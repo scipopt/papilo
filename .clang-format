@@ -1,0 +1,16 @@
+﻿---
+AllowShortFunctionsOnASingleLine: Inline
+AlwaysBreakAfterDefinitionReturnType: All
+AlwaysBreakAfterReturnType: All
+AlwaysBreakTemplateDeclarations: 'true'
+BreakBeforeBraces: Allman
+IndentCaseLabels: 'false'
+IndentWidth: '3'
+PointerAlignment: Left
+SortIncludes: 'true'
+SpaceBeforeParens: Never
+SpacesInParentheses: 'true'
+TabWidth: '3'
+UseTab: Never
+
+...

@@ -1,0 +1,10 @@
+*.o
+*.so
+*.dylib
+*.mod
+*__pycache__*
+*~
+matlab/clusol.h
+include/clusol.h
+matlab/libclusol_proto*.m
+*.DS_Store
