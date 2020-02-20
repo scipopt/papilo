@@ -174,6 +174,7 @@ class ProblemUpdate
          ++stats.ndeletedrows;
          rflags.set( RowFlag::REDUNDANT );
       }
+      postsolve.notifyRedundantRow( row );
    }
 
    void
@@ -1009,7 +1010,8 @@ ProblemUpdate<REAL>::removeFixedCols()
          continue;
 
       assert( lbs[col] == problem.getUpperBounds()[col] );
-      postsolve.notifyFixedCol( col, lbs[col] );
+      auto colvec = consMatrix.getColumnCoefficients( col );
+      postsolve.notifyFixedCol( col, lbs[col], colvec, obj.coefficients );
 
       // if it is fixed to zero activities and sides do not need to be
       // updated
@@ -1024,7 +1026,6 @@ ProblemUpdate<REAL>::removeFixedCols()
       }
 
       // fixed to nonzero value, so update sides and activities
-      auto colvec = consMatrix.getColumnCoefficients( col );
       int collen = colvec.getLength();
       const int* colrows = colvec.getIndices();
       const REAL* colvals = colvec.getValues();
@@ -1333,6 +1334,11 @@ ProblemUpdate<REAL>::trivialPresolve()
 
    removeFixedCols();
 
+   // for( auto row : redundant_rows )
+   //    postsolve.notifyRedundantRow( row );
+   // for( auto col : deleted_cols )
+   //    postsolve.notifyDeletedCol( col );
+
    problem.getConstraintMatrix().deleteRowsAndCols(
        redundant_rows, deleted_cols, problem.getRowActivities(), singletonRows,
        singletonColumns, emptyColumns );
@@ -1423,7 +1429,13 @@ ProblemUpdate<REAL>::removeSingletonRow( int row )
 
       if( !rflags[row].test( RowFlag::RHS_INF ) &&
           status != PresolveStatus::INFEASIBLE )
+      {
+         // todo:
+         // if( postsolve.postsolveType == PostsolveType::FULL )
+         //    postsolve.notifyBoundChange( false, true, col, row, lbs[col],
+         //                                 rhs / val );
          status = changeLB( col, rhs / val );
+      }
    }
    else
    {
@@ -1437,6 +1449,9 @@ ProblemUpdate<REAL>::removeSingletonRow( int row )
          status = changeUB( col, rhs / val );
    }
 
+   auto colvec = consMatrix.getColumnCoefficients( col );
+   Objective<REAL>& obj = problem.getObjective();
+   postsolve.notifySingletonRow( row, col, val, obj.coefficients, colvec );
    markRowRedundant( row );
 
    return status;
@@ -1539,6 +1554,8 @@ ProblemUpdate<REAL>::removeEmptyColumns()
       Objective<REAL>& obj = problem.getObjective();
       VariableDomains<REAL>& domains = problem.getVariableDomains();
       Vec<int>& colsize = problem.getConstraintMatrix().getColSizes();
+
+      SparseVectorView<REAL> empty_column;
       for( int col : emptyColumns )
       {
          if( colsize[col] != 0 )
@@ -1551,7 +1568,7 @@ ProblemUpdate<REAL>::removeEmptyColumns()
          {
             assert( colsize[col] == 0 );
 
-            REAL fixval;
+            REAL fixval, cost;
 
             if( obj.coefficients[col] == 0 )
             {
@@ -1581,12 +1598,15 @@ ProblemUpdate<REAL>::removeEmptyColumns()
 
                   fixval = domains.lower_bounds[col];
                }
+            }
 
+            postsolve.notifyFixedCol( col, fixval, empty_column,
+                                      obj.coefficients );
+            if( obj.coefficients[col] != 0 )
+            {
                obj.offset += obj.coefficients[col] * fixval;
                obj.coefficients[col] = 0;
             }
-
-            postsolve.notifyFixedCol( col, fixval );
             domains.flags[col].set( ColFlag::FIXED );
 
             ++stats.ndeletedcols;

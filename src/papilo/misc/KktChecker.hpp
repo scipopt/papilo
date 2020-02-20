@@ -28,6 +28,7 @@
 #include <iostream>
 
 #include "papilo/core/Problem.hpp"
+#include "papilo/core/ProblemBuilder.hpp"
 #include "papilo/core/RowFlags.hpp"
 #include "papilo/core/Solution.hpp"
 #include "papilo/core/SparseStorage.hpp"
@@ -41,23 +42,23 @@ namespace papilo
 
 enum kkt_status
 {
-   OK,
-   Fail_Length,
-   Fail_Primal_Bound,
-   Fail_Primal_Feasibility,
-   Fail_Dual_Feasibility,
-   Fail_Complementary_Slackness,
-   Fail_Stationarity_Lagrangian
+   OK = 0,
+   Fail_Length = 1,
+   Fail_Primal_Bound = 2,
+   Fail_Primal_Feasibility = 3,
+   Fail_Dual_Feasibility = 4,
+   Fail_Complementary_Slackness = 5,
+   Fail_Stationarity_Lagrangian = 6
 };
 
 enum CheckLevel
 {
    No_check,
    Check,
-   Primal_feasibility_only,
-   Solver_and_primal_feas,   // expects dual values from solver
-   Postsolved_problem_full,  // expects dual values from solver
-   After_each_postsolve_step // expects dual values from solver
+   Primal_only,
+   Primal_and_dual,
+   After_each_step_primal_only,
+   After_each_step_and_dual
 };
 
 /// class to hold all the data needed for the checks. The other class
@@ -66,6 +67,7 @@ template <typename REAL>
 class KktState
 {
  private:
+   KktInfo<REAL> info;
    // problem and solution data. rowValues is not a reference because it is
    // calculated internally here. The other three point to the corresponding
    // values in postsolve
@@ -172,17 +174,24 @@ class KktState
       {
          if( !solSetCol[col] )
             continue;
-         if( !colLBInf( problem, reduced_index ) &&
+
+         int index =
+             ( problem.getNCols() < solSetCol.size() ) ? reduced_index : col;
+         if( !colLBInf( problem, index ) &&
              colLower[col] - colValues[col] > tol )
          {
             message.info( "Column {:<3} violates lower column bound.\n", col );
+            REAL value = colLower[col] - colValues[col];
+            info.primal_col_bounds.values.push_back( value );
             status = kkt_status::Fail_Primal_Bound;
          }
 
-         if( !colUBInf( problem, reduced_index ) &&
+         if( !colUBInf( problem, index ) &&
              colValues[col] - colUpper[col] > tol )
          {
             message.info( "Column {:<3} violates upper column bound.\n", col );
+            REAL value = colValues[col] - colUpper[col];
+            info.primal_col_bounds.values.push_back( value );
             status = kkt_status::Fail_Primal_Bound;
          }
 
@@ -198,14 +207,19 @@ class KktState
       const int nCols = solSetCol.size();
 
       if( colLower.size() != nCols || colUpper.size() != nCols ||
-          colValues.size() != nCols || colDuals.size() != nCols )
+          colValues.size() != nCols )
          return kkt_status::Fail_Length;
 
       const int nRows = solSetRow.size();
 
       if( rowLower.size() != nRows || rowUpper.size() != nRows ||
-          rowValues.size() != nRows || rowDuals.size() != nRows )
+          rowValues.size() != nRows )
          return kkt_status::Fail_Length;
+
+      if( level == CheckLevel::After_each_step_and_dual ||
+          level == CheckLevel::Primal_and_dual )
+         if( colDuals.size() != nCols || rowDuals.size() != nRows )
+            return kkt_status::Fail_Length;
 
       return kkt_status::OK;
    }
@@ -217,8 +231,6 @@ class KktState
    checkPrimalFeasibility()
    {
       kkt_status status = checkPrimalBounds();
-      if( status != kkt_status::OK )
-         return status;
 
       int reduced_index = 0;
       for( int row = 0; row < solSetRow.size(); row++ )
@@ -226,16 +238,22 @@ class KktState
          if( !solSetRow[row] )
             continue;
 
-         if( !rowLHSInf( problem, reduced_index ) &&
+         int index =
+             ( problem.getNRows() < solSetRow.size() ) ? reduced_index : row;
+         if( !rowLHSInf( problem, index ) &&
              rowLower[row] - rowValues[row] > tol )
          {
             message.info( "Row {:<3} violates row bounds.\n", row );
+            REAL value = rowValues[row] - rowUpper[row];
+            info.primal_row_bounds.values.push_back( value );
             status = kkt_status::Fail_Primal_Feasibility;
          }
-         if( !rowRHSInf( problem, reduced_index ) &&
+         if( !rowRHSInf( problem, index ) &&
              rowValues[row] - rowUpper[row] > tol )
          {
             message.info( "Row {:<3} violates row bounds.\n", row );
+            REAL value = rowValues[row] - rowUpper[row];
+            info.primal_row_bounds.values.push_back( value );
             status = kkt_status::Fail_Primal_Feasibility;
          }
          reduced_index++;
@@ -385,7 +403,8 @@ class KktState
       }
 
       // Below is used getNCols() because matrixCW is the transpose.
-      assert( matrixCW.getNCols() == reduced_row_index );
+      assert( matrixCW.getNCols() == reduced_row_index ||
+              matrixCW.getNCols() == solSetRow.size() );
 
       int reduced_index = 0;
       for( int col = 0; col < solSetCol.size(); col++ )
@@ -418,6 +437,7 @@ class KktState
    {
       const int nRows = problem.getNRows();
       const int nCols = problem.getNCols();
+
       rowValues.resize( solSetRow.size() );
       REAL rowValue;
 
@@ -429,15 +449,26 @@ class KktState
       for( int i = 0; i < solSetCol.size(); i++ )
          if( solSetCol[i] )
             orig_col_index.push_back( i );
-      assert( orig_col_index.size() == nCols );
 
-      for( int i = 0; i < solSetRow.size(); i++ )
+      bool reduced = false;
+      if( nRows < solSetRow.size() || nCols < solSetCol.size() )
       {
-         if( !solSetRow[i] )
+         reduced = true;
+         assert( orig_col_index.size() == nCols );
+      }
+
+      for( int row = 0; row < solSetRow.size(); row++ )
+      {
+         if( !solSetRow[row] )
             continue;
 
          rowValue = 0;
-         auto index_range = matrixRW.getRowRanges()[reduced_row_index];
+         IndexRange index_range;
+         if( reduced )
+            index_range = matrixRW.getRowRanges()[reduced_row_index];
+         else
+            index_range = matrixRW.getRowRanges()[row];
+
          for( int j = index_range.start; j < index_range.end; j++ )
          {
             int col = matrixRW.getColumns()[j];
@@ -446,11 +477,41 @@ class KktState
 
             // col is index of the column in reduced problem and colValues is
             // expanded.
-            rowValue += values[j] * colValues[orig_col_index[col]];
+            if( reduced )
+               rowValue += values[j] * colValues[orig_col_index[col]];
+            else
+               rowValue += values[j] * colValues[col];
          }
-         rowValues[i] = rowValue;
+         rowValues[row] = rowValue;
          reduced_row_index++;
       }
+   }
+
+   void
+   updateInfo()
+   {
+      updateKktInfo( getCurrentNCols(), getCurrentNRows(), info );
+   }
+
+   void
+   reportKktInfo()
+   {
+      int on = getCurrentNRows();
+      int count = solSetRow.size();
+      message.info( "KKT check\n" );
+      message.info( "         solSetRow: {:>3} / {:>3}\n", on, count );
+      on = getCurrentNCols();
+      count = solSetCol.size();
+      message.info( "         solSetCol: {:>3} / {:>3} \n", on, count );
+      message.info( "                    vio / chk    max, sum    \n" );
+      message.info( "Primal col bounds:  {:>3} / {:>3}  \n",
+                    info.primal_col_bounds.num_violated, info.num_col );
+      //               info.primal_col_bounds.max, info.primal_col_bounds.sum );
+      message.info( "Primal row bounds:  {:>3} / {:>3}  \n",
+                    info.primal_row_bounds.num_violated, info.num_row );
+
+      // todo: dual.
+      message.info( "\n" );
    }
 
    Message message;
@@ -502,12 +563,12 @@ class KktChecker<REAL, CheckLevel::No_check>
    KktChecker( Problem<REAL> prob ) {}
 
    void
-   checkSolution( State& ) const
+   checkSolution( State&, bool intermediate = false ) const
    {
    }
 
-   void
-   checkIntermediate( State& ) const
+   bool
+   expandProblem()
    {
    }
 
@@ -515,11 +576,6 @@ class KktChecker<REAL, CheckLevel::No_check>
    checkKKT( State& ) const
    {
       return kkt_status::OK;
-   }
-
-   void
-   setLevel( State& state, CheckLevel type_of_check ) const
-   {
    }
 
    void
@@ -538,6 +594,36 @@ class KktChecker<REAL, CheckLevel::No_check>
                     const bool lb_inf, const bool ub_inf )
    {
    }
+
+   void
+   undoSubstitutedCol( const int col )
+   {
+   }
+
+   void
+   undoParallelCol( const int col )
+   {
+   }
+
+   void
+   undoFixedCol( const int col, const REAL value )
+   {
+   }
+
+   void
+   undoSingletonRow( const int row )
+   {
+   }
+
+   void
+   undoDeletedCol( const int col )
+   {
+   }
+
+   void
+   undoRedundantRow( const int row )
+   {
+   }
 };
 
 /// class for checking the optimality conditions of the problem during and
@@ -554,21 +640,37 @@ class KktChecker<REAL, CheckLevel::Check>
    Vec<REAL> colUpper_reduced;
    Num<REAL> num;
 
+   // set to false if kkt do not hold
+   bool kktHold;
+
+   Problem<REAL> original_problem;
+   Problem<REAL> reduced_problem;
+   Problem<REAL> problem;
+
+   Vec<uint8_t> solSetRow;
+   Vec<uint8_t> solSetCol;
+
  public:
-   CheckLevel level = CheckLevel::Primal_feasibility_only;
+   CheckLevel level = CheckLevel::Primal_only;
    using State = KktState<REAL>;
 
    State
    initState( ProblemType type, Solution<REAL>& solution,
               CheckLevel checker_level )
    {
+      if( type == ProblemType::POSTSOLVED )
+         return initState( type, solution, solSetCol, solSetRow,
+                           checker_level );
+
+      assert( type == ProblemType::ORIGINAL );
       int ncols = original_problem.getNCols();
       int nrows = original_problem.getNRows();
-      Vec<uint8_t> solSetColumns( ncols, 1 );
-      Vec<uint8_t> solSetRows( nrows, 1 );
+      solSetCol.resize( ncols );
+      solSetCol.assign( ncols, 1 );
+      solSetRow.resize( nrows );
+      solSetRow.assign( nrows, 1 );
 
-      return initState( type, solution, solSetColumns, solSetRows,
-                        checker_level );
+      return initState( type, solution, solSetCol, solSetRow, checker_level );
    }
 
    State
@@ -578,8 +680,10 @@ class KktChecker<REAL, CheckLevel::Check>
    {
       int ncols = original_problem.getNCols();
       int nrows = original_problem.getNRows();
-      Vec<uint8_t> solSetColumns( ncols, 0 );
-      Vec<uint8_t> solSetRows( nrows, 0 );
+      solSetCol.resize( ncols );
+      solSetCol.assign( ncols, 0 );
+      solSetRow.resize( nrows );
+      solSetRow.assign( nrows, 0 );
 
       for( int k = 0; k < origcol_map.size(); ++k )
       {
@@ -606,129 +710,155 @@ class KktChecker<REAL, CheckLevel::Check>
       // todo: make sure constraint matrix transpose is valid since
       //  ...getMatrixTranspose() is used for checking KKT in KktState.
 
-      if( type == ProblemType::POSTSOLVED )
+      switch( type )
+      {
+      case ProblemType::POSTSOLVED:
       {
          compareMatrixToTranspose( problem.getConstraintMatrix(), num );
-         message.info( "Initializing check of postsolved solution\n" );
+         message.info( "\nInitializing check of postsolved solution\n" );
          return State( level, problem, solution, solSetColumns, solSetRows );
       }
-
-      if( type == ProblemType::ORIGINAL )
+      case ProblemType::ORIGINAL:
       {
          // compares transposes too so no need to call other checks.
-         if( level == CheckLevel::After_each_postsolve_step )
+         if( level == CheckLevel::After_each_step_and_dual ||
+             level == CheckLevel::After_each_step_primal_only )
          {
             bool problems_are_same =
                 compareProblems( original_problem, problem, num );
-            assert( problems_are_same );
+            if( !problems_are_same )
+               message.info( "Postsolved problem differs from original.\n" );
          }
          message.info( "Initializing check of original solution\n" );
-         // todo: assert solSetRows and SolSetColumns are all set.
-         return State( level, original_problem, solution, solSetColumns,
-                       solSetRows );
-      }
 
-      // matrix type is ProblemType::REDUCED.
-      compareMatrixToTranspose( reduced_problem.getConstraintMatrix(), num );
-
-      // if problem type is REDUCED expand row / column bound vectors since
-      // original_solution is already padded.
-      const int nRows = reduced_problem.getNRows();
-      const int nCols = reduced_problem.getNCols();
-
-      if( solSetRows.size() > nRows )
-      {
-         const Vec<REAL> tmp_upper =
-             reduced_problem.getConstraintMatrix().getRightHandSides();
-         const Vec<REAL> tmp_lower =
-             reduced_problem.getConstraintMatrix().getLeftHandSides();
-
-         assert( tmp_upper.size() == nRows );
-         assert( tmp_lower.size() == nRows );
-
-         rowUpper_reduced.clear();
-         rowLower_reduced.clear();
-         rowUpper_reduced.resize( solSetRows.size(), 0 );
-         rowLower_reduced.resize( solSetRows.size(), 0 );
-
-         int index = 0;
-         for( int k = 0; k < solSetRows.size(); ++k )
+         if( solSetCol.size() == 0 )
          {
-            if( solSetRows[k] )
+            solSetCol.resize( original_problem.getNCols() );
+            solSetCol.assign( original_problem.getNCols(), true );
+         }
+         assert( solSetCol.size() == original_problem.getNCols() );
+         assert( std::all_of( solSetCol.begin(), solSetCol.end(),
+                              []( uint8_t isset ) { return isset; } ) );
+
+         if( solSetRow.size() == 0 )
+         {
+            solSetRow.resize( original_problem.getNRows() );
+            solSetRow.assign( original_problem.getNRows(), true );
+         }
+         assert( solSetRow.size() == original_problem.getNRows() );
+         assert( std::all_of( solSetRow.begin(), solSetRow.end(),
+                              []( uint8_t isset ) { return isset; } ) );
+
+         // todo: for LP set CheckLevel to prima and dual, once dual postsolve
+         // is implemented.
+         return State( CheckLevel::Primal_only, original_problem, solution,
+                       solSetColumns, solSetRows );
+      }
+      case ProblemType::REDUCED:
+      {
+         compareMatrixToTranspose( reduced_problem.getConstraintMatrix(), num );
+
+         // if problem type is REDUCED expand row / column bound vectors since
+         // original_solution is already padded.
+         const int nRows = reduced_problem.getNRows();
+         const int nCols = reduced_problem.getNCols();
+
+         if( solSetRows.size() > nRows )
+         {
+            const Vec<REAL> tmp_upper =
+                reduced_problem.getConstraintMatrix().getRightHandSides();
+            const Vec<REAL> tmp_lower =
+                reduced_problem.getConstraintMatrix().getLeftHandSides();
+
+            assert( tmp_upper.size() == nRows );
+            assert( tmp_lower.size() == nRows );
+
+            rowUpper_reduced.clear();
+            rowLower_reduced.clear();
+            rowUpper_reduced.resize( solSetRows.size(), 0 );
+            rowLower_reduced.resize( solSetRows.size(), 0 );
+
+            int index = 0;
+            for( int k = 0; k < solSetRows.size(); ++k )
             {
-               rowUpper_reduced[k] = tmp_upper[index];
-               rowLower_reduced[k] = tmp_lower[index];
-               index++;
+               if( solSetRows[k] )
+               {
+                  rowUpper_reduced[k] = tmp_upper[index];
+                  rowLower_reduced[k] = tmp_lower[index];
+                  index++;
+               }
             }
          }
-      }
-      else
-      {
-         assert( solSetRows.size() == nRows );
-         rowUpper_reduced =
-             reduced_problem.getConstraintMatrix().getRightHandSides();
-         rowLower_reduced =
-             reduced_problem.getConstraintMatrix().getLeftHandSides();
-      }
-
-      if( solSetColumns.size() > nCols )
-      {
-         Vec<REAL> tmp_upper =
-             reduced_problem.getVariableDomains().upper_bounds;
-         Vec<REAL> tmp_lower =
-             reduced_problem.getVariableDomains().lower_bounds;
-
-         assert( tmp_upper.size() == nCols );
-         assert( tmp_lower.size() == nCols );
-
-         colUpper_reduced.clear();
-         colLower_reduced.clear();
-         colUpper_reduced.resize( solSetColumns.size(), 0 );
-         colLower_reduced.resize( solSetColumns.size(), 0 );
-
-         int index = 0;
-         for( int k = 0; k < solSetColumns.size(); ++k )
+         else
          {
-            if( solSetColumns[k] )
+            assert( solSetRows.size() == nRows );
+            rowUpper_reduced =
+                reduced_problem.getConstraintMatrix().getRightHandSides();
+            rowLower_reduced =
+                reduced_problem.getConstraintMatrix().getLeftHandSides();
+         }
+
+         if( solSetColumns.size() > nCols )
+         {
+            Vec<REAL> tmp_upper =
+                reduced_problem.getVariableDomains().upper_bounds;
+            Vec<REAL> tmp_lower =
+                reduced_problem.getVariableDomains().lower_bounds;
+
+            assert( tmp_upper.size() == nCols );
+            assert( tmp_lower.size() == nCols );
+
+            colUpper_reduced.clear();
+            colLower_reduced.clear();
+            colUpper_reduced.resize( solSetColumns.size(), 0 );
+            colLower_reduced.resize( solSetColumns.size(), 0 );
+
+            int index = 0;
+            for( int k = 0; k < solSetColumns.size(); ++k )
             {
-               colUpper_reduced[k] = tmp_upper[index];
-               colLower_reduced[k] = tmp_lower[index];
-               index++;
+               if( solSetColumns[k] )
+               {
+                  colUpper_reduced[k] = tmp_upper[index];
+                  colLower_reduced[k] = tmp_lower[index];
+                  index++;
+               }
             }
          }
-      }
-      else
-      {
-         assert( solSetColumns.size() == nCols );
-         colUpper_reduced = reduced_problem.getVariableDomains().upper_bounds;
-         colLower_reduced = reduced_problem.getVariableDomains().lower_bounds;
-      }
+         else
+         {
+            assert( solSetColumns.size() == nCols );
+            colUpper_reduced =
+                reduced_problem.getVariableDomains().upper_bounds;
+            colLower_reduced =
+                reduced_problem.getVariableDomains().lower_bounds;
+         }
 
-      message.info( "Initializing check of reduced solution\n" );
-      return State( level, reduced_problem, solution, solSetColumns, solSetRows,
-                    rowLower_reduced, rowUpper_reduced, colLower_reduced,
-                    colUpper_reduced );
+         message.info( "\nInitializing check of reduced solution\n" );
+         return State( level, reduced_problem, solution, solSetColumns,
+                       solSetRows, rowLower_reduced, rowUpper_reduced,
+                       colLower_reduced, colUpper_reduced );
+      }
+      }
    }
 
    void
-   setLevel( CheckLevel type_of_check ) const
-   {
-      level = type_of_check;
-   }
-
-   void
-   checkSolution( State& state ) const
+   checkSolution( State& state, bool intermediate = false ) const
    {
       state.getRowValues();
       kkt_status status = kkt_status::OK;
-      if( state.level == CheckLevel::Primal_feasibility_only )
+      if( state.level == CheckLevel::Primal_only ||
+          state.level == CheckLevel::After_each_step_primal_only )
          status = state.checkPrimalFeasibility();
       else
          status = checkKKT( state );
 
       if( status )
       {
-         message.info( "Check solution: FAIL, status: " );
+         if( !intermediate )
+            message.info( "Check solution: FAIL, status: " );
+         else
+            message.info( "Check intermediate solution: FAIL, status: " );
+
          message.info( std::to_string( status ) );
          message.info( "\n" );
       }
@@ -736,22 +866,8 @@ class KktChecker<REAL, CheckLevel::Check>
       {
          message.info( "Check solution: OK\n" );
       }
-   }
-
-   void
-   checkIntermediate( State& state ) const
-   {
-      if( state.level != CheckLevel::After_each_postsolve_step )
-         return;
-
-      kkt_status status = checkKKT( state );
-      if( status )
-      {
-         message.info( "KKT intermediate FAIL, status: " );
-         message.info( std::to_string( status ) );
-         message.info( "\n" );
-      }
-      return;
+      state.updateInfo();
+      state.reportKktInfo();
    }
 
    kkt_status
@@ -799,22 +915,175 @@ class KktChecker<REAL, CheckLevel::Check>
       return return_status;
    }
 
+   // Expand problem from reduced according to solSet* vectors.
+   bool
+   expandProblem()
+   {
+      assert( reduced_problem.getNCols() > -1 );
+      assert( original_problem.getNCols() > -1 );
+      problem = reduced_problem;
+
+      int ncols = original_problem.getNCols();
+      int nrows = original_problem.getNRows();
+
+      ProblemBuilder<REAL> builder;
+      builder.setNumCols( ncols );
+      builder.setNumRows( nrows );
+
+      std::vector<int> original_index_col;
+      original_index_col.reserve( reduced_problem.getNCols() );
+      for( int col = 0; col < solSetCol.size(); col++ )
+         if( solSetCol[col] )
+            original_index_col.push_back( col );
+      assert( original_index_col.size() == reduced_problem.getNCols() );
+
+      std::vector<int> original_index_row;
+      original_index_row.reserve( reduced_problem.getNRows() );
+      for( int row = 0; row < solSetRow.size(); row++ )
+         if( solSetRow[row] )
+            original_index_row.push_back( row );
+      assert( original_index_row.size() == reduced_problem.getNRows() );
+
+      // matrix
+      int reduced = 0;
+      for( int row = 0; row < solSetRow.size(); row++ )
+      {
+         const Vec<int>& lengths_o =
+             original_problem.getConstraintMatrix().getRowSizes();
+         const Vec<int>& lengths_r =
+             reduced_problem.getConstraintMatrix().getRowSizes();
+         int len_o = lengths_o[row];
+         if( solSetRow[row] )
+         {
+            assert( reduced < lengths_r.size() );
+            int len_r = lengths_r[reduced];
+            assert( original_index_row[reduced] == row );
+            // Saved row at end of presolve.
+            const SparseVectorView<REAL>& row_coeff =
+                reduced_problem.getConstraintMatrix().getRowCoefficients(
+                    reduced );
+            assert( row_coeff.getLength() == len_r );
+            assert( row_coeff.getLength() > 0 );
+            std::vector<int> columns( len_r );
+            const int* columns_reduced = row_coeff.getIndices();
+            for( int i = 0; i < len_r; i++ )
+            {
+               assert( len_r = row_coeff.getLength() );
+               int col = columns_reduced[i];
+               assert( col < original_index_col.size() && col >= 0 );
+               columns[i] = original_index_col[col];
+            }
+            builder.addRowEntries( row, len_r, &columns[0],
+                                   row_coeff.getValues() );
+            reduced++;
+         }
+         else
+         {
+            // todo: // saved row at elimination.
+            // empty with size of original.
+            int len = len_o;
+            std::vector<int> zeros( len, 0 );
+            std::vector<REAL> orig_ones( len, 1 );
+            const int* cols = &zeros[0];
+            const REAL* vals = &orig_ones[0];
+            builder.addRowEntries( row, len, cols, vals );
+         }
+      }
+      assert( reduced == reduced_problem.getNRows() );
+
+      // domains and objective
+      builder.setObjOffset( reduced_problem.getObjective().offset );
+      reduced = 0;
+      const Vec<REAL>& reduced_objective =
+          reduced_problem.getObjective().coefficients;
+      const Vec<REAL>& reduced_lb = reduced_problem.getLowerBounds();
+      const Vec<REAL>& reduced_ub = reduced_problem.getUpperBounds();
+      const Vec<ColFlags>& reduced_col_flags = reduced_problem.getColFlags();
+
+      for( int col = 0; col < solSetCol.size(); col++ )
+      {
+         if( solSetCol[col] )
+         {
+            // add information from reduced problem
+            assert( reduced < reduced_col_flags.size() );
+            assert( reduced < reduced_lb.size() );
+            assert( reduced < reduced_ub.size() );
+            assert( reduced < reduced_objective.size() );
+            // lb
+            if( reduced_col_flags[reduced].test( ColFlag::LB_INF ) )
+               builder.setColLbInf( col, true );
+            else
+               builder.setColLb( col, reduced_lb[reduced] );
+            // ub
+            if( reduced_col_flags[reduced].test( ColFlag::UB_INF ) )
+               builder.setColUbInf( col, true );
+            else
+               builder.setColUb( col, reduced_ub[reduced] );
+
+            builder.setObj( col, reduced_objective[reduced] );
+            reduced++;
+         }
+         else
+         {
+            // add infinite bounds and zero cost
+            builder.setColLbInf( col, true );
+            builder.setColUbInf( col, true );
+            builder.setObj( col, 0 );
+         }
+      }
+      assert( reduced == reduced_problem.getNCols() );
+
+      // row bounds
+      const Vec<RowFlags>& reduced_flags = reduced_problem.getRowFlags();
+      const Vec<REAL>& reduced_lhs =
+          reduced_problem.getConstraintMatrix().getLeftHandSides();
+      const Vec<REAL>& reduced_rhs =
+          reduced_problem.getConstraintMatrix().getRightHandSides();
+      reduced = 0;
+      for( int row = 0; row < solSetRow.size(); row++ )
+      {
+         if( solSetRow[row] )
+         {
+            assert( original_index_row[reduced] == row );
+            // lhs
+            if( reduced_flags[reduced].test( RowFlag::LHS_INF ) )
+               builder.setRowLhsInf( row, true );
+            else
+               builder.setRowLhs( row, reduced_lhs[reduced] );
+            // rhs
+            if( reduced_flags[reduced].test( RowFlag::RHS_INF ) )
+               builder.setRowRhsInf( row, true );
+            else
+               builder.setRowRhs( row, reduced_rhs[reduced] );
+            reduced++;
+         }
+         else
+         {
+            // todo: add bounds of row at elimination?
+            builder.setRowLhsInf( row, true );
+            builder.setRowRhsInf( row, true );
+         }
+      }
+      assert( reduced == reduced_problem.getNRows() );
+
+      problem = builder.build();
+
+      problem.setVariableNames( original_problem.getVariableNames() );
+      problem.setConstraintNames( original_problem.getConstraintNames() );
+      problem.setName( original_problem.getName() );
+
+      return true;
+   }
+
    void
    setOriginalProblem( const Problem<REAL>& prob )
    {
       original_problem = prob;
    };
-
    void
    setReducedProblem( const Problem<REAL>& problem )
    {
       reduced_problem = problem;
-
-      // todo:
-      // assert original_problem is set
-
-      // allocate memory for reduced. for now for each row / col take
-      // max of row/col in original and reduced problem.
    }
 
    void
@@ -825,18 +1094,57 @@ class KktChecker<REAL, CheckLevel::Check>
       addRow( problem, row, length, values, coeffs, lhs, rhs, lb_inf, ub_inf );
    }
 
+   void
+   undoSubstitutedCol( const int col )
+   {
+      assert( !solSetCol[col] );
+      solSetCol[col] = true;
+      // todo: ...
+   }
+
+   void
+   undoParallelCol( const int col )
+   {
+      assert( !solSetCol[col] );
+      solSetCol[col] = true;
+      // todo: ...
+   }
+
+   void
+   undoFixedCol( const int col, const REAL value )
+   {
+      assert( !solSetCol[col] );
+      solSetCol[col] = true;
+      // todo:
+      // addCol( problem, col, length, values, coeffs, l, u, lb_inf, ub_inf );
+   }
+
+   void
+   undoSingletonRow( const int row )
+   {
+      assert( solSetRow[row] );
+      // todo:
+      // addRow( problem, row, length, values, coeffs, lhs, rhs, lhs_inf,
+      // rhs_inf );
+   }
+
+   void
+   undoDeletedCol( const int col )
+   {
+      assert( !solSetCol[col] );
+      solSetCol[col] = true;
+      // todo:
+      // addCol( problem, col, length, values, coeffs, l, u, lb_inf, ub_inf );
+   }
+
+   void
+   undoRedundantRow( const int row )
+   {
+      assert( !solSetRow[row] );
+      solSetRow[row] = true;
+   }
+
    Message message;
-
- private:
-   // set to false if kkt do not hold
-   bool kktHold;
-
-   Problem<REAL> original_problem;
-   Problem<REAL> reduced_problem;
-   Problem<REAL> problem;
-
-   Vec<uint8_t> solSetRow;
-   Vec<uint8_t> solSetCol;
 };
 
 template <typename REAL>

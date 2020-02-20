@@ -286,6 +286,7 @@ class Presolve
    bool lastRoundReduced;
    int nunsuccessful;
    bool rundelayed;
+   bool dual_solution = false;
 };
 
 #ifdef PAPILO_USE_EXTERN_TEMPLATES
@@ -634,6 +635,9 @@ Presolve<REAL>::apply( Problem<REAL>& problem )
 
       result.postsolve = Postsolve<REAL>( problem, num );
       result.postsolve.getChecker().setOriginalProblem( problem );
+
+      if( problem.getNumIntegralCols() == 0 )
+         result.postsolve.postsolveType = PostsolveType::FULL;
 
       result.status = PresolveStatus::UNCHANGED;
 
@@ -1050,6 +1054,13 @@ Presolve<REAL>::apply( Problem<REAL>& problem )
                solution.primal.resize( problem.getNCols() );
                Vec<uint8_t> componentSolved( ncomponents );
 
+               if( result.postsolve.postsolveType == PostsolveType::FULL )
+               {
+                  solution.type = SolutionType::PRIMAL_AND_DUAL;
+                  solution.col_dual.resize( problem.getNCols() );
+                  solution.row_dual.resize( problem.getNRows() );
+               }
+
                tbb::parallel_for(
                    tbb::blocked_range<int>( 0, ncomponents - 1 ),
                    [this, &components, &solution, &problem, &result, &compInfo,
@@ -1153,9 +1164,14 @@ Presolve<REAL>::apply( Problem<REAL>& problem )
 
                      for( int j = 0; j != numcompcols; ++j )
                      {
-                        lbs[compcols[j]] = solution.primal[compcols[j]];
-                        ubs[compcols[j]] = solution.primal[compcols[j]];
-                        probUpdate.markColFixed( compcols[j] );
+                        const int col = compcols[j];
+                        lbs[compcols[j]] = solution.primal[col];
+                        ubs[compcols[j]] = solution.primal[col];
+                        probUpdate.markColFixed( col );
+                        if( result.postsolve.postsolveType ==
+                            PostsolveType::FULL )
+                           result.postsolve.notifyDualValue(
+                               true, col, solution.col_dual[col] );
                      }
 
                      const int* comprows = components.getComponentsRows( i );
@@ -1191,6 +1207,21 @@ Presolve<REAL>::apply( Problem<REAL>& problem )
          msg.info( "  nonzeros: {}\n", problem.getConstraintMatrix().getNnz() );
 
          result.status = PresolveStatus::REDUCED;
+         if( result.postsolve.postsolveType == PostsolveType::FULL )
+         {
+            auto& col_cost = problem.getObjective().coefficients;
+            auto& col_lower = problem.getLowerBounds();
+            auto& col_upper = problem.getLowerBounds();
+            auto& row_lower = problem.getConstraintMatrix().getLeftHandSides();
+            auto& row_upper = problem.getConstraintMatrix().getRightHandSides();
+            auto& col_flags = problem.getColFlags();
+            auto& row_flags = problem.getRowFlags();
+
+            result.postsolve.notifyReducedBoundsAndCost(
+                col_lower, col_upper, row_lower, row_upper, col_cost, row_flags,
+                col_flags );
+         }
+
          result.postsolve.getChecker().setReducedProblem( problem );
          return result;
       }
