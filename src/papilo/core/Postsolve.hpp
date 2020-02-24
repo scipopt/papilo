@@ -21,8 +21,8 @@
 /*                                                                           */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef _POSTSOLVE_HPP_
-#define _POSTSOLVE_HPP_
+#ifndef _PAPILO_CORE_POSTSOLVE_HPP_
+#define _PAPILO_CORE_POSTSOLVE_HPP_
 
 #include "papilo/core/Problem.hpp"
 #include "papilo/misc/KktChecker.hpp"

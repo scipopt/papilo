@@ -21,8 +21,8 @@
 /*                                                                           */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef _PARSING_MPS_PARSER_HPP_
-#define _PARSING_MPS_PARSER_HPP_
+#ifndef _PAPILO_IO_MPS_PARSER_HPP_
+#define _PAPILO_IO_MPS_PARSER_HPP_
 
 #include "papilo/core/ConstraintMatrix.hpp"
 #include "papilo/core/Objective.hpp"

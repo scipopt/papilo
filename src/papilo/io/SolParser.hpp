@@ -21,8 +21,8 @@
 /*                                                                           */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef _IO_SOL_PARSER_HPP_
-#define _IO_SOL_PARSER_HPP_
+#ifndef _PAPILO_IO_SOL_PARSER_HPP_
+#define _PAPILO_IO_SOL_PARSER_HPP_
 
 #include "papilo/misc/Hash.hpp"
 #include "papilo/misc/String.hpp"

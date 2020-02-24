@@ -21,10 +21,18 @@
 /*                                                                           */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef _MISC_HASH_HPP_
-#define _MISC_HASH_HPP_
+#ifndef _PAPILO_MISC_HASH_HPP_
+#define _PAPILO_MISC_HASH_HPP_
 
+#include "papilo/Config.hpp"
+
+#ifndef PAPILO_USE_STANDARD_HASHMAP
 #include "ska/bytell_hash_map.hpp"
+#else
+#include <unordered_map>
+#include <unordered_set>
+#endif
+
 #include <cstdint>
 #include <type_traits>
 
@@ -93,12 +101,25 @@ struct Hasher<T, T>
    }
 };
 
+#ifndef PAPILO_USE_STANDARD_HASHMAP
+
 template <typename K, typename V, typename H = std::hash<K>,
           typename E = std::equal_to<K>>
 using HashMap = ska::bytell_hash_map<K, V, H, E, Allocator<std::pair<K, V>>>;
 
 template <typename T, typename H = std::hash<T>, typename E = std::equal_to<T>>
 using HashSet = ska::bytell_hash_set<T, H, E, Allocator<T>>;
+
+#else
+
+template <typename K, typename V, typename H = std::hash<K>,
+          typename E = std::equal_to<K>>
+using HashMap = std::unordered_map<K, V, H, E, Allocator<std::pair<K, V>>>;
+
+template <typename T, typename H = std::hash<T>, typename E = std::equal_to<T>>
+using HashSet = std::unordered_set<T, H, E, Allocator<T>>;
+
+#endif
 
 } // namespace papilo
 

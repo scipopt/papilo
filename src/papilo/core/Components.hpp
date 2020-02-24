@@ -21,8 +21,8 @@
 /*                                                                           */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef _CORE_COMPONENTS_HPP_
-#define _CORE_COMPONENTS_HPP_
+#ifndef _PAPILO_CORE_COMPONENTS_HPP_
+#define _PAPILO_CORE_COMPONENTS_HPP_
 
 #include "papilo/core/Problem.hpp"
 #include "papilo/misc/Hash.hpp"

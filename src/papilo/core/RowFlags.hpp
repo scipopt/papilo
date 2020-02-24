@@ -21,8 +21,8 @@
 /*                                                                           */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef _CORE_ROW_FLAGS_HPP_
-#define _CORE_ROW_FLAGS_HPP_
+#ifndef _PAPILO_CORE_ROW_FLAGS_HPP_
+#define _PAPILO_CORE_ROW_FLAGS_HPP_
 
 #include "papilo/misc/Flags.hpp"
 

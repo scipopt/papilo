@@ -21,8 +21,8 @@
 /*                                                                           */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef _PARALLEL_COL_DETECTION_HPP_
-#define _PARALLEL_COL_DETECTION_HPP_
+#ifndef _PAPILO_PARALLEL_COL_DETECTION_HPP_
+#define _PAPILO_PARALLEL_COL_DETECTION_HPP_
 
 #include "papilo/core/PresolveMethod.hpp"
 #include "papilo/core/Problem.hpp"

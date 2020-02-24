@@ -21,8 +21,8 @@
 /*                                                                           */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef _CORE_CONSTRAINT_MATRIX_HPP_
-#define _CORE_CONSTRAINT_MATRIX_HPP_
+#ifndef _PAPILO_CORE_CONSTRAINT_MATRIX_HPP_
+#define _PAPILO_CORE_CONSTRAINT_MATRIX_HPP_
 
 #include "papilo/core/MatrixBuffer.hpp"
 #include "papilo/core/Objective.hpp"

@@ -21,8 +21,8 @@
 /*                                                                           */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef _IO_SOL_WRITER_HPP_
-#define _IO_SOL_WRITER_HPP_
+#ifndef _PAPILO_IO_SOL_WRITER_HPP_
+#define _PAPILO_IO_SOL_WRITER_HPP_
 
 #include "papilo/misc/Vec.hpp"
 #include "papilo/misc/fmt.hpp"

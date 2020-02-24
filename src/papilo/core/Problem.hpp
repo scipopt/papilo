@@ -21,8 +21,8 @@
 /*                                                                           */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef _CORE_PROBLEM_HPP_
-#define _CORE_PROBLEM_HPP_
+#ifndef _PAPILO_CORE_PROBLEM_HPP_
+#define _PAPILO_CORE_PROBLEM_HPP_
 
 #include "papilo/core/ConstraintMatrix.hpp"
 #include "papilo/core/Objective.hpp"

@@ -21,8 +21,8 @@
 /*                                                                           */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef MISC_WRAPPERS_HPP
-#define MISC_WRAPPERS_HPP
+#ifndef _PAPILO_MISC_WRAPPERS_HPP_
+#define _PAPILO_MISC_WRAPPERS_HPP_
 
 #include "papilo/misc/OptionsParser.hpp"
 #include <string>

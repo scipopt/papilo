@@ -21,8 +21,8 @@
 /*                                                                           */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef _CORE_NUM_HPP_
-#define _CORE_NUM_HPP_
+#ifndef _PAPILO_MISC_NUM_HPP_
+#define _PAPILO_MISC_NUM_HPP_
 
 #include "papilo/misc/ParameterSet.hpp"
 #include <cmath>

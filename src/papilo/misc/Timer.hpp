@@ -21,8 +21,8 @@
 /*                                                                           */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef _MISC_TIMER_HPP_
-#define _MISC_TIMER_HPP_
+#ifndef _PAPILO_MISC_TIMER_HPP_
+#define _PAPILO_MISC_TIMER_HPP_
 
 #include <tbb/tick_count.h>
 
