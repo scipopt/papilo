@@ -21,8 +21,8 @@
 /*                                                                           */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef PARSE_OPTIONS_HPP
-#define PARSE_OPTIONS_HPP
+#ifndef _PAPILO_MISC_OPTIONS_PARSER_HPP_
+#define _PAPILO_MISC_OPTIONS_PARSER_HPP_
 
 #include "papilo/misc/fmt.hpp"
 #include <boost/program_options.hpp>

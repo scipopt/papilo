@@ -21,8 +21,8 @@
 /*                                                                           */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef _MISC_FMT_HPP_
-#define _MISC_FMT_HPP_
+#ifndef _PAPILO_MISC_FMT_HPP_
+#define _PAPILO_MISC_FMT_HPP_
 
 #ifndef FMT_HEADER_ONLY
 #define FMT_HEADER_ONLY

@@ -21,8 +21,8 @@
 /*                                                                           */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef _MISC_SIGNATURE_HPP_
-#define _MISC_SIGNATURE_HPP_
+#ifndef _PAPILO_MISC_SIGNATURE_HPP_
+#define _PAPILO_MISC_SIGNATURE_HPP_
 
 #include "papilo/misc/Hash.hpp"
 #include <cmath>

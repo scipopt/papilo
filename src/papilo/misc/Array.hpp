@@ -21,8 +21,8 @@
 /*                                                                           */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef _MISC_ARRAY_HPP_
-#define _MISC_ARRAY_HPP_
+#ifndef _PAPILO_MISC_ARRAY_HPP_
+#define _PAPILO_MISC_ARRAY_HPP_
 
 #include "papilo/misc/Alloc.hpp"
 #include <cstdint>

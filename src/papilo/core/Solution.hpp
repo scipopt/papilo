@@ -21,8 +21,8 @@
 /*                                                                           */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef _CORE_SOLUTION_HPP_
-#define _CORE_SOLUTION_HPP_
+#ifndef _PAPILO_CORE_SOLUTION_HPP_
+#define _PAPILO_CORE_SOLUTION_HPP_
 
 namespace papilo
 {
