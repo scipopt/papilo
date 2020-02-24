@@ -49,7 +49,7 @@ jobs:
         tar xf ./scipoptsuite-${SCIP_VERSION}.tgz
         cmake -E make_directory ./scipoptsuite-${SCIP_VERSION}/build
         cd ./scipoptsuite-${SCIP_VERSION}/build
-        cmake .. -DCMAKE_BUILD_TYPE=Release
+        cmake .. -DCMAKE_BUILD_TYPE=Release -DGCG=off
         cmake --build .
         cmake --build . --target all_executables
         cpack -G STGZ
