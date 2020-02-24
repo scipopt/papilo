@@ -12,7 +12,9 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest]
+        os: [ubuntu-latest,macOS-latest]
+    env:
+      BOOST_ROOT:
 
     steps:
     - uses: actions/checkout@v1
@@ -40,8 +42,6 @@ jobs:
       working-directory: ${{runner.home}}
       run: |
         sudo apt-get update
-        echo $BOOST_ROOT
-        echo $Boost_ROOT
         sudo apt-get install libtbb2 gfortran libboost-dev libboost-iostreams-dev libboost-program-options-dev libboost-serialization-dev
         wget http://scip.zib.de/download/release/SCIPOptSuite-6.0.2-Linux.deb
         sudo apt-get install -f ./SCIPOptSuite-6.0.2-Linux.deb
