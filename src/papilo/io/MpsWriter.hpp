@@ -163,7 +163,7 @@ struct MpsWriter
       {
          if( obj.offset != REAL{0.0} )
             fmt::print( out, "    B         {: <9} {:.15}\n", "OBJ",
-                        double( -obj.offset ) );
+                        double( REAL( -obj.offset ) ) );
       }
 
       for( int i = 0; i < consmatrix.getNRows(); ++i )
