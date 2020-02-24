@@ -17,36 +17,47 @@ jobs:
       BOOST_ROOT:
       MAKEFLAGS: -j4
       CTEST_PARALLEL_LEVEL: 4
+      SCIP_VERSION: 6.0.2
 
     steps:
     - uses: actions/checkout@v1
 
-    - name: Install dependecies on OS-X
+    - name: Install dependencies on OS-X
       if: matrix.os == 'macOS-latest'
-      working-directory: ${{runner.home}}
       run: |
         brew update
         brew install boost tbb
-        wget http://scip.zib.de/download/release/scipoptsuite-6.0.2.tgz
-        tar xf ./scipoptsuite-6.0.2.tgz
-        mkdir ./scipoptsuite-6.0.2/build
-        cd ./scipoptsuite-6.0.2/build
-        cmake .. -DZIMPL=off
-        make
-        sudo make install
-      # wget http://scip.zib.de/download/release/SCIPOptSuite-6.0.2-Darwin-no-Ipopt.sh
-      # chmod +x SCIPOptSuite-6.0.2-Darwin-no-Ipopt.sh
-      # sudo ./SCIPOptSuite-6.0.2-Darwin-no-Ipopt.sh --prefix=/usr/local --skip-license
-      # scip -c r -c $GITHUB_WORKSPACE/test/instances/bell5.mps -c "o q"
 
-    - name: Install dependecies on ubuntu
+    - name: Install dependencies on ubuntu
       if: matrix.os == 'ubuntu-latest'
-      working-directory: ${{runner.home}}
       run: |
         sudo apt-get update
         sudo apt-get install libtbb2 gfortran libboost-dev libboost-iostreams-dev libboost-program-options-dev libboost-serialization-dev
-        wget http://scip.zib.de/download/release/SCIPOptSuite-6.0.2-Linux.deb
-        sudo apt-get install -f ./SCIPOptSuite-6.0.2-Linux.deb
+
+    - name: Provide Cached SCIP package
+      id: scip-cached
+      uses: actions/cache@v1
+      with:
+        path: ${{env.HOME}}/SCIPOptSuite.sh
+        key: scipoptsuite-${{env.SCIP_VERSION}}-${{ runner.os }}
+
+    - name: Create SCIP package
+      if: steps.scip-cached.outputs.cache-hit != 'true'
+      working-directory: ${{env.HOME}}
+      run: |
+        wget http://scip.zib.de/download/release/scipoptsuite-${SCIP_VERSION}.tgz
+        tar xf ./scipoptsuite-${SCIP_VERSION}.tgz
+        cmake -E make_directory ./scipoptsuite-${SCIP_VERSION}/build
+        cd ./scipoptsuite-${SCIP_VERSION}/build
+        cmake .. -DCMAKE_BUILD_TYPE=Release
+        cmake --build .
+        cmake --build . --target all_executables
+        cpack -G STGZ
+        chmod +x SCIPOptSuite-${SCIP_VERSION}*.sh
+        cp SCIPOptSuite-${SCIP_VERSION}*.sh $HOME/SCIPOptSuite.sh
+
+    - name: Install SCIP
+      run: sudo $HOME/SCIPOptSuite.sh --prefix=/usr/local --skip-license
 
     - name: Create Build Environment
       # Some projects don't allow in-source building, so create a separate build directory
