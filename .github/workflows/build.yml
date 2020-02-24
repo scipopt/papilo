@@ -24,6 +24,13 @@ jobs:
         brew update
         brew install boost
         brew install tbb
+        wget http://scip.zib.de/download/release/scipoptsuite-6.0.2.tgz
+        tar xf ./scipoptsuite-6.0.2.tgz
+        mkdir ./scipoptsuite-6.0.2/build
+        cd ./scipoptsuite-6.0.2/build
+        cmake .. -DZIMPL=off
+        make -j4
+        sudo make install
       # wget http://scip.zib.de/download/release/SCIPOptSuite-6.0.2-Darwin-no-Ipopt.sh
       # chmod +x SCIPOptSuite-6.0.2-Darwin-no-Ipopt.sh
       # sudo ./SCIPOptSuite-6.0.2-Darwin-no-Ipopt.sh --prefix=/usr/local --skip-license
@@ -33,7 +40,7 @@ jobs:
       working-directory: ${{runner.home}}
       run: |
         sudo apt-get update
-        sudo apt-get install libtbb2 gfortran libboost-all-dev
+        sudo apt-get install libtbb2 gfortran libboost-iostreams-dev libboost-program-options-dev libboost-serialization-dev
         wget http://scip.zib.de/download/release/SCIPOptSuite-6.0.2-Linux.deb
         sudo apt-get install -f ./SCIPOptSuite-6.0.2-Linux.deb
 
