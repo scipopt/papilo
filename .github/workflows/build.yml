@@ -12,7 +12,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest,macOS-latest]
+        os: [ubuntu-18.04,macos-10.15]
     env:
       BOOST_ROOT:
       MAKEFLAGS: -j4
@@ -23,26 +23,27 @@ jobs:
     - uses: actions/checkout@v1
 
     - name: Install dependencies on OS-X
-      if: matrix.os == 'macOS-latest'
+      if: runner.os == 'macOS'
       run: |
         brew update
         brew install boost tbb
 
     - name: Install dependencies on ubuntu
-      if: matrix.os == 'ubuntu-latest'
+      if: runner.os == 'Linux'
       run: |
         sudo apt-get update
         sudo apt-get install libtbb2 gfortran libboost-dev libboost-iostreams-dev libboost-program-options-dev libboost-serialization-dev
 
-    - name: Provide Cached SCIP package
-      id: scip-cached
+    - name: Cached SCIPOptSuite
+      id: cached-scip
+      working-directory: ${{env.HOME}}
       uses: actions/cache@v1
       with:
-        path: ${{env.HOME}}/SCIPOptSuite.sh
-        key: scipoptsuite-${{env.SCIP_VERSION}}-${{ runner.os }}
+        path: ./SCIPOptSuite.sh
+        key: scipoptsuite-${{env.SCIP_VERSION}}-${{ matrix.os }}
 
-    - name: Create SCIP package
-      if: steps.scip-cached.outputs.cache-hit != 'true'
+    - name: Package SCIPOptSuite
+      if: steps.cached-scip.outputs.cache-hit != 'true'
       working-directory: ${{env.HOME}}
       run: |
         wget http://scip.zib.de/download/release/scipoptsuite-${SCIP_VERSION}.tgz
