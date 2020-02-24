@@ -34,7 +34,7 @@ jobs:
       run: |
         sudo apt-get update
         sudo apt-get install libtbb2
-        wget http://scip.zib.de/download/release/SCIPOptSuite-$VERSION-Linux-Ub1604.deb
+        wget http://scip.zib.de/download/release/SCIPOptSuite-6.0.2-Linux-Ub1604.deb
         sudo apt-get install -f SCIPOptSuite-6.0.2-Linux-Ub1604.deb
 
     - name: Create Build Environment
