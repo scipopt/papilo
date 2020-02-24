@@ -39,7 +39,7 @@ jobs:
       uses: actions/cache@v1
       with:
         path: ./SCIPOptSuite
-        key: scipoptsuite-${{env.SCIP_VERSION}}-${{ matrix.os }}
+        key: scipoptsuite-${{env.SCIP_VERSION}}-${{ matrix.os }}-package
 
     - name: Package SCIPOptSuite
       if: steps.cached-scip.outputs.cache-hit != 'true'
