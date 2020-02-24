@@ -33,19 +33,9 @@ jobs:
       working-directory: ${{runner.home}}
       run: |
         sudo apt-get update
-        sudo apt-get install libtbb2 gfortran libboost-iostreams-dev libboost-program-options-dev libboost-serialization-dev
-      # wget http://scip.zib.de/download/release/SCIPOptSuite-6.0.2-Linux.deb
-      # sudo apt-get install -f ./SCIPOptSuite-6.0.2-Linux.deb
-
-    - name: Build SCIP
-      working-directory: ${{runner.home}}
-      run: |
-        wget http://scip.zib.de/download/release/scipoptsuite-6.0.2.tgz
-        tar xf ./scipoptsuite-6.0.2.tgz
-        mkdir ./scipoptsuite-6.0.2/build
-        cd ./scipoptsuite-6.0.2/build
-        cmake ..
-        make -j4 libscip
+        sudo apt-get install libtbb2 gfortran libboost-all-dev
+        wget http://scip.zib.de/download/release/SCIPOptSuite-6.0.2-Linux.deb
+        sudo apt-get install -f ./SCIPOptSuite-6.0.2-Linux.deb
 
     - name: Create Build Environment
       # Some projects don't allow in-source building, so create a separate build directory
@@ -61,8 +51,6 @@ jobs:
       # and build directories, but this is only available with CMake 3.13 and higher.  
       # The CMake binaries on the Github Actions machines are (as of this writing) 3.12
       run: cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DSOPLEX=off
-      env:
-        SCIP_DIR: ${{runner.workspace}}/scipoptsuite-6.0.2/build
 
     - name: Build
       working-directory: ${{runner.workspace}}/build
