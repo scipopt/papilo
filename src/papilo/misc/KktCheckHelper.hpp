@@ -22,8 +22,8 @@
 /*                                                                           */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef _MISC_KKT_CHECK_HELPER_HPP_
-#define _MISC_KKT_CHECK_HELPER_HPP_
+#ifndef _PAPILO_MISC_KKT_CHECK_HELPER_HPP_
+#define _PAPILO_MISC_KKT_CHECK_HELPER_HPP_
 
 #include <iostream>
 

@@ -21,8 +21,8 @@
 /*                                                                           */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef _MISC_COMPRESS_VECTOR_HPP_
-#define _MISC_COMPRESS_VECTOR_HPP_
+#ifndef _PAPILO_MISC_COMPRESS_VECTOR_HPP_
+#define _PAPILO_MISC_COMPRESS_VECTOR_HPP_
 
 #include "papilo/misc/Vec.hpp"
 #include <cassert>

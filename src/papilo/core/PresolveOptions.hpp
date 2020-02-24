@@ -21,8 +21,8 @@
 /*                                                                           */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef _CORE_PAPILO_OPTIONS_HPP_
-#define _CORE_PAPILO_OPTIONS_HPP_
+#ifndef _PAPILO_CORE_PRESOLVE_OPTIONS_HPP_
+#define _PAPILO_CORE_PRESOLVE_OPTIONS_HPP_
 
 #include "papilo/misc/ParameterSet.hpp"
 #include <type_traits>

@@ -21,8 +21,8 @@
 /*                                                                           */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef _MISC_PARAMETER_SET_HPP_
-#define _MISC_PARAMETER_SET_HPP_
+#ifndef _PAPILO_MISC_PARAMETER_SET_HPP_
+#define _PAPILO_MISC_PARAMETER_SET_HPP_
 
 #include "papilo/misc/Alloc.hpp"
 #include "papilo/misc/String.hpp"

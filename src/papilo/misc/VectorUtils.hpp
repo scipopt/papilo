@@ -22,8 +22,8 @@
 /*                                                                           */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef _MISC_VECTOR_UTILS_HPP_
-#define _MISC_VECTOR_UTILS_HPP_
+#ifndef _PAPILO_MISC_VECTOR_UTILS_HPP_
+#define _PAPILO_MISC_VECTOR_UTILS_HPP_
 
 #include "papilo/core/Problem.hpp"
 #include "papilo/core/RowFlags.hpp"

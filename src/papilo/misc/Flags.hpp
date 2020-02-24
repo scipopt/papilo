@@ -21,8 +21,8 @@
 /*                                                                           */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef _MISC_FLAGS_HPP_
-#define _MISC_FLAGS_HPP_
+#ifndef _PAPILO_MISC_FLAGS_HPP_
+#define _PAPILO_MISC_FLAGS_HPP_
 
 #include <cstdint>
 #include <type_traits>

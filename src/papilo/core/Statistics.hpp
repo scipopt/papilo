@@ -21,8 +21,8 @@
 /*                                                                           */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef _CORE_STATISTICS_HPP_
-#define _CORE_STATISTICS_HPP_
+#ifndef _PAPILO_CORE_STATISTICS_HPP_
+#define _PAPILO_CORE_STATISTICS_HPP_
 
 namespace papilo
 {

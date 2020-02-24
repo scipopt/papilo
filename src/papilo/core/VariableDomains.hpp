@@ -21,8 +21,8 @@
 /*                                                                           */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef _VARIABLE_DOMAINS_HPP_
-#define _VARIABLE_DOMAINS_HPP_
+#ifndef _PAPILO_CORE_VARIABLE_DOMAINS_HPP_
+#define _PAPILO_CORE_VARIABLE_DOMAINS_HPP_
 
 #include "papilo/misc/Flags.hpp"
 #include "papilo/misc/MultiPrecision.hpp"

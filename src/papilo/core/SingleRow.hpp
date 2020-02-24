@@ -21,8 +21,8 @@
 /*                                                                           */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef _CORE_SINGLE_ROW_HPP_
-#define _CORE_SINGLE_ROW_HPP_
+#ifndef _PAPILO_CORE_SINGLE_ROW_HPP_
+#define _PAPILO_CORE_SINGLE_ROW_HPP_
 
 #include "papilo/core/RowFlags.hpp"
 #include "papilo/core/VariableDomains.hpp"

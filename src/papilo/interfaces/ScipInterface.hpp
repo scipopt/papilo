@@ -21,8 +21,8 @@
 /*                                                                           */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef _INTERFACES_SCIP_INTERFACE_HPP_
-#define _INTERFACES_SCIP_INTERFACE_HPP_
+#ifndef _PAPILO_INTERFACES_SCIP_INTERFACE_HPP_
+#define _PAPILO_INTERFACES_SCIP_INTERFACE_HPP_
 
 #include "papilo/misc/Vec.hpp"
 #include <cassert>

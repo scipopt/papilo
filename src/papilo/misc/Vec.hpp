@@ -21,8 +21,8 @@
 /*                                                                           */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef _MISC_VEC_HPP_
-#define _MISC_VEC_HPP_
+#ifndef _PAPILO_MISC_VEC_HPP_
+#define _PAPILO_MISC_VEC_HPP_
 
 #include "papilo/misc/Alloc.hpp"
 #include <boost/container/small_vector.hpp>

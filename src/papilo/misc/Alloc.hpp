@@ -21,8 +21,8 @@
 /*                                                                           */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef _MISC_ALLOC_HPP_
-#define _MISC_ALLOC_HPP_
+#ifndef _PAPILO_MISC_ALLOC_HPP_
+#define _PAPILO_MISC_ALLOC_HPP_
 
 #include <memory>
 

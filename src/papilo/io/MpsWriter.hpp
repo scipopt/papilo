@@ -21,8 +21,8 @@
 /*                                                                           */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef _IO_MPS_WRITER_
-#define _IO_MPS_WRITER_
+#ifndef _PAPILO_IO_MPS_WRITER_
+#define _PAPILO_IO_MPS_WRITER_
 
 #include "papilo/core/Problem.hpp"
 #include "papilo/misc/Vec.hpp"

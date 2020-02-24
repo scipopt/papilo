@@ -21,8 +21,8 @@
 /*                                                                           */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef _MISC_STRING_HPP_
-#define _MISC_STRING_HPP_
+#ifndef _PAPILO_MISC_STRING_HPP_
+#define _PAPILO_MISC_STRING_HPP_
 
 #include "papilo/misc/Alloc.hpp"
 #include <string>

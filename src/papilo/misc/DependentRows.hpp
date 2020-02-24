@@ -21,8 +21,8 @@
 /*                                                                           */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef _MISC_DEPENDENT_ROWS_HPP_
-#define _MISC_DEPENDENT_ROWS_HPP_
+#ifndef _PAPILO_MISC_DEPENDENT_ROWS_HPP_
+#define _PAPILO_MISC_DEPENDENT_ROWS_HPP_
 
 #include "papilo/Config.hpp"
 
