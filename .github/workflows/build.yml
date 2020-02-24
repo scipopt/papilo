@@ -38,7 +38,7 @@ jobs:
       id: cached-scip
       uses: actions/cache@v1
       with:
-        path: $${env.HOME}}/SCIPOptSuite
+        path: ./SCIPOptSuite
         key: scipoptsuite-${{env.SCIP_VERSION}}-${{ matrix.os }}
 
     - name: Package SCIPOptSuite
@@ -54,12 +54,11 @@ jobs:
         cmake --build . --target all_executables
         cpack -G STGZ
         chmod +x SCIPOptSuite-${SCIP_VERSION}*.sh
-        cmake -E make_directory $HOME/SCIPOptSuite
-        cp SCIPOptSuite-${SCIP_VERSION}*.sh $HOME/SCIPOptSuite/install.sh
+        cmake -E make_directory $GITHUB_WORKSPACE/SCIPOptSuite
+        cp SCIPOptSuite-${SCIP_VERSION}*.sh $GITHUB_WORKSPACE/SCIPOptSuite/install.sh
 
     - name: Install SCIPOptSuite
-      working-directory: $${env.HOME}}/SCIPOptSuite
-      run: sudo ./install.sh --prefix=/usr/local --skip-license
+      run: sudo ./SCIPOptSuite/install.sh --prefix=/usr/local --skip-license
 
     - name: Create Build Environment
       # Some projects don't allow in-source building, so create a separate build directory
