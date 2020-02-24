@@ -181,6 +181,12 @@ else()
    set(PAPILO_HAVE_HIGHS 0)
 endif()
 
+if( CMAKE_SIZEOF_VOID_P EQUAL 8 )
+   set(PAPILO_USE_STANDARD_HASHMAP 0)
+else()
+   set(PAPILO_USE_STANDARD_HASHMAP 1)
+endif()
+
 configure_file("${PROJECT_SOURCE_DIR}/src/papilo/Config.hpp.in"
                "${PROJECT_BINARY_DIR}/papilo/Config.hpp")
 
