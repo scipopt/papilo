@@ -199,7 +199,7 @@ struct MpsWriter
                                    RowFlag::EQUALITY, RowFlag::REDUNDANT ) )
                continue;
 
-            double rangeval = double( rhs[i] - lhs[i] );
+            double rangeval = double( REAL( rhs[i] - lhs[i] ) );
 
             if( rangeval != 0 )
             {
