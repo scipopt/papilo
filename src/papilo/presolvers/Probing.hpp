@@ -21,8 +21,8 @@
 /*                                                                           */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef _PROBING_HPP_
-#define _PROBING_HPP_
+#ifndef _PAPILO_PRESOLVERS_PROBING_HPP_
+#define _PAPILO_PRESOLVERS_PROBING_HPP_
 
 #include "papilo/core/PresolveMethod.hpp"
 #include "papilo/core/ProbingView.hpp"
@@ -285,7 +285,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
 
    int currentbadgestart = 0;
 
-   int workinglimit = consMatrix.getNnz() * 2;
+   int64_t workinglimit = consMatrix.getNnz() * 2;
 
    const int nprobingcands = static_cast<int>( probing_cands.size() );
    int badgesize = 0;
@@ -379,7 +379,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
       if( infeasible.load( std::memory_order_relaxed ) )
          return PresolveStatus::INFEASIBLE;
 
-      int amountofwork = 0;
+      int64_t amountofwork = 0;
       int nfixings = 0;
       int nboundchgs = 0;
       int nsubstitutions = -substitutions.size();
@@ -470,7 +470,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
           "probing found: {} fixings, {} substitutions, {} bound changes\n",
           nfixings, nsubstitutions, nboundchgs );
 
-      int extrawork =
+      int64_t extrawork =
           ( ( 0.1 * ( nfixings + nsubstitutions ) + 0.01 * nboundchgs ) *
             consMatrix.getNnz() );
 

@@ -21,8 +21,8 @@
 /*                                                                           */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef _CORE_MATRIX_BUFFER_HPP_
-#define _CORE_MATRIX_BUFFER_HPP_
+#ifndef _PAPILO_CORE_MATRIX_BUFFER_HPP_
+#define _PAPILO_CORE_MATRIX_BUFFER_HPP_
 
 #include "papilo/core/SparseStorage.hpp"
 #include "papilo/misc/Vec.hpp"

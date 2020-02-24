@@ -21,8 +21,8 @@
 /*                                                                           */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef _CORE_PROBING_VIEW_HPP_
-#define _CORE_PROBING_VIEW_HPP_
+#ifndef _PAPILO_CORE_PROBING_VIEW_HPP_
+#define _PAPILO_CORE_PROBING_VIEW_HPP_
 
 #include "papilo/core/Problem.hpp"
 #include "papilo/core/SingleRow.hpp"
@@ -152,7 +152,7 @@ class ProbingView
       return substitutions;
    }
 
-   int
+   int64_t
    getAmountOfWork() const
    {
       return amountofwork;
@@ -216,7 +216,7 @@ class ProbingView
    Vec<ProbingBoundChg<REAL>> boundChanges;
    Vec<ProbingSubstitution<REAL>> substitutions;
 
-   int amountofwork;
+   int64_t amountofwork;
 };
 
 #ifdef PAPILO_USE_EXTERN_TEMPLATES

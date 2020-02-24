@@ -21,8 +21,8 @@
 /*                                                                           */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef _OBJECTIVE_HPP_
-#define _OBJECTIVE_HPP_
+#ifndef _PAPILO_CORE_OBJECTIVE_HPP_
+#define _PAPILO_CORE_OBJECTIVE_HPP_
 
 #include "papilo/misc/Vec.hpp"
 

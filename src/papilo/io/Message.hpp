@@ -21,8 +21,8 @@
 /*                                                                           */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef _IO_MESSAGE_HPP_
-#define _IO_MESSAGE_HPP_
+#ifndef _PAPILO_IO_MESSAGE_HPP_
+#define _PAPILO_IO_MESSAGE_HPP_
 
 #include "papilo/misc/ParameterSet.hpp"
 #include "papilo/misc/fmt.hpp"

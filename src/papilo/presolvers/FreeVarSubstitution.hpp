@@ -21,8 +21,8 @@
 /*                                                                           */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef _PRESOLVERS_FREEVAR_HPP_
-#define _PRESOLVERS_FREEVAR_HPP_
+#ifndef _PAPILO_PRESOLVERS_FREEVAR_HPP_
+#define _PAPILO_PRESOLVERS_FREEVAR_HPP_
 
 #include "papilo/core/PresolveMethod.hpp"
 #include "papilo/core/Problem.hpp"

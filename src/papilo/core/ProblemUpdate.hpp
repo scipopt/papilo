@@ -21,8 +21,8 @@
 /*                                                                           */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef _CORE_PROBLEM_UPDATE_HPP_
-#define _CORE_PROBLEM_UPDATE_HPP_
+#ifndef _PAPILO_CORE_PROBLEM_UPDATE_HPP_
+#define _PAPILO_CORE_PROBLEM_UPDATE_HPP_
 
 #include "papilo/core/MatrixBuffer.hpp"
 #include "papilo/core/Postsolve.hpp"

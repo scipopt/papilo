@@ -21,8 +21,8 @@
 /*                                                                           */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef _PRESOLVERS_DUAL_INFER_HPP_
-#define _PRESOLVERS_DUAL_INFER_HPP_
+#ifndef _PAPILO_PRESOLVERS_DUAL_INFER_HPP_
+#define _PAPILO_PRESOLVERS_DUAL_INFER_HPP_
 
 #include "papilo/core/PresolveMethod.hpp"
 #include "papilo/core/Problem.hpp"
@@ -195,12 +195,15 @@ DualInfer<REAL>::execute( const Problem<REAL>& problem,
          continue;
       }
 
-      int colweight = ( !cflags[c].test( ColFlag::LB_INF ) +
-                        !cflags[c].test( ColFlag::UB_INF ) ) *
-                          colsize[c] * ncols +
-                      colperm[c];
+      int64_t colweight = int64_t( !cflags[c].test( ColFlag::LB_INF ) +
+                                   !cflags[c].test( ColFlag::UB_INF ) ) *
+                              colsize[c] * ncols +
+                          colperm[c];
 
-      checkRedundantBounds.emplace_back( colweight, c );
+      checkRedundantBounds.emplace_back(
+          int( std::min( int64_t( std::numeric_limits<int>::max() ),
+                         colweight ) ),
+          c );
    }
 
    pdqsort( checkRedundantBounds.begin(), checkRedundantBounds.end(),

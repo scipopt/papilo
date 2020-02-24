@@ -21,8 +21,8 @@
 /*                                                                           */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef _INTERFACES_SOVLER_INTERFACE_HPP_
-#define _INTERFACES_SOVLER_INTERFACE_HPP_
+#ifndef _PAPILO_INTERFACES_SOLVER_INTERFACE_HPP_
+#define _PAPILO_INTERFACES_SOLVER_INTERFACE_HPP_
 
 #include "papilo/core/Components.hpp"
 #include "papilo/io/Message.hpp"

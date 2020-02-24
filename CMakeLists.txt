@@ -5,7 +5,7 @@ set(CMAKE_CXX_STANDARD 14)
 # set(CMAKE_CXX_EXTENSIONS OFF)
 # required for gcc if set(CMAKE_CXX_EXTENSIONS OFF) is used
 # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fext-numeric-literals")
-
+cmake_policy(SET CMP0074 NEW)
 # path to e.g. findGMP module
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/Modules)
 set(CMAKE_CXX_VISIBILITY_PRESET hidden)
@@ -181,6 +181,12 @@ else()
    set(PAPILO_HAVE_HIGHS 0)
 endif()
 
+if( CMAKE_SIZEOF_VOID_P EQUAL 8 )
+   set(PAPILO_USE_STANDARD_HASHMAP 0)
+else()
+   set(PAPILO_USE_STANDARD_HASHMAP 1)
+endif()
+
 configure_file("${PROJECT_SOURCE_DIR}/src/papilo/Config.hpp.in"
                "${PROJECT_BINARY_DIR}/papilo/Config.hpp")
 
@@ -216,6 +222,21 @@ include_directories(${SCIP_INCLUDE_DIRS} ${SOPLEX_INCLUDE_DIRS} ${HIGHS_INCLUDE_
 
 if(Boost_IOSTREAMS_FOUND AND Boost_SERIALIZATION_FOUND AND Boost_PROGRAM_OPTIONS_FOUND)
    add_executable(papilo-executable src/papilo.cpp)
+
+   if(SCIP_FOUND)
+      list(APPEND linked_solvers "SCIP")
+   endif()
+   if(SOPLEX_FOUND)
+      list(APPEND linked_solvers "SoPlex")
+   endif()
+   if(HIGHS_FOUND)
+      list(APPEND linked_solvers "HiGHS")
+   endif()
+   if(linked_solvers)
+      message(STATUS "Linking solvers: ${linked_solvers}")
+   else()
+      message(STATUS "No solvers linked")
+   endif()
    set_target_properties(papilo-executable PROPERTIES OUTPUT_NAME papilo RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin" )
    target_link_libraries(papilo-executable papilo-core ${SOPLEX_LIBRARIES} ${SCIP_LIBRARIES} ${HIGHS_LIBRARIES} ${Boost_LIBRARIES})
    target_compile_definitions(papilo-executable PRIVATE PAPILO_USE_EXTERN_TEMPLATES PAPILO_MPS_WRITER)

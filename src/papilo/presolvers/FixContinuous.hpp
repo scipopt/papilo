@@ -21,8 +21,8 @@
 /*                                                                           */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef _PRESOLVERS_FIX_CONTINUOUS_HPP_
-#define _PRESOLVERS_FIX_CONTINUOUS_HPP_
+#ifndef _PAPILO_PRESOLVERS_FIX_CONTINUOUS_HPP_
+#define _PAPILO_PRESOLVERS_FIX_CONTINUOUS_HPP_
 
 #include "papilo/core/PresolveMethod.hpp"
 #include "papilo/core/Problem.hpp"

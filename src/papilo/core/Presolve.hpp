@@ -21,8 +21,8 @@
 /*                                                                           */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef _CORE_PAPILO_HPP_
-#define _CORE_PAPILO_HPP_
+#ifndef _PAPILO_CORE_PRESOLVE_HPP_
+#define _PAPILO_CORE_PRESOLVE_HPP_
 
 #include <tbb/blocked_range.h>
 #include <tbb/parallel_for.h>

@@ -21,8 +21,8 @@
 /*                                                                           */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef _CORE_REDUCTIONS_HPP_
-#define _CORE_REDUCTIONS_HPP_
+#ifndef _PAPILO_CORE_REDUCTIONS_HPP_
+#define _PAPILO_CORE_REDUCTIONS_HPP_
 
 #include "papilo/misc/Vec.hpp"
 #include <cassert>

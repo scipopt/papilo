@@ -21,8 +21,8 @@
 /*                                                                           */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef _SPARSE_STORAGE_HPP_
-#define _SPARSE_STORAGE_HPP_
+#ifndef _PAPILO_CORE_SPARSE_STORAGE_HPP_
+#define _PAPILO_CORE_SPARSE_STORAGE_HPP_
 
 #include "papilo/misc/MultiPrecision.hpp"
 #include "papilo/misc/Vec.hpp"
@@ -889,10 +889,10 @@ SparseStorage<REAL>::shiftRows( const int* rowinds, int ninds,
                assert( rowranges[l - 1].end <= rowranges[l].start );
                assert( rowranges[l].end - rowranges[l].start ==
                        tmpvals.size() );
-               assert( memcmp( tmpvals.data(), &values[rowranges[l].start],
-                               tmpvals.size() ) == 0 );
-               assert( memcmp( tmpinds.data(), &columns[rowranges[l].start],
-                               tmpinds.size() ) == 0 );
+               assert( std::equal( tmpvals.begin(), tmpvals.end(),
+                                   &values[rowranges[l].start] ) );
+               assert( std::equal( tmpinds.begin(), tmpinds.end(),
+                                   &columns[rowranges[l].start] ) );
                ++l;
             }
          }
@@ -941,10 +941,10 @@ SparseStorage<REAL>::shiftRows( const int* rowinds, int ninds,
                assert( rowranges[r + 1].start >= rowranges[r].end );
                assert( rowranges[r].end - rowranges[r].start ==
                        tmpvals.size() );
-               assert( memcmp( tmpvals.data(), &values[rowranges[r].start],
-                               tmpvals.size() ) == 0 );
-               assert( memcmp( tmpinds.data(), &columns[rowranges[r].start],
-                               tmpinds.size() ) == 0 );
+               assert( std::equal( tmpvals.begin(), tmpvals.end(),
+                                   &values[rowranges[r].start] ) );
+               assert( std::equal( tmpinds.begin(), tmpinds.end(),
+                                   &columns[rowranges[r].start] ) );
                --r;
             }
          }

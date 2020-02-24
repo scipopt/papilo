@@ -21,8 +21,8 @@
 /*                                                                           */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef _MISC_STABLE_SUM_HPP_
-#define _MISC_STABLE_SUM_HPP_
+#ifndef _PAPILO_MISC_STABLE_SUM_HPP_
+#define _PAPILO_MISC_STABLE_SUM_HPP_
 
 #include "papilo/misc/Num.hpp"
 
