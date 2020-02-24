@@ -22,7 +22,7 @@ jobs:
     steps:
     - uses: actions/checkout@v1
 
-    - name: Install dependencies on OS-X
+    - name: Install dependencies on mac OS
       if: runner.os == 'macOS'
       run: |
         brew update
