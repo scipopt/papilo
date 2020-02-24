@@ -15,6 +15,8 @@ jobs:
         os: [ubuntu-latest,macOS-latest]
     env:
       BOOST_ROOT:
+      MAKEFLAGS: -j4
+      CTEST_PARALLEL_LEVEL: 4
 
     steps:
     - uses: actions/checkout@v1
@@ -24,18 +26,17 @@ jobs:
       working-directory: ${{runner.home}}
       run: |
         brew update
-        brew install boost
-        brew install tbb
-        wget http://scip.zib.de/download/release/scipoptsuite-6.0.2.tgz
-        tar xf ./scipoptsuite-6.0.2.tgz
-        mkdir ./scipoptsuite-6.0.2/build
-        cd ./scipoptsuite-6.0.2/build
-        cmake .. -DZIMPL=off
-        make -j4
-        sudo make install
-      # wget http://scip.zib.de/download/release/SCIPOptSuite-6.0.2-Darwin-no-Ipopt.sh
-      # chmod +x SCIPOptSuite-6.0.2-Darwin-no-Ipopt.sh
-      # sudo ./SCIPOptSuite-6.0.2-Darwin-no-Ipopt.sh --prefix=/usr/local --skip-license
+        brew install boost tbb gmp zlib
+        wget http://scip.zib.de/download/release/SCIPOptSuite-6.0.2-Darwin-no-Ipopt.sh
+        chmod +x SCIPOptSuite-6.0.2-Darwin-no-Ipopt.sh
+        sudo ./SCIPOptSuite-6.0.2-Darwin-no-Ipopt.sh --prefix=/usr/local --skip-license
+      # wget http://scip.zib.de/download/release/scipoptsuite-6.0.2.tgz
+      # tar xf ./scipoptsuite-6.0.2.tgz
+      # mkdir ./scipoptsuite-6.0.2/build
+      # cd ./scipoptsuite-6.0.2/build
+      # cmake .. -DZIMPL=off
+      # make
+      # sudo make install
 
     - name: Install dependecies on ubuntu
       if: matrix.os == 'ubuntu-latest'
@@ -65,11 +66,11 @@ jobs:
       working-directory: ${{runner.workspace}}/build
       shell: bash
       # Execute the build.  You can specify a specific target with "--target <NAME>"
-      run: cmake --build . --config $BUILD_TYPE -- VERBOSE=true -j2
+      run: cmake --build . --config $BUILD_TYPE
 
     - name: Test
       working-directory: ${{runner.workspace}}/build
       shell: bash
       # Execute tests defined by the CMake configuration.  
       # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
-      run: ctest -C $BUILD_TYPE --verbose
+      run: ctest -C $BUILD_TYPE
