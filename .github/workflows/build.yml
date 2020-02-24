@@ -17,8 +17,8 @@ jobs:
     steps:
     - uses: actions/checkout@v1
 
-    - name: Install boost on OS X
-      runs-on: macOS-latest
+    - name: Install dependecies on OS-X
+      if: matrix.os == 'macOS-latest'
       run: sudo brew install boost
 
     - name: Create Build Environment
