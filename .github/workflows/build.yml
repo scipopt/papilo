@@ -33,7 +33,7 @@ jobs:
       working-directory: ${{runner.home}}
       run: |
         sudo apt-get update
-        sudo apt-get install libtbb2
+        sudo apt-get install libtbb2 gfortran
         wget http://scip.zib.de/download/release/SCIPOptSuite-6.0.2-Linux.deb
         sudo apt-get install -f ./SCIPOptSuite-6.0.2-Linux.deb
 
