@@ -19,7 +19,7 @@ jobs:
 
     - name: Install dependecies on OS-X
       if: matrix.os == 'macOS-latest'
-      working-directory: ${{home}}
+      working-directory: ${{runner.home}}
       run: |
         brew update
         brew install boost
@@ -30,7 +30,7 @@ jobs:
 
     - name: Install dependecies on ubuntu
       if: matrix.os == 'ubuntu-latest'
-      working-directory: ${{home}}
+      working-directory: ${{runner.home}}
       run: |
         sudo apt-get update
         sudo apt-get install libtbb2
