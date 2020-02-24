@@ -56,7 +56,7 @@ jobs:
         chmod +x SCIPOptSuite-${SCIP_VERSION}*.sh
         cp SCIPOptSuite-${SCIP_VERSION}*.sh $GITHUB_WORKSPACE/SCIPOptSuite.sh
 
-    - name: Install SCIP
+    - name: Install SCIPOptSuite
       run: sudo ./SCIPOptSuite.sh --prefix=/usr/local --skip-license
 
     - name: Create Build Environment
