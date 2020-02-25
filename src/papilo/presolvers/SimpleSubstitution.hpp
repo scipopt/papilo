@@ -125,8 +125,8 @@ SimpleSubstitution<REAL>::execute( const Problem<REAL>& problem,
       {
          assert( cflags[inds[1]].test( ColFlag::INTEGRAL ) );
          if( abs( vals[0] ) < abs( vals[1] ) ||
-             abs( vals[0] ) == abs( vals[1] ) &&
-                 problemUpdate.isColBetterForSubstitution( inds[0], inds[1] ) )
+             ( abs( vals[0] ) == abs( vals[1] ) &&
+               problemUpdate.isColBetterForSubstitution( inds[0], inds[1] ) ) )
             subst = 0;
          else
             subst = 1;
