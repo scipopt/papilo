@@ -1,3 +1,5 @@
+# Taken from https://github.com/bluescarni/mppp/blob/master/cmake/FindQuadmath.cmake
+
 # Originally copied from the KDE project repository:
 # http://websvn.kde.org/trunk/KDE/kdeutils/cmake/modules/FindGMP.cmake?view=markup&pathrev=675218
 
