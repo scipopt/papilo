@@ -284,6 +284,7 @@ class Postsolve
       start.push_back( values.size() );
    }
 
+   // TODO add mechanism for saving columns as well
    Vec<int> row_stack_index;
 };
 
@@ -297,7 +298,9 @@ template <typename REAL>
 void
 Postsolve<REAL>::notifyRedundantRow( const int row )
 {
-
+   // TODO, this must get the index of the saved row (index in postsolve stack),
+   //       and additionally the current problem index of the row which we map
+   //       to the original problem and can store it inside the value
    types.push_back( ReductionType::REDUNDANT_ROW );
    indices.push_back( row );
    values.push_back( 0 );
@@ -309,6 +312,7 @@ template <typename REAL>
 void
 Postsolve<REAL>::notifyDeletedCol( const int col )
 {
+   // TODO Same as with notify redundant row above
    types.push_back( ReductionType::DELETED_COL );
    indices.push_back( col );
    values.push_back( 0 );
@@ -322,6 +326,11 @@ Postsolve<REAL>::notifyBoundChange( const bool is_row, const bool is_lower,
                                     const int row, const int col,
                                     const REAL old_bound, const REAL new_bound )
 {
+   // TODO, this is probably not needed due to the bound relaxing strategy I'll
+   // add for constraint propagation, instead there should be a function
+   // notifyForcingRow. This is called for the case where a row forces a column
+   // upper bound to its lower bound and the column is fixed as a result, or the
+   // other way around.
    types.push_back( ReductionType::BOUND_CHANGE );
    if( is_row && is_lower )
       indices.push_back( 0 );
@@ -348,6 +357,8 @@ Postsolve<REAL>::notifyReducedBoundsAndCost(
     const Vec<REAL>& row_ub, const Vec<REAL>& cost,
     const Vec<RowFlags>& row_flags, const Vec<ColFlags>& col_flags )
 {
+   // TODO for what is this notification required? Can you add comments?
+
    types.push_back( ReductionType::REDUCED_BOUNDS_COST );
 
    // would be better to only pass finite values, not all
@@ -403,6 +414,7 @@ Postsolve<REAL>::notifyFixedCol( int col, const REAL val,
 
    if( postsolveType == PostsolveType::FULL )
    {
+      // TODO this should probably use the saveCol mechanism
       const int length = colvec.getLength();
       indices.push_back( length );
       values.push_back( cost[origcol_mapping[col]] );
@@ -426,6 +438,9 @@ Postsolve<REAL>::notifySingletonRow( const int row, const int col,
                                      const REAL coeff, const Vec<REAL>& cost,
                                      const SparseVectorView<REAL>& colvec )
 {
+   // TODO: in general it would be good for all the notify functions, now that
+   // there are so many to have comments that say which information needs to be
+   // stored for which postsolve type
    types.push_back( ReductionType::SINGLETON_ROW );
    indices.push_back( origrow_mapping[row] );
    values.push_back( 0 );
@@ -455,6 +470,7 @@ template <typename REAL>
 void
 Postsolve<REAL>::notifyDualValue( bool is_column_dual, int index, REAL value )
 {
+   // TODO, for which reduction is this notify function for?
    // Pushing zero so I don't modity finishNotify()'s assert (for the moment)
    if( is_column_dual )
       types.push_back( ReductionType::COLUMN_DUAL_VALUE );
@@ -466,6 +482,7 @@ Postsolve<REAL>::notifyDualValue( bool is_column_dual, int index, REAL value )
    finishNotify();
 }
 
+// TODO remove dead code if not needed anymore
 // template <typename REAL>
 // void
 // Postsolve<REAL>::notifySavedRow( int row,
@@ -571,6 +588,15 @@ Postsolve<REAL>::notifySubstitution( int col,
                                      SparseVectorView<REAL> equalityLHS,
                                      REAL equalityRHS )
 {
+   // TODO: depending on the postsolve type I guess we need to save also the
+   //       column, but for this branch lets focus on a working dual postsolve
+   //       only for the trivial presolve and lets add tests for that. Simple
+   //       tests could basically just read the MIP  instances in test/instances
+   //       folder, then discard integrality information, and apply a presolve
+   //       procedure that only uses trivial presolve. I think when this is done
+   //       I will add a flag to the presolvers for which postsolve type they
+   //       are compatible and default all to only primal. Then we can work on
+   //       adding more and more presolvers in later merge requests.
    const REAL* coefs = equalityLHS.getValues();
    const int* columns = equalityLHS.getIndices();
    const int length = equalityLHS.getLength();
