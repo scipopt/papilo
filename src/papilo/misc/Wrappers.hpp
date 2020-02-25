@@ -28,7 +28,7 @@
 #include <string>
 #include <utility>
 
-#include <tbb/tick_count.h>
+#include "tbb/tick_count.h"
 
 #include "papilo/core/Postsolve.hpp"
 #include "papilo/core/Presolve.hpp"

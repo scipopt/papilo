@@ -34,8 +34,8 @@
 #include "papilo/misc/String.hpp"
 #include "papilo/misc/Vec.hpp"
 #include "papilo/misc/fmt.hpp"
-#include <tbb/blocked_range.h>
-#include <tbb/parallel_for.h>
+#include "tbb/blocked_range.h"
+#include "tbb/parallel_for.h"
 
 namespace papilo
 {

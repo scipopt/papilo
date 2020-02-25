@@ -34,12 +34,12 @@
 #include "papilo/misc/Vec.hpp"
 #include "papilo/misc/compress_vector.hpp"
 #include "papilo/misc/fmt.hpp"
+#include "tbb/blocked_range.h"
+#include "tbb/combinable.h"
+#include "tbb/concurrent_vector.h"
+#include "tbb/parallel_for.h"
 #include <atomic>
 #include <boost/functional/hash.hpp>
-#include <tbb/blocked_range.h>
-#include <tbb/combinable.h>
-#include <tbb/concurrent_vector.h>
-#include <tbb/parallel_for.h>
 
 namespace papilo
 {

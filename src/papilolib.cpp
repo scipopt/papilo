@@ -108,10 +108,10 @@ struct AllocatorTraits<T>
 #include "papilo/core/VariableDomains.hpp"
 #include "papilo/misc/MultiPrecision.hpp"
 
+#include "tbb/tick_count.h"
 #include <boost/program_options.hpp>
 #include <cassert>
 #include <fstream>
-#include <tbb/tick_count.h>
 
 #include "papilo/core/ProblemBuilder.hpp"
 #include "papilo/interfaces/ScipInterface.hpp"

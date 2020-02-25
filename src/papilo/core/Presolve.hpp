@@ -24,11 +24,11 @@
 #ifndef _PAPILO_CORE_PRESOLVE_HPP_
 #define _PAPILO_CORE_PRESOLVE_HPP_
 
-#include <tbb/blocked_range.h>
-#include <tbb/parallel_for.h>
-#include <tbb/partitioner.h>
-#include <tbb/task_arena.h>
-#include <tbb/tick_count.h>
+#include "tbb/blocked_range.h"
+#include "tbb/parallel_for.h"
+#include "tbb/partitioner.h"
+#include "tbb/task_arena.h"
+#include "tbb/tick_count.h"
 
 #include <cctype>
 #include <fstream>
