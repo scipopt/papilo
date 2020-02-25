@@ -850,13 +850,14 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
          int length = (int)values[first];
          bool lb_inf = false;
          bool ub_inf = false;
-         if( indices[1] )
+         if( indices[first + 1] )
             lb_inf = true;
-         if( indices[2] )
+         if( indices[first + 2] )
             ub_inf = true;
 
-         checker.addRowToProblem( row, length, &values[3], &indices[3],
-                                  values[1], values[2], lb_inf, ub_inf );
+         checker.addRowToProblem( row, length, &values[first + 3],
+                                  &indices[first + 3], values[first + 1],
+                                  values[first + 2], lb_inf, ub_inf );
          break;
       }
       case ReductionType::FIXED_COL:
