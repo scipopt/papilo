@@ -28,7 +28,7 @@
 
 #include <boost/serialization/split_free.hpp>
 
-#ifdef PREOLVE_HAVE_FLOAT128
+#ifdef PAPILO_HAVE_FLOAT128
 #include <boost/multiprecision/float128.hpp>
 namespace papilo
 {
