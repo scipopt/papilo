@@ -846,11 +846,12 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
          break;
       case ReductionType::SAVE_ROW:
       {
-         //TODO I think this and the SAVE_COL step should just be skipped
+         // TODO I think this and the SAVE_COL step should just be skipped
          //     we only want to restore redundant rows that have been removed
-         //     not all saved rows. Saved row has no logical implications for postsolve
-         //     it should just give the deleted row a new index within the postsolve structure
-         //     this index would be used by the undo redundant col I guess.
+         //     not all saved rows. Saved row has no logical implications for
+         //     postsolve it should just give the deleted row a new index within
+         //     the postsolve structure this index would be used by the undo
+         //     redundant col I guess.
          int row = indices[first];
          int length = (int)values[first];
          bool lb_inf = false;
