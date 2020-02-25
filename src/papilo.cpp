@@ -33,10 +33,10 @@
 #include "papilo/misc/Wrappers.hpp"
 #include <papilo/Config.hpp>
 
+#include "tbb/tick_count.h"
 #include <boost/program_options.hpp>
 #include <cassert>
 #include <fstream>
-#include <tbb/tick_count.h>
 
 #ifdef PAPILO_HAVE_SCIP
 
