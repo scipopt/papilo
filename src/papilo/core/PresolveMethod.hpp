@@ -32,8 +32,8 @@
 #include "papilo/misc/Num.hpp"
 #include "papilo/misc/Vec.hpp"
 #include "papilo/misc/fmt.hpp"
+#include "tbb/tick_count.h"
 #include <bitset>
-#include <tbb/tick_count.h>
 
 namespace papilo
 {

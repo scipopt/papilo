@@ -84,8 +84,8 @@ CoefficientStrengthening<REAL>::execute(
       const int len = rowcoefficients.getLength();
       const int* coefindices = rowcoefficients.getIndices();
 
-      if( !rflags[i].test( RowFlag::LHS_INF ) &&
-              !rflags[i].test( RowFlag::RHS_INF ) ||
+      if( ( !rflags[i].test( RowFlag::LHS_INF ) &&
+            !rflags[i].test( RowFlag::RHS_INF ) ) ||
           len <= 1 )
          continue;
 

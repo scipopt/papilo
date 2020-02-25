@@ -34,6 +34,7 @@
 #include "papilo/misc/fmt.hpp"
 #include <fstream>
 
+#include "tbb/parallel_invoke.h"
 #include <boost/archive/text_iarchive.hpp>
 #include <boost/archive/text_oarchive.hpp>
 #include <boost/archive/tmpdir.hpp>
@@ -41,7 +42,6 @@
 #include <boost/serialization/list.hpp>
 #include <boost/serialization/utility.hpp>
 #include <boost/serialization/vector.hpp>
-#include <tbb/parallel_invoke.h>
 
 namespace papilo
 {
