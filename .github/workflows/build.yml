@@ -45,7 +45,7 @@ jobs:
       if: runner.os == 'Windows' && steps.cached-scip.outputs.cache-hit != 'true'
       run: |
         cmake -E make_directory $GITHUB_WORKSPACE\SCIPOptSuite
-        wget http://scip.zib.de/download/release/SCIPOptSuite-${SCIP_VERSION}-win64-VS15.exe -OutFile $GITHUB_WORKSPACE\SCIPOptSuite\install.exe
+        Invoke-WebRequest -Uri "http://scip.zib.de/download/release/SCIPOptSuite-${SCIP_VERSION}-win64-VS15.exe" -OutFile "$GITHUB_WORKSPACE\SCIPOptSuite\install.exe"
 
     - name: Package SCIPOptSuite
       if:  runner.os != 'Windows' && steps.cached-scip.outputs.cache-hit != 'true'
