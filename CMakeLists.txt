@@ -67,64 +67,18 @@ else()
    set(PAPILO_GITHASH_AVAILABLE 0)
 endif()
 
-# look for installed tbb library and headers
-find_library(TBB_INSTALLED_LIBRARY NAMES tbb libtbb.so.2)
-if(TBB_INSTALLED_LIBRARY)
-   # always use the TBB includes packaged with papilo to avoid incompatibilities
-   set(TBB_INCLUDES "${PROJECT_SOURCE_DIR}/external/tbb/include")
-   install(DIRECTORY
-      ${PROJECT_SOURCE_DIR}/external/tbb/include/tbb
-      DESTINATION include/papilo-external)
-   set(TBB_INSTALL_INCLUDES "\$ENV{DESTDIR}\${CMAKE_INSTALL_PREFIX}/include/papilo-external")
-
-   # if they where found, install a config file
-   get_filename_component(TBB_INSTALLED_LIB_DIR ${TBB_INSTALLED_LIBRARY} DIRECTORY)
-   message(STATUS "Found installed TBB: ${TBB_INSTALLED_LIBRARY}")
-   include(${PROJECT_SOURCE_DIR}/external/tbb/cmake/TBBInstallConfig.cmake)
-   tbb_install_config(INSTALL_DIR ${CMAKE_BINARY_DIR}
-                     SYSTEM_NAME ${CMAKE_SYSTEM_NAME}
-                     LIB_PATH ${TBB_INSTALLED_LIB_DIR} BIN_PATH ${TBB_INSTALLED_LIB_DIR}
-                     INC_PATH ${TBB_INCLUDES})
-   set(TBB_DIR "${CMAKE_BINARY_DIR}")
-   install(CODE "
-include(${PROJECT_SOURCE_DIR}/external/tbb/cmake/TBBInstallConfig.cmake)
-tbb_install_config(INSTALL_DIR \$ENV{DESTDIR}\${CMAKE_INSTALL_PREFIX}/lib/cmake/papilo
-                     SYSTEM_NAME ${CMAKE_SYSTEM_NAME}
-                     LIB_PATH ${TBB_INSTALLED_LIB_DIR} BIN_PATH ${TBB_INSTALLED_LIB_DIR}
-                     INC_PATH ${TBB_INSTALL_INCLUDES})")
-else()
-      include(${PROJECT_SOURCE_DIR}/external/tbb/cmake/TBBBuild.cmake)
-      tbb_build(TBB_ROOT ${PROJECT_SOURCE_DIR}/external/tbb CONFIG_DIR TBB_DIR MAKE_ARGS tbb_build_dir=${CMAKE_CURRENT_BINARY_DIR} tbb_build_prefix=tbb)
-      install(DIRECTORY
-         ${PROJECT_SOURCE_DIR}/external/tbb/include/tbb
-         DESTINATION include/papilo-external)
-
-      find_library(TBB_LIBRARY_LOCATION NAMES libtbb.so.2 tbb PATHS ${CMAKE_CURRENT_BINARY_DIR}/tbb_release)
-
-      install(FILES
-         ${TBB_LIBRARY_LOCATION}
-         DESTINATION lib)
-
-      install(CODE "
-include(${PROJECT_SOURCE_DIR}/external/tbb/cmake/TBBInstallConfig.cmake)
-tbb_install_config(INSTALL_DIR \$ENV{DESTDIR}\${CMAKE_INSTALL_PREFIX}/lib/cmake/papilo SYSTEM_NAME ${CMAKE_SYSTEM_NAME}
-   TBB_VERSION_FILE ${PROJECT_SOURCE_DIR}/external/tbb/include/tbb/tbb_stddef.h
-   LIB_REL_PATH ../../../lib INC_REL_PATH ../../../include/papilo-external)
-   ")
-endif()
-
-find_package(TBB REQUIRED tbb)
-
 add_library(papilo INTERFACE)
 target_include_directories(papilo INTERFACE
    $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}>
    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src>
    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/external>
+   $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/external/tbb/include>
    $<INSTALL_INTERFACE:include>
    $<INSTALL_INTERFACE:include/papilo-external>
    ${Boost_INCLUDE_DIRS})
 
-target_link_libraries(papilo INTERFACE ${TBB_IMPORTED_TARGETS} ${QUADMATH_IMPORTED_TARGET} ${GMP_LIBRARIES})
+find_package(TBB MODULE REQUIRED)
+target_link_libraries(papilo INTERFACE ${TBB_LIBRARY} ${QUADMATH_IMPORTED_TARGET} ${GMP_LIBRARIES})
 
 if(LUSOL)
    include(CheckLanguage)
@@ -341,6 +295,11 @@ install(FILES
    ${PROJECT_SOURCE_DIR}/src/papilo/presolvers/Sparsify.hpp
    DESTINATION include/papilo/presolvers)
 
+# install external library header files
+install(DIRECTORY
+   ${PROJECT_SOURCE_DIR}/external/tbb/include/tbb
+   DESTINATION include/papilo-external)
+
 install(FILES
    ${PROJECT_SOURCE_DIR}/external/fmt/chrono.h
    ${PROJECT_SOURCE_DIR}/external/fmt/color.h
@@ -373,13 +332,11 @@ install(FILES
 
 # configure the config file for the build tree
 set(QUADMATH_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/Modules)
-set(TBB_CONFIG_LOCATION ${TBB_DIR})
 configure_file(${PROJECT_SOURCE_DIR}/papilo-config.cmake.in
   "${CMAKE_BINARY_DIR}/papilo-config.cmake" @ONLY)
 
 # configure and install config file for installation
 set(QUADMATH_MODULE_PATH "\${CMAKE_CURRENT_LIST_DIR}")
-set(TBB_CONFIG_LOCATION "\${CMAKE_CURRENT_LIST_DIR}")
 configure_file(${PROJECT_SOURCE_DIR}/papilo-config.cmake.in
     "${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/papilo-config.cmake" @ONLY)
 
