@@ -12,7 +12,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-18.04,ubuntu-16.04,macos-10.15]
+        os: [windows-latest]
     env:
       BOOST_ROOT:
       MAKEFLAGS: -j4
@@ -41,8 +41,14 @@ jobs:
         path: ./SCIPOptSuite
         key: scipoptsuite-${{env.SCIP_VERSION}}-${{ matrix.os }}-package
 
+    - name: Download SCIPOptSuite on windows
+      if: runner.os == 'Windows' && steps.cached-scip.outputs.cache-hit != 'true'
+      run: |
+        cmake -E make_directory $GITHUB_WORKSPACE\SCIPOptSuite
+        wget http://scip.zib.de/download/release/SCIPOptSuite-${SCIP_VERSION}-win64-VS15.exe -OutFile $GITHUB_WORKSPACE\SCIPOptSuite\install.exe
+
     - name: Package SCIPOptSuite
-      if: steps.cached-scip.outputs.cache-hit != 'true'
+      if:  runner.os != 'Windows' && steps.cached-scip.outputs.cache-hit != 'true'
       run: |
         cd $HOME
         wget http://scip.zib.de/download/release/scipoptsuite-${SCIP_VERSION}.tgz
@@ -58,7 +64,12 @@ jobs:
         cp SCIPOptSuite-${SCIP_VERSION}*.sh $GITHUB_WORKSPACE/SCIPOptSuite/install.sh
 
     - name: Install SCIPOptSuite
+      if: runner.os != 'Windows'
       run: sudo ./SCIPOptSuite/install.sh --prefix=/usr/local --skip-license
+
+    - name: Install SCIPOptSuite on Windows
+      if: runner.os == 'Windows'
+      run: Invoke-Command -ScriptBlock $GITHUB_WORKSPACE\SCIPOptSuite\install.exe /S /v/qn
 
     - name: Create Build Environment
       # Some projects don't allow in-source building, so create a separate build directory
