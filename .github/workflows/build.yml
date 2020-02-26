@@ -44,8 +44,8 @@ jobs:
     - name: Download dependencies for windows
       if: runner.os == 'Windows' && steps.cached-dependencies.outputs.cache-hit != 'true'
       run: |
-        cmake -E make_directory $GITHUB_WORKSPACE/Dependencies
-        Invoke-WebRequest -Uri "http://scip.zib.de/download/release/SCIPOptSuite-6.0.2-win64-VS15.exe" -OutFile "$GITHUB_WORKSPACE\Dependencies\scipoptsuite.exe"
+        cmake -E make_directory ${{runner.workspace}}/Dependencies
+        Invoke-WebRequest -Uri "http://scip.zib.de/download/release/SCIPOptSuite-$env:SCIP_VERSION-win64-VS15.exe" -OutFile "${{runner.workspace}}\Dependencies\scipoptsuite.exe"
 
     - name: Package SCIPOptSuite
       if:  runner.os != 'Windows' && steps.cached-scip.outputs.cache-hit != 'true'
