@@ -8,8 +8,9 @@ rm -f $NAME.tar
 echo ">>> Packaging $NAME."
 
 # echo "store git hash"
-# GITHASH=`git describe --always --dirty  | sed 's/^.*-g//'`
-# echo "#define PRESOL_GITHASH \"$GITHASH\"" > src/presol/git_hash.cpp
+GITHASH=`git describe --always --dirty  | sed 's/^.*-g//'`
+sed -i "s/undef PAPILO_GITHASH_AVAILABLE/define PAPILO_GITHASH_AVAILABLE/g" src/papilo/Config.hpp
+sed -i "s/undef PAPILO_GITHASH/define PAPILO_GITHASH \"$GITHASH\"/g" src/papilo/Config.hpp
 
 # Before we create a tarball change the directory and file rights in a command way
 echo "adjust file modes"
