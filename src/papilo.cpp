@@ -139,44 +139,44 @@ main( int argc, char* argv[] )
    // run the command passed as argument
    switch( optionsInfo.command )
    {
-   case Command::NONE:
+   case Command::kNone:
       return 1;
-   case Command::PRESOLVE:
-   case Command::SOLVE:
+   case Command::kPresolve:
+   case Command::kSolve:
       switch( optionsInfo.arithmetic_type )
       {
-      case ArithmeticType::DOUBLE:
+      case ArithmeticType::kDouble:
          if( presolve_and_solve<double>(
                  optionsInfo, get_lp_solver_factory<double>( optionsInfo ),
                  get_mip_solver_factory<double>( optionsInfo ) ) !=
-             ResultStatus::OK )
+             ResultStatus::kOk )
             return 1;
          break;
-      case ArithmeticType::QUAD:
+      case ArithmeticType::kQuad:
          if( presolve_and_solve<Quad>(
                  optionsInfo, get_lp_solver_factory<Quad>( optionsInfo ),
                  get_mip_solver_factory<Quad>( optionsInfo ) ) !=
-             ResultStatus::OK )
+             ResultStatus::kOk )
             return 1;
          break;
-      case ArithmeticType::RATIONAL:
+      case ArithmeticType::kRational:
          if( presolve_and_solve<Rational>(
                  optionsInfo, get_lp_solver_factory<Rational>( optionsInfo ),
                  get_mip_solver_factory<Rational>( optionsInfo ) ) !=
-             ResultStatus::OK )
+             ResultStatus::kOk )
             return 1;
       }
       break;
-   case Command::POSTSOLVE:
+   case Command::kPostsolve:
       switch( optionsInfo.arithmetic_type )
       {
-      case ArithmeticType::DOUBLE:
+      case ArithmeticType::kDouble:
          postsolve<double>( optionsInfo );
          break;
-      case ArithmeticType::QUAD:
+      case ArithmeticType::kQuad:
          postsolve<Quad>( optionsInfo );
          break;
-      case ArithmeticType::RATIONAL:
+      case ArithmeticType::kRational:
          postsolve<Rational>( optionsInfo );
       }
    }

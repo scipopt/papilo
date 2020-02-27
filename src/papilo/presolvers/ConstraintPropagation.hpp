@@ -39,7 +39,7 @@ class ConstraintPropagation : public PresolveMethod<REAL>
    ConstraintPropagation() : PresolveMethod<REAL>()
    {
       this->setName( "propagation" );
-      this->setTiming( PresolverTiming::FAST );
+      this->setTiming( PresolverTiming::kFast );
    }
 
    /// todo how to communicate about postsolve information
@@ -70,7 +70,7 @@ ConstraintPropagation<REAL>::execute( const Problem<REAL>& problem,
    const auto& rhsValues = consMatrix.getRightHandSides();
    const auto& rflags = consMatrix.getRowFlags();
 
-   PresolveStatus result = PresolveStatus::UNCHANGED;
+   PresolveStatus result = PresolveStatus::kUnchanged;
 
    // for LP constraint propagation we might want to weaken the bounds by some
    // small amount above the feasibility tolerance
@@ -85,15 +85,15 @@ ConstraintPropagation<REAL>::execute( const Problem<REAL>& problem,
       if( num.isHugeVal( val ) )
          return;
 
-      if( boundChange == BoundChange::LOWER )
+      if( boundChange == BoundChange::kLower )
       {
-         assert( domains.flags[col].test( ColFlag::LB_INF ) ||
+         assert( domains.flags[col].test( ColFlag::kLbInf ) ||
                  val > domains.lower_bounds[col] );
 
-         if( domains.flags[col].test( ColFlag::INTEGRAL, ColFlag::IMPL_INT ) )
+         if( domains.flags[col].test( ColFlag::kIntegral, ColFlag::kImplInt ) )
             val = num.feasCeil( val );
 
-         if( !domains.flags[col].test( ColFlag::UB_INF ) )
+         if( !domains.flags[col].test( ColFlag::kUbInf ) )
          {
             // compute distance of new lower bound to the upper bound
             REAL bnddist = domains.upper_bounds[col] - val;
@@ -101,7 +101,7 @@ ConstraintPropagation<REAL>::execute( const Problem<REAL>& problem,
             // bound exceeded by more then feastol means infeasible
             if( bnddist < -num.getFeasTol() )
             {
-               result = PresolveStatus::INFEASIBLE;
+               result = PresolveStatus::kInfeasible;
                return;
             }
 
@@ -114,29 +114,29 @@ ConstraintPropagation<REAL>::execute( const Problem<REAL>& problem,
             {
                // todo reductions.forcingRowToUpper(currentrow, col);
                reductions.fixCol( col, domains.upper_bounds[col] );
-               result = PresolveStatus::REDUCED;
+               result = PresolveStatus::kReduced;
                return;
             }
          }
 
          val -= weakenbounds;
-         if( domains.flags[col].test( ColFlag::LB_INF ) ||
+         if( domains.flags[col].test( ColFlag::kLbInf ) ||
              val - domains.lower_bounds[col] > +1000 * num.getFeasTol() )
          {
             reductions.changeColLB( col, val );
-            result = PresolveStatus::REDUCED;
+            result = PresolveStatus::kReduced;
          }
       }
       else
       {
-         assert( boundChange == BoundChange::UPPER );
-         assert( domains.flags[col].test( ColFlag::UB_INF ) ||
+         assert( boundChange == BoundChange::kUpper );
+         assert( domains.flags[col].test( ColFlag::kUbInf ) ||
                  val < domains.upper_bounds[col] );
 
-         if( domains.flags[col].test( ColFlag::INTEGRAL, ColFlag::IMPL_INT ) )
+         if( domains.flags[col].test( ColFlag::kIntegral, ColFlag::kImplInt ) )
             val = num.feasFloor( val );
 
-         if( !domains.flags[col].test( ColFlag::LB_INF ) )
+         if( !domains.flags[col].test( ColFlag::kLbInf ) )
          {
             // compute distance of new upper bound to the lower bound
             REAL bnddist = val - domains.lower_bounds[col];
@@ -144,7 +144,7 @@ ConstraintPropagation<REAL>::execute( const Problem<REAL>& problem,
             // bound exceeded by more then feastol means infeasible
             if( bnddist < -num.getFeasTol() )
             {
-               result = PresolveStatus::INFEASIBLE;
+               result = PresolveStatus::kInfeasible;
                return;
             }
 
@@ -157,17 +157,17 @@ ConstraintPropagation<REAL>::execute( const Problem<REAL>& problem,
             {
                // todo reductions.forcingRowToLower(currentrow, col);
                reductions.fixCol( col, domains.lower_bounds[col] );
-               result = PresolveStatus::REDUCED;
+               result = PresolveStatus::kReduced;
                return;
             }
          }
 
          val += weakenbounds;
-         if( domains.flags[col].test( ColFlag::UB_INF ) ||
+         if( domains.flags[col].test( ColFlag::kUbInf ) ||
              val - domains.upper_bounds[col] < -1000 * num.getFeasTol() )
          {
             reductions.changeColUB( col, val );
-            result = PresolveStatus::REDUCED;
+            result = PresolveStatus::kReduced;
          }
       }
    };
@@ -181,11 +181,11 @@ ConstraintPropagation<REAL>::execute( const Problem<REAL>& problem,
       switch( rowvec.getLength() )
       {
       case 0:
-         if( ( !rflags[row].test( RowFlag::LHS_INF ) &&
+         if( ( !rflags[row].test( RowFlag::kLhsInf ) &&
                num.isFeasGT( lhsValues[row], 0 ) ) ||
-             ( !rflags[row].test( RowFlag::RHS_INF ) &&
+             ( !rflags[row].test( RowFlag::kRhsInf ) &&
                num.isFeasLT( rhsValues[row], 0 ) ) )
-            result = PresolveStatus::INFEASIBLE;
+            result = PresolveStatus::kInfeasible;
          else
             reductions.markRowRedundant( row );
          break;
@@ -199,7 +199,7 @@ ConstraintPropagation<REAL>::execute( const Problem<REAL>& problem,
                         domains.upper_bounds, domains.flags, add_boundchange );
       }
 
-      if( result == PresolveStatus::INFEASIBLE )
+      if( result == PresolveStatus::kInfeasible )
          break;
    }
 

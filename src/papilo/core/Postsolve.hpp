@@ -49,23 +49,23 @@ namespace papilo
 /// possible types of post solving
 enum class PostsolveType : int
 {
-   PRIMAL_VALUES_ONLY = 0,
-   FULL = 1,
+   kPrimal = 0,
+   kFull = 1,
 };
 
 enum class ReductionType : int
 {
-   FIXED_COL = 0,
-   SUBSTITUTED_COL = 1,
-   PARALLEL_COL = 2,
-   SAVE_ROW = 3,
-   SAVE_COL = 4
+   kFixedCol = 0,
+   kSubstitutedCol = 1,
+   kParallelCol = 2,
+   kSaveRow = 3,
+   kSaveCol = 4
 };
 
 enum class PostsolveStatus : int
 {
-   OK,
-   FAIL
+   kOk,
+   kFail
 };
 
 // forward declarations
@@ -92,8 +92,8 @@ class Postsolve
 
    // set to full for development of postsolve,
    // later will not be default value
-   // PostsolveType postsolveType = PostsolveType::FULL;
-   PostsolveType postsolveType = PostsolveType::PRIMAL_VALUES_ONLY;
+   // PostsolveType postsolveType = PostsolveType::kFull;
+   PostsolveType postsolveType = PostsolveType::kPrimal;
 
    Vec<ReductionType> types;
    Vec<int> indices;
@@ -243,7 +243,7 @@ template <typename REAL>
 void
 Postsolve<REAL>::notifyFixedCol( int col, REAL val )
 {
-   types.push_back( ReductionType::FIXED_COL );
+   types.push_back( ReductionType::kFixedCol );
    indices.push_back( origcol_mapping[col] );
    values.push_back( val );
 
@@ -260,19 +260,19 @@ Postsolve<REAL>::notifyFixedCol( int col, REAL val )
 //    const int* columns = coefficients.getIndices();
 //    const int length = coefficients.getLength();
 
-//    types.push_back( ReductionType::SAVE_ROW );
+//    types.push_back( ReductionType::kSaveRow );
 //    indices.push_back( origrow_mapping[row] );
 //    values.push_back( (double)length );
 
 //    // LB
-//    if( flags.test( RowFlag::LHS_INF ) )
+//    if( flags.test( RowFlag::kLhsInf ) )
 //       indices.push_back( 1 );
 //    else
 //       indices.push_back( 0 );
 //    values.push_back( lhs );
 
 //    // UB
-//    if( flags.test( RowFlag::RHS_INF ) )
+//    if( flags.test( RowFlag::kRhsInf ) )
 //       indices.push_back( 1 );
 //    else
 //       indices.push_back( 0 );
@@ -316,21 +316,21 @@ Postsolve<REAL>::notifySavedRow( int row,
    const int* columns = coefficients.getIndices();
    const int length = coefficients.getLength();
 
-   types.push_back( ReductionType::SAVE_ROW );
+   types.push_back( ReductionType::kSaveRow );
 
    int stack_index = indices.size();
    indices.push_back( origrow_mapping[row] );
    values.push_back( (double)length );
 
    // LB
-   if( flags.test( RowFlag::LHS_INF ) )
+   if( flags.test( RowFlag::kLhsInf ) )
       indices.push_back( 1 );
    else
       indices.push_back( 0 );
    values.push_back( lhs );
 
    // UB
-   if( flags.test( RowFlag::RHS_INF ) )
+   if( flags.test( RowFlag::kRhsInf ) )
       indices.push_back( 1 );
    else
       indices.push_back( 0 );
@@ -360,7 +360,7 @@ Postsolve<REAL>::notifySubstitution( int col,
    const int length = equalityLHS.getLength();
    assert( length > 1 );
 
-   types.push_back( ReductionType::SUBSTITUTED_COL );
+   types.push_back( ReductionType::kSubstitutedCol );
    values.push_back( equalityRHS );
    // values.insert( values.end(), coefs, coefs + length );
    indices.push_back( origcol_mapping[col] );
@@ -391,17 +391,17 @@ Postsolve<REAL>::notifyParallelCols( int col1, bool col1integral,
    int col2BoundFlags = 0;
 
    if( col1integral )
-      col1BoundFlags |= static_cast<int>( ColFlag::INTEGRAL );
+      col1BoundFlags |= static_cast<int>( ColFlag::kIntegral );
    if( col1lbinf )
-      col1BoundFlags |= static_cast<int>( ColFlag::LB_INF );
+      col1BoundFlags |= static_cast<int>( ColFlag::kLbInf );
    if( col1ubinf )
-      col1BoundFlags |= static_cast<int>( ColFlag::UB_INF );
+      col1BoundFlags |= static_cast<int>( ColFlag::kUbInf );
    if( col2integral )
-      col2BoundFlags |= static_cast<int>( ColFlag::INTEGRAL );
+      col2BoundFlags |= static_cast<int>( ColFlag::kIntegral );
    if( col2lbinf )
-      col2BoundFlags |= static_cast<int>( ColFlag::LB_INF );
+      col2BoundFlags |= static_cast<int>( ColFlag::kLbInf );
    if( col2ubinf )
-      col2BoundFlags |= static_cast<int>( ColFlag::UB_INF );
+      col2BoundFlags |= static_cast<int>( ColFlag::kUbInf );
 
    // add all information
    indices.push_back( origcol_mapping[col1] );
@@ -416,7 +416,7 @@ Postsolve<REAL>::notifyParallelCols( int col1, bool col1integral,
    values.push_back( col2scale );
 
    // add the range and the type of the reduction
-   types.push_back( ReductionType::PARALLEL_COL );
+   types.push_back( ReductionType::kParallelCol );
 
    finishNotify();
 }
@@ -429,9 +429,9 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
    const Vec<REAL>& reducedSol = reducedSolution.primal;
    Vec<REAL>& origSol = originalSolution.primal;
 
-   if( reducedSolution.type == SolutionType::PRIMAL_AND_DUAL )
+   if( reducedSolution.type == SolutionType::kPrimalDual )
    {
-      originalSolution.type = SolutionType::PRIMAL_AND_DUAL;
+      originalSolution.type = SolutionType::kPrimalDual;
    }
 
    origSol.clear();
@@ -443,7 +443,7 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
       origSol[origcol] = reducedSol[k];
    }
 
-   if( originalSolution.type == SolutionType::PRIMAL_AND_DUAL )
+   if( originalSolution.type == SolutionType::kPrimalDual )
    {
       assert( reducedSolution.col_dual.size() == origcol_mapping.size() );
       originalSolution.col_dual.clear();
@@ -475,10 +475,10 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
    {
       // originalSoluiton is already the reduced solution padded with zeros
       auto kktState =
-          checker.initState( ProblemType::REDUCED, originalSolution,
+          checker.initState( ProblemType::kReduced, originalSolution,
                              origcol_mapping, origrow_mapping, checker.level );
 
-      if( originalSolution.type == SolutionType::PRIMAL_AND_DUAL )
+      if( originalSolution.type == SolutionType::kPrimalDual )
          checker.level = CheckLevel::Solver_and_primal_feas;
       //   checker.setLevel( CheckLevel::After_each_postsolve_step);
 
@@ -493,7 +493,7 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
 
       switch( type )
       {
-      case ReductionType::SAVE_ROW:
+      case ReductionType::kSaveRow:
       {
          int row = indices[first];
          int length = (int)values[first];
@@ -508,7 +508,7 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
                                   values[1], values[2], lb_inf, ub_inf );
          break;
       }
-      case ReductionType::FIXED_COL:
+      case ReductionType::kFixedCol:
       {
          int col = indices[first];
          // todo: move to checker
@@ -517,7 +517,7 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
          origSol[col] = values[first];
          break;
       }
-      case ReductionType::SUBSTITUTED_COL:
+      case ReductionType::kSubstitutedCol:
       {
          int col = indices[first];
          // assert( !solSet[col] );
@@ -541,11 +541,11 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
          // solSet[col] = true;
          break;
       }
-      case ReductionType::PARALLEL_COL:
+      case ReductionType::kParallelCol:
       {
-         constexpr int IS_INTEGRAL = static_cast<int>( ColFlag::INTEGRAL );
-         constexpr int IS_LBINF = static_cast<int>( ColFlag::LB_INF );
-         constexpr int IS_UBINF = static_cast<int>( ColFlag::UB_INF );
+         constexpr int IS_INTEGRAL = static_cast<int>( ColFlag::kIntegral );
+         constexpr int IS_LBINF = static_cast<int>( ColFlag::kLbInf );
+         constexpr int IS_UBINF = static_cast<int>( ColFlag::kUbInf );
 
          assert( last - first == 5 );
 
@@ -698,7 +698,7 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
       if( checker.level == CheckLevel::After_each_postsolve_step )
       {
          auto kktStatePostsolvedProblem = checker.initState(
-             ProblemType::POSTSOLVED, originalSolution, checker.level );
+             ProblemType::kPostsolved, originalSolution, checker.level );
          checker.checkIntermediate( kktStatePostsolvedProblem );
       }
    }
@@ -708,10 +708,10 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
    //                      []( uint8_t isset ) { return isset; } ) );
 
    auto kktStateOriginalProblem = checker.initState(
-       ProblemType::ORIGINAL, originalSolution, checker.level );
+       ProblemType::kOriginal, originalSolution, checker.level );
    checker.checkSolution( kktStateOriginalProblem );
 
-   return PostsolveStatus::OK;
+   return PostsolveStatus::kOk;
 }
 
 } // namespace papilo

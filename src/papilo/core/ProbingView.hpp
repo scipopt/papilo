@@ -256,9 +256,9 @@ ProbingView<REAL>::reset()
       if( i < 0 )
       {
          int c = -i - 1;
-         assert( !probing_domain_flags[c].test( ColFlag::LB_USELESS ) &&
-                 problem.getColFlags()[c].test( ColFlag::LB_USELESS ) );
-         probing_domain_flags[c].set( ColFlag::LB_USELESS );
+         assert( !probing_domain_flags[c].test( ColFlag::kLbUseless ) &&
+                 problem.getColFlags()[c].test( ColFlag::kLbUseless ) );
+         probing_domain_flags[c].set( ColFlag::kLbUseless );
 #ifndef NDEBUG
          probing_lower_bounds[c] = orig_lbs[c];
 #endif
@@ -274,9 +274,9 @@ ProbingView<REAL>::reset()
       if( i < 0 )
       {
          int c = -i - 1;
-         assert( !probing_domain_flags[c].test( ColFlag::UB_USELESS ) &&
-                 problem.getColFlags()[c].test( ColFlag::UB_USELESS ) );
-         probing_domain_flags[c].set( ColFlag::UB_USELESS );
+         assert( !probing_domain_flags[c].test( ColFlag::kUbUseless ) &&
+                 problem.getColFlags()[c].test( ColFlag::kUbUseless ) );
+         probing_domain_flags[c].set( ColFlag::kUbUseless );
 #ifndef NDEBUG
          probing_upper_bounds[c] = orig_ubs[c];
 #endif
@@ -344,7 +344,7 @@ ProbingView<REAL>::activityChanged( ActivityChange actchange, int rowid,
 
    bool unreliable;
 
-   if( actchange == ActivityChange::MIN )
+   if( actchange == ActivityChange::kMin )
       unreliable = ( activity.ninfmin <= 1 && activity.min != 0 &&
                      origactivity.min != 0 &&
                      num.isZero( activity.min / origactivity.min ) );
@@ -364,8 +364,8 @@ ProbingView<REAL>::activityChanged( ActivityChange actchange, int rowid,
    }
 
    // check for infeasibility
-   if( actchange == ActivityChange::MIN && activity.ninfmin == 0 &&
-       !rflags[rowid].test( RowFlag::RHS_INF ) &&
+   if( actchange == ActivityChange::kMin && activity.ninfmin == 0 &&
+       !rflags[rowid].test( RowFlag::kRhsInf ) &&
        num.isFeasLT( rhs[rowid], activity.min ) &&
        num.isSafeLT( rhs[rowid], activity.min ) )
    {
@@ -379,8 +379,8 @@ ProbingView<REAL>::activityChanged( ActivityChange actchange, int rowid,
       infeasible = true;
    }
 
-   if( actchange == ActivityChange::MAX && activity.ninfmax == 0 &&
-       !rflags[rowid].test( RowFlag::LHS_INF ) &&
+   if( actchange == ActivityChange::kMax && activity.ninfmax == 0 &&
+       !rflags[rowid].test( RowFlag::kLhsInf ) &&
        num.isFeasGT( lhs[rowid], activity.max ) &&
        num.isSafeGT( lhs[rowid], activity.max ) )
    {
@@ -404,7 +404,7 @@ ProbingView<REAL>::changeLb( int col, REAL newlb )
    const auto& orig_lbs = problem.getLowerBounds();
 
    // bound must be tighter than current domains
-   bool lbinf = probing_domain_flags[col].test( ColFlag::LB_USELESS );
+   bool lbinf = probing_domain_flags[col].test( ColFlag::kLbUseless );
    assert( lbinf || probing_lower_bounds[col] != newlb );
 
    Message::debug( this, "changing probing lower bound of col {} to {}\n", col,
@@ -414,11 +414,11 @@ ProbingView<REAL>::changeLb( int col, REAL newlb )
    {
       // bound was not altered yet, store the negative (index + 1) to
       // indicate that the infinity flag was altered
-      probing_domain_flags[col].unset( ColFlag::LB_USELESS );
+      probing_domain_flags[col].unset( ColFlag::kLbUseless );
       changed_lbs.push_back( -col - 1 );
    }
    else if( probing_lower_bounds[col] == orig_lbs[col] &&
-            !problem.getColFlags()[col].test( ColFlag::LB_USELESS ) )
+            !problem.getColFlags()[col].test( ColFlag::kLbUseless ) )
       // if bound was not altered yet remember it in the index vector
       changed_lbs.push_back( col );
 
@@ -429,7 +429,7 @@ ProbingView<REAL>::changeLb( int col, REAL newlb )
    // update the probing activities by using the column view
    update_activities_after_boundchange(
        colvec.getValues(), colvec.getIndices(), colvec.getLength(),
-       BoundChange::LOWER, oldlb, newlb, lbinf, probing_activities,
+       BoundChange::kLower, oldlb, newlb, lbinf, probing_activities,
        [this]( ActivityChange actChange, int rowid,
                RowActivity<REAL>& activity ) {
           activityChanged( actChange, rowid, activity );
@@ -446,7 +446,7 @@ ProbingView<REAL>::changeUb( int col, REAL newub )
    const auto& orig_ubs = problem.getUpperBounds();
 
    // bound must be tighter than current domains
-   bool ubinf = probing_domain_flags[col].test( ColFlag::UB_USELESS );
+   bool ubinf = probing_domain_flags[col].test( ColFlag::kUbUseless );
    assert( ubinf || probing_upper_bounds[col] != newub );
 
    Message::debug( this, "changing probing upper bound of col {} to {}\n", col,
@@ -456,11 +456,11 @@ ProbingView<REAL>::changeUb( int col, REAL newub )
    {
       // bound was not altered yet, store the negative (index + 1) to
       // indicate that the infinity flag was altered
-      probing_domain_flags[col].unset( ColFlag::UB_USELESS );
+      probing_domain_flags[col].unset( ColFlag::kUbUseless );
       changed_ubs.push_back( -col - 1 );
    }
    else if( probing_upper_bounds[col] == orig_ubs[col] &&
-            !problem.getColFlags()[col].test( ColFlag::UB_USELESS ) )
+            !problem.getColFlags()[col].test( ColFlag::kUbUseless ) )
       // if bound was not altered yet remember it in the index vector
       changed_ubs.push_back( col );
 
@@ -471,7 +471,7 @@ ProbingView<REAL>::changeUb( int col, REAL newub )
    // update the probing activities by using the column view
    update_activities_after_boundchange(
        colvec.getValues(), colvec.getIndices(), colvec.getLength(),
-       BoundChange::UPPER, oldub, newub, ubinf, probing_activities,
+       BoundChange::kUpper, oldub, newub, ubinf, probing_activities,
        [this]( ActivityChange actChange, int rowid,
                RowActivity<REAL>& activity ) {
           activityChanged( actChange, rowid, activity );
@@ -541,11 +541,11 @@ ProbingView<REAL>::analyzeImplications()
          int col = c < 0 ? -c - 1 : c;
 
          assert( c >= 0 ||
-                 ( !probing_domain_flags[col].test( ColFlag::LB_USELESS ) &&
-                   orig_domain_flags[col].test( ColFlag::LB_USELESS ) ) );
+                 ( !probing_domain_flags[col].test( ColFlag::kLbUseless ) &&
+                   orig_domain_flags[col].test( ColFlag::kLbUseless ) ) );
          assert( c < 0 ||
-                 ( !probing_domain_flags[col].test( ColFlag::LB_USELESS ) &&
-                   !orig_domain_flags[col].test( ColFlag::LB_USELESS ) ) );
+                 ( !probing_domain_flags[col].test( ColFlag::kLbUseless ) &&
+                   !orig_domain_flags[col].test( ColFlag::kLbUseless ) ) );
          assert( c < 0 || probing_lower_bounds[col] > orig_lbs[col] );
 
          boundChanges.emplace_back(
@@ -557,11 +557,11 @@ ProbingView<REAL>::analyzeImplications()
          int col = c < 0 ? -c - 1 : c;
 
          assert( c >= 0 ||
-                 ( !probing_domain_flags[col].test( ColFlag::UB_USELESS ) &&
-                   orig_domain_flags[col].test( ColFlag::UB_USELESS ) ) );
+                 ( !probing_domain_flags[col].test( ColFlag::kUbUseless ) &&
+                   orig_domain_flags[col].test( ColFlag::kUbUseless ) ) );
          assert( c < 0 ||
-                 ( !probing_domain_flags[col].test( ColFlag::UB_USELESS ) &&
-                   !orig_domain_flags[col].test( ColFlag::UB_USELESS ) ) );
+                 ( !probing_domain_flags[col].test( ColFlag::kUbUseless ) &&
+                   !orig_domain_flags[col].test( ColFlag::kUbUseless ) ) );
          assert( c < 0 || probing_upper_bounds[col] < orig_ubs[col] );
 
          boundChanges.emplace_back(
@@ -596,10 +596,10 @@ ProbingView<REAL>::analyzeImplications()
    {
       bool impliedFixing =
           ( boundChg.upper &&
-            !orig_domain_flags[boundChg.col].test( ColFlag::LB_USELESS ) &&
+            !orig_domain_flags[boundChg.col].test( ColFlag::kLbUseless ) &&
             orig_lbs[boundChg.col] == boundChg.bound ) ||
           ( !boundChg.upper &&
-            !orig_domain_flags[boundChg.col].test( ColFlag::UB_USELESS ) &&
+            !orig_domain_flags[boundChg.col].test( ColFlag::kUbUseless ) &&
             orig_ubs[boundChg.col] == boundChg.bound );
 
       // only this probing branch is infeasible, so add all implications of
@@ -612,7 +612,7 @@ ProbingView<REAL>::analyzeImplications()
       }
 
       bool fixed =
-          ( !probing_domain_flags[boundChg.col].test( ColFlag::UNBOUNDED ) &&
+          ( !probing_domain_flags[boundChg.col].test( ColFlag::kUnbounded ) &&
             probing_lower_bounds[boundChg.col] ==
                 probing_upper_bounds[boundChg.col] );
 
@@ -642,7 +642,7 @@ ProbingView<REAL>::analyzeImplications()
          // smaller index
          if( col1 < col2 && abs( scale ) == 1 &&
              ( zerofixval == 1 || zerofixval == 0 ) &&
-             probing_domain_flags[col1].test( ColFlag::INTEGRAL ) )
+             probing_domain_flags[col1].test( ColFlag::kIntegral ) )
             std::swap( col1, col2 );
 
          // add the corresponding substitution.
@@ -650,11 +650,11 @@ ProbingView<REAL>::analyzeImplications()
              ProbingSubstitution<REAL>( col1, scale, col2, zerofixval ) );
       }
       else if( boundChg.upper &&
-               !probing_domain_flags[boundChg.col].test( ColFlag::UB_INF ) &&
-               ( orig_domain_flags[boundChg.col].test( ColFlag::UB_INF ) ||
+               !probing_domain_flags[boundChg.col].test( ColFlag::kUbInf ) &&
+               ( orig_domain_flags[boundChg.col].test( ColFlag::kUbInf ) ||
                  orig_ubs[boundChg.col] > probing_upper_bounds[boundChg.col] ) )
       {
-         assert( orig_domain_flags[boundChg.col].test( ColFlag::UB_INF ) ||
+         assert( orig_domain_flags[boundChg.col].test( ColFlag::kUbInf ) ||
                  orig_ubs[boundChg.col] > boundChg.bound );
 
          // upper bound is tightened in both probing branches
@@ -663,11 +663,11 @@ ProbingView<REAL>::analyzeImplications()
              num.max( boundChg.bound, probing_upper_bounds[boundChg.col] ) ) );
       }
       else if( !boundChg.upper &&
-               !probing_domain_flags[boundChg.col].test( ColFlag::LB_INF ) &&
-               ( orig_domain_flags[boundChg.col].test( ColFlag::LB_INF ) ||
+               !probing_domain_flags[boundChg.col].test( ColFlag::kLbInf ) &&
+               ( orig_domain_flags[boundChg.col].test( ColFlag::kLbInf ) ||
                  orig_lbs[boundChg.col] < probing_lower_bounds[boundChg.col] ) )
       {
-         assert( orig_domain_flags[boundChg.col].test( ColFlag::LB_INF ) ||
+         assert( orig_domain_flags[boundChg.col].test( ColFlag::kLbInf ) ||
                  orig_lbs[boundChg.col] < boundChg.bound );
 
          // lower bound is tightened in both probing branches
@@ -708,11 +708,11 @@ ProbingView<REAL>::propagateDomains()
       {
          bool propagate = false;
 
-         if( !rflags[candrow].test( RowFlag::RHS_INF ) &&
+         if( !rflags[candrow].test( RowFlag::kRhsInf ) &&
              probing_activities[candrow].ninfmin <= 1 )
             propagate = true;
 
-         if( !rflags[candrow].test( RowFlag::LHS_INF ) &&
+         if( !rflags[candrow].test( RowFlag::kLhsInf ) &&
              probing_activities[candrow].ninfmax <= 1 )
             propagate = true;
 
@@ -731,14 +731,14 @@ ProbingView<REAL>::propagateDomains()
                    return;
 
                 bool isint = probing_domain_flags[colid].test(
-                    ColFlag::INTEGRAL, ColFlag::IMPL_INT );
+                    ColFlag::kIntegral, ColFlag::kImplInt );
 
-                if( bndChg == BoundChange::LOWER )
+                if( bndChg == BoundChange::kLower )
                 {
                    if( isint )
                       newbound = num.feasCeil( newbound );
 
-                   if( !probing_domain_flags[colid].test( ColFlag::UB_INF ) &&
+                   if( !probing_domain_flags[colid].test( ColFlag::kUbInf ) &&
                        newbound > probing_upper_bounds[colid] )
                    {
                       if( num.isFeasGT( newbound,
@@ -758,12 +758,12 @@ ProbingView<REAL>::propagateDomains()
 
                    REAL delta = newbound - probing_lower_bounds[colid];
                    bool finiteDomain =
-                       !probing_domain_flags[colid].test( ColFlag::UB_INF );
+                       !probing_domain_flags[colid].test( ColFlag::kUbInf );
 
                    REAL mindomred = isint ? minintdomred : mincontdomred;
 
                    if( probing_domain_flags[colid].test(
-                           ColFlag::LB_USELESS ) ||
+                           ColFlag::kLbUseless ) ||
                        ( finiteDomain && delta > 0 &&
                          ( delta / ( probing_upper_bounds[colid] -
                                      probing_lower_bounds[colid] ) >=
@@ -772,11 +772,11 @@ ProbingView<REAL>::propagateDomains()
                 }
                 else
                 {
-                   assert( bndChg == BoundChange::UPPER );
+                   assert( bndChg == BoundChange::kUpper );
                    if( isint )
                       newbound = num.feasFloor( newbound );
 
-                   if( !probing_domain_flags[colid].test( ColFlag::LB_INF ) &&
+                   if( !probing_domain_flags[colid].test( ColFlag::kLbInf ) &&
                        newbound < probing_lower_bounds[colid] )
                    {
                       if( num.isFeasLT( newbound,
@@ -796,12 +796,12 @@ ProbingView<REAL>::propagateDomains()
 
                    REAL delta = probing_upper_bounds[colid] - newbound;
                    bool finiteDomain =
-                       !probing_domain_flags[colid].test( ColFlag::LB_INF );
+                       !probing_domain_flags[colid].test( ColFlag::kLbInf );
 
                    REAL mindomred = isint ? minintdomred : mincontdomred;
 
                    if( probing_domain_flags[colid].test(
-                           ColFlag::UB_USELESS ) ||
+                           ColFlag::kUbUseless ) ||
                        ( finiteDomain && delta > 0 &&
                          ( delta / ( probing_upper_bounds[colid] -
                                      probing_lower_bounds[colid] ) >=

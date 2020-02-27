@@ -58,7 +58,7 @@ class Sparsify : public PresolveMethod<REAL>
    Sparsify() : PresolveMethod<REAL>()
    {
       this->setName( "sparsify" );
-      this->setTiming( PresolverTiming::EXHAUSTIVE );
+      this->setTiming( PresolverTiming::kExhaustive );
       this->setDelayed( true );
    }
 
@@ -111,12 +111,12 @@ Sparsify<REAL>::execute( const Problem<REAL>& problem,
    const auto& ncols = consmatrix.getNCols();
 
    auto isBinaryCol = [&]( int col ) {
-      return cflags[col].test( ColFlag::INTEGRAL ) &&
-             !cflags[col].test( ColFlag::UNBOUNDED ) &&
+      return cflags[col].test( ColFlag::kIntegral ) &&
+             !cflags[col].test( ColFlag::kUnbounded ) &&
              lower_bounds[col] == 0 && upper_bounds[col] == 1;
    };
 
-   PresolveStatus result = PresolveStatus::UNCHANGED;
+   PresolveStatus result = PresolveStatus::kUnchanged;
 
    // after each call skip more rounds to not call sparsify too often
    this->skipRounds( this->getNCalls() );
@@ -135,12 +135,12 @@ Sparsify<REAL>::execute( const Problem<REAL>& problem,
 
    for( int i = 0; i < nrows; ++i )
    {
-      if( rflags[i].test( RowFlag::REDUNDANT ) ||
-          !rflags[i].test( RowFlag::EQUALITY ) || rowsize[i] <= 1 ||
+      if( rflags[i].test( RowFlag::kRedundant ) ||
+          !rflags[i].test( RowFlag::kEquation ) || rowsize[i] <= 1 ||
           rowsize[i] > std::numeric_limits<HitCount>::max() )
          continue;
 
-      assert( !rflags[i].test( RowFlag::LHS_INF, RowFlag::RHS_INF ) &&
+      assert( !rflags[i].test( RowFlag::kLhsInf, RowFlag::kRhsInf ) &&
               lhs_values[i] == rhs_values[i] );
 
       equalities.emplace_back( i );
@@ -186,7 +186,7 @@ Sparsify<REAL>::execute( const Problem<REAL>& problem,
                 {
                    int col = eqcols[i];
 
-                   if( !cflags[col].test( ColFlag::INTEGRAL ) )
+                   if( !cflags[col].test( ColFlag::kIntegral ) )
                       ++ncont;
                    else if( isBinaryCol( col ) )
                       ++nbin;
@@ -262,7 +262,7 @@ Sparsify<REAL>::execute( const Problem<REAL>& problem,
                    int col = eqcols[i];
 
                    if( problem.getNumIntegralCols() != 0 &&
-                       ( !cflags[col].test( ColFlag::INTEGRAL ) ||
+                       ( !cflags[col].test( ColFlag::kIntegral ) ||
                          isBinaryCol( col ) ) )
                       continue;
 
@@ -322,7 +322,7 @@ Sparsify<REAL>::execute( const Problem<REAL>& problem,
                       bool skip = false;
                       for( int j = 0; j != candlen; ++j )
                       {
-                         if( cflags[candcols[j]].test( ColFlag::INTEGRAL ) )
+                         if( cflags[candcols[j]].test( ColFlag::kIntegral ) )
                          {
                             skip = true;
                             break;
@@ -423,7 +423,7 @@ Sparsify<REAL>::execute( const Problem<REAL>& problem,
 
    if( nreductions != 0 )
    {
-      result = PresolveStatus::REDUCED;
+      result = PresolveStatus::kReduced;
 
       Vec<std::tuple<int, int, std::pair<int, REAL>*>> reductionData;
 

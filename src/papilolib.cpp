@@ -551,22 +551,22 @@ PrintSCIPMessage( SCIP_MESSAGEHDLR* handler, FILE* file, const char* message,
 static SCIP_DECL_ERRORPRINTING( messageError )
 {
    SCIP_MESSAGEHDLR* messagehdlr = static_cast<SCIP_MESSAGEHDLR*>( data );
-   PrintSCIPMessage( messagehdlr, NULL, msg, VerbosityLevel::ERROR );
+   PrintSCIPMessage( messagehdlr, NULL, msg, VerbosityLevel::kError );
 }
 
 static SCIP_DECL_MESSAGEWARNING( messageWarning )
 {
-   PrintSCIPMessage( messagehdlr, file, msg, VerbosityLevel::WARNING );
+   PrintSCIPMessage( messagehdlr, file, msg, VerbosityLevel::kWarning );
 }
 
 static SCIP_DECL_MESSAGEINFO( messageInfo )
 {
-   PrintSCIPMessage( messagehdlr, file, msg, VerbosityLevel::INFO );
+   PrintSCIPMessage( messagehdlr, file, msg, VerbosityLevel::kInfo );
 }
 
 static SCIP_DECL_MESSAGEDIALOG( messageDialog )
 {
-   PrintSCIPMessage( messagehdlr, file, msg, VerbosityLevel::INFO );
+   PrintSCIPMessage( messagehdlr, file, msg, VerbosityLevel::kInfo );
 }
 
 static void
@@ -1158,16 +1158,16 @@ papilo_solver_start( PAPILO_SOLVER* solver )
    case SolverState::PROBLEM_PRESOLVED:
       switch( solver->presolveResult.status )
       {
-      case PresolveStatus::UNCHANGED:
-      case PresolveStatus::REDUCED:
+      case PresolveStatus::kUnchanged:
+      case PresolveStatus::kReduced:
          break;
-      case PresolveStatus::INFEASIBLE:
+      case PresolveStatus::kInfeasible:
          solver->solveinfo.solve_result = PAPILO_SOLVE_RESULT_INFEASIBLE;
          return &solver->solveinfo;
-      case PresolveStatus::UNBND_OR_INFEAS:
+      case PresolveStatus::kUnbndOrInfeas:
          solver->solveinfo.solve_result = PAPILO_SOLVE_RESULT_UNBND_OR_INFEAS;
          return &solver->solveinfo;
-      case PresolveStatus::UNBOUNDED:
+      case PresolveStatus::kUnbounded:
          solver->solveinfo.solve_result = PAPILO_SOLVE_RESULT_UNBOUNDED;
          return &solver->solveinfo;
       }
@@ -1230,7 +1230,7 @@ papilo_solver_start( PAPILO_SOLVER* solver )
             solverInterface->solve();
 
             if( static_cast<int>( solver->presolve.getVerbosityLevel() ) >=
-                static_cast<int>( VerbosityLevel::INFO ) )
+                static_cast<int>( VerbosityLevel::kInfo ) )
                solverInterface->printDetails();
          }
          status = solverInterface->getStatus();
@@ -1241,14 +1241,14 @@ papilo_solver_start( PAPILO_SOLVER* solver )
       }
       else
       {
-         status = SolverStatus::OPTIMAL;
+         status = SolverStatus::kOptimal;
          solver->presolve.message().info( "problem solved in presolving\n" );
       }
 
       Solution<double> solution;
       switch( status )
       {
-      case SolverStatus::OPTIMAL:
+      case SolverStatus::kOptimal:
          solver->solveinfo.solve_result = PAPILO_SOLVE_RESULT_STOPPED;
 
          if( solverInterface != nullptr &&
@@ -1256,7 +1256,7 @@ papilo_solver_start( PAPILO_SOLVER* solver )
             break;
 
          if( solver->presolveResult.postsolve.undo(
-                 solution, solver->solution ) == PostsolveStatus::OK )
+                 solution, solver->solution ) == PostsolveStatus::kOk )
          {
             solver->solveinfo.bestsol = solver->solution.primal.data();
             solver->solveinfo.solve_result = PAPILO_SOLVE_RESULT_OPTIMAL;
@@ -1279,7 +1279,7 @@ papilo_solver_start( PAPILO_SOLVER* solver )
          }
 
          break;
-      case SolverStatus::INTERRUPTED:
+      case SolverStatus::kInterrupted:
          solver->solveinfo.solve_result = PAPILO_SOLVE_RESULT_STOPPED;
 
          if( solverInterface != nullptr )
@@ -1290,7 +1290,7 @@ papilo_solver_start( PAPILO_SOLVER* solver )
             break;
 
          if( solver->presolveResult.postsolve.undo(
-                 solution, solver->solution ) == PostsolveStatus::OK )
+                 solution, solver->solution ) == PostsolveStatus::kOk )
          {
             solver->solveinfo.bestsol = solver->solution.primal.data();
             solver->solveinfo.solve_result = PAPILO_SOLVE_RESULT_FEASIBLE;
@@ -1309,18 +1309,18 @@ papilo_solver_start( PAPILO_SOLVER* solver )
          }
 
          break;
-      case SolverStatus::INFEASIBLE:
+      case SolverStatus::kInfeasible:
          solver->solveinfo.solve_result = PAPILO_SOLVE_RESULT_INFEASIBLE;
          break;
-      case SolverStatus::UNBOUNDED:
+      case SolverStatus::kUnbounded:
          solver->solveinfo.solve_result = PAPILO_SOLVE_RESULT_UNBOUNDED;
          break;
-      case SolverStatus::UNBND_OR_INFEAS:
+      case SolverStatus::kUnbndOrInfeas:
          solver->solveinfo.solve_result = PAPILO_SOLVE_RESULT_UNBND_OR_INFEAS;
          break;
-      case SolverStatus::INIT:
+      case SolverStatus::kInit:
          assert( false );
-      case SolverStatus::ERROR:
+      case SolverStatus::kError:
          solver->presolve.message().error(
              "solver terminated with an error\n" );
          solver->solveinfo.solve_result = PAPILO_SOLVE_RESULT_STOPPED;

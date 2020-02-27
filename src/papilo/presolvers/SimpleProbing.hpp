@@ -39,8 +39,8 @@ class SimpleProbing : public PresolveMethod<REAL>
    SimpleProbing() : PresolveMethod<REAL>()
    {
       this->setName( "simpleprobing" );
-      this->setType( PresolverType::INTEGRAL_COLS );
-      this->setTiming( PresolverTiming::MEDIUM );
+      this->setType( PresolverType::kIntegralCols );
+      this->setTiming( PresolverTiming::kMedium );
    }
 
    virtual PresolveStatus
@@ -76,18 +76,18 @@ SimpleProbing<REAL>::execute( const Problem<REAL>& problem,
    const auto& rhs_values = constMatrix.getRightHandSides();
    const auto& rflags = constMatrix.getRowFlags();
 
-   PresolveStatus result = PresolveStatus::UNCHANGED;
+   PresolveStatus result = PresolveStatus::kUnchanged;
    int nrows = problem.getNRows();
 
    for( int i = 0; i != nrows; ++i )
    {
-      if( !rflags[i].test( RowFlag::EQUALITY ) || rowsize[i] <= 2 ||
+      if( !rflags[i].test( RowFlag::kEquation ) || rowsize[i] <= 2 ||
           activities[i].ninfmin != 0 || activities[i].ninfmax != 0 ||
           !num.isEq( activities[i].min + activities[i].max,
                      2 * rhs_values[i] ) )
          continue;
 
-      assert( rflags[i].test( RowFlag::EQUALITY ) );
+      assert( rflags[i].test( RowFlag::kEquation ) );
       assert( activities[i].ninfmin == 0 && activities[i].ninfmax == 0 );
       assert( num.isEq( activities[i].min + activities[i].max,
                         2 * rhs_values[i] ) );
@@ -103,8 +103,8 @@ SimpleProbing<REAL>::execute( const Problem<REAL>& problem,
       for( int k = 0; k != rowlen; ++k )
       {
          int col = rowcols[k];
-         assert( !cflags[col].test( ColFlag::UNBOUNDED ) );
-         if( !cflags[col].test( ColFlag::INTEGRAL ) ||
+         assert( !cflags[col].test( ColFlag::kUnbounded ) );
+         if( !cflags[col].test( ColFlag::kIntegral ) ||
              domains.lower_bounds[col] != 0 || domains.upper_bounds[col] != 1 ||
              !num.isEq( abs( rowvals[k] ), bincoef ) )
             continue;
@@ -121,13 +121,13 @@ SimpleProbing<REAL>::execute( const Problem<REAL>& problem,
              num.isEq( abs( bincoef ), activities[i].max - rhs_values[i] ) );
          assert( domains.lower_bounds[bincol] == 0 );
          assert( domains.upper_bounds[bincol] == 1 );
-         assert( cflags[bincol].test( ColFlag::INTEGRAL ) );
+         assert( cflags[bincol].test( ColFlag::kIntegral ) );
 
          Message::debug(
              this, "probing on simple equation detected {} subsitutions\n",
              rowlen - 1 );
 
-         result = PresolveStatus::REDUCED;
+         result = PresolveStatus::kReduced;
          for( int k = 0; k != rowlen; ++k )
          {
             int col = rowcols[k];

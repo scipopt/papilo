@@ -121,22 +121,22 @@ class MpsParser
 
    enum class boundtype
    {
-      LE,
-      EQ,
-      GE
+      kLE,
+      kEq,
+      kGE
    };
 
    enum class parsekey
    {
-      ROWS,
-      COLS,
-      RHS,
-      RANGES,
-      BOUNDS,
-      NONE,
-      END,
-      FAIL,
-      COMMENT
+      kRows,
+      kCols,
+      kRhs,
+      kRanges,
+      kBounds,
+      kNone,
+      kEnd,
+      kFail,
+      kComment
    };
 
    void
@@ -144,19 +144,19 @@ class MpsParser
    {
       switch( keyword )
       {
-      case parsekey::ROWS:
+      case parsekey::kRows:
          std::cerr << "read error in section ROWS " << std::endl;
          break;
-      case parsekey::COLS:
+      case parsekey::kCols:
          std::cerr << "read error in section COLUMNS " << std::endl;
          break;
-      case parsekey::RHS:
+      case parsekey::kRhs:
          std::cerr << "read error in section RHS " << std::endl;
          break;
-      case parsekey::BOUNDS:
+      case parsekey::kBounds:
          std::cerr << "read error in section BOUNDS " << std::endl;
          break;
-      case parsekey::RANGES:
+      case parsekey::kRanges:
          std::cerr << "read error in section RANGES " << std::endl;
          break;
       default:
@@ -237,22 +237,22 @@ MpsParser<REAL>::checkFirstWord( std::string& strline,
    if( word.front() == 'R' ) // todo
    {
       if( word == "ROWS" )
-         return MpsParser<REAL>::parsekey::ROWS;
+         return MpsParser<REAL>::parsekey::kRows;
       else if( word == "RHS" )
-         return MpsParser<REAL>::parsekey::RHS;
+         return MpsParser<REAL>::parsekey::kRhs;
       else if( word == "RANGES" )
-         return MpsParser<REAL>::parsekey::RANGES;
+         return MpsParser<REAL>::parsekey::kRanges;
       else
-         return MpsParser<REAL>::parsekey::NONE;
+         return MpsParser<REAL>::parsekey::kNone;
    }
    else if( word == "COLUMNS" )
-      return MpsParser<REAL>::parsekey::COLS;
+      return MpsParser<REAL>::parsekey::kCols;
    else if( word == "BOUNDS" )
-      return MpsParser<REAL>::parsekey::BOUNDS;
+      return MpsParser<REAL>::parsekey::kBounds;
    else if( word == "ENDATA" )
-      return MpsParser<REAL>::parsekey::END;
+      return MpsParser<REAL>::parsekey::kEnd;
    else
-      return MpsParser<REAL>::parsekey::NONE;
+      return MpsParser<REAL>::parsekey::kNone;
 }
 
 template <typename REAL>
@@ -286,7 +286,7 @@ MpsParser<REAL>::parseRows( boost::iostreams::filtering_istream& file,
       MpsParser<REAL>::parsekey key = checkFirstWord( strline, it, word_ref );
 
       // start of new section?
-      if( key != parsekey::NONE )
+      if( key != parsekey::kNone )
       {
          nRows = int( nrows );
          if( !hasobj )
@@ -302,22 +302,22 @@ MpsParser<REAL>::parseRows( boost::iostreams::filtering_istream& file,
       {
          rowlhs.push_back( REAL{0.0} );
          rowrhs.push_back( REAL{0.0} );
-         row_flags.emplace_back( RowFlag::RHS_INF );
-         rowtype.push_back( boundtype::GE );
+         row_flags.emplace_back( RowFlag::kRhsInf );
+         rowtype.push_back( boundtype::kGE );
       }
       else if( word_ref.front() == 'E' )
       {
          rowlhs.push_back( REAL{0.0} );
          rowrhs.push_back( REAL{0.0} );
-         row_flags.emplace_back( RowFlag::EQUALITY );
-         rowtype.push_back( boundtype::EQ );
+         row_flags.emplace_back( RowFlag::kEquation );
+         rowtype.push_back( boundtype::kEq );
       }
       else if( word_ref.front() == 'L' )
       {
          rowlhs.push_back( REAL{0.0} );
          rowrhs.push_back( REAL{0.0} );
-         row_flags.emplace_back( RowFlag::LHS_INF );
-         rowtype.push_back( boundtype::LE );
+         row_flags.emplace_back( RowFlag::kLhsInf );
+         rowtype.push_back( boundtype::kLE );
       }
       else if( word_ref.front() ==
                'N' ) // todo properly treat multiple free rows
@@ -327,9 +327,9 @@ MpsParser<REAL>::parseRows( boost::iostreams::filtering_istream& file,
             rowlhs.push_back( REAL{0.0} );
             rowrhs.push_back( REAL{0.0} );
             RowFlags rowf;
-            rowf.set( RowFlag::LHS_INF, RowFlag::RHS_INF );
+            rowf.set( RowFlag::kLhsInf, RowFlag::kRhsInf );
             row_flags.emplace_back( rowf );
-            rowtype.push_back( boundtype::LE );
+            rowtype.push_back( boundtype::kLE );
          }
          else
          {
@@ -340,7 +340,7 @@ MpsParser<REAL>::parseRows( boost::iostreams::filtering_istream& file,
       else if( word_ref.empty() ) // empty line
          continue;
       else
-         return parsekey::FAIL;
+         return parsekey::kFail;
 
       std::string rowname = ""; // todo use ref
 
@@ -357,11 +357,11 @@ MpsParser<REAL>::parseRows( boost::iostreams::filtering_istream& file,
       if( !ret.second )
       {
          std::cerr << "duplicate row " << rowname << std::endl;
-         return parsekey::FAIL;
+         return parsekey::kFail;
       }
    }
 
-   return parsekey::FAIL;
+   return parsekey::kFail;
 }
 
 template <typename REAL>
@@ -405,7 +405,7 @@ MpsParser<REAL>::parseCols( boost::iostreams::filtering_istream& file,
       MpsParser<REAL>::parsekey key = checkFirstWord( strline, it, word_ref );
 
       // start of new section?
-      if( key != parsekey::NONE )
+      if( key != parsekey::kNone )
       {
          if( ncols > 1 )
             pdqsort( entries.begin() + colstart, entries.end(),
@@ -433,7 +433,7 @@ MpsParser<REAL>::parseCols( boost::iostreams::filtering_istream& file,
              ( !integral_cols && marker != "'INTORG'" ) )
          {
             std::cerr << "integrality marker error " << std::endl;
-            return parsekey::FAIL;
+            return parsekey::kFail;
          }
          integral_cols = !integral_cols;
 
@@ -453,13 +453,13 @@ MpsParser<REAL>::parseCols( boost::iostreams::filtering_istream& file,
          if( !ret.second )
          {
             std::cerr << "duplicate column " << std::endl;
-            return parsekey::FAIL;
+            return parsekey::kFail;
          }
 
          assert( lb4cols.size() == col_flags.size() );
 
-         col_flags.emplace_back( integral_cols ? ColFlag::INTEGRAL
-                                               : ColFlag::NONE );
+         col_flags.emplace_back( integral_cols ? ColFlag::kIntegral
+                                               : ColFlag::kNone );
 
          // initialize with default bounds
          if( integral_cols )
@@ -471,7 +471,7 @@ MpsParser<REAL>::parseCols( boost::iostreams::filtering_istream& file,
          {
             lb4cols.push_back( REAL{0.0} );
             ub4cols.push_back( REAL{0.0} );
-            col_flags.back().set( ColFlag::UB_INF );
+            col_flags.back().set( ColFlag::kUbInf );
          }
 
          assert( col_flags.size() == lb4cols.size() );
@@ -493,10 +493,10 @@ MpsParser<REAL>::parseCols( boost::iostreams::filtering_istream& file,
                  qi::real_parser<typename RealParseType<REAL>::type>()[(
                      addtuple )] ),
               ascii::space ) )
-         return parsekey::FAIL;
+         return parsekey::kFail;
    }
 
-   return parsekey::FAIL;
+   return parsekey::kFail;
 }
 
 template <typename REAL>
@@ -514,7 +514,7 @@ MpsParser<REAL>::parseRanges( boost::iostreams::filtering_istream& file )
       MpsParser<REAL>::parsekey key = checkFirstWord( strline, it, word_ref );
 
       // start of new section?
-      if( key != parsekey::NONE && key != parsekey::RANGES )
+      if( key != parsekey::kNone && key != parsekey::kRanges )
          return key;
 
       if( word_ref.empty() )
@@ -535,19 +535,19 @@ MpsParser<REAL>::parseRanges( boost::iostreams::filtering_istream& file )
                        this]( typename RealParseType<REAL>::type val ) {
          assert( size_t( rowidx ) < rowrhs.size() );
 
-         if( row_type[rowidx] == boundtype::GE )
+         if( row_type[rowidx] == boundtype::kGE )
          {
-            row_flags[rowidx].unset( RowFlag::RHS_INF );
+            row_flags[rowidx].unset( RowFlag::kRhsInf );
             rowrhs[rowidx] = rowlhs[rowidx] + abs( val );
          }
-         else if( row_type[rowidx] == boundtype::LE )
+         else if( row_type[rowidx] == boundtype::kLE )
          {
-            row_flags[rowidx].unset( RowFlag::LHS_INF );
+            row_flags[rowidx].unset( RowFlag::kLhsInf );
             rowlhs[rowidx] = rowrhs[rowidx] - abs( val );
          }
          else
          {
-            assert( row_type[rowidx] == boundtype::EQ );
+            assert( row_type[rowidx] == boundtype::kEq );
             assert( rowrhs[rowidx] == rowlhs[rowidx] );
 
             if( val > REAL{0.0} )
@@ -564,7 +564,7 @@ MpsParser<REAL>::parseRanges( boost::iostreams::filtering_istream& file )
                  qi::real_parser<typename RealParseType<REAL>::type>()[(
                      addrange )] ),
               ascii::space ) )
-         return parsekey::FAIL;
+         return parsekey::kFail;
 
       // optional part todo don't replicate code
       qi::phrase_parse(
@@ -575,7 +575,7 @@ MpsParser<REAL>::parseRanges( boost::iostreams::filtering_istream& file )
           ascii::space );
    }
 
-   return parsekey::FAIL;
+   return parsekey::kFail;
 }
 
 template <typename REAL>
@@ -592,7 +592,7 @@ MpsParser<REAL>::parseRhs( boost::iostreams::filtering_istream& file )
       MpsParser<REAL>::parsekey key = checkFirstWord( strline, it, word_ref );
 
       // start of new section?
-      if( key != parsekey::NONE && key != parsekey::RHS )
+      if( key != parsekey::kNone && key != parsekey::kRhs )
          return key;
 
       if( word_ref.empty() )
@@ -616,20 +616,20 @@ MpsParser<REAL>::parseRhs( boost::iostreams::filtering_istream& file )
             objoffset = -REAL{val};
             return;
          }
-         if( row_type[rowidx] == boundtype::EQ ||
-             row_type[rowidx] == boundtype::LE )
+         if( row_type[rowidx] == boundtype::kEq ||
+             row_type[rowidx] == boundtype::kLE )
          {
             assert( size_t( rowidx ) < rowrhs.size() );
             rowrhs[rowidx] = REAL{val};
-            row_flags[rowidx].unset( RowFlag::RHS_INF );
+            row_flags[rowidx].unset( RowFlag::kRhsInf );
          }
 
-         if( row_type[rowidx] == boundtype::EQ ||
-             row_type[rowidx] == boundtype::GE )
+         if( row_type[rowidx] == boundtype::kEq ||
+             row_type[rowidx] == boundtype::kGE )
          {
             assert( size_t( rowidx ) < rowlhs.size() );
             rowlhs[rowidx] = REAL{val};
-            row_flags[rowidx].unset( RowFlag::LHS_INF );
+            row_flags[rowidx].unset( RowFlag::kLhsInf );
          }
       };
 
@@ -639,10 +639,10 @@ MpsParser<REAL>::parseRhs( boost::iostreams::filtering_istream& file )
                  qi::real_parser<typename RealParseType<REAL>::type>()[(
                      addrhs )] ),
               ascii::space ) )
-         return parsekey::FAIL;
+         return parsekey::kFail;
    }
 
-   return parsekey::FAIL;
+   return parsekey::kFail;
 }
 
 template <typename REAL>
@@ -662,7 +662,7 @@ MpsParser<REAL>::parseBounds( boost::iostreams::filtering_istream& file )
       MpsParser<REAL>::parsekey key = checkFirstWord( strline, it, word_ref );
 
       // start of new section?
-      if( key != parsekey::NONE )
+      if( key != parsekey::kNone )
          return key;
 
       if( word_ref.empty() )
@@ -740,7 +740,7 @@ MpsParser<REAL>::parseBounds( boost::iostreams::filtering_istream& file )
                  it, strline.end(),
                  ( qi::lexeme[qi::as_string[+qi::graph][( parsename )]] ),
                  ascii::space ) )
-            return parsekey::FAIL;
+            return parsekey::kFail;
 
          if( isintegral ) // binary
          {
@@ -748,17 +748,17 @@ MpsParser<REAL>::parseBounds( boost::iostreams::filtering_istream& file )
                lb4cols[colidx] = REAL{0.0};
             if( isub )
             {
-               col_flags[colidx].unset( ColFlag::UB_INF );
+               col_flags[colidx].unset( ColFlag::kUbInf );
                ub4cols[colidx] = REAL{1.0};
             }
-            col_flags[colidx].set( ColFlag::INTEGRAL );
+            col_flags[colidx].set( ColFlag::kIntegral );
          }
          else
          {
             if( islb )
-               col_flags[colidx].set( ColFlag::LB_INF );
+               col_flags[colidx].set( ColFlag::kLbInf );
             if( isub )
-               col_flags[colidx].set( ColFlag::UB_INF );
+               col_flags[colidx].set( ColFlag::kUbInf );
          }
          continue;
       }
@@ -774,32 +774,32 @@ MpsParser<REAL>::parseBounds( boost::iostreams::filtering_istream& file )
                         {
                            lb4cols[colidx] = REAL{val};
                            lb_is_default[colidx] = false;
-                           col_flags[colidx].unset( ColFlag::LB_INF );
+                           col_flags[colidx].unset( ColFlag::kLbInf );
                         }
                         if( isub )
                         {
                            ub4cols[colidx] = REAL{val};
                            ub_is_default[colidx] = false;
-                           col_flags[colidx].unset( ColFlag::UB_INF );
+                           col_flags[colidx].unset( ColFlag::kUbInf );
                         }
 
                         if( isintegral )
-                           col_flags[colidx].set( ColFlag::INTEGRAL );
+                           col_flags[colidx].set( ColFlag::kIntegral );
 
-                        if( col_flags[colidx].test( ColFlag::INTEGRAL ) )
+                        if( col_flags[colidx].test( ColFlag::kIntegral ) )
                         {
-                           col_flags[colidx].set( ColFlag::INTEGRAL );
+                           col_flags[colidx].set( ColFlag::kIntegral );
                            if( !islb && lb_is_default[colidx] )
                               lb4cols[colidx] = REAL{0.0};
                            if( !isub && ub_is_default[colidx] )
-                              col_flags[colidx].set( ColFlag::UB_INF );
+                              col_flags[colidx].set( ColFlag::kUbInf );
                         }
                      } )] ),
               ascii::space ) )
-         return parsekey::FAIL;
+         return parsekey::kFail;
    }
 
-   return parsekey::FAIL;
+   return parsekey::kFail;
 }
 
 template <typename REAL>
@@ -829,31 +829,31 @@ void
 MpsParser<REAL>::parse( boost::iostreams::filtering_istream& file )
 {
    nnz = 0;
-   parsekey keyword = parsekey::NONE;
-   parsekey keyword_old = parsekey::NONE;
+   parsekey keyword = parsekey::kNone;
+   parsekey keyword_old = parsekey::kNone;
 
    // parsing loop
-   while( keyword != parsekey::FAIL && keyword != parsekey::END )
+   while( keyword != parsekey::kFail && keyword != parsekey::kEnd )
    {
       keyword_old = keyword;
       switch( keyword )
       {
-      case parsekey::ROWS:
+      case parsekey::kRows:
          keyword = parseRows( file, row_type );
          break;
-      case parsekey::COLS:
+      case parsekey::kCols:
          keyword = parseCols( file, row_type );
          break;
-      case parsekey::RHS:
+      case parsekey::kRhs:
          keyword = parseRhs( file );
          break;
-      case parsekey::RANGES:
+      case parsekey::kRanges:
          keyword = parseRanges( file );
          break;
-      case parsekey::BOUNDS:
+      case parsekey::kBounds:
          keyword = parseBounds( file );
          break;
-      case parsekey::FAIL:
+      case parsekey::kFail:
          break;
       default:
          keyword = parseDefault( file );
@@ -861,7 +861,7 @@ MpsParser<REAL>::parse( boost::iostreams::filtering_istream& file )
       }
    }
 
-   if( keyword == parsekey::FAIL )
+   if( keyword == parsekey::kFail )
    {
       printErrorMessage( keyword_old );
       exit( 1 ); // todo exception
