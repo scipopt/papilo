@@ -40,7 +40,7 @@ class SimpleSubstitution : public PresolveMethod<REAL>
    SimpleSubstitution() : PresolveMethod<REAL>()
    {
       this->setName( "doubletoneq" );
-      this->setTiming( PresolverTiming::MEDIUM );
+      this->setTiming( PresolverTiming::kMedium );
    }
 
    virtual PresolveStatus
@@ -83,22 +83,22 @@ SimpleSubstitution<REAL>::execute( const Problem<REAL>& problem,
    const auto& ncols = constMatrix.getNCols();
    const auto& rowperm = problemUpdate.getRandomRowPerm();
 
-   PresolveStatus result = PresolveStatus::UNCHANGED;
+   PresolveStatus result = PresolveStatus::kUnchanged;
 
    for( int k = 0; k < nrows; ++k )
    {
       int i = rowperm[k];
       // check that equality flag is correct or row is redundant
-      assert( rflags[i].test( RowFlag::REDUNDANT ) ||
-              ( !rflags[i].test( RowFlag::EQUALITY ) &&
+      assert( rflags[i].test( RowFlag::kRedundant ) ||
+              ( !rflags[i].test( RowFlag::kEquation ) &&
                 ( lhs_values[i] != rhs_values[i] ||
-                  rflags[i].test( RowFlag::LHS_INF, RowFlag::RHS_INF ) ) ) ||
-              ( rflags[i].test( RowFlag::EQUALITY ) &&
-                !rflags[i].test( RowFlag::LHS_INF, RowFlag::RHS_INF ) &&
+                  rflags[i].test( RowFlag::kLhsInf, RowFlag::kRhsInf ) ) ) ||
+              ( rflags[i].test( RowFlag::kEquation ) &&
+                !rflags[i].test( RowFlag::kLhsInf, RowFlag::kRhsInf ) &&
                 lhs_values[i] == rhs_values[i] ) );
 
-      if( rflags[i].test( RowFlag::REDUNDANT ) ||
-          !rflags[i].test( RowFlag::EQUALITY ) ||
+      if( rflags[i].test( RowFlag::kRedundant ) ||
+          !rflags[i].test( RowFlag::kEquation ) ||
           constMatrix.getRowSizes()[i] != 2 )
          continue;
 
@@ -111,19 +111,19 @@ SimpleSubstitution<REAL>::execute( const Problem<REAL>& problem,
       int subst;
       int stay;
 
-      if( cflags[inds[0]].test( ColFlag::INTEGRAL ) !=
-          cflags[inds[1]].test( ColFlag::INTEGRAL ) )
+      if( cflags[inds[0]].test( ColFlag::kIntegral ) !=
+          cflags[inds[1]].test( ColFlag::kIntegral ) )
       {
-         if( cflags[inds[0]].test( ColFlag::INTEGRAL ) )
+         if( cflags[inds[0]].test( ColFlag::kIntegral ) )
             subst = 1;
          else
             subst = 0;
 
          stay = 1 - subst;
       }
-      else if( cflags[inds[0]].test( ColFlag::INTEGRAL ) )
+      else if( cflags[inds[0]].test( ColFlag::kIntegral ) )
       {
-         assert( cflags[inds[1]].test( ColFlag::INTEGRAL ) );
+         assert( cflags[inds[1]].test( ColFlag::kIntegral ) );
          if( abs( vals[0] ) < abs( vals[1] ) ||
              ( abs( vals[0] ) == abs( vals[1] ) &&
                problemUpdate.isColBetterForSubstitution( inds[0], inds[1] ) ) )
@@ -137,7 +137,7 @@ SimpleSubstitution<REAL>::execute( const Problem<REAL>& problem,
             continue;
 
          if( !num.isFeasIntegral( rhs / vals[subst] ) )
-            return PresolveStatus::INFEASIBLE;
+            return PresolveStatus::kInfeasible;
       }
       else
       {
@@ -158,7 +158,7 @@ SimpleSubstitution<REAL>::execute( const Problem<REAL>& problem,
          stay = 1 - subst;
       }
 
-      result = PresolveStatus::REDUCED;
+      result = PresolveStatus::kReduced;
 
       TransactionGuard<REAL> guard{reductions};
 
@@ -167,32 +167,32 @@ SimpleSubstitution<REAL>::execute( const Problem<REAL>& problem,
       reductions.lockColBounds( inds[subst] );
 
       REAL s = vals[subst] * vals[stay];
-      if( !cflags[inds[subst]].test( ColFlag::LB_INF ) )
+      if( !cflags[inds[subst]].test( ColFlag::kLbInf ) )
       {
          REAL staybound =
              ( rhs - vals[subst] * domains.lower_bounds[inds[subst]] ) /
              vals[stay];
          if( s < 0 &&
-             ( cflags[inds[stay]].test( ColFlag::LB_INF ) ||
+             ( cflags[inds[stay]].test( ColFlag::kLbInf ) ||
                num.isGT( staybound, domains.lower_bounds[inds[stay]] ) ) )
             reductions.changeColLB( inds[stay], staybound );
 
          if( s > 0 &&
-             ( cflags[inds[stay]].test( ColFlag::UB_INF ) ||
+             ( cflags[inds[stay]].test( ColFlag::kUbInf ) ||
                num.isLT( staybound, domains.upper_bounds[inds[stay]] ) ) )
             reductions.changeColUB( inds[stay], staybound );
       }
 
-      if( !cflags[inds[subst]].test( ColFlag::UB_INF ) )
+      if( !cflags[inds[subst]].test( ColFlag::kUbInf ) )
       {
          REAL staybound =
              ( rhs - vals[subst] * domains.upper_bounds[inds[subst]] ) /
              vals[stay];
-         if( s > 0 && ( cflags[inds[stay]].test( ColFlag::LB_INF ) ||
+         if( s > 0 && ( cflags[inds[stay]].test( ColFlag::kLbInf ) ||
                         staybound > domains.lower_bounds[inds[stay]] ) )
             reductions.changeColLB( inds[stay], staybound );
 
-         if( s < 0 && ( cflags[inds[stay]].test( ColFlag::UB_INF ) ||
+         if( s < 0 && ( cflags[inds[stay]].test( ColFlag::kUbInf ) ||
                         staybound < domains.upper_bounds[inds[stay]] ) )
             reductions.changeColUB( inds[stay], staybound );
       }

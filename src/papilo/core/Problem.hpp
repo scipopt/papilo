@@ -117,7 +117,7 @@ class Problem
 
       for( ColFlags cf : variableDomains.flags )
       {
-         if( cf.test( ColFlag::INTEGRAL ) )
+         if( cf.test( ColFlag::kIntegral ) )
             ++nintegers;
          else
             ++ncontinuous;
@@ -137,7 +137,7 @@ class Problem
 
       for( ColFlags cf : variableDomains.flags )
       {
-         if( cf.test( ColFlag::INTEGRAL ) )
+         if( cf.test( ColFlag::kIntegral ) )
             ++nintegers;
          else
             ++ncontinuous;
@@ -377,9 +377,9 @@ class Problem
       for( unsigned int i = 0; i < numCols; ++i )
       {
          if( variableDomains.lower_bounds[i] <= -inf )
-            variableDomains.flags[i].set( ColFlag::LB_INF );
+            variableDomains.flags[i].set( ColFlag::kLbInf );
          if( variableDomains.upper_bounds[i] >= inf )
-            variableDomains.flags[i].set( ColFlag::UB_INF );
+            variableDomains.flags[i].set( ColFlag::kUbInf );
       }
    }
 
@@ -401,7 +401,7 @@ class Problem
 
       for( int i = 0; i != getNCols(); ++i )
       {
-         if( !variableDomains.flags[i].test( ColFlag::LB_INF ) &&
+         if( !variableDomains.flags[i].test( ColFlag::kLbInf ) &&
              sol[i] < variableDomains.lower_bounds[i] )
          {
             REAL thisviol = variableDomains.lower_bounds[i] - sol[i];
@@ -416,7 +416,7 @@ class Problem
             boundviolation = num.max( boundviolation, thisviol );
          }
 
-         if( !variableDomains.flags[i].test( ColFlag::UB_INF ) &&
+         if( !variableDomains.flags[i].test( ColFlag::kUbInf ) &&
              sol[i] > variableDomains.upper_bounds[i] )
          {
             REAL thisviol = sol[i] - variableDomains.upper_bounds[i];
@@ -431,7 +431,7 @@ class Problem
             boundviolation = num.max( boundviolation, thisviol );
          }
 
-         if( variableDomains.flags[i].test( ColFlag::INTEGRAL ) )
+         if( variableDomains.flags[i].test( ColFlag::kIntegral ) )
          {
             REAL thisviol = abs( num.round( sol[i] ) - sol[i] );
 
@@ -463,10 +463,10 @@ class Problem
 
          REAL activity = activitySum.get();
 
-         if( !rflags[i].test( RowFlag::RHS_INF ) && activity > rhs[i] )
+         if( !rflags[i].test( RowFlag::kRhsInf ) && activity > rhs[i] )
             rowviolation = num.max( rowviolation, activity - rhs[i] );
 
-         if( !rflags[i].test( RowFlag::LHS_INF ) && activity < lhs[i] )
+         if( !rflags[i].test( RowFlag::kLhsInf ) && activity < lhs[i] )
             rowviolation = num.max( rowviolation, lhs[i] - activity );
       }
 
@@ -648,8 +648,8 @@ class Problem
       {
          int col = std::get<2>( tuple );
 
-         if( cflags[col].test( ColFlag::INACTIVE ) ||
-             !cflags[col].test( ColFlag::UNBOUNDED ) )
+         if( cflags[col].test( ColFlag::kInactive ) ||
+             !cflags[col].test( ColFlag::kUnbounded ) )
             continue;
 
          auto colvec = constraintMatrix.getColumnCoefficients( col );
@@ -661,51 +661,51 @@ class Problem
 
          ColFlags colf = cflags[col];
 
-         while( ( !colf.test( ColFlag::LB_INF ) ||
-                  !colf.test( ColFlag::UB_INF ) ) &&
+         while( ( !colf.test( ColFlag::kLbInf ) ||
+                  !colf.test( ColFlag::kUbInf ) ) &&
                 k != collen )
          {
             int row = colrows[k];
 
-            if( rflags[row].test( RowFlag::REDUNDANT ) )
+            if( rflags[row].test( RowFlag::kRedundant ) )
             {
                ++k;
                continue;
             }
 
-            if( !colf.test( ColFlag::LB_INF ) &&
+            if( !colf.test( ColFlag::kLbInf ) &&
                 row_implies_LB( num, lhs[row], rhs[row], rflags[row],
                                 activities[row], colvals[k], lbs[col], ubs[col],
                                 cflags[col] ) )
-               colf.set( ColFlag::LB_INF );
+               colf.set( ColFlag::kLbInf );
 
-            if( !colf.test( ColFlag::UB_INF ) &&
+            if( !colf.test( ColFlag::kUbInf ) &&
                 row_implies_UB( num, lhs[row], rhs[row], rflags[row],
                                 activities[row], colvals[k], lbs[col], ubs[col],
                                 cflags[col] ) )
-               colf.set( ColFlag::UB_INF );
+               colf.set( ColFlag::kUbInf );
 
             ++k;
          }
 
-         if( colf.test( ColFlag::LB_INF ) && colf.test( ColFlag::UB_INF ) )
+         if( colf.test( ColFlag::kLbInf ) && colf.test( ColFlag::kUbInf ) )
          {
             int oldnremoved = nremoved;
-            if( !cflags[col].test( ColFlag::LB_INF ) )
+            if( !cflags[col].test( ColFlag::kLbInf ) )
             {
                update_activities_remove_finite_bound( colrows, colvals, collen,
-                                                      BoundChange::LOWER,
+                                                      BoundChange::kLower,
                                                       lbs[col], activities );
-               cflags[col].set( ColFlag::LB_INF );
+               cflags[col].set( ColFlag::kLbInf );
                ++nremoved;
             }
 
-            if( !cflags[col].test( ColFlag::UB_INF ) )
+            if( !cflags[col].test( ColFlag::kUbInf ) )
             {
                update_activities_remove_finite_bound( colrows, colvals, collen,
-                                                      BoundChange::UPPER,
+                                                      BoundChange::kUpper,
                                                       ubs[col], activities );
-               cflags[col].set( ColFlag::UB_INF );
+               cflags[col].set( ColFlag::kUbInf );
                ++nremoved;
             }
 
@@ -792,9 +792,9 @@ Problem<REAL>::substituteVarInObj( const Num<REAL>& num, int col, int row )
       objcoefficients[indices[j]] = newobjcoeff;
    }
 
-   assert( consMatrix.getRowFlags()[row].test( RowFlag::EQUALITY ) &&
-           !consMatrix.getRowFlags()[row].test( RowFlag::RHS_INF ) &&
-           !consMatrix.getRowFlags()[row].test( RowFlag::LHS_INF ) &&
+   assert( consMatrix.getRowFlags()[row].test( RowFlag::kEquation ) &&
+           !consMatrix.getRowFlags()[row].test( RowFlag::kRhsInf ) &&
+           !consMatrix.getRowFlags()[row].test( RowFlag::kLhsInf ) &&
            consMatrix.getLeftHandSides()[row] ==
                consMatrix.getRightHandSides()[row] );
    getObjective().offset -= consMatrix.getLeftHandSides()[row] * substscale;

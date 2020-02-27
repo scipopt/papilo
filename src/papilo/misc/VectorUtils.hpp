@@ -79,10 +79,10 @@ compareColBounds( const Vec<REAL>& first_values, const Vec<REAL>& second_values,
 
    for( int i = 0; i < size; i++ )
    {
-      if( ( first_flags[i].test( ColFlag::LB_INF ) &&
-            second_flags[i].test( ColFlag::LB_INF ) ) ||
-          ( first_flags[i].test( ColFlag::UB_INF ) &&
-            second_flags[i].test( ColFlag::UB_INF ) ) )
+      if( ( first_flags[i].test( ColFlag::kLbInf ) &&
+            second_flags[i].test( ColFlag::kLbInf ) ) ||
+          ( first_flags[i].test( ColFlag::kUbInf ) &&
+            second_flags[i].test( ColFlag::kUbInf ) ) )
          return false;
 
       if( !num.isEq( first_values[i], second_values[i] ) )
@@ -108,10 +108,10 @@ compareRowBounds( const Vec<REAL>& first_values, const Vec<REAL>& second_values,
 
    for( int i = 0; i < size; i++ )
    {
-      if( ( first_flags[i].test( RowFlag::LHS_INF ) &&
-            second_flags[i].test( RowFlag::LHS_INF ) ) ||
-          ( first_flags[i].test( RowFlag::RHS_INF ) &&
-            second_flags[i].test( RowFlag::RHS_INF ) ) )
+      if( ( first_flags[i].test( RowFlag::kLhsInf ) &&
+            second_flags[i].test( RowFlag::kLhsInf ) ) ||
+          ( first_flags[i].test( RowFlag::kRhsInf ) &&
+            second_flags[i].test( RowFlag::kRhsInf ) ) )
          return false;
 
       if( !num.isEq( first_values[i], second_values[i] ) )

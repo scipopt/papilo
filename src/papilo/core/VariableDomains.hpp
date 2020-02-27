@@ -35,23 +35,23 @@ namespace papilo
 
 enum class ColFlag : uint8_t
 {
-   NONE = 0,
-   LB_INF = 1 << 0,
-   LB_HUGE = 1 << 1,
-   UB_INF = 1 << 2,
-   UB_HUGE = 1 << 3,
-   INTEGRAL = 1 << 4,
-   FIXED = 1 << 5,
-   SUBSTITUTED = 1 << 6,
-   IMPL_INT = 1 << 7,
-   UNBOUNDED = static_cast<uint8_t>( ColFlag::LB_INF ) |
-               static_cast<uint8_t>( ColFlag::UB_INF ),
-   INACTIVE = static_cast<uint8_t>( ColFlag::FIXED ) |
-              static_cast<uint8_t>( ColFlag::SUBSTITUTED ),
-   LB_USELESS = static_cast<uint8_t>( ColFlag::LB_INF ) |
-                static_cast<uint8_t>( ColFlag::LB_HUGE ),
-   UB_USELESS = static_cast<uint8_t>( ColFlag::UB_INF ) |
-                static_cast<uint8_t>( ColFlag::UB_HUGE ),
+   kNone = 0,
+   kLbInf = 1 << 0,
+   kLbHuge = 1 << 1,
+   kUbInf = 1 << 2,
+   kUbHuge = 1 << 3,
+   kIntegral = 1 << 4,
+   kFixed = 1 << 5,
+   kSubstituted = 1 << 6,
+   kImplInt = 1 << 7,
+   kUnbounded = static_cast<uint8_t>( ColFlag::kLbInf ) |
+                static_cast<uint8_t>( ColFlag::kUbInf ),
+   kInactive = static_cast<uint8_t>( ColFlag::kFixed ) |
+               static_cast<uint8_t>( ColFlag::kSubstituted ),
+   kLbUseless = static_cast<uint8_t>( ColFlag::kLbInf ) |
+                static_cast<uint8_t>( ColFlag::kLbHuge ),
+   kUbUseless = static_cast<uint8_t>( ColFlag::kUbInf ) |
+                static_cast<uint8_t>( ColFlag::kUbHuge ),
 };
 
 using ColFlags = Flags<ColFlag>;
@@ -72,9 +72,9 @@ struct VariableDomains
    bool
    isBinary( int col ) const
    {
-      return flags[col].test( ColFlag::INTEGRAL ) &&
-             !flags[col].test( ColFlag::LB_USELESS, ColFlag::UB_USELESS,
-                               ColFlag::INACTIVE ) &&
+      return flags[col].test( ColFlag::kIntegral ) &&
+             !flags[col].test( ColFlag::kLbUseless, ColFlag::kUbUseless,
+                               ColFlag::kInactive ) &&
              lower_bounds[col] == 0 && upper_bounds[col] == 1;
    }
 

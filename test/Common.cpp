@@ -53,11 +53,11 @@ TEST_CASE( "test activity computation and constraint propagation", "[core]" )
 
       if( ncalls == 0 )
       {
-         REQUIRE( actChange == ActivityChange::MIN );
+         REQUIRE( actChange == ActivityChange::kMin );
       }
       else if( ncalls == 1 )
       {
-         REQUIRE( actChange == ActivityChange::MAX );
+         REQUIRE( actChange == ActivityChange::kMax );
       }
 
       ++ncalls;
@@ -89,7 +89,7 @@ TEST_CASE( "test activity computation and constraint propagation", "[core]" )
        lbs[6], ubs[6], rowvalues[6], 3.0, activities[0],
        [&]( ActivityChange actChange, RowActivity<double>& activity ) {
           REQUIRE( &activity == &activities[0] );
-          REQUIRE( actChange == ActivityChange::MAX );
+          REQUIRE( actChange == ActivityChange::kMax );
           ++ncalls;
        } );
 
@@ -107,12 +107,12 @@ TEST_CASE( "test activity computation and constraint propagation", "[core]" )
        lbs[7], ubs[7], rowvalues[7], 3.0, activities[0],
        [&]( ActivityChange actChange, RowActivity<double>& activity ) {
           REQUIRE( &activity == &activities[0] );
-          if( actChange == ActivityChange::MAX )
+          if( actChange == ActivityChange::kMax )
           {
              REQUIRE( maxchanged == false );
              maxchanged = true;
           }
-          else if( actChange == ActivityChange::MIN )
+          else if( actChange == ActivityChange::kMin )
           {
              REQUIRE( minchanged == false );
              minchanged = true;
@@ -145,11 +145,11 @@ TEST_CASE( "test activity computation and constraint propagation", "[core]" )
    propagate_row( rowvalues.data(), colinds.data(), rowvalues.size(),
                   activities[0], -infinity<double>(), activities[0].min, lbs,
                   ubs, [&]( BoundChange bndChg, int colid, double newbnd ) {
-                     if( bndChg == BoundChange::LOWER )
+                     if( bndChg == BoundChange::kLower )
                      {
                         lbs_cpy[colid] = newbnd;
                      }
-                     else if( bndChg == BoundChange::UPPER )
+                     else if( bndChg == BoundChange::kUpper )
                      {
                         ubs_cpy[colid] = newbnd;
                      }
@@ -178,11 +178,11 @@ TEST_CASE( "test activity computation and constraint propagation", "[core]" )
    propagate_row( rowvalues.data(), colinds.data(), rowvalues.size(),
                   activities[0], activities[0].max, infinity<double>(), lbs,
                   ubs, [&]( BoundChange bndChg, int colid, double newbnd ) {
-                     if( bndChg == BoundChange::LOWER )
+                     if( bndChg == BoundChange::kLower )
                      {
                         lbs_cpy[colid] = newbnd;
                      }
-                     else if( bndChg == BoundChange::UPPER )
+                     else if( bndChg == BoundChange::kUpper )
                      {
                         ubs_cpy[colid] = newbnd;
                      }

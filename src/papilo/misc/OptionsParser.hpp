@@ -39,25 +39,25 @@ using namespace boost::program_options;
 
 enum class Command
 {
-   NONE,
-   PRESOLVE,
-   SOLVE,
-   POSTSOLVE
+   kNone,
+   kPresolve,
+   kSolve,
+   kPostsolve
 };
 
 struct ArithmeticType
 {
    enum
    {
-      DOUBLE = 'd',
-      QUAD = 'q',
-      RATIONAL = 'r'
+      kDouble = 'd',
+      kQuad = 'q',
+      kRational = 'r'
    };
 };
 
 struct OptionsInfo
 {
-   Command command = Command::NONE;
+   Command command = Command::kNone;
    std::string instance_file;
    std::string reduced_problem_file;
    std::string postsolve_archive_file;
@@ -69,7 +69,7 @@ struct OptionsInfo
    std::string objective_reference;
    std::vector<std::string> unparsed_options;
    double tlim = std::numeric_limits<double>::max();
-   char arithmetic_type = ArithmeticType::DOUBLE;
+   char arithmetic_type = ArithmeticType::kDouble;
    int nthreads;
    bool print_stats;
    bool print_params;
@@ -84,14 +84,14 @@ struct OptionsInfo
          return false;
       }
 
-      if( command == Command::POSTSOLVE && !postsolve_archive_file.empty() &&
+      if( command == Command::kPostsolve && !postsolve_archive_file.empty() &&
           !std::ifstream( postsolve_archive_file ) )
       {
          fmt::print( "file {} is not valid\n", postsolve_archive_file );
          return false;
       }
 
-      if( command == Command::POSTSOLVE && !reduced_solution_file.empty() &&
+      if( command == Command::kPostsolve && !reduced_solution_file.empty() &&
           !std::ifstream( reduced_solution_file ) )
       {
          fmt::print( "file {} is not valid\n", reduced_solution_file );
@@ -127,11 +127,11 @@ struct OptionsInfo
    {
       is_complete = false;
       if( commandString == "presolve" )
-         command = Command::PRESOLVE;
+         command = Command::kPresolve;
       else if( commandString == "solve" )
-         command = Command::SOLVE;
+         command = Command::kSolve;
       else if( commandString == "postsolve" )
-         command = Command::POSTSOLVE;
+         command = Command::kPostsolve;
       else
       {
          fmt::print( "unknown command: {}\n", commandString );
@@ -141,21 +141,21 @@ struct OptionsInfo
       std::string arithmetic_type_message = fmt::format(
           "'{}' for double precision, '{}' for quad precision, and '{}' "
           "for exact rational arithmetic",
-          (char)ArithmeticType::DOUBLE, (char)ArithmeticType::QUAD,
-          (char)ArithmeticType::RATIONAL );
+          (char)ArithmeticType::kDouble, (char)ArithmeticType::kQuad,
+          (char)ArithmeticType::kRational );
 
       options_description desc( fmt::format( "{} command", commandString ) );
 
       desc.add_options()( "file,f", value( &instance_file ), "instance file" );
       desc.add_options()(
           "arithmetic-type,a",
-          value( &arithmetic_type )->default_value( ArithmeticType::DOUBLE ),
+          value( &arithmetic_type )->default_value( ArithmeticType::kDouble ),
           arithmetic_type_message.c_str() );
       desc.add_options()( "postsolve-archive,v",
                           value( &postsolve_archive_file ),
                           "filename for postsolve archive" );
 
-      if( command != Command::POSTSOLVE )
+      if( command != Command::kPostsolve )
       {
          desc.add_options()( "reduced-problem,r",
                              value( &reduced_problem_file ),
@@ -174,7 +174,7 @@ struct OptionsInfo
                              value( &nthreads )->default_value( 0 ) );
       }
 
-      if( command != Command::PRESOLVE )
+      if( command != Command::kPresolve )
       {
          desc.add_options()( "reduced-solution,u",
                              value( &reduced_solution_file ),
@@ -186,7 +186,7 @@ struct OptionsInfo
                              "correct objective value for validation" );
       }
 
-      if( command == Command::SOLVE )
+      if( command == Command::kSolve )
       {
          desc.add_options()( "scip-settings,s", value( &scip_settings_file ),
                              "SCIP settings file" );
@@ -219,23 +219,23 @@ struct OptionsInfo
       if( !checkFiles() )
          return;
 
-      if( arithmetic_type != ArithmeticType::DOUBLE &&
-          arithmetic_type != ArithmeticType::QUAD &&
-          arithmetic_type != ArithmeticType::RATIONAL )
+      if( arithmetic_type != ArithmeticType::kDouble &&
+          arithmetic_type != ArithmeticType::kQuad &&
+          arithmetic_type != ArithmeticType::kRational )
          fmt::print( "invalid arithmetic type '{}'\nvalid options are {}\n",
                      (char)arithmetic_type, arithmetic_type_message );
 
       switch( command )
       {
-      case Command::SOLVE:
-      case Command::PRESOLVE:
+      case Command::kSolve:
+      case Command::kPresolve:
          if( instance_file.empty() )
          {
             fmt::print( "{} requires an instance file\n", commandString );
             return;
          }
          break;
-      case Command::POSTSOLVE:
+      case Command::kPostsolve:
          if( postsolve_archive_file.empty() || reduced_solution_file.empty() )
          {
             fmt::print(
@@ -243,7 +243,7 @@ struct OptionsInfo
                 commandString );
             return;
          }
-      case Command::NONE:
+      case Command::kNone:
          assert( false );
       }
 

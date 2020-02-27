@@ -67,23 +67,23 @@ class ScipInterface : public SolverInterface<REAL>
       for( int i = 0; i < ncols; ++i )
       {
          SCIP_VAR* var;
-         assert( !domains.flags[i].test( ColFlag::INACTIVE ) );
+         assert( !domains.flags[i].test( ColFlag::kInactive ) );
 
-         SCIP_Real lb = domains.flags[i].test( ColFlag::LB_INF )
+         SCIP_Real lb = domains.flags[i].test( ColFlag::kLbInf )
                             ? -SCIPinfinity( scip )
                             : SCIP_Real( domains.lower_bounds[i] );
-         SCIP_Real ub = domains.flags[i].test( ColFlag::UB_INF )
+         SCIP_Real ub = domains.flags[i].test( ColFlag::kUbInf )
                             ? SCIPinfinity( scip )
                             : SCIP_Real( domains.upper_bounds[i] );
          SCIP_VARTYPE type;
-         if( domains.flags[i].test( ColFlag::INTEGRAL ) )
+         if( domains.flags[i].test( ColFlag::kIntegral ) )
          {
             if( lb == REAL{0} && ub == REAL{1} )
                type = SCIP_VARTYPE_BINARY;
             else
                type = SCIP_VARTYPE_INTEGER;
          }
-         else if( domains.flags[i].test( ColFlag::IMPL_INT ) )
+         else if( domains.flags[i].test( ColFlag::kImplInt ) )
             type = SCIP_VARTYPE_IMPLINT;
          else
             type = SCIP_VARTYPE_CONTINUOUS;
@@ -109,10 +109,10 @@ class ScipInterface : public SolverInterface<REAL>
          auto rowvec = consMatrix.getRowCoefficients( i );
          const REAL* vals = rowvec.getValues();
          const int* inds = rowvec.getIndices();
-         SCIP_Real lhs = rflags[i].test( RowFlag::LHS_INF )
+         SCIP_Real lhs = rflags[i].test( RowFlag::kLhsInf )
                              ? -SCIPinfinity( scip )
                              : SCIP_Real( lhs_values[i] );
-         SCIP_Real rhs = rflags[i].test( RowFlag::RHS_INF )
+         SCIP_Real rhs = rflags[i].test( RowFlag::kRhsInf )
                              ? SCIPinfinity( scip )
                              : SCIP_Real( rhs_values[i] );
 
@@ -161,16 +161,16 @@ class ScipInterface : public SolverInterface<REAL>
       {
          int col = colset[i];
          SCIP_VAR* var;
-         assert( !domains.flags[col].test( ColFlag::INACTIVE ) );
+         assert( !domains.flags[col].test( ColFlag::kInactive ) );
 
-         SCIP_Real lb = domains.flags[col].test( ColFlag::LB_INF )
+         SCIP_Real lb = domains.flags[col].test( ColFlag::kLbInf )
                             ? -SCIPinfinity( scip )
                             : SCIP_Real( domains.lower_bounds[col] );
-         SCIP_Real ub = domains.flags[col].test( ColFlag::UB_INF )
+         SCIP_Real ub = domains.flags[col].test( ColFlag::kUbInf )
                             ? SCIPinfinity( scip )
                             : SCIP_Real( domains.upper_bounds[col] );
          SCIP_VARTYPE type;
-         if( domains.flags[col].test( ColFlag::INTEGRAL ) )
+         if( domains.flags[col].test( ColFlag::kIntegral ) )
          {
             if( lb == REAL{0} && ub == REAL{1} )
                type = SCIP_VARTYPE_BINARY;
@@ -202,10 +202,10 @@ class ScipInterface : public SolverInterface<REAL>
          auto rowvec = consMatrix.getRowCoefficients( row );
          const REAL* vals = rowvec.getValues();
          const int* inds = rowvec.getIndices();
-         SCIP_Real lhs = rflags[row].test( RowFlag::LHS_INF )
+         SCIP_Real lhs = rflags[row].test( RowFlag::kLhsInf )
                              ? -SCIPinfinity( scip )
                              : SCIP_Real( lhs_values[row] );
-         SCIP_Real rhs = rflags[row].test( RowFlag::RHS_INF )
+         SCIP_Real rhs = rflags[row].test( RowFlag::kRhsInf )
                              ? SCIPinfinity( scip )
                              : SCIP_Real( rhs_values[row] );
 
@@ -245,7 +245,7 @@ class ScipInterface : public SolverInterface<REAL>
    readSettings( const String& file ) override
    {
       if( SCIPreadParams( scip, file.c_str() ) != SCIP_OKAY )
-         this->status = SolverStatus::ERROR;
+         this->status = SolverStatus::kError;
    }
 
    void
@@ -255,14 +255,14 @@ class ScipInterface : public SolverInterface<REAL>
    {
       if( doSetUp( prob, row_maps, col_maps, components, component ) !=
           SCIP_OKAY )
-         this->status = SolverStatus::ERROR;
+         this->status = SolverStatus::kError;
    }
 
    void
    setNodeLimit( int num ) override
    {
       if( SCIPsetLongintParam( scip, "limits/nodes", num ) != SCIP_OKAY )
-         this->status = SolverStatus::ERROR;
+         this->status = SolverStatus::kError;
    }
 
    void
@@ -270,29 +270,29 @@ class ScipInterface : public SolverInterface<REAL>
    {
       if( SCIPsetRealParam( scip, "limits/gap", SCIP_Real( gaplim ) ) !=
           SCIP_OKAY )
-         this->status = SolverStatus::ERROR;
+         this->status = SolverStatus::kError;
    }
 
    void
    setSoftTimeLimit( double tlim ) override
    {
       if( SCIPsetIntParam( scip, "timing/clocktype", 2 ) != SCIP_OKAY )
-         this->status = SolverStatus::ERROR;
+         this->status = SolverStatus::kError;
 
       if( SCIPsetRealParam( scip, "limits/softtime", SCIP_Real( tlim ) ) !=
           SCIP_OKAY )
-         this->status = SolverStatus::ERROR;
+         this->status = SolverStatus::kError;
    }
 
    void
    setTimeLimit( double tlim ) override
    {
       if( SCIPsetIntParam( scip, "timing/clocktype", 2 ) != SCIP_OKAY )
-         this->status = SolverStatus::ERROR;
+         this->status = SolverStatus::kError;
 
       if( SCIPsetRealParam( scip, "limits/time", SCIP_Real( tlim ) ) !=
           SCIP_OKAY )
-         this->status = SolverStatus::ERROR;
+         this->status = SolverStatus::kError;
    }
 
    void
@@ -300,19 +300,19 @@ class ScipInterface : public SolverInterface<REAL>
    {
       switch( verbosity )
       {
-      case VerbosityLevel::QUIET:
+      case VerbosityLevel::kQuiet:
          SCIP_CALL_ABORT( SCIPsetIntParam( scip, "display/verblevel", 0 ) );
          break;
-      case VerbosityLevel::ERROR:
+      case VerbosityLevel::kError:
          SCIP_CALL_ABORT( SCIPsetIntParam( scip, "display/verblevel", 1 ) );
          break;
-      case VerbosityLevel::WARNING:
+      case VerbosityLevel::kWarning:
          SCIP_CALL_ABORT( SCIPsetIntParam( scip, "display/verblevel", 2 ) );
          break;
-      case VerbosityLevel::INFO:
+      case VerbosityLevel::kInfo:
          SCIP_CALL_ABORT( SCIPsetIntParam( scip, "display/verblevel", 4 ) );
          break;
-      case VerbosityLevel::EXTRA:
+      case VerbosityLevel::kExtra:
          SCIP_CALL_ABORT( SCIPsetIntParam( scip, "display/verblevel", 5 ) );
       }
    }
@@ -322,24 +322,24 @@ class ScipInterface : public SolverInterface<REAL>
           const Vec<int>& col_maps ) override
    {
       if( doSetUp( prob, row_maps, col_maps ) != SCIP_OKAY )
-         this->status = SolverStatus::ERROR;
+         this->status = SolverStatus::kError;
    }
 
    void
    solve() override
    {
-      assert( this->status != SolverStatus::ERROR );
+      assert( this->status != SolverStatus::kError );
 
       if( SCIPsolve( scip ) != SCIP_OKAY )
       {
-         this->status = SolverStatus::ERROR;
+         this->status = SolverStatus::kError;
          return;
       }
 
       switch( SCIPgetStatus( scip ) )
       {
       case SCIP_STATUS_UNKNOWN:
-         this->status = SolverStatus::ERROR;
+         this->status = SolverStatus::kError;
          return;
       case SCIP_STATUS_USERINTERRUPT:
       case SCIP_STATUS_NODELIMIT:
@@ -352,19 +352,19 @@ class ScipInterface : public SolverInterface<REAL>
       case SCIP_STATUS_BESTSOLLIMIT:
       case SCIP_STATUS_RESTARTLIMIT:
       case SCIP_STATUS_TERMINATE:
-         this->status = SolverStatus::INTERRUPTED;
+         this->status = SolverStatus::kInterrupted;
          break;
       case SCIP_STATUS_INFORUNBD:
-         this->status = SolverStatus::UNBND_OR_INFEAS;
+         this->status = SolverStatus::kUnbndOrInfeas;
          return;
       case SCIP_STATUS_INFEASIBLE:
-         this->status = SolverStatus::INFEASIBLE;
+         this->status = SolverStatus::kInfeasible;
          return;
       case SCIP_STATUS_UNBOUNDED:
-         this->status = SolverStatus::UNBOUNDED;
+         this->status = SolverStatus::kUnbounded;
          return;
       case SCIP_STATUS_OPTIMAL:
-         this->status = SolverStatus::OPTIMAL;
+         this->status = SolverStatus::kOptimal;
       }
    }
 
@@ -379,7 +379,7 @@ class ScipInterface : public SolverInterface<REAL>
    {
       SCIP_SOL* sol = SCIPgetBestSol( scip );
 
-      if( solbuffer.type != SolutionType::PRIMAL_ONLY )
+      if( solbuffer.type != SolutionType::kPrimal )
          return false;
 
       solbuffer.primal.resize( vars.size() );
@@ -424,7 +424,7 @@ class ScipInterface : public SolverInterface<REAL>
    {
       SCIP_SOL* sol = SCIPgetBestSol( scip );
 
-      if( solbuffer.type != SolutionType::PRIMAL_ONLY )
+      if( solbuffer.type != SolutionType::kPrimal )
          return false;
 
       if( sol != nullptr )

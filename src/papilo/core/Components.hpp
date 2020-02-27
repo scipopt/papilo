@@ -244,7 +244,7 @@ class Components
          {
             for( int j = compcolstart[i]; j != compcolstart[i + 1]; ++j )
             {
-               if( cflags[compcols[j]].test( ColFlag::INTEGRAL ) )
+               if( cflags[compcols[j]].test( ColFlag::kIntegral ) )
                   ++compInfo[i].nintegral;
                else
                   ++compInfo[i].ncontinuous;

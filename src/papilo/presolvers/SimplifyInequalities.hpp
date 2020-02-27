@@ -51,8 +51,8 @@ class SimplifyInequalities : public PresolveMethod<REAL>
    SimplifyInequalities() : PresolveMethod<REAL>()
    {
       this->setName( "simplifyineq" );
-      this->setTiming( PresolverTiming::MEDIUM );
-      this->setType( PresolverType::INTEGRAL_COLS );
+      this->setTiming( PresolverTiming::kMedium );
+      this->setType( PresolverType::kIntegralCols );
    }
 
    /// todo how to communicate about postsolve information
@@ -146,7 +146,7 @@ SimplifyInequalities<REAL>::simplify(
    Vec<int>::iterator start_cont;
    start_cont = partition(
        colOrder.begin(), colOrder.end(), [&colinds, &cflags]( int const& a ) {
-          return cflags[colinds[a]].test( ColFlag::INTEGRAL );
+          return cflags[colinds[a]].test( ColFlag::kIntegral );
        } );
    // integer variables after non-increasing absolute value of the
    // coefficients
@@ -176,7 +176,7 @@ SimplifyInequalities<REAL>::simplify(
       int v = colOrder[i];
 
       // break if variable not integral
-      if( !cflags[colinds[v]].test( ColFlag::INTEGRAL ) )
+      if( !cflags[colinds[v]].test( ColFlag::kIntegral ) )
          break;
 
       // update gcd
@@ -184,7 +184,7 @@ SimplifyInequalities<REAL>::simplify(
       if( num.isLE( gcd, 1 ) )
          break;
 
-      assert( !cflags[colinds[v]].test( ColFlag::LB_INF, ColFlag::UB_INF ) );
+      assert( !cflags[colinds[v]].test( ColFlag::kLbInf, ColFlag::kUbInf ) );
 
       // update residual activities
       // attention: the calculation inaccuracy can be greater than epsilon
@@ -200,7 +200,7 @@ SimplifyInequalities<REAL>::simplify(
       }
 
       // calculate siderest
-      if( !rflag.test( RowFlag::RHS_INF ) )
+      if( !rflag.test( RowFlag::kRhsInf ) )
       {
          siderest = rhs - num.epsFloor( rhs / gcd ) * gcd;
       }
@@ -212,9 +212,9 @@ SimplifyInequalities<REAL>::simplify(
       }
 
       // check if the ordered variables on the right of i are redundant
-      if( ( !rflag.test( RowFlag::RHS_INF ) && resmaxact <= siderest &&
+      if( ( !rflag.test( RowFlag::kRhsInf ) && resmaxact <= siderest &&
             num.isFeasLT( siderest - gcd, resminact ) ) ||
-          ( !rflag.test( RowFlag::LHS_INF ) && resminact >= siderest - gcd &&
+          ( !rflag.test( RowFlag::kLhsInf ) && resminact >= siderest - gcd &&
             num.isFeasGT( siderest, resmaxact ) ) )
       {
          redundant = true;
@@ -250,7 +250,7 @@ SimplifyInequalities<REAL>::execute( const Problem<REAL>& problem,
    const Vec<REAL>& lbs = problem.getLowerBounds();
    const Vec<REAL>& ubs = problem.getUpperBounds();
 
-   PresolveStatus result = PresolveStatus::UNCHANGED;
+   PresolveStatus result = PresolveStatus::kUnchanged;
 
    // allocate only once
    Vec<int> colOrder;
@@ -264,7 +264,7 @@ SimplifyInequalities<REAL>::execute( const Problem<REAL>& problem,
       const REAL* values = rowvec.getValues();
       const int* colinds = rowvec.getIndices();
 
-      if( rflags[row].test( RowFlag::REDUNDANT ) )
+      if( rflags[row].test( RowFlag::kRedundant ) )
          continue;
       // don't check empty or bound-constraints
       if( rowlen < 2 )
@@ -273,7 +273,7 @@ SimplifyInequalities<REAL>::execute( const Problem<REAL>& problem,
       if( activities[row].ninfmax != 0 || activities[row].ninfmin != 0 )
          continue;
       // consider only inequalities
-      if( !rflags[row].test( RowFlag::RHS_INF, RowFlag::LHS_INF ) )
+      if( !rflags[row].test( RowFlag::kRhsInf, RowFlag::kLhsInf ) )
          continue;
 
       REAL gcd = 0;
@@ -313,11 +313,11 @@ SimplifyInequalities<REAL>::execute( const Problem<REAL>& problem,
 
             Message::debug( this, "removed variable {} in row {}\n", col, row );
 
-            result = PresolveStatus::REDUCED;
+            result = PresolveStatus::kReduced;
          }
 
          // round side to multiple of gcd; don't divide row by gcd
-         if( !rflags[row].test( RowFlag::RHS_INF ) && rhs[row] != 0 )
+         if( !rflags[row].test( RowFlag::kRhsInf ) && rhs[row] != 0 )
          {
             REAL newrhs = num.feasFloor( rhs[row] / gcd ) * gcd;
             // side is really changed
@@ -328,10 +328,10 @@ SimplifyInequalities<REAL>::execute( const Problem<REAL>& problem,
 
                Message::debug( this, "changed rhs of row {}\n", row );
 
-               result = PresolveStatus::REDUCED;
+               result = PresolveStatus::kReduced;
             }
          }
-         else if( !rflags[row].test( RowFlag::LHS_INF ) && lhs[row] != 0 )
+         else if( !rflags[row].test( RowFlag::kLhsInf ) && lhs[row] != 0 )
          {
             REAL newlhs = num.feasCeil( lhs[row] / gcd ) * gcd;
             // side is really changed
@@ -342,7 +342,7 @@ SimplifyInequalities<REAL>::execute( const Problem<REAL>& problem,
 
                Message::debug( this, "changed lhs of row {}\n", row );
 
-               result = PresolveStatus::REDUCED;
+               result = PresolveStatus::kReduced;
             }
          }
       }
