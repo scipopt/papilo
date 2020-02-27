@@ -340,7 +340,7 @@ MpsParser<REAL>::parseRows( boost::iostreams::filtering_istream& file,
       else if( word_ref.empty() ) // empty line
          continue;
       else
-         return parsekey::FAIL;
+         return parsekey::kFail;
 
       std::string rowname = ""; // todo use ref
 
@@ -357,11 +357,11 @@ MpsParser<REAL>::parseRows( boost::iostreams::filtering_istream& file,
       if( !ret.second )
       {
          std::cerr << "duplicate row " << rowname << std::endl;
-         return parsekey::FAIL;
+         return parsekey::kFail;
       }
    }
 
-   return parsekey::FAIL;
+   return parsekey::kFail;
 }
 
 template <typename REAL>
@@ -433,7 +433,7 @@ MpsParser<REAL>::parseCols( boost::iostreams::filtering_istream& file,
              ( !integral_cols && marker != "'INTORG'" ) )
          {
             std::cerr << "integrality marker error " << std::endl;
-            return parsekey::FAIL;
+            return parsekey::kFail;
          }
          integral_cols = !integral_cols;
 
@@ -453,7 +453,7 @@ MpsParser<REAL>::parseCols( boost::iostreams::filtering_istream& file,
          if( !ret.second )
          {
             std::cerr << "duplicate column " << std::endl;
-            return parsekey::FAIL;
+            return parsekey::kFail;
          }
 
          assert( lb4cols.size() == col_flags.size() );
@@ -493,10 +493,10 @@ MpsParser<REAL>::parseCols( boost::iostreams::filtering_istream& file,
                  qi::real_parser<typename RealParseType<REAL>::type>()[(
                      addtuple )] ),
               ascii::space ) )
-         return parsekey::FAIL;
+         return parsekey::kFail;
    }
 
-   return parsekey::FAIL;
+   return parsekey::kFail;
 }
 
 template <typename REAL>
@@ -564,7 +564,7 @@ MpsParser<REAL>::parseRanges( boost::iostreams::filtering_istream& file )
                  qi::real_parser<typename RealParseType<REAL>::type>()[(
                      addrange )] ),
               ascii::space ) )
-         return parsekey::FAIL;
+         return parsekey::kFail;
 
       // optional part todo don't replicate code
       qi::phrase_parse(
@@ -575,7 +575,7 @@ MpsParser<REAL>::parseRanges( boost::iostreams::filtering_istream& file )
           ascii::space );
    }
 
-   return parsekey::FAIL;
+   return parsekey::kFail;
 }
 
 template <typename REAL>
@@ -639,10 +639,10 @@ MpsParser<REAL>::parseRhs( boost::iostreams::filtering_istream& file )
                  qi::real_parser<typename RealParseType<REAL>::type>()[(
                      addrhs )] ),
               ascii::space ) )
-         return parsekey::FAIL;
+         return parsekey::kFail;
    }
 
-   return parsekey::FAIL;
+   return parsekey::kFail;
 }
 
 template <typename REAL>
@@ -740,7 +740,7 @@ MpsParser<REAL>::parseBounds( boost::iostreams::filtering_istream& file )
                  it, strline.end(),
                  ( qi::lexeme[qi::as_string[+qi::graph][( parsename )]] ),
                  ascii::space ) )
-            return parsekey::FAIL;
+            return parsekey::kFail;
 
          if( isintegral ) // binary
          {
@@ -796,10 +796,10 @@ MpsParser<REAL>::parseBounds( boost::iostreams::filtering_istream& file )
                         }
                      } )] ),
               ascii::space ) )
-         return parsekey::FAIL;
+         return parsekey::kFail;
    }
 
-   return parsekey::FAIL;
+   return parsekey::kFail;
 }
 
 template <typename REAL>
@@ -833,7 +833,7 @@ MpsParser<REAL>::parse( boost::iostreams::filtering_istream& file )
    parsekey keyword_old = parsekey::kNone;
 
    // parsing loop
-   while( keyword != parsekey::FAIL && keyword != parsekey::kEnd )
+   while( keyword != parsekey::kFail && keyword != parsekey::kEnd )
    {
       keyword_old = keyword;
       switch( keyword )
@@ -853,7 +853,7 @@ MpsParser<REAL>::parse( boost::iostreams::filtering_istream& file )
       case parsekey::kBounds:
          keyword = parseBounds( file );
          break;
-      case parsekey::FAIL:
+      case parsekey::kFail:
          break;
       default:
          keyword = parseDefault( file );
@@ -861,7 +861,7 @@ MpsParser<REAL>::parse( boost::iostreams::filtering_istream& file )
       }
    }
 
-   if( keyword == parsekey::FAIL )
+   if( keyword == parsekey::kFail )
    {
       printErrorMessage( keyword_old );
       exit( 1 ); // todo exception
