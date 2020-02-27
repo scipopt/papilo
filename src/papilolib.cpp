@@ -105,21 +105,19 @@ struct AllocatorTraits<T>
 #include "papilo/core/ConstraintMatrix.hpp"
 #include "papilo/core/Objective.hpp"
 #include "papilo/core/Presolve.hpp"
-#include "papilo/core/VariableDomains.hpp"
-#include "papilo/misc/MultiPrecision.hpp"
-
-#include "tbb/tick_count.h"
-#include <boost/program_options.hpp>
-#include <cassert>
-#include <fstream>
-
 #include "papilo/core/ProblemBuilder.hpp"
+#include "papilo/core/VariableDomains.hpp"
 #include "papilo/interfaces/ScipInterface.hpp"
 #include "papilo/interfaces/SoplexInterface.hpp"
-
+#include "papilo/misc/MultiPrecision.hpp"
+#include "papilo/misc/tbb.hpp"
 #ifdef PAPILO_MPS_WRITER
 #include "papilo/io/MpsWriter.hpp"
 #endif
+
+#include <boost/program_options.hpp>
+#include <cassert>
+#include <fstream>
 
 struct Papilo_Problem
 {

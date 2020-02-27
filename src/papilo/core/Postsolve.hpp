@@ -32,9 +32,9 @@
 #include "papilo/misc/Vec.hpp"
 #include "papilo/misc/compress_vector.hpp"
 #include "papilo/misc/fmt.hpp"
+#include "papilo/misc/tbb.hpp"
 #include <fstream>
 
-#include "tbb/parallel_invoke.h"
 #include <boost/archive/text_iarchive.hpp>
 #include <boost/archive/text_oarchive.hpp>
 #include <boost/archive/tmpdir.hpp>

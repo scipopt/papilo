@@ -30,9 +30,7 @@
 #include "papilo/core/SingleRow.hpp"
 #include "papilo/misc/Hash.hpp"
 #include "papilo/misc/Signature.hpp"
-#include "tbb/blocked_range.h"
-#include "tbb/concurrent_vector.h"
-#include "tbb/parallel_for.h"
+#include "papilo/misc/tbb.hpp"
 
 namespace papilo
 {
