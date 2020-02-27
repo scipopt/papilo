@@ -282,17 +282,17 @@ class HighsInterface : public SolverInterface<REAL>
    {
       switch( verbosity )
       {
-      case VerbosityLevel::QUIET:
+      case VerbosityLevel::kQuiet:
          opts.message_level = ML_NONE;
          opts.logfile = nullptr;
          opts.output = nullptr;
          solver.setHighsOutput( nullptr );
          solver.setHighsLogfile( nullptr );
          break;
-      case VerbosityLevel::ERROR:
-      case VerbosityLevel::WARNING:
-      case VerbosityLevel::INFO:
-      case VerbosityLevel::EXTRA:
+      case VerbosityLevel::kError:
+      case VerbosityLevel::kWarning:
+      case VerbosityLevel::kInfo:
+      case VerbosityLevel::kExtra:
          opts.message_level = ML_MINIMAL;
       }
    }

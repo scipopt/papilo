@@ -1056,7 +1056,7 @@ Presolve<REAL>::apply( Problem<REAL>& problem )
                          {
                             std::unique_ptr<SolverInterface<REAL>> solver =
                                 lpSolverFactory->newSolver(
-                                    VerbosityLevel::QUIET );
+                                    VerbosityLevel::kQuiet );
 
                             solver->setUp( problem,
                                            result.postsolve.origrow_mapping,
@@ -1091,7 +1091,7 @@ Presolve<REAL>::apply( Problem<REAL>& problem )
                          {
                             std::unique_ptr<SolverInterface<REAL>> solver =
                                 mipSolverFactory->newSolver(
-                                    VerbosityLevel::QUIET );
+                                    VerbosityLevel::kQuiet );
 
                             solver->setGapLimit( 0 );
                             solver->setNodeLimit(

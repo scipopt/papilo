@@ -551,22 +551,22 @@ PrintSCIPMessage( SCIP_MESSAGEHDLR* handler, FILE* file, const char* message,
 static SCIP_DECL_ERRORPRINTING( messageError )
 {
    SCIP_MESSAGEHDLR* messagehdlr = static_cast<SCIP_MESSAGEHDLR*>( data );
-   PrintSCIPMessage( messagehdlr, NULL, msg, VerbosityLevel::ERROR );
+   PrintSCIPMessage( messagehdlr, NULL, msg, VerbosityLevel::kError );
 }
 
 static SCIP_DECL_MESSAGEWARNING( messageWarning )
 {
-   PrintSCIPMessage( messagehdlr, file, msg, VerbosityLevel::WARNING );
+   PrintSCIPMessage( messagehdlr, file, msg, VerbosityLevel::kWarning );
 }
 
 static SCIP_DECL_MESSAGEINFO( messageInfo )
 {
-   PrintSCIPMessage( messagehdlr, file, msg, VerbosityLevel::INFO );
+   PrintSCIPMessage( messagehdlr, file, msg, VerbosityLevel::kInfo );
 }
 
 static SCIP_DECL_MESSAGEDIALOG( messageDialog )
 {
-   PrintSCIPMessage( messagehdlr, file, msg, VerbosityLevel::INFO );
+   PrintSCIPMessage( messagehdlr, file, msg, VerbosityLevel::kInfo );
 }
 
 static void
@@ -1230,7 +1230,7 @@ papilo_solver_start( PAPILO_SOLVER* solver )
             solverInterface->solve();
 
             if( static_cast<int>( solver->presolve.getVerbosityLevel() ) >=
-                static_cast<int>( VerbosityLevel::INFO ) )
+                static_cast<int>( VerbosityLevel::kInfo ) )
                solverInterface->printDetails();
          }
          status = solverInterface->getStatus();

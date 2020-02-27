@@ -139,7 +139,7 @@ class SolverFactory
 {
  public:
    virtual std::unique_ptr<SolverInterface<REAL>>
-   newSolver( VerbosityLevel verbosity = VerbosityLevel::QUIET ) const = 0;
+   newSolver( VerbosityLevel verbosity = VerbosityLevel::kQuiet ) const = 0;
 
    virtual ~SolverFactory() {}
 };

@@ -300,19 +300,19 @@ class ScipInterface : public SolverInterface<REAL>
    {
       switch( verbosity )
       {
-      case VerbosityLevel::QUIET:
+      case VerbosityLevel::kQuiet:
          SCIP_CALL_ABORT( SCIPsetIntParam( scip, "display/verblevel", 0 ) );
          break;
-      case VerbosityLevel::ERROR:
+      case VerbosityLevel::kError:
          SCIP_CALL_ABORT( SCIPsetIntParam( scip, "display/verblevel", 1 ) );
          break;
-      case VerbosityLevel::WARNING:
+      case VerbosityLevel::kWarning:
          SCIP_CALL_ABORT( SCIPsetIntParam( scip, "display/verblevel", 2 ) );
          break;
-      case VerbosityLevel::INFO:
+      case VerbosityLevel::kInfo:
          SCIP_CALL_ABORT( SCIPsetIntParam( scip, "display/verblevel", 4 ) );
          break;
-      case VerbosityLevel::EXTRA:
+      case VerbosityLevel::kExtra:
          SCIP_CALL_ABORT( SCIPsetIntParam( scip, "display/verblevel", 5 ) );
       }
    }

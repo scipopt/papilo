@@ -258,17 +258,17 @@ class SoplexInterface : public SolverInterface<REAL>
 
       switch( verbosity )
       {
-      case VerbosityLevel::QUIET:
-      case VerbosityLevel::ERROR:
+      case VerbosityLevel::kQuiet:
+      case VerbosityLevel::kError:
          spx.setIntParam( SoPlex::VERBOSITY, SoPlex::VERBOSITY_ERROR );
          break;
-      case VerbosityLevel::WARNING:
+      case VerbosityLevel::kWarning:
          spx.setIntParam( SoPlex::VERBOSITY, SoPlex::VERBOSITY_WARNING );
          break;
-      case VerbosityLevel::INFO:
+      case VerbosityLevel::kInfo:
          spx.setIntParam( SoPlex::VERBOSITY, SoPlex::VERBOSITY_NORMAL );
          break;
-      case VerbosityLevel::EXTRA:
+      case VerbosityLevel::kExtra:
          spx.setIntParam( SoPlex::VERBOSITY, SoPlex::VERBOSITY_HIGH );
       }
    }
