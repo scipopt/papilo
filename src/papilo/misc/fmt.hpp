@@ -41,8 +41,18 @@
 #define PAPILO_DEFINED_WIN32_LEAN_AND_MEAN
 #endif
 
+#ifndef NOGDI
+#define NOGDI
+#define PAPILO_DEFINED_NOGDI
+#endif
+
 #include "fmt/format.h"
 #include "fmt/ostream.h"
+
+#ifdef PAPILO_DEFINED_NOGDI
+#undef NOGDI
+#undef PAPILO_DEFINED_NOGDI
+#endif
 
 #ifdef PAPILO_DEFINED_NOMINMAX
 #undef NOMINMAX
