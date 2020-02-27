@@ -37,6 +37,16 @@
 #define PAPILO_DEFINED_WIN32_LEAN_AND_MEAN
 #endif
 
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#define PAPILO_DEFINED_WIN32_LEAN_AND_MEAN
+#endif
+
+#ifndef NOGDI
+#define NOGDI
+#define PAPILO_DEFINED_NOGDI
+#endif
+
 #include "tbb/blocked_range.h"
 #include "tbb/combinable.h"
 #include "tbb/concurrent_hash_map.h"
@@ -46,6 +56,11 @@
 #include "tbb/partitioner.h"
 #include "tbb/task_arena.h"
 #include "tbb/tick_count.h"
+
+#ifdef PAPILO_DEFINED_NOGDI
+#undef NOGDI
+#undef PAPILO_DEFINED_NOGDI
+#endif
 
 #ifdef PAPILO_DEFINED_NOMINMAX
 #undef NOMINMAX
