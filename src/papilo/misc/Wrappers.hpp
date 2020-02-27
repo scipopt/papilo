@@ -282,8 +282,8 @@ presolve_and_solve(
       if( result.postsolve.getOriginalProblem().getNumIntegralCols() == 0 )
          solution.type = SolutionType::PRIMAL_AND_DUAL;
 
-      if( ( status == SolverStatus::OPTIMAL ||
-            status == SolverStatus::INTERRUPTED ) &&
+      if( ( status == SolverStatus::kOptimal ||
+            status == SolverStatus::kInterrupted ) &&
           solver->getSolution( solution ) )
          postsolve( result.postsolve, solution, opts.objective_reference,
                     opts.orig_solution_file );

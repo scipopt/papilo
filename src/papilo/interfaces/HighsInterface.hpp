@@ -251,7 +251,7 @@ class HighsInterface : public SolverInterface<REAL>
 
       if( solver.run() == HighsStatus::Error )
       {
-         this->status = SolverStatus::ERROR;
+         this->status = SolverStatus::kError;
          return;
       }
 
@@ -260,20 +260,20 @@ class HighsInterface : public SolverInterface<REAL>
       switch( stat )
       {
       default:
-         this->status = SolverStatus::ERROR;
+         this->status = SolverStatus::kError;
          return;
       case HighsModelStatus::PRIMAL_INFEASIBLE:
-         this->status = SolverStatus::INFEASIBLE;
+         this->status = SolverStatus::kInfeasible;
          return;
       case HighsModelStatus::PRIMAL_UNBOUNDED:
-         this->status = SolverStatus::UNBOUNDED;
+         this->status = SolverStatus::kUnbounded;
          return;
       case HighsModelStatus::REACHED_TIME_LIMIT:
       case HighsModelStatus::REACHED_ITERATION_LIMIT:
-         this->status = SolverStatus::INTERRUPTED;
+         this->status = SolverStatus::kInterrupted;
          return;
       case HighsModelStatus::OPTIMAL:
-         this->status = SolverStatus::OPTIMAL;
+         this->status = SolverStatus::kOptimal;
       }
    }
 
@@ -300,7 +300,7 @@ class HighsInterface : public SolverInterface<REAL>
    REAL
    getDualBound() override
    {
-      if( this->status == SolverStatus::OPTIMAL )
+      if( this->status == SolverStatus::kOptimal )
          return -inf; // todo
 
       return -inf;
@@ -348,7 +348,7 @@ class HighsInterface : public SolverInterface<REAL>
    getSolution( const Components& components, int component,
                 Solution<REAL>& sol ) override
    {
-      if( this->status != SolverStatus::OPTIMAL )
+      if( this->status != SolverStatus::kOptimal )
          return false;
 
       int numcols = solver.getNumCols();

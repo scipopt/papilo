@@ -1077,7 +1077,7 @@ Presolve<REAL>::apply( Problem<REAL>& problem )
 
                             SolverStatus status = solver->getStatus();
 
-                            if( status == SolverStatus::OPTIMAL )
+                            if( status == SolverStatus::kOptimal )
                             {
                                if( solver->getSolution( components,
                                                         compInfo[i].componentid,
@@ -1117,7 +1117,7 @@ Presolve<REAL>::apply( Problem<REAL>& problem )
 
                             SolverStatus status = solver->getStatus();
 
-                            if( status == SolverStatus::OPTIMAL )
+                            if( status == SolverStatus::kOptimal )
                             {
                                if( solver->getSolution( components,
                                                         compInfo[i].componentid,

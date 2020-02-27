@@ -1241,14 +1241,14 @@ papilo_solver_start( PAPILO_SOLVER* solver )
       }
       else
       {
-         status = SolverStatus::OPTIMAL;
+         status = SolverStatus::kOptimal;
          solver->presolve.message().info( "problem solved in presolving\n" );
       }
 
       Solution<double> solution;
       switch( status )
       {
-      case SolverStatus::OPTIMAL:
+      case SolverStatus::kOptimal:
          solver->solveinfo.solve_result = PAPILO_SOLVE_RESULT_STOPPED;
 
          if( solverInterface != nullptr &&
@@ -1279,7 +1279,7 @@ papilo_solver_start( PAPILO_SOLVER* solver )
          }
 
          break;
-      case SolverStatus::INTERRUPTED:
+      case SolverStatus::kInterrupted:
          solver->solveinfo.solve_result = PAPILO_SOLVE_RESULT_STOPPED;
 
          if( solverInterface != nullptr )
@@ -1309,18 +1309,18 @@ papilo_solver_start( PAPILO_SOLVER* solver )
          }
 
          break;
-      case SolverStatus::INFEASIBLE:
+      case SolverStatus::kInfeasible:
          solver->solveinfo.solve_result = PAPILO_SOLVE_RESULT_INFEASIBLE;
          break;
-      case SolverStatus::UNBOUNDED:
+      case SolverStatus::kUnbounded:
          solver->solveinfo.solve_result = PAPILO_SOLVE_RESULT_UNBOUNDED;
          break;
-      case SolverStatus::UNBND_OR_INFEAS:
+      case SolverStatus::kUnbndOrInfeas:
          solver->solveinfo.solve_result = PAPILO_SOLVE_RESULT_UNBND_OR_INFEAS;
          break;
-      case SolverStatus::INIT:
+      case SolverStatus::kInit:
          assert( false );
-      case SolverStatus::ERROR:
+      case SolverStatus::kError:
          solver->presolve.message().error(
              "solver terminated with an error\n" );
          solver->solveinfo.solve_result = PAPILO_SOLVE_RESULT_STOPPED;

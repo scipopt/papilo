@@ -245,7 +245,7 @@ class ScipInterface : public SolverInterface<REAL>
    readSettings( const String& file ) override
    {
       if( SCIPreadParams( scip, file.c_str() ) != SCIP_OKAY )
-         this->status = SolverStatus::ERROR;
+         this->status = SolverStatus::kError;
    }
 
    void
@@ -255,14 +255,14 @@ class ScipInterface : public SolverInterface<REAL>
    {
       if( doSetUp( prob, row_maps, col_maps, components, component ) !=
           SCIP_OKAY )
-         this->status = SolverStatus::ERROR;
+         this->status = SolverStatus::kError;
    }
 
    void
    setNodeLimit( int num ) override
    {
       if( SCIPsetLongintParam( scip, "limits/nodes", num ) != SCIP_OKAY )
-         this->status = SolverStatus::ERROR;
+         this->status = SolverStatus::kError;
    }
 
    void
@@ -270,29 +270,29 @@ class ScipInterface : public SolverInterface<REAL>
    {
       if( SCIPsetRealParam( scip, "limits/gap", SCIP_Real( gaplim ) ) !=
           SCIP_OKAY )
-         this->status = SolverStatus::ERROR;
+         this->status = SolverStatus::kError;
    }
 
    void
    setSoftTimeLimit( double tlim ) override
    {
       if( SCIPsetIntParam( scip, "timing/clocktype", 2 ) != SCIP_OKAY )
-         this->status = SolverStatus::ERROR;
+         this->status = SolverStatus::kError;
 
       if( SCIPsetRealParam( scip, "limits/softtime", SCIP_Real( tlim ) ) !=
           SCIP_OKAY )
-         this->status = SolverStatus::ERROR;
+         this->status = SolverStatus::kError;
    }
 
    void
    setTimeLimit( double tlim ) override
    {
       if( SCIPsetIntParam( scip, "timing/clocktype", 2 ) != SCIP_OKAY )
-         this->status = SolverStatus::ERROR;
+         this->status = SolverStatus::kError;
 
       if( SCIPsetRealParam( scip, "limits/time", SCIP_Real( tlim ) ) !=
           SCIP_OKAY )
-         this->status = SolverStatus::ERROR;
+         this->status = SolverStatus::kError;
    }
 
    void
@@ -322,24 +322,24 @@ class ScipInterface : public SolverInterface<REAL>
           const Vec<int>& col_maps ) override
    {
       if( doSetUp( prob, row_maps, col_maps ) != SCIP_OKAY )
-         this->status = SolverStatus::ERROR;
+         this->status = SolverStatus::kError;
    }
 
    void
    solve() override
    {
-      assert( this->status != SolverStatus::ERROR );
+      assert( this->status != SolverStatus::kError );
 
       if( SCIPsolve( scip ) != SCIP_OKAY )
       {
-         this->status = SolverStatus::ERROR;
+         this->status = SolverStatus::kError;
          return;
       }
 
       switch( SCIPgetStatus( scip ) )
       {
       case SCIP_STATUS_UNKNOWN:
-         this->status = SolverStatus::ERROR;
+         this->status = SolverStatus::kError;
          return;
       case SCIP_STATUS_USERINTERRUPT:
       case SCIP_STATUS_NODELIMIT:
@@ -352,19 +352,19 @@ class ScipInterface : public SolverInterface<REAL>
       case SCIP_STATUS_BESTSOLLIMIT:
       case SCIP_STATUS_RESTARTLIMIT:
       case SCIP_STATUS_TERMINATE:
-         this->status = SolverStatus::INTERRUPTED;
+         this->status = SolverStatus::kInterrupted;
          break;
       case SCIP_STATUS_INFORUNBD:
-         this->status = SolverStatus::UNBND_OR_INFEAS;
+         this->status = SolverStatus::kUnbndOrInfeas;
          return;
       case SCIP_STATUS_INFEASIBLE:
-         this->status = SolverStatus::INFEASIBLE;
+         this->status = SolverStatus::kInfeasible;
          return;
       case SCIP_STATUS_UNBOUNDED:
-         this->status = SolverStatus::UNBOUNDED;
+         this->status = SolverStatus::kUnbounded;
          return;
       case SCIP_STATUS_OPTIMAL:
-         this->status = SolverStatus::OPTIMAL;
+         this->status = SolverStatus::kOptimal;
       }
    }
 

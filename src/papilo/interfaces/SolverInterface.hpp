@@ -43,13 +43,13 @@ enum class SolverType : int
 
 enum class SolverStatus : int
 {
-   INIT,
-   OPTIMAL,
-   INFEASIBLE,
-   UNBOUNDED,
-   UNBND_OR_INFEAS,
-   INTERRUPTED,
-   ERROR
+   kInit,
+   kOptimal,
+   kInfeasible,
+   kUnbounded,
+   kUnbndOrInfeas,
+   kInterrupted,
+   kError
 };
 
 template <typename REAL>
@@ -59,7 +59,7 @@ class SolverInterface
    SolverStatus status;
 
  public:
-   SolverInterface() : status( SolverStatus::INIT ) {}
+   SolverInterface() : status( SolverStatus::kInit ) {}
 
    virtual void
    setUp( const Problem<REAL>& prob, const Vec<int>& row_maps,

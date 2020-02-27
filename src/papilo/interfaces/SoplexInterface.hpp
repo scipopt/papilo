@@ -48,7 +48,7 @@ class SoplexInterface : public SolverInterface<REAL>
    readSettings( const String& file ) override
    {
       if( !spx.loadSettingsFile( file.c_str() ) )
-         this->status = SolverStatus::ERROR;
+         this->status = SolverStatus::kError;
    }
 
    soplex::SoPlex&
@@ -222,7 +222,7 @@ class SoplexInterface : public SolverInterface<REAL>
    {
       using namespace soplex;
 
-      assert( this->status != SolverStatus::ERROR );
+      assert( this->status != SolverStatus::kError );
 
       spx.setSettings( spx.settings() );
 
@@ -231,23 +231,23 @@ class SoplexInterface : public SolverInterface<REAL>
       switch( stat )
       {
       default:
-         this->status = SolverStatus::ERROR;
+         this->status = SolverStatus::kError;
          return;
       case SPxSolver::Status::INForUNBD:
-         this->status = SolverStatus::UNBND_OR_INFEAS;
+         this->status = SolverStatus::kUnbndOrInfeas;
          return;
       case SPxSolver::Status::INFEASIBLE:
-         this->status = SolverStatus::INFEASIBLE;
+         this->status = SolverStatus::kInfeasible;
          return;
       case SPxSolver::Status::UNBOUNDED:
-         this->status = SolverStatus::UNBOUNDED;
+         this->status = SolverStatus::kUnbounded;
          return;
       case SPxSolver::Status::ABORT_CYCLING:
-         this->status = SolverStatus::INTERRUPTED;
+         this->status = SolverStatus::kInterrupted;
          return;
       case SPxSolver::Status::OPTIMAL_UNSCALED_VIOLATIONS:
       case SPxSolver::Status::OPTIMAL:
-         this->status = SolverStatus::OPTIMAL;
+         this->status = SolverStatus::kOptimal;
       }
    }
 
