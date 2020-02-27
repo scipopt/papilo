@@ -41,7 +41,7 @@ class SingletonCols : public PresolveMethod<REAL>
    SingletonCols() : PresolveMethod<REAL>()
    {
       this->setName( "colsingleton" );
-      this->setTiming( PresolverTiming::FAST );
+      this->setTiming( PresolverTiming::kFast );
    }
 
    virtual PresolveStatus

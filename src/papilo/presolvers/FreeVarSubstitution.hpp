@@ -44,7 +44,7 @@ class Substitution : public PresolveMethod<REAL>
    Substitution() : PresolveMethod<REAL>()
    {
       this->setName( "substitution" );
-      this->setTiming( PresolverTiming::EXHAUSTIVE );
+      this->setTiming( PresolverTiming::kExhaustive );
    }
 
    void

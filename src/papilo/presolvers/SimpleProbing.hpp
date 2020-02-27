@@ -39,8 +39,8 @@ class SimpleProbing : public PresolveMethod<REAL>
    SimpleProbing() : PresolveMethod<REAL>()
    {
       this->setName( "simpleprobing" );
-      this->setType( PresolverType::INTEGRAL_COLS );
-      this->setTiming( PresolverTiming::MEDIUM );
+      this->setType( PresolverType::kIntegralCols );
+      this->setTiming( PresolverTiming::kMedium );
    }
 
    virtual PresolveStatus

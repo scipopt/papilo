@@ -51,8 +51,8 @@ class SimplifyInequalities : public PresolveMethod<REAL>
    SimplifyInequalities() : PresolveMethod<REAL>()
    {
       this->setName( "simplifyineq" );
-      this->setTiming( PresolverTiming::MEDIUM );
-      this->setType( PresolverType::INTEGRAL_COLS );
+      this->setTiming( PresolverTiming::kMedium );
+      this->setType( PresolverType::kIntegralCols );
    }
 
    /// todo how to communicate about postsolve information

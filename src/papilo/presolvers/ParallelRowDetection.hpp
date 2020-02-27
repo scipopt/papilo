@@ -111,7 +111,7 @@ class ParallelRowDetection : public PresolveMethod<REAL>
    ParallelRowDetection() : PresolveMethod<REAL>()
    {
       this->setName( "parallelrows" );
-      this->setTiming( PresolverTiming::MEDIUM );
+      this->setTiming( PresolverTiming::kMedium );
    }
 
    /// todo how to communicate about postsolve information

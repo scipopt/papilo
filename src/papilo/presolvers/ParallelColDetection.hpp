@@ -108,7 +108,7 @@ class ParallelColDetection : public PresolveMethod<REAL>
    ParallelColDetection() : PresolveMethod<REAL>()
    {
       this->setName( "parallelcols" );
-      this->setTiming( PresolverTiming::MEDIUM );
+      this->setTiming( PresolverTiming::kMedium );
    }
 
    bool

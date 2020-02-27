@@ -42,7 +42,7 @@ class DominatedCols : public PresolveMethod<REAL>
    DominatedCols() : PresolveMethod<REAL>()
    {
       this->setName( "domcol" );
-      this->setTiming( PresolverTiming::EXHAUSTIVE );
+      this->setTiming( PresolverTiming::kExhaustive );
    }
 
    bool

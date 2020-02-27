@@ -38,8 +38,8 @@ class CoefficientStrengthening : public PresolveMethod<REAL>
    CoefficientStrengthening() : PresolveMethod<REAL>()
    {
       this->setName( "coefftightening" );
-      this->setType( PresolverType::INTEGRAL_COLS );
-      this->setTiming( PresolverTiming::FAST );
+      this->setType( PresolverType::kIntegralCols );
+      this->setTiming( PresolverTiming::kFast );
    }
 
    /// todo how to communicate about postsolve information

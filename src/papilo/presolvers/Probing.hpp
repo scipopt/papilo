@@ -53,8 +53,8 @@ class Probing : public PresolveMethod<REAL>
    Probing() : PresolveMethod<REAL>()
    {
       this->setName( "probing" );
-      this->setTiming( PresolverTiming::EXHAUSTIVE );
-      this->setType( PresolverType::INTEGRAL_COLS );
+      this->setTiming( PresolverTiming::kExhaustive );
+      this->setType( PresolverType::kIntegralCols );
    }
 
    void

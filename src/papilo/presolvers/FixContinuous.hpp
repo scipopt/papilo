@@ -39,8 +39,8 @@ class FixContinuous : public PresolveMethod<REAL>
    FixContinuous() : PresolveMethod<REAL>()
    {
       this->setName( "fixcontinuous" );
-      this->setTiming( PresolverTiming::MEDIUM );
-      this->setType( PresolverType::CONTINUOUS_COLS );
+      this->setTiming( PresolverTiming::kMedium );
+      this->setType( PresolverType::kContinuousCols );
    }
 
    /// todo how to communicate about postsolve information

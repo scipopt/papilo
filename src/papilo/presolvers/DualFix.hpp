@@ -41,7 +41,7 @@ class DualFix : public PresolveMethod<REAL>
    DualFix() : PresolveMethod<REAL>()
    {
       this->setName( "dualfix" );
-      this->setTiming( PresolverTiming::MEDIUM );
+      this->setTiming( PresolverTiming::kMedium );
    }
 
    bool

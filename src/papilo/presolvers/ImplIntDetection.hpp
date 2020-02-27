@@ -40,8 +40,8 @@ class ImplIntDetection : public PresolveMethod<REAL>
    ImplIntDetection() : PresolveMethod<REAL>()
    {
       this->setName( "implint" );
-      this->setTiming( PresolverTiming::EXHAUSTIVE );
-      this->setType( PresolverType::MIXED_COLS );
+      this->setTiming( PresolverTiming::kExhaustive );
+      this->setType( PresolverType::kMixedCols );
    }
 
    virtual PresolveStatus

@@ -1256,7 +1256,7 @@ papilo_solver_start( PAPILO_SOLVER* solver )
             break;
 
          if( solver->presolveResult.postsolve.undo(
-                 solution, solver->solution ) == PostsolveStatus::OK )
+                 solution, solver->solution ) == PostsolveStatus::kOk )
          {
             solver->solveinfo.bestsol = solver->solution.primal.data();
             solver->solveinfo.solve_result = PAPILO_SOLVE_RESULT_OPTIMAL;
@@ -1290,7 +1290,7 @@ papilo_solver_start( PAPILO_SOLVER* solver )
             break;
 
          if( solver->presolveResult.postsolve.undo(
-                 solution, solver->solution ) == PostsolveStatus::OK )
+                 solution, solver->solution ) == PostsolveStatus::kOk )
          {
             solver->solveinfo.bestsol = solver->solution.primal.data();
             solver->solveinfo.solve_result = PAPILO_SOLVE_RESULT_FEASIBLE;

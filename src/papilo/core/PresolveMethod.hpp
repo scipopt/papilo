@@ -70,17 +70,17 @@ enum class PresolveStatus : int
 
 enum class PresolverTiming : int
 {
-   FAST = 0,
-   MEDIUM = 1,
-   EXHAUSTIVE = 2,
+   kFast = 0,
+   kMedium = 1,
+   kExhaustive = 2,
 };
 
 enum class PresolverType
 {
-   ALL_COLS,
-   INTEGRAL_COLS,
-   CONTINUOUS_COLS,
-   MIXED_COLS,
+   kAllCols,
+   kIntegralCols,
+   kContinuousCols,
+   kMixedCols,
 };
 
 template <typename REAL>
@@ -92,8 +92,8 @@ class PresolveMethod
       ncalls = 0;
       nsuccessCall = 0;
       name = "unnamed";
-      type = PresolverType::ALL_COLS;
-      timing = PresolverTiming::EXHAUSTIVE;
+      type = PresolverType::kAllCols;
+      timing = PresolverTiming::kExhaustive;
       delayed = false;
       execTime = 0.0;
       enabled = true;
@@ -145,13 +145,13 @@ class PresolveMethod
       }
 
       if( problem.getNumIntegralCols() == 0 &&
-          ( type == PresolverType::INTEGRAL_COLS ||
-            type == PresolverType::MIXED_COLS ) )
+          ( type == PresolverType::kIntegralCols ||
+            type == PresolverType::kMixedCols ) )
          return PresolveStatus::UNCHANGED;
 
       if( problem.getNumContinuousCols() == 0 &&
-          ( type == PresolverType::CONTINUOUS_COLS ||
-            type == PresolverType::MIXED_COLS ) )
+          ( type == PresolverType::kContinuousCols ||
+            type == PresolverType::kMixedCols ) )
          return PresolveStatus::UNCHANGED;
 
       ++ncalls;
@@ -177,7 +177,7 @@ class PresolveMethod
          break;
       case PresolveStatus::UNCHANGED:
          ++nconsecutiveUnsuccessCall;
-         if( timing != PresolverTiming::FAST )
+         if( timing != PresolverTiming::kFast )
             skip += nconsecutiveUnsuccessCall;
          break;
       }
@@ -234,13 +234,13 @@ class PresolveMethod
    {
       assert( roundCounter < 4 );
 
-      if( ( roundCounter == 0 && timing == PresolverTiming::FAST ) ||
-          ( roundCounter == 1 && timing == PresolverTiming::MEDIUM ) ||
-          ( roundCounter == 2 && timing == PresolverTiming::EXHAUSTIVE ) )
+      if( ( roundCounter == 0 && timing == PresolverTiming::kFast ) ||
+          ( roundCounter == 1 && timing == PresolverTiming::kMedium ) ||
+          ( roundCounter == 2 && timing == PresolverTiming::kExhaustive ) )
          return true;
 
       // always finish with a fast round
-      if( roundCounter == 3 && timing == PresolverTiming::FAST )
+      if( roundCounter == 3 && timing == PresolverTiming::kFast )
          return true;
 
       return false;

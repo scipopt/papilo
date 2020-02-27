@@ -648,20 +648,20 @@ Presolve<REAL>::apply( Problem<REAL>& problem )
       fastPresolvers.first = fastPresolvers.second = 0;
       while( fastPresolvers.second < npresolvers &&
              presolvers[fastPresolvers.second]->getTiming() ==
-                 PresolverTiming::FAST )
+                 PresolverTiming::kFast )
          ++fastPresolvers.second;
 
       mediumPresolvers.first = mediumPresolvers.second = fastPresolvers.second;
       while( mediumPresolvers.second < npresolvers &&
              presolvers[mediumPresolvers.second]->getTiming() ==
-                 PresolverTiming::MEDIUM )
+                 PresolverTiming::kMedium )
          ++mediumPresolvers.second;
 
       exhaustivePresolvers.first = exhaustivePresolvers.second =
           mediumPresolvers.second;
       while( exhaustivePresolvers.second < npresolvers &&
              presolvers[exhaustivePresolvers.second]->getTiming() ==
-                 PresolverTiming::EXHAUSTIVE )
+                 PresolverTiming::kExhaustive )
          ++exhaustivePresolvers.second;
 
       reductions.resize( presolvers.size() );

@@ -39,8 +39,8 @@ class DualInfer : public PresolveMethod<REAL>
    DualInfer() : PresolveMethod<REAL>()
    {
       this->setName( "dualinfer" );
-      this->setTiming( PresolverTiming::EXHAUSTIVE );
-      this->setType( PresolverType::CONTINUOUS_COLS );
+      this->setTiming( PresolverTiming::kExhaustive );
+      this->setType( PresolverType::kContinuousCols );
    }
 
    bool

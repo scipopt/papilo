@@ -58,7 +58,7 @@ class Sparsify : public PresolveMethod<REAL>
    Sparsify() : PresolveMethod<REAL>()
    {
       this->setName( "sparsify" );
-      this->setTiming( PresolverTiming::EXHAUSTIVE );
+      this->setTiming( PresolverTiming::kExhaustive );
       this->setDelayed( true );
    }
 

@@ -40,7 +40,7 @@ class SimpleSubstitution : public PresolveMethod<REAL>
    SimpleSubstitution() : PresolveMethod<REAL>()
    {
       this->setName( "doubletoneq" );
-      this->setTiming( PresolverTiming::MEDIUM );
+      this->setTiming( PresolverTiming::kMedium );
    }
 
    virtual PresolveStatus
