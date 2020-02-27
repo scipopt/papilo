@@ -463,7 +463,7 @@ ProblemUpdate<REAL>::fixCol( int col, REAL val )
                          "fixing {} col {} with bounds [{},{}] to value {} was "
                          "detected to be infeasible\n",
                          cflags[col].test( ColFlag::kIntegral ) ? "integral"
-                                                               : "continuous",
+                                                                : "continuous",
                          col,
                          cflags[col].test( ColFlag::kLbInf )
                              ? -std::numeric_limits<double>::infinity()
@@ -880,10 +880,11 @@ ProblemUpdate<REAL>::flush()
    if( checkChangedActivities() == PresolveStatus::kInfeasible )
       return PresolveStatus::kInfeasible;
 
-   auto iter = std::remove_if( changed_activities.begin(),
-                               changed_activities.end(), [&rflags]( int row ) {
-                                  return rflags[row].test( RowFlag::kRedundant );
-                               } );
+   auto iter =
+       std::remove_if( changed_activities.begin(), changed_activities.end(),
+                       [&rflags]( int row ) {
+                          return rflags[row].test( RowFlag::kRedundant );
+                       } );
 
    changed_activities.erase( iter, changed_activities.end() );
 
@@ -1304,7 +1305,8 @@ ProblemUpdate<REAL>::trivialRowPresolve()
               ( !rflags[row].test( RowFlag::kEquation ) &&
                 ( rflags[row].test( RowFlag::kLhsInf, RowFlag::kRhsInf ) ||
                   lhs[row] != rhs[row] ) ) ||
-              ( rflags[row].test( RowFlag::kEquation ) && lhs[row] == rhs[row] &&
+              ( rflags[row].test( RowFlag::kEquation ) &&
+                lhs[row] == rhs[row] &&
                 !rflags[row].test( RowFlag::kLhsInf, RowFlag::kRhsInf ) ) );
    }
 
@@ -1838,7 +1840,8 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
             const int* colindices = colvec.getIndices();
             const int nbrelevantrows = colvec.getLength();
 
-            assert( !cflags[col].test( ColFlag::kSubstituted, ColFlag::kFixed ) );
+            assert(
+                !cflags[col].test( ColFlag::kSubstituted, ColFlag::kFixed ) );
             cflags[col].set( ColFlag::kSubstituted );
 
             // change the objective coefficients and offset
@@ -2191,7 +2194,8 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
             if( cflags[col1].test( ColFlag::kFixed ) ||
                 cflags[col2].test( ColFlag::kFixed ) )
             {
-               if( !cflags[col1].test( ColFlag::kFixed, ColFlag::kSubstituted ) )
+               if( !cflags[col1].test( ColFlag::kFixed,
+                                       ColFlag::kSubstituted ) )
                {
                   assert( cflags[col2].test( ColFlag::kFixed ) );
                   if( fixCol( col1, factor * lbs[col2] + offset ) ==
@@ -2231,12 +2235,14 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
             }
             if( col2_imp_lb > lbs[col2] )
             {
-               if( changeLB( col2, col2_imp_lb ) == PresolveStatus::kInfeasible )
+               if( changeLB( col2, col2_imp_lb ) ==
+                   PresolveStatus::kInfeasible )
                   return ApplyResult::kInfeasible;
             }
             else if( col2_imp_ub < ubs[col2] )
             {
-               if( changeUB( col2, col2_imp_ub ) == PresolveStatus::kInfeasible )
+               if( changeUB( col2, col2_imp_ub ) ==
+                   PresolveStatus::kInfeasible )
                   return ApplyResult::kInfeasible;
             }
 

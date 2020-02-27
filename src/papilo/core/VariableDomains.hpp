@@ -45,9 +45,9 @@ enum class ColFlag : uint8_t
    kSubstituted = 1 << 6,
    kImplInt = 1 << 7,
    kUnbounded = static_cast<uint8_t>( ColFlag::kLbInf ) |
-               static_cast<uint8_t>( ColFlag::kUbInf ),
+                static_cast<uint8_t>( ColFlag::kUbInf ),
    kInactive = static_cast<uint8_t>( ColFlag::kFixed ) |
-              static_cast<uint8_t>( ColFlag::kSubstituted ),
+               static_cast<uint8_t>( ColFlag::kSubstituted ),
    kLbUseless = static_cast<uint8_t>( ColFlag::kLbInf ) |
                 static_cast<uint8_t>( ColFlag::kLbHuge ),
    kUbUseless = static_cast<uint8_t>( ColFlag::kUbInf ) |

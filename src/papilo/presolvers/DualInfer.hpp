@@ -126,8 +126,9 @@ DualInfer<REAL>::execute( const Problem<REAL>& problem,
                colf.set( ColFlag::kUbInf );
 
                if( !colf.test( ColFlag::kUbHuge ) )
-                  update_activities_remove_finite_bound(
-                      inds, vals, len, BoundChange::kUpper, ub, activitiesCopy );
+                  update_activities_remove_finite_bound( inds, vals, len,
+                                                         BoundChange::kUpper,
+                                                         ub, activitiesCopy );
             }
          }
 
@@ -139,8 +140,9 @@ DualInfer<REAL>::execute( const Problem<REAL>& problem,
                colf.set( ColFlag::kLbInf );
 
                if( !colf.test( ColFlag::kLbHuge ) )
-                  update_activities_remove_finite_bound(
-                      inds, vals, len, BoundChange::kLower, lb, activitiesCopy );
+                  update_activities_remove_finite_bound( inds, vals, len,
+                                                         BoundChange::kLower,
+                                                         lb, activitiesCopy );
             }
          }
 
