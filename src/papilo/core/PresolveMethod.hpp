@@ -32,7 +32,7 @@
 #include "papilo/misc/Num.hpp"
 #include "papilo/misc/Vec.hpp"
 #include "papilo/misc/fmt.hpp"
-#include "tbb/tick_count.h"
+#include "papilo/misc/tbb.hpp"
 #include <bitset>
 
 namespace papilo

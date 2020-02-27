@@ -31,9 +31,9 @@
 #include "papilo/misc/MultiPrecision.hpp"
 #include "papilo/misc/OptionsParser.hpp"
 #include "papilo/misc/Wrappers.hpp"
+#include "papilo/misc/tbb.hpp"
 #include <papilo/Config.hpp>
 
-#include "tbb/tick_count.h"
 #include <boost/program_options.hpp>
 #include <cassert>
 #include <fstream>

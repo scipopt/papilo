@@ -21,14 +21,10 @@
 /*                                                                           */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef _PAPILO_MISC_FMT_HPP_
-#define _PAPILO_MISC_FMT_HPP_
+#ifndef _PAPILO_MISC_TBB_HPP_
+#define _PAPILO_MISC_TBB_HPP_
 
-#ifndef FMT_HEADER_ONLY
-#define FMT_HEADER_ONLY
-#endif
-
-/* if those macros are not defined and fmt includes windows.h
+/* if those macros are not defined and tbb includes windows.h
  * then many macros are defined that can interfere with standard C++ code
  */
 #ifndef NOMINMAX
@@ -41,8 +37,15 @@
 #define PAPILO_DEFINED_WIN32_LEAN_AND_MEAN
 #endif
 
-#include "fmt/format.h"
-#include "fmt/ostream.h"
+#include "tbb/blocked_range.h"
+#include "tbb/combinable.h"
+#include "tbb/concurrent_hash_map.h"
+#include "tbb/concurrent_vector.h"
+#include "tbb/parallel_for.h"
+#include "tbb/parallel_invoke.h"
+#include "tbb/partitioner.h"
+#include "tbb/task_arena.h"
+#include "tbb/tick_count.h"
 
 #ifdef PAPILO_DEFINED_NOMINMAX
 #undef NOMINMAX

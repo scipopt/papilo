@@ -36,7 +36,7 @@
 #include "papilo/misc/Vec.hpp"
 #include "papilo/misc/compress_vector.hpp"
 #include "papilo/misc/fmt.hpp"
-#include "tbb/parallel_invoke.h"
+#include "papilo/misc/tbb.hpp"
 #include <algorithm>
 
 namespace papilo
