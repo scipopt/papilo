@@ -36,23 +36,23 @@ namespace papilo
 
 enum class BoundChange
 {
-   LOWER,
-   UPPER
+   kLower,
+   kUpper
 };
 
 enum class ActivityChange
 {
-   MIN,
-   MAX
+   kMin,
+   kMax
 };
 
 enum class RowStatus
 {
-   INFEASIBLE,
-   REDUNDANT,
-   REDUNDANT_LHS,
-   REDUNDANT_RHS,
-   UNKNOWN,
+   kInfeasible,
+   kRedundant,
+   kRedundantLhs,
+   kRedundantRhs,
+   kUnknown,
 };
 
 template <typename REAL>
@@ -78,12 +78,12 @@ struct RowActivity
    bool
    repropagate( ActivityChange actChange, RowFlags rflags )
    {
-      if( actChange == ActivityChange::MIN &&
-          !rflags.test( RowFlag::RHS_INF ) && ninfmin <= 1 )
+      if( actChange == ActivityChange::kMin &&
+          !rflags.test( RowFlag::kRhsInf ) && ninfmin <= 1 )
          return true;
 
-      if( actChange == ActivityChange::MAX &&
-          !rflags.test( RowFlag::LHS_INF ) && ninfmax <= 1 )
+      if( actChange == ActivityChange::kMax &&
+          !rflags.test( RowFlag::kLhsInf ) && ninfmax <= 1 )
          return true;
 
       return false;
@@ -93,38 +93,38 @@ struct RowActivity
    checkStatus( const Num<REAL>& num, RowFlags rflags, const REAL& lhs,
                 const REAL& rhs ) const
    {
-      RowStatus status = RowStatus::REDUNDANT;
+      RowStatus status = RowStatus::kRedundant;
 
-      if( !rflags.test( RowFlag::LHS_INF ) )
+      if( !rflags.test( RowFlag::kLhsInf ) )
       {
          if( ninfmax == 0 && num.isFeasLT( max, lhs ) &&
              num.isSafeLT( max, lhs ) )
-            return RowStatus::INFEASIBLE;
+            return RowStatus::kInfeasible;
 
          if( ninfmin == 0 && num.isFeasGE( min, lhs ) )
-            status = RowStatus::REDUNDANT_LHS;
+            status = RowStatus::kRedundantLhs;
          else
-            status = RowStatus::UNKNOWN;
+            status = RowStatus::kUnknown;
       }
 
-      if( !rflags.test( RowFlag::RHS_INF ) )
+      if( !rflags.test( RowFlag::kRhsInf ) )
       {
          if( ninfmin == 0 && num.isFeasGT( min, rhs ) &&
              num.isSafeGT( min, rhs ) )
-            return RowStatus::INFEASIBLE;
+            return RowStatus::kInfeasible;
 
          if( ninfmax == 0 && num.isFeasLE( max, rhs ) )
          {
-            if( status == RowStatus::UNKNOWN )
-               status = RowStatus::REDUNDANT_RHS;
+            if( status == RowStatus::kUnknown )
+               status = RowStatus::kRedundantRhs;
             else
-               status = RowStatus::REDUNDANT;
+               status = RowStatus::kRedundant;
          }
-         else if( status == RowStatus::REDUNDANT )
-            status = RowStatus::UNKNOWN;
+         else if( status == RowStatus::kRedundant )
+            status = RowStatus::kUnknown;
       }
-      else if( status == RowStatus::REDUNDANT_LHS )
-         status = RowStatus::REDUNDANT;
+      else if( status == RowStatus::kRedundantLhs )
+         status = RowStatus::kRedundant;
 
       return status;
    }
@@ -153,18 +153,18 @@ count_locks( const REAL& val, RowFlags rflags, int& ndownlocks, int& nuplocks )
 
    if( val < 0 )
    {
-      if( !rflags.test( RowFlag::LHS_INF ) )
+      if( !rflags.test( RowFlag::kLhsInf ) )
          ++nuplocks;
 
-      if( !rflags.test( RowFlag::RHS_INF ) )
+      if( !rflags.test( RowFlag::kRhsInf ) )
          ++ndownlocks;
    }
    else
    {
-      if( !rflags.test( RowFlag::LHS_INF ) )
+      if( !rflags.test( RowFlag::kLhsInf ) )
          ++ndownlocks;
 
-      if( !rflags.test( RowFlag::RHS_INF ) )
+      if( !rflags.test( RowFlag::kRhsInf ) )
          ++nuplocks;
    }
 }
@@ -188,7 +188,7 @@ compute_row_activity( const REAL* rowvals, const int* colindices, int rowlen,
    for( int j = 0; j < rowlen; ++j )
    {
       int col = colindices[j];
-      if( !flags[col].test( ColFlag::UB_USELESS ) )
+      if( !flags[col].test( ColFlag::kUbUseless ) )
       {
          if( rowvals[j] < 0 )
             activity.min += rowvals[j] * upper_bounds[col];
@@ -197,14 +197,14 @@ compute_row_activity( const REAL* rowvals, const int* colindices, int rowlen,
       }
       else
       {
-         assert( flags[col].test( ColFlag::UB_USELESS ) );
+         assert( flags[col].test( ColFlag::kUbUseless ) );
          if( rowvals[j] < 0 )
             ++activity.ninfmin;
          else
             ++activity.ninfmax;
       }
 
-      if( !flags[col].test( ColFlag::LB_USELESS ) )
+      if( !flags[col].test( ColFlag::kLbUseless ) )
       {
          if( rowvals[j] < 0 )
             activity.max += rowvals[j] * lower_bounds[col];
@@ -213,7 +213,7 @@ compute_row_activity( const REAL* rowvals, const int* colindices, int rowlen,
       }
       else
       {
-         assert( flags[col].test( ColFlag::LB_USELESS ) );
+         assert( flags[col].test( ColFlag::kLbUseless ) );
          if( rowvals[j] < 0 )
             ++activity.ninfmax;
          else
@@ -236,10 +236,10 @@ update_activity_after_boundchange( const REAL& colval, BoundChange type,
                                    RowActivity<REAL>& activity )
 {
    assert( oldbound_inf ||
-           ( type == BoundChange::LOWER && newbound != oldbound ) ||
-           ( type == BoundChange::UPPER && newbound != oldbound ) );
+           ( type == BoundChange::kLower && newbound != oldbound ) ||
+           ( type == BoundChange::kUpper && newbound != oldbound ) );
 
-   if( type == BoundChange::LOWER )
+   if( type == BoundChange::kLower )
    {
       if( colval < REAL{0.0} )
       {
@@ -255,7 +255,7 @@ update_activity_after_boundchange( const REAL& colval, BoundChange type,
             activity.max += ( newbound - oldbound ) * colval;
          }
 
-         return ActivityChange::MAX;
+         return ActivityChange::kMax;
       }
       else
       {
@@ -271,7 +271,7 @@ update_activity_after_boundchange( const REAL& colval, BoundChange type,
             activity.min += ( newbound - oldbound ) * colval;
          }
 
-         return ActivityChange::MIN;
+         return ActivityChange::kMin;
       }
    }
    else
@@ -290,7 +290,7 @@ update_activity_after_boundchange( const REAL& colval, BoundChange type,
             activity.min += ( newbound - oldbound ) * colval;
          }
 
-         return ActivityChange::MIN;
+         return ActivityChange::kMin;
       }
       else
       {
@@ -306,7 +306,7 @@ update_activity_after_boundchange( const REAL& colval, BoundChange type,
             activity.max += ( newbound - oldbound ) * colval;
          }
 
-         return ActivityChange::MAX;
+         return ActivityChange::kMax;
       }
    }
 }
@@ -320,7 +320,7 @@ update_activities_remove_finite_bound( const int* colinds, const REAL* colvals,
                                        const REAL& oldbound,
                                        Vec<RowActivity<REAL>>& activities )
 {
-   if( type == BoundChange::LOWER )
+   if( type == BoundChange::kLower )
    {
       for( int i = 0; i != collen; ++i )
       {
@@ -375,8 +375,8 @@ update_activities_after_boundchange( const REAL* colvals, const int* colrows,
                                      bool watchInfiniteActivities = false )
 {
    assert( oldbound_inf ||
-           ( type == BoundChange::LOWER && newbound != oldbound ) ||
-           ( type == BoundChange::UPPER && newbound != oldbound ) );
+           ( type == BoundChange::kLower && newbound != oldbound ) ||
+           ( type == BoundChange::kUpper && newbound != oldbound ) );
 
    for( int i = 0; i < collen; ++i )
    {
@@ -385,13 +385,13 @@ update_activities_after_boundchange( const REAL* colvals, const int* colrows,
       ActivityChange actChange = update_activity_after_boundchange(
           colvals[i], type, oldbound, newbound, oldbound_inf, activity );
 
-      if( actChange == ActivityChange::MIN &&
+      if( actChange == ActivityChange::kMin &&
           ( activity.ninfmin == 0 || watchInfiniteActivities ) )
-         activityChange( ActivityChange::MIN, colrows[i], activity );
+         activityChange( ActivityChange::kMin, colrows[i], activity );
 
-      if( actChange == ActivityChange::MAX &&
+      if( actChange == ActivityChange::kMax &&
           ( activity.ninfmax == 0 || watchInfiniteActivities ) )
-         activityChange( ActivityChange::MAX, colrows[i], activity );
+         activityChange( ActivityChange::kMax, colrows[i], activity );
    }
 }
 
@@ -419,7 +419,7 @@ update_activities_after_coeffchange( REAL collb, REAL colub, ColFlags cflags,
       { // if the old coefficient was not 0.0 we remove its contributions to the
         // minimum and maximum activity
          // remove old contributions of the lower bound
-         if( cflags.test( ColFlag::LB_USELESS ) )
+         if( cflags.test( ColFlag::kLbUseless ) )
          {
             if( oldcolcoef < 0.0 )
                --activity.ninfmax;
@@ -435,7 +435,7 @@ update_activities_after_coeffchange( REAL collb, REAL colub, ColFlags cflags,
          }
 
          // remove old contributions of the upper bound
-         if( cflags.test( ColFlag::UB_USELESS ) )
+         if( cflags.test( ColFlag::kUbUseless ) )
          {
             if( oldcolcoef < 0.0 )
                --activity.ninfmin;
@@ -455,7 +455,7 @@ update_activities_after_coeffchange( REAL collb, REAL colub, ColFlags cflags,
       { // if the new coefficient is not 0.0 we add its contributions to the
         // minimum and maximum activity
          // add new contributions of the lower bound
-         if( cflags.test( ColFlag::LB_USELESS ) )
+         if( cflags.test( ColFlag::kLbUseless ) )
          {
             if( newcolcoef < 0.0 )
                ++activity.ninfmax;
@@ -471,7 +471,7 @@ update_activities_after_coeffchange( REAL collb, REAL colub, ColFlags cflags,
          }
 
          // addnewold contributions of the upper bound
-         if( cflags.test( ColFlag::UB_USELESS ) )
+         if( cflags.test( ColFlag::kUbUseless ) )
          {
             if( newcolcoef < 0.0 )
                ++activity.ninfmin;
@@ -490,45 +490,45 @@ update_activities_after_coeffchange( REAL collb, REAL colub, ColFlags cflags,
       if( ( oldactivity.ninfmin != 0 && activity.ninfmin == 0 ) ||
           ( oldactivity.ninfmin == 0 && activity.ninfmin == 0 &&
             oldactivity.min != activity.min ) )
-         activityChange( ActivityChange::MIN, activity );
+         activityChange( ActivityChange::kMin, activity );
 
       if( ( oldactivity.ninfmax != 0 && activity.ninfmax == 0 ) ||
           ( oldactivity.ninfmax == 0 && activity.ninfmax == 0 &&
             oldactivity.max != activity.max ) )
-         activityChange( ActivityChange::MAX, activity );
+         activityChange( ActivityChange::kMax, activity );
    }
    else
    { // the sign of the coefficient did not flip, so the column bounds still
      // contribute to the same activity bound
-      if( !cflags.test( ColFlag::LB_USELESS ) && collb != 0.0 )
+      if( !cflags.test( ColFlag::kLbUseless ) && collb != 0.0 )
       {
          if( newcolcoef < REAL{0.0} )
          {
             activity.max += collb * ( newcolcoef - oldcolcoef );
             if( activity.ninfmax == 0 )
-               activityChange( ActivityChange::MAX, activity );
+               activityChange( ActivityChange::kMax, activity );
          }
          else
          {
             activity.min += collb * ( newcolcoef - oldcolcoef );
             if( activity.ninfmin == 0 )
-               activityChange( ActivityChange::MIN, activity );
+               activityChange( ActivityChange::kMin, activity );
          }
       }
 
-      if( !cflags.test( ColFlag::UB_USELESS ) && colub != 0.0 )
+      if( !cflags.test( ColFlag::kUbUseless ) && colub != 0.0 )
       {
          if( newcolcoef < REAL{0.0} )
          {
             activity.min += colub * ( newcolcoef - oldcolcoef );
             if( activity.ninfmin == 0 )
-               activityChange( ActivityChange::MIN, activity );
+               activityChange( ActivityChange::kMin, activity );
          }
          else
          {
             activity.max += colub * ( newcolcoef - oldcolcoef );
             if( activity.ninfmax == 0 )
-               activityChange( ActivityChange::MAX, activity );
+               activityChange( ActivityChange::kMax, activity );
          }
       }
    }
@@ -546,14 +546,14 @@ propagate_row( const REAL* rowvals, const int* colindices, int rowlen,
                BOUNDCHANGE&& boundchange )
 {
    if( activity.ninfmin == 1 && activity.ninfmax == 0 &&
-       rflags.test( RowFlag::RHS_INF ) )
+       rflags.test( RowFlag::kRhsInf ) )
       rhs = activity.max;
 
    if( activity.ninfmax == 1 && activity.ninfmin == 0 &&
-       rflags.test( RowFlag::LHS_INF ) )
+       rflags.test( RowFlag::kLhsInf ) )
       lhs = activity.min;
 
-   if( !rflags.test( RowFlag::RHS_INF ) && activity.ninfmin <= 1 )
+   if( !rflags.test( RowFlag::kRhsInf ) && activity.ninfmin <= 1 )
    {
       for( int j = 0; j < rowlen; ++j )
       {
@@ -567,44 +567,44 @@ propagate_row( const REAL* rowvals, const int* colindices, int rowlen,
          {
             if( activity.ninfmin == 1 )
             {
-               if( !domainFlags[col].test( ColFlag::UB_USELESS ) )
+               if( !domainFlags[col].test( ColFlag::kUbUseless ) )
                   continue;
 
                j = rowlen;
             }
             else
             {
-               assert( !domainFlags[col].test( ColFlag::UB_USELESS ) );
+               assert( !domainFlags[col].test( ColFlag::kUbUseless ) );
                minresact -= val * ub;
             }
 
             REAL newlb = ( rhs - minresact ) / val;
-            if( domainFlags[col].test( ColFlag::LB_INF ) || newlb > lb )
-               boundchange( BoundChange::LOWER, col, newlb );
+            if( domainFlags[col].test( ColFlag::kLbInf ) || newlb > lb )
+               boundchange( BoundChange::kLower, col, newlb );
          }
          else
          {
             if( activity.ninfmin == 1 )
             {
-               if( !domainFlags[col].test( ColFlag::LB_USELESS ) )
+               if( !domainFlags[col].test( ColFlag::kLbUseless ) )
                   continue;
 
                j = rowlen;
             }
             else
             {
-               assert( !domainFlags[col].test( ColFlag::LB_USELESS ) );
+               assert( !domainFlags[col].test( ColFlag::kLbUseless ) );
                minresact -= val * lb;
             }
 
             REAL newub = ( rhs - minresact ) / val;
-            if( domainFlags[col].test( ColFlag::UB_INF ) || newub < ub )
-               boundchange( BoundChange::UPPER, col, newub );
+            if( domainFlags[col].test( ColFlag::kUbInf ) || newub < ub )
+               boundchange( BoundChange::kUpper, col, newub );
          }
       }
    }
 
-   if( !rflags.test( RowFlag::LHS_INF ) && activity.ninfmax <= 1 )
+   if( !rflags.test( RowFlag::kLhsInf ) && activity.ninfmax <= 1 )
    {
       for( int j = 0; j < rowlen; ++j )
       {
@@ -618,39 +618,39 @@ propagate_row( const REAL* rowvals, const int* colindices, int rowlen,
          {
             if( activity.ninfmax == 1 )
             {
-               if( !domainFlags[col].test( ColFlag::LB_USELESS ) )
+               if( !domainFlags[col].test( ColFlag::kLbUseless ) )
                   continue;
 
                j = rowlen;
             }
             else
             {
-               assert( !domainFlags[col].test( ColFlag::LB_USELESS ) );
+               assert( !domainFlags[col].test( ColFlag::kLbUseless ) );
                maxresact -= val * lb;
             }
 
             REAL newub = ( lhs - maxresact ) / val;
-            if( domainFlags[col].test( ColFlag::UB_INF ) || newub < ub )
-               boundchange( BoundChange::UPPER, col, newub );
+            if( domainFlags[col].test( ColFlag::kUbInf ) || newub < ub )
+               boundchange( BoundChange::kUpper, col, newub );
          }
          else
          {
             if( activity.ninfmax == 1 )
             {
-               if( !domainFlags[col].test( ColFlag::UB_USELESS ) )
+               if( !domainFlags[col].test( ColFlag::kUbUseless ) )
                   continue;
 
                j = rowlen;
             }
             else
             {
-               assert( !domainFlags[col].test( ColFlag::UB_USELESS ) );
+               assert( !domainFlags[col].test( ColFlag::kUbUseless ) );
                maxresact -= val * ub;
             }
 
             REAL newlb = ( lhs - maxresact ) / val;
-            if( domainFlags[col].test( ColFlag::LB_INF ) || newlb > lb )
-               boundchange( BoundChange::LOWER, col, newlb );
+            if( domainFlags[col].test( ColFlag::kLbInf ) || newlb > lb )
+               boundchange( BoundChange::kLower, col, newlb );
          }
       }
    }
@@ -663,34 +663,34 @@ row_implies_LB( const Num<REAL>& num, REAL lhs, REAL rhs, RowFlags rflags,
                 REAL colub, ColFlags cflags )
 
 {
-   if( cflags.test( ColFlag::LB_INF ) )
+   if( cflags.test( ColFlag::kLbInf ) )
       return true;
 
    REAL resact;
    REAL side;
 
-   if( colcoef > 0.0 && !rflags.test( RowFlag::LHS_INF ) )
+   if( colcoef > 0.0 && !rflags.test( RowFlag::kLhsInf ) )
    {
       if( activity.ninfmax == 0 )
       {
-         assert( !cflags.test( ColFlag::UB_USELESS ) );
+         assert( !cflags.test( ColFlag::kUbUseless ) );
          resact = activity.max - colub * colcoef;
       }
-      else if( activity.ninfmax == 1 && cflags.test( ColFlag::UB_USELESS ) )
+      else if( activity.ninfmax == 1 && cflags.test( ColFlag::kUbUseless ) )
          resact = activity.max;
       else
          return false;
 
       side = lhs;
    }
-   else if( colcoef < 0.0 && !rflags.test( RowFlag::RHS_INF ) )
+   else if( colcoef < 0.0 && !rflags.test( RowFlag::kRhsInf ) )
    {
       if( activity.ninfmin == 0 )
       {
-         assert( !cflags.test( ColFlag::UB_USELESS ) );
+         assert( !cflags.test( ColFlag::kUbUseless ) );
          resact = activity.min - colub * colcoef;
       }
-      else if( activity.ninfmin == 1 && cflags.test( ColFlag::UB_USELESS ) )
+      else if( activity.ninfmin == 1 && cflags.test( ColFlag::kUbUseless ) )
          resact = activity.min;
       else
          return false;
@@ -709,34 +709,34 @@ row_implies_UB( const Num<REAL>& num, REAL lhs, REAL rhs, RowFlags rflags,
                 const RowActivity<REAL>& activity, REAL colcoef, REAL collb,
                 REAL colub, ColFlags cflags )
 {
-   if( cflags.test( ColFlag::UB_INF ) )
+   if( cflags.test( ColFlag::kUbInf ) )
       return true;
 
    REAL resact;
    REAL side;
 
-   if( colcoef > 0.0 && !rflags.test( RowFlag::RHS_INF ) )
+   if( colcoef > 0.0 && !rflags.test( RowFlag::kRhsInf ) )
    {
       if( activity.ninfmin == 0 )
       {
-         assert( !cflags.test( ColFlag::LB_USELESS ) );
+         assert( !cflags.test( ColFlag::kLbUseless ) );
          resact = activity.min - collb * colcoef;
       }
-      else if( activity.ninfmin == 1 && cflags.test( ColFlag::LB_USELESS ) )
+      else if( activity.ninfmin == 1 && cflags.test( ColFlag::kLbUseless ) )
          resact = activity.min;
       else
          return false;
 
       side = rhs;
    }
-   else if( colcoef < 0.0 && !rflags.test( RowFlag::LHS_INF ) )
+   else if( colcoef < 0.0 && !rflags.test( RowFlag::kLhsInf ) )
    {
       if( activity.ninfmax == 0 )
       {
-         assert( !cflags.test( ColFlag::LB_USELESS ) );
+         assert( !cflags.test( ColFlag::kLbUseless ) );
          resact = activity.max - collb * colcoef;
       }
-      else if( activity.ninfmax == 1 && cflags.test( ColFlag::LB_USELESS ) )
+      else if( activity.ninfmax == 1 && cflags.test( ColFlag::kLbUseless ) )
          resact = activity.max;
       else
          return false;

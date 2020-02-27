@@ -188,17 +188,17 @@ presolve_and_solve(
 
    switch( result.status )
    {
-   case PresolveStatus::INFEASIBLE:
+   case PresolveStatus::kInfeasible:
       fmt::print( "presolve detected infeasible problem\n" );
       return ResultStatus::INFEASIBLE_OR_UNBOUNDED;
-   case PresolveStatus::UNBND_OR_INFEAS:
+   case PresolveStatus::kUnbndOrInfeas:
       fmt::print( "presolve detected unbounded or infeasible problem\n" );
       return ResultStatus::INFEASIBLE_OR_UNBOUNDED;
-   case PresolveStatus::UNBOUNDED:
+   case PresolveStatus::kUnbounded:
       fmt::print( "presolve detected unbounded problem\n" );
       return ResultStatus::INFEASIBLE_OR_UNBOUNDED;
-   case PresolveStatus::UNCHANGED:
-   case PresolveStatus::REDUCED:
+   case PresolveStatus::kUnchanged:
+   case PresolveStatus::kReduced:
       break;
    }
 
@@ -277,10 +277,10 @@ presolve_and_solve(
          solver->printDetails();
 
       Solution<REAL> solution;
-      solution.type = SolutionType::PRIMAL_ONLY;
+      solution.type = SolutionType::kPrimal;
 
       if( result.postsolve.getOriginalProblem().getNumIntegralCols() == 0 )
-         solution.type = SolutionType::PRIMAL_AND_DUAL;
+         solution.type = SolutionType::kPrimalDual;
 
       if( ( status == SolverStatus::kOptimal ||
             status == SolverStatus::kInterrupted ) &&

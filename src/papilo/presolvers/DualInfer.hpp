@@ -87,7 +87,7 @@ DualInfer<REAL>::execute( const Problem<REAL>& problem,
    const int nrows = problem.getNRows();
    const auto& activities = problem.getRowActivities();
 
-   PresolveStatus result = PresolveStatus::UNCHANGED;
+   PresolveStatus result = PresolveStatus::kUnchanged;
 
    // get called less and less over time regardless of success since the
    // presolver can be expensive otherwise
@@ -106,49 +106,49 @@ DualInfer<REAL>::execute( const Problem<REAL>& problem,
 
       int i = 0;
       while(
-          ( !colf.test( ColFlag::LB_INF ) || !colf.test( ColFlag::UB_INF ) ) &&
+          ( !colf.test( ColFlag::kLbInf ) || !colf.test( ColFlag::kUbInf ) ) &&
           i != len )
       {
          int row = inds[i];
 
          assert( !consMatrix.isRowRedundant( row ) );
 
-         bool lhsinf = rflags[row].test( RowFlag::LHS_INF );
-         bool rhsinf = rflags[row].test( RowFlag::RHS_INF );
+         bool lhsinf = rflags[row].test( RowFlag::kLhsInf );
+         bool rhsinf = rflags[row].test( RowFlag::kRhsInf );
          const REAL& lhs = lhsValues[row];
          const REAL& rhs = rhsValues[row];
 
-         if( !colf.test( ColFlag::UB_INF ) )
+         if( !colf.test( ColFlag::kUbInf ) )
          {
             if( row_implies_UB( num, lhs, rhs, rflags[row], activitiesCopy[row],
                                 vals[i], lb, ub, colf ) )
             {
-               colf.set( ColFlag::UB_INF );
+               colf.set( ColFlag::kUbInf );
 
-               if( !colf.test( ColFlag::UB_HUGE ) )
+               if( !colf.test( ColFlag::kUbHuge ) )
                   update_activities_remove_finite_bound(
-                      inds, vals, len, BoundChange::UPPER, ub, activitiesCopy );
+                      inds, vals, len, BoundChange::kUpper, ub, activitiesCopy );
             }
          }
 
-         if( !colf.test( ColFlag::LB_INF ) )
+         if( !colf.test( ColFlag::kLbInf ) )
          {
             if( row_implies_LB( num, lhs, rhs, rflags[row], activitiesCopy[row],
                                 vals[i], lb, ub, colf ) )
             {
-               colf.set( ColFlag::LB_INF );
+               colf.set( ColFlag::kLbInf );
 
-               if( !colf.test( ColFlag::LB_HUGE ) )
+               if( !colf.test( ColFlag::kLbHuge ) )
                   update_activities_remove_finite_bound(
-                      inds, vals, len, BoundChange::LOWER, lb, activitiesCopy );
+                      inds, vals, len, BoundChange::kLower, lb, activitiesCopy );
             }
          }
 
          ++i;
       }
 
-      lbinf = colf.test( ColFlag::LB_INF );
-      ubinf = colf.test( ColFlag::UB_INF );
+      lbinf = colf.test( ColFlag::kLbInf );
+      ubinf = colf.test( ColFlag::kUbInf );
    };
 
    // initialize dual variable domains
@@ -166,10 +166,10 @@ DualInfer<REAL>::execute( const Problem<REAL>& problem,
 
       assert( rowsize[i] > 0 );
 
-      if( !rflags[i].test( RowFlag::RHS_INF ) )
-         dualColFlags[i].set( ColFlag::LB_INF );
-      if( !rflags[i].test( RowFlag::LHS_INF ) )
-         dualColFlags[i].set( ColFlag::UB_INF );
+      if( !rflags[i].test( RowFlag::kRhsInf ) )
+         dualColFlags[i].set( ColFlag::kLbInf );
+      if( !rflags[i].test( RowFlag::kLhsInf ) )
+         dualColFlags[i].set( ColFlag::kUbInf );
    }
 
    // initialize dual constraint sides, mark constraints of integral columns
@@ -183,20 +183,20 @@ DualInfer<REAL>::execute( const Problem<REAL>& problem,
    const Vec<int>& colperm = problemUpdate.getRandomColPerm();
    for( int c = 0; c != ncols; ++c )
    {
-      assert( !dualRowFlags[c].test( RowFlag::LHS_INF ) );
-      assert( !dualRowFlags[c].test( RowFlag::RHS_INF ) );
+      assert( !dualRowFlags[c].test( RowFlag::kLhsInf ) );
+      assert( !dualRowFlags[c].test( RowFlag::kRhsInf ) );
 
-      if( cflags[c].test( ColFlag::INTEGRAL, ColFlag::INACTIVE ) ||
+      if( cflags[c].test( ColFlag::kIntegral, ColFlag::kInactive ) ||
           colsize[c] == 0 )
       {
-         dualRowFlags[c].set( RowFlag::RHS_INF );
-         dualRowFlags[c].set( RowFlag::LHS_INF );
-         dualRowFlags[c].set( RowFlag::REDUNDANT );
+         dualRowFlags[c].set( RowFlag::kRhsInf );
+         dualRowFlags[c].set( RowFlag::kLhsInf );
+         dualRowFlags[c].set( RowFlag::kRedundant );
          continue;
       }
 
-      int64_t colweight = int64_t( !cflags[c].test( ColFlag::LB_INF ) +
-                                   !cflags[c].test( ColFlag::UB_INF ) ) *
+      int64_t colweight = int64_t( !cflags[c].test( ColFlag::kLbInf ) +
+                                   !cflags[c].test( ColFlag::kUbInf ) ) *
                               colsize[c] * ncols +
                           colperm[c];
 
@@ -222,17 +222,17 @@ DualInfer<REAL>::execute( const Problem<REAL>& problem,
 
       if( !lbinf && !ubinf )
       {
-         dualRowFlags[c].set( RowFlag::RHS_INF );
-         dualRowFlags[c].set( RowFlag::LHS_INF );
-         dualRowFlags[c].set( RowFlag::REDUNDANT );
+         dualRowFlags[c].set( RowFlag::kRhsInf );
+         dualRowFlags[c].set( RowFlag::kLhsInf );
+         dualRowFlags[c].set( RowFlag::kRedundant );
          continue;
       }
 
       if( !lbinf )
-         dualRowFlags[c].set( RowFlag::LHS_INF );
+         dualRowFlags[c].set( RowFlag::kLhsInf );
 
       if( !ubinf )
-         dualRowFlags[c].set( RowFlag::RHS_INF );
+         dualRowFlags[c].set( RowFlag::kRhsInf );
    }
 
    // compute initial activities, skip redundant rows
@@ -242,11 +242,11 @@ DualInfer<REAL>::execute( const Problem<REAL>& problem,
    Vec<int> nextChangedActivity;
 
    auto checkRedundancy = [&]( int dualRow ) {
-      if( ( dualRowFlags[dualRow].test( RowFlag::LHS_INF ) ||
+      if( ( dualRowFlags[dualRow].test( RowFlag::kLhsInf ) ||
             ( dualActivities[dualRow].ninfmin == 0 &&
               num.isFeasGE( dualActivities[dualRow].min,
                             dualLHS[dualRow] ) ) ) &&
-          ( dualRowFlags[dualRow].test( RowFlag::RHS_INF ) ||
+          ( dualRowFlags[dualRow].test( RowFlag::kRhsInf ) ||
             ( dualActivities[dualRow].ninfmax == 0 &&
               num.isFeasLE( dualActivities[dualRow].max,
                             dualRHS[dualRow] ) ) ) )
@@ -256,7 +256,7 @@ DualInfer<REAL>::execute( const Problem<REAL>& problem,
 
    for( int i = 0; i != ncols; ++i )
    {
-      if( dualRowFlags[i].test( RowFlag::REDUNDANT ) )
+      if( dualRowFlags[i].test( RowFlag::kRedundant ) )
       {
          dualActivities[i].min = 0;
          dualActivities[i].max = 0;
@@ -273,14 +273,14 @@ DualInfer<REAL>::execute( const Problem<REAL>& problem,
 
       if( checkRedundancy( i ) )
       {
-         dualRowFlags[i].set( RowFlag::REDUNDANT );
+         dualRowFlags[i].set( RowFlag::kRedundant );
          continue;
       }
 
       if( ( dualActivities[i].ninfmax <= 1 &&
-            !dualRowFlags[i].test( RowFlag::LHS_INF ) ) ||
+            !dualRowFlags[i].test( RowFlag::kLhsInf ) ) ||
           ( dualActivities[i].ninfmin <= 1 &&
-            !dualRowFlags[i].test( RowFlag::RHS_INF ) ) )
+            !dualRowFlags[i].test( RowFlag::kRhsInf ) ) )
          changedActivity.push_back( i );
    }
 
@@ -292,20 +292,20 @@ DualInfer<REAL>::execute( const Problem<REAL>& problem,
       bool oldboundinf;
       REAL oldbound;
 
-      if( boundChg == BoundChange::LOWER )
+      if( boundChg == BoundChange::kLower )
       {
-         oldboundinf = dualColFlags[dualCol].test( ColFlag::LB_INF );
+         oldboundinf = dualColFlags[dualCol].test( ColFlag::kLbInf );
          oldbound = dualLB[dualCol];
 
          // check against other bound for infeasibility
-         if( !dualColFlags[dualCol].test( ColFlag::UB_INF ) )
+         if( !dualColFlags[dualCol].test( ColFlag::kUbInf ) )
          {
             REAL bnddist = dualUB[dualCol] - newbound;
 
             // bound exceeded by more then feastol means infeasible
             if( bnddist < -num.getFeasTol() )
             {
-               result = PresolveStatus::UNBND_OR_INFEAS;
+               result = PresolveStatus::kUnbndOrInfeas;
                return;
             }
 
@@ -333,26 +333,26 @@ DualInfer<REAL>::execute( const Problem<REAL>& problem,
          if( !oldboundinf && newbound - oldbound <= +1000 * num.getFeasTol() )
             return;
 
-         dualColFlags[dualCol].unset( ColFlag::LB_INF );
+         dualColFlags[dualCol].unset( ColFlag::kLbInf );
          dualLB[dualCol] = newbound;
 
-         assert( dualColFlags[dualCol].test( ColFlag::UB_INF ) ||
+         assert( dualColFlags[dualCol].test( ColFlag::kUbInf ) ||
                  dualLB[dualCol] <= dualUB[dualCol] );
       }
       else
       {
-         oldboundinf = dualColFlags[dualCol].test( ColFlag::UB_INF );
+         oldboundinf = dualColFlags[dualCol].test( ColFlag::kUbInf );
          oldbound = dualUB[dualCol];
 
          // check against other bound for infeasibility
-         if( !dualColFlags[dualCol].test( ColFlag::LB_INF ) )
+         if( !dualColFlags[dualCol].test( ColFlag::kLbInf ) )
          {
             REAL bnddist = newbound - dualLB[dualCol];
 
             // bound exceeded by more then feastol means infeasible
             if( bnddist < -num.getFeasTol() )
             {
-               result = PresolveStatus::UNBND_OR_INFEAS;
+               result = PresolveStatus::kUnbndOrInfeas;
                return;
             }
 
@@ -376,10 +376,10 @@ DualInfer<REAL>::execute( const Problem<REAL>& problem,
          if( !oldboundinf && newbound - oldbound >= -1000 * num.getFeasTol() )
             return;
 
-         dualColFlags[dualCol].unset( ColFlag::UB_INF );
+         dualColFlags[dualCol].unset( ColFlag::kUbInf );
          dualUB[dualCol] = newbound;
 
-         assert( dualColFlags[dualCol].test( ColFlag::LB_INF ) ||
+         assert( dualColFlags[dualCol].test( ColFlag::kLbInf ) ||
                  dualUB[dualCol] >= dualLB[dualCol] );
       }
 
@@ -391,7 +391,7 @@ DualInfer<REAL>::execute( const Problem<REAL>& problem,
       {
          int dualRow = inds[i];
 
-         if( dualRowFlags[dualRow].test( RowFlag::REDUNDANT ) )
+         if( dualRowFlags[dualRow].test( RowFlag::kRedundant ) )
             continue;
 
          RowActivity<REAL>& activity = dualActivities[dualRow];
@@ -401,21 +401,21 @@ DualInfer<REAL>::execute( const Problem<REAL>& problem,
 
          if( checkRedundancy( dualRow ) )
          {
-            dualRowFlags[dualRow].set( RowFlag::REDUNDANT );
+            dualRowFlags[dualRow].set( RowFlag::kRedundant );
             continue;
          }
 
          if( activity.lastchange != nrounds )
          {
-            if( actChange == ActivityChange::MIN &&
-                !dualRowFlags[dualRow].test( RowFlag::RHS_INF ) &&
+            if( actChange == ActivityChange::kMin &&
+                !dualRowFlags[dualRow].test( RowFlag::kRhsInf ) &&
                 activity.ninfmin <= 1 )
             {
                activity.lastchange = nrounds;
                nextChangedActivity.push_back( dualRow );
             }
-            else if( actChange == ActivityChange::MAX &&
-                     !dualRowFlags[dualRow].test( RowFlag::LHS_INF ) &&
+            else if( actChange == ActivityChange::kMax &&
+                     !dualRowFlags[dualRow].test( RowFlag::kLhsInf ) &&
                      activity.ninfmax <= 1 )
             {
                activity.lastchange = nrounds;
@@ -432,7 +432,7 @@ DualInfer<REAL>::execute( const Problem<REAL>& problem,
                       nrounds, changedActivity.size() );
       for( int dualRow : changedActivity )
       {
-         if( dualRowFlags[dualRow].test( RowFlag::REDUNDANT ) )
+         if( dualRowFlags[dualRow].test( RowFlag::kRedundant ) )
             continue;
 
          auto colvec = consMatrix.getColumnCoefficients( dualRow );
@@ -443,7 +443,7 @@ DualInfer<REAL>::execute( const Problem<REAL>& problem,
                         dualRowFlags[dualRow], dualLB, dualUB, dualColFlags,
                         boundChanged );
 
-         if( result == PresolveStatus::UNBND_OR_INFEAS )
+         if( result == PresolveStatus::kUnbndOrInfeas )
             return result;
       }
 
@@ -463,14 +463,14 @@ DualInfer<REAL>::execute( const Problem<REAL>& problem,
       if( consMatrix.isRowRedundant( i ) )
          continue;
 
-      if( !rflags[i].test( RowFlag::LHS_INF ) &&
-          !rflags[i].test( RowFlag::RHS_INF ) && lhsValues[i] == rhsValues[i] )
+      if( !rflags[i].test( RowFlag::kLhsInf ) &&
+          !rflags[i].test( RowFlag::kRhsInf ) && lhsValues[i] == rhsValues[i] )
          continue;
 
-      if( ( !dualColFlags[i].test( ColFlag::LB_INF ) &&
+      if( ( !dualColFlags[i].test( ColFlag::kLbInf ) &&
             num.isFeasGT( dualLB[i], 0 ) ) )
       {
-         assert( !rflags[i].test( RowFlag::LHS_INF ) );
+         assert( !rflags[i].test( RowFlag::kLhsInf ) );
 
          if( activities[i].ninfmax != 0 ||
              num.isFeasLT( lhsValues[i], activities[i].max ) )
@@ -481,10 +481,10 @@ DualInfer<REAL>::execute( const Problem<REAL>& problem,
             ++impliedeqs;
          }
       }
-      else if( !dualColFlags[i].test( ColFlag::UB_INF ) &&
+      else if( !dualColFlags[i].test( ColFlag::kUbInf ) &&
                num.isFeasLT( dualUB[i], 0 ) )
       {
-         assert( !rflags[i].test( RowFlag::RHS_INF ) );
+         assert( !rflags[i].test( RowFlag::kRhsInf ) );
 
          if( activities[i].ninfmin != 0 ||
              num.isFeasGT( rhsValues[i], activities[i].min ) )
@@ -504,7 +504,7 @@ DualInfer<REAL>::execute( const Problem<REAL>& problem,
       if( colsize[i] <= 0 )
          continue;
 
-      if( dualRowFlags[i].test( RowFlag::REDUNDANT ) )
+      if( dualRowFlags[i].test( RowFlag::kRedundant ) )
       {
          auto colvec = consMatrix.getColumnCoefficients( i );
 
@@ -517,12 +517,12 @@ DualInfer<REAL>::execute( const Problem<REAL>& problem,
           num.isFeasLT( dualActivities[i].max, obj[i] ) &&
           num.isSafeLT( dualActivities[i].max, obj[i] ) )
       {
-         assert( !cflags[i].test( ColFlag::LB_INF ) );
+         assert( !cflags[i].test( ColFlag::kLbInf ) );
          TransactionGuard<REAL> tg{reductions};
          reductions.lockColBounds( i );
          reductions.fixCol( i, lbValues[i] );
 
-         if( cflags[i].test( ColFlag::INTEGRAL ) )
+         if( cflags[i].test( ColFlag::kIntegral ) )
             ++fixedints;
          else
             ++fixedconts;
@@ -531,12 +531,12 @@ DualInfer<REAL>::execute( const Problem<REAL>& problem,
                num.isFeasGT( dualActivities[i].min, obj[i] ) &&
                num.isSafeGT( dualActivities[i].min, obj[i] ) )
       {
-         assert( !cflags[i].test( ColFlag::UB_INF ) );
+         assert( !cflags[i].test( ColFlag::kUbInf ) );
          TransactionGuard<REAL> tg{reductions};
          reductions.lockColBounds( i );
          reductions.fixCol( i, ubValues[i] );
 
-         if( cflags[i].test( ColFlag::INTEGRAL ) )
+         if( cflags[i].test( ColFlag::kIntegral ) )
             ++fixedints;
          else
             ++fixedconts;
@@ -545,9 +545,9 @@ DualInfer<REAL>::execute( const Problem<REAL>& problem,
 
    // set result if reductions where found
    if( impliedeqs > 0 || fixedints > 0 || fixedconts > 0 )
-      result = PresolveStatus::REDUCED;
+      result = PresolveStatus::kReduced;
 
-   // if( nrounds != 0 && result == PresolveStatus::REDUCED )
+   // if( nrounds != 0 && result == PresolveStatus::kReduced )
    //    fmt::print(
    //        "   Dual infer: {} propagation rounds, {} implied equations, "
    //        "{} integers fixed, {} conts fixed\n",

@@ -80,7 +80,7 @@ SingletonStuffing<REAL>::execute( const Problem<REAL>& problem,
    const auto& rowsize = constMatrix.getRowSizes();
    const auto& obj = problem.getObjective().coefficients;
 
-   PresolveStatus result = PresolveStatus::UNCHANGED;
+   PresolveStatus result = PresolveStatus::kUnchanged;
    Vec<int> rowsWithPenaltySingletons;
    Vec<uint8_t> penaltyVarCount( nrows );
 
@@ -90,7 +90,7 @@ SingletonStuffing<REAL>::execute( const Problem<REAL>& problem,
       if( !impliedeq && rowsize[row] <= 1 )
          return;
 
-      result = PresolveStatus::REDUCED;
+      result = PresolveStatus::kReduced;
 
       TransactionGuard<REAL> tg{reductions};
       reductions.lockColBounds( col );
@@ -100,14 +100,14 @@ SingletonStuffing<REAL>::execute( const Problem<REAL>& problem,
       // the substitution
       if( impliedeq )
       {
-         if( rflags[row].test( RowFlag::LHS_INF ) )
+         if( rflags[row].test( RowFlag::kLhsInf ) )
          {
-            assert( !rflags[row].test( RowFlag::RHS_INF ) );
+            assert( !rflags[row].test( RowFlag::kRhsInf ) );
             reductions.changeRowLHS( row, side );
          }
          else
          {
-            assert( rflags[row].test( RowFlag::RHS_INF ) );
+            assert( rflags[row].test( RowFlag::kRhsInf ) );
             reductions.changeRowRHS( row, side );
          }
 
@@ -126,8 +126,8 @@ SingletonStuffing<REAL>::execute( const Problem<REAL>& problem,
       }
       else
       {
-         assert( lbimplied || !cflags[col].test( ColFlag::LB_INF ) );
-         assert( ubimplied || !cflags[col].test( ColFlag::UB_INF ) );
+         assert( lbimplied || !cflags[col].test( ColFlag::kLbInf ) );
+         assert( ubimplied || !cflags[col].test( ColFlag::kUbInf ) );
 
          // implied free only for one bound -> modify equation to be an
          // inequality and remove the columns coefficient
@@ -170,9 +170,9 @@ SingletonStuffing<REAL>::execute( const Problem<REAL>& problem,
 
       assert( !constMatrix.isRowRedundant( row ) );
 
-      if( rflags[row].test( RowFlag::EQUALITY ) )
+      if( rflags[row].test( RowFlag::kEquation ) )
       {
-         assert( !rflags[row].test( RowFlag::LHS_INF, RowFlag::RHS_INF ) );
+         assert( !rflags[row].test( RowFlag::kLhsInf, RowFlag::kRhsInf ) );
 
          // Found singleton column within an equation:
          // Check if it is implied free on one bound. In that case the
@@ -201,7 +201,7 @@ SingletonStuffing<REAL>::execute( const Problem<REAL>& problem,
                ( !lbimplied && obj[col] != 0 ) ) )
             continue;
 
-         if( cflags[col].test( ColFlag::INTEGRAL ) )
+         if( cflags[col].test( ColFlag::kIntegral ) )
          {
             bool unsuitableForSubstitution = false;
 
@@ -213,7 +213,7 @@ SingletonStuffing<REAL>::execute( const Problem<REAL>& problem,
                if( rowinds[i] == col )
                   continue;
 
-               if( !cflags[rowinds[i]].test( ColFlag::INTEGRAL ) )
+               if( !cflags[rowinds[i]].test( ColFlag::kIntegral ) )
                {
                   unsuitableForSubstitution = true;
                   break;
@@ -260,10 +260,10 @@ SingletonStuffing<REAL>::execute( const Problem<REAL>& problem,
       if( ndownlocks == 0 && obj[col] >= 0 )
       {
          // dual fix to lower bound
-         if( cflags[col].test( ColFlag::LB_INF ) )
+         if( cflags[col].test( ColFlag::kLbInf ) )
          {
             if( obj[col] != 0 )
-               return PresolveStatus::UNBND_OR_INFEAS;
+               return PresolveStatus::kUnbndOrInfeas;
 
             continue;
          }
@@ -271,7 +271,7 @@ SingletonStuffing<REAL>::execute( const Problem<REAL>& problem,
          TransactionGuard<REAL> tg{reductions};
          reductions.lockColStrong( col );
          reductions.fixCol( col, lower_bounds[col] );
-         result = PresolveStatus::REDUCED;
+         result = PresolveStatus::kReduced;
 
          continue;
       }
@@ -279,10 +279,10 @@ SingletonStuffing<REAL>::execute( const Problem<REAL>& problem,
       if( nuplocks == 0 && obj[col] <= 0 )
       {
          // dual fix to upper bound
-         if( cflags[col].test( ColFlag::UB_INF ) )
+         if( cflags[col].test( ColFlag::kUbInf ) )
          {
             if( obj[col] != 0 )
-               return PresolveStatus::UNBND_OR_INFEAS;
+               return PresolveStatus::kUnbndOrInfeas;
 
             continue;
          }
@@ -290,7 +290,7 @@ SingletonStuffing<REAL>::execute( const Problem<REAL>& problem,
          TransactionGuard<REAL> tg{reductions};
          reductions.lockColStrong( col );
          reductions.fixCol( col, upper_bounds[col] );
-         result = PresolveStatus::REDUCED;
+         result = PresolveStatus::kReduced;
 
          continue;
       }
@@ -314,7 +314,7 @@ SingletonStuffing<REAL>::execute( const Problem<REAL>& problem,
       // directly implies a bound for the dualvariable of the primal row.
       // If the dual bound implies the primal row to be an equation we can
       // substitute the singleton variable as above in the equation case
-      if( !cflags[col].test( ColFlag::INTEGRAL ) )
+      if( !cflags[col].test( ColFlag::kIntegral ) )
       {
          bool duallbinf = true;
          bool dualubinf = true;
@@ -357,8 +357,8 @@ SingletonStuffing<REAL>::execute( const Problem<REAL>& problem,
          {
             bool removevar = true;
 
-            assert( !rflags[row].test( RowFlag::LHS_INF ) );
-            assert( rflags[row].test( RowFlag::RHS_INF ) ||
+            assert( !rflags[row].test( RowFlag::kLhsInf ) );
+            assert( rflags[row].test( RowFlag::kRhsInf ) ||
                     rhs_values[row] != lhs_values[row] );
 
             // check again if row implies more bounds with new right hand
@@ -366,7 +366,7 @@ SingletonStuffing<REAL>::execute( const Problem<REAL>& problem,
             if( !lbimplied )
             {
                lbimplied = row_implies_LB(
-                   num, lhs_values[row], lhs_values[row], RowFlag::EQUALITY,
+                   num, lhs_values[row], lhs_values[row], RowFlag::kEquation,
                    activities[row], val, lower_bounds[col], upper_bounds[col],
                    cflags[col] );
 
@@ -378,7 +378,7 @@ SingletonStuffing<REAL>::execute( const Problem<REAL>& problem,
             if( removevar && !ubimplied )
             {
                ubimplied = row_implies_UB(
-                   num, lhs_values[row], lhs_values[row], RowFlag::EQUALITY,
+                   num, lhs_values[row], lhs_values[row], RowFlag::kEquation,
                    activities[row], val, lower_bounds[col], upper_bounds[col],
                    cflags[col] );
 
@@ -397,7 +397,7 @@ SingletonStuffing<REAL>::execute( const Problem<REAL>& problem,
             {
                // if the variable should not be removed, then just apply the
                // dual reduction and change the constraint into an equation
-               result = PresolveStatus::REDUCED;
+               result = PresolveStatus::kReduced;
 
                TransactionGuard<REAL> tg{reductions};
                reductions.lockColBounds( col );
@@ -409,15 +409,15 @@ SingletonStuffing<REAL>::execute( const Problem<REAL>& problem,
          {
             bool removevar = true;
 
-            assert( !rflags[row].test( RowFlag::RHS_INF ) );
-            assert( rflags[row].test( RowFlag::LHS_INF ) ||
+            assert( !rflags[row].test( RowFlag::kRhsInf ) );
+            assert( rflags[row].test( RowFlag::kLhsInf ) ||
                     rhs_values[row] != lhs_values[row] );
 
             // check again if row implies more bounds with new left hand side
             if( !lbimplied )
             {
                lbimplied = row_implies_LB(
-                   num, rhs_values[row], rhs_values[row], RowFlag::EQUALITY,
+                   num, rhs_values[row], rhs_values[row], RowFlag::kEquation,
                    activities[row], val, lower_bounds[col], upper_bounds[col],
                    cflags[col] );
 
@@ -429,7 +429,7 @@ SingletonStuffing<REAL>::execute( const Problem<REAL>& problem,
             if( removevar && !ubimplied )
             {
                ubimplied = row_implies_UB(
-                   num, rhs_values[row], rhs_values[row], RowFlag::EQUALITY,
+                   num, rhs_values[row], rhs_values[row], RowFlag::kEquation,
                    activities[row], val, lower_bounds[col], upper_bounds[col],
                    cflags[col] );
 
@@ -448,7 +448,7 @@ SingletonStuffing<REAL>::execute( const Problem<REAL>& problem,
             {
                // if the variable should not be removed, then just apply the
                // dual reduction and change the constraint into an equation
-               result = PresolveStatus::REDUCED;
+               result = PresolveStatus::kReduced;
 
                TransactionGuard<REAL> tg{reductions};
                reductions.lockColBounds( col );
@@ -478,16 +478,16 @@ SingletonStuffing<REAL>::execute( const Problem<REAL>& problem,
 
    for( int row : rowsWithPenaltySingletons )
    {
-      assert( rflags[row].test( RowFlag::LHS_INF ) ||
-              rflags[row].test( RowFlag::RHS_INF ) );
-      assert( !rflags[row].test( RowFlag::LHS_INF ) ||
-              !rflags[row].test( RowFlag::RHS_INF ) );
+      assert( rflags[row].test( RowFlag::kLhsInf ) ||
+              rflags[row].test( RowFlag::kRhsInf ) );
+      assert( !rflags[row].test( RowFlag::kLhsInf ) ||
+              !rflags[row].test( RowFlag::kRhsInf ) );
 
       int scale;
       REAL rhs;
       REAL maxresact = 0;
 
-      if( rflags[row].test( RowFlag::RHS_INF ) )
+      if( rflags[row].test( RowFlag::kRhsInf ) )
       {
          rhs = -lhs_values[row];
          scale = -1;
@@ -512,12 +512,12 @@ SingletonStuffing<REAL>::execute( const Problem<REAL>& problem,
 
          // if the column is a singleton and not integral it could be a
          // penalty variable
-         if( colsize[col] == 1 && !cflags[col].test( ColFlag::INTEGRAL ) )
+         if( colsize[col] == 1 && !cflags[col].test( ColFlag::kIntegral ) )
          {
             // for penalty variables adjust the right hand side as if it
             // where complemented whith the cheapest bound
             if( coeff > 0 && obj[col] < 0 &&
-                !cflags[col].test( ColFlag::UB_USELESS ) )
+                !cflags[col].test( ColFlag::kUbUseless ) )
             {
                rhs -= coeff * upper_bounds[col];
                penaltyvars.emplace_back( col, std::move( coeff ) );
@@ -525,7 +525,7 @@ SingletonStuffing<REAL>::execute( const Problem<REAL>& problem,
             }
 
             if( coeff < 0 && obj[col] > 0 &&
-                !cflags[col].test( ColFlag::LB_USELESS ) )
+                !cflags[col].test( ColFlag::kLbUseless ) )
             {
                rhs -= coeff * lower_bounds[col];
                penaltyvars.emplace_back( col, std::move( coeff ) );
@@ -535,14 +535,14 @@ SingletonStuffing<REAL>::execute( const Problem<REAL>& problem,
             // handle the dual fix case here again to adjust the right hand
             // side with the stronger values
             if( coeff > 0 && obj[col] >= 0 &&
-                !cflags[col].test( ColFlag::LB_INF ) )
+                !cflags[col].test( ColFlag::kLbInf ) )
             {
                rhs -= coeff * lower_bounds[col];
                continue;
             }
 
             if( coeff < 0 && obj[col] <= 0 &&
-                !cflags[col].test( ColFlag::UB_INF ) )
+                !cflags[col].test( ColFlag::kUbInf ) )
             {
                rhs -= coeff * upper_bounds[col];
                continue;
@@ -554,7 +554,7 @@ SingletonStuffing<REAL>::execute( const Problem<REAL>& problem,
          // them with their largest contribution from the right hand side
          if( coeff > 0 )
          {
-            if( cflags[col].test( ColFlag::UB_USELESS ) )
+            if( cflags[col].test( ColFlag::kUbUseless ) )
             {
                suitable = false;
                break;
@@ -564,7 +564,7 @@ SingletonStuffing<REAL>::execute( const Problem<REAL>& problem,
          }
          else
          {
-            if( cflags[col].test( ColFlag::LB_USELESS ) )
+            if( cflags[col].test( ColFlag::kLbUseless ) )
             {
                suitable = false;
                break;
@@ -600,7 +600,7 @@ SingletonStuffing<REAL>::execute( const Problem<REAL>& problem,
          // them with their largest contribution from the right hand side
          if( coeff > 0 )
          {
-            if( cflags[col].test( ColFlag::LB_USELESS ) )
+            if( cflags[col].test( ColFlag::kLbUseless ) )
             {
                suitable = false;
                break;
@@ -610,7 +610,7 @@ SingletonStuffing<REAL>::execute( const Problem<REAL>& problem,
          }
          else
          {
-            if( cflags[col].test( ColFlag::UB_USELESS ) )
+            if( cflags[col].test( ColFlag::kUbUseless ) )
             {
                suitable = false;
                break;

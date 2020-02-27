@@ -29,8 +29,8 @@ namespace papilo
 
 enum class SolutionType
 {
-   PRIMAL_ONLY,
-   PRIMAL_AND_DUAL
+   kPrimal,
+   kPrimalDual
 };
 
 template <typename REAL>
@@ -43,7 +43,7 @@ class Solution
    Vec<REAL> row_dual;
 
    // Default type primal only.
-   Solution() : type( SolutionType::PRIMAL_ONLY ) {}
+   Solution() : type( SolutionType::kPrimal ) {}
 
    Solution( SolutionType type_ ) : type( type_ ) {}
 
@@ -53,13 +53,13 @@ class Solution
    }
 
    Solution( Vec<REAL> values )
-       : type( SolutionType::PRIMAL_ONLY ), primal( std::move( values ) )
+       : type( SolutionType::kPrimal ), primal( std::move( values ) )
    {
    }
 
    Solution( Vec<REAL> primal_values, Vec<REAL> dual_col_values,
              Vec<REAL> dual_row_values )
-       : type( SolutionType::PRIMAL_AND_DUAL ),
+       : type( SolutionType::kPrimalDual ),
          primal( std::move( primal_values ) ),
          col_dual( std::move( dual_col_values ) ),
          row_dual( std::move( dual_row_values ) )
@@ -72,9 +72,9 @@ template <typename REAL>
 class PrimalSolution : public Solution<REAL>
 {
  public:
-   PrimalSolution() : Solution<REAL>( SolutionType::PRIMAL_ONLY ) {}
+   PrimalSolution() : Solution<REAL>( SolutionType::kPrimal ) {}
    PrimalSolution( std::vector<REAL> values )
-       : Solution<REAL>( SolutionType::PRIMAL_ONLY, values )
+       : Solution<REAL>( SolutionType::kPrimal, values )
    {
    }
 };
@@ -86,9 +86,9 @@ class PrimalDualSolution : public Solution<REAL>
    std::vector<REAL> col_dual;
    std::vector<REAL> row_dual;
 
-   PrimalDualSolution() : Solution<REAL>( SolutionType::PRIMAL_AND_DUAL ) {}
+   PrimalDualSolution() : Solution<REAL>( SolutionType::kPrimalDual ) {}
    PrimalDualSolution( std::vector<REAL> primal_values )
-       : Solution<REAL>( SolutionType::PRIMAL_ONLY, primal_values )
+       : Solution<REAL>( SolutionType::kPrimal, primal_values )
    {
    }
 };

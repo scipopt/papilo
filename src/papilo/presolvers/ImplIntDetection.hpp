@@ -78,12 +78,12 @@ ImplIntDetection<REAL>::execute( const Problem<REAL>& problem,
    const auto& nrows = consmatrix.getNRows();
    const auto& ncols = consmatrix.getNCols();
 
-   PresolveStatus result = PresolveStatus::UNCHANGED;
+   PresolveStatus result = PresolveStatus::kUnchanged;
 
    for( int col = 0; col != ncols; ++col )
    {
-      if( cflags[col].test( ColFlag::INTEGRAL, ColFlag::IMPL_INT,
-                            ColFlag::INACTIVE ) )
+      if( cflags[col].test( ColFlag::kIntegral, ColFlag::kImplInt,
+                            ColFlag::kInactive ) )
          continue;
 
       bool testinequalities =
@@ -99,8 +99,8 @@ ImplIntDetection<REAL>::execute( const Problem<REAL>& problem,
       {
          int row = colrows[i];
 
-         if( rflags[row].test( RowFlag::REDUNDANT ) ||
-             !rflags[row].test( RowFlag::EQUALITY ) )
+         if( rflags[row].test( RowFlag::kRedundant ) ||
+             !rflags[row].test( RowFlag::kEquation ) )
             continue;
 
          testinequalities = false;
@@ -122,7 +122,7 @@ ImplIntDetection<REAL>::execute( const Problem<REAL>& problem,
             if( rowcol == col )
                continue;
 
-            if( !cflags[rowcol].test( ColFlag::INTEGRAL, ColFlag::IMPL_INT ) ||
+            if( !cflags[rowcol].test( ColFlag::kIntegral, ColFlag::kImplInt ) ||
                 !num.isIntegral( scale * rowvals[j] ) )
             {
                impliedint = false;
@@ -138,18 +138,18 @@ ImplIntDetection<REAL>::execute( const Problem<REAL>& problem,
       {
          // add reduction
          reductions.impliedInteger( col );
-         result = PresolveStatus::REDUCED;
+         result = PresolveStatus::kReduced;
          continue;
       }
 
       if( !testinequalities )
          continue;
 
-      if( !cflags[col].test( ColFlag::LB_INF ) &&
+      if( !cflags[col].test( ColFlag::kLbInf ) &&
           !num.isIntegral( lower_bounds[col] ) )
          continue;
 
-      if( !cflags[col].test( ColFlag::UB_INF ) &&
+      if( !cflags[col].test( ColFlag::kUbInf ) &&
           !num.isIntegral( upper_bounds[col] ) )
          continue;
 
@@ -159,19 +159,19 @@ ImplIntDetection<REAL>::execute( const Problem<REAL>& problem,
       {
          int row = colrows[i];
 
-         if( rflags[row].test( RowFlag::REDUNDANT ) )
+         if( rflags[row].test( RowFlag::kRedundant ) )
             continue;
 
          REAL scale = 1 / colvals[i];
 
-         if( !rflags[row].test( RowFlag::RHS_INF ) &&
+         if( !rflags[row].test( RowFlag::kRhsInf ) &&
              !num.isIntegral( scale * rhs_values[row] ) )
          {
             impliedint = false;
             break;
          }
 
-         if( !rflags[row].test( RowFlag::LHS_INF ) &&
+         if( !rflags[row].test( RowFlag::kLhsInf ) &&
              !num.isIntegral( scale * lhs_values[row] ) )
          {
             impliedint = false;
@@ -190,7 +190,7 @@ ImplIntDetection<REAL>::execute( const Problem<REAL>& problem,
             if( rowcol == col )
                continue;
 
-            if( !cflags[rowcol].test( ColFlag::INTEGRAL, ColFlag::IMPL_INT ) ||
+            if( !cflags[rowcol].test( ColFlag::kIntegral, ColFlag::kImplInt ) ||
                 !num.isIntegral( scale * rowvals[j] ) )
             {
                impliedint = false;
@@ -206,7 +206,7 @@ ImplIntDetection<REAL>::execute( const Problem<REAL>& problem,
       {
          // add reduction
          reductions.impliedInteger( col );
-         result = PresolveStatus::REDUCED;
+         result = PresolveStatus::kReduced;
       }
    }
 

@@ -265,14 +265,14 @@ Postsolve<REAL>::notifyFixedCol( int col, REAL val )
 //    values.push_back( (double)length );
 
 //    // LB
-//    if( flags.test( RowFlag::LHS_INF ) )
+//    if( flags.test( RowFlag::kLhsInf ) )
 //       indices.push_back( 1 );
 //    else
 //       indices.push_back( 0 );
 //    values.push_back( lhs );
 
 //    // UB
-//    if( flags.test( RowFlag::RHS_INF ) )
+//    if( flags.test( RowFlag::kRhsInf ) )
 //       indices.push_back( 1 );
 //    else
 //       indices.push_back( 0 );
@@ -323,14 +323,14 @@ Postsolve<REAL>::notifySavedRow( int row,
    values.push_back( (double)length );
 
    // LB
-   if( flags.test( RowFlag::LHS_INF ) )
+   if( flags.test( RowFlag::kLhsInf ) )
       indices.push_back( 1 );
    else
       indices.push_back( 0 );
    values.push_back( lhs );
 
    // UB
-   if( flags.test( RowFlag::RHS_INF ) )
+   if( flags.test( RowFlag::kRhsInf ) )
       indices.push_back( 1 );
    else
       indices.push_back( 0 );
@@ -391,17 +391,17 @@ Postsolve<REAL>::notifyParallelCols( int col1, bool col1integral,
    int col2BoundFlags = 0;
 
    if( col1integral )
-      col1BoundFlags |= static_cast<int>( ColFlag::INTEGRAL );
+      col1BoundFlags |= static_cast<int>( ColFlag::kIntegral );
    if( col1lbinf )
-      col1BoundFlags |= static_cast<int>( ColFlag::LB_INF );
+      col1BoundFlags |= static_cast<int>( ColFlag::kLbInf );
    if( col1ubinf )
-      col1BoundFlags |= static_cast<int>( ColFlag::UB_INF );
+      col1BoundFlags |= static_cast<int>( ColFlag::kUbInf );
    if( col2integral )
-      col2BoundFlags |= static_cast<int>( ColFlag::INTEGRAL );
+      col2BoundFlags |= static_cast<int>( ColFlag::kIntegral );
    if( col2lbinf )
-      col2BoundFlags |= static_cast<int>( ColFlag::LB_INF );
+      col2BoundFlags |= static_cast<int>( ColFlag::kLbInf );
    if( col2ubinf )
-      col2BoundFlags |= static_cast<int>( ColFlag::UB_INF );
+      col2BoundFlags |= static_cast<int>( ColFlag::kUbInf );
 
    // add all information
    indices.push_back( origcol_mapping[col1] );
@@ -429,9 +429,9 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
    const Vec<REAL>& reducedSol = reducedSolution.primal;
    Vec<REAL>& origSol = originalSolution.primal;
 
-   if( reducedSolution.type == SolutionType::PRIMAL_AND_DUAL )
+   if( reducedSolution.type == SolutionType::kPrimalDual )
    {
-      originalSolution.type = SolutionType::PRIMAL_AND_DUAL;
+      originalSolution.type = SolutionType::kPrimalDual;
    }
 
    origSol.clear();
@@ -443,7 +443,7 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
       origSol[origcol] = reducedSol[k];
    }
 
-   if( originalSolution.type == SolutionType::PRIMAL_AND_DUAL )
+   if( originalSolution.type == SolutionType::kPrimalDual )
    {
       assert( reducedSolution.col_dual.size() == origcol_mapping.size() );
       originalSolution.col_dual.clear();
@@ -478,7 +478,7 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
           checker.initState( ProblemType::REDUCED, originalSolution,
                              origcol_mapping, origrow_mapping, checker.level );
 
-      if( originalSolution.type == SolutionType::PRIMAL_AND_DUAL )
+      if( originalSolution.type == SolutionType::kPrimalDual )
          checker.level = CheckLevel::Solver_and_primal_feas;
       //   checker.setLevel( CheckLevel::After_each_postsolve_step);
 
@@ -543,9 +543,9 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
       }
       case ReductionType::kParallelCol:
       {
-         constexpr int IS_INTEGRAL = static_cast<int>( ColFlag::INTEGRAL );
-         constexpr int IS_LBINF = static_cast<int>( ColFlag::LB_INF );
-         constexpr int IS_UBINF = static_cast<int>( ColFlag::UB_INF );
+         constexpr int IS_INTEGRAL = static_cast<int>( ColFlag::kIntegral );
+         constexpr int IS_LBINF = static_cast<int>( ColFlag::kLbInf );
+         constexpr int IS_UBINF = static_cast<int>( ColFlag::kUbInf );
 
          assert( last - first == 5 );
 

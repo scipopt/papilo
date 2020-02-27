@@ -32,11 +32,11 @@ namespace papilo
 enum class RowFlag : uint8_t
 {
    NONE = 0,
-   LHS_INF = 1 << 0,
-   RHS_INF = 1 << 1,
-   EQUALITY = 1 << 2,
-   INTEGRAL = 1 << 3,
-   REDUNDANT = 1 << 4,
+   kLhsInf = 1 << 0,
+   kRhsInf = 1 << 1,
+   kEquation = 1 << 2,
+   kIntegral = 1 << 3,
+   kRedundant = 1 << 4,
 };
 
 using RowFlags = Flags<RowFlag>;

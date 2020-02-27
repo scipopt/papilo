@@ -73,7 +73,7 @@ CoefficientStrengthening<REAL>::execute(
    const auto& rhs_values = constMatrix.getRightHandSides();
    const auto& rflags = constMatrix.getRowFlags();
 
-   PresolveStatus result = PresolveStatus::UNCHANGED;
+   PresolveStatus result = PresolveStatus::kUnchanged;
 
    Vec<std::pair<REAL, int>> integerCoefficients;
 
@@ -84,8 +84,8 @@ CoefficientStrengthening<REAL>::execute(
       const int len = rowcoefficients.getLength();
       const int* coefindices = rowcoefficients.getIndices();
 
-      if( ( !rflags[i].test( RowFlag::LHS_INF ) &&
-            !rflags[i].test( RowFlag::RHS_INF ) ) ||
+      if( ( !rflags[i].test( RowFlag::kLhsInf ) &&
+            !rflags[i].test( RowFlag::kRhsInf ) ) ||
           len <= 1 )
          continue;
 
@@ -95,9 +95,9 @@ CoefficientStrengthening<REAL>::execute(
 
       // normalize constraint to a * x <= b constraint, remember if it was
       // scaled by -1
-      if( !rflags[i].test( RowFlag::LHS_INF ) )
+      if( !rflags[i].test( RowFlag::kLhsInf ) )
       {
-         assert( rflags[i].test( RowFlag::RHS_INF ) );
+         assert( rflags[i].test( RowFlag::kRhsInf ) );
 
          if( activities[i].ninfmin == 0 )
             maxact = -activities[i].min;
@@ -109,8 +109,8 @@ CoefficientStrengthening<REAL>::execute(
       }
       else
       {
-         assert( !rflags[i].test( RowFlag::RHS_INF ) );
-         assert( rflags[i].test( RowFlag::LHS_INF ) );
+         assert( !rflags[i].test( RowFlag::kRhsInf ) );
+         assert( rflags[i].test( RowFlag::kLhsInf ) );
 
          if( activities[i].ninfmax == 0 )
             maxact = activities[i].max;
@@ -133,9 +133,9 @@ CoefficientStrengthening<REAL>::execute(
 
       for( int k = 0; k != len; ++k )
       {
-         if( !cflags[coefindices[k]].test( ColFlag::INTEGRAL,
-                                           ColFlag::IMPL_INT ) ||
-             cflags[coefindices[k]].test( ColFlag::FIXED ) )
+         if( !cflags[coefindices[k]].test( ColFlag::kIntegral,
+                                           ColFlag::kImplInt ) ||
+             cflags[coefindices[k]].test( ColFlag::kFixed ) )
             continue;
 
          if( num.isFeasGE( newabscoef, abs( coefficients[k] ) ) )
@@ -153,12 +153,12 @@ CoefficientStrengthening<REAL>::execute(
       // adjust side and qualified coefficients
       for( std::pair<REAL, int>& intCoef : integerCoefficients )
       {
-         assert( domains.flags[intCoef.second].test( ColFlag::LB_INF ) ||
-                 domains.flags[intCoef.second].test( ColFlag::UB_INF ) ||
+         assert( domains.flags[intCoef.second].test( ColFlag::kLbInf ) ||
+                 domains.flags[intCoef.second].test( ColFlag::kUbInf ) ||
                  domains.lower_bounds[intCoef.second] !=
                      domains.upper_bounds[intCoef.second] );
-         assert( domains.flags[intCoef.second].test( ColFlag::LB_INF ) ||
-                 domains.flags[intCoef.second].test( ColFlag::UB_INF ) ||
+         assert( domains.flags[intCoef.second].test( ColFlag::kLbInf ) ||
+                 domains.flags[intCoef.second].test( ColFlag::kUbInf ) ||
                  domains.upper_bounds[intCoef.second] -
                          domains.lower_bounds[intCoef.second] >=
                      1.0 );
@@ -166,14 +166,14 @@ CoefficientStrengthening<REAL>::execute(
 
          if( intCoef.first < REAL{0} )
          {
-            assert( !domains.flags[intCoef.second].test( ColFlag::LB_INF ) );
+            assert( !domains.flags[intCoef.second].test( ColFlag::kLbInf ) );
             rhs -= ( newabscoef + intCoef.first ) *
                    domains.lower_bounds[intCoef.second];
             intCoef.first = -newabscoef;
          }
          else
          {
-            assert( !domains.flags[intCoef.second].test( ColFlag::UB_INF ) );
+            assert( !domains.flags[intCoef.second].test( ColFlag::kUbInf ) );
             rhs += ( newabscoef - intCoef.first ) *
                    domains.upper_bounds[intCoef.second];
             intCoef.first = newabscoef;
@@ -188,8 +188,8 @@ CoefficientStrengthening<REAL>::execute(
       {
          for( const std::pair<REAL, int>& intCoef : integerCoefficients )
             reductions.changeMatrixEntry( i, intCoef.second, -intCoef.first );
-         assert( rflags[i].test( RowFlag::RHS_INF ) );
-         assert( !rflags[i].test( RowFlag::LHS_INF ) );
+         assert( rflags[i].test( RowFlag::kRhsInf ) );
+         assert( !rflags[i].test( RowFlag::kLhsInf ) );
 
          if( lhs_values[i] != -rhs )
             reductions.changeRowLHS( i, -rhs );
@@ -199,14 +199,14 @@ CoefficientStrengthening<REAL>::execute(
          assert( scale == 1 );
          for( const std::pair<REAL, int>& intCoef : integerCoefficients )
             reductions.changeMatrixEntry( i, intCoef.second, intCoef.first );
-         assert( rflags[i].test( RowFlag::LHS_INF ) );
-         assert( !rflags[i].test( RowFlag::RHS_INF ) );
+         assert( rflags[i].test( RowFlag::kLhsInf ) );
+         assert( !rflags[i].test( RowFlag::kRhsInf ) );
 
          if( rhs_values[i] != rhs )
             reductions.changeRowRHS( i, rhs );
       }
 
-      result = PresolveStatus::REDUCED;
+      result = PresolveStatus::kReduced;
    }
    return result;
 }

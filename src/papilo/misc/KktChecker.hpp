@@ -843,28 +843,28 @@ template <typename REAL>
 bool
 rowLHSInf( const Problem<REAL>& problem, const int row )
 {
-   return problem.getRowFlags()[row].test( RowFlag::LHS_INF );
+   return problem.getRowFlags()[row].test( RowFlag::kLhsInf );
 }
 
 template <typename REAL>
 bool
 rowRHSInf( const Problem<REAL>& problem, const int row )
 {
-   return problem.getRowFlags()[row].test( RowFlag::RHS_INF );
+   return problem.getRowFlags()[row].test( RowFlag::kRhsInf );
 }
 
 template <typename REAL>
 bool
 colLBInf( const Problem<REAL>& problem, const int col )
 {
-   return problem.getColFlags()[col].test( ColFlag::LB_INF );
+   return problem.getColFlags()[col].test( ColFlag::kLbInf );
 }
 
 template <typename REAL>
 bool
 colUBInf( const Problem<REAL>& problem, const int col )
 {
-   return problem.getColFlags()[col].test( ColFlag::UB_INF );
+   return problem.getColFlags()[col].test( ColFlag::kUbInf );
 }
 
 // for testing

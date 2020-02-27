@@ -1158,16 +1158,16 @@ papilo_solver_start( PAPILO_SOLVER* solver )
    case SolverState::PROBLEM_PRESOLVED:
       switch( solver->presolveResult.status )
       {
-      case PresolveStatus::UNCHANGED:
-      case PresolveStatus::REDUCED:
+      case PresolveStatus::kUnchanged:
+      case PresolveStatus::kReduced:
          break;
-      case PresolveStatus::INFEASIBLE:
+      case PresolveStatus::kInfeasible:
          solver->solveinfo.solve_result = PAPILO_SOLVE_RESULT_INFEASIBLE;
          return &solver->solveinfo;
-      case PresolveStatus::UNBND_OR_INFEAS:
+      case PresolveStatus::kUnbndOrInfeas:
          solver->solveinfo.solve_result = PAPILO_SOLVE_RESULT_UNBND_OR_INFEAS;
          return &solver->solveinfo;
-      case PresolveStatus::UNBOUNDED:
+      case PresolveStatus::kUnbounded:
          solver->solveinfo.solve_result = PAPILO_SOLVE_RESULT_UNBOUNDED;
          return &solver->solveinfo;
       }

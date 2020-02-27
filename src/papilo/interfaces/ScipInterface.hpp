@@ -67,23 +67,23 @@ class ScipInterface : public SolverInterface<REAL>
       for( int i = 0; i < ncols; ++i )
       {
          SCIP_VAR* var;
-         assert( !domains.flags[i].test( ColFlag::INACTIVE ) );
+         assert( !domains.flags[i].test( ColFlag::kInactive ) );
 
-         SCIP_Real lb = domains.flags[i].test( ColFlag::LB_INF )
+         SCIP_Real lb = domains.flags[i].test( ColFlag::kLbInf )
                             ? -SCIPinfinity( scip )
                             : SCIP_Real( domains.lower_bounds[i] );
-         SCIP_Real ub = domains.flags[i].test( ColFlag::UB_INF )
+         SCIP_Real ub = domains.flags[i].test( ColFlag::kUbInf )
                             ? SCIPinfinity( scip )
                             : SCIP_Real( domains.upper_bounds[i] );
          SCIP_VARTYPE type;
-         if( domains.flags[i].test( ColFlag::INTEGRAL ) )
+         if( domains.flags[i].test( ColFlag::kIntegral ) )
          {
             if( lb == REAL{0} && ub == REAL{1} )
                type = SCIP_VARTYPE_BINARY;
             else
                type = SCIP_VARTYPE_INTEGER;
          }
-         else if( domains.flags[i].test( ColFlag::IMPL_INT ) )
+         else if( domains.flags[i].test( ColFlag::kImplInt ) )
             type = SCIP_VARTYPE_IMPLINT;
          else
             type = SCIP_VARTYPE_CONTINUOUS;
@@ -109,10 +109,10 @@ class ScipInterface : public SolverInterface<REAL>
          auto rowvec = consMatrix.getRowCoefficients( i );
          const REAL* vals = rowvec.getValues();
          const int* inds = rowvec.getIndices();
-         SCIP_Real lhs = rflags[i].test( RowFlag::LHS_INF )
+         SCIP_Real lhs = rflags[i].test( RowFlag::kLhsInf )
                              ? -SCIPinfinity( scip )
                              : SCIP_Real( lhs_values[i] );
-         SCIP_Real rhs = rflags[i].test( RowFlag::RHS_INF )
+         SCIP_Real rhs = rflags[i].test( RowFlag::kRhsInf )
                              ? SCIPinfinity( scip )
                              : SCIP_Real( rhs_values[i] );
 
@@ -161,16 +161,16 @@ class ScipInterface : public SolverInterface<REAL>
       {
          int col = colset[i];
          SCIP_VAR* var;
-         assert( !domains.flags[col].test( ColFlag::INACTIVE ) );
+         assert( !domains.flags[col].test( ColFlag::kInactive ) );
 
-         SCIP_Real lb = domains.flags[col].test( ColFlag::LB_INF )
+         SCIP_Real lb = domains.flags[col].test( ColFlag::kLbInf )
                             ? -SCIPinfinity( scip )
                             : SCIP_Real( domains.lower_bounds[col] );
-         SCIP_Real ub = domains.flags[col].test( ColFlag::UB_INF )
+         SCIP_Real ub = domains.flags[col].test( ColFlag::kUbInf )
                             ? SCIPinfinity( scip )
                             : SCIP_Real( domains.upper_bounds[col] );
          SCIP_VARTYPE type;
-         if( domains.flags[col].test( ColFlag::INTEGRAL ) )
+         if( domains.flags[col].test( ColFlag::kIntegral ) )
          {
             if( lb == REAL{0} && ub == REAL{1} )
                type = SCIP_VARTYPE_BINARY;
@@ -202,10 +202,10 @@ class ScipInterface : public SolverInterface<REAL>
          auto rowvec = consMatrix.getRowCoefficients( row );
          const REAL* vals = rowvec.getValues();
          const int* inds = rowvec.getIndices();
-         SCIP_Real lhs = rflags[row].test( RowFlag::LHS_INF )
+         SCIP_Real lhs = rflags[row].test( RowFlag::kLhsInf )
                              ? -SCIPinfinity( scip )
                              : SCIP_Real( lhs_values[row] );
-         SCIP_Real rhs = rflags[row].test( RowFlag::RHS_INF )
+         SCIP_Real rhs = rflags[row].test( RowFlag::kRhsInf )
                              ? SCIPinfinity( scip )
                              : SCIP_Real( rhs_values[row] );
 
@@ -379,7 +379,7 @@ class ScipInterface : public SolverInterface<REAL>
    {
       SCIP_SOL* sol = SCIPgetBestSol( scip );
 
-      if( solbuffer.type != SolutionType::PRIMAL_ONLY )
+      if( solbuffer.type != SolutionType::kPrimal )
          return false;
 
       solbuffer.primal.resize( vars.size() );
@@ -424,7 +424,7 @@ class ScipInterface : public SolverInterface<REAL>
    {
       SCIP_SOL* sol = SCIPgetBestSol( scip );
 
-      if( solbuffer.type != SolutionType::PRIMAL_ONLY )
+      if( solbuffer.type != SolutionType::kPrimal )
          return false;
 
       if( sol != nullptr )

@@ -326,7 +326,7 @@ ParallelRowDetection<REAL>::execute( const Problem<REAL>& problem,
    const int nrows = constMatrix.getNRows();
    const Vec<int>& rowperm = problemUpdate.getRandomRowPerm();
 
-   PresolveStatus result = PresolveStatus::UNCHANGED;
+   PresolveStatus result = PresolveStatus::kUnchanged;
 
    // get called less and less over time regardless of success since the
    // presolver can be expensive otherwise
@@ -335,21 +335,21 @@ ParallelRowDetection<REAL>::execute( const Problem<REAL>& problem,
    // lambda to handle the parallel rows
    auto handlerows = [&reductions, &result, &lhs_values, &rhs_values, &rflags,
                       &num]( int row1, int row2, REAL ratio ) {
-      bool firstconsEquality = rflags[row1].test( RowFlag::EQUALITY );
-      bool secondconsEquality = rflags[row2].test( RowFlag::EQUALITY );
+      bool firstconsEquality = rflags[row1].test( RowFlag::kEquation );
+      bool secondconsEquality = rflags[row2].test( RowFlag::kEquation );
 
-      assert( !firstconsEquality || ( !rflags[row1].test( RowFlag::RHS_INF ) &&
-                                      !rflags[row1].test( RowFlag::LHS_INF ) &&
+      assert( !firstconsEquality || ( !rflags[row1].test( RowFlag::kRhsInf ) &&
+                                      !rflags[row1].test( RowFlag::kLhsInf ) &&
                                       rhs_values[row1] == lhs_values[row1] ) );
-      assert( !secondconsEquality || ( !rflags[row2].test( RowFlag::RHS_INF ) &&
-                                       !rflags[row2].test( RowFlag::LHS_INF ) &&
+      assert( !secondconsEquality || ( !rflags[row2].test( RowFlag::kRhsInf ) &&
+                                       !rflags[row2].test( RowFlag::kLhsInf ) &&
                                        rhs_values[row2] == lhs_values[row2] ) );
       assert( ratio != 0.0 );
 
       REAL adjustedLHS = lhs_values[row2] * ratio;
       REAL adjustedRHS = rhs_values[row2] * ratio;
-      bool adjustedLHSInf = rflags[row2].test( RowFlag::LHS_INF );
-      bool adjustedRHSInf = rflags[row2].test( RowFlag::RHS_INF );
+      bool adjustedLHSInf = rflags[row2].test( RowFlag::kLhsInf );
+      bool adjustedRHSInf = rflags[row2].test( RowFlag::kRhsInf );
 
       using std::swap;
       if( ratio < REAL{0.0} )
@@ -375,7 +375,7 @@ ParallelRowDetection<REAL>::execute( const Problem<REAL>& problem,
          }
          else
          {
-            result = PresolveStatus::INFEASIBLE;
+            result = PresolveStatus::kInfeasible;
          }
       }
       else if( firstconsEquality && !secondconsEquality )
@@ -395,15 +395,15 @@ ParallelRowDetection<REAL>::execute( const Problem<REAL>& problem,
          }
          else
          {
-            result = PresolveStatus::INFEASIBLE;
+            result = PresolveStatus::kInfeasible;
          }
       }
       else if( !firstconsEquality && secondconsEquality )
       {
          // same as previous case, but row1 and row2 are flipped
-         if( ( rflags[row1].test( RowFlag::RHS_INF ) ||
+         if( ( rflags[row1].test( RowFlag::kRhsInf ) ||
                num.isFeasGE( rhs_values[row1], adjustedRHS ) ) &&
-             ( rflags[row1].test( RowFlag::LHS_INF ) ||
+             ( rflags[row1].test( RowFlag::kLhsInf ) ||
                num.isFeasLE( lhs_values[row1], adjustedRHS ) ) )
          {
             TransactionGuard<REAL> guard{reductions};
@@ -413,7 +413,7 @@ ParallelRowDetection<REAL>::execute( const Problem<REAL>& problem,
          }
          else
          {
-            result = PresolveStatus::INFEASIBLE;
+            result = PresolveStatus::kInfeasible;
          }
       }
       else
@@ -421,12 +421,12 @@ ParallelRowDetection<REAL>::execute( const Problem<REAL>& problem,
          // l1 != r1, l2 != r2, s > 0
          // if [l1, r1] inter [s*l2, s*r2] emplty, infeasible
          // else we keep one row and give it the thightest bounds
-         if( ( !rflags[row1].test( RowFlag::RHS_INF ) && !adjustedLHSInf &&
+         if( ( !rflags[row1].test( RowFlag::kRhsInf ) && !adjustedLHSInf &&
                num.isFeasLT( rhs_values[row1], adjustedLHS ) ) ||
-             ( !rflags[row1].test( RowFlag::LHS_INF ) && !adjustedRHSInf &&
+             ( !rflags[row1].test( RowFlag::kLhsInf ) && !adjustedRHSInf &&
                num.isFeasLT( adjustedRHS, lhs_values[row1] ) ) )
          {
-            result = PresolveStatus::INFEASIBLE;
+            result = PresolveStatus::kInfeasible;
          }
          else
          {
@@ -434,11 +434,11 @@ ParallelRowDetection<REAL>::execute( const Problem<REAL>& problem,
             reductions.lockRow( row1 );
             reductions.lockRow( row2 );
 
-            if( !adjustedRHSInf && ( rflags[row1].test( RowFlag::RHS_INF ) ||
+            if( !adjustedRHSInf && ( rflags[row1].test( RowFlag::kRhsInf ) ||
                                      adjustedRHS < rhs_values[row1] ) )
                reductions.changeRowRHS( row1, adjustedRHS );
 
-            if( !adjustedLHSInf && ( rflags[row1].test( RowFlag::LHS_INF ) ||
+            if( !adjustedLHSInf && ( rflags[row1].test( RowFlag::kLhsInf ) ||
                                      adjustedLHS > lhs_values[row1] ) )
                reductions.changeRowLHS( row1, adjustedLHS );
 
@@ -524,7 +524,7 @@ ParallelRowDetection<REAL>::execute( const Problem<REAL>& problem,
                                          rowperm[std::get<1>( b )] );
                } );
 
-      result = PresolveStatus::REDUCED;
+      result = PresolveStatus::kReduced;
 
       for( const std::tuple<int, int, REAL>& parallelRow : parallelRows )
       {
@@ -536,7 +536,7 @@ ParallelRowDetection<REAL>::execute( const Problem<REAL>& problem,
 
          handlerows( row1, row2, ratio );
 
-         if( result == PresolveStatus::INFEASIBLE )
+         if( result == PresolveStatus::kInfeasible )
             break;
       }
    }

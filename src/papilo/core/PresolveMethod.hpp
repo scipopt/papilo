@@ -52,19 +52,19 @@ class ProblemUpdate;
 enum class PresolveStatus : int
 {
    /// problem was not changed
-   UNCHANGED = 0,
+   kUnchanged = 0,
 
    /// problem was reduced
-   REDUCED = 1,
+   kReduced = 1,
 
    /// problem was detected to be unbounded or infeasible
-   UNBND_OR_INFEAS = 2,
+   kUnbndOrInfeas = 2,
 
    /// problem was detected to be unbounded
-   UNBOUNDED = 3,
+   kUnbounded = 3,
 
    /// problem was detected to be infeasible
-   INFEASIBLE = 4,
+   kInfeasible = 4,
 
 };
 
@@ -136,23 +136,23 @@ class PresolveMethod
         const Num<REAL>& num, Reductions<REAL>& reductions )
    {
       if( !enabled || delayed )
-         return PresolveStatus::UNCHANGED;
+         return PresolveStatus::kUnchanged;
 
       if( skip != 0 )
       {
          --skip;
-         return PresolveStatus::UNCHANGED;
+         return PresolveStatus::kUnchanged;
       }
 
       if( problem.getNumIntegralCols() == 0 &&
           ( type == PresolverType::kIntegralCols ||
             type == PresolverType::kMixedCols ) )
-         return PresolveStatus::UNCHANGED;
+         return PresolveStatus::kUnchanged;
 
       if( problem.getNumContinuousCols() == 0 &&
           ( type == PresolverType::kContinuousCols ||
             type == PresolverType::kMixedCols ) )
-         return PresolveStatus::UNCHANGED;
+         return PresolveStatus::kUnchanged;
 
       ++ncalls;
 
@@ -165,17 +165,17 @@ class PresolveMethod
 
       switch( result )
       {
-      case PresolveStatus::UNBOUNDED:
-      case PresolveStatus::UNBND_OR_INFEAS:
-      case PresolveStatus::INFEASIBLE:
+      case PresolveStatus::kUnbounded:
+      case PresolveStatus::kUnbndOrInfeas:
+      case PresolveStatus::kInfeasible:
          Message::debug( &problemUpdate,
                          "[{}:{}] {} detected unboundedness or infeasibility\n",
                          __FILE__, __LINE__, this->name );
-      case PresolveStatus::REDUCED:
+      case PresolveStatus::kReduced:
          ++nsuccessCall;
          nconsecutiveUnsuccessCall = 0;
          break;
-      case PresolveStatus::UNCHANGED:
+      case PresolveStatus::kUnchanged:
          ++nconsecutiveUnsuccessCall;
          if( timing != PresolverTiming::kFast )
             skip += nconsecutiveUnsuccessCall;

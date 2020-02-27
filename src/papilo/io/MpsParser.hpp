@@ -302,21 +302,21 @@ MpsParser<REAL>::parseRows( boost::iostreams::filtering_istream& file,
       {
          rowlhs.push_back( REAL{0.0} );
          rowrhs.push_back( REAL{0.0} );
-         row_flags.emplace_back( RowFlag::RHS_INF );
+         row_flags.emplace_back( RowFlag::kRhsInf );
          rowtype.push_back( boundtype::GE );
       }
       else if( word_ref.front() == 'E' )
       {
          rowlhs.push_back( REAL{0.0} );
          rowrhs.push_back( REAL{0.0} );
-         row_flags.emplace_back( RowFlag::EQUALITY );
+         row_flags.emplace_back( RowFlag::kEquation );
          rowtype.push_back( boundtype::EQ );
       }
       else if( word_ref.front() == 'L' )
       {
          rowlhs.push_back( REAL{0.0} );
          rowrhs.push_back( REAL{0.0} );
-         row_flags.emplace_back( RowFlag::LHS_INF );
+         row_flags.emplace_back( RowFlag::kLhsInf );
          rowtype.push_back( boundtype::LE );
       }
       else if( word_ref.front() ==
@@ -327,7 +327,7 @@ MpsParser<REAL>::parseRows( boost::iostreams::filtering_istream& file,
             rowlhs.push_back( REAL{0.0} );
             rowrhs.push_back( REAL{0.0} );
             RowFlags rowf;
-            rowf.set( RowFlag::LHS_INF, RowFlag::RHS_INF );
+            rowf.set( RowFlag::kLhsInf, RowFlag::kRhsInf );
             row_flags.emplace_back( rowf );
             rowtype.push_back( boundtype::LE );
          }
@@ -458,8 +458,8 @@ MpsParser<REAL>::parseCols( boost::iostreams::filtering_istream& file,
 
          assert( lb4cols.size() == col_flags.size() );
 
-         col_flags.emplace_back( integral_cols ? ColFlag::INTEGRAL
-                                               : ColFlag::NONE );
+         col_flags.emplace_back( integral_cols ? ColFlag::kIntegral
+                                               : ColFlag::kNone );
 
          // initialize with default bounds
          if( integral_cols )
@@ -471,7 +471,7 @@ MpsParser<REAL>::parseCols( boost::iostreams::filtering_istream& file,
          {
             lb4cols.push_back( REAL{0.0} );
             ub4cols.push_back( REAL{0.0} );
-            col_flags.back().set( ColFlag::UB_INF );
+            col_flags.back().set( ColFlag::kUbInf );
          }
 
          assert( col_flags.size() == lb4cols.size() );
@@ -537,12 +537,12 @@ MpsParser<REAL>::parseRanges( boost::iostreams::filtering_istream& file )
 
          if( row_type[rowidx] == boundtype::GE )
          {
-            row_flags[rowidx].unset( RowFlag::RHS_INF );
+            row_flags[rowidx].unset( RowFlag::kRhsInf );
             rowrhs[rowidx] = rowlhs[rowidx] + abs( val );
          }
          else if( row_type[rowidx] == boundtype::LE )
          {
-            row_flags[rowidx].unset( RowFlag::LHS_INF );
+            row_flags[rowidx].unset( RowFlag::kLhsInf );
             rowlhs[rowidx] = rowrhs[rowidx] - abs( val );
          }
          else
@@ -621,7 +621,7 @@ MpsParser<REAL>::parseRhs( boost::iostreams::filtering_istream& file )
          {
             assert( size_t( rowidx ) < rowrhs.size() );
             rowrhs[rowidx] = REAL{val};
-            row_flags[rowidx].unset( RowFlag::RHS_INF );
+            row_flags[rowidx].unset( RowFlag::kRhsInf );
          }
 
          if( row_type[rowidx] == boundtype::EQ ||
@@ -629,7 +629,7 @@ MpsParser<REAL>::parseRhs( boost::iostreams::filtering_istream& file )
          {
             assert( size_t( rowidx ) < rowlhs.size() );
             rowlhs[rowidx] = REAL{val};
-            row_flags[rowidx].unset( RowFlag::LHS_INF );
+            row_flags[rowidx].unset( RowFlag::kLhsInf );
          }
       };
 
@@ -748,17 +748,17 @@ MpsParser<REAL>::parseBounds( boost::iostreams::filtering_istream& file )
                lb4cols[colidx] = REAL{0.0};
             if( isub )
             {
-               col_flags[colidx].unset( ColFlag::UB_INF );
+               col_flags[colidx].unset( ColFlag::kUbInf );
                ub4cols[colidx] = REAL{1.0};
             }
-            col_flags[colidx].set( ColFlag::INTEGRAL );
+            col_flags[colidx].set( ColFlag::kIntegral );
          }
          else
          {
             if( islb )
-               col_flags[colidx].set( ColFlag::LB_INF );
+               col_flags[colidx].set( ColFlag::kLbInf );
             if( isub )
-               col_flags[colidx].set( ColFlag::UB_INF );
+               col_flags[colidx].set( ColFlag::kUbInf );
          }
          continue;
       }
@@ -774,25 +774,25 @@ MpsParser<REAL>::parseBounds( boost::iostreams::filtering_istream& file )
                         {
                            lb4cols[colidx] = REAL{val};
                            lb_is_default[colidx] = false;
-                           col_flags[colidx].unset( ColFlag::LB_INF );
+                           col_flags[colidx].unset( ColFlag::kLbInf );
                         }
                         if( isub )
                         {
                            ub4cols[colidx] = REAL{val};
                            ub_is_default[colidx] = false;
-                           col_flags[colidx].unset( ColFlag::UB_INF );
+                           col_flags[colidx].unset( ColFlag::kUbInf );
                         }
 
                         if( isintegral )
-                           col_flags[colidx].set( ColFlag::INTEGRAL );
+                           col_flags[colidx].set( ColFlag::kIntegral );
 
-                        if( col_flags[colidx].test( ColFlag::INTEGRAL ) )
+                        if( col_flags[colidx].test( ColFlag::kIntegral ) )
                         {
-                           col_flags[colidx].set( ColFlag::INTEGRAL );
+                           col_flags[colidx].set( ColFlag::kIntegral );
                            if( !islb && lb_is_default[colidx] )
                               lb4cols[colidx] = REAL{0.0};
                            if( !isub && ub_is_default[colidx] )
-                              col_flags[colidx].set( ColFlag::UB_INF );
+                              col_flags[colidx].set( ColFlag::kUbInf );
                         }
                      } )] ),
               ascii::space ) )

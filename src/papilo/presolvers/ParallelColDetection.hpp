@@ -149,10 +149,10 @@ ParallelColDetection<REAL>::findParallelCols(
    auto checkDomainsForHoles = [&]( int col1, int col2, const REAL& scale2 ) {
       // test whether we need to check that the domain of the merged
       // column has no holes
-      assert( cflags[col1].test( ColFlag::INTEGRAL ) );
-      assert( cflags[col2].test( ColFlag::INTEGRAL ) );
-      assert( !cflags[col1].test( ColFlag::LB_INF, ColFlag::UB_INF ) );
-      assert( !cflags[col2].test( ColFlag::LB_INF, ColFlag::UB_INF ) );
+      assert( cflags[col1].test( ColFlag::kIntegral ) );
+      assert( cflags[col2].test( ColFlag::kIntegral ) );
+      assert( !cflags[col1].test( ColFlag::kLbInf, ColFlag::kUbInf ) );
+      assert( !cflags[col2].test( ColFlag::kLbInf, ColFlag::kUbInf ) );
 
       // compute the domains of the merged column
       REAL mergeval = lbs[col2];
@@ -219,7 +219,7 @@ ParallelColDetection<REAL>::findParallelCols(
 
       const int length = col1vec.getLength();
       const REAL* coefs1 = col1vec.getValues();
-      bool col1integral = cflags[col1].test( ColFlag::INTEGRAL );
+      bool col1integral = cflags[col1].test( ColFlag::kIntegral );
 
       if( length < 2 )
          return;
@@ -239,7 +239,7 @@ ParallelColDetection<REAL>::findParallelCols(
                               length * sizeof( int ) ) == 0 );
 
          const REAL* coefs2 = col2vec.getValues();
-         bool col2integral = cflags[col2].test( ColFlag::INTEGRAL );
+         bool col2integral = cflags[col2].test( ColFlag::kIntegral );
 
          bool checkdomains = false;
          bool scalecol2;
@@ -250,7 +250,7 @@ ParallelColDetection<REAL>::findParallelCols(
             if( scalecol2 )
             {
                assert( !col1integral );
-               if( !cflags[col1].test( ColFlag::LB_INF, ColFlag::UB_INF ) &&
+               if( !cflags[col1].test( ColFlag::kLbInf, ColFlag::kUbInf ) &&
                    num.isLT(
                        abs( ( ubs[col1] - lbs[col1] ) * coefs1[0] / coefs2[0] ),
                        1 ) )
@@ -260,7 +260,7 @@ ParallelColDetection<REAL>::findParallelCols(
             {
                assert( !col2integral );
 
-               if( !cflags[col2].test( ColFlag::LB_INF, ColFlag::UB_INF ) &&
+               if( !cflags[col2].test( ColFlag::kLbInf, ColFlag::kUbInf ) &&
                    num.isLT(
                        abs( ( ubs[col2] - lbs[col2] ) * coefs2[0] / coefs1[0] ),
                        1 ) )
@@ -276,8 +276,8 @@ ParallelColDetection<REAL>::findParallelCols(
             {
                assert( col2integral );
 
-               if( cflags[col1].test( ColFlag::LB_INF, ColFlag::UB_INF ) ||
-                   cflags[col2].test( ColFlag::LB_INF, ColFlag::UB_INF ) )
+               if( cflags[col1].test( ColFlag::kLbInf, ColFlag::kUbInf ) ||
+                   cflags[col2].test( ColFlag::kLbInf, ColFlag::kUbInf ) )
                   continue;
 
                if( scalecol2 && !num.isIntegral( coefs1[0] / coefs2[0] ) )
@@ -432,7 +432,7 @@ ParallelColDetection<REAL>::execute( const Problem<REAL>& problem,
    const int ncols = constMatrix.getNCols();
    const Vec<int>& colperm = problemUpdate.getRandomColPerm();
 
-   PresolveStatus result = PresolveStatus::UNCHANGED;
+   PresolveStatus result = PresolveStatus::kUnchanged;
 
    // get called less and less over time regardless of success since the
    // presolver can be expensive otherwise
@@ -500,7 +500,7 @@ ParallelColDetection<REAL>::execute( const Problem<REAL>& problem,
                   return std::make_pair( colperm[a.first], colperm[a.second] ) <
                          std::make_pair( colperm[b.first], colperm[b.second] );
                } );
-      result = PresolveStatus::REDUCED;
+      result = PresolveStatus::kReduced;
       // fmt::print( "found {} parallel columns\n", parallelCols.size() );
       for( const std::pair<int, int>& parallelCol : parallelCols )
       {
@@ -511,8 +511,8 @@ ParallelColDetection<REAL>::execute( const Problem<REAL>& problem,
          reductions.lockCol( col1 );
          reductions.lockCol( col2 );
 
-         if( cflags[col2].test( ColFlag::INTEGRAL ) !=
-             cflags[col1].test( ColFlag::INTEGRAL ) )
+         if( cflags[col2].test( ColFlag::kIntegral ) !=
+             cflags[col1].test( ColFlag::kIntegral ) )
             reductions.lockColBounds( col1 );
 
          reductions.parallelCols( col1, col2 );

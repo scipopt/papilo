@@ -279,19 +279,19 @@ class ConstraintMatrix
       assert( index < getNRows() );
       if( !infval )
       {
-         flags[index].unset( RowFlag::LHS_INF );
+         flags[index].unset( RowFlag::kLhsInf );
          lhs_values[index] = value;
 
-         if( !flags[index].test( RowFlag::RHS_INF ) &&
+         if( !flags[index].test( RowFlag::kRhsInf ) &&
              lhs_values[index] == rhs_values[index] )
-            flags[index].set( RowFlag::EQUALITY );
+            flags[index].set( RowFlag::kEquation );
          else
-            flags[index].unset( RowFlag::EQUALITY );
+            flags[index].unset( RowFlag::kEquation );
       }
       else
       {
-         flags[index].unset( RowFlag::EQUALITY );
-         flags[index].set( RowFlag::LHS_INF );
+         flags[index].unset( RowFlag::kEquation );
+         flags[index].set( RowFlag::kLhsInf );
       }
    }
 
@@ -304,19 +304,19 @@ class ConstraintMatrix
       assert( index < getNRows() );
       if( !infval )
       {
-         flags[index].unset( RowFlag::RHS_INF );
+         flags[index].unset( RowFlag::kRhsInf );
          rhs_values[index] = value;
 
-         if( !flags[index].test( RowFlag::LHS_INF ) &&
+         if( !flags[index].test( RowFlag::kLhsInf ) &&
              lhs_values[index] == rhs_values[index] )
-            flags[index].set( RowFlag::EQUALITY );
+            flags[index].set( RowFlag::kEquation );
          else
-            flags[index].unset( RowFlag::EQUALITY );
+            flags[index].unset( RowFlag::kEquation );
       }
       else
       {
-         flags[index].unset( RowFlag::EQUALITY );
-         flags[index].set( RowFlag::RHS_INF );
+         flags[index].unset( RowFlag::kEquation );
+         flags[index].set( RowFlag::kRhsInf );
       }
    }
 
@@ -324,14 +324,14 @@ class ConstraintMatrix
    void
    markRowRedundant( const int row )
    {
-      flags[row].set( RowFlag::REDUNDANT );
+      flags[row].set( RowFlag::kRedundant );
    }
 
    /// is given row redundant
    bool
    isRowRedundant( const int row ) const
    {
-      return flags[row].test( RowFlag::REDUNDANT );
+      return flags[row].test( RowFlag::kRedundant );
    }
 
    /// returns reference to the values of the
@@ -707,7 +707,7 @@ ConstraintMatrix<REAL>::deleteRowsAndCols( Vec<int>& deletedRows,
        [this, &deletedRows, rowranges, rowcols, &activities]() {
           for( int row : deletedRows )
           {
-             assert( flags[row].test( RowFlag::REDUNDANT ) );
+             assert( flags[row].test( RowFlag::kRedundant ) );
 
              for( int i = rowranges[row].start; i != rowranges[row].end; ++i )
              {
@@ -1157,17 +1157,17 @@ ConstraintMatrix<REAL>::sparsify(
    // update sides if necessary
    if( rhs_values[eqrow] != 0 )
    {
-      if( !flags[targetrow].test( RowFlag::LHS_INF ) )
+      if( !flags[targetrow].test( RowFlag::kLhsInf ) )
          lhs_values[targetrow] += scale * rhs_values[eqrow];
 
-      if( !flags[targetrow].test( RowFlag::RHS_INF ) )
+      if( !flags[targetrow].test( RowFlag::kRhsInf ) )
          rhs_values[targetrow] += scale * rhs_values[eqrow];
 
       // due to numerics the row can become an equation
-      if( !flags[targetrow].test( RowFlag::LHS_INF, RowFlag::RHS_INF,
-                                  RowFlag::EQUALITY ) &&
+      if( !flags[targetrow].test( RowFlag::kLhsInf, RowFlag::kRhsInf,
+                                  RowFlag::kEquation ) &&
           lhs_values[targetrow] == rhs_values[targetrow] )
-         flags[targetrow].set( RowFlag::EQUALITY );
+         flags[targetrow].set( RowFlag::kEquation );
    }
 
    // finally update the row
@@ -1178,10 +1178,10 @@ ConstraintMatrix<REAL>::sparsify(
          if( activity.lastchange == presolveround )
             return;
 
-         if( actChange == ActivityChange::MIN && activity.ninfmin > 1 )
+         if( actChange == ActivityChange::kMin && activity.ninfmin > 1 )
             return;
 
-         if( actChange == ActivityChange::MAX && activity.ninfmax > 1 )
+         if( actChange == ActivityChange::kMax && activity.ninfmax > 1 )
             return;
 
          activity.lastchange = presolveround;
@@ -1260,10 +1260,10 @@ ConstraintMatrix<REAL>::aggregate(
          if( activity.lastchange == presolveround )
             return;
 
-         if( actChange == ActivityChange::MIN && activity.ninfmin > 1 )
+         if( actChange == ActivityChange::kMin && activity.ninfmin > 1 )
             return;
 
-         if( actChange == ActivityChange::MAX && activity.ninfmax > 1 )
+         if( actChange == ActivityChange::kMax && activity.ninfmax > 1 )
             return;
 
          activity.lastchange = presolveround;
@@ -1295,12 +1295,12 @@ ConstraintMatrix<REAL>::aggregate(
    {
       int row = freecolindices[i];
 
-      assert( flags[row].test( RowFlag::REDUNDANT ) ||
-              ( !flags[row].test( RowFlag::EQUALITY ) &&
-                ( flags[row].test( RowFlag::LHS_INF, RowFlag::RHS_INF ) ||
+      assert( flags[row].test( RowFlag::kRedundant ) ||
+              ( !flags[row].test( RowFlag::kEquation ) &&
+                ( flags[row].test( RowFlag::kLhsInf, RowFlag::kRhsInf ) ||
                   lhs_values[row] != rhs_values[row] ) ) ||
-              ( flags[row].test( RowFlag::EQUALITY ) &&
-                !flags[row].test( RowFlag::LHS_INF, RowFlag::RHS_INF ) &&
+              ( flags[row].test( RowFlag::kEquation ) &&
+                !flags[row].test( RowFlag::kLhsInf, RowFlag::kRhsInf ) &&
                 lhs_values[row] == rhs_values[row] ) );
 
       // do not modify the equations content while it is still used,
@@ -1312,7 +1312,7 @@ ConstraintMatrix<REAL>::aggregate(
          for( int k = 0; k < equalitylen; ++k )
             tripletbuffer.emplace_back( equalityindices[k], row, 0 );
 
-         flags[row].set( RowFlag::REDUNDANT );
+         flags[row].set( RowFlag::kRedundant );
          cons_matrix.rowranges[row].start =
              cons_matrix.rowranges[row + 1].start;
          cons_matrix.rowranges[row].end = cons_matrix.rowranges[row + 1].start;
@@ -1356,25 +1356,25 @@ ConstraintMatrix<REAL>::aggregate(
       // change the bounds
       if( equalityRHS != 0 )
       {
-         if( !flags[row].test( RowFlag::LHS_INF ) )
+         if( !flags[row].test( RowFlag::kLhsInf ) )
             lhs_values[row] += eqscale * equalityRHS;
 
-         if( !flags[row].test( RowFlag::RHS_INF ) )
+         if( !flags[row].test( RowFlag::kRhsInf ) )
             rhs_values[row] += eqscale * equalityRHS;
 
          // due to numerics the row can become an equation
-         if( !flags[row].test( RowFlag::LHS_INF, RowFlag::RHS_INF,
-                               RowFlag::EQUALITY ) &&
+         if( !flags[row].test( RowFlag::kLhsInf, RowFlag::kRhsInf,
+                               RowFlag::kEquation ) &&
              lhs_values[row] == rhs_values[row] )
-            flags[row].set( RowFlag::EQUALITY );
+            flags[row].set( RowFlag::kEquation );
       }
 
-      assert( flags[row].test( RowFlag::REDUNDANT ) ||
-              ( !flags[row].test( RowFlag::EQUALITY ) &&
-                ( flags[row].test( RowFlag::LHS_INF, RowFlag::RHS_INF ) ||
+      assert( flags[row].test( RowFlag::kRedundant ) ||
+              ( !flags[row].test( RowFlag::kEquation ) &&
+                ( flags[row].test( RowFlag::kLhsInf, RowFlag::kRhsInf ) ||
                   lhs_values[row] != rhs_values[row] ) ) ||
-              ( flags[row].test( RowFlag::EQUALITY ) &&
-                !flags[row].test( RowFlag::LHS_INF, RowFlag::RHS_INF ) &&
+              ( flags[row].test( RowFlag::kEquation ) &&
+                !flags[row].test( RowFlag::kLhsInf, RowFlag::kRhsInf ) &&
                 lhs_values[row] == rhs_values[row] ) );
    }
 

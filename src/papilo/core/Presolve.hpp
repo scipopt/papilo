@@ -294,7 +294,7 @@ template <typename REAL>
 PresolveStatus
 Presolve<REAL>::evaluateResults()
 {
-   int result = static_cast<int>( PresolveStatus::UNCHANGED );
+   int result = static_cast<int>( PresolveStatus::kUnchanged );
 
    for( std::size_t i = 0; i < results.size(); ++i )
       result = std::max( result, static_cast<int>( results[i] ) );
@@ -323,26 +323,26 @@ Presolve<REAL>::applyReductions( int p, const Reductions<REAL>& reductions,
       for( ; k != start; ++k )
       {
          result = probUpdate.applyTransaction( &reds[k], &reds[k + 1] );
-         if( result == ApplyResult::APPLIED )
+         if( result == ApplyResult::kApplied )
             ++stats.ntsxapplied;
-         else if( result == ApplyResult::REJECTED )
+         else if( result == ApplyResult::kRejected )
             ++stats.ntsxconflicts;
-         else if( result == ApplyResult::INFEASIBLE )
+         else if( result == ApplyResult::kInfeasible )
             return std::make_pair( -1, -1 );
-         else if( result == ApplyResult::POSTPONED )
+         else if( result == ApplyResult::kPostponed )
             postponedReductions.emplace_back( &reds[k], &reds[k + 1] );
 
          ++nbtsxTotal;
       }
 
       result = probUpdate.applyTransaction( &reds[start], &reds[end] );
-      if( result == ApplyResult::APPLIED )
+      if( result == ApplyResult::kApplied )
          ++stats.ntsxapplied;
-      else if( result == ApplyResult::REJECTED )
+      else if( result == ApplyResult::kRejected )
          ++stats.ntsxconflicts;
-      else if( result == ApplyResult::INFEASIBLE )
+      else if( result == ApplyResult::kInfeasible )
          return std::make_pair( -1, -1 );
-      else if( result == ApplyResult::POSTPONED )
+      else if( result == ApplyResult::kPostponed )
          postponedReductions.emplace_back( &reds[start], &reds[end] );
 
       k = end;
@@ -352,13 +352,13 @@ Presolve<REAL>::applyReductions( int p, const Reductions<REAL>& reductions,
    for( ; k != static_cast<int>( reds.size() ); ++k )
    {
       result = probUpdate.applyTransaction( &reds[k], &reds[k + 1] );
-      if( result == ApplyResult::APPLIED )
+      if( result == ApplyResult::kApplied )
          ++stats.ntsxapplied;
-      else if( result == ApplyResult::REJECTED )
+      else if( result == ApplyResult::kRejected )
          ++stats.ntsxconflicts;
-      else if( result == ApplyResult::INFEASIBLE )
+      else if( result == ApplyResult::kInfeasible )
          return std::make_pair( -1, -1 );
-      else if( result == ApplyResult::POSTPONED )
+      else if( result == ApplyResult::kPostponed )
          postponedReductions.emplace_back( &reds[k], &reds[k + 1] );
 
       ++nbtsxTotal;
@@ -378,7 +378,7 @@ Presolve<REAL>::finishRound( ProblemUpdate<REAL>& probUpdate )
    for( auto& reduction : reductions )
       reduction.clear();
 
-   std::fill( results.begin(), results.end(), PresolveStatus::UNCHANGED );
+   std::fill( results.begin(), results.end(), PresolveStatus::kUnchanged );
 
    // TODO compress if problem size decreased by some factor
 }
@@ -400,12 +400,12 @@ Presolve<REAL>::applyPostponed( ProblemUpdate<REAL>& probUpdate )
 
          ApplyResult r =
              probUpdate.applyTransaction( ptrpair.first, ptrpair.second );
-         if( r == ApplyResult::APPLIED )
+         if( r == ApplyResult::kApplied )
          {
             ++stats.ntsxapplied;
             ++presolverStats[presolver].second;
          }
-         else if( r == ApplyResult::REJECTED )
+         else if( r == ApplyResult::kRejected )
             ++stats.ntsxconflicts;
       }
    }
@@ -508,7 +508,7 @@ Presolve<REAL>::applyPresolversReductions( ProblemUpdate<REAL>& probUpdate )
 
    for( std::size_t i = 0; i < presolvers.size(); ++i )
    {
-      if( results[i] == PresolveStatus::REDUCED )
+      if( results[i] == PresolveStatus::kReduced )
       {
          Message::debug( this, "applying reductions of presolver {}\n",
                          presolvers[i]->getName() );
@@ -520,7 +520,7 @@ Presolve<REAL>::applyPresolversReductions( ProblemUpdate<REAL>& probUpdate )
 
          presolverStats[i].first += stats.first;
          presolverStats[i].second += stats.second;
-         results[i] = PresolveStatus::UNCHANGED;
+         results[i] = PresolveStatus::kUnchanged;
       }
 
       postponedReductionToPresolver.push_back( postponedReductions.size() );
@@ -530,7 +530,7 @@ Presolve<REAL>::applyPresolversReductions( ProblemUpdate<REAL>& probUpdate )
 
    applyPostponed( probUpdate );
 
-   if( probUpdate.flush() == PresolveStatus::INFEASIBLE )
+   if( probUpdate.flush() == PresolveStatus::kInfeasible )
       return false;
 
    return true;
@@ -630,7 +630,7 @@ Presolve<REAL>::apply( Problem<REAL>& problem )
       result.postsolve = Postsolve<REAL>( problem, num );
       result.postsolve.getChecker().setOriginalProblem( problem );
 
-      result.status = PresolveStatus::UNCHANGED;
+      result.status = PresolveStatus::kUnchanged;
 
       pdqsort( presolvers.begin(), presolvers.end(),
                []( const std::unique_ptr<PresolveMethod<REAL>>& a,
@@ -687,9 +687,9 @@ Presolve<REAL>::apply( Problem<REAL>& problem )
 
       result.status = probUpdate.trivialPresolve();
 
-      if( result.status == PresolveStatus::INFEASIBLE ||
-          result.status == PresolveStatus::UNBND_OR_INFEAS ||
-          result.status == PresolveStatus::UNBOUNDED )
+      if( result.status == PresolveStatus::kInfeasible ||
+          result.status == PresolveStatus::kUnbndOrInfeas ||
+          result.status == PresolveStatus::kUnbounded )
          return result;
 
       roundCounter = 4;
@@ -811,7 +811,7 @@ Presolve<REAL>::apply( Problem<REAL>& problem )
          result.status = evaluateResults();
          switch( result.status )
          {
-         case PresolveStatus::UNBND_OR_INFEAS:
+         case PresolveStatus::kUnbndOrInfeas:
             // in case of unbounded or infeasible results we return immediately
             printPresolversStats();
             Message::debug(
@@ -819,30 +819,30 @@ Presolve<REAL>::apply( Problem<REAL>& problem )
                 "[{}:{}] presolvers detected infeasibility or unboundedness\n",
                 __FILE__, __LINE__ );
             return result;
-         case PresolveStatus::UNBOUNDED:
+         case PresolveStatus::kUnbounded:
             // in case of unbounded or infeasible results we return immediately
             printPresolversStats();
             Message::debug( this,
                             "[{}:{}] presolvers detected unbounded problem\n",
                             __FILE__, __LINE__ );
             return result;
-         case PresolveStatus::INFEASIBLE:
+         case PresolveStatus::kInfeasible:
             // in case of unbounded or infeasible results we return immediately
             printPresolversStats();
             Message::debug( this, "[{}:{}] presolvers detected infeasibility\n",
                             __FILE__, __LINE__ );
             return result;
-         case PresolveStatus::UNCHANGED:
+         case PresolveStatus::kUnchanged:
             // printRoundStats( true );
             //++roundCounter;
             abort = updateRoundCounter( problem, probUpdate,
                                         ( stats - oldstats ), timer, true );
             break;
-         case PresolveStatus::REDUCED:
+         case PresolveStatus::kReduced:
             // problem reductions where found by at least one presolver
             if( !applyPresolversReductions( probUpdate ) )
             {
-               result.status = PresolveStatus::INFEASIBLE;
+               result.status = PresolveStatus::kInfeasible;
                return result;
             }
 
@@ -865,9 +865,9 @@ Presolve<REAL>::apply( Problem<REAL>& problem )
       {
          result.status = probUpdate.trivialPresolve();
 
-         if( result.status == PresolveStatus::INFEASIBLE ||
-             result.status == PresolveStatus::UNBND_OR_INFEAS ||
-             result.status == PresolveStatus::UNBOUNDED )
+         if( result.status == PresolveStatus::kInfeasible ||
+             result.status == PresolveStatus::kUnbndOrInfeas ||
+             result.status == PresolveStatus::kUnbounded )
             return result;
 
          probUpdate.clearStates();
@@ -888,8 +888,8 @@ Presolve<REAL>::apply( Problem<REAL>& problem )
 
          for( int i = 0; i != problem.getNRows(); ++i )
          {
-            if( rflags[i].test( RowFlag::REDUNDANT ) ||
-                !rflags[i].test( RowFlag::EQUALITY ) )
+            if( rflags[i].test( RowFlag::kRedundant ) ||
+                !rflags[i].test( RowFlag::kEquation ) )
                continue;
 
             equations.push_back( i );
@@ -941,9 +941,9 @@ Presolve<REAL>::apply( Problem<REAL>& problem )
 
             for( int col = 0; col != problem.getNCols(); ++col )
             {
-               if( cflags[col].test( ColFlag::INACTIVE, ColFlag::INTEGRAL ) ||
-                   !cflags[col].test( ColFlag::LB_INF ) ||
-                   !cflags[col].test( ColFlag::UB_INF ) )
+               if( cflags[col].test( ColFlag::kInactive, ColFlag::kIntegral ) ||
+                   !cflags[col].test( ColFlag::kLbInf ) ||
+                   !cflags[col].test( ColFlag::kUbInf ) )
                   continue;
 
                freeCols.push_back( col );
@@ -1165,7 +1165,7 @@ Presolve<REAL>::apply( Problem<REAL>& problem )
 
                if( nsolved != 0 )
                {
-                  if( probUpdate.flush() == PresolveStatus::INFEASIBLE )
+                  if( probUpdate.flush() == PresolveStatus::kInfeasible )
                      assert( false );
 
                   probUpdate.compress();
@@ -1185,7 +1185,7 @@ Presolve<REAL>::apply( Problem<REAL>& problem )
                    problem.getNumContinuousCols() );
          msg.info( "  nonzeros: {}\n", problem.getConstraintMatrix().getNnz() );
 
-         result.status = PresolveStatus::REDUCED;
+         result.status = PresolveStatus::kReduced;
          result.postsolve.getChecker().setReducedProblem( problem );
          return result;
       }
@@ -1197,7 +1197,7 @@ Presolve<REAL>::apply( Problem<REAL>& problem )
       msg.info( "  nonzeros: {}\n", problem.getConstraintMatrix().getNnz() );
 
       // problem was not changed
-      result.status = PresolveStatus::UNCHANGED;
+      result.status = PresolveStatus::kUnchanged;
       return result;
    } );
 }

@@ -94,9 +94,9 @@ class SoplexInterface : public SolverInterface<REAL>
       DSVector vec( ncols );
       for( int i = 0; i < nrows; ++i )
       {
-         Real lhs = rflags[i].test( RowFlag::LHS_INF ) ? -infinity
+         Real lhs = rflags[i].test( RowFlag::kLhsInf ) ? -infinity
                                                        : Real( lhs_values[i] );
-         Real rhs = rflags[i].test( RowFlag::RHS_INF ) ? infinity
+         Real rhs = rflags[i].test( RowFlag::kRhsInf ) ? infinity
                                                        : Real( rhs_values[i] );
 
          rows.add( lhs, vec, rhs );
@@ -106,12 +106,12 @@ class SoplexInterface : public SolverInterface<REAL>
 
       for( int i = 0; i < ncols; ++i )
       {
-         assert( !domains.flags[i].test( ColFlag::INACTIVE ) );
+         assert( !domains.flags[i].test( ColFlag::kInactive ) );
 
-         Real lb = domains.flags[i].test( ColFlag::LB_INF )
+         Real lb = domains.flags[i].test( ColFlag::kLbInf )
                        ? -infinity
                        : Real( domains.lower_bounds[i] );
-         Real ub = domains.flags[i].test( ColFlag::UB_INF )
+         Real ub = domains.flags[i].test( ColFlag::kUbInf )
                        ? infinity
                        : Real( domains.upper_bounds[i] );
 
@@ -173,10 +173,10 @@ class SoplexInterface : public SolverInterface<REAL>
 
          assert( components.getRowComponentIdx( row ) == i );
 
-         Real lhs = rflags[row].test( RowFlag::LHS_INF )
+         Real lhs = rflags[row].test( RowFlag::kLhsInf )
                         ? -infinity
                         : Real( lhs_values[row] );
-         Real rhs = rflags[row].test( RowFlag::RHS_INF )
+         Real rhs = rflags[row].test( RowFlag::kRhsInf )
                         ? infinity
                         : Real( rhs_values[row] );
 
@@ -190,12 +190,12 @@ class SoplexInterface : public SolverInterface<REAL>
          int col = colset[i];
 
          assert( components.getColComponentIdx( col ) == i );
-         assert( !domains.flags[col].test( ColFlag::INACTIVE ) );
+         assert( !domains.flags[col].test( ColFlag::kInactive ) );
 
-         Real lb = domains.flags[col].test( ColFlag::LB_INF )
+         Real lb = domains.flags[col].test( ColFlag::kLbInf )
                        ? -infinity
                        : Real( domains.lower_bounds[col] );
-         Real ub = domains.flags[col].test( ColFlag::UB_INF )
+         Real ub = domains.flags[col].test( ColFlag::kUbInf )
                        ? infinity
                        : Real( domains.upper_bounds[col] );
 
@@ -297,7 +297,7 @@ class SoplexInterface : public SolverInterface<REAL>
       for( int i = 0; i != numcols; ++i )
          sol.primal[i] = REAL( buffer[i] );
 
-      if( sol.type == SolutionType::PRIMAL_ONLY )
+      if( sol.type == SolutionType::kPrimal )
          return true;
 
       if( !spx.getRedCostReal( buffer.data(), numcols ) )
@@ -338,7 +338,7 @@ class SoplexInterface : public SolverInterface<REAL>
       for( int i = 0; i != numcols; ++i )
          sol.primal[compcols[i]] = REAL( buffer[i] );
 
-      if( sol.type == SolutionType::PRIMAL_ONLY )
+      if( sol.type == SolutionType::kPrimal )
          return true;
 
       if( !spx.getRedCostReal( buffer.data(), numcols ) )

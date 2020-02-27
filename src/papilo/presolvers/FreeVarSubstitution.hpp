@@ -110,7 +110,7 @@ Substitution<REAL>::execute( const Problem<REAL>& problem,
    const auto& colsize = constMatrix.getColSizes();
    const auto& rowperm = problemUpdate.getRandomRowPerm();
 
-   PresolveStatus result = PresolveStatus::UNCHANGED;
+   PresolveStatus result = PresolveStatus::kUnchanged;
 
    // TODO: identify the equality rows, and sort them by length
    // loop over the sorted rows, and loop over the columns in reverse order
@@ -125,12 +125,12 @@ Substitution<REAL>::execute( const Problem<REAL>& problem,
    equalities.reserve( nrows );
    for( int i = 0; i < nrows; ++i )
    {
-      if( rflags[i].test( RowFlag::REDUNDANT ) ||
-          !rflags[i].test( RowFlag::EQUALITY ) ||
+      if( rflags[i].test( RowFlag::kRedundant ) ||
+          !rflags[i].test( RowFlag::kEquation ) ||
           constMatrix.getRowSizes()[i] <= 1 )
          continue;
 
-      assert( !rflags[i].test( RowFlag::LHS_INF, RowFlag::RHS_INF ) &&
+      assert( !rflags[i].test( RowFlag::kLhsInf, RowFlag::kRhsInf ) &&
               lhs_values[i] == rhs_values[i] );
 
       equalities.emplace_back( constMatrix.getRowCoefficients( i ), i );
@@ -163,7 +163,7 @@ Substitution<REAL>::execute( const Problem<REAL>& problem,
       bool containsNonBinInt = false;
       for( int i = 0; i != length; ++i )
       {
-         if( !cflags[rowindices[i]].test( ColFlag::INTEGRAL ) )
+         if( !cflags[rowindices[i]].test( ColFlag::kIntegral ) )
          {
             containsContinuous = true;
             break;
@@ -213,7 +213,7 @@ Substitution<REAL>::execute( const Problem<REAL>& problem,
             continue;
 
          // check if integrality condition is guaranteed for this column
-         if( cflags[col].test( ColFlag::INTEGRAL ) )
+         if( cflags[col].test( ColFlag::kIntegral ) )
          {
             // if the row contains continuous variables we cannot use it for
             // substituting an integral column
@@ -328,7 +328,7 @@ Substitution<REAL>::execute( const Problem<REAL>& problem,
          if( upperboundImplied && lowerboundImplied )
          {
             // reductions
-            result = PresolveStatus::REDUCED;
+            result = PresolveStatus::kReduced;
             ++ntried[row];
 
             TransactionGuard<REAL> guard{reductions};

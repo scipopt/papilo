@@ -100,11 +100,11 @@ class HighsInterface : public SolverInterface<REAL>
 
       for( int i = 0; i != nrows; ++i )
       {
-         model.rowLower_[i] = rflags[i].test( RowFlag::LHS_INF )
+         model.rowLower_[i] = rflags[i].test( RowFlag::kLhsInf )
                                   ? -inf
                                   : double( lhs_values[i] );
          model.rowUpper_[i] =
-             rflags[i].test( RowFlag::RHS_INF ) ? inf : double( rhs_values[i] );
+             rflags[i].test( RowFlag::kRhsInf ) ? inf : double( rhs_values[i] );
       }
 
       model.integrality_.resize( ncols );
@@ -117,12 +117,12 @@ class HighsInterface : public SolverInterface<REAL>
 
       for( int i = 0; i < ncols; ++i )
       {
-         assert( !domains.flags[i].test( ColFlag::INACTIVE ) );
+         assert( !domains.flags[i].test( ColFlag::kInactive ) );
 
-         model.colLower_[i] = domains.flags[i].test( ColFlag::LB_INF )
+         model.colLower_[i] = domains.flags[i].test( ColFlag::kLbInf )
                                   ? -inf
                                   : double( domains.lower_bounds[i] );
-         model.colUpper_[i] = domains.flags[i].test( ColFlag::UB_INF )
+         model.colUpper_[i] = domains.flags[i].test( ColFlag::kUbInf )
                                   ? inf
                                   : double( domains.upper_bounds[i] );
 
@@ -192,10 +192,10 @@ class HighsInterface : public SolverInterface<REAL>
 
          assert( components.getRowComponentIdx( row ) == i );
 
-         model.rowLower_[i] = rflags[row].test( RowFlag::LHS_INF )
+         model.rowLower_[i] = rflags[row].test( RowFlag::kLhsInf )
                                   ? -inf
                                   : double( lhs_values[row] );
-         model.rowUpper_[i] = rflags[row].test( RowFlag::RHS_INF )
+         model.rowUpper_[i] = rflags[row].test( RowFlag::kRhsInf )
                                   ? inf
                                   : double( rhs_values[row] );
       }
@@ -212,12 +212,12 @@ class HighsInterface : public SolverInterface<REAL>
          int col = colset[i];
 
          assert( components.getColComponentIdx( col ) == i );
-         assert( !domains.flags[col].test( ColFlag::INACTIVE ) );
+         assert( !domains.flags[col].test( ColFlag::kInactive ) );
 
-         model.colLower_[i] = domains.flags[col].test( ColFlag::LB_INF )
+         model.colLower_[i] = domains.flags[col].test( ColFlag::kLbInf )
                                   ? -inf
                                   : double( domains.lower_bounds[col] );
-         model.colUpper_[i] = domains.flags[col].test( ColFlag::UB_INF )
+         model.colUpper_[i] = domains.flags[col].test( ColFlag::kUbInf )
                                   ? inf
                                   : double( domains.upper_bounds[col] );
 
@@ -328,7 +328,7 @@ class HighsInterface : public SolverInterface<REAL>
          sol.primal[i] = highsSol.col_value[i];
 
       // return if no dual requested
-      if( sol.type == SolutionType::PRIMAL_ONLY )
+      if( sol.type == SolutionType::kPrimal )
          return true;
 
       // get reduced costs
@@ -366,7 +366,7 @@ class HighsInterface : public SolverInterface<REAL>
       for( int i = 0; i != numcols; ++i )
          sol.primal[compcols[i]] = REAL( highsSol.col_value[i] );
 
-      if( sol.type == SolutionType::PRIMAL_ONLY )
+      if( sol.type == SolutionType::kPrimal )
          return true;
 
       for( int i = 0; i != numcols; ++i )

@@ -127,7 +127,7 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
    const int ncols = problem.getNCols();
    const int nrows = problem.getNRows();
 
-   PresolveStatus result = PresolveStatus::UNCHANGED;
+   PresolveStatus result = PresolveStatus::kUnchanged;
 
    // do not call dominated column presolver too often, since it can be
    // expensive
@@ -149,9 +149,9 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
              const int* colrows = colvec.getIndices();
              const REAL* colvals = colvec.getValues();
 
-             if( cflags[col].test( ColFlag::LB_INF ) )
+             if( cflags[col].test( ColFlag::kLbInf ) )
                 colinfo[col].lbfree = -1;
-             if( cflags[col].test( ColFlag::UB_INF ) )
+             if( cflags[col].test( ColFlag::kUbInf ) )
                 colinfo[col].ubfree = -1;
 
              for( int j = 0; j != collen; ++j )
@@ -171,14 +171,14 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
                                     cflags[col] ) )
                    colinfo[col].lbfree = j + 1;
 
-                if( !rflags[row].test( RowFlag::LHS_INF, RowFlag::RHS_INF ) )
+                if( !rflags[row].test( RowFlag::kLhsInf, RowFlag::kRhsInf ) )
                 {
                    // ranged row or equality, add to positive and negative
                    // signature
                    colinfo[col].pos.add( row );
                    colinfo[col].neg.add( row );
                 }
-                else if( rflags[row].test( RowFlag::LHS_INF ) )
+                else if( rflags[row].test( RowFlag::kLhsInf ) )
                 {
                    // <= constraint, add to positive signature for positive
                    // coefficient and negative signature otherwise
@@ -191,7 +191,7 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
                 {
                    // >= constraint, add to positive signature for negative
                    // coefficient and negative signature otherwise
-                   assert( rflags[row].test( RowFlag::RHS_INF ) );
+                   assert( rflags[row].test( RowFlag::kRhsInf ) );
                    if( colvals[j] < 0 )
                       colinfo[col].pos.add( row );
                    else
@@ -205,8 +205,8 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
        } );
 
    auto checkDominance = [&]( int col1, int col2, int scal1, int scal2 ) {
-      assert( !cflags[col1].test( ColFlag::INTEGRAL ) ||
-              cflags[col2].test( ColFlag::INTEGRAL ) );
+      assert( !cflags[col1].test( ColFlag::kIntegral ) ||
+              cflags[col2].test( ColFlag::kIntegral ) );
 
       // first check if the signatures rule out domination
       if( !colinfo[col1].allowsDomination( scal1, colinfo[col2], scal2 ) )
@@ -258,13 +258,13 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
             ++j;
          }
 
-         if( !rowf.test( RowFlag::LHS_INF, RowFlag::RHS_INF ) )
+         if( !rowf.test( RowFlag::kLhsInf, RowFlag::kRhsInf ) )
          {
             // ranged row or equality, values must be equal
             if( !num.isEq( val1, val2 ) )
                return false;
          }
-         else if( rowf.test( RowFlag::LHS_INF ) )
+         else if( rowf.test( RowFlag::kLhsInf ) )
          {
             // <= constraint, col1 must have a smaller or equal coefficient
             if( num.isGT( val1, val2 ) )
@@ -273,7 +273,7 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
          else
          {
             // >= constraint, col1 must have a larger or equal coefficient
-            assert( rowf.test( RowFlag::RHS_INF ) );
+            assert( rowf.test( RowFlag::kRhsInf ) );
             if( num.isLT( val1, val2 ) )
                return false;
          }
@@ -285,12 +285,12 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
          RowFlags rowf = rflags[col1rows[i]];
          ++i;
 
-         if( !rowf.test( RowFlag::LHS_INF, RowFlag::RHS_INF ) )
+         if( !rowf.test( RowFlag::kLhsInf, RowFlag::kRhsInf ) )
          {
             // ranged row or equality, values must be equal
             return false;
          }
-         else if( rowf.test( RowFlag::LHS_INF ) )
+         else if( rowf.test( RowFlag::kLhsInf ) )
          {
             // <= constraint, col1 must have a smaller or equal coefficient
             if( num.isGT( val1, 0 ) )
@@ -299,7 +299,7 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
          else
          {
             // >= constraint, col1 must have a larger or equal coefficient
-            assert( rowf.test( RowFlag::RHS_INF ) );
+            assert( rowf.test( RowFlag::kRhsInf ) );
             if( num.isLT( val1, 0 ) )
                return false;
          }
@@ -311,12 +311,12 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
          RowFlags rowf = rflags[col2rows[j]];
          ++j;
 
-         if( !rowf.test( RowFlag::LHS_INF, RowFlag::RHS_INF ) )
+         if( !rowf.test( RowFlag::kLhsInf, RowFlag::kRhsInf ) )
          {
             // ranged row or equality, values must be equal
             return false;
          }
-         else if( rowf.test( RowFlag::LHS_INF ) )
+         else if( rowf.test( RowFlag::kLhsInf ) )
          {
             // <= constraint, col1 must have a smaller or equal coefficient
             if( num.isGT( 0, val2 ) )
@@ -325,7 +325,7 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
          else
          {
             // >= constraint, col1 must have a larger or equal coefficient
-            assert( rowf.test( RowFlag::RHS_INF ) );
+            assert( rowf.test( RowFlag::kRhsInf ) );
             if( num.isLT( 0, val2 ) )
                return false;
          }
@@ -379,10 +379,10 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
              for( int j = 0; j != collen; ++j )
              {
                 int row = colrows[j];
-                if( ( !rflags[row].test( RowFlag::LHS_INF, RowFlag::RHS_INF ) ||
-                      ( !rflags[row].test( RowFlag::RHS_INF ) &&
+                if( ( !rflags[row].test( RowFlag::kLhsInf, RowFlag::kRhsInf ) ||
+                      ( !rflags[row].test( RowFlag::kRhsInf ) &&
                         scale * colvals[j] > 0 ) ||
-                      ( !rflags[row].test( RowFlag::LHS_INF ) &&
+                      ( !rflags[row].test( RowFlag::kLhsInf ) &&
                         scale * colvals[j] < 0 ) ) &&
                     rowsize[row] < bestrowsize )
                 {
@@ -406,39 +406,39 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
              for( int j = 0; j != rowlen; ++j )
              {
                 int col = rowcols[j];
-                if( col == i || ( cflags[i].test( ColFlag::INTEGRAL ) &&
-                                  !cflags[col].test( ColFlag::INTEGRAL ) ) )
+                if( col == i || ( cflags[i].test( ColFlag::kIntegral ) &&
+                                  !cflags[col].test( ColFlag::kIntegral ) ) )
                    continue;
 
                 bool fixtolb = false;
                 bool fixtoub = false;
 
-                if( !rflags[bestrow].test( RowFlag::LHS_INF,
-                                           RowFlag::RHS_INF ) )
+                if( !rflags[bestrow].test( RowFlag::kLhsInf,
+                                           RowFlag::kRhsInf ) )
                 {
-                   if( !cflags[col].test( ColFlag::LB_INF ) &&
+                   if( !cflags[col].test( ColFlag::kLbInf ) &&
                        num.isEq( colval, rowvals[j] ) &&
                        num.isLE( colobj, obj[col] ) &&
                        checkDominance( i, col, scale, 1 ) )
                       fixtolb = true;
 
-                   if( !cflags[col].test( ColFlag::UB_INF ) &&
+                   if( !cflags[col].test( ColFlag::kUbInf ) &&
                        num.isEq( colval, -rowvals[j] ) &&
                        num.isLE( colobj, -obj[col] ) &&
                        checkDominance( i, col, scale, -1 ) )
                       fixtoub = true;
                 }
-                else if( rflags[bestrow].test( RowFlag::LHS_INF ) )
+                else if( rflags[bestrow].test( RowFlag::kLhsInf ) )
                 {
                    assert( colval > 0 &&
-                           !rflags[bestrow].test( RowFlag::RHS_INF ) );
-                   if( !cflags[col].test( ColFlag::LB_INF ) &&
+                           !rflags[bestrow].test( RowFlag::kRhsInf ) );
+                   if( !cflags[col].test( ColFlag::kLbInf ) &&
                        num.isLE( colval, rowvals[j] ) &&
                        num.isLE( colobj, obj[col] ) &&
                        checkDominance( i, col, scale, 1 ) )
                       fixtolb = true;
 
-                   if( !cflags[col].test( ColFlag::UB_INF ) &&
+                   if( !cflags[col].test( ColFlag::kUbInf ) &&
                        num.isLE( colval, -rowvals[j] ) &&
                        num.isLE( colobj, -obj[col] ) &&
                        checkDominance( i, col, scale, -1 ) )
@@ -447,14 +447,14 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
                 else
                 {
                    assert( colval < 0 &&
-                           rflags[bestrow].test( RowFlag::RHS_INF ) );
-                   if( !cflags[col].test( ColFlag::LB_INF ) &&
+                           rflags[bestrow].test( RowFlag::kRhsInf ) );
+                   if( !cflags[col].test( ColFlag::kLbInf ) &&
                        num.isGE( colval, rowvals[j] ) &&
                        num.isLE( colobj, obj[col] ) &&
                        checkDominance( i, col, scale, 1 ) )
                       fixtolb = true;
 
-                   if( !cflags[col].test( ColFlag::UB_INF ) &&
+                   if( !cflags[col].test( ColFlag::kUbInf ) &&
                        num.isGE( colval, -rowvals[j] ) &&
                        num.isLE( colobj, -obj[col] ) &&
                        checkDominance( i, col, scale, -1 ) )
@@ -465,7 +465,7 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
                 {
                    domcolreductions.push_back( DomcolReduction{
                        i, col, implrowlock,
-                       fixtolb ? BoundChange::UPPER : BoundChange::LOWER} );
+                       fixtolb ? BoundChange::kUpper : BoundChange::kLower} );
                 }
              }
           }
@@ -473,7 +473,7 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
 
    if( !domcolreductions.empty() )
    {
-      result = PresolveStatus::REDUCED;
+      result = PresolveStatus::kReduced;
       const Vec<int>& colperm = problemUpdate.getRandomColPerm();
 
       pdqsort(
@@ -492,7 +492,7 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
          if( dr.implrowlock > 0 )
             reductions.lockRow( dr.implrowlock );
 
-         if( dr.boundchg == BoundChange::UPPER )
+         if( dr.boundchg == BoundChange::kUpper )
             reductions.fixCol( dr.col2, lbValues[dr.col2] );
          else
             reductions.fixCol( dr.col2, ubValues[dr.col2] );

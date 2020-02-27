@@ -119,7 +119,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
                         const Num<REAL>& num, Reductions<REAL>& reductions )
 {
    if( problem.getNumIntegralCols() == 0 )
-      return PresolveStatus::UNCHANGED;
+      return PresolveStatus::kUnchanged;
 
    const auto& domains = problem.getVariableDomains();
    const auto& lower_bounds = domains.lower_bounds;
@@ -140,14 +140,14 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
 
    for( int i = 0; i != ncols; ++i )
    {
-      if( !cflags[i].test( ColFlag::UNBOUNDED ) &&
-          cflags[i].test( ColFlag::INTEGRAL ) && colsize[i] > 0 &&
+      if( !cflags[i].test( ColFlag::kUnbounded ) &&
+          cflags[i].test( ColFlag::kIntegral ) && colsize[i] > 0 &&
           lower_bounds[i] == 0 && upper_bounds[i] == 1 )
          probing_cands.push_back( i );
    }
 
    if( probing_cands.size() == 0 )
-      return PresolveStatus::UNCHANGED;
+      return PresolveStatus::kUnchanged;
 
    Array<std::atomic_int> probing_scores( ncols );
 
@@ -173,9 +173,9 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
                 continue;
 
              if( ( activities[row].ninfmin != 0 ||
-                   rflags[row].test( RowFlag::RHS_INF ) ) &&
+                   rflags[row].test( RowFlag::kRhsInf ) ) &&
                  ( activities[row].ninfmax != 0 ||
-                   rflags[row].test( RowFlag::LHS_INF ) ) )
+                   rflags[row].test( RowFlag::kLhsInf ) ) )
                 continue;
 
              auto rowvec = consMatrix.getRowCoefficients( row );
@@ -187,7 +187,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
 
              for( int i = 0; i != rowlen; ++i )
              {
-                if( cflags[colinds[i]].test( ColFlag::INTEGRAL ) &&
+                if( cflags[colinds[i]].test( ColFlag::kIntegral ) &&
                     lower_bounds[colinds[i]] == 0.0 &&
                     upper_bounds[colinds[i]] == 1.0 )
                    binvarsRow.emplace_back( rowvals[i], colinds[i] );
@@ -211,13 +211,13 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
                 REAL minimplcoef = abscoef;
 
                 if( activities[row].ninfmin == 0 &&
-                    !rflags[row].test( RowFlag::RHS_INF ) )
+                    !rflags[row].test( RowFlag::kRhsInf ) )
                    minimplcoef = std::min(
                        minimplcoef,
                        REAL( rhs[row] - activities[row].min - abscoef ) );
 
                 if( activities[row].ninfmax == 0 &&
-                    !rflags[row].test( RowFlag::LHS_INF ) )
+                    !rflags[row].test( RowFlag::kLhsInf ) )
                    minimplcoef =
                        std::min( minimplcoef, REAL( activities[row].max -
                                                     abscoef - lhs[row] ) );
@@ -340,7 +340,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
              {
                 const int col = probing_cands[i];
 
-                assert( cflags[col].test( ColFlag::INTEGRAL ) &&
+                assert( cflags[col].test( ColFlag::kIntegral ) &&
                             lower_bounds[col] == 0 ||
                         upper_bounds[col] == 1 );
 
@@ -374,7 +374,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
           } );
 
       if( infeasible.load( std::memory_order_relaxed ) )
-         return PresolveStatus::INFEASIBLE;
+         return PresolveStatus::kInfeasible;
 
       int64_t amountofwork = 0;
       int nfixings = 0;
@@ -485,7 +485,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
               currentbadgestart == currentbadgeend;
    } while( !abort );
 
-   PresolveStatus result = PresolveStatus::UNCHANGED;
+   PresolveStatus result = PresolveStatus::kUnchanged;
 
    if( !boundChanges.empty() )
    {
@@ -503,7 +503,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
             reductions.changeColLB( boundChg.col, boundChg.bound );
       }
 
-      result = PresolveStatus::REDUCED;
+      result = PresolveStatus::kReduced;
    }
 
    if( !substitutions.empty() )
@@ -528,7 +528,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
                                 subst.col2const );
       }
 
-      result = PresolveStatus::REDUCED;
+      result = PresolveStatus::kReduced;
    }
 
    return result;

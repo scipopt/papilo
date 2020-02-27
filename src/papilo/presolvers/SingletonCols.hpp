@@ -81,7 +81,7 @@ SingletonCols<REAL>::execute( const Problem<REAL>& problem,
    const auto& rowsize = constMatrix.getRowSizes();
    const auto& obj = problem.getObjective().coefficients;
 
-   PresolveStatus result = PresolveStatus::UNCHANGED;
+   PresolveStatus result = PresolveStatus::kUnchanged;
 
    auto handleEquation = [&]( int col, bool lbimplied, bool ubimplied,
                               const REAL& val, int row, bool impliedeq,
@@ -89,7 +89,7 @@ SingletonCols<REAL>::execute( const Problem<REAL>& problem,
       if( !impliedeq && rowsize[row] <= 1 )
          return;
 
-      result = PresolveStatus::REDUCED;
+      result = PresolveStatus::kReduced;
 
       TransactionGuard<REAL> tg{reductions};
       reductions.lockColBounds( col );
@@ -99,14 +99,14 @@ SingletonCols<REAL>::execute( const Problem<REAL>& problem,
       // the substitution
       if( impliedeq )
       {
-         if( rflags[row].test( RowFlag::LHS_INF ) )
+         if( rflags[row].test( RowFlag::kLhsInf ) )
          {
-            assert( !rflags[row].test( RowFlag::RHS_INF ) );
+            assert( !rflags[row].test( RowFlag::kRhsInf ) );
             reductions.changeRowLHS( row, side );
          }
          else
          {
-            assert( rflags[row].test( RowFlag::RHS_INF ) );
+            assert( rflags[row].test( RowFlag::kRhsInf ) );
             reductions.changeRowRHS( row, side );
          }
 
@@ -125,8 +125,8 @@ SingletonCols<REAL>::execute( const Problem<REAL>& problem,
       }
       else
       {
-         assert( lbimplied || !cflags[col].test( ColFlag::LB_INF ) );
-         assert( ubimplied || !cflags[col].test( ColFlag::UB_INF ) );
+         assert( lbimplied || !cflags[col].test( ColFlag::kLbInf ) );
+         assert( ubimplied || !cflags[col].test( ColFlag::kUbInf ) );
 
          // implied free only for one bound -> modify equation to be an
          // inequality and remove the columns coefficient
@@ -173,9 +173,9 @@ SingletonCols<REAL>::execute( const Problem<REAL>& problem,
 
       assert( !constMatrix.isRowRedundant( row ) );
 
-      if( rflags[row].test( RowFlag::EQUALITY ) )
+      if( rflags[row].test( RowFlag::kEquation ) )
       {
-         assert( !rflags[row].test( RowFlag::LHS_INF, RowFlag::RHS_INF ) );
+         assert( !rflags[row].test( RowFlag::kLhsInf, RowFlag::kRhsInf ) );
          assert( lhs_values[row] == rhs_values[row] );
 
          if( rowsize[row] <= 1 )
@@ -205,7 +205,7 @@ SingletonCols<REAL>::execute( const Problem<REAL>& problem,
                ( !lbimplied && obj[col] != 0 ) ) )
             continue;
 
-         if( cflags[col].test( ColFlag::INTEGRAL ) )
+         if( cflags[col].test( ColFlag::kIntegral ) )
          {
             bool unsuitableForSubstitution = false;
 
@@ -217,7 +217,7 @@ SingletonCols<REAL>::execute( const Problem<REAL>& problem,
                if( rowinds[i] == col )
                   continue;
 
-               if( !cflags[rowinds[i]].test( ColFlag::INTEGRAL ) )
+               if( !cflags[rowinds[i]].test( ColFlag::kIntegral ) )
                {
                   unsuitableForSubstitution = true;
                   break;
@@ -264,10 +264,10 @@ SingletonCols<REAL>::execute( const Problem<REAL>& problem,
       if( ndownlocks == 0 && obj[col] >= 0 )
       {
          // dual fix to lower bound
-         if( cflags[col].test( ColFlag::LB_INF ) )
+         if( cflags[col].test( ColFlag::kLbInf ) )
          {
             if( obj[col] != 0 )
-               return PresolveStatus::UNBND_OR_INFEAS;
+               return PresolveStatus::kUnbndOrInfeas;
 
             continue;
          }
@@ -275,7 +275,7 @@ SingletonCols<REAL>::execute( const Problem<REAL>& problem,
          TransactionGuard<REAL> tg{reductions};
          reductions.lockColStrong( col );
          reductions.fixCol( col, lower_bounds[col] );
-         result = PresolveStatus::REDUCED;
+         result = PresolveStatus::kReduced;
 
          continue;
       }
@@ -283,10 +283,10 @@ SingletonCols<REAL>::execute( const Problem<REAL>& problem,
       if( nuplocks == 0 && obj[col] <= 0 )
       {
          // dual fix to upper bound
-         if( cflags[col].test( ColFlag::UB_INF ) )
+         if( cflags[col].test( ColFlag::kUbInf ) )
          {
             if( obj[col] != 0 )
-               return PresolveStatus::UNBND_OR_INFEAS;
+               return PresolveStatus::kUnbndOrInfeas;
 
             continue;
          }
@@ -294,7 +294,7 @@ SingletonCols<REAL>::execute( const Problem<REAL>& problem,
          TransactionGuard<REAL> tg{reductions};
          reductions.lockColStrong( col );
          reductions.fixCol( col, upper_bounds[col] );
-         result = PresolveStatus::REDUCED;
+         result = PresolveStatus::kReduced;
 
          continue;
       }
@@ -306,7 +306,7 @@ SingletonCols<REAL>::execute( const Problem<REAL>& problem,
       // directly implies a bound for the dualvariable of the primal row.
       // If the dual bound implies the primal row to be an equation we can
       // substitute the singleton variable as above in the equation case
-      if( !cflags[col].test( ColFlag::INTEGRAL ) )
+      if( !cflags[col].test( ColFlag::kIntegral ) )
       {
          bool duallbinf = true;
          bool dualubinf = true;
@@ -349,8 +349,8 @@ SingletonCols<REAL>::execute( const Problem<REAL>& problem,
          {
             bool removevar = true;
 
-            assert( !rflags[row].test( RowFlag::LHS_INF ) );
-            assert( rflags[row].test( RowFlag::RHS_INF ) ||
+            assert( !rflags[row].test( RowFlag::kLhsInf ) );
+            assert( rflags[row].test( RowFlag::kRhsInf ) ||
                     rhs_values[row] != lhs_values[row] );
 
             // check again if row implies more bounds with new right hand
@@ -358,7 +358,7 @@ SingletonCols<REAL>::execute( const Problem<REAL>& problem,
             if( !lbimplied )
             {
                lbimplied = row_implies_LB(
-                   num, lhs_values[row], lhs_values[row], RowFlag::EQUALITY,
+                   num, lhs_values[row], lhs_values[row], RowFlag::kEquation,
                    activities[row], val, lower_bounds[col], upper_bounds[col],
                    cflags[col] );
 
@@ -370,7 +370,7 @@ SingletonCols<REAL>::execute( const Problem<REAL>& problem,
             if( removevar && !ubimplied )
             {
                ubimplied = row_implies_UB(
-                   num, lhs_values[row], lhs_values[row], RowFlag::EQUALITY,
+                   num, lhs_values[row], lhs_values[row], RowFlag::kEquation,
                    activities[row], val, lower_bounds[col], upper_bounds[col],
                    cflags[col] );
 
@@ -389,7 +389,7 @@ SingletonCols<REAL>::execute( const Problem<REAL>& problem,
             {
                // if the variable should not be removed, then just apply the
                // dual reduction and change the constraint into an equation
-               result = PresolveStatus::REDUCED;
+               result = PresolveStatus::kReduced;
 
                TransactionGuard<REAL> tg{reductions};
                reductions.lockColBounds( col );
@@ -401,15 +401,15 @@ SingletonCols<REAL>::execute( const Problem<REAL>& problem,
          {
             bool removevar = true;
 
-            assert( !rflags[row].test( RowFlag::RHS_INF ) );
-            assert( rflags[row].test( RowFlag::LHS_INF ) ||
+            assert( !rflags[row].test( RowFlag::kRhsInf ) );
+            assert( rflags[row].test( RowFlag::kLhsInf ) ||
                     rhs_values[row] != lhs_values[row] );
 
             // check again if row implies more bounds with new left hand side
             if( !lbimplied )
             {
                lbimplied = row_implies_LB(
-                   num, rhs_values[row], rhs_values[row], RowFlag::EQUALITY,
+                   num, rhs_values[row], rhs_values[row], RowFlag::kEquation,
                    activities[row], val, lower_bounds[col], upper_bounds[col],
                    cflags[col] );
 
@@ -421,7 +421,7 @@ SingletonCols<REAL>::execute( const Problem<REAL>& problem,
             if( removevar && !ubimplied )
             {
                ubimplied = row_implies_UB(
-                   num, rhs_values[row], rhs_values[row], RowFlag::EQUALITY,
+                   num, rhs_values[row], rhs_values[row], RowFlag::kEquation,
                    activities[row], val, lower_bounds[col], upper_bounds[col],
                    cflags[col] );
 
@@ -440,7 +440,7 @@ SingletonCols<REAL>::execute( const Problem<REAL>& problem,
             {
                // if the variable should not be removed, then just apply the
                // dual reduction and change the constraint into an equation
-               result = PresolveStatus::REDUCED;
+               result = PresolveStatus::kReduced;
 
                TransactionGuard<REAL> tg{reductions};
                reductions.lockColBounds( col );
