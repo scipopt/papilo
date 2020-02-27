@@ -28,11 +28,8 @@
 #include "papilo/core/Problem.hpp"
 #include "papilo/core/ProblemUpdate.hpp"
 #include "papilo/misc/Hash.hpp"
+#include "papilo/misc/tbb.hpp"
 #include "pdqsort/pdqsort.h"
-#include "tbb/blocked_range.h"
-#include "tbb/concurrent_hash_map.h"
-#include "tbb/parallel_for.h"
-#include "tbb/parallel_invoke.h"
 
 namespace papilo
 {

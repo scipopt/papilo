@@ -28,7 +28,30 @@
 #define FMT_HEADER_ONLY
 #endif
 
+/* if those macros are not defined and fmt includes windows.h
+ * then many macros are defined that can interfere with standard C++ code
+ */
+#ifndef NOMINMAX
+#define NOMINMAX
+#define PAPILO_DEFINED_NOMINAX
+#endif
+
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#define PAPILO_DEFINED_WIN32_LEAN_AND_MEAN
+#endif
+
 #include "fmt/format.h"
 #include "fmt/ostream.h"
+
+#ifdef PAPILO_DEFINED_NOMINAX
+#undef NOMINMAX
+#undef PAPILO_DEFINED_NOMINMAX
+#endif
+
+#ifdef PAPILO_DEFINED_WIN32_LEAN_AND_MEAN
+#undef WIN32_LEAN_AND_MEAN
+#undef PAPILO_DEFINED_WIN32_LEAN_AND_MEAN
+#endif
 
 #endif

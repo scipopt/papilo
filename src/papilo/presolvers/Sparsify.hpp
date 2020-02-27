@@ -29,8 +29,7 @@
 #include "papilo/core/ProblemUpdate.hpp"
 #include "papilo/core/SingleRow.hpp"
 #include "papilo/misc/Hash.hpp"
-#include "tbb/combinable.h"
-#include "tbb/parallel_for.h"
+#include "papilo/misc/tbb.hpp"
 
 namespace papilo
 {

@@ -28,7 +28,7 @@
 #include "papilo/misc/MultiPrecision.hpp"
 #include "papilo/misc/Vec.hpp"
 #include "papilo/misc/compress_vector.hpp"
-#include "tbb/parallel_invoke.h"
+#include "papilo/misc/tbb.hpp"
 
 namespace papilo
 {

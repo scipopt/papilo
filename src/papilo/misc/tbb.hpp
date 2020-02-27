@@ -21,32 +21,37 @@
 /*                                                                           */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef _PAPILO_MISC_TIMER_HPP_
-#define _PAPILO_MISC_TIMER_HPP_
+#ifndef _PAPILO_MISC_TBB_HPP_
+#define _PAPILO_MISC_TBB_HPP_
 
-#include "papilo/misc/tbb.hpp"
+#ifndef NOMINMAX
+#define NOMINMAX
+#define PAPILO_DEFINED_NOMINAX
+#endif
 
-namespace papilo
-{
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#define PAPILO_DEFINED_WIN32_LEAN_AND_MEAN
+#endif
 
-class Timer
-{
- public:
-   Timer( double& time ) : time( time ) { start = tbb::tick_count::now(); }
+#include "tbb/blocked_range.h"
+#include "tbb/combinable.h"
+#include "tbb/concurrent_hash_map.h"
+#include "tbb/concurrent_vector.h"
+#include "tbb/parallel_for.h"
+#include "tbb/parallel_invoke.h"
+#include "tbb/partitioner.h"
+#include "tbb/task_arena.h"
+#include "tbb/tick_count.h"
 
-   double
-   getTime() const
-   {
-      return ( tbb::tick_count::now() - start ).seconds();
-   }
+#ifdef PAPILO_DEFINED_NOMINAX
+#undef NOMINMAX
+#undef PAPILO_DEFINED_NOMINMAX
+#endif
 
-   ~Timer() { time += ( tbb::tick_count::now() - start ).seconds(); }
-
- private:
-   tbb::tick_count start;
-   double& time;
-};
-
-} // namespace papilo
+#ifdef PAPILO_DEFINED_WIN32_LEAN_AND_MEAN
+#undef WIN32_LEAN_AND_MEAN
+#undef PAPILO_DEFINED_WIN32_LEAN_AND_MEAN
+#endif
 
 #endif
