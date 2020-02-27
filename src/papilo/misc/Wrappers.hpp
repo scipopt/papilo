@@ -45,9 +45,9 @@ namespace papilo
 
 enum class ResultStatus
 {
-   OK = 0,
-   INFEASIBLE_OR_UNBOUNDED,
-   ERROR
+   kOk = 0,
+   kUnbndOrInfeas,
+   kError
 };
 
 template <typename REAL>
@@ -190,13 +190,13 @@ presolve_and_solve(
    {
    case PresolveStatus::kInfeasible:
       fmt::print( "presolve detected infeasible problem\n" );
-      return ResultStatus::INFEASIBLE_OR_UNBOUNDED;
+      return ResultStatus::kUnbndOrInfeas;
    case PresolveStatus::kUnbndOrInfeas:
       fmt::print( "presolve detected unbounded or infeasible problem\n" );
-      return ResultStatus::INFEASIBLE_OR_UNBOUNDED;
+      return ResultStatus::kUnbndOrInfeas;
    case PresolveStatus::kUnbounded:
       fmt::print( "presolve detected unbounded problem\n" );
-      return ResultStatus::INFEASIBLE_OR_UNBOUNDED;
+      return ResultStatus::kUnbndOrInfeas;
    case PresolveStatus::kUnchanged:
    case PresolveStatus::kReduced:
       break;
@@ -233,8 +233,8 @@ presolve_and_solve(
                   opts.postsolve_archive_file, t.getTime() );
    }
 
-   if( opts.command == Command::PRESOLVE )
-      return ResultStatus::OK;
+   if( opts.command == Command::kPresolve )
+      return ResultStatus::kOk;
 
    double solvetime = 0;
    {
@@ -251,7 +251,7 @@ presolve_and_solve(
       else
       {
          fmt::print( "no solver available for solving\n" );
-         return ResultStatus::ERROR;
+         return ResultStatus::kError;
       }
 
       solver->setUp( problem, result.postsolve.origrow_mapping,
@@ -264,7 +264,7 @@ presolve_and_solve(
          if( tlim <= 0 )
          {
             fmt::print( "time limit reached in presolving\n" );
-            return ResultStatus::OK;
+            return ResultStatus::kOk;
          }
          solver->setTimeLimit( tlim );
       }
@@ -292,7 +292,7 @@ presolve_and_solve(
    fmt::print( "\nsolving finished after {:.3f} seconds\n",
                presolve.getStatistics().presolvetime + solvetime + writetime );
 
-   return ResultStatus::OK;
+   return ResultStatus::kOk;
 }
 
 template <typename REAL>

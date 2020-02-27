@@ -475,7 +475,7 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
    {
       // originalSoluiton is already the reduced solution padded with zeros
       auto kktState =
-          checker.initState( ProblemType::REDUCED, originalSolution,
+          checker.initState( ProblemType::kReduced, originalSolution,
                              origcol_mapping, origrow_mapping, checker.level );
 
       if( originalSolution.type == SolutionType::kPrimalDual )
@@ -698,7 +698,7 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
       if( checker.level == CheckLevel::After_each_postsolve_step )
       {
          auto kktStatePostsolvedProblem = checker.initState(
-             ProblemType::POSTSOLVED, originalSolution, checker.level );
+             ProblemType::kPostsolved, originalSolution, checker.level );
          checker.checkIntermediate( kktStatePostsolvedProblem );
       }
    }
@@ -708,7 +708,7 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
    //                      []( uint8_t isset ) { return isset; } ) );
 
    auto kktStateOriginalProblem = checker.initState(
-       ProblemType::ORIGINAL, originalSolution, checker.level );
+       ProblemType::kOriginal, originalSolution, checker.level );
    checker.checkSolution( kktStateOriginalProblem );
 
    return PostsolveStatus::kOk;
