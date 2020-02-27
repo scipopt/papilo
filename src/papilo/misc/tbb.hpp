@@ -24,9 +24,12 @@
 #ifndef _PAPILO_MISC_TBB_HPP_
 #define _PAPILO_MISC_TBB_HPP_
 
+/* if those macros are not defined and tbb includes windows.h
+ * then many macros are defined that can interfere with standard C++ code
+ */
 #ifndef NOMINMAX
 #define NOMINMAX
-#define PAPILO_DEFINED_NOMINAX
+#define PAPILO_DEFINED_NOMINMAX
 #endif
 
 #ifndef WIN32_LEAN_AND_MEAN
@@ -44,7 +47,7 @@
 #include "tbb/task_arena.h"
 #include "tbb/tick_count.h"
 
-#ifdef PAPILO_DEFINED_NOMINAX
+#ifdef PAPILO_DEFINED_NOMINMAX
 #undef NOMINMAX
 #undef PAPILO_DEFINED_NOMINMAX
 #endif

@@ -33,7 +33,7 @@
  */
 #ifndef NOMINMAX
 #define NOMINMAX
-#define PAPILO_DEFINED_NOMINAX
+#define PAPILO_DEFINED_NOMINMAX
 #endif
 
 #ifndef WIN32_LEAN_AND_MEAN
@@ -44,7 +44,7 @@
 #include "fmt/format.h"
 #include "fmt/ostream.h"
 
-#ifdef PAPILO_DEFINED_NOMINAX
+#ifdef PAPILO_DEFINED_NOMINMAX
 #undef NOMINMAX
 #undef PAPILO_DEFINED_NOMINMAX
 #endif
