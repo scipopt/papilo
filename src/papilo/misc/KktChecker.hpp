@@ -658,11 +658,11 @@ class KktChecker<REAL, CheckLevel::Check>
    initState( ProblemType type, Solution<REAL>& solution,
               CheckLevel checker_level )
    {
-      if( type == ProblemType::POSTSOLVED )
+      if( type == ProblemType::kPostsolved )
          return initState( type, solution, solSetCol, solSetRow,
                            checker_level );
 
-      assert( type == ProblemType::ORIGINAL );
+      assert( type == ProblemType::kOriginal );
       int ncols = original_problem.getNCols();
       int nrows = original_problem.getNRows();
       solSetCol.resize( ncols );
@@ -1010,12 +1010,12 @@ class KktChecker<REAL, CheckLevel::Check>
             assert( reduced < reduced_ub.size() );
             assert( reduced < reduced_objective.size() );
             // lb
-            if( reduced_col_flags[reduced].test( ColFlag::LB_INF ) )
+            if( reduced_col_flags[reduced].test( ColFlag::kLbInf ) )
                builder.setColLbInf( col, true );
             else
                builder.setColLb( col, reduced_lb[reduced] );
             // ub
-            if( reduced_col_flags[reduced].test( ColFlag::UB_INF ) )
+            if( reduced_col_flags[reduced].test( ColFlag::kUbInf ) )
                builder.setColUbInf( col, true );
             else
                builder.setColUb( col, reduced_ub[reduced] );
@@ -1046,12 +1046,12 @@ class KktChecker<REAL, CheckLevel::Check>
          {
             assert( original_index_row[reduced] == row );
             // lhs
-            if( reduced_flags[reduced].test( RowFlag::LHS_INF ) )
+            if( reduced_flags[reduced].test( RowFlag::kLhsInf ) )
                builder.setRowLhsInf( row, true );
             else
                builder.setRowLhs( row, reduced_lhs[reduced] );
             // rhs
-            if( reduced_flags[reduced].test( RowFlag::RHS_INF ) )
+            if( reduced_flags[reduced].test( RowFlag::kRhsInf ) )
                builder.setRowRhsInf( row, true );
             else
                builder.setRowRhs( row, reduced_rhs[reduced] );

@@ -389,10 +389,10 @@ Postsolve<REAL>::notifyReducedBoundsAndCost(
    {
       int flag_lb = 0;
       int flag_ub = 0;
-      if( col_flags[col].test( ColFlag::LB_INF ) )
-         flag_lb |= static_cast<int>( ColFlag::LB_INF );
-      if( col_flags[col].test( ColFlag::UB_INF ) )
-         flag_ub |= static_cast<int>( ColFlag::UB_INF );
+      if( col_flags[col].test( ColFlag::kLbInf ) )
+         flag_lb |= static_cast<int>( ColFlag::kLbInf );
+      if( col_flags[col].test( ColFlag::kUbInf ) )
+         flag_ub |= static_cast<int>( ColFlag::kUbInf );
       indices.push_back( flag_lb );
       values.push_back( col_lb[col] );
       indices.push_back( flag_ub );
@@ -404,10 +404,10 @@ Postsolve<REAL>::notifyReducedBoundsAndCost(
    {
       int flag_lb = 0;
       int flag_ub = 0;
-      if( row_flags[row].test( RowFlag::LHS_INF ) )
-         flag_lb |= static_cast<int>( RowFlag::LHS_INF );
-      if( row_flags[row].test( RowFlag::RHS_INF ) )
-         flag_ub |= static_cast<int>( RowFlag::RHS_INF );
+      if( row_flags[row].test( RowFlag::kLhsInf ) )
+         flag_lb |= static_cast<int>( RowFlag::kLhsInf );
+      if( row_flags[row].test( RowFlag::kRhsInf ) )
+         flag_ub |= static_cast<int>( RowFlag::kRhsInf );
       indices.push_back( flag_lb );
       values.push_back( row_lb[row] );
       indices.push_back( flag_ub );
@@ -434,7 +434,7 @@ Postsolve<REAL>::notifyFixedCol( int col, const REAL val,
    indices.push_back( origcol_mapping[col] );
    values.push_back( val );
 
-   if( postsolveType == PostsolveType::FULL )
+   if( postsolveType == PostsolveType::kFull )
    {
       // TODO this should probably use the saveCol mechanism if the column
       // values are needed
@@ -738,7 +738,7 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
        origcol_mapping.size() < nColsOriginal )
    {
       CheckLevel level = CheckLevel::Primal_only;
-      if( originalSolution.type == SolutionType::PRIMAL_AND_DUAL )
+      if( originalSolution.type == SolutionType::kPrimalDual )
          CheckLevel level = CheckLevel::Primal_and_dual;
 
       auto kktState =
@@ -750,7 +750,7 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
 
       checker.expandProblem();
       auto kktState_expand = checker.initState(
-          ProblemType::POSTSOLVED, originalSolution, checker.level );
+          ProblemType::kPostsolved, originalSolution, checker.level );
       checker.checkSolution( kktState_expand );
    }
 
@@ -771,7 +771,7 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
    Vec<int> row_lower_from_col;
    Vec<int> row_upper_from_col;
 
-   if( originalSolution.type == SolutionType::PRIMAL_AND_DUAL )
+   if( originalSolution.type == SolutionType::kPrimalDual )
    {
 
       col_cost.assign( nColsOriginal, 0 );
@@ -915,7 +915,7 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
                                   values[first + 2], lb_inf, ub_inf );
          break;
       }
-      case ReductionType::SAVE_COL:
+      case ReductionType::kSaveCol:
       {
          break;
       }
@@ -1025,7 +1025,7 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
          // todo: modify, unused right now
          // case ReductionType::kRedundantRow:
          //{
-         // if( originalSolution.type == SolutionType::PRIMAL_AND_DUAL )
+         // if( originalSolution.type == SolutionType::kPrimalDual )
          // {
          //    int row = indices[first];
          //    int col_lo = indices[first + 1];
