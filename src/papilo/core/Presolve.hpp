@@ -1049,9 +1049,9 @@ Presolve<REAL>::apply( Problem<REAL>& problem )
                solution.primal.resize( problem.getNCols() );
                Vec<uint8_t> componentSolved( ncomponents );
 
-               if( result.postsolve.postsolveType == PostsolveType::FULL )
+               if( result.postsolve.postsolveType == PostsolveType::kFull )
                {
-                  solution.type = SolutionType::PRIMAL_AND_DUAL;
+                  solution.type = SolutionType::kPrimalDual;
                   solution.col_dual.resize( problem.getNCols() );
                   solution.row_dual.resize( problem.getNRows() );
                }
@@ -1164,7 +1164,7 @@ Presolve<REAL>::apply( Problem<REAL>& problem )
                         ubs[compcols[j]] = solution.primal[col];
                         probUpdate.markColFixed( col );
                         if( result.postsolve.postsolveType ==
-                            PostsolveType::FULL )
+                            PostsolveType::kFull )
                            result.postsolve.notifyDualValue(
                                true, col, solution.col_dual[col] );
                      }
