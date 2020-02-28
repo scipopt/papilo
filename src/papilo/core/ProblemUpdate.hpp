@@ -1432,7 +1432,6 @@ ProblemUpdate<REAL>::removeSingletonRow( int row )
       if( !rflags[row].test( RowFlag::kRhsInf ) &&
           status != PresolveStatus::kInfeasible )
          status = changeLB( col, rhs / val );
-      }
    }
    else
    {
@@ -1452,7 +1451,7 @@ ProblemUpdate<REAL>::removeSingletonRow( int row )
    markRowRedundant( row );
 
    return status;
-}
+} // namespace papilo
 
 template <typename REAL>
 void
