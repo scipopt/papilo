@@ -24,7 +24,7 @@
 #ifndef _PAPILO_MISC_TIMER_HPP_
 #define _PAPILO_MISC_TIMER_HPP_
 
-#include "tbb/tick_count.h"
+#include "papilo/misc/tbb.hpp"
 
 namespace papilo
 {

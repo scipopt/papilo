@@ -117,18 +117,18 @@ class ProblemBuilder
    setColLbInf( int col, bool isInfinite )
    {
       if( isInfinite )
-         domains.flags[col].set( ColFlag::LB_INF );
+         domains.flags[col].set( ColFlag::kLbInf );
       else
-         domains.flags[col].unset( ColFlag::LB_INF );
+         domains.flags[col].unset( ColFlag::kLbInf );
    }
 
    void
    setColUbInf( int col, bool isInfinite )
    {
       if( isInfinite )
-         domains.flags[col].set( ColFlag::UB_INF );
+         domains.flags[col].set( ColFlag::kUbInf );
       else
-         domains.flags[col].unset( ColFlag::UB_INF );
+         domains.flags[col].unset( ColFlag::kUbInf );
    }
 
    void
@@ -147,27 +147,27 @@ class ProblemBuilder
    setColIntegral( int col, bool isIntegral )
    {
       if( isIntegral )
-         domains.flags[col].set( ColFlag::INTEGRAL );
+         domains.flags[col].set( ColFlag::kIntegral );
       else
-         domains.flags[col].unset( ColFlag::INTEGRAL );
+         domains.flags[col].unset( ColFlag::kIntegral );
    }
 
    void
    setRowLhsInf( int row, bool isInfinite )
    {
       if( isInfinite )
-         rflags[row].set( RowFlag::LHS_INF );
+         rflags[row].set( RowFlag::kLhsInf );
       else
-         rflags[row].unset( RowFlag::LHS_INF );
+         rflags[row].unset( RowFlag::kLhsInf );
    }
 
    void
    setRowRhsInf( int row, bool isInfinite )
    {
       if( isInfinite )
-         rflags[row].set( RowFlag::RHS_INF );
+         rflags[row].set( RowFlag::kRhsInf );
       else
-         rflags[row].unset( RowFlag::RHS_INF );
+         rflags[row].unset( RowFlag::kRhsInf );
    }
 
    void

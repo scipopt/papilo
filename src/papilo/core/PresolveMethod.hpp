@@ -32,7 +32,7 @@
 #include "papilo/misc/Num.hpp"
 #include "papilo/misc/Vec.hpp"
 #include "papilo/misc/fmt.hpp"
-#include "tbb/tick_count.h"
+#include "papilo/misc/tbb.hpp"
 #include <bitset>
 
 namespace papilo
@@ -52,35 +52,35 @@ class ProblemUpdate;
 enum class PresolveStatus : int
 {
    /// problem was not changed
-   UNCHANGED = 0,
+   kUnchanged = 0,
 
    /// problem was reduced
-   REDUCED = 1,
+   kReduced = 1,
 
    /// problem was detected to be unbounded or infeasible
-   UNBND_OR_INFEAS = 2,
+   kUnbndOrInfeas = 2,
 
    /// problem was detected to be unbounded
-   UNBOUNDED = 3,
+   kUnbounded = 3,
 
    /// problem was detected to be infeasible
-   INFEASIBLE = 4,
+   kInfeasible = 4,
 
 };
 
 enum class PresolverTiming : int
 {
-   FAST = 0,
-   MEDIUM = 1,
-   EXHAUSTIVE = 2,
+   kFast = 0,
+   kMedium = 1,
+   kExhaustive = 2,
 };
 
 enum class PresolverType
 {
-   ALL_COLS,
-   INTEGRAL_COLS,
-   CONTINUOUS_COLS,
-   MIXED_COLS,
+   kAllCols,
+   kIntegralCols,
+   kContinuousCols,
+   kMixedCols,
 };
 
 template <typename REAL>
@@ -92,8 +92,8 @@ class PresolveMethod
       ncalls = 0;
       nsuccessCall = 0;
       name = "unnamed";
-      type = PresolverType::ALL_COLS;
-      timing = PresolverTiming::EXHAUSTIVE;
+      type = PresolverType::kAllCols;
+      timing = PresolverTiming::kExhaustive;
       delayed = false;
       execTime = 0.0;
       enabled = true;
@@ -136,23 +136,23 @@ class PresolveMethod
         const Num<REAL>& num, Reductions<REAL>& reductions )
    {
       if( !enabled || delayed )
-         return PresolveStatus::UNCHANGED;
+         return PresolveStatus::kUnchanged;
 
       if( skip != 0 )
       {
          --skip;
-         return PresolveStatus::UNCHANGED;
+         return PresolveStatus::kUnchanged;
       }
 
       if( problem.getNumIntegralCols() == 0 &&
-          ( type == PresolverType::INTEGRAL_COLS ||
-            type == PresolverType::MIXED_COLS ) )
-         return PresolveStatus::UNCHANGED;
+          ( type == PresolverType::kIntegralCols ||
+            type == PresolverType::kMixedCols ) )
+         return PresolveStatus::kUnchanged;
 
       if( problem.getNumContinuousCols() == 0 &&
-          ( type == PresolverType::CONTINUOUS_COLS ||
-            type == PresolverType::MIXED_COLS ) )
-         return PresolveStatus::UNCHANGED;
+          ( type == PresolverType::kContinuousCols ||
+            type == PresolverType::kMixedCols ) )
+         return PresolveStatus::kUnchanged;
 
       ++ncalls;
 
@@ -165,19 +165,19 @@ class PresolveMethod
 
       switch( result )
       {
-      case PresolveStatus::UNBOUNDED:
-      case PresolveStatus::UNBND_OR_INFEAS:
-      case PresolveStatus::INFEASIBLE:
+      case PresolveStatus::kUnbounded:
+      case PresolveStatus::kUnbndOrInfeas:
+      case PresolveStatus::kInfeasible:
          Message::debug( &problemUpdate,
                          "[{}:{}] {} detected unboundedness or infeasibility\n",
                          __FILE__, __LINE__, this->name );
-      case PresolveStatus::REDUCED:
+      case PresolveStatus::kReduced:
          ++nsuccessCall;
          nconsecutiveUnsuccessCall = 0;
          break;
-      case PresolveStatus::UNCHANGED:
+      case PresolveStatus::kUnchanged:
          ++nconsecutiveUnsuccessCall;
-         if( timing != PresolverTiming::FAST )
+         if( timing != PresolverTiming::kFast )
             skip += nconsecutiveUnsuccessCall;
          break;
       }
@@ -234,13 +234,13 @@ class PresolveMethod
    {
       assert( roundCounter < 4 );
 
-      if( ( roundCounter == 0 && timing == PresolverTiming::FAST ) ||
-          ( roundCounter == 1 && timing == PresolverTiming::MEDIUM ) ||
-          ( roundCounter == 2 && timing == PresolverTiming::EXHAUSTIVE ) )
+      if( ( roundCounter == 0 && timing == PresolverTiming::kFast ) ||
+          ( roundCounter == 1 && timing == PresolverTiming::kMedium ) ||
+          ( roundCounter == 2 && timing == PresolverTiming::kExhaustive ) )
          return true;
 
       // always finish with a fast round
-      if( roundCounter == 3 && timing == PresolverTiming::FAST )
+      if( roundCounter == 3 && timing == PresolverTiming::kFast )
          return true;
 
       return false;

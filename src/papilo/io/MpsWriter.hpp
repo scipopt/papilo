@@ -81,16 +81,16 @@ struct MpsWriter
 
          char type;
 
-         if( row_flags[i].test( RowFlag::LHS_INF ) &&
-             row_flags[i].test( RowFlag::RHS_INF ) )
+         if( row_flags[i].test( RowFlag::kLhsInf ) &&
+             row_flags[i].test( RowFlag::kRhsInf ) )
             type = 'N';
-         else if( row_flags[i].test( RowFlag::RHS_INF ) )
+         else if( row_flags[i].test( RowFlag::kRhsInf ) )
             type = 'G';
-         else if( row_flags[i].test( RowFlag::LHS_INF ) )
+         else if( row_flags[i].test( RowFlag::kLhsInf ) )
             type = 'L';
          else
          {
-            if( !row_flags[i].test( RowFlag::EQUALITY ) )
+            if( !row_flags[i].test( RowFlag::kEquation ) )
                hasRangedRow = true;
             type = 'E';
          }
@@ -110,15 +110,15 @@ struct MpsWriter
 
          for( int i = 0; i < consmatrix.getNCols(); ++i )
          {
-            if( col_flags[i].test( ColFlag::INACTIVE ) )
+            if( col_flags[i].test( ColFlag::kInactive ) )
                continue;
 
-            if( ( !col_flags[i].test( ColFlag::INTEGRAL ) && integral ) ||
-                ( col_flags[i].test( ColFlag::INTEGRAL ) && !integral ) )
+            if( ( !col_flags[i].test( ColFlag::kIntegral ) && integral ) ||
+                ( col_flags[i].test( ColFlag::kIntegral ) && !integral ) )
                continue;
 
             assert(
-                !col_flags[i].test( ColFlag::FIXED, ColFlag::SUBSTITUTED ) );
+                !col_flags[i].test( ColFlag::kFixed, ColFlag::kSubstituted ) );
 
             if( obj.coefficients[i] != 0.0 )
             {
@@ -172,11 +172,11 @@ struct MpsWriter
          if( consmatrix.isRowRedundant( i ) )
             continue;
 
-         if( row_flags[i].test( RowFlag::LHS_INF ) &&
-             row_flags[i].test( RowFlag::RHS_INF ) )
+         if( row_flags[i].test( RowFlag::kLhsInf ) &&
+             row_flags[i].test( RowFlag::kRhsInf ) )
             continue;
 
-         if( row_flags[i].test( RowFlag::LHS_INF ) )
+         if( row_flags[i].test( RowFlag::kLhsInf ) )
          {
             if( rhs[i] != REAL{0.0} )
                fmt::print( out, "    B         {: <9} {:.15}\n",
@@ -195,8 +195,8 @@ struct MpsWriter
          fmt::print( out, "RANGES\n" );
          for( int i = 0; i < consmatrix.getNRows(); ++i )
          {
-            if( row_flags[i].test( RowFlag::LHS_INF, RowFlag::RHS_INF,
-                                   RowFlag::EQUALITY, RowFlag::REDUNDANT ) )
+            if( row_flags[i].test( RowFlag::kLhsInf, RowFlag::kRhsInf,
+                                   RowFlag::kEquation, RowFlag::kRedundant ) )
                continue;
 
             double rangeval = double( REAL( rhs[i] - lhs[i] ) );
@@ -213,11 +213,11 @@ struct MpsWriter
 
       for( int i = 0; i < consmatrix.getNCols(); ++i )
       {
-         if( col_flags[i].test( ColFlag::INACTIVE ) )
+         if( col_flags[i].test( ColFlag::kInactive ) )
             continue;
 
-         if( !col_flags[i].test( ColFlag::LB_INF ) &&
-             !col_flags[i].test( ColFlag::UB_INF ) &&
+         if( !col_flags[i].test( ColFlag::kLbInf ) &&
+             !col_flags[i].test( ColFlag::kUbInf ) &&
              lower_bounds[i] == upper_bounds[i] )
          {
             fmt::print( out, " FX BND       {: <9} {:.15}\n",
@@ -225,9 +225,9 @@ struct MpsWriter
          }
          else
          {
-            if( col_flags[i].test( ColFlag::LB_INF ) || lower_bounds[i] != 0.0 )
+            if( col_flags[i].test( ColFlag::kLbInf ) || lower_bounds[i] != 0.0 )
             {
-               if( col_flags[i].test( ColFlag::LB_INF ) )
+               if( col_flags[i].test( ColFlag::kLbInf ) )
                   fmt::print( out, " MI BND       {}\n",
                               varnames[col_mapping[i]] );
                else
@@ -236,7 +236,7 @@ struct MpsWriter
                               double( lower_bounds[i] ) );
             }
 
-            if( !col_flags[i].test( ColFlag::UB_INF ) )
+            if( !col_flags[i].test( ColFlag::kUbInf ) )
                fmt::print( out, " UP BND       {: <9} {:.15}\n",
                            varnames[col_mapping[i]],
                            double( upper_bounds[i] ) );

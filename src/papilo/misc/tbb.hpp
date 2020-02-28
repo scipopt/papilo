@@ -21,79 +21,55 @@
 /*                                                                           */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef _PAPILO_CORE_SOLUTION_HPP_
-#define _PAPILO_CORE_SOLUTION_HPP_
+#ifndef _PAPILO_MISC_TBB_HPP_
+#define _PAPILO_MISC_TBB_HPP_
 
-namespace papilo
-{
+/* if those macros are not defined and tbb includes windows.h
+ * then many macros are defined that can interfere with standard C++ code
+ */
+#ifndef NOMINMAX
+#define NOMINMAX
+#define PAPILO_DEFINED_NOMINMAX
+#endif
 
-enum class SolutionType
-{
-   kPrimal,
-   kPrimalDual
-};
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#define PAPILO_DEFINED_WIN32_LEAN_AND_MEAN
+#endif
 
-template <typename REAL>
-class Solution
-{
- public:
-   SolutionType type;
-   Vec<REAL> primal;
-   Vec<REAL> col_dual;
-   Vec<REAL> row_dual;
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#define PAPILO_DEFINED_WIN32_LEAN_AND_MEAN
+#endif
 
-   // Default type primal only.
-   Solution() : type( SolutionType::kPrimal ) {}
+#ifndef NOGDI
+#define NOGDI
+#define PAPILO_DEFINED_NOGDI
+#endif
 
-   Solution( SolutionType type_ ) : type( type_ ) {}
+#include "tbb/blocked_range.h"
+#include "tbb/combinable.h"
+#include "tbb/concurrent_hash_map.h"
+#include "tbb/concurrent_vector.h"
+#include "tbb/parallel_for.h"
+#include "tbb/parallel_invoke.h"
+#include "tbb/partitioner.h"
+#include "tbb/task_arena.h"
+#include "tbb/tick_count.h"
 
-   Solution( SolutionType type_, Vec<REAL> values )
-       : type( type_ ), primal( std::move( values ) )
-   {
-   }
+#ifdef PAPILO_DEFINED_NOGDI
+#undef NOGDI
+#undef PAPILO_DEFINED_NOGDI
+#endif
 
-   Solution( Vec<REAL> values )
-       : type( SolutionType::kPrimal ), primal( std::move( values ) )
-   {
-   }
+#ifdef PAPILO_DEFINED_NOMINMAX
+#undef NOMINMAX
+#undef PAPILO_DEFINED_NOMINMAX
+#endif
 
-   Solution( Vec<REAL> primal_values, Vec<REAL> dual_col_values,
-             Vec<REAL> dual_row_values )
-       : type( SolutionType::kPrimalDual ),
-         primal( std::move( primal_values ) ),
-         col_dual( std::move( dual_col_values ) ),
-         row_dual( std::move( dual_row_values ) )
-   {
-   }
-};
-
-/*
-template <typename REAL>
-class PrimalSolution : public Solution<REAL>
-{
- public:
-   PrimalSolution() : Solution<REAL>( SolutionType::kPrimal ) {}
-   PrimalSolution( std::vector<REAL> values )
-       : Solution<REAL>( SolutionType::kPrimal, values )
-   {
-   }
-};
-
-template <typename REAL>
-class PrimalDualSolution : public Solution<REAL>
-{
- public:
-   std::vector<REAL> col_dual;
-   std::vector<REAL> row_dual;
-
-   PrimalDualSolution() : Solution<REAL>( SolutionType::kPrimalDual ) {}
-   PrimalDualSolution( std::vector<REAL> primal_values )
-       : Solution<REAL>( SolutionType::kPrimal, primal_values )
-   {
-   }
-};
-*/
-
-} // namespace papilo
+#ifdef PAPILO_DEFINED_WIN32_LEAN_AND_MEAN
+#undef WIN32_LEAN_AND_MEAN
+#undef PAPILO_DEFINED_WIN32_LEAN_AND_MEAN
+#endif
 
 #endif

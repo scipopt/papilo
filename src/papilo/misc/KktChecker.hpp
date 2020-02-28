@@ -520,9 +520,9 @@ class KktState
 
 enum class ProblemType
 {
-   ORIGINAL,
-   REDUCED,
-   POSTSOLVED
+   kOriginal,
+   kReduced,
+   kPostsolved
 };
 
 template <typename REAL, CheckLevel CHECK_LEVEL>
@@ -712,13 +712,13 @@ class KktChecker<REAL, CheckLevel::Check>
 
       switch( type )
       {
-      case ProblemType::POSTSOLVED:
+      case ProblemType::kPostsolved:
       {
          compareMatrixToTranspose( problem.getConstraintMatrix(), num );
          message.info( "\nInitializing check of postsolved solution\n" );
          return State( level, problem, solution, solSetColumns, solSetRows );
       }
-      case ProblemType::ORIGINAL:
+      case ProblemType::kOriginal:
       {
          // compares transposes too so no need to call other checks.
          if( level == CheckLevel::After_each_step_and_dual ||
@@ -754,11 +754,11 @@ class KktChecker<REAL, CheckLevel::Check>
          return State( CheckLevel::Primal_only, original_problem, solution,
                        solSetColumns, solSetRows );
       }
-      case ProblemType::REDUCED:
+      case ProblemType::kReduced:
       {
          compareMatrixToTranspose( reduced_problem.getConstraintMatrix(), num );
 
-         // if problem type is REDUCED expand row / column bound vectors since
+         // if problem type is kReduced expand row / column bound vectors since
          // original_solution is already padded.
          const int nRows = reduced_problem.getNRows();
          const int nCols = reduced_problem.getNCols();
@@ -1151,28 +1151,28 @@ template <typename REAL>
 bool
 rowLHSInf( const Problem<REAL>& problem, const int row )
 {
-   return problem.getRowFlags()[row].test( RowFlag::LHS_INF );
+   return problem.getRowFlags()[row].test( RowFlag::kLhsInf );
 }
 
 template <typename REAL>
 bool
 rowRHSInf( const Problem<REAL>& problem, const int row )
 {
-   return problem.getRowFlags()[row].test( RowFlag::RHS_INF );
+   return problem.getRowFlags()[row].test( RowFlag::kRhsInf );
 }
 
 template <typename REAL>
 bool
 colLBInf( const Problem<REAL>& problem, const int col )
 {
-   return problem.getColFlags()[col].test( ColFlag::LB_INF );
+   return problem.getColFlags()[col].test( ColFlag::kLbInf );
 }
 
 template <typename REAL>
 bool
 colUBInf( const Problem<REAL>& problem, const int col )
 {
-   return problem.getColFlags()[col].test( ColFlag::UB_INF );
+   return problem.getColFlags()[col].test( ColFlag::kUbInf );
 }
 
 // for testing

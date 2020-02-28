@@ -35,11 +35,11 @@ namespace papilo
 
 enum class VerbosityLevel : int
 {
-   QUIET = 0,
-   ERROR = 1,
-   WARNING = 2,
-   INFO = 3,
-   EXTRA = 4,
+   kQuiet = 0,
+   kError = 1,
+   kWarning = 2,
+   kInfo = 3,
+   kExtra = 4,
 };
 
 struct EnableDebugOutput
@@ -48,7 +48,7 @@ struct EnableDebugOutput
 
 class Message
 {
-   int verbosity{static_cast<int>( VerbosityLevel::INFO )};
+   int verbosity{static_cast<int>( VerbosityLevel::kInfo )};
 
    void ( *write )( int level, const char* data, size_t len,
                     void* usrdata ) = nullptr;
@@ -115,13 +115,13 @@ class Message
    {
       switch( static_cast<VerbosityLevel>( verbosity ) )
       {
-      case VerbosityLevel::EXTRA:
-         print( VerbosityLevel::EXTRA, std::forward<Args>( args )... );
+      case VerbosityLevel::kExtra:
+         print( VerbosityLevel::kExtra, std::forward<Args>( args )... );
          break;
-      case VerbosityLevel::INFO:
-      case VerbosityLevel::WARNING:
-      case VerbosityLevel::ERROR:
-      case VerbosityLevel::QUIET:
+      case VerbosityLevel::kInfo:
+      case VerbosityLevel::kWarning:
+      case VerbosityLevel::kError:
+      case VerbosityLevel::kQuiet:
          break;
       }
    }
@@ -132,13 +132,13 @@ class Message
    {
       switch( static_cast<VerbosityLevel>( verbosity ) )
       {
-      case VerbosityLevel::EXTRA:
-      case VerbosityLevel::INFO:
-         print( VerbosityLevel::INFO, std::forward<Args>( args )... );
+      case VerbosityLevel::kExtra:
+      case VerbosityLevel::kInfo:
+         print( VerbosityLevel::kInfo, std::forward<Args>( args )... );
          break;
-      case VerbosityLevel::WARNING:
-      case VerbosityLevel::ERROR:
-      case VerbosityLevel::QUIET:
+      case VerbosityLevel::kWarning:
+      case VerbosityLevel::kError:
+      case VerbosityLevel::kQuiet:
          break;
       }
    }
@@ -149,13 +149,13 @@ class Message
    {
       switch( static_cast<VerbosityLevel>( verbosity ) )
       {
-      case VerbosityLevel::EXTRA:
-      case VerbosityLevel::INFO:
-      case VerbosityLevel::WARNING:
-         print( VerbosityLevel::WARNING, std::forward<Args>( args )... );
+      case VerbosityLevel::kExtra:
+      case VerbosityLevel::kInfo:
+      case VerbosityLevel::kWarning:
+         print( VerbosityLevel::kWarning, std::forward<Args>( args )... );
          break;
-      case VerbosityLevel::ERROR:
-      case VerbosityLevel::QUIET:
+      case VerbosityLevel::kError:
+      case VerbosityLevel::kQuiet:
          break;
       }
    }
@@ -166,13 +166,13 @@ class Message
    {
       switch( static_cast<VerbosityLevel>( verbosity ) )
       {
-      case VerbosityLevel::EXTRA:
-      case VerbosityLevel::INFO:
-      case VerbosityLevel::WARNING:
-      case VerbosityLevel::ERROR:
-         print( VerbosityLevel::ERROR, std::forward<Args>( args )... );
+      case VerbosityLevel::kExtra:
+      case VerbosityLevel::kInfo:
+      case VerbosityLevel::kWarning:
+      case VerbosityLevel::kError:
+         print( VerbosityLevel::kError, std::forward<Args>( args )... );
          break;
-      case VerbosityLevel::QUIET:
+      case VerbosityLevel::kQuiet:
          break;
       }
    }

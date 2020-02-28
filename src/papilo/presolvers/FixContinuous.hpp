@@ -39,8 +39,8 @@ class FixContinuous : public PresolveMethod<REAL>
    FixContinuous() : PresolveMethod<REAL>()
    {
       this->setName( "fixcontinuous" );
-      this->setTiming( PresolverTiming::MEDIUM );
-      this->setType( PresolverType::CONTINUOUS_COLS );
+      this->setTiming( PresolverTiming::kMedium );
+      this->setType( PresolverType::kContinuousCols );
    }
 
    /// todo how to communicate about postsolve information
@@ -75,7 +75,7 @@ FixContinuous<REAL>::execute( const Problem<REAL>& problem,
    const int ncols = consMatrix.getNCols();
    const auto& colsize = consMatrix.getColSizes();
 
-   PresolveStatus result = PresolveStatus::UNCHANGED;
+   PresolveStatus result = PresolveStatus::kUnchanged;
    if( num.getFeasTol() == REAL{0} )
       return result;
 
@@ -84,8 +84,8 @@ FixContinuous<REAL>::execute( const Problem<REAL>& problem,
       // dont fix removed or empty columns, integral columns, columns with
       // infinity bounds, columns that are already fixed, and columns whose
       // bounds are more than epsilon apart
-      if( cflags[i].test( ColFlag::UNBOUNDED, ColFlag::INTEGRAL,
-                          ColFlag::INACTIVE ) ||
+      if( cflags[i].test( ColFlag::kUnbounded, ColFlag::kIntegral,
+                          ColFlag::kInactive ) ||
           ( ubs[i] - lbs[i] ) > num.getFeasTol() )
          continue;
 
@@ -113,7 +113,7 @@ FixContinuous<REAL>::execute( const Problem<REAL>& problem,
          TransactionGuard<REAL> tg{reductions};
          reductions.lockColBounds( i );
          reductions.fixCol( i, fixval );
-         result = PresolveStatus::REDUCED;
+         result = PresolveStatus::kReduced;
       }
    }
 

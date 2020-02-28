@@ -24,32 +24,30 @@
 #ifndef _PAPILO_MISC_WRAPPERS_HPP_
 #define _PAPILO_MISC_WRAPPERS_HPP_
 
-#include "papilo/misc/OptionsParser.hpp"
-#include <string>
-#include <utility>
-
-#include "tbb/tick_count.h"
-
 #include "papilo/core/Postsolve.hpp"
 #include "papilo/core/Presolve.hpp"
 #include "papilo/io/MpsParser.hpp"
 #include "papilo/io/MpsWriter.hpp"
 #include "papilo/io/SolParser.hpp"
 #include "papilo/io/SolWriter.hpp"
+#include "papilo/misc/OptionsParser.hpp"
+#include "papilo/misc/tbb.hpp"
+
 #include <boost/archive/binary_iarchive.hpp>
 #include <boost/archive/binary_oarchive.hpp>
-
 #include <boost/lexical_cast.hpp>
 #include <fstream>
+#include <string>
+#include <utility>
 
 namespace papilo
 {
 
 enum class ResultStatus
 {
-   OK = 0,
-   INFEASIBLE_OR_UNBOUNDED,
-   ERROR
+   kOk = 0,
+   kUnbndOrInfeas,
+   kError
 };
 
 template <typename REAL>
@@ -190,17 +188,17 @@ presolve_and_solve(
 
    switch( result.status )
    {
-   case PresolveStatus::INFEASIBLE:
+   case PresolveStatus::kInfeasible:
       fmt::print( "presolve detected infeasible problem\n" );
-      return ResultStatus::INFEASIBLE_OR_UNBOUNDED;
-   case PresolveStatus::UNBND_OR_INFEAS:
+      return ResultStatus::kUnbndOrInfeas;
+   case PresolveStatus::kUnbndOrInfeas:
       fmt::print( "presolve detected unbounded or infeasible problem\n" );
-      return ResultStatus::INFEASIBLE_OR_UNBOUNDED;
-   case PresolveStatus::UNBOUNDED:
+      return ResultStatus::kUnbndOrInfeas;
+   case PresolveStatus::kUnbounded:
       fmt::print( "presolve detected unbounded problem\n" );
-      return ResultStatus::INFEASIBLE_OR_UNBOUNDED;
-   case PresolveStatus::UNCHANGED:
-   case PresolveStatus::REDUCED:
+      return ResultStatus::kUnbndOrInfeas;
+   case PresolveStatus::kUnchanged:
+   case PresolveStatus::kReduced:
       break;
    }
 
@@ -235,8 +233,8 @@ presolve_and_solve(
                   opts.postsolve_archive_file, t.getTime() );
    }
 
-   if( opts.command == Command::PRESOLVE )
-      return ResultStatus::OK;
+   if( opts.command == Command::kPresolve )
+      return ResultStatus::kOk;
 
    double solvetime = 0;
    {
@@ -253,7 +251,7 @@ presolve_and_solve(
       else
       {
          fmt::print( "no solver available for solving\n" );
-         return ResultStatus::ERROR;
+         return ResultStatus::kError;
       }
 
       solver->setUp( problem, result.postsolve.origrow_mapping,
@@ -266,7 +264,7 @@ presolve_and_solve(
          if( tlim <= 0 )
          {
             fmt::print( "time limit reached in presolving\n" );
-            return ResultStatus::OK;
+            return ResultStatus::kOk;
          }
          solver->setTimeLimit( tlim );
       }
@@ -279,13 +277,13 @@ presolve_and_solve(
          solver->printDetails();
 
       Solution<REAL> solution;
-      solution.type = SolutionType::PRIMAL_ONLY;
+      solution.type = SolutionType::kPrimal;
 
       if( result.postsolve.getOriginalProblem().getNumIntegralCols() == 0 )
-         solution.type = SolutionType::PRIMAL_AND_DUAL;
+         solution.type = SolutionType::kPrimalDual;
 
-      if( ( status == SolverStatus::OPTIMAL ||
-            status == SolverStatus::INTERRUPTED ) &&
+      if( ( status == SolverStatus::kOptimal ||
+            status == SolverStatus::kInterrupted ) &&
           solver->getSolution( solution ) )
          postsolve( result.postsolve, solution, opts.objective_reference,
                     opts.orig_solution_file );
@@ -294,7 +292,7 @@ presolve_and_solve(
    fmt::print( "\nsolving finished after {:.3f} seconds\n",
                presolve.getStatistics().presolvetime + solvetime + writetime );
 
-   return ResultStatus::OK;
+   return ResultStatus::kOk;
 }
 
 template <typename REAL>
