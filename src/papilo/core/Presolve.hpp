@@ -24,6 +24,7 @@
 #ifndef _PAPILO_CORE_PRESOLVE_HPP_
 #define _PAPILO_CORE_PRESOLVE_HPP_
 
+#include <algorithm>
 #include <cctype>
 #include <fstream>
 #include <initializer_list>
@@ -632,12 +633,12 @@ Presolve<REAL>::apply( Problem<REAL>& problem )
 
       result.status = PresolveStatus::kUnchanged;
 
-      pdqsort( presolvers.begin(), presolvers.end(),
-               []( const std::unique_ptr<PresolveMethod<REAL>>& a,
-                   const std::unique_ptr<PresolveMethod<REAL>>& b ) {
-                  return static_cast<int>( a->getTiming() ) <
-                         static_cast<int>( b->getTiming() );
-               } );
+      std::stable_sort( presolvers.begin(), presolvers.end(),
+                        []( const std::unique_ptr<PresolveMethod<REAL>>& a,
+                            const std::unique_ptr<PresolveMethod<REAL>>& b ) {
+                           return static_cast<int>( a->getTiming() ) <
+                                  static_cast<int>( b->getTiming() );
+                        } );
 
       std::pair<int, int> fastPresolvers;
       std::pair<int, int> mediumPresolvers;
