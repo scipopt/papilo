@@ -226,13 +226,13 @@ ParallelRowDetection<REAL>::computeRowHashes(
              // already deleted)
              if( len > 1 )
              {
-                // compute scale such that the first
-                // coefficient is positive M_PI the choice of
-                // M_PI is arbitrary and is used to make cases
+                // compute scale such that the first coefficient is
+                // positive 1/golden ratio. The choice of
+                // the constant is arbitrary and is used to make cases
                 // where two coefficients that are equal
                 // within epsilon get different values are
-                // more unlikely
-                REAL scale = M_PI / rowvals[0];
+                // more unlikely by choosing some irrational number
+                REAL scale = REAL( 2.0 / ( 1.0 + sqrt( 5.0 ) ) ) / rowvals[0];
 
                 // add scaled coefficients of other row
                 // entries to compute the hash
