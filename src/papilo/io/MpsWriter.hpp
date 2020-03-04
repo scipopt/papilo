@@ -67,7 +67,7 @@ struct MpsWriter
 #ifdef PAPILO_USE_BOOST_IOSTREAMS_WITH_ZLIB
       if( boost::algorithm::ends_with( filename, ".gz" ) )
          out.push( boost::iostreams::gzip_compressor() );
-#else
+#endif
 
 #ifdef PAPILO_USE_BOOST_IOSTREAMS_WITH_BZIP2
       if( boost::algorithm::ends_with( filename, ".bz2" ) )
