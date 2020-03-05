@@ -91,6 +91,10 @@ target_include_directories(papilo INTERFACE
 find_package(TBB MODULE REQUIRED)
 target_link_libraries(papilo INTERFACE ${TBB_LIBRARY} ${QUADMATH_IMPORTED_TARGET} ${GMP_LIBRARIES} Boost::disable_autolinking)
 
+if(MSVC)
+   target_compile_definitions(papilo INTERFACE /bigobj)
+endif()
+
 if(LUSOL)
    include(CheckLanguage)
    check_language(Fortran)
