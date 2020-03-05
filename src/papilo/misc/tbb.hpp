@@ -48,8 +48,8 @@
 #endif
 
 #ifdef _MSC_VER
-#  pragma push_macro("__TBB_NO_IMPLICIT_LINKAGE")
-#  define __TBB_NO_IMPLICIT_LINKAGE 1
+#pragma push_macro( "__TBB_NO_IMPLICIT_LINKAGE" )
+#define __TBB_NO_IMPLICIT_LINKAGE 1
 #endif
 
 #include "tbb/blocked_range.h"
@@ -63,7 +63,7 @@
 #include "tbb/tick_count.h"
 
 #ifdef _MSC_VER
-#  pragma pop_macro("__TBB_NO_IMPLICIT_LINKAGE")
+#pragma pop_macro( "__TBB_NO_IMPLICIT_LINKAGE" )
 #endif
 
 #ifdef PAPILO_DEFINED_NOGDI
