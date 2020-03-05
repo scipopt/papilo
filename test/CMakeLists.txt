@@ -116,8 +116,9 @@ if(TARGET papilo-executable AND PAPILO_HAVE_SCIP)
             #
             # treat the instance as a tuple (list) of two values
             #
+            file(TO_NATIVE_PATH ${PROJECT_SOURCE_DIR}/test/${path} instance_file)
             add_test(NAME ${numtype}-solve-${basename}
-                     COMMAND $<TARGET_FILE:papilo-executable> solve -a ${numtype} -f ${PROJECT_SOURCE_DIR}/test/${path} -o ${optval}
+                     COMMAND $<TARGET_FILE:papilo-executable> solve -a ${numtype} -f ${instance_file} -o ${optval}
                      )
             set_tests_properties(${numtype}-solve-${basename}
                                  PROPERTIES
