@@ -51,7 +51,7 @@ jobs:
         expand-archive -path "${{github.workspace}}\Dependencies\tbb.zip" -destinationpath "${{github.workspace}}\Dependencies\"
 
     - name: Package SCIPOptSuite
-      if:  runner.os != 'Windows' && steps.cached-scip.outputs.cache-hit != 'true'
+      if:  runner.os != 'Windows' && steps.cached-dependencies.outputs.cache-hit != 'true'
       run: |
         cd $HOME
         wget http://scip.zib.de/download/release/scipoptsuite-${SCIP_VERSION}.tgz
