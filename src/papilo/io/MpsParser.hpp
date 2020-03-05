@@ -122,7 +122,7 @@ class MpsParser
    bool
    parseFile( const std::string& filename );
 
-   void
+   bool
    parse( boost::iostreams::filtering_istream& file );
 
    enum class boundtype
@@ -830,13 +830,11 @@ MpsParser<REAL>::parseFile( const std::string& filename )
 
    in.push( file );
 
-   parse( in );
-
-   return true;
+   return parse( in );
 }
 
 template <typename REAL>
-void
+bool
 MpsParser<REAL>::parse( boost::iostreams::filtering_istream& file )
 {
    nnz = 0;
@@ -844,7 +842,8 @@ MpsParser<REAL>::parse( boost::iostreams::filtering_istream& file )
    parsekey keyword_old = parsekey::kNone;
 
    // parsing loop
-   while( keyword != parsekey::kFail && keyword != parsekey::kEnd )
+   while( keyword != parsekey::kFail && keyword != parsekey::kEnd &&
+          !file.eof() && file.good() )
    {
       keyword_old = keyword;
       switch( keyword )
@@ -872,16 +871,18 @@ MpsParser<REAL>::parse( boost::iostreams::filtering_istream& file )
       }
    }
 
-   if( keyword == parsekey::kFail )
+   if( keyword == parsekey::kFail || keyword != parsekey::kEnd )
    {
       printErrorMessage( keyword_old );
-      exit( 1 ); // todo exception
+      return false;
    }
 
    assert( row_type.size() == unsigned( nRows ) );
 
    nCols = colname2idx.size();
    nRows = rowname2idx.size() - 1; // subtract obj row
+
+   return true;
 }
 
 } // namespace papilo
