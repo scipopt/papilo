@@ -19,7 +19,7 @@ jobs:
       CTEST_PARALLEL_LEVEL: 4
       SCIP_VERSION: 6.0.2
       TBBROOT: ${{github.workspace}}\Dependencies\tbb
-      PATH: ${{github.workspace}}\Dependencies\tbb\bin\intel64\vc14
+      PATH: ${{env.PATH}}:${{github.workspace}}\Dependencies\tbb\bin\intel64\vc14
 
     steps:
     - uses: actions/checkout@v1
