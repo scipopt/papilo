@@ -63,7 +63,7 @@ jobs:
         cmake --build . --target all_executables
         cpack -G STGZ
         chmod +x SCIPOptSuite-${SCIP_VERSION}*.sh
-        cmake -E make_directory $GITHUB_WORKSPACE/SCIPOptSuite
+        cmake -E make_directory $GITHUB_WORKSPACE/Dependencies
         cp SCIPOptSuite-${SCIP_VERSION}*.sh $GITHUB_WORKSPACE/Dependencies/scipoptsuite.sh
 
     - name: Install SCIPOptSuite
