@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION 3.3.0)
+cmake_minimum_required (VERSION 3.5.0)
 project(papilo VERSION 1.0.0.0)
 
 set(CMAKE_CXX_STANDARD 14)
@@ -89,7 +89,7 @@ target_include_directories(papilo INTERFACE
    ${Boost_INCLUDE_DIRS})
 
 find_package(TBB MODULE REQUIRED)
-target_link_libraries(papilo INTERFACE ${TBB_LIBRARY} ${QUADMATH_IMPORTED_TARGET} ${GMP_LIBRARIES})
+target_link_libraries(papilo INTERFACE ${TBB_LIBRARY} ${QUADMATH_IMPORTED_TARGET} ${GMP_LIBRARIES} Boost::disable_autolinking)
 
 if(LUSOL)
    include(CheckLanguage)
