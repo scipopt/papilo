@@ -12,11 +12,11 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [windows-latest]
+        os: [ubuntu-18.04,ubuntu-16.04,macos-10.15,windows-latest]
     env:
       BOOST_ROOT:
       MAKEFLAGS: -j4
-      CTEST_PARALLEL_LEVEL: 4
+      CTEST_PARALLEL_LEVEL: 2
       SCIP_VERSION: 6.0.2
       TBBROOT: ${{github.workspace}}\Dependencies\tbb
 
@@ -70,7 +70,7 @@ jobs:
       if: runner.os != 'Windows'
       run: sudo ./Dependencies/scipoptsuite.sh --prefix=/usr/local --skip-license
 
-    - name: Install SCIPOptSuite on Windows
+    - name: Install dependencies on Windows
       if: runner.os == 'Windows'
       run: |
         Invoke-Command -ScriptBlock { Start-Process ${{github.workspace}}\Dependencies\scipoptsuite.exe -ArgumentList "/S" -Wait }
