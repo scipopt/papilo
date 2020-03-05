@@ -4,6 +4,11 @@ endif()
 set(PAPILO_IMPORTED_TARGETS papilo)
 set(PAPILO_FOUND 1)
 
+if(@TBB_BUILT_STATIC_LIB@ AND (NOT TARGET tbb))
+   add_library(tbb STATIC IMPORTED)
+   set_target_properties(tbb PROPERTIES IMPORTED_LOCATION @PAPILO_TBB_STATIC_LIB_LOCATION@)
+endif()
+
 if(@PAPILO_HAVE_FLOAT128@)
    set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} @QUADMATH_MODULE_PATH@)
    find_package(Quadmath)
