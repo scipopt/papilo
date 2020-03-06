@@ -24,6 +24,7 @@ find_library(TBB_LIBRARY
             HINTS ${TBB_SEARCH_DIR}
             PATHS ${TBB_DEFAULT_SEARCH_DIR}
             PATH_SUFFIXES ${TBB_LIB_PATH_SUFFIXES})
+set(TBB_BUILT_STATIC_LIB 0)
 
 # if the library was not found try to build a static library from source
 if(NOT TBB_LIBRARY)
