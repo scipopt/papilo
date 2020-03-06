@@ -93,9 +93,10 @@ if(TBB_BUILT_STATIC_LIB)
    install(FILES ${TBB_STATIC_LIB} DESTINATION lib)
 endif()
 
-target_link_libraries(papilo INTERFACE ${TBB_LIBRARY} ${QUADMATH_IMPORTED_TARGET} ${GMP_LIBRARIES} Boost::disable_autolinking)
+target_link_libraries(papilo INTERFACE ${TBB_LIBRARY} ${QUADMATH_IMPORTED_TARGET} ${GMP_LIBRARIES})
 
 if(MSVC)
+   target_compile_definitions(papilo INTERFACE BOOST_ALL_NO_LIB)
    target_compile_options(papilo INTERFACE /bigobj)
 endif()
 
