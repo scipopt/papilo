@@ -155,11 +155,12 @@ else()
    set(PAPILO_HAVE_HIGHS 0)
 endif()
 
-set(CMAKE_REQUIRED_FLAGS ${CMAKE_CXX_FLAGS})
+#check_cxx_compiler_flag(-std=c++14 HAVE_FLAG_STD_CXX14)
+#set(CMAKE_REQUIRED_FLAGS "-std=c++14")
 set(CMAKE_REQUIRED_INCLUDES ${PROJECT_SOURCE_DIR}/external)
 check_cxx_source_compiles(
    "#include \"ska/bytell_hash_map.hpp\"
-   int main() { ska::bytell_hash_map<int,int> hashmap; hashmap.clear(); return 0; }"
+   int main() { ska::bytell_hash_map<int,int> hashmap; (void)hashmap; return 0; }"
    PAPILO_BYTELL_HASHMAP_WORKS )
 
 if( PAPILO_BYTELL_HASHMAP_WORKS )
