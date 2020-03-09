@@ -1256,6 +1256,9 @@ ConstraintMatrix<REAL>::aggregate(
    auto updateActivity = [presolveround, &changedActivities, &domains,
                           &activities, &tripletbuffer](
                              int row, int col, REAL oldval, REAL newval ) {
+      if( oldval == newval )
+         return;
+
       auto activityChange = [row, presolveround, &changedActivities](
                                 ActivityChange actChange,
                                 RowActivity<REAL>& activity ) {

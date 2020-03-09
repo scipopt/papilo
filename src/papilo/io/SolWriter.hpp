@@ -24,14 +24,20 @@
 #ifndef _PAPILO_IO_SOL_WRITER_HPP_
 #define _PAPILO_IO_SOL_WRITER_HPP_
 
+#include "papilo/Config.hpp"
 #include "papilo/misc/Vec.hpp"
 #include "papilo/misc/fmt.hpp"
-#include <boost/iostreams/filter/bzip2.hpp>
-#include <boost/iostreams/filter/gzip.hpp>
 #include <boost/iostreams/filtering_stream.hpp>
 #include <cmath>
 #include <fstream>
 #include <iostream>
+
+#ifdef PAPILO_USE_BOOST_IOSTREAMS_WITH_BZIP2
+#include <boost/iostreams/filter/bzip2.hpp>
+#endif
+#ifdef PAPILO_USE_BOOST_IOSTREAMS_WITH_ZLIB
+#include <boost/iostreams/filter/gzip.hpp>
+#endif
 
 namespace papilo
 {
@@ -48,10 +54,14 @@ struct SolWriter
       std::ofstream file( filename, std::ofstream::out );
       boost::iostreams::filtering_ostream out;
 
+#ifdef PAPILO_USE_BOOST_IOSTREAMS_WITH_ZLIB
       if( boost::algorithm::ends_with( filename, ".gz" ) )
          out.push( boost::iostreams::gzip_compressor() );
-      else if( boost::algorithm::ends_with( filename, ".bz2" ) )
+#endif
+#ifdef PAPILO_USE_BOOST_IOSTREAMS_WITH_BZIP2
+      if( boost::algorithm::ends_with( filename, ".bz2" ) )
          out.push( boost::iostreams::bzip2_compressor() );
+#endif
 
       out.push( file );
 

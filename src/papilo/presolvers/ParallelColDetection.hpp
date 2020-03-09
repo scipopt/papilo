@@ -365,14 +365,13 @@ ParallelColDetection<REAL>::computeColHashes(
 
              if( len > 1 )
              {
-                REAL scale = M_PI / vals[0];
-
-                // compute scale such that the first
-                // coefficient is positive M_PI the choice of
-                // M_PI is arbitrary and is used to make cases
+                // compute scale such that the first coefficient is
+                // positive 1/golden ratio. The choice of
+                // the constant is arbitrary and is used to make cases
                 // where two coefficients that are equal
                 // within epsilon get different values are
-                // more unlikely
+                // more unlikely by choosign some irrational number
+                REAL scale = REAL( 2.0 / ( 1.0 + sqrt( 5.0 ) ) ) / vals[0];
 
                 // add scaled coefficients of other row
                 // entries to compute the hash

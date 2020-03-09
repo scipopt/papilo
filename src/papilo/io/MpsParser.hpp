@@ -24,6 +24,7 @@
 #ifndef _PAPILO_IO_MPS_PARSER_HPP_
 #define _PAPILO_IO_MPS_PARSER_HPP_
 
+#include "papilo/Config.hpp"
 #include "papilo/core/ConstraintMatrix.hpp"
 #include "papilo/core/Objective.hpp"
 #include "papilo/core/Problem.hpp"
@@ -35,8 +36,6 @@
 #include <algorithm>
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/dynamic_bitset.hpp>
-#include <boost/iostreams/filter/bzip2.hpp>
-#include <boost/iostreams/filter/gzip.hpp>
 #include <boost/iostreams/filtering_stream.hpp>
 #include <boost/spirit/include/qi.hpp>
 #include <boost/utility/string_ref.hpp>
@@ -47,6 +46,13 @@
 #include <memory>
 #include <tuple>
 #include <utility>
+
+#ifdef PAPILO_USE_BOOST_IOSTREAMS_WITH_BZIP2
+#include <boost/iostreams/filter/bzip2.hpp>
+#endif
+#ifdef PAPILO_USE_BOOST_IOSTREAMS_WITH_ZLIB
+#include <boost/iostreams/filter/gzip.hpp>
+#endif
 
 namespace papilo
 {
@@ -116,7 +122,7 @@ class MpsParser
    bool
    parseFile( const std::string& filename );
 
-   void
+   bool
    parse( boost::iostreams::filtering_istream& file );
 
    enum class boundtype
@@ -812,20 +818,23 @@ MpsParser<REAL>::parseFile( const std::string& filename )
    if( !file )
       return false;
 
+#ifdef PAPILO_USE_BOOST_IOSTREAMS_WITH_ZLIB
    if( boost::algorithm::ends_with( filename, ".gz" ) )
       in.push( boost::iostreams::gzip_decompressor() );
-   else if( boost::algorithm::ends_with( filename, ".bz2" ) )
+#endif
+
+#ifdef PAPILO_USE_BOOST_IOSTREAMS_WITH_BZIP2
+   if( boost::algorithm::ends_with( filename, ".bz2" ) )
       in.push( boost::iostreams::bzip2_decompressor() );
+#endif
 
    in.push( file );
 
-   parse( in );
-
-   return true;
+   return parse( in );
 }
 
 template <typename REAL>
-void
+bool
 MpsParser<REAL>::parse( boost::iostreams::filtering_istream& file )
 {
    nnz = 0;
@@ -833,7 +842,8 @@ MpsParser<REAL>::parse( boost::iostreams::filtering_istream& file )
    parsekey keyword_old = parsekey::kNone;
 
    // parsing loop
-   while( keyword != parsekey::kFail && keyword != parsekey::kEnd )
+   while( keyword != parsekey::kFail && keyword != parsekey::kEnd &&
+          !file.eof() && file.good() )
    {
       keyword_old = keyword;
       switch( keyword )
@@ -861,16 +871,18 @@ MpsParser<REAL>::parse( boost::iostreams::filtering_istream& file )
       }
    }
 
-   if( keyword == parsekey::kFail )
+   if( keyword == parsekey::kFail || keyword != parsekey::kEnd )
    {
       printErrorMessage( keyword_old );
-      exit( 1 ); // todo exception
+      return false;
    }
 
    assert( row_type.size() == unsigned( nRows ) );
 
    nCols = colname2idx.size();
    nRows = rowname2idx.size() - 1; // subtract obj row
+
+   return true;
 }
 
 } // namespace papilo

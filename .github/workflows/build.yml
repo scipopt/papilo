@@ -12,12 +12,13 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-18.04,ubuntu-16.04,macos-10.15]
+        os: [ubuntu-18.04,ubuntu-16.04,macos-10.15,windows-latest]
     env:
       BOOST_ROOT:
       MAKEFLAGS: -j4
       CTEST_PARALLEL_LEVEL: 4
       SCIP_VERSION: 6.0.2
+      TBBROOT: ${{github.workspace}}\Dependencies\tbb
 
     steps:
     - uses: actions/checkout@v1
@@ -34,15 +35,23 @@ jobs:
         sudo apt-get update
         sudo apt-get install libtbb2 gfortran libboost-dev libboost-iostreams-dev libboost-program-options-dev libboost-serialization-dev
 
-    - name: Cached SCIPOptSuite
-      id: cached-scip
+    - name: Cached Dependencies
+      id: cached-dependencies
       uses: actions/cache@v1
       with:
-        path: ./SCIPOptSuite
-        key: scipoptsuite-${{env.SCIP_VERSION}}-${{ matrix.os }}-package
+        path: ./Dependencies
+        key: dependencies-${{env.SCIP_VERSION}}-${{ matrix.os }}-package
+
+    - name: Download dependencies for windows
+      if: runner.os == 'Windows' && steps.cached-dependencies.outputs.cache-hit != 'true'
+      run: |
+        cmake -E make_directory ${{github.workspace}}/Dependencies
+        Invoke-WebRequest -Uri "http://scip.zib.de/download/release/SCIPOptSuite-${{env.SCIP_VERSION}}-win64-VS15.exe" -OutFile "${{github.workspace}}\Dependencies\scipoptsuite.exe"
+        Invoke-WebRequest -Uri "https://github.com/intel/tbb/releases/download/v2020.1/tbb-2020.1-win.zip" -OutFile "${{github.workspace}}\Dependencies\tbb.zip"
+        expand-archive -path "${{github.workspace}}\Dependencies\tbb.zip" -destinationpath "${{github.workspace}}\Dependencies\"
 
     - name: Package SCIPOptSuite
-      if: steps.cached-scip.outputs.cache-hit != 'true'
+      if:  runner.os != 'Windows' && steps.cached-dependencies.outputs.cache-hit != 'true'
       run: |
         cd $HOME
         wget http://scip.zib.de/download/release/scipoptsuite-${SCIP_VERSION}.tgz
@@ -54,36 +63,45 @@ jobs:
         cmake --build . --target all_executables
         cpack -G STGZ
         chmod +x SCIPOptSuite-${SCIP_VERSION}*.sh
-        cmake -E make_directory $GITHUB_WORKSPACE/SCIPOptSuite
-        cp SCIPOptSuite-${SCIP_VERSION}*.sh $GITHUB_WORKSPACE/SCIPOptSuite/install.sh
+        cmake -E make_directory $GITHUB_WORKSPACE/Dependencies
+        cp SCIPOptSuite-${SCIP_VERSION}*.sh $GITHUB_WORKSPACE/Dependencies/scipoptsuite.sh
 
     - name: Install SCIPOptSuite
-      run: sudo ./SCIPOptSuite/install.sh --prefix=/usr/local --skip-license
+      if: runner.os != 'Windows'
+      run: sudo ./Dependencies/scipoptsuite.sh --prefix=/usr/local --skip-license
+
+    - name: Install dependencies on Windows
+      if: runner.os == 'Windows'
+      run: |
+        Invoke-Command -ScriptBlock { Start-Process ${{github.workspace}}\Dependencies\scipoptsuite.exe -ArgumentList "/S" -Wait }
+        echo "::add-path::${{github.workspace}}\Dependencies\tbb\bin\intel64\vc14"
 
     - name: Create Build Environment
       # Some projects don't allow in-source building, so create a separate build directory
       # We'll use this as our working directory for all subsequent commands
-      run: cmake -E make_directory ${{runner.workspace}}/build
+      run: cmake -E make_directory ${{github.workspace}}/build
 
     - name: Configure CMake
       # Use a bash shell so we can use the same syntax for environment variable
       # access regardless of the host operating system
       shell: bash
-      working-directory: ${{runner.workspace}}/build
+      working-directory: ${{github.workspace}}/build
       # Note the current convention is to use the -S and -B options here to specify source 
       # and build directories, but this is only available with CMake 3.13 and higher.  
       # The CMake binaries on the Github Actions machines are (as of this writing) 3.12
-      run: cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DSOPLEX=off
+      run: cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DSOPLEX=off -DLUSOL=off
 
     - name: Build
-      working-directory: ${{runner.workspace}}/build
+      working-directory: ${{github.workspace}}/build
       shell: bash
       # Execute the build.  You can specify a specific target with "--target <NAME>"
       run: cmake --build . --config $BUILD_TYPE
 
     - name: Test
-      working-directory: ${{runner.workspace}}/build
+      # TODO: fix the deadlock occurring on windows for some weird reason (maybe a loaderlock caused by TBB?)
+      if: runner.os != 'Windows'
+      working-directory: ${{github.workspace}}/build
       shell: bash
       # Execute tests defined by the CMake configuration.  
       # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
-      run: ctest -C $BUILD_TYPE
+      run: ctest -C $BUILD_TYPE --output-on-failure

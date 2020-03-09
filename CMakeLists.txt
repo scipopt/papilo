@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION 3.3.0)
+cmake_minimum_required (VERSION 3.5.0)
 project(papilo VERSION 1.0.0.1)
 
 set(CMAKE_CXX_STANDARD 14)
@@ -89,7 +89,16 @@ target_include_directories(papilo INTERFACE
    ${Boost_INCLUDE_DIRS})
 
 find_package(TBB MODULE REQUIRED)
+if(TBB_BUILT_STATIC_LIB)
+   install(FILES ${TBB_STATIC_LIB} DESTINATION lib)
+endif()
+
 target_link_libraries(papilo INTERFACE ${TBB_LIBRARY} ${QUADMATH_IMPORTED_TARGET} ${GMP_LIBRARIES})
+
+if(MSVC)
+   target_compile_definitions(papilo INTERFACE BOOST_ALL_NO_LIB)
+   target_compile_options(papilo INTERFACE /bigobj)
+endif()
 
 if(LUSOL)
    include(CheckLanguage)
@@ -115,8 +124,8 @@ if(CMAKE_Fortran_COMPILER AND BLAS_FOUND)
    set(CLUSOL_TARGET clusol)
 else()
    set(PAPILO_HAVE_LUSOL 0)
-  set(CLUSOL_TARGET "")
-  message(STATUS "LUSOL is not built")
+   set(CLUSOL_TARGET "")
+   message(STATUS "LUSOL is not built")
 endif()
 
 if(SCIP)
@@ -146,10 +155,41 @@ else()
    set(PAPILO_HAVE_HIGHS 0)
 endif()
 
-if( CMAKE_SIZEOF_VOID_P EQUAL 8 )
+if(NOT MSVC)
+   check_cxx_compiler_flag(-std=c++14 HAVE_FLAG_STD_CXX14)
+   if(HAVE_FLAG_STD_CXX14)
+      set(CMAKE_REQUIRED_FLAGS "-std=c++14")
+   else()
+      check_cxx_compiler_flag(-std=c++1y HAVE_FLAG_STD_CXX1Y)
+      if(HAVE_FLAG_STD_CXX1Y)
+         set(CMAKE_REQUIRED_FLAGS "-std=c++1y")
+      endif()
+   endif()
+endif()
+set(CMAKE_REQUIRED_INCLUDES ${PROJECT_SOURCE_DIR}/external)
+check_cxx_source_compiles(
+   "#include \"ska/bytell_hash_map.hpp\"
+   int main() { ska::bytell_hash_map<int,int> hashmap; (void)hashmap; return 0; }"
+   PAPILO_BYTELL_HASHMAP_WORKS )
+
+if( PAPILO_BYTELL_HASHMAP_WORKS )
    set(PAPILO_USE_STANDARD_HASHMAP 0)
 else()
    set(PAPILO_USE_STANDARD_HASHMAP 1)
+endif()
+
+if(Boost_IOSTREAMS_FOUND)
+   include(CheckCXXSourceCompiles)
+   set(CMAKE_REQUIRED_INCLUDES ${Boost_INCLUDE_DIRS})
+   set(CMAKE_REQUIRED_LIBRARIES ${Boost_LIBRARIES})
+   check_cxx_source_compiles(
+      "#include <boost/iostreams/filter/gzip.hpp>
+       int main() { auto decomp = boost::iostreams::gzip_decompressor(); (void)decomp; return 0; }"
+      PAPILO_USE_BOOST_IOSTREAMS_WITH_ZLIB )
+   check_cxx_source_compiles(
+      "#include <boost/iostreams/filter/bzip2.hpp>
+       int main() { auto decomp = boost::iostreams::bzip2_decompressor(); (void)decomp; return 0; }"
+      PAPILO_USE_BOOST_IOSTREAMS_WITH_BZIP2 )
 endif()
 
 configure_file("${PROJECT_SOURCE_DIR}/src/papilo/Config.hpp.in"
@@ -344,11 +384,14 @@ install(FILES
 
 # configure the config file for the build tree
 set(QUADMATH_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/Modules)
+set(PAPILO_TBB_STATIC_LIB_LOCATION ${TBB_STATIC_LIB})
 configure_file(${PROJECT_SOURCE_DIR}/papilo-config.cmake.in
   "${CMAKE_BINARY_DIR}/papilo-config.cmake" @ONLY)
 
 # configure and install config file for installation
 set(QUADMATH_MODULE_PATH "\${CMAKE_CURRENT_LIST_DIR}")
+get_filename_component(TBB_STATIC_LIB_NAME "${TBB_STATIC_LIB}" NAME)
+set(PAPILO_TBB_STATIC_LIB_LOCATION "\${CMAKE_CURRENT_LIST_DIR}/../../${TBB_STATIC_LIB_NAME}")
 configure_file(${PROJECT_SOURCE_DIR}/papilo-config.cmake.in
     "${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/papilo-config.cmake" @ONLY)
 
