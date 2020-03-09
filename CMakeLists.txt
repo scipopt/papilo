@@ -155,7 +155,24 @@ else()
    set(PAPILO_HAVE_HIGHS 0)
 endif()
 
-if( CMAKE_SIZEOF_VOID_P EQUAL 8 )
+if(NOT MSVC)
+   check_cxx_compiler_flag(-std=c++14 HAVE_FLAG_STD_CXX14)
+   if(HAVE_FLAG_STD_CXX14)
+      set(CMAKE_REQUIRED_FLAGS "-std=c++14")
+   else()
+      check_cxx_compiler_flag(-std=c++1y HAVE_FLAG_STD_CXX1Y)
+      if(HAVE_FLAG_STD_CXX1Y)
+         set(CMAKE_REQUIRED_FLAGS "-std=c++1y")
+      endif()
+   endif()
+endif()
+set(CMAKE_REQUIRED_INCLUDES ${PROJECT_SOURCE_DIR}/external)
+check_cxx_source_compiles(
+   "#include \"ska/bytell_hash_map.hpp\"
+   int main() { ska::bytell_hash_map<int,int> hashmap; (void)hashmap; return 0; }"
+   PAPILO_BYTELL_HASHMAP_WORKS )
+
+if( PAPILO_BYTELL_HASHMAP_WORKS )
    set(PAPILO_USE_STANDARD_HASHMAP 0)
 else()
    set(PAPILO_USE_STANDARD_HASHMAP 1)

@@ -105,7 +105,8 @@ struct Hasher<T, T>
 
 template <typename K, typename V, typename H = std::hash<K>,
           typename E = std::equal_to<K>>
-using HashMap = ska::bytell_hash_map<K, V, H, E, Allocator<std::pair<K, V>>>;
+using HashMap =
+    ska::bytell_hash_map<K, V, H, E, Allocator<std::pair<const K, V>>>;
 
 template <typename T, typename H = std::hash<T>, typename E = std::equal_to<T>>
 using HashSet = ska::bytell_hash_set<T, H, E, Allocator<T>>;
@@ -114,7 +115,8 @@ using HashSet = ska::bytell_hash_set<T, H, E, Allocator<T>>;
 
 template <typename K, typename V, typename H = std::hash<K>,
           typename E = std::equal_to<K>>
-using HashMap = std::unordered_map<K, V, H, E, Allocator<std::pair<K, V>>>;
+using HashMap =
+    std::unordered_map<K, V, H, E, Allocator<std::pair<const K, V>>>;
 
 template <typename T, typename H = std::hash<T>, typename E = std::equal_to<T>>
 using HashSet = std::unordered_set<T, H, E, Allocator<T>>;
