@@ -18,7 +18,7 @@ jobs:
       MAKEFLAGS: -j4
       CTEST_PARALLEL_LEVEL: 4
       SCIP_VERSION: 6.0.2
-      #TBBROOT: ${{github.workspace}}\Dependencies\tbb
+      TBBROOT: ${{github.workspace}}\Dependencies\tbb
 
     steps:
     - uses: actions/checkout@v1
@@ -47,8 +47,8 @@ jobs:
       run: |
         cmake -E make_directory ${{github.workspace}}/Dependencies
         Invoke-WebRequest -Uri "http://scip.zib.de/download/release/SCIPOptSuite-${{env.SCIP_VERSION}}-win64-VS15.exe" -OutFile "${{github.workspace}}\Dependencies\scipoptsuite.exe"
-      # Invoke-WebRequest -Uri "https://github.com/intel/tbb/releases/download/v2020.1/tbb-2020.1-win.zip" -OutFile "${{github.workspace}}\Dependencies\tbb.zip"
-      # expand-archive -path "${{github.workspace}}\Dependencies\tbb.zip" -destinationpath "${{github.workspace}}\Dependencies\"
+        Invoke-WebRequest -Uri "https://github.com/intel/tbb/releases/download/v2020.1/tbb-2020.1-win.zip" -OutFile "${{github.workspace}}\Dependencies\tbb.zip"
+        expand-archive -path "${{github.workspace}}\Dependencies\tbb.zip" -destinationpath "${{github.workspace}}\Dependencies\"
 
     - name: Package SCIPOptSuite
       if:  runner.os != 'Windows' && steps.cached-dependencies.outputs.cache-hit != 'true'
