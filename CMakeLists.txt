@@ -156,7 +156,9 @@ else()
 endif()
 
 check_cxx_compiler_flag(-std=c++14 HAVE_FLAG_STD_CXX14)
-set(CMAKE_REQUIRED_FLAGS "-std=c++14")
+if(HAVE_FLAG_STD_CXX14)
+   set(CMAKE_REQUIRED_FLAGS "-std=c++14")
+endif()
 set(CMAKE_REQUIRED_INCLUDES ${PROJECT_SOURCE_DIR}/external)
 check_cxx_source_compiles(
    "#include \"ska/bytell_hash_map.hpp\"
