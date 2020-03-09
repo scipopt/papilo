@@ -155,7 +155,13 @@ else()
    set(PAPILO_HAVE_HIGHS 0)
 endif()
 
-if( CMAKE_SIZEOF_VOID_P EQUAL 8 )
+set(CMAKE_REQUIRED_INCLUDES ${PROJECT_SOURCE_DIR}/external)
+check_cxx_source_compiles(
+   "#include \"ska/bytell_hash_map.hpp\"
+   int main() { ska::bytell_hash_map<int,int> hashmap; hashmap.clear(); return 0; }"
+   PAPILO_BYTELL_HASHMAP_WORKS )
+
+if( PAPILO_BYTELL_HASHMAP_WORKS )
    set(PAPILO_USE_STANDARD_HASHMAP 0)
 else()
    set(PAPILO_USE_STANDARD_HASHMAP 1)
