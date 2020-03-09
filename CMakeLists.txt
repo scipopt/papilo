@@ -155,8 +155,8 @@ else()
    set(PAPILO_HAVE_HIGHS 0)
 endif()
 
-#check_cxx_compiler_flag(-std=c++14 HAVE_FLAG_STD_CXX14)
-#set(CMAKE_REQUIRED_FLAGS "-std=c++14")
+check_cxx_compiler_flag(-std=c++14 HAVE_FLAG_STD_CXX14)
+set(CMAKE_REQUIRED_FLAGS "-std=c++14")
 set(CMAKE_REQUIRED_INCLUDES ${PROJECT_SOURCE_DIR}/external)
 check_cxx_source_compiles(
    "#include \"ska/bytell_hash_map.hpp\"
