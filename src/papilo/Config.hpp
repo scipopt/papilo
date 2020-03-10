@@ -24,6 +24,12 @@
 #ifndef _PAPILO_CONFIG_HPP_
 #define _PAPILO_CONFIG_HPP_
 
+#ifndef PAPILO_NO_CMAKE_CONFIG
+
+#include "papilo/CMakeConfig.hpp"
+
+#else
+
 #define PAPILO_VERSION_MAJOR 1
 #define PAPILO_VERSION_MINOR 0
 #define PAPILO_VERSION_PATCH 0
@@ -31,5 +37,7 @@
 
 #undef PAPILO_GITHASH_AVAILABLE
 #undef PAPILO_GITHASH
+
+#endif
 
 #endif

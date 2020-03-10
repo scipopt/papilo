@@ -21,6 +21,7 @@
 /*                                                                           */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
+#include "papilo/Config.hpp"
 #include "papilo/core/ConstraintMatrix.hpp"
 #include "papilo/core/Objective.hpp"
 #include "papilo/core/Presolve.hpp"
@@ -32,7 +33,6 @@
 #include "papilo/misc/OptionsParser.hpp"
 #include "papilo/misc/Wrappers.hpp"
 #include "papilo/misc/tbb.hpp"
-#include <papilo/Config.hpp>
 
 #include <boost/program_options.hpp>
 #include <cassert>
