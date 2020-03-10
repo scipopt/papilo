@@ -27,8 +27,8 @@
  * edit the original file NOT THIS FILE.
  * --------------------------------------------------------------------------*/
 
-#ifndef _PAPILO_CONFIG_HPP_
-#define _PAPILO_CONFIG_HPP_
+#ifndef _PAPILO_CMAKE_CONFIG_HPP_
+#define _PAPILO_CMAKE_CONFIG_HPP_
 
 #cmakedefine PAPILO_HAVE_FLOAT128
 #cmakedefine PAPILO_HAVE_GMP

@@ -192,8 +192,8 @@ if(Boost_IOSTREAMS_FOUND)
       PAPILO_USE_BOOST_IOSTREAMS_WITH_BZIP2 )
 endif()
 
-configure_file("${PROJECT_SOURCE_DIR}/src/papilo/Config.hpp.in"
-               "${PROJECT_BINARY_DIR}/papilo/Config.hpp")
+configure_file("${PROJECT_SOURCE_DIR}/src/papilo/CMakeConfig.hpp.in"
+               "${PROJECT_BINARY_DIR}/papilo/CMakeConfig.hpp")
 
 add_library(papilo-core STATIC
    src/papilo/core/VariableDomains.cpp
