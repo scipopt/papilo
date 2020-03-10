@@ -264,7 +264,8 @@ add_subdirectory(test)
 
 # install the header files of papilo
 install(FILES
-   ${PROJECT_BINARY_DIR}/papilo/Config.hpp
+   ${PROJECT_BINARY_DIR}/papilo/CMakeConfig.hpp
+   ${PROJECT_SOURCE_DIR}/src/papilo/Config.hpp
    DESTINATION include/papilo)
 
 install(FILES
