@@ -351,7 +351,9 @@ class ScipInterface : public SolverInterface<REAL>
       case SCIP_STATUS_SOLLIMIT:
       case SCIP_STATUS_BESTSOLLIMIT:
       case SCIP_STATUS_RESTARTLIMIT:
+#if SCIP_VERSION_MAJOR >= 6
       case SCIP_STATUS_TERMINATE:
+#endif
          this->status = SolverStatus::kInterrupted;
          break;
       case SCIP_STATUS_INFORUNBD:
