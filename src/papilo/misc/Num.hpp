@@ -353,51 +353,49 @@ class Num
    static constexpr bool
    isSafeEq( const R1& a, const R2& b )
    {
-      if( !num_traits<REAL>::is_floating_point )
-         return true;
-
-      return abs( relDiff( a, b ) ) <=
-             ( 1024 * std::numeric_limits<REAL>::epsilon() );
+      return num_traits<REAL>::is_floating_point
+                 ? ( abs( relDiff( a, b ) ) <=
+                     ( 1024 * std::numeric_limits<REAL>::epsilon() ) )
+                 : true;
    }
 
    template <typename R1, typename R2>
    static constexpr bool
    isSafeGE( const R1& a, const R2& b )
    {
-      if( !num_traits<REAL>::is_floating_point )
-         return true;
-
-      return relDiff( a, b ) >=
-             -( 1024 * std::numeric_limits<REAL>::epsilon() );
+      return num_traits<REAL>::is_floating_point
+                 ? ( relDiff( a, b ) >=
+                     -( 1024 * std::numeric_limits<REAL>::epsilon() ) )
+                 : true;
    }
 
    template <typename R1, typename R2>
    static constexpr bool
    isSafeLE( const R1& a, const R2& b )
    {
-      if( !num_traits<REAL>::is_floating_point )
-         return true;
-
-      return relDiff( a, b ) <= ( 1024 * std::numeric_limits<REAL>::epsilon() );
+      return num_traits<REAL>::is_floating_point
+                 ? ( relDiff( a, b ) <=
+                     ( 1024 * std::numeric_limits<REAL>::epsilon() ) )
+                 : true;
    }
 
    template <typename R1, typename R2>
    static constexpr bool
    isSafeGT( const R1& a, const R2& b )
    {
-      if( !num_traits<REAL>::is_floating_point )
-         return true;
-
-      return relDiff( a, b ) > ( 1024 * std::numeric_limits<REAL>::epsilon() );
+      return num_traits<REAL>::is_floating_point
+                 ? ( relDiff( a, b ) >
+                     ( 1024 * std::numeric_limits<REAL>::epsilon() ) )
+                 : true;
    }
 
    template <typename R1, typename R2>
    bool static constexpr isSafeLT( const R1& a, const R2& b )
    {
-      if( !num_traits<REAL>::is_floating_point )
-         return true;
-
-      return relDiff( a, b ) < -( 1024 * std::numeric_limits<REAL>::epsilon() );
+      return num_traits<REAL>::is_floating_point
+                 ? ( relDiff( a, b ) <
+                     -( 1024 * std::numeric_limits<REAL>::epsilon() ) )
+                 : true;
    }
 
    template <typename R>
