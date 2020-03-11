@@ -42,7 +42,7 @@ struct Statistics
    Statistics( double presolvetime, int ntsxapplied, int ntsxconflicts,
                int nboundchgs, int nsidechgs, int ncoefchgs, int nrounds,
                int ndeletedcols, int ndeletedrows )
-       : presolvetime( presolvetime ), , ntsxapplied( ntsxapplied ),
+       : presolvetime( presolvetime ), ntsxapplied( ntsxapplied ),
          ntsxconflicts( ntsxconflicts ), nboundchgs( nboundchgs ),
          nsidechgs( nsidechgs ), ncoefchgs( ncoefchgs ), nrounds( nrounds ),
          ndeletedcols( ndeletedcols ), ndeletedrows( ndeletedrows )
