@@ -168,20 +168,6 @@ class Presolve
       return this->presolveOptions;
    }
 
-   /// set epsilon value for numerical comparisons
-   void
-   setEpsilon( REAL epsilon )
-   {
-      num.setEpsilon( std::move( epsilon ) );
-   }
-
-   /// set feasibility tolerance value
-   void
-   setFeasTol( REAL feastol )
-   {
-      num.setFeasTol( std::move( feastol ) );
-   }
-
    /// get epsilon value for numerical comparisons
    const REAL&
    getEpsilon() const
