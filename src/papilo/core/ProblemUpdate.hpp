@@ -378,7 +378,7 @@ ProblemUpdate<REAL>::ProblemUpdate( Problem<REAL>& problem,
    lastcompress_ndelcols = 0;
    lastcompress_ndelrows = 0;
 
-   std::ranlux24_base randgen( presolveOptions.randomseed );
+   std::ranlux24 randgen( presolveOptions.randomseed );
    random_col_perm.resize( problem.getNCols() );
    for( int i = 0; i < problem.getNCols(); ++i )
       random_col_perm[i] = i;
