@@ -245,6 +245,9 @@ include_directories(${SCIP_INCLUDE_DIRS} ${SOPLEX_INCLUDE_DIRS} ${HIGHS_INCLUDE_
 
 if(Boost_IOSTREAMS_FOUND AND Boost_SERIALIZATION_FOUND AND Boost_PROGRAM_OPTIONS_FOUND)
    add_executable(papilo-executable src/papilo.cpp)
+   add_executable(papilo-executable src/duplicates.cpp)
+   target_link_libraries(duplicates papilo-core ${Boost_LIBRARIES})
+   target_compile_definitions(duplicates PRIVATE PAPILO_USE_EXTERN_TEMPLATES PAPILO_MPS_WRITER)
 
    if(PAPILO_HAVE_SCIP)
       list(APPEND linked_solvers "SCIP")
