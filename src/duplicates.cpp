@@ -32,8 +32,10 @@ using namespace papilo;
 
 // Returns True if cols in given permutation are same
 static bool
-check_cols( const VariableDomains<double> vd1, const VariableDomains<double> vd2, Vec<int> perm1, const Vec<int> perm2, int ncols )
+check_cols( const VariableDomains<double> vd1, const VariableDomains<double> vd2, Vec<int> perm1, const Vec<int> perm2 )
 {
+   assert(perm1.size() == perm2.size() );
+   int ncols = perm1.size();
 
    for( int i = 0; i < ncols; ++i )
    {
@@ -82,15 +84,55 @@ check_cols( const VariableDomains<double> vd1, const VariableDomains<double> vd2
 
 // Returns True if rows are in
 static bool
-check_rows( const ConstraintMatrix<double> cm1, const ConstraintMatrix<double> cm2, Vec<int> permrow1, const Vec<int> permrow2, int nrows )
+check_rows( const ConstraintMatrix<double> cm1, const ConstraintMatrix<double> cm2, Vec<int> permrow1, Vec<int> permrow2, Vec<int> permcol1, Vec<int> permcol2 )
 {
+   assert(permrow1.size() == permrow2.size());
+   assert(permcol1.size() == permcol2.size());
+   int nrows = permrow1.size();
+   int ncols = permcol1.size();
 
    for( int i = 0; i < nrows; ++i)
    {
-      int i1 = permrow1[i];
-      int i2 = permrow2[i];
+      int i1row = permrow1[i];
+      int i2row = permrow2[i];
+
+      // Check Row coefficients
+      const SparseVectorView<double> row1 = cm1.getRowCoefficients(i1row);
+      const SparseVectorView<double> row2 = cm2.getRowCoefficients(i2row);
+
+      // Assume: If there is different amounts of variables in constraint it is not the same (not entirely true)
+      const int curr_ncols = row1.getLength();
+      if( curr_ncols != row2.getLength() )
+      {
+         fmt::print("Different amounts of variables in row prob1:{} and prob2:{}", i1row, i2row);
+      }
+
+      const int* inds1 = row1.getIndices();
+      const int* inds2 = row2.getIndices();
+      const double* vals1 = row1.getValues();
+      const double* vals2 = row2.getValues();
+
+      for( int x = 0; x < curr_ncols; ++x)
+      {
+         // Check if same variables are defined for row
+         int final_index1 = permcol1[*(inds1 + x)];
+         int final_index2 = permcol2[*(inds2 + x)];
+         if( final_index1 != final_index2)
+         {
+            fmt::print("Different columns defined in row prob1:{} and prob2:{}", i1row, i2row);
+            return false;
+         }
+         // Check if values are same
+         if( *(vals1 + x) != *(vals2 + x) )
+         {
+            fmt::print("Different coefficients in row prob1:{} and prob2:{}", i1row, i2row);
+            return false;
+         }
+      }
+
 
    }
+   return true;
 }
 
 static bool
@@ -116,15 +158,15 @@ check_duplicates( const Problem<double>& prob1, const Problem<double>& prob2 )
       return i++;
    });
 
-   check_cols(vd1, vd2, nocolperm, nocolperm, ncols);
+   check_cols(vd1, vd2, nocolperm, nocolperm);
 
    // Check for rows
    // First assume for being same you need to have same rows (even though not true)
    int nrows = prob1.getNRows();
 
-   if( nrows = prob2.getNRows() )
+   if( nrows != prob2.getNRows() )
    {
-      fmt::print("not same number of rows");
+      fmt::print("not same number of rows: prob1:{} prob2:{}\n", nrows, prob2.getNRows() );
       return false;
    }
 
@@ -137,7 +179,7 @@ check_duplicates( const Problem<double>& prob1, const Problem<double>& prob2 )
    const ConstraintMatrix<double> cm1 = prob1.getConstraintMatrix();
    const ConstraintMatrix<double> cm2 = prob2.getConstraintMatrix();
 
-   check_rows(cm1, cm2, norowperm, norowperm, nrows);
+   check_rows(cm1, cm2, norowperm, norowperm, nocolperm, nocolperm );
 
    // All checks passed
    return true;
