@@ -80,10 +80,23 @@ check_cols( const VariableDomains<double> vd1, const VariableDomains<double> vd2
    return true;
 }
 
+// Returns True if rows are in
+static bool
+check_rows( const ConstraintMatrix<double> cm1, const ConstraintMatrix<double> cm2, Vec<int> permrow1, const Vec<int> permrow2, int nrows )
+{
+
+   for( int i = 0; i < nrows; ++i)
+   {
+      int i1 = permrow1[i];
+      int i2 = permrow2[i];
+
+   }
+}
+
 static bool
 check_duplicates( const Problem<double>& prob1, const Problem<double>& prob2 )
 {
-   // hier prob1 und prob2 vergleichen
+   // Check for columns
    int ncols = prob1.getNCols();
 
    if( ncols != prob2.getNCols() )
@@ -96,15 +109,37 @@ check_duplicates( const Problem<double>& prob1, const Problem<double>& prob2 )
    const VariableDomains<double>& vd1 = prob1.getVariableDomains();
    const VariableDomains<double>& vd2 = prob2.getVariableDomains();
 
-   Vec<int> noperm(ncols);
+   Vec<int> nocolperm(ncols);
    // std::iota(noperm.begin(), noperm.end(), 0);
-   std::generate(noperm.begin(), noperm.end(), [] {
+   std::generate(nocolperm.begin(), nocolperm.end(), [] {
       static int i = 0;
       return i++;
    });
 
-   return check_cols(vd1, vd2, noperm, noperm, ncols);
+   check_cols(vd1, vd2, nocolperm, nocolperm, ncols);
 
+   // Check for rows
+   // First assume for being same you need to have same rows (even though not true)
+   int nrows = prob1.getNRows();
+
+   if( nrows = prob2.getNRows() )
+   {
+      fmt::print("not same number of rows");
+      return false;
+   }
+
+   Vec<int> norowperm(nrows);
+   std::generate(norowperm.begin(), norowperm.end(), [] {
+      static int i = 0;
+      return i++;
+   });
+
+   const ConstraintMatrix<double> cm1 = prob1.getConstraintMatrix();
+   const ConstraintMatrix<double> cm2 = prob2.getConstraintMatrix();
+
+   check_rows(cm1, cm2, norowperm, norowperm, nrows);
+
+   // All checks passed
    return true;
 }
 
