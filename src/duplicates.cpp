@@ -46,6 +46,7 @@ check_cols( const VariableDomains<double> vd1, const VariableDomains<double> vd2
           vd2.flags[i2].test( ColFlag::kIntegral ) )
       {
          // kein duplikat: eine variable ist ganzzahlig die andere nicht
+         fmt::print("One variable is integer the other not in col prob1:{} and prob2:{}\n", i1, i2);
          return false;
       }
 
@@ -53,6 +54,7 @@ check_cols( const VariableDomains<double> vd1, const VariableDomains<double> vd2
           vd2.flags[i2].test( ColFlag::kUbInf ) )
       {
          // kein duplikat: ein upper bound ist +infinity, der andere nicht
+         fmt::print("One variable's UB is +infty the others not in col prob1:{} and prob2:{}\n", i1, i2);
          return false;
       }
 
@@ -60,6 +62,7 @@ check_cols( const VariableDomains<double> vd1, const VariableDomains<double> vd2
           vd2.flags[i2].test( ColFlag::kLbInf ) )
       {
          // kein duplikat: ein lower bound ist -infinity, der andere nicht
+         fmt::print("One variable's UB is -infty the other not in col prob1:{} and prob2:{}\n", i1, i2);
          return false;
       }
 
@@ -68,6 +71,7 @@ check_cols( const VariableDomains<double> vd1, const VariableDomains<double> vd2
       {
          assert( !vd2.flags[i2].test( ColFlag::kLbInf ) );
          // kein duplikat: lower bounds sind endlich aber unterschiedlich
+         fmt::print("LBs are different in col prob1:{} and prob2:{}\n", i1, i2);
          return false;
       }
 
@@ -76,6 +80,7 @@ check_cols( const VariableDomains<double> vd1, const VariableDomains<double> vd2
       {
          assert( !vd2.flags[i2].test( ColFlag::kUbInf ) );
          // kein duplikat: upper bounds sind endlich aber unterschiedlich
+         fmt::print("UBs are different in col prob1:{} and prob2:{}\n", i1, i2);
          return false;
       }
    }
