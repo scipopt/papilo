@@ -34,16 +34,18 @@ using namespace papilo;
 static bool
 guess_permutation_col( const Problem<double>& prob1, const Problem<double>& prob2, Vec<int>& out_perm1, Vec<int>& out_perm2 )
 {
+   // for every col I want to find another matching one
+   
 
-   int ncols = prob1.getNCols();
-   Vec<int> nocolperm(ncols);
-   // std::iota(noperm.begin(), noperm.end(), 0);
-   std::generate(nocolperm.begin(), nocolperm.end(), [] {
-      static int i = 0;
-      return i++;
-   });
-   out_perm1 = nocolperm;
-   out_perm2 = nocolperm;
+   return false;
+}
+
+/// Outputs array of length n representing no permutation
+static void
+fill_identity_permutation( Vec<int>& out_perm )
+{
+   int n = out_perm.size();
+   for( int i = 0; i < n; ++i ) out_perm[i] = i;
 }
 
 /// Returns True if variables in given permutation have same attributes
@@ -226,7 +228,13 @@ check_duplicates( const Problem<double>& prob1, const Problem<double>& prob2 )
 
    Vec<int> perm_col1(ncols);
    Vec<int> perm_col2(ncols);
-   guess_permutation_col(prob1, prob2, perm_col1, perm_col2);
+   if( !guess_permutation_col(prob1, prob2, perm_col1, perm_col2) )
+   {
+      // in case guess_permutation did not find anything try anyways
+      fill_identity_permutation(perm_col1);
+      fill_identity_permutation(perm_col2);
+   }
+   fmt::print("{}", fmt::join(perm_col2, ", "));
 
    const VariableDomains<double>& vd1 = prob1.getVariableDomains();
    const VariableDomains<double>& vd2 = prob2.getVariableDomains();
