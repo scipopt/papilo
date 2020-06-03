@@ -30,6 +30,56 @@
 
 using namespace papilo;
 
+// Returns True if cols in given permutation are same
+static bool
+check_cols( const VariableDomains<double> vd1, const VariableDomains<double> vd2, Vec<int> perm1, const Vec<int> perm2, int ncols )
+{
+
+   for( int i = 0; i < ncols; ++i )
+   {
+      int i1 = perm1[i];
+      int i2 = perm2[i];
+
+      if( vd1.flags[i1].test( ColFlag::kIntegral ) !=
+          vd2.flags[i2].test( ColFlag::kIntegral ) )
+      {
+         // kein duplikat: eine variable ist ganzzahlig die andere nicht
+         return false;
+      }
+
+      if( vd1.flags[i1].test( ColFlag::kUbInf ) !=
+          vd2.flags[i2].test( ColFlag::kUbInf ) )
+      {
+         // kein duplikat: ein upper bound ist +infinity, der andere nicht
+         return false;
+      }
+
+      if( vd1.flags[i1].test( ColFlag::kLbInf ) !=
+          vd2.flags[i2].test( ColFlag::kLbInf ) )
+      {
+         // kein duplikat: ein lower bound ist -infinity, der andere nicht
+         return false;
+      }
+
+      if( !vd1.flags[i1].test( ColFlag::kLbInf ) &&
+          vd1.lower_bounds[i1] != vd2.lower_bounds[i2] )
+      {
+         assert( !vd2.flags[i2].test( ColFlag::kLbInf ) );
+         // kein duplikat: lower bounds sind endlich aber unterschiedlich
+         return false;
+      }
+
+      if( !vd1.flags[i1].test( ColFlag::kUbInf ) &&
+          vd1.upper_bounds[i1] != vd2.upper_bounds[i2] )
+      {
+         assert( !vd2.flags[i2].test( ColFlag::kUbInf ) );
+         // kein duplikat: upper bounds sind endlich aber unterschiedlich
+         return false;
+      }
+   }
+   return true;
+}
+
 static bool
 check_duplicates( const Problem<double>& prob1, const Problem<double>& prob2 )
 {
@@ -39,53 +89,23 @@ check_duplicates( const Problem<double>& prob1, const Problem<double>& prob2 )
    if( ncols != prob2.getNCols() )
    {
       // kein duplikat: unterschiedlich viele variablen
+      fmt::print("not same number of variables\n");
       return false;
    }
 
    const VariableDomains<double>& vd1 = prob1.getVariableDomains();
    const VariableDomains<double>& vd2 = prob2.getVariableDomains();
 
-   for( int i = 0; i < ncols; ++i )
-   {
-      if( vd1.flags[i].test( ColFlag::kIntegral ) !=
-          vd2.flags[i].test( ColFlag::kIntegral ) )
-      {
-         // kein duplikat: eine variable ist ganzzahlig die andere nicht
-         return false;
-      }
+   Vec<int> noperm(ncols);
+   // std::iota(noperm.begin(), noperm.end(), 0);
+   std::generate(noperm.begin(), noperm.end(), [] {
+      static int i = 0;
+      return i++;
+   });
 
-      if( vd1.flags[i].test( ColFlag::kUbInf ) !=
-          vd2.flags[i].test( ColFlag::kUbInf ) )
-      {
-         // kein duplikat: ein upper bound ist +infinity, der andere nicht
-         return false;
-      }
+   return check_cols(vd1, vd2, noperm, noperm, ncols);
 
-      if( vd1.flags[i].test( ColFlag::kLbInf ) !=
-          vd2.flags[i].test( ColFlag::kLbInf ) )
-      {
-         // kein duplikat: ein lower bound ist -infinity, der andere nicht
-         return false;
-      }
-
-      if( !vd1.flags[i].test( ColFlag::kLbInf ) &&
-          vd1.lower_bounds[i] != vd2.lower_bounds[i] )
-      {
-         assert( !vd2.flags[i].test( ColFlag::kLbInf ) );
-         // kein duplikat: lower bounds sind endlich aber unterschiedlich
-         return false;
-      }
-
-      if( !vd1.flags[i].test( ColFlag::kUbInf ) &&
-          vd1.upper_bounds[i] != vd2.upper_bounds[i] )
-      {
-         assert( !vd2.flags[i].test( ColFlag::kUbInf ) );
-         // kein duplikat: upper bounds sind endlich aber unterschiedlich
-         return false;
-      }
-   }
-
-   return false;
+   return true;
 }
 
 int
@@ -97,7 +117,8 @@ main( int argc, char* argv[] )
    Problem<double> prob1 = MpsParser<double>::loadProblem( argv[1] );
    Problem<double> prob2 = MpsParser<double>::loadProblem( argv[2] );
 
-   fmt::print( "duplicates: {}\n", check_duplicates( prob1, prob2 ) );
+   fmt::print( "duplicates: \n");
+   fmt::print( "{}", check_duplicates( prob1, prob2 ) );
 
    return 0;
 }
