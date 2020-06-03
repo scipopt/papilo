@@ -32,7 +32,7 @@ using namespace papilo;
 
 // Returns True if cols in given permutation are same
 static bool
-check_cols( const VariableDomains<double> vd1, const VariableDomains<double> vd2, Vec<int> perm1, const Vec<int> perm2 )
+check_cols( const VariableDomains<double>& vd1, const VariableDomains<double>& vd2, Vec<int> perm1, const Vec<int> perm2 )
 {
    assert(perm1.size() == perm2.size() );
    int ncols = perm1.size();
@@ -87,19 +87,75 @@ check_cols( const VariableDomains<double> vd1, const VariableDomains<double> vd2
    return true;
 }
 
-// Returns True if rows are in
+// Returns True if rows are the same
 static bool
-check_rows( const ConstraintMatrix<double> cm1, const ConstraintMatrix<double> cm2, Vec<int> permrow1, Vec<int> permrow2, Vec<int> permcol1, Vec<int> permcol2 )
+check_rows( const ConstraintMatrix<double>& cm1, const ConstraintMatrix<double>& cm2, Vec<int> permrow1, Vec<int> permrow2, Vec<int> permcol1, Vec<int> permcol2 )
 {
    assert(permrow1.size() == permrow2.size());
    assert(permcol1.size() == permcol2.size());
    int nrows = permrow1.size();
    int ncols = permcol1.size();
+   // Row flags
+   const Vec<RowFlags>& rflags1 = cm1.getRowFlags();
+   const Vec<RowFlags>& rflags2 = cm2.getRowFlags();
+   // Get sides
+   const Vec<double>& lhs1 = cm1.getLeftHandSides();
+   const Vec<double>& lhs2 = cm2.getLeftHandSides();
+   const Vec<double>& rhs1 = cm1.getRightHandSides();
+   const Vec<double>& rhs2 = cm2.getRightHandSides();
 
    for( int i = 0; i < nrows; ++i)
    {
       int i1row = permrow1[i];
       int i2row = permrow2[i];
+
+      // Check Row flags for dissimilarities
+      if( rflags1[i1row].test( RowFlag::kLhsInf ) != rflags2[i2row].test( RowFlag::kLhsInf ))
+      {
+         fmt::print("LHS is infinite in one of both problems --- row prob1:{} and prob2:{}\n", i1row, i2row);
+         return false;
+      }
+
+      if( rflags1[i1row].test( RowFlag::kRhsInf ) != rflags2[i2row].test( RowFlag::kRhsInf ))
+      {
+         fmt::print("RHS is infinite in one of both problems --- row prob1:{} and prob2:{}\n", i1row, i2row);
+         return false;
+      }
+
+      if( rflags1[i1row].test( RowFlag::kEquation ) != rflags2[i2row].test( RowFlag::kEquation ))
+      {
+         fmt::print("Row is equation in only one of both problems --- row prob1:{} and prob2:{}\n", i1row, i2row);
+         return false;
+      }
+
+      if( rflags1[i1row].test( RowFlag::kIntegral ) != rflags2[i2row].test( RowFlag::kIntegral ))
+      {
+         fmt::print("Row is Integral in only one of both problems --- row prob1:{} and prob2:{}\n", i1row, i2row);
+         return false;
+      }
+
+      // needed? probably not
+      if( rflags1[i1row].test( RowFlag::kRedundant ) != rflags2[i2row].test( RowFlag::kRedundant ))
+      {
+         fmt::print("Row is redundant in only one of both problems --- row prob1:{} and prob2:{}\n", i1row, i2row);
+         return false;
+      }
+
+      // Check Row LHS values
+      if( rflags1[i1row].test( RowFlag::kLhsInf ) && lhs1[i1row] != lhs2[i2row] )
+      {
+         assert( rflags2[i2row].test( RowFlag::kLhsInf ) );
+         fmt::print("RHS is finite and different --- row prob1:{} and prob2:{}\n", i1row, i2row);
+         return false;
+      }
+
+      // Check Row RHS values
+      if( rflags1[i1row].test( RowFlag::kRhsInf ) && rhs1[i1row] != rhs2[i2row] )
+      {
+         assert( rflags2[i2row].test( RowFlag::kRhsInf ) );
+         fmt::print("RHS is finite and different --- row prob1:{} and prob2:{}\n", i1row, i2row);
+         return false;
+      }
 
       // Check Row coefficients
       const SparseVectorView<double> row1 = cm1.getRowCoefficients(i1row);
