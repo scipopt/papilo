@@ -104,7 +104,8 @@ check_rows( const ConstraintMatrix<double> cm1, const ConstraintMatrix<double> c
       const int curr_ncols = row1.getLength();
       if( curr_ncols != row2.getLength() )
       {
-         fmt::print("Different amounts of variables in row prob1:{} and prob2:{}", i1row, i2row);
+         fmt::print("Different amounts of variables in row prob1:{} and prob2:{}\n", i1row, i2row);
+         return false;
       }
 
       const int* inds1 = row1.getIndices();
@@ -119,18 +120,16 @@ check_rows( const ConstraintMatrix<double> cm1, const ConstraintMatrix<double> c
          int final_index2 = permcol2[*(inds2 + x)];
          if( final_index1 != final_index2)
          {
-            fmt::print("Different columns defined in row prob1:{} and prob2:{}", i1row, i2row);
+            fmt::print("Different columns defined in row prob1:{} and prob2:{}\n", i1row, i2row);
             return false;
          }
          // Check if values are same
          if( *(vals1 + x) != *(vals2 + x) )
          {
-            fmt::print("Different coefficients in row prob1:{} and prob2:{}", i1row, i2row);
+            fmt::print("Different coefficients in row prob1:{} and prob2:{}\n", i1row, i2row);
             return false;
          }
       }
-
-
    }
    return true;
 }
@@ -158,7 +157,7 @@ check_duplicates( const Problem<double>& prob1, const Problem<double>& prob2 )
       return i++;
    });
 
-   check_cols(vd1, vd2, nocolperm, nocolperm);
+   if( !check_cols(vd1, vd2, nocolperm, nocolperm) ) return false;
 
    // Check for rows
    // First assume for being same you need to have same rows (even though not true)
@@ -179,7 +178,7 @@ check_duplicates( const Problem<double>& prob1, const Problem<double>& prob2 )
    const ConstraintMatrix<double> cm1 = prob1.getConstraintMatrix();
    const ConstraintMatrix<double> cm2 = prob2.getConstraintMatrix();
 
-   check_rows(cm1, cm2, norowperm, norowperm, nocolperm, nocolperm );
+   if( !check_rows(cm1, cm2, norowperm, norowperm, nocolperm, nocolperm) ) return false;
 
    // All checks passed
    return true;
@@ -194,8 +193,8 @@ main( int argc, char* argv[] )
    Problem<double> prob1 = MpsParser<double>::loadProblem( argv[1] );
    Problem<double> prob2 = MpsParser<double>::loadProblem( argv[2] );
 
-   fmt::print( "duplicates: \n");
-   fmt::print( "{}", check_duplicates( prob1, prob2 ) );
+   bool res = check_duplicates( prob1, prob2 );
+   fmt::print( "duplicates: {}\n", res);
 
    return 0;
 }
