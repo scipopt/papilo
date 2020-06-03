@@ -30,7 +30,23 @@
 
 using namespace papilo;
 
-// Returns True if cols in given permutation are same
+/// Tries to compute a permutation for columns
+static bool
+guess_permutation_col( const Problem<double>& prob1, const Problem<double>& prob2, Vec<int>& out_perm1, Vec<int>& out_perm2 )
+{
+
+   int ncols = prob1.getNCols();
+   Vec<int> nocolperm(ncols);
+   // std::iota(noperm.begin(), noperm.end(), 0);
+   std::generate(nocolperm.begin(), nocolperm.end(), [] {
+      static int i = 0;
+      return i++;
+   });
+   out_perm1 = nocolperm;
+   out_perm2 = nocolperm;
+}
+
+/// Returns True if variables in given permutation have same attributes
 static bool
 check_cols( const VariableDomains<double>& vd1, const VariableDomains<double>& vd2, Vec<int> perm1, const Vec<int> perm2 )
 {
@@ -87,7 +103,7 @@ check_cols( const VariableDomains<double>& vd1, const VariableDomains<double>& v
    return true;
 }
 
-// Returns True if rows are the same
+/// Returns True if rows in given Permutation are same for also given variable permutation
 static bool
 check_rows( const ConstraintMatrix<double>& cm1, const ConstraintMatrix<double>& cm2, Vec<int> permrow1, Vec<int> permrow2, Vec<int> permcol1, Vec<int> permcol2 )
 {
@@ -208,17 +224,14 @@ check_duplicates( const Problem<double>& prob1, const Problem<double>& prob2 )
       return false;
    }
 
+   Vec<int> perm_col1(ncols);
+   Vec<int> perm_col2(ncols);
+   guess_permutation_col(prob1, prob2, perm_col1, perm_col2);
+
    const VariableDomains<double>& vd1 = prob1.getVariableDomains();
    const VariableDomains<double>& vd2 = prob2.getVariableDomains();
 
-   Vec<int> nocolperm(ncols);
-   // std::iota(noperm.begin(), noperm.end(), 0);
-   std::generate(nocolperm.begin(), nocolperm.end(), [] {
-      static int i = 0;
-      return i++;
-   });
-
-   if( !check_cols(vd1, vd2, nocolperm, nocolperm) ) return false;
+   if( !check_cols(vd1, vd2, perm_col1, perm_col2) ) return false;
 
    // Check for rows
    // First assume for being same you need to have same rows (even though not true)
@@ -239,7 +252,7 @@ check_duplicates( const Problem<double>& prob1, const Problem<double>& prob2 )
    const ConstraintMatrix<double> cm1 = prob1.getConstraintMatrix();
    const ConstraintMatrix<double> cm2 = prob2.getConstraintMatrix();
 
-   if( !check_rows(cm1, cm2, norowperm, norowperm, nocolperm, nocolperm) ) return false;
+   if( !check_rows(cm1, cm2, norowperm, norowperm, perm_col1, perm_col2) ) return false;
 
    // All checks passed
    return true;
