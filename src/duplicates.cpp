@@ -471,6 +471,8 @@ check_rows( const ConstraintMatrix<double>& cm1,
    const Vec<double>& rhs1 = cm1.getRightHandSides();
    const Vec<double>& rhs2 = cm2.getRightHandSides();
 
+   HashMap<int, double> coefmap;
+
    for( int i = 0; i < nrows; ++i )
    {
       int i1row = permrow1[i];
@@ -566,25 +568,32 @@ check_rows( const ConstraintMatrix<double>& cm1,
       const double* vals2 = row2.getValues();
 
       for( int x = 0; x < curr_ncols; ++x )
+         coefmap[permcol1[inds1[x]]] = vals1[x];
+
+      for( int x = 0; x < curr_ncols; ++x )
       {
+         int final_index2 = permcol2[inds2[x]];
+
          // Check if same variables are defined for row
-         int final_index1 = permcol1[*( inds1 + x )];
-         int final_index2 = permcol2[*( inds2 + x )];
-         if( final_index1 != final_index2 )
+         if( coefmap.count( final_index2 ) == 0 )
          {
             fmt::print(
                 "Different columns defined in row prob1:{} and prob2:{}\n",
                 i1row, i2row );
             return false;
          }
+
          // Check if values are same
-         if( *( vals1 + x ) != *( vals2 + x ) )
+         if( coefmap[final_index2] != vals2[x] )
          {
             fmt::print( "Different coefficients in row prob1:{} and prob2:{}\n",
                         i1row, i2row );
             return false;
          }
       }
+
+      // clear map for next row
+      coefmap.clear();
    }
    return true;
 }
