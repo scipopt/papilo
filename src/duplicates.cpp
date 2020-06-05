@@ -26,16 +26,293 @@
 #include "papilo/core/Problem.hpp"
 #include "papilo/core/VariableDomains.hpp"
 #include "papilo/io/MpsParser.hpp"
+#include "papilo/misc/Hash.hpp"
+#include "papilo/misc/Vec.hpp"
 #include "papilo/misc/fmt.hpp"
+#include "papilo/misc/tbb.hpp"
+#include "pdqsort/pdqsort.h"
+#include "tbb/concurrent_unordered_set.h"
+#include <algorithm>
 
 using namespace papilo;
 
+static std::pair<Vec<int>, Vec<int>>
+compute_row_and_column_permutation( const Problem<double>& prob )
+{
+   const ConstraintMatrix<double>& consmatrix = prob.getConstraintMatrix();
+
+   std::pair<Vec<int>, Vec<int>> retval;
+   Vec<uint64_t> rowhashes;
+   Vec<uint64_t> colhashes;
+
+   auto obj = [&]( int col ) {
+      double tmp = prob.getObjective().coefficients[col];
+      uint64_t val;
+      std::memcpy( &val, &tmp, sizeof( double ) );
+      return val;
+   };
+
+   auto lb = [&]( int col ) {
+      double tmp = prob.getColFlags()[col].test( ColFlag::kLbInf )
+                       ? std::numeric_limits<double>::lowest()
+                       : prob.getLowerBounds()[col];
+      uint64_t val;
+      std::memcpy( &val, &tmp, sizeof( double ) );
+      return val;
+   };
+
+   auto ub = [&]( int col ) {
+      double tmp = prob.getColFlags()[col].test( ColFlag::kUbInf )
+                       ? std::numeric_limits<double>::max()
+                       : prob.getUpperBounds()[col];
+      uint64_t val;
+      std::memcpy( &val, &tmp, sizeof( double ) );
+      return val;
+   };
+
+   auto lhs = [&]( int row ) {
+      double tmp = consmatrix.getRowFlags()[row].test( RowFlag::kLhsInf )
+                       ? std::numeric_limits<double>::lowest()
+                       : consmatrix.getLeftHandSides()[row];
+      uint64_t val;
+      std::memcpy( &val, &tmp, sizeof( double ) );
+      return val;
+   };
+
+   auto rhs = [&]( int row ) {
+      double tmp = consmatrix.getRowFlags()[row].test( RowFlag::kRhsInf )
+                       ? std::numeric_limits<double>::max()
+                       : consmatrix.getRightHandSides()[row];
+      uint64_t val;
+      std::memcpy( &val, &tmp, sizeof( double ) );
+      return val;
+   };
+
+   auto col_is_integral = [&]( int col ) {
+      return static_cast<uint64_t>(
+          prob.getColFlags()[col].test( ColFlag::kIntegral ) );
+   };
+
+   int ncols = prob.getNCols();
+   int nrows = prob.getNRows();
+   colhashes.resize( ncols + 2 );
+   rowhashes.resize( nrows + 4 );
+
+   const int LHS = ncols;
+   const int RHS = ncols + 1;
+
+   colhashes[LHS] = UINT64_MAX;
+   colhashes[RHS] = UINT64_MAX - 1;
+
+   const int OBJ = nrows;
+   const int INTEGRAL = nrows + 1;
+   const int LB = nrows + 2;
+   const int UB = nrows + 3;
+
+   rowhashes[OBJ] = UINT64_MAX - 2;
+   rowhashes[INTEGRAL] = UINT64_MAX - 3;
+   rowhashes[LB] = UINT64_MAX - 4;
+   rowhashes[UB] = UINT64_MAX - 5;
+
+   Vec<std::pair<uint64_t, int>> csrvals;
+   Vec<int> csrstarts;
+
+   csrstarts.resize( nrows + 1 );
+   csrvals.reserve( consmatrix.getNnz() + 2 * nrows );
+
+   for( int i = 0; i < nrows; ++i )
+   {
+      csrstarts[i] = csrvals.size();
+
+      auto rowvec = consmatrix.getRowCoefficients( i );
+      for( int k = 0; k < rowvec.getLength(); ++k )
+      {
+         uint64_t coef;
+         std::memcpy( &coef, rowvec.getValues() + k, sizeof( double ) );
+         csrvals.emplace_back( coef, rowvec.getIndices()[k] );
+      }
+
+      csrvals.emplace_back( lhs( i ), LHS );
+      csrvals.emplace_back( rhs( i ), RHS );
+   }
+
+   csrstarts[nrows] = csrvals.size();
+
+   Vec<std::pair<uint64_t, int>> cscvals;
+   Vec<int> cscstarts;
+   cscstarts.resize( ncols + 1 );
+   cscvals.reserve( consmatrix.getNnz() + 4 * ncols );
+
+   for( int i = 0; i < ncols; ++i )
+   {
+      cscstarts[i] = cscvals.size();
+
+      auto colvec = consmatrix.getColumnCoefficients( i );
+      for( int k = 0; k < colvec.getLength(); ++k )
+      {
+         uint64_t coef;
+         std::memcpy( &coef, colvec.getValues() + k, sizeof( double ) );
+         cscvals.emplace_back( coef, colvec.getIndices()[k] );
+      }
+
+      cscvals.emplace_back( obj( i ), OBJ );
+      cscvals.emplace_back( col_is_integral( i ), INTEGRAL );
+      cscvals.emplace_back( lb( i ), LB );
+      cscvals.emplace_back( ub( i ), UB );
+   }
+
+   cscstarts[ncols] = cscvals.size();
+
+   auto comp_rowvals = [&]( const std::pair<uint64_t, int>& a,
+                            const std::pair<uint64_t, int>& b ) {
+      return std::make_pair( a.first, colhashes[a.second] ) <
+             std::make_pair( b.first, colhashes[b.second] );
+   };
+
+   auto comp_colvals = [&]( const std::pair<uint64_t, int>& a,
+                            const std::pair<uint64_t, int>& b ) {
+      return std::make_pair( a.first, rowhashes[a.second] ) <
+             std::make_pair( b.first, rowhashes[b.second] );
+   };
+
+   bool changed = true;
+   int iters = 0;
+   size_t lastncols = -1;
+   HashMap<uint64_t, size_t> distinct_hashes( ncols );
+
+   size_t lastnrows = -1;
+   HashMap<uint64_t, size_t> distinct_row_hashes( nrows );
+
+   Vec<int>& colperm = retval.first;
+   colperm.resize( ncols );
+   for( int i = 0; i < ncols; ++i )
+      colperm[i] = i;
+
+   Vec<int>& rowperm = retval.second;
+   rowperm.resize( nrows );
+   for( int i = 0; i < nrows; ++i )
+      rowperm[i] = i;
+
+   size_t nrows2 = nrows;
+   size_t ncols2 = ncols;
+
+   while( nrows2 != 0 || ncols2 != 0 )
+   {
+      changed = false;
+
+      tbb::parallel_for(
+          tbb::blocked_range<int>( 0, ncols2 ),
+          [&]( const tbb::blocked_range<int>& r ) {
+             for( int i = r.begin(); i != r.end(); ++i )
+             {
+                int col = colperm[i];
+                int start = cscstarts[col];
+                int end = cscstarts[col + 1];
+                pdqsort( &cscvals[start], &cscvals[end], comp_colvals );
+
+                Hasher<uint64_t> hasher( end - start );
+                for( int k = start; k < end; ++k )
+                {
+                   hasher.addValue( cscvals[k].first );
+                   hasher.addValue( rowhashes[cscvals[k].second] );
+                }
+
+                colhashes[col] = hasher.getHash() >> 1;
+             }
+          } );
+
+      distinct_hashes.clear();
+
+      for( size_t i = 0; i < ncols2; ++i )
+         distinct_hashes[colhashes[colperm[i]]] += 1;
+
+      pdqsort( colperm.begin(), colperm.begin() + ncols2, [&]( int a, int b ) {
+         return std::make_pair( -distinct_hashes[colhashes[a]], colhashes[a] ) <
+                std::make_pair( -distinct_hashes[colhashes[b]], colhashes[b] );
+      } );
+
+      lastncols = ncols2;
+      ncols2 = 0;
+
+      while( ncols2 < ncols )
+      {
+         uint64_t hashval = colhashes[colperm[ncols2]];
+         size_t partitionsize = distinct_hashes[hashval];
+         if( partitionsize <= 1 )
+            break;
+
+         ncols2 += partitionsize;
+      }
+
+      if( ncols2 == lastncols )
+         ++colhashes[colperm[0]];
+
+      tbb::parallel_for(
+          tbb::blocked_range<int>( 0, nrows2 ),
+          [&]( const tbb::blocked_range<int>& r ) {
+             for( int i = r.begin(); i != r.end(); ++i )
+             {
+                int row = rowperm[i];
+                int start = csrstarts[row];
+                int end = csrstarts[row + 1];
+                pdqsort( &csrvals[start], &csrvals[end], comp_rowvals );
+
+                Hasher<uint64_t> hasher( end - start );
+
+                for( int k = start; k < end; ++k )
+                {
+                   hasher.addValue( csrvals[k].first );
+                   hasher.addValue( colhashes[csrvals[k].second] );
+                }
+
+                rowhashes[row] = hasher.getHash() >> 1;
+             }
+          } );
+      distinct_row_hashes.clear();
+
+      for( size_t i = 0; i < nrows2; ++i )
+         distinct_row_hashes[rowhashes[rowperm[i]]] += 1;
+
+      pdqsort( rowperm.begin(), rowperm.begin() + nrows2, [&]( int a, int b ) {
+         return std::make_pair( -distinct_row_hashes[rowhashes[a]],
+                                rowhashes[a] ) <
+                std::make_pair( -distinct_row_hashes[rowhashes[b]],
+                                rowhashes[b] );
+      } );
+
+      lastnrows = nrows2;
+      nrows2 = 0;
+
+      while( nrows2 < ncols )
+      {
+         uint64_t hashval = rowhashes[rowperm[nrows2]];
+         size_t partitionsize = distinct_row_hashes[hashval];
+         if( partitionsize <= 1 )
+            break;
+
+         nrows2 += partitionsize;
+      }
+
+      if( nrows2 == lastnrows )
+         ++rowhashes[rowperm[0]];
+
+      ++iters;
+
+      fmt::print( "iter {}: {} non unit col partitions and {} non unit row "
+                  "partitions\n",
+                  iters, ncols2, nrows2 );
+   }
+
+   return retval;
+}
+
 /// Tries to compute a permutation for columns
 static bool
-guess_permutation_col( const Problem<double>& prob1, const Problem<double>& prob2, Vec<int>& out_perm1, Vec<int>& out_perm2 )
+guess_permutation_col( const Problem<double>& prob1,
+                       const Problem<double>& prob2, Vec<int>& out_perm1,
+                       Vec<int>& out_perm2 )
 {
    // for every col I want to find another matching one
-   
 
    return false;
 }
@@ -45,15 +322,58 @@ static void
 fill_identity_permutation( Vec<int>& out_perm )
 {
    int n = out_perm.size();
-   for( int i = 0; i < n; ++i ) out_perm[i] = i;
+   for( int i = 0; i < n; ++i )
+      out_perm[i] = i;
 }
 
 /// Returns True if variables in given permutation have same attributes
 static bool
-check_cols( const VariableDomains<double>& vd1, const VariableDomains<double>& vd2, Vec<int> perm1, const Vec<int> perm2 )
+check_cols( const VariableDomains<double>& vd1,
+            const VariableDomains<double>& vd2, Vec<int> perm1,
+            const Vec<int> perm2 )
 {
-   assert(perm1.size() == perm2.size() );
+   assert( perm1.size() == perm2.size() );
    int ncols = perm1.size();
+
+   // for( int i = 0; i < ncols; ++i )
+   //{
+   //   if( vd1.flags[i].test( ColFlag::kIntegral ) !=
+   //       vd2.flags[i].test( ColFlag::kIntegral ) )
+   //   {
+   //      // kein duplikat: eine variable ist ganzzahlig die andere nicht
+   //      return false;
+   //   }
+   //
+   //   if( vd1.flags[i].test( ColFlag::kUbInf ) !=
+   //       vd2.flags[i].test( ColFlag::kUbInf ) )
+   //   {
+   //      // kein duplikat: ein upper bound ist +infinity, der andere nicht
+   //      return false;
+   //   }
+   //
+   //   if( vd1.flags[i].test( ColFlag::kLbInf ) !=
+   //       vd2.flags[i].test( ColFlag::kLbInf ) )
+   //   {
+   //      // kein duplikat: ein lower bound ist -infinity, der andere nicht
+   //      return false;
+   //   }
+   //
+   //   if( !vd1.flags[i].test( ColFlag::kLbInf ) &&
+   //       vd1.lower_bounds[i] != vd2.lower_bounds[i] )
+   //   {
+   //      assert( !vd2.flags[i].test( ColFlag::kLbInf ) );
+   //      // kein duplikat: lower bounds sind endlich aber unterschiedlich
+   //      return false;
+   //   }
+   //
+   //   if( !vd1.flags[i].test( ColFlag::kUbInf ) &&
+   //       vd1.upper_bounds[i] != vd2.upper_bounds[i] )
+   //   {
+   //      assert( !vd2.flags[i].test( ColFlag::kUbInf ) );
+   //      // kein duplikat: upper bounds sind endlich aber unterschiedlich
+   //      return false;
+   //   }
+   //}
 
    for( int i = 0; i < ncols; ++i )
    {
@@ -64,7 +384,9 @@ check_cols( const VariableDomains<double>& vd1, const VariableDomains<double>& v
           vd2.flags[i2].test( ColFlag::kIntegral ) )
       {
          // kein duplikat: eine variable ist ganzzahlig die andere nicht
-         fmt::print("One variable is integer the other not in col prob1:{} and prob2:{}\n", i1, i2);
+         fmt::print( "One variable is integer the other not in col prob1:{} "
+                     "and prob2:{}\n",
+                     i1, i2 );
          return false;
       }
 
@@ -72,7 +394,9 @@ check_cols( const VariableDomains<double>& vd1, const VariableDomains<double>& v
           vd2.flags[i2].test( ColFlag::kUbInf ) )
       {
          // kein duplikat: ein upper bound ist +infinity, der andere nicht
-         fmt::print("One variable's UB is +infty the others not in col prob1:{} and prob2:{}\n", i1, i2);
+         fmt::print( "One variable's UB is +infty the others not in col "
+                     "prob1:{} and prob2:{}\n",
+                     i1, i2 );
          return false;
       }
 
@@ -80,7 +404,9 @@ check_cols( const VariableDomains<double>& vd1, const VariableDomains<double>& v
           vd2.flags[i2].test( ColFlag::kLbInf ) )
       {
          // kein duplikat: ein lower bound ist -infinity, der andere nicht
-         fmt::print("One variable's UB is -infty the other not in col prob1:{} and prob2:{}\n", i1, i2);
+         fmt::print( "One variable's UB is -infty the other not in col "
+                     "prob1:{} and prob2:{}\n",
+                     i1, i2 );
          return false;
       }
 
@@ -89,7 +415,8 @@ check_cols( const VariableDomains<double>& vd1, const VariableDomains<double>& v
       {
          assert( !vd2.flags[i2].test( ColFlag::kLbInf ) );
          // kein duplikat: lower bounds sind endlich aber unterschiedlich
-         fmt::print("LBs are different in col prob1:{} and prob2:{}\n", i1, i2);
+         fmt::print( "LBs are different in col prob1:{} and prob2:{}\n", i1,
+                     i2 );
          return false;
       }
 
@@ -98,19 +425,23 @@ check_cols( const VariableDomains<double>& vd1, const VariableDomains<double>& v
       {
          assert( !vd2.flags[i2].test( ColFlag::kUbInf ) );
          // kein duplikat: upper bounds sind endlich aber unterschiedlich
-         fmt::print("UBs are different in col prob1:{} and prob2:{}\n", i1, i2);
+         fmt::print( "UBs are different in col prob1:{} and prob2:{}\n", i1,
+                     i2 );
          return false;
       }
    }
    return true;
 }
 
-/// Returns True if rows in given Permutation are same for also given variable permutation
+/// Returns True if rows in given Permutation are same for also given variable
+/// permutation
 static bool
-check_rows( const ConstraintMatrix<double>& cm1, const ConstraintMatrix<double>& cm2, Vec<int> permrow1, Vec<int> permrow2, Vec<int> permcol1, Vec<int> permcol2 )
+check_rows( const ConstraintMatrix<double>& cm1,
+            const ConstraintMatrix<double>& cm2, Vec<int> permrow1,
+            Vec<int> permrow2, Vec<int> permcol1, Vec<int> permcol2 )
 {
-   assert(permrow1.size() == permrow2.size());
-   assert(permcol1.size() == permcol2.size());
+   assert( permrow1.size() == permrow2.size() );
+   assert( permcol1.size() == permcol2.size() );
    int nrows = permrow1.size();
    int ncols = permcol1.size();
    // Row flags
@@ -122,68 +453,92 @@ check_rows( const ConstraintMatrix<double>& cm1, const ConstraintMatrix<double>&
    const Vec<double>& rhs1 = cm1.getRightHandSides();
    const Vec<double>& rhs2 = cm2.getRightHandSides();
 
-   for( int i = 0; i < nrows; ++i)
+   for( int i = 0; i < nrows; ++i )
    {
       int i1row = permrow1[i];
       int i2row = permrow2[i];
 
       // Check Row flags for dissimilarities
-      if( rflags1[i1row].test( RowFlag::kLhsInf ) != rflags2[i2row].test( RowFlag::kLhsInf ))
+      if( rflags1[i1row].test( RowFlag::kLhsInf ) !=
+          rflags2[i2row].test( RowFlag::kLhsInf ) )
       {
-         fmt::print("LHS is infinite in one of both problems --- row prob1:{} and prob2:{}\n", i1row, i2row);
+         fmt::print( "LHS is infinite in one of both problems --- row prob1:{} "
+                     "and prob2:{}\n",
+                     i1row, i2row );
          return false;
       }
 
-      if( rflags1[i1row].test( RowFlag::kRhsInf ) != rflags2[i2row].test( RowFlag::kRhsInf ))
+      if( rflags1[i1row].test( RowFlag::kRhsInf ) !=
+          rflags2[i2row].test( RowFlag::kRhsInf ) )
       {
-         fmt::print("RHS is infinite in one of both problems --- row prob1:{} and prob2:{}\n", i1row, i2row);
+         fmt::print( "RHS is infinite in one of both problems --- row prob1:{} "
+                     "and prob2:{}\n",
+                     i1row, i2row );
          return false;
       }
 
-      if( rflags1[i1row].test( RowFlag::kEquation ) != rflags2[i2row].test( RowFlag::kEquation ))
+      if( rflags1[i1row].test( RowFlag::kEquation ) !=
+          rflags2[i2row].test( RowFlag::kEquation ) )
       {
-         fmt::print("Row is equation in only one of both problems --- row prob1:{} and prob2:{}\n", i1row, i2row);
+         fmt::print( "Row is equation in only one of both problems --- row "
+                     "prob1:{} and prob2:{}\n",
+                     i1row, i2row );
          return false;
       }
 
-      if( rflags1[i1row].test( RowFlag::kIntegral ) != rflags2[i2row].test( RowFlag::kIntegral ))
+      if( rflags1[i1row].test( RowFlag::kIntegral ) !=
+          rflags2[i2row].test( RowFlag::kIntegral ) )
       {
-         fmt::print("Row is Integral in only one of both problems --- row prob1:{} and prob2:{}\n", i1row, i2row);
+         fmt::print( "Row is Integral in only one of both problems --- row "
+                     "prob1:{} and prob2:{}\n",
+                     i1row, i2row );
          return false;
       }
 
       // needed? probably not
-      if( rflags1[i1row].test( RowFlag::kRedundant ) != rflags2[i2row].test( RowFlag::kRedundant ))
+      if( rflags1[i1row].test( RowFlag::kRedundant ) !=
+          rflags2[i2row].test( RowFlag::kRedundant ) )
       {
-         fmt::print("Row is redundant in only one of both problems --- row prob1:{} and prob2:{}\n", i1row, i2row);
+         fmt::print( "Row is redundant in only one of both problems --- row "
+                     "prob1:{} and prob2:{}\n",
+                     i1row, i2row );
          return false;
       }
 
       // Check Row LHS values
-      if( rflags1[i1row].test( RowFlag::kLhsInf ) && lhs1[i1row] != lhs2[i2row] )
+      if( rflags1[i1row].test( RowFlag::kLhsInf ) &&
+          lhs1[i1row] != lhs2[i2row] )
       {
          assert( rflags2[i2row].test( RowFlag::kLhsInf ) );
-         fmt::print("RHS is finite and different --- row prob1:{} and prob2:{}\n", i1row, i2row);
+         fmt::print(
+             "RHS is finite and different --- row prob1:{} and prob2:{}\n",
+             i1row, i2row );
          return false;
       }
 
       // Check Row RHS values
-      if( rflags1[i1row].test( RowFlag::kRhsInf ) && rhs1[i1row] != rhs2[i2row] )
+      if( rflags1[i1row].test( RowFlag::kRhsInf ) &&
+          rhs1[i1row] != rhs2[i2row] )
       {
          assert( rflags2[i2row].test( RowFlag::kRhsInf ) );
-         fmt::print("RHS is finite and different --- row prob1:{} and prob2:{}\n", i1row, i2row);
+         fmt::print(
+             "RHS is finite and different --- row prob1:{} and prob2:{}\n",
+             i1row, i2row );
          return false;
       }
 
       // Check Row coefficients
-      const SparseVectorView<double> row1 = cm1.getRowCoefficients(i1row);
-      const SparseVectorView<double> row2 = cm2.getRowCoefficients(i2row);
+      const SparseVectorView<double> row1 = cm1.getRowCoefficients( i1row );
+      const SparseVectorView<double> row2 = cm2.getRowCoefficients( i2row );
 
-      // Assume: If there is different amounts of variables in constraint it is not the same (not entirely true)
+      // Assume: If there is different amounts of variables in constraint it is
+      // not the same (not entirely true)
       const int curr_ncols = row1.getLength();
       if( curr_ncols != row2.getLength() )
       {
-         fmt::print("Different amounts of variables in row prob1:{} and prob2:{}\n", i1row, i2row);
+         fmt::print(
+             "Different amounts of variables in row prob1:{} and prob2:{}\n",
+             i1row, i2row );
          return false;
       }
 
@@ -192,20 +547,23 @@ check_rows( const ConstraintMatrix<double>& cm1, const ConstraintMatrix<double>&
       const double* vals1 = row1.getValues();
       const double* vals2 = row2.getValues();
 
-      for( int x = 0; x < curr_ncols; ++x)
+      for( int x = 0; x < curr_ncols; ++x )
       {
          // Check if same variables are defined for row
-         int final_index1 = permcol1[*(inds1 + x)];
-         int final_index2 = permcol2[*(inds2 + x)];
-         if( final_index1 != final_index2)
+         int final_index1 = permcol1[*( inds1 + x )];
+         int final_index2 = permcol2[*( inds2 + x )];
+         if( final_index1 != final_index2 )
          {
-            fmt::print("Different columns defined in row prob1:{} and prob2:{}\n", i1row, i2row);
+            fmt::print(
+                "Different columns defined in row prob1:{} and prob2:{}\n",
+                i1row, i2row );
             return false;
          }
          // Check if values are same
-         if( *(vals1 + x) != *(vals2 + x) )
+         if( *( vals1 + x ) != *( vals2 + x ) )
          {
-            fmt::print("Different coefficients in row prob1:{} and prob2:{}\n", i1row, i2row);
+            fmt::print( "Different coefficients in row prob1:{} and prob2:{}\n",
+                        i1row, i2row );
             return false;
          }
       }
@@ -222,45 +580,53 @@ check_duplicates( const Problem<double>& prob1, const Problem<double>& prob2 )
    if( ncols != prob2.getNCols() )
    {
       // kein duplikat: unterschiedlich viele variablen
-      fmt::print("not same number of variables\n");
+      fmt::print( "not same number of variables\n" );
       return false;
    }
 
-   Vec<int> perm_col1(ncols);
-   Vec<int> perm_col2(ncols);
-   if( !guess_permutation_col(prob1, prob2, perm_col1, perm_col2) )
-   {
-      // in case guess_permutation did not find anything try anyways
-      fill_identity_permutation(perm_col1);
-      fill_identity_permutation(perm_col2);
-   }
-   fmt::print("{}", fmt::join(perm_col2, ", "));
-
-   const VariableDomains<double>& vd1 = prob1.getVariableDomains();
-   const VariableDomains<double>& vd2 = prob2.getVariableDomains();
-
-   if( !check_cols(vd1, vd2, perm_col1, perm_col2) ) return false;
-
    // Check for rows
-   // First assume for being same you need to have same rows (even though not true)
+   // First assume for being same you need to have same rows (even though not
+   // true)
    int nrows = prob1.getNRows();
 
    if( nrows != prob2.getNRows() )
    {
-      fmt::print("not same number of rows: prob1:{} prob2:{}\n", nrows, prob2.getNRows() );
+      fmt::print( "not same number of rows: prob1:{} prob2:{}\n", nrows,
+                  prob2.getNRows() );
       return false;
    }
 
-   Vec<int> norowperm(nrows);
-   std::generate(norowperm.begin(), norowperm.end(), [] {
-      static int i = 0;
-      return i++;
-   });
+   std::pair<Vec<int>, Vec<int>> perms1 =
+       compute_row_and_column_permutation( prob1 );
+   std::pair<Vec<int>, Vec<int>> perms2 =
+       compute_row_and_column_permutation( prob2 );
+
+   Vec<int>& perm_col1 = perms1.second;
+   Vec<int>& perm_col2 = perms2.second;
+   // Vec<int> perm_col1( ncols );
+   // Vec<int> perm_col2( ncols );
+   // if( !guess_permutation_col( prob1, prob2, perm_col1, perm_col2 ) )
+   //{
+   //   // in case guess_permutation did not find anything try anyways
+   //   fill_identity_permutation( perm_col1 );
+   //   fill_identity_permutation( perm_col2 );
+   //}
+   fmt::print( "{}", fmt::join( perm_col2, ", " ) );
+
+   const VariableDomains<double>& vd1 = prob1.getVariableDomains();
+   const VariableDomains<double>& vd2 = prob2.getVariableDomains();
+
+   if( !check_cols( vd1, vd2, perm_col1, perm_col2 ) )
+      return false;
+
+   Vec<int>& perm_row1 = perms1.first;
+   Vec<int>& perm_row2 = perms2.first;
 
    const ConstraintMatrix<double> cm1 = prob1.getConstraintMatrix();
    const ConstraintMatrix<double> cm2 = prob2.getConstraintMatrix();
 
-   if( !check_rows(cm1, cm2, norowperm, norowperm, perm_col1, perm_col2) ) return false;
+   if( !check_rows( cm1, cm2, perm_row1, perm_row2, perm_col1, perm_col2 ) )
+      return false;
 
    // All checks passed
    return true;
@@ -276,7 +642,7 @@ main( int argc, char* argv[] )
    Problem<double> prob2 = MpsParser<double>::loadProblem( argv[2] );
 
    bool res = check_duplicates( prob1, prob2 );
-   fmt::print( "duplicates: {}\n", res);
+   fmt::print( "duplicates: {}\n", res );
 
    return 0;
 }
