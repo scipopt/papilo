@@ -195,7 +195,7 @@ compute_row_and_column_permutation( const Problem<double>& prob )
    size_t nrows2 = nrows;
    size_t ncols2 = ncols;
 
-   while( nrows2 != 0 && ncols2 != 0 )
+   while( ncols2 != 0 )
    {
       tbb::parallel_for(
           tbb::blocked_range<int>( 0, ncols2 ),
@@ -252,6 +252,9 @@ compute_row_and_column_permutation( const Problem<double>& prob )
          std::swap( colperm[0], colperm[ncols2] );
          colhashes[colperm[ncols2]] = ncols2;
       }
+
+      if( nrows2 == 0 )
+         break;
 
       tbb::parallel_for(
           tbb::blocked_range<int>( 0, nrows2 ),
