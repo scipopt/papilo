@@ -92,6 +92,7 @@ public:
       stats.matrixMin = minabsval;
       stats.matrixMax = maxabsval;
       stats.dynamism = maxdyn;
+      // todo: dynamism for col/row missing sometimes. Gotta fix that
       fmt::print("max {}, min {}, dyn {}", double(maxabsval), double(minabsval), double(maxdyn));
 
    }
