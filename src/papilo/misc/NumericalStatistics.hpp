@@ -24,12 +24,14 @@
 #ifndef _PAPILO_MISC_NUMERICALSTATISTICS_HPP_
 #define _PAPILO_MISC_NUMERICALSTATISTICS_HPP_
 
+#include "papilo/core/Problem.hpp"
 #include <cmath>
 
 namespace papilo
 {
 
-struct NumericalStatistics {
+struct Num_stats
+{
    double matrixMin;
    double matrixMax;
    double objMin;
@@ -39,8 +41,21 @@ struct NumericalStatistics {
    double rhsMin;
    double rhsMax;
    double lhsMin;
-   double rhsMax;
+   double lhsMax;
    double dynamism;
+};
+
+class NumericalStatistics
+{
+public:
+   NumericalStatistics(Problem<double>& p)
+      : prob(p)
+   { }
+
+
+private:
+   Num_stats stats;
+   Problem<double>& prob;
 };
 
 } // namespace papilo
