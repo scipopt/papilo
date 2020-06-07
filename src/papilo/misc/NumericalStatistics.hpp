@@ -24,38 +24,57 @@
 #ifndef _PAPILO_MISC_NUMERICALSTATISTICS_HPP_
 #define _PAPILO_MISC_NUMERICALSTATISTICS_HPP_
 
+#include "papilo/core/ConstraintMatrix.hpp"
 #include "papilo/core/Problem.hpp"
 #include <cmath>
 
 namespace papilo
 {
 
+template <typename REAL>
 struct Num_stats
 {
-   double matrixMin;
-   double matrixMax;
-   double objMin;
-   double objMax;
-   double boundsMin;
-   double boundsMax;
-   double rhsMin;
-   double rhsMax;
-   double lhsMin;
-   double lhsMax;
-   double dynamism;
+   REAL matrixMin;
+   REAL matrixMax;
+   REAL objMin;
+   REAL objMax;
+   REAL boundsMin;
+   REAL boundsMax;
+   REAL rhsMin;
+   REAL rhsMax;
+   REAL lhsMin;
+   REAL lhsMax;
+   REAL dynamism;
 };
 
+template <typename REAL>
 class NumericalStatistics
 {
 public:
-   NumericalStatistics(Problem<double>& p)
-      : prob(p)
-   { }
+   NumericalStatistics(Problem<REAL>& p)
+      : stats(Num_stats<REAL>())
+      , prob(p)
+   {
+      // Set all values in Num_stats
+
+      ConstraintMatrix<REAL>& cm = prob.getConstraintMatrix();
+
+      int nrows = cm.getNRows();
+      int ncols = cm.getNCols();
+
+      REAL maxabsval = 0.0;
+      if( nrows < ncols )
+      {
+         for( int r = 0; r < nrows; ++r)
+            maxabsval = std::max( cm.getRowCoefficients(r).getMaxAbsValue(), maxabsval );
+      }
+
+   }
 
 
 private:
-   Num_stats stats;
-   Problem<double>& prob;
+   Num_stats<REAL> stats;
+   Problem<REAL>& prob;
 };
 
 } // namespace papilo
