@@ -26,6 +26,7 @@
 
 #include "papilo/core/ConstraintMatrix.hpp"
 #include "papilo/core/Problem.hpp"
+#include "papilo/misc/fmt.hpp"
 #include <cmath>
 
 namespace papilo
@@ -62,12 +63,36 @@ public:
       int nrows = cm.getNRows();
       int ncols = cm.getNCols();
 
+      REAL minabsval;
       REAL maxabsval = 0.0;
+      REAL maxdyn = 0.0;
       if( nrows < ncols )
       {
          for( int r = 0; r < nrows; ++r)
-            maxabsval = std::max( cm.getRowCoefficients(r).getMaxAbsValue(), maxabsval );
+         {
+            const SparseVectorView<REAL>& row = cm.getRowCoefficients(r);
+            // technically you loop 3 times over row -> not efficient
+            maxabsval = std::max( row.getMaxAbsValue(), maxabsval );
+            maxdyn = std::max( row.getDynamism(), maxdyn);
+            if( r == 0 ) minabsval = maxabsval;
+            else minabsval = std::min( row.getMinAbsValue(), minabsval);
+         }
       }
+      else
+      {
+         for( int c = 0; c < ncols; ++c)
+         {
+            const SparseVectorView<REAL>& col = cm.getColumnCoefficients(c);
+            maxabsval = std::max( col.getMaxAbsValue(), maxabsval );
+            maxdyn = std::max( col.getDynamism(), maxdyn);
+            if( c == 0 ) minabsval = maxabsval;
+            else minabsval = std::min( col.getMinAbsValue(), minabsval);
+         }
+      }
+      stats.matrixMin = minabsval;
+      stats.matrixMax = maxabsval;
+      stats.dynamism = maxdyn;
+      fmt::print("max {}, min {}, dyn {}", double(maxabsval), double(minabsval), double(maxdyn));
 
    }
 

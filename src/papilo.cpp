@@ -29,7 +29,6 @@
 #include "papilo/io/MpsParser.hpp"
 #include "papilo/io/MpsWriter.hpp"
 #include "papilo/io/SolParser.hpp"
-#include "papilo/misc/NumericalStatistics.hpp"
 #include "papilo/misc/MultiPrecision.hpp"
 #include "papilo/misc/OptionsParser.hpp"
 #include "papilo/misc/Wrappers.hpp"

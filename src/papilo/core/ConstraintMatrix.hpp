@@ -85,6 +85,20 @@ class SparseVectorView
    }
 
    REAL
+   getMinAbsValue() const
+   {
+      REAL minabsval;
+
+      for( int i = 0; i != len; ++i)
+      {
+         if( i == 0 ) minabsval = vals[0];
+         else minabsval = std::min( REAL( abs( vals[i] ) ), minabsval );
+      }
+
+      return minabsval;
+   }
+
+   REAL
    getDynamism() const
    {
       if( len != 0 )

@@ -30,6 +30,7 @@
 #include "papilo/io/MpsWriter.hpp"
 #include "papilo/io/SolParser.hpp"
 #include "papilo/io/SolWriter.hpp"
+#include "papilo/misc/NumericalStatistics.hpp"
 #include "papilo/misc/OptionsParser.hpp"
 #include "papilo/misc/tbb.hpp"
 
@@ -67,6 +68,8 @@ presolve_and_solve(
    }
 
    fmt::print( "reading took {:.3} seconds\n", readtime );
+
+   NumericalStatistics<REAL> nstats(problem);
 
    Presolve<REAL> presolve;
    presolve.addDefaultPresolvers();
