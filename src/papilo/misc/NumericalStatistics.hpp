@@ -46,6 +46,8 @@ struct Num_stats
    REAL lhsMin;
    REAL lhsMax;
    REAL dynamism;
+   REAL rowDynamism;
+   REAL colDynamism;
 };
 
 template <typename REAL>
@@ -65,35 +67,38 @@ public:
 
       REAL minabsval;
       REAL maxabsval = 0.0;
-      REAL maxdyn = 0.0;
-      if( nrows < ncols )
+      REAL maxRowDyn = 0.0;
+      REAL maxColDyn = 0.0;
+
+      for( int r = 0; r < nrows; ++r )
       {
-         for( int r = 0; r < nrows; ++r)
-         {
-            const SparseVectorView<REAL>& row = cm.getRowCoefficients(r);
-            // technically you loop 3 times over row -> not efficient
-            maxabsval = std::max( row.getMaxAbsValue(), maxabsval );
-            maxdyn = std::max( row.getDynamism(), maxdyn);
-            if( r == 0 ) minabsval = maxabsval;
-            else minabsval = std::min( row.getMinAbsValue(), minabsval);
-         }
+         const SparseVectorView<REAL>& row = cm.getRowCoefficients(r);
+         std::pair<REAL,REAL> minmax = row.getMinMaxAbsValue();
+
+         maxabsval = std::max( minmax.second, maxabsval);
+         if( r == 0 ) minabsval = maxabsval;
+         else minabsval = std::min( minmax.first, minabsval);
+
+         REAL dyn = minmax.second / minmax.first;
+         maxRowDyn = std::max( dyn , maxRowDyn );
       }
-      else
+
+      for( int c = 0; c < ncols; ++c )
       {
-         for( int c = 0; c < ncols; ++c)
-         {
-            const SparseVectorView<REAL>& col = cm.getColumnCoefficients(c);
-            maxabsval = std::max( col.getMaxAbsValue(), maxabsval );
-            maxdyn = std::max( col.getDynamism(), maxdyn);
-            if( c == 0 ) minabsval = maxabsval;
-            else minabsval = std::min( col.getMinAbsValue(), minabsval);
-         }
+         const SparseVectorView<REAL>& col = cm.getColumnCoefficients(c);
+         std::pair<REAL,REAL> minmax = col.getMinMaxAbsValue();
+
+         REAL dyn = minmax.second / minmax.first;
+         maxColDyn = std::max( dyn, maxColDyn );
       }
+
       stats.matrixMin = minabsval;
       stats.matrixMax = maxabsval;
-      stats.dynamism = maxdyn;
-      // todo: dynamism for col/row missing sometimes. Gotta fix that
-      fmt::print("max {}, min {}, dyn {}", double(maxabsval), double(minabsval), double(maxdyn));
+      stats.dynamism = maxabsval/minabsval;
+
+      stats.rowDynamism = maxRowDyn;
+      stats.colDynamism = maxColDyn;
+      fmt::print("max {}, min {}, dyn {}", double(maxabsval), double(minabsval), double(stats.dynamism));
 
    }
 

@@ -91,11 +91,27 @@ class SparseVectorView
 
       for( int i = 0; i != len; ++i)
       {
-         if( i == 0 ) minabsval = vals[0];
+         if( i == 0 ) minabsval = abs( vals[0] );
          else minabsval = std::min( REAL( abs( vals[i] ) ), minabsval );
       }
 
       return minabsval;
+   }
+
+   std::pair<REAL,REAL>
+   getMinMaxAbsValue() const
+   {
+      REAL maxabsval = 0.0;
+      REAL minabsval;
+
+      for( int i = 0; i != len; ++ i)
+      {
+         maxabsval = std::max( REAL( abs( vals[i] ) ), maxabsval );
+         if( i == 0) minabsval = maxabsval;
+         else minabsval = std::min( REAL( abs( vals[i] ) ), minabsval );
+      }
+
+      return std::make_pair(minabsval, maxabsval);
    }
 
    REAL
