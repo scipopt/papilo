@@ -96,30 +96,30 @@ public:
          if( !rhsMinSet )
          {
             rhsMinSet = true;
-            if( !rf[r].test( RowFlag::kLhsInf ) && !rf[r].test( RowFlag::kRhsInf ) )
+            if( !rf[r].test( RowFlag::kLhsInf ) && !rf[r].test( RowFlag::kRhsInf ) && lhs[r] != 0 && rhs[r] != 0 )
                stats.rhsMin = std::min( abs( lhs[r] ),
                                         abs( rhs[r] )
                                         );
-            else if( !rf[r].test( RowFlag::kLhsInf ) )
-               stats.boundsMin = abs( lhs[r] );
-            else if( !rf[r].test( RowFlag::kRhsInf ) )
-               stats.boundsMin = abs( rhs[r] );
+            else if( !rf[r].test( RowFlag::kLhsInf ) && lhs[r] != 0 )
+               stats.rhsMin = abs( lhs[r] );
+            else if( !rf[r].test( RowFlag::kRhsInf ) && rhs[r] != 0 )
+               stats.rhsMin = abs( rhs[r] );
             else
                rhsMinSet = false;
          }
          else
          {
-            if( !rf[r].test( RowFlag::kLhsInf ) && !rf[r].test( RowFlag::kRhsInf ) )
+            if( !rf[r].test( RowFlag::kLhsInf ) && !rf[r].test( RowFlag::kRhsInf ) && lhs[r] != 0 && rhs[r] != 0 )
                stats.rhsMin = std::min( stats.rhsMin,
                                         REAL( std::min( abs( lhs[r] ),
                                                         abs( rhs[r] )
                                                         ) )
                                         );
-            else if( !rf[r].test( RowFlag::kLhsInf ) )
+            else if( !rf[r].test( RowFlag::kLhsInf ) && lhs[r] != 0 )
                stats.rhsMin = std::min( stats.rhsMin,
                                         REAL( abs( lhs[r] ) )
                                         );
-            else if( !rf[r].test( RowFlag::kRhsInf ) )
+            else if( !rf[r].test( RowFlag::kRhsInf ) && rhs[r] != 0 )
                stats.rhsMin = std::min( stats.rhsMin,
                                         REAL( abs( rhs[r] ) )
                                         );
@@ -236,13 +236,13 @@ public:
          }
       }
 
-      fmt::print(" Matrix range [{},{}]\n Bounds range [{},{}]\n Obj range [{},{}]\n RHS range [{},{}]\n dyn: {} dynCol: {}, dynRow: {}\n",
-                 double(stats.matrixMax),
+      fmt::print(" Matrix range    [{},{}]\n Objective range [{},{}]\n Bounds range    [{},{}]\n RHS range       [{},{}]\n dyn: {} dynCol: {}, dynRow: {}\n",
                  double(stats.matrixMin),
-                 double(stats.boundsMin),
-                 double(stats.boundsMax),
+                 double(stats.matrixMax),
                  double(stats.objMin),
                  double(stats.objMax),
+                 double(stats.boundsMin),
+                 double(stats.boundsMax),
                  double(stats.rhsMin),
                  double(stats.rhsMax),
                  double(stats.dynamism),
