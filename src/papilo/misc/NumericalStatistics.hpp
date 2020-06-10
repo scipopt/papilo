@@ -124,7 +124,9 @@ public:
          {
             if( !vd.flags[c].test( ColFlag::kLbInf ) && !vd.flags[c].test( ColFlag::kUbInf ) )
                stats.boundsMin = std::min( stats.boundsMin,
-                                           REAL( std::min( abs( vd.lower_bounds[c] ), abs( vd.upper_bounds[c] ) ) )
+                                           REAL( std::min( abs( vd.lower_bounds[c] ),
+                                                           abs( vd.upper_bounds[c] )
+                                                           ) )
                                            );
             else if( !vd.flags[c].test( ColFlag::kLbInf ) )
                stats.boundsMin = std::min( stats.boundsMin,
@@ -142,7 +144,9 @@ public:
                stats.boundsMaxInf = true;
             else
                stats.boundsMax = std::max( stats.boundsMax,
-                                           REAL( std::max( abs( vd.lower_bounds[c]), abs( vd.upper_bounds[c] ) ) )
+                                           REAL( std::max( abs( vd.lower_bounds[c]),
+                                                           abs( vd.upper_bounds[c] )
+                                                           ) )
                                            );
          }
 
