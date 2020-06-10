@@ -229,8 +229,12 @@ public:
                                         );
          }
       }
+   }
 
-      fmt::print(" Matrix range    [{},{}]\n Objective range [{},{}]\n Bounds range    [{},{}]\n RHS range       [{},{}]\n dyn: {} dynCol: {}, dynRow: {}\n",
+   void
+   printStatistics()
+   {
+      fmt::print("Numerical Statistics:\n Matrix range    [{:.0e},{:.0e}]\n Objective range [{:.0e},{:.0e}]\n Bounds range    [{:.0e},{:.0e}]\n RHS range       [{:.0e},{:.0e}]\n Dynamism Columns: {:.0e}, Dynamism Rows   : {:.0e}\n",
                  double(stats.matrixMin),
                  double(stats.matrixMax),
                  double(stats.objMin),
@@ -239,11 +243,9 @@ public:
                  double(stats.boundsMax),
                  double(stats.rhsMin),
                  double(stats.rhsMax),
-                 double(stats.dynamism),
                  double(stats.colDynamism),
                  double(stats.rowDynamism)
                  );
-
    }
 
 
