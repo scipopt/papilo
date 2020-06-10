@@ -69,16 +69,12 @@ public:
 
       // matrixMin, matrixMax, dynamism, bounds
 
-      REAL minabsval = 0.0;
+      REAL minabsval = 0.0;   //todo replace with stats.minabsval...
       REAL maxabsval = 0.0;
       REAL maxRowDyn = 0.0;
-      REAL maxColDyn = 0.0;
-
-      stats.boundsMaxInf = false;
-      stats.boundsMax = 0.0;
-      stats.boundsMin = 0.0;
 
 
+      // Row dynamism, matrixMin/Max
       for( int r = 0; r < nrows; ++r )
       {
          const SparseVectorView<REAL>& row = cm.getRowCoefficients(r);
@@ -92,6 +88,14 @@ public:
          maxRowDyn = std::max( dyn , maxRowDyn );
       }
 
+      REAL maxColDyn = 0.0;
+      stats.boundsMaxInf = false;
+      stats.boundsMax = 0.0;
+      stats.boundsMin = 0.0;
+      bool boundsMinSet = false;
+
+
+      // Column dynamism, Variable Bounds
       for( int c = 0; c < ncols; ++c )
       {
          // Column dynamism
@@ -102,12 +106,35 @@ public:
          maxColDyn = std::max( dyn, maxColDyn );
 
          // Bounds
-         if( c == 0 )
-            stats.boundsMin = std::min( abs( vd.lower_bounds[c] ), abs( vd.upper_bounds[c] ) );
+
+         // Handle case where first variables are unbounded
+         if( !boundsMinSet )
+         {
+            boundsMinSet = true;
+            if( !vd.flags[c].test( ColFlag::kLbInf ) && !vd.flags[c].test( ColFlag::kUbInf ) )
+               stats.boundsMin = std::min( abs( vd.lower_bounds[c] ), abs( vd.upper_bounds[c] ) );
+            else if( !vd.flags[c].test( ColFlag::kLbInf ) )
+               stats.boundsMin = abs( vd.lower_bounds[c] );
+            else if( !vd.flags[c].test( ColFlag::kUbInf ) )
+               stats.boundsMin = abs( vd.upper_bounds[c] );
+            else
+               boundsMinSet = false;
+         }
          else
-            stats.boundsMin = std::min( stats.boundsMin,
-                                        REAL( std::min( abs( vd.lower_bounds[c] ), abs( vd.upper_bounds[c] ) ) )
-                                        );
+         {
+            if( !vd.flags[c].test( ColFlag::kLbInf ) && !vd.flags[c].test( ColFlag::kUbInf ) )
+               stats.boundsMin = std::min( stats.boundsMin,
+                                           REAL( std::min( abs( vd.lower_bounds[c] ), abs( vd.upper_bounds[c] ) ) )
+                                           );
+            else if( !vd.flags[c].test( ColFlag::kLbInf ) )
+               stats.boundsMin = std::min( stats.boundsMin,
+                                           abs( vd.lower_bounds[c] )
+                                           );
+            else if( !vd.flags[c].test( ColFlag::kUbInf ) )
+               stats.boundsMin = std::min( stats.boundsMin,
+                                           abs( vd.upper_bounds[c] )
+                                           );
+         }
 
          if( !stats.boundsMaxInf )
          {
