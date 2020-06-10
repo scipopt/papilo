@@ -234,7 +234,7 @@ public:
    void
    printStatistics()
    {
-      fmt::print("Numerical Statistics:\n Matrix range    [{:.0e},{:.0e}]\n Objective range [{:.0e},{:.0e}]\n Bounds range    [{:.0e},{:.0e}]\n RHS range       [{:.0e},{:.0e}]\n Dynamism Columns: {:.0e}, Dynamism Rows   : {:.0e}\n",
+      fmt::print("Numerical Statistics:\n Matrix range    [{:.0e},{:.0e}]\n Objective range [{:.0e},{:.0e}]\n Bounds range    [{:.0e},{:.0e}]\n RHS range       [{:.0e},{:.0e}]\n Dynamism Variables: {:.0e}\n Dynamism Rows     : {:.0e}\n",
                  double(stats.matrixMin),
                  double(stats.matrixMax),
                  double(stats.objMin),
