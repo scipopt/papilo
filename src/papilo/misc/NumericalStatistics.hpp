@@ -69,9 +69,9 @@ public:
 
       // matrixMin, matrixMax, dynamism, bounds
 
-      REAL minabsval = 0.0;   //todo replace with stats.minabsval...
-      REAL maxabsval = 0.0;
-      REAL maxRowDyn = 0.0;
+      stats.matrixMin = 0.0;
+      stats.matrixMax = 0.0;
+      stats.rowDynamism = 0.0;
 
 
       // Row dynamism, matrixMin/Max
@@ -80,15 +80,15 @@ public:
          const SparseVectorView<REAL>& row = cm.getRowCoefficients(r);
          std::pair<REAL,REAL> minmax = row.getMinMaxAbsValue();
 
-         maxabsval = std::max( minmax.second, maxabsval);
-         if( r == 0 ) minabsval = maxabsval;
-         else minabsval = std::min( minmax.first, minabsval);
+         stats.matrixMax = std::max( minmax.second, stats.matrixMax);
+         if( r == 0 ) stats.matrixMin = stats.matrixMax;
+         else stats.matrixMin = std::min( minmax.first, stats.matrixMin);
 
          REAL dyn = minmax.second / minmax.first;
-         maxRowDyn = std::max( dyn , maxRowDyn );
+         stats.rowDynamism = std::max( dyn , stats.rowDynamism );
       }
 
-      REAL maxColDyn = 0.0;
+      stats.colDynamism = 0.0;
       stats.boundsMaxInf = false;
       stats.boundsMax = 0.0;
       stats.boundsMin = 0.0;
@@ -103,7 +103,7 @@ public:
          std::pair<REAL,REAL> minmax = col.getMinMaxAbsValue();
 
          REAL dyn = minmax.second / minmax.first;
-         maxColDyn = std::max( dyn, maxColDyn );
+         stats.colDynamism = std::max( dyn, stats.colDynamism );
 
          // Bounds
 
@@ -128,11 +128,11 @@ public:
                                            );
             else if( !vd.flags[c].test( ColFlag::kLbInf ) )
                stats.boundsMin = std::min( stats.boundsMin,
-                                           abs( vd.lower_bounds[c] )
+                                           REAL( abs( vd.lower_bounds[c] ) )
                                            );
             else if( !vd.flags[c].test( ColFlag::kUbInf ) )
                stats.boundsMin = std::min( stats.boundsMin,
-                                           abs( vd.upper_bounds[c] )
+                                           REAL( abs( vd.upper_bounds[c] ) )
                                            );
          }
 
@@ -148,11 +148,7 @@ public:
 
       }
 
-      stats.matrixMin = minabsval;
-      stats.matrixMax = maxabsval;
-      stats.dynamism = maxabsval/minabsval;
-      stats.rowDynamism = maxRowDyn;
-      stats.colDynamism = maxColDyn;
+      stats.dynamism = stats.matrixMax/stats.matrixMin;
 
       // Objective
       const Objective<REAL>& obj = prob.getObjective();
@@ -168,14 +164,16 @@ public:
       stats.objMax = maxAbsObj;
       stats.objMin = minAbsObj;
 
-      fmt::print("max {}, min {}, dyn {}, bounds: [{},{}], obj: [{},{}]",
-                 double(maxabsval),
-                 double(minabsval),
-                 double(stats.dynamism),
+      fmt::print("Matrix[{},{}], bounds: [{},{}], obj: [{},{}], dyn: {} dynCol: {}, dynRow: {}",
+                 double(stats.matrixMax),
+                 double(stats.matrixMin),
                  double(stats.boundsMin),
                  double(stats.boundsMax),
                  double(stats.objMin),
-                 double(stats.objMax)
+                 double(stats.objMax),
+                 double(stats.dynamism),
+                 double(stats.colDynamism),
+                 double(stats.rowDynamism)
                  );
 
    }
