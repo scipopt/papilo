@@ -88,12 +88,12 @@ public:
          stats.rowDynamism = std::max( dyn , stats.rowDynamism );
       }
 
+
       stats.colDynamism = 0.0;
       stats.boundsMaxInf = false;
       stats.boundsMax = 0.0;
       stats.boundsMin = 0.0;
       bool boundsMinSet = false;
-
 
       // Column dynamism, Variable Bounds
       for( int c = 0; c < ncols; ++c )
@@ -142,7 +142,7 @@ public:
                stats.boundsMaxInf = true;
             else
                stats.boundsMax = std::max( stats.boundsMax,
-                                           REAL( std::min( abs( vd.lower_bounds[c]), abs( vd.upper_bounds[c] ) ) )
+                                           REAL( std::max( abs( vd.lower_bounds[c]), abs( vd.upper_bounds[c] ) ) )
                                            );
          }
 
@@ -153,16 +153,28 @@ public:
       // Objective
       const Objective<REAL>& obj = prob.getObjective();
 
-      REAL maxAbsObj = 0.0;
-      REAL minAbsObj = 0.0; // == 0 beachten
+      stats.objMax = 0.0;
+      stats.objMin = 0.0;
+      bool objMinSet = false;
+
       for( int i = 0; i < obj.coefficients.size(); ++i )
       {
-         maxAbsObj = std::max( REAL( abs( obj.coefficients[i] ) ), maxAbsObj );
-         if( i == 0 ) minAbsObj = abs( obj.coefficients[i] );
-         else minAbsObj = std::min( REAL ( abs( obj.coefficients[i] ) ), minAbsObj );
+         if( obj.coefficients[i] != 0 )
+         {
+            stats.objMax = std::max( stats.objMax,
+                                     REAL( abs( obj.coefficients[i] ) )
+                                     );
+            if( !objMinSet )
+            {
+               stats.objMin = abs( obj.coefficients[i] );
+               objMinSet = true;
+            }
+            else
+               stats.objMin = std::min( stats.objMin,
+                                        REAL ( abs( obj.coefficients[i] ) )
+                                        );
+         }
       }
-      stats.objMax = maxAbsObj;
-      stats.objMin = minAbsObj;
 
       fmt::print("Matrix[{},{}], bounds: [{},{}], obj: [{},{}], dyn: {} dynCol: {}, dynRow: {}",
                  double(stats.matrixMax),
