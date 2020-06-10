@@ -44,8 +44,7 @@ struct Num_stats
    bool boundsMaxInf;
    REAL rhsMin;
    REAL rhsMax;
-   REAL lhsMin;
-   REAL lhsMax;
+   bool rhsMaxInf;
    REAL dynamism;
    REAL rowDynamism;
    REAL colDynamism;
@@ -63,20 +62,26 @@ public:
 
       const ConstraintMatrix<REAL>& cm = prob.getConstraintMatrix();
       const VariableDomains<REAL>& vd = prob.getVariableDomains();
+      const Vec<RowFlags>& rf = cm.getRowFlags();
+      const Vec<REAL>& lhs = cm.getLeftHandSides();
+      const Vec<REAL>& rhs = cm.getRightHandSides();
 
       int nrows = cm.getNRows();
       int ncols = cm.getNCols();
 
-      // matrixMin, matrixMax, dynamism, bounds
 
       stats.matrixMin = 0.0;
       stats.matrixMax = 0.0;
       stats.rowDynamism = 0.0;
+      stats.rhsMin = 0.0;
+      stats.rhsMax = 0.0;
+      stats.rhsMaxInf = false;
+      bool rhsMinSet = false;
 
-
-      // Row dynamism, matrixMin/Max
+      // Row dynamism, matrixMin/Max, RHS
       for( int r = 0; r < nrows; ++r )
       {
+         // matrixMin/Max
          const SparseVectorView<REAL>& row = cm.getRowCoefficients(r);
          std::pair<REAL,REAL> minmax = row.getMinMaxAbsValue();
 
@@ -84,15 +89,70 @@ public:
          if( r == 0 ) stats.matrixMin = stats.matrixMax;
          else stats.matrixMin = std::min( minmax.first, stats.matrixMin);
 
+         // Row dynamism
          REAL dyn = minmax.second / minmax.first;
          stats.rowDynamism = std::max( dyn , stats.rowDynamism );
+
+         // RHS min/max
+
+         // Handle case where RHS/LHS is inf
+         if( !rhsMinSet )
+         {
+            rhsMinSet = true;
+            if( !rf[r].test( RowFlag::kLhsInf ) && !rf[r].test( RowFlag::kRhsInf ) )
+               stats.rhsMin = std::min( abs( lhs[r] ),
+                                        abs( rhs[r] )
+                                        );
+            else if( !rf[r].test( RowFlag::kLhsInf ) )
+               stats.boundsMin = abs( lhs[r] );
+            else if( !rf[r].test( RowFlag::kRhsInf ) )
+               stats.boundsMin = abs( rhs[r] );
+            else
+               rhsMinSet = false;
+         }
+         else
+         {
+            if( !rf[r].test( RowFlag::kLhsInf ) && !rf[r].test( RowFlag::kRhsInf ) )
+               stats.rhsMin = std::min( stats.rhsMin,
+                                        REAL( std::min( abs( lhs[r] ),
+                                                        abs( rhs[r] )
+                                                        ) )
+                                        );
+            else if( !rf[r].test( RowFlag::kLhsInf ) )
+               stats.rhsMin = std::min( stats.rhsMin,
+                                        REAL( abs( lhs[r] ) )
+                                        );
+            else if( !rf[r].test( RowFlag::kRhsInf ) )
+               stats.rhsMin = std::min( stats.rhsMin,
+                                        REAL( abs( rhs[r] ) )
+                                        );
+         }
+
+         // Find biggest absolute value, even if one side unbounded
+         if( rf[r].test( RowFlag::kLhsInf ) || rf[r].test( RowFlag::kRhsInf ) )
+            stats.rhsMaxInf = true;
+            if( rf[r].test( RowFlag::kLhsInf ) && !rf[r].test( RowFlag::kRhsInf ) )
+               stats.rhsMax = std::max( stats.rhsMax,
+                                        REAL( abs( rhs[r] ) )
+                                        );
+            else if( !rf[r].test( RowFlag::kLhsInf ) && rf[r].test( RowFlag::kRhsInf ) )
+               stats.rhsMax = std::max( stats.rhsMax,
+                                        REAL( abs( lhs[r] ) )
+                                        );
+         else
+            stats.rhsMax = std::max( stats.rhsMax,
+                                       REAL( std::max( abs( lhs[r] ),
+                                                      abs( rhs[r] )
+                                                      ) )
+                                       );
+
       }
 
 
       stats.colDynamism = 0.0;
-      stats.boundsMaxInf = false;
-      stats.boundsMax = 0.0;
       stats.boundsMin = 0.0;
+      stats.boundsMax = 0.0;
+      stats.boundsMaxInf = false;
       bool boundsMinSet = false;
 
       // Column dynamism, Variable Bounds
@@ -138,7 +198,7 @@ public:
                                            );
          }
 
-         if( !stats.boundsMaxInf )
+         if( !stats.boundsMaxInf ) // fix inf bug
          {
             if( vd.flags[c].test( ColFlag::kLbInf ) || vd.flags[c].test( ColFlag::kUbInf ) )
                stats.boundsMaxInf = true;
@@ -180,17 +240,21 @@ public:
          }
       }
 
-      fmt::print("Matrix[{},{}], bounds: [{},{}], obj: [{},{}], dyn: {} dynCol: {}, dynRow: {}",
+      fmt::print(" Matrix range [{},{}]\n Bounds range [{},{}]\n Obj range [{},{}]\n RHS range [{},{}]\n dyn: {} dynCol: {}, dynRow: {}\n",
                  double(stats.matrixMax),
                  double(stats.matrixMin),
                  double(stats.boundsMin),
                  double(stats.boundsMax),
                  double(stats.objMin),
                  double(stats.objMax),
+                 double(stats.rhsMin),
+                 double(stats.rhsMax),
                  double(stats.dynamism),
                  double(stats.colDynamism),
                  double(stats.rowDynamism)
                  );
+      if( stats.rhsMaxInf ) fmt::print("RHS Max is INF\n");
+      if( stats.boundsMaxInf ) fmt::print( "Bounds Max is INF\n");
 
    }
 
