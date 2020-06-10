@@ -198,17 +198,25 @@ public:
                                            );
          }
 
-         if( !stats.boundsMaxInf ) // fix inf bug
+
+         if( vd.flags[c].test( ColFlag::kLbInf ) || vd.flags[c].test( ColFlag::kUbInf ) )
          {
-            if( vd.flags[c].test( ColFlag::kLbInf ) || vd.flags[c].test( ColFlag::kUbInf ) )
-               stats.boundsMaxInf = true;
-            else
+            stats.boundsMaxInf = true;
+            if( !vd.flags[c].test( ColFlag::kLbInf ) && vd.flags[c].test( ColFlag::kUbInf ) )
                stats.boundsMax = std::max( stats.boundsMax,
-                                           REAL( std::max( abs( vd.lower_bounds[c]),
-                                                           abs( vd.upper_bounds[c] )
-                                                           ) )
+                                           REAL( abs( vd.lower_bounds[c]) )
+                                           );
+            else if( vd.flags[c].test( ColFlag::kLbInf ) && !vd.flags[c].test( ColFlag::kUbInf ) )
+               stats.boundsMax = std::max( stats.boundsMax,
+                                           REAL( abs( vd.upper_bounds[c]) )
                                            );
          }
+         else
+            stats.boundsMax = std::max( stats.boundsMax,
+                                          REAL( std::max( abs( vd.lower_bounds[c]),
+                                                         abs( vd.upper_bounds[c] )
+                                                         ) )
+                                          );
 
       }
 
