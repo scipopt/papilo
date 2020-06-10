@@ -248,6 +248,11 @@ public:
                  );
    }
 
+   const Num_stats<REAL>&
+   getNum_stats()
+   {
+      return stats;
+   }
 
 private:
    Num_stats<REAL> stats;
