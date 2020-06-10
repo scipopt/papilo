@@ -36,7 +36,7 @@ TEST_CASE( "accurate-numerical-statistics",
            "[misc]" )
 {
    // Load problems and check values
-   const std::string pathInstDir = "instances/";
+   const std::string pathInstDir = "test/instances/";
 
    const std::string instance1 = "bell5.mps";
    const std::string instance2 = "blend2.mps";
