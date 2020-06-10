@@ -41,10 +41,8 @@ struct Num_stats
    REAL objMax;
    REAL boundsMin;
    REAL boundsMax;
-   bool boundsMaxInf;
    REAL rhsMin;
    REAL rhsMax;
-   bool rhsMaxInf;
    REAL dynamism;
    REAL rowDynamism;
    REAL colDynamism;
@@ -75,7 +73,6 @@ public:
       stats.rowDynamism = 0.0;
       stats.rhsMin = 0.0;
       stats.rhsMax = 0.0;
-      stats.rhsMaxInf = false;
       bool rhsMinSet = false;
 
       // Row dynamism, matrixMin/Max, RHS
@@ -128,31 +125,26 @@ public:
                                         );
          }
 
-         // Find biggest absolute value, even if one side unbounded
-         if( rf[r].test( RowFlag::kLhsInf ) || rf[r].test( RowFlag::kRhsInf ) )
-            stats.rhsMaxInf = true;
-            if( rf[r].test( RowFlag::kLhsInf ) && !rf[r].test( RowFlag::kRhsInf ) )
-               stats.rhsMax = std::max( stats.rhsMax,
-                                        REAL( abs( rhs[r] ) )
-                                        );
-            else if( !rf[r].test( RowFlag::kLhsInf ) && rf[r].test( RowFlag::kRhsInf ) )
-               stats.rhsMax = std::max( stats.rhsMax,
-                                        REAL( abs( lhs[r] ) )
-                                        );
-         else
+         if( !rf[r].test( RowFlag::kLhsInf ) && !rf[r].test( RowFlag::kRhsInf ) )
             stats.rhsMax = std::max( stats.rhsMax,
-                                       REAL( std::max( abs( lhs[r] ),
-                                                      abs( rhs[r] )
-                                                      ) )
-                                       );
-
+                                     REAL( std::max( abs( lhs[r] ),
+                                                     abs( rhs[r] )
+                                                     ) )
+                                     );
+         else if( !rf[r].test( RowFlag::kLhsInf ) )
+            stats.rhsMax = std::max( stats.rhsMax,
+                                     REAL( abs( lhs[r] ) )
+                                     );
+         else if( !rf[r].test( RowFlag::kRhsInf ) )
+            stats.rhsMax = std::max( stats.rhsMax,
+                                     REAL( abs( rhs[r] ) )
+                                     );
       }
 
 
       stats.colDynamism = 0.0;
       stats.boundsMin = 0.0;
       stats.boundsMax = 0.0;
-      stats.boundsMaxInf = false;
       bool boundsMinSet = false;
 
       // Column dynamism, Variable Bounds
@@ -199,24 +191,20 @@ public:
          }
 
 
-         if( vd.flags[c].test( ColFlag::kLbInf ) || vd.flags[c].test( ColFlag::kUbInf ) )
-         {
-            stats.boundsMaxInf = true;
-            if( !vd.flags[c].test( ColFlag::kLbInf ) && vd.flags[c].test( ColFlag::kUbInf ) )
-               stats.boundsMax = std::max( stats.boundsMax,
-                                           REAL( abs( vd.lower_bounds[c]) )
-                                           );
-            else if( vd.flags[c].test( ColFlag::kLbInf ) && !vd.flags[c].test( ColFlag::kUbInf ) )
-               stats.boundsMax = std::max( stats.boundsMax,
-                                           REAL( abs( vd.upper_bounds[c]) )
-                                           );
-         }
-         else
+         if( !vd.flags[c].test( ColFlag::kLbInf ) && !vd.flags[c].test( ColFlag::kUbInf ) )
             stats.boundsMax = std::max( stats.boundsMax,
-                                          REAL( std::max( abs( vd.lower_bounds[c]),
-                                                         abs( vd.upper_bounds[c] )
-                                                         ) )
-                                          );
+                                        REAL( std::max( abs( vd.lower_bounds[c]),
+                                                        abs( vd.upper_bounds[c] )
+                                                        ) )
+                                        );
+         else if( !vd.flags[c].test( ColFlag::kLbInf ) )
+            stats.boundsMax = std::max( stats.boundsMax,
+                                        REAL( abs( vd.lower_bounds[c]) )
+                                        );
+         else if( !vd.flags[c].test( ColFlag::kUbInf ) )
+            stats.boundsMax = std::max( stats.boundsMax,
+                                        REAL( abs( vd.upper_bounds[c]) )
+                                        );
 
       }
 
@@ -261,8 +249,6 @@ public:
                  double(stats.colDynamism),
                  double(stats.rowDynamism)
                  );
-      if( stats.rhsMaxInf ) fmt::print("RHS Max is INF\n");
-      if( stats.boundsMaxInf ) fmt::print( "Bounds Max is INF\n");
 
    }
 
