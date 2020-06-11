@@ -1,4 +1,3 @@
-include_directories(${SCIP_INCLUDE_DIRS} ${SOPLEX_INCLUDE_DIRS} ${HIGHS_INCLUDE_DIRS})
 if(SCIP)
    find_package(SCIP QUIET)
 endif()
@@ -25,6 +24,8 @@ if(HIGHS_FOUND)
 else()
    set(PAPILO_HAVE_HIGHS 0)
 endif()
+
+include_directories(${SCIP_INCLUDE_DIRS} ${SOPLEX_INCLUDE_DIRS} ${HIGHS_INCLUDE_DIRS})
 if(Boost_IOSTREAMS_FOUND AND Boost_SERIALIZATION_FOUND AND Boost_PROGRAM_OPTIONS_FOUND)
    add_executable(papilo-executable ${CMAKE_CURRENT_LIST_DIR}/../src/papilo.cpp)
 
