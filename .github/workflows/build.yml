@@ -37,7 +37,7 @@ jobs:
 
     - name: Cached Dependencies
       id: cached-dependencies
-      uses: actions/cache@v1
+      uses: actions/cache@v2
       with:
         path: ./Dependencies
         key: dependencies-${{env.SCIP_VERSION}}-${{ matrix.os }}-package
