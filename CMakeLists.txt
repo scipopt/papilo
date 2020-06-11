@@ -16,9 +16,6 @@ set(CMAKE_VISIBILITY_INLINES_HIDDEN 1)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 include(GenerateExportHeader)
 
-# must be added first so that the configurated config file is preferred over the normal one
-include_directories(${CMAKE_BINARY_DIR})
-
 option(GMP "should gmp be linked" ON)
 option(QUADMATH "should quadmath library be used" ON)
 if(MSVC)
@@ -41,9 +38,9 @@ if(GMP)
     find_package(GMP)
 endif()
 if(GMP_FOUND)
-    include_directories(${GMP_INCLUDE_DIRS})
     set(PAPILO_HAVE_GMP 1)
 else()
+    set(GMP_INCLUDE_DIRS "")
     set(GMP_LIBRARIES "")
     set(PAPILO_HAVE_GMP 0)
 endif()
@@ -53,11 +50,11 @@ if(QUADMATH)
 endif()
 if(Quadmath_FOUND)
    set(PAPILO_HAVE_FLOAT128 1)
-   include_directories(${Quadmath_INCLUDE_DIRS})
-   set(QUADMATH_IMPORTED_TARGET Quadmath::quadmath)
+   set(Quadmath_IMPORTED_TARGET Quadmath::quadmath)
 else()
    set(PAPILO_HAVE_FLOAT128 0)
-   set(QUADMATH_IMPORTED_TARGET "")
+   set(Quadmath_INCLUDE_DIRS "")
+   set(Quadmath_IMPORTED_TARGET "")
 endif()
 
 find_program(GIT git)
@@ -93,7 +90,9 @@ target_include_directories(papilo INTERFACE
    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/external/tbb/include>
    $<INSTALL_INTERFACE:include>
    $<INSTALL_INTERFACE:include/papilo-external>
-   ${Boost_INCLUDE_DIRS})
+   ${Boost_INCLUDE_DIRS}
+   ${GMP_INCLUDE_DIRS}
+   ${Quadmath_INCLUDE_DIRS})
 
 find_package(TBB MODULE REQUIRED)
 if(TBB_BUILT_STATIC_LIB)
@@ -111,7 +110,7 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
    endif()
 endif()
 
-target_link_libraries(papilo INTERFACE ${TBB_LIBRARY} ${QUADMATH_IMPORTED_TARGET} ${GMP_LIBRARIES})
+target_link_libraries(papilo INTERFACE ${TBB_LIBRARY} ${Quadmath_IMPORTED_TARGET} ${GMP_LIBRARIES})
 
 if(MSVC)
    target_compile_definitions(papilo INTERFACE BOOST_ALL_NO_LIB)
