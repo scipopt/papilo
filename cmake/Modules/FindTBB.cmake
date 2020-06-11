@@ -41,10 +41,15 @@ if(NOT TBB_LIBRARY)
          # create an imported target that also links the thread libraries via its interface
          set(TBB_BUILT_STATIC_LIB 1)
          find_package( Threads )
+         list(APPEND linkinterface "${CMAKE_THREAD_LIBS_INIT}")
+         find_library(LIBRT rt)
+         if(LIBRT)
+            list(APPEND linkinterface "${LIBRT}")
+         endif()
          add_library(tbb STATIC IMPORTED)
          set_target_properties(tbb PROPERTIES
             IMPORTED_LOCATION "${TBB_LIBRARY}"
-            IMPORTED_LINK_INTERFACE_LIBRARIES "${CMAKE_THREAD_LIBS_INIT}")
+            INTERFACE_LINK_LIBRARIES ${linkinterface})
          # add variable to hold the static lib so that it can be installed
          set(TBB_STATIC_LIB ${TBB_LIBRARY})
          set(TBB_LIBRARY tbb)
