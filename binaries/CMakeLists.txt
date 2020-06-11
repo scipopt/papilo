@@ -51,7 +51,7 @@ if(Boost_IOSTREAMS_FOUND AND Boost_SERIALIZATION_FOUND AND Boost_PROGRAM_OPTIONS
 endif()
 
 if(PAPILO_HAVE_SCIP AND PAPILO_HAVE_SOPLEX)
-   add_library(papilolib SHARED ${CMAKE_CURRENT_LIST_DIR}/..src/papilolib.cpp)
+   add_library(papilolib SHARED ${CMAKE_CURRENT_LIST_DIR}/../src/papilolib.cpp)
    set_target_properties(papilolib PROPERTIES OUTPUT_NAME papilo LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
    target_link_libraries(papilolib papilo ${SOPLEX_PIC_LIBRARIES} ${SCIP_LIBRARIES})
    if( Boost_IOSTREAMS_FOUND )
