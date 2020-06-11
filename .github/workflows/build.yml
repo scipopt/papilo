@@ -54,7 +54,7 @@ jobs:
       if:  runner.os != 'Windows' && steps.cached-dependencies.outputs.cache-hit != 'true'
       run: |
         cd $HOME
-        wget http://www.scipopt.org/download/release/scipoptsuite-${SCIP_VERSION}.tgz
+        wget http://www.scipopt.org/download/release/scipoptsuite-${SCIP_VERSION}.tgz --no-check-certificate
         tar xf ./scipoptsuite-${SCIP_VERSION}.tgz
         cmake -E make_directory ./scipoptsuite-${SCIP_VERSION}/build
         cd ./scipoptsuite-${SCIP_VERSION}/build
