@@ -46,7 +46,7 @@ jobs:
       if: runner.os == 'Windows' && steps.cached-dependencies.outputs.cache-hit != 'true'
       run: |
         cmake -E make_directory ${{github.workspace}}/Dependencies
-        Invoke-WebRequest -Uri "http://scip.zib.de/download/release/SCIPOptSuite-${{env.SCIP_VERSION}}-win64-VS15.exe" -OutFile "${{github.workspace}}\Dependencies\scipoptsuite.exe"
+        Invoke-WebRequest -Uri "http://www.scipopt.org/download/release/SCIPOptSuite-${{env.SCIP_VERSION}}-win64-VS15.exe" -OutFile "${{github.workspace}}\Dependencies\scipoptsuite.exe"
         Invoke-WebRequest -Uri "https://github.com/intel/tbb/releases/download/v2020.1/tbb-2020.1-win.zip" -OutFile "${{github.workspace}}\Dependencies\tbb.zip"
         expand-archive -path "${{github.workspace}}\Dependencies\tbb.zip" -destinationpath "${{github.workspace}}\Dependencies\"
 
@@ -54,7 +54,7 @@ jobs:
       if:  runner.os != 'Windows' && steps.cached-dependencies.outputs.cache-hit != 'true'
       run: |
         cd $HOME
-        wget http://scip.zib.de/download/release/scipoptsuite-${SCIP_VERSION}.tgz
+        wget http://www.scipopt.org/download/release/scipoptsuite-${SCIP_VERSION}.tgz
         tar xf ./scipoptsuite-${SCIP_VERSION}.tgz
         cmake -E make_directory ./scipoptsuite-${SCIP_VERSION}/build
         cd ./scipoptsuite-${SCIP_VERSION}/build
