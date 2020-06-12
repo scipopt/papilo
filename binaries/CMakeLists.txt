@@ -28,6 +28,8 @@ else()
 endif()
 
 include_directories(${SCIP_INCLUDE_DIRS} ${SOPLEX_INCLUDE_DIRS} ${HIGHS_INCLUDE_DIRS})
+find_package(Boost REQUIRED OPTIONAL_COMPONENTS iostreams serialization program_options)
+
 if(Boost_IOSTREAMS_FOUND AND Boost_SERIALIZATION_FOUND AND Boost_PROGRAM_OPTIONS_FOUND)
    add_executable(papilo-executable ${CMAKE_CURRENT_LIST_DIR}/../src/papilo.cpp)
 

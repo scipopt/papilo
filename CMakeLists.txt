@@ -31,7 +31,7 @@ if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Release)
 endif()
 
-find_package(Boost REQUIRED OPTIONAL_COMPONENTS iostreams serialization program_options)
+find_package(Boost REQUIRED)
 
 if(GMP)
     find_package(GMP)
