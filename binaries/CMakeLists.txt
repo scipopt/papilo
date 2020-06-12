@@ -27,6 +27,8 @@ else()
    set(PAPILO_HAVE_HIGHS 0)
 endif()
 
+set(CMAKE_CXX_STANDARD 14)
+
 include_directories(${SCIP_INCLUDE_DIRS} ${SOPLEX_INCLUDE_DIRS} ${HIGHS_INCLUDE_DIRS} ${CMAKE_CURRENT_BINARY_DIR})
 find_package(Boost REQUIRED OPTIONAL_COMPONENTS iostreams serialization program_options)
 
