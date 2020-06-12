@@ -144,6 +144,9 @@ else()
    message(STATUS "LUSOL is not built")
 endif()
 
+include(CheckCXXSourceCompiles)
+include(CheckCXXCompilerFlag)
+
 if(NOT MSVC)
    check_cxx_compiler_flag(-std=c++14 HAVE_FLAG_STD_CXX14)
    if(HAVE_FLAG_STD_CXX14)
@@ -168,7 +171,6 @@ else()
 endif()
 
 if(Boost_IOSTREAMS_FOUND)
-   include(CheckCXXSourceCompiles)
    set(CMAKE_REQUIRED_INCLUDES ${Boost_INCLUDE_DIRS})
    set(CMAKE_REQUIRED_LIBRARIES ${Boost_LIBRARIES})
    check_cxx_source_compiles(
