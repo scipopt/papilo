@@ -1,3 +1,5 @@
+include(GenerateExportHeader)
+
 if(SCIP)
    find_package(SCIP QUIET)
 endif()

@@ -14,7 +14,6 @@ set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/Modules)
 set(CMAKE_CXX_VISIBILITY_PRESET hidden)
 set(CMAKE_VISIBILITY_INLINES_HIDDEN 1)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
-include(GenerateExportHeader)
 
 option(GMP "should gmp be linked" ON)
 option(QUADMATH "should quadmath library be used" ON)
