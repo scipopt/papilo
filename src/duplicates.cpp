@@ -168,6 +168,7 @@ compute_row_and_column_permutation( const Problem<double>& prob )
       return std::make_pair( a.first, colhashes[a.second] ) <
              std::make_pair( b.first, colhashes[b.second] );
    };
+   // colperm and rowperm needs to be regarded here? (csr/cscvals does not have the colperm saved in the .second...)
 
    auto comp_colvals = [&]( const std::pair<uint64_t, int>& a,
                             const std::pair<uint64_t, int>& b ) {
@@ -205,6 +206,16 @@ compute_row_and_column_permutation( const Problem<double>& prob )
                 int col = colperm[i];
                 int start = cscstarts[col];
                 int end = cscstarts[col + 1];
+                /*
+                 * rowhashes is not initialized in first run, I think that can cause non deterministic behaviour for coeffs of same size when sorting.
+                 * You can not initialize it to 0 as that would lead to unsortability? (since a.first == b.first and rowhashes[a.second] == rowhashes[b.second]
+                 * (i do not know how pdqsort handles that though)
+                 * That also could be problematic for rowhash collisions
+                 * In both cases it is unknown (to me) which row goes first or second - leading to potential wrong permutations (some sort of backtracing here????)
+                 * If you initialize rowhashes to random non colliding values you determine a permutation beforehand, in some cases it will be very uncertain to reach
+                 * a correct permutation
+                 * Of course you can argue this is very unlikely, but depending on how pdqsort handles this ( I think ) it is not hard to construct some examples that do not work...
+                 */
                 pdqsort( &cscvals[start], &cscvals[end], comp_colvals );
 
                 Hasher<uint64_t> hasher( end - start );
