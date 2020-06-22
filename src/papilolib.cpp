@@ -96,11 +96,15 @@ struct CallbackAllocator
 
 #include "papilo/misc/Alloc.hpp"
 using namespace papilo;
+
+namespace papilo
+{
 template <typename T>
 struct AllocatorTraits<T>
 {
    using type = std::allocator<T>;
 };
+} // namespace papilo
 
 #include "papilo/core/ConstraintMatrix.hpp"
 #include "papilo/core/Objective.hpp"
