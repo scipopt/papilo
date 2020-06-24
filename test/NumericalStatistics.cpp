@@ -44,6 +44,35 @@ TEST_CASE( "accurate-numerical-statistics",
    const std::string filename1 = pathInstDir + instance1;
    Problem<double> problem1 = MpsParser<double>::loadProblem( filename1 );
 
+     // enum declaration, only needed once
+   enum class boundtype{ kLE, kEq, kGE };
+   // Variable declaration
+   Vec<Triplet<double>> entries;
+   Vec<double> rowlhs;
+   Vec<double> rowrhs;
+   Vec<std::string> rownames;
+   Vec<std::string> colnames;
+
+   HashMap<std::string, int> rowname2idx;
+   HashMap<std::string, int> colname2idx;
+   Vec<double> lb4cols;
+   Vec<double> ub4cols;
+   Vec<boundtype> row_type;
+   Vec<RowFlags> row_flags;
+   Vec<ColFlags> col_flags;
+   double objoffset = 0;
+
+   Problem<double> problem;
+   // Objective
+   Vec<double> coeffobj{ 0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,43000.0,43000.0,43000.0,43000.0,43000.0,43000.0,43000.0,43000.0,43000.0,43000.0,43000.0,43000.0,43000.0,43000.0,58000.0,58000.0,58000.0,59000.0,59000.0,59000.0,59000.0,60000.0,59000.0,59000.0,59000.0,58000.0,58000.0,58000.0,10000.0,10000.0,10000.0,10000.0,10000.0,10000.0,10000.0,10000.0,10000.0,10000.0,10000.0,10000.0,10000.0,10000.0,24.5645,20.3962,14.1693,50.2605,58.0423,36.6095,39.201,48.034,29.4336,36.0182,18.7245,30.3169,5.3655,25.55,20.7977,1.825,2.45645,2.03962,1.41693,5.02605,5.80423,3.66095,3.9201,4.8034,2.94336,3.60182,1.87245,3.03169,0.53655,2.555,2.07977,0.1825,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,};
+   problem.setObjective( coeffobj, 0.0 );
+
+   const Objective<double> o1 = problem.getObjective();
+   const Objective<double> o2 = problem1.getObjective();
+
+   REQUIRE( o1.coefficients.size() == o2.coefficients.size() );
+   REQUIRE( o1.coefficients.size() == o2.coefficients.size() );
+
    NumericalStatistics<double> nstats1(problem1);
    const Num_stats<double>& stats = nstats1.getNum_stats();
    nstats1.printStatistics();
