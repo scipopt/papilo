@@ -168,7 +168,6 @@ compute_row_and_column_permutation( const Problem<double>& prob )
       return std::make_pair( a.first, colhashes[a.second] ) <
              std::make_pair( b.first, colhashes[b.second] );
    };
-   // colperm and rowperm needs to be regarded here? (csr/cscvals does not have the colperm saved in the .second...)
 
    auto comp_colvals = [&]( const std::pair<uint64_t, int>& a,
                             const std::pair<uint64_t, int>& b ) {
