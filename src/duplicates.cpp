@@ -669,17 +669,37 @@ check_duplicates( const Problem<double>& prob1, const Problem<double>& prob2 )
    return true;
 }
 
+static uint64_t
+compute_instancehash( const Problem<double>& prob )
+{
+
+   return 0
+}
+
 int
 main( int argc, char* argv[] )
 {
-
-   assert( argc == 3 );
+   if( argc != 2 || argc != 3 )
+   {
+      fmt::print("usage:\n")
+      fmt::print("./check_duplicates instance1.mps instance2.mps  - check for duplicates\n")
+      fmt::print("./check_duplicates instance1.mps                - compute unique hash for instance")
+   }
+   assert( argc == 2 || argc == 3 );
 
    Problem<double> prob1 = MpsParser<double>::loadProblem( argv[1] );
-   Problem<double> prob2 = MpsParser<double>::loadProblem( argv[2] );
 
-   bool res = check_duplicates( prob1, prob2 );
-   fmt::print( "duplicates: {}\n", res );
+   if( argc == 2 )
+   {
+      uint64_t result = compute_instancehash()
+      fmt::print( result )
+   }
+   else
+   {
+      Problem<double> prob2 = MpsParser<double>::loadProblem( argv[2] );
+      bool res = check_duplicates( prob1, prob2 );
+      fmt::print( "duplicates: {}\n", res );
+   }
 
    return 0;
 }
