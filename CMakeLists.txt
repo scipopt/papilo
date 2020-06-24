@@ -244,6 +244,9 @@ target_compile_definitions(papilo-core PRIVATE PAPILO_USE_EXTERN_TEMPLATES)
 include_directories(${SCIP_INCLUDE_DIRS} ${SOPLEX_INCLUDE_DIRS} ${HIGHS_INCLUDE_DIRS})
 
 if(Boost_IOSTREAMS_FOUND AND Boost_SERIALIZATION_FOUND AND Boost_PROGRAM_OPTIONS_FOUND)
+   add_executable(convMPS src/convMPS.cpp)
+   target_link_libraries(convMPS papilo-core ${Boost_LIBRARIES})
+   target_compile_definitions(convMPS PRIVATE PAPILO_USE_EXTERN_TEMPLATES PAPILO_MPS_WRITER)
    add_executable(papilo-executable src/papilo.cpp)
 
    if(PAPILO_HAVE_SCIP)
