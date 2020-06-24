@@ -48,7 +48,6 @@ convMPS( const Problem<double>& prob )
    // Variables
    fmt::print("   // Variable declaration\n");
    fmt::print("   Vec<Triplet<double>> entries;\n");
-   fmt::print("   Vec<std::pair<int, double>> coeffobj;\n");
    fmt::print("   Vec<double> rowlhs;\n");
    fmt::print("   Vec<double> rowrhs;\n");
    fmt::print("   Vec<std::string> rownames;\n");
@@ -61,11 +60,16 @@ convMPS( const Problem<double>& prob )
    fmt::print("   Vec<RowFlags> row_flags;\n");
    fmt::print("   Vec<ColFlags> col_flags;\n");
    fmt::print("   double objoffset = 0;\n\n");
+   fmt::print("   Problem<double> problem;\n");
 
    // Objective
    const Objective<double>& obj = prob.getObjective();
    fmt::print("   // Objective\n");
-   fmt::print("   \n");
+   fmt::print("   Vec<double> coeffobj{{ ");
+   for(double coeff: obj.coefficients)
+      fmt::print("{},", coeff);
+   fmt::print("}};\n");
+   fmt::print("   problem.setObjective( coeffobj, {} );\n", obj.offset);
 
 
 }
