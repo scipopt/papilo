@@ -673,7 +673,7 @@ static uint64_t
 compute_instancehash( const Problem<double>& prob )
 {
 
-   return 0
+   return 0;
 }
 
 int
@@ -681,9 +681,9 @@ main( int argc, char* argv[] )
 {
    if( argc != 2 || argc != 3 )
    {
-      fmt::print("usage:\n")
-      fmt::print("./check_duplicates instance1.mps instance2.mps  - check for duplicates\n")
-      fmt::print("./check_duplicates instance1.mps                - compute unique hash for instance")
+      fmt::print("usage:\n");
+      fmt::print("./check_duplicates instance1.mps instance2.mps  - check for duplicates\n");
+      fmt::print("./check_duplicates instance1.mps                - compute unique hash for instance");
    }
    assert( argc == 2 || argc == 3 );
 
@@ -691,8 +691,8 @@ main( int argc, char* argv[] )
 
    if( argc == 2 )
    {
-      uint64_t result = compute_instancehash()
-      fmt::print( result )
+      uint64_t result = compute_instancehash( prob1 );
+      fmt::print( "{}", result );
    }
    else
    {
