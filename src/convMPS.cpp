@@ -41,13 +41,19 @@ convMPS( const Problem<double>& prob )
 {
    /// Print all the relevant stuff for problem creation as cpp commands
 
+   // Get all relevant data
+   int nCols = prob.getNCols();
+   int nRows = prob.getNRows();
+   const Objective<double>& obj = prob.getObjective();
+   const ConstraintMatrix<double>& cm = prob.getConstraintMatrix();
+
    // Data structures
    fmt::print("   // enum declaration, only needed once\n");
    fmt::print("   enum class boundtype{{ kLE, kEq, kGE }};\n");
 
    // Variables
    fmt::print("   // Variable declaration\n");
-   fmt::print("   Vec<Triplet<double>> entries;\n");
+   fmt::print("   int nCols = {}; int nRows = {};\n", nCols, nRows);
    fmt::print("   Vec<double> rowlhs;\n");
    fmt::print("   Vec<double> rowrhs;\n");
    fmt::print("   Vec<std::string> rownames;\n");
@@ -63,14 +69,28 @@ convMPS( const Problem<double>& prob )
    fmt::print("   Problem<double> problem;\n");
 
    // Objective
-   const Objective<double>& obj = prob.getObjective();
    fmt::print("   // Objective\n");
    fmt::print("   Vec<double> coeffobj{{ ");
    for(double coeff: obj.coefficients)
       fmt::print("{},", coeff);
    fmt::print("}};\n");
-   fmt::print("   problem.setObjective( coeffobj, {} );\n", obj.offset);
+   fmt::print("   problem.setObjective( coeffobj, {} );\n\n", obj.offset);
 
+   // Constraint Matrix
+   fmt::print("   // Constraint Matrix\n");
+   fmt::print("   Vec<std::tuple<int, int, double>> entries{{");
+   // iterate through every row and add columns
+   for(int r = 0; r < nRows; ++r)
+   {
+      const SparseVectorView<double>& rc = cm.getRowCoefficients( r );
+      const int len = rc.getLength();
+      const int* indices = rc.getIndices();
+      const double* vals = rc.getValues();
+      for(int i = 0; i < len; ++i)
+         fmt::print( "{{{},{},{}}},", r, *(indices + i), *(vals + i) );
+   }
+   fmt::print("}};\n");
+   fmt::print("   problem.setConstraintMatrix( SparseStorage<double>{{ entries, nCols, nRows, false }} , rowlhs, rowrhs, row_flags, false )");
 
 }
 
