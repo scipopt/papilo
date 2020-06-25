@@ -214,8 +214,10 @@ convMPS( const Problem<double>& prob )
    }
    fmt::print( "}};\n" );
    fmt::print( "   pb.addEntryAll( entries );\n" );
-
-
+   // Names
+   fmt::print( "   pb.setProblemName(\"{}\");\n", prob.getName() );
+   // Build the Problem
+   fmt::print( "   Problem<double> problem = pb.build();\n" );
 
 }
 
