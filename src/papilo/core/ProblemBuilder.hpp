@@ -123,12 +123,28 @@ class ProblemBuilder
    }
 
    void
+   setColLbInfAll( Vec<bool> isInfinite )
+   {
+      assert( domains.flags.size() == isInfinite.size() );
+      for( int c = 0; c < isInfinite.size(); ++c )
+         setColLbInf( c, isInfinite[i] );
+   }
+
+   void
    setColLbInf( int col, bool isInfinite )
    {
       if( isInfinite )
          domains.flags[col].set( ColFlag::kLbInf );
       else
          domains.flags[col].unset( ColFlag::kLbInf );
+   }
+
+   void
+   setColUbInfAll( Vec<bool> isInfinite )
+   {
+      assert( domains.flags.size() == isInfinite.size() );
+      for( int c = 0; c < isInfinite.size(); ++c )
+         setColUbInf( c, isInfinite[i] );
    }
 
    void
@@ -141,9 +157,25 @@ class ProblemBuilder
    }
 
    void
+   setColLbAll( Vec<REAL> lbs )
+   {
+      assert( lbs.size() == domains.lower_bounds.size() );
+      for( int c = 0; c < lbs.size(); ++c )
+         domains.lower_bounds[c] = std::move( lbs[c] );
+   }
+
+   void
    setColLb( int col, REAL lb )
    {
       domains.lower_bounds[col] = std::move( lb );
+   }
+
+   void
+   setColUbAll( Vec<REAL> ubs )
+   {
+      assert( ubs.size() == domains.upper_bounds.size() );
+      for( int c = 0; c < ubs.size(); ++c )
+         domains.upper_bounds[c] = std::move( ubs[c] );
    }
 
    void
