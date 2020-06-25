@@ -50,39 +50,39 @@ convMPS( const Problem<double>& prob )
    Vec<double> rowrhs = cm.getRightHandSides();
 
    // Data structures
-   fmt::print("   // enum declaration, only needed once\n");
-   fmt::print("   enum class boundtype{{ kLE, kEq, kGE }};\n");
+   fmt::print( "   // enum declaration, only needed once\n" );
+   fmt::print( "   enum class boundtype{{ kLE, kEq, kGE }};\n" );
 
    // Variables
-   fmt::print("   // Variable declaration\n");
-   fmt::print("   int nCols = {}; int nRows = {};\n", nCols, nRows);
-   fmt::print("   Vec<double> rowlhs({});\n", nRows );
-   fmt::print("   Vec<double> rowrhs({});\n", nRows );
-   fmt::print("   Vec<std::string> rownames;\n");
-   fmt::print("   Vec<std::string> colnames;\n\n");
-   fmt::print("   HashMap<std::string, int> rowname2idx;\n");
-   fmt::print("   HashMap<std::string, int> colname2idx;\n");
-   fmt::print("   Vec<double> lb4cols;\n");
-   fmt::print("   Vec<double> ub4cols;\n");
-   fmt::print("   Vec<boundtype> row_type;\n");
-   fmt::print("   Vec<RowFlags> row_flags;\n");
-   fmt::print("   Vec<ColFlags> col_flags;\n");
-   fmt::print("   double objoffset = 0;\n\n");
-   fmt::print("   Problem<double> problem;\n");
+   fmt::print( "   // Variable declaration\n" );
+   fmt::print( "   int nCols = {}; int nRows = {};\n", nCols, nRows );
+   fmt::print( "   Vec<double> rowlhs({});\n", nRows );
+   fmt::print( "   Vec<double> rowrhs({});\n", nRows );
+   fmt::print( "   Vec<std::string> rownames;\n" );
+   fmt::print( "   Vec<std::string> colnames;\n\n" );
+   fmt::print( "   HashMap<std::string, int> rowname2idx;\n" );
+   fmt::print( "   HashMap<std::string, int> colname2idx;\n" );
+   fmt::print( "   Vec<double> lb4cols;\n" );
+   fmt::print( "   Vec<double> ub4cols;\n" );
+   fmt::print( "   Vec<boundtype> row_type;\n" );
+   fmt::print( "   Vec<RowFlags> row_flags;\n" );
+   fmt::print( "   Vec<ColFlags> col_flags;\n" );
+   fmt::print( "   double objoffset = 0;\n\n" );
+   fmt::print( "   Problem<double> problem;\n" );
 
    // Objective
-   fmt::print("   // Objective\n");
-   fmt::print("   Vec<double> coeffobj{{ ");
-   for(double coeff: obj.coefficients)
-      fmt::print("{},", coeff);
-   fmt::print("}};\n");
-   fmt::print("   problem.setObjective( coeffobj, {} );\n\n", obj.offset);
+   fmt::print( "   // Objective\n" );
+   fmt::print( "   Vec<double> coeffobj{{ " );
+   for( double coeff: obj.coefficients )
+      fmt::print ("{},", coeff );
+   fmt::print( "}};\n" );
+   fmt::print( "   problem.setObjective( coeffobj, {} );\n\n", obj.offset );
 
    // Constraint Matrix
-   fmt::print("   // Constraint Matrix\n");
-   fmt::print("   Vec<std::tuple<int, int, double>> entries{{");
+   fmt::print( "   // Constraint Matrix\n" );
+   fmt::print( "   Vec<std::tuple<int, int, double>> entries{{" );
    // iterate through every row and add columns
-   for(int r = 0; r < nRows; ++r)
+   for( int r = 0; r < nRows; ++r )
    {
       const SparseVectorView<double>& rc = cm.getRowCoefficients( r );
       const int len = rc.getLength();
@@ -91,17 +91,17 @@ convMPS( const Problem<double>& prob )
       for(int i = 0; i < len; ++i)
          fmt::print( "{{{},{},{}}},", r, *(indices + i), *(vals + i) );
    }
-   fmt::print("}};\n");
+   fmt::print( "}};\n" );
    // iterate through every row and set lhs and rhs
-   fmt::print("   rowlhs = {{");
-   for(int r = 0; r < nRows; ++r)
-      fmt::print("{},", rowlhs[r]);
-   fmt::print("   }};\n");
-   fmt::print("   rowrhs = {{");
-   for(int r = 0; r < nRows; ++r)
-      fmt::print("{},", rowrhs[r]);
-   fmt::print("   }};\n");
-   fmt::print("   problem.setConstraintMatrix( SparseStorage<double>{{ entries, nCols, nRows, false }} , rowlhs, rowrhs, row_flags, false );");
+   fmt::print( "   rowlhs = {{" );
+   for( int r = 0; r < nRows; ++r )
+      fmt::print( "{},", rowlhs[r] );
+   fmt::print( "   }};\n" );
+   fmt::print( "   rowrhs = {{" );
+   for( int r = 0; r < nRows; ++r )
+      fmt::print( "{},", rowrhs[r] );
+   fmt::print( "   }};\n" );
+   fmt::print( "   problem.setConstraintMatrix( SparseStorage<double>{{ entries, nCols, nRows, false }} , rowlhs, rowrhs, row_flags, false );" );
 
 }
 
@@ -110,8 +110,8 @@ main( int argc, char* argv[] )
 {
    if( argc != 2 )
    {
-      fmt::print("usage:\n");
-      fmt::print("./convMPS instance1.mps         - create array of cpp code to load instance.mps to papilo\n");
+      fmt::print( "usage:\n" );
+      fmt::print( "./convMPS instance1.mps         - create array of cpp code to load instance.mps to papilo\n" );
       return 1;
    }
    assert( argc == 2 );
