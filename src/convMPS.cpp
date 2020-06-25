@@ -154,7 +154,7 @@ convMPS( const Problem<double>& prob )
    fmt::print( "}};\n" );
    fmt::print( "   pb.setObjAll( coeffobj );\n" );
    fmt::print( "   pb.setObjOffset( {} );\n", obj.offset );
-   // Bounds
+   // Columns
    fmt::print( "   Vec<double> lbs = {{" );
    for( int c = 0; c < nCols; ++c )
       fmt::print( "{},", vd.lower_bounds[c] );
@@ -171,10 +171,16 @@ convMPS( const Problem<double>& prob )
    for( int c = 0; c < nCols; ++c )
       fmt::print( "{},", vd.flags[c].test( ColFlag::kUbInf ) );
    fmt::print( "}};\n" );
+   fmt::print( "   Vec<bool> isIntegral = {{" );
+   for( int c = 0; c < nCols; ++c )
+      fmt::print( "{},", vd.flags[c].test( ColFlag::kIntegral ) );
+   fmt::print( "}};\n" );
    fmt::print( "   pb.setColLbAll( lbs );\n" );
    fmt::print( "   pb.setColLbInfAll( lbInf );\n" );
    fmt::print( "   pb.setColUbAll( ubs );\n" );
    fmt::print( "   pb.setColUbInfAll( ubInf );\n" );
+   fmt::print( "   pb.setColIntegralAll( isIntegral );\n" );
+   // Rows
 
 
 }
