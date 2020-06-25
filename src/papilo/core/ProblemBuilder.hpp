@@ -214,7 +214,7 @@ class ProblemBuilder
    setRowLhsInfAll( Vec<bool> isInfinite )
    {
       assert( isInfinite.size() == rflags.size() );
-      for( int r = 0; 0 < isInfinite.size(); ++r )
+      for( int r = 0; r < isInfinite.size(); ++r )
          setRowLhsInf( r, isInfinite[r] );
    }
 
@@ -231,7 +231,7 @@ class ProblemBuilder
    setRowRhsInfAll( Vec<bool> isInfinite )
    {
       assert( isInfinite.size() == rflags.size() );
-      for( int r = 0; 0 < isInfinite.size(); ++r )
+      for( int r = 0; r < isInfinite.size(); ++r )
          setRowRhsInf( r, isInfinite[r] );
    }
 
