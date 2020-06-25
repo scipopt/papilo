@@ -49,6 +49,7 @@ convMPS( const Problem<double>& prob )
    Vec<double> rowlhs = cm.getLeftHandSides();
    Vec<double> rowrhs = cm.getRightHandSides();
    Vec<RowFlags> row_flags = cm.getRowFlags();
+   const int nnz = cm.getNnz();
 
    // Data structures
    fmt::print( "   // enum declaration, only needed once\n" );
@@ -137,6 +138,21 @@ convMPS( const Problem<double>& prob )
    }
    fmt::print( "\n" );
    fmt::print( "   problem.setConstraintMatrix( SparseStorage<double>{{ entries, nCols, nRows, false }} , rowlhs, rowrhs, row_flags, false );" );
+
+   // Version 2: The problem builder
+   fmt::print( "\n\n\n   ///PROBLEM BUILDER CODE\n" );
+   fmt::print( "   int nCols = {}; int nRows = {};\n", nCols, nRows );
+   fmt::print( "   ProblemBuilder<double> pB;" );
+
+   // Set all needed things
+   fmt::print( "   pB.reserve( {},{},{} );\n", nnz, nRows, nCols );
+   // Obj
+   fmt::print( "   Vec<double> coeffobj{{ " );
+   for( double coeff: obj.coefficients )
+      fmt::print ("{},", coeff );
+   fmt::print( "}};\n" );
+   fmt::print( "   pb.setObjAll( coeffobj );\n" );
+   fmt::print( "   pb.setObjOffset( {} );\n", obj.offset );
 
 }
 
