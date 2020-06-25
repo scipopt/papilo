@@ -148,7 +148,7 @@ convMPS( const Problem<double>& prob )
    // Set all needed things
    fmt::print( "   pb.reserve( {},{},{} );\n", nnz, nRows, nCols );
    // Obj
-   fmt::print( "   //Vec<double> coeffobj{{ " );
+   fmt::print( "   //Vec<double> coeffobj{{" );
    for( double coeff: obj.coefficients )
       fmt::print ("{},", coeff );
    fmt::print( "}};\n" );
@@ -181,6 +181,27 @@ convMPS( const Problem<double>& prob )
    fmt::print( "   pb.setColUbInfAll( ubInf );\n" );
    fmt::print( "   pb.setColIntegralAll( isIntegral );\n" );
    // Rows
+   fmt::print( "   Vec<bool> lhsIsInf{{" );
+   for( int r = 0; r < nRows; ++r )
+      fmt::print( "{},", row_flags[r].test( RowFlag::kLhsInf ) );
+   fmt::print( "}};\n" );
+   fmt::print( "   Vec<double> lhs{{" );
+   for( int r  = 0; r < nRows; ++r )
+      fmt::print( "{},", rowlhs[r] );
+   fmt::print( "}};\n" );
+   fmt::print( "   Vec<bool> rhsIsInf{{" );
+   for( int r = 0; r < nRows; ++r )
+      fmt::print( "{},", row_flags[r].test( RowFlag::kRhsInf ) );
+   fmt::print( "}};\n" );
+   fmt::print( "   Vec<double> rhs{{" );
+   for( int r  = 0; r < nRows; ++r )
+      fmt::print( "{},", rowrhs[r] );
+   fmt::print( "}};\n" );
+   fmt::print( "   pb.setRowLhsInfAll( lhsIsInf );\n" );
+   fmt::print( "   pb.setRowRhsInfAll( rhsIsInf );\n" );
+   fmt::print( "   pb.setRowLhsAll( lhs );\n" );
+   fmt::print( "   pb.setRowLhsAll( rhs );\n" );
+
 
 
 }
