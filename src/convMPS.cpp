@@ -50,6 +50,7 @@ convMPS( const Problem<double>& prob )
    Vec<double> rowrhs = cm.getRightHandSides();
    Vec<RowFlags> row_flags = cm.getRowFlags();
    const int nnz = cm.getNnz();
+   const VariableDomains<double> vd = prob.getVariableDomains();
 
    // Data structures
    fmt::print( "   // enum declaration, only needed once\n" );
@@ -141,18 +142,40 @@ convMPS( const Problem<double>& prob )
 
    // Version 2: The problem builder
    fmt::print( "\n\n\n   ///PROBLEM BUILDER CODE\n" );
-   fmt::print( "   int nCols = {}; int nRows = {};\n", nCols, nRows );
-   fmt::print( "   ProblemBuilder<double> pB;" );
+   fmt::print( "   //int nCols = {}; int nRows = {};\n", nCols, nRows );
+   fmt::print( "   ProblemBuilder<double> pb;\n" );
 
    // Set all needed things
-   fmt::print( "   pB.reserve( {},{},{} );\n", nnz, nRows, nCols );
+   fmt::print( "   pb.reserve( {},{},{} );\n", nnz, nRows, nCols );
    // Obj
-   fmt::print( "   Vec<double> coeffobj{{ " );
+   fmt::print( "   //Vec<double> coeffobj{{ " );
    for( double coeff: obj.coefficients )
       fmt::print ("{},", coeff );
    fmt::print( "}};\n" );
    fmt::print( "   pb.setObjAll( coeffobj );\n" );
    fmt::print( "   pb.setObjOffset( {} );\n", obj.offset );
+   // Bounds
+   fmt::print( "   Vec<double> lbs = {{" );
+   for( int c = 0; c < nCols; ++c )
+      fmt::print( "{},", vd.lower_bounds[c] );
+   fmt::print( "}};\n" );
+   fmt::print( "   Vec<double> lbInf = {{" );
+   for( int c = 0; c < nCols; ++c )
+      fmt::print( "{},", vd.flags[c].test( ColFlag::kLbInf ) );
+   fmt::print( "}};\n" );
+   fmt::print( "   Vec<double> ubs = {{" );
+   for( int c = 0; c < nCols; ++c )
+      fmt::print( "{},", vd.upper_bounds[c] );
+   fmt::print( "}};\n" );
+   fmt::print( "   Vec<double> ubInf = {{" );
+   for( int c = 0; c < nCols; ++c )
+      fmt::print( "{},", vd.flags[c].test( ColFlag::kUbInf ) );
+   fmt::print( "}};\n" );
+   fmt::print( "   pb.setColLbAll( lbs );\n" );
+   fmt::print( "   pb.setColLbInfAll( lbInf );\n" );
+   fmt::print( "   pb.setColUbAll( ubs );\n" );
+   fmt::print( "   pb.setColUbInfAll( ubInf );\n" );
+
 
 }
 
