@@ -30,6 +30,12 @@
 #include <string>
 #include <cmath>
 
+#include "papilo/misc/Flags.hpp"
+#include "papilo/core/ConstraintMatrix.hpp"
+#include "papilo/core/Objective.hpp"
+#include <memory>
+#include <tuple>
+
 using namespace papilo;
 
 TEST_CASE( "accurate-numerical-statistics",
@@ -68,11 +74,12 @@ TEST_CASE( "accurate-numerical-statistics",
    Vec<double> rowlhs{0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,   };
    Vec<double> rowrhs{0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,-800.0,-3100.0,-50.0,-40.0,-900.0,-40.0,-7150.0,-4800.0,-3000.0,-250.0,-400.0,-1000.0,-4000.0,-90.0,-700.0,-24.0,8.0,8.0,8.0,8.0,1.0,1.0,13.0,13.0,1.0,1.0,13.0,13.0,8.0,8.0,2.0,2.0,   };
    row_flags[0].set(RowFlag::kLhsInf); row_flags[1].set(RowFlag::kLhsInf); row_flags[2].set(RowFlag::kLhsInf); row_flags[3].set(RowFlag::kLhsInf); row_flags[4].set(RowFlag::kLhsInf); row_flags[5].set(RowFlag::kLhsInf); row_flags[6].set(RowFlag::kLhsInf); row_flags[7].set(RowFlag::kLhsInf); row_flags[8].set(RowFlag::kLhsInf); row_flags[9].set(RowFlag::kLhsInf); row_flags[10].set(RowFlag::kLhsInf); row_flags[11].set(RowFlag::kLhsInf); row_flags[12].set(RowFlag::kLhsInf); row_flags[13].set(RowFlag::kLhsInf); row_flags[14].set(RowFlag::kLhsInf); row_flags[15].set(RowFlag::kLhsInf); row_flags[16].set(RowFlag::kLhsInf); row_flags[17].set(RowFlag::kLhsInf); row_flags[18].set(RowFlag::kLhsInf); row_flags[19].set(RowFlag::kLhsInf); row_flags[20].set(RowFlag::kLhsInf); row_flags[21].set(RowFlag::kLhsInf); row_flags[22].set(RowFlag::kLhsInf); row_flags[23].set(RowFlag::kLhsInf); row_flags[24].set(RowFlag::kLhsInf); row_flags[25].set(RowFlag::kLhsInf); row_flags[26].set(RowFlag::kLhsInf); row_flags[27].set(RowFlag::kLhsInf); row_flags[28].set(RowFlag::kLhsInf); row_flags[29].set(RowFlag::kLhsInf); row_flags[30].set(RowFlag::kLhsInf); row_flags[31].set(RowFlag::kLhsInf); row_flags[32].set(RowFlag::kLhsInf); row_flags[33].set(RowFlag::kLhsInf); row_flags[34].set(RowFlag::kLhsInf); row_flags[35].set(RowFlag::kLhsInf); row_flags[36].set(RowFlag::kLhsInf); row_flags[37].set(RowFlag::kLhsInf); row_flags[38].set(RowFlag::kLhsInf); row_flags[39].set(RowFlag::kLhsInf); row_flags[40].set(RowFlag::kLhsInf); row_flags[41].set(RowFlag::kLhsInf); row_flags[42].set(RowFlag::kLhsInf); row_flags[43].set(RowFlag::kLhsInf); row_flags[44].set(RowFlag::kLhsInf); row_flags[45].set(RowFlag::kLhsInf); row_flags[46].set(RowFlag::kLhsInf); row_flags[47].set(RowFlag::kLhsInf); row_flags[48].set(RowFlag::kLhsInf); row_flags[49].set(RowFlag::kLhsInf); row_flags[50].set(RowFlag::kLhsInf); row_flags[51].set(RowFlag::kLhsInf); row_flags[52].set(RowFlag::kLhsInf); row_flags[53].set(RowFlag::kLhsInf); row_flags[54].set(RowFlag::kLhsInf); row_flags[55].set(RowFlag::kLhsInf); row_flags[56].set(RowFlag::kLhsInf); row_flags[57].set(RowFlag::kLhsInf); row_flags[58].set(RowFlag::kLhsInf); row_flags[59].set(RowFlag::kLhsInf); row_flags[60].set(RowFlag::kLhsInf); row_flags[61].set(RowFlag::kLhsInf); row_flags[62].set(RowFlag::kLhsInf); row_flags[63].set(RowFlag::kLhsInf); row_flags[64].set(RowFlag::kLhsInf); row_flags[65].set(RowFlag::kLhsInf); row_flags[66].set(RowFlag::kLhsInf); row_flags[67].set(RowFlag::kLhsInf); row_flags[68].set(RowFlag::kLhsInf); row_flags[69].set(RowFlag::kLhsInf); row_flags[70].set(RowFlag::kLhsInf); row_flags[71].set(RowFlag::kLhsInf); row_flags[72].set(RowFlag::kLhsInf); row_flags[73].set(RowFlag::kLhsInf); row_flags[74].set(RowFlag::kLhsInf); row_flags[75].set(RowFlag::kLhsInf); row_flags[76].set(RowFlag::kLhsInf); row_flags[77].set(RowFlag::kLhsInf); row_flags[78].set(RowFlag::kLhsInf); row_flags[79].set(RowFlag::kLhsInf); row_flags[80].set(RowFlag::kLhsInf); row_flags[81].set(RowFlag::kLhsInf); row_flags[82].set(RowFlag::kLhsInf); row_flags[83].set(RowFlag::kLhsInf); row_flags[84].set(RowFlag::kLhsInf); row_flags[85].set(RowFlag::kLhsInf); row_flags[86].set(RowFlag::kLhsInf); row_flags[87].set(RowFlag::kLhsInf); row_flags[88].set(RowFlag::kLhsInf); row_flags[89].set(RowFlag::kLhsInf); row_flags[90].set(RowFlag::kLhsInf);
+   SparseStorage<double> sparseStorage{ entries, nCols, nRows, true };
+   // problem.setConstraintMatrix( sparseStorage , rowlhs, rowrhs, row_flags, false );
 
 
 
-
-
+   // Objective
    const Objective<double> o1 = problem.getObjective();
    const Objective<double> o2 = problem1.getObjective();
 
@@ -80,6 +87,11 @@ TEST_CASE( "accurate-numerical-statistics",
    REQUIRE( o1.coefficients == o2.coefficients );
 
    const ConstraintMatrix<double>& cm1 = problem1.getConstraintMatrix();
+   // Rhs Lhs
+   REQUIRE( rowlhs == cm1.getLeftHandSides() );
+   REQUIRE( rowrhs == cm1.getRightHandSides() );
+
+   // Row Flags
    Vec<RowFlags> row_flags1 = cm1.getRowFlags();
 
    REQUIRE( row_flags.size() == row_flags1.size() );
