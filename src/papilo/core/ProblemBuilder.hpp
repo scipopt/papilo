@@ -185,12 +185,28 @@ class ProblemBuilder
    }
 
    void
+   setColIntegralAll( Vec<bool> isIntegral )
+   {
+      assert( isIntegral.size() == domains.flags.size() );
+      for( int c = 0; c < isIntegral.size(); ++c )
+         setColIntegral( c, isIntegral[c] );
+   }
+
+   void
    setColIntegral( int col, bool isIntegral )
    {
       if( isIntegral )
          domains.flags[col].set( ColFlag::kIntegral );
       else
          domains.flags[col].unset( ColFlag::kIntegral );
+   }
+
+   void
+   setRowLhsInfAll( Vec<bool> isInfinite )
+   {
+      assert( isInfinite.size() == rflags.size() );
+      for( int r = 0; 0 < isInfinite.size(); ++r )
+         setRowLhsInf( r, isInfinite[r] );
    }
 
    void
@@ -203,6 +219,14 @@ class ProblemBuilder
    }
 
    void
+   setRowRhsInfAll( Vec<bool> isInfinite )
+   {
+      assert( isInfinite.size() == rflags.size() );
+      for( int r = 0; 0 < isInfinite.size(); ++r )
+         setRowRhsInf( r, isInfinite[r] );
+   }
+
+   void
    setRowRhsInf( int row, bool isInfinite )
    {
       if( isInfinite )
@@ -212,9 +236,25 @@ class ProblemBuilder
    }
 
    void
+   setRowLhsAll( Vec<REAL> lhsvals )
+   {
+      assert( lhsvals.size() == lhs.size() );
+      for( int r = 0; r < lhsvals.size(); ++r )
+         lhs[r] = std::move( lhsvals[r] );
+   }
+
+   void
    setRowLhs( int row, REAL lhsval )
    {
       lhs[row] = std::move( lhsval );
+   }
+
+   void
+   setRowRhsAll( Vec<REAL> rhsvals )
+   {
+      assert( rhsvals.size() == rhs.size() );
+      for( int r = 0; r < rhsvals.size(); ++r )
+         rhs[r] = std::move( rhsvals[r] );
    }
 
    void
