@@ -53,7 +53,7 @@ convMPS( const Problem<double>& prob )
    const VariableDomains<double> vd = prob.getVariableDomains();
 
    // Start printing
-   fmt::print( "\n   ///PROBLEM BUILDER CODE\n" );
+   fmt::print( "   ///PROBLEM BUILDER CODE\n" );
    fmt::print( "   int nCols = {}; int nRows = {};\n", nCols, nRows );
    fmt::print( "   ProblemBuilder<double> pb;\n" );
    // Set all needed things
@@ -130,6 +130,7 @@ convMPS( const Problem<double>& prob )
    // @TODO: col and row names
    // Build the Problem
    fmt::print( "   Problem<double> problem = pb.build();\n" );
+   fmt::print( "   ///PROBLEM BUILDER CODE END\n" );
 }
 
 int
