@@ -99,6 +99,13 @@ class ProblemBuilder
       colnames.reserve( ncols );
    }
 
+   /// change the objective coefficient of a column
+   void
+   setObj( int col, REAL val )
+   {
+      obj.coefficients[col] = std::move( val );
+   }
+
    /// change the objective coefficient of all columns
    void
    setObjAll( Vec<REAL> values )
@@ -108,26 +115,11 @@ class ProblemBuilder
          obj.coefficients[c] = std::move( values[c] );
    }
 
-   /// change the objective coefficient of a column
-   void
-   setObj( int col, REAL val )
-   {
-      obj.coefficients[col] = std::move( val );
-   }
-
    /// change the objectives constant offset
    void
    setObjOffset( REAL val )
    {
       obj.offset = std::move( val );
-   }
-
-   void
-   setColLbInfAll( Vec<bool> isInfinite )
-   {
-      assert( domains.flags.size() == isInfinite.size() );
-      for( int c = 0; c < isInfinite.size(); ++c )
-         setColLbInf( c, isInfinite[c] );
    }
 
    void
@@ -140,11 +132,11 @@ class ProblemBuilder
    }
 
    void
-   setColUbInfAll( Vec<bool> isInfinite )
+   setColLbInfAll( Vec<bool> isInfinite )
    {
       assert( domains.flags.size() == isInfinite.size() );
       for( int c = 0; c < isInfinite.size(); ++c )
-         setColUbInf( c, isInfinite[c] );
+         setColLbInf( c, isInfinite[c] );
    }
 
    void
@@ -157,11 +149,11 @@ class ProblemBuilder
    }
 
    void
-   setColLbAll( Vec<REAL> lbs )
+   setColUbInfAll( Vec<bool> isInfinite )
    {
-      assert( lbs.size() == domains.lower_bounds.size() );
-      for( int c = 0; c < lbs.size(); ++c )
-         domains.lower_bounds[c] = std::move( lbs[c] );
+      assert( domains.flags.size() == isInfinite.size() );
+      for( int c = 0; c < isInfinite.size(); ++c )
+         setColUbInf( c, isInfinite[c] );
    }
 
    void
@@ -171,11 +163,11 @@ class ProblemBuilder
    }
 
    void
-   setColUbAll( Vec<REAL> ubs )
+   setColLbAll( Vec<REAL> lbs )
    {
-      assert( ubs.size() == domains.upper_bounds.size() );
-      for( int c = 0; c < ubs.size(); ++c )
-         domains.upper_bounds[c] = std::move( ubs[c] );
+      assert( lbs.size() == domains.lower_bounds.size() );
+      for( int c = 0; c < lbs.size(); ++c )
+         domains.lower_bounds[c] = std::move( lbs[c] );
    }
 
    void
@@ -185,11 +177,11 @@ class ProblemBuilder
    }
 
    void
-   setColIntegralAll( Vec<bool> isIntegral )
+   setColUbAll( Vec<REAL> ubs )
    {
-      assert( isIntegral.size() == domains.flags.size() );
-      for( int c = 0; c < isIntegral.size(); ++c )
-         setColIntegral( c, isIntegral[c] );
+      assert( ubs.size() == domains.upper_bounds.size() );
+      for( int c = 0; c < ubs.size(); ++c )
+         domains.upper_bounds[c] = std::move( ubs[c] );
    }
 
    void
@@ -202,11 +194,11 @@ class ProblemBuilder
    }
 
    void
-   setRowLhsInfAll( Vec<bool> isInfinite )
+   setColIntegralAll( Vec<bool> isIntegral )
    {
-      assert( isInfinite.size() == rflags.size() );
-      for( int r = 0; 0 < isInfinite.size(); ++r )
-         setRowLhsInf( r, isInfinite[r] );
+      assert( isIntegral.size() == domains.flags.size() );
+      for( int c = 0; c < isIntegral.size(); ++c )
+         setColIntegral( c, isIntegral[c] );
    }
 
    void
@@ -219,11 +211,11 @@ class ProblemBuilder
    }
 
    void
-   setRowRhsInfAll( Vec<bool> isInfinite )
+   setRowLhsInfAll( Vec<bool> isInfinite )
    {
       assert( isInfinite.size() == rflags.size() );
       for( int r = 0; 0 < isInfinite.size(); ++r )
-         setRowRhsInf( r, isInfinite[r] );
+         setRowLhsInf( r, isInfinite[r] );
    }
 
    void
@@ -236,6 +228,20 @@ class ProblemBuilder
    }
 
    void
+   setRowRhsInfAll( Vec<bool> isInfinite )
+   {
+      assert( isInfinite.size() == rflags.size() );
+      for( int r = 0; 0 < isInfinite.size(); ++r )
+         setRowRhsInf( r, isInfinite[r] );
+   }
+
+   void
+   setRowLhs( int row, REAL lhsval )
+   {
+      lhs[row] = std::move( lhsval );
+   }
+
+   void
    setRowLhsAll( Vec<REAL> lhsvals )
    {
       assert( lhsvals.size() == lhs.size() );
@@ -244,9 +250,9 @@ class ProblemBuilder
    }
 
    void
-   setRowLhs( int row, REAL lhsval )
+   setRowRhs( int row, REAL rhsval )
    {
-      lhs[row] = std::move( lhsval );
+      rhs[row] = std::move( rhsval );
    }
 
    void
@@ -257,18 +263,20 @@ class ProblemBuilder
          rhs[r] = std::move( rhsvals[r] );
    }
 
-   void
-   setRowRhs( int row, REAL rhsval )
-   {
-      rhs[row] = std::move( rhsval );
-   }
-
    /// add a nonzero entry for the given row and column
    void
    addEntry( int row, int col, const REAL& val )
    {
       assert( val != 0 );
       matrix_buffer.addEntry( row, col, val );
+   }
+
+   /// add all given entries given in tripel: (row,col,val)
+   void
+   addEntryAll( Vec<std::tuple<int,int,REAL>> entries )
+   {
+      for( auto trp : entries )
+         addEntry( std::get<0>(trp), std::get<1>(trp), std::get<2>(trp) );
    }
 
    /// add the nonzero entries for the given row
