@@ -99,6 +99,15 @@ class ProblemBuilder
       colnames.reserve( ncols );
    }
 
+   /// change the objective coefficient of all columns
+   void
+   setObjAll( Vec<REAL> values )
+   {
+      assert( values.size() == obj.coefficients.size() );
+      for( int c = 0; c < values.size(); ++c )
+         obj.coefficients[c] = std::move( values[c] );
+   }
+
    /// change the objective coefficient of a column
    void
    setObj( int col, REAL val )
