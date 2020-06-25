@@ -127,7 +127,7 @@ class ProblemBuilder
    {
       assert( domains.flags.size() == isInfinite.size() );
       for( int c = 0; c < isInfinite.size(); ++c )
-         setColLbInf( c, isInfinite[i] );
+         setColLbInf( c, isInfinite[c] );
    }
 
    void
@@ -144,7 +144,7 @@ class ProblemBuilder
    {
       assert( domains.flags.size() == isInfinite.size() );
       for( int c = 0; c < isInfinite.size(); ++c )
-         setColUbInf( c, isInfinite[i] );
+         setColUbInf( c, isInfinite[c] );
    }
 
    void
