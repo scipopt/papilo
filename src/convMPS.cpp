@@ -80,7 +80,7 @@ convMPS( const Problem<double>& prob )
 
    // Constraint Matrix
    fmt::print( "   // Constraint Matrix\n" );
-   fmt::print( "   Vec<std::tuple<int, int, double>> entries{{" );
+   fmt::print( "   // Vec<std::tuple<int, int, double>> entries{{" );
    // iterate through every row and add columns
    for( int r = 0; r < nRows; ++r )
    {
@@ -201,6 +201,19 @@ convMPS( const Problem<double>& prob )
    fmt::print( "   pb.setRowRhsInfAll( rhsIsInf );\n" );
    fmt::print( "   pb.setRowLhsAll( lhs );\n" );
    fmt::print( "   pb.setRowLhsAll( rhs );\n" );
+   // Entries ( Nonzero Matrix values )
+   fmt::print( "   Vec<std::tuple<int, int, double>> entries{{" );
+   for( int r = 0; r < nRows; ++r )
+   {
+      const SparseVectorView<double>& rc = cm.getRowCoefficients( r );
+      const int len = rc.getLength();
+      const int* indices = rc.getIndices();
+      const double* vals = rc.getValues();
+      for(int i = 0; i < len; ++i)
+         fmt::print( "{{{},{},{}}},", r, *(indices + i), *(vals + i) );
+   }
+   fmt::print( "}};\n" );
+   fmt::print( "   pb.addEntryAll( entries );\n" );
 
 
 
