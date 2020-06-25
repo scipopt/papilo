@@ -142,36 +142,36 @@ convMPS( const Problem<double>& prob )
 
    // Version 2: The problem builder
    fmt::print( "\n\n\n   ///PROBLEM BUILDER CODE\n" );
-   fmt::print( "   //int nCols = {}; int nRows = {};\n", nCols, nRows );
+   fmt::print( "   int nCols = {}; int nRows = {};\n", nCols, nRows );
    fmt::print( "   ProblemBuilder<double> pb;\n" );
 
    // Set all needed things
    fmt::print( "   pb.reserve( {},{},{} );\n", nnz, nRows, nCols );
    // Obj
-   fmt::print( "   //Vec<double> coeffobj{{" );
+   fmt::print( "   Vec<double> coeffobj{{" );
    for( double coeff: obj.coefficients )
       fmt::print ("{},", coeff );
    fmt::print( "}};\n" );
    fmt::print( "   pb.setObjAll( coeffobj );\n" );
    fmt::print( "   pb.setObjOffset( {} );\n", obj.offset );
    // Columns
-   fmt::print( "   Vec<double> lbs = {{" );
+   fmt::print( "   Vec<double> lbs{{" );
    for( int c = 0; c < nCols; ++c )
       fmt::print( "{},", vd.lower_bounds[c] );
    fmt::print( "}};\n" );
-   fmt::print( "   Vec<bool> lbInf = {{" );
+   fmt::print( "   Vec<bool> lbInf{{" );
    for( int c = 0; c < nCols; ++c )
       fmt::print( "{},", vd.flags[c].test( ColFlag::kLbInf ) );
    fmt::print( "}};\n" );
-   fmt::print( "   Vec<double> ubs = {{" );
+   fmt::print( "   Vec<double> ubs{{" );
    for( int c = 0; c < nCols; ++c )
       fmt::print( "{},", vd.upper_bounds[c] );
    fmt::print( "}};\n" );
-   fmt::print( "   Vec<bool> ubInf = {{" );
+   fmt::print( "   Vec<bool> ubInf{{" );
    for( int c = 0; c < nCols; ++c )
       fmt::print( "{},", vd.flags[c].test( ColFlag::kUbInf ) );
    fmt::print( "}};\n" );
-   fmt::print( "   Vec<bool> isIntegral = {{" );
+   fmt::print( "   Vec<bool> isIntegral{{" );
    for( int c = 0; c < nCols; ++c )
       fmt::print( "{},", vd.flags[c].test( ColFlag::kIntegral ) );
    fmt::print( "}};\n" );
@@ -200,7 +200,7 @@ convMPS( const Problem<double>& prob )
    fmt::print( "   pb.setRowLhsInfAll( lhsIsInf );\n" );
    fmt::print( "   pb.setRowRhsInfAll( rhsIsInf );\n" );
    fmt::print( "   pb.setRowLhsAll( lhs );\n" );
-   fmt::print( "   pb.setRowLhsAll( rhs );\n" );
+   fmt::print( "   pb.setRowRhsAll( rhs );\n" );
    // Entries ( Nonzero Matrix values )
    fmt::print( "   Vec<std::tuple<int, int, double>> entries{{" );
    for( int r = 0; r < nRows; ++r )
