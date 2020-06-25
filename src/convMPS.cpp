@@ -135,7 +135,7 @@ convMPS( const Problem<double>& prob )
          assert( somethingset == true );
       }
 
-      fmt::print( "); "); // no newline so the file does not get clustered with rowflags...
+      fmt::print( ");" ); // no newline so the file does not get clustered with rowflags...
    }
    fmt::print( "\n" );
    fmt::print( "   problem.setConstraintMatrix( SparseStorage<double>{{ entries, nCols, nRows, false }} , rowlhs, rowrhs, row_flags, false );" );
@@ -159,7 +159,7 @@ convMPS( const Problem<double>& prob )
    for( int c = 0; c < nCols; ++c )
       fmt::print( "{},", vd.lower_bounds[c] );
    fmt::print( "}};\n" );
-   fmt::print( "   Vec<double> lbInf = {{" );
+   fmt::print( "   Vec<bool> lbInf = {{" );
    for( int c = 0; c < nCols; ++c )
       fmt::print( "{},", vd.flags[c].test( ColFlag::kLbInf ) );
    fmt::print( "}};\n" );
@@ -167,7 +167,7 @@ convMPS( const Problem<double>& prob )
    for( int c = 0; c < nCols; ++c )
       fmt::print( "{},", vd.upper_bounds[c] );
    fmt::print( "}};\n" );
-   fmt::print( "   Vec<double> ubInf = {{" );
+   fmt::print( "   Vec<bool> ubInf = {{" );
    for( int c = 0; c < nCols; ++c )
       fmt::print( "{},", vd.flags[c].test( ColFlag::kUbInf ) );
    fmt::print( "}};\n" );

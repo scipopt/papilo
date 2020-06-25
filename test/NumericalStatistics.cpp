@@ -22,6 +22,7 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 #include "papilo/core/Problem.hpp"
+#include "papilo/core/ProblemBuilder.hpp"
 #include "papilo/io/MpsParser.hpp"
 #include "catch/catch.hpp"
 #include "papilo/misc/NumericalStatistics.hpp"
