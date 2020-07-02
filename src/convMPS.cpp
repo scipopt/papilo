@@ -39,7 +39,13 @@ using namespace papilo;
 static void
 convMPS( const Problem<double>& prob )
 {
-   /// Print all the relevant stuff for problem creation as cpp commands
+   /*
+    * Prints code to create an object of class Problem in PaPILO
+    * Copy console output in your desired file
+    * You will need to include
+    * "papilo/core/Problem.hpp"
+    * "papilo/core/ProblemBuilder.hpp"
+    */
 
    // Get all relevant data
    int nCols = prob.getNCols();
