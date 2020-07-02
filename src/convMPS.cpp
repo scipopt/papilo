@@ -54,21 +54,13 @@ convMPS( const Problem<double>& prob )
    const Vec<std::string> cnames = prob.getVariableNames();
    const Vec<std::string> rnames = prob.getConstraintNames();
 
-   // Start printing
    fmt::print( "   ///PROBLEM BUILDER CODE\n" );
-   fmt::print( "   int nCols = {}; int nRows = {};\n", nCols, nRows );
-   fmt::print( "   ProblemBuilder<double> pb;\n" );
-   // Set all needed things
-   fmt::print( "   pb.reserve( {},{},{} );\n", nnz, nRows, nCols );
-   fmt::print( "   pb.setNumRows( nRows );\n" );
-   fmt::print( "   pb.setNumCols( nCols );\n" );
+   // Set Variables
    // Obj
    fmt::print( "   Vec<double> coeffobj{{" );
    for( double coeff: obj.coefficients )
       fmt::print ("{},", coeff );
    fmt::print( "}};\n" );
-   fmt::print( "   pb.setObjAll( coeffobj );\n" );
-   fmt::print( "   pb.setObjOffset( {} );\n", obj.offset );
    // Columns
    fmt::print( "   Vec<double> lbs{{" );
    for( int c = 0; c < nCols; ++c )
@@ -90,11 +82,6 @@ convMPS( const Problem<double>& prob )
    for( int c = 0; c < nCols; ++c )
       fmt::print( "{},", vd.flags[c].test( ColFlag::kIntegral ) );
    fmt::print( "}};\n" );
-   fmt::print( "   pb.setColLbAll( lbs );\n" );
-   fmt::print( "   pb.setColLbInfAll( lbInf );\n" );
-   fmt::print( "   pb.setColUbAll( ubs );\n" );
-   fmt::print( "   pb.setColUbInfAll( ubInf );\n" );
-   fmt::print( "   pb.setColIntegralAll( isIntegral );\n" );
    // Rows
    fmt::print( "   Vec<bool> lhsIsInf{{" );
    for( int r = 0; r < nRows; ++r )
@@ -112,10 +99,6 @@ convMPS( const Problem<double>& prob )
    for( int r  = 0; r < nRows; ++r )
       fmt::print( "{},", rowrhs[r] );
    fmt::print( "}};\n" );
-   fmt::print( "   pb.setRowLhsInfAll( lhsIsInf );\n" );
-   fmt::print( "   pb.setRowRhsInfAll( rhsIsInf );\n" );
-   fmt::print( "   pb.setRowLhsAll( lhs );\n" );
-   fmt::print( "   pb.setRowRhsAll( rhs );\n" );
    // Entries ( Nonzero Matrix values )
    fmt::print( "   Vec<std::tuple<int, int, double>> entries{{" );
    for( int r = 0; r < nRows; ++r )
@@ -128,7 +111,6 @@ convMPS( const Problem<double>& prob )
          fmt::print( "{{{},{},{}}},", r, *(indices + i), *(vals + i) );
    }
    fmt::print( "}};\n" );
-   fmt::print( "   pb.addEntryAll( entries );\n" );
    // Names
    fmt::print( "   Vec<std::string> rnames{{");
    for( int r = 0; r < nRows; ++r )
@@ -138,7 +120,25 @@ convMPS( const Problem<double>& prob )
    for( int c = 0; c < nCols; ++c )
       fmt::print( "\"{}\",", cnames[c] );
    fmt::print( "}};\n");
+   // Set problem Builder
+   fmt::print( "   int nCols = {}; int nRows = {};\n", nCols, nRows );
+   fmt::print( "   ProblemBuilder<double> pb;\n" );
+   fmt::print( "   pb.reserve( {},{},{} );\n", nnz, nRows, nCols );
+   fmt::print( "   pb.setNumRows( nRows );\n" );
+   fmt::print( "   pb.setNumCols( nCols );\n" );
+   fmt::print( "   pb.setObjAll( coeffobj );\n" );
+   fmt::print( "   pb.setObjOffset( {} );\n", obj.offset );
+   fmt::print( "   pb.setColLbAll( lbs );\n" );
+   fmt::print( "   pb.setColLbInfAll( lbInf );\n" );
+   fmt::print( "   pb.setColUbAll( ubs );\n" );
+   fmt::print( "   pb.setColUbInfAll( ubInf );\n" );
+   fmt::print( "   pb.setColIntegralAll( isIntegral );\n" );
+   fmt::print( "   pb.setRowLhsInfAll( lhsIsInf );\n" );
+   fmt::print( "   pb.setRowRhsInfAll( rhsIsInf );\n" );
+   fmt::print( "   pb.setRowLhsAll( lhs );\n" );
+   fmt::print( "   pb.setRowRhsAll( rhs );\n" );
    fmt::print( "   pb.setRowNameAll( rnames );\n" );
+   fmt::print( "   pb.addEntryAll( entries );\n" );
    fmt::print( "   pb.setColNameAll( cnames );\n" );
    fmt::print( "   pb.setProblemName( \"{}\" );\n", prob.getName() );
    // Build the Problem
