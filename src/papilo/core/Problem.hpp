@@ -287,7 +287,7 @@ class Problem
       return constraintNames;
    }
 
-   /// get the constraint names
+   /// get the problem name
    const String&
    getName() const
    {
@@ -322,28 +322,28 @@ class Problem
       return variableDomains.upper_bounds;
    }
 
-   /// get the (dense) vector of variable lower bounds
+   /// get the (dense) vector of column sizes
    const Vec<int>&
    getColSizes() const
    {
       return constraintMatrix.getColSizes();
    }
 
-   /// get the (dense) vector of variable lower bounds
+   /// get the (dense) vector of column sizes
    Vec<int>&
    getColSizes()
    {
       return constraintMatrix.getColSizes();
    }
 
-   /// get the (dense) vector of variable upper bounds
+   /// get the (dense) vector of row sizes
    const Vec<int>&
    getRowSizes() const
    {
       return constraintMatrix.getRowSizes();
    }
 
-   /// get the (dense) vector of variable upper bounds
+   /// get the (dense) vector of row sizes
    Vec<int>&
    getRowSizes()
    {
