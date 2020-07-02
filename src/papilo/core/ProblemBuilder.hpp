@@ -300,9 +300,27 @@ class ProblemBuilder
 
    template <typename Str>
    void
+   setRowNameAll( Vec<Str> names )
+   {
+      assert( rownames.size() == names.size() );
+      for( int r = 0; r < names.size(); ++r )
+         rownames[r] = String( names[r] );
+   }
+
+   template <typename Str>
+   void
    setColName( int col, Str&& name )
    {
       colnames[col] = String( name );
+   }
+
+   template <typename Str>
+   void
+   setColNameAll( Vec<Str> names )
+   {
+      assert( colnames.size() == names.size() );
+      for( int c = 0; c < names.size(); ++c )
+         colnames[c] = String( names[c] );
    }
 
    template <typename Str>
