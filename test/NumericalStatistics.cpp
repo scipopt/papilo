@@ -124,7 +124,7 @@ TEST_CASE( "accurate-numerical-statistics",
 
    /// Check if statistics are printed correctly
 
-   //bell5.mps
+   //bell5
    Problem<double> prob = instances::bell5();
    NumericalStatistics<double> nstats(prob);
    const Num_stats<double>& stats = nstats.getNum_stats();
@@ -139,7 +139,7 @@ TEST_CASE( "accurate-numerical-statistics",
    // REQUIRE( round( stats.colDynamism ) ==  );
    // REQUIRE( round( stats.rowDynamism ) ==  );
 
-   // blend2.mps
+   // blend2
    Problem<double> prob1 = instances::blend2();
    NumericalStatistics<double> nstats1(prob1);
    const Num_stats<double>& stats1 = nstats1.getNum_stats();
@@ -151,6 +151,51 @@ TEST_CASE( "accurate-numerical-statistics",
    REQUIRE( fmt::format("{:.0e}", stats1.boundsMax ) == "2e+04" );
    REQUIRE( fmt::format("{:.0e}", stats1.rhsMin ) == "9e+00" );
    REQUIRE( fmt::format("{:.0e}", stats1.rhsMax ) == "1e+03" );
+   // REQUIRE( round( stats.colDynamism ) ==  );
+   // REQUIRE( round( stats.rowDynamism ) ==  );
+
+   // dcmulti
+   Problem<double> prob2 = instances::dcmulti();
+   NumericalStatistics<double> nstats2(prob2);
+   const Num_stats<double>& stats2 = nstats2.getNum_stats();
+   REQUIRE( fmt::format("{:.0e}", stats2.matrixMin ) == "1e+00" );
+   REQUIRE( fmt::format("{:.0e}", stats2.matrixMax ) == "6e+02" );
+   REQUIRE( fmt::format("{:.0e}", stats2.objMin ) == "4e-01" );
+   REQUIRE( fmt::format("{:.0e}", stats2.objMax ) == "2e+03" );
+   REQUIRE( fmt::format("{:.0e}", stats2.boundsMin ) == "1e+00" );
+   REQUIRE( fmt::format("{:.0e}", stats2.boundsMax ) == "1e+00" );
+   REQUIRE( fmt::format("{:.0e}", stats2.rhsMin ) == "1e+00" );
+   REQUIRE( fmt::format("{:.0e}", stats2.rhsMax ) == "3e+02" );
+   // REQUIRE( round( stats.colDynamism ) ==  );
+   // REQUIRE( round( stats.rowDynamism ) ==  );
+
+   // egout
+   Problem<double> prob3 = instances::egout();
+   NumericalStatistics<double> nstats3(prob3);
+   const Num_stats<double>& stats3 = nstats3.getNum_stats();
+   REQUIRE( fmt::format("{:.0e}", stats3.matrixMin ) == "1e+00" );
+   REQUIRE( fmt::format("{:.0e}", stats3.matrixMax ) == "1e+02" );
+   REQUIRE( fmt::format("{:.0e}", stats3.objMin ) == "1e-03" );
+   REQUIRE( fmt::format("{:.0e}", stats3.objMax ) == "4e+01" );
+   REQUIRE( fmt::format("{:.0e}", stats3.boundsMin ) == "7e-02" );
+   REQUIRE( fmt::format("{:.0e}", stats3.boundsMax ) == "2e+01" );
+   REQUIRE( fmt::format("{:.0e}", stats3.rhsMin ) == "0e+00" );
+   REQUIRE( fmt::format("{:.0e}", stats3.rhsMax ) == "0e+00" );
+   // REQUIRE( round( stats.colDynamism ) ==  );
+   // REQUIRE( round( stats.rowDynamism ) ==  );
+
+   // enigma
+   Problem<double> prob4 = instances::enigma();
+   NumericalStatistics<double> nstats4(prob4);
+   const Num_stats<double>& stats4 = nstats4.getNum_stats();
+   REQUIRE( fmt::format("{:.0e}", stats4.matrixMin ) == "1e+00" );
+   REQUIRE( fmt::format("{:.0e}", stats4.matrixMax ) == "9e+05" );
+   REQUIRE( fmt::format("{:.0e}", stats4.objMin ) == "1e+00" );
+   REQUIRE( fmt::format("{:.0e}", stats4.objMax ) == "9e+00" );
+   REQUIRE( fmt::format("{:.0e}", stats4.boundsMin ) == "1e+00" );
+   REQUIRE( fmt::format("{:.0e}", stats4.boundsMax ) == "1e+00" );
+   REQUIRE( fmt::format("{:.0e}", stats4.rhsMin ) == "1e+00" );
+   REQUIRE( fmt::format("{:.0e}", stats4.rhsMax ) == "1e+00" );
    // REQUIRE( round( stats.colDynamism ) ==  );
    // REQUIRE( round( stats.rowDynamism ) ==  );
 }
