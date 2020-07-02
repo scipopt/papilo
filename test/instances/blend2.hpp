@@ -27,7 +27,7 @@
 #include "papilo/core/Problem.hpp"
 #include "papilo/core/ProblemBuilder.hpp"
 
-namespace papilo
+namespace papilo::instances
 {
 
 Problem<double>
