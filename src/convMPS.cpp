@@ -51,6 +51,8 @@ convMPS( const Problem<double>& prob )
    Vec<RowFlags> row_flags = cm.getRowFlags();
    const int nnz = cm.getNnz();
    const VariableDomains<double> vd = prob.getVariableDomains();
+   const Vec<std::string> cnames = prob.getVariableNames();
+   const Vec<std::string> rnames = prob.getConstraintNames();
 
    // Start printing
    fmt::print( "   ///PROBLEM BUILDER CODE\n" );
@@ -58,6 +60,8 @@ convMPS( const Problem<double>& prob )
    fmt::print( "   ProblemBuilder<double> pb;\n" );
    // Set all needed things
    fmt::print( "   pb.reserve( {},{},{} );\n", nnz, nRows, nCols );
+   fmt::print( "   pb.setNumRows( nRows );\n" );
+   fmt::print( "   pb.setNumCols( nCols );\n" );
    // Obj
    fmt::print( "   Vec<double> coeffobj{{" );
    for( double coeff: obj.coefficients )
@@ -126,8 +130,17 @@ convMPS( const Problem<double>& prob )
    fmt::print( "}};\n" );
    fmt::print( "   pb.addEntryAll( entries );\n" );
    // Names
-   fmt::print( "   pb.setProblemName(\"{}\");\n", prob.getName() );
-   // @TODO: col and row names
+   fmt::print( "   Vec<std::string> rnames{{");
+   for( int r = 0; r < nRows; ++r )
+      fmt::print( "\"{}\",", rnames[r] );
+   fmt::print( "}};\n");
+   fmt::print( "   Vec<std::string> cnames{{");
+   for( int c = 0; c < nCols; ++c )
+      fmt::print( "\"{}\",", cnames[c] );
+   fmt::print( "}};\n");
+   fmt::print( "   pb.setRowNameAll( rnames );\n" );
+   fmt::print( "   pb.setColNameAll( cnames );\n" );
+   fmt::print( "   pb.setProblemName( \"{}\" );\n", prob.getName() );
    // Build the Problem
    fmt::print( "   Problem<double> problem = pb.build();\n" );
    fmt::print( "   ///PROBLEM BUILDER CODE END\n" );
