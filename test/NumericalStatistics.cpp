@@ -53,9 +53,9 @@ TEST_CASE( "accurate-numerical-statistics",
    const std::string filename1 = pathInstDir + instance1;
    Problem<double> problem1 = MpsParser<double>::loadProblem( filename1 );
 
-   ///PROBLEM BUILDER CODE
-   Problem<double> problem2 = bell5();
-   ///PROBLEM BUILDER CODE END
+   Problem<double> problem2 = instances::bell5();
+
+   /// CHECK IF CONVMPS WORKS CORRECTLY
 
    // Various variables
    REQUIRE( problem1.getNCols() == problem2.getNCols() );
@@ -120,35 +120,37 @@ TEST_CASE( "accurate-numerical-statistics",
    REQUIRE( problem1.getVariableNames() == problem2.getVariableNames() );
    REQUIRE( problem1.getConstraintNames() == problem2.getConstraintNames() );
 
+   /// END CHECK
 
-   // NumericalStatistics<double> nstats1(problem1);
-   // const Num_stats<double>& stats = nstats1.getNum_stats();
-   // nstats1.printStatistics();
-   // //bell5.mps
-   // REQUIRE( fmt::format("{:.0e}", double( stats.matrixMin ) ) == "8e-05" );
-   // REQUIRE( fmt::format("{:.0e}", stats.matrixMax ) == "1e+03" );
-   // REQUIRE( fmt::format("{:.0e}", stats.objMin ) == "2e-01" );
-   // REQUIRE( fmt::format("{:.0e}", stats.objMax ) == "6e+04" );
-   // REQUIRE( fmt::format("{:.0e}", stats.boundsMin ) == "1e+00" );
-   // REQUIRE( fmt::format("{:.0e}", stats.boundsMax ) == "1e+04" );
-   // REQUIRE( fmt::format("{:.0e}", stats.rhsMin ) == "1e+00" );
-   // REQUIRE( fmt::format("{:.0e}", stats.rhsMax ) == "7e+03" );
+   /// Check if statistics are printed correctly
+
+   //bell5.mps
+   Problem<double> prob = instances::bell5();
+   NumericalStatistics<double> nstats(prob);
+   const Num_stats<double>& stats = nstats.getNum_stats();
+   REQUIRE( fmt::format("{:.0e}", double( stats.matrixMin ) ) == "8e-05" );
+   REQUIRE( fmt::format("{:.0e}", stats.matrixMax ) == "1e+03" );
+   REQUIRE( fmt::format("{:.0e}", stats.objMin ) == "2e-01" );
+   REQUIRE( fmt::format("{:.0e}", stats.objMax ) == "6e+04" );
+   REQUIRE( fmt::format("{:.0e}", stats.boundsMin ) == "1e+00" );
+   REQUIRE( fmt::format("{:.0e}", stats.boundsMax ) == "1e+04" );
+   REQUIRE( fmt::format("{:.0e}", stats.rhsMin ) == "1e+00" );
+   REQUIRE( fmt::format("{:.0e}", stats.rhsMax ) == "7e+03" );
    // REQUIRE( round( stats.colDynamism ) ==  );
    // REQUIRE( round( stats.rowDynamism ) ==  );
 
-   // Problem<double> problem2 = MpsParser<double>::loadProblem( pathInstDir + instance2 );
-
-   // NumericalStatistics<double> nstats2(problem2);
-   // const Num_stats<double>& stats2 = nstats2.getNum_stats();
-   // // blend2.mps
-   // REQUIRE( fmt::format("{:.0e}", stats2.matrixMin ) == "1e+00" );
-   // REQUIRE( fmt::format("{:.0e}", stats2.matrixMax ) == "7e+03" );
-   // REQUIRE( fmt::format("{:.0e}", stats2.objMin ) == "5e-01" );
-   // REQUIRE( fmt::format("{:.0e}", stats2.objMax ) == "2e+01" );
-   // REQUIRE( fmt::format("{:.0e}", stats2.boundsMin ) == "1e+00" );
-   // REQUIRE( fmt::format("{:.0e}", stats2.boundsMax ) == "2e+04" );
-   // REQUIRE( fmt::format("{:.0e}", stats2.rhsMin ) == "9e+00" );
-   // REQUIRE( fmt::format("{:.0e}", stats2.rhsMax ) == "1e+03" );
-   // // REQUIRE( round( stats.colDynamism ) ==  );
-   // // REQUIRE( round( stats.rowDynamism ) ==  );
+   // blend2.mps
+   Problem<double> prob1 = instances::blend2();
+   NumericalStatistics<double> nstats1(prob1);
+   const Num_stats<double>& stats1 = nstats1.getNum_stats();
+   REQUIRE( fmt::format("{:.0e}", stats1.matrixMin ) == "1e+00" );
+   REQUIRE( fmt::format("{:.0e}", stats1.matrixMax ) == "7e+03" );
+   REQUIRE( fmt::format("{:.0e}", stats1.objMin ) == "5e-01" );
+   REQUIRE( fmt::format("{:.0e}", stats1.objMax ) == "2e+01" );
+   REQUIRE( fmt::format("{:.0e}", stats1.boundsMin ) == "1e+00" );
+   REQUIRE( fmt::format("{:.0e}", stats1.boundsMax ) == "2e+04" );
+   REQUIRE( fmt::format("{:.0e}", stats1.rhsMin ) == "9e+00" );
+   REQUIRE( fmt::format("{:.0e}", stats1.rhsMax ) == "1e+03" );
+   // REQUIRE( round( stats.colDynamism ) ==  );
+   // REQUIRE( round( stats.rowDynamism ) ==  );
 }
