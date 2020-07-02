@@ -86,7 +86,6 @@ TEST_CASE( "accurate-numerical-statistics",
       REQUIRE( row_flags2[r].test( RowFlag::NONE ) == row_flags1[r].test( RowFlag::NONE ) );
       REQUIRE( row_flags2[r].test( RowFlag::kLhsInf ) == row_flags1[r].test( RowFlag::kLhsInf ) );
       REQUIRE( row_flags2[r].test( RowFlag::kRhsInf ) == row_flags1[r].test( RowFlag::kRhsInf ) );
-      REQUIRE( row_flags2[r].test( RowFlag::kEquation ) == row_flags1[r].test( RowFlag::kEquation ) );
       REQUIRE( row_flags2[r].test( RowFlag::kIntegral ) == row_flags1[r].test( RowFlag::kIntegral ) );
       REQUIRE( row_flags2[r].test( RowFlag::kRedundant ) == row_flags1[r].test( RowFlag::kRedundant ) );
    }
