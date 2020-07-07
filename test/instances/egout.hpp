@@ -27,7 +27,9 @@
 #include "papilo/core/Problem.hpp"
 #include "papilo/core/ProblemBuilder.hpp"
 
-namespace papilo::instances
+namespace papilo
+{
+namespace instances
 {
 
 Problem<double>
@@ -73,6 +75,7 @@ egout()
    return problem;
 }
 
+} // namespace instances
 } // namespace papilo
 
 #endif
