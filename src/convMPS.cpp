@@ -63,9 +63,10 @@ convMPS( const Problem<double>& prob )
    fmt::print( "   ///PROBLEM BUILDER CODE\n" );
    // Set Variables
    // Obj
+   fmt::print( "   what\n" );
    fmt::print( "   Vec<double> coeffobj{{" );
-   for( double coeff: obj.coefficients )
-      fmt::print ("{},", coeff );
+   for( double coeff : obj.coefficients )
+      fmt::print( "{},", coeff );
    fmt::print( "}};\n" );
    // Columns
    fmt::print( "   Vec<double> lbs{{" );
@@ -94,7 +95,7 @@ convMPS( const Problem<double>& prob )
       fmt::print( "{},", row_flags[r].test( RowFlag::kLhsInf ) );
    fmt::print( "}};\n" );
    fmt::print( "   Vec<double> lhs{{" );
-   for( int r  = 0; r < nRows; ++r )
+   for( int r = 0; r < nRows; ++r )
       fmt::print( "{},", rowlhs[r] );
    fmt::print( "}};\n" );
    fmt::print( "   Vec<bool> rhsIsInf{{" );
@@ -102,7 +103,7 @@ convMPS( const Problem<double>& prob )
       fmt::print( "{},", row_flags[r].test( RowFlag::kRhsInf ) );
    fmt::print( "}};\n" );
    fmt::print( "   Vec<double> rhs{{" );
-   for( int r  = 0; r < nRows; ++r )
+   for( int r = 0; r < nRows; ++r )
       fmt::print( "{},", rowrhs[r] );
    fmt::print( "}};\n" );
    // Entries ( Nonzero Matrix values )
@@ -113,19 +114,20 @@ convMPS( const Problem<double>& prob )
       const int len = rc.getLength();
       const int* indices = rc.getIndices();
       const double* vals = rc.getValues();
-      for(int i = 0; i < len; ++i)
-         fmt::print( "{{{},{},{}}},", r, *(indices + i), *(vals + i) );
+      for( int i = 0; i < len; ++i )
+         fmt::print( "std::tuple<int, int, double>{{{},{},{}}},", r,
+                     *( indices + i ), *( vals + i ) );
    }
    fmt::print( "}};\n" );
    // Names
-   fmt::print( "   Vec<std::string> rnames{{");
+   fmt::print( "   Vec<std::string> rnames{{" );
    for( int r = 0; r < nRows; ++r )
       fmt::print( "\"{}\",", rnames[r] );
-   fmt::print( "}};\n");
-   fmt::print( "   Vec<std::string> cnames{{");
+   fmt::print( "}};\n" );
+   fmt::print( "   Vec<std::string> cnames{{" );
    for( int c = 0; c < nCols; ++c )
       fmt::print( "\"{}\",", cnames[c] );
-   fmt::print( "}};\n");
+   fmt::print( "}};\n" );
    // Set problem Builder
    fmt::print( "   int nCols = {}; int nRows = {};\n", nCols, nRows );
    fmt::print( "   ProblemBuilder<double> pb;\n" );
@@ -158,7 +160,8 @@ main( int argc, char* argv[] )
    if( argc != 2 )
    {
       fmt::print( "usage:\n" );
-      fmt::print( "./convMPS instance1.mps         - create array of cpp code to load instance.mps to papilo\n" );
+      fmt::print( "./convMPS instance1.mps         - create array of cpp code "
+                  "to load instance.mps to papilo\n" );
       return 1;
    }
    assert( argc == 2 );
