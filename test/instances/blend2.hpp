@@ -1886,7 +1886,7 @@ blend2()
    pb.setRowNameAll( rnames );
    pb.addEntryAll( entries );
    pb.setColNameAll( cnames );
-   pb.setProblemName( "blend2.mps" );
+   pb.setProblemName( "blend2.hpp" );
    Problem<double> problem = pb.build();
    /// PROBLEM BUILDER CODE END
 

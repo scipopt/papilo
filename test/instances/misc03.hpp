@@ -2289,7 +2289,7 @@ misc03()
    pb.setRowNameAll( rnames );
    pb.addEntryAll( entries );
    pb.setColNameAll( cnames );
-   pb.setProblemName( "test/instances/misc03.mps" );
+   pb.setProblemName( "misc03.hpp" );
    Problem<double> problem = pb.build();
    /// PROBLEM BUILDER CODE END
 

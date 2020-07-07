@@ -447,7 +447,7 @@ enigma()
    pb.setRowNameAll( rnames );
    pb.addEntryAll( entries );
    pb.setColNameAll( cnames );
-   pb.setProblemName( "test/instances/enigma.mps" );
+   pb.setProblemName( "enigma.hpp" );
    Problem<double> problem = pb.build();
    /// PROBLEM BUILDER CODE END
 

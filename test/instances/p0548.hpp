@@ -2249,7 +2249,7 @@ p0548()
    pb.setRowNameAll( rnames );
    pb.addEntryAll( entries );
    pb.setColNameAll( cnames );
-   pb.setProblemName( "test/instances/p0548.mps" );
+   pb.setProblemName( "p0548.hpp" );
    Problem<double> problem = pb.build();
    /// PROBLEM BUILDER CODE END
 

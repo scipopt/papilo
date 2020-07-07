@@ -672,7 +672,7 @@ rgn()
    pb.setRowNameAll( rnames );
    pb.addEntryAll( entries );
    pb.setColNameAll( cnames );
-   pb.setProblemName( "test/instances/rgn.mps" );
+   pb.setProblemName( "rgn.hpp" );
    Problem<double> problem = pb.build();
    /// PROBLEM BUILDER CODE END
 

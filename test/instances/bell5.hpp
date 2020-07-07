@@ -473,7 +473,7 @@ bell5()
    pb.setRowNameAll( rnames );
    pb.addEntryAll( entries );
    pb.setColNameAll( cnames );
-   pb.setProblemName( "bell5.mps" );
+   pb.setProblemName( "bell5.hpp" );
    Problem<double> problem = pb.build();
    /// PROBLEM BUILDER CODE END
 

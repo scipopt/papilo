@@ -466,7 +466,7 @@ lseu()
    pb.setRowNameAll( rnames );
    pb.addEntryAll( entries );
    pb.setColNameAll( cnames );
-   pb.setProblemName( "test/instances/lseu.mps" );
+   pb.setProblemName( "lseu.hpp" );
    Problem<double> problem = pb.build();
    /// PROBLEM BUILDER CODE END
 

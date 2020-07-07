@@ -152,7 +152,7 @@ flugpl()
    pb.setRowNameAll( rnames );
    pb.addEntryAll( entries );
    pb.setColNameAll( cnames );
-   pb.setProblemName( "test/instances/flugpl.mps" );
+   pb.setProblemName( "flugpl.hpp" );
    Problem<double> problem = pb.build();
    /// PROBLEM BUILDER CODE END
 

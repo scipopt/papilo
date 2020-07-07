@@ -612,7 +612,7 @@ gt2()
    pb.setRowNameAll( rnames );
    pb.addEntryAll( entries );
    pb.setColNameAll( cnames );
-   pb.setProblemName( "test/instances/gt2.mps" );
+   pb.setProblemName( "gt2.hpp" );
    Problem<double> problem = pb.build();
    /// PROBLEM BUILDER CODE END
 
