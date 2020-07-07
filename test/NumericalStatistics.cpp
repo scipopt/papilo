@@ -45,8 +45,6 @@ TEST_CASE( "accurate-numerical-statistics",
    REQUIRE( fmt::format("{:.0e}", stats.boundsMax ) == "1e+04" );
    REQUIRE( fmt::format("{:.0e}", stats.rhsMin ) == "1e+00" );
    REQUIRE( fmt::format("{:.0e}", stats.rhsMax ) == "7e+03" );
-   // REQUIRE( round( stats.colDynamism ) ==  );
-   // REQUIRE( round( stats.rowDynamism ) ==  );
 
    // blend2
    Problem<double> prob1 = instances::blend2();
@@ -60,8 +58,6 @@ TEST_CASE( "accurate-numerical-statistics",
    REQUIRE( fmt::format("{:.0e}", stats1.boundsMax ) == "2e+04" );
    REQUIRE( fmt::format("{:.0e}", stats1.rhsMin ) == "9e+00" );
    REQUIRE( fmt::format("{:.0e}", stats1.rhsMax ) == "1e+03" );
-   // REQUIRE( round( stats.colDynamism ) ==  );
-   // REQUIRE( round( stats.rowDynamism ) ==  );
 
    // dcmulti
    Problem<double> prob2 = instances::dcmulti();
@@ -75,8 +71,6 @@ TEST_CASE( "accurate-numerical-statistics",
    REQUIRE( fmt::format("{:.0e}", stats2.boundsMax ) == "1e+00" );
    REQUIRE( fmt::format("{:.0e}", stats2.rhsMin ) == "1e+00" );
    REQUIRE( fmt::format("{:.0e}", stats2.rhsMax ) == "3e+02" );
-   // REQUIRE( round( stats.colDynamism ) ==  );
-   // REQUIRE( round( stats.rowDynamism ) ==  );
 
    // egout
    Problem<double> prob3 = instances::egout();
@@ -90,8 +84,6 @@ TEST_CASE( "accurate-numerical-statistics",
    REQUIRE( fmt::format("{:.0e}", stats3.boundsMax ) == "2e+01" );
    REQUIRE( fmt::format("{:.0e}", stats3.rhsMin ) == "0e+00" );
    REQUIRE( fmt::format("{:.0e}", stats3.rhsMax ) == "0e+00" );
-   // REQUIRE( round( stats.colDynamism ) ==  );
-   // REQUIRE( round( stats.rowDynamism ) ==  );
 
    // enigma
    Problem<double> prob4 = instances::enigma();
@@ -105,8 +97,6 @@ TEST_CASE( "accurate-numerical-statistics",
    REQUIRE( fmt::format("{:.0e}", stats4.boundsMax ) == "1e+00" );
    REQUIRE( fmt::format("{:.0e}", stats4.rhsMin ) == "1e+00" );
    REQUIRE( fmt::format("{:.0e}", stats4.rhsMax ) == "1e+00" );
-   // REQUIRE( round( stats.colDynamism ) ==  );
-   // REQUIRE( round( stats.rowDynamism ) ==  );
 
    // flugpl
    Problem<double> prob5 = instances::flugpl();
@@ -120,8 +110,8 @@ TEST_CASE( "accurate-numerical-statistics",
    REQUIRE( fmt::format("{:.0e}", stats5.boundsMax ) == "8e+01" );
    REQUIRE( fmt::format("{:.0e}", stats5.rhsMin ) == "6e+01" );
    REQUIRE( fmt::format("{:.0e}", stats5.rhsMax ) == "1e+04" );
-   // REQUIRE( round( stats.colDynamism ) ==  );
-   // REQUIRE( round( stats.rowDynamism ) ==  );
+   REQUIRE( fmt::format("{:.0e}", stats5.colDynamism ) == "2e+02" );
+   REQUIRE( fmt::format("{:.0e}", stats5.rowDynamism ) == "2e+02" );
 
    // gt2
    Problem<double> prob6 = instances::gt2();
@@ -135,8 +125,6 @@ TEST_CASE( "accurate-numerical-statistics",
    REQUIRE( fmt::format("{:.0e}", stats6.boundsMax ) == "2e+01" );
    REQUIRE( fmt::format("{:.0e}", stats6.rhsMin ) == "1e+00" );
    REQUIRE( fmt::format("{:.0e}", stats6.rhsMax ) == "6e+03" );
-   // REQUIRE( round( stats.colDynamism ) ==  );
-   // REQUIRE( round( stats.rowDynamism ) ==  );
 
    // lseu
    Problem<double> prob7 = instances::lseu();
@@ -150,8 +138,6 @@ TEST_CASE( "accurate-numerical-statistics",
    REQUIRE( fmt::format("{:.0e}", stats7.boundsMax ) == "1e+00" );
    REQUIRE( fmt::format("{:.0e}", stats7.rhsMin ) == "1e+00" );
    REQUIRE( fmt::format("{:.0e}", stats7.rhsMax ) == "3e+03" );
-   // REQUIRE( round( stats.colDynamism ) ==  );
-   // REQUIRE( round( stats.rowDynamism ) ==  );
 
    // misc03
    Problem<double> prob8 = instances::misc03();
@@ -165,8 +151,6 @@ TEST_CASE( "accurate-numerical-statistics",
    REQUIRE( fmt::format("{:.0e}", stats8.boundsMax ) == "1e+00" );
    REQUIRE( fmt::format("{:.0e}", stats8.rhsMin ) == "1e+00" );
    REQUIRE( fmt::format("{:.0e}", stats8.rhsMax ) == "2e+02" );
-   // REQUIRE( round( stats.colDynamism ) ==  );
-   // REQUIRE( round( stats.rowDynamism ) ==  );
 
    // p0548
    Problem<double> prob9 = instances::p0548();
@@ -180,8 +164,6 @@ TEST_CASE( "accurate-numerical-statistics",
    REQUIRE( fmt::format("{:.0e}", stats9.boundsMax ) == "1e+00" );
    REQUIRE( fmt::format("{:.0e}", stats9.rhsMin ) == "1e+00" );
    REQUIRE( fmt::format("{:.0e}", stats9.rhsMax ) == "1e+04" );
-   // REQUIRE( round( stats.colDynamism ) ==  );
-   // REQUIRE( round( stats.rowDynamism ) ==  );
 
    // rgn
    Problem<double> prob10 = instances::rgn();
@@ -195,6 +177,5 @@ TEST_CASE( "accurate-numerical-statistics",
    REQUIRE( fmt::format("{:.0e}", stats10.boundsMax ) == "1e+02" );
    REQUIRE( fmt::format("{:.0e}", stats10.rhsMin ) == "1e+00" );
    REQUIRE( fmt::format("{:.0e}", stats10.rhsMax ) == "4e+00" );
-   // REQUIRE( round( stats.colDynamism ) ==  );
-   // REQUIRE( round( stats.rowDynamism ) ==  );
+
 }
