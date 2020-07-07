@@ -63,7 +63,6 @@ convMPS( const Problem<double>& prob )
    fmt::print( "   ///PROBLEM BUILDER CODE\n" );
    // Set Variables
    // Obj
-   fmt::print( "   what\n" );
    fmt::print( "   Vec<double> coeffobj{{" );
    for( double coeff : obj.coefficients )
       fmt::print( "{},", coeff );
