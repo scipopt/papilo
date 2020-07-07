@@ -273,10 +273,10 @@ class ProblemBuilder
 
    /// add all given entries given in tripel: (row,col,val)
    void
-   addEntryAll( Vec<std::tuple<int,int,REAL>> entries )
+   addEntryAll( Vec<std::tuple<int, int, REAL>> entries )
    {
       for( auto trp : entries )
-         addEntry( std::get<0>(trp), std::get<1>(trp), std::get<2>(trp) );
+         addEntry( std::get<0>( trp ), std::get<1>( trp ), std::get<2>( trp ) );
    }
 
    /// add the nonzero entries for the given row
@@ -287,7 +287,7 @@ class ProblemBuilder
       for( int i = 0; i != len; ++i )
       {
          assert( vals[i] != 0 );
-         matrix_buffer.addEntry( row, cols[i], REAL{vals[i]} );
+         matrix_buffer.addEntry( row, cols[i], REAL{ vals[i] } );
       }
    }
 
@@ -338,7 +338,7 @@ class ProblemBuilder
       for( int i = 0; i != len; ++i )
       {
          assert( vals[i] != 0 );
-         matrix_buffer.addEntry( rows[i], col, REAL{vals[i]} );
+         matrix_buffer.addEntry( rows[i], col, REAL{ vals[i] } );
       }
    }
 
@@ -355,7 +355,7 @@ class ProblemBuilder
       problem.setConstraintMatrix( ConstraintMatrix<REAL>{
           matrix_buffer.buildCSR( nrows, ncols ),
           matrix_buffer.buildCSC( nrows, ncols ), std::move( lhs ),
-          std::move( rhs ), std::move( rflags )} );
+          std::move( rhs ), std::move( rflags ) } );
 
       matrix_buffer.clear();
 

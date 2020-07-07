@@ -69,7 +69,7 @@ presolve_and_solve(
 
    fmt::print( "reading took {:.3} seconds\n", readtime );
 
-   NumericalStatistics<REAL> nstats(problem);
+   NumericalStatistics<REAL> nstats( problem );
    nstats.printStatistics();
 
    Presolve<REAL> presolve;
