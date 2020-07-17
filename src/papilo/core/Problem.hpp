@@ -65,7 +65,7 @@ class Problem
    void
    setObjective( Vec<REAL> coefficients, REAL offset = 0.0 )
    {
-      objective = Objective<REAL>{ std::move( coefficients ), offset };
+      objective = Objective<REAL>{std::move( coefficients ), offset};
    }
 
    /// set objective function
