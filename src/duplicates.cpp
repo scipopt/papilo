@@ -672,18 +672,28 @@ check_duplicates( const Problem<double>& prob1, const Problem<double>& prob2 )
 static uint64_t
 compute_instancehash( const Problem<double>& prob )
 {
+   const ConstraintMatrix<double> cm = prob.getConstraintMatrix();
 
-   return 0;
+   Hasher<uint64_t> hasher( cm.getNnz() );
+   hasher.addValue( cm.getNRows() );
+   hasher.addValue( cm.getNCols() );
+   hasher.addValue( prob.getNumIntegralCols() );
+   hasher.addValue( prob.getNumContinuousCols() );
+   // maybe add permutation later
+   // add numerical statistics max min dynamism
+
+   return hasher.getHash();
 }
 
 int
 main( int argc, char* argv[] )
 {
-   if( argc != 2 || argc != 3 )
+   if( argc != 2 && argc != 3 )
    {
       fmt::print("usage:\n");
       fmt::print("./check_duplicates instance1.mps instance2.mps  - check for duplicates\n");
       fmt::print("./check_duplicates instance1.mps                - compute unique hash for instance");
+      return 1;
    }
    assert( argc == 2 || argc == 3 );
 
