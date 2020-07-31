@@ -215,12 +215,6 @@ add_library(papilo-core STATIC
 target_link_libraries(papilo-core papilo)
 target_compile_definitions(papilo-core PRIVATE PAPILO_USE_EXTERN_TEMPLATES)
 
-if(Boost_IOSTREAMS_FOUND AND Boost_SERIALIZATION_FOUND AND Boost_PROGRAM_OPTIONS_FOUND)
-   add_executable(duplicates src/duplicates.cpp)
-   target_link_libraries(duplicates papilo-core ${Boost_LIBRARIES})
-   target_compile_definitions(duplicates PRIVATE PAPILO_USE_EXTERN_TEMPLATES PAPILO_MPS_WRITER)
-endif()
-
 if(NOT PAPILO_NO_BINARIES)
    add_subdirectory(binaries)
 endif()

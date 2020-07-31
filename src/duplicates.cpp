@@ -29,6 +29,7 @@
 #include "papilo/misc/Hash.hpp"
 #include "papilo/misc/Vec.hpp"
 #include "papilo/misc/fmt.hpp"
+#include "papilo/misc/NumericalStatistics.hpp"
 #include "papilo/misc/tbb.hpp"
 #include "pdqsort/pdqsort.h"
 #include "tbb/concurrent_unordered_set.h"
@@ -645,6 +646,12 @@ compute_instancehash( const Problem<double>& prob )
 {
    const ConstraintMatrix<double> cm = prob.getConstraintMatrix();
 
+   auto doubleToUInt = []( double num ) {
+      uint64_t val;
+      std::memcpy( &val, &num, sizeof( double ) );
+      return val;
+   };
+
    Hasher<uint64_t> hasher( cm.getNnz() );
    hasher.addValue( cm.getNRows() );
    hasher.addValue( cm.getNCols() );
@@ -656,6 +663,19 @@ compute_instancehash( const Problem<double>& prob )
    //    hasher.addValue( row );
    // for( int col : perm.second )
    //    hasher.addValue( col );
+   NumericalStatistics<double> nstats( prob );
+   Num_stats<double> stats = nstats.getNum_stats();
+   hasher.addValue( doubleToUInt( stats.matrixMin ) );
+   hasher.addValue( doubleToUInt( stats.matrixMax ) );
+   hasher.addValue( doubleToUInt( stats.objMin ) );
+   hasher.addValue( doubleToUInt( stats.objMax ) );
+   hasher.addValue( doubleToUInt( stats.boundsMin ) );
+   hasher.addValue( doubleToUInt( stats.boundsMax ) );
+   hasher.addValue( doubleToUInt( stats.rhsMin ) );
+   hasher.addValue( doubleToUInt( stats.rhsMax ) );
+   hasher.addValue( doubleToUInt( stats.dynamism ) );
+   hasher.addValue( doubleToUInt( stats.rowDynamism ) );
+   hasher.addValue( doubleToUInt( stats.colDynamism ) );
 
    return hasher.getHash();
 }

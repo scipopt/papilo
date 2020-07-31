@@ -33,7 +33,7 @@ include_directories(${SCIP_INCLUDE_DIRS} ${SOPLEX_INCLUDE_DIRS} ${HIGHS_INCLUDE_
 find_package(Boost REQUIRED OPTIONAL_COMPONENTS iostreams serialization program_options)
 
 if(Boost_IOSTREAMS_FOUND AND Boost_SERIALIZATION_FOUND AND Boost_PROGRAM_OPTIONS_FOUND)
-   add_executable(duplicates  ${CMAKE_CURRENT_LIST_DIR}/../src/papilo.cpp)
+   add_executable(duplicates  ${CMAKE_CURRENT_LIST_DIR}/../src/duplicates.cpp)
    set_target_properties(duplicates PROPERTIES OUTPUT_NAME duplicates RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin" )
    target_link_libraries(duplicates papilo-core ${Boost_LIBRARIES})
    target_compile_definitions(duplicates PRIVATE PAPILO_USE_EXTERN_TEMPLATES PAPILO_MPS_WRITER)
