@@ -640,22 +640,11 @@ check_duplicates( const Problem<double>& prob1, const Problem<double>& prob2 )
    Vec<int>& perm_row1 = perms1.first;
    Vec<int>& perm_row2 = perms2.first;
 
-   // Vec<int> perm_col1( ncols );
-   // Vec<int> perm_col2( ncols );
-   // if( !guess_permutation_col( prob1, prob2, perm_col1, perm_col2 ) )
-   //{
-   //   // in case guess_permutation did not find anything try anyways
-   //   fill_identity_permutation( perm_col1 );
-   //   fill_identity_permutation( perm_col2 );
-   //}
-   fmt::print( "{}", fmt::join( perm_col2, ", " ) );
-
    const VariableDomains<double>& vd1 = prob1.getVariableDomains();
    const VariableDomains<double>& vd2 = prob2.getVariableDomains();
 
    // const Vec<String> rnames1 = prob1.getConstraintNames();
    // const Vec<String> rnames2 = prob2.getConstraintNames();
-
 
    // const Vec<String> cnames1 = prob1.getVariableNames();
    // const Vec<String> cnames2 = prob2.getVariableNames();
@@ -669,7 +658,6 @@ check_duplicates( const Problem<double>& prob1, const Problem<double>& prob2 )
    //    if( rnames1[perm_row1[i]] != rnames2[perm_row2[i]] ) fmt::print( "{}: {:20} - {:20}\n", i, rnames1[perm_row1[i]], rnames2[perm_row2[i]] );
    // }
 
-
    // fmt::print( "Columns\n" );
    // for( int i = 0; i < ncols; ++i )
    // {
@@ -678,7 +666,6 @@ check_duplicates( const Problem<double>& prob1, const Problem<double>& prob2 )
 
    if( !check_cols( vd1, vd2, perm_col1, perm_col2 ) )
       return false;
-
 
    const ConstraintMatrix<double> cm1 = prob1.getConstraintMatrix();
    const ConstraintMatrix<double> cm2 = prob2.getConstraintMatrix();
