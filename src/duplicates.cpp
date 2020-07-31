@@ -687,8 +687,12 @@ compute_instancehash( const Problem<double>& prob )
    hasher.addValue( cm.getNCols() );
    hasher.addValue( prob.getNumIntegralCols() );
    hasher.addValue( prob.getNumContinuousCols() );
-   // maybe add permutation later
-   // add numerical statistics max min dynamism
+   std::pair<Vec<int>, Vec<int>> perm =
+       compute_row_and_column_permutation( prob );
+   for( int row : perm.first )
+      hasher.addValue( row );
+   for( int col : perm.second )
+      hasher.addValue( col );
 
    return hasher.getHash();
 }
