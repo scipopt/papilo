@@ -33,8 +33,16 @@
 #include "pdqsort/pdqsort.h"
 #include "tbb/concurrent_unordered_set.h"
 #include <algorithm>
+#include <sys/stat.h>
 
 using namespace papilo;
+
+bool
+fileExists( const std::string& name )
+{
+   struct stat buff;
+   return ( stat ( name.c_str(), &buff ) == 0 );
+}
 
 static std::pair<Vec<int>, Vec<int>>
 compute_row_and_column_permutation( const Problem<double>& prob )
@@ -310,7 +318,7 @@ compute_row_and_column_permutation( const Problem<double>& prob )
 
       ++iters;
 
-      fmt::print( "iter {}: {} non unit col partitions and {} non unit row "
+      fmt::print( "iter {:3}: {:6} non unit col partitions and {:6} non unit row "
                   "partitions\n",
                   iters, ncols2, nrows2 );
    }
@@ -702,13 +710,18 @@ main( int argc, char* argv[] )
 {
    if( argc != 2 && argc != 3 )
    {
-      fmt::print("usage:\n");
-      fmt::print("./check_duplicates instance1.mps instance2.mps  - check for duplicates\n");
-      fmt::print("./check_duplicates instance1.mps                - compute unique hash for instance");
+      fmt::print( "usage:\n" );
+      fmt::print( "./check_duplicates instance1.mps instance2.mps  - check for duplicates\n" );
+      fmt::print( "./check_duplicates instance1.mps                - compute unique hash for instance" );
       return 1;
    }
    assert( argc == 2 || argc == 3 );
 
+   if( !fileExists( argv[1] ) )
+   {
+      fmt::print( "Error: Can not find instance at `{}`", argv[1] );
+      return 1;
+   }
    Problem<double> prob1 = MpsParser<double>::loadProblem( argv[1] );
 
    if( argc == 2 )
@@ -718,6 +731,11 @@ main( int argc, char* argv[] )
    }
    else
    {
+      if( !fileExists( argv[2] ) )
+      {
+         fmt::print( "Error: Can not find instance at `{}`", argv[2] );
+         return 1;
+      }
       Problem<double> prob2 = MpsParser<double>::loadProblem( argv[2] );
       bool res = check_duplicates( prob1, prob2 );
       fmt::print( "duplicates: {}\n", res );
