@@ -195,8 +195,68 @@ compute_row_and_column_permutation( const Problem<double>& prob )
    size_t nrows2 = nrows;
    size_t ncols2 = ncols;
 
-   while( ncols2 != 0 )
+   while( nrows2 != 0 )
    {
+      tbb::parallel_for(
+          tbb::blocked_range<int>( 0, nrows2 ),
+          [&]( const tbb::blocked_range<int>& r ) {
+             for( int i = r.begin(); i != r.end(); ++i )
+             {
+                int row = rowperm[i];
+                int start = csrstarts[row];
+                int end = csrstarts[row + 1];
+                pdqsort( &csrvals[start], &csrvals[end], comp_rowvals );
+
+                Hasher<uint64_t> hasher( end - start );
+                for( int k = start; k < end; ++k )
+                {
+                   hasher.addValue( csrvals[k].first );
+                   hasher.addValue( colhashes[csrvals[k].second] );
+                }
+
+                rowhashes[row] = hasher.getHash() >> 1;
+             }
+          } );
+      distinct_row_hashes.clear();
+
+      for( size_t i = 0; i < nrows2; ++i )
+         distinct_row_hashes[rowhashes[rowperm[i]]] += 1;
+
+      pdqsort( rowperm.begin(), rowperm.begin() + nrows2, [&]( int a, int b ) {
+         return std::make_tuple( -distinct_row_hashes[rowhashes[a]],
+                                rowhashes[a], a ) <
+                std::make_tuple( -distinct_row_hashes[rowhashes[b]],
+                                rowhashes[b], b );
+      } );
+
+      lastnrows = nrows2;
+      nrows2 = 0;
+
+      while( nrows2 < lastnrows )
+      {
+         uint64_t hashval = rowhashes[rowperm[nrows2]];
+         size_t partitionsize = distinct_row_hashes[hashval];
+         if( partitionsize <= 1 )
+            break;
+
+         nrows2 += partitionsize;
+      }
+
+      for( size_t i = nrows2; i < lastnrows; ++i )
+      {
+         rowhashes[rowperm[i]] = i;
+      }
+
+      if( nrows2 == lastnrows )
+      {
+         --nrows2;
+         std::swap( rowperm[0], rowperm[nrows2] );
+         rowhashes[rowperm[nrows2]] = nrows2;
+      }
+
+      if( ncols2 == 0 )
+         break;
+
       tbb::parallel_for(
           tbb::blocked_range<int>( 0, ncols2 ),
           [&]( const tbb::blocked_range<int>& r ) {
@@ -205,16 +265,6 @@ compute_row_and_column_permutation( const Problem<double>& prob )
                 int col = colperm[i];
                 int start = cscstarts[col];
                 int end = cscstarts[col + 1];
-                /*
-                 * rowhashes is not initialized in first run, I think that can cause non deterministic behaviour for coeffs of same size when sorting.
-                 * You can not initialize it to 0 as that would lead to unsortability? (since a.first == b.first and rowhashes[a.second] == rowhashes[b.second]
-                 * (i do not know how pdqsort handles that though)
-                 * That also could be problematic for rowhash collisions
-                 * In both cases it is unknown (to me) which row goes first or second - leading to potential wrong permutations (some sort of backtracing here????)
-                 * If you initialize rowhashes to random non colliding values you determine a permutation beforehand, in some cases it will be very uncertain to reach
-                 * a correct permutation
-                 * Of course you can argue this is very unlikely, but depending on how pdqsort handles this ( I think ) it is not hard to construct some examples that do not work...
-                 */
                 pdqsort( &cscvals[start], &cscvals[end], comp_colvals );
 
                 Hasher<uint64_t> hasher( end - start );
@@ -227,7 +277,6 @@ compute_row_and_column_permutation( const Problem<double>& prob )
                 colhashes[col] = hasher.getHash() >> 1;
              }
           } );
-
       distinct_hashes.clear();
 
       for( size_t i = 0; i < ncols2; ++i )
@@ -254,74 +303,6 @@ compute_row_and_column_permutation( const Problem<double>& prob )
       for( size_t i = ncols2; i < lastncols; ++i )
       {
          colhashes[colperm[i]] = i;
-      }
-
-      if( ncols2 == lastncols )
-      {
-         --ncols2;
-         std::swap( colperm[0], colperm[ncols2] );
-         colhashes[colperm[ncols2]] = ncols2;
-      }
-
-      if( nrows2 == 0 )
-         break;
-
-      tbb::parallel_for(
-          tbb::blocked_range<int>( 0, nrows2 ),
-          [&]( const tbb::blocked_range<int>& r ) {
-             for( int i = r.begin(); i != r.end(); ++i )
-             {
-                int row = rowperm[i];
-                int start = csrstarts[row];
-                int end = csrstarts[row + 1];
-                pdqsort( &csrvals[start], &csrvals[end], comp_rowvals );
-
-                Hasher<uint64_t> hasher( end - start );
-
-                for( int k = start; k < end; ++k )
-                {
-                   hasher.addValue( csrvals[k].first );
-                   hasher.addValue( colhashes[csrvals[k].second] );
-                }
-
-                rowhashes[row] = hasher.getHash() >> 1;
-             }
-          } );
-      distinct_row_hashes.clear();
-
-      for( size_t i = 0; i < nrows2; ++i )
-         distinct_row_hashes[rowhashes[rowperm[i]]] += 1;
-
-      pdqsort( rowperm.begin(), rowperm.begin() + nrows2, [&]( int a, int b ) {
-         return std::make_pair( -distinct_row_hashes[rowhashes[a]],
-                                rowhashes[a] ) <
-                std::make_pair( -distinct_row_hashes[rowhashes[b]],
-                                rowhashes[b] );
-      } );
-
-      lastnrows = nrows2;
-      nrows2 = 0;
-
-      while( nrows2 < lastnrows )
-      {
-         uint64_t hashval = rowhashes[rowperm[nrows2]];
-         size_t partitionsize = distinct_row_hashes[hashval];
-         if( partitionsize <= 1 )
-            break;
-
-         nrows2 += partitionsize;
-      }
-
-      for( size_t i = nrows2; i < lastnrows; ++i )
-      {
-         rowhashes[rowperm[i]] = i;
-      }
-
-      if( nrows2 == lastnrows )
-      {
-         --nrows2;
-         std::swap( rowperm[0], rowperm[nrows2] );
-         rowhashes[rowperm[nrows2]] = nrows2;
       }
 
       ++iters;
