@@ -621,27 +621,6 @@ check_duplicates( const Problem<double>& prob1, const Problem<double>& prob2 )
    Vec<int>& perm_row1 = perms1.first;
    Vec<int>& perm_row2 = perms2.first;
 
-   // const Vec<String> rnames1 = prob1.getConstraintNames();
-   // const Vec<String> rnames2 = prob2.getConstraintNames();
-
-   // const Vec<String> cnames1 = prob1.getVariableNames();
-   // const Vec<String> cnames2 = prob2.getVariableNames();
-
-   // fmt::print( "\n" );
-   // // fmt::print( "{}\n", cnames1[289] );
-   // fmt::print( "s1 {:20} {:20}\n", rnames1[258], rnames2[258] );
-
-   // for( int i = 0; i < nrows; ++i )
-   // {
-   //    if( rnames1[perm_row1[i]] != rnames2[perm_row2[i]] ) fmt::print( "{}: {:20} - {:20}\n", i, rnames1[perm_row1[i]], rnames2[perm_row2[i]] );
-   // }
-
-   // fmt::print( "Columns\n" );
-   // for( int i = 0; i < ncols; ++i )
-   // {
-   //    if( cnames1[perm_col1[i]] != cnames2[perm_col2[i]] ) fmt::print( "{}: {:20} - {:20}\n", i, cnames1[perm_col1[i]], cnames2[perm_col2[i]] );
-   // }
-
    if( !check_cols( prob1, prob2, perm_col1, perm_col2 ) )
       return false;
 
