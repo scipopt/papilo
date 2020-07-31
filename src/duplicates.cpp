@@ -41,6 +41,9 @@ compute_row_and_column_permutation( const Problem<double>& prob )
 {
    const ConstraintMatrix<double>& consmatrix = prob.getConstraintMatrix();
 
+   // const Vec<String> rnames = prob.getConstraintNames();
+   // const Vec<String> cnames = prob.getVariableNames();
+
    std::pair<Vec<int>, Vec<int>> retval;
    Vec<uint64_t> rowhashes;
    Vec<uint64_t> colhashes;
@@ -562,6 +565,9 @@ check_rows( const ConstraintMatrix<double>& cm1,
       const double* vals1 = row1.getValues();
       const double* vals2 = row2.getValues();
 
+      // fmt::print( "index {}\n", inds1[0] );
+      // fmt::print( "permin {}\n", permcol1[inds1[0]] );
+
       for( int x = 0; x < curr_ncols; ++x )
       {
          int col = findcol( inds1[x], permcol1 );
@@ -578,6 +584,7 @@ check_rows( const ConstraintMatrix<double>& cm1,
             fmt::print(
                 "Different columns defined in row prob1:{} and prob2:{}\n",
                 i1row, i2row );
+            // fmt::print( "{} . i: {}\n", x, i );
             return false;
          }
 
@@ -586,6 +593,7 @@ check_rows( const ConstraintMatrix<double>& cm1,
          {
             fmt::print( "Different coefficients in row prob1:{} and prob2:{}\n",
                         i1row, i2row );
+            // fmt::print( "{}\n", coefmap[final_index2] );
             return false;
          }
       }
@@ -628,6 +636,10 @@ check_duplicates( const Problem<double>& prob1, const Problem<double>& prob2 )
 
    Vec<int>& perm_col1 = perms1.second;
    Vec<int>& perm_col2 = perms2.second;
+
+   Vec<int>& perm_row1 = perms1.first;
+   Vec<int>& perm_row2 = perms2.first;
+
    // Vec<int> perm_col1( ncols );
    // Vec<int> perm_col2( ncols );
    // if( !guess_permutation_col( prob1, prob2, perm_col1, perm_col2 ) )
@@ -641,11 +653,32 @@ check_duplicates( const Problem<double>& prob1, const Problem<double>& prob2 )
    const VariableDomains<double>& vd1 = prob1.getVariableDomains();
    const VariableDomains<double>& vd2 = prob2.getVariableDomains();
 
+   // const Vec<String> rnames1 = prob1.getConstraintNames();
+   // const Vec<String> rnames2 = prob2.getConstraintNames();
+
+
+   // const Vec<String> cnames1 = prob1.getVariableNames();
+   // const Vec<String> cnames2 = prob2.getVariableNames();
+
+   // fmt::print( "\n" );
+   // // fmt::print( "{}\n", cnames1[289] );
+   // fmt::print( "s1 {:20} {:20}\n", rnames1[258], rnames2[258] );
+
+   // for( int i = 0; i < nrows; ++i )
+   // {
+   //    if( rnames1[perm_row1[i]] != rnames2[perm_row2[i]] ) fmt::print( "{}: {:20} - {:20}\n", i, rnames1[perm_row1[i]], rnames2[perm_row2[i]] );
+   // }
+
+
+   // fmt::print( "Columns\n" );
+   // for( int i = 0; i < ncols; ++i )
+   // {
+   //    if( cnames1[perm_col1[i]] != cnames2[perm_col2[i]] ) fmt::print( "{}: {:20} - {:20}\n", i, cnames1[perm_col1[i]], cnames2[perm_col2[i]] );
+   // }
+
    if( !check_cols( vd1, vd2, perm_col1, perm_col2 ) )
       return false;
 
-   Vec<int>& perm_row1 = perms1.first;
-   Vec<int>& perm_row2 = perms2.first;
 
    const ConstraintMatrix<double> cm1 = prob1.getConstraintMatrix();
    const ConstraintMatrix<double> cm2 = prob2.getConstraintMatrix();
