@@ -483,6 +483,10 @@ check_rows( const ConstraintMatrix<double>& cm1,
 
    HashMap<int, double> coefmap;
 
+   auto findcol = []( int col, Vec<int> perm ) {
+      return std::distance( perm.begin(), std::find( perm.begin(), perm.end(), col ) );
+   };
+
    for( int i = 0; i < nrows; ++i )
    {
       int i1row = permrow1[i];
@@ -578,11 +582,14 @@ check_rows( const ConstraintMatrix<double>& cm1,
       const double* vals2 = row2.getValues();
 
       for( int x = 0; x < curr_ncols; ++x )
-         coefmap[permcol1[inds1[x]]] = vals1[x];
+      {
+         int col = findcol( inds1[x], permcol1 );
+         coefmap[col] = vals1[x];
+      }
 
       for( int x = 0; x < curr_ncols; ++x )
       {
-         int final_index2 = permcol2[inds2[x]];
+         int final_index2 = findcol( inds2[x], permcol2 );
 
          // Check if same variables are defined for row
          if( coefmap.count( final_index2 ) == 0 )
