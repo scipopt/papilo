@@ -711,7 +711,7 @@ class KktChecker<REAL, CheckLevel::Check>
    }
 
    void
-   setLevel( CheckLevel type_of_check ) const
+   setLevel( CheckLevel type_of_check )
    {
       level = type_of_check;
    }

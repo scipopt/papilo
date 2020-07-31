@@ -30,12 +30,13 @@ else()
    set(PAPILOLIB_TARGET "")
 endif()
 
-add_executable(unit_test TestMain.cpp MatrixBuffer.cpp VectorUtils.cpp ${PAPILOLIB_TEST_FILE})
-target_link_libraries(unit_test papilo ${PAPILOLIB_TARGET})
+add_executable(unit_test TestMain.cpp MatrixBuffer.cpp VectorUtils.cpp NumericalStatistics.cpp ${PAPILOLIB_TEST_FILE})
+target_link_libraries(unit_test papilo ${PAPILOLIB_TARGET} ${Boost_LIBRARIES})
 
 set(unit_tests
  "matrix-buffer"
  "vector-comparisons"
+ "accurate-numerical-statistics"
  ${PAPILOLIB_TESTS}
   )
 
