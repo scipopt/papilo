@@ -52,7 +52,7 @@ template <typename REAL>
 class NumericalStatistics
 {
  public:
-   NumericalStatistics( Problem<REAL>& p )
+   NumericalStatistics( const Problem<REAL>& p )
        : stats( Num_stats<REAL>() ), prob( p )
    {
       // Set all values in Num_stats
@@ -247,7 +247,7 @@ class NumericalStatistics
 
  private:
    Num_stats<REAL> stats;
-   Problem<REAL>& prob;
+   const Problem<REAL>& prob;
 };
 
 } // namespace papilo
