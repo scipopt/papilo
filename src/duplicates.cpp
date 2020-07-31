@@ -41,7 +41,7 @@ bool
 fileExists( const std::string& name )
 {
    struct stat buff;
-   return ( stat ( name.c_str(), &buff ) == 0 );
+   return ( stat( name.c_str(), &buff ) == 0 );
 }
 
 static std::pair<Vec<int>, Vec<int>>
@@ -237,9 +237,9 @@ compute_row_and_column_permutation( const Problem<double>& prob, bool verbose )
 
       pdqsort( rowperm.begin(), rowperm.begin() + nrows2, [&]( int a, int b ) {
          return std::make_tuple( -distinct_row_hashes[rowhashes[a]],
-                                rowhashes[a], a ) <
+                                 rowhashes[a], a ) <
                 std::make_tuple( -distinct_row_hashes[rowhashes[b]],
-                                rowhashes[b], b );
+                                 rowhashes[b], b );
       } );
 
       lastnrows = nrows2;
@@ -321,9 +321,10 @@ compute_row_and_column_permutation( const Problem<double>& prob, bool verbose )
       ++iters;
 
       if( verbose )
-         fmt::print( "iter {:3}: {:6} non unit col partitions and {:6} non unit row "
-                  "partitions\n",
-                  iters, ncols2, nrows2 );
+         fmt::print(
+             "iter {:3}: {:6} non unit col partitions and {:6} non unit row "
+             "partitions\n",
+             iters, ncols2, nrows2 );
    }
 
    return retval;
@@ -351,9 +352,8 @@ fill_identity_permutation( Vec<int>& out_perm )
 
 /// Returns True if variables in given permutation have same attributes
 static bool
-check_cols( const Problem<double>& prob1,
-            const Problem<double>& prob2, Vec<int> perm1,
-            const Vec<int> perm2 )
+check_cols( const Problem<double>& prob1, const Problem<double>& prob2,
+            Vec<int> perm1, const Vec<int> perm2 )
 {
    assert( perm1.size() == perm2.size() );
    int ncols = perm1.size();
@@ -364,8 +364,9 @@ check_cols( const Problem<double>& prob1,
    const Vec<String> cnames1 = prob1.getVariableNames();
    const Vec<String> cnames2 = prob2.getVariableNames();
 
-   auto printVarsAndIndex = [&] ( int i1, int i2 ) {
-      fmt::print( "Differing Variables: Problem 1: {:6} at index {:<5} vs ", cnames1[i1], i1 );
+   auto printVarsAndIndex = [&]( int i1, int i2 ) {
+      fmt::print( "Differing Variables: Problem 1: {:6} at index {:<5} vs ",
+                  cnames1[i1], i1 );
       fmt::print( "Problem 2: {:6} at index {:<5}\n", cnames2[i2], i2 );
    };
 
@@ -378,7 +379,7 @@ check_cols( const Problem<double>& prob1,
           vd2.flags[i2].test( ColFlag::kIntegral ) )
       {
          // kein duplikat: eine variable ist ganzzahlig die andere nicht
-         fmt::print( "Variable is integer the other not!\n");
+         fmt::print( "Variable is integer the other not!\n" );
          printVarsAndIndex( i1, i2 );
          return false;
       }
@@ -387,7 +388,8 @@ check_cols( const Problem<double>& prob1,
           vd2.flags[i2].test( ColFlag::kUbInf ) )
       {
          // kein duplikat: ein upper bound ist +infinity, der andere nicht
-         fmt::print( "Variable's Upper Bound is +infty and the others is not!\n" );
+         fmt::print(
+             "Variable's Upper Bound is +infty and the others is not!\n" );
          printVarsAndIndex( i1, i2 );
          return false;
       }
@@ -396,7 +398,8 @@ check_cols( const Problem<double>& prob1,
           vd2.flags[i2].test( ColFlag::kLbInf ) )
       {
          // kein duplikat: ein lower bound ist -infinity, der andere nicht
-         fmt::print( "Variable's Lower Bound is -infty and the others is not! " );
+         fmt::print(
+             "Variable's Lower Bound is -infty and the others is not! " );
          printVarsAndIndex( i1, i2 );
          return false;
       }
@@ -427,9 +430,9 @@ check_cols( const Problem<double>& prob1,
 /// Returns True if rows in given Permutation are same for also given variable
 /// permutation
 static bool
-check_rows( const Problem<double>& prob1,
-            const Problem<double>& prob2, Vec<int> permrow1,
-            Vec<int> permrow2, Vec<int> permcol1, Vec<int> permcol2 )
+check_rows( const Problem<double>& prob1, const Problem<double>& prob2,
+            Vec<int> permrow1, Vec<int> permrow2, Vec<int> permcol1,
+            Vec<int> permcol2 )
 {
    assert( permrow1.size() == permrow2.size() );
    assert( permcol1.size() == permcol2.size() );
@@ -455,13 +458,15 @@ check_rows( const Problem<double>& prob1,
    const Vec<String> rnames1 = prob1.getConstraintNames();
    const Vec<String> rnames2 = prob2.getConstraintNames();
 
-   auto printConstraintsAndIndex = [&] ( int i1, int i2 ) {
-      fmt::print( "Differing Constraints: Problem 1: {:6} at index {:<5} vs ", rnames1[i1], i1 );
+   auto printConstraintsAndIndex = [&]( int i1, int i2 ) {
+      fmt::print( "Differing Constraints: Problem 1: {:6} at index {:<5} vs ",
+                  rnames1[i1], i1 );
       fmt::print( "Problem 2: {:6} at index {:<5}\n", rnames2[i2], i2 );
    };
 
    auto findcol = []( int col, Vec<int> perm ) {
-      return std::distance( perm.begin(), std::find( perm.begin(), perm.end(), col ) );
+      return std::distance( perm.begin(),
+                            std::find( perm.begin(), perm.end(), col ) );
    };
 
    for( int i = 0; i < nrows; ++i )
@@ -565,7 +570,9 @@ check_rows( const Problem<double>& prob1,
          {
             fmt::print( "Row has different variables!\n" );
             printConstraintsAndIndex( i1row, i2row );
-            fmt::print( "Variable `{}` at index {} is defined for Problem 2, but not for Problem1", cnames2[i], i );
+            fmt::print( "Variable `{}` at index {} is defined for Problem 2, "
+                        "but not for Problem1",
+                        cnames2[i], i );
             return false;
          }
 
@@ -574,7 +581,9 @@ check_rows( const Problem<double>& prob1,
          {
             fmt::print( "Row has different coefficients for variable!\n" );
             printConstraintsAndIndex( i1row, i2row );
-            fmt::print( "Variables: Problem1: {} at {} vs Problem2: {} at {}\n", coefmap[final_index2], permrow1[final_index2], vals2[x], inds2[x] );
+            fmt::print( "Variables: Problem1: {} at {} vs Problem2: {} at {}\n",
+                        coefmap[final_index2], permrow1[final_index2], vals2[x],
+                        inds2[x] );
             return false;
          }
       }
@@ -641,12 +650,12 @@ compute_instancehash( const Problem<double>& prob )
    hasher.addValue( cm.getNCols() );
    hasher.addValue( prob.getNumIntegralCols() );
    hasher.addValue( prob.getNumContinuousCols() );
-   std::pair<Vec<int>, Vec<int>> perm =
-       compute_row_and_column_permutation( prob, false );
-   for( int row : perm.first )
-      hasher.addValue( row );
-   for( int col : perm.second )
-      hasher.addValue( col );
+   // std::pair<Vec<int>, Vec<int>> perm =
+   //     compute_row_and_column_permutation( prob, false );
+   // for( int row : perm.first )
+   //    hasher.addValue( row );
+   // for( int col : perm.second )
+   //    hasher.addValue( col );
 
    return hasher.getHash();
 }
@@ -657,8 +666,10 @@ main( int argc, char* argv[] )
    if( argc != 2 && argc != 3 )
    {
       fmt::print( "usage:\n" );
-      fmt::print( "./check_duplicates instance1.mps instance2.mps  - check for duplicates\n" );
-      fmt::print( "./check_duplicates instance1.mps                - compute unique hash for instance" );
+      fmt::print( "./check_duplicates instance1.mps instance2.mps  - check for "
+                  "duplicates\n" );
+      fmt::print( "./check_duplicates instance1.mps                - compute "
+                  "unique hash for instance" );
       return 1;
    }
    assert( argc == 2 || argc == 3 );
