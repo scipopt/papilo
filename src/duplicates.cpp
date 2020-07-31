@@ -365,7 +365,7 @@ check_cols( const Problem<double>& prob1,
    const Vec<String> cnames2 = prob2.getVariableNames();
 
    auto printVarsAndIndex = [&] ( int i1, int i2 ) {
-      fmt::print( "Variables: Problem 1: {:6} at index {:<5} vs ", cnames1[i1], i1 );
+      fmt::print( "Differing Variables: Problem 1: {:6} at index {:<5} vs ", cnames1[i1], i1 );
       fmt::print( "Problem 2: {:6} at index {:<5}\n", cnames2[i2], i2 );
    };
 
@@ -450,6 +450,16 @@ check_rows( const Problem<double>& prob1,
 
    HashMap<int, double> coefmap;
 
+   const Vec<String> cnames1 = prob1.getVariableNames();
+   const Vec<String> cnames2 = prob2.getVariableNames();
+   const Vec<String> rnames1 = prob1.getConstraintNames();
+   const Vec<String> rnames2 = prob2.getConstraintNames();
+
+   auto printConstraintsAndIndex = [&] ( int i1, int i2 ) {
+      fmt::print( "Differing Constraints: Problem 1: {:6} at index {:<5} vs ", rnames1[i1], i1 );
+      fmt::print( "Problem 2: {:6} at index {:<5}\n", rnames2[i2], i2 );
+   };
+
    auto findcol = []( int col, Vec<int> perm ) {
       return std::distance( perm.begin(), std::find( perm.begin(), perm.end(), col ) );
    };
@@ -463,36 +473,32 @@ check_rows( const Problem<double>& prob1,
       if( rflags1[i1row].test( RowFlag::kLhsInf ) !=
           rflags2[i2row].test( RowFlag::kLhsInf ) )
       {
-         fmt::print( "LHS is infinite in one of both problems --- row prob1:{} "
-                     "and prob2:{}\n",
-                     i1row, i2row );
+         fmt::print( "Row has infinite LHS in only one of both problems!\n" );
+         printConstraintsAndIndex( i1row, i2row );
          return false;
       }
 
       if( rflags1[i1row].test( RowFlag::kRhsInf ) !=
           rflags2[i2row].test( RowFlag::kRhsInf ) )
       {
-         fmt::print( "RHS is infinite in one of both problems --- row prob1:{} "
-                     "and prob2:{}\n",
-                     i1row, i2row );
+         fmt::print( "Row has infinite RHS in only one of both problems!\n" );
+         printConstraintsAndIndex( i1row, i2row );
          return false;
       }
 
       if( rflags1[i1row].test( RowFlag::kEquation ) !=
           rflags2[i2row].test( RowFlag::kEquation ) )
       {
-         fmt::print( "Row is equation in only one of both problems --- row "
-                     "prob1:{} and prob2:{}\n",
-                     i1row, i2row );
+         fmt::print( "Row is equation in only one of both problems!\n" );
+         printConstraintsAndIndex( i1row, i2row );
          return false;
       }
 
       if( rflags1[i1row].test( RowFlag::kIntegral ) !=
           rflags2[i2row].test( RowFlag::kIntegral ) )
       {
-         fmt::print( "Row is Integral in only one of both problems --- row "
-                     "prob1:{} and prob2:{}\n",
-                     i1row, i2row );
+         fmt::print( "Row is Integral in only one of both problems!\n" );
+         printConstraintsAndIndex( i1row, i2row );
          return false;
       }
 
@@ -500,9 +506,8 @@ check_rows( const Problem<double>& prob1,
       if( rflags1[i1row].test( RowFlag::kRedundant ) !=
           rflags2[i2row].test( RowFlag::kRedundant ) )
       {
-         fmt::print( "Row is redundant in only one of both problems --- row "
-                     "prob1:{} and prob2:{}\n",
-                     i1row, i2row );
+         fmt::print( "Row is redundant in only one of both problems!\n" );
+         printConstraintsAndIndex( i1row, i2row );
          return false;
       }
 
@@ -511,9 +516,8 @@ check_rows( const Problem<double>& prob1,
           lhs1[i1row] != lhs2[i2row] )
       {
          assert( rflags2[i2row].test( RowFlag::kLhsInf ) );
-         fmt::print(
-             "RHS is finite and different --- row prob1:{} and prob2:{}\n",
-             i1row, i2row );
+         fmt::print( "Row has different LHS in both problems!\n" );
+         printConstraintsAndIndex( i1row, i2row );
          return false;
       }
 
@@ -522,9 +526,8 @@ check_rows( const Problem<double>& prob1,
           rhs1[i1row] != rhs2[i2row] )
       {
          assert( rflags2[i2row].test( RowFlag::kRhsInf ) );
-         fmt::print(
-             "RHS is finite and different --- row prob1:{} and prob2:{}\n",
-             i1row, i2row );
+         fmt::print( "Row has different RHS in both problems!\n" );
+         printConstraintsAndIndex( i1row, i2row );
          return false;
       }
 
@@ -537,9 +540,8 @@ check_rows( const Problem<double>& prob1,
       const int curr_ncols = row1.getLength();
       if( curr_ncols != row2.getLength() )
       {
-         fmt::print(
-             "Different amounts of variables in row prob1:{} and prob2:{}\n",
-             i1row, i2row );
+         fmt::print( "Row has different amounts of variables!\n" );
+         printConstraintsAndIndex( i1row, i2row );
          return false;
       }
 
@@ -547,9 +549,6 @@ check_rows( const Problem<double>& prob1,
       const int* inds2 = row2.getIndices();
       const double* vals1 = row1.getValues();
       const double* vals2 = row2.getValues();
-
-      // fmt::print( "index {}\n", inds1[0] );
-      // fmt::print( "permin {}\n", permcol1[inds1[0]] );
 
       for( int x = 0; x < curr_ncols; ++x )
       {
@@ -564,19 +563,18 @@ check_rows( const Problem<double>& prob1,
          // Check if same variables are defined for row
          if( coefmap.count( final_index2 ) == 0 )
          {
-            fmt::print(
-                "Different columns defined in row prob1:{} and prob2:{}\n",
-                i1row, i2row );
-            // fmt::print( "{} . i: {}\n", x, i );
+            fmt::print( "Row has different variables!\n" );
+            printConstraintsAndIndex( i1row, i2row );
+            fmt::print( "Variable `{}` at index {} is defined for Problem 2, but not for Problem1", cnames2[i], i );
             return false;
          }
 
          // Check if values are same
          if( coefmap[final_index2] != vals2[x] )
          {
-            fmt::print( "Different coefficients in row prob1:{} and prob2:{}\n",
-                        i1row, i2row );
-            // fmt::print( "{}\n", coefmap[final_index2] );
+            fmt::print( "Row has different coefficients for variable!\n" );
+            printConstraintsAndIndex( i1row, i2row );
+            fmt::print( "Variables: Problem1: {} at {} vs Problem2: {} at {}\n", coefmap[final_index2], permrow1[final_index2], vals2[x], inds2[x] );
             return false;
          }
       }
