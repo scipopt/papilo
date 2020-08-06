@@ -45,6 +45,7 @@ using Quad =
 BOOST_SERIALIZATION_SPLIT_FREE( papilo::Quad )
 
 #else
+#include <boost/serialization/nvp.hpp>
 #include <boost/multiprecision/cpp_bin_float.hpp>
 namespace papilo
 {
@@ -53,6 +54,7 @@ using Quad = boost::multiprecision::cpp_bin_float_quad;
 #endif
 
 #ifdef PAPILO_HAVE_GMP
+#include <boost/serialization/nvp.hpp>
 #include <boost/multiprecision/cpp_bin_float.hpp>
 #include <boost/multiprecision/gmp.hpp>
 
@@ -121,6 +123,7 @@ load( Archive& ar,
 } // namespace boost
 
 #else
+#include <boost/serialization/nvp.hpp>
 #include <boost/multiprecision/cpp_bin_float.hpp>
 #include <boost/multiprecision/cpp_int.hpp>
 
