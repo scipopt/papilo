@@ -694,12 +694,19 @@ main( int argc, char* argv[] )
    }
    assert( argc == 2 || argc == 3 );
 
+   // Load and check problem 1
    if( !fileExists( argv[1] ) )
    {
       fmt::print( "Error: Can not find instance at `{}`\n", argv[1] );
       return 1;
    }
-   Problem<double> prob1 = MpsParser<double>::loadProblem( argv[1] );
+   boost::optional<Problem<double>> prob1t = MpsParser<double>::loadProblem( argv[1] );
+   if( !prob1t )
+   {
+      fmt::print( "error loading problem {}\n", argv[1] );
+      return 1;
+   }
+   Problem<double> prob1 = *prob1t;
 
    if( argc == 2 )
    {
@@ -708,14 +715,20 @@ main( int argc, char* argv[] )
    }
    else
    {
+      // Load and check problem 2
       if( !fileExists( argv[2] ) )
       {
          fmt::print( "Error: Can not find instance at `{}`\n", argv[2] );
          return 1;
       }
-      Problem<double> prob2 = MpsParser<double>::loadProblem( argv[2] );
-      bool res = check_duplicates( prob1, prob2 );
-      fmt::print( "duplicates: {}\n", res );
+      boost::optional<Problem<double>> prob2t = MpsParser<double>::loadProblem( argv[2] );
+      if( !prob2t )
+      {
+         fmt::print( "error loading problem {}\n", argv[1] );
+         return 1;
+      }
+      Problem<double> prob2 = *prob2t;
+      fmt::print( "duplicates: {}\n", check_duplicates( prob1, prob2 ) );
    }
 
    return 0;
