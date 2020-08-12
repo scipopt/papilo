@@ -20,6 +20,11 @@
 /* along with this program.  If not, see <https://www.gnu.org/licenses/>.    */
 /*                                                                           */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+/*
+ * A file which takes a papilo problem as input,
+ * and creates code for papilo to recreate that problem file
+ * without having the actual .mps file.
+ */
 
 #include "papilo/core/ConstraintMatrix.hpp"
 #include "papilo/core/Objective.hpp"
