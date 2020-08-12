@@ -704,7 +704,7 @@ main( int argc, char* argv[] )
    if( argc == 2 )
    {
       uint64_t result = compute_instancehash( prob1 );
-      fmt::print( "{}", result );
+      fmt::print( "{}\n", result );
    }
    else
    {
