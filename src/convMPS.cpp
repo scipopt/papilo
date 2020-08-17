@@ -40,6 +40,7 @@ static void
 convMPS( const Problem<double>& prob )
 {
    /*
+    * This file can be compiled using `make convMPS`
     * Prints code to create an object of class Problem in PaPILO
     * Copy console output in your desired file
     * You will need to include
@@ -72,34 +73,34 @@ convMPS( const Problem<double>& prob )
    for( int c = 0; c < nCols; ++c )
       fmt::print( "{},", vd.lower_bounds[c] );
    fmt::print( "}};\n" );
-   fmt::print( "   Vec<bool> lbInf{{" );
+   fmt::print( "   Vec<uint8_t> lbInf{{" );
    for( int c = 0; c < nCols; ++c )
-      fmt::print( "{},", vd.flags[c].test( ColFlag::kLbInf ) );
+      fmt::print( "{},", vd.flags[c].test( ColFlag::kLbInf ) ? 1 : 0 );
    fmt::print( "}};\n" );
    fmt::print( "   Vec<double> ubs{{" );
    for( int c = 0; c < nCols; ++c )
       fmt::print( "{},", vd.upper_bounds[c] );
    fmt::print( "}};\n" );
-   fmt::print( "   Vec<bool> ubInf{{" );
+   fmt::print( "   Vec<uint8_t> ubInf{{" );
    for( int c = 0; c < nCols; ++c )
-      fmt::print( "{},", vd.flags[c].test( ColFlag::kUbInf ) );
+      fmt::print( "{},", vd.flags[c].test( ColFlag::kUbInf ) ? 1 : 0 );
    fmt::print( "}};\n" );
-   fmt::print( "   Vec<bool> isIntegral{{" );
+   fmt::print( "   Vec<uint8_t> isIntegral{{" );
    for( int c = 0; c < nCols; ++c )
-      fmt::print( "{},", vd.flags[c].test( ColFlag::kIntegral ) );
+      fmt::print( "{},", vd.flags[c].test( ColFlag::kIntegral ) ? 1 : 0 );
    fmt::print( "}};\n" );
    // Rows
-   fmt::print( "   Vec<bool> lhsIsInf{{" );
+   fmt::print( "   Vec<uint8_t> lhsIsInf{{" );
    for( int r = 0; r < nRows; ++r )
-      fmt::print( "{},", row_flags[r].test( RowFlag::kLhsInf ) );
+      fmt::print( "{},", row_flags[r].test( RowFlag::kLhsInf ) ? 1 : 0 );
    fmt::print( "}};\n" );
    fmt::print( "   Vec<double> lhs{{" );
    for( int r = 0; r < nRows; ++r )
       fmt::print( "{},", rowlhs[r] );
    fmt::print( "}};\n" );
-   fmt::print( "   Vec<bool> rhsIsInf{{" );
+   fmt::print( "   Vec<uint8_t> rhsIsInf{{" );
    for( int r = 0; r < nRows; ++r )
-      fmt::print( "{},", row_flags[r].test( RowFlag::kRhsInf ) );
+      fmt::print( "{},", row_flags[r].test( RowFlag::kRhsInf ) ? 1 : 0 );
    fmt::print( "}};\n" );
    fmt::print( "   Vec<double> rhs{{" );
    for( int r = 0; r < nRows; ++r )

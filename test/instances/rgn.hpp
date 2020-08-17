@@ -66,25 +66,15 @@ rgn()
        0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
        0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
    };
-   Vec<bool> lbInf{
-       false, false, false, false, false, false, false, false, false, false,
-       false, false, false, false, false, false, false, false, false, false,
-       false, false, false, false, false, false, false, false, false, false,
-       false, false, false, false, false, false, false, false, false, false,
-       false, false, false, false, false, false, false, false, false, false,
-       false, false, false, false, false, false, false, false, false, false,
-       false, false, false, false, false, false, false, false, false, false,
-       false, false, false, false, false, false, false, false, false, false,
-       false, false, false, false, false, false, false, false, false, false,
-       false, false, false, false, false, false, false, false, false, false,
-       false, false, false, false, false, false, false, false, false, false,
-       false, false, false, false, false, false, false, false, false, false,
-       false, false, false, false, false, false, false, false, false, false,
-       false, false, false, false, false, false, false, false, false, false,
-       false, false, false, false, false, false, false, false, false, false,
-       false, false, false, false, false, false, false, false, false, false,
-       false, false, false, false, false, false, false, false, false, false,
-       false, false, false, false, false, false, false, false, false, false,
+   Vec<uint8_t> lbInf{
+       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
    };
    Vec<double> ubs{
        1.0,   1.0,   1.0,   1.0,   1.0,   1.0,   1.0,   1.0,   1.0,   1.0,
@@ -106,59 +96,35 @@ rgn()
        100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0,
        100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0,
    };
-   Vec<bool> ubInf{
-       false, false, false, false, false, false, false, false, false, false,
-       false, false, false, false, false, false, false, false, false, false,
-       false, false, false, false, false, false, false, false, false, false,
-       false, false, false, false, false, false, false, false, false, false,
-       false, false, false, false, false, false, false, false, false, false,
-       false, false, false, false, false, false, false, false, false, false,
-       false, false, false, false, false, false, false, false, false, false,
-       false, false, false, false, false, false, false, false, false, false,
-       false, false, false, false, false, false, false, false, false, false,
-       false, false, false, false, false, false, false, false, false, false,
-       false, false, false, false, false, false, false, false, false, false,
-       false, false, false, false, false, false, false, false, false, false,
-       false, false, false, false, false, false, false, false, false, false,
-       false, false, false, false, false, false, false, false, false, false,
-       false, false, false, false, false, false, false, false, false, false,
-       false, false, false, false, false, false, false, false, false, false,
-       false, false, false, false, false, false, false, false, false, false,
-       false, false, false, false, false, false, false, false, false, false,
+   Vec<uint8_t> ubInf{
+       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
    };
-   Vec<bool> isIntegral{
-       true,  true,  true,  true,  true,  true,  true,  true,  true,  true,
-       true,  true,  true,  true,  true,  true,  true,  true,  true,  true,
-       true,  true,  true,  true,  true,  true,  true,  true,  true,  true,
-       true,  true,  true,  true,  true,  true,  true,  true,  true,  true,
-       true,  true,  true,  true,  true,  true,  true,  true,  true,  true,
-       true,  true,  true,  true,  true,  true,  true,  true,  true,  true,
-       true,  true,  true,  true,  true,  true,  true,  true,  true,  true,
-       true,  true,  true,  true,  true,  true,  true,  true,  true,  true,
-       true,  true,  true,  true,  true,  true,  true,  true,  true,  true,
-       true,  true,  true,  true,  true,  true,  true,  true,  true,  true,
-       false, false, false, false, false, false, false, false, false, false,
-       false, false, false, false, false, false, false, false, false, false,
-       false, false, false, false, false, false, false, false, false, false,
-       false, false, false, false, false, false, false, false, false, false,
-       false, false, false, false, false, false, false, false, false, false,
-       false, false, false, false, false, false, false, false, false, false,
-       false, false, false, false, false, false, false, false, false, false,
-       false, false, false, false, false, false, false, false, false, false,
+   Vec<uint8_t> isIntegral{
+       1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+       1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+       1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+       1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+       1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
    };
-   Vec<bool> lhsIsInf{
-       true,  true,  true,  true,  false, false, false, false,
-       false, false, false, false, false, false, false, false,
-       false, false, false, false, false, false, false, false,
+   Vec<uint8_t> lhsIsInf{
+       1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
    };
    Vec<double> lhs{
        0.0,  0.0,  0.0,  0.0,  -3.5, -3.5, -3.5, -3.5, -3.5, -3.5, -3.5, -3.5,
        -3.5, -3.5, -3.5, -3.5, -3.5, -3.5, -3.5, -3.5, -3.5, -3.5, -3.5, -3.5,
    };
-   Vec<bool> rhsIsInf{
-       false, false, false, false, false, false, false, false,
-       false, false, false, false, false, false, false, false,
-       false, false, false, false, false, false, false, false,
+   Vec<uint8_t> rhsIsInf{
+       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
    };
    Vec<double> rhs{
        1.0,  1.0,  1.0,  1.0,  -3.5, -3.5, -3.5, -3.5, -3.5, -3.5, -3.5, -3.5,
