@@ -13,4 +13,4 @@ jobs:
         source: './src'
         exclude: './external'
         extensions: 'hpp,cpp,h'
-        clangFormatVersion: 9
+        clangFormatVersion: 10
