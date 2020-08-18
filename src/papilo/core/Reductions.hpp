@@ -141,7 +141,7 @@ class Reductions
    void
    markRowRedundant( int row )
    {
-      reductions.emplace_back( REAL{0.0}, row, RowReduction::REDUNDANT );
+      reductions.emplace_back( REAL{ 0.0 }, row, RowReduction::REDUNDANT );
    }
 
    /// lock row, i.e. modifications that come before this transaction are

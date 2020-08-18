@@ -279,7 +279,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
    Vec<ProbingBoundChg<REAL>> boundChanges;
    boundChanges.reserve( ncols );
 
-   std::atomic_bool infeasible{false};
+   std::atomic_bool infeasible{ false };
 
    int currentbadgestart = 0;
 

@@ -332,7 +332,7 @@ Substitution<REAL>::execute( const Problem<REAL>& problem,
             result = PresolveStatus::kReduced;
             ++ntried[row];
 
-            TransactionGuard<REAL> guard{reductions};
+            TransactionGuard<REAL> guard{ reductions };
 
             reductions.lockRow( row );
             if( lbrowlock != -1 )

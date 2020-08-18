@@ -116,7 +116,7 @@ SimplifyInequalities<REAL>::computeGCD( REAL val1, REAL val2,
    int64_t intval4;
    int64_t intval5;
    if( isIntegral( 600 * val1, intval4 ) && isIntegral( 600 * val2, intval5 ) )
-      return boost::gcd( intval4, intval5 ) / REAL{600};
+      return boost::gcd( intval4, intval5 ) / REAL{ 600 };
 
    // gcd not defined
    return 0;
@@ -302,7 +302,7 @@ SimplifyInequalities<REAL>::execute( const Problem<REAL>& problem,
       {
          assert( gcd >= 1 );
 
-         TransactionGuard<REAL> guard{reductions};
+         TransactionGuard<REAL> guard{ reductions };
          reductions.lockRow( row );
          // TODO other locks needed?
 

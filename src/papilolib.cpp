@@ -137,7 +137,7 @@ papilo_problem_create( double infinity, const char* name, int nnz_hint,
 
    // allocate memory and construct with placement new
    PAPILO_PROBLEM* prob = new( Allocator<PAPILO_PROBLEM>().allocate( 1 ) )
-       PAPILO_PROBLEM{ProblemBuilder<double>(), infinity};
+       PAPILO_PROBLEM{ ProblemBuilder<double>(), infinity };
 
    // allocate memory for given number of nonzeros
    prob->problemBuilder.reserve( nnz_hint, row_hint, col_hint );
