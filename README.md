@@ -217,6 +217,47 @@ PostsolveStatus status = result.postsolve.undo(reducedsol, origsol);
 The value of `status` is `PostsolveStatus::kOk` if everything worked or `PostsolveStatus::kFail` otherwise.
 If everything worked then `origsol.primal` contains the primal solution values in the original problem space.
 
+# Presolve parameters
+
+There are several parameters that can be adjusted to influence the during presolving.
+All the parameters and their default values are listed in the file `parameters.txt`.
+Adjusting a parameter via the command line when using the PaPILO exectuable works like this:
+```
+bin/papilo solve -f problem.mps -l problem.sol --presolve.randomseed=42
+```
+This call will use an adjusted random seed for the presolve routine.
+
+Alternatively a file with the same format as `parameters.txt` can be used to set multiple parameters by
+passing the setting file with the `-p`/`--parameter-settings` flag.
+
+Passing the `--print-params` flag will print the parameters in a format similar to the one of `parameters.txt` before starting presolving.
+The printed parameters will have the values they where set to, not the default values.
+
+For adjusting the parameters programatically there are two ways.
+The first way is to obtain an instance of `papilo::ParameterSet` by calling `papilo::Presolve<REAL>::getParameters()`.
+It is important to call this member function after the `papilo::Presolve<REAL>` class has been fully configured and all presolvers have been added.
+Otherwise not all parameters are available, e.g. the ones that are added by individual presolvers.
+Now we can call `papilo::ParameterSet::setParameter( key, val )` to set parameters to their desired values.
+
+If we want to adjust the random seed programatically this would look like
+```
+papilo::Presolve<REAL> presolve;
+...
+// add all presolvers
+...
+papilo::ParameterSet paramset = presolve.getParameters();
+paramset.setParameter("presolve.randomseed", 42);
+```
+The function setParameter will throw exceptions if anything goes wrong.
+E.g. if the parameter key was not recognized or the type of the value is not suitable.
+Possible exceptions are of the types `std::out_of_range`, `std::domain_error`, or `std::invalid_argument` and contain a suitable error message.
+For debugging it can be helpful to print the parameters stored within a `papilo::ParameterSet` which can be achieved by calling `paramset.printParams(std::cout)` and produces an output similar to the one in `parameters.txt`.
+
+The second way to set a subset of parameters is by directly accessing the instance of `papilo::PresolveOptions` that is stored within each instance of `papilo::Presolve`.
+Setting the random seed with this method can simply be achieved by `presolve.getPresolveOptions().randomseed = 42`.
+The caveat with directly accessing the `papilo::PresolveOptions` is, that parameters added by individual presolvers cannot be set and that no error checking is performed in case the user sets a parameter to an invalid value.
+Nevertheless this can be convenient for setting basic things like tolerances, time limits, and thread limits.
+
 # Algorithmic and implementation details
 
 The release report of the SCIP Optimization Suite 7.0 contains a section about PaPILO. The report is available under http://www.optimization-online.org/DB_HTML/2020/03/7705.html.
