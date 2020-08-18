@@ -15,7 +15,7 @@ When PaPILO is compiled as part of the SCIP Optimization Suite linking of SoPlex
 # Dependencies
 
 External dependencies that need to be installed by the user are the Intel TBB runtime library and boost headers.
-The executable additional requires some of the boost runtime libraries that are not required when papilo is used as
+The executable additional requires some of the boost runtime libraries that are not required when PaPILO is used as
 a library.
 Under the folder external/ there are additional packages that are directly included within PaPILO and have a
 liberal open-source license.
@@ -35,7 +35,7 @@ make
 ```
 
 Solvers that are found in the system are automatically linked to the executable.
-Additionally one can speciy the locations of solvers, e.g. with -DSCIP_DIR=<location of scip-config.cmake>, to allow
+Additionally one can specify the locations of solvers, e.g. with -DSCIP_DIR=<location of scip-config.cmake>, to allow
 PaPILO to find them in non-standard locations.
 
 # Usage of the binary
@@ -83,11 +83,11 @@ papilo::Float500
 papilo::Float1000
 papilo::Rational
 ```
-The numeric type used by papilo will be reffered to as REAL in the following section. It can be any of above types as well as simply `double` for using standard double precision arithmetic.
+The numeric type used by PaPILO will be reffered to as REAL in the following section. It can be any of above types as well as simply `double` for using standard double precision arithmetic.
 
 To avoid confusion with types a short note on types like `papilo:Vec` and `papilo::String`.
 Those types are aliases for types from the standard library, `std::vector` and `std::string`, that possibly use an adjusted allocator. If nothing is altered regarding the allocator the type `papilo::Vec` will be exactly the same as `std::vector`.
-It can be changed by adding a partial specialization of `papilo::AllocatorTraits<T>` after including `papilo/misc/Alloc.hpp` but before including any other header of papilo.
+It can be changed by adding a partial specialization of `papilo::AllocatorTraits<T>` after including `papilo/misc/Alloc.hpp` but before including any other header of PaPILO.
 
 The C++ interface for using PaPILO mainly evolves around the classes
 `papilo::Presolve<REAL>`, which controls the presolving routines, `papilo::Problem<REAL>` which holds the problem instance, and `papilo::Postsolve<REAL>`, which can transform solutions in the reduced space into solutions for the original problem space. The includes for those classes
@@ -215,11 +215,11 @@ PostsolveStatus status = result.postsolve.undo(reducedsol, origsol);
 ```
 
 The value of `status` is `PostsolveStatus::kOk` if everything worked or `PostsolveStatus::kFail` otherwise.
-If everything worked then `origsol.primal` contains the primal solution values in the original problem space.
+If everything worked then the vector `origsol.primal` contains the primal solution values in the original problem space.
 
 # Presolve parameters
 
-There are several parameters that can be adjusted to influence the during presolving.
+There are several parameters that can be adjusted to influence the behavior during presolving.
 All the parameters and their default values are listed in the file `parameters.txt`.
 Adjusting a parameter via the command line when using the PaPILO exectuable works like this:
 ```
@@ -231,11 +231,11 @@ Alternatively a file with the same format as `parameters.txt` can be used to set
 passing the setting file with the `-p`/`--parameter-settings` flag.
 
 Passing the `--print-params` flag will print the parameters in a format similar to the one of `parameters.txt` before starting presolving.
-The printed parameters will have the values they where set to, not the default values.
+The printed parameters will have the values they were set to, not the default values.
 
 For adjusting the parameters programatically there are two ways.
 The first way is to obtain an instance of `papilo::ParameterSet` by calling `papilo::Presolve<REAL>::getParameters()`.
-It is important to call this member function after the `papilo::Presolve<REAL>` class has been fully configured and all presolvers have been added.
+It is important to call this member function after all presolvers have been added to the `papilo::Presolve<REAL>` class.
 Otherwise not all parameters are available, e.g. the ones that are added by individual presolvers.
 Now we can call `papilo::ParameterSet::setParameter( key, val )` to set parameters to their desired values.
 
@@ -248,12 +248,12 @@ papilo::Presolve<REAL> presolve;
 papilo::ParameterSet paramset = presolve.getParameters();
 paramset.setParameter("presolve.randomseed", 42);
 ```
-The function setParameter will throw exceptions if anything goes wrong.
-E.g. if the parameter key was not recognized or the type of the value is not suitable.
+The function `papilo::ParameterSet::setParameter()` will throw exceptions if anything goes wrong,
+e.g. if the parameter key was not recognized or the type of the value is not suitable.
 Possible exceptions are of the types `std::out_of_range`, `std::domain_error`, or `std::invalid_argument` and contain a suitable error message.
 For debugging it can be helpful to print the parameters stored within a `papilo::ParameterSet` which can be achieved by calling `paramset.printParams(std::cout)` and produces an output similar to the one in `parameters.txt`.
 
-The second way to set a subset of parameters is by directly accessing the instance of `papilo::PresolveOptions` that is stored within each instance of `papilo::Presolve`.
+The second way to set a subset of parameters is by directly accessing the instance of `papilo::PresolveOptions` that is stored within each instance of `papilo::Presolve<REAL>`.
 Setting the random seed with this method can simply be achieved by `presolve.getPresolveOptions().randomseed = 42`.
 The caveat with directly accessing the `papilo::PresolveOptions` is, that parameters added by individual presolvers cannot be set and that no error checking is performed in case the user sets a parameter to an invalid value.
 Nevertheless this can be convenient for setting basic things like tolerances, time limits, and thread limits.
@@ -276,22 +276,22 @@ Use the following rules to set a suitable value for `PresolverTiming`.
   They are the slowest in the category of medium timing presolvers included in the default.
 * `PresolverTiming::kExhaustive` for presolvers that neither fit into the fast or medium categories
 
-In addition depending on the presolve method it might be good to add restrictions on what type of problems a presolver is called.
+In addition, depending on the presolve method, it might be good to add restrictions on what type of problems a presolver is called.
 For this the `setType(PresolveType)` member function of `papilo::PresolveMethod<REAL>` should be used.
-If the type is set to `PresolverType::KIntegralCols` or `PresolverType::ContinuousCols` then the presolver only runs if integral or continuous columns are present respectively. The type `PresolverType::kMixedCols` runs only if both integral and continuous columns are present which is suitable for the implied integer detection presolver.
+If the type is set to `PresolverType::KIntegralCols` or `PresolverType::kContinuousCols` then the presolver only runs if integral or continuous columns are present respectively. The type `PresolverType::kMixedCols` runs only if both integral and continuous columns are present which is suitable for the implied integer detection presolver.
 
 For presolve methods that require internal state two additional virtual member functions need to be overriden.
-An example for this can be seen in the `papilo::Probing` presolver.
+An example for this can be seen in the `papilo::Probing<REAL>` presolver.
 The probing presolver stores how often a variable has been probed between calls.
-For this it overrides the `papilo::PresolveMethod<REAL>::initialize` member function which clears the internal data and
+For this it overrides the `papilo::PresolveMethod<REAL>::initialize()` member function which clears the internal data and
 adjusts it to the given problems dimension. The function must return a boolean value.
 The value `false` indicates that the presolver does not need to be informed in case the index space of the columns changes
-and the value `true` indicates the opposite. When `true` is returned in initialize the member function `papilo::PresolveMethod<REAL>::compress`
+and the value `true` indicates the opposite. When `true` is returned in the initialize member function `papilo::PresolveMethod<REAL>::compress()`
 should additionally be overriden. The function is called with a mapping for the rows and columns and is called when
 PaPILO compresses the index space of the problem.
 In the compress callback the probing presolver uses the given column mapping to compress the vector that stores how often each variable has been probed.
 
-If the presolve method wants to add parameters that can be adjusted via the `papilo::ParameterSet`, then the member function `papilo::PresolveMethod<REAL>::addPresolverParams()` should be overridden.
+If the presolve method needs to add parameters that can be adjusted via the `papilo::ParameterSet`, then the member function `papilo::PresolveMethod<REAL>::addPresolverParams()` should be overridden.
 
 The member function `papilo::PresolveMethod<REAL>::execute()` is a pure virtual function and therefore must be implemented for every presolve method.
 This is where the presolver actually runs. The method grants read-only access to the `papilo::Problem<REAL>` that is being presolved
@@ -304,6 +304,7 @@ Assuming the new presolve method is called `MyPresolveMethod` this is achieved b
 ```
 presolve.addPresolver( std::unique_ptr<papilo::PresolveMethod<REAL>>( new MyPresolveMethod<REAL>() ) );
 ```
+Getting the PaPILO binary to call your presolver could be achieved by adding an include for your presolver in `papilo/core/Presolve.hpp` and then adding it together with the other default presolvers in the member function `papilo::Presolve<REAL>::addDefaultPresolvers()`.
 
 # Algorithmic and implementation details
 
