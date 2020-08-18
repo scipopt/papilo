@@ -243,12 +243,12 @@ For other licensing options we refer to https://scipopt.org/, where PaPILO can b
 
 # Contributors
 
-Leona Gottwald (@lgottwald) --- main author
+Leona Gottwald ([@lgottwald](https://github.com/lgottwald)) --- main author
 
-Ivet Galabovaa (@galabovaa) --- groundwork for dual postsolve, KKT checker
+[Ivet Galabova](https://sites.google.com/view/ivetgalabova) ([@galabovaa](https://github.com/galabovaa)) --- groundwork for dual postsolve, KKT checker
 
-Kathrin Halbig (katrin.halbig@fau.de) --- presolver for GCD based reductions on inequalities(simplifyineq)
+[Kathrin Halbig](https://en.www.math.fau.de/edom/team/katrin-halbig/) --- presolver for GCD based reductions on inequalities(simplifyineq)
 
 Anass Meskini --- general development and contributions to substitution presolver in terms of internship
 
-Daniel Rehfeldt (@dRehfeldt) --- core data structures and MPS parsing
+[Daniel Rehfeldt](https://www.zib.de/members/rehfeldt) ([@dRehfeldt](https://github.com/dRehfeldt)) --- core data structures and MPS parsing
