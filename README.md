@@ -1,4 +1,4 @@
-# PaPILO&mdash;Parallel Presolve for Integer and Linear Optimization
+# PaPILO &mdash; Parallel Presolve for Integer and Linear Optimization
 
 PaPILO, a C++14 based software package, provides parallel presolve routines for (mixed integer) linear programming problems. The routines
 are implemented using templates which allows switching to higher precision or rational arithmetic using the boost multiprecision package.
