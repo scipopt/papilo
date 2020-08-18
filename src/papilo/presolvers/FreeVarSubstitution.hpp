@@ -62,6 +62,7 @@ class Substitution : public PresolveMethod<REAL>
    initialize( const Problem<REAL>& problem,
                const PresolveOptions& presolveOptions ) override
    {
+      ntried.clear();
       ntried.resize( problem.getNRows(), 0 );
 
       Message::debug( this, "initialized ntried vector to size {}\n",
@@ -331,7 +332,7 @@ Substitution<REAL>::execute( const Problem<REAL>& problem,
             result = PresolveStatus::kReduced;
             ++ntried[row];
 
-            TransactionGuard<REAL> guard{reductions};
+            TransactionGuard<REAL> guard{ reductions };
 
             reductions.lockRow( row );
             if( lbrowlock != -1 )

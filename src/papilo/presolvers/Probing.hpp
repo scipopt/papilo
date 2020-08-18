@@ -72,6 +72,7 @@ class Probing : public PresolveMethod<REAL>
    initialize( const Problem<REAL>& problem,
                const PresolveOptions& presolveOptions ) override
    {
+      nprobed.clear();
       nprobed.resize( problem.getNCols(), 0 );
 
       Message::debug( this, "initialized nprobed vector to size {}\n",
@@ -278,7 +279,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
    Vec<ProbingBoundChg<REAL>> boundChanges;
    boundChanges.reserve( ncols );
 
-   std::atomic_bool infeasible{false};
+   std::atomic_bool infeasible{ false };
 
    int currentbadgestart = 0;
 

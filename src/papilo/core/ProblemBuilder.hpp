@@ -198,7 +198,7 @@ class ProblemBuilder
       for( int i = 0; i != len; ++i )
       {
          assert( vals[i] != 0 );
-         matrix_buffer.addEntry( row, cols[i], REAL{vals[i]} );
+         matrix_buffer.addEntry( row, cols[i], REAL{ vals[i] } );
       }
    }
 
@@ -231,7 +231,7 @@ class ProblemBuilder
       for( int i = 0; i != len; ++i )
       {
          assert( vals[i] != 0 );
-         matrix_buffer.addEntry( rows[i], col, REAL{vals[i]} );
+         matrix_buffer.addEntry( rows[i], col, REAL{ vals[i] } );
       }
    }
 
@@ -248,7 +248,7 @@ class ProblemBuilder
       problem.setConstraintMatrix( ConstraintMatrix<REAL>{
           matrix_buffer.buildCSR( nrows, ncols ),
           matrix_buffer.buildCSC( nrows, ncols ), std::move( lhs ),
-          std::move( rhs ), std::move( rflags )} );
+          std::move( rhs ), std::move( rflags ) } );
 
       matrix_buffer.clear();
 

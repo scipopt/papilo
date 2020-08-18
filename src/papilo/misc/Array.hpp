@@ -60,9 +60,17 @@ class Array
       return ptr.get_deleter().size;
    }
 
-   T& operator[]( int i ) { return ptr[i]; }
+   T&
+   operator[]( int i )
+   {
+      return ptr[i];
+   }
 
-   const T& operator[]( int i ) const { return ptr[i]; }
+   const T&
+   operator[]( int i ) const
+   {
+      return ptr[i];
+   }
 
  private:
    std::unique_ptr<T[], ArrayDeleter<T>> ptr;

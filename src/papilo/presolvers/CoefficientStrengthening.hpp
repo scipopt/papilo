@@ -164,7 +164,7 @@ CoefficientStrengthening<REAL>::execute(
                      1.0 );
          assert( newabscoef < abs( intCoef.first ) );
 
-         if( intCoef.first < REAL{0} )
+         if( intCoef.first < REAL{ 0 } )
          {
             assert( !domains.flags[intCoef.second].test( ColFlag::kLbInf ) );
             rhs -= ( newabscoef + intCoef.first ) *
@@ -181,7 +181,7 @@ CoefficientStrengthening<REAL>::execute(
       }
 
       // add reduction to change side and coefficients
-      TransactionGuard<REAL> guard{reductions};
+      TransactionGuard<REAL> guard{ reductions };
       reductions.lockRow( i );
 
       if( scale == -1 )

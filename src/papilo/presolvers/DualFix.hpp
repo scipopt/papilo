@@ -130,7 +130,7 @@ DualFix<REAL>::execute( const Problem<REAL>& problem,
          // of other presolvers
          if( !cflags[i].test( ColFlag::kLbInf ) )
          {
-            TransactionGuard<REAL> guard{reductions};
+            TransactionGuard<REAL> guard{ reductions };
 
             reductions.lockCol( i );
             reductions.fixCol( i, lbs[i] );
@@ -154,7 +154,7 @@ DualFix<REAL>::execute( const Problem<REAL>& problem,
          // of other presolvers
          if( !cflags[i].test( ColFlag::kUbInf ) )
          {
-            TransactionGuard<REAL> guard{reductions};
+            TransactionGuard<REAL> guard{ reductions };
 
             reductions.lockCol( i );
             reductions.fixCol( i, ubs[i] );
@@ -290,7 +290,7 @@ DualFix<REAL>::execute( const Problem<REAL>& problem,
                // A transaction is only needed to group several reductions that
                // belong together
                // TODO are any locks needed?
-               TransactionGuard<REAL> guard{reductions};
+               TransactionGuard<REAL> guard{ reductions };
 
                reductions.lockCol( i );
                reductions.lockColBounds( i );
@@ -395,7 +395,7 @@ DualFix<REAL>::execute( const Problem<REAL>& problem,
                // A transaction is only needed to group several reductions that
                // belong together
                // TODO are any locks needed?
-               TransactionGuard<REAL> guard{reductions};
+               TransactionGuard<REAL> guard{ reductions };
 
                reductions.lockCol( i );
                reductions.lockColBounds( i );

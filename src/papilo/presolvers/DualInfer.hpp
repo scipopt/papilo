@@ -158,8 +158,8 @@ DualInfer<REAL>::execute( const Problem<REAL>& problem,
    Vec<REAL> dualUB;
    Vec<ColFlags> dualColFlags( nrows );
 
-   dualLB.resize( nrows, REAL{0} );
-   dualUB.resize( nrows, REAL{0} );
+   dualLB.resize( nrows, REAL{ 0 } );
+   dualUB.resize( nrows, REAL{ 0 } );
 
    for( int i = 0; i != nrows; ++i )
    {
@@ -477,7 +477,7 @@ DualInfer<REAL>::execute( const Problem<REAL>& problem,
          if( activities[i].ninfmax != 0 ||
              num.isFeasLT( lhsValues[i], activities[i].max ) )
          {
-            TransactionGuard<REAL> tg{reductions};
+            TransactionGuard<REAL> tg{ reductions };
             reductions.lockRow( i );
             reductions.changeRowRHS( i, lhsValues[i] );
             ++impliedeqs;
@@ -491,7 +491,7 @@ DualInfer<REAL>::execute( const Problem<REAL>& problem,
          if( activities[i].ninfmin != 0 ||
              num.isFeasGT( rhsValues[i], activities[i].min ) )
          {
-            TransactionGuard<REAL> tg{reductions};
+            TransactionGuard<REAL> tg{ reductions };
             reductions.lockRow( i );
             reductions.changeRowLHS( i, rhsValues[i] );
             ++impliedeqs;
@@ -520,7 +520,7 @@ DualInfer<REAL>::execute( const Problem<REAL>& problem,
           num.isSafeLT( dualActivities[i].max, obj[i] ) )
       {
          assert( !cflags[i].test( ColFlag::kLbInf ) );
-         TransactionGuard<REAL> tg{reductions};
+         TransactionGuard<REAL> tg{ reductions };
          reductions.lockColBounds( i );
          reductions.fixCol( i, lbValues[i] );
 
@@ -534,7 +534,7 @@ DualInfer<REAL>::execute( const Problem<REAL>& problem,
                num.isSafeGT( dualActivities[i].min, obj[i] ) )
       {
          assert( !cflags[i].test( ColFlag::kUbInf ) );
-         TransactionGuard<REAL> tg{reductions};
+         TransactionGuard<REAL> tg{ reductions };
          reductions.lockColBounds( i );
          reductions.fixCol( i, ubValues[i] );
 

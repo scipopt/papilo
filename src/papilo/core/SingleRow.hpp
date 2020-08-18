@@ -241,7 +241,7 @@ update_activity_after_boundchange( const REAL& colval, BoundChange type,
 
    if( type == BoundChange::kLower )
    {
-      if( colval < REAL{0.0} )
+      if( colval < REAL{ 0.0 } )
       {
          if( oldbound_inf )
          {
@@ -276,7 +276,7 @@ update_activity_after_boundchange( const REAL& colval, BoundChange type,
    }
    else
    {
-      if( colval < REAL{0.0} )
+      if( colval < REAL{ 0.0 } )
       {
          if( oldbound_inf )
          {
@@ -327,7 +327,7 @@ update_activities_remove_finite_bound( const int* colinds, const REAL* colvals,
          const REAL& colval = colvals[i];
          RowActivity<REAL>& activity = activities[colinds[i]];
 
-         if( colval < REAL{0.0} )
+         if( colval < REAL{ 0.0 } )
          {
             activity.max -= oldbound * colval;
             ++activity.ninfmax;
@@ -346,7 +346,7 @@ update_activities_remove_finite_bound( const int* colinds, const REAL* colvals,
          const REAL& colval = colvals[i];
          RowActivity<REAL>& activity = activities[colinds[i]];
 
-         if( colval < REAL{0.0} )
+         if( colval < REAL{ 0.0 } )
          {
             activity.min -= oldbound * colval;
             ++activity.ninfmin;
@@ -502,7 +502,7 @@ update_activities_after_coeffchange( REAL collb, REAL colub, ColFlags cflags,
      // contribute to the same activity bound
       if( !cflags.test( ColFlag::kLbUseless ) && collb != 0.0 )
       {
-         if( newcolcoef < REAL{0.0} )
+         if( newcolcoef < REAL{ 0.0 } )
          {
             activity.max += collb * ( newcolcoef - oldcolcoef );
             if( activity.ninfmax == 0 )
@@ -518,7 +518,7 @@ update_activities_after_coeffchange( REAL collb, REAL colub, ColFlags cflags,
 
       if( !cflags.test( ColFlag::kUbUseless ) && colub != 0.0 )
       {
-         if( newcolcoef < REAL{0.0} )
+         if( newcolcoef < REAL{ 0.0 } )
          {
             activity.min += colub * ( newcolcoef - oldcolcoef );
             if( activity.ninfmin == 0 )
@@ -563,7 +563,7 @@ propagate_row( const REAL* rowvals, const int* colindices, int rowlen,
          REAL minresact = activity.min;
          REAL val = rowvals[j];
 
-         if( val < REAL{0.0} )
+         if( val < REAL{ 0.0 } )
          {
             if( activity.ninfmin == 1 )
             {
@@ -614,7 +614,7 @@ propagate_row( const REAL* rowvals, const int* colindices, int rowlen,
          REAL maxresact = activity.max;
          REAL val = rowvals[j];
 
-         if( val < REAL{0.0} )
+         if( val < REAL{ 0.0 } )
          {
             if( activity.ninfmax == 1 )
             {

@@ -465,7 +465,7 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
                 {
                    domcolreductions.push_back( DomcolReduction{
                        i, col, implrowlock,
-                       fixtolb ? BoundChange::kUpper : BoundChange::kLower} );
+                       fixtolb ? BoundChange::kUpper : BoundChange::kLower } );
                 }
              }
           }
@@ -485,7 +485,7 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
 
       for( const DomcolReduction& dr : domcolreductions )
       {
-         TransactionGuard<REAL> tg{reductions};
+         TransactionGuard<REAL> tg{ reductions };
          reductions.lockCol( dr.col1 );
          reductions.lockColBounds( dr.col1 );
          reductions.lockCol( dr.col2 );
