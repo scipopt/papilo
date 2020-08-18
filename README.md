@@ -258,6 +258,47 @@ Setting the random seed with this method can simply be achieved by `presolve.get
 The caveat with directly accessing the `papilo::PresolveOptions` is, that parameters added by individual presolvers cannot be set and that no error checking is performed in case the user sets a parameter to an invalid value.
 Nevertheless this can be convenient for setting basic things like tolerances, time limits, and thread limits.
 
+# Adding a presolver
+
+Adding a presolver to PaPILO requires the following steps. First create a class for your presolver that inherits publically from `papilo::PresolveMethod<REAL>`.
+In the constructor at least adjust the name and the timing of the new presolver.
+For the constraint propagation presolver this is done in the constructor by the following calls:
+```
+this->setName( "propagation" );
+this->setTiming( PresolverTiming::kFast );
+```
+Use the following rules to set a suitable value for `PresolverTiming`.
+* `PresolverTiming::kFast` for presolvers that work only on altered parts of the problem.
+  E.g. the constraint propagation presolver will only look at rows for which the activity was adjusted
+* `PresolverTiming::kMedium` for presolvers that run in $O(n \log n)$ of the problem size (number of rows/columns/nonzeros).
+  E.g. the parallel row/column presolvers compute hash values and sort on the order of the rows and columns.
+  Technically the runtime becomes quadratic in the worst case when many collisions occur, but practically the presolvers are fast.
+  They are the slowest in the category of medium timing presolvers included in the default.
+* `PresolverTiming::kExhaustive` for presolvers that neither fit into the fast or medium categories
+
+In addition depending on the presolve method it might be good to add restrictions on what type of problems a presolver is called.
+For this the `setType(PresolveType)` member function of `papilo::PresolveMethod<REAL>` should be used.
+If the type is set to `PresolverType::KIntegralCols` or `PresolverType::ContinuousCols` then the presolver only runs if integral or continuous columns are present respectively. The type `PresolverType::kMixedCols` runs only if both integral and continuous columns are present which is suitable for the implied integer detection presolver.
+
+For presolve methods that require internal state two additional virtual member functions need to be overriden.
+An example for this can be seen in the `papilo::Probing` presolver.
+The probing presolver stores how often a variable has been probed between calls.
+For this it overrides the `papilo::PresolveMethod<REAL>::initialize` member function which clears the internal data and
+adjusts it to the given problems dimension. The function must return a boolean value.
+The value `false` indicates that the presolver does not need to be informed in case the index space of the columns changes
+and the value `true` indicates the opposite. When `true` is returned in initialize the member function `papilo::PresolveMethod<REAL>::compress`
+should additionally be overriden. The function is called with a mapping for the rows and columns and is called when
+PaPILO compresses the index space of the problem.
+In the compress callback the probing presolver uses the given column mapping to compress the vector that stores how often each variable has been probed.
+
+If the presolve method wants to add parameters that can be adjusted via the `papilo::ParameterSet`, then the member function `papilo::PresolveMethod<REAL>::addPresolverParams()` should be overridden.
+
+The member function `papilo::PresolveMethod<REAL>::execute()` is a pure virtual function and therefore must be implemented for every presolve method.
+This is where the presolver actually runs. The method grants read-only access to the `papilo::Problem<REAL>` that is being presolved
+and grants write access to an instance of `papilo::Reductions<REAL>`. A presolve method should scan the problem for possible reductions and add them
+to the reductions class. This is only the broad picture and there are some more details that we omit here for brevity.
+Looking at some of the default implemented presolvers can help for understanding further details and also the resources in the next section.
+
 # Algorithmic and implementation details
 
 The release report of the SCIP Optimization Suite 7.0 contains a section about PaPILO. The report is available under http://www.optimization-online.org/DB_HTML/2020/03/7705.html.
