@@ -62,6 +62,7 @@ class Substitution : public PresolveMethod<REAL>
    initialize( const Problem<REAL>& problem,
                const PresolveOptions& presolveOptions ) override
    {
+      ntried.clear();
       ntried.resize( problem.getNRows(), 0 );
 
       Message::debug( this, "initialized ntried vector to size {}\n",

@@ -72,6 +72,7 @@ class Probing : public PresolveMethod<REAL>
    initialize( const Problem<REAL>& problem,
                const PresolveOptions& presolveOptions ) override
    {
+      nprobed.clear();
       nprobed.resize( problem.getNCols(), 0 );
 
       Message::debug( this, "initialized nprobed vector to size {}\n",
