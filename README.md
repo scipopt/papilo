@@ -1,4 +1,4 @@
-# PaPILO --- Parallel Presolve for Integer and Linear Optimization
+# PaPILO&mdash;Parallel Presolve for Integer and Linear Optimization
 
 PaPILO, a C++14 based software package, provides parallel presolve routines for (mixed integer) linear programming problems. The routines
 are implemented using templates which allows switching to higher precision or rational arithmetic using the boost multiprecision package.
@@ -243,14 +243,14 @@ For other licensing options we refer to https://scipopt.org/, where PaPILO can b
 
 # Contributors
 
-Leona Gottwald ([@lgottwald](https://github.com/lgottwald)) --- main author
+Leona Gottwald ([@lgottwald](https://github.com/lgottwald)) &mdash; main author
 
-[Ivet Galabova](https://sites.google.com/view/ivetgalabova) ([@galabovaa](https://github.com/galabovaa)) --- groundwork for dual postsolve, KKT checker
+[Ivet Galabova](https://sites.google.com/view/ivetgalabova) ([@galabovaa](https://github.com/galabovaa)) &mdash; groundwork for dual postsolve, KKT checker
 
-[Kathrin Halbig](https://en.www.math.fau.de/edom/team/katrin-halbig/) --- presolver for GCD based reductions on inequalities (simplifyineq)
+[Kathrin Halbig](https://en.www.math.fau.de/edom/team/katrin-halbig/) &mdash; presolver for GCD based reductions on inequalities (simplifyineq)
 
-[Gabriel Kressin](https://www.zib.de/members/kressin) ([@GabrielKP](https://github.com/GabrielKP)) --- numerical statistics, testing
+[Gabriel Kressin](https://www.zib.de/members/kressin) ([@GabrielKP](https://github.com/GabrielKP)) &mdash; numerical statistics, testing
 
-Anass Meskini --- general development and contributions to substitution presolver in terms of internship
+Anass Meskini &mdash; general development and contributions to substitution presolver in terms of internship
 
-[Daniel Rehfeldt](https://www.zib.de/members/rehfeldt) ([@dRehfeldt](https://github.com/dRehfeldt)) --- core data structures and MPS parsing
+[Daniel Rehfeldt](https://www.zib.de/members/rehfeldt) ([@dRehfeldt](https://github.com/dRehfeldt)) &mdash; core data structures and MPS parsing
