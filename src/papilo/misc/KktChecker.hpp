@@ -842,17 +842,7 @@ class KktChecker<REAL, CheckLevel::Check>
    }
 
    void
-<<<<<<< HEAD
    checkSolution( State& state, bool intermediate = false ) const
-=======
-   setLevel( CheckLevel type_of_check )
-   {
-      level = type_of_check;
-   }
-
-   void
-   checkSolution( State& state ) const
->>>>>>> origin/master
    {
       state.getRowValues();
       kkt_status status = kkt_status::OK;
