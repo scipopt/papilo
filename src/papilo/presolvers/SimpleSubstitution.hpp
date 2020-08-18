@@ -160,7 +160,7 @@ SimpleSubstitution<REAL>::execute( const Problem<REAL>& problem,
 
       result = PresolveStatus::kReduced;
 
-      TransactionGuard<REAL> guard{reductions};
+      TransactionGuard<REAL> guard{ reductions };
 
       reductions.lockRow( i );
 

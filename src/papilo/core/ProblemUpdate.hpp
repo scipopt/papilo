@@ -379,7 +379,7 @@ ProblemUpdate<REAL>::ProblemUpdate( Problem<REAL>& problem,
    lastcompress_ndelcols = 0;
    lastcompress_ndelrows = 0;
 
-   std::ranlux24_base randgen( presolveOptions.randomseed );
+   std::ranlux24 randgen( presolveOptions.randomseed );
    random_col_perm.resize( problem.getNCols() );
    for( int i = 0; i < problem.getNCols(); ++i )
       random_col_perm[i] = i;
@@ -1890,13 +1890,13 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
             assert( constraintMatrix.getRowCoefficients( equalityrow )
                         .getLength() == 0 );
             assert( constraintMatrix.getLeftHandSides()[equalityrow] ==
-                    REAL{0} );
+                    REAL{ 0 } );
             assert( constraintMatrix.getRightHandSides()[equalityrow] ==
-                    REAL{0} );
+                    REAL{ 0 } );
             assert( constraintMatrix.getColSizes()[col] == -1 );
             assert( constraintMatrix.getColumnCoefficients( col ).getLength() ==
-                    REAL{0} );
-            assert( objective.coefficients[col] == REAL{0} );
+                    REAL{ 0 } );
+            assert( objective.coefficients[col] == REAL{ 0 } );
 
             assert( row_state[equalityrow].test( State::kModified ) );
             assert( col_state[col].test( State::kModified ) );
@@ -1932,14 +1932,14 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
             if( cflags[col].test( ColFlag::kLbUseless ) || lbs[col] != 0 )
                update_activities_after_boundchange(
                    colvec.getValues(), colvec.getIndices(), colvec.getLength(),
-                   BoundChange::kLower, lbs[col], REAL{0},
+                   BoundChange::kLower, lbs[col], REAL{ 0 },
                    cflags[col].test( ColFlag::kLbUseless ),
                    problem.getRowActivities(), updateActivity );
 
             if( cflags[col].test( ColFlag::kUbUseless ) || ubs[col] != 0 )
                update_activities_after_boundchange(
                    colvec.getValues(), colvec.getIndices(), colvec.getLength(),
-                   BoundChange::kUpper, ubs[col], REAL{0},
+                   BoundChange::kUpper, ubs[col], REAL{ 0 },
                    cflags[col].test( ColFlag::kUbUseless ),
                    problem.getRowActivities(), updateActivity );
 
@@ -2092,7 +2092,7 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
                   {
                      update_activities_after_boundchange(
                          vals2, inds, collen, BoundChange::kLower, lbs[col2],
-                         REAL{0}, false, problem.getRowActivities(),
+                         REAL{ 0 }, false, problem.getRowActivities(),
                          []( ActivityChange, int, const RowActivity<REAL>& ) {
                          } );
                   }
@@ -2109,7 +2109,7 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
                   {
                      update_activities_after_boundchange(
                          vals1, inds, collen, BoundChange::kUpper, ubs[col1],
-                         REAL{0}, cflags[col1].test( ColFlag::kUbUseless ),
+                         REAL{ 0 }, cflags[col1].test( ColFlag::kUbUseless ),
                          problem.getRowActivities(),
                          []( ActivityChange, int, const RowActivity<REAL>& ) {
                          } );
@@ -2127,7 +2127,7 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
                   {
                      update_activities_after_boundchange(
                          vals1, inds, collen, BoundChange::kLower, lbs[col1],
-                         REAL{0}, cflags[col1].test( ColFlag::kLbUseless ),
+                         REAL{ 0 }, cflags[col1].test( ColFlag::kLbUseless ),
                          problem.getRowActivities(),
                          []( ActivityChange, int, const RowActivity<REAL>& ) {
                          } );
@@ -2144,7 +2144,7 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
                   {
                      update_activities_after_boundchange(
                          vals2, inds, collen, BoundChange::kUpper, ubs[col2],
-                         REAL{0}, false, problem.getRowActivities(),
+                         REAL{ 0 }, false, problem.getRowActivities(),
                          updateActivity );
                   }
                }
@@ -2155,7 +2155,7 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
                   {
                      update_activities_after_boundchange(
                          vals1, inds, collen, BoundChange::kLower, lbs[col1],
-                         REAL{0}, cflags[col1].test( ColFlag::kLbUseless ),
+                         REAL{ 0 }, cflags[col1].test( ColFlag::kLbUseless ),
                          problem.getRowActivities(),
                          []( ActivityChange, int, const RowActivity<REAL>& ) {
                          } );
@@ -2168,7 +2168,7 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
                   {
                      update_activities_after_boundchange(
                          vals1, inds, collen, BoundChange::kUpper, ubs[col1],
-                         REAL{0}, cflags[col1].test( ColFlag::kUbUseless ),
+                         REAL{ 0 }, cflags[col1].test( ColFlag::kUbUseless ),
                          problem.getRowActivities(),
                          []( ActivityChange, int, const RowActivity<REAL>& ) {
                          } );
@@ -2262,8 +2262,8 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
 
             // set up the equality
             // x_1 - factor * x_2 = offset
-            int indices[] = {col1, col2};
-            REAL coefficients[] = {1.0, -factor};
+            int indices[] = { col1, col2 };
+            REAL coefficients[] = { 1.0, -factor };
             // argument needs to be sorted
             if( col1 > col2 )
             {
@@ -2308,17 +2308,17 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
                // change the objective
                auto& obj = problem.getObjective();
                auto& obj_coef = obj.coefficients;
-               if( obj_coef[col1] != REAL{0} )
+               if( obj_coef[col1] != REAL{ 0 } )
                {
                   obj_coef[col2] += obj_coef[col1] * factor;
                   if( num.isZero( obj_coef[col2] ) )
-                     obj_coef[col2] = REAL{0};
+                     obj_coef[col2] = REAL{ 0 };
                   obj.offset += obj_coef[col1] * offset;
-                  obj_coef[col1] = REAL{0};
+                  obj_coef[col1] = REAL{ 0 };
                }
 
                // statistics
-               if( offset != REAL{0} )
+               if( offset != REAL{ 0 } )
                   stats.nsidechgs += 2 * length;
                stats.ncoefchgs += 2 * length;
                ++stats.ndeletedcols;
@@ -2387,7 +2387,7 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
                setRowState( reduction.row, State::kBoundsModified );
 
                constraintMatrix.template modifyLeftHandSide<true>(
-                   reduction.row, REAL{0} );
+                   reduction.row, REAL{ 0 } );
 
                ++stats.nsidechgs;
             }
@@ -2397,7 +2397,7 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
             {
                setRowState( reduction.row, State::kBoundsModified );
                constraintMatrix.template modifyRightHandSide<true>(
-                   reduction.row, REAL{0} );
+                   reduction.row, REAL{ 0 } );
                ++stats.nsidechgs;
             }
             break;

@@ -48,7 +48,7 @@ struct EnableDebugOutput
 
 class Message
 {
-   int verbosity{static_cast<int>( VerbosityLevel::kInfo )};
+   int verbosity{ static_cast<int>( VerbosityLevel::kInfo ) };
 
    void ( *write )( int level, const char* data, size_t len,
                     void* usrdata ) = nullptr;
@@ -73,7 +73,7 @@ class Message
           buf;
       fmt::vformat_to(
           buf, format_str,
-          {fmt::make_format_args( std::forward<Args>( args )... )} );
+          { fmt::make_format_args( std::forward<Args>( args )... ) } );
       std::size_t size = buf.size();
 
       if( write != nullptr )

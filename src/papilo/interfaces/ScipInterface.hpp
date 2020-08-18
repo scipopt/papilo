@@ -78,7 +78,7 @@ class ScipInterface : public SolverInterface<REAL>
          SCIP_VARTYPE type;
          if( domains.flags[i].test( ColFlag::kIntegral ) )
          {
-            if( lb == REAL{0} && ub == REAL{1} )
+            if( lb == REAL{ 0 } && ub == REAL{ 1 } )
                type = SCIP_VARTYPE_BINARY;
             else
                type = SCIP_VARTYPE_INTEGER;
@@ -129,7 +129,7 @@ class ScipInterface : public SolverInterface<REAL>
          SCIP_CALL( SCIPreleaseCons( scip, &cons ) );
       }
 
-      if( obj.offset != REAL{0} )
+      if( obj.offset != REAL{ 0 } )
          SCIP_CALL( SCIPaddOrigObjoffset( scip, SCIP_Real( obj.offset ) ) );
 
       return SCIP_OKAY;
@@ -172,7 +172,7 @@ class ScipInterface : public SolverInterface<REAL>
          SCIP_VARTYPE type;
          if( domains.flags[col].test( ColFlag::kIntegral ) )
          {
-            if( lb == REAL{0} && ub == REAL{1} )
+            if( lb == REAL{ 0 } && ub == REAL{ 1 } )
                type = SCIP_VARTYPE_BINARY;
             else
                type = SCIP_VARTYPE_INTEGER;
@@ -222,7 +222,7 @@ class ScipInterface : public SolverInterface<REAL>
          SCIP_CALL( SCIPreleaseCons( scip, &cons ) );
       }
 
-      if( obj.offset != REAL{0} )
+      if( obj.offset != REAL{ 0 } )
          SCIP_CALL( SCIPaddOrigObjoffset( scip, SCIP_Real( obj.offset ) ) );
 
       return SCIP_OKAY;
@@ -351,7 +351,9 @@ class ScipInterface : public SolverInterface<REAL>
       case SCIP_STATUS_SOLLIMIT:
       case SCIP_STATUS_BESTSOLLIMIT:
       case SCIP_STATUS_RESTARTLIMIT:
+#if SCIP_VERSION_MAJOR >= 6
       case SCIP_STATUS_TERMINATE:
+#endif
          this->status = SolverStatus::kInterrupted;
          break;
       case SCIP_STATUS_INFORUNBD:

@@ -172,7 +172,7 @@ struct MpsWriter
 
       if( obj.offset != 0 )
       {
-         if( obj.offset != REAL{0.0} )
+         if( obj.offset != REAL{ 0.0 } )
             fmt::print( out, "    B         {: <9} {:.15}\n", "OBJ",
                         double( REAL( -obj.offset ) ) );
       }
@@ -189,13 +189,13 @@ struct MpsWriter
 
          if( row_flags[i].test( RowFlag::kLhsInf ) )
          {
-            if( rhs[i] != REAL{0.0} )
+            if( rhs[i] != REAL{ 0.0 } )
                fmt::print( out, "    B         {: <9} {:.15}\n",
                            consnames[row_mapping[i]], double( rhs[i] ) );
          }
          else
          {
-            if( lhs[i] != REAL{0.0} )
+            if( lhs[i] != REAL{ 0.0 } )
                fmt::print( out, "    B         {: <9} {:.15}\n",
                            consnames[row_mapping[i]], double( lhs[i] ) );
          }

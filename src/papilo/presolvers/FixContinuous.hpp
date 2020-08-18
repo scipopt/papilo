@@ -76,7 +76,7 @@ FixContinuous<REAL>::execute( const Problem<REAL>& problem,
    const auto& colsize = consMatrix.getColSizes();
 
    PresolveStatus result = PresolveStatus::kUnchanged;
-   if( num.getFeasTol() == REAL{0} )
+   if( num.getFeasTol() == REAL{ 0 } )
       return result;
 
    for( int i = 0; i < ncols; ++i )
@@ -108,9 +108,9 @@ FixContinuous<REAL>::execute( const Problem<REAL>& problem,
          else if( ceil( lbs[i] ) == ubs[i] )
             fixval = ubs[i];
          else // otherwise take the midpoint
-            fixval = REAL{0.5} * ( ubs[i] + lbs[i] );
+            fixval = REAL{ 0.5 } * ( ubs[i] + lbs[i] );
 
-         TransactionGuard<REAL> tg{reductions};
+         TransactionGuard<REAL> tg{ reductions };
          reductions.lockColBounds( i );
          reductions.fixCol( i, fixval );
          result = PresolveStatus::kReduced;

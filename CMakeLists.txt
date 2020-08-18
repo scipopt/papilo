@@ -5,20 +5,23 @@ set(CMAKE_CXX_STANDARD 14)
 # set(CMAKE_CXX_EXTENSIONS OFF)
 # required for gcc if set(CMAKE_CXX_EXTENSIONS OFF) is used
 # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fext-numeric-literals")
+if(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
+   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-psabi")
+endif()
 
 # path to e.g. findGMP module
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/Modules)
 set(CMAKE_CXX_VISIBILITY_PRESET hidden)
 set(CMAKE_VISIBILITY_INLINES_HIDDEN 1)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
-include(GenerateExportHeader)
-
-# must be added first so that the configurated config file is preferred over the normal one
-include_directories(${CMAKE_BINARY_DIR})
 
 option(GMP "should gmp be linked" ON)
 option(QUADMATH "should quadmath library be used" ON)
-option(LUSOL "should LUSOL package be enabled" ON)
+if(MSVC)
+   option(LUSOL "should LUSOL package be enabled" OFF)
+else()
+   option(LUSOL "should LUSOL package be enabled" ON)
+endif()
 option(HIGHS "should HiGHS LP solver be linked if found" ON)
 option(SOPLEX "should SoPlex LP solver be linked if found" ON)
 option(SCIP "should SCIP solver be linked if found" ON)
@@ -28,15 +31,15 @@ if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Release)
 endif()
 
-find_package(Boost REQUIRED OPTIONAL_COMPONENTS iostreams serialization program_options)
+find_package(Boost REQUIRED)
 
 if(GMP)
     find_package(GMP)
 endif()
 if(GMP_FOUND)
-    include_directories(${GMP_INCLUDE_DIRS})
     set(PAPILO_HAVE_GMP 1)
 else()
+    set(GMP_INCLUDE_DIRS "")
     set(GMP_LIBRARIES "")
     set(PAPILO_HAVE_GMP 0)
 endif()
@@ -46,11 +49,11 @@ if(QUADMATH)
 endif()
 if(Quadmath_FOUND)
    set(PAPILO_HAVE_FLOAT128 1)
-   include_directories(${Quadmath_INCLUDE_DIRS})
-   set(QUADMATH_IMPORTED_TARGET Quadmath::quadmath)
+   set(Quadmath_IMPORTED_TARGET Quadmath::quadmath)
 else()
    set(PAPILO_HAVE_FLOAT128 0)
-   set(QUADMATH_IMPORTED_TARGET "")
+   set(Quadmath_INCLUDE_DIRS "")
+   set(Quadmath_IMPORTED_TARGET "")
 endif()
 
 find_program(GIT git)
@@ -86,14 +89,27 @@ target_include_directories(papilo INTERFACE
    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/external/tbb/include>
    $<INSTALL_INTERFACE:include>
    $<INSTALL_INTERFACE:include/papilo-external>
-   ${Boost_INCLUDE_DIRS})
+   ${Boost_INCLUDE_DIRS}
+   ${GMP_INCLUDE_DIRS}
+   ${Quadmath_INCLUDE_DIRS})
 
 find_package(TBB MODULE REQUIRED)
 if(TBB_BUILT_STATIC_LIB)
    install(FILES ${TBB_STATIC_LIB} DESTINATION lib)
 endif()
+if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+   file(TO_CMAKE_PATH "$ENV{TBBROOT}" TBB_ROOTDIR)
+   if(CMAKE_CL_64)
+      set(TBB_DLL "${TBB_ROOTDIR}/../redist/intel64/tbb/vc_mt/tbb.dll")
+   else()
+      set(TBB_DLL "${TBB_ROOTDIR}/../redist/ia32/tbb/vc_mt/tbb.dll")
+   endif()
+   if(EXISTS "${TBB_DLL}")
+      install(FILES "${TBB_DLL}" DESTINATION bin)
+   endif()
+endif()
 
-target_link_libraries(papilo INTERFACE ${TBB_LIBRARY} ${QUADMATH_IMPORTED_TARGET} ${GMP_LIBRARIES})
+target_link_libraries(papilo INTERFACE ${TBB_LIBRARY} ${Quadmath_IMPORTED_TARGET} ${GMP_LIBRARIES})
 
 if(MSVC)
    target_compile_definitions(papilo INTERFACE BOOST_ALL_NO_LIB)
@@ -128,32 +144,8 @@ else()
    message(STATUS "LUSOL is not built")
 endif()
 
-if(SCIP)
-   find_package(SCIP QUIET)
-endif()
-if(SCIP_FOUND)
-   set(PAPILO_HAVE_SCIP 1)
-else()
-   set(PAPILO_HAVE_SCIP 0)
-endif()
-
-if(SOPLEX)
-   find_package(SOPLEX QUIET)
-endif()
-if(SOPLEX_FOUND)
-   set(PAPILO_HAVE_SOPLEX 1)
-else()
-   set(PAPILO_HAVE_SOPLEX 0)
-endif()
-
-if(HIGHS)
-   find_package(HIGHS QUIET)
-endif()
-if(HIGHS_FOUND)
-   set(PAPILO_HAVE_HIGHS 1)
-else()
-   set(PAPILO_HAVE_HIGHS 0)
-endif()
+include(CheckCXXSourceCompiles)
+include(CheckCXXCompilerFlag)
 
 if(NOT MSVC)
    check_cxx_compiler_flag(-std=c++14 HAVE_FLAG_STD_CXX14)
@@ -179,7 +171,6 @@ else()
 endif()
 
 if(Boost_IOSTREAMS_FOUND)
-   include(CheckCXXSourceCompiles)
    set(CMAKE_REQUIRED_INCLUDES ${Boost_INCLUDE_DIRS})
    set(CMAKE_REQUIRED_LIBRARIES ${Boost_LIBRARIES})
    check_cxx_source_compiles(
@@ -192,8 +183,8 @@ if(Boost_IOSTREAMS_FOUND)
       PAPILO_USE_BOOST_IOSTREAMS_WITH_BZIP2 )
 endif()
 
-configure_file("${PROJECT_SOURCE_DIR}/src/papilo/Config.hpp.in"
-               "${PROJECT_BINARY_DIR}/papilo/Config.hpp")
+configure_file("${PROJECT_SOURCE_DIR}/src/papilo/CMakeConfig.hpp.in"
+               "${PROJECT_BINARY_DIR}/papilo/CMakeConfig.hpp")
 
 add_library(papilo-core STATIC
    src/papilo/core/VariableDomains.cpp
@@ -223,39 +214,9 @@ add_library(papilo-core STATIC
 
 target_link_libraries(papilo-core papilo)
 target_compile_definitions(papilo-core PRIVATE PAPILO_USE_EXTERN_TEMPLATES)
-include_directories(${SCIP_INCLUDE_DIRS} ${SOPLEX_INCLUDE_DIRS} ${HIGHS_INCLUDE_DIRS})
 
-if(Boost_IOSTREAMS_FOUND AND Boost_SERIALIZATION_FOUND AND Boost_PROGRAM_OPTIONS_FOUND)
-   add_executable(papilo-executable src/papilo.cpp)
-
-   if(SCIP_FOUND)
-      list(APPEND linked_solvers "SCIP")
-   endif()
-   if(SOPLEX_FOUND)
-      list(APPEND linked_solvers "SoPlex")
-   endif()
-   if(HIGHS_FOUND)
-      list(APPEND linked_solvers "HiGHS")
-   endif()
-   if(linked_solvers)
-      message(STATUS "Linking solvers: ${linked_solvers}")
-   else()
-      message(STATUS "No solvers linked")
-   endif()
-   set_target_properties(papilo-executable PROPERTIES OUTPUT_NAME papilo RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin" )
-   target_link_libraries(papilo-executable papilo-core ${SOPLEX_LIBRARIES} ${SCIP_LIBRARIES} ${HIGHS_LIBRARIES} ${Boost_LIBRARIES})
-   target_compile_definitions(papilo-executable PRIVATE PAPILO_USE_EXTERN_TEMPLATES PAPILO_MPS_WRITER)
-endif()
-
-if(SCIP_FOUND AND SOPLEX_FOUND)
-   add_library(papilolib SHARED src/papilolib.cpp)
-   set_target_properties(papilolib PROPERTIES OUTPUT_NAME papilo LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
-   target_link_libraries(papilolib papilo ${SOPLEX_PIC_LIBRARIES} ${SCIP_LIBRARIES})
-   if( Boost_IOSTREAMS_FOUND )
-      target_compile_definitions(papilolib PRIVATE PAPILO_MPS_WRITER)
-      target_link_libraries(papilolib ${Boost_IOSTREAMS_LIBRARY})
-   endif()
-   generate_export_header(papilolib)
+if(NOT PAPILO_NO_BINARIES)
+   add_subdirectory(binaries)
 endif()
 
 # add tests
@@ -264,7 +225,8 @@ add_subdirectory(test)
 
 # install the header files of papilo
 install(FILES
-   ${PROJECT_BINARY_DIR}/papilo/Config.hpp
+   ${PROJECT_BINARY_DIR}/papilo/CMakeConfig.hpp
+   ${PROJECT_SOURCE_DIR}/src/papilo/Config.hpp
    DESTINATION include/papilo)
 
 install(FILES
@@ -315,6 +277,7 @@ install(FILES
    ${PROJECT_SOURCE_DIR}/src/papilo/misc/KktChecker.hpp
    ${PROJECT_SOURCE_DIR}/src/papilo/misc/KktCheckHelper.hpp
    ${PROJECT_SOURCE_DIR}/src/papilo/misc/MultiPrecision.hpp
+   ${PROJECT_SOURCE_DIR}/src/papilo/misc/NumericalStatistics.hpp
    ${PROJECT_SOURCE_DIR}/src/papilo/misc/Num.hpp
    ${PROJECT_SOURCE_DIR}/src/papilo/misc/OptionsParser.hpp
    ${PROJECT_SOURCE_DIR}/src/papilo/misc/ParameterSet.hpp

@@ -87,6 +87,42 @@ class SparseVectorView
    }
 
    REAL
+   getMinAbsValue() const
+   {
+      REAL minabsval;
+
+      for( int i = 0; i != len; ++i )
+      {
+         if( i == 0 )
+            minabsval = abs( vals[0] );
+         else
+            minabsval = std::min( REAL( abs( vals[i] ) ), minabsval );
+      }
+
+      return minabsval;
+   }
+
+   std::pair<REAL, REAL>
+   getMinMaxAbsValue() const
+   {
+      if( len != 0 )
+      {
+         REAL maxabsval = abs( vals[0] );
+         REAL minabsval = maxabsval;
+
+         for( int i = 1; i != len; ++i )
+         {
+            maxabsval = std::max( REAL( abs( vals[i] ) ), maxabsval );
+            minabsval = std::min( REAL( abs( vals[i] ) ), minabsval );
+         }
+
+         return std::make_pair( minabsval, maxabsval );
+      }
+
+      return std::make_pair( 0, 0 );
+   }
+
+   REAL
    getDynamism() const
    {
       if( len != 0 )
@@ -203,10 +239,10 @@ class ConstraintMatrix
 
       auto index_range = cons_matrix.getRowRanges()[r];
 
-      return SparseVectorView<REAL>{cons_matrix.getValues() + index_range.start,
-                                    cons_matrix.getColumns() +
-                                        index_range.start,
-                                    index_range.end - index_range.start};
+      return SparseVectorView<REAL>{
+          cons_matrix.getValues() + index_range.start,
+          cons_matrix.getColumns() + index_range.start,
+          index_range.end - index_range.start };
    }
 
    /// returns a sparse vector view on the column coefficients and their row
@@ -221,7 +257,7 @@ class ConstraintMatrix
       return SparseVectorView<REAL>{
           cons_matrix_transp.getValues() + index_range.start,
           cons_matrix_transp.getColumns() + index_range.start,
-          index_range.end - index_range.start};
+          index_range.end - index_range.start };
    }
 
    /// returns maximal change of constraint feasibility for the given change of
@@ -1248,7 +1284,7 @@ ConstraintMatrix<REAL>::aggregate(
    }
    assert( freeColPos != equalitylen );
 
-   REAL eqbasescale = REAL{-1} / equalityvalues[freeColPos];
+   REAL eqbasescale = REAL{ -1 } / equalityvalues[freeColPos];
 
    assert( tripletbuffer.empty() );
    tripletbuffer.reserve( equalitylen * colsize[col] );
@@ -1285,7 +1321,7 @@ ConstraintMatrix<REAL>::aggregate(
    auto mergeVal = [&]( const REAL& oldval, const REAL& addition ) {
       REAL val = oldval + addition;
       if( num.isZero( val ) )
-         return REAL{0};
+         return REAL{ 0 };
 
       return std::move( val );
    };
@@ -1331,7 +1367,8 @@ ConstraintMatrix<REAL>::aggregate(
       REAL eqscale = eqbasescale * freecolcoef[i];
 
       int newsize = cons_matrix.changeRow(
-          row, int{0}, equalitylen, [&]( int k ) { return equalityindices[k]; },
+          row, int{ 0 }, equalitylen,
+          [&]( int k ) { return equalityindices[k]; },
           [&]( int k ) {
              return k == freeColPos ? REAL( -freecolcoef[i] )
                                     : REAL( equalityvalues[k] * eqscale );

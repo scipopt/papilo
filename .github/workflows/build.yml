@@ -12,7 +12,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-18.04,ubuntu-16.04,macos-10.15,windows-latest]
+        os: [ubuntu-18.04,ubuntu-16.04,macos-10.15]
     env:
       BOOST_ROOT:
       MAKEFLAGS: -j4
@@ -37,7 +37,7 @@ jobs:
 
     - name: Cached Dependencies
       id: cached-dependencies
-      uses: actions/cache@v1
+      uses: actions/cache@v2
       with:
         path: ./Dependencies
         key: dependencies-${{env.SCIP_VERSION}}-${{ matrix.os }}-package
@@ -46,15 +46,15 @@ jobs:
       if: runner.os == 'Windows' && steps.cached-dependencies.outputs.cache-hit != 'true'
       run: |
         cmake -E make_directory ${{github.workspace}}/Dependencies
-        Invoke-WebRequest -Uri "http://scip.zib.de/download/release/SCIPOptSuite-${{env.SCIP_VERSION}}-win64-VS15.exe" -OutFile "${{github.workspace}}\Dependencies\scipoptsuite.exe"
+        Invoke-WebRequest -Uri "http://www.scipopt.org/download/release/SCIPOptSuite-${{env.SCIP_VERSION}}-win64-VS15.exe" -OutFile "${{github.workspace}}\Dependencies\scipoptsuite.exe"
         Invoke-WebRequest -Uri "https://github.com/intel/tbb/releases/download/v2020.1/tbb-2020.1-win.zip" -OutFile "${{github.workspace}}\Dependencies\tbb.zip"
         expand-archive -path "${{github.workspace}}\Dependencies\tbb.zip" -destinationpath "${{github.workspace}}\Dependencies\"
 
     - name: Package SCIPOptSuite
-      if:  runner.os != 'Windows' && steps.cached-dependencies.outputs.cache-hit != 'true'
+      if: runner.os != 'Windows' && steps.cached-dependencies.outputs.cache-hit != 'true'
       run: |
         cd $HOME
-        wget http://scip.zib.de/download/release/scipoptsuite-${SCIP_VERSION}.tgz
+        wget http://www.scipopt.org/download/release/scipoptsuite-${SCIP_VERSION}.tgz --no-check-certificate
         tar xf ./scipoptsuite-${SCIP_VERSION}.tgz
         cmake -E make_directory ./scipoptsuite-${SCIP_VERSION}/build
         cd ./scipoptsuite-${SCIP_VERSION}/build
@@ -89,7 +89,7 @@ jobs:
       # Note the current convention is to use the -S and -B options here to specify source 
       # and build directories, but this is only available with CMake 3.13 and higher.  
       # The CMake binaries on the Github Actions machines are (as of this writing) 3.12
-      run: cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DSOPLEX=off -DLUSOL=off
+      run: cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DSOPLEX=off
 
     - name: Build
       working-directory: ${{github.workspace}}/build
