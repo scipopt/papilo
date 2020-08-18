@@ -8,9 +8,9 @@ jobs:
 
     steps:
     - uses: actions/checkout@v1
-    - uses: DoozyX/clang-format-lint-action@v0.5
+    - uses: DoozyX/clang-format-lint-action@v0.8
       with:
         source: './src'
         exclude: './external'
         extensions: 'hpp,cpp,h'
-        clangFormatVersion: 10
+        clangFormatVersion: 9
