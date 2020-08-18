@@ -55,7 +55,7 @@ struct SolParser
       }
 
       Solution<REAL> sol;
-      sol.primal.resize( origcol_mapping.size(), REAL{0} );
+      sol.primal.resize( origcol_mapping.size(), REAL{ 0 } );
       String strline;
       // TODO
       getline( file, strline );

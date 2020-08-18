@@ -132,7 +132,7 @@ class ProblemBuilder
    }
 
    void
-   setColLbInfAll( Vec<bool> isInfinite )
+   setColLbInfAll( Vec<uint8_t> isInfinite )
    {
       assert( domains.flags.size() == isInfinite.size() );
       for( int c = 0; c < isInfinite.size(); ++c )
@@ -149,7 +149,7 @@ class ProblemBuilder
    }
 
    void
-   setColUbInfAll( Vec<bool> isInfinite )
+   setColUbInfAll( Vec<uint8_t> isInfinite )
    {
       assert( domains.flags.size() == isInfinite.size() );
       for( int c = 0; c < isInfinite.size(); ++c )
@@ -194,7 +194,7 @@ class ProblemBuilder
    }
 
    void
-   setColIntegralAll( Vec<bool> isIntegral )
+   setColIntegralAll( Vec<uint8_t> isIntegral )
    {
       assert( isIntegral.size() == domains.flags.size() );
       for( int c = 0; c < isIntegral.size(); ++c )
@@ -211,7 +211,7 @@ class ProblemBuilder
    }
 
    void
-   setRowLhsInfAll( Vec<bool> isInfinite )
+   setRowLhsInfAll( Vec<uint8_t> isInfinite )
    {
       assert( isInfinite.size() == rflags.size() );
       for( int r = 0; r < isInfinite.size(); ++r )
@@ -228,7 +228,7 @@ class ProblemBuilder
    }
 
    void
-   setRowRhsInfAll( Vec<bool> isInfinite )
+   setRowRhsInfAll( Vec<uint8_t> isInfinite )
    {
       assert( isInfinite.size() == rflags.size() );
       for( int r = 0; r < isInfinite.size(); ++r )
@@ -287,7 +287,7 @@ class ProblemBuilder
       for( int i = 0; i != len; ++i )
       {
          assert( vals[i] != 0 );
-         matrix_buffer.addEntry( row, cols[i], REAL{vals[i]} );
+         matrix_buffer.addEntry( row, cols[i], REAL{ vals[i] } );
       }
    }
 
@@ -338,7 +338,7 @@ class ProblemBuilder
       for( int i = 0; i != len; ++i )
       {
          assert( vals[i] != 0 );
-         matrix_buffer.addEntry( rows[i], col, REAL{vals[i]} );
+         matrix_buffer.addEntry( rows[i], col, REAL{ vals[i] } );
       }
    }
 
@@ -355,7 +355,7 @@ class ProblemBuilder
       problem.setConstraintMatrix( ConstraintMatrix<REAL>{
           matrix_buffer.buildCSR( nrows, ncols ),
           matrix_buffer.buildCSC( nrows, ncols ), std::move( lhs ),
-          std::move( rhs ), std::move( rflags )} );
+          std::move( rhs ), std::move( rflags ) } );
 
       matrix_buffer.clear();
 

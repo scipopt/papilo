@@ -550,7 +550,7 @@ SparseStorage<REAL>::SparseStorage( REAL* values_in, int* rowstart_in,
 
       for( int j = rowstart_in[r]; j < rowstart_in[r + 1]; j++ )
       {
-         if( values_in[j] != REAL{0.0} )
+         if( values_in[j] != REAL{ 0.0 } )
          {
             assert( j + shift >= 0 );
 
@@ -593,15 +593,15 @@ SparseStorage<REAL>::getTranspose() const
 
       for( int j = start; j < end; j++ )
       {
-         assert( values[j] != REAL{0.0} );
+         assert( values[j] != REAL{ 0.0 } );
          w[columns[j]]++;
       }
    }
 
    assert( spareRatio >= 1.0 );
 
-   SparseStorage<REAL> transpose{nCols, nRows, nnz, spareRatio,
-                                 minInterRowSpace};
+   SparseStorage<REAL> transpose{ nCols, nRows, nnz, spareRatio,
+                                  minInterRowSpace };
 
    // set row ranges of transpose
    transpose.rowranges[0].start = 0;

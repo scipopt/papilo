@@ -254,7 +254,7 @@ struct MatrixBuffer
    findEntry( int row, int col )
    {
       using Node = GetNodeProperty<RowMajor>;
-      MatrixEntry<REAL> entry( row, col, REAL{0} );
+      MatrixEntry<REAL> entry( row, col, REAL{ 0 } );
 
       int k = Node::root( this );
 
@@ -319,7 +319,7 @@ struct MatrixBuffer
 
       assert( row == -1 || col == -1 );
 
-      MatrixEntry<REAL> dummy( row, col, REAL{0} );
+      MatrixEntry<REAL> dummy( row, col, REAL{ 0 } );
 
       while( k != 0 )
       {

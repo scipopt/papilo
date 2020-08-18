@@ -149,13 +149,14 @@ struct DefaultTolerances<REAL, false>
    epsilon()
    {
       return feasTol() *
-             pow( REAL{10}, -( std::numeric_limits<REAL>::digits10 / 4 ) );
+             pow( REAL{ 10 }, -( std::numeric_limits<REAL>::digits10 / 4 ) );
    }
 
    static constexpr REAL
    feasTol()
    {
-      return pow( REAL{10}, -( std::numeric_limits<REAL>::digits10 / 2 - 1 ) );
+      return pow( REAL{ 10 },
+                  -( std::numeric_limits<REAL>::digits10 / 2 - 1 ) );
    }
 };
 
@@ -165,13 +166,13 @@ struct DefaultTolerances<REAL, true>
    static constexpr REAL
    epsilon()
    {
-      return REAL{0};
+      return REAL{ 0 };
    }
 
    static constexpr REAL
    feasTol()
    {
-      return REAL{0};
+      return REAL{ 0 };
    }
 };
 
@@ -179,7 +180,11 @@ template <typename REAL>
 class Num
 {
  public:
-   Num() : epsilon( REAL{1e-9} ), feastol( REAL{1e-6} ), hugeval( REAL{1e8} ) {}
+   Num()
+       : epsilon( REAL{ 1e-9 } ), feastol( REAL{ 1e-6 } ),
+         hugeval( REAL{ 1e8 } )
+   {
+   }
 
    template <typename R>
    static constexpr REAL

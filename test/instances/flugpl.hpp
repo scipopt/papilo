@@ -44,33 +44,28 @@ flugpl()
        0.0,  0.0, 0.0, 57.0, 0.0, 0.0, 57.0, 0.0, 0.0,
        57.0, 0.0, 0.0, 57.0, 0.0, 0.0, 57.0, 0.0, 0.0,
    };
-   Vec<bool> lbInf{
-       false, false, false, false, false, false, false, false, false,
-       false, false, false, false, false, false, false, false, false,
+   Vec<uint8_t> lbInf{
+       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
    };
    Vec<double> ubs{
        0.0,  18.0, 0.0, 75.0, 18.0, 0.0, 75.0, 18.0, 0.0,
        75.0, 18.0, 0.0, 75.0, 18.0, 0.0, 75.0, 18.0, 0.0,
    };
-   Vec<bool> ubInf{
-       true,  false, true, false, false, true, false, false, true,
-       false, false, true, false, false, true, false, false, true,
+   Vec<uint8_t> ubInf{
+       1, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1,
    };
-   Vec<bool> isIntegral{
-       false, true, false, true, true, false, true, true, false,
-       true,  true, false, true, true, false, true, true, false,
+   Vec<uint8_t> isIntegral{
+       0, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0,
    };
-   Vec<bool> lhsIsInf{
-       false, false, true, false, false, true, false, false, true,
-       false, false, true, false, false, true, false, false, true,
+   Vec<uint8_t> lhsIsInf{
+       0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1,
    };
    Vec<double> lhs{
        60.0, 8000.0,  0.0, 0.0, 9000.0, 0.0, 0.0, 8000.0,  0.0,
        0.0,  10000.0, 0.0, 0.0, 9000.0, 0.0, 0.0, 12000.0, 0.0,
    };
-   Vec<bool> rhsIsInf{
-       false, true, false, false, true, false, false, true, false,
-       false, true, false, false, true, false, false, true, false,
+   Vec<uint8_t> rhsIsInf{
+       0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0,
    };
    Vec<double> rhs{
        60.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,

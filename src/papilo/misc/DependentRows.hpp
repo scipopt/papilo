@@ -121,7 +121,7 @@ class DependentRows
 
          // preallocate enough storage for LUSOL to work
          int64_t alloc =
-             std::max( {8 * nnz, 32 * nrows, 32 * ncols, int64_t{10000}} );
+             std::max( { 8 * nnz, 32 * nrows, 32 * ncols, int64_t{ 10000 } } );
          A.reserve( alloc );
          indc.reserve( alloc );
          indr.reserve( alloc );
@@ -314,8 +314,8 @@ class DependentRows
 
       for( int i = 1; i != mat.entries.size(); ++i )
       {
-         PivotCandidate p{i, colsize[mat.entries[i].col],
-                          rowsize[mat.entries[i].row]};
+         PivotCandidate p{ i, colsize[mat.entries[i].col],
+                           rowsize[mat.entries[i].row] };
          heap.push( p );
       }
 
@@ -420,9 +420,9 @@ class DependentRows
                         assert( rowentryidx > 0 &&
                                 rowentryidx < mat.entries.size() &&
                                 rowentry == &mat.entries[rowentryidx] );
-                        heap.push( PivotCandidate{rowentryidx,
-                                                  colsize[rowentry->col],
-                                                  rowsize[rowentry->row]} );
+                        heap.push( PivotCandidate{ rowentryidx,
+                                                   colsize[rowentry->col],
+                                                   rowsize[rowentry->row] } );
                      }
                   }
                   else
@@ -430,9 +430,9 @@ class DependentRows
                      ++colsize[rowiter->col];
                      ++rowsize[coliter->row];
                      int rowentryidx = int( mat.entries.size() );
-                     heap.push( PivotCandidate{rowentryidx,
-                                               colsize[rowiter->col],
-                                               rowsize[coliter->row]} );
+                     heap.push( PivotCandidate{ rowentryidx,
+                                                colsize[rowiter->col],
+                                                rowsize[coliter->row] } );
                      int tmpcoliteridx = ( coliter - &mat.entries[0] );
                      int tmprowiteridx = ( rowiter - &mat.entries[0] );
                      mat.addEntry( coliter->row, rowiter->col, delta );

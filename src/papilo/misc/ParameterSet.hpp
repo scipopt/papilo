@@ -303,7 +303,7 @@ class ParameterSet
          throw std::invalid_argument(
              "tried to add parameter that already exists" );
 
-      parameters.emplace( key, Parameter{description, StringOption{&val}} );
+      parameters.emplace( key, Parameter{ description, StringOption{ &val } } );
    }
 
    void
@@ -313,7 +313,7 @@ class ParameterSet
          throw std::invalid_argument(
              "tried to add parameter that already exists" );
 
-      parameters.emplace( key, Parameter{description, BoolOption{&val}} );
+      parameters.emplace( key, Parameter{ description, BoolOption{ &val } } );
    }
 
    void
@@ -325,8 +325,8 @@ class ParameterSet
          throw std::invalid_argument(
              "tried to add parameter that already exists" );
 
-      parameters.emplace(
-          key, Parameter{description, NumericalOption<int>{&val, min, max}} );
+      parameters.emplace( key, Parameter{ description, NumericalOption<int>{
+                                                           &val, min, max } } );
    }
 
    void
@@ -339,8 +339,8 @@ class ParameterSet
              "tried to add parameter that already exists" );
 
       parameters.emplace(
-          key, Parameter{description,
-                         NumericalOption<unsigned int>{&val, min, max}} );
+          key, Parameter{ description,
+                          NumericalOption<unsigned int>{ &val, min, max } } );
    }
 
    void
@@ -353,8 +353,8 @@ class ParameterSet
              "tried to add parameter that already exists" );
 
       parameters.emplace(
-          key, Parameter{description,
-                         NumericalOption<std::int64_t>{&val, min, max}} );
+          key, Parameter{ description,
+                          NumericalOption<std::int64_t>{ &val, min, max } } );
    }
 
    void
@@ -366,8 +366,8 @@ class ParameterSet
          throw std::invalid_argument(
              "tried to add parameter that already exists" );
 
-      parameters.emplace( key, Parameter{description, NumericalOption<double>{
-                                                          &val, min, max}} );
+      parameters.emplace( key, Parameter{ description, NumericalOption<double>{
+                                                           &val, min, max } } );
    }
 
    void
@@ -379,8 +379,8 @@ class ParameterSet
              "tried to add parameter that already exists" );
 
       parameters.emplace(
-          key, Parameter{description,
-                         CategoricalOption{&val, std::move( options )}} );
+          key, Parameter{ description,
+                          CategoricalOption{ &val, std::move( options ) } } );
    }
 
    template <typename T>

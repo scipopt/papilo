@@ -352,7 +352,7 @@ ParallelRowDetection<REAL>::execute( const Problem<REAL>& problem,
       bool adjustedRHSInf = rflags[row2].test( RowFlag::kRhsInf );
 
       using std::swap;
-      if( ratio < REAL{0.0} )
+      if( ratio < REAL{ 0.0 } )
       {
          swap( adjustedLHS, adjustedRHS );
          swap( adjustedLHSInf, adjustedRHSInf );
@@ -368,7 +368,7 @@ ParallelRowDetection<REAL>::execute( const Problem<REAL>& problem,
          // if r1 != r2 infeasible
          if( num.isFeasEq( rhs_values[row1], adjustedRHS ) )
          {
-            TransactionGuard<REAL> guard{reductions};
+            TransactionGuard<REAL> guard{ reductions };
             reductions.lockRow( row1 );
             reductions.lockRow( row2 );
             reductions.markRowRedundant( row2 );
@@ -388,7 +388,7 @@ ParallelRowDetection<REAL>::execute( const Problem<REAL>& problem,
              ( adjustedLHSInf ||
                num.isFeasGE( rhs_values[row1], adjustedLHS ) ) )
          {
-            TransactionGuard<REAL> guard{reductions};
+            TransactionGuard<REAL> guard{ reductions };
             reductions.lockRow( row1 );
             reductions.lockRow( row2 );
             reductions.markRowRedundant( row2 );
@@ -406,7 +406,7 @@ ParallelRowDetection<REAL>::execute( const Problem<REAL>& problem,
              ( rflags[row1].test( RowFlag::kLhsInf ) ||
                num.isFeasLE( lhs_values[row1], adjustedRHS ) ) )
          {
-            TransactionGuard<REAL> guard{reductions};
+            TransactionGuard<REAL> guard{ reductions };
             reductions.lockRow( row1 );
             reductions.lockRow( row2 );
             reductions.markRowRedundant( row1 );
@@ -430,7 +430,7 @@ ParallelRowDetection<REAL>::execute( const Problem<REAL>& problem,
          }
          else
          {
-            TransactionGuard<REAL> guard{reductions};
+            TransactionGuard<REAL> guard{ reductions };
             reductions.lockRow( row1 );
             reductions.lockRow( row2 );
 
@@ -449,9 +449,9 @@ ParallelRowDetection<REAL>::execute( const Problem<REAL>& problem,
 
    assert( nrows > 0 );
 
-   std::unique_ptr<unsigned int[]> supportid{new unsigned int[nrows]};
-   std::unique_ptr<unsigned int[]> coefhash{new unsigned int[nrows]};
-   std::unique_ptr<int[]> row{new int[nrows]};
+   std::unique_ptr<unsigned int[]> supportid{ new unsigned int[nrows] };
+   std::unique_ptr<unsigned int[]> coefhash{ new unsigned int[nrows] };
+   std::unique_ptr<int[]> row{ new int[nrows] };
 
 #if 0
       tbb::parallel_invoke(
