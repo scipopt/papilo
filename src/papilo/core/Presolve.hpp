@@ -592,9 +592,9 @@ Presolve<REAL>::apply( Problem<REAL>& problem )
 
    return arena.execute( [this, &problem]() {
       stats = Statistics();
-      num.setFeasTol( REAL{presolveOptions.feastol} );
-      num.setEpsilon( REAL{presolveOptions.epsilon} );
-      num.setHugeVal( REAL{presolveOptions.hugeval} );
+      num.setFeasTol( REAL{ presolveOptions.feastol } );
+      num.setEpsilon( REAL{ presolveOptions.epsilon } );
+      num.setHugeVal( REAL{ presolveOptions.hugeval } );
 
       Timer timer( stats.presolvetime );
 
@@ -897,7 +897,7 @@ Presolve<REAL>::apply( Problem<REAL>& problem )
             msg.info( "found {} equations, checking for linear dependency\n",
                       equations.size() );
             {
-               Timer t{factorTime};
+               Timer t{ factorTime };
                dependentEqs = depRows.getDependentRows( msg, num );
             }
             msg.info(
@@ -954,7 +954,7 @@ Presolve<REAL>::apply( Problem<REAL>& problem )
                    freeCols.size(), freeColNnz );
 
                {
-                  Timer t{factorTime};
+                  Timer t{ factorTime };
                   dependentFreeCols = depRows.getDependentRows( msg, num );
                }
 

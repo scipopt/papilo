@@ -465,7 +465,7 @@ Sparsify<REAL>::execute( const Problem<REAL>& problem,
          int num = std::get<1>( reductionTuple );
          const std::pair<int, REAL>* sparsify = std::get<2>( reductionTuple );
 
-         TransactionGuard<REAL> tg{reductions};
+         TransactionGuard<REAL> tg{ reductions };
          reductions.lockRow( eqrow );
          reductions.sparsify( eqrow, num, sparsify );
       }

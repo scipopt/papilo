@@ -91,7 +91,7 @@ SingletonCols<REAL>::execute( const Problem<REAL>& problem,
 
       result = PresolveStatus::kReduced;
 
-      TransactionGuard<REAL> tg{reductions};
+      TransactionGuard<REAL> tg{ reductions };
       reductions.lockColBounds( col );
       reductions.lockRow( row );
 
@@ -272,7 +272,7 @@ SingletonCols<REAL>::execute( const Problem<REAL>& problem,
             continue;
          }
 
-         TransactionGuard<REAL> tg{reductions};
+         TransactionGuard<REAL> tg{ reductions };
          reductions.lockColStrong( col );
          reductions.fixCol( col, lower_bounds[col] );
          result = PresolveStatus::kReduced;
@@ -291,7 +291,7 @@ SingletonCols<REAL>::execute( const Problem<REAL>& problem,
             continue;
          }
 
-         TransactionGuard<REAL> tg{reductions};
+         TransactionGuard<REAL> tg{ reductions };
          reductions.lockColStrong( col );
          reductions.fixCol( col, upper_bounds[col] );
          result = PresolveStatus::kReduced;
@@ -391,7 +391,7 @@ SingletonCols<REAL>::execute( const Problem<REAL>& problem,
                // dual reduction and change the constraint into an equation
                result = PresolveStatus::kReduced;
 
-               TransactionGuard<REAL> tg{reductions};
+               TransactionGuard<REAL> tg{ reductions };
                reductions.lockColBounds( col );
                reductions.lockRow( row );
                reductions.changeRowRHS( row, lhs_values[row] );
@@ -442,7 +442,7 @@ SingletonCols<REAL>::execute( const Problem<REAL>& problem,
                // dual reduction and change the constraint into an equation
                result = PresolveStatus::kReduced;
 
-               TransactionGuard<REAL> tg{reductions};
+               TransactionGuard<REAL> tg{ reductions };
                reductions.lockColBounds( col );
                reductions.lockRow( row );
                reductions.changeRowLHS( row, rhs_values[row] );

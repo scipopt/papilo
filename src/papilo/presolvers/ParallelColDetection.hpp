@@ -439,9 +439,9 @@ ParallelColDetection<REAL>::execute( const Problem<REAL>& problem,
 
    assert( ncols > 0 );
 
-   std::unique_ptr<unsigned int[]> supportid{new unsigned int[ncols]};
-   std::unique_ptr<unsigned int[]> coefhash{new unsigned int[ncols]};
-   std::unique_ptr<int[]> col{new int[ncols]};
+   std::unique_ptr<unsigned int[]> supportid{ new unsigned int[ncols] };
+   std::unique_ptr<unsigned int[]> coefhash{ new unsigned int[ncols] };
+   std::unique_ptr<int[]> col{ new int[ncols] };
 
    tbb::parallel_invoke(
        [ncols, &col]() {
@@ -506,7 +506,7 @@ ParallelColDetection<REAL>::execute( const Problem<REAL>& problem,
          int col1 = parallelCol.first;
          int col2 = parallelCol.second;
 
-         TransactionGuard<REAL> tg{reductions};
+         TransactionGuard<REAL> tg{ reductions };
          reductions.lockCol( col1 );
          reductions.lockCol( col2 );
 

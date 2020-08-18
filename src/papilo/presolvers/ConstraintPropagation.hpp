@@ -76,9 +76,9 @@ ConstraintPropagation<REAL>::execute( const Problem<REAL>& problem,
    // small amount above the feasibility tolerance
    REAL weakenbounds =
        problem.getNumIntegralCols() == 0
-           ? REAL{problemUpdate.getPresolveOptions().weakenlpvarbounds *
-                  num.getFeasTol()}
-           : REAL{0};
+           ? REAL{ problemUpdate.getPresolveOptions().weakenlpvarbounds *
+                   num.getFeasTol() }
+           : REAL{ 0 };
 
    auto add_boundchange = [&]( BoundChange boundChange, int col, REAL val ) {
       // do not accept huge values as bounds

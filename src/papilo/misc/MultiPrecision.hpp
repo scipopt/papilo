@@ -46,6 +46,7 @@ BOOST_SERIALIZATION_SPLIT_FREE( papilo::Quad )
 
 #else
 #include <boost/multiprecision/cpp_bin_float.hpp>
+#include <boost/serialization/nvp.hpp>
 namespace papilo
 {
 using Quad = boost::multiprecision::cpp_bin_float_quad;
@@ -55,6 +56,7 @@ using Quad = boost::multiprecision::cpp_bin_float_quad;
 #ifdef PAPILO_HAVE_GMP
 #include <boost/multiprecision/cpp_bin_float.hpp>
 #include <boost/multiprecision/gmp.hpp>
+#include <boost/serialization/nvp.hpp>
 
 // unfortunately the multiprecision gmp types do not provide an overload for
 // serialization
@@ -123,6 +125,7 @@ load( Archive& ar,
 #else
 #include <boost/multiprecision/cpp_bin_float.hpp>
 #include <boost/multiprecision/cpp_int.hpp>
+#include <boost/serialization/nvp.hpp>
 
 namespace papilo
 {
