@@ -65,7 +65,7 @@ class Problem
    void
    setObjective( Vec<REAL> coefficients, REAL offset = 0.0 )
    {
-      objective = Objective<REAL>{std::move( coefficients ), offset};
+      objective = Objective<REAL>{ std::move( coefficients ), offset };
    }
 
    /// set objective function
@@ -91,12 +91,12 @@ class Problem
          constraintMatrix = ConstraintMatrix<REAL>{
              std::move( cons_matrix_other ), std::move( cons_matrix ),
              std::move( lhs_values ), std::move( rhs_values ),
-             std::move( row_flags )};
+             std::move( row_flags ) };
       else
          constraintMatrix = ConstraintMatrix<REAL>{
              std::move( cons_matrix ), std::move( cons_matrix_other ),
              std::move( lhs_values ), std::move( rhs_values ),
-             std::move( row_flags )};
+             std::move( row_flags ) };
    }
 
    /// set constraint matrix
@@ -129,9 +129,9 @@ class Problem
    setVariableDomains( Vec<REAL> lower_bounds, Vec<REAL> upper_bounds,
                        Vec<ColFlags> col_flags )
    {
-      variableDomains = VariableDomains<REAL>{std::move( lower_bounds ),
-                                              std::move( upper_bounds ),
-                                              std::move( col_flags )};
+      variableDomains = VariableDomains<REAL>{ std::move( lower_bounds ),
+                                               std::move( upper_bounds ),
+                                               std::move( col_flags ) };
       nintegers = 0;
       ncontinuous = 0;
 
@@ -611,7 +611,7 @@ class Problem
    REAL
    getMaxAbsCoefficient()
    {
-      REAL maxCoef{0};
+      REAL maxCoef{ 0 };
 
       for( int i = 0; i != constraintMatrix.getNCols(); ++i )
          maxCoef = std::max(
@@ -739,7 +739,7 @@ class Problem
 
  private:
    String name;
-   REAL inputTolerance{0};
+   REAL inputTolerance{ 0 };
    Objective<REAL> objective;
    ConstraintMatrix<REAL> constraintMatrix;
    VariableDomains<REAL> variableDomains;
@@ -764,7 +764,7 @@ Problem<REAL>::substituteVarInObj( const Num<REAL>& num, int col, int row )
    auto& objcoefficients = getObjective().coefficients;
    REAL freevarCoefInObj = objcoefficients[col];
 
-   if( freevarCoefInObj == REAL{0} )
+   if( freevarCoefInObj == REAL{ 0 } )
       return;
 
    const auto equalityrow = consMatrix.getRowCoefficients( row );
@@ -779,7 +779,7 @@ Problem<REAL>::substituteVarInObj( const Num<REAL>& num, int col, int row )
 
    REAL substscale = -freevarCoefInObj / freevarCoefInCons;
 
-   objcoefficients[col] = REAL{0.0};
+   objcoefficients[col] = REAL{ 0.0 };
    for( int j = 0; j < length; ++j )
    {
       if( indices[j] == col )

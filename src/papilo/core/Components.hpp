@@ -108,8 +108,8 @@ class Components
    detectComponents( const Problem<REAL>& problem )
    {
       const int ncols = problem.getNCols();
-      std::unique_ptr<int[]> rank{new int[ncols]};
-      std::unique_ptr<int[]> parent{new int[ncols]};
+      std::unique_ptr<int[]> rank{ new int[ncols] };
+      std::unique_ptr<int[]> parent{ new int[ncols] };
       boost::disjoint_sets<int*, int*> djsets( rank.get(), parent.get() );
 
       for( int i = 0; i != ncols; ++i )
@@ -139,7 +139,7 @@ class Components
       {
          int nextid = static_cast<int>( componentmap.size() );
          auto insert_result =
-             componentmap.insert( {djsets.find_set( i ), nextid} );
+             componentmap.insert( { djsets.find_set( i ), nextid } );
       }
 
       int numcomponents = static_cast<int>( componentmap.size() );
