@@ -247,7 +247,9 @@ Leona Gottwald ([@lgottwald](https://github.com/lgottwald)) --- main author
 
 [Ivet Galabova](https://sites.google.com/view/ivetgalabova) ([@galabovaa](https://github.com/galabovaa)) --- groundwork for dual postsolve, KKT checker
 
-[Kathrin Halbig](https://en.www.math.fau.de/edom/team/katrin-halbig/) --- presolver for GCD based reductions on inequalities(simplifyineq)
+[Kathrin Halbig](https://en.www.math.fau.de/edom/team/katrin-halbig/) --- presolver for GCD based reductions on inequalities (simplifyineq)
+
+[Gabriel Kressin](https://www.zib.de/members/kressin) ([@GabrielKP](https://github.com/GabrielKP)) --- numerical statistics, testing
 
 Anass Meskini --- general development and contributions to substitution presolver in terms of internship
 
