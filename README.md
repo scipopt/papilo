@@ -299,6 +299,12 @@ and grants write access to an instance of `papilo::Reductions<REAL>`. A presolve
 to the reductions class. This is only the broad picture and there are some more details that we omit here for brevity.
 Looking at some of the default implemented presolvers can help for understanding further details and also the resources in the next section.
 
+Finally when a new presolve method is implemented it needs to be added to the `papilo::Presolve<REAL>` instance that is used for presolving.
+Assuming the new presolve method is called `MyPresolveMethod` this is achieved by the following call:
+```
+presolve.addPresolver( std::unique_ptr<papilo::PresolveMethod<REAL>>( new MyPresolveMethod<REAL>() ) );
+```
+
 # Algorithmic and implementation details
 
 The release report of the SCIP Optimization Suite 7.0 contains a section about PaPILO. The report is available under http://www.optimization-online.org/DB_HTML/2020/03/7705.html.
