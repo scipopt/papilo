@@ -644,39 +644,299 @@ check_duplicates( const Problem<double>& prob1, const Problem<double>& prob2 )
 static uint64_t
 compute_instancehash( const Problem<double>& prob )
 {
+   const int MAX_HASH_ITERS = 5;
    const ConstraintMatrix<double> cm = prob.getConstraintMatrix();
 
-   auto doubleToUInt = []( double num ) {
+   int nrows = cm.getNRows();
+   int ncols = cm.getNCols();
+   int nnz = cm.getNnz();
+
+   auto obj = [&]( int col ) {
+      double tmp = prob.getObjective().coefficients[col];
       uint64_t val;
-      std::memcpy( &val, &num, sizeof( double ) );
+      std::memcpy( &val, &tmp, sizeof( double ) );
       return val;
    };
 
-   Hasher<uint64_t> hasher( cm.getNnz() );
-   hasher.addValue( cm.getNRows() );
-   hasher.addValue( cm.getNCols() );
+   auto lb = [&]( int col ) {
+      double tmp = prob.getColFlags()[col].test( ColFlag::kLbInf )
+                       ? std::numeric_limits<double>::lowest()
+                       : prob.getLowerBounds()[col];
+      uint64_t val;
+      std::memcpy( &val, &tmp, sizeof( double ) );
+      return val;
+   };
+
+   auto ub = [&]( int col ) {
+      double tmp = prob.getColFlags()[col].test( ColFlag::kUbInf )
+                       ? std::numeric_limits<double>::max()
+                       : prob.getUpperBounds()[col];
+      uint64_t val;
+      std::memcpy( &val, &tmp, sizeof( double ) );
+      return val;
+   };
+
+   auto col_is_integral = [&]( int col ) {
+      return static_cast<uint64_t>(
+          prob.getColFlags()[col].test( ColFlag::kIntegral ) );
+   };
+
+   auto lhs = [&]( int row ) {
+      double tmp = cm.getRowFlags()[row].test( RowFlag::kLhsInf )
+                       ? std::numeric_limits<double>::lowest()
+                       : cm.getLeftHandSides()[row];
+      uint64_t val;
+      std::memcpy( &val, &tmp, sizeof( double ) );
+      return val;
+   };
+
+   auto rhs = [&]( int row ) {
+      double tmp = cm.getRowFlags()[row].test( RowFlag::kRhsInf )
+                       ? std::numeric_limits<double>::max()
+                       : cm.getRightHandSides()[row];
+      uint64_t val;
+      std::memcpy( &val, &tmp, sizeof( double ) );
+      return val;
+   };
+
+   // Setup rowhashes and colhashes
+   Vec<uint64_t> rowhashes;
+   Vec<uint64_t> colhashes;
+   colhashes.resize( ncols + 2 );
+   rowhashes.resize( nrows + 4 );
+
+   const int LHS = ncols;
+   const int RHS = ncols + 1;
+
+   colhashes[LHS] = UINT64_MAX;
+   colhashes[RHS] = UINT64_MAX - 1;
+
+   const int OBJ = nrows;
+   const int INTEGRAL = nrows + 1;
+   const int LB = nrows + 2;
+   const int UB = nrows + 3;
+
+   rowhashes[OBJ] = UINT64_MAX - 2;
+   rowhashes[INTEGRAL] = UINT64_MAX - 3;
+   rowhashes[LB] = UINT64_MAX - 4;
+   rowhashes[UB] = UINT64_MAX - 5;
+
+   // Datastructure to save coefficients columnwise
+   Vec<std::pair<uint64_t, int>> csrvals;
+   Vec<int> csrstarts;
+   csrstarts.resize( nrows + 1 );
+   csrvals.reserve( nnz + 2 * nrows );
+
+   for( int i = 0; i < nrows; ++i )
+   {
+      csrstarts[i] = csrvals.size();
+
+      auto rowvec = cm.getRowCoefficients( i );
+      for( int k = 0; k < rowvec.getLength(); ++k )
+      {
+         uint64_t coef;
+         std::memcpy( &coef, rowvec.getValues() + k, sizeof( double ) );
+         csrvals.emplace_back( coef, rowvec.getIndices()[k] );
+      }
+
+      csrvals.emplace_back( lhs( i ), LHS );
+      csrvals.emplace_back( rhs( i ), RHS );
+   }
+
+   csrstarts[nrows] = csrvals.size();
+
+   // Datastructure to save coefficients rowwise
+   Vec<std::pair<uint64_t, int>> cscvals;
+   Vec<int> cscstarts;
+   cscstarts.resize( ncols + 1 );
+   cscvals.reserve( nnz + 4 * ncols );
+
+   for( int i = 0; i < ncols; ++i )
+   {
+      cscstarts[i] = cscvals.size();
+
+      auto colvec = cm.getColumnCoefficients( i );
+      for( int k = 0; k < colvec.getLength(); ++k )
+      {
+         uint64_t coef;
+         std::memcpy( &coef, colvec.getValues() + k, sizeof( double ) );
+         cscvals.emplace_back( coef, colvec.getIndices()[k] );
+      }
+
+      cscvals.emplace_back( obj( i ), OBJ );
+      cscvals.emplace_back( col_is_integral( i ), INTEGRAL );
+      cscvals.emplace_back( lb( i ), LB );
+      cscvals.emplace_back( ub( i ), UB );
+   }
+
+   cscstarts[ncols] = cscvals.size();
+
+   auto comp_rowvals = [&]( const std::pair<uint64_t, int>& a,
+                            const std::pair<uint64_t, int>& b ) {
+      return std::make_pair( a.first, colhashes[a.second] ) <
+             std::make_pair( b.first, colhashes[b.second] );
+   };
+
+   auto comp_colvals = [&]( const std::pair<uint64_t, int>& a,
+                            const std::pair<uint64_t, int>& b ) {
+      return std::make_pair( a.first, rowhashes[a.second] ) <
+             std::make_pair( b.first, rowhashes[b.second] );
+   };
+
+   // Prepare permutation to not compute all hashes in each step newly
+   Vec<int> colperm;
+   colperm.resize( ncols );
+   for( int i = 0; i < ncols; ++i )
+      colperm[i] = i;
+
+   Vec<int> rowperm;
+   rowperm.resize( nrows );
+   for( int i = 0; i < nrows; ++i )
+      rowperm[i] = i;
+
+   int iters = 0;
+
+   int ncols2 = ncols;
+   size_t lastncols = -1;
+   HashMap<uint64_t, size_t> distinct_col_hashes( ncols );
+
+   int nrows2 = nrows;
+   size_t lastnrows = -1;
+   HashMap<uint64_t, size_t> distinct_row_hashes( nrows );
+
+   // Compute column and row hashes
+   while( nrows2 != 0 && iters <= MAX_HASH_ITERS )
+   {
+      tbb::parallel_for(
+          tbb::blocked_range<int>( 0, nrows2 ),
+          [&]( const tbb::blocked_range<int>& r ) {
+             for( int i = r.begin(); i != r.end(); ++i )
+             {
+                int row = rowperm[i];
+                int start = csrstarts[row];
+                int end = csrstarts[row + 1];
+                pdqsort( &csrvals[start], &csrvals[end], comp_rowvals );
+
+                Hasher<uint64_t> hasher( end - start );
+                for( int k = start; k < end; ++k )
+                {
+                   hasher.addValue( csrvals[k].first );
+                   hasher.addValue( colhashes[csrvals[k].second] );
+                }
+
+                rowhashes[row] = hasher.getHash() >> 1;
+             }
+          } );
+
+      distinct_row_hashes.clear();
+
+      for( size_t i = 0; i < nrows2; ++i )
+         distinct_row_hashes[rowhashes[rowperm[i]]] += 1;
+
+      pdqsort( rowperm.begin(), rowperm.begin() + nrows2, [&]( int a, int b ) {
+         return std::make_tuple( -distinct_row_hashes[rowhashes[a]],
+                                 rowhashes[a], a ) <
+                std::make_tuple( -distinct_row_hashes[rowhashes[b]],
+                                 rowhashes[b], b );
+      } );
+
+      lastnrows = nrows2;
+      nrows2 = 0;
+
+      while( nrows2 < lastnrows )
+      {
+         uint64_t hashval = rowhashes[rowperm[nrows2]];
+         size_t partitionsize = distinct_row_hashes[hashval];
+         if( partitionsize <= 1 )
+            break;
+
+         nrows2 += partitionsize;
+      }
+
+      for( size_t i = nrows2; i < lastnrows; ++i )
+      {
+         rowhashes[rowperm[i]] = i;
+      }
+
+      if( nrows2 == lastnrows )
+      {
+         --nrows2;
+         std::swap( rowperm[0], rowperm[nrows2] );
+         rowhashes[rowperm[nrows2]] = nrows2;
+      }
+
+      if( ncols2 == 0 )
+         break;
+
+      tbb::parallel_for(
+          tbb::blocked_range<int>( 0, ncols2 ),
+          [&]( const tbb::blocked_range<int>& r ) {
+             for( int i = r.begin(); i != r.end(); ++i )
+             {
+                int col = colperm[i];
+                int start = cscstarts[col];
+                int end = cscstarts[col + 1];
+                pdqsort( &cscvals[start], &cscvals[end], comp_colvals );
+
+                Hasher<uint64_t> hasher( end - start );
+                for( int k = start; k < end; ++k )
+                {
+                   hasher.addValue( cscvals[k].first );
+                   hasher.addValue( rowhashes[cscvals[k].second] );
+                }
+
+                colhashes[col] = hasher.getHash() >> 1;
+             }
+          } );
+
+      distinct_col_hashes.clear();
+
+      for( size_t i = 0; i < ncols2; ++i )
+         distinct_col_hashes[colhashes[colperm[i]]] += 1;
+
+      pdqsort( colperm.begin(), colperm.begin() + ncols2, [&]( int a, int b ) {
+         return std::make_pair( -distinct_col_hashes[colhashes[a]],
+                                colhashes[a] ) <
+                std::make_pair( -distinct_col_hashes[colhashes[b]],
+                                colhashes[b] );
+      } );
+
+      lastncols = ncols2;
+      ncols2 = 0;
+
+      while( ncols2 < lastncols )
+      {
+         uint64_t hashval = colhashes[colperm[ncols2]];
+         size_t partitionsize = distinct_col_hashes[hashval];
+         if( partitionsize <= 1 )
+            break;
+
+         ncols2 += partitionsize;
+      }
+
+      for( size_t i = ncols2; i < lastncols; ++i )
+      {
+         colhashes[colperm[i]] = i;
+      }
+
+      ++iters;
+   }
+   // Sort hashes
+   pdqsort( rowhashes.begin(), rowhashes.end(),
+            []( uint64_t a, uint64_t b ) { return a < b; } );
+   pdqsort( colhashes.begin(), colhashes.end(),
+            []( uint64_t a, uint64_t b ) { return a < b; } );
+
+   // Put all values in the hasher
+   Hasher<uint64_t> hasher( nnz );
+   hasher.addValue( nrows );
+   hasher.addValue( ncols );
    hasher.addValue( prob.getNumIntegralCols() );
    hasher.addValue( prob.getNumContinuousCols() );
-   // std::pair<Vec<int>, Vec<int>> perm =
-   //     compute_row_and_column_permutation( prob, false );
-   // for( int row : perm.first )
-   //    hasher.addValue( row );
-   // for( int col : perm.second )
-   //    hasher.addValue( col );
-   NumericalStatistics<double> nstats( prob );
-   Num_stats<double> stats = nstats.getNum_stats();
-   hasher.addValue( doubleToUInt( stats.matrixMin ) );
-   hasher.addValue( doubleToUInt( stats.matrixMax ) );
-   hasher.addValue( doubleToUInt( stats.objMin ) );
-   hasher.addValue( doubleToUInt( stats.objMax ) );
-   hasher.addValue( doubleToUInt( stats.boundsMin ) );
-   hasher.addValue( doubleToUInt( stats.boundsMax ) );
-   hasher.addValue( doubleToUInt( stats.rhsMin ) );
-   hasher.addValue( doubleToUInt( stats.rhsMax ) );
-   hasher.addValue( doubleToUInt( stats.dynamism ) );
-   hasher.addValue( doubleToUInt( stats.rowDynamism ) );
-   hasher.addValue( doubleToUInt( stats.colDynamism ) );
-
+   for( uint64_t hash : rowhashes )
+      hasher.addValue( hash );
+   for( uint64_t hash : colhashes )
+      hasher.addValue( hash );
    return hasher.getHash();
 }
 
