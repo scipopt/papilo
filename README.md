@@ -1,28 +1,28 @@
 # PaPILO &mdash; Parallel Presolve for Integer and Linear Optimization
 
-PaPILO, a C++14 based software package, provides parallel presolve routines for (mixed integer) linear programming problems. The routines
+PaPILO, a C++14-based software package, provides parallel presolve routines for (mixed integer) linear programming problems. The routines
 are implemented using templates which allows switching to higher precision or rational arithmetic using the boost multiprecision package.
 
-Additionally to the distribution here in github under the LGPLv3, PaPILO is also distributed as part of the
+Additionally to the distribution here under the LGPLv3, PaPILO is also distributed as part of the
 SCIP Optimization Suite which is available under https://scipopt.org/.
 
 PaPILO can be used as a header-based library and also provides an executable.
 Using the executable it is possible to presolve and postsolve MILP instances based on files.
-Additionaly PaPILO can be linked to SCIP, SoPlex, and HiGHS (https://github.com/ERGO-Code/HiGHS) solvers and act as a frontend. In this setting PaPILO passes the presolved problem to those solvers and applies the postsolve step to the optimal solution.
+Additionally, PaPILO can be linked to SCIP, SoPlex, and HiGHS (https://github.com/ERGO-Code/HiGHS) solvers and act as a frontend. In this setting PaPILO passes the presolved problem to those solvers and applies the postsolve step to the optimal solution.
 
 When PaPILO is compiled as part of the SCIP Optimization Suite linking of SoPlex and SCIP solvers is performed automatically.
 
 # Dependencies
 
 External dependencies that need to be installed by the user are the Intel TBB runtime library and boost headers.
-The executable additional requires some of the boost runtime libraries that are not required when PaPILO is used as
+The executable additionally requires some of the boost runtime libraries that are not required when PaPILO is used as
 a library.
 Under the folder external/ there are additional packages that are directly included within PaPILO and have a
 liberal open-source license.
 
 Intel TBB is also included and PaPILO tries to compile a static version of TBB if the runtime library is missing.
 This fails on some systems currently and if any problems occur it is recommended to install an Intel TBB runtime library
-from, e.g., the systems package manager (`libtbb2` on debian/ubuntu based distributions).
+from, e.g., the systems package manager (`libtbb2` on debian/ubuntu-based distributions).
 
 # Building
 
@@ -41,9 +41,9 @@ PaPILO to find them in non-standard locations.
 # Usage of the binary
 
 The PaPILO binary provides a list of all available functionality when the help flag `-h` or `--help` is specified.
-The binary provides the three subcommands `solve`, `presolve`, and `postsolve`. If no solvers are linked the `solve` subcommand will fail and print that as a message.
+The binary provides the three subcommands `solve`, `presolve`, and `postsolve`. If no solvers are linked the `solve` subcommand will fail and print an error message.
 
-Next we provide a small example of how the binary can be used to apply presolving and postsolving to problem based on files.
+Next we provide a small example of how the binary can be used to apply presolving and postsolving based on files.
 
 Assuming a problem instance is stored in the file `problem.mps` the following call will apply presolving with standard settings and write the reduced problem to `reduced.mps` and all information that is needed for postsolve to the binary archive `reduced.postsolve`.
 ```
@@ -57,7 +57,7 @@ The format of the solution should be one value per line given like this:
 <variable name>        <value>
 ```
 This is compatible with the solutions given on the MIPLIB 2017 homepage https://miplib.zib.de and with the solutions written by the SCIP solver.
-Variable names that are not found in reduced problem are ignored.
+Variable names that are not found in the reduced problem are ignored.
 
 The command for applying the postsolve step to the solution `reduced.sol` is then
 ```
@@ -74,8 +74,8 @@ This will presolve the problem, pass the reduced problem to a solver, and subseq
 
 # Using PaPILO as a library
 
-As PaPILO provides a templated C++ interface the type used for numerical computations must be specified. During configuration time PaPILO scans the system and provides the fastest available numeric types for quadprecision and for exact rational arithmetic in the file
-`papilo/misc/MultiPrecision.hpp`. Including this file will introduce the types
+PaPILO provides a templated C++ interface that allows to specify the type used for numerical computations. During configuration time PaPILO scans the system and provides the fastest available numeric types for quadprecision and for exact rational arithmetic in the file
+`papilo/misc/MultiPrecision.hpp`. Including this file will currently introduce the types
 ```
 papilo::Quad
 papilo::Float100
@@ -83,17 +83,20 @@ papilo::Float500
 papilo::Float1000
 papilo::Rational
 ```
-The numeric type used by PaPILO will be reffered to as REAL in the following section. It can be any of above types as well as simply `double` for using standard double precision arithmetic.
+The numeric type used by PaPILO will be refered to as REAL in the following section. It can be any of the above types as well as simply `double` for using standard double precision arithmetic.
 
 To avoid confusion with types a short note on types like `papilo:Vec` and `papilo::String`.
-Those types are aliases for types from the standard library, `std::vector` and `std::string`, that possibly use an adjusted allocator. If nothing is altered regarding the allocator the type `papilo::Vec` will be exactly the same as `std::vector`.
+Those types are aliases for types from the standard library, `std::vector` and `std::string`, that possibly use an adjusted allocator. If nothing is altered regarding the allocator then the type `papilo::Vec` will be exactly the same as `std::vector`.
 It can be changed by adding a partial specialization of `papilo::AllocatorTraits<T>` after including `papilo/misc/Alloc.hpp` but before including any other header of PaPILO.
 
-The C++ interface for using PaPILO mainly evolves around the classes
-`papilo::Presolve<REAL>`, which controls the presolving routines, `papilo::Problem<REAL>` which holds the problem instance, and `papilo::Postsolve<REAL>`, which can transform solutions in the reduced space into solutions for the original problem space. The includes for those classes
-under `papilo/core/{Problem,Postsolve,Presolve}.hpp`.
+The C++ interface for using PaPILO mainly revolves around the classes
+*   `papilo::Presolve<REAL>`, which controls the presolving routines,
+*   `papilo::Problem<REAL>`, which holds the problem instance, and
+*   `papilo::Postsolve<REAL>`, which can transform solutions in the reduced space into solutions for the original problem space.
+The includes for those classes are under `papilo/core/{Problem,Postsolve,Presolve}.hpp`.
 
 ## Creating an instance of `papilo::Problem<REAL>`
+
 The PaPILO binary uses the MPS parsing routine to construct an instance of `papilo::Problem<REAL>` with the call `papilo::MpsParser<REAL>::loadProblem("problem.mps")`.
 
 For feeding a problem to PaPILO programmatically, there is the class
