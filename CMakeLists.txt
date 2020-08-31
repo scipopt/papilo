@@ -170,9 +170,6 @@ else()
    set(PAPILO_USE_STANDARD_HASHMAP 1)
 endif()
 
-configure_file("${PROJECT_SOURCE_DIR}/src/papilo/CMakeConfig.hpp.in"
-               "${PROJECT_BINARY_DIR}/papilo/CMakeConfig.hpp")
-
 add_library(papilo-core STATIC
    src/papilo/core/VariableDomains.cpp
    src/papilo/core/SparseStorage.cpp
@@ -205,6 +202,9 @@ target_compile_definitions(papilo-core PRIVATE PAPILO_USE_EXTERN_TEMPLATES)
 if(NOT PAPILO_NO_BINARIES)
    add_subdirectory(binaries)
 endif()
+
+configure_file("${PROJECT_SOURCE_DIR}/src/papilo/CMakeConfig.hpp.in"
+               "${PROJECT_BINARY_DIR}/papilo/CMakeConfig.hpp")
 
 # add tests
 enable_testing()
