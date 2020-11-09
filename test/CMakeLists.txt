@@ -30,7 +30,7 @@ else()
    set(PAPILOLIB_TARGET "")
 endif()
 
-add_executable(unit_test TestMain.cpp MatrixBuffer.cpp VectorUtils.cpp NumericalStatistics.cpp ${PAPILOLIB_TEST_FILE})
+add_executable(unit_test TestMain.cpp MatrixBuffer.cpp VectorUtils.cpp NumericalStatistics.cpp SparseStorage.cpp ${PAPILOLIB_TEST_FILE})
 target_link_libraries(unit_test papilo ${PAPILOLIB_TARGET} ${Boost_LIBRARIES})
 
 set(unit_tests
