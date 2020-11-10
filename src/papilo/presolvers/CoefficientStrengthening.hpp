@@ -55,6 +55,7 @@ extern template class CoefficientStrengthening<Rational>;
 #endif
 
 template <typename REAL>
+
 PresolveStatus
 CoefficientStrengthening<REAL>::execute(
     const Problem<REAL>& problem, const ProblemUpdate<REAL>& problemUpdate,
@@ -65,7 +66,7 @@ CoefficientStrengthening<REAL>::execute(
    const auto& domains = problem.getVariableDomains();
    const auto& cflags = domains.flags;
    const auto& activities = problem.getRowActivities();
-   const auto& changedactivities = problemUpdate.getChangedActivities();
+   const auto& changedActivities = problemUpdate.getChangedActivities();
 
    const auto& constMatrix = problem.getConstraintMatrix();
    const auto& lhs_values = constMatrix.getLeftHandSides();
@@ -76,7 +77,7 @@ CoefficientStrengthening<REAL>::execute(
 
    Vec<std::pair<REAL, int>> integerCoefficients;
 
-   for( int i : changedactivities )
+   for( int i : changedActivities )
    {
       auto rowcoefficients = constMatrix.getRowCoefficients( i );
       const REAL* coefficients = rowcoefficients.getValues();
