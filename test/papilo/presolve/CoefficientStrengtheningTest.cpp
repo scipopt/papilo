@@ -25,76 +25,60 @@
 #include "papilo/core/PresolveMethod.hpp"
 #include "papilo/core/Problem.hpp"
 #include "papilo/core/ProblemBuilder.hpp"
-#include "papilo/presolvers/FixContinuous.hpp"
+#include "papilo/presolvers/CoefficientStrengthening.hpp"
 
 using namespace papilo;
 
 Problem<double>
-setupProblemForTest( double upperBoundForVar3 );
+setupProblemForCoefficientStrengthening();
 
-TEST_CASE( "happy path - presolve fix continuous", "[presolve]" )
+TEST_CASE( "happy path - coefficient strengthening", "[presolve]" )
 {
    Num<double> num{};
-   Problem<double> problem = setupProblemForTest( num.getFeasTol() / 4 );
+   Problem<double> problem = setupProblemForCoefficientStrengthening();
    Statistics statistics{};
    PresolveOptions presolveOptions{};
    Postsolve<double> postsolve = Postsolve<double>( problem, num );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num );
-   FixContinuous<double> presolvingMethod{};
+   CoefficientStrengthening<double> presolvingMethod{};
    Reductions<double> reductions{};
    PresolveStatus presolveStatus =
        presolvingMethod.execute( problem, problemUpdate, num, reductions );
+   //TODO: tests scheitert weil maxact changed von problem Update empty ist
    BOOST_ASSERT( presolveStatus == PresolveStatus::kReduced );
-   BOOST_ASSERT( reductions.size() == 2 );
-   BOOST_ASSERT( reductions.getReduction( 0 ).col == 2 );
-   BOOST_ASSERT( reductions.getReduction( 0 ).row ==
-                 ColReduction::BOUNDS_LOCKED );
-   BOOST_ASSERT( reductions.getReduction( 0 ).newval == 0 );
-   BOOST_ASSERT( reductions.getReduction( 1 ).row == ColReduction::FIXED );
-   BOOST_ASSERT( reductions.getReduction( 1 ).col == 2 );
-   BOOST_ASSERT( reductions.getReduction( 1 ).newval == 0 );
-}
-
-TEST_CASE( "happy path - no presolve fix continuous", "[presolve]" )
-{
-   Num<double> num{};
-   Problem<double> problem = setupProblemForTest( num.getFeasTol() );
-   Statistics statistics{};
-   PresolveOptions presolveOptions{};
-   Postsolve<double> postsolve = Postsolve<double>( problem, num );
-   ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
-                                        presolveOptions, num );
-   FixContinuous<double> presolvingMethod{};
-   Reductions<double> reductions{};
-   PresolveStatus presolveStatus =
-       presolvingMethod.execute( problem, problemUpdate, num, reductions );
-   BOOST_ASSERT( presolveStatus == PresolveStatus::kUnchanged );
-   BOOST_ASSERT( reductions.size() == 0 );
+//   BOOST_ASSERT( reductions.size() == 2 );
+//   BOOST_ASSERT( reductions.getReduction( 0 ).col == 2 );
+//   BOOST_ASSERT( reductions.getReduction( 0 ).row ==
+//                 ColReduction::BOUNDS_LOCKED );
+//   BOOST_ASSERT( reductions.getReduction( 0 ).newval == 0 );
+//   BOOST_ASSERT( reductions.getReduction( 1 ).row == ColReduction::FIXED );
+//   BOOST_ASSERT( reductions.getReduction( 1 ).col == 2 );
+//   BOOST_ASSERT( reductions.getReduction( 1 ).newval == 0 );
 }
 
 Problem<double>
-setupProblemForTest( double upperBoundForVar3 )
+setupProblemForCoefficientStrengthening()
 {
    Vec<double> coefficients{ 1.0, 1.0, 1.0 };
-   Vec<double> upperBounds{ 10.0, 10.0, upperBoundForVar3 };
+   Vec<double> upperBounds{ 10.0, 10.0, 10.0 };
    Vec<double> lowerBounds{ 0.0, 0.0, 0.0 };
-   Vec<uint8_t> isIntegral{ 1, 1, 0 };
+   Vec<uint8_t> isIntegral{ 1, 1, 1 };
 
    Vec<double> rhs{ 1.0, 2.0 };
    Vec<std::string> rowNames{ "A1", "A2" };
    Vec<std::string> columnNames{ "c1", "c2", "c3" };
    Vec<std::tuple<int, int, double>> entries{
-       std::tuple<int, int, double>{ 0, 0, 1.0 },
-       std::tuple<int, int, double>{ 0, 1, 2.0 },
-       std::tuple<int, int, double>{ 0, 2, 3.0 },
-       std::tuple<int, int, double>{ 1, 1, 2.0 },
+       std::tuple<int, int, double>{ 0, 0, 10.0 },
+       std::tuple<int, int, double>{ 0, 1, 10.0 },
+       std::tuple<int, int, double>{ 1, 1, 20.0 },
+       std::tuple<int, int, double>{ 1, 2, 30.0 },
    };
 
    ProblemBuilder<double> pb;
-   pb.reserve( 4, 2, 3 );
-   pb.setNumRows( 2 );
-   pb.setNumCols( 3 );
+   pb.reserve( entries.size(), rowNames.size(), columnNames.size() );
+   pb.setNumRows( rowNames.size() );
+   pb.setNumCols( columnNames.size() );
    pb.setColUbAll( upperBounds );
    pb.setColLbAll( lowerBounds );
    pb.setObjAll( coefficients );
@@ -103,7 +87,7 @@ setupProblemForTest( double upperBoundForVar3 )
    pb.setRowRhsAll( rhs );
    pb.addEntryAll( entries );
    pb.setColNameAll( columnNames );
-   pb.setProblemName( "matrix with potential continuous fix" );
+   pb.setProblemName( "coefficient strengthening matrix" );
    Problem<double> problem = pb.build();
    return problem;
 }

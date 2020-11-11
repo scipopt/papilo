@@ -40,7 +40,7 @@ class SimplifyInequalities : public PresolveMethod<REAL>
    computeGCD( REAL gcd, REAL val, const Num<REAL>& num );
 
    void
-   simplify( const REAL* values, const int* colinds, int rowlen,
+   simplify( const REAL* values, const int* colinds, int rowLength,
              const RowActivity<REAL>& activity, const RowFlags& rflag,
              const Vec<ColFlags>& cflags, const REAL& rhs, const REAL& lhs,
              const Vec<REAL>& lbs, const Vec<REAL>& ubs, Vec<int>& colOrder,
@@ -124,20 +124,20 @@ SimplifyInequalities<REAL>::computeGCD( REAL val1, REAL val2,
 template <typename REAL>
 void
 SimplifyInequalities<REAL>::simplify(
-    const REAL* values, const int* colinds, int rowlen,
+    const REAL* values, const int* colinds, int rowLength,
     const RowActivity<REAL>& activity, const RowFlags& rflag,
     const Vec<ColFlags>& cflags, const REAL& rhs, const REAL& lhs,
     const Vec<REAL>& lbs, const Vec<REAL>& ubs, Vec<int>& colOrder,
     Vec<int>& coeffDelete, REAL& gcd, bool& change, const Num<REAL>& num )
 {
-   auto maxact = activity.max;
-   auto minact = activity.min;
+   auto maxActivity = activity.max;
+   auto minActivity = activity.min;
 
    // 'colOrder' contains indices of 'values'; colOrder[0] is index of biggest
    // absolut coefficient in 'values' (of integer variables)
 
    // order variables
-   for( int i = 0; i != rowlen; ++i )
+   for( int i = 0; i != rowLength; ++i )
    {
       colOrder.push_back( i );
    }
@@ -156,8 +156,8 @@ SimplifyInequalities<REAL>::simplify(
 
    // check if continuous variables or variables with small absolut value
    // always fit into the constraint
-   REAL resmaxact = maxact;
-   REAL resminact = minact;
+   REAL resmaxact = maxActivity;
+   REAL resminact = minActivity;
    assert( num.isGE( resmaxact, resminact ) );
 
    // start value important for first variable
@@ -169,7 +169,7 @@ SimplifyInequalities<REAL>::simplify(
    int i = 0;
 
    // iterate over ordered non-zero entries
-   for( ; i != rowlen; ++i )
+   for( ; i != rowLength; ++i )
    {
       // index of variable in rowvec
       int v = colOrder[i];
@@ -225,7 +225,7 @@ SimplifyInequalities<REAL>::simplify(
    {
       change = true;
       // safe indices of redundant variables
-      for( int w = i + 1; w < rowlen; ++w )
+      for( int w = i + 1; w < rowLength; ++w )
       {
          coeffDelete.push_back( colOrder[w] );
       }

@@ -32,6 +32,9 @@ endif()
 
 add_executable(unit_test TestMain.cpp MatrixBuffer.cpp VectorUtils.cpp NumericalStatistics.cpp SparseStorage.cpp
         papilo/presolve/FixContinuousTest.cpp
+        papilo/presolve/SingletonColsTest.cpp
+        papilo/presolve/ParallelRowDetectionTest.cpp
+        papilo/presolve/CoefficientStrengtheningTest.cpp
         ${PAPILOLIB_TEST_FILE})
 target_link_libraries(unit_test papilo ${PAPILOLIB_TARGET} ${Boost_LIBRARIES})
 
