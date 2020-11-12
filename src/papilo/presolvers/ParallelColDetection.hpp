@@ -91,18 +91,18 @@ class ParallelColDetection : public PresolveMethod<REAL>
    };
 
    void
-   findParallelCols( const Num<REAL>& num, const int* bucket, int bucketsize,
+   findParallelCols( const Num<REAL>& num, const int* bucket, int bucketSize,
                      const ConstraintMatrix<REAL>& constMatrix,
                      const Vec<REAL>& obj, const VariableDomains<REAL>& domains,
                      Vec<std::pair<int, int>>& parallelCols );
 
    void
    computeColHashes( const ConstraintMatrix<REAL>& constMatrix,
-                     const Vec<REAL>& obj, unsigned int* colhashes );
+                     const Vec<REAL>& obj, unsigned int* columnHashes );
 
    void
    computeSupportId( const ConstraintMatrix<REAL>& constMatrix,
-                     unsigned int* supporthashes );
+                     unsigned int* supportHashes );
 
  public:
    ParallelColDetection() : PresolveMethod<REAL>()
@@ -120,6 +120,11 @@ class ParallelColDetection : public PresolveMethod<REAL>
       return false;
    }
 
+   int
+   determineBucketSize( int nColumns, std::unique_ptr<unsigned int[]>& supportid,
+                        std::unique_ptr<unsigned int[]>& coefhash,
+                        std::unique_ptr<int[]>& column, int i );
+
    virtual PresolveStatus
    execute( const Problem<REAL>& problem,
             const ProblemUpdate<REAL>& problemUpdate, const Num<REAL>& num,
@@ -135,12 +140,12 @@ extern template class ParallelColDetection<Rational>;
 template <typename REAL>
 void
 ParallelColDetection<REAL>::findParallelCols(
-    const Num<REAL>& num, const int* bucket, int bucketsize,
+    const Num<REAL>& num, const int* bucket, int bucketSize,
     const ConstraintMatrix<REAL>& constMatrix, const Vec<REAL>& obj,
     const VariableDomains<REAL>& domains,
     Vec<std::pair<int, int>>& parallelCols )
 {
-   // TODO if bucketsize too large do gurobi trick
+   // TODO if bucketSize too large do gurobi trick
    const Vec<ColFlags>& cflags = domains.flags;
    const Vec<REAL>& lbs = domains.lower_bounds;
    const Vec<REAL>& ubs = domains.upper_bounds;
@@ -173,7 +178,7 @@ ParallelColDetection<REAL>::findParallelCols(
       // find a value in the domain of column 2 to constitute the
       // value the all values in the domain of the merged column.
       // If no such value is found the columns cannot be merged
-      bool foundhole = false;
+      bool foundHole = false;
       while( num.isLE( mergeval, mergeub ) )
       {
          // initialize col1val with the lower bound of column 1
@@ -185,7 +190,7 @@ ParallelColDetection<REAL>::findParallelCols(
          // 1, otherwise we found a hole If that check failed for
          // the current col1val we increase it by 1 the upper bound
          // of column 1 is reached
-         foundhole = true;
+         foundHole = true;
          while( num.isLE( col1val, ubs[col1] ) )
          {
             REAL col2val = mergeval - col1val * scale2;
@@ -193,7 +198,7 @@ ParallelColDetection<REAL>::findParallelCols(
             if( num.isIntegral( col2val ) && num.isGE( col2val, lbs[col2] ) &&
                 num.isLE( col2val, ubs[col2] ) )
             {
-               foundhole = false;
+               foundHole = false;
                break;
             }
 
@@ -201,17 +206,17 @@ ParallelColDetection<REAL>::findParallelCols(
          }
 
          // if a hole was found we can stop
-         if( foundhole )
+         if( foundHole )
             break;
 
          // test next value in domain
          mergeval += 1;
       }
 
-      return foundhole;
+      return foundHole;
    };
 
-   for( int i = 0; i < bucketsize; ++i )
+   for( int i = 0; i < bucketSize; ++i )
    {
       int col1 = bucket[i];
       auto col1vec = constMatrix.getColumnCoefficients( col1 );
@@ -223,7 +228,7 @@ ParallelColDetection<REAL>::findParallelCols(
       if( length < 2 )
          return;
 
-      for( int j = i + 1; j < bucketsize; ++j )
+      for( int j = i + 1; j < bucketSize; ++j )
       {
          int col2 = bucket[j];
          auto col2vec = constMatrix.getColumnCoefficients( col2 );
@@ -347,7 +352,7 @@ template <typename REAL>
 void
 ParallelColDetection<REAL>::computeColHashes(
     const ConstraintMatrix<REAL>& constMatrix, const Vec<REAL>& obj,
-    unsigned int* colhashes )
+    unsigned int* columnHashes )
 {
    tbb::parallel_for(
        tbb::blocked_range<int>( 0, constMatrix.getNCols() ),
@@ -355,10 +360,9 @@ ParallelColDetection<REAL>::computeColHashes(
           for( int i = r.begin(); i != r.end(); ++i )
           {
              // compute hash-value for coefficients
-
-             auto colcoefs = constMatrix.getColumnCoefficients( i );
-             const REAL* vals = colcoefs.getValues();
-             const int len = colcoefs.getLength();
+             auto columnCoefficients = constMatrix.getColumnCoefficients( i );
+             const REAL* values = columnCoefficients.getValues();
+             const int len = columnCoefficients.getLength();
 
              Hasher<unsigned int> hasher( len );
 
@@ -369,19 +373,21 @@ ParallelColDetection<REAL>::computeColHashes(
                 // the constant is arbitrary and is used to make cases
                 // where two coefficients that are equal
                 // within epsilon get different values are
-                // more unlikely by choosign some irrational number
-                REAL scale = REAL( 2.0 / ( 1.0 + sqrt( 5.0 ) ) ) / vals[0];
+                // more unlikely by choose some irrational number
+                //TODO: define constant? bzw vorher berechnen
+                REAL scale = REAL( 2.0 / ( 1.0 + sqrt( 5.0 ) ) ) / values[0];
 
                 // add scaled coefficients of other row
                 // entries to compute the hash
                 for( int j = 1; j != len; ++j )
-                   hasher.addValue( Num<REAL>::hashCode( vals[j] * scale ) );
-
+                {
+                   hasher.addValue( Num<REAL>::hashCode( values[j] * scale ) );
+                }
                 if( obj[i] != 0 )
                    hasher.addValue( Num<REAL>::hashCode( obj[i] * scale ) );
              }
 
-             colhashes[i] = hasher.getHash();
+             columnHashes[i] = hasher.getHash();
           }
        } );
 }
@@ -389,7 +395,7 @@ ParallelColDetection<REAL>::computeColHashes(
 template <typename REAL>
 void
 ParallelColDetection<REAL>::computeSupportId(
-    const ConstraintMatrix<REAL>& constMatrix, unsigned int* supporthashes )
+    const ConstraintMatrix<REAL>& constMatrix, unsigned int* supportHashes )
 {
    using SupportMap =
        HashMap<std::pair<int, const int*>, int, SupportHash, SupportEqual>;
@@ -407,9 +413,9 @@ ParallelColDetection<REAL>::computeSupportId(
           supportMap.emplace( std::make_pair( length, support ), i );
 
       if( insResult.second )
-         supporthashes[i] = i;
+         supportHashes[i] = i;
       else // support already exists, use the previous support id
-         supporthashes[i] = insResult.first->second;
+         supportHashes[i] = insResult.first->second;
    }
 }
 
@@ -464,29 +470,16 @@ ParallelColDetection<REAL>::execute( const Problem<REAL>& problem,
 
    for( int i = 0; i < ncols; )
    {
-      // determine size of bucket
-      int j;
-      for( j = i + 1; j < ncols; ++j )
-      {
-         if( coefhash[col[i]] != coefhash[col[j]] ||
-             supportid[col[i]] != supportid[col[j]] )
-            break;
-      }
-      int len = j - i;
+      int bucketSize = determineBucketSize(ncols, supportid, coefhash, col, i);
 
-      // if more  than one col is in the bucket try to find parallel
-      // cols
-      if( len > 1 )
+      // if more than one col is in the bucket try to find parallel cols
+      if( bucketSize > 1 )
       {
-         // fmt::print( "bucket of length {} starting at {}\n", len, i
-         // );
-         findParallelCols( num, col.get() + i, len, constMatrix, obj,
+         findParallelCols( num, col.get() + i, bucketSize, constMatrix, obj,
                            problem.getVariableDomains(), parallelCols );
       }
 
-      assert( j > i );
-      // set i to start of next bucket
-      i = j;
+      i = i + bucketSize;
    }
 
    if( !parallelCols.empty() )
@@ -517,6 +510,26 @@ ParallelColDetection<REAL>::execute( const Problem<REAL>& problem,
    }
 
    return result;
+}
+
+template <typename REAL>
+int
+ParallelColDetection<REAL>::determineBucketSize(
+    int nColumns, std::unique_ptr<unsigned int[]>& supportid,
+    std::unique_ptr<unsigned int[]>& coefficentHashes, std::unique_ptr<int[]>& column,
+    int i )
+{
+   int j;
+   for( j = i + 1; j < nColumns; ++j )
+   {
+      if( coefficentHashes[column[i]] != coefficentHashes[column[j]] ||
+          supportid[column[i]] != supportid[column[j]] )
+      {
+         break;
+      }
+   }
+   assert( j > i );
+   return j - i;
 }
 
 } // namespace papilo

@@ -1,18 +1,11 @@
-#add_executable(sparse_storage SparseStorage.cpp)
 #add_executable(coef_stren CoefStren.cpp)
 #add_executable(aggregation Aggregation.cpp)
 
-#target_link_libraries(sparse_storage ${TBB_IMPORTED_TARGETS})
-#target_link_libraries(common ${TBB_IMPORTED_TARGETS})
 #target_link_libraries(coef_stren ${TBB_IMPORTED_TARGETS})
 #target_link_libraries(aggregation ${TBB_IMPORTED_TARGETS})
-#target_link_libraries(parallel_rows ${TBB_IMPORTED_TARGETS})
 
-#add_test(NAME SparseStorage COMMAND sparse_storage )
-#add_test(NAME Common COMMAND common )
 #add_test(NAME CoefStren COMMAND coef_stren)
 #add_test(NAME Aggregation COMMAND aggregation)
-#add_test(NAME ParallelRows COMMAND parallel_rows)
 
 if(TARGET papilolib)
    set(PAPILOLIB_TESTS
@@ -31,6 +24,7 @@ add_executable(unit_test TestMain.cpp MatrixBuffer.cpp VectorUtils.cpp Numerical
         papilo/presolve/FixContinuousTest.cpp
         papilo/presolve/SingletonColsTest.cpp
         papilo/presolve/ParallelRowDetectionTest.cpp
+        papilo/presolve/ParallelColDetectionTest.cpp
         papilo/presolve/CoefficientStrengtheningTest.cpp
         ${PAPILOLIB_TEST_FILE})
 target_link_libraries(unit_test papilo ${PAPILOLIB_TARGET} ${Boost_LIBRARIES})
@@ -42,13 +36,10 @@ set(unit_tests
  ${PAPILOLIB_TESTS}
   )
 
-#
 # add a test to build the SCIP binary that all further tests depend on
-#
 add_test(NAME unit-test-build
         COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target unit_test
         )
-
 
 set_tests_properties(unit-test-build
                      PROPERTIES
@@ -63,9 +54,8 @@ foreach(test ${unit_tests})
 endforeach()
 
 if(TARGET papilo-executable AND PAPILO_HAVE_SCIP)
-   #
+
    # MIP instances
-   #
    set(instances_MIP
        "instances/bell5.mps\;8966406.49152"
        "instances/blend2.mps\;7.598985"
