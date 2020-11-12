@@ -22,7 +22,7 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 #include "papilo/misc/NumericalStatistics.hpp"
-#include "../test/instances/Instances.hpp"
+#include "../instances/Instances.hpp"
 #include "catch/catch.hpp"
 #include "papilo/misc/fmt.hpp"
 
@@ -33,8 +33,7 @@ TEST_CASE( "accurate-numerical-statistics", "[misc]" )
    /// Check if statistics are printed correctly
 
    // bell5
-   Problem<double> prob = instances::bell5();
-   NumericalStatistics<double> nstats( prob );
+   NumericalStatistics<double> nstats( instances::bell5() );
    const Num_stats<double>& stats = nstats.getNum_stats();
    REQUIRE( fmt::format( "{:.0e}", double( stats.matrixMin ) ) == "8e-05" );
    REQUIRE( fmt::format( "{:.0e}", stats.matrixMax ) == "1e+03" );
@@ -46,8 +45,7 @@ TEST_CASE( "accurate-numerical-statistics", "[misc]" )
    REQUIRE( fmt::format( "{:.0e}", stats.rhsMax ) == "7e+03" );
 
    // blend2
-   Problem<double> prob1 = instances::blend2();
-   NumericalStatistics<double> nstats1( prob1 );
+   NumericalStatistics<double> nstats1( instances::blend2() );
    const Num_stats<double>& stats1 = nstats1.getNum_stats();
    REQUIRE( fmt::format( "{:.0e}", stats1.matrixMin ) == "1e+00" );
    REQUIRE( fmt::format( "{:.0e}", stats1.matrixMax ) == "7e+03" );
@@ -59,8 +57,7 @@ TEST_CASE( "accurate-numerical-statistics", "[misc]" )
    REQUIRE( fmt::format( "{:.0e}", stats1.rhsMax ) == "1e+03" );
 
    // dcmulti
-   Problem<double> prob2 = instances::dcmulti();
-   NumericalStatistics<double> nstats2( prob2 );
+   NumericalStatistics<double> nstats2( instances::dcmulti() );
    const Num_stats<double>& stats2 = nstats2.getNum_stats();
    REQUIRE( fmt::format( "{:.0e}", stats2.matrixMin ) == "1e+00" );
    REQUIRE( fmt::format( "{:.0e}", stats2.matrixMax ) == "6e+02" );
@@ -72,8 +69,7 @@ TEST_CASE( "accurate-numerical-statistics", "[misc]" )
    REQUIRE( fmt::format( "{:.0e}", stats2.rhsMax ) == "3e+02" );
 
    // egout
-   Problem<double> prob3 = instances::egout();
-   NumericalStatistics<double> nstats3( prob3 );
+   NumericalStatistics<double> nstats3( instances::egout() );
    const Num_stats<double>& stats3 = nstats3.getNum_stats();
    REQUIRE( fmt::format( "{:.0e}", stats3.matrixMin ) == "1e+00" );
    REQUIRE( fmt::format( "{:.0e}", stats3.matrixMax ) == "1e+02" );
@@ -152,8 +148,7 @@ TEST_CASE( "accurate-numerical-statistics", "[misc]" )
    REQUIRE( fmt::format( "{:.0e}", stats8.rhsMax ) == "2e+02" );
 
    // p0548
-   Problem<double> prob9 = instances::p0548();
-   NumericalStatistics<double> nstats9( prob9 );
+   NumericalStatistics<double> nstats9( instances::p0548() );
    const Num_stats<double>& stats9 = nstats9.getNum_stats();
    REQUIRE( fmt::format( "{:.0e}", stats9.matrixMin ) == "1e+00" );
    REQUIRE( fmt::format( "{:.0e}", stats9.matrixMax ) == "1e+04" );
@@ -165,8 +160,7 @@ TEST_CASE( "accurate-numerical-statistics", "[misc]" )
    REQUIRE( fmt::format( "{:.0e}", stats9.rhsMax ) == "1e+04" );
 
    // rgn
-   Problem<double> prob10 = instances::rgn();
-   NumericalStatistics<double> nstats10( prob10 );
+   NumericalStatistics<double> nstats10( instances::rgn() );
    const Num_stats<double>& stats10 = nstats10.getNum_stats();
    REQUIRE( fmt::format( "{:.0e}", stats10.matrixMin ) == "1e+00" );
    REQUIRE( fmt::format( "{:.0e}", stats10.matrixMax ) == "5e+00" );

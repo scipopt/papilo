@@ -43,8 +43,10 @@ TEST_CASE( "happy path - presolve fix continuous", "[presolve]" )
                                         presolveOptions, num );
    FixContinuous<double> presolvingMethod{};
    Reductions<double> reductions{};
+
    PresolveStatus presolveStatus =
        presolvingMethod.execute( problem, problemUpdate, num, reductions );
+
    BOOST_ASSERT( presolveStatus == PresolveStatus::kReduced );
    BOOST_ASSERT( reductions.size() == 2 );
    BOOST_ASSERT( reductions.getReduction( 0 ).col == 2 );

@@ -20,12 +20,21 @@ else()
    set(PAPILOLIB_TARGET "")
 endif()
 
-add_executable(unit_test TestMain.cpp MatrixBuffer.cpp VectorUtils.cpp NumericalStatistics.cpp SparseStorage.cpp
+add_executable(unit_test TestMain.cpp
+        papilo/InstancesTest.cpp
+
+        papilo/core/MatrixBufferTest.cpp
+        papilo/core/SparseStorageTest.cpp
+
+        papilo/misc/VectorUtilsTest.cpp
+
+        #papilo/presolve/CoefStren.cpp
+        papilo/presolve/CoefficientStrengtheningTest.cpp
         papilo/presolve/FixContinuousTest.cpp
-        papilo/presolve/SingletonColsTest.cpp
+        #papilo/presolve/FreeVarSubstitutionTest.cpp.cpp
         papilo/presolve/ParallelRowDetectionTest.cpp
         papilo/presolve/ParallelColDetectionTest.cpp
-        papilo/presolve/CoefficientStrengtheningTest.cpp
+        papilo/presolve/SingletonColsTest.cpp
         ${PAPILOLIB_TEST_FILE})
 target_link_libraries(unit_test papilo ${PAPILOLIB_TARGET} ${Boost_LIBRARIES})
 

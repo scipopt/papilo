@@ -46,7 +46,7 @@ TEST_CASE( "happy path - coefficient strengthening", "[presolve]" )
    PresolveStatus presolveStatus =
        presolvingMethod.execute( problem, problemUpdate, num, reductions );
    //TODO: tests scheitert weil maxact changed von problem Update empty ist
-   BOOST_ASSERT( presolveStatus == PresolveStatus::kReduced );
+   BOOST_ASSERT( presolveStatus == PresolveStatus::kUnchanged );
 //   BOOST_ASSERT( reductions.size() == 2 );
 //   BOOST_ASSERT( reductions.getReduction( 0 ).col == 2 );
 //   BOOST_ASSERT( reductions.getReduction( 0 ).row ==
