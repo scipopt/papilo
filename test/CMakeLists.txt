@@ -1,9 +1,6 @@
 #add_executable(sparse_storage SparseStorage.cpp)
-#add_executable(common Common.cpp)
 #add_executable(coef_stren CoefStren.cpp)
 #add_executable(aggregation Aggregation.cpp)
-#todo add if fixed
-#add_executable(parallel_rows ParallelRows.cpp)
 
 #target_link_libraries(sparse_storage ${TBB_IMPORTED_TARGETS})
 #target_link_libraries(common ${TBB_IMPORTED_TARGETS})
