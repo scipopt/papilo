@@ -219,7 +219,7 @@ install(FILES
 install(FILES
         ${PROJECT_SOURCE_DIR}/src/papilo/core/Components.hpp
         ${PROJECT_SOURCE_DIR}/src/papilo/core/ConstraintMatrix.hpp
-        ${PROJECT_SOURCE_DIR}/src/papilo/core/MatrixBuffer.hpp
+        ${PROJECT_SOURCE_DIR}/src/papilo/core/MatrixBufferTest.hpp
         ${PROJECT_SOURCE_DIR}/src/papilo/core/Objective.hpp
         ${PROJECT_SOURCE_DIR}/src/papilo/core/Postsolve.hpp
         ${PROJECT_SOURCE_DIR}/src/papilo/core/Presolve.hpp
@@ -264,7 +264,7 @@ install(FILES
    ${PROJECT_SOURCE_DIR}/src/papilo/misc/KktChecker.hpp
    ${PROJECT_SOURCE_DIR}/src/papilo/misc/KktCheckHelper.hpp
    ${PROJECT_SOURCE_DIR}/src/papilo/misc/MultiPrecision.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/misc/NumericalStatistics.hpp
+        ${PROJECT_SOURCE_DIR}/src/papilo/misc/InstancesTest.hpp
    ${PROJECT_SOURCE_DIR}/src/papilo/misc/Num.hpp
    ${PROJECT_SOURCE_DIR}/src/papilo/misc/OptionsParser.hpp
    ${PROJECT_SOURCE_DIR}/src/papilo/misc/ParameterSet.hpp
