@@ -730,9 +730,10 @@ class Problem
       return std::make_pair( nremoved, nnewfreevars );
    }
 
+   //TODO kann das geloescht werden
    template <typename Archive>
    void
-   serialize( Archive& ar, const unsigned int version )
+   serialize( Archive& ar )
    {
       ar& name;
       ar& inputTolerance;
