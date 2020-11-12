@@ -1,12 +1,3 @@
-#add_executable(coef_stren CoefStren.cpp)
-#add_executable(aggregation Aggregation.cpp)
-
-#target_link_libraries(coef_stren ${TBB_IMPORTED_TARGETS})
-#target_link_libraries(aggregation ${TBB_IMPORTED_TARGETS})
-
-#add_test(NAME CoefStren COMMAND coef_stren)
-#add_test(NAME Aggregation COMMAND aggregation)
-
 if(TARGET papilolib)
    set(PAPILOLIB_TESTS
       "papilolib"
@@ -28,13 +19,13 @@ add_executable(unit_test TestMain.cpp
 
         papilo/misc/VectorUtilsTest.cpp
 
-        #papilo/presolve/CoefStren.cpp
-        papilo/presolve/CoefficientStrengtheningTest.cpp
+        #papilo/presolve/CoefficientStrengtheningTest.cpp
         papilo/presolve/FixContinuousTest.cpp
         #papilo/presolve/FreeVarSubstitutionTest.cpp.cpp
         papilo/presolve/ParallelRowDetectionTest.cpp
         papilo/presolve/ParallelColDetectionTest.cpp
         papilo/presolve/SingletonColsTest.cpp
+        #papilo/presolve/SimpleProbingTest.cpp
         ${PAPILOLIB_TEST_FILE})
 target_link_libraries(unit_test papilo ${PAPILOLIB_TARGET} ${Boost_LIBRARIES})
 

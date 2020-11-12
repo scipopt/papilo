@@ -178,6 +178,7 @@ SingletonCols<REAL>::execute( const Problem<REAL>& problem,
          assert( !rflags[row].test( RowFlag::kLhsInf, RowFlag::kRhsInf ) );
          assert( lhs_values[row] == rhs_values[row] );
 
+         //singleton rows are already check in trivial presolve
          if( rowSizes[row] <= 1 )
             continue;
 
@@ -212,18 +213,18 @@ SingletonCols<REAL>::execute( const Problem<REAL>& problem,
             auto rowvec = constMatrix.getRowCoefficients( row );
             const int* rowinds = rowvec.getIndices();
             const REAL* rowvals = rowvec.getValues();
-            for( int i = 0; i != rowvec.getLength(); ++i )
+            for( int k = 0; k != rowvec.getLength(); ++k )
             {
-               if( rowinds[i] == col )
+               if( rowinds[k] == col )
                   continue;
 
-               if( !cflags[rowinds[i]].test( ColFlag::kIntegral ) )
+               if( !cflags[rowinds[k]].test( ColFlag::kIntegral ) )
                {
                   unsuitableForSubstitution = true;
                   break;
                }
 
-               if( !num.isIntegral( rowvals[i] / val ) )
+               if( !num.isIntegral( rowvals[k] / val ) )
                {
                   unsuitableForSubstitution = true;
                   break;

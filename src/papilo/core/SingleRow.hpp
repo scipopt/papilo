@@ -64,11 +64,11 @@ struct RowActivity
    /// maximal activity of the row
    REAL max;
 
-   /// number of variables that contribute with an infinite obund to the minimal
+   /// number of variables that contribute with an infinite bound to the minimal
    /// activity of this row
    int ninfmin;
 
-   /// number of variables that contribute with an infinite obund to the maximal
+   /// number of variables that contribute with an infinite bound to the maximal
    /// activity of this row
    int ninfmax;
 
