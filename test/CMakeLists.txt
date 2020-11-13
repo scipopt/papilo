@@ -20,8 +20,10 @@ add_executable(unit_test TestMain.cpp
         papilo/misc/VectorUtilsTest.cpp
 
         #papilo/presolve/CoefficientStrengtheningTest.cpp
+        #papilo/presolve/ConstraintPropagationTest.cpp
         papilo/presolve/FixContinuousTest.cpp
-        #papilo/presolve/FreeVarSubstitutionTest.cpp.cpp
+        #papilo/presolve/FreeVarSubstitutionTest.cpp
+        papilo/presolve/ImplIntDetectionTest.cpp
         papilo/presolve/ParallelRowDetectionTest.cpp
         papilo/presolve/ParallelColDetectionTest.cpp
         papilo/presolve/SingletonColsTest.cpp
