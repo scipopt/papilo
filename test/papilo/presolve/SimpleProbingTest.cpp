@@ -21,60 +21,81 @@
 /*                                                                           */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
+#include "papilo/presolvers/SimpleProbing.hpp"
 #include "catch/catch.hpp"
 #include "papilo/core/PresolveMethod.hpp"
 #include "papilo/core/Problem.hpp"
 #include "papilo/core/ProblemBuilder.hpp"
-#include "papilo/presolvers/CoefficientStrengthening.hpp"
 
 using namespace papilo;
 
 Problem<double>
-setupProblemForCoefficientStrengthening();
+setupProblemWithSimpleProbing();
 
-TEST_CASE( "happy path - coefficient strengthening", "[presolve]" )
+TEST_CASE( "happy path - simple probing", "[presolve]" )
 {
    Num<double> num{};
-   Problem<double> problem = setupProblemForCoefficientStrengthening();
+   Problem<double> problem = setupProblemWithSimpleProbing();
    Statistics statistics{};
    PresolveOptions presolveOptions{};
+   presolveOptions.dualreds = 0;
    Postsolve<double> postsolve = Postsolve<double>( problem, num );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num );
-   CoefficientStrengthening<double> presolvingMethod{};
+   SimpleProbing<double> presolvingMethod{};
    Reductions<double> reductions{};
    problem.recomputeAllActivities();
+
    PresolveStatus presolveStatus =
        presolvingMethod.execute( problem, problemUpdate, num, reductions );
-   //TODO: tests scheitert weil activityChanged von problem Update empty ist
-   BOOST_ASSERT( presolveStatus == PresolveStatus::kUnchanged );
-//   BOOST_ASSERT( reductions.size() == 2 );
-//   BOOST_ASSERT( reductions.getReduction( 0 ).col == 2 );
-//   BOOST_ASSERT( reductions.getReduction( 0 ).row ==
-//                 ColReduction::BOUNDS_LOCKED );
-//   BOOST_ASSERT( reductions.getReduction( 0 ).newval == 0 );
-//   BOOST_ASSERT( reductions.getReduction( 1 ).row == ColReduction::FIXED );
-//   BOOST_ASSERT( reductions.getReduction( 1 ).col == 2 );
-//   BOOST_ASSERT( reductions.getReduction( 1 ).newval == 0 );
+
+   BOOST_ASSERT( presolveStatus == PresolveStatus::kReduced );
+   BOOST_ASSERT( reductions.size() == 4 );
+   BOOST_ASSERT( reductions.getReduction( 0 ).col == 1 );
+   BOOST_ASSERT( reductions.getReduction( 0 ).row == ColReduction::REPLACE );
+   BOOST_ASSERT( reductions.getReduction( 0 ).newval == -1 );
+
+   BOOST_ASSERT( reductions.getReduction( 1 ).col == 0 );
+   BOOST_ASSERT( reductions.getReduction( 1 ).row ==
+                 papilo::ColReduction::NONE );
+   BOOST_ASSERT( reductions.getReduction( 1 ).newval == 1 );
+
+   BOOST_ASSERT( reductions.getReduction( 2 ).col == 2 );
+   BOOST_ASSERT( reductions.getReduction( 2 ).row ==
+                 papilo::ColReduction::REPLACE );
+   BOOST_ASSERT( reductions.getReduction( 2 ).newval == -1 );
+
+   BOOST_ASSERT( reductions.getReduction( 3 ).col == 0 );
+   BOOST_ASSERT( reductions.getReduction( 3 ).row ==
+                 papilo::ColReduction::NONE );
+   BOOST_ASSERT( reductions.getReduction( 3 ).newval == 1 );
+
 }
 
 Problem<double>
-setupProblemForCoefficientStrengthening()
+setupProblemWithSimpleProbing()
 {
-   Vec<double> coefficients{ 1.0, 1.0, 1.0 };
-   Vec<double> upperBounds{ 10.0, 10.0, 10.0 };
-   Vec<double> lowerBounds{ 0.0, 0.0, 0.0 };
-   Vec<uint8_t> isIntegral{ 1, 1, 1 };
+   // simple probing requires
+   // - rhs = (sup -inf) / 2
+   // futhermore for one column
+   // - integral variables
+   // - coeff = supp - rhs
+   // i.e. 2x + y + z = 2 with (sup = 4 & x = binary)
+   // -> x = 1 or sup(y +z)
+   Vec<double> coefficients{ 1.0, 1.0, 1.0, 1.0 };
+   Vec<double> upperBounds{ 1.0, 1.0, 1.0, 1.0 };
+   Vec<double> lowerBounds{ 0.0, 0.0, 0.0, 0.0 };
+   Vec<uint8_t> isIntegral{ 1, 1, 1, 1 };
 
-   Vec<double> rhs{ 1.0, 2.0 };
+   Vec<double> rhs{ 2.0, 2.0 };
+   Vec<double> lhs{ rhs[0], 3.0 };
    Vec<std::string> rowNames{ "A1", "A2" };
-   Vec<std::string> columnNames{ "c1", "c2", "c3" };
+   Vec<std::string> columnNames{ "c1", "c2", "c3", "c4" };
    Vec<std::tuple<int, int, double>> entries{
-       std::tuple<int, int, double>{ 0, 0, 10.0 },
-       std::tuple<int, int, double>{ 0, 1, 10.0 },
-       std::tuple<int, int, double>{ 1, 1, 20.0 },
-       std::tuple<int, int, double>{ 1, 2, 30.0 },
-   };
+       std::tuple<int, int, double>{ 0, 0, 2.0 },
+       std::tuple<int, int, double>{ 0, 1, 1.0 },
+       std::tuple<int, int, double>{ 0, 2, 1.0 },
+       std::tuple<int, int, double>{ 1, 1, 2.0 } };
 
    ProblemBuilder<double> pb;
    pb.reserve( entries.size(), rowNames.size(), columnNames.size() );
@@ -86,9 +107,11 @@ setupProblemForCoefficientStrengthening()
    pb.setObjOffset( 0.0 );
    pb.setColIntegralAll( isIntegral );
    pb.setRowRhsAll( rhs );
+   pb.setRowLhsAll( lhs );
    pb.addEntryAll( entries );
    pb.setColNameAll( columnNames );
-   pb.setProblemName( "coefficient strengthening matrix" );
+   pb.setProblemName( "matrix for testing simple probing" );
    Problem<double> problem = pb.build();
+   problem.getConstraintMatrix().modifyLeftHandSide( 0, lhs[0] );
    return problem;
 }

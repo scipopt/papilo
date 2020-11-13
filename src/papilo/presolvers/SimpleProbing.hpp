@@ -67,7 +67,7 @@ SimpleProbing<REAL>::execute( const Problem<REAL>& problem,
    const auto& domains = problem.getVariableDomains();
    const auto& cflags = domains.flags;
    const auto& activities = problem.getRowActivities();
-   const auto& changedActivities = problemUpdate.getChangedActivities();
+   const auto& changedactivities = problemUpdate.getChangedActivities();
 
    const auto& rowsize = problem.getRowSizes();
 

@@ -25,7 +25,7 @@ add_executable(unit_test TestMain.cpp
         papilo/presolve/ParallelRowDetectionTest.cpp
         papilo/presolve/ParallelColDetectionTest.cpp
         papilo/presolve/SingletonColsTest.cpp
-        #papilo/presolve/SimpleProbingTest.cpp
+        papilo/presolve/SimpleProbingTest.cpp
         ${PAPILOLIB_TEST_FILE})
 target_link_libraries(unit_test papilo ${PAPILOLIB_TARGET} ${Boost_LIBRARIES})
 

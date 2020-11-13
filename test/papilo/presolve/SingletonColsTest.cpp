@@ -185,7 +185,7 @@ setupProblemWithSingletonColumn()
    pb.setColNameAll( columnNames );
    pb.setProblemName( "singleton column matrix with equation" );
    Problem<double> problem = pb.build();
-   // TODO: is there no check if the l
+   // TODO: is there no check if there is an equation by the problem builder
    problem.getConstraintMatrix().modifyLeftHandSide( 0, 1 );
    return problem;
 }
