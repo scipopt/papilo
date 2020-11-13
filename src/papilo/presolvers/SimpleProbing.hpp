@@ -47,6 +47,13 @@ class SimpleProbing : public PresolveMethod<REAL>
    execute( const Problem<REAL>& problem,
             const ProblemUpdate<REAL>& problemUpdate, const Num<REAL>& num,
             Reductions<REAL>& reductions ) override;
+
+   void
+   calculateReductionsForSimpleProbing( const Num<REAL>& num, Reductions<REAL>& reductions,
+              const VariableDomains<REAL>& domains,
+              const Vec<papilo::RowActivity<REAL>>& activities,
+              const REAL* rowvals, const int* rowcols, int rowlen,
+              REAL bincoef, int bincol );
 };
 
 #ifdef PAPILO_USE_EXTERN_TEMPLATES
@@ -76,7 +83,6 @@ SimpleProbing<REAL>::execute( const Problem<REAL>& problem,
    const auto& rhs_values = constMatrix.getRightHandSides();
    const auto& rflags = constMatrix.getRowFlags();
 
-   PresolveStatus result = PresolveStatus::kUnchanged;
    int nrows = problem.getNRows();
 
    for( int i = 0; i != nrows; ++i )
@@ -98,7 +104,6 @@ SimpleProbing<REAL>::execute( const Problem<REAL>& problem,
       const int rowlen = rowvec.getLength();
 
       REAL bincoef = activities[i].max - rhs_values[i];
-      int bincol = -1;
 
       for( int k = 0; k != rowlen; ++k )
       {
@@ -109,50 +114,54 @@ SimpleProbing<REAL>::execute( const Problem<REAL>& problem,
              !num.isEq( abs( rowvals[k] ), bincoef ) )
             continue;
 
-         bincol = col;
-         // could be negative
-         bincoef = rowvals[k];
-         break;
-      }
-
-      if( bincol != -1 )
-      {
-         assert(
-             num.isEq( abs( bincoef ), activities[i].max - rhs_values[i] ) );
-         assert( domains.lower_bounds[bincol] == 0 );
-         assert( domains.upper_bounds[bincol] == 1 );
-         assert( cflags[bincol].test( ColFlag::kIntegral ) );
+         assert( num.isEq( abs( bincoef ), activities[i].max - rhs_values[i] ) );
+         assert( domains.lower_bounds[col] == 0 );
+         assert( domains.upper_bounds[col] == 1 );
+         assert( cflags[col].test( ColFlag::kIntegral ) );
 
          Message::debug(
              this, "probing on simple equation detected {} subsitutions\n",
              rowlen - 1 );
+         calculateReductionsForSimpleProbing( num, reductions, domains,
+                                              activities, rowvals, rowcols,
+                                              rowlen, bincoef, col );
+         return PresolveStatus::kReduced;
 
-         result = PresolveStatus::kReduced;
-         for( int k = 0; k != rowlen; ++k )
-         {
-            int col = rowcols[k];
-            if( col == bincol )
-               continue;
-
-            REAL factor;
-            REAL offset;
-            if( bincoef * rowvals[k] > 0 )
-            {
-               factor =
-                   -( domains.upper_bounds[col] - domains.lower_bounds[col] );
-               offset = domains.upper_bounds[col];
-            }
-            else
-            {
-               factor = domains.upper_bounds[col] - domains.lower_bounds[col];
-               offset = domains.lower_bounds[col];
-            }
-
-            reductions.replaceCol( col, bincol, factor, offset );
-         }
       }
+
    }
-   return result;
+   return PresolveStatus::kUnchanged;
+}
+template <typename REAL>
+void
+SimpleProbing<REAL>::calculateReductionsForSimpleProbing(
+    const Num<REAL>& num, Reductions<REAL>& reductions,
+    const VariableDomains<REAL>& domains,
+    const Vec<papilo::RowActivity<REAL>>& activities, const REAL* rowvals,
+    const int* rowcols, const int rowlen, REAL bincoef, int bincol )
+{
+   for( int k = 0; k != rowlen; ++k )
+   {
+      int col = rowcols[k];
+      if( col == bincol )
+         continue;
+
+      REAL factor;
+      REAL offset;
+      if( bincoef * rowvals[k] > 0 )
+      {
+         factor =
+             -( domains.upper_bounds[col] - domains.lower_bounds[col] );
+         offset = domains.upper_bounds[col];
+      }
+      else
+      {
+         factor = domains.upper_bounds[col] - domains.lower_bounds[col];
+         offset = domains.lower_bounds[col];
+      }
+
+      reductions.replaceCol( col, bincol, factor, offset );
+   }
 }
 
 } // namespace papilo

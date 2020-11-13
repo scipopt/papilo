@@ -51,6 +51,8 @@ TEST_CASE( "happy path - simple probing", "[presolve]" )
 
    BOOST_ASSERT( presolveStatus == PresolveStatus::kReduced );
    BOOST_ASSERT( reductions.size() == 4 );
+
+   //  lb + x (ub -lb) = y => x = 1 -y
    BOOST_ASSERT( reductions.getReduction( 0 ).col == 1 );
    BOOST_ASSERT( reductions.getReduction( 0 ).row == ColReduction::REPLACE );
    BOOST_ASSERT( reductions.getReduction( 0 ).newval == -1 );
@@ -60,6 +62,7 @@ TEST_CASE( "happy path - simple probing", "[presolve]" )
                  papilo::ColReduction::NONE );
    BOOST_ASSERT( reductions.getReduction( 1 ).newval == 1 );
 
+   //  lb + x (ub -lb) = z => x = 1 -z
    BOOST_ASSERT( reductions.getReduction( 2 ).col == 2 );
    BOOST_ASSERT( reductions.getReduction( 2 ).row ==
                  papilo::ColReduction::REPLACE );
@@ -81,8 +84,8 @@ setupProblemWithSimpleProbing()
    // - integral variables
    // - coeff = supp - rhs
    // i.e. 2x + y + z = 2 with (sup = 4 & x = binary)
-   // -> x = 1 or sup(y +z)
-   Vec<double> coefficients{ 1.0, 1.0, 1.0, 1.0 };
+   // -> lb + x (ub -lb) = y/z
+   Vec<double> coefficients{ 3.0, 1.0, 1.0, 1.0 };
    Vec<double> upperBounds{ 1.0, 1.0, 1.0, 1.0 };
    Vec<double> lowerBounds{ 0.0, 0.0, 0.0, 0.0 };
    Vec<uint8_t> isIntegral{ 1, 1, 1, 1 };
