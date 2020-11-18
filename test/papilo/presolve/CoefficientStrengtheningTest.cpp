@@ -44,36 +44,38 @@ TEST_CASE( "happy path - coefficient strengthening", "[presolve]" )
    CoefficientStrengthening<double> presolvingMethod{};
    Reductions<double> reductions{};
    problem.recomputeAllActivities();
+   problemUpdate.trivialPresolve();
    PresolveStatus presolveStatus =
        presolvingMethod.execute( problem, problemUpdate, num, reductions );
-   //TODO: tests scheitert weil activityChanged von problem Update empty ist
-   BOOST_ASSERT( presolveStatus == PresolveStatus::kUnchanged );
-//   BOOST_ASSERT( reductions.size() == 2 );
-//   BOOST_ASSERT( reductions.getReduction( 0 ).col == 2 );
-//   BOOST_ASSERT( reductions.getReduction( 0 ).row ==
-//                 ColReduction::BOUNDS_LOCKED );
-//   BOOST_ASSERT( reductions.getReduction( 0 ).newval == 0 );
-//   BOOST_ASSERT( reductions.getReduction( 1 ).row == ColReduction::FIXED );
-//   BOOST_ASSERT( reductions.getReduction( 1 ).col == 2 );
-//   BOOST_ASSERT( reductions.getReduction( 1 ).newval == 0 );
+   //the Constraint x +2y <=2 (x,y in {0,1}) is dominated by x+ y <=1
+   BOOST_ASSERT( presolveStatus == PresolveStatus::kReduced );
+   BOOST_ASSERT( reductions.size() == 3 );
+   BOOST_ASSERT( reductions.getReduction( 0 ).col == RowReduction::LOCKED );
+   BOOST_ASSERT( reductions.getReduction( 0 ).row == 0 );
+   BOOST_ASSERT( reductions.getReduction( 0 ).newval == 0 );
+   BOOST_ASSERT( reductions.getReduction( 1 ).row == 0 );
+   BOOST_ASSERT( reductions.getReduction( 1 ).col == 1 );
+   BOOST_ASSERT( reductions.getReduction( 1 ).newval == 1 );
+   BOOST_ASSERT( reductions.getReduction( 2 ).row == 0 );
+   BOOST_ASSERT( reductions.getReduction( 2 ).col == RowReduction::RHS );
+   BOOST_ASSERT( reductions.getReduction( 2 ).newval == 1 );
 }
 
 Problem<double>
 setupProblemForCoefficientStrengthening()
 {
+//   1x + 2y <= 1
    Vec<double> coefficients{ 1.0, 1.0, 1.0 };
-   Vec<double> upperBounds{ 10.0, 10.0, 10.0 };
+   Vec<double> upperBounds{ 1.0, 1.0, 1.0 };
    Vec<double> lowerBounds{ 0.0, 0.0, 0.0 };
    Vec<uint8_t> isIntegral{ 1, 1, 1 };
 
-   Vec<double> rhs{ 1.0, 2.0 };
-   Vec<std::string> rowNames{ "A1", "A2" };
+   Vec<double> rhs{ 2.0};
+   Vec<std::string> rowNames{ "A1" };
    Vec<std::string> columnNames{ "c1", "c2", "c3" };
    Vec<std::tuple<int, int, double>> entries{
-       std::tuple<int, int, double>{ 0, 0, 10.0 },
-       std::tuple<int, int, double>{ 0, 1, 10.0 },
-       std::tuple<int, int, double>{ 1, 1, 20.0 },
-       std::tuple<int, int, double>{ 1, 2, 30.0 },
+       std::tuple<int, int, double>{ 0, 0, 1.0 },
+       std::tuple<int, int, double>{ 0, 1, 2.0 },
    };
 
    ProblemBuilder<double> pb;
