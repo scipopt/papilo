@@ -224,6 +224,10 @@ class Presolve
       return stats;
    }
 
+   std::pair<int, int>
+   applyReductions( int p, const Reductions<REAL>& reductions,
+                    ProblemUpdate<REAL>& probUpdate );
+
  private:
    // data to perform presolving
    Vec<PresolveStatus> results;
@@ -254,9 +258,6 @@ class Presolve
    PresolveStatus
    evaluateResults();
 
-   std::pair<int, int>
-   applyReductions( int p, const Reductions<REAL>& reductions,
-                    ProblemUpdate<REAL>& probUpdate );
 
    void
    finishRound( ProblemUpdate<REAL>& probUpdate );

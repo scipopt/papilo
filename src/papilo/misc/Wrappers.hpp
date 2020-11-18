@@ -68,7 +68,7 @@ presolve_and_solve(
       prob = MpsParser<REAL>::loadProblem( opts.instance_file );
    }
 
-   // Check wether reading was successfull or not
+   // Check whether reading was successful or not
    if( !prob )
    {
       fmt::print( "error loading problem {}\n", opts.instance_file );
@@ -228,7 +228,7 @@ presolve_and_solve(
                                   result.postsolve.origrow_mapping,
                                   result.postsolve.origcol_mapping );
 
-      const auto t1 = tbb::tick_count::now();
+      const auto t1 = tbb::tick_count::now(); // TODO unneccessary
       fmt::print( "reduced problem written to {} in {:.3f} seconds\n\n",
                   opts.reduced_problem_file, t.getTime() );
    }

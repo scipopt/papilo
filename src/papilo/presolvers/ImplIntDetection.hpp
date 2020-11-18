@@ -40,6 +40,8 @@ class ImplIntDetection : public PresolveMethod<REAL>
    ImplIntDetection() : PresolveMethod<REAL>()
    {
       this->setName( "implint" );
+      // TODO: why is this solver exhaustive? U need to count the continuous
+      // variables if there is only one?
       this->setTiming( PresolverTiming::kExhaustive );
       this->setType( PresolverType::kMixedCols );
    }

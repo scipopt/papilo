@@ -55,7 +55,7 @@ TEST_CASE( "happy-path-simple-probing", "[presolve]" )
    REQUIRE( presolveStatus == PresolveStatus::kReduced );
    REQUIRE( reductions.size() == 4 );
 
-   //  lb + x (ub -lb) = y => x = 1 -y
+   // ub + x (lb - ub) = y => x = 1 -y
    REQUIRE( reductions.getReduction( 0 ).col == 1 );
    REQUIRE( reductions.getReduction( 0 ).row == ColReduction::REPLACE );
    REQUIRE( reductions.getReduction( 0 ).newval == -1 );
@@ -64,7 +64,7 @@ TEST_CASE( "happy-path-simple-probing", "[presolve]" )
    REQUIRE( reductions.getReduction( 1 ).row == papilo::ColReduction::NONE );
    REQUIRE( reductions.getReduction( 1 ).newval == 1 );
 
-   //  lb + x (ub -lb) = z => x = 1 -z
+   // ub + x (lb - ub) = z => x = 1 -z
    REQUIRE( reductions.getReduction( 2 ).col == 2 );
    REQUIRE( reductions.getReduction( 2 ).row == papilo::ColReduction::REPLACE );
    REQUIRE( reductions.getReduction( 2 ).newval == -1 );
@@ -154,7 +154,7 @@ setupProblemWithSimpleProbing()
    // - integral variables
    // - coeff = supp - rhs
    // i.e. 2x + y + z = 2 with (sup = 4 & x = binary)
-   // -> lb + x (ub -lb) = y/z
+   // -> ub + x (lb - ub) = y/z
    Num<double> num{};
    Vec<double> coefficients{ 3.0, 1.0, 1.0, 1.0 };
    Vec<double> upperBounds{ 1.0, 1.0, 1.0, 1.0 };

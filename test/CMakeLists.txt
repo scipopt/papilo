@@ -33,10 +33,10 @@ endif ()
 
 add_executable(unit_test TestMain.cpp
         papilo/InstancesTest.cpp
-        papilo/DebugTest.cpp
 
         papilo/core/MatrixBufferTest.cpp
         papilo/core/SparseStorageTest.cpp
+        papilo/core/PresolveTest.cpp
         papilo/core/ProblemUpdateTest.cpp
         papilo/misc/VectorUtilsTest.cpp
 
@@ -67,6 +67,11 @@ set(unit_tests
         "matrix-buffer"
         "vector-comparisons"
         "matrix-comparisons"
+
+        "replacing-variables-is-postponed-by-flag"
+        "happy-path-replace-variable"
+        "happy-path-substitute-matrix-coefficient-into-objective"
+        "happy-path-aggregate-free-column"
 
         #ProblemUpdate
         "happy-path-presolve-singleton-row"
@@ -142,6 +147,8 @@ set(unit_tests
         # "example-9-from-7.1-Presolve-Reductions-in-MIP"
         "example-10-from-7.5-Presolve-Reductions-in-MIP"
 
+
+        "integration-test-for-flugpl"
         ${PAPILOLIB_TESTS}
         ${BOOST_REQUIRED_TESTS}
         )

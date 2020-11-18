@@ -1226,7 +1226,7 @@ ConstraintMatrix<REAL>::aggregate(
    assert( std::is_sorted( equalityindices, equalityindices + equalitylen ) );
 
    int freeColPos;
-   for( freeColPos = 0; freeColPos != equalitylen; ++freeColPos )
+   for( freeColPos = 0; freeColPos < equalitylen; ++freeColPos )
    {
       if( equalityindices[freeColPos] == col )
          break;

@@ -43,7 +43,7 @@ class SimpleProbing : public PresolveMethod<REAL>
       this->setTiming( PresolverTiming::kMedium );
    }
 
-   virtual PresolveStatus
+   PresolveStatus
    execute( const Problem<REAL>& problem,
             const ProblemUpdate<REAL>& problemUpdate, const Num<REAL>& num,
             Reductions<REAL>& reductions ) override;
