@@ -30,13 +30,12 @@
 using namespace papilo;
 
 Problem<double>
-setupProblemWithSimpleProbing();
+setupProblemWithConstraintPropagation();
 
 TEST_CASE( "happy path - constraint propagation", "[presolve]" )
 {
-   //TODO: only with changedActivity
    Num<double> num{};
-   Problem<double> problem = setupProblemWithSimpleProbing();
+   Problem<double> problem = setupProblemWithConstraintPropagation();
    Statistics statistics{};
    PresolveOptions presolveOptions{};
    presolveOptions.dualreds = 0;
@@ -46,31 +45,48 @@ TEST_CASE( "happy path - constraint propagation", "[presolve]" )
    ConstraintPropagation<double> presolvingMethod{};
    Reductions<double> reductions{};
    problem.recomputeAllActivities();
+   problemUpdate.trivialPresolve();
 
    PresolveStatus presolveStatus =
        presolvingMethod.execute( problem, problemUpdate, num, reductions );
 
-   BOOST_ASSERT( presolveStatus == PresolveStatus::kUnchanged );
+   BOOST_ASSERT( presolveStatus == PresolveStatus::kReduced );
+   BOOST_ASSERT( reductions.size() == 4 );
+   BOOST_ASSERT( reductions.getReduction( 0 ).col == 0 );
+   BOOST_ASSERT( reductions.getReduction( 0 ).row == ColReduction::UPPER_BOUND );
+   BOOST_ASSERT( reductions.getReduction( 0 ).newval == 1 );
+
+   BOOST_ASSERT( reductions.getReduction( 1 ).row == ColReduction::UPPER_BOUND );
+   BOOST_ASSERT( reductions.getReduction( 1 ).col == 1 );
+   BOOST_ASSERT( reductions.getReduction( 1 ).newval == 1 );
+
+   BOOST_ASSERT( reductions.getReduction( 2 ).col == 1 );
+   BOOST_ASSERT( reductions.getReduction( 2 ).row == ColReduction::FIXED );
+   BOOST_ASSERT( reductions.getReduction( 2 ).newval == 0 );
+
+   BOOST_ASSERT( reductions.getReduction( 3 ).col == 2 );
+   BOOST_ASSERT( reductions.getReduction( 3 ).newval == 0.1 );
+   BOOST_ASSERT( reductions.getReduction( 3 ).row == ColReduction::UPPER_BOUND );
 
 }
 
 Problem<double>
 setupProblemWithConstraintPropagation()
 {
-   Vec<double> coefficients{ 1.0, 1.0, 1.0};
-   Vec<double> upperBounds{ 3.0, 3.0, 3.0 };
+   Vec<double> coefficients{ 1.0, 1.0, 1.0 };
+   Vec<double> upperBounds{ 10.0, 10.0, 10.0 };
    Vec<double> lowerBounds{ 0.0, 0.0, 0.0 };
-   Vec<uint8_t> isIntegral{ 1, 1, 1, 1 };
+   Vec<uint8_t> isIntegral{ 0, 1, 0 };
 
-   Vec<double> rhs{ 3.0, 2.0 };
+   Vec<double> rhs{ 1.0, 2.0 };
    Vec<std::string> rowNames{ "A1", "A2" };
    Vec<std::string> columnNames{ "c1", "c2", "c3" };
    Vec<std::tuple<int, int, double>> entries{
-       std::tuple<int, int, double>{ 0, 0, 2.0 },
+       std::tuple<int, int, double>{ 0, 0, 1.0 },
        std::tuple<int, int, double>{ 0, 1, 1.0 },
-
-       std::tuple<int, int, double>{ 0, 2, 7.0 },
-       std::tuple<int, int, double>{ 1, 1, 2.0 } };
+       std::tuple<int, int, double>{ 1, 1, 20.0 },
+       std::tuple<int, int, double>{ 1, 2, 20.0 },
+   };
 
    ProblemBuilder<double> pb;
    pb.reserve( entries.size(), rowNames.size(), columnNames.size() );

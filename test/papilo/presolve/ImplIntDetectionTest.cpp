@@ -46,7 +46,6 @@ TEST_CASE( "happy path - implied integer detection", "[presolve]" )
    problem.recomputeAllActivities();
    PresolveStatus presolveStatus =
        presolvingMethod.execute( problem, problemUpdate, num, reductions );
-   //TODO: tests scheitert weil activityChanged von problem Update empty ist
    BOOST_ASSERT( presolveStatus == PresolveStatus::kReduced );
    BOOST_ASSERT( reductions.size() == 1 );
    BOOST_ASSERT( reductions.getReduction( 0 ).col == 0 );
