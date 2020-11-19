@@ -31,7 +31,7 @@ namespace papilo
 
 enum class RowFlag : uint8_t
 {
-   NONE = 0,
+   NONE = 0, // TODO: this should only occur while building the model, otherwise the problem isn't persistent?
    kLhsInf = 1 << 0,
    kRhsInf = 1 << 1,
    kEquation = 1 << 2,
