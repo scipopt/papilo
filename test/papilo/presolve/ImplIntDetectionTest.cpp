@@ -32,7 +32,7 @@ using namespace papilo;
 Problem<double>
 setupProblemImplIntDetection();
 
-TEST_CASE( "happy path - implied integer detection", "[presolve]" )
+TEST_CASE( "happy-path-implied-integer-detection", "[presolve]" )
 {
    Num<double> num{};
    Problem<double> problem = setupProblemImplIntDetection();

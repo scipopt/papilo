@@ -30,7 +30,7 @@
 papilo::Problem<double>
 setupProblemWithParallelColumns();
 
-TEST_CASE( "happy path - parallel column detection", "[presolve]" )
+TEST_CASE( "happy-path-parallel-column-detection", "[presolve]" )
 {
    papilo::Num<double> num{};
    papilo::Problem<double> problem = setupProblemWithParallelColumns();

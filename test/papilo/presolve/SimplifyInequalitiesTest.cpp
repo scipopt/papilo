@@ -38,7 +38,7 @@ setupExample2ofChapter3Dot5InPresolveReductions();
 Problem<double>
 setupProblemForSimplifyingInequalities();
 
-TEST_CASE( "happy path - simplify inequalities (only greatest divisor)",
+TEST_CASE( "happy-path-simplify-inequalities-only-greatest-divisor",
            "[presolve]" )
 {
    Num<double> num{};
@@ -61,7 +61,7 @@ TEST_CASE( "happy path - simplify inequalities (only greatest divisor)",
    BOOST_ASSERT( presolveStatus == PresolveStatus::kUnchanged );
 }
 
-TEST_CASE( "example 1 from 3.5 Presolve Reductions in MIP", "[presolve]" )
+TEST_CASE( "example-1-from-3.5-Presolve-Reductions-in-MIP", "[presolve]" )
 {
    Num<double> num{};
    Problem<double> problem = setupExample1ofChapter3Dot5InPresolveReductions();
@@ -88,7 +88,7 @@ TEST_CASE( "example 1 from 3.5 Presolve Reductions in MIP", "[presolve]" )
  * x = 1913z + 1009 -> 3571571z +1913y = 1735091 -> 1867z + y = 907
  * -> y = 907; z= 0; x = 1009 (instead of 2000 b&b decisions))
  */
-TEST_CASE( "example 2 from 3.5 Presolve Reductions in MIP", "[presolve]" )
+TEST_CASE( "example-2-from-3.5-Presolve-Reductions-in-MIP", "[presolve]" )
 {
    Num<double> num{};
    Problem<double> problem = setupExample2ofChapter3Dot5InPresolveReductions();

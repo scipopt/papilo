@@ -32,7 +32,7 @@ using namespace papilo;
 Problem<double>
 setupProblemForCoefficientStrengthening();
 
-TEST_CASE( "happy path - coefficient strengthening", "[presolve]" )
+TEST_CASE( "happy-path-coefficient-strengthening", "[presolve]" )
 {
    Num<double> num{};
    Problem<double> problem = setupProblemForCoefficientStrengthening();

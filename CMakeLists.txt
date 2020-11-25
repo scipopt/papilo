@@ -208,7 +208,7 @@ configure_file("${PROJECT_SOURCE_DIR}/src/papilo/CMakeConfig.hpp.in"
 
 # add tests
 enable_testing()
-add_subdirectory(test)
+add_subdirectory(${PROJECT_SOURCE_DIR}/test)
 
 # install the header files of papilo
 install(FILES
@@ -217,17 +217,18 @@ install(FILES
    DESTINATION include/papilo)
 
 install(FILES
-   ${PROJECT_SOURCE_DIR}/src/papilo/core/Components.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/core/ConstraintMatrix.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/core/MatrixBuffer.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/core/Objective.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/core/Postsolve.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/core/Presolve.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/core/PresolveMethod.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/core/PresolveOptions.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/core/ProbingView.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/core/ProblemBuilder.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/core/Problem.hpp
+        #TODO FreeVar is missing?
+        ${PROJECT_SOURCE_DIR}/src/papilo/core/Components.hp
+        ${PROJECT_SOURCE_DIR}/src/papilo/core/ConstraintMatrix.hpp
+        ${PROJECT_SOURCE_DIR}/src/papilo/core/MatrixBuffer.hpp
+        ${PROJECT_SOURCE_DIR}/src/papilo/core/Objective.hpp
+        ${PROJECT_SOURCE_DIR}/src/papilo/core/Postsolve.hpp
+        ${PROJECT_SOURCE_DIR}/src/papilo/core/Presolve.hpp
+        ${PROJECT_SOURCE_DIR}/src/papilo/core/PresolveMethod.hpp
+        ${PROJECT_SOURCE_DIR}/src/papilo/core/PresolveOptions.hpp
+        ${PROJECT_SOURCE_DIR}/src/papilo/core/ProbingView.hpp
+        ${PROJECT_SOURCE_DIR}/src/papilo/core/ProblemBuilder.hpp
+        ${PROJECT_SOURCE_DIR}/src/papilo/core/Problem.hpp
    ${PROJECT_SOURCE_DIR}/src/papilo/core/ProblemUpdate.hpp
    ${PROJECT_SOURCE_DIR}/src/papilo/core/Reductions.hpp
    ${PROJECT_SOURCE_DIR}/src/papilo/core/RowFlags.hpp

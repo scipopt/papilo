@@ -33,12 +33,31 @@ add_executable(unit_test TestMain.cpp
         ${PAPILOLIB_TEST_FILE})
 target_link_libraries(unit_test papilo ${PAPILOLIB_TARGET} ${Boost_LIBRARIES})
 
+
 set(unit_tests
- "matrix-buffer"
- "vector-comparisons"
- "accurate-numerical-statistics"
- ${PAPILOLIB_TESTS}
-  )
+        "accurate-numerical-statistics"
+
+        "matrix-buffer"
+        "vector-comparisons"
+        "matrix-comparisons"
+        "problem-comparisons"
+
+        "happy-path-coefficient-strengthening"
+        "happy-path-constraint-propagation"
+        "happy-path-presolve-fix-continuous"
+        "happy-path-no-presolve-fix-continuous"
+        "happy-path-implied-integer-detection"
+        "happy-path-parallel-row-detection"
+        "happy-path-parallel-column-detection"
+        "happy-path-probing"
+        "failed-path-probing-on-not-binary-variables"
+        "happy-path-singleton-column"
+        "failed-path-singleton-column-row"
+        "happy-path-simplify-inequalities-only-greatest-divisor"
+        "example-1-from-3.5-Presolve-Reductions-in-MIP"
+        "example-2-from-3.5-Presolve-Reductions-in-MIP"
+        ${PAPILOLIB_TESTS}
+        )
 
 # add a test to build the SCIP binary that all further tests depend on
 add_test(NAME unit-test-build
@@ -128,4 +147,3 @@ if(TARGET papilo-executable AND PAPILO_HAVE_SCIP)
 
    add_instancetests(instances_MIP numtypes)
 endif()
-

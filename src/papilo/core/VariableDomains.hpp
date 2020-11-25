@@ -80,7 +80,7 @@ struct VariableDomains
 
    template <typename Archive>
    void
-   serialize( Archive& ar )
+   serialize( Archive& ar, const unsigned int version )
    {
       ar& lower_bounds;
       ar& upper_bounds;

@@ -35,7 +35,7 @@ setupProblemWithProbing();
 Problem<double>
 setupProblemWithProbingWithNoBinary();
 
-TEST_CASE( "happy path - probing", "[presolve]" )
+TEST_CASE( "happy-path-probing", "[presolve]" )
 {
    Num<double> num{};
    Problem<double> problem = setupProblemWithProbing();
@@ -60,7 +60,7 @@ TEST_CASE( "happy path - probing", "[presolve]" )
    BOOST_ASSERT( reductions.getReduction( 0 ).newval == 0 );
 }
 
-TEST_CASE( "failed path - probing on not binary variables", "[presolve]" )
+TEST_CASE( "failed-path-probing-on-not-binary-variables", "[presolve]" )
 {
    Num<double> num{};
    Problem<double> problem = setupProblemWithProbingWithNoBinary();

@@ -44,7 +44,7 @@ forceCalculationOfSingletonRows( Problem<double>& problem,
    problemUpdate.trivialColumnPresolve();
 }
 
-TEST_CASE( "happy path - singleton column", "[presolve]" )
+TEST_CASE( "happy-path-singleton-column", "[presolve]" )
 {
    Num<double> num{};
    Problem<double> problem = setupProblemWithSingletonColumn();
@@ -86,7 +86,7 @@ TEST_CASE( "happy path - singleton column", "[presolve]" )
    BOOST_ASSERT( reductions.getReduction( 4 ).row == 0);
 }
 
-TEST_CASE( "failed path - singleton column & row", "[presolve]" )
+TEST_CASE( "failed-path-singleton-column-row", "[presolve]" )
 {
    Num<double> num{};
    Problem<double> problem = setupProblemWithOnlyOneEntryIn1stRowAndColumn();

@@ -107,7 +107,7 @@ class Probing : public PresolveMethod<REAL>
             Reductions<REAL>& reductions ) override;
 
    bool
-   isBinaryVariable( int upper_bound, int lower_bound, int column_size,
+   isBinaryVariable( REAL upper_bound, REAL lower_bound, int column_size,
                      const Flags<ColFlag>& colFlag ) const;
 };
 
@@ -547,7 +547,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
 
 template <typename REAL>
 bool
-Probing<REAL>::isBinaryVariable( int upper_bound, int lower_bound,
+Probing<REAL>::isBinaryVariable( REAL upper_bound, REAL lower_bound,
                                  int column_size,
                                  const Flags<ColFlag>& colFlag ) const
 {

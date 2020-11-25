@@ -32,7 +32,7 @@ using namespace papilo;
 Problem<double>
 setupProblemForTest( double upperBoundForVar3 );
 
-TEST_CASE( "happy path - presolve fix continuous", "[presolve]" )
+TEST_CASE( "happy-path-presolve-fix-continuous", "[presolve]" )
 {
    Num<double> num{};
    Problem<double> problem = setupProblemForTest( num.getFeasTol() / 4 );
@@ -58,7 +58,7 @@ TEST_CASE( "happy path - presolve fix continuous", "[presolve]" )
    BOOST_ASSERT( reductions.getReduction( 1 ).newval == 0 );
 }
 
-TEST_CASE( "happy path - no presolve fix continuous", "[presolve]" )
+TEST_CASE( "happy-path-no-presolve-fix-continuous", "[presolve]" )
 {
    Num<double> num{};
    Problem<double> problem = setupProblemForTest( num.getFeasTol() );

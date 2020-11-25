@@ -32,7 +32,7 @@ using namespace papilo;
 Problem<double>
 setupProblemWithConstraintPropagation();
 
-TEST_CASE( "happy path - constraint propagation", "[presolve]" )
+TEST_CASE( "happy-path-constraint-propagation", "[presolve]" )
 {
    Num<double> num{};
    Problem<double> problem = setupProblemWithConstraintPropagation();
