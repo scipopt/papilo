@@ -105,6 +105,10 @@ class Probing : public PresolveMethod<REAL>
    execute( const Problem<REAL>& problem,
             const ProblemUpdate<REAL>& problemUpdate, const Num<REAL>& num,
             Reductions<REAL>& reductions ) override;
+
+   bool
+   isBinaryVariable( int upper_bound, int lower_bound, int column_size,
+                     const Flags<ColFlag>& colFlag ) const;
 };
 
 #ifdef PAPILO_USE_EXTERN_TEMPLATES
@@ -123,17 +127,17 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
       return PresolveStatus::kUnchanged;
 
    const auto& domains = problem.getVariableDomains();
-   const auto& lower_bounds = domains.lower_bounds;
-   const auto& upper_bounds = domains.upper_bounds;
-   const auto& cflags = domains.flags;
+   const Vec<REAL>& lower_bounds = domains.lower_bounds;
+   const Vec<REAL>& upper_bounds = domains.upper_bounds;
+   const Vec<ColFlags>& cflags = domains.flags;
 
    const auto& consMatrix = problem.getConstraintMatrix();
    const auto& lhs = consMatrix.getLeftHandSides();
    const auto& rhs = consMatrix.getRightHandSides();
-   const auto& rflags = consMatrix.getRowFlags();
+   const Vec<RowFlags>& rowFlags = consMatrix.getRowFlags();
    const auto& activities = problem.getRowActivities();
    const int ncols = problem.getNCols();
-   const auto& colsize = consMatrix.getColSizes();
+   const Vec<int>& colsize = consMatrix.getColSizes();
    const auto& colperm = problemUpdate.getRandomColPerm();
 
    Vec<int> probing_cands;
@@ -141,13 +145,12 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
 
    for( int i = 0; i != ncols; ++i )
    {
-      if( !cflags[i].test( ColFlag::kUnbounded ) &&
-          cflags[i].test( ColFlag::kIntegral ) && colsize[i] > 0 &&
-          lower_bounds[i] == 0 && upper_bounds[i] == 1 )
+      if( isBinaryVariable( upper_bounds[i], lower_bounds[i], colsize[i],
+                            cflags[i] ) )
          probing_cands.push_back( i );
    }
 
-   if( probing_cands.size() == 0 )
+   if( probing_cands.empty() )
       return PresolveStatus::kUnchanged;
 
    Array<std::atomic_int> probing_scores( ncols );
@@ -155,7 +158,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
    for( int i = 0; i != ncols; ++i )
       probing_scores[i].store( 0, std::memory_order_relaxed );
 
-   if( nprobed.size() == 0 )
+   if( nprobed.empty() )
    {
       nprobed.resize( size_t( ncols ), 0 );
 
@@ -167,16 +170,16 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
    tbb::parallel_for(
        tbb::blocked_range<int>( 0, problem.getNRows() ),
        [&]( const tbb::blocked_range<int>& r ) {
-          Vec<std::pair<REAL, int>> binvarsRow;
+          Vec<std::pair<REAL, int>> binary_variables_in_row;
           for( int row = r.begin(); row != r.end(); ++row )
           {
              if( consMatrix.isRowRedundant( row ) )
                 continue;
 
              if( ( activities[row].ninfmin != 0 ||
-                   rflags[row].test( RowFlag::kRhsInf ) ) &&
+                   rowFlags[row].test( RowFlag::kRhsInf ) ) &&
                  ( activities[row].ninfmax != 0 ||
-                   rflags[row].test( RowFlag::kLhsInf ) ) )
+                   rowFlags[row].test( RowFlag::kLhsInf ) ) )
                 continue;
 
              auto rowvec = consMatrix.getRowCoefficients( row );
@@ -184,41 +187,47 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
              const REAL* rowvals = rowvec.getValues();
              const int rowlen = rowvec.getLength();
 
-             binvarsRow.reserve( rowlen );
+             binary_variables_in_row.reserve( rowlen );
 
              for( int i = 0; i != rowlen; ++i )
              {
-                if( cflags[colinds[i]].test( ColFlag::kIntegral ) &&
-                    lower_bounds[colinds[i]] == 0.0 &&
-                    upper_bounds[colinds[i]] == 1.0 )
-                   binvarsRow.emplace_back( rowvals[i], colinds[i] );
+                if( isBinaryVariable( upper_bounds[i], lower_bounds[i],
+                                      colsize[i], cflags[i] ) )
+                   binary_variables_in_row.emplace_back( rowvals[i],
+                                                         colinds[i] );
              }
 
-             const int nbinvarsrow = static_cast<int>( binvarsRow.size() );
+             const int nbinvarsrow =
+                 static_cast<int>( binary_variables_in_row.size() );
 
              if( nbinvarsrow == 0 )
                 continue;
 
-             pdqsort( binvarsRow.begin(), binvarsRow.end(),
+             pdqsort( binary_variables_in_row.begin(),
+                      binary_variables_in_row.end(),
                       []( const std::pair<REAL, int>& a,
                           const std::pair<REAL, int>& b ) {
                          return abs( a.first ) > abs( b.first );
                       } );
 
-             for( int i = 0; i != nbinvarsrow; ++i )
+             for( int i = 0; i < nbinvarsrow; ++i )
              {
-                int col = binvarsRow[i].second;
-                REAL abscoef = abs( binvarsRow[i].first );
+                // TODO: wouldn't be simpler: calculate minimplcoef, if greater
+                // equals than abs, then discard
+                int col = binary_variables_in_row[i].second;
+                REAL abscoef = abs( binary_variables_in_row[i].first );
                 REAL minimplcoef = abscoef;
 
                 if( activities[row].ninfmin == 0 &&
-                    !rflags[row].test( RowFlag::kRhsInf ) )
+                    !rowFlags[row].test( RowFlag::kRhsInf ) )
                    minimplcoef = std::min(
                        minimplcoef,
                        REAL( rhs[row] - activities[row].min - abscoef ) );
 
+                // TODO: this could be else plus debug statement,
+                // because rows not fulfilling the constraint are excluded
                 if( activities[row].ninfmax == 0 &&
-                    !rflags[row].test( RowFlag::kLhsInf ) )
+                    !rowFlags[row].test( RowFlag::kLhsInf ) )
                    minimplcoef =
                        std::min( minimplcoef, REAL( activities[row].max -
                                                     abscoef - lhs[row] ) );
@@ -229,7 +238,8 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
                 int nimplbins = 0;
                 for( int j = i + 1; j != nbinvarsrow; ++j )
                 {
-                   if( num.isFeasGT( abs( binvarsRow[j].first ), minimplcoef ) )
+                   if( num.isFeasGT( abs( binary_variables_in_row[j].first ),
+                                     minimplcoef ) )
                       ++nimplbins;
                    else
                       break;
@@ -242,7 +252,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
                    break;
              }
 
-             binvarsRow.clear();
+             binary_variables_in_row.clear();
           }
        } );
 
@@ -270,7 +280,45 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
                return s1 > s2 || ( s1 == s2 && colperm[col1] < colperm[col2] );
             } );
 
-   const auto& rowsize = consMatrix.getRowSizes();
+   const Vec<int>& rowsize = consMatrix.getRowSizes();
+
+   int currentbadgestart = 0;
+
+   int64_t working_limit = consMatrix.getNnz() * 2;
+   int initial_badge_limit = 0.1 * working_limit;
+
+   const int nprobingcands = static_cast<int>( probing_cands.size() );
+   int badge_size = 0;
+   for( int i : probing_cands )
+   {
+      ++badge_size;
+
+      if( badge_size == maxinitialbadgesize )
+         break;
+
+      initial_badge_limit -= colsize[i];
+      if( initial_badge_limit <= 0 )
+         break;
+
+      auto colvec = consMatrix.getColumnCoefficients( i );
+      const int* rowinds = colvec.getIndices();
+      for( int k = 0; k != colvec.getLength(); ++k )
+      {
+         initial_badge_limit -= ( rowsize[rowinds[k]] - 1 );
+
+         if( initial_badge_limit <= 0 )
+            break;
+      }
+
+      if( initial_badge_limit <= 0 )
+         break;
+   }
+
+   badge_size = std::max( std::min( nprobingcands, minbadgesize ), badge_size );
+
+   int current_badge_end = currentbadgestart + badge_size;
+   int n_useless = 0;
+   bool abort = false;
 
    HashMap<std::pair<int, int>, int, boost::hash<std::pair<int, int>>>
        substitutionsPos;
@@ -280,44 +328,6 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
    boundChanges.reserve( ncols );
 
    std::atomic_bool infeasible{ false };
-
-   int currentbadgestart = 0;
-
-   int64_t workinglimit = consMatrix.getNnz() * 2;
-
-   const int nprobingcands = static_cast<int>( probing_cands.size() );
-   int badgesize = 0;
-   int initialbadgelim = 0.1 * workinglimit;
-   for( int i : probing_cands )
-   {
-      ++badgesize;
-
-      if( badgesize == maxinitialbadgesize )
-         break;
-
-      initialbadgelim -= colsize[i];
-      if( initialbadgelim <= 0 )
-         break;
-
-      auto colvec = consMatrix.getColumnCoefficients( i );
-      const int* rowinds = colvec.getIndices();
-      for( int k = 0; k != colvec.getLength(); ++k )
-      {
-         initialbadgelim -= ( rowsize[rowinds[k]] - 1 );
-
-         if( initialbadgelim <= 0 )
-            break;
-      }
-
-      if( initialbadgelim <= 0 )
-         break;
-   }
-
-   badgesize = std::max( std::min( nprobingcands, minbadgesize ), badgesize );
-
-   int currentbadgeend = currentbadgestart + badgesize;
-   int nuseless = 0;
-   bool abort = false;
 
    // use tbb combinable so that each thread will copy the activities and
    // bounds at most once
@@ -330,10 +340,10 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
    do
    {
       Message::debug( this, "probing candidates {} to {}\n", currentbadgestart,
-                      currentbadgeend );
+                      current_badge_end );
 
       tbb::parallel_for(
-          tbb::blocked_range<int>( currentbadgestart, currentbadgeend ),
+          tbb::blocked_range<int>( currentbadgestart, current_badge_end ),
           [&]( const tbb::blocked_range<int>& r ) {
              ProbingView<REAL>& probingView = probing_views.local();
 
@@ -456,12 +466,12 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
       } );
 
       nsubstitutions += substitutions.size();
-      currentbadgestart = currentbadgeend;
+      currentbadgestart = current_badge_end;
 
       if( nfixings == 0 && nboundchgs == 0 && nsubstitutions == 0 )
-         nuseless += amountofwork;
+         n_useless += amountofwork;
       else
-         nuseless = 0;
+         n_useless = 0;
 
       Message::debug(
           this,
@@ -472,18 +482,18 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
           ( ( 0.1 * ( nfixings + nsubstitutions ) + 0.01 * nboundchgs ) *
             consMatrix.getNnz() );
 
-      workinglimit -= amountofwork;
-      workinglimit += extrawork;
+      working_limit -= amountofwork;
+      working_limit += extrawork;
 
-      badgesize = static_cast<int>(
-          ceil( badgesize * static_cast<double>( workinglimit + extrawork ) /
+      badge_size = static_cast<int>(
+          ceil( badge_size * static_cast<double>( working_limit + extrawork ) /
                 amountofwork ) );
-      badgesize = std::max( badgesize, minbadgesize );
-      badgesize = std::min( nprobingcands - currentbadgestart, badgesize );
-      currentbadgeend = currentbadgestart + badgesize;
+      badge_size = std::max( badge_size, minbadgesize );
+      badge_size = std::min( nprobingcands - currentbadgestart, badge_size );
+      current_badge_end = currentbadgestart + badge_size;
 
-      abort = nuseless >= consMatrix.getNnz() * 2 || workinglimit < 0 ||
-              currentbadgestart == currentbadgeend;
+      abort = n_useless >= consMatrix.getNnz() * 2 || working_limit < 0 ||
+              currentbadgestart == current_badge_end;
    } while( !abort );
 
    PresolveStatus result = PresolveStatus::kUnchanged;
@@ -533,6 +543,17 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
    }
 
    return result;
+}
+
+template <typename REAL>
+bool
+Probing<REAL>::isBinaryVariable( int upper_bound, int lower_bound,
+                                 int column_size,
+                                 const Flags<ColFlag>& colFlag ) const
+{
+   return !colFlag.test( ColFlag::kUnbounded ) &&
+          colFlag.test( ColFlag::kIntegral ) && column_size > 0 &&
+          lower_bound == 0 && upper_bound == 1;
 }
 
 } // namespace papilo
