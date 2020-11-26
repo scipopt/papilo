@@ -30,6 +30,8 @@
 #include "papilo/misc/Num.hpp"
 #include "papilo/misc/fmt.hpp"
 
+// TODO: before this presolver starts feasibility needs to be checked
+// TODO: -> maybe do the simple check before? that means inf <= b <= sup
 namespace papilo
 {
 
@@ -43,7 +45,7 @@ class SimpleSubstitution : public PresolveMethod<REAL>
       this->setTiming( PresolverTiming::kMedium );
    }
 
-   virtual PresolveStatus
+   PresolveStatus
    execute( const Problem<REAL>& problem,
             const ProblemUpdate<REAL>& problemUpdate, const Num<REAL>& num,
             Reductions<REAL>& reductions ) override;

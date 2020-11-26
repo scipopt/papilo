@@ -32,7 +32,7 @@ using namespace papilo;
 Problem<double>
 setupProblemWithSimpleProbing();
 
-TEST_CASE( "happy path - simple probing", "[presolve]" )
+TEST_CASE( "happy-path-simple-probing", "[presolve]" )
 {
    Num<double> num{};
    Problem<double> problem = setupProblemWithSimpleProbing();

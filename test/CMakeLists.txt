@@ -29,6 +29,7 @@ add_executable(unit_test TestMain.cpp
         papilo/presolve/ProbingTest.cpp
         papilo/presolve/SingletonColsTest.cpp
         papilo/presolve/SimpleProbingTest.cpp
+        papilo/presolve/SimpleSubstitutionTest.cpp
         papilo/presolve/SimplifyInequalitiesTest.cpp
         ${PAPILOLIB_TEST_FILE})
 target_link_libraries(unit_test papilo ${PAPILOLIB_TARGET} ${Boost_LIBRARIES})
@@ -53,6 +54,11 @@ set(unit_tests
         "failed-path-probing-on-not-binary-variables"
         "happy-path-singleton-column"
         "failed-path-singleton-column-row"
+        "happy-path-simple-probing"
+        "happy-path-simple-substitution-for-2-int"
+        "happy-path-simple-substitution-for-2-continuous"
+        "happy-path-simple-substitution-for-continuous-and-integer"
+        "failed-path-simple-substitution-for-2-int"
         "happy-path-simplify-inequalities-only-greatest-divisor"
         "example-1-from-3.5-Presolve-Reductions-in-MIP"
         "example-2-from-3.5-Presolve-Reductions-in-MIP"
