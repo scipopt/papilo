@@ -47,15 +47,14 @@ TEST_CASE( "happy-path-presolve-fix-continuous", "[presolve]" )
    PresolveStatus presolveStatus =
        presolvingMethod.execute( problem, problemUpdate, num, reductions );
 
-   BOOST_ASSERT( presolveStatus == PresolveStatus::kReduced );
-   BOOST_ASSERT( reductions.size() == 2 );
-   BOOST_ASSERT( reductions.getReduction( 0 ).col == 2 );
-   BOOST_ASSERT( reductions.getReduction( 0 ).row ==
-                 ColReduction::BOUNDS_LOCKED );
-   BOOST_ASSERT( reductions.getReduction( 0 ).newval == 0 );
-   BOOST_ASSERT( reductions.getReduction( 1 ).row == ColReduction::FIXED );
-   BOOST_ASSERT( reductions.getReduction( 1 ).col == 2 );
-   BOOST_ASSERT( reductions.getReduction( 1 ).newval == 0 );
+   REQUIRE( presolveStatus == PresolveStatus::kReduced );
+   REQUIRE( reductions.size() == 2 );
+   REQUIRE( reductions.getReduction( 0 ).col == 2 );
+   REQUIRE( reductions.getReduction( 0 ).row == ColReduction::BOUNDS_LOCKED );
+   REQUIRE( reductions.getReduction( 0 ).newval == 0 );
+   REQUIRE( reductions.getReduction( 1 ).row == ColReduction::FIXED );
+   REQUIRE( reductions.getReduction( 1 ).col == 2 );
+   REQUIRE( reductions.getReduction( 1 ).newval == 0 );
 }
 
 TEST_CASE( "happy-path-no-presolve-fix-continuous", "[presolve]" )
@@ -71,8 +70,8 @@ TEST_CASE( "happy-path-no-presolve-fix-continuous", "[presolve]" )
    Reductions<double> reductions{};
    PresolveStatus presolveStatus =
        presolvingMethod.execute( problem, problemUpdate, num, reductions );
-   BOOST_ASSERT( presolveStatus == PresolveStatus::kUnchanged );
-   BOOST_ASSERT( reductions.size() == 0 );
+   REQUIRE( presolveStatus == PresolveStatus::kUnchanged );
+   REQUIRE( reductions.size() == 0 );
 }
 
 Problem<double>

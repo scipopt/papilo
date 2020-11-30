@@ -30,6 +30,9 @@
 papilo::Problem<double>
 setupProblemWithParallelColumns();
 
+papilo::Problem<double>
+setupExample8ofChapter6Dot3InPresolveReductions();
+
 TEST_CASE( "happy-path-parallel-column-detection", "[presolve]" )
 {
    papilo::Num<double> num{};
@@ -47,22 +50,41 @@ TEST_CASE( "happy-path-parallel-column-detection", "[presolve]" )
    papilo::PresolveStatus presolveStatus =
        presolvingMethod.execute( problem, problemUpdate, num, reductions );
 
-   BOOST_ASSERT( presolveStatus == papilo::PresolveStatus::kReduced );
-   BOOST_ASSERT( reductions.size() == 3 );
-   BOOST_ASSERT( reductions.getReduction( 0 ).row ==
-                 papilo::ColReduction::LOCKED );
-   BOOST_ASSERT( reductions.getReduction( 0 ).col == 2 );
-   BOOST_ASSERT( reductions.getReduction( 0 ).newval == 0 );
+   REQUIRE( presolveStatus == papilo::PresolveStatus::kReduced );
+   REQUIRE( reductions.size() == 3 );
+   REQUIRE( reductions.getReduction( 0 ).row == papilo::ColReduction::LOCKED );
+   REQUIRE( reductions.getReduction( 0 ).col == 2 );
+   REQUIRE( reductions.getReduction( 0 ).newval == 0 );
 
-   BOOST_ASSERT( reductions.getReduction( 1 ).col == 1 );
-   BOOST_ASSERT( reductions.getReduction( 1 ).row ==
-                 papilo::ColReduction::LOCKED );
-   BOOST_ASSERT( reductions.getReduction( 1 ).newval == 0 );
+   REQUIRE( reductions.getReduction( 1 ).col == 1 );
+   REQUIRE( reductions.getReduction( 1 ).row == papilo::ColReduction::LOCKED );
+   REQUIRE( reductions.getReduction( 1 ).newval == 0 );
 
-   BOOST_ASSERT( reductions.getReduction( 2 ).row ==
-                 papilo::ColReduction::PARALLEL );
-   BOOST_ASSERT( reductions.getReduction( 2 ).col == 2 );
-   BOOST_ASSERT( reductions.getReduction( 2 ).newval == 1 );
+   REQUIRE( reductions.getReduction( 2 ).row ==
+            papilo::ColReduction::PARALLEL );
+   REQUIRE( reductions.getReduction( 2 ).col == 2 );
+   REQUIRE( reductions.getReduction( 2 ).newval == 1 );
+}
+
+TEST_CASE( "example-8-from-6.3-Presolve-Reductions-in-MIP", "[presolve]" )
+{
+   papilo::Num<double> num{};
+   papilo::Problem<double> problem =
+       setupExample8ofChapter6Dot3InPresolveReductions();
+   papilo::Statistics statistics{};
+   papilo::PresolveOptions presolveOptions{};
+   papilo::Postsolve<double> postsolve =
+       papilo::Postsolve<double>( problem, num );
+   papilo::ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
+                                                presolveOptions, num );
+   problemUpdate.checkChangedActivities();
+   papilo::ParallelColDetection<double> presolvingMethod{};
+   papilo::Reductions<double> reductions{};
+
+   papilo::PresolveStatus presolveStatus =
+       presolvingMethod.execute( problem, problemUpdate, num, reductions );
+
+   REQUIRE( presolveStatus == papilo::PresolveStatus::kUnchanged );
 }
 
 papilo::Problem<double>
@@ -79,9 +101,9 @@ setupProblemWithParallelColumns()
    papilo::Vec<std::tuple<int, int, double>> entries{
        std::tuple<int, int, double>{ 0, 0, 1.0 },
        std::tuple<int, int, double>{ 1, 1, 1.0 },
-       std::tuple<int, int, double>{ 2, 1, 2.0 },
        std::tuple<int, int, double>{ 1, 2, 2.0 },
-       std::tuple<int, int, double>{ 2, 2, 4.0 },
+       std::tuple<int, int, double>{ 2, 1, -2.0 },
+       std::tuple<int, int, double>{ 2, 2, -4.0 },
    };
 
    papilo::ProblemBuilder<double> pb;
@@ -97,6 +119,38 @@ setupProblemWithParallelColumns()
    pb.addEntryAll( entries );
    pb.setColNameAll( columnNames );
    pb.setProblemName( "matrix with parallel columns (1 and 2)" );
+   papilo::Problem<double> problem = pb.build();
+   return problem;
+}
+
+papilo::Problem<double>
+setupExample8ofChapter6Dot3InPresolveReductions()
+{
+   papilo::Vec<double> coefficients{ 2.0, 4.0, 1.0 };
+   papilo::Vec<double> lowerBounds{ 0, 0, 0 };
+   papilo::Vec<uint8_t> isIntegral{ 0, 0, 0 };
+
+   papilo::Vec<double> rhs{ -10 };
+   papilo::Vec<std::string> rowNames{ "A1" };
+   papilo::Vec<std::string> columnNames{ "x", "y", "z" };
+   papilo::Vec<std::tuple<int, int, double>> entries{
+       std::tuple<int, int, double>{ 0, 0, -1 },
+       std::tuple<int, int, double>{ 0, 1, -2 },
+       std::tuple<int, int, double>{ 0, 2, -1 } };
+
+   papilo::ProblemBuilder<double> pb;
+   pb.reserve( entries.size(), rowNames.size(), columnNames.size() );
+   pb.setNumRows( rowNames.size() );
+   pb.setNumCols( columnNames.size() );
+   pb.setColLbAll( lowerBounds );
+   pb.setObjAll( coefficients );
+   pb.setObjOffset( 0.0 );
+   pb.setColIntegralAll( isIntegral );
+   pb.setRowRhsAll( rhs );
+   pb.addEntryAll( entries );
+   pb.setColNameAll( columnNames );
+   pb.setProblemName(
+       "matrix Example 8 of chapter 6.3 in Presolve Reductions in MIP" );
    papilo::Problem<double> problem = pb.build();
    return problem;
 }

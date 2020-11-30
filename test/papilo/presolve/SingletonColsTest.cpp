@@ -61,29 +61,28 @@ TEST_CASE( "happy-path-singleton-column", "[presolve]" )
    PresolveStatus presolveStatus =
        presolvingMethod.execute( problem, problemUpdate, num, reductions );
 
-   BOOST_ASSERT( presolveStatus == PresolveStatus::kReduced );
-   BOOST_ASSERT( reductions.size() == 5 );
-   BOOST_ASSERT( reductions.getReduction( 0 ).col ==0);
-   BOOST_ASSERT( reductions.getReduction( 0 ).row == ColReduction::BOUNDS_LOCKED);
-   BOOST_ASSERT( reductions.getReduction( 0 ).newval == 0 );
+   REQUIRE( presolveStatus == PresolveStatus::kReduced );
+   REQUIRE( reductions.size() == 5 );
+   REQUIRE( reductions.getReduction( 0 ).col == 0 );
+   REQUIRE( reductions.getReduction( 0 ).row == ColReduction::BOUNDS_LOCKED );
+   REQUIRE( reductions.getReduction( 0 ).newval == 0 );
 
-   BOOST_ASSERT( reductions.getReduction( 1 ).row == 0 );
-   BOOST_ASSERT( reductions.getReduction( 1 ).col ==
-                 papilo::RowReduction::LOCKED );
-   BOOST_ASSERT( reductions.getReduction( 1 ).newval == 0 );
+   REQUIRE( reductions.getReduction( 1 ).row == 0 );
+   REQUIRE( reductions.getReduction( 1 ).col == papilo::RowReduction::LOCKED );
+   REQUIRE( reductions.getReduction( 1 ).newval == 0 );
 
-   BOOST_ASSERT( reductions.getReduction( 2 ).col == 0 );
-   BOOST_ASSERT( reductions.getReduction( 2 ).newval == 0 );
-   BOOST_ASSERT( reductions.getReduction( 2 ).row == ColReduction::SUBSTITUTE_OBJ);
+   REQUIRE( reductions.getReduction( 2 ).col == 0 );
+   REQUIRE( reductions.getReduction( 2 ).newval == 0 );
+   REQUIRE( reductions.getReduction( 2 ).row == ColReduction::SUBSTITUTE_OBJ );
 
-   //in matrix entry (0,0) new value 0
-   BOOST_ASSERT( reductions.getReduction( 3 ).col == 0 );
-   BOOST_ASSERT( reductions.getReduction( 3 ).newval == 0 );
-   BOOST_ASSERT( reductions.getReduction( 3 ).row == 0);
+   // in matrix entry (0,0) new value 0
+   REQUIRE( reductions.getReduction( 3 ).col == 0 );
+   REQUIRE( reductions.getReduction( 3 ).newval == 0 );
+   REQUIRE( reductions.getReduction( 3 ).row == 0 );
 
-   BOOST_ASSERT( reductions.getReduction( 4 ).col == RowReduction::LHS_INF );
-   BOOST_ASSERT( reductions.getReduction( 4 ).newval == 0 );
-   BOOST_ASSERT( reductions.getReduction( 4 ).row == 0);
+   REQUIRE( reductions.getReduction( 4 ).col == RowReduction::LHS_INF );
+   REQUIRE( reductions.getReduction( 4 ).newval == 0 );
+   REQUIRE( reductions.getReduction( 4 ).row == 0 );
 }
 
 TEST_CASE( "failed-path-singleton-column-row", "[presolve]" )
@@ -102,7 +101,7 @@ TEST_CASE( "failed-path-singleton-column-row", "[presolve]" )
    PresolveStatus presolveStatus =
        presolvingMethod.execute( problem, problemUpdate, num, reductions );
 
-   BOOST_ASSERT( presolveStatus == PresolveStatus::kUnchanged );
+   REQUIRE( presolveStatus == PresolveStatus::kUnchanged );
 }
 
 Problem<double>

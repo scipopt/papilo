@@ -148,6 +148,7 @@ ParallelRowDetection<REAL>::findParallelRows(
       const int length = row1.getLength();
       const REAL* coefs1 = row1.getValues();
 
+      // TODO: why are Columns with only one entry excluded? see ParallelColumn
       if( length < 2 )
          return;
 

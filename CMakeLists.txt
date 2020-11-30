@@ -217,7 +217,6 @@ install(FILES
    DESTINATION include/papilo)
 
 install(FILES
-        #TODO FreeVar is missing?
         ${PROJECT_SOURCE_DIR}/src/papilo/core/Components.hp
         ${PROJECT_SOURCE_DIR}/src/papilo/core/ConstraintMatrix.hpp
         ${PROJECT_SOURCE_DIR}/src/papilo/core/MatrixBuffer.hpp

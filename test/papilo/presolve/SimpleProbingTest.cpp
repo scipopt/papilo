@@ -32,13 +32,15 @@ using namespace papilo;
 Problem<double>
 setupProblemWithSimpleProbing();
 
+Problem<double>
+setupExample3ofChapter3Dot6InPresolveReductions();
+
 TEST_CASE( "happy-path-simple-probing", "[presolve]" )
 {
    Num<double> num{};
    Problem<double> problem = setupProblemWithSimpleProbing();
    Statistics statistics{};
    PresolveOptions presolveOptions{};
-   presolveOptions.dualreds = 0;
    Postsolve<double> postsolve = Postsolve<double>( problem, num );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num );
@@ -49,30 +51,96 @@ TEST_CASE( "happy-path-simple-probing", "[presolve]" )
    PresolveStatus presolveStatus =
        presolvingMethod.execute( problem, problemUpdate, num, reductions );
 
-   BOOST_ASSERT( presolveStatus == PresolveStatus::kReduced );
-   BOOST_ASSERT( reductions.size() == 4 );
+   REQUIRE( presolveStatus == PresolveStatus::kReduced );
+   REQUIRE( reductions.size() == 4 );
 
    //  lb + x (ub -lb) = y => x = 1 -y
-   BOOST_ASSERT( reductions.getReduction( 0 ).col == 1 );
-   BOOST_ASSERT( reductions.getReduction( 0 ).row == ColReduction::REPLACE );
-   BOOST_ASSERT( reductions.getReduction( 0 ).newval == -1 );
+   REQUIRE( reductions.getReduction( 0 ).col == 1 );
+   REQUIRE( reductions.getReduction( 0 ).row == ColReduction::REPLACE );
+   REQUIRE( reductions.getReduction( 0 ).newval == -1 );
 
-   BOOST_ASSERT( reductions.getReduction( 1 ).col == 0 );
-   BOOST_ASSERT( reductions.getReduction( 1 ).row ==
-                 papilo::ColReduction::NONE );
-   BOOST_ASSERT( reductions.getReduction( 1 ).newval == 1 );
+   REQUIRE( reductions.getReduction( 1 ).col == 0 );
+   REQUIRE( reductions.getReduction( 1 ).row == papilo::ColReduction::NONE );
+   REQUIRE( reductions.getReduction( 1 ).newval == 1 );
 
    //  lb + x (ub -lb) = z => x = 1 -z
-   BOOST_ASSERT( reductions.getReduction( 2 ).col == 2 );
-   BOOST_ASSERT( reductions.getReduction( 2 ).row ==
-                 papilo::ColReduction::REPLACE );
-   BOOST_ASSERT( reductions.getReduction( 2 ).newval == -1 );
+   REQUIRE( reductions.getReduction( 2 ).col == 2 );
+   REQUIRE( reductions.getReduction( 2 ).row == papilo::ColReduction::REPLACE );
+   REQUIRE( reductions.getReduction( 2 ).newval == -1 );
 
-   BOOST_ASSERT( reductions.getReduction( 3 ).col == 0 );
-   BOOST_ASSERT( reductions.getReduction( 3 ).row ==
-                 papilo::ColReduction::NONE );
-   BOOST_ASSERT( reductions.getReduction( 3 ).newval == 1 );
+   REQUIRE( reductions.getReduction( 3 ).col == 0 );
+   REQUIRE( reductions.getReduction( 3 ).row == papilo::ColReduction::NONE );
+   REQUIRE( reductions.getReduction( 3 ).newval == 1 );
+}
 
+TEST_CASE( "example-3-from-3.6-Presolve-Reductions-in-MIP", "[presolve]" )
+{
+   Num<double> num{};
+   Problem<double> problem = setupExample3ofChapter3Dot6InPresolveReductions();
+   Statistics statistics{};
+   PresolveOptions presolveOptions{};
+   Postsolve<double> postsolve = Postsolve<double>( problem, num );
+   ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
+                                        presolveOptions, num );
+   SimpleProbing<double> presolvingMethod{};
+   Reductions<double> reductions{};
+   problem.recomputeAllActivities();
+
+   PresolveStatus presolveStatus =
+       presolvingMethod.execute( problem, problemUpdate, num, reductions );
+
+   REQUIRE( presolveStatus == PresolveStatus::kReduced );
+   REQUIRE( reductions.size() == 8 );
+
+   REQUIRE( reductions.getReduction( 0 ).col == 1 );
+   REQUIRE( reductions.getReduction( 0 ).row == ColReduction::REPLACE );
+   REQUIRE( reductions.getReduction( 0 ).newval == -1 );
+
+   REQUIRE( reductions.getReduction( 1 ).col == 0 );
+   REQUIRE( reductions.getReduction( 1 ).row == papilo::ColReduction::NONE );
+   REQUIRE( reductions.getReduction( 1 ).newval == 1 );
+}
+
+Problem<double>
+setupExample3ofChapter3Dot6InPresolveReductions()
+{
+   // min sum(x)
+   // s.t. 4 x + y + z + v + w = 4
+   Vec<double> coefficients{ 1.0, 1.0, 1.0, 1.0, 1.0 };
+   Vec<double> lowerBounds{ 0.0, 0.0, 0.0, 0.0, 0.0 };
+   Vec<double> upperBounds{ 1.0, 1.0, 1.0, 1.0, 1.0 };
+   Vec<uint8_t> isIntegral{ 1, 0, 0, 0, 0 };
+
+   Vec<double> rhs{ 4.0 };
+   Vec<double> lhs{ rhs[0] };
+   Vec<std::string> rowNames{ "A1" };
+   Vec<std::string> columnNames{ "x1", "x2", "x3", "x4", "x5" };
+   Vec<std::tuple<int, int, double>> entries{
+       std::tuple<int, int, double>{ 0, 0, 4.0 },
+       std::tuple<int, int, double>{ 0, 1, 1.0 },
+       std::tuple<int, int, double>{ 0, 2, 1.0 },
+       std::tuple<int, int, double>{ 0, 3, 1.0 },
+       std::tuple<int, int, double>{ 0, 4, 1.0 },
+   };
+
+   ProblemBuilder<double> pb;
+   pb.reserve( entries.size(), rowNames.size(), columnNames.size() );
+   pb.setNumRows( rowNames.size() );
+   pb.setNumCols( columnNames.size() );
+   pb.setColLbAll( lowerBounds );
+   pb.setColUbAll( upperBounds );
+   pb.setObjAll( coefficients );
+   pb.setObjOffset( 0.0 );
+   pb.setColIntegralAll( isIntegral );
+   pb.setRowRhsAll( rhs );
+   pb.setRowLhsAll( lhs );
+   pb.addEntryAll( entries );
+   pb.setColNameAll( columnNames );
+   pb.setProblemName(
+       "matrix Example 3 of chapter 3.6 in Presolve Reductions in MIP" );
+   Problem<double> problem = pb.build();
+   problem.getConstraintMatrix().modifyLeftHandSide( 0, lhs[0] );
+   return problem;
 }
 
 Problem<double>

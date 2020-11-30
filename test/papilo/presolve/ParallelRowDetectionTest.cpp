@@ -47,22 +47,20 @@ TEST_CASE( "happy-path-parallel-row-detection", "[presolve]" )
    papilo::PresolveStatus presolveStatus =
        presolvingMethod.execute( problem, problemUpdate, num, reductions );
 
-   BOOST_ASSERT( presolveStatus == papilo::PresolveStatus::kReduced );
-   BOOST_ASSERT( reductions.size() == 3 );
-   BOOST_ASSERT( reductions.getReduction( 0 ).col ==
-                 papilo::RowReduction::LOCKED );
-   BOOST_ASSERT( reductions.getReduction( 0 ).row == 2 );
-   BOOST_ASSERT( reductions.getReduction( 0 ).newval == 0 );
+   REQUIRE( presolveStatus == papilo::PresolveStatus::kReduced );
+   REQUIRE( reductions.size() == 3 );
+   REQUIRE( reductions.getReduction( 0 ).col == papilo::RowReduction::LOCKED );
+   REQUIRE( reductions.getReduction( 0 ).row == 2 );
+   REQUIRE( reductions.getReduction( 0 ).newval == 0 );
 
-   BOOST_ASSERT( reductions.getReduction( 1 ).row == 0 );
-   BOOST_ASSERT( reductions.getReduction( 1 ).col ==
-                 papilo::RowReduction::LOCKED );
-   BOOST_ASSERT( reductions.getReduction( 1 ).newval == 0 );
+   REQUIRE( reductions.getReduction( 1 ).row == 0 );
+   REQUIRE( reductions.getReduction( 1 ).col == papilo::RowReduction::LOCKED );
+   REQUIRE( reductions.getReduction( 1 ).newval == 0 );
 
-   BOOST_ASSERT( reductions.getReduction( 2 ).col ==
-                 papilo::RowReduction::REDUNDANT );
-   BOOST_ASSERT( reductions.getReduction( 2 ).newval == 0 );
-   BOOST_ASSERT( reductions.getReduction( 2 ).row == 0 );
+   REQUIRE( reductions.getReduction( 2 ).col ==
+            papilo::RowReduction::REDUNDANT );
+   REQUIRE( reductions.getReduction( 2 ).newval == 0 );
+   REQUIRE( reductions.getReduction( 2 ).row == 0 );
 }
 
 papilo::Problem<double>

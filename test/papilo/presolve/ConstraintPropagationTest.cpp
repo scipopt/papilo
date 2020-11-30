@@ -50,24 +50,23 @@ TEST_CASE( "happy-path-constraint-propagation", "[presolve]" )
    PresolveStatus presolveStatus =
        presolvingMethod.execute( problem, problemUpdate, num, reductions );
 
-   BOOST_ASSERT( presolveStatus == PresolveStatus::kReduced );
-   BOOST_ASSERT( reductions.size() == 4 );
-   BOOST_ASSERT( reductions.getReduction( 0 ).col == 0 );
-   BOOST_ASSERT( reductions.getReduction( 0 ).row == ColReduction::UPPER_BOUND );
-   BOOST_ASSERT( reductions.getReduction( 0 ).newval == 1 );
+   REQUIRE( presolveStatus == PresolveStatus::kReduced );
+   REQUIRE( reductions.size() == 4 );
+   REQUIRE( reductions.getReduction( 0 ).col == 0 );
+   REQUIRE( reductions.getReduction( 0 ).row == ColReduction::UPPER_BOUND );
+   REQUIRE( reductions.getReduction( 0 ).newval == 1 );
 
-   BOOST_ASSERT( reductions.getReduction( 1 ).row == ColReduction::UPPER_BOUND );
-   BOOST_ASSERT( reductions.getReduction( 1 ).col == 1 );
-   BOOST_ASSERT( reductions.getReduction( 1 ).newval == 1 );
+   REQUIRE( reductions.getReduction( 1 ).row == ColReduction::UPPER_BOUND );
+   REQUIRE( reductions.getReduction( 1 ).col == 1 );
+   REQUIRE( reductions.getReduction( 1 ).newval == 1 );
 
-   BOOST_ASSERT( reductions.getReduction( 2 ).col == 1 );
-   BOOST_ASSERT( reductions.getReduction( 2 ).row == ColReduction::FIXED );
-   BOOST_ASSERT( reductions.getReduction( 2 ).newval == 0 );
+   REQUIRE( reductions.getReduction( 2 ).col == 1 );
+   REQUIRE( reductions.getReduction( 2 ).row == ColReduction::FIXED );
+   REQUIRE( reductions.getReduction( 2 ).newval == 0 );
 
-   BOOST_ASSERT( reductions.getReduction( 3 ).col == 2 );
-   BOOST_ASSERT( reductions.getReduction( 3 ).newval == 0.1 );
-   BOOST_ASSERT( reductions.getReduction( 3 ).row == ColReduction::UPPER_BOUND );
-
+   REQUIRE( reductions.getReduction( 3 ).col == 2 );
+   REQUIRE( reductions.getReduction( 3 ).newval == 0.1 );
+   REQUIRE( reductions.getReduction( 3 ).row == ColReduction::UPPER_BOUND );
 }
 
 Problem<double>

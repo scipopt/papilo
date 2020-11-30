@@ -35,6 +35,8 @@
 .vscode
 .idea/
 
-build
+#Generated Files
+/build/
 /cmake-build-debug/
+/cmake-build-debug-coverage/
 external/tbb/cmake/

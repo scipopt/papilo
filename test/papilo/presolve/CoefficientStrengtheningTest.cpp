@@ -47,18 +47,18 @@ TEST_CASE( "happy-path-coefficient-strengthening", "[presolve]" )
    problemUpdate.trivialPresolve();
    PresolveStatus presolveStatus =
        presolvingMethod.execute( problem, problemUpdate, num, reductions );
-   //the Constraint x +2y <=2 (x,y in {0,1}) is dominated by x+ y <=1
-   BOOST_ASSERT( presolveStatus == PresolveStatus::kReduced );
-   BOOST_ASSERT( reductions.size() == 3 );
-   BOOST_ASSERT( reductions.getReduction( 0 ).col == RowReduction::LOCKED );
-   BOOST_ASSERT( reductions.getReduction( 0 ).row == 0 );
-   BOOST_ASSERT( reductions.getReduction( 0 ).newval == 0 );
-   BOOST_ASSERT( reductions.getReduction( 1 ).row == 0 );
-   BOOST_ASSERT( reductions.getReduction( 1 ).col == 1 );
-   BOOST_ASSERT( reductions.getReduction( 1 ).newval == 1 );
-   BOOST_ASSERT( reductions.getReduction( 2 ).row == 0 );
-   BOOST_ASSERT( reductions.getReduction( 2 ).col == RowReduction::RHS );
-   BOOST_ASSERT( reductions.getReduction( 2 ).newval == 1 );
+   // the Constraint x +2y <=2 (x,y in {0,1}) is dominated by x+ y <=1
+   REQUIRE( presolveStatus == PresolveStatus::kReduced );
+   REQUIRE( reductions.size() == 3 );
+   REQUIRE( reductions.getReduction( 0 ).col == RowReduction::LOCKED );
+   REQUIRE( reductions.getReduction( 0 ).row == 0 );
+   REQUIRE( reductions.getReduction( 0 ).newval == 0 );
+   REQUIRE( reductions.getReduction( 1 ).row == 0 );
+   REQUIRE( reductions.getReduction( 1 ).col == 1 );
+   REQUIRE( reductions.getReduction( 1 ).newval == 1 );
+   REQUIRE( reductions.getReduction( 2 ).row == 0 );
+   REQUIRE( reductions.getReduction( 2 ).col == RowReduction::RHS );
+   REQUIRE( reductions.getReduction( 2 ).newval == 1 );
 }
 
 Problem<double>

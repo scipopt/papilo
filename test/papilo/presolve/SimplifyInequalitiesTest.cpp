@@ -58,7 +58,7 @@ TEST_CASE( "happy-path-simplify-inequalities-only-greatest-divisor",
 
    // x -3y + 6z = 9 -> x = 3 w; w in Z -> w - y + 2 = 6
    // potential clash with implied integer
-   BOOST_ASSERT( presolveStatus == PresolveStatus::kUnchanged );
+   REQUIRE( presolveStatus == PresolveStatus::kUnchanged );
 }
 
 TEST_CASE( "example-1-from-3.5-Presolve-Reductions-in-MIP", "[presolve]" )
@@ -76,7 +76,8 @@ TEST_CASE( "example-1-from-3.5-Presolve-Reductions-in-MIP", "[presolve]" )
    PresolveStatus presolveStatus =
        presolvingMethod.execute( problem, problemUpdate, num, reductions );
 
-   BOOST_ASSERT( presolveStatus == PresolveStatus::kUnchanged );
+   // TODO:
+   REQUIRE( presolveStatus == PresolveStatus::kUnchanged );
 }
 
 /***
@@ -103,7 +104,8 @@ TEST_CASE( "example-2-from-3.5-Presolve-Reductions-in-MIP", "[presolve]" )
    PresolveStatus presolveStatus =
        presolvingMethod.execute( problem, problemUpdate, num, reductions );
 
-   BOOST_ASSERT( presolveStatus == PresolveStatus::kUnchanged );
+   // TODO:
+   REQUIRE( presolveStatus == PresolveStatus::kUnchanged );
 }
 
 Problem<double>
@@ -137,7 +139,7 @@ setupExample1ofChapter3Dot5InPresolveReductions()
    pb.addEntryAll( entries );
    pb.setColNameAll( columnNames );
    pb.setProblemName(
-       "matrix Example 1 iof chapter 3.5 in Presolve Reductions in MIP" );
+       "matrix Example 1 of chapter 3.5 in Presolve Reductions in MIP" );
    Problem<double> problem = pb.build();
    problem.getConstraintMatrix().modifyLeftHandSide( 0, lhs[0] );
    return problem;
@@ -173,7 +175,7 @@ setupExample2ofChapter3Dot5InPresolveReductions()
    pb.addEntryAll( entries );
    pb.setColNameAll( columnNames );
    pb.setProblemName(
-       "matrix Example 2 iof chapter 3.5 in Presolve Reductions in MIP" );
+       "matrix Example 2 of chapter 3.5 in Presolve Reductions in MIP" );
    Problem<double> problem = pb.build();
    problem.getConstraintMatrix().modifyLeftHandSide( 0, lhs[0] );
    return problem;

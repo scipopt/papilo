@@ -51,33 +51,32 @@ TEST_CASE( "happy-path-simple-substitution-for-2-int", "[presolve]" )
        presolvingMethod.execute( problem, problemUpdate, num, reductions );
 
    // Reduction => x = 2 - y/2 -> 0.5 (1 for int) <= x <= 2
-   BOOST_ASSERT( presolveStatus == PresolveStatus::kReduced );
-   BOOST_ASSERT( reductions.size() == 5 );
+   REQUIRE( presolveStatus == PresolveStatus::kReduced );
+   REQUIRE( reductions.size() == 5 );
 
-   BOOST_ASSERT( reductions.getReduction( 0 ).col == RowReduction::LOCKED );
-   BOOST_ASSERT( reductions.getReduction( 0 ).row == 0 );
-   BOOST_ASSERT( reductions.getReduction( 0 ).newval == 0 );
+   REQUIRE( reductions.getReduction( 0 ).col == RowReduction::LOCKED );
+   REQUIRE( reductions.getReduction( 0 ).row == 0 );
+   REQUIRE( reductions.getReduction( 0 ).newval == 0 );
 
-   BOOST_ASSERT( reductions.getReduction( 1 ).row ==
-                 ColReduction::BOUNDS_LOCKED );
-   BOOST_ASSERT( reductions.getReduction( 1 ).col == 1 );
-   BOOST_ASSERT( reductions.getReduction( 1 ).newval == 0 );
+   REQUIRE( reductions.getReduction( 1 ).row == ColReduction::BOUNDS_LOCKED );
+   REQUIRE( reductions.getReduction( 1 ).col == 1 );
+   REQUIRE( reductions.getReduction( 1 ).newval == 0 );
 
-   BOOST_ASSERT( reductions.getReduction( 2 ).col == 0 );
-   BOOST_ASSERT( reductions.getReduction( 2 ).row ==
-                 papilo::ColReduction::UPPER_BOUND );
-   BOOST_ASSERT( reductions.getReduction( 2 ).newval == 2 );
+   REQUIRE( reductions.getReduction( 2 ).col == 0 );
+   REQUIRE( reductions.getReduction( 2 ).row ==
+            papilo::ColReduction::UPPER_BOUND );
+   REQUIRE( reductions.getReduction( 2 ).newval == 2 );
 
-   BOOST_ASSERT( reductions.getReduction( 3 ).col == 0 );
-   BOOST_ASSERT( reductions.getReduction( 3 ).row ==
-                 papilo::ColReduction::LOWER_BOUND );
+   REQUIRE( reductions.getReduction( 3 ).col == 0 );
+   REQUIRE( reductions.getReduction( 3 ).row ==
+            papilo::ColReduction::LOWER_BOUND );
    // TODO: this could be rounded down for an integer
-   BOOST_ASSERT( reductions.getReduction( 3 ).newval == 0.5 );
+   REQUIRE( reductions.getReduction( 3 ).newval == 0.5 );
 
-   BOOST_ASSERT( reductions.getReduction( 4 ).col == 1 );
-   BOOST_ASSERT( reductions.getReduction( 4 ).row ==
-                 papilo::ColReduction::SUBSTITUTE );
-   BOOST_ASSERT( reductions.getReduction( 4 ).newval == 0 );
+   REQUIRE( reductions.getReduction( 4 ).col == 1 );
+   REQUIRE( reductions.getReduction( 4 ).row ==
+            papilo::ColReduction::SUBSTITUTE );
+   REQUIRE( reductions.getReduction( 4 ).newval == 0 );
 }
 
 TEST_CASE( "happy-path-simple-substitution-for-2-continuous", "[presolve]" )
@@ -98,22 +97,21 @@ TEST_CASE( "happy-path-simple-substitution-for-2-continuous", "[presolve]" )
        presolvingMethod.execute( problem, problemUpdate, num, reductions );
 
    // Reduction => x = 4 - 2y -> 0 <= x <= 4 (no further bound relaxation)
-   BOOST_ASSERT( presolveStatus == PresolveStatus::kReduced );
-   BOOST_ASSERT( reductions.size() == 3 );
+   REQUIRE( presolveStatus == PresolveStatus::kReduced );
+   REQUIRE( reductions.size() == 3 );
 
-   BOOST_ASSERT( reductions.getReduction( 0 ).col == RowReduction::LOCKED );
-   BOOST_ASSERT( reductions.getReduction( 0 ).row == 0 );
-   BOOST_ASSERT( reductions.getReduction( 0 ).newval == 0 );
+   REQUIRE( reductions.getReduction( 0 ).col == RowReduction::LOCKED );
+   REQUIRE( reductions.getReduction( 0 ).row == 0 );
+   REQUIRE( reductions.getReduction( 0 ).newval == 0 );
 
-   BOOST_ASSERT( reductions.getReduction( 1 ).row ==
-                 ColReduction::BOUNDS_LOCKED );
-   BOOST_ASSERT( reductions.getReduction( 1 ).col == 0 );
-   BOOST_ASSERT( reductions.getReduction( 1 ).newval == 0 );
+   REQUIRE( reductions.getReduction( 1 ).row == ColReduction::BOUNDS_LOCKED );
+   REQUIRE( reductions.getReduction( 1 ).col == 0 );
+   REQUIRE( reductions.getReduction( 1 ).newval == 0 );
 
-   BOOST_ASSERT( reductions.getReduction( 2 ).col == 0 );
-   BOOST_ASSERT( reductions.getReduction( 2 ).row ==
-                 papilo::ColReduction::SUBSTITUTE );
-   BOOST_ASSERT( reductions.getReduction( 2 ).newval == 0 );
+   REQUIRE( reductions.getReduction( 2 ).col == 0 );
+   REQUIRE( reductions.getReduction( 2 ).row ==
+            papilo::ColReduction::SUBSTITUTE );
+   REQUIRE( reductions.getReduction( 2 ).newval == 0 );
 }
 
 TEST_CASE( "happy-path-simple-substitution-for-continuous-and-integer",
@@ -135,22 +133,21 @@ TEST_CASE( "happy-path-simple-substitution-for-continuous-and-integer",
        presolvingMethod.execute( problem, problemUpdate, num, reductions );
 
    // Reduction => x = 4 - 2y -> 0 <= x <= 4 (no further bound relaxation)
-   BOOST_ASSERT( presolveStatus == PresolveStatus::kReduced );
-   BOOST_ASSERT( reductions.size() == 3 );
+   REQUIRE( presolveStatus == PresolveStatus::kReduced );
+   REQUIRE( reductions.size() == 3 );
 
-   BOOST_ASSERT( reductions.getReduction( 0 ).col == RowReduction::LOCKED );
-   BOOST_ASSERT( reductions.getReduction( 0 ).row == 0 );
-   BOOST_ASSERT( reductions.getReduction( 0 ).newval == 0 );
+   REQUIRE( reductions.getReduction( 0 ).col == RowReduction::LOCKED );
+   REQUIRE( reductions.getReduction( 0 ).row == 0 );
+   REQUIRE( reductions.getReduction( 0 ).newval == 0 );
 
-   BOOST_ASSERT( reductions.getReduction( 1 ).row ==
-                 ColReduction::BOUNDS_LOCKED );
-   BOOST_ASSERT( reductions.getReduction( 1 ).col == 0 );
-   BOOST_ASSERT( reductions.getReduction( 1 ).newval == 0 );
+   REQUIRE( reductions.getReduction( 1 ).row == ColReduction::BOUNDS_LOCKED );
+   REQUIRE( reductions.getReduction( 1 ).col == 0 );
+   REQUIRE( reductions.getReduction( 1 ).newval == 0 );
 
-   BOOST_ASSERT( reductions.getReduction( 2 ).col == 0 );
-   BOOST_ASSERT( reductions.getReduction( 2 ).row ==
-                 papilo::ColReduction::SUBSTITUTE );
-   BOOST_ASSERT( reductions.getReduction( 2 ).newval == 0 );
+   REQUIRE( reductions.getReduction( 2 ).col == 0 );
+   REQUIRE( reductions.getReduction( 2 ).row ==
+            papilo::ColReduction::SUBSTITUTE );
+   REQUIRE( reductions.getReduction( 2 ).newval == 0 );
 }
 
 TEST_CASE( "failed-path-simple-substitution-for-2-int", "[presolve]" )
@@ -170,7 +167,7 @@ TEST_CASE( "failed-path-simple-substitution-for-2-int", "[presolve]" )
    PresolveStatus presolveStatus =
        presolvingMethod.execute( problem, problemUpdate, num, reductions );
 
-   BOOST_ASSERT( presolveStatus == PresolveStatus::kUnchanged );
+   REQUIRE( presolveStatus == PresolveStatus::kUnchanged );
 }
 
 Problem<double>

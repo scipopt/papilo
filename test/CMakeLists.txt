@@ -16,13 +16,13 @@ add_executable(unit_test TestMain.cpp
 
         papilo/core/MatrixBufferTest.cpp
         papilo/core/SparseStorageTest.cpp
-
         papilo/misc/VectorUtilsTest.cpp
 
         papilo/presolve/CoefficientStrengtheningTest.cpp
         papilo/presolve/ConstraintPropagationTest.cpp
+        papilo/presolve/DualFixTest.cpp
         papilo/presolve/FixContinuousTest.cpp
-#        papilo/presolve/FreeVarSubstitutionTest.cpp
+        papilo/presolve/FreeVarSubstitutionTest.cpp
         papilo/presolve/ImplIntDetectionTest.cpp
         papilo/presolve/ParallelRowDetectionTest.cpp
         papilo/presolve/ParallelColDetectionTest.cpp
@@ -31,7 +31,9 @@ add_executable(unit_test TestMain.cpp
         papilo/presolve/SimpleProbingTest.cpp
         papilo/presolve/SimpleSubstitutionTest.cpp
         papilo/presolve/SimplifyInequalitiesTest.cpp
+
         ${PAPILOLIB_TEST_FILE})
+
 target_link_libraries(unit_test papilo ${PAPILOLIB_TARGET} ${Boost_LIBRARIES})
 
 
@@ -41,27 +43,64 @@ set(unit_tests
         "matrix-buffer"
         "vector-comparisons"
         "matrix-comparisons"
+
         "problem-comparisons"
 
         "happy-path-coefficient-strengthening"
+
         "happy-path-constraint-propagation"
+
+        # Fix Continuous
         "happy-path-presolve-fix-continuous"
         "happy-path-no-presolve-fix-continuous"
+
+        #FreeVarSubstitution
+        "test free variable detection"
+
         "happy-path-implied-integer-detection"
+
         "happy-path-parallel-row-detection"
+
         "happy-path-parallel-column-detection"
+
+        #Probing
         "happy-path-probing"
         "failed-path-probing-on-not-binary-variables"
+
+        #singleton Column
         "happy-path-singleton-column"
         "failed-path-singleton-column-row"
+
+        #Simple Probing
         "happy-path-simple-probing"
+
+        #Simple Substitution
         "happy-path-simple-substitution-for-2-int"
         "happy-path-simple-substitution-for-2-continuous"
         "happy-path-simple-substitution-for-continuous-and-integer"
+
+        #DualFix
+        "happy-path-dual-fix"
+        "happy_path_dual_substitution_for_equations"
+        "happy_path_dual_substitution"
         "failed-path-simple-substitution-for-2-int"
         "happy-path-simplify-inequalities-only-greatest-divisor"
-        "example-1-from-3.5-Presolve-Reductions-in-MIP"
-        "example-2-from-3.5-Presolve-Reductions-in-MIP"
+        "happy_path_dual_substitution_unbounded_variables"
+        "trivial-column-presolve-does-dual-presolve-already"
+        "happy_path_dual_substitution_rounding"
+
+        "example-1-from-3.5-Presolve-Reductions-in-MIP" # not working
+        "example-2-from-3.5-Presolve-Reductions-in-MIP" # not working
+        "example-3-from-3.6-Presolve-Reductions-in-MIP" # trivial presolve fixes this case
+        "example-4-from-4.4-Presolve-Reductions-in-MIP" # not working
+        "example-5-from-4.4-Presolve-Reductions-in-MIP"
+        # "example-6-from-4.5-Presolve-Reductions-in-MIP"
+        # "example-7-from-5.5-Presolve-Reductions-in-MIP"
+        "example-8-from-6.3-Presolve-Reductions-in-MIP" # not working because one Coefficients are excluded
+        # "example-9-from-7.1-Presolve-Reductions-in-MIP"
+        # "example-10-from-7.5-Presolve-Reductions-in-MIP"
+
+
         ${PAPILOLIB_TESTS}
         )
 

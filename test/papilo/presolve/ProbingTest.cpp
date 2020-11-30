@@ -52,12 +52,12 @@ TEST_CASE( "happy-path-probing", "[presolve]" )
    PresolveStatus presolveStatus =
        presolvingMethod.execute( problem, problemUpdate, num, reductions );
 
-   BOOST_ASSERT( presolveStatus == PresolveStatus::kReduced );
-   BOOST_ASSERT( reductions.size() == 1 );
-   BOOST_ASSERT( reductions.getReduction( 0 ).col == 1 );
-   BOOST_ASSERT( reductions.getReduction( 0 ).row ==
-                 papilo::ColReduction::UPPER_BOUND );
-   BOOST_ASSERT( reductions.getReduction( 0 ).newval == 0 );
+   REQUIRE( presolveStatus == PresolveStatus::kReduced );
+   REQUIRE( reductions.size() == 1 );
+   REQUIRE( reductions.getReduction( 0 ).col == 1 );
+   REQUIRE( reductions.getReduction( 0 ).row ==
+            papilo::ColReduction::UPPER_BOUND );
+   REQUIRE( reductions.getReduction( 0 ).newval == 0 );
 }
 
 TEST_CASE( "failed-path-probing-on-not-binary-variables", "[presolve]" )
@@ -77,7 +77,7 @@ TEST_CASE( "failed-path-probing-on-not-binary-variables", "[presolve]" )
    PresolveStatus presolveStatus =
        presolvingMethod.execute( problem, problemUpdate, num, reductions );
 
-   BOOST_ASSERT( presolveStatus == PresolveStatus::kUnchanged );
+   REQUIRE( presolveStatus == PresolveStatus::kUnchanged );
 }
 
 Problem<double>
