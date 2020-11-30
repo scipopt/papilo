@@ -99,6 +99,9 @@ set(unit_tests
         "happy-path-singleton-column-equation"
 
         #Simple Probing
+        "failed-path-singleton-column-row"
+
+        #Simple Probing
         "happy-path-simple-probing"
 
         #Simple Substitution
