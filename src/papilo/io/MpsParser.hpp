@@ -233,7 +233,8 @@ MpsParser<REAL>::checkFirstWord( std::string& strline,
    it = strline.begin() + strline.find_first_not_of( " " );
    std::string::iterator it_start = it;
 
-   qi::parse( it, strline.end(), qi::lexeme[+qi::graph] ); // todo
+   // TODO: Daniel
+   qi::parse( it, strline.end(), qi::lexeme[+qi::graph] );
 
    const std::size_t length = std::distance( it_start, it );
 

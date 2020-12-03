@@ -120,7 +120,6 @@ class ParallelColDetection : public PresolveMethod<REAL>
       return false;
    }
 
-   /// todo how to communicate about postsolve information
    virtual PresolveStatus
    execute( const Problem<REAL>& problem,
             const ProblemUpdate<REAL>& problemUpdate, const Num<REAL>& num,
@@ -414,7 +413,6 @@ ParallelColDetection<REAL>::computeSupportId(
    }
 }
 
-/// todo how to communicate about postsolve information
 template <typename REAL>
 PresolveStatus
 ParallelColDetection<REAL>::execute( const Problem<REAL>& problem,

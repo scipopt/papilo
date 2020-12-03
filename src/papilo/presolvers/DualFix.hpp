@@ -53,7 +53,6 @@ class DualFix : public PresolveMethod<REAL>
       return false;
    }
 
-   /// todo how to communicate about postsolve information
    virtual PresolveStatus
    execute( const Problem<REAL>& problem,
             const ProblemUpdate<REAL>& problemUpdate, const Num<REAL>& num,
@@ -289,7 +288,7 @@ DualFix<REAL>::execute( const Problem<REAL>& problem,
 
                // A transaction is only needed to group several reductions that
                // belong together
-               // TODO are any locks needed?
+               // TODO are the locks to strict?
                TransactionGuard<REAL> guard{ reductions };
 
                reductions.lockCol( i );
@@ -394,7 +393,7 @@ DualFix<REAL>::execute( const Problem<REAL>& problem,
 
                // A transaction is only needed to group several reductions that
                // belong together
-               // TODO are any locks needed?
+               // TODO are the locks to strict?
                TransactionGuard<REAL> guard{ reductions };
 
                reductions.lockCol( i );

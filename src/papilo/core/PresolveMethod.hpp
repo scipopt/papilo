@@ -246,11 +246,12 @@ class PresolveMethod
       return false;
    }
 
-   /// todo interface for certificate function and flag to indicate whther
-   /// presolver writes certificates
    virtual void
    getCertificate()
    {
+      // todo interface for certificate function and flag to indicate whether
+      // presolver writes certificates -> Leon
+      // example for Probing because of gap
    }
 
    unsigned int

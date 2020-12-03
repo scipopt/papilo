@@ -121,15 +121,6 @@ Sparsify<REAL>::execute( const Problem<REAL>& problem,
    // after each call skip more rounds to not call sparsify too often
    this->skipRounds( this->getNCalls() );
 
-   // TODO: identify the equality rows, and sort them by length
-   // loop over the sorted rows, and loop over the columns in reverse order
-   // check numerical condition, implied freeness (check if row implies a
-   // tighter bound, don't check it if it does later) and we substitute the
-   // first col that we can and break (use a vector instead of a hashmap) and
-   // add reductions in place
-   // add a map that tells if the implied bounds of a col was already
-   // computed and failed (using dynamicbitset)
-
    Vec<int> equalities;
    equalities.reserve( nrows );
 

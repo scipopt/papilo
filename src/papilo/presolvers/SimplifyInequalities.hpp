@@ -55,7 +55,6 @@ class SimplifyInequalities : public PresolveMethod<REAL>
       this->setType( PresolverType::kIntegralCols );
    }
 
-   /// todo how to communicate about postsolve information
    virtual PresolveStatus
    execute( const Problem<REAL>& problem,
             const ProblemUpdate<REAL>& problemUpdate, const Num<REAL>& num,
@@ -304,7 +303,7 @@ SimplifyInequalities<REAL>::execute( const Problem<REAL>& problem,
 
          TransactionGuard<REAL> guard{ reductions };
          reductions.lockRow( row );
-         // TODO other locks needed?
+         // TODO: are the locks sufficient?
 
          // remove redundant variables
          for( int col : coeffDelete )

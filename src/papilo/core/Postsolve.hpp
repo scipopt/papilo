@@ -511,7 +511,7 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
       case ReductionType::kFixedCol:
       {
          int col = indices[first];
-         // todo: move to checker
+         // todo: move to KKTChecker
          // assert( !solSet[col] );
          // solSet[col] = true;
          origSol[col] = values[first];
@@ -703,7 +703,7 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
       }
    }
 
-   // todo: move to checker
+   // todo: move to KKTChecker
    // assert( std::all_of( solSet.begin(), solSet.end(),
    //                      []( uint8_t isset ) { return isset; } ) );
 

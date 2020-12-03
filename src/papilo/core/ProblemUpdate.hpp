@@ -830,7 +830,7 @@ ProblemUpdate<REAL>::flushChangedCoeffs()
                 update_activity( actChange, row, activity );
              } );
          ++stats.ncoefchgs;
-         // todo update locks
+         // TODO update up/down-locks -> so that i.e. DualFix can use it
       };
 
       problem.getConstraintMatrix().changeCoefficients(
@@ -892,22 +892,10 @@ ProblemUpdate<REAL>::flush()
    removeFixedCols();
 
    // delete fixed columns and redundant rows form the matrix
-   // todo update locks in delete rows and cols function
+   // TODO update locks in delete rows and cols function
    consMatrix.deleteRowsAndCols( redundant_rows, deleted_cols, activities,
                                  singletonRows, singletonColumns,
                                  emptyColumns );
-
-   // after deleting rows and cols check again for singleton rows
-   // if( !singletonRows.empty() )
-   //{
-   //   for( int row : singletonRows )
-   //   {
-   //      if( removeSingletonRow( row ) == PresolveStatus::kInfeasible )
-   //         return PresolveStatus::kInfeasible;
-   //   }
-   //
-   //   singletonRows.clear();
-   //}
 
    // remove singleton columns from list of singleton columns if they are not
    // singletons anymore
@@ -1413,7 +1401,7 @@ ProblemUpdate<REAL>::removeSingletonRow( int row )
    const REAL lhs = consMatrix.getLeftHandSides()[row];
    const REAL rhs = consMatrix.getRightHandSides()[row];
 
-   // todo: save row for postsolve.
+   // TODO: save row for dual-postsolve.
    // postsolve.notifySavedRow(row, rowvec, lhs, rhs, rflags[row]);
 
    if( rflags[row].test( RowFlag::kEquation ) )

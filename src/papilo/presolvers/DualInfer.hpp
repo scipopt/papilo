@@ -52,7 +52,6 @@ class DualInfer : public PresolveMethod<REAL>
       return false;
    }
 
-   /// todo how to communicate about postsolve information
    virtual PresolveStatus
    execute( const Problem<REAL>& problem,
             const ProblemUpdate<REAL>& problemUpdate, const Num<REAL>& num,

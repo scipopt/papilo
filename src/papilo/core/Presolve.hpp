@@ -366,8 +366,6 @@ Presolve<REAL>::finishRound( ProblemUpdate<REAL>& probUpdate )
       reduction.clear();
 
    std::fill( results.begin(), results.end(), PresolveStatus::kUnchanged );
-
-   // TODO compress if problem size decreased by some factor
 }
 
 template <typename REAL>
@@ -657,8 +655,6 @@ Presolve<REAL>::apply( Problem<REAL>& problem )
       roundCounter = 0;
 
       presolverStats.resize( presolvers.size(), std::pair<int, int>( 0, 0 ) );
-
-      // todo move trivial round 0 to initiliaze function
 
       ProblemUpdate<REAL> probUpdate( problem, result.postsolve, stats,
                                       presolveOptions, num );
@@ -986,7 +982,7 @@ Presolve<REAL>::apply( Problem<REAL>& problem )
          {
             int nremoved;
             int nnewfreevars;
-            // todo check if lp solver is simplex solver / add options
+
             std::tie( nremoved, nnewfreevars ) =
                 probUpdate.removeRedundantBounds();
             if( nremoved != 0 )

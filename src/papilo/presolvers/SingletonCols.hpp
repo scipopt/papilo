@@ -256,8 +256,9 @@ SingletonCols<REAL>::execute( const Problem<REAL>& problem,
 
       count_locks( val, rflags[row], ndownlocks, nuplocks );
 
-      // ranged row -> not a singleton. @TODO: check if ranged row can be
-      // converted to an equation with dual infer technique below
+      // ranged row (-inf < lhs < rhs < inf) -> not a singleton. TODO: check if
+      // ranged row can be converted to an equation with dual infer technique
+      // below
       if( nuplocks != 0 && ndownlocks != 0 )
          continue;
 

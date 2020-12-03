@@ -57,7 +57,8 @@ struct SolParser
       Solution<REAL> sol;
       sol.primal.resize( origcol_mapping.size(), REAL{ 0 } );
       String strline;
-      // TODO
+      // TODO: not sure if this works for every solution files
+      // check if commentar syntax works with SCIP
       getline( file, strline );
       getline( file, strline );
 
@@ -72,7 +73,7 @@ struct SolParser
          auto it = nameToCol.find( tokens[0] );
          if( it != nameToCol.end() )
          {
-            // TODO replace by exeption
+            // TODO replace by exception
             assert( tokens.size() > 1 );
             sol.primal[it->second] = std::stod( tokens[1] );
          }

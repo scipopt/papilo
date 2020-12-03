@@ -113,14 +113,6 @@ Substitution<REAL>::execute( const Problem<REAL>& problem,
 
    PresolveStatus result = PresolveStatus::kUnchanged;
 
-   // TODO: identify the equality rows, and sort them by length
-   // loop over the sorted rows, and loop over the columns in reverse order
-   // check numerical condition, implied freeness (check if row implies a
-   // tighter bound, don't check it if it does later) and we substitute the
-   // first col that we can and break (use a vector instead of a hashmap) and
-   // add reductions in place
-   // add a map that tells if the implied bounds of a col was already
-   // computed and failed (using dynamicbitset)
    using Equality = std::tuple<SparseVectorView<REAL>, int>;
    Vec<Equality> equalities;
    equalities.reserve( nrows );
