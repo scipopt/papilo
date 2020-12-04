@@ -75,6 +75,9 @@ class Substitution : public PresolveMethod<REAL>
    execute( const Problem<REAL>& problem,
             const ProblemUpdate<REAL>& problemUpdate, const Num<REAL>& num,
             Reductions<REAL>& reductions ) override;
+   bool
+   is_divisible( const Num<REAL>& num, const int length, const REAL* rowvalues,
+                 REAL minabsintvalue ) const;
 };
 
 #ifdef PAPILO_USE_EXTERN_TEMPLATES
@@ -141,8 +144,8 @@ Substitution<REAL>::execute( const Problem<REAL>& problem,
 
    boost::dynamic_bitset<> colUnusable( ncols );
    boost::dynamic_bitset<> touchedRows( nrows );
-   Vec<int> colcands;
-   colcands.reserve( ncols );
+   Vec<int> column_candidates;
+   column_candidates.reserve( ncols );
 
    for( auto equality : equalities )
    {
@@ -176,24 +179,11 @@ Substitution<REAL>::execute( const Problem<REAL>& problem,
       // equal to the smallest absolute coefficient in the row. Additional we
       // need to ensure that all coefficients are integral if divided by the
       // smallest absolute coefficient.
-      if( !containsContinuous )
-      {
-         bool divisible = true;
-         for( int i = 0; i != length; ++i )
-         {
-            if( !num.isIntegral( rowvalues[i] / minabsintvalue ) )
-            {
-               divisible = false;
-               break;
-            }
-         }
+      if( !containsContinuous &&
+          !is_divisible( num, length, rowvalues, minabsintvalue ) )
+         continue;
 
-         // row cannot be used for substitution
-         if( !divisible )
-            continue;
-      }
-
-      colcands.clear();
+      column_candidates.clear();
 
       for( int i = 0; i < length; ++i )
       {
@@ -213,6 +203,9 @@ Substitution<REAL>::execute( const Problem<REAL>& problem,
             if( containsContinuous )
                continue;
 
+            // TODO: why not saving the index of the value also? this would
+            // reduce the if statement to just comparing indices
+
             // the divisibility of the coefficients has been checked
             // above and we know that we can use it only if its coefficient has
             // the smallest magnitude of the coefficients within the row
@@ -227,16 +220,17 @@ Substitution<REAL>::execute( const Problem<REAL>& problem,
                continue;
          }
 
-         colcands.push_back( i );
+         column_candidates.push_back( i );
       }
 
-      pdqsort( colcands.begin(), colcands.end(), [&]( int i1, int i2 ) {
-         int col1 = rowindices[i1];
-         int col2 = rowindices[i2];
-         return problemUpdate.isColBetterForSubstitution( col1, col2 );
-      } );
+      pdqsort( column_candidates.begin(), column_candidates.end(),
+               [&]( int i1, int i2 ) {
+                  int col1 = rowindices[i1];
+                  int col2 = rowindices[i2];
+                  return problemUpdate.isColBetterForSubstitution( col1, col2 );
+               } );
 
-      for( int i : colcands )
+      for( int i : column_candidates )
       {
          int col = rowindices[i];
          auto colvec = constMatrix.getColumnCoefficients( col );
@@ -347,6 +341,22 @@ Substitution<REAL>::execute( const Problem<REAL>& problem,
    }
 
    return result;
+}
+
+template <typename REAL>
+bool
+Substitution<REAL>::is_divisible( const Num<REAL>& num, const int length,
+                                  const REAL* row_values,
+                                  REAL min_abs_int_value ) const
+{
+   for( int i = 0; i != length; ++i )
+   {
+      if( !num.isIntegral( row_values[i] / min_abs_int_value ) )
+      {
+         return false;
+      }
+   }
+   return true;
 }
 
 } // namespace papilo

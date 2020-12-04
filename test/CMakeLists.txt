@@ -16,6 +16,7 @@ add_executable(unit_test TestMain.cpp
 
         papilo/core/MatrixBufferTest.cpp
         papilo/core/SparseStorageTest.cpp
+        papilo/core/ProblemUpdateTest.cpp
         papilo/misc/VectorUtilsTest.cpp
 
         papilo/presolve/CoefficientStrengtheningTest.cpp
@@ -43,6 +44,9 @@ set(unit_tests
         "matrix-buffer"
         "vector-comparisons"
         "matrix-comparisons"
+
+        #ProblemUpdate
+        "happy-path-presolve-singleton-row"
 
         "problem-comparisons"
 
