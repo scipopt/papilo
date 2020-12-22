@@ -71,7 +71,7 @@ class Sparsify : public PresolveMethod<REAL>
           this->maxscale, 1.0 );
    }
 
-   virtual PresolveStatus
+   PresolveStatus
    execute( const Problem<REAL>& problem,
             const ProblemUpdate<REAL>& problemUpdate, const Num<REAL>& num,
             Reductions<REAL>& reductions ) override;
@@ -152,7 +152,7 @@ Sparsify<REAL>::execute( const Problem<REAL>& problem,
           auto& sparsify = localData.sparsify;
           auto& reductionBuffer = localData.reductionBuffer;
 
-          for( int i = r.begin(); i != r.end(); ++i )
+          for( int i = r.begin(); i < r.end(); ++i )
           {
              int eqrow = equalities[i];
 
@@ -270,6 +270,7 @@ Sparsify<REAL>::execute( const Problem<REAL>& problem,
 
                       if( candrowhits[row] == 0 )
                       {
+                         //TODO: what means this expression
                          if( i > eqlen - minhits )
                             continue;
 

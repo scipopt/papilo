@@ -34,6 +34,7 @@ add_executable(unit_test TestMain.cpp
         papilo/presolve/SimpleProbingTest.cpp
         papilo/presolve/SimpleSubstitutionTest.cpp
         papilo/presolve/SimplifyInequalitiesTest.cpp
+        papilo/presolve/SparsifyTest.cpp
 
         ${PAPILOLIB_TEST_FILE})
 
@@ -94,6 +95,10 @@ set(unit_tests
         "happy_path_dual_substitution_unbounded_variables"
         "trivial-column-presolve-does-dual-presolve-already"
         "happy_path_dual_substitution_rounding"
+
+        #Sparsify
+        "happy-path-sparsify"
+        "failed-path-sparsify"
 
         "example-1-from-3.5-Presolve-Reductions-in-MIP" # not working
         "example-2-from-3.5-Presolve-Reductions-in-MIP" # not working
