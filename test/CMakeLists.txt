@@ -22,6 +22,7 @@ add_executable(unit_test TestMain.cpp
         papilo/presolve/CoefficientStrengtheningTest.cpp
         papilo/presolve/ConstraintPropagationTest.cpp
         papilo/presolve/DualFixTest.cpp
+        papilo/presolve/DualInferTest.cpp
         papilo/presolve/FixContinuousTest.cpp
         papilo/presolve/FreeVarSubstitutionTest.cpp
         papilo/presolve/ImplIntDetectionTest.cpp
@@ -59,7 +60,7 @@ set(unit_tests
         "happy-path-no-presolve-fix-continuous"
 
         #FreeVarSubstitution
-        "test free variable detection"
+        "test-free-variable-detection"
 
         "happy-path-implied-integer-detection"
 
@@ -102,7 +103,7 @@ set(unit_tests
         # "example-7-from-5.5-Presolve-Reductions-in-MIP"
         "example-8-from-6.3-Presolve-Reductions-in-MIP" # not working because one Coefficients are excluded
         # "example-9-from-7.1-Presolve-Reductions-in-MIP"
-        # "example-10-from-7.5-Presolve-Reductions-in-MIP"
+        "example-10-from-7.5-Presolve-Reductions-in-MIP"
 
 
         ${PAPILOLIB_TESTS}

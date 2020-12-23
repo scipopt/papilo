@@ -33,7 +33,7 @@
 papilo::Problem<double>
 setupProblemForFreeVariableSubstitution();
 
-TEST_CASE( "test free variable detection", "[presolve]" )
+TEST_CASE( "test-free-variable-detection", "[presolve]" )
 {
    papilo::Problem<double> problem = setupProblemForFreeVariableSubstitution();
 
