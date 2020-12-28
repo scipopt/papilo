@@ -74,7 +74,7 @@ set(unit_tests
 
         #singleton Column
         "happy-path-singleton-column"
-        "failed-path-singleton-column-row"
+        "happy-path-singleton-column-equation"
 
         #Simple Probing
         "happy-path-simple-probing"

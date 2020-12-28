@@ -42,6 +42,7 @@ forceCalculationOfSingletonRows( Problem<double>& problem,
 {
    problem.recomputeLocks();
    problemUpdate.trivialColumnPresolve();
+   problem.recomputeAllActivities();
 }
 
 TEST_CASE( "happy-path-singleton-column", "[presolve]" )
@@ -54,7 +55,6 @@ TEST_CASE( "happy-path-singleton-column", "[presolve]" )
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num );
    forceCalculationOfSingletonRows( problem, problemUpdate );
-   problem.recomputeAllActivities();
    SingletonCols<double> presolvingMethod{};
    Reductions<double> reductions{};
 
@@ -85,7 +85,7 @@ TEST_CASE( "happy-path-singleton-column", "[presolve]" )
    REQUIRE( reductions.getReduction( 4 ).row == 0 );
 }
 
-TEST_CASE( "failed-path-singleton-column-row", "[presolve]" )
+TEST_CASE( "happy-path-singleton-column-equation", "[presolve]" )
 {
    Num<double> num{};
    Problem<double> problem = setupProblemWithOnlyOneEntryIn1stRowAndColumn();
@@ -101,7 +101,28 @@ TEST_CASE( "failed-path-singleton-column-row", "[presolve]" )
    PresolveStatus presolveStatus =
        presolvingMethod.execute( problem, problemUpdate, num, reductions );
 
-   REQUIRE( presolveStatus == PresolveStatus::kUnchanged );
+   REQUIRE( presolveStatus == PresolveStatus::kReduced );
+   REQUIRE( reductions.size() == 5 );
+   REQUIRE( reductions.getReduction( 0 ).col == 2 );
+   REQUIRE( reductions.getReduction( 0 ).row == ColReduction::BOUNDS_LOCKED );
+   REQUIRE( reductions.getReduction( 0 ).newval == 0 );
+
+   REQUIRE( reductions.getReduction( 1 ).col == papilo::RowReduction::LOCKED );
+   REQUIRE( reductions.getReduction( 1 ).row == 1 );
+   REQUIRE( reductions.getReduction( 1 ).newval == 0 );
+
+   REQUIRE( reductions.getReduction( 2 ).col == 2 );
+   REQUIRE( reductions.getReduction( 2 ).row == ColReduction::SUBSTITUTE_OBJ );
+   REQUIRE( reductions.getReduction( 2 ).newval == 1 );
+
+   REQUIRE( reductions.getReduction( 3 ).col == 2 );
+   REQUIRE( reductions.getReduction( 3 ).row == 1 );
+   REQUIRE( reductions.getReduction( 3 ).newval == 0 );
+
+   REQUIRE( reductions.getReduction( 4 ).col == RowReduction::LHS_INF );
+   REQUIRE( reductions.getReduction( 4 ).row == 1 );
+   REQUIRE( reductions.getReduction( 4 ).newval == 0 );
+
 }
 
 Problem<double>
@@ -110,19 +131,19 @@ setupProblemWithOnlyOneEntryIn1stRowAndColumn()
    Vec<double> coefficients{ 1.0, 1.0, 1.0 };
    Vec<double> upperBounds{ 10.0, 10.0, 10.0 };
    Vec<double> lowerBounds{ 0.0, 0.0, 0.0 };
-   Vec<uint8_t> isIntegral{ 1, 1, 1 };
+   Vec<uint8_t> isIntegral{ 0, 0, 0 };
 
-   Vec<uint8_t> isLefthandsideInfinity{ 0, 1, 1 };
-   Vec<uint8_t> isRighthandsideInfinity{ 0, 0, 0 };
-   Vec<double> rhs{ 1.0, 2.0, 3.0 };
-   Vec<std::string> rowNames{ "A1", "A2", "A3" };
-   Vec<std::string> columnNames{ "c1", "c2", "c3" };
+   Vec<uint8_t> isLefthandsideInfinity{ 1, 1 };
+   Vec<uint8_t> isRighthandsideInfinity{ 0, 0 };
+   Vec<double> rhs{ 3.0, 10.0};
+   Vec<std::string> rowNames{ "A1", "A2"};
+   Vec<std::string> columnNames{ "x", "y", "z" };
    Vec<std::tuple<int, int, double>> entries{
        std::tuple<int, int, double>{ 0, 0, 1.0 },
-       std::tuple<int, int, double>{ 1, 1, 2.0 },
-       std::tuple<int, int, double>{ 2, 2, 3.0 },
-       std::tuple<int, int, double>{ 1, 2, 3.0 },
-       std::tuple<int, int, double>{ 2, 1, 4.0 },
+       std::tuple<int, int, double>{ 0, 1, 2.0 },
+       std::tuple<int, int, double>{ 1, 0, 3.0 },
+       std::tuple<int, int, double>{ 1, 1, 3.0 },
+       std::tuple<int, int, double>{ 1, 2, 4.0 },
    };
 
    ProblemBuilder<double> pb;
@@ -141,8 +162,7 @@ setupProblemWithOnlyOneEntryIn1stRowAndColumn()
    pb.setColNameAll( columnNames );
    pb.setProblemName( "singleton column & row matrix with equation" );
    Problem<double> problem = pb.build();
-   // TODO: if constructing the problem like this, why is there noch check on Equation?
-   problem.getConstraintMatrix().modifyLeftHandSide( 0, 1 );
+   problem.getConstraintMatrix().modifyLeftHandSide( 1, rhs[1] );
    return problem;
 }
 
@@ -182,9 +202,8 @@ setupProblemWithSingletonColumn()
    pb.setRowRhsInfAll( isRighthandsideInfinity );
    pb.addEntryAll( entries );
    pb.setColNameAll( columnNames );
-   pb.setProblemName( "singleton column matrix with equation" );
+   pb.setProblemName( "singleton column" );
    Problem<double> problem = pb.build();
-   // TODO: is there no check if there is an equation by the problem builder
    problem.getConstraintMatrix().modifyLeftHandSide( 0, 1 );
    return problem;
 }
