@@ -1,22 +1,3 @@
-#add_executable(sparse_storage SparseStorage.cpp)
-#add_executable(common Common.cpp)
-#add_executable(coef_stren CoefStren.cpp)
-#add_executable(aggregation Aggregation.cpp)
-#todo add if fixed
-#add_executable(parallel_rows ParallelRows.cpp)
-
-#target_link_libraries(sparse_storage ${TBB_IMPORTED_TARGETS})
-#target_link_libraries(common ${TBB_IMPORTED_TARGETS})
-#target_link_libraries(coef_stren ${TBB_IMPORTED_TARGETS})
-#target_link_libraries(aggregation ${TBB_IMPORTED_TARGETS})
-#target_link_libraries(parallel_rows ${TBB_IMPORTED_TARGETS})
-
-#add_test(NAME SparseStorage COMMAND sparse_storage )
-#add_test(NAME Common COMMAND common )
-#add_test(NAME CoefStren COMMAND coef_stren)
-#add_test(NAME Aggregation COMMAND aggregation)
-#add_test(NAME ParallelRows COMMAND parallel_rows)
-
 if(TARGET papilolib)
    set(PAPILOLIB_TESTS
       "papilolib"
@@ -30,23 +11,108 @@ else()
    set(PAPILOLIB_TARGET "")
 endif()
 
-add_executable(unit_test TestMain.cpp MatrixBuffer.cpp VectorUtils.cpp NumericalStatistics.cpp ${PAPILOLIB_TEST_FILE})
+add_executable(unit_test TestMain.cpp
+        papilo/InstancesTest.cpp
+
+        papilo/core/MatrixBufferTest.cpp
+        papilo/core/SparseStorageTest.cpp
+        papilo/core/ProblemUpdateTest.cpp
+        papilo/misc/VectorUtilsTest.cpp
+
+        papilo/presolve/CoefficientStrengtheningTest.cpp
+        papilo/presolve/ConstraintPropagationTest.cpp
+        papilo/presolve/DualFixTest.cpp
+        papilo/presolve/DualInferTest.cpp
+        papilo/presolve/FixContinuousTest.cpp
+        papilo/presolve/FreeVarSubstitutionTest.cpp
+        papilo/presolve/ImplIntDetectionTest.cpp
+        papilo/presolve/ParallelRowDetectionTest.cpp
+        papilo/presolve/ParallelColDetectionTest.cpp
+        papilo/presolve/ProbingTest.cpp
+        papilo/presolve/SingletonColsTest.cpp
+        papilo/presolve/SimpleProbingTest.cpp
+        papilo/presolve/SimpleSubstitutionTest.cpp
+        papilo/presolve/SimplifyInequalitiesTest.cpp
+
+        ${PAPILOLIB_TEST_FILE})
+
 target_link_libraries(unit_test papilo ${PAPILOLIB_TARGET} ${Boost_LIBRARIES})
 
-set(unit_tests
- "matrix-buffer"
- "vector-comparisons"
- "accurate-numerical-statistics"
- ${PAPILOLIB_TESTS}
-  )
 
-#
+set(unit_tests
+        "accurate-numerical-statistics"
+
+        "matrix-buffer"
+        "vector-comparisons"
+        "matrix-comparisons"
+
+        #ProblemUpdate
+        "happy-path-presolve-singleton-row"
+
+        "problem-comparisons"
+
+        "happy-path-coefficient-strengthening"
+
+        "happy-path-constraint-propagation"
+
+        # Fix Continuous
+        "happy-path-presolve-fix-continuous"
+        "happy-path-no-presolve-fix-continuous"
+
+        #FreeVarSubstitution
+        "test-free-variable-detection"
+
+        "happy-path-implied-integer-detection"
+
+        "happy-path-parallel-row-detection"
+
+        "happy-path-parallel-column-detection"
+
+        #Probing
+        "happy-path-probing"
+        "failed-path-probing-on-not-binary-variables"
+
+        #singleton Column
+        "happy-path-singleton-column"
+        "happy-path-singleton-column-equation"
+
+        #Simple Probing
+        "happy-path-simple-probing"
+
+        #Simple Substitution
+        "happy-path-simple-substitution-for-2-int"
+        "happy-path-simple-substitution-for-2-continuous"
+        "happy-path-simple-substitution-for-continuous-and-integer"
+
+        #DualFix
+        "happy-path-dual-fix"
+        "happy_path_dual_substitution_for_equations"
+        "happy_path_dual_substitution"
+        "failed-path-simple-substitution-for-2-int"
+        "happy-path-simplify-inequalities-only-greatest-divisor"
+        "happy_path_dual_substitution_unbounded_variables"
+        "trivial-column-presolve-does-dual-presolve-already"
+        "happy_path_dual_substitution_rounding"
+
+        "example-1-from-3.5-Presolve-Reductions-in-MIP" # not working
+        "example-2-from-3.5-Presolve-Reductions-in-MIP" # not working
+        "example-3-from-3.6-Presolve-Reductions-in-MIP" # trivial presolve fixes this case
+        "example-4-from-4.4-Presolve-Reductions-in-MIP" # not working
+        "example-5-from-4.4-Presolve-Reductions-in-MIP"
+        # "example-6-from-4.5-Presolve-Reductions-in-MIP"
+        # "example-7-from-5.5-Presolve-Reductions-in-MIP"
+        "example-8-from-6.3-Presolve-Reductions-in-MIP" # not working because one Coefficients are excluded
+        # "example-9-from-7.1-Presolve-Reductions-in-MIP"
+        "example-10-from-7.5-Presolve-Reductions-in-MIP"
+
+
+        ${PAPILOLIB_TESTS}
+        )
+
 # add a test to build the SCIP binary that all further tests depend on
-#
 add_test(NAME unit-test-build
         COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target unit_test
         )
-
 
 set_tests_properties(unit-test-build
                      PROPERTIES
@@ -61,9 +127,8 @@ foreach(test ${unit_tests})
 endforeach()
 
 if(TARGET papilo-executable AND PAPILO_HAVE_SCIP)
-   #
+
    # MIP instances
-   #
    set(instances_MIP
        "instances/bell5.mps\;8966406.49152"
        "instances/blend2.mps\;7.598985"
@@ -132,4 +197,3 @@ if(TARGET papilo-executable AND PAPILO_HAVE_SCIP)
 
    add_instancetests(instances_MIP numtypes)
 endif()
-

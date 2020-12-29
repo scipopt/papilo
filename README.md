@@ -339,7 +339,7 @@ Leona Gottwald ([@lgottwald](https://github.com/lgottwald)) &mdash; main author
 
 [Ivet Galabova](https://sites.google.com/view/ivetgalabova) ([@galabovaa](https://github.com/galabovaa)) &mdash; groundwork for dual postsolve, KKT checker
 
-[Kathrin Halbig](https://en.www.math.fau.de/edom/team/katrin-halbig/) &mdash; presolver for GCD based reductions on inequalities (simplifyineq)
+[Katrin Halbig](https://en.www.math.fau.de/edom/team/katrin-halbig/) &mdash; presolver for GCD based reductions on inequalities (simplifyineq)
 
 [Gabriel Kressin](https://www.zib.de/members/kressin) ([@GabrielKP](https://github.com/GabrielKP)) &mdash; numerical statistics, testing
 

@@ -112,37 +112,28 @@ DualInfer<REAL>::execute( const Problem<REAL>& problem,
 
          assert( !consMatrix.isRowRedundant( row ) );
 
-         bool lhsinf = rflags[row].test( RowFlag::kLhsInf );
-         bool rhsinf = rflags[row].test( RowFlag::kRhsInf );
          const REAL& lhs = lhsValues[row];
          const REAL& rhs = rhsValues[row];
 
-         if( !colf.test( ColFlag::kUbInf ) )
+         if( !colf.test( ColFlag::kUbInf ) &&
+             row_implies_UB( num, lhs, rhs, rflags[row], activitiesCopy[row],
+                             vals[i], lb, ub, colf ) )
          {
-            if( row_implies_UB( num, lhs, rhs, rflags[row], activitiesCopy[row],
-                                vals[i], lb, ub, colf ) )
-            {
-               colf.set( ColFlag::kUbInf );
+            colf.set( ColFlag::kUbInf );
 
-               if( !colf.test( ColFlag::kUbHuge ) )
-                  update_activities_remove_finite_bound( inds, vals, len,
-                                                         BoundChange::kUpper,
-                                                         ub, activitiesCopy );
-            }
+            if( !colf.test( ColFlag::kUbHuge ) )
+               update_activities_remove_finite_bound(
+                   inds, vals, len, BoundChange::kUpper, ub, activitiesCopy );
          }
 
-         if( !colf.test( ColFlag::kLbInf ) )
+         if( !colf.test( ColFlag::kLbInf ) &&
+             row_implies_LB( num, lhs, rhs, rflags[row], activitiesCopy[row],
+                             vals[i], lb, ub, colf ) )
          {
-            if( row_implies_LB( num, lhs, rhs, rflags[row], activitiesCopy[row],
-                                vals[i], lb, ub, colf ) )
-            {
-               colf.set( ColFlag::kLbInf );
-
-               if( !colf.test( ColFlag::kLbHuge ) )
-                  update_activities_remove_finite_bound( inds, vals, len,
-                                                         BoundChange::kLower,
-                                                         lb, activitiesCopy );
-            }
+            colf.set( ColFlag::kLbInf );
+            if( !colf.test( ColFlag::kLbHuge ) )
+               update_activities_remove_finite_bound(
+                   inds, vals, len, BoundChange::kLower, lb, activitiesCopy );
          }
 
          ++i;
@@ -547,12 +538,6 @@ DualInfer<REAL>::execute( const Problem<REAL>& problem,
    // set result if reductions where found
    if( impliedeqs > 0 || fixedints > 0 || fixedconts > 0 )
       result = PresolveStatus::kReduced;
-
-   // if( nrounds != 0 && result == PresolveStatus::kReduced )
-   //    fmt::print(
-   //        "   Dual infer: {} propagation rounds, {} implied equations, "
-   //        "{} integers fixed, {} conts fixed\n",
-   //        nrounds, impliedeqs, fixedints, fixedconts );
 
    return result;
 }

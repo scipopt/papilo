@@ -352,6 +352,7 @@ class Problem
 
    /// fix infinite bounds to the correct value for presolve
    /// checking for double values at the moment
+   // TODO: why isn't this called anywhere?
    void
    fixInfiniteBounds( REAL inf )
    {

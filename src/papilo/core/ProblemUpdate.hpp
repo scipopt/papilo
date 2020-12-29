@@ -353,6 +353,18 @@ class ProblemUpdate
    ApplyResult
    applyTransaction( const Reduction<REAL>* first,
                      const Reduction<REAL>* last );
+   void
+   roundIntegralColumns( Vec<REAL>& lbs, Vec<REAL>& ubs, int col,
+                         Vec<ColFlags>& cflags, PresolveStatus& status );
+   void
+   mark_huge_values( const Vec<REAL>& lbs, const Vec<REAL>& ubs,
+                     Vec<ColFlags>& cflags, int col );
+   bool
+   is_dualfix_enabled( const Vec<REAL>& obj, int col ) const;
+
+   PresolveStatus
+   apply_dualfix( Vec<REAL>& lbs, Vec<REAL>& ubs, Vec<ColFlags>& cflags,
+                  const Vec<REAL>& obj, const Vec<Locks>& locks, int col );
 };
 
 #ifdef PAPILO_USE_EXTERN_TEMPLATES
@@ -1066,38 +1078,10 @@ ProblemUpdate<REAL>::trivialColumnPresolve()
          continue;
 
       // for integral columns round the bounds to integral values
-      if( cflags[col].test( ColFlag::kIntegral ) )
-      {
-         if( !cflags[col].test( ColFlag::kLbInf ) )
-         {
-            REAL ceillb = ceil( lbs[col] );
-            if( ceillb != lbs[col] )
-            {
-               ++stats.nboundchgs;
-               lbs[col] = ceillb;
-               status = PresolveStatus::kReduced;
-            }
-         }
+      roundIntegralColumns( lbs, ubs, col, cflags, status );
 
-         if( !cflags[col].test( ColFlag::kUbInf ) )
-         {
-            REAL floorub = floor( ubs[col] );
-            if( floorub != ubs[col] )
-            {
-               ++stats.nboundchgs;
-               ubs[col] = floorub;
-               status = PresolveStatus::kReduced;
-            }
-         }
-      }
+      mark_huge_values( lbs, ubs, cflags, col );
 
-      if( !cflags[col].test( ColFlag::kLbInf ) && num.isHugeVal( lbs[col] ) )
-         cflags[col].set( ColFlag::kLbHuge );
-
-      if( !cflags[col].test( ColFlag::kUbInf ) && num.isHugeVal( ubs[col] ) )
-         cflags[col].set( ColFlag::kUbHuge );
-
-      // if bounds are contradicting return infeasibility
       if( !cflags[col].test( ColFlag::kUnbounded ) )
       {
          if( lbs[col] > ubs[col] )
@@ -1113,80 +1097,17 @@ ProblemUpdate<REAL>::trivialColumnPresolve()
          {
             markColFixed( col );
             status = PresolveStatus::kReduced;
+            // TODO why not continue with this row
             continue;
          }
       }
 
-      bool dualfix;
-      switch( presolveOptions.dualreds )
-      {
-      default:
-         assert( false );
-      case 0:
-         dualfix = false;
-         break;
-      case 1:
-         dualfix = obj[col] != 0;
-         break;
-      case 2:
-         dualfix = true;
-      }
-
-      // perform dual fixing if allowed
-      if( dualfix )
-      {
-         if( locks[col].down == 0 && obj[col] >= 0 )
-         {
-            if( cflags[col].test( ColFlag::kLbInf ) )
-            {
-               if( obj[col] != 0 )
-               {
-                  Message::debug( this,
-                                  "[{}:{}] dual fixing in trivial presolve "
-                                  "detected status UNBND_OR_INFEAS\n",
-                                  __FILE__, __LINE__ );
-                  return PresolveStatus::kUnbndOrInfeas;
-               }
-            }
-            else
-            {
-               ubs[col] = lbs[col];
-               cflags[col].unset( ColFlag::kUbInf );
-               ++stats.nboundchgs;
-
-               markColFixed( col );
-
-               status = PresolveStatus::kReduced;
-               continue;
-            }
-         }
-
-         if( locks[col].up == 0 && obj[col] <= 0 )
-         {
-            if( cflags[col].test( ColFlag::kUbInf ) )
-            {
-               if( obj[col] != 0 )
-               {
-                  Message::debug( this,
-                                  "[{}:{}] dual fixing in trivial presolve "
-                                  "detected status UNBND_OR_INFEAS\n",
-                                  __FILE__, __LINE__ );
-                  return PresolveStatus::kUnbndOrInfeas;
-               }
-            }
-            else
-            {
-               lbs[col] = ubs[col];
-               cflags[col].unset( ColFlag::kLbInf );
-               ++stats.nboundchgs;
-
-               markColFixed( col );
-
-               status = PresolveStatus::kReduced;
-               continue;
-            }
-         }
-      }
+      status = apply_dualfix( lbs, ubs, cflags, obj, locks, col );
+      // TODO why not continue with this row
+      if( status == PresolveStatus::kUnbndOrInfeas )
+         return status;
+      else if( status == PresolveStatus::kReduced )
+         continue;
 
       switch( colsize[col] )
       {
@@ -1199,6 +1120,133 @@ ProblemUpdate<REAL>::trivialColumnPresolve()
    }
 
    return status;
+}
+
+template <typename REAL>
+PresolveStatus
+ProblemUpdate<REAL>::apply_dualfix( Vec<REAL>& lbs, Vec<REAL>& ubs,
+                                    Vec<ColFlags>& cflags, const Vec<REAL>& obj,
+                                    const Vec<Locks>& locks, int col )
+{
+   if( is_dualfix_enabled( obj, col ) )
+   {
+      if( locks[col].down == 0 && obj[col] >= 0 )
+      {
+         if( cflags[col].test( ColFlag::kLbInf ) )
+         {
+            if( obj[col] != 0 )
+            {
+               Message::debug( this,
+                               "[{}:{}] dual fixing in trivial presolve "
+                               "detected status UNBND_OR_INFEAS\n",
+                               __FILE__, __LINE__ );
+               return PresolveStatus::kUnbndOrInfeas;
+            }
+         }
+         else
+         {
+            ubs[col] = lbs[col];
+            cflags[col].unset( ColFlag::kUbInf );
+            ++stats.nboundchgs;
+
+            markColFixed( col );
+            return PresolveStatus::kReduced;
+         }
+      }
+
+      if( locks[col].up == 0 && obj[col] <= 0 )
+      {
+         if( cflags[col].test( ColFlag::kUbInf ) )
+         {
+            if( obj[col] != 0 )
+            {
+               Message::debug( this,
+                               "[{}:{}] dual fixing in trivial presolve "
+                               "detected status UNBND_OR_INFEAS\n",
+                               __FILE__, __LINE__ );
+               return PresolveStatus::kUnbndOrInfeas;
+            }
+         }
+         else
+         {
+            lbs[col] = ubs[col];
+            cflags[col].unset( ColFlag::kLbInf );
+            ++stats.nboundchgs;
+
+            markColFixed( col );
+
+            return PresolveStatus::kReduced;
+         }
+      }
+   }
+   return PresolveStatus::kUnchanged;
+}
+
+template <typename REAL>
+bool
+ProblemUpdate<REAL>::is_dualfix_enabled( const Vec<REAL>& obj, int col ) const
+{
+   bool dualfix;
+   switch( presolveOptions.dualreds )
+   {
+   default:
+      assert( false );
+   case 0:
+      dualfix = false;
+      break;
+   case 1:
+      dualfix = obj[col] != 0;
+      break;
+   case 2:
+      dualfix = true;
+   }
+   return dualfix;
+}
+
+template <typename REAL>
+void
+ProblemUpdate<REAL>::mark_huge_values( const Vec<REAL>& lbs,
+                                       const Vec<REAL>& ubs,
+                                       Vec<ColFlags>& cflags, int col )
+{
+   if( !cflags[col].test( ColFlag::kLbInf ) && num.isHugeVal( lbs[col] ) )
+      cflags[col].set( ColFlag::kLbHuge );
+
+   if( !cflags[col].test( ColFlag::kUbInf ) && num.isHugeVal( ubs[col] ) )
+      cflags[col].set( ColFlag::kUbHuge );
+}
+
+// TODO: for me think about it
+template <typename REAL>
+void
+ProblemUpdate<REAL>::roundIntegralColumns( Vec<REAL>& lbs, Vec<REAL>& ubs,
+                                           int col, Vec<ColFlags>& cflags,
+                                           PresolveStatus& status )
+{
+   if( cflags[col].test( ColFlag::kIntegral ) )
+   {
+      if( !cflags[col].test( ColFlag::kLbInf ) )
+      {
+         REAL ceillb = ceil( lbs[col] );
+         if( ceillb != lbs[col] )
+         {
+            ++stats.nboundchgs;
+            lbs[col] = ceillb;
+            status = PresolveStatus::kReduced;
+         }
+      }
+
+      if( !cflags[col].test( ColFlag::kUbInf ) )
+      {
+         REAL floorub = floor( ubs[col] );
+         if( floorub != ubs[col] )
+         {
+            ++stats.nboundchgs;
+            ubs[col] = floorub;
+            status = PresolveStatus::kReduced;
+         }
+      }
+   }
 }
 
 template <typename REAL>

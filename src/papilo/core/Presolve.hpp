@@ -281,12 +281,12 @@ template <typename REAL>
 PresolveStatus
 Presolve<REAL>::evaluateResults()
 {
-   int result = static_cast<int>( PresolveStatus::kUnchanged );
+   int largestValue = static_cast<int>( PresolveStatus::kUnchanged );
 
-   for( std::size_t i = 0; i < results.size(); ++i )
-      result = std::max( result, static_cast<int>( results[i] ) );
+   for( auto& i : results )
+      largestValue = std::max( largestValue, static_cast<int>( i ) );
 
-   return static_cast<PresolveStatus>( result );
+   return static_cast<PresolveStatus>( largestValue );
 }
 
 template <typename REAL>
@@ -498,13 +498,13 @@ Presolve<REAL>::applyPresolversReductions( ProblemUpdate<REAL>& probUpdate )
          Message::debug( this, "applying reductions of presolver {}\n",
                          presolvers[i]->getName() );
 
-         auto stats = applyReductions( i, reductions[i], probUpdate );
+         auto statistics = applyReductions( i, reductions[i], probUpdate );
 
-         if( stats.first < 0 || stats.second < 0 )
+         if( statistics.first < 0 || statistics.second < 0 )
             return false;
 
-         presolverStats[i].first += stats.first;
-         presolverStats[i].second += stats.second;
+         presolverStats[i].first += statistics.first;
+         presolverStats[i].second += statistics.second;
          results[i] = PresolveStatus::kUnchanged;
       }
 

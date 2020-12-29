@@ -30,3 +30,13 @@
 *.exe
 *.out
 *.app
+
+#IDES
+.vscode
+.idea/
+
+#Generated Files
+/build/
+/cmake-build-debug/
+/cmake-build-debug-coverage/
+external/tbb/cmake/

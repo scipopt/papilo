@@ -75,10 +75,10 @@ SingletonCols<REAL>::execute( const Problem<REAL>& problem,
    const auto& lhs_values = constMatrix.getLeftHandSides();
    const auto& rhs_values = constMatrix.getRightHandSides();
    const auto& rflags = constMatrix.getRowFlags();
-   const auto& nrows = constMatrix.getNRows();
-   const auto& ncols = constMatrix.getNCols();
+   const auto& nRows = constMatrix.getNRows();
+   const auto& nColumns = constMatrix.getNCols();
    const auto& colsize = constMatrix.getColSizes();
-   const auto& rowsize = constMatrix.getRowSizes();
+   const auto& rowSizes = constMatrix.getRowSizes();
    const auto& obj = problem.getObjective().coefficients;
 
    PresolveStatus result = PresolveStatus::kUnchanged;
@@ -86,7 +86,7 @@ SingletonCols<REAL>::execute( const Problem<REAL>& problem,
    auto handleEquation = [&]( int col, bool lbimplied, bool ubimplied,
                               const REAL& val, int row, bool impliedeq,
                               const REAL& side ) {
-      if( !impliedeq && rowsize[row] <= 1 )
+      if( !impliedeq && rowSizes[row] <= 1 )
          return;
 
       result = PresolveStatus::kReduced;
@@ -110,7 +110,7 @@ SingletonCols<REAL>::execute( const Problem<REAL>& problem,
             reductions.changeRowRHS( row, side );
          }
 
-         if( rowsize[row] <= 1 )
+         if( rowSizes[row] <= 1 )
             return;
       }
 
@@ -178,7 +178,8 @@ SingletonCols<REAL>::execute( const Problem<REAL>& problem,
          assert( !rflags[row].test( RowFlag::kLhsInf, RowFlag::kRhsInf ) );
          assert( lhs_values[row] == rhs_values[row] );
 
-         if( rowsize[row] <= 1 )
+         //singleton rows are already check in trivial presolve
+         if( rowSizes[row] <= 1 )
             continue;
 
          // Found singleton column within an equation:
@@ -212,18 +213,18 @@ SingletonCols<REAL>::execute( const Problem<REAL>& problem,
             auto rowvec = constMatrix.getRowCoefficients( row );
             const int* rowinds = rowvec.getIndices();
             const REAL* rowvals = rowvec.getValues();
-            for( int i = 0; i != rowvec.getLength(); ++i )
+            for( int k = 0; k != rowvec.getLength(); ++k )
             {
-               if( rowinds[i] == col )
+               if( rowinds[k] == col )
                   continue;
 
-               if( !cflags[rowinds[i]].test( ColFlag::kIntegral ) )
+               if( !cflags[rowinds[k]].test( ColFlag::kIntegral ) )
                {
                   unsuitableForSubstitution = true;
                   break;
                }
 
-               if( !num.isIntegral( rowvals[i] / val ) )
+               if( !num.isIntegral( rowvals[k] / val ) )
                {
                   unsuitableForSubstitution = true;
                   break;

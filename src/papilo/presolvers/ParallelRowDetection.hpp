@@ -35,11 +35,12 @@ namespace papilo
 {
 
 template <typename REAL>
+// Identical row reduction needs to be done before
 class ParallelRowDetection : public PresolveMethod<REAL>
 {
    struct SupportHashCompare
    {
-      SupportHashCompare() {}
+      SupportHashCompare() = default;
 
       static size_t
       hash( const std::pair<int, const int*>& row )
@@ -107,6 +108,11 @@ class ParallelRowDetection : public PresolveMethod<REAL>
    computeSupportIdParallel( const ConstraintMatrix<REAL>& constMatrix,
                              unsigned int* supportid );
 
+   int
+   determineBucketSize( int nRows, std::unique_ptr<unsigned int[]>& supportid,
+                        std::unique_ptr<unsigned int[]>& coefhash,
+                        std::unique_ptr<int[]>& row, int i );
+
  public:
    ParallelRowDetection() : PresolveMethod<REAL>()
    {
@@ -142,6 +148,7 @@ ParallelRowDetection<REAL>::findParallelRows(
       const int length = row1.getLength();
       const REAL* coefs1 = row1.getValues();
 
+      // TODO: why are Columns with only one entry excluded? see ParallelColumn
       if( length < 2 )
          return;
 
@@ -169,6 +176,7 @@ ParallelRowDetection<REAL>::findParallelRows(
             {
                if( !num.isEq( coefs1[k], scale2 * coefs2[k] ) )
                {
+                  // TODO wäre es nicht sinvoller einfach return zu machen
                   parallel = false;
                   break;
                }
@@ -231,6 +239,8 @@ ParallelRowDetection<REAL>::computeRowHashes(
                 // where two coefficients that are equal
                 // within epsilon get different values are
                 // more unlikely by choosing some irrational number
+                // TODO: define as constant to reduce the amount of arithmetic
+                // operations
                 REAL scale = REAL( 2.0 / ( 1.0 + sqrt( 5.0 ) ) ) / rowvals[0];
 
                 // add scaled coefficients of other row
@@ -322,7 +332,7 @@ ParallelRowDetection<REAL>::execute( const Problem<REAL>& problem,
    const auto& lhs_values = constMatrix.getLeftHandSides();
    const auto& rhs_values = constMatrix.getRightHandSides();
    const auto& rflags = constMatrix.getRowFlags();
-   const int nrows = constMatrix.getNRows();
+   const int nRows = constMatrix.getNRows();
    const Vec<int>& rowperm = problemUpdate.getRandomRowPerm();
 
    PresolveStatus result = PresolveStatus::kUnchanged;
@@ -332,7 +342,7 @@ ParallelRowDetection<REAL>::execute( const Problem<REAL>& problem,
    this->skipRounds( this->getNCalls() );
 
    // lambda to handle the parallel rows
-   auto handlerows = [&reductions, &result, &lhs_values, &rhs_values, &rflags,
+   auto handleRows = [&reductions, &result, &lhs_values, &rhs_values, &rflags,
                       &num]( int row1, int row2, REAL ratio ) {
       bool firstconsEquality = rflags[row1].test( RowFlag::kEquation );
       bool secondconsEquality = rflags[row2].test( RowFlag::kEquation );
@@ -446,29 +456,15 @@ ParallelRowDetection<REAL>::execute( const Problem<REAL>& problem,
       }
    };
 
-   assert( nrows > 0 );
+   assert( nRows > 0 );
 
-   std::unique_ptr<unsigned int[]> supportid{ new unsigned int[nrows] };
-   std::unique_ptr<unsigned int[]> coefhash{ new unsigned int[nrows] };
-   std::unique_ptr<int[]> row{ new int[nrows] };
-
-#if 0
-      tbb::parallel_invoke(
-          [nrows, &row]() {
-             for( int i = 0; i < nrows; ++i )
-                row[i] = i;
-          },
-          [&constMatrix, &coefhash, this]() {
-             computeRowHashes( constMatrix, coefhash.get() );
-          },
-          [&constMatrix, &supportid, this]() {
-             computeSupportIdParallel( constMatrix, supportid.get() );
-          } );
-#else
+   std::unique_ptr<unsigned int[]> supportid{ new unsigned int[nRows] };
+   std::unique_ptr<unsigned int[]> coefhash{ new unsigned int[nRows] };
+   std::unique_ptr<int[]> row{ new int[nRows] };
 
    tbb::parallel_invoke(
-       [nrows, &row]() {
-          for( int i = 0; i < nrows; ++i )
+       [nRows, &row]() {
+          for( int i = 0; i < nRows; ++i )
              row[i] = i;
        },
        [&constMatrix, &coefhash, this]() {
@@ -476,10 +472,11 @@ ParallelRowDetection<REAL>::execute( const Problem<REAL>& problem,
        },
        [&constMatrix, &supportid, this]() {
           computeSupportId( constMatrix, supportid.get() );
+          // TODO why deactivated?
+          // computeSupportIdParallel( constMatrix, supportid.get() );
        } );
-#endif
 
-   pdqsort( row.get(), row.get() + nrows, [&]( int a, int b ) {
+   pdqsort( row.get(), row.get() + nRows, [&]( int a, int b ) {
       return supportid[a] < supportid[b] ||
              ( supportid[a] == supportid[b] && coefhash[a] < coefhash[b] ) ||
              ( supportid[a] == supportid[b] && coefhash[a] == coefhash[b] &&
@@ -488,28 +485,18 @@ ParallelRowDetection<REAL>::execute( const Problem<REAL>& problem,
 
    Vec<std::tuple<int, int, REAL>> parallelRows;
 
-   for( int i = 0; i < nrows; )
+   for( int i = 0; i < nRows; )
    {
-      // determine size of bucket
-      int j;
-      for( j = i + 1; j < nrows; ++j )
-      {
-         if( coefhash[row[i]] != coefhash[row[j]] ||
-             supportid[row[i]] != supportid[row[j]] )
-            break;
-      }
-      int len = j - i;
+      int bucketSize =
+          determineBucketSize( nRows, supportid, coefhash, row, i );
 
       // if more  than one row is in the bucket try to find parallel rows
-      if( len > 1 )
+      if( bucketSize > 1 )
       {
-         // fmt::print( "bucket of length {} starting at {}\n", len, i );
-         findParallelRows( num, row.get() + i, len, constMatrix, parallelRows );
+         findParallelRows( num, row.get() + i, bucketSize, constMatrix,
+                           parallelRows );
       }
-
-      assert( j > i );
-      // set i to start of next bucket
-      i = j;
+      i = bucketSize + i;
    }
 
    if( !parallelRows.empty() )
@@ -533,7 +520,7 @@ ParallelRowDetection<REAL>::execute( const Problem<REAL>& problem,
 
          std::tie( row1, row2, ratio ) = parallelRow;
 
-         handlerows( row1, row2, ratio );
+         handleRows( row1, row2, ratio );
 
          if( result == PresolveStatus::kInfeasible )
             break;
@@ -541,6 +528,25 @@ ParallelRowDetection<REAL>::execute( const Problem<REAL>& problem,
    }
 
    return result;
+}
+template <typename REAL>
+int
+ParallelRowDetection<REAL>::determineBucketSize(
+    int nRows, std::unique_ptr<unsigned int[]>& supportid,
+    std::unique_ptr<unsigned int[]>& coefhash, std::unique_ptr<int[]>& row,
+    int i )
+{
+   int j;
+   for( j = i + 1; j < nRows; ++j )
+   {
+      if( coefhash[row[i]] != coefhash[row[j]] ||
+          supportid[row[i]] != supportid[row[j]] )
+      {
+         break;
+      }
+   }
+   assert( j > i );
+   return j - i;
 }
 
 } // namespace papilo

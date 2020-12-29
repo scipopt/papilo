@@ -55,6 +55,7 @@ extern template class CoefficientStrengthening<Rational>;
 #endif
 
 template <typename REAL>
+
 PresolveStatus
 CoefficientStrengthening<REAL>::execute(
     const Problem<REAL>& problem, const ProblemUpdate<REAL>& problemUpdate,
@@ -65,7 +66,8 @@ CoefficientStrengthening<REAL>::execute(
    const auto& domains = problem.getVariableDomains();
    const auto& cflags = domains.flags;
    const auto& activities = problem.getRowActivities();
-   const auto& changedactivities = problemUpdate.getChangedActivities();
+   //TODO: what is changed_activities
+   const auto& changedActivities = problemUpdate.getChangedActivities();
 
    const auto& constMatrix = problem.getConstraintMatrix();
    const auto& lhs_values = constMatrix.getLeftHandSides();
@@ -76,15 +78,16 @@ CoefficientStrengthening<REAL>::execute(
 
    Vec<std::pair<REAL, int>> integerCoefficients;
 
-   for( int i : changedactivities )
+   for( int i : changedActivities )
    {
-      auto rowcoefficients = constMatrix.getRowCoefficients( i );
-      const REAL* coefficients = rowcoefficients.getValues();
-      const int len = rowcoefficients.getLength();
-      const int* coefindices = rowcoefficients.getIndices();
+      auto rowCoefficients = constMatrix.getRowCoefficients( i );
+      const REAL* coefficients = rowCoefficients.getValues();
+      const int len = rowCoefficients.getLength();
+      const int* coefindices = rowCoefficients.getIndices();
 
-      if( ( !rflags[i].test( RowFlag::kLhsInf ) &&
-            !rflags[i].test( RowFlag::kRhsInf ) ) ||
+      auto& rowFlag = rflags[i];
+      if( ( !rowFlag.test( RowFlag::kLhsInf ) &&
+            !rowFlag.test( RowFlag::kRhsInf ) ) ||
           len <= 1 )
          continue;
 
@@ -94,9 +97,9 @@ CoefficientStrengthening<REAL>::execute(
 
       // normalize constraint to a * x <= b constraint, remember if it was
       // scaled by -1
-      if( !rflags[i].test( RowFlag::kLhsInf ) )
+      if( !rowFlag.test( RowFlag::kLhsInf ) )
       {
-         assert( rflags[i].test( RowFlag::kRhsInf ) );
+         assert( rowFlag.test( RowFlag::kRhsInf ) );
 
          if( activities[i].ninfmin == 0 )
             maxact = -activities[i].min;
@@ -108,8 +111,8 @@ CoefficientStrengthening<REAL>::execute(
       }
       else
       {
-         assert( !rflags[i].test( RowFlag::kRhsInf ) );
-         assert( rflags[i].test( RowFlag::kLhsInf ) );
+         assert( !rowFlag.test( RowFlag::kRhsInf ) );
+         assert( rowFlag.test( RowFlag::kLhsInf ) );
 
          if( activities[i].ninfmax == 0 )
             maxact = activities[i].max;
@@ -187,8 +190,8 @@ CoefficientStrengthening<REAL>::execute(
       {
          for( const std::pair<REAL, int>& intCoef : integerCoefficients )
             reductions.changeMatrixEntry( i, intCoef.second, -intCoef.first );
-         assert( rflags[i].test( RowFlag::kRhsInf ) );
-         assert( !rflags[i].test( RowFlag::kLhsInf ) );
+         assert( rowFlag.test( RowFlag::kRhsInf ) );
+         assert( !rowFlag.test( RowFlag::kLhsInf ) );
 
          if( lhs_values[i] != -rhs )
             reductions.changeRowLHS( i, -rhs );
@@ -198,8 +201,8 @@ CoefficientStrengthening<REAL>::execute(
          assert( scale == 1 );
          for( const std::pair<REAL, int>& intCoef : integerCoefficients )
             reductions.changeMatrixEntry( i, intCoef.second, intCoef.first );
-         assert( rflags[i].test( RowFlag::kLhsInf ) );
-         assert( !rflags[i].test( RowFlag::kRhsInf ) );
+         assert( rowFlag.test( RowFlag::kLhsInf ) );
+         assert( !rowFlag.test( RowFlag::kRhsInf ) );
 
          if( rhs_values[i] != rhs )
             reductions.changeRowRHS( i, rhs );
