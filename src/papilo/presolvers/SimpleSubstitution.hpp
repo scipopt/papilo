@@ -29,6 +29,7 @@
 #include "papilo/core/ProblemUpdate.hpp"
 #include "papilo/misc/Num.hpp"
 #include "papilo/misc/fmt.hpp"
+#include <boost/integer/extended_euclidean.hpp>
 
 // TODO: before this presolver starts feasibility needs to be checked
 // TODO: -> maybe do the simple check before? that means inf <= b <= sup
@@ -135,11 +136,24 @@ SimpleSubstitution<REAL>::execute( const Problem<REAL>& problem,
 
          stay = 1 - subst;
 
-         if( !num.isIntegral( vals[stay] / vals[subst] ) )
+         if( !num.isIntegral( vals[stay] / vals[subst] ))
+         {
+            if(!num.isIntegral( vals[stay])
+                     || !num.isIntegral(vals[subst] ) )
+               continue;
+            auto res = boost::integer::extended_euclidean(
+                static_cast<int64_t>( vals[stay] ),
+                static_cast<int64_t>( vals[subst] ) );
+            //TODO with the extended euclidean can calculated
+            // if the bounds are fulfilled-> see the dissertation of T. Achterberg
+            if( !num.isIntegral( rhs / res.gcd ) )
+               return PresolveStatus::kInfeasible;
             continue;
-
-         if( !num.isFeasIntegral( rhs / vals[subst] ) )
+         }
+         // problem is infeasible if gcd (i.e. vals[subst]) is not divisor of rhs
+         if(!num.isFeasIntegral( rhs / vals[subst] ))
             return PresolveStatus::kInfeasible;
+
       }
       else
       {
