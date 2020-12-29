@@ -48,7 +48,7 @@ TEST_CASE( "happy-path-coefficient-strengthening", "[presolve]" )
    PresolveStatus presolveStatus =
        presolvingMethod.execute( problem, problemUpdate, num, reductions );
    // the Constraint x +2y <=2 (x,y in {0,1}) is dominated by x+ y <=1
-   REQUIRE( presolveStatus == PresolveStatus::kUnchanged );
+   REQUIRE( presolveStatus == PresolveStatus::kReduced );
    REQUIRE( reductions.size() == 3 );
    REQUIRE( reductions.getReduction( 0 ).col == RowReduction::LOCKED );
    REQUIRE( reductions.getReduction( 0 ).row == 0 );

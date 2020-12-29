@@ -50,6 +50,12 @@ class SimpleSubstitution : public PresolveMethod<REAL>
    execute( const Problem<REAL>& problem,
             const ProblemUpdate<REAL>& problemUpdate, const Num<REAL>& num,
             Reductions<REAL>& reductions ) override;
+
+   bool
+   isConstraintsFeasibleWithGivenBounds(
+       const Num<REAL>& num, Vec<REAL> lower_bounds,
+       const Vec<REAL> upper_bounds, const REAL* vals, REAL rhs, int subst,
+       int stay, const boost::integer::euclidean_result_t<int64_t>& res ) const;
 };
 
 #ifdef PAPILO_USE_EXTERN_TEMPLATES
@@ -136,24 +142,25 @@ SimpleSubstitution<REAL>::execute( const Problem<REAL>& problem,
 
          stay = 1 - subst;
 
-         if( !num.isIntegral( vals[stay] / vals[subst] ))
+         if( !num.isIntegral( vals[stay] / vals[subst] ) )
          {
-            if(!num.isIntegral( vals[stay])
-                     || !num.isIntegral(vals[subst] ) )
+            if( !num.isIntegral( vals[stay] ) ||
+                !num.isIntegral( vals[subst] ) )
                continue;
             auto res = boost::integer::extended_euclidean(
                 static_cast<int64_t>( vals[stay] ),
                 static_cast<int64_t>( vals[subst] ) );
-            //TODO with the extended euclidean can calculated
-            // if the bounds are fulfilled-> see the dissertation of T. Achterberg
-            if( !num.isIntegral( rhs / res.gcd ) )
-               return PresolveStatus::kInfeasible;
-            continue;
-         }
-         // problem is infeasible if gcd (i.e. vals[subst]) is not divisor of rhs
-         if(!num.isFeasIntegral( rhs / vals[subst] ))
+            bool b = num.isIntegral( rhs / res.gcd );
+            bool b1 = isConstraintsFeasibleWithGivenBounds(
+                num, lower_bounds, upper_bounds, vals, rhs, subst, stay, res );
+            if( b && b1 )
+               continue;
             return PresolveStatus::kInfeasible;
-
+         }
+         // problem is infeasible if gcd (i.e. vals[subst]) is not divisor of
+         // rhs
+         if( !num.isFeasIntegral( rhs / vals[subst] ) )
+            return PresolveStatus::kInfeasible;
       }
       else
       {
@@ -217,6 +224,29 @@ SimpleSubstitution<REAL>::execute( const Problem<REAL>& problem,
    }
 
    return result;
+}
+template <typename REAL>
+bool
+SimpleSubstitution<REAL>::isConstraintsFeasibleWithGivenBounds(
+    const Num<REAL>& num, const Vec<REAL> lower_bounds,
+    const Vec<REAL> upper_bounds, const REAL* vals, REAL rhs, int subst,
+    int stay, const boost::integer::euclidean_result_t<int64_t>& res ) const
+{
+   int64_t initial_solution_for_x = res.x * rhs;
+   int64_t initial_solution_for_y = res.y * rhs;
+   int64_t factor = (int)initial_solution_for_y * res.gcd / vals[stay];
+   int64_t solution_for_x =
+       initial_solution_for_x + factor / res.gcd * vals[subst];
+   int64_t solution_for_y =
+       initial_solution_for_y - factor / res.gcd * vals[stay];
+
+   REAL ub_sol_y = ( solution_for_y - lower_bounds[stay] ) / vals[stay];
+   REAL lb_sol_y = ( solution_for_y - upper_bounds[stay] ) / vals[stay];
+   REAL ub_sol_x = ( upper_bounds[subst] - solution_for_x ) / vals[subst];
+   REAL lb_sol_x = ( lower_bounds[subst] - solution_for_x ) / vals[subst];
+
+   return num.isFeasLE( num.epsCeil( lb_sol_y ), num.epsFloor( ub_sol_y ) ) &&
+          num.isFeasLE( num.epsCeil( lb_sol_x ), num.epsFloor( ub_sol_x ) );
 }
 
 } // namespace papilo

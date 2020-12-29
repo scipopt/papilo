@@ -34,13 +34,13 @@ setupProblemWithSimpleSubstitution( uint8_t is_x_integer, uint8_t is_y_integer,
                                     double a_y );
 
 Problem<double>
-setupProblemWithExample10_1FromConstraintIntegerProgramming();
+setupProblemWithInfeasibleBounds( double x, double y, double rhs );
 
 Problem<double>
 setupProblemWithSimpleSubstitutionInfeasibleGcd();
 
 Problem<double>
-setupProblemWithSimpleSubstitutionFeasibleGcd( );
+setupProblemWithSimpleSubstitutionFeasibleGcd();
 
 TEST_CASE( "happy-path-simple-substitution-for-2-int", "[presolve]" )
 {
@@ -87,7 +87,8 @@ TEST_CASE( "happy-path-simple-substitution-for-2-int", "[presolve]" )
    REQUIRE( reductions.getReduction( 4 ).newval == 0 );
 }
 
-TEST_CASE( "happy-path-simple-substitution-for-int-continuous-coeff", "[presolve]" )
+TEST_CASE( "happy-path-simple-substitution-for-int-continuous-coeff",
+           "[presolve]" )
 {
    Num<double> num{};
    Problem<double> problem = setupProblemWithSimpleSubstitution( 1, 1, 2.2 );
@@ -104,7 +105,6 @@ TEST_CASE( "happy-path-simple-substitution-for-int-continuous-coeff", "[presolve
    PresolveStatus presolveStatus =
        presolvingMethod.execute( problem, problemUpdate, num, reductions );
    REQUIRE( presolveStatus == PresolveStatus::kUnchanged );
-
 }
 
 TEST_CASE( "happy-path-simple-substitution-for-2-continuous", "[presolve]" )
@@ -201,7 +201,7 @@ TEST_CASE( "failed-path-simple-substitution-for-2-int", "[presolve]" )
 TEST_CASE( "example_10_1_in_constraint_integer_programming", "[presolve]" )
 {
    Num<double> num{};
-   Problem<double> problem = setupProblemWithExample10_1FromConstraintIntegerProgramming();
+   Problem<double> problem = setupProblemWithInfeasibleBounds( 8.0, 3.0, 37.0 );
    Statistics statistics{};
    PresolveOptions presolveOptions{};
    presolveOptions.dualreds = 0;
@@ -214,11 +214,9 @@ TEST_CASE( "example_10_1_in_constraint_integer_programming", "[presolve]" )
 
    PresolveStatus presolveStatus =
        presolvingMethod.execute( problem, problemUpdate, num, reductions );
-
-   //TODO: with the current bounds the constraint can't be fulfilled
-   // executing it with all presolvers the Infeasiblity is detected
-   REQUIRE( presolveStatus == PresolveStatus::kUnchanged );
+   REQUIRE( presolveStatus == PresolveStatus::kInfeasible );
 }
+
 
 TEST_CASE( "should_return_feasible_if_gcd_of_coeff_is_in_rhs", "[presolve]" )
 {
@@ -299,16 +297,17 @@ setupProblemWithSimpleSubstitution( uint8_t is_x_integer, uint8_t is_y_integer,
 }
 
 Problem<double>
-setupProblemWithExample10_1FromConstraintIntegerProgramming( )
+setupProblemWithInfeasibleBounds( double x, double y, double rhs )
 {
    // 3x + 8y = 37
    // 0<= x,y y= 5
-   Vec<double> coefficients{ 3.0, 1.0 };
+   Num<double> num{};
+   Vec<double> coefficients{ x, y };
    Vec<double> upperBounds{ 5.0, 5.0 };
    Vec<double> lowerBounds{ 0.0, 0.0 };
    Vec<uint8_t> isIntegral{ 1, 1 };
 
-   Vec<double> rhs{ 37.0 };
+   Vec<double> rhs_values{ rhs };
    Vec<std::string> rowNames{ "A1" };
    Vec<std::string> columnNames{ "c1", "c2" };
    Vec<std::tuple<int, int, double>> entries{
@@ -325,20 +324,21 @@ setupProblemWithExample10_1FromConstraintIntegerProgramming( )
    pb.setObjAll( coefficients );
    pb.setObjOffset( 0.0 );
    pb.setColIntegralAll( isIntegral );
-   pb.setRowRhsAll( rhs );
+   pb.setRowRhsAll( rhs_values );
    pb.addEntryAll( entries );
    pb.setColNameAll( columnNames );
    pb.setProblemName( "example 10.1 in Constraint Integer Programming" );
    Problem<double> problem = pb.build();
-   problem.getConstraintMatrix().modifyLeftHandSide( 0, rhs[0] );
+   problem.getConstraintMatrix().modifyLeftHandSide( 0,num, rhs );
    return problem;
 }
 
 Problem<double>
-setupProblemWithSimpleSubstitutionInfeasibleGcd( )
+setupProblemWithSimpleSubstitutionInfeasibleGcd()
 {
    // 6x + 8y = 37
    // 0<= x,y y= 5
+   Num<double> num{};
    Vec<double> coefficients{ 3.0, 1.0 };
    Vec<double> upperBounds{ 5.0, 5.0 };
    Vec<double> lowerBounds{ 0.0, 0.0 };
@@ -366,15 +366,16 @@ setupProblemWithSimpleSubstitutionInfeasibleGcd( )
    pb.setColNameAll( columnNames );
    pb.setProblemName( "gcd(x,y) is not divisor of rhs" );
    Problem<double> problem = pb.build();
-   problem.getConstraintMatrix().modifyLeftHandSide( 0, rhs[0] );
+   problem.getConstraintMatrix().modifyLeftHandSide( 0,num, rhs[0] );
    return problem;
 }
 
 Problem<double>
-setupProblemWithSimpleSubstitutionFeasibleGcd( )
+setupProblemWithSimpleSubstitutionFeasibleGcd()
 {
    // 6x + 9y = 15 with 15/6 and 9/6 no integer
    // 0<= x,y y= 5
+   Num<double> num{};
    Vec<double> coefficients{ 3.0, 1.0 };
    Vec<double> upperBounds{ 5.0, 5.0 };
    Vec<double> lowerBounds{ 0.0, 0.0 };
@@ -402,7 +403,6 @@ setupProblemWithSimpleSubstitutionFeasibleGcd( )
    pb.setColNameAll( columnNames );
    pb.setProblemName( "gcd(x,y) is divisor of rhs" );
    Problem<double> problem = pb.build();
-   problem.getConstraintMatrix().modifyLeftHandSide( 0, rhs[0] );
+   problem.getConstraintMatrix().modifyLeftHandSide( 0, num, rhs[0] );
    return problem;
 }
-
