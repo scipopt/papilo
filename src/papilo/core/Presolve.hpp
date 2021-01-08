@@ -233,7 +233,7 @@ class Presolve
    bool
    updateRoundCounter( Problem<REAL>& problem, ProblemUpdate<REAL>& probUpdate,
                        const Statistics& roundStats, const Timer& presolvetimer,
-                       bool unchanched = false );
+                       bool unchanged = false );
 
    bool
    applyPresolversReductions( ProblemUpdate<REAL>& probUpdate );
@@ -405,7 +405,7 @@ Presolve<REAL>::updateRoundCounter( Problem<REAL>& problem,
                                     ProblemUpdate<REAL>& probUpdate,
                                     const Statistics& roundStats,
                                     const Timer& presolvetimer,
-                                    bool unchanched )
+                                    bool unchanged )
 {
    if( presolveOptions.tlim != std::numeric_limits<double>::max() )
    {
@@ -413,7 +413,7 @@ Presolve<REAL>::updateRoundCounter( Problem<REAL>& problem,
          return true;
    }
 
-   if( !unchanched )
+   if( !unchanged )
    {
       double abortfac = problem.getNumIntegralCols() == 0
                             ? presolveOptions.lpabortfac

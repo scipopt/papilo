@@ -13,6 +13,7 @@ endif()
 
 add_executable(unit_test TestMain.cpp
         papilo/InstancesTest.cpp
+        papilo/DebugTest.cpp
 
         papilo/core/MatrixBufferTest.cpp
         papilo/core/SparseStorageTest.cpp
