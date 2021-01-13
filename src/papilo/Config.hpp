@@ -3,7 +3,7 @@
 /*               This file is part of the program and library                */
 /*    PaPILO --- Parallel Presolve for Integer and Linear Optimization       */
 /*                                                                           */
-/* Copyright (C) 2020  Konrad-Zuse-Zentrum                                   */
+/* Copyright (C) 2020-2021 Konrad-Zuse-Zentrum                               */
 /*                     fuer Informationstechnik Berlin                       */
 /*                                                                           */
 /* This program is free software: you can redistribute it and/or modify      */
@@ -32,7 +32,7 @@
 
 #define PAPILO_VERSION_MAJOR 1
 #define PAPILO_VERSION_MINOR 0
-#define PAPILO_VERSION_PATCH 2
+#define PAPILO_VERSION_PATCH 3
 #define PAPILO_VERSION_TWEAK 0
 
 #undef PAPILO_GITHASH_AVAILABLE
