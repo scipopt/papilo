@@ -155,27 +155,33 @@ endforeach ()
 
 if (TARGET papilo-executable AND PAPILO_HAVE_SCIP)
 
-    # MIP instances
-    set(instances_MIP
-            "instances/bell5.mps\;8966406.49152"
-            "instances/blend2.mps\;7.598985"
-            "instances/dcmulti.mps\;188182"
-            "instances/egout.mps\;568.1007"
-            "instances/enigma.mps\;0"
-            "instances/flugpl.mps\;1201500"
-            "instances/gt2.mps\;21166"
-            "instances/lseu.mps\;1120"
-            "instances/misc03.mps\;3360"
-            "instances/p0548.mps\;8691"
-            "instances/rgn.mps\;82.19999924"
-            "instances/dual_fix_pos_inf.mps\;-7.5"
+
+
+   # MIP instances
+   set(instances_MIP
+       "instances/bell5.mps\;8966406.49152"
+       "instances/blend2.mps\;7.598985"
+       "instances/dcmulti.mps\;188182"
+       "instances/egout.mps\;568.1007"
+       "instances/enigma.mps\;0"
+       "instances/flugpl.mps\;1201500"
+       "instances/gt2.mps\;21166"
+       "instances/lseu.mps\;1120"
+       "instances/misc03.mps\;3360"
+       "instances/p0548.mps\;8691"
+       "instances/rgn.mps\;82.19999924"
+       "instances/dual_fix_pos_inf.mps\;-7.5"
             "instances/dual_fix_neg_inf.mps\;-10"
             )
 
-    set(numtypes
-            "d"
-            "q"
-            "r")
+    set(infeas
+           "instances/presolved_ns2080781.mps"
+           )
+
+   set(numtypes
+      "d"
+      "q"
+      "r")
 
     #
     # add a test to build the SCIP binary that all further tests depend on
@@ -224,5 +230,28 @@ if (TARGET papilo-executable AND PAPILO_HAVE_SCIP)
         endforeach (instance)
     endmacro(add_instancetests)
 
-    add_instancetests(instances_MIP numtypes)
-endif ()
+
+   macro(add_infeasible_instancetests instances numtypes)
+      #
+      # loop over the instances
+      #
+      foreach(instance ${${instances}})
+
+         foreach(numtype ${${numtypes}})
+            file(TO_NATIVE_PATH ${PROJECT_SOURCE_DIR}/test/${instance} instance_file)
+
+            add_test(NAME ${numtype}-infeas-${instance}
+                    COMMAND $<TARGET_FILE:papilo-executable> solve -a ${numtype} -f ${instance_file}
+                    )
+            set_tests_properties(${numtype}-infeas-${instance}
+                    PROPERTIES
+                    PASS_REGULAR_EXPRESSION "presolve detected infeasible problem"
+                    DEPENDS papilo-build
+                    )
+         endforeach(numtype)
+      endforeach(instance)
+   endmacro(add_infeasible_instancetests)
+
+   add_instancetests(instances_MIP numtypes)
+   add_infeasible_instancetests(infeas numtypes)
+endif()

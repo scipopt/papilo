@@ -428,8 +428,8 @@ ParallelRowDetection<REAL>::execute( const Problem<REAL>& problem,
       else
       {
          // l1 != r1, l2 != r2, s > 0
-         // if [l1, r1] inter [s*l2, s*r2] emplty, infeasible
-         // else we keep one row and give it the thightest bounds
+         // if [l1, r1] inter [s*l2, s*r2] empty, infeasible
+         // else we keep one row and give it the tightest bounds
          if( ( !rflags[row1].test( RowFlag::kRhsInf ) && !adjustedLHSInf &&
                num.isFeasLT( rhs_values[row1], adjustedLHS ) ) ||
              ( !rflags[row1].test( RowFlag::kLhsInf ) && !adjustedRHSInf &&
@@ -443,12 +443,14 @@ ParallelRowDetection<REAL>::execute( const Problem<REAL>& problem,
             reductions.lockRow( row1 );
             reductions.lockRow( row2 );
 
-            if( !adjustedRHSInf && ( rflags[row1].test( RowFlag::kRhsInf ) ||
-                                     adjustedRHS < rhs_values[row1] ) )
+            if( !adjustedRHSInf &&
+                ( rflags[row1].test( RowFlag::kRhsInf ) ||
+                  num.isLT( adjustedRHS, rhs_values[row1] ) ) )
                reductions.changeRowRHS( row1, adjustedRHS );
 
-            if( !adjustedLHSInf && ( rflags[row1].test( RowFlag::kLhsInf ) ||
-                                     adjustedLHS > lhs_values[row1] ) )
+            if( !adjustedLHSInf &&
+                ( rflags[row1].test( RowFlag::kLhsInf ) ||
+                  num.isGT( adjustedLHS, lhs_values[row1] ) ) )
                reductions.changeRowLHS( row1, adjustedLHS );
 
             reductions.markRowRedundant( row2 );

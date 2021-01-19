@@ -575,6 +575,7 @@ ProblemUpdate<REAL>::changeLB( int col, REAL val )
       ++stats.nboundchgs;
       if( !cflags[col].test( ColFlag::kUbInf ) && newbound > ubs[col] )
       {
+         //TODO: should be checking if to values are the same not be compared by isGT
          if( num.isFeasGT( newbound, ubs[col] ) )
          {
             Message::debug( this,
@@ -664,6 +665,7 @@ ProblemUpdate<REAL>::changeUB( int col, REAL val )
       ++stats.nboundchgs;
       if( !cflags[col].test( ColFlag::kLbInf ) && newbound < lbs[col] )
       {
+         //TODO: should be checking if to values are the same not be compared by isGT
          if( num.isFeasLT( newbound, lbs[col] ) )
          {
             Message::debug( this,
@@ -1483,8 +1485,6 @@ ProblemUpdate<REAL>::removeSingletonRow( int row )
    const int col = rowvec.getIndices()[0];
    const REAL lhs = consMatrix.getLeftHandSides()[row];
    const REAL rhs = consMatrix.getRightHandSides()[row];
-
-   // TODO: save row for dual-postsolve.
 
    if( rflags[row].test( RowFlag::kEquation ) )
       status = fixCol( col, rhs / val );
@@ -2418,9 +2418,25 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
                for( int i = 0; i != rowlen; ++i )
                   setColState( rowcols[i], State::kModified );
             }
+            //TODO: is this necessary-> bounds could be (actually not) changed by to independent
+            if( !rflags[reduction.row].test( RowFlag::kRhsInf ) &&
+                num.isFeasGT(
+                    reduction.newval,
+                    constraintMatrix.getRightHandSides()[reduction.row])){
+               Message::debug( this,
+                               "fixing the lhs of row {} with bounds [{},{}] to value {} is "
+                               "detected to be infeasible\n",
+                               reduction.row,
+                               rflags[reduction.row].test( RowFlag::kLhsInf )
+                               ? -std::numeric_limits<double>::infinity()
+                               : double( constraintMatrix.getLeftHandSides()[reduction.row] ),
+                               double(constraintMatrix.getRightHandSides()[reduction.row]),
+                               double(reduction.newval));
+               return ApplyResult::kInfeasible;
+            }
 
             constraintMatrix.modifyLeftHandSide( reduction.row,
-                                                 reduction.newval );
+                                                 reduction.newval, num );
 
             ++stats.nsidechgs;
             break;
@@ -2438,9 +2454,28 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
                for( int i = 0; i != rowlen; ++i )
                   setColState( rowcols[i], State::kModified );
             }
+            //TODO: is this necessary-> bounds could be (actually not) changed by to independent
+            if( !rflags[reduction.row].test( RowFlag::kLhsInf ) &&
+                num.isFeasGT(
+                    constraintMatrix.getLeftHandSides()[reduction.row],
+                    reduction.newval))
+            {
+               Message::debug( this,
+                               "fixing the rhs of row {} with bounds [{},{}] to value {} is "
+                               "detected to be infeasible\n",
+                               reduction.row,
+                               double(constraintMatrix.getLeftHandSides()[reduction.row]),
+                               rflags[reduction.row].test( RowFlag::kRhsInf )
+                               ? -std::numeric_limits<double>::infinity()
+                               : double( constraintMatrix.getRightHandSides()[reduction.row] ),
+
+                               double(reduction.newval)
+                               );
+               return ApplyResult::kInfeasible;
+            }
 
             constraintMatrix.modifyRightHandSide( reduction.row,
-                                                  reduction.newval );
+                                                  reduction.newval, num );
 
             ++stats.nsidechgs;
             break;

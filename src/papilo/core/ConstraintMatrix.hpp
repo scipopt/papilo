@@ -309,17 +309,22 @@ class ConstraintMatrix
    /// modify the value of an element from the left hand side
    template <bool infval = false>
    void
-   modifyLeftHandSide( const int index, const REAL& value = 0 )
+   modifyLeftHandSide( const int index, const REAL& value = 0,
+                       const Num<REAL>& num = Num<REAL>() )
    {
       assert( index >= 0 );
       assert( index < getNRows() );
       if( !infval )
       {
          flags[index].unset( RowFlag::kLhsInf );
-         lhs_values[index] = value;
+
+         if( num.isEq( value, rhs_values[index] ) )
+            lhs_values[index] = rhs_values[index];
+         else
+            lhs_values[index] = value;
 
          if( !flags[index].test( RowFlag::kRhsInf ) &&
-             lhs_values[index] == rhs_values[index] )
+             lhs_values[index] == rhs_values[index]  )
             flags[index].set( RowFlag::kEquation );
          else
             flags[index].unset( RowFlag::kEquation );
@@ -334,15 +339,20 @@ class ConstraintMatrix
    /// modify the value of an element from the right hand side
    template <bool infval = false>
    void
-   modifyRightHandSide( const int index, const REAL& value = 0 )
+   modifyRightHandSide( const int index, const REAL& value = 0 ,
+                        const Num<REAL>& num = Num<REAL>() )
    {
       assert( index >= 0 );
       assert( index < getNRows() );
       if( !infval )
       {
          flags[index].unset( RowFlag::kRhsInf );
-         rhs_values[index] = value;
+         if( num.isEq( value, rhs_values[index] ) )
+            rhs_values[index] = lhs_values[index];
+         else
+            rhs_values[index] = value;
 
+         // TODO: should it not num.isEq()
          if( !flags[index].test( RowFlag::kLhsInf ) &&
              lhs_values[index] == rhs_values[index] )
             flags[index].set( RowFlag::kEquation );
