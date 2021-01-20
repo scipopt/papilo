@@ -35,8 +35,11 @@
 .vscode
 .idea/
 
+#testcluster
+/check/results/
+
 #Generated Files
 /build/
 /cmake-build-debug/
 /cmake-build-debug-coverage/
-external/tbb/cmake/
+/external/tbb/cmake/

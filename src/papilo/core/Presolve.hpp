@@ -268,6 +268,9 @@ class Presolve
    bool lastRoundReduced;
    int nunsuccessful;
    bool rundelayed;
+
+   void
+   logStatus( const Problem<REAL>& problem ) const;
 };
 
 #ifdef PAPILO_USE_EXTERN_TEMPLATES
@@ -606,8 +609,9 @@ Presolve<REAL>::apply( Problem<REAL>& problem )
 
       msg.info( "\nstarting presolve of problem {}:\n", problem.getName() );
       msg.info( "  rows:     {}\n", problem.getNRows() );
-      msg.info( "  columns:  {} ({} int., {} cont.)\n", problem.getNCols(),
-                problem.getNumIntegralCols(), problem.getNumContinuousCols() );
+      msg.info( "  columns:  {}\n", problem.getNCols() );
+      msg.info( "  int. columns:  {}\n", problem.getNumIntegralCols() );
+      msg.info( "  cont. columns:  {}\n", problem.getNumContinuousCols() );
       msg.info( "  nonzeros: {}\n\n", problem.getConstraintMatrix().getNnz() );
 
       PresolveResult<REAL> result;
@@ -1161,28 +1165,33 @@ Presolve<REAL>::apply( Problem<REAL>& problem )
             }
          }
 
-         msg.info( "presolved problem:\n" );
-         msg.info( "  rows:     {}\n", problem.getNRows() );
-         msg.info( "  columns:  {} ({} int., {} cont.)\n", problem.getNCols(),
-                   problem.getNumIntegralCols(),
-                   problem.getNumContinuousCols() );
-         msg.info( "  nonzeros: {}\n", problem.getConstraintMatrix().getNnz() );
+         logStatus( problem );
 
          result.status = PresolveStatus::kReduced;
          result.postsolve.getChecker().setReducedProblem( problem );
          return result;
       }
 
-      msg.info( "presolved problem:\n" );
-      msg.info( "  rows:     {}\n", problem.getNRows() );
-      msg.info( "  columns:  {} ({} int., {} cont.)\n", problem.getNCols(),
-                problem.getNumIntegralCols(), problem.getNumContinuousCols() );
-      msg.info( "  nonzeros: {}\n", problem.getConstraintMatrix().getNnz() );
+      logStatus( problem );
 
       // problem was not changed
       result.status = PresolveStatus::kUnchanged;
       return result;
    } );
+}
+
+template <typename REAL>
+void
+Presolve<REAL>::logStatus( const Problem<REAL>& problem ) const
+{
+   msg.info( "reduced problem:\n" );
+   msg.info( "  reduced rows:     {}\n", problem.getNRows() );
+   msg.info( "  reduced columns:  {}\n", problem.getNCols() );
+   msg.info( "  reduced int. columns:  {}\n", problem.getNumIntegralCols() );
+   msg.info( "  reduced cont. columns:  {}\n",
+             problem.getNumContinuousCols() );
+   msg.info( "  reduced nonzeros: {}\n",
+             problem.getConstraintMatrix().getNnz() );
 }
 
 } // namespace papilo
