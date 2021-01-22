@@ -49,7 +49,7 @@ if(NOT TBB_LIBRARY)
          add_library(tbb STATIC IMPORTED)
          set_target_properties(tbb PROPERTIES
             IMPORTED_LOCATION "${TBB_LIBRARY}"
-            INTERFACE_LINK_LIBRARIES ${linkinterface})
+            INTERFACE_LINK_LIBRARIES "${linkinterface}")
          # add variable to hold the static lib so that it can be installed
          set(TBB_STATIC_LIB ${TBB_LIBRARY})
          set(TBB_LIBRARY tbb)
