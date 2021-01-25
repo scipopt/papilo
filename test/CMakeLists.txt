@@ -117,7 +117,8 @@ set(unit_tests
         "happy_path_dual_fix_on_infinity"
 
         "happy-path-simplify-inequalities-only-greatest-divisor"
-        "bug_in_SimplifyInequalities"
+        "simplify_inequ_doesnt_lock_more_rows"
+        "simplify_inequ_doesnt_apply_lb_and_ub_on_one_row"
 
         #Sparsify
         "happy-path-sparsify"

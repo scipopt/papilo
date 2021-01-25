@@ -32,12 +32,19 @@
 
 namespace papilo
 {
-
-// TODO: maybe rename to Euclidian reducation for unbounded inequalities?
-// since test don't show expected results, functionality of the presolver is
-// questionable
-// or the solver behaves in another manner than the testwriter expected
-
+/**
+ * Simplify Inequalities removes the "unneccessary" variables in a constraint:
+ * Example:
+ * 15x1 +15x2 +7x3 +3x4 +y1 <= 26
+ * <=> 15x1 +15x2 <= 26  # delete variables
+ * <=> x1 +x2 <=1  # divide by greatestCommonDivisor and round right side down
+ *
+ * if this is not possible, then the GCD is calculated, so this is used to
+ * reduce rhs/lhs -> (floor[rhs/gcd]* gcd )
+ * Example
+ * 15x1 +15x2 +10x3 +5x4 <= 18 -> 18 can be reduced to 15
+ * @tparam REAL
+ */
 template <typename REAL>
 class SimplifyInequalities : public PresolveMethod<REAL>
 {
@@ -57,6 +64,7 @@ class SimplifyInequalities : public PresolveMethod<REAL>
    {
       this->setName( "simplifyineq" );
       this->setTiming( PresolverTiming::kMedium );
+      //TODO: -> false?
       this->setType( PresolverType::kIntegralCols );
    }
 
@@ -102,14 +110,11 @@ extern template class SimplifyInequalities<Rational>;
  * @param num
  * @return gcd (with heuristics for floating points)
  */
-// TODO: why are only two numbers compared? the parameter suggests that there
-// should/can be more?
 template <typename REAL>
 REAL
 SimplifyInequalities<REAL>::computeGreatestCommonDivisor( REAL val1, REAL val2,
                                                           const Num<REAL>& num )
 {
-   // TODO: I removed the 2nd parameter because it is not necessary?
    auto isIntegral = [&num]( REAL val ) {
       if( val > std::numeric_limits<int64_t>::max() ||
           val < std::numeric_limits<int64_t>::min() )
@@ -165,26 +170,16 @@ SimplifyInequalities<REAL>::simplify(
    auto maxActivity = activity.max;
    auto minActivity = activity.min;
 
-   // 'colOrder' contains indices of 'values'; colOrder[0] is index of biggest
-   // absolut coefficient in 'values' (of integer variables)
+   // sort the list 'colOrder' for integer/continuous and then for absolute
+   // coefficient
 
-   // order variables
-   // TODO: hm I don't think that colOrder contains the described information.
-   // I see no ordering, just inserting the indices of the rows?
-   // the values of the test (first column 2; 2nd 4) are always in the order
-   // [0,1]
    for( int i = 0; i < rowLength; ++i )
-   {
       colOrder.push_back( i );
-   }
-   // continuous variables to the end
    Vec<int>::iterator start_cont;
    start_cont = partition(
        colOrder.begin(), colOrder.end(), [&colinds, &cflags]( int const& a ) {
           return cflags[colinds[a]].test( ColFlag::kIntegral );
        } );
-   // integer variables after non-increasing absolute value of the
-   // coefficients
    pdqsort( colOrder.begin(), start_cont,
             [&values]( int const& a, int const& b ) {
                return abs( values[a] ) > abs( values[b] );
@@ -311,73 +306,58 @@ SimplifyInequalities<REAL>::execute( const Problem<REAL>& problem,
       colOrder.clear();
       coefficientsThatCanBeDeleted.clear();
 
-      // if variables always fit into the constraint, delete them
-      // e.g. x are binary and y is continuous with 0 <= y <= 1
-      // 15x1 +15x2 +7x3 +3x4 +y1 <= 26
-      // <=> 15x1 +15x2 <= 26  # delete variables
-      // <=> x1 +x2 <=1  # divide by greatestCommonDivisor and round right side
-      // down
-      //
-      // if no variables can be deleted, but the greatestCommonDivisor of all
-      // coefficients is greater than 1, round side to multiple of
-      // greatestCommonDivisor e.g. x are binary 15x1 +15x2 +10x3 +5x4 <= 18
-      // 15x1 +15x2 +10x3 +5x4 <= 15  # round right side down
       simplify( rowvec.getValues(), colinds, rowLength, activities[row],
                 rflags[row], cflags, rhs[row], lhs[row], lbs, ubs, colOrder,
                 coefficientsThatCanBeDeleted, greatestCommonDivisor,
                 isSimplificationPossible, num );
 
-      // simplification is possible
       if( isSimplificationPossible )
       {
          assert( greatestCommonDivisor >= 1 );
+         bool col_can_be_deleted = !coefficientsThatCanBeDeleted.empty();
+         bool rhs_needs_update = false;
+         bool lhs_needs_update = false;
+         REAL new_rhs = 0;
+         REAL new_lhs = 0;
+
+         if( !rflags[row].test( RowFlag::kRhsInf ) && rhs[row] != 0 )
+         {
+            new_rhs = num.feasFloor( rhs[row] / greatestCommonDivisor ) *
+                      greatestCommonDivisor;
+            rhs_needs_update = new_rhs != rhs[row];
+         }
+         else if( !rflags[row].test( RowFlag::kLhsInf ) && lhs[row] != 0 )
+         {
+            new_lhs = num.feasCeil( lhs[row] / greatestCommonDivisor ) *
+                      greatestCommonDivisor;
+            lhs_needs_update = new_lhs != lhs[row];
+         }
+
+         if( !rhs_needs_update && !lhs_needs_update && !col_can_be_deleted )
+            continue;
 
          TransactionGuard<REAL> guard{ reductions };
          reductions.lockRow( row );
-         // TODO: are the locks sufficient?
 
-         // remove redundant variables
          for( int col : coefficientsThatCanBeDeleted )
          {
             reductions.changeMatrixEntry( row, colinds[col], 0 );
-
-            Message::debug( this, "removed variable {} in row {}\n", col, row );
-
             result = PresolveStatus::kReduced;
          }
 
          // round side to multiple of greatestCommonDivisor; don't divide row by
          // greatestCommonDivisor
-         //TODO: warum wird null ausgeschlossen, wird das nicht durch die nächste bedingung gefasst
-         if( !rflags[row].test( RowFlag::kRhsInf ) && rhs[row] != 0 )
+         if( rhs_needs_update )
          {
-            REAL newrhs = num.feasFloor( rhs[row] / greatestCommonDivisor ) *
-                          greatestCommonDivisor;
-            // side is really changed
-            if( newrhs != rhs[row] )
-            {
-               assert( rhs[row] != 0 );
-               reductions.changeRowRHS( row, newrhs );
-
-               Message::debug( this, "changed rhs of row {}\n", row );
-
-               result = PresolveStatus::kReduced;
-            }
+            assert( rhs[row] != 0 );
+            reductions.changeRowRHS( row, new_rhs );
+            result = PresolveStatus::kReduced;
          }
-         else if( !rflags[row].test( RowFlag::kLhsInf ) && lhs[row] != 0 )
+         if( lhs_needs_update )
          {
-            REAL newlhs = num.feasCeil( lhs[row] / greatestCommonDivisor ) *
-                          greatestCommonDivisor;
-            // side is really changed
-            if( newlhs != lhs[row] )
-            {
-               assert( lhs[row] != 0 );
-               reductions.changeRowLHS( row, newlhs );
-
-               Message::debug( this, "changed lhs of row {}\n", row );
-
-               result = PresolveStatus::kReduced;
-            }
+            assert( lhs[row] != 0 );
+            reductions.changeRowLHS( row, new_lhs );
+            result = PresolveStatus::kReduced;
          }
       }
    }

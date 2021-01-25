@@ -86,8 +86,7 @@ ImplIntDetection<REAL>::execute( const Problem<REAL>& problem,
                             ColFlag::kInactive ) )
          continue;
 
-      bool testinequalities =
-          problemUpdate.getPresolveOptions().dualreds == 2 ? true : false;
+      bool testinequalities = problemUpdate.getPresolveOptions().dualreds == 2;
       bool impliedint = false;
 
       auto colvec = consmatrix.getColumnCoefficients( col );
