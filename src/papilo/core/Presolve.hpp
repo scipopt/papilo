@@ -354,8 +354,7 @@ Presolve<REAL>::applyReductions( int p, const Reductions<REAL>& reductions,
       ++nbtsxTotal;
    }
 
-   return std::pair<int, int>( nbtsxTotal,
-                               ( stats.ntsxapplied - nbtsxAppliedStart ) );
+   return { nbtsxTotal,( stats.ntsxapplied - nbtsxAppliedStart ) };
 }
 
 template <typename REAL>

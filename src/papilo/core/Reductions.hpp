@@ -47,6 +47,7 @@ struct ColReduction
       SUBSTITUTE_OBJ = -11,
       PARALLEL = -12,
       IMPL_INT = -13,
+      FIXED_INFINITY = -14,
    };
 };
 
@@ -159,27 +160,6 @@ class Reductions
       ++transactions.back().nlocks;
    }
 
-   /// lock row with a strong lock, i.e. modifications that come before or after
-   /// this transaction are conflicting
-   void
-   lockRowStrong( int row )
-   {
-      // locks are only valid inside a transaction
-      assert( !transactions.empty() && transactions.back().end == -1 );
-      // locks must come first within a transaction
-      assert( transactions.back().start + transactions.back().nlocks ==
-              static_cast<int>( reductions.size() ) );
-
-      reductions.emplace_back( 0.0, row, RowReduction::LOCKED_STRONG );
-      ++transactions.back().nlocks;
-   }
-
-   void
-   changeObjCoeff( int col, REAL newval )
-   {
-      reductions.emplace_back( newval, ColReduction::OBJECTIVE, col );
-   }
-
    void
    changeColLB( int col, REAL newval )
    {
@@ -196,6 +176,24 @@ class Reductions
    fixCol( int col, REAL val )
    {
       reductions.emplace_back( val, ColReduction::FIXED, col );
+   }
+
+   void
+   fixColPositiveInfinity( int col, int columnLength, const int* rowIndices )
+   {
+      for( int i = 0; i < columnLength; i++ )
+         markRowRedundant( rowIndices[i] );
+
+      reductions.emplace_back( 1, ColReduction::FIXED_INFINITY, col );
+   }
+
+   void
+   fixColNegativeInfinity( int col, int columnLength, const int* rowIndices )
+   {
+      for( int i = 0; i < columnLength; i++ )
+         markRowRedundant( rowIndices[i] );
+
+      reductions.emplace_back( -1, ColReduction::FIXED_INFINITY, col );
    }
 
    /// lock column, i.e. modifications that come before this transaction are

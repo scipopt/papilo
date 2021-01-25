@@ -53,7 +53,7 @@ class DualFix : public PresolveMethod<REAL>
       return false;
    }
 
-   virtual PresolveStatus
+   PresolveStatus
    execute( const Problem<REAL>& problem,
             const ProblemUpdate<REAL>& problemUpdate, const Num<REAL>& num,
             Reductions<REAL>& reductions ) override;
@@ -136,9 +136,6 @@ DualFix<REAL>::execute( const Problem<REAL>& problem,
             break;
       }
 
-      // TODO add presolve result to return unbounded or infeasible when
-      // column would be fixed to an infinite value
-
       // fix column to lower or upper bound
       if( ndownlocks == 0 )
       {
@@ -159,17 +156,18 @@ DualFix<REAL>::execute( const Problem<REAL>& problem,
          {
             return PresolveStatus::kUnbndOrInfeas;
          }
-         // TODO else case
+         else
+         {
+            TransactionGuard<REAL> guard{ reductions };
+            reductions.lockCol( i );
+            reductions.fixColNegativeInfinity( i, collen, rowinds );
+            result = PresolveStatus::kReduced;
+         }
       }
       else if( nuplocks == 0 )
       {
          assert( cflags[i].test( ColFlag::kUnbounded ) || ubs[i] != lbs[i] );
 
-         // fmt::print("col {} with bounds [{},{}] can be fixed to upper
-         // bound\n", i, lbs[i], ubs[i]);
-
-         // use a transaction and lock the column to protect it from changes
-         // of other presolvers
          if( !cflags[i].test( ColFlag::kUbInf ) )
          {
             TransactionGuard<REAL> guard{ reductions };
@@ -183,12 +181,13 @@ DualFix<REAL>::execute( const Problem<REAL>& problem,
          {
             return PresolveStatus::kUnbndOrInfeas;
          }
-         // TODO else case
-         // else
-         // {
-         //    remove variable and all constraints with a_ij != 0
-         //    in postprocessing step we can always find a finit value
-         // }
+         else
+         {
+            TransactionGuard<REAL> guard{ reductions };
+            reductions.lockCol( i );
+            reductions.fixColPositiveInfinity( i, collen, rowinds );
+            result = PresolveStatus::kReduced;
+         }
       }
       // apply dual substitution
       else
@@ -220,25 +219,25 @@ DualFix<REAL>::execute( const Problem<REAL>& problem,
                   if( !cflags[i].test( ColFlag::kLbInf ) )
                      new_UB = num.max( lbs[i], new_UB );
 
-               // A transaction is only needed to group several reductions that
-               // belong together
-               // TODO are the locks to strict?
-               TransactionGuard<REAL> guard{ reductions };
+                  // A transaction is only needed to group several reductions
+                  // that belong together
+                  TransactionGuard<REAL> guard{ reductions };
 
-               reductions.lockCol( i );
-               reductions.lockColBounds( i );
-               reductions.changeColUB( i, new_UB );
-               Message::debug( this, "tightened upper bound of col {} to {}\n",
-                               i, double( new_UB ) );
+                  reductions.lockCol( i );
+                  reductions.lockColBounds( i );
+                  reductions.changeColUB( i, new_UB );
+                  Message::debug( this,
+                                  "tightened upper bound of col {} to {}\n", i,
+                                  double( new_UB ) );
 
-               result = PresolveStatus::kReduced;
+                  result = PresolveStatus::kReduced;
 
-               // If new upper bound is set, we continue with the next column.
-               // Although, If c=0, we can try to derive an additional lower
-               // bound it will conflict with the locks of this reduction and
-               // hence will never be applied.
-               continue;
-            }
+                  // If new upper bound is set, we continue with the next
+                  // column. Although, If c=0, we can try to derive an
+                  // additional lower bound it will conflict with the locks of
+                  // this reduction and hence will never be applied.
+                  continue;
+               }
             }
          }
 
@@ -269,7 +268,6 @@ DualFix<REAL>::execute( const Problem<REAL>& problem,
 
                // A transaction is only needed to group several reductions that
                // belong together
-               // TODO are any locks needed?
                TransactionGuard<REAL> guard{ reductions };
 
                reductions.lockCol( i );

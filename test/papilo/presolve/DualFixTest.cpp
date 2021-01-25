@@ -50,6 +50,9 @@ setupMatrixForDualSubstitutionWithUnboundedVar();
 Problem<double>
 setupMatrixForDualSubstitutionIntegerRounding();
 
+Problem<double>
+setupMatrixForDualFixInfinity();
+
 TEST_CASE( "trivial-column-presolve-does-dual-presolve-already", "[presolve]" )
 {
    Num<double> num{};
@@ -61,8 +64,6 @@ TEST_CASE( "trivial-column-presolve-does-dual-presolve-already", "[presolve]" )
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num );
 
-   //   problem.recomputeAllActivities(); // TODO: what does trivial presolve
-   //   and if recalculates the dual fix why is it needed
    problemUpdate.trivialPresolve();
 
    REQUIRE( problem.getColFlags()[0].test( ColFlag::kFixed ) );
@@ -140,7 +141,7 @@ TEST_CASE( "happy_path_dual_substitution_rounding", "[presolve]" )
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num );
 
-   problemUpdate.trivialPresolve();
+   problem.recomputeAllActivities();
    papilo::DualFix<double> presolvingMethod{};
    Reductions<double> reductions{};
 
@@ -148,6 +149,7 @@ TEST_CASE( "happy_path_dual_substitution_rounding", "[presolve]" )
        presolvingMethod.execute( problem, problemUpdate, num, reductions );
 
    REQUIRE( presolveStatus == PresolveStatus::kReduced );
+   REQUIRE( reductions.size() == 6 );
    REQUIRE( reductions.getReduction( 0 ).col == 0 );
    REQUIRE( reductions.getReduction( 0 ).row == papilo::ColReduction::LOCKED );
    REQUIRE( reductions.getReduction( 0 ).newval == 0 );
@@ -161,6 +163,20 @@ TEST_CASE( "happy_path_dual_substitution_rounding", "[presolve]" )
    REQUIRE( reductions.getReduction( 2 ).row ==
             papilo::ColReduction::UPPER_BOUND );
    REQUIRE( reductions.getReduction( 2 ).newval == 6 );
+
+   REQUIRE( reductions.getReduction( 3 ).col == 1 );
+   REQUIRE( reductions.getReduction( 3 ).row == papilo::ColReduction::LOCKED );
+   REQUIRE( reductions.getReduction( 3 ).newval == 0 );
+
+   REQUIRE( reductions.getReduction( 4 ).col == 1 );
+   REQUIRE( reductions.getReduction( 4 ).row ==
+            papilo::ColReduction::BOUNDS_LOCKED );
+   REQUIRE( reductions.getReduction( 4 ).newval == 0 );
+
+   REQUIRE( reductions.getReduction( 5 ).col == 1 );
+   REQUIRE( reductions.getReduction( 5 ).row ==
+            papilo::ColReduction::LOWER_BOUND );
+   REQUIRE( reductions.getReduction( 5 ).newval == 4 );
 }
 
 TEST_CASE( "happy_path_dual_substitution_unbounded_variables", "[presolve]" )
@@ -200,8 +216,9 @@ TEST_CASE( "happy_path_dual_substitution_for_equations", "[presolve]" )
    PresolveStatus presolveStatus =
        presolvingMethod.execute( problem, problemUpdate, num, reductions );
 
-   // TODO:
    REQUIRE( presolveStatus == PresolveStatus::kReduced );
+   REQUIRE( reductions.size() == 3 );
+
    REQUIRE( reductions.getReduction( 0 ).col == 1 );
    REQUIRE( reductions.getReduction( 0 ).row == papilo::ColReduction::LOCKED );
    REQUIRE( reductions.getReduction( 0 ).newval == 0 );
@@ -215,6 +232,49 @@ TEST_CASE( "happy_path_dual_substitution_for_equations", "[presolve]" )
    REQUIRE( reductions.getReduction( 2 ).row ==
             papilo::ColReduction::LOWER_BOUND );
    REQUIRE( reductions.getReduction( 2 ).newval == 2 );
+}
+
+TEST_CASE( "happy_path_dual_fix_on_infinity", "[presolve]" )
+{
+   Num<double> num{};
+   Problem<double> problem = setupMatrixForDualFixInfinity();
+   Statistics statistics{};
+   PresolveOptions presolveOptions{};
+   Postsolve<double> postsolve = Postsolve<double>( problem, num );
+   ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
+                                        presolveOptions, num );
+
+   problem.recomputeAllActivities();
+   papilo::DualFix<double> presolvingMethod{};
+   Reductions<double> reductions{};
+
+   PresolveStatus presolveStatus =
+       presolvingMethod.execute( problem, problemUpdate, num, reductions );
+
+   REQUIRE( presolveStatus == PresolveStatus::kReduced );
+   REQUIRE( reductions.size() >= 6 );
+
+   REQUIRE( reductions.getReduction( 0 ).row == papilo::ColReduction::LOCKED );
+   REQUIRE( reductions.getReduction( 0 ).col == 0 );
+   REQUIRE( reductions.getReduction( 0 ).newval == 0 );
+
+
+   for( int i = 0; i < 3; i++ )
+   {
+      REQUIRE( reductions.getReduction( 1 +i ).col ==
+               papilo::RowReduction::REDUNDANT );
+      REQUIRE( reductions.getReduction( 1+i ).row == i );
+      REQUIRE( reductions.getReduction( 1+i ).newval == 0 );
+   }
+
+   REQUIRE( reductions.getReduction( 4 ).col == 0 );
+   REQUIRE( reductions.getReduction( 4 ).row ==
+            papilo::ColReduction::FIXED_INFINITY );
+   REQUIRE( reductions.getReduction( 4 ).newval == -1 );
+
+   REQUIRE( reductions.getTransactions( )[0].start == 0);
+   REQUIRE( reductions.getTransactions( )[0].end == 5);
+
 }
 
 TEST_CASE( "example-4-from-4.4-Presolve-Reductions-in-MIP", "[presolve]" )
@@ -363,6 +423,56 @@ setupExample5ofChapter4Dot4InPresolveReductions()
    pb.setColNameAll( columnNames );
    pb.setProblemName(
        "matrix Example 5 of chapter 4.4 in Presolve Reductions in MIP" );
+   Problem<double> problem = pb.build();
+   return problem;
+}
+
+Problem<double>
+setupMatrixForDualFixInfinity()
+{
+   // min y + z
+   // x +y <= 8
+   // x + z <= -4
+   // x - 2y - z <= 6
+   // -5 <= y,z <= 5
+   Vec<double> coefficients{ 0, 1.0, 1.0 };
+   Vec<double> upperBounds{ 5.0, 5.0, 5.0 };
+   Vec<double> lowerBounds{ 0.0, -5.0, -5.0 };
+   Vec<uint8_t> isIntegral{ 0, 0, 0 };
+   Vec<uint8_t> lhsInfinity{ 1, 1, 1 };
+   Vec<uint8_t> rhsInfinity{ 0, 0, 0 };
+   Vec<uint8_t> upperBoundsInfinity{ 0, 0, 0 };
+   Vec<uint8_t> lowerBoundsInfinity{ 1, 0, 0 };
+
+   Vec<double> rhs{ 8.0, -4.0, 6.0 };
+   Vec<std::string> rowNames{ "A1", "A2", "A3" };
+   Vec<std::string> columnNames{ "x", "y", "z" };
+   Vec<std::tuple<int, int, double>> entries{
+       std::tuple<int, int, double>{ 0, 0, 1.0 },
+       std::tuple<int, int, double>{ 0, 1, 1.0 },
+       std::tuple<int, int, double>{ 1, 0, 1.0 },
+       std::tuple<int, int, double>{ 1, 2, 1.0 },
+       std::tuple<int, int, double>{ 2, 0, 1.0 },
+       std::tuple<int, int, double>{ 2, 1, -2.0 },
+       std::tuple<int, int, double>{ 2, 2, -1.0 } };
+
+   ProblemBuilder<double> pb;
+   pb.reserve( entries.size(), rowNames.size(), columnNames.size() );
+   pb.setNumRows( rowNames.size() );
+   pb.setNumCols( columnNames.size() );
+   pb.setColUbAll( upperBounds );
+   pb.setColLbAll( lowerBounds );
+   pb.setObjAll( coefficients );
+   pb.setObjOffset( 0.0 );
+   pb.setColIntegralAll( isIntegral );
+   pb.setRowRhsAll( rhs );
+   pb.setRowLhsInfAll( lhsInfinity );
+   pb.setRowRhsInfAll( rhsInfinity );
+   pb.setColUbInfAll( upperBoundsInfinity );
+   pb.setColLbInfAll( lowerBoundsInfinity );
+   pb.addEntryAll( entries );
+   pb.setColNameAll( columnNames );
+   pb.setProblemName( "variable x can be set to neg infinity" );
    Problem<double> problem = pb.build();
    return problem;
 }

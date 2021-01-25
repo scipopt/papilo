@@ -159,6 +159,9 @@ class ProblemUpdate
    fixCol( int col, REAL val );
 
    PresolveStatus
+   fixColInfinity( int col, REAL val );
+
+   PresolveStatus
    changeLB( int col, REAL val );
 
    PresolveStatus
@@ -365,6 +368,7 @@ class ProblemUpdate
    PresolveStatus
    apply_dualfix( Vec<REAL>& lbs, Vec<REAL>& ubs, Vec<ColFlags>& cflags,
                   const Vec<REAL>& obj, const Vec<Locks>& locks, int col );
+
 };
 
 #ifdef PAPILO_USE_EXTERN_TEMPLATES
@@ -441,24 +445,13 @@ ProblemUpdate<REAL>::fixCol( int col, REAL val )
       update_activity( actChange, rowid, activity );
    };
 
-   bool lbchanged;
-   bool ubchanged;
+   bool lbchanged = cflags[col].test( ColFlag::kLbInf ) || val != lbs[col];
+   bool ubchanged = cflags[col].test( ColFlag::kUbInf ) || val != ubs[col];
 
-   if( cflags[col].test( ColFlag::kLbInf ) || val != lbs[col] )
-   {
+   if( lbchanged )
       ++stats.nboundchgs;
-      lbchanged = true;
-   }
-   else
-      lbchanged = false;
-
-   if( cflags[col].test( ColFlag::kUbInf ) || val != ubs[col] )
-   {
+   if( ubchanged )
       ++stats.nboundchgs;
-      ubchanged = true;
-   }
-   else
-      ubchanged = false;
 
    if( lbchanged || ubchanged )
    {
@@ -487,6 +480,8 @@ ProblemUpdate<REAL>::fixCol( int col, REAL val )
          return PresolveStatus::kInfeasible;
       }
 
+      // TODO: should be this case be already checked before (the stats may also
+      // be false)
       if( cflags[col].test( ColFlag::kFixed ) )
          return PresolveStatus::kUnchanged;
 
@@ -504,6 +499,8 @@ ProblemUpdate<REAL>::fixCol( int col, REAL val )
 
       if( ubchanged )
       {
+         // TODO: warum benutzt man nicht die bereits vorhandenen Funktionen,
+         // wie changeUB
          update_activities_after_boundchange(
              colvec.getValues(), colvec.getIndices(), colvec.getLength(),
              BoundChange::kUpper, ubs[col], val,
@@ -525,6 +522,30 @@ ProblemUpdate<REAL>::fixCol( int col, REAL val )
    assert( cflags[col].test( ColFlag::kFixed ) );
 
    return PresolveStatus::kUnchanged;
+}
+
+template <typename REAL>
+PresolveStatus
+ProblemUpdate<REAL>::fixColInfinity( int col, REAL val )
+{
+   ConstraintMatrix<REAL>& constraintMatrix = problem.getConstraintMatrix();
+   Vec<REAL>& lbs = problem.getLowerBounds();
+   Vec<REAL>& ubs = problem.getUpperBounds();
+   Vec<ColFlags>& cflags = problem.getColFlags();
+
+   if( cflags[col].test( ColFlag::kSubstituted ) ||
+       cflags[col].test( ColFlag::kFixed ) || val == 0 )
+      return PresolveStatus::kUnchanged;
+
+   assert(val < 0 && !cflags[col].test( ColFlag::kLbInf ) );
+   assert(val > 0 && !cflags[col].test( ColFlag::kUbInf ) );
+
+   // activity doesn't need to be upgraded because rows should be mark redundant
+   markColFixed( col );
+
+   setColState( col, State::kBoundsModified );
+
+   return PresolveStatus::kReduced;
 }
 
 template <typename REAL>
@@ -1002,12 +1023,25 @@ ProblemUpdate<REAL>::removeFixedCols()
    ConstraintMatrix<REAL>& consMatrix = problem.getConstraintMatrix();
    Vec<RowFlags>& rflags = consMatrix.getRowFlags();
    Vec<REAL>& lhs = consMatrix.getLeftHandSides();
+   Vec<ColFlags>& colFlags = problem.getColFlags();
    Vec<REAL>& rhs = consMatrix.getRightHandSides();
 
    for( int col : deleted_cols )
    {
       if( !cflags[col].test( ColFlag::kFixed ) )
          continue;
+
+      if( cflags[col].test( ColFlag::kLbInf ) )
+      {
+         postsolve.notifyFixedInfCol( col, -1, problem.getUpperBounds()[col],
+                                      problem );
+         continue;
+      }
+      if( cflags[col].test( ColFlag::kUbInf ) )
+      {
+         postsolve.notifyFixedInfCol( col, 1, lbs[col], problem );
+         continue;
+      }
 
       assert( lbs[col] == problem.getUpperBounds()[col] );
       postsolve.notifyFixedCol( col, lbs[col] );
@@ -1427,6 +1461,7 @@ ProblemUpdate<REAL>::trivialPresolve()
    return status;
 }
 
+
 template <typename REAL>
 PresolveStatus
 ProblemUpdate<REAL>::removeSingletonRow( int row )
@@ -1450,7 +1485,6 @@ ProblemUpdate<REAL>::removeSingletonRow( int row )
    const REAL rhs = consMatrix.getRightHandSides()[row];
 
    // TODO: save row for dual-postsolve.
-   // postsolve.notifySavedRow(row, rowvec, lhs, rhs, rflags[row]);
 
    if( rflags[row].test( RowFlag::kEquation ) )
       status = fixCol( col, rhs / val );
@@ -1569,10 +1603,7 @@ template <typename REAL>
 PresolveStatus
 ProblemUpdate<REAL>::removeEmptyColumns()
 {
-   if( presolveOptions.dualreds == 0 )
-      emptyColumns.clear();
-
-   if( !emptyColumns.empty() )
+   if( presolveOptions.dualreds != 0 && !emptyColumns.empty() )
    {
       Objective<REAL>& obj = problem.getObjective();
       VariableDomains<REAL>& domains = problem.getVariableDomains();
@@ -1692,20 +1723,21 @@ ProblemUpdate<REAL>::checkTransactionConflicts( const Reduction<REAL>* first,
                return ConflictType::kConflict;
             break;
          case ColReduction::PARALLEL:
-            break;
          case ColReduction::SUBSTITUTE_OBJ:
             // TODO I think columns in the substitution equation need to be
             // checked for locks since they will be modified?
             break;
          case ColReduction::SUBSTITUTE:
          case ColReduction::REPLACE:
-            // we potponed the substitution to be performed last
+            // we postponed the substitution to be performed last
             if( postponeSubstitutions )
                return ConflictType::kPostpone;
 
             // TODO I think columns in the substitution equation need to be
             // checked for locks since they will be modified? (e.g. strong
             // locks from dual fixing)
+            break;
+         default:
             break;
          }
       }
@@ -1805,6 +1837,13 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
          case ColReduction::FIXED:
          {
             if( fixCol( reduction.col, reduction.newval ) ==
+                PresolveStatus::kInfeasible )
+               return ApplyResult::kInfeasible;
+            break;
+         }
+         case ColReduction::FIXED_INFINITY:
+         {
+            if( fixColInfinity( reduction.col, reduction.newval ) ==
                 PresolveStatus::kInfeasible )
                return ApplyResult::kInfeasible;
             break;
@@ -2347,6 +2386,8 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
             }
             break;
          }
+         default:
+            break;
          }
       }
       else
@@ -2483,6 +2524,9 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
                   setColState( eqrowcols[j], State::kModified );
             }
          }
+         break;
+         default:
+            break;
          }
       }
    }

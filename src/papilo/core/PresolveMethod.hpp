@@ -57,6 +57,7 @@ enum class PresolveStatus : int
    /// problem was reduced
    kReduced = 1,
 
+   //TODO: kUnboundedIfFeasible?
    /// problem was detected to be unbounded or infeasible
    kUnbndOrInfeas = 2,
 
