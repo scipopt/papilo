@@ -111,11 +111,13 @@ set(unit_tests
         "happy_path_dual_substitution_for_equations"
         "happy_path_dual_substitution"
         "failed-path-simple-substitution-for-2-int"
-        "happy-path-simplify-inequalities-only-greatest-divisor"
         "happy_path_dual_substitution_unbounded_variables"
         "trivial-column-presolve-does-dual-presolve-already"
         "happy_path_dual_substitution_rounding"
         "happy_path_dual_fix_on_infinity"
+
+        "happy-path-simplify-inequalities-only-greatest-divisor"
+        "bug_in_SimplifyInequalities"
 
         #Sparsify
         "happy-path-sparsify"

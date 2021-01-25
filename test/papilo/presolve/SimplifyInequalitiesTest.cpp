@@ -26,6 +26,7 @@
 #include "papilo/core/PresolveMethod.hpp"
 #include "papilo/core/Problem.hpp"
 #include "papilo/core/ProblemBuilder.hpp"
+#include "papilo/io/MpsParser.hpp"
 
 using namespace papilo;
 
@@ -37,6 +38,9 @@ setupExample2ofChapter3Dot5InPresolveReductions();
 
 Problem<double>
 setupProblemForSimplifyingInequalities();
+
+Problem<double>
+setup_simple_problem_for_simplify_inequalities();
 
 TEST_CASE( "happy-path-simplify-inequalities-only-greatest-divisor",
            "[presolve]" )
@@ -59,6 +63,31 @@ TEST_CASE( "happy-path-simplify-inequalities-only-greatest-divisor",
    // x -3y + 6z = 9 -> x = 3 w; w in Z -> w - y + 2 = 6
    // potential clash with implied integer
    REQUIRE( presolveStatus == PresolveStatus::kUnchanged );
+}
+
+TEST_CASE( "bug_in_SimplifyInequalities_smaller", "[presolve]" )
+{
+   Num<double> num{};
+   Problem<double> problem = setup_simple_problem_for_simplify_inequalities();
+   Statistics statistics{};
+   PresolveOptions presolveOptions{};
+   Postsolve<double> postsolve = Postsolve<double>( problem, num );
+   ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
+                                        presolveOptions, num );
+   problem.recomputeAllActivities();
+   SimplifyInequalities<double> presolvingMethod{};
+   Reductions<double> reductions{};
+
+   PresolveStatus presolveStatus =
+       presolvingMethod.execute( problem, problemUpdate, num, reductions );
+
+   REQUIRE( presolveStatus == PresolveStatus::kReduced );
+   //TODO: only exists if there is at least one "real" action
+   REQUIRE( reductions.getTransactions()[0].end -
+                reductions.getTransactions()[0].start ==
+            1 );
+   REQUIRE( reductions.getReduction(2).newval == -275);
+   REQUIRE( reductions.getReduction(2).row == 1);
 }
 
 TEST_CASE( "example-1-from-3.5-Presolve-Reductions-in-MIP", "[presolve]" )
@@ -190,7 +219,7 @@ setupProblemForSimplifyingInequalities()
    Vec<uint8_t> isIntegral{ 0, 0 };
 
    Vec<double> rhs{ 6 };
-   Vec<std::string> rowNames{"A1" };
+   Vec<std::string> rowNames{ "A1" };
    Vec<std::string> columnNames{ "c1", "c2" };
    Vec<std::tuple<int, int, double>> entries{
        std::tuple<int, int, double>{ 0, 0, 2.0 },
@@ -206,7 +235,49 @@ setupProblemForSimplifyingInequalities()
    pb.setColIntegralAll( isIntegral );
    pb.setRowRhsAll( rhs );
    pb.setRowLhsInfAll( lhsInf );
-   pb.setRowLhs(0, 1);
+   pb.setRowLhs( 0, 1 );
+   pb.addEntryAll( entries );
+   pb.setColNameAll( columnNames );
+   pb.setProblemName( "matrix constraint 1 can be divided by 2" );
+   Problem<double> problem = pb.build();
+   return problem;
+}
+
+Problem<double>
+setup_simple_problem_for_simplify_inequalities()
+{
+   Vec<double> coefficients{ 0.0, 0.0, 0.0, 0.0 };
+   Vec<double> lowerBounds{ 0.0, 0.0, 0, 0 };
+   Vec<double> upperBounds{ 1.0, 1.0, 1.0, 1.0 };
+   Vec<uint8_t> lhsInf{ 1, 1 };
+   Vec<uint8_t> isIntegral{ 1, 1, 1, 1 };
+
+   Vec<double> rhs{ -270, -271 };
+   Vec<std::string> rowNames{ "R128", "R_test" };
+   Vec<std::string> columnNames{ "C151", "C163", "C188", "C189" };
+   Vec<std::tuple<int, int, double>> entries{
+       std::tuple<int, int, double>{ 0, 0, -300.0 },
+       std::tuple<int, int, double>{ 0, 1, -285.0 },
+       std::tuple<int, int, double>{ 0, 2, -200.0 },
+       std::tuple<int, int, double>{ 0, 3, -400.0 },
+       std::tuple<int, int, double>{ 1, 0, -300.0 },
+       std::tuple<int, int, double>{ 1, 1, -285.0 },
+       std::tuple<int, int, double>{ 1, 2, -200.0 },
+       std::tuple<int, int, double>{ 1, 3, -400.0 }
+   };
+
+   ProblemBuilder<double> pb;
+   pb.reserve( entries.size(), rowNames.size(), columnNames.size() );
+   pb.setNumRows( rowNames.size() );
+   pb.setNumCols( columnNames.size() );
+   pb.setColLbAll( lowerBounds );
+   pb.setColUbAll( upperBounds );
+   pb.setObjAll( coefficients );
+   pb.setObjOffset( 0.0 );
+   pb.setColIntegralAll( isIntegral );
+   pb.setRowRhsAll( rhs );
+   pb.setRowLhsInfAll( lhsInf );
+   pb.setRowLhs( 0, 1 );
    pb.addEntryAll( entries );
    pb.setColNameAll( columnNames );
    pb.setProblemName( "matrix constraint 1 can be divided by 2" );
