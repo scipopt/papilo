@@ -45,8 +45,6 @@ TEST_CASE( "happy-path-presolve-singleton-row", "[core]" )
    papilo::ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                                 presolveOptions, num );
    papilo::PresolveStatus status = problemUpdate.trivialPresolve();
-   //   TODO:why is the status not changed REQUIRE(status ==
-   //   papilo::PresolveStatus::kReduced);
    REQUIRE( problem.getUpperBounds()[2] == 1 );
    REQUIRE( problem.getRowFlags()[1].test( papilo::RowFlag::kRedundant ) );
 }
@@ -62,12 +60,10 @@ TEST_CASE( "happy-path-presolve-singleton-row-fixed", "[core]" )
    papilo::ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                                 presolveOptions, num );
    papilo::PresolveStatus status = problemUpdate.trivialPresolve();
-   //   TODO:why is the status not changed REQUIRE(status ==
-   //   papilo::PresolveStatus::kReduced);
+
    REQUIRE( problem.getUpperBounds()[2] == 1 );
    REQUIRE( problem.getLowerBounds()[2] == 1 );
    REQUIRE( problem.getRowFlags()[1].test( papilo::RowFlag::kRedundant ) );
-   // TODO: should this variable be fixed
    REQUIRE( problem.getColFlags()[1].test( papilo::ColFlag::kFixed ) );
 }
 

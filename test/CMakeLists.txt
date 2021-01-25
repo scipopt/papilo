@@ -1,15 +1,35 @@
-if(TARGET papilolib)
-   set(PAPILOLIB_TESTS
-      "papilolib"
-      "papilolib-no-rows"
-      )
-   set(PAPILOLIB_TEST_FILE PapiloLib.cpp)
-   set(PAPILOLIB_TARGET papilolib)
-else()
-   set(PAPILOLIB_TESTS "")
-   set(PAPILOLIB_TEST_FILE "")
-   set(PAPILOLIB_TARGET "")
-endif()
+find_package(Boost REQUIRED OPTIONAL_COMPONENTS serialization program_options iostreams)
+
+if (TARGET papilolib)
+    set(PAPILOLIB_TESTS
+            "papilolib"
+            "papilolib-no-rows"
+            )
+    set(PAPILOLIB_TEST_FILE PapiloLib.cpp)
+    set(PAPILOLIB_TARGET papilolib)
+else ()
+    set(PAPILOLIB_TESTS "")
+    set(PAPILOLIB_TEST_FILE "")
+    set(PAPILOLIB_TARGET "")
+endif ()
+
+if(Boost_IOSTREAMS_FOUND AND Boost_SERIALIZATION_FOUND AND Boost_PROGRAM_OPTIONS_FOUND)
+    configure_file(resources/dual_fix_neg_inf.postsolve resources/dual_fix_neg_inf.postsolve COPYONLY)
+    configure_file(resources/dual_fix_pos_inf.postsolve resources/dual_fix_pos_inf.postsolve COPYONLY)
+    configure_file(instances/dual_fix_neg_inf.mps resources/dual_fix_neg_inf.mps COPYONLY)
+    set(BOOST_REQUIRED_TESTS
+            "finding-the-right-value-in-postsolve-for-a-column-fixed-pos-inf"
+            "finding-the-right-value-in-postsolve-for-a-column-fixed-neg-inf"
+            "mps-parser-loading-simple-problem"
+            )
+    set(BOOST_REQUIRED_TEST_FILES
+            papilo/core/PostsolveTest.cpp
+            papilo/io/MpsParserTest.cpp
+            )
+else ()
+    set(BOOST_REQUIRED_TESTS "")
+    set(BOOST_REQUIRED_TEST_FILES)
+endif ()
 
 add_executable(unit_test TestMain.cpp
         papilo/InstancesTest.cpp
@@ -36,10 +56,10 @@ add_executable(unit_test TestMain.cpp
         papilo/presolve/SimplifyInequalitiesTest.cpp
         papilo/presolve/SparsifyTest.cpp
 
+        ${BOOST_REQUIRED_TEST_FILES}
         ${PAPILOLIB_TEST_FILE})
 
 target_link_libraries(unit_test papilo ${PAPILOLIB_TARGET} ${Boost_LIBRARIES})
-
 
 set(unit_tests
         "accurate-numerical-statistics"
@@ -62,7 +82,7 @@ set(unit_tests
         "happy-path-no-presolve-fix-continuous"
 
         #FreeVarSubstitution
-        "test-free-variable-detection"
+        "happy-path-test-free-variable-detection"
 
         "happy-path-implied-integer-detection"
 
@@ -95,6 +115,7 @@ set(unit_tests
         "happy_path_dual_substitution_unbounded_variables"
         "trivial-column-presolve-does-dual-presolve-already"
         "happy_path_dual_substitution_rounding"
+        "happy_path_dual_fix_on_infinity"
 
         #Sparsify
         "happy-path-sparsify"
@@ -111,8 +132,8 @@ set(unit_tests
         # "example-9-from-7.1-Presolve-Reductions-in-MIP"
         "example-10-from-7.5-Presolve-Reductions-in-MIP"
 
-
         ${PAPILOLIB_TESTS}
+        ${BOOST_REQUIRED_TESTS}
         )
 
 # add a test to build the SCIP binary that all further tests depend on
@@ -121,85 +142,87 @@ add_test(NAME unit-test-build
         )
 
 set_tests_properties(unit-test-build
-                     PROPERTIES
-                     RESOURCE_LOCK unittestbin)
+        PROPERTIES
+        RESOURCE_LOCK unittestbin)
 
-foreach(test ${unit_tests})
-   add_test(NAME unit-test-${test} COMMAND unit_test ${test} )
+foreach (test ${unit_tests})
+    add_test(NAME unit-test-${test} COMMAND unit_test ${test})
 
-   set_tests_properties(unit-test-${test}
+    set_tests_properties(unit-test-${test}
+            PROPERTIES
+            DEPENDS unit-test-build)
+endforeach ()
+
+if (TARGET papilo-executable AND PAPILO_HAVE_SCIP)
+
+    # MIP instances
+    set(instances_MIP
+            "instances/bell5.mps\;8966406.49152"
+            "instances/blend2.mps\;7.598985"
+            "instances/dcmulti.mps\;188182"
+            "instances/egout.mps\;568.1007"
+            "instances/enigma.mps\;0"
+            "instances/flugpl.mps\;1201500"
+            "instances/gt2.mps\;21166"
+            "instances/lseu.mps\;1120"
+            "instances/misc03.mps\;3360"
+            "instances/p0548.mps\;8691"
+            "instances/rgn.mps\;82.19999924"
+            "instances/dual_fix_pos_inf.mps\;-7.5"
+            "instances/dual_fix_neg_inf.mps\;-10"
+            )
+
+    set(numtypes
+            "d"
+            "q"
+            "r")
+
+    #
+    # add a test to build the SCIP binary that all further tests depend on
+    #
+    add_test(NAME papilo-build
+            COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target papilo-executable
+            )
+    # avoid that several build jobs try to concurrently build the binaries
+    set_tests_properties(papilo-build
+            PROPERTIES
+            RESOURCE_LOCK papilobin)
+
+    #
+    # macro to split an instance into its relevant information
+    # - path
+    # - optval
+    # - basename
+    #
+    macro(split_instance instance)
+        list(GET instance 0 path)
+        list(GET instance 1 optval)
+        get_filename_component(basename ${path} NAME)
+    endmacro(split_instance)
+
+    macro(add_instancetests instances numtypes)
+        #
+        # loop over the instances
+        #
+        foreach (instance ${${instances}})
+            split_instance(instance)
+
+            foreach (numtype ${${numtypes}})
+                #
+                # treat the instance as a tuple (list) of two values
+                #
+                file(TO_NATIVE_PATH ${PROJECT_SOURCE_DIR}/test/${path} instance_file)
+                add_test(NAME ${numtype}-solve-${basename}
+                        COMMAND $<TARGET_FILE:papilo-executable> solve -a ${numtype} -f ${instance_file} -o ${optval}
+                        )
+                set_tests_properties(${numtype}-solve-${basename}
                         PROPERTIES
-                        DEPENDS unit-test-build)
-endforeach()
+                        PASS_REGULAR_EXPRESSION "validation: SUCCESS"
+                        DEPENDS papilo-build
+                        )
+            endforeach (numtype)
+        endforeach (instance)
+    endmacro(add_instancetests)
 
-if(TARGET papilo-executable AND PAPILO_HAVE_SCIP)
-
-   # MIP instances
-   set(instances_MIP
-       "instances/bell5.mps\;8966406.49152"
-       "instances/blend2.mps\;7.598985"
-       "instances/dcmulti.mps\;188182"
-       "instances/egout.mps\;568.1007"
-       "instances/enigma.mps\;0"
-       "instances/flugpl.mps\;1201500"
-       "instances/gt2.mps\;21166"
-       "instances/lseu.mps\;1120"
-       "instances/misc03.mps\;3360"
-       "instances/p0548.mps\;8691"
-       "instances/rgn.mps\;82.19999924"
-       )
-
-   set(numtypes
-      "d"
-      "q"
-      "r")
-
-   #
-   # add a test to build the SCIP binary that all further tests depend on
-   #
-   add_test(NAME papilo-build
-           COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target papilo-executable
-           )
-   # avoid that several build jobs try to concurrently build the binaries
-   set_tests_properties(papilo-build
-                        PROPERTIES
-                        RESOURCE_LOCK papilobin)
-
-   #
-   # macro to split an instance into its relevant information
-   # - path
-   # - optval
-   # - basename
-   #
-   macro(split_instance instance)
-       list(GET instance 0 path)
-       list(GET instance 1 optval)
-       get_filename_component(basename ${path} NAME)
-   endmacro(split_instance)
-
-   macro(add_instancetests instances numtypes)
-      #
-      # loop over the instances
-      #
-      foreach(instance ${${instances}})
-         split_instance(instance)
-
-         foreach(numtype ${${numtypes}})
-            #
-            # treat the instance as a tuple (list) of two values
-            #
-            file(TO_NATIVE_PATH ${PROJECT_SOURCE_DIR}/test/${path} instance_file)
-            add_test(NAME ${numtype}-solve-${basename}
-                     COMMAND $<TARGET_FILE:papilo-executable> solve -a ${numtype} -f ${instance_file} -o ${optval}
-                     )
-            set_tests_properties(${numtype}-solve-${basename}
-                                 PROPERTIES
-                                    PASS_REGULAR_EXPRESSION "validation: SUCCESS"
-                                    DEPENDS papilo-build
-                                    )
-         endforeach(numtype)
-      endforeach(instance)
-   endmacro(add_instancetests)
-
-   add_instancetests(instances_MIP numtypes)
-endif()
+    add_instancetests(instances_MIP numtypes)
+endif ()

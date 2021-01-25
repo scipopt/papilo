@@ -3,7 +3,7 @@
 /*               This file is part of the program and library                */
 /*    PaPILO --- Parallel Presolve for Integer and Linear Optimization       */
 /*                                                                           */
-/* Copyright (C) 2020-2021 Konrad-Zuse-Zentrum                               */
+/* Copyright (C) 2020  Konrad-Zuse-Zentrum                                   */
 /*                     fuer Informationstechnik Berlin                       */
 /*                                                                           */
 /* This program is free software: you can redistribute it and/or modify      */
@@ -21,52 +21,24 @@
 /*                                                                           */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef _PAPILO_CORE_SOLUTION_HPP_
-#define _PAPILO_CORE_SOLUTION_HPP_
+#include "papilo/io/MpsParser.hpp"
+#include "catch/catch.hpp"
+#include "papilo/core/PresolveMethod.hpp"
+#include "papilo/core/Problem.hpp"
 
-namespace papilo
+using namespace papilo;
+
+Problem<double>
+setupProblemForCoefficientStrengthening();
+
+TEST_CASE( "mps-parser-loading-simple-problem", "[io]" )
 {
-
-enum class SolutionType
-{
-   kPrimal,
-   kPrimalDual
-};
-
-template <typename REAL>
-class Solution
-{
- public:
-   SolutionType type;
-   Vec<REAL> primal;
-   Vec<REAL> col_dual;
-   Vec<REAL> row_dual;
-
-   // Default type primal only.
-   Solution() : type( SolutionType::kPrimal ) {}
-
-   Solution( SolutionType type_ ) : type( type_ ) {}
-
-   Solution( SolutionType type_, Vec<REAL> values )
-       : type( type_ ), primal( std::move( values ) )
-   {
-   }
-
-   Solution( Vec<REAL> values )
-       : type( SolutionType::kPrimal ), primal( std::move( values ) )
-   {
-   }
-
-   Solution( Vec<REAL> primal_values, Vec<REAL> dual_col_values,
-             Vec<REAL> dual_row_values )
-       : type( SolutionType::kPrimalDual ),
-         primal( std::move( primal_values ) ),
-         col_dual( std::move( dual_col_values ) ),
-         row_dual( std::move( dual_row_values ) )
-   {
-   }
-};
-
-} // namespace papilo
-
-#endif
+   boost::optional<Problem<double>> optional = MpsParser<double>::loadProblem(
+       "./resources/dual_fix_neg_inf.mps" );
+   REQUIRE( optional.is_initialized() == true );
+   Problem<double> problem = optional.get();
+   Vec<int> expected_row_sizes{2,2,3};
+   Vec<int> expected_col_sizes{3,2,2};
+   REQUIRE(problem.getConstraintMatrix().getRowSizes() == expected_row_sizes);
+   REQUIRE(problem.getConstraintMatrix().getColSizes() == expected_col_sizes);
+}

@@ -317,7 +317,7 @@ postsolve( Postsolve<REAL>& postsolve, const Solution<REAL>& reduced_sol,
    Solution<REAL> original_sol;
 
    auto t0 = tbb::tick_count::now();
-   PostsolveStatus status = postsolve.undo( reduced_sol, original_sol );
+   postsolve.undo( reduced_sol, original_sol );
    auto t1 = tbb::tick_count::now();
 
    fmt::print( "\npostsolve finished after {:.3f} seconds\n",

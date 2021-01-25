@@ -33,7 +33,7 @@
 papilo::Problem<double>
 setupProblemForFreeVariableSubstitution();
 
-TEST_CASE( "test-free-variable-detection", "[presolve]" )
+TEST_CASE( "happy-path-test-free-variable-detection", "[presolve]" )
 {
    papilo::Problem<double> problem = setupProblemForFreeVariableSubstitution();
 
@@ -81,6 +81,7 @@ setupProblemForFreeVariableSubstitution()
    // 2x + y >= 1
    // x + 2z <= 2
    // x + v + w = 1
+   // |x| <= 3; y <= 1 ; z >= 0
    double inf = 10000000;
    papilo::Vec<double> coefficients{ 1.0, 1.0, 1.0, 1.0, 1.0 };
    papilo::Vec<double> upperBounds{ 3.0, 1.0, inf, inf, inf };
