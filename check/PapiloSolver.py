@@ -24,6 +24,39 @@ CHANGED_COEFFICIENTS_NAME = "chg_coeff"
 TSX_APPLIED_NAME = "tsx_applied"
 TSX_CONFLICTS_NAME = "tsx_conflicts"
 
+SOLVER_column_singleton = "colsingleton"
+SOLVER_coeff_tightening = "coefftightening"
+SOLVER_propagation = "propagation"
+SOLVER_simple_probing = "simpleprobing"
+SOLVER_stuffing = "stuffing"
+SOLVER_dual_fix = "dualfix"
+SOLVER_fix_continuous = "fixcontinuous"
+SOLVER_parallel_rows = "parallelrows"
+SOLVER_parallel_columns = "parallelcols"
+SOLVER_doubletoneq = "doubletoneq"
+SOLVER_simplify_inequality = "simplifyineq"
+SOLVER_dual_infer = "dualinfer"
+SOLVER_substitution = "substitution"
+SOLVER_probing = "probing"
+SOLVER_dom_colums = "domcol"
+SOLVER_sparsify = "sparsify"
+
+TSX_RATE_column_singleton = "tsx%colsingleton"
+TSX_RATE_coeff_tightening = "tsx%coefftightening"
+TSX_RATE_propagation = "tsx%propagation"
+TSX_RATE_simple_probing = "tsx%simpleprobing"
+TSX_RATE_stuffing = "tsx%stuffing"
+TSX_RATE_dual_fix = "tsx%dualfix"
+TSX_RATE_fix_continuous = "tsx%fixcontinuous"
+TSX_RATE_parallel_rows = "tsx%parallelrows"
+TSX_RATE_parallel_columns = "tsx%parallelcols"
+TSX_RATE_doubletoneq = "tsx%doubletoneq"
+TSX_RATE_simplify_inequality = "tsx%simplifyineq"
+TSX_RATE_dual_infer = "tsx%dualinfer"
+TSX_RATE_substitution = "tsx%substitution"
+TSX_RATE_probing = "tsx%probing"
+TSX_RATE_dom_colums = "tsx%domcol"
+TSX_RATE_sparsify = "tsx%sparsify"
 
 DEFAULT_VALUE = -1.0
 
@@ -34,6 +67,8 @@ class PapiloSolver(SCIPSolver):
     recognition_expr = re.compile("starting presolve of problem")
 
     presolving_time_expr = re.compile("presolving finished after\s+(\S+)")
+
+    floating_point_expr = "[-+]?[0-9]*\.?[0-9]*"
 
     rows_expr = re.compile("\s+rows:\s+(\S+)")
     columns_expr = re.compile("\s+columns:\s+(\S+)")
@@ -52,10 +87,12 @@ class PapiloSolver(SCIPSolver):
     rows_deleted = re.compile("presolved \d+ rounds:\s+\d+ del cols,\s+(\S+)")
     bound_changes = re.compile("presolved \d+ rounds:\s+\d+ del cols,\s+\d+ del rows,\s+(\S+)")
     changed_sides = re.compile("presolved \d+ rounds:\s+\d+ del cols,\s+\d+ del rows,\s+\d+ chg bounds,\s+(\S+)")
-    changed_coefficients = re.compile("presolved \d+ rounds:\s+\d+ del cols,\s+\d+ del rows,\s+\d+ chg bounds,\s+\d+ chg sides,\s+(\S+)")
-    transactions_applied = re.compile("presolved \d+ rounds:\s+\d+ del cols,\s+\d+ del rows,\s+\d+ chg bounds,\s+\d+ chg sides,\s+\d+ chg coeffs,\s+(\S+)")
-    transactions_conflicts = re.compile("presolved \d+ rounds:\s+\d+ del cols,\s+\d+ del rows,\s+\d+ chg bounds,\s+\d+ chg sides,\s+\d+ chg coeffs,\s+\d+ tsx applied,\s+(\S+)")
-
+    changed_coefficients = re.compile(
+        "presolved \d+ rounds:\s+\d+ del cols,\s+\d+ del rows,\s+\d+ chg bounds,\s+\d+ chg sides,\s+(\S+)")
+    transactions_applied = re.compile(
+        "presolved \d+ rounds:\s+\d+ del cols,\s+\d+ del rows,\s+\d+ chg bounds,\s+\d+ chg sides,\s+\d+ chg coeffs,\s+(\S+)")
+    transactions_conflicts = re.compile(
+        "presolved \d+ rounds:\s+\d+ del cols,\s+\d+ del rows,\s+\d+ chg bounds,\s+\d+ chg sides,\s+\d+ chg coeffs,\s+\d+ tsx applied,\s+(\S+)")
 
     def __init__(self, **kw):
         super(PapiloSolver, self).__init__(**kw)
@@ -84,7 +121,6 @@ class PapiloSolver(SCIPSolver):
         self.addData(BOUND_CHANGES_NAME, DEFAULT_VALUE)
         self.addData(TSX_APPLIED_NAME, DEFAULT_VALUE)
         self.addData(TSX_CONFLICTS_NAME, DEFAULT_VALUE)
-
 
     def extractPrimalboundHistory(self, line):
         pass
@@ -118,3 +154,27 @@ class PapiloSolver(SCIPSolver):
         self.extractByExpression(line, self.changed_coefficients, CHANGED_COEFFICIENTS_NAME, str)
         self.extractByExpression(line, self.transactions_applied, TSX_APPLIED_NAME, str)
         self.extractByExpression(line, self.transactions_conflicts, TSX_CONFLICTS_NAME, str)
+
+        self.extractByExpression(line, self.setup_expr_for_solver(SOLVER_column_singleton), TSX_RATE_column_singleton,
+                                 str)
+        self.extractByExpression(line, self.setup_expr_for_solver(SOLVER_coeff_tightening), TSX_RATE_coeff_tightening,
+                                 str)
+        self.extractByExpression(line, self.setup_expr_for_solver(SOLVER_probing), TSX_RATE_probing, str)
+        self.extractByExpression(line, self.setup_expr_for_solver(SOLVER_stuffing), TSX_RATE_stuffing, str)
+        self.extractByExpression(line, self.setup_expr_for_solver(SOLVER_sparsify), TSX_RATE_sparsify, str)
+        self.extractByExpression(line, self.setup_expr_for_solver(SOLVER_substitution), TSX_RATE_substitution, str)
+        self.extractByExpression(line, self.setup_expr_for_solver(SOLVER_dual_fix), TSX_RATE_dual_fix, str)
+        self.extractByExpression(line, self.setup_expr_for_solver(SOLVER_dual_infer), TSX_RATE_dual_infer, str)
+        self.extractByExpression(line, self.setup_expr_for_solver(SOLVER_dom_colums), TSX_RATE_dom_colums, str)
+        self.extractByExpression(line, self.setup_expr_for_solver(SOLVER_fix_continuous), TSX_RATE_fix_continuous, str)
+        self.extractByExpression(line, self.setup_expr_for_solver(SOLVER_simplify_inequality),
+                                 TSX_RATE_simplify_inequality, str)
+        self.extractByExpression(line, self.setup_expr_for_solver(SOLVER_doubletoneq), TSX_RATE_doubletoneq, str)
+        self.extractByExpression(line, self.setup_expr_for_solver(SOLVER_parallel_columns), TSX_RATE_parallel_columns,
+                                 str)
+        self.extractByExpression(line, self.setup_expr_for_solver(SOLVER_parallel_rows), TSX_RATE_parallel_rows, str)
+        self.extractByExpression(line, self.setup_expr_for_solver(SOLVER_propagation), TSX_RATE_propagation, str)
+        self.extractByExpression(line, self.setup_expr_for_solver(SOLVER_simple_probing), TSX_RATE_simple_probing, str)
+
+    def setup_expr_for_solver(self, name):
+        return re.compile("\s+" + name + "\s+\d+\s+" + self.floating_point_expr + "\s+\d+\s+(\S+)")

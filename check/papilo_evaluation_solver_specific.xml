@@ -1,0 +1,19 @@
+<?xml version="1.0" ?>
+<Evaluation comparecolformat="%.3f" index="ProblemName LogFileName" indexsplit="-1">
+	<Column active="True" alternative="1e+30" name="tsx%colsingleton" origcolname="tsx%colsingleton" reduction="meanOrConcat"/>
+	<Column active="True" alternative="-1e+30" name="tsx%coefftightening" origcolname="tsx%coefftightening" reduction="meanOrConcat"/>
+	<Column active="True" alternative="-1" name="tsx%propagation" origcolname="tsx%propagation" reduction="meanOrConcat"/>
+	<Column active="True" alternative="-1" name="tsx%simpleprobing" origcolname="tsx%simpleprobing" reduction="meanOrConcat"/>
+	<Column active="True" alternative="-1" name="tsx%stuffing" origcolname="tsx%stuffing" reduction="meanOrConcat"/>
+	<Column active="True" alternative="-1" name="tsx%dualfix" origcolname="tsx%dualfix" reduction="meanOrConcat"/>
+	<Column active="True" alternative="-1" name="tsx%fixcontinuous" origcolname="tsx%fixcontinuous" reduction="meanOrConcat"/>
+	<Column active="True" alternative="-1" name="tsx%parallelrows" origcolname="tsx%parallelrows" reduction="meanOrConcat"/>
+	<Column active="True" alternative="-1" name="tsx%parallelcols" origcolname="tsx%parallelcols" reduction="meanOrConcat"/>
+	<Column active="True" alternative="-1" name="tsx%doubletoneq" origcolname="tsx%doubletoneq" reduction="meanOrConcat"/>
+	<Column active="True" alternative="-1" name="tsx%dualinfer" origcolname="tsx%dualinfer" reduction="meanOrConcat"/>
+	<Column active="True" alternative="-1" name="tsx%substitution" origcolname="tsx%substitution" reduction="meanOrConcat"/>
+	<Column active="True" alternative="-1" name="tsx%probing" origcolname="tsx%probing" reduction="meanOrConcat"/>
+	<Column active="True" alternative="-1" name="tsx%domcol" origcolname="tsx%domcol" reduction="meanOrConcat"/>
+	<Column active="True" alternative="-1" name="tsx%sparsify" origcolname="tsx%sparsify" reduction="meanOrConcat"/>
+
+</Evaluation>
