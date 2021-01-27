@@ -57,22 +57,6 @@ class DualFix : public PresolveMethod<REAL>
    execute( const Problem<REAL>& problem,
             const ProblemUpdate<REAL>& problemUpdate, const Num<REAL>& num,
             Reductions<REAL>& reductions ) override;
-
-   std::pair<bool, REAL>
-   calc_upper_bound_with_dual_substitution(
-       const Num<REAL>& num, const ConstraintMatrix<REAL>& consMatrix,
-       const Vec<RowActivity<REAL>>& activities, const Vec<REAL>& lbs,
-       const Vec<REAL>& ubs, const Vec<REAL>& rhs, const Vec<REAL>& lhs, int i,
-       int collen, const REAL* values, const int* rowinds,
-       const Vec<ColFlags>& cflags, const Vec<RowFlags>& rflags );
-
-   std::pair<bool, REAL>
-   calc_lower_bound_with_dual_substitution(
-       const Num<REAL>& num, const ConstraintMatrix<REAL>& consMatrix,
-       const Vec<RowActivity<REAL>>& activities, const Vec<REAL>& lbs,
-       const Vec<REAL>& ubs, const Vec<REAL>& lhs, const Vec<REAL>& rhs, int i,
-       int collen, const REAL* values, const int* rowinds,
-       const Vec<ColFlags>& cflags, const Vec<RowFlags>& rflags );
 };
 
 #ifdef PAPILO_USE_EXTERN_TEMPLATES
@@ -101,7 +85,7 @@ DualFix<REAL>::execute( const Problem<REAL>& problem,
 
    PresolveStatus result = PresolveStatus::kUnchanged;
 
-   for( int i = 0; i < ncols; ++i )
+   for( int i = 0; i != ncols; ++i )
    {
       // skip inactive columns
       if( cflags[i].test( ColFlag::kInactive ) )
@@ -112,13 +96,10 @@ DualFix<REAL>::execute( const Problem<REAL>& problem,
       if( problemUpdate.getPresolveOptions().dualreds < 2 && objective[i] == 0 )
          continue;
 
-      // TODO: this can be replaced with    Vec<Locks>& locks =
-      // problem.getLocks(); or nah? probably because it isn't updated?
       auto colvec = consMatrix.getColumnCoefficients( i );
       int collen = colvec.getLength();
       const REAL* values = colvec.getValues();
       const int* rowinds = colvec.getIndices();
-
       int nuplocks = 0;
       int ndownlocks = 0;
 
@@ -128,7 +109,7 @@ DualFix<REAL>::execute( const Problem<REAL>& problem,
       else if( objective[i] > 0 )
          ++nuplocks;
 
-      for( int j = 0; j < collen; ++j )
+      for( int j = 0; j != collen; ++j )
       {
          count_locks( values[j], rflags[rowinds[j]], ndownlocks, nuplocks );
 
@@ -192,6 +173,32 @@ DualFix<REAL>::execute( const Problem<REAL>& problem,
       // apply dual substitution
       else
       {
+         // Function checks if considered row allows dual bound strengthening
+         // and calculates tightest bound for this row.
+         auto check_row = []( int ninf, REAL activity, const REAL& side,
+                              const REAL& coeff, const REAL& boundval,
+                              bool boundinf, bool& skip, REAL& cand_bound ) {
+           switch( ninf )
+           {
+           case 0:
+              assert( !boundinf );
+              // calculate residual activity
+              activity -= boundval * coeff;
+              break;
+           case 1:
+              if( boundinf )
+                 break;
+           default:
+              // If one of the other variables with non-zero entry is
+              // unbounded, dual bound strengthening is not possible for this
+              // column; skip column.
+              skip = true;
+              return;
+           }
+
+           // calculate candidate for new bound
+           cand_bound = ( side - activity ) / coeff;
+         };
          // If c_i >= 0, we might derive a tighter upper bound.
          // We consider only rows of
          // M := { (a_ji < 0 and rhs != inf) or (a_ji > 0 and lhs != inf)}.
@@ -199,45 +206,102 @@ DualFix<REAL>::execute( const Problem<REAL>& problem,
          // bound can be set to new_UB.
          if( objective[i] >= 0 )
          {
-            const std::pair<bool, REAL>& new_upper_bound =
-                calc_upper_bound_with_dual_substitution(
-                    num, consMatrix, activities, lbs, ubs, rhs, lhs, i, collen,
-                    values, rowinds, cflags, rflags );
+            bool skip = false;
+            bool new_UB_init = false;
+            REAL new_UB;
 
-            if( new_upper_bound.first )
+            // go through all rows with non-zero entry
+            for( int j = 0; j != collen; ++j )
             {
-               REAL new_UB = new_upper_bound.second;
+               int row = rowinds[j];
+               // candidate for new upper bound
+               REAL cand_bound;
 
-               // set new upper bound
-               if( !num.isHugeVal( new_UB ) )
-               {
-                  assert( cflags[i].test( ColFlag::kUbInf ) ||
-                          new_UB < ubs[i] );
-
-                  // cannot detect infeasibility with this method, so at most
-                  // tighten the bound to the lower bound
-                  if( !cflags[i].test( ColFlag::kLbInf ) )
-                     new_UB = num.max( lbs[i], new_UB );
-
-                  // A transaction is only needed to group several reductions
-                  // that belong together
-                  TransactionGuard<REAL> guard{ reductions };
-
-                  reductions.lockCol( i );
-                  reductions.lockColBounds( i );
-                  reductions.changeColUB( i, new_UB );
-                  Message::debug( this,
-                                  "tightened upper bound of col {} to {}\n", i,
-                                  double( new_UB ) );
-
-                  result = PresolveStatus::kReduced;
-
-                  // If new upper bound is set, we continue with the next
-                  // column. Although, If c=0, we can try to derive an
-                  // additional lower bound it will conflict with the locks of
-                  // this reduction and hence will never be applied.
+               if( consMatrix.isRowRedundant( row ) )
                   continue;
+
+               // if row is in M, calculate candidate for new upper bound
+               if( values[j] < 0.0 )
+               {
+                  if( !rflags[row].test( RowFlag::kRhsInf ) )
+                  {
+                     check_row( activities[row].ninfmax, activities[row].max,
+                                rhs[row], values[j], lbs[i],
+                                cflags[i].test( ColFlag::kLbInf ), skip,
+                                cand_bound );
+                  }
+                  else
+                     // row is not in M
+                     continue;
                }
+               else
+               {
+                  if( !rflags[row].test( RowFlag::kLhsInf ) )
+                  {
+                     check_row( activities[row].ninfmin, activities[row].min,
+                                lhs[row], values[j], lbs[i],
+                                cflags[i].test( ColFlag::kLbInf ), skip,
+                                cand_bound );
+                  }
+                  else
+                     // row is not in M
+                     continue;
+               }
+
+               if( skip == true )
+                  break;
+
+               // Only if variable is greater than or equal to new_UB, all rows
+               // in M are redundant.
+               // I. e. we round up for integer variables.
+               if( cflags[i].test( ColFlag::kIntegral ) )
+                  cand_bound = num.epsCeil( cand_bound );
+
+               if( !new_UB_init || cand_bound > new_UB )
+               {
+                  new_UB = cand_bound;
+                  new_UB_init = true;
+
+                  // check if bound is already equal or worse than current bound
+                  // and abort in that case
+                  if( ( !cflags[i].test( ColFlag::kUbInf ) &&
+                        num.isGE( new_UB, ubs[i] ) ) ||
+                      new_UB >= num.getHugeVal() )
+                  {
+                     skip = true;
+                     break;
+                  }
+               }
+            }
+
+            // set new upper bound
+            if( !skip && new_UB_init && !num.isHugeVal( new_UB ) )
+            {
+               assert( cflags[i].test( ColFlag::kUbInf ) || new_UB < ubs[i] );
+
+               // cannot detect infeasibility with this method, so at most
+               // tighten the bound to the lower bound
+               if( !cflags[i].test( ColFlag::kLbInf ) )
+                  new_UB = num.max( lbs[i], new_UB );
+
+               // A transaction is only needed to group several reductions that
+               // belong together
+               // TODO are the locks to strict?
+               TransactionGuard<REAL> guard{ reductions };
+
+               reductions.lockCol( i );
+               reductions.lockColBounds( i );
+               reductions.changeColUB( i, new_UB );
+               Message::debug( this, "tightened upper bound of col {} to {}\n",
+                               i, double( new_UB ) );
+
+               result = PresolveStatus::kReduced;
+
+               // If new upper bound is set, we continue with the next column.
+               // Although, If c=0, we can try to derive an additional lower
+               // bound it will conflict with the locks of this reduction and
+               // hence will never be applied.
+               continue;
             }
          }
 
@@ -248,16 +312,75 @@ DualFix<REAL>::execute( const Problem<REAL>& problem,
          // bound can be set to new_LB.
          if( objective[i] <= 0 )
          {
-            const std::pair<bool, REAL>& new_lower_bound =
-                calc_lower_bound_with_dual_substitution(
-                    num, consMatrix, activities, lbs, ubs, lhs, rhs, i, collen,
-                    values, rowinds, cflags, rflags );
+            bool skip = false;
+            bool new_LB_init = false;
+            REAL new_LB;
 
-            if( !new_lower_bound.first )
-               continue;
-            REAL new_LB = new_lower_bound.second;
+            // go through all rows with non-zero entry
+            for( int j = 0; j != collen; ++j )
+            {
+               int row = rowinds[j];
+               // candidate for new lower bound
+               REAL cand_bound;
+
+               if( consMatrix.isRowRedundant( row ) )
+                  continue;
+
+               // if row is in M, calculate candidate for new lower bound
+               if( values[j] > 0.0 )
+               {
+                  if( !rflags[row].test( RowFlag::kRhsInf ) )
+                  {
+                     check_row( activities[row].ninfmax, activities[row].max,
+                                rhs[row], values[j], ubs[i],
+                                cflags[i].test( ColFlag::kUbInf ), skip,
+                                cand_bound );
+                  }
+                  else
+                     // row is not in M
+                     continue;
+               }
+               else
+               {
+                  if( !rflags[row].test( RowFlag::kLhsInf ) )
+                  {
+                     check_row( activities[row].ninfmin, activities[row].min,
+                                lhs[row], values[j], ubs[i],
+                                cflags[i].test( ColFlag::kUbInf ), skip,
+                                cand_bound );
+                  }
+                  else
+                     // row is not in M
+                     continue;
+               }
+
+               if( skip == true )
+                  break;
+
+               // Only if variable is less than or equal to new_LB, all rows in
+               // M are redundant. I. e. we round down for integer variables.
+               if( cflags[i].test( ColFlag::kIntegral ) )
+                  cand_bound = num.epsFloor( cand_bound );
+
+               if( !new_LB_init || cand_bound < new_LB )
+               {
+                  new_LB = cand_bound;
+                  new_LB_init = true;
+
+                  // check if bound is already equal or worse than current bound
+                  // and abort in that case
+                  if( ( !cflags[i].test( ColFlag::kLbInf ) &&
+                        num.isLE( new_LB, lbs[i] ) ) ||
+                      new_LB <= -num.getHugeVal() )
+                  {
+                     skip = true;
+                     break;
+                  }
+               }
+            }
+
             // set new lower bound
-            if( !num.isHugeVal( new_LB ) )
+            if( !skip && new_LB_init && !num.isHugeVal( new_LB ) )
             {
                assert( cflags[i].test( ColFlag::kLbInf ) || new_LB > lbs[i] );
 
@@ -268,6 +391,7 @@ DualFix<REAL>::execute( const Problem<REAL>& problem,
 
                // A transaction is only needed to group several reductions that
                // belong together
+               // TODO are the locks to strict?
                TransactionGuard<REAL> guard{ reductions };
 
                reductions.lockCol( i );
@@ -284,147 +408,6 @@ DualFix<REAL>::execute( const Problem<REAL>& problem,
    }
 
    return result;
-}
-
-template <typename REAL>
-std::pair<bool, REAL>
-DualFix<REAL>::calc_upper_bound_with_dual_substitution(
-    const Num<REAL>& num, const ConstraintMatrix<REAL>& consMatrix,
-    const Vec<RowActivity<REAL>>& activities, const Vec<REAL>& lbs,
-    const Vec<REAL>& ubs, const Vec<REAL>& rhs, const Vec<REAL>& lhs, int i,
-    int collen, const REAL* values, const int* rowinds,
-    const Vec<ColFlags>& cflags, const Vec<RowFlags>& rflags )
-{
-
-   bool new_UB_init = false;
-   REAL new_UB;
-
-   for( int j = 0; j != collen; ++j )
-   {
-      int row = rowinds[j];
-
-      // candidate for new upper bound
-      REAL cand_bound;
-
-      if( consMatrix.isRowRedundant( row ) )
-         continue;
-
-      if( values[j] < 0.0 && !rflags[row].test( RowFlag::kRhsInf ) &&
-          activities[row].ninfmax == 0 )
-      {
-         cand_bound =
-             ( rhs[row] - ( activities[row].max - values[j] * lbs[i] ) ) /
-             values[j];
-      }
-      else if( values[j] > 0.0 && !rflags[row].test( RowFlag::kLhsInf ) &&
-               activities[row].ninfmin == 0 )
-      {
-         cand_bound =
-             ( lhs[row] - ( activities[row].min - values[j] * ubs[i] ) ) /
-             values[j];
-      }
-      else if( ( values[j] < 0.0 && !rflags[row].test( RowFlag::kRhsInf ) &&
-                 ( activities[row].ninfmax > 1 ||
-                   ( activities[row].ninfmax == 1 &&
-                     !cflags[i].test( ColFlag::kLbInf ) ) ) ) ||
-               values[j] >= 0.0 && !rflags[row].test( RowFlag::kLhsInf ) &&
-                   ( activities[row].ninfmin > 1 ||
-                     ( activities[row].ninfmin == 1 &&
-                       !cflags[i].test( ColFlag::kLbInf ) ) ) )
-         return { false, 0 };
-      else
-         continue;
-
-      // Only if variable is greater than or equal to new_UB, all rows
-      // in M are redundant.
-      // I. e. we round up for integer variables.
-      if( cflags[i].test( ColFlag::kIntegral ) )
-         cand_bound = num.epsCeil( cand_bound );
-
-      if( !new_UB_init || cand_bound > new_UB )
-      {
-         new_UB = cand_bound;
-         new_UB_init = true;
-
-         // check if bound is already equal or worse than current bound
-         // and abort in that case
-         if( ( !cflags[i].test( ColFlag::kUbInf ) &&
-               num.isGE( new_UB, ubs[i] ) ) ||
-             new_UB >= num.getHugeVal() )
-            return { false, 0 };
-      }
-   }
-   return { true, new_UB };
-}
-
-template <typename REAL>
-std::pair<bool, REAL>
-DualFix<REAL>::calc_lower_bound_with_dual_substitution(
-    const Num<REAL>& num, const ConstraintMatrix<REAL>& consMatrix,
-    const Vec<RowActivity<REAL>>& activities, const Vec<REAL>& lbs,
-    const Vec<REAL>& ubs, const Vec<REAL>& lhs, const Vec<REAL>& rhs, int i,
-    int collen, const REAL* values, const int* rowinds,
-    const Vec<ColFlags>& cflags, const Vec<RowFlags>& rflags )
-{
-   bool new_LB_init = false;
-   REAL new_LB;
-
-   for( int j = 0; j != collen; ++j )
-   {
-      int row = rowinds[j];
-      // candidate for new lower bound
-      REAL cand_bound;
-
-      if( consMatrix.isRowRedundant( row ) )
-         continue;
-
-      if( values[j] < 0.0 && !rflags[row].test( RowFlag::kLhsInf ) &&
-          activities[row].ninfmax == 0 )
-      {
-         cand_bound =
-             ( lhs[row] - ( activities[row].min - values[j] * lbs[i] ) ) /
-             values[j];
-      }
-      else if( values[j] > 0.0 && !rflags[row].test( RowFlag::kRhsInf ) &&
-               activities[row].ninfmin == 0 )
-      {
-         cand_bound =
-             ( rhs[row] - ( activities[row].max - values[j] * ubs[i] ) ) /
-             values[j];
-      }
-      else if( ( values[j] < 0.0 && !rflags[row].test( RowFlag::kLhsInf ) &&
-                     ( activities[row].ninfmax == 1 &&
-                       !cflags[i].test( ColFlag::kUbInf ) ) ||
-                 activities[row].ninfmax > 1 ) ||
-               ( values[j] > 0.0 && !rflags[row].test( RowFlag::kRhsInf ) &&
-                     ( activities[row].ninfmin == 1 &&
-                       !cflags[i].test( ColFlag::kUbInf ) ) ||
-                 activities[row].ninfmin > 1 ) )
-         return { false, 0 };
-      else
-         continue;
-
-      // Only if variable is less than or equal to new_LB, all rows in
-      // M are redundant. I. e. we round down for integer variables.
-      if( cflags[i].test( ColFlag::kIntegral ) )
-         cand_bound = num.epsFloor( cand_bound );
-
-      if( !new_LB_init || cand_bound < new_LB )
-      {
-         new_LB = cand_bound;
-         new_LB_init = true;
-
-         // check if bound is already equal or worse than current bound
-         // and abort in that case
-         if( ( !cflags[i].test( ColFlag::kLbInf ) &&
-               num.isLE( new_LB, lbs[i] ) ) ||
-             new_LB <= -num.getHugeVal() )
-         {
-            return { false, 0 };
-         }
-      }
-   }
-   return { true, new_LB };
 }
 
 } // namespace papilo
