@@ -537,8 +537,8 @@ ProblemUpdate<REAL>::fixColInfinity( int col, REAL val )
        cflags[col].test( ColFlag::kFixed ) || val == 0 )
       return PresolveStatus::kUnchanged;
 
-   assert(val < 0 && !cflags[col].test( ColFlag::kLbInf ) );
-   assert(val > 0 && !cflags[col].test( ColFlag::kUbInf ) );
+   assert((val < 0 && cflags[col].test( ColFlag::kLbInf )) ||
+                 (val > 0 && cflags[col].test( ColFlag::kUbInf )) );
 
    // activity doesn't need to be upgraded because rows should be mark redundant
    markColFixed( col );
