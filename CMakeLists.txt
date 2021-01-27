@@ -60,10 +60,9 @@ find_program(GIT git)
 
 if((GIT) AND (EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/.git))
    execute_process(
-      COMMAND ${GIT} describe --always --dirty
+      COMMAND ${GIT} rev-parse --short HEAD
       WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
       OUTPUT_VARIABLE PAPILO_GITHASH OUTPUT_STRIP_TRAILING_WHITESPACE)
-   string(REGEX REPLACE \"^.*-g\" \"\" PAPILO_GITHASH ${PAPILO_GITHASH})
 else()
    file(STRINGS ${CMAKE_CURRENT_SOURCE_DIR}/src/papilo/Config.hpp githash_define REGEX "define PAPILO_GITHASH .*")
    if(githash_define)
