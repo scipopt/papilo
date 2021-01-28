@@ -297,7 +297,7 @@ DualInfer<REAL>::execute( const Problem<REAL>& problem,
             // bound exceeded by more then feastol means infeasible
             if( bnddist < -num.getFeasTol() )
             {
-               result = PresolveStatus::kUnbndOrInfeas;
+               result = PresolveStatus::kUnboundedIfFeasible;
                return;
             }
 
@@ -344,7 +344,7 @@ DualInfer<REAL>::execute( const Problem<REAL>& problem,
             // bound exceeded by more then feastol means infeasible
             if( bnddist < -num.getFeasTol() )
             {
-               result = PresolveStatus::kUnbndOrInfeas;
+               result = PresolveStatus::kUnboundedIfFeasible;
                return;
             }
 
@@ -435,7 +435,7 @@ DualInfer<REAL>::execute( const Problem<REAL>& problem,
                         dualRowFlags[dualRow], dualLB, dualUB, dualColFlags,
                         boundChanged );
 
-         if( result == PresolveStatus::kUnbndOrInfeas )
+         if( result == PresolveStatus::kUnboundedIfFeasible )
             return result;
       }
 

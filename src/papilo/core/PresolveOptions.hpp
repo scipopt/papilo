@@ -151,6 +151,12 @@ struct PresolveOptions
                              "maximal number of threads to use (0: automatic)",
                              threads, 0 );
    }
+
+   bool
+   runs_sequentiell(){
+      return threads==1;
+   }
+
 };
 
 } // namespace papilo
