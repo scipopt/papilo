@@ -66,7 +66,6 @@ CoefficientStrengthening<REAL>::execute(
    const auto& domains = problem.getVariableDomains();
    const auto& cflags = domains.flags;
    const auto& activities = problem.getRowActivities();
-   //TODO: what is changed_activities
    const auto& changedActivities = problemUpdate.getChangedActivities();
 
    const auto& constMatrix = problem.getConstraintMatrix();

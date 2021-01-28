@@ -122,10 +122,10 @@ class ParallelColDetection : public PresolveMethod<REAL>
 
    int
    determineBucketSize( int nColumns, std::unique_ptr<unsigned int[]>& supportid,
-                        std::unique_ptr<unsigned int[]>& coefhash,
+                        std::unique_ptr<unsigned int[]>& coefficentHashes,
                         std::unique_ptr<int[]>& column, int i );
 
-   virtual PresolveStatus
+   PresolveStatus
    execute( const Problem<REAL>& problem,
             const ProblemUpdate<REAL>& problemUpdate, const Num<REAL>& num,
             Reductions<REAL>& reductions ) override;
