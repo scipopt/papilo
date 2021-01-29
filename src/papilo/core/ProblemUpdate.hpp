@@ -368,7 +368,6 @@ class ProblemUpdate
    PresolveStatus
    apply_dualfix( Vec<REAL>& lbs, Vec<REAL>& ubs, Vec<ColFlags>& cflags,
                   const Vec<REAL>& obj, const Vec<Locks>& locks, int col );
-
 };
 
 #ifdef PAPILO_USE_EXTERN_TEMPLATES
@@ -411,16 +410,10 @@ void
 ProblemUpdate<REAL>::update_activity( ActivityChange actChange, int rowid,
                                       RowActivity<REAL>& activity )
 {
-   if( activity.lastchange == stats.nrounds )
-      return;
-
-   if( actChange == ActivityChange::kMin && activity.ninfmin > 1 )
-      return;
-
-   if( actChange == ActivityChange::kMax && activity.ninfmax > 1 )
-      return;
-
-   if( problem.getConstraintMatrix().isRowRedundant( rowid ) )
+   if( activity.lastchange == stats.nrounds ||
+       (actChange == ActivityChange::kMin && activity.ninfmin > 1) ||
+       (actChange == ActivityChange::kMax && activity.ninfmax > 1) ||
+       problem.getConstraintMatrix().isRowRedundant( rowid ) )
       return;
 
    activity.lastchange = stats.nrounds;
@@ -537,8 +530,8 @@ ProblemUpdate<REAL>::fixColInfinity( int col, REAL val )
        cflags[col].test( ColFlag::kFixed ) || val == 0 )
       return PresolveStatus::kUnchanged;
 
-   assert((val < 0 && cflags[col].test( ColFlag::kLbInf )) ||
-                 (val > 0 && cflags[col].test( ColFlag::kUbInf )) );
+   assert( ( val < 0 && cflags[col].test( ColFlag::kLbInf ) ) ||
+           ( val > 0 && cflags[col].test( ColFlag::kUbInf ) ) );
 
    // activity doesn't need to be upgraded because rows should be mark redundant
    markColFixed( col );
@@ -575,7 +568,8 @@ ProblemUpdate<REAL>::changeLB( int col, REAL val )
       ++stats.nboundchgs;
       if( !cflags[col].test( ColFlag::kUbInf ) && newbound > ubs[col] )
       {
-         //TODO: should be checking if to values are the same not be compared by isGT
+         // TODO: should be checking if to values are the same not be compared
+         // by isGT
          if( num.isFeasGT( newbound, ubs[col] ) )
          {
             Message::debug( this,
@@ -665,7 +659,8 @@ ProblemUpdate<REAL>::changeUB( int col, REAL val )
       ++stats.nboundchgs;
       if( !cflags[col].test( ColFlag::kLbInf ) && newbound < lbs[col] )
       {
-         //TODO: should be checking if to values are the same not be compared by isGT
+         // TODO: should be checking if to values are the same not be compared
+         // by isGT
          if( num.isFeasLT( newbound, lbs[col] ) )
          {
             Message::debug( this,
@@ -1461,7 +1456,6 @@ ProblemUpdate<REAL>::trivialPresolve()
 
    return status;
 }
-
 
 template <typename REAL>
 PresolveStatus
@@ -2417,20 +2411,26 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
                for( int i = 0; i != rowlen; ++i )
                   setColState( rowcols[i], State::kModified );
             }
-            //TODO: is this necessary-> bounds could be (actually not) changed by to independent
+            // TODO: is this necessary-> bounds could be (actually not) changed
+            // by to independent
             if( !rflags[reduction.row].test( RowFlag::kRhsInf ) &&
                 num.isFeasGT(
                     reduction.newval,
-                    constraintMatrix.getRightHandSides()[reduction.row])){
-               Message::debug( this,
-                               "fixing the lhs of row {} with bounds [{},{}] to value {} is "
-                               "detected to be infeasible\n",
-                               reduction.row,
-                               rflags[reduction.row].test( RowFlag::kLhsInf )
-                               ? -std::numeric_limits<double>::infinity()
-                               : double( constraintMatrix.getLeftHandSides()[reduction.row] ),
-                               double(constraintMatrix.getRightHandSides()[reduction.row]),
-                               double(reduction.newval));
+                    constraintMatrix.getRightHandSides()[reduction.row] ) )
+            {
+               Message::debug(
+                   this,
+                   "fixing the lhs of row {} with bounds [{},{}] to value {} "
+                   "is "
+                   "detected to be infeasible\n",
+                   reduction.row,
+                   rflags[reduction.row].test( RowFlag::kLhsInf )
+                       ? -std::numeric_limits<double>::infinity()
+                       : double( constraintMatrix
+                                     .getLeftHandSides()[reduction.row] ),
+                   double(
+                       constraintMatrix.getRightHandSides()[reduction.row] ),
+                   double( reduction.newval ) );
                return ApplyResult::kInfeasible;
             }
 
@@ -2453,23 +2453,26 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
                for( int i = 0; i != rowlen; ++i )
                   setColState( rowcols[i], State::kModified );
             }
-            //TODO: is this necessary-> bounds could be (actually not) changed by to independent
+            // TODO: is this necessary-> bounds could be (actually not) changed
+            // by to independent
             if( !rflags[reduction.row].test( RowFlag::kLhsInf ) &&
                 num.isFeasGT(
                     constraintMatrix.getLeftHandSides()[reduction.row],
-                    reduction.newval))
+                    reduction.newval ) )
             {
-               Message::debug( this,
-                               "fixing the rhs of row {} with bounds [{},{}] to value {} is "
-                               "detected to be infeasible\n",
-                               reduction.row,
-                               double(constraintMatrix.getLeftHandSides()[reduction.row]),
-                               rflags[reduction.row].test( RowFlag::kRhsInf )
-                               ? -std::numeric_limits<double>::infinity()
-                               : double( constraintMatrix.getRightHandSides()[reduction.row] ),
+               Message::debug(
+                   this,
+                   "fixing the rhs of row {} with bounds [{},{}] to value {} "
+                   "is "
+                   "detected to be infeasible\n",
+                   reduction.row,
+                   double( constraintMatrix.getLeftHandSides()[reduction.row] ),
+                   rflags[reduction.row].test( RowFlag::kRhsInf )
+                       ? -std::numeric_limits<double>::infinity()
+                       : double( constraintMatrix
+                                     .getRightHandSides()[reduction.row] ),
 
-                               double(reduction.newval)
-                               );
+                   double( reduction.newval ) );
                return ApplyResult::kInfeasible;
             }
 

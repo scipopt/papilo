@@ -194,6 +194,7 @@ add_library(papilo-core STATIC
    src/papilo/presolvers/SingletonStuffing.cpp
    src/papilo/presolvers/Sparsify.cpp
    src/papilo/presolvers/SimplifyInequalities.cpp
+   src/papilo/core/EarlyPresolveTerminationException.hpp
         )
 
 target_link_libraries(papilo-core papilo)
