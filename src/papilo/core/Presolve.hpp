@@ -271,7 +271,7 @@ class Presolve
                          const Statistics& roundStats,
                          const Timer& presolvetimer, bool unchanged = false );
    void
-   applyPresolversReductions( ProblemUpdate<REAL>& probUpdate );
+   apply_all_presolver_reductions( ProblemUpdate<REAL>& probUpdate );
 
    void
    printRoundStats( bool unchanged, std::string rndtype );
@@ -306,11 +306,23 @@ class Presolve
    evaluate_and_apply( const Timer& timer, Problem<REAL>& problem,
                        PresolveResult<REAL>& result,
                        ProblemUpdate<REAL>& probUpdate,
-                       const Statistics& oldstats );
+                       const Statistics& oldstats, int size,
+                       bool run_sequentiell );
 
    void
    apply_reduction_of_solver( ProblemUpdate<REAL>& probUpdate,
                               size_t index_presolver );
+
+   void
+   apply_result_sequentiell( int index_presolver,
+                             ProblemUpdate<REAL>& probUpdate,
+                             bool& run_sequentiell );
+
+   void
+   run_presolvers( const Problem<REAL>& problem,
+                          const std::pair<int, int>& presolver_2_run,
+                          ProblemUpdate<REAL>& probUpdate,
+                          bool& run_sequentiell );
 };
 
 #ifdef PAPILO_USE_EXTERN_TEMPLATES
@@ -422,9 +434,9 @@ Presolve<REAL>::apply( Problem<REAL>& problem )
       finishRound( probUpdate );
       ++stats.nrounds;
 
-//#define PARALLEL_FAST_PRESOLVERS = false
-#define PARALLEL_MEDIUM_PRESOLVERS
-#define PARALLEL_EXHAUSTIVE_PRESOLVERS
+      //#define PARALLEL_FAST_PRESOLVERS = false
+      //#define PARALLEL_MEDIUM_PRESOLVERS
+      //#define PARALLEL_EXHAUSTIVE_PRESOLVERS
 
       nunsuccessful = 0;
       rundelayed = true;
@@ -441,11 +453,13 @@ Presolve<REAL>::apply( Problem<REAL>& problem )
          Statistics last_rounds_stats = stats;
          do
          {
+            bool run_sequentiell = false;
             // if problem is trivial abort here
             if( probUpdate.getNActiveCols() == 0 ||
                 probUpdate.getNActiveRows() == 0 )
                break;
 
+            int size = probUpdate.getChangedActivities().size();
             switch( round_to_evaluate )
             {
             case Delegator::kFast:
@@ -467,60 +481,26 @@ Presolve<REAL>::apply( Problem<REAL>& problem )
                {
                   results[i] = presolvers[i]->run( problem, probUpdate, num,
                                                    reductions[i] );
-//                  apply_reduction_of_solver( probUpdate, i );
+                  // TODO: this isn't currently not running because of changed_activities
+                  // run_presolvers( problem, fastPresolvers, probUpdate,
+                  //                               run_sequentiell );
                }
 #endif
                break;
             case Delegator::kMedium:
-#ifdef PARALLEL_MEDIUM_PRESOLVERS
-               tbb::parallel_for(
-                   tbb::blocked_range<int>( mediumPresolvers.first,
-                                            mediumPresolvers.second ),
-                   [&]( const tbb::blocked_range<int>& r ) {
-                      for( int i = r.begin(); i != r.end(); ++i )
-                      {
-                         results[i] = presolvers[i]->run( problem, probUpdate,
-                                                          num, reductions[i] );
-                      }
-                   },
-                   tbb::simple_partitioner() );
-#else
-               for( int i = mediumPresolvers.first;
-                    i != mediumPresolvers.second; ++i )
-               {
-                  results[i] = presolvers[i]->run( problem, probUpdate, num,
-                                                   reductions[i] );
-               }
-#endif
+               run_presolvers( problem, mediumPresolvers, probUpdate,
+                               run_sequentiell );
                break;
             case Delegator::kExhaustive:
-#ifdef PARALLEL_EXHAUSTIVE_PRESOLVERS
-               tbb::parallel_for(
-                   tbb::blocked_range<int>( exhaustivePresolvers.first,
-                                            exhaustivePresolvers.second ),
-                   [&]( const tbb::blocked_range<int>& r ) {
-                      for( int i = r.begin(); i != r.end(); ++i )
-                      {
-                         results[i] = presolvers[i]->run( problem, probUpdate,
-                                                          num, reductions[i] );
-                      }
-                   },
-                   tbb::simple_partitioner() );
-#else
-               for( int i = exhaustivePresolvers.first;
-                    i != exhaustivePresolvers.second; ++i )
-               {
-                  results[i] = presolvers[i]->run( problem, probUpdate, num,
-                                                   reductions[i] );
-               }
-#endif
+               run_presolvers( problem, exhaustivePresolvers, probUpdate,
+                               run_sequentiell );
                break;
             default:
                assert( false );
             }
 
             evaluate_and_apply( timer, problem, result, probUpdate,
-                                last_rounds_stats );
+                                last_rounds_stats, size, run_sequentiell );
             last_rounds_stats = stats;
 
          } while( round_to_evaluate != Delegator::kAbort );
@@ -543,6 +523,7 @@ Presolve<REAL>::apply( Problem<REAL>& problem )
             return result;
 
          probUpdate.clearStates();
+         probUpdate.check_and_compress();
       }
 
       printPresolversStats();
@@ -865,6 +846,50 @@ Presolve<REAL>::apply( Problem<REAL>& problem )
 }
 
 template <typename REAL>
+void
+Presolve<REAL>::run_presolvers(
+    const Problem<REAL>& problem, const std::pair<int, int>& presolver_2_run,
+    ProblemUpdate<REAL>& probUpdate, bool& run_sequentiell )
+{
+   if( presolveOptions.runs_sequentiell()  && presolveOptions.sequentiellreductionapplying)
+   {
+      probUpdate.setPostponeSubstitutions( false );
+      for( int i = presolver_2_run.first; i != presolver_2_run.second; ++i )
+      {
+         results[i] =
+             presolvers[i]->run( problem, probUpdate, num, reductions[i] );
+         apply_result_sequentiell( i, probUpdate, run_sequentiell );
+      }
+   }
+   else
+   {
+      tbb::parallel_for(
+          tbb::blocked_range<int>( presolver_2_run.first,
+                                   presolver_2_run.second ),
+          [&]( const tbb::blocked_range<int>& r ) {
+            for( int i = r.begin(); i != r.end(); ++i )
+            {
+               results[i] = presolvers[i]->run( problem, probUpdate, num,
+                                                reductions[i] );
+            }
+          },
+          tbb::simple_partitioner() );
+   }
+}
+
+template <typename REAL>
+void
+Presolve<REAL>::apply_result_sequentiell( int index_presolver,
+                                          ProblemUpdate<REAL>& probUpdate,
+                                          bool& run_sequentiell )
+{
+   run_sequentiell = true;
+   apply_reduction_of_solver( probUpdate, index_presolver );
+   probUpdate.flushChangedCoeffs();
+   probUpdate.clearStates();
+}
+
+template <typename REAL>
 Delegator
 Presolve<REAL>::determine_next_round( Problem<REAL>& problem,
                                       ProblemUpdate<REAL>& probUpdate,
@@ -889,10 +914,12 @@ void
 Presolve<REAL>::evaluate_and_apply( const Timer& timer, Problem<REAL>& problem,
                                     PresolveResult<REAL>& result,
                                     ProblemUpdate<REAL>& probUpdate,
-                                    const Statistics& oldstats )
+                                    const Statistics& oldstats, int size,
+                                    bool run_sequentiell )
 {
    if( round_to_evaluate == Delegator::kFast )
    {
+      //      probUpdate.clearChangeInfo( size );
       probUpdate.clearChangeInfo();
       lastRoundReduced = false;
    }
@@ -911,7 +938,15 @@ Presolve<REAL>::evaluate_and_apply( const Timer& timer, Problem<REAL>& problem,
       break;
    case PresolveStatus::kReduced:
       // problem reductions where found by at least one presolver
-      applyPresolversReductions( probUpdate );
+      if( !run_sequentiell )
+         apply_all_presolver_reductions( probUpdate );
+      else
+      {
+         // TODO: why only check in Infeasible
+         if( probUpdate.flush() == PresolveStatus::kInfeasible )
+            throw EarlyPresolveTerminationException(
+                PresolveStatus::kInfeasible );
+      }
       round_to_evaluate = determine_next_round( problem, probUpdate,
                                                 ( stats - oldstats ), timer );
       // end round
@@ -921,8 +956,10 @@ Presolve<REAL>::evaluate_and_apply( const Timer& timer, Problem<REAL>& problem,
 
 template <typename REAL>
 void
-Presolve<REAL>::applyPresolversReductions( ProblemUpdate<REAL>& probUpdate )
+Presolve<REAL>::apply_all_presolver_reductions(
+    ProblemUpdate<REAL>& probUpdate )
 {
+   // TODO: why is thisn't set globally
    probUpdate.setPostponeSubstitutions( true );
 
    postponedReductionToPresolver.push_back( 0 );
@@ -941,6 +978,7 @@ Presolve<REAL>::applyPresolversReductions( ProblemUpdate<REAL>& probUpdate )
    if( probUpdate.flush() == PresolveStatus::kInfeasible )
       throw EarlyPresolveTerminationException( PresolveStatus::kInfeasible );
 }
+
 template <typename REAL>
 void
 Presolve<REAL>::apply_reduction_of_solver( ProblemUpdate<REAL>& probUpdate,
@@ -952,8 +990,8 @@ Presolve<REAL>::apply_reduction_of_solver( ProblemUpdate<REAL>& probUpdate,
    Message::debug( this, "applying reductions of presolver {}\n",
                    presolvers[index_presolver]->getName() );
 
-   auto statistics =
-       applyReductions( index_presolver, reductions[index_presolver], probUpdate );
+   auto statistics = applyReductions( index_presolver,
+                                      reductions[index_presolver], probUpdate );
 
    // TODO: what should happen here former it was an if clause?
    assert( statistics.first >= 0 && statistics.second >= 0 );
@@ -1062,6 +1100,7 @@ void
 Presolve<REAL>::finishRound( ProblemUpdate<REAL>& probUpdate )
 {
    probUpdate.clearStates();
+   probUpdate.check_and_compress();
 
    for( auto& reduction : reductions )
       reduction.clear();

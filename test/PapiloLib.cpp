@@ -455,7 +455,7 @@ TEST_CASE( "papilolib", "[C-API]" )
    REQUIRE( sol != nullptr );
 
    double objval = 0;
-   for( int i = 0; i != nvars; ++i )
+   for( int i = 0; i < nvars; ++i )
       objval += obj[i] * sol[i];
    REQUIRE( objval == Approx( 796648.4375 ) );
 

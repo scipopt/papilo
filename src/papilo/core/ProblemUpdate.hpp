@@ -264,7 +264,20 @@ class ProblemUpdate
    }
 
    void
+   clearChangeInfo( int size )
+   {
+      // TODO: use std::remove?
+      // https://stackoverflow.com/questions/347441/erasing-elements-from-a-vector
+      changed_activities.erase( changed_activities.begin(),
+                                changed_activities.begin() + size );
+      firstNewSingletonCol = singletonColumns.size();
+   }
+
+   void
    clearStates();
+
+   void
+   check_and_compress();
 
    const Vec<int>&
    getChangedActivities() const
@@ -411,8 +424,8 @@ ProblemUpdate<REAL>::update_activity( ActivityChange actChange, int rowid,
                                       RowActivity<REAL>& activity )
 {
    if( activity.lastchange == stats.nrounds ||
-       (actChange == ActivityChange::kMin && activity.ninfmin > 1) ||
-       (actChange == ActivityChange::kMax && activity.ninfmax > 1) ||
+       ( actChange == ActivityChange::kMin && activity.ninfmin > 1 ) ||
+       ( actChange == ActivityChange::kMax && activity.ninfmax > 1 ) ||
        problem.getConstraintMatrix().isRowRedundant( rowid ) )
       return;
 
@@ -996,17 +1009,20 @@ ProblemUpdate<REAL>::clearStates()
        std::all_of( col_state.begin(), col_state.end(), []( Flags<State> s ) {
           return s.equal( State::kUnmodified );
        } ) );
+}
 
-   if( presolveOptions.compressfac != 0 )
-   {
-      if( ( problem.getNCols() > 100 &&
-            getNActiveCols() <
-                problem.getNCols() * presolveOptions.compressfac ) ||
-          ( problem.getNRows() > 100 &&
-            getNActiveRows() <
-                problem.getNRows() * presolveOptions.compressfac ) )
-         compress();
-   }
+template <typename REAL>
+void
+ProblemUpdate<REAL>::check_and_compress()
+{
+   if( presolveOptions.compressfac != 0 &&
+       ( ( problem.getNCols() > 100 &&
+           getNActiveCols() <
+               problem.getNCols() * presolveOptions.compressfac ) ||
+         ( problem.getNRows() > 100 &&
+           getNActiveRows() <
+               problem.getNRows() * presolveOptions.compressfac ) ) )
+      compress();
 }
 
 template <typename REAL>

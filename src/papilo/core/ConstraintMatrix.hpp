@@ -84,22 +84,6 @@ class SparseVectorView
       return maxabsval;
    }
 
-   REAL
-   getMinAbsValue() const
-   {
-      REAL minabsval;
-
-      for( int i = 0; i != len; ++i )
-      {
-         if( i == 0 )
-            minabsval = abs( vals[0] );
-         else
-            minabsval = std::min( REAL( abs( vals[i] ) ), minabsval );
-      }
-
-      return minabsval;
-   }
-
    std::pair<REAL, REAL>
    getMinMaxAbsValue() const
    {
@@ -172,12 +156,6 @@ class ConstraintMatrix
 
       assert( flags.size() == cons_matrix.getNRows() );
 
-      // for(int i = 0; i < getNRows(); ++i )
-      //{
-      // fmt::print("row {} [ {} {} ]\n", i, rowranges[i].start,
-      // rowranges[i].end);
-      //}
-
       for( int i = 0; i < cons_matrix.getNRows(); ++i )
          rowsize.push_back( rowranges[i].end - rowranges[i].start );
 
@@ -209,11 +187,6 @@ class ConstraintMatrix
       return cons_matrix.getNnz();
    }
 
-   std::pair<const REAL*, int>
-   getValInfo() const
-   {
-      return std::make_pair( cons_matrix.getValues(), cons_matrix.getNAlloc() );
-   }
 
    std::pair<const IndexRange*, int>
    getRangeInfo() const
@@ -365,42 +338,11 @@ class ConstraintMatrix
       }
    }
 
-   /// mark given row as redundant
-   void
-   markRowRedundant( const int row )
-   {
-      flags[row].set( RowFlag::kRedundant );
-   }
-
    /// is given row redundant
    bool
    isRowRedundant( const int row ) const
    {
       return flags[row].test( RowFlag::kRedundant );
-   }
-
-   /// returns reference to the values of the
-   /// column-wise matrix (cons_matrix_transp) for solvers
-   const REAL*
-   getTransposeValues() const
-   {
-      return cons_matrix_transp.getValues();
-   }
-
-   /// returns reference to the row indices of the
-   /// column-wise matrix (cons_matrix_transp) for solvers
-   const int*
-   getTransposeRowIndices() const
-   {
-      return cons_matrix_transp.getColumns();
-   }
-
-   /// returns reference to a sequence containin the start indices
-   /// of the columns in the column-wise matrix (cons_matrix_transp)
-   Vec<int>
-   getTransposeColStart() const
-   {
-      return cons_matrix_transp.getRowStarts();
    }
 
    /// Compress the storage and the indices by removing empty rows and columns
