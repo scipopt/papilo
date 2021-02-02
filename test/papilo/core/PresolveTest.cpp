@@ -261,6 +261,7 @@ applyReductions( const Reductions<double>& reductions,
                  bool substitutions )
 {
    Num<double> num{};
+   Message msg{};
    Problem<double> problem =
        setupProblemWithMultiplePresolvingOptions();
    Statistics statistics{};
@@ -268,7 +269,7 @@ applyReductions( const Reductions<double>& reductions,
    Postsolve<double> postsolve =
        Postsolve<double>( problem, num );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
-                                                presolveOptions, num );
+                                                presolveOptions, num, msg );
    problem.recomputeLocks();
    problemUpdate.trivialColumnPresolve();
    problem.recomputeAllActivities();

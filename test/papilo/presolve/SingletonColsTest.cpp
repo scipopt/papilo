@@ -51,13 +51,14 @@ forceCalculationOfSingletonRows( Problem<double>& problem,
 
 TEST_CASE( "happy-path-singleton-column", "[presolve]" )
 {
-   const Num<double> num{};
+   Num<double> num{};
+   Message msg{};
    Problem<double> problem = setupProblemWithSingletonColumn();
    Statistics statistics{};
    PresolveOptions presolveOptions{};
    Postsolve<double> postsolve = Postsolve<double>( problem, num );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
-                                        presolveOptions, num );
+                                        presolveOptions, num , msg);
    forceCalculationOfSingletonRows( problem, problemUpdate );
    SingletonCols<double> presolvingMethod{};
    Reductions<double> reductions{};
@@ -91,13 +92,14 @@ TEST_CASE( "happy-path-singleton-column", "[presolve]" )
 
 TEST_CASE( "happy-path-singleton-column-equation", "[presolve]" )
 {
-   const Num<double> num{};
+   Num<double> num{};
+   Message msg{};
    Problem<double> problem = setupProblemWithOnlyOneEntryIn1stRowAndColumn();
    Statistics statistics{};
    PresolveOptions presolveOptions{};
    Postsolve<double> postsolve = Postsolve<double>( problem, num );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
-                                        presolveOptions, num );
+                                        presolveOptions, num, msg );
    forceCalculationOfSingletonRows( problem, problemUpdate );
    SingletonCols<double> presolvingMethod{};
    Reductions<double> reductions{};
@@ -130,6 +132,7 @@ TEST_CASE( "happy-path-singleton-column-equation", "[presolve]" )
 
 TEST_CASE( "happy-path-singleton-column-implied-bounds-negative-coeff-pos-bounds", "[presolve]" )
 {
+   Message msg{};
    const Num<double> num{};
    Problem<double> problem =
        setupProblemWithSingletonColumnInEquationWithNoImpliedBounds( -1.0, 10.0,
@@ -138,7 +141,7 @@ TEST_CASE( "happy-path-singleton-column-implied-bounds-negative-coeff-pos-bounds
    PresolveOptions presolveOptions{};
    Postsolve<double> postsolve = Postsolve<double>( problem, num );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
-                                        presolveOptions, num );
+                                        presolveOptions, num, msg );
    forceCalculationOfSingletonRows( problem, problemUpdate );
    SingletonCols<double> presolvingMethod{};
    Reductions<double> reductions{};
@@ -175,6 +178,7 @@ TEST_CASE( "happy-path-singleton-column-implied-bounds-negative-coeff-pos-bounds
 
 TEST_CASE( "happy-path-singleton-column-implied-bounds-negative-coeff-neg-bounds", "[presolve]" )
 {
+   Message msg{};
    const Num<double> num{};
    Problem<double> problem =
        setupProblemWithSingletonColumnInEquationWithNoImpliedBounds( -1.0, -3.0,
@@ -183,7 +187,7 @@ TEST_CASE( "happy-path-singleton-column-implied-bounds-negative-coeff-neg-bounds
    PresolveOptions presolveOptions{};
    Postsolve<double> postsolve = Postsolve<double>( problem, num );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
-                                        presolveOptions, num );
+                                        presolveOptions, num, msg );
    forceCalculationOfSingletonRows( problem, problemUpdate );
    SingletonCols<double> presolvingMethod{};
    Reductions<double> reductions{};
@@ -220,6 +224,7 @@ TEST_CASE( "happy-path-singleton-column-implied-bounds-negative-coeff-neg-bounds
 
 TEST_CASE( "happy-path-singleton-column-implied-bounds-positive-coeff-pos-bounds", "[presolve]" )
 {
+   Message msg{};
    const Num<double> num{};
    Problem<double> problem =
        setupProblemWithSingletonColumnInEquationWithNoImpliedBounds( 1.0, 10.0,
@@ -228,7 +233,7 @@ TEST_CASE( "happy-path-singleton-column-implied-bounds-positive-coeff-pos-bounds
    PresolveOptions presolveOptions{};
    Postsolve<double> postsolve = Postsolve<double>( problem, num );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
-                                        presolveOptions, num );
+                                        presolveOptions, num, msg );
    forceCalculationOfSingletonRows( problem, problemUpdate );
    SingletonCols<double> presolvingMethod{};
    Reductions<double> reductions{};
@@ -267,6 +272,7 @@ TEST_CASE( "happy-path-singleton-column-implied-bounds-positive-coeff-pos-bounds
 
 TEST_CASE( "happy-path-singleton-column-implied-bounds-positive-coeff-neg-bounds", "[presolve]" )
 {
+   Message msg{};
    const Num<double> num{};
    Problem<double> problem =
        setupProblemWithSingletonColumnInEquationWithNoImpliedBounds( 1.0, -3.0,
@@ -275,7 +281,7 @@ TEST_CASE( "happy-path-singleton-column-implied-bounds-positive-coeff-neg-bounds
    PresolveOptions presolveOptions{};
    Postsolve<double> postsolve = Postsolve<double>( problem, num );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
-                                        presolveOptions, num );
+                                        presolveOptions, num, msg );
    forceCalculationOfSingletonRows( problem, problemUpdate );
    SingletonCols<double> presolvingMethod{};
    Reductions<double> reductions{};

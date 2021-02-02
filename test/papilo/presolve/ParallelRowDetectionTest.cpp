@@ -27,54 +27,57 @@
 #include "papilo/core/Problem.hpp"
 #include "papilo/core/ProblemBuilder.hpp"
 
-papilo::Problem<double>
+using namespace papilo;
+
+Problem<double>
 setupProblemWithParallelRow();
 
 TEST_CASE( "happy-path-parallel-row-detection", "[presolve]" )
 {
-   papilo::Num<double> num{};
-   papilo::Problem<double> problem = setupProblemWithParallelRow();
-   papilo::Statistics statistics{};
-   papilo::PresolveOptions presolveOptions{};
-   papilo::Postsolve<double> postsolve =
-       papilo::Postsolve<double>( problem, num );
-   papilo::ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
-                                                presolveOptions, num );
+   Num<double> num{};
+   Message msg{};
+   Problem<double> problem = setupProblemWithParallelRow();
+   Statistics statistics{};
+   PresolveOptions presolveOptions{};
+   Postsolve<double> postsolve =
+       Postsolve<double>( problem, num );
+   ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
+                                                presolveOptions, num, msg );
    problemUpdate.checkChangedActivities();
-   papilo::ParallelRowDetection<double> presolvingMethod{};
-   papilo::Reductions<double> reductions{};
+   ParallelRowDetection<double> presolvingMethod{};
+   Reductions<double> reductions{};
 
-   papilo::PresolveStatus presolveStatus =
+   PresolveStatus presolveStatus =
        presolvingMethod.execute( problem, problemUpdate, num, reductions );
 
-   REQUIRE( presolveStatus == papilo::PresolveStatus::kReduced );
+   REQUIRE( presolveStatus == PresolveStatus::kReduced );
    REQUIRE( reductions.size() == 3 );
-   REQUIRE( reductions.getReduction( 0 ).col == papilo::RowReduction::LOCKED );
+   REQUIRE( reductions.getReduction( 0 ).col == RowReduction::LOCKED );
    REQUIRE( reductions.getReduction( 0 ).row == 2 );
    REQUIRE( reductions.getReduction( 0 ).newval == 0 );
 
    REQUIRE( reductions.getReduction( 1 ).row == 0 );
-   REQUIRE( reductions.getReduction( 1 ).col == papilo::RowReduction::LOCKED );
+   REQUIRE( reductions.getReduction( 1 ).col == RowReduction::LOCKED );
    REQUIRE( reductions.getReduction( 1 ).newval == 0 );
 
    REQUIRE( reductions.getReduction( 2 ).col ==
-            papilo::RowReduction::REDUNDANT );
+            RowReduction::REDUNDANT );
    REQUIRE( reductions.getReduction( 2 ).newval == 0 );
    REQUIRE( reductions.getReduction( 2 ).row == 0 );
 }
 
-papilo::Problem<double>
+Problem<double>
 setupProblemWithParallelRow()
 {
-   papilo::Vec<double> coefficients{ 1.0, 1.0, 1.0 };
-   papilo::Vec<double> upperBounds{ 10.0, 10.0, 10.0 };
-   papilo::Vec<double> lowerBounds{ 0.0, 0.0, 0.0 };
-   papilo::Vec<uint8_t> isIntegral{ 1, 1, 1 };
+   Vec<double> coefficients{ 1.0, 1.0, 1.0 };
+   Vec<double> upperBounds{ 10.0, 10.0, 10.0 };
+   Vec<double> lowerBounds{ 0.0, 0.0, 0.0 };
+   Vec<uint8_t> isIntegral{ 1, 1, 1 };
 
-   papilo::Vec<double> rhs{ 1.0, 2.0, 3.0 };
-   papilo::Vec<std::string> rowNames{ "A1", "A2", "A3" };
-   papilo::Vec<std::string> columnNames{ "c1", "c2", "c3" };
-   papilo::Vec<std::tuple<int, int, double>> entries{
+   Vec<double> rhs{ 1.0, 2.0, 3.0 };
+   Vec<std::string> rowNames{ "A1", "A2", "A3" };
+   Vec<std::string> columnNames{ "c1", "c2", "c3" };
+   Vec<std::tuple<int, int, double>> entries{
        std::tuple<int, int, double>{ 0, 0, 1.0 },
        std::tuple<int, int, double>{ 0, 1, 1.0 },
        std::tuple<int, int, double>{ 0, 2, 2.0 },
@@ -85,7 +88,7 @@ setupProblemWithParallelRow()
        std::tuple<int, int, double>{ 2, 2, 6.0 },
    };
 
-   papilo::ProblemBuilder<double> pb;
+   ProblemBuilder<double> pb;
    pb.reserve( entries.size(), rowNames.size(), columnNames.size() );
    pb.setNumRows( rowNames.size() );
    pb.setNumCols( columnNames.size() );
@@ -98,6 +101,6 @@ setupProblemWithParallelRow()
    pb.addEntryAll( entries );
    pb.setColNameAll( columnNames );
    pb.setProblemName( "matrix with parallel rows (0 and 2)" );
-   papilo::Problem<double> problem = pb.build();
+   Problem<double> problem = pb.build();
    return problem;
 }

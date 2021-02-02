@@ -58,13 +58,14 @@ setupMatrixForDualFixInfinity();
 TEST_CASE( "trivial-column-presolve-does-dual-presolve-already", "[presolve]" )
 {
    Num<double> num{};
+   Message msg{};
    Problem<double> problem =
        setupMatrixForDualFixFirstColumnOnlyPositiveValues();
    Statistics statistics{};
    PresolveOptions presolveOptions{};
    Postsolve<double> postsolve = Postsolve<double>( problem, num );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
-                                        presolveOptions, num );
+                                        presolveOptions, num, msg );
 
    problemUpdate.trivialPresolve();
 
@@ -76,13 +77,14 @@ TEST_CASE( "trivial-column-presolve-does-dual-presolve-already", "[presolve]" )
 TEST_CASE( "happy-path-dual-fix", "[presolve]" )
 {
    Num<double> num{};
+   Message msg{};
    Problem<double> problem =
        setupMatrixForDualFixFirstColumnOnlyPositiveValues();
    Statistics statistics{};
    PresolveOptions presolveOptions{};
    Postsolve<double> postsolve = Postsolve<double>( problem, num );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
-                                        presolveOptions, num );
+                                        presolveOptions, num, msg );
 
    problem.recomputeAllActivities();
    papilo::DualFix<double> presolvingMethod{};
@@ -103,12 +105,13 @@ TEST_CASE( "happy-path-dual-fix", "[presolve]" )
 TEST_CASE( "happy_path_dual_substitution", "[presolve]" )
 {
    Num<double> num{};
+   Message msg{};
    Problem<double> problem = setupMatrixForDualSubstitution();
    Statistics statistics{};
    PresolveOptions presolveOptions{};
    Postsolve<double> postsolve = Postsolve<double>( problem, num );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
-                                        presolveOptions, num );
+                                        presolveOptions, num, msg );
 
    problemUpdate.trivialPresolve();
    papilo::DualFix<double> presolvingMethod{};
@@ -136,12 +139,13 @@ TEST_CASE( "happy_path_dual_substitution", "[presolve]" )
 TEST_CASE( "happy_path_dual_substitution_rounding", "[presolve]" )
 {
    Num<double> num{};
+   Message msg{};
    Problem<double> problem = setupMatrixForDualSubstitutionIntegerRounding();
    Statistics statistics{};
    PresolveOptions presolveOptions{};
    Postsolve<double> postsolve = Postsolve<double>( problem, num );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
-                                        presolveOptions, num );
+                                        presolveOptions, num, msg );
 
    problem.recomputeAllActivities();
    papilo::DualFix<double> presolvingMethod{};
@@ -184,12 +188,13 @@ TEST_CASE( "happy_path_dual_substitution_rounding", "[presolve]" )
 TEST_CASE( "happy_path_dual_substitution_unbounded_variables", "[presolve]" )
 {
    Num<double> num{};
+   Message msg{};
    Problem<double> problem = setupMatrixForDualSubstitutionWithUnboundedVar();
    Statistics statistics{};
    PresolveOptions presolveOptions{};
    Postsolve<double> postsolve = Postsolve<double>( problem, num );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
-                                        presolveOptions, num );
+                                        presolveOptions, num, msg );
 
    problem.recomputeAllActivities();
    papilo::DualFix<double> presolvingMethod{};
@@ -204,12 +209,13 @@ TEST_CASE( "happy_path_dual_substitution_unbounded_variables", "[presolve]" )
 TEST_CASE( "happy_path_dual_substitution_for_equations", "[presolve]" )
 {
    Num<double> num{};
+   Message msg{};
    Problem<double> problem = setupMatrixForDualSubstitutionEquation();
    Statistics statistics{};
    PresolveOptions presolveOptions{};
    Postsolve<double> postsolve = Postsolve<double>( problem, num );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
-                                        presolveOptions, num );
+                                        presolveOptions, num, msg );
 
    problem.recomputeAllActivities();
    papilo::DualFix<double> presolvingMethod{};
@@ -239,12 +245,13 @@ TEST_CASE( "happy_path_dual_substitution_for_equations", "[presolve]" )
 TEST_CASE( "happy_path_dual_fix_on_infinity", "[presolve]" )
 {
    Num<double> num{};
+   Message msg{};
    Problem<double> problem = setupMatrixForDualFixInfinity();
    Statistics statistics{};
    PresolveOptions presolveOptions{};
    Postsolve<double> postsolve = Postsolve<double>( problem, num );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
-                                        presolveOptions, num );
+                                        presolveOptions, num, msg );
 
    problem.recomputeAllActivities();
    papilo::DualFix<double> presolvingMethod{};
@@ -280,12 +287,13 @@ TEST_CASE( "happy_path_dual_fix_on_infinity", "[presolve]" )
 TEST_CASE( "example-4-from-4.4-Presolve-Reductions-in-MIP", "[presolve]" )
 {
    Num<double> num{};
+   Message msg{};
    Problem<double> problem = setupExample4ofChapter4Dot4InPresolveReductions();
    Statistics statistics{};
    PresolveOptions presolveOptions{};
    Postsolve<double> postsolve = Postsolve<double>( problem, num );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
-                                        presolveOptions, num );
+                                        presolveOptions, num, msg );
    problemUpdate.trivialPresolve();
    papilo::DualFix<double> presolvingMethod{};
    Reductions<double> reductions{};
@@ -299,12 +307,13 @@ TEST_CASE( "example-4-from-4.4-Presolve-Reductions-in-MIP", "[presolve]" )
 TEST_CASE( "example-5-from-4.4-Presolve-Reductions-in-MIP", "[presolve]" )
 {
    Num<double> num{};
+   Message msg{};
    Problem<double> problem = setupExample5ofChapter4Dot4InPresolveReductions();
    Statistics statistics{};
    PresolveOptions presolveOptions{};
    Postsolve<double> postsolve = Postsolve<double>( problem, num );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
-                                        presolveOptions, num );
+                                        presolveOptions, num, msg );
    papilo::DualFix<double> presolvingMethod{};
 
    problemUpdate.trivialPresolve();

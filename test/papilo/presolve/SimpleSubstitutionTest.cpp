@@ -45,13 +45,14 @@ setupProblemWithSimpleSubstitutionFeasibleGcd();
 TEST_CASE( "happy-path-simple-substitution-for-2-int", "[presolve]" )
 {
    Num<double> num{};
+   Message msg{};
    Problem<double> problem = setupProblemWithSimpleSubstitution( 1, 1, 1.0 );
    Statistics statistics{};
    PresolveOptions presolveOptions{};
    presolveOptions.dualreds = 0;
    Postsolve<double> postsolve = Postsolve<double>( problem, num );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
-                                        presolveOptions, num );
+                                        presolveOptions, num, msg );
    SimpleSubstitution<double> presolvingMethod{};
    Reductions<double> reductions{};
    problem.recomputeAllActivities();
@@ -90,6 +91,7 @@ TEST_CASE( "happy-path-simple-substitution-for-2-int", "[presolve]" )
 TEST_CASE( "happy-path-simple-substitution-for-int-continuous-coeff",
            "[presolve]" )
 {
+   Message msg {};
    Num<double> num{};
    Problem<double> problem = setupProblemWithSimpleSubstitution( 1, 1, 2.2 );
    Statistics statistics{};
@@ -97,7 +99,7 @@ TEST_CASE( "happy-path-simple-substitution-for-int-continuous-coeff",
    presolveOptions.dualreds = 0;
    Postsolve<double> postsolve = Postsolve<double>( problem, num );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
-                                        presolveOptions, num );
+                                        presolveOptions, num, msg );
    SimpleSubstitution<double> presolvingMethod{};
    Reductions<double> reductions{};
    problem.recomputeAllActivities();
@@ -110,13 +112,14 @@ TEST_CASE( "happy-path-simple-substitution-for-int-continuous-coeff",
 TEST_CASE( "happy-path-simple-substitution-for-2-continuous", "[presolve]" )
 {
    Num<double> num{};
+   Message msg{};
    Problem<double> problem = setupProblemWithSimpleSubstitution( 0, 0, 1.0 );
    Statistics statistics{};
    PresolveOptions presolveOptions{};
    presolveOptions.dualreds = 0;
    Postsolve<double> postsolve = Postsolve<double>( problem, num );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
-                                        presolveOptions, num );
+                                        presolveOptions, num, msg );
    SimpleSubstitution<double> presolvingMethod{};
    Reductions<double> reductions{};
    problem.recomputeAllActivities();
@@ -146,13 +149,14 @@ TEST_CASE( "happy-path-simple-substitution-for-continuous-and-integer",
            "[presolve]" )
 {
    Num<double> num{};
+   Message msg{};
    Problem<double> problem = setupProblemWithSimpleSubstitution( 0, 1, 1.0 );
    Statistics statistics{};
    PresolveOptions presolveOptions{};
    presolveOptions.dualreds = 0;
    Postsolve<double> postsolve = Postsolve<double>( problem, num );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
-                                        presolveOptions, num );
+                                        presolveOptions, num, msg );
    SimpleSubstitution<double> presolvingMethod{};
    Reductions<double> reductions{};
    problem.recomputeAllActivities();
@@ -181,13 +185,14 @@ TEST_CASE( "happy-path-simple-substitution-for-continuous-and-integer",
 TEST_CASE( "failed-path-simple-substitution-for-2-int", "[presolve]" )
 {
    Num<double> num{};
+   Message msg{};
    Problem<double> problem = setupProblemWithSimpleSubstitution( 1, 1, 3.0 );
    Statistics statistics{};
    PresolveOptions presolveOptions{};
    presolveOptions.dualreds = 0;
    Postsolve<double> postsolve = Postsolve<double>( problem, num );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
-                                        presolveOptions, num );
+                                        presolveOptions, num, msg );
    SimpleSubstitution<double> presolvingMethod{};
    Reductions<double> reductions{};
    problem.recomputeAllActivities();
@@ -200,6 +205,7 @@ TEST_CASE( "failed-path-simple-substitution-for-2-int", "[presolve]" )
 
 TEST_CASE( "example_10_1_in_constraint_integer_programming", "[presolve]" )
 {
+   Message msg {};
    Num<double> num{};
    Problem<double> problem = setupProblemWithInfeasibleBounds( 8.0, 3.0, 37.0 );
    Statistics statistics{};
@@ -207,7 +213,7 @@ TEST_CASE( "example_10_1_in_constraint_integer_programming", "[presolve]" )
    presolveOptions.dualreds = 0;
    Postsolve<double> postsolve = Postsolve<double>( problem, num );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
-                                        presolveOptions, num );
+                                        presolveOptions, num, msg );
    SimpleSubstitution<double> presolvingMethod{};
    Reductions<double> reductions{};
    problem.recomputeAllActivities();
@@ -220,6 +226,7 @@ TEST_CASE( "example_10_1_in_constraint_integer_programming", "[presolve]" )
 
 TEST_CASE( "should_return_feasible_if_gcd_of_coeff_is_in_rhs", "[presolve]" )
 {
+   Message msg {};
    Num<double> num{};
    Problem<double> problem = setupProblemWithSimpleSubstitutionFeasibleGcd();
    Statistics statistics{};
@@ -227,7 +234,7 @@ TEST_CASE( "should_return_feasible_if_gcd_of_coeff_is_in_rhs", "[presolve]" )
    presolveOptions.dualreds = 0;
    Postsolve<double> postsolve = Postsolve<double>( problem, num );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
-                                        presolveOptions, num );
+                                        presolveOptions, num, msg );
    SimpleSubstitution<double> presolvingMethod{};
    Reductions<double> reductions{};
    problem.recomputeAllActivities();
@@ -240,6 +247,7 @@ TEST_CASE( "should_return_feasible_if_gcd_of_coeff_is_in_rhs", "[presolve]" )
 
 TEST_CASE( "should_return_infeasible_if_gcd_of_coeff_is_in_rhs", "[presolve]" )
 {
+   Message msg {};
    Num<double> num{};
    Problem<double> problem = setupProblemWithSimpleSubstitutionInfeasibleGcd();
    Statistics statistics{};
@@ -247,7 +255,7 @@ TEST_CASE( "should_return_infeasible_if_gcd_of_coeff_is_in_rhs", "[presolve]" )
    presolveOptions.dualreds = 0;
    Postsolve<double> postsolve = Postsolve<double>( problem, num );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
-                                        presolveOptions, num );
+                                        presolveOptions, num, msg );
    SimpleSubstitution<double> presolvingMethod{};
    Reductions<double> reductions{};
    problem.recomputeAllActivities();

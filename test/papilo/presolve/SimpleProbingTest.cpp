@@ -43,12 +43,13 @@ setupExample3ofChapter3Dot6InPresolveReductions();
 TEST_CASE( "happy-path-simple-probing", "[presolve]" )
 {
    Num<double> num{};
+   Message msg{};
    Problem<double> problem = setupProblemWithSimpleProbing(true, true);
    Statistics statistics{};
    PresolveOptions presolveOptions{};
    Postsolve<double> postsolve = Postsolve<double>( problem, num );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
-                                        presolveOptions, num );
+                                        presolveOptions, num, msg );
    SimpleProbing<double> presolvingMethod{};
    Reductions<double> reductions{};
    problem.recomputeAllActivities();
@@ -80,13 +81,14 @@ TEST_CASE( "happy-path-simple-probing", "[presolve]" )
 
 TEST_CASE( "happy-path-simple-probing-only-negative-coeff", "[presolve]" )
 {
+   Message msg{};
    Num<double> num{};
    Problem<double> problem = setupProblemWithSimpleProbing(true, true);
    Statistics statistics{};
    PresolveOptions presolveOptions{};
    Postsolve<double> postsolve = Postsolve<double>( problem, num );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
-                                        presolveOptions, num );
+                                        presolveOptions, num, msg );
    SimpleProbing<double> presolvingMethod{};
    Reductions<double> reductions{};
    problem.recomputeAllActivities();
@@ -119,13 +121,14 @@ TEST_CASE( "happy-path-simple-probing-only-negative-coeff", "[presolve]" )
 
 TEST_CASE( "example-3-from-3.6-Presolve-Reductions-in-MIP", "[presolve]" )
 {
+   Message msg{};
    Num<double> num{};
    Problem<double> problem = setupExample3ofChapter3Dot6InPresolveReductions();
    Statistics statistics{};
    PresolveOptions presolveOptions{};
    Postsolve<double> postsolve = Postsolve<double>( problem, num );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
-                                        presolveOptions, num );
+                                        presolveOptions, num, msg );
    SimpleProbing<double> presolvingMethod{};
    Reductions<double> reductions{};
    problem.recomputeAllActivities();
@@ -152,6 +155,7 @@ TEST_CASE( "example-3-from-3.6-Presolve-Reductions-in-MIP", "[presolve]" )
 TEST_CASE( "happy-path-simple-probing-only-binary-negative-coefficient",
            "[presolve]" )
 {
+   Message msg{};
    Num<double> num{};
    Problem<double> problem =
        setupProblemWithSimpleProbingMaxActEqualMinAct( true, false );
@@ -159,7 +163,7 @@ TEST_CASE( "happy-path-simple-probing-only-binary-negative-coefficient",
    PresolveOptions presolveOptions{};
    Postsolve<double> postsolve = Postsolve<double>( problem, num );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
-                                        presolveOptions, num );
+                                        presolveOptions, num, msg );
    SimpleProbing<double> presolvingMethod{};
    Reductions<double> reductions{};
    problem.recomputeAllActivities();
@@ -186,6 +190,7 @@ TEST_CASE( "happy-path-simple-probing-only-binary-negative-coefficient",
 TEST_CASE( "happy-path-simple-probing-only-binary-positive-coefficient",
            "[presolve]" )
 {
+   Message msg{};
    Num<double> num{};
    Problem<double> problem =
        setupProblemWithSimpleProbingMaxActEqualMinAct( false, true );
@@ -193,7 +198,7 @@ TEST_CASE( "happy-path-simple-probing-only-binary-positive-coefficient",
    PresolveOptions presolveOptions{};
    Postsolve<double> postsolve = Postsolve<double>( problem, num );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
-                                        presolveOptions, num );
+                                        presolveOptions, num, msg );
    SimpleProbing<double> presolvingMethod{};
    Reductions<double> reductions{};
    problem.recomputeAllActivities();
