@@ -1133,7 +1133,6 @@ ProblemUpdate<REAL>::trivialColumnPresolve()
          {
             markColFixed( col );
             status = PresolveStatus::kReduced;
-            // TODO why not continue with this row
             continue;
          }
       }
