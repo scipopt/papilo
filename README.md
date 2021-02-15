@@ -34,6 +34,20 @@ cmake ..
 make
 ```
 
+Building PaPILO with SCIP and SOPELX works also with the standard cmake workflow:
+```
+mkdir build
+cd build
+cmake -DSCIP_DIR=PATH_TO_SCIP_BUILD_DIR ..
+make
+```
+If you use a relative path to SCIP, then the reference point is the location of the `CMakeLists.txt`.
+If you want to build PaPILO with a provided Boost version please add one of these option to the cmake command:
+```
+-DBOOST_ROOT=../boost_1_66_0
+-DBOOST_INCLUDEDIR=../boost_1_66_0/include
+```
+
 Solvers that are found in the system are automatically linked to the executable.
 Additionally one can specify the locations of solvers, e.g. with -DSCIP_DIR=<location of scip-config.cmake>, to allow
 PaPILO to find them in non-standard locations.

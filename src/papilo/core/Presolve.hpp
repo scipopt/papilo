@@ -414,7 +414,6 @@ Presolve<REAL>::updateRoundCounter( Problem<REAL>& problem,
       if( presolvetimer.getTime() >= presolveOptions.tlim )
          return true;
    }
-
    if( !unchanged )
    {
       double abortfac = problem.getNumIntegralCols() == 0

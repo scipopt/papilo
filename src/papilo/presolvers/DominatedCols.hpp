@@ -337,7 +337,6 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
    tbb::concurrent_vector<DomcolReduction> domcolreductions;
 
    // scan unbounded columns if they dominate other columns
-   // for( int i : unboundedcols ) // = 0; i != ncols; ++i )
    tbb::parallel_for(
        tbb::blocked_range<int>( 0, unboundedcols.size() ),
        [&]( const tbb::blocked_range<int>& r ) {
