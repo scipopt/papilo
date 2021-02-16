@@ -1149,7 +1149,6 @@ ProblemUpdate<REAL>::trivialColumnPresolve()
       }
 
       status = apply_dualfix( lbs, ubs, cflags, obj, locks, col );
-      // TODO why not continue with this row
       if( status == PresolveStatus::kUnbndOrInfeas )
          return status;
       else if( status == PresolveStatus::kReduced )

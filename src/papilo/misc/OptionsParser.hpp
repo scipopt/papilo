@@ -64,6 +64,7 @@ struct OptionsInfo
    std::string reduced_solution_file;
    std::string orig_solution_file;
    std::string scip_settings_file;
+   std::string optimal_solution_file;
    std::string soplex_settings_file;
    std::string param_settings_file;
    std::string objective_reference;
@@ -78,47 +79,56 @@ struct OptionsInfo
    bool
    checkFiles()
    {
-      if( !instance_file.empty() && !std::ifstream( instance_file ) )
+      if( existsFile(instance_file))
       {
          fmt::print( "file {} is not valid\n", instance_file );
          return false;
       }
 
-      if( command == Command::kPostsolve && !postsolve_archive_file.empty() &&
-          !std::ifstream( postsolve_archive_file ) )
+      if( command == Command::kPostsolve && existsFile(postsolve_archive_file) )
       {
          fmt::print( "file {} is not valid\n", postsolve_archive_file );
          return false;
       }
 
-      if( command == Command::kPostsolve && !reduced_solution_file.empty() &&
-          !std::ifstream( reduced_solution_file ) )
+      if( command == Command::kPostsolve && existsFile(reduced_solution_file)  )
       {
          fmt::print( "file {} is not valid\n", reduced_solution_file );
          return false;
       }
 
-      if( !scip_settings_file.empty() && !std::ifstream( scip_settings_file ) )
+      if( existsFile( scip_settings_file ) )
       {
          fmt::print( "file {} is not valid\n", scip_settings_file );
          return false;
       }
 
-      if( !soplex_settings_file.empty() &&
-          !std::ifstream( soplex_settings_file ) )
+      if( existsFile( optimal_solution_file ) )
+      {
+         fmt::print( "file {} is not valid\n", optimal_solution_file );
+         return false;
+      }
+
+
+      if( existsFile( soplex_settings_file ))
       {
          fmt::print( "file {} is not valid\n", soplex_settings_file );
          return false;
       }
 
-      if( !param_settings_file.empty() && !print_params &&
-          !std::ifstream( param_settings_file ) )
+      if( !print_params && existsFile( param_settings_file ))
       {
          fmt::print( "file {} is not valid\n", param_settings_file );
          return false;
       }
 
       return true;
+   }
+
+   bool
+   existsFile( std::string& filename ) const
+   {
+      return !filename.empty() && !std::ifstream( filename );
    }
 
    void
@@ -147,6 +157,7 @@ struct OptionsInfo
       options_description desc( fmt::format( "{} command", commandString ) );
 
       desc.add_options()( "file,f", value( &instance_file ), "instance file" );
+
       desc.add_options()(
           "arithmetic-type,a",
           value( &arithmetic_type )->default_value( ArithmeticType::kDouble ),
@@ -154,6 +165,10 @@ struct OptionsInfo
       desc.add_options()( "postsolve-archive,v",
                           value( &postsolve_archive_file ),
                           "filename for postsolve archive" );
+
+      desc.add_options()( "validate-solution,b",
+                          value( &optimal_solution_file ),
+                          "optimal solution for validation" );
 
       if( command != Command::kPostsolve )
       {
@@ -184,6 +199,9 @@ struct OptionsInfo
          desc.add_options()( "reference-objective,o",
                              value( &objective_reference ),
                              "correct objective value for validation" );
+         desc.add_options()( "validate-solution,b",
+                             value( &optimal_solution_file ),
+                             "optimal solution for validation" );
       }
 
       if( command == Command::kSolve )

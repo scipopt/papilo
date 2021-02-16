@@ -13,7 +13,7 @@ else ()
     set(PAPILOLIB_TARGET "")
 endif ()
 
-if(Boost_IOSTREAMS_FOUND AND Boost_SERIALIZATION_FOUND AND Boost_PROGRAM_OPTIONS_FOUND)
+if (Boost_IOSTREAMS_FOUND AND Boost_SERIALIZATION_FOUND AND Boost_PROGRAM_OPTIONS_FOUND)
     configure_file(resources/dual_fix_neg_inf.postsolve resources/dual_fix_neg_inf.postsolve COPYONLY)
     configure_file(resources/dual_fix_pos_inf.postsolve resources/dual_fix_pos_inf.postsolve COPYONLY)
     configure_file(instances/dual_fix_neg_inf.mps resources/dual_fix_neg_inf.mps COPYONLY)
@@ -173,36 +173,48 @@ endforeach ()
 if (TARGET papilo-executable AND PAPILO_HAVE_SCIP)
 
 
-
-   # MIP instances
-   set(instances_MIP
-       "instances/bell5.mps\;8966406.49152"
-       "instances/blend2.mps\;7.598985"
-       "instances/dcmulti.mps\;188182"
-       "instances/egout.mps\;568.1007"
-       "instances/enigma.mps\;0"
-       "instances/flugpl.mps\;1201500"
-       "instances/gt2.mps\;21166"
-       "instances/lseu.mps\;1120"
-       "instances/misc03.mps\;3360"
-       "instances/p0548.mps\;8691"
-       "instances/rgn.mps\;82.19999924"
-       "instances/dual_fix_pos_inf.mps\;-7.5"
+    # MIP instances
+    set(instances_MIP
+            "instances/bell5.mps\;8966406.49152"
+            "instances/blend2.mps\;7.598985"
+            "instances/dcmulti.mps\;188182"
+            "instances/egout.mps\;568.1007"
+            "instances/enigma.mps\;0"
+            "instances/flugpl.mps\;1201500"
+            "instances/gt2.mps\;21166"
+            "instances/lseu.mps\;1120"
+            "instances/misc03.mps\;3360"
+            "instances/p0548.mps\;8691"
+            "instances/rgn.mps\;82.19999924"
+            "instances/dual_fix_pos_inf.mps\;-7.5"
             "instances/dual_fix_neg_inf.mps\;-10"
             )
 
+    # MIP instances
+    set(solution_mip
+            "instances/bell5.mps\;instances/solutions/bell5.sol"
+            "instances/blend2.mps\;instances/solutions/blend2.sol"
+            "instances/dcmulti.mps\;instances/solutions/dcmulti.sol"
+            "instances/egout.mps\;instances/solutions/egout.sol"
+            "instances/enigma.mps\;instances/solutions/enigma.sol"
+            "instances/flugpl.mps\;instances/solutions/flugpl.sol"
+            "instances/gt2.mps\;instances/solutions/gt2.sol"
+            "instances/lseu.mps\;instances/solutions/lseu.sol"
+            "instances/misc03.mps\;instances/solutions/misc03.sol"
+            "instances/p0548.mps\;instances/solutions/p0548.sol"
+            "instances/rgn.mps\;instances/solutions/rgn.sol"
+            )
+
     set(infeas
-           "instances/presolved_ns2080781.mps"
-           )
+            "instances/presolved_ns2080781.mps"
+            )
 
-   set(numtypes
-      "d"
-      "q"
-      "r")
+    set(numtypes
+            "d"
+            "q"
+            "r")
 
-    #
     # add a test to build the SCIP binary that all further tests depend on
-    #
     add_test(NAME papilo-build
             COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target papilo-executable
             )
@@ -211,30 +223,22 @@ if (TARGET papilo-executable AND PAPILO_HAVE_SCIP)
             PROPERTIES
             RESOURCE_LOCK papilobin)
 
-    #
     # macro to split an instance into its relevant information
     # - path
     # - optval
     # - basename
-    #
     macro(split_instance instance)
         list(GET instance 0 path)
         list(GET instance 1 optval)
         get_filename_component(basename ${path} NAME)
     endmacro(split_instance)
 
+    ##solving these instances returns the defined optimal value for every numtype
     macro(add_instancetests instances numtypes)
-        #
-        # loop over the instances
-        #
         foreach (instance ${${instances}})
             split_instance(instance)
-
+            file(TO_NATIVE_PATH ${PROJECT_SOURCE_DIR}/test/${path} instance_file)
             foreach (numtype ${${numtypes}})
-                #
-                # treat the instance as a tuple (list) of two values
-                #
-                file(TO_NATIVE_PATH ${PROJECT_SOURCE_DIR}/test/${path} instance_file)
                 add_test(NAME ${numtype}-solve-${basename}
                         COMMAND $<TARGET_FILE:papilo-executable> solve -a ${numtype} -f ${instance_file} -o ${optval}
                         )
@@ -247,28 +251,50 @@ if (TARGET papilo-executable AND PAPILO_HAVE_SCIP)
         endforeach (instance)
     endmacro(add_instancetests)
 
-
-   macro(add_infeasible_instancetests instances numtypes)
-      #
-      # loop over the instances
-      #
-      foreach(instance ${${instances}})
-
-         foreach(numtype ${${numtypes}})
+    ##solving returns infeasible for these instances and every potential numtype
+    macro(add_infeasible_instancetests instances numtypes)
+        foreach (instance ${${instances}})
             file(TO_NATIVE_PATH ${PROJECT_SOURCE_DIR}/test/${instance} instance_file)
+            foreach (numtype ${${numtypes}})
+                add_test(NAME ${numtype}-infeas-${instance}
+                        COMMAND $<TARGET_FILE:papilo-executable> solve -a ${numtype} -f ${instance_file}
+                        )
+                set_tests_properties(${numtype}-infeas-${instance}
+                        PROPERTIES
+                        PASS_REGULAR_EXPRESSION "presolve detected infeasible problem"
+                        DEPENDS papilo-build
+                        )
+            endforeach (numtype)
+        endforeach (instance)
+    endmacro(add_infeasible_instancetests)
 
-            add_test(NAME ${numtype}-infeas-${instance}
-                    COMMAND $<TARGET_FILE:papilo-executable> solve -a ${numtype} -f ${instance_file}
-                    )
-            set_tests_properties(${numtype}-infeas-${instance}
-                    PROPERTIES
-                    PASS_REGULAR_EXPRESSION "presolve detected infeasible problem"
-                    DEPENDS papilo-build
-                    )
-         endforeach(numtype)
-      endforeach(instance)
-   endmacro(add_infeasible_instancetests)
+    macro(split_solution solution)
+        list(GET instance 0 path)
+        list(GET instance 1 path_solution)
+        get_filename_component(basename ${path} NAME)
+    endmacro(split_solution)
 
-   add_instancetests(instances_MIP numtypes)
-   add_infeasible_instancetests(infeas numtypes)
-endif()
+    ##solution is still contained after presolving
+    macro(validate_solution instances numtypes)
+        foreach (instance ${${instances}})
+            split_solution(instance)
+            file(TO_NATIVE_PATH ${PROJECT_SOURCE_DIR}/test/${path} instance_file)
+            file(TO_NATIVE_PATH ${PROJECT_SOURCE_DIR}/test/${path_solution} solution_file)
+            file(TO_NATIVE_PATH ${PROJECT_SOURCE_DIR}/settings/no_dual_reductions.set settings)
+            foreach (numtype ${${numtypes}})
+                add_test(NAME ${numtype}-validate-solution-${basename}
+                        COMMAND $<TARGET_FILE:papilo-executable> presolve -a ${numtype} -f ${instance_file} -b ${solution_file} -p settings
+                        )
+                set_tests_properties(${numtype}-validate-solution-${basename}
+                        PROPERTIES
+                        PASS_REGULAR_EXPRESSION "validation: SUCCESS\n"
+                        DEPENDS papilo-build
+                        )
+            endforeach (numtype)
+        endforeach (instance)
+    endmacro(validate_solution)
+
+    add_instancetests(instances_MIP numtypes)
+    add_infeasible_instancetests(infeas numtypes)
+    validate_solution(solution_mip numtypes)
+endif ()

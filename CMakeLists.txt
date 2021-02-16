@@ -272,6 +272,7 @@ install(FILES
    ${PROJECT_SOURCE_DIR}/src/papilo/misc/StableSum.hpp
    ${PROJECT_SOURCE_DIR}/src/papilo/misc/String.hpp
    ${PROJECT_SOURCE_DIR}/src/papilo/misc/Timer.hpp
+   ${PROJECT_SOURCE_DIR}/src/papilo/misc/Validation.hpp
    ${PROJECT_SOURCE_DIR}/src/papilo/misc/Vec.hpp
    ${PROJECT_SOURCE_DIR}/src/papilo/misc/VectorUtils.hpp
    ${PROJECT_SOURCE_DIR}/src/papilo/misc/Wrappers.hpp

@@ -1,0 +1,2 @@
+# 0: disable dual reductions, 1: allow dual reductions that never cut off optimal solutions, 2: allow all dual reductions  [Integer: [0,2]]
+presolve.dualreds = 0

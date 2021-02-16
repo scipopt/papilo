@@ -32,6 +32,7 @@
 #include "papilo/io/SolWriter.hpp"
 #include "papilo/misc/NumericalStatistics.hpp"
 #include "papilo/misc/OptionsParser.hpp"
+#include "papilo/misc/Validation.hpp"
 #include "papilo/misc/tbb.hpp"
 
 #include <boost/archive/binary_iarchive.hpp>
@@ -222,13 +223,11 @@ presolve_and_solve(
    if( !opts.reduced_problem_file.empty() )
    {
       Timer t( writetime );
-      const auto t0 = tbb::tick_count::now();
 
       MpsWriter<REAL>::writeProb( opts.reduced_problem_file, problem,
                                   result.postsolve.origrow_mapping,
                                   result.postsolve.origcol_mapping );
 
-      const auto t1 = tbb::tick_count::now(); // TODO unneccessary
       fmt::print( "reduced problem written to {} in {:.3f} seconds\n\n",
                   opts.reduced_problem_file, t.getTime() );
    }
@@ -244,6 +243,14 @@ presolve_and_solve(
       oa << result.postsolve;
       fmt::print( "postsolve archive written to {} in {:.3f} seconds\n\n",
                   opts.postsolve_archive_file, t.getTime() );
+   }
+
+   if( !opts.optimal_solution_file.empty() )
+   {
+      if(presolve.getPresolveOptions().dualreds!=0){
+         fmt::print("**WARNING: Enabling dual reductions might cut of feasible or optimal solution\n");
+      }
+      Validation<REAL>::validateProblem(problem, result.postsolve, opts.optimal_solution_file);
    }
 
    if( opts.command == Command::kPresolve )
