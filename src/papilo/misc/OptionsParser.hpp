@@ -166,9 +166,12 @@ struct OptionsInfo
                           value( &postsolve_archive_file ),
                           "filename for postsolve archive" );
 
-      desc.add_options()( "validate-solution,b",
-                          value( &optimal_solution_file ),
-                          "optimal solution for validation" );
+      if( command == Command::kPresolve )
+      {
+         desc.add_options()( "validate-solution,b",
+                             value( &optimal_solution_file ),
+                             "optimal solution for validation" );
+      }
 
       if( command != Command::kPostsolve )
       {

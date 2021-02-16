@@ -30,18 +30,18 @@ struct Validation
    static void
    validateProblem( const Problem<REAL>& problem,
                     const Postsolve<REAL>& postsolve,
-                    const std::string& optimal_solution_file )
+                    const std::string& optimal_solution_file,
+                    const PresolveStatus status )
    {
-
       Solution<REAL> optimal_solution =
           parse_solution( postsolve, optimal_solution_file );
 
-      if( check_if_solution_is_contained_in_problem( problem, postsolve,
-                                                     optimal_solution )
-          &&
+      if( (status == PresolveStatus::kUnchanged ||
+          status == PresolveStatus::kReduced) &&
+          check_if_solution_is_contained_in_problem( problem, postsolve,
+                                                     optimal_solution ) &&
           can_reduced_solution_be_recalculated( problem, postsolve,
-                                                optimal_solution )
-          )
+                                                optimal_solution ) )
          fmt::print( "validation: SUCCESS\n" );
       else
          fmt::print( "validation: FAILURE\n" );
@@ -107,7 +107,8 @@ struct Validation
          REAL solution_coeff =
              optimal_solution.primal[postsolve.origcol_mapping[i]];
          if( !problem.getColFlags()[i].test( ColFlag::kUbInf ) &&
-             !postsolve.getNum().isFeasLE(solution_coeff, problem.getUpperBounds()[i] ))
+             !postsolve.getNum().isFeasLE( solution_coeff,
+                                           problem.getUpperBounds()[i] ) )
          {
             fmt::print(
                 "lb {} of var {} violates bounds for value {} ",
@@ -117,7 +118,8 @@ struct Validation
             validation_success = false;
          }
          if( !problem.getColFlags()[i].test( ColFlag::kLbInf ) &&
-             !postsolve.getNum().isFeasGE(solution_coeff, problem.getLowerBounds()[i] ))
+             !postsolve.getNum().isFeasGE( solution_coeff,
+                                           problem.getLowerBounds()[i] ) )
          {
             fmt::print(
                 "ub {} of var {} violates bounds for value {} ",

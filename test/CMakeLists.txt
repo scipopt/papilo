@@ -280,10 +280,10 @@ if (TARGET papilo-executable AND PAPILO_HAVE_SCIP)
             split_solution(instance)
             file(TO_NATIVE_PATH ${PROJECT_SOURCE_DIR}/test/${path} instance_file)
             file(TO_NATIVE_PATH ${PROJECT_SOURCE_DIR}/test/${path_solution} solution_file)
-            file(TO_NATIVE_PATH ${PROJECT_SOURCE_DIR}/settings/no_dual_reductions.set settings)
+            file(TO_NATIVE_PATH ${PROJECT_SOURCE_DIR}/settings/no_dual_reductions.set settings_file)
             foreach (numtype ${${numtypes}})
                 add_test(NAME ${numtype}-validate-solution-${basename}
-                        COMMAND $<TARGET_FILE:papilo-executable> presolve -a ${numtype} -f ${instance_file} -b ${solution_file} -p settings
+                        COMMAND $<TARGET_FILE:papilo-executable> presolve -a ${numtype} -f ${instance_file} -b ${solution_file} -p ${settings_file}
                         )
                 set_tests_properties(${numtype}-validate-solution-${basename}
                         PROPERTIES

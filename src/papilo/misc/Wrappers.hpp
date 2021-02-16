@@ -200,6 +200,14 @@ presolve_and_solve(
 
    auto result = presolve.apply( problem );
 
+   if( !opts.optimal_solution_file.empty() )
+   {
+      if(presolve.getPresolveOptions().dualreds!=0){
+         fmt::print("**WARNING: Enabling dual reductions might cut of feasible or optimal solution\n");
+      }
+      Validation<REAL>::validateProblem(problem, result.postsolve, opts.optimal_solution_file, result.status);
+   }
+
    switch( result.status )
    {
    case PresolveStatus::kInfeasible:
@@ -245,13 +253,7 @@ presolve_and_solve(
                   opts.postsolve_archive_file, t.getTime() );
    }
 
-   if( !opts.optimal_solution_file.empty() )
-   {
-      if(presolve.getPresolveOptions().dualreds!=0){
-         fmt::print("**WARNING: Enabling dual reductions might cut of feasible or optimal solution\n");
-      }
-      Validation<REAL>::validateProblem(problem, result.postsolve, opts.optimal_solution_file);
-   }
+
 
    if( opts.command == Command::kPresolve )
       return ResultStatus::kOk;
