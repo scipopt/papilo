@@ -190,21 +190,6 @@ if (TARGET papilo-executable AND PAPILO_HAVE_SCIP)
             "instances/dual_fix_neg_inf.mps\;-10"
             )
 
-    # MIP instances
-    set(solution_mip
-            "instances/bell5.mps\;instances/solutions/bell5.sol"
-            "instances/blend2.mps\;instances/solutions/blend2.sol"
-            "instances/dcmulti.mps\;instances/solutions/dcmulti.sol"
-            "instances/egout.mps\;instances/solutions/egout.sol"
-            "instances/enigma.mps\;instances/solutions/enigma.sol"
-            "instances/flugpl.mps\;instances/solutions/flugpl.sol"
-            "instances/gt2.mps\;instances/solutions/gt2.sol"
-            "instances/lseu.mps\;instances/solutions/lseu.sol"
-            "instances/misc03.mps\;instances/solutions/misc03.sol"
-            "instances/p0548.mps\;instances/solutions/p0548.sol"
-            "instances/rgn.mps\;instances/solutions/rgn.sol"
-            )
-
     set(infeas
             "instances/presolved_ns2080781.mps"
             )
@@ -268,33 +253,42 @@ if (TARGET papilo-executable AND PAPILO_HAVE_SCIP)
         endforeach (instance)
     endmacro(add_infeasible_instancetests)
 
-    macro(split_solution solution)
-        list(GET instance 0 path)
-        list(GET instance 1 path_solution)
-        get_filename_component(basename ${path} NAME)
-    endmacro(split_solution)
-
-    ##solution is still contained after presolving
-    macro(validate_solution instances numtypes)
-        foreach (instance ${${instances}})
-            split_solution(instance)
-            file(TO_NATIVE_PATH ${PROJECT_SOURCE_DIR}/test/${path} instance_file)
-            file(TO_NATIVE_PATH ${PROJECT_SOURCE_DIR}/test/${path_solution} solution_file)
-            file(TO_NATIVE_PATH ${PROJECT_SOURCE_DIR}/settings/no_dual_reductions.set settings_file)
-            foreach (numtype ${${numtypes}})
-                add_test(NAME ${numtype}-validate-solution-${basename}
-                        COMMAND $<TARGET_FILE:papilo-executable> presolve -a ${numtype} -f ${instance_file} -b ${solution_file} -p ${settings_file}
-                        )
-                set_tests_properties(${numtype}-validate-solution-${basename}
-                        PROPERTIES
-                        PASS_REGULAR_EXPRESSION "validation: SUCCESS\n"
-                        DEPENDS papilo-build
-                        )
-            endforeach (numtype)
-        endforeach (instance)
-    endmacro(validate_solution)
 
     add_instancetests(instances_MIP numtypes)
     add_infeasible_instancetests(infeas numtypes)
-    validate_solution(solution_mip numtypes)
+endif ()
+
+set(filename_for_solutions "solutions.test")
+if (TARGET papilo-executable AND EXISTS ${PROJECT_SOURCE_DIR}/${filename_for_solutions})
+
+    FILE(READ ${PROJECT_SOURCE_DIR}/${filename_for_solutions} content)
+    string(REPLACE "\n" ";" instances ${content})
+
+    macro(split_solution solution)
+        string(REPLACE "," ";" sol ${solution})
+        list(GET sol 0 path)
+        list(GET sol 1 path_solution)
+        get_filename_component(basename ${path} NAME)
+    endmacro(split_solution)
+
+    #solution is still contained after presolving
+    macro(validate_solution instance)
+        split_solution(${instance})
+        file(TO_NATIVE_PATH ${path} instance_file)
+        file(TO_NATIVE_PATH ${path_solution} solution_file)
+        file(TO_NATIVE_PATH ${PROJECT_SOURCE_DIR}/settings/no_strong_dual_reductions.set settings_file)
+        #TODO find better testname -> solution file can be occur multiple times
+        add_test(NAME validate-solution-${solution_file}
+                COMMAND $<TARGET_FILE:papilo-executable> presolve -f ${instance_file} -b ${solution_file} -p ${settings_file}
+                )
+        set_tests_properties(validate-solution-${solution_file}
+                PROPERTIES
+                PASS_REGULAR_EXPRESSION "validation: SUCCESS\n"
+                DEPENDS papilo-build
+                )
+    endmacro(validate_solution)
+
+    foreach (instance ${instances})
+        validate_solution(${instance})
+    endforeach (instance)
 endif ()
