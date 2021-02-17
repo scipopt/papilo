@@ -546,15 +546,17 @@ propagate_row( const REAL* rowvals, const int* colindices, int rowlen,
                const Vec<REAL>& upper_bounds, const Vec<ColFlags>& domainFlags,
                BOUNDCHANGE&& boundchange )
 {
+
+   bool adj_rhs = false;
    if( activity.ninfmin == 1 && activity.ninfmax == 0 &&
        rflags.test( RowFlag::kRhsInf ) )
+   {
+      adj_rhs = true;
       rhs = activity.max;
+   }
 
-   if( activity.ninfmax == 1 && activity.ninfmin == 0 &&
-       rflags.test( RowFlag::kLhsInf ) )
-      lhs = activity.min;
-
-   if( !rflags.test( RowFlag::kRhsInf ) && activity.ninfmin <= 1 )
+   if( (!rflags.test( RowFlag::kRhsInf ) && activity.ninfmin <= 1) ||
+       adj_rhs )
    {
       for( int j = 0; j < rowlen; ++j )
       {
@@ -605,7 +607,15 @@ propagate_row( const REAL* rowvals, const int* colindices, int rowlen,
       }
    }
 
-   if( !rflags.test( RowFlag::kLhsInf ) && activity.ninfmax <= 1 )
+   bool adj_lhs = false;
+   if( activity.ninfmax == 1 && activity.ninfmin == 0 &&
+       rflags.test( RowFlag::kLhsInf ) )
+   {
+      adj_lhs = true;
+      lhs = activity.min;
+   }
+
+   if( (!rflags.test( RowFlag::kLhsInf ) && activity.ninfmax <= 1) || adj_lhs )
    {
       for( int j = 0; j < rowlen; ++j )
       {
