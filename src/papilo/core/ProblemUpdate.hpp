@@ -2435,7 +2435,7 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
             }
 
             constraintMatrix.modifyLeftHandSide( reduction.row,num,
-                                                 reduction.newval, num );
+                                                 reduction.newval );
 
             ++stats.nsidechgs;
             break;
@@ -2474,7 +2474,7 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
             }
 
             constraintMatrix.modifyRightHandSide( reduction.row,num,
-                                                  reduction.newval, num );
+                                                  reduction.newval );
 
             ++stats.nsidechgs;
             break;
