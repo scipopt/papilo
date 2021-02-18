@@ -48,25 +48,17 @@ class Problem;
 template <typename REAL>
 class ProblemUpdate;
 
-/// result codes of a presolving routine
 enum class PresolveStatus : int
 {
-   /// problem was not changed
    kUnchanged = 0,
 
-   /// problem was reduced
    kReduced = 1,
 
-   //TODO: kUnboundedIfFeasible?
-   /// problem was detected to be unbounded or infeasible
-   kUnbndOrInfeas = 2,
+   kUnboundedIfFeasible = 2,
 
-   /// problem was detected to be unbounded
    kUnbounded = 3,
 
-   /// problem was detected to be infeasible
    kInfeasible = 4,
-
 };
 
 enum class PresolverTiming : int
@@ -167,7 +159,7 @@ class PresolveMethod
       switch( result )
       {
       case PresolveStatus::kUnbounded:
-      case PresolveStatus::kUnbndOrInfeas:
+      case PresolveStatus::kUnboundedIfFeasible:
       case PresolveStatus::kInfeasible:
          Message::debug( &problemUpdate,
                          "[{}:{}] {} detected unboundedness or infeasibility\n",
@@ -200,12 +192,6 @@ class PresolveMethod
                     name, ncalls, success, stats.first, applied, execTime );
    }
 
-   PresolverType
-   getType() const
-   {
-      return this->type;
-   }
-
    PresolverTiming
    getTiming() const
    {
@@ -228,31 +214,6 @@ class PresolveMethod
    getName() const
    {
       return this->name;
-   }
-
-   bool
-   runInRound( int roundCounter )
-   {
-      assert( roundCounter < 4 );
-
-      if( ( roundCounter == 0 && timing == PresolverTiming::kFast ) ||
-          ( roundCounter == 1 && timing == PresolverTiming::kMedium ) ||
-          ( roundCounter == 2 && timing == PresolverTiming::kExhaustive ) )
-         return true;
-
-      // always finish with a fast round
-      if( roundCounter == 3 && timing == PresolverTiming::kFast )
-         return true;
-
-      return false;
-   }
-
-   virtual void
-   getCertificate()
-   {
-      // todo interface for certificate function and flag to indicate whether
-      // presolver writes certificates -> Leon
-      // example for Probing because of gap
    }
 
    unsigned int

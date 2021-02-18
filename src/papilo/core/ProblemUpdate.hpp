@@ -264,7 +264,20 @@ class ProblemUpdate
    }
 
    void
+   clearChangeInfo( int size )
+   {
+      // TODO: use std::remove?
+      // https://stackoverflow.com/questions/347441/erasing-elements-from-a-vector
+      changed_activities.erase( changed_activities.begin(),
+                                changed_activities.begin() + size );
+      firstNewSingletonCol = singletonColumns.size();
+   }
+
+   void
    clearStates();
+
+   void
+   check_and_compress();
 
    const Vec<int>&
    getChangedActivities() const
@@ -368,7 +381,6 @@ class ProblemUpdate
    PresolveStatus
    apply_dualfix( Vec<REAL>& lbs, Vec<REAL>& ubs, Vec<ColFlags>& cflags,
                   const Vec<REAL>& obj, const Vec<Locks>& locks, int col );
-
 };
 
 #ifdef PAPILO_USE_EXTERN_TEMPLATES
@@ -411,16 +423,10 @@ void
 ProblemUpdate<REAL>::update_activity( ActivityChange actChange, int rowid,
                                       RowActivity<REAL>& activity )
 {
-   if( activity.lastchange == stats.nrounds )
-      return;
-
-   if( actChange == ActivityChange::kMin && activity.ninfmin > 1 )
-      return;
-
-   if( actChange == ActivityChange::kMax && activity.ninfmax > 1 )
-      return;
-
-   if( problem.getConstraintMatrix().isRowRedundant( rowid ) )
+   if( activity.lastchange == stats.nrounds ||
+       ( actChange == ActivityChange::kMin && activity.ninfmin > 1 ) ||
+       ( actChange == ActivityChange::kMax && activity.ninfmax > 1 ) ||
+       problem.getConstraintMatrix().isRowRedundant( rowid ) )
       return;
 
    activity.lastchange = stats.nrounds;
@@ -537,8 +543,8 @@ ProblemUpdate<REAL>::fixColInfinity( int col, REAL val )
        cflags[col].test( ColFlag::kFixed ) || val == 0 )
       return PresolveStatus::kUnchanged;
 
-   assert((val < 0 && cflags[col].test( ColFlag::kLbInf )) ||
-                 (val > 0 && cflags[col].test( ColFlag::kUbInf )) );
+   assert( ( val < 0 && cflags[col].test( ColFlag::kLbInf ) ) ||
+           ( val > 0 && cflags[col].test( ColFlag::kUbInf ) ) );
 
    // activity doesn't need to be upgraded because rows should be mark redundant
    markColFixed( col );
@@ -575,7 +581,8 @@ ProblemUpdate<REAL>::changeLB( int col, REAL val )
       ++stats.nboundchgs;
       if( !cflags[col].test( ColFlag::kUbInf ) && newbound > ubs[col] )
       {
-         //TODO: should be checking if to values are the same not be compared by isGT
+         // TODO: should be checking if to values are the same not be compared
+         // by isGT
          if( num.isFeasGT( newbound, ubs[col] ) )
          {
             Message::debug( this,
@@ -665,7 +672,8 @@ ProblemUpdate<REAL>::changeUB( int col, REAL val )
       ++stats.nboundchgs;
       if( !cflags[col].test( ColFlag::kLbInf ) && newbound < lbs[col] )
       {
-         //TODO: should be checking if to values are the same not be compared by isGT
+         // TODO: should be checking if to values are the same not be compared
+         // by isGT
          if( num.isFeasLT( newbound, lbs[col] ) )
          {
             Message::debug( this,
@@ -970,8 +978,8 @@ ProblemUpdate<REAL>::flush()
    }
 
    // fix empty columns
-   if( removeEmptyColumns() == PresolveStatus::kUnbndOrInfeas )
-      return PresolveStatus::kUnbndOrInfeas;
+   if( removeEmptyColumns() == PresolveStatus::kUnboundedIfFeasible )
+      return PresolveStatus::kUnboundedIfFeasible;
 
    return PresolveStatus::kReduced;
 }
@@ -1001,17 +1009,20 @@ ProblemUpdate<REAL>::clearStates()
        std::all_of( col_state.begin(), col_state.end(), []( Flags<State> s ) {
           return s.equal( State::kUnmodified );
        } ) );
+}
 
-   if( presolveOptions.compressfac != 0 )
-   {
-      if( ( problem.getNCols() > 100 &&
-            getNActiveCols() <
-                problem.getNCols() * presolveOptions.compressfac ) ||
-          ( problem.getNRows() > 100 &&
-            getNActiveRows() <
-                problem.getNRows() * presolveOptions.compressfac ) )
-         compress();
-   }
+template <typename REAL>
+void
+ProblemUpdate<REAL>::check_and_compress()
+{
+   if( presolveOptions.compressfac != 0 &&
+       ( ( problem.getNCols() > 100 &&
+           getNActiveCols() <
+               problem.getNCols() * presolveOptions.compressfac ) ||
+         ( problem.getNRows() > 100 &&
+           getNActiveRows() <
+               problem.getNRows() * presolveOptions.compressfac ) ) )
+      compress();
 }
 
 template <typename REAL>
@@ -1139,7 +1150,7 @@ ProblemUpdate<REAL>::trivialColumnPresolve()
 
       status = apply_dualfix( lbs, ubs, cflags, obj, locks, col );
       // TODO why not continue with this row
-      if( status == PresolveStatus::kUnbndOrInfeas )
+      if( status == PresolveStatus::kUnboundedIfFeasible )
          return status;
       else if( status == PresolveStatus::kReduced )
          continue;
@@ -1175,7 +1186,7 @@ ProblemUpdate<REAL>::apply_dualfix( Vec<REAL>& lbs, Vec<REAL>& ubs,
                                "[{}:{}] dual fixing in trivial presolve "
                                "detected status UNBND_OR_INFEAS\n",
                                __FILE__, __LINE__ );
-               return PresolveStatus::kUnbndOrInfeas;
+               return PresolveStatus::kUnboundedIfFeasible;
             }
          }
          else
@@ -1199,7 +1210,7 @@ ProblemUpdate<REAL>::apply_dualfix( Vec<REAL>& lbs, Vec<REAL>& ubs,
                                "[{}:{}] dual fixing in trivial presolve "
                                "detected status UNBND_OR_INFEAS\n",
                                __FILE__, __LINE__ );
-               return PresolveStatus::kUnbndOrInfeas;
+               return PresolveStatus::kUnboundedIfFeasible;
             }
          }
          else
@@ -1395,13 +1406,13 @@ ProblemUpdate<REAL>::trivialPresolve()
 
    PresolveStatus status = trivialColumnPresolve();
    if( status == PresolveStatus::kInfeasible ||
-       status == PresolveStatus::kUnbndOrInfeas )
+       status == PresolveStatus::kUnboundedIfFeasible )
       return status;
 
    problem.recomputeAllActivities();
    status = trivialRowPresolve();
    if( status == PresolveStatus::kInfeasible ||
-       status == PresolveStatus::kUnbndOrInfeas )
+       status == PresolveStatus::kUnboundedIfFeasible )
       return status;
 
    removeFixedCols();
@@ -1438,7 +1449,7 @@ ProblemUpdate<REAL>::trivialPresolve()
 
    status = checkChangedActivities();
    if( status == PresolveStatus::kInfeasible ||
-       status == PresolveStatus::kUnbndOrInfeas )
+       status == PresolveStatus::kUnboundedIfFeasible )
       return status;
 
    changed_activities.clear();
@@ -1461,7 +1472,6 @@ ProblemUpdate<REAL>::trivialPresolve()
 
    return status;
 }
-
 
 template <typename REAL>
 PresolveStatus
@@ -1637,7 +1647,7 @@ ProblemUpdate<REAL>::removeEmptyColumns()
                if( obj.coefficients[col] < 0 )
                {
                   if( domains.flags[col].test( ColFlag::kUbInf ) )
-                     return PresolveStatus::kUnbndOrInfeas;
+                     return PresolveStatus::kUnboundedIfFeasible;
 
                   fixval = domains.upper_bounds[col];
                }
@@ -1645,7 +1655,7 @@ ProblemUpdate<REAL>::removeEmptyColumns()
                {
                   assert( obj.coefficients[col] > 0 );
                   if( domains.flags[col].test( ColFlag::kLbInf ) )
-                     return PresolveStatus::kUnbndOrInfeas;
+                     return PresolveStatus::kUnboundedIfFeasible;
 
                   fixval = domains.lower_bounds[col];
                }
@@ -2417,20 +2427,26 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
                for( int i = 0; i != rowlen; ++i )
                   setColState( rowcols[i], State::kModified );
             }
-            //TODO: is this necessary-> bounds could be (actually not) changed by to independent
+            // TODO: is this necessary-> bounds could be (actually not) changed
+            // by to independent
             if( !rflags[reduction.row].test( RowFlag::kRhsInf ) &&
                 num.isFeasGT(
                     reduction.newval,
-                    constraintMatrix.getRightHandSides()[reduction.row])){
-               Message::debug( this,
-                               "fixing the lhs of row {} with bounds [{},{}] to value {} is "
-                               "detected to be infeasible\n",
-                               reduction.row,
-                               rflags[reduction.row].test( RowFlag::kLhsInf )
-                               ? -std::numeric_limits<double>::infinity()
-                               : double( constraintMatrix.getLeftHandSides()[reduction.row] ),
-                               double(constraintMatrix.getRightHandSides()[reduction.row]),
-                               double(reduction.newval));
+                    constraintMatrix.getRightHandSides()[reduction.row] ) )
+            {
+               Message::debug(
+                   this,
+                   "fixing the lhs of row {} with bounds [{},{}] to value {} "
+                   "is "
+                   "detected to be infeasible\n",
+                   reduction.row,
+                   rflags[reduction.row].test( RowFlag::kLhsInf )
+                       ? -std::numeric_limits<double>::infinity()
+                       : double( constraintMatrix
+                                     .getLeftHandSides()[reduction.row] ),
+                   double(
+                       constraintMatrix.getRightHandSides()[reduction.row] ),
+                   double( reduction.newval ) );
                return ApplyResult::kInfeasible;
             }
 
@@ -2453,23 +2469,26 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
                for( int i = 0; i != rowlen; ++i )
                   setColState( rowcols[i], State::kModified );
             }
-            //TODO: is this necessary-> bounds could be (actually not) changed by to independent
+            // TODO: is this necessary-> bounds could be (actually not) changed
+            // by to independent
             if( !rflags[reduction.row].test( RowFlag::kLhsInf ) &&
                 num.isFeasGT(
                     constraintMatrix.getLeftHandSides()[reduction.row],
-                    reduction.newval))
+                    reduction.newval ) )
             {
-               Message::debug( this,
-                               "fixing the rhs of row {} with bounds [{},{}] to value {} is "
-                               "detected to be infeasible\n",
-                               reduction.row,
-                               double(constraintMatrix.getLeftHandSides()[reduction.row]),
-                               rflags[reduction.row].test( RowFlag::kRhsInf )
-                               ? -std::numeric_limits<double>::infinity()
-                               : double( constraintMatrix.getRightHandSides()[reduction.row] ),
+               Message::debug(
+                   this,
+                   "fixing the rhs of row {} with bounds [{},{}] to value {} "
+                   "is "
+                   "detected to be infeasible\n",
+                   reduction.row,
+                   double( constraintMatrix.getLeftHandSides()[reduction.row] ),
+                   rflags[reduction.row].test( RowFlag::kRhsInf )
+                       ? -std::numeric_limits<double>::infinity()
+                       : double( constraintMatrix
+                                     .getRightHandSides()[reduction.row] ),
 
-                               double(reduction.newval)
-                               );
+                   double( reduction.newval ) );
                return ApplyResult::kInfeasible;
             }
 

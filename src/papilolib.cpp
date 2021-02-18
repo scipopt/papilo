@@ -1168,7 +1168,7 @@ papilo_solver_start( PAPILO_SOLVER* solver )
       case PresolveStatus::kInfeasible:
          solver->solveinfo.solve_result = PAPILO_SOLVE_RESULT_INFEASIBLE;
          return &solver->solveinfo;
-      case PresolveStatus::kUnbndOrInfeas:
+      case PresolveStatus::kUnboundedIfFeasible:
          solver->solveinfo.solve_result = PAPILO_SOLVE_RESULT_UNBND_OR_INFEAS;
          return &solver->solveinfo;
       case PresolveStatus::kUnbounded:

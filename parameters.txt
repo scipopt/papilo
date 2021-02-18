@@ -73,6 +73,9 @@ presolve.removeslackvars = 1
 # maximal number of threads to use (0: automatic)  [Integer: [0,2147483647]]
 presolve.threads = 0
 
+# if only one thread (presolve.threads = 0) is used, apply the reductions immediately afterwards
+presolve.sequentiellreductionapplying = 1
+
 # time limit for presolve  [Numerical: [0,1.7976931348623157e+308]]
 presolve.tlim = 1.7976931348623157e+308
 
@@ -123,3 +126,4 @@ substitution.maxfillin = 10
 
 # maximum amount of nonzeros being moved to make space for fillin from substitutions within a row  [Integer: [0,2147483647]]
 substitution.maxshiftperrow = 10
+

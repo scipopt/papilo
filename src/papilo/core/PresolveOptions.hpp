@@ -73,6 +73,8 @@ struct PresolveOptions
 
    unsigned int randomseed = 0;
 
+   bool sequentiellreductionapplying =true;
+
    void
    addParameters( ParameterSet& paramSet )
    {
@@ -150,7 +152,16 @@ struct PresolveOptions
       paramSet.addParameter( "presolve.threads",
                              "maximal number of threads to use (0: automatic)",
                              threads, 0 );
+      paramSet.addParameter( "presolve.sequentiellreductionapplying",
+                             "# if only one thread (presolve.threads = 0) is used, apply the reductions immediately afterwards",
+                             sequentiellreductionapplying );
    }
+
+   bool
+   runs_sequentiell() const{
+      return threads==1;
+   }
+
 };
 
 } // namespace papilo
