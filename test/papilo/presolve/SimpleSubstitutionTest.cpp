@@ -33,7 +33,14 @@ Problem<double>
 setupProblemWithSimpleSubstitution( uint8_t is_x_integer, uint8_t is_y_integer,
                                     double a_y );
 
+Problem<double>
+setupProblemWithInfeasibleBounds( double x, double y, double rhs );
 
+Problem<double>
+setupProblemWithSimpleSubstitutionInfeasibleGcd();
+
+Problem<double>
+setupProblemWithSimpleSubstitutionFeasibleGcd();
 
 TEST_CASE( "happy-path-simple-substitution-for-2-int", "[presolve]" )
 {
@@ -72,13 +79,32 @@ TEST_CASE( "happy-path-simple-substitution-for-2-int", "[presolve]" )
    REQUIRE( reductions.getReduction( 3 ).col == 0 );
    REQUIRE( reductions.getReduction( 3 ).row ==
             papilo::ColReduction::LOWER_BOUND );
-   // TODO: this could be rounded down for an integer
    REQUIRE( reductions.getReduction( 3 ).newval == 0.5 );
 
    REQUIRE( reductions.getReduction( 4 ).col == 1 );
    REQUIRE( reductions.getReduction( 4 ).row ==
             papilo::ColReduction::SUBSTITUTE );
    REQUIRE( reductions.getReduction( 4 ).newval == 0 );
+}
+
+TEST_CASE( "happy-path-simple-substitution-for-int-continuous-coeff",
+           "[presolve]" )
+{
+   Num<double> num{};
+   Problem<double> problem = setupProblemWithSimpleSubstitution( 1, 1, 2.2 );
+   Statistics statistics{};
+   PresolveOptions presolveOptions{};
+   presolveOptions.dualreds = 0;
+   Postsolve<double> postsolve = Postsolve<double>( problem, num );
+   ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
+                                        presolveOptions, num );
+   SimpleSubstitution<double> presolvingMethod{};
+   Reductions<double> reductions{};
+   problem.recomputeAllActivities();
+
+   PresolveStatus presolveStatus =
+       presolvingMethod.execute( problem, problemUpdate, num, reductions );
+   REQUIRE( presolveStatus == PresolveStatus::kUnchanged );
 }
 
 TEST_CASE( "happy-path-simple-substitution-for-2-continuous", "[presolve]" )
@@ -172,6 +198,66 @@ TEST_CASE( "failed-path-simple-substitution-for-2-int", "[presolve]" )
    REQUIRE( presolveStatus == PresolveStatus::kUnchanged );
 }
 
+TEST_CASE( "example_10_1_in_constraint_integer_programming", "[presolve]" )
+{
+   Num<double> num{};
+   Problem<double> problem = setupProblemWithInfeasibleBounds( 8.0, 3.0, 37.0 );
+   Statistics statistics{};
+   PresolveOptions presolveOptions{};
+   presolveOptions.dualreds = 0;
+   Postsolve<double> postsolve = Postsolve<double>( problem, num );
+   ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
+                                        presolveOptions, num );
+   SimpleSubstitution<double> presolvingMethod{};
+   Reductions<double> reductions{};
+   problem.recomputeAllActivities();
+
+   PresolveStatus presolveStatus =
+       presolvingMethod.execute( problem, problemUpdate, num, reductions );
+   REQUIRE( presolveStatus == PresolveStatus::kInfeasible );
+}
+
+
+TEST_CASE( "should_return_feasible_if_gcd_of_coeff_is_in_rhs", "[presolve]" )
+{
+   Num<double> num{};
+   Problem<double> problem = setupProblemWithSimpleSubstitutionFeasibleGcd();
+   Statistics statistics{};
+   PresolveOptions presolveOptions{};
+   presolveOptions.dualreds = 0;
+   Postsolve<double> postsolve = Postsolve<double>( problem, num );
+   ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
+                                        presolveOptions, num );
+   SimpleSubstitution<double> presolvingMethod{};
+   Reductions<double> reductions{};
+   problem.recomputeAllActivities();
+
+   PresolveStatus presolveStatus =
+       presolvingMethod.execute( problem, problemUpdate, num, reductions );
+
+   REQUIRE( presolveStatus == PresolveStatus::kUnchanged );
+}
+
+TEST_CASE( "should_return_infeasible_if_gcd_of_coeff_is_in_rhs", "[presolve]" )
+{
+   Num<double> num{};
+   Problem<double> problem = setupProblemWithSimpleSubstitutionInfeasibleGcd();
+   Statistics statistics{};
+   PresolveOptions presolveOptions{};
+   presolveOptions.dualreds = 0;
+   Postsolve<double> postsolve = Postsolve<double>( problem, num );
+   ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
+                                        presolveOptions, num );
+   SimpleSubstitution<double> presolvingMethod{};
+   Reductions<double> reductions{};
+   problem.recomputeAllActivities();
+
+   PresolveStatus presolveStatus =
+       presolvingMethod.execute( problem, problemUpdate, num, reductions );
+
+   REQUIRE( presolveStatus == PresolveStatus::kInfeasible );
+}
+
 Problem<double>
 setupProblemWithSimpleSubstitution( uint8_t is_x_integer, uint8_t is_y_integer,
                                     double a_y )
@@ -207,5 +293,116 @@ setupProblemWithSimpleSubstitution( uint8_t is_x_integer, uint8_t is_y_integer,
    pb.setProblemName( "matrix for testing simple probing" );
    Problem<double> problem = pb.build();
    problem.getConstraintMatrix().modifyLeftHandSide( 0,num, rhs[0] );
+   return problem;
+}
+
+Problem<double>
+setupProblemWithInfeasibleBounds( double x, double y, double rhs )
+{
+   // 3x + 8y = 37
+   // 0<= x,y y= 5
+   Num<double> num{};
+   Vec<double> coefficients{ x, y };
+   Vec<double> upperBounds{ 5.0, 5.0 };
+   Vec<double> lowerBounds{ 0.0, 0.0 };
+   Vec<uint8_t> isIntegral{ 1, 1 };
+
+   Vec<double> rhs_values{ rhs };
+   Vec<std::string> rowNames{ "A1" };
+   Vec<std::string> columnNames{ "c1", "c2" };
+   Vec<std::tuple<int, int, double>> entries{
+       std::tuple<int, int, double>{ 0, 0, 3.0 },
+       std::tuple<int, int, double>{ 0, 1, 8.0 },
+   };
+
+   ProblemBuilder<double> pb;
+   pb.reserve( entries.size(), rowNames.size(), columnNames.size() );
+   pb.setNumRows( rowNames.size() );
+   pb.setNumCols( columnNames.size() );
+   pb.setColUbAll( upperBounds );
+   pb.setColLbAll( lowerBounds );
+   pb.setObjAll( coefficients );
+   pb.setObjOffset( 0.0 );
+   pb.setColIntegralAll( isIntegral );
+   pb.setRowRhsAll( rhs_values );
+   pb.addEntryAll( entries );
+   pb.setColNameAll( columnNames );
+   pb.setProblemName( "example 10.1 in Constraint Integer Programming" );
+   Problem<double> problem = pb.build();
+   problem.getConstraintMatrix().modifyLeftHandSide( 0,num, rhs );
+   return problem;
+}
+
+Problem<double>
+setupProblemWithSimpleSubstitutionInfeasibleGcd()
+{
+   // 6x + 8y = 37
+   // 0<= x,y y= 5
+   Num<double> num{};
+   Vec<double> coefficients{ 3.0, 1.0 };
+   Vec<double> upperBounds{ 5.0, 5.0 };
+   Vec<double> lowerBounds{ 0.0, 0.0 };
+   Vec<uint8_t> isIntegral{ 1, 1 };
+
+   Vec<double> rhs{ 37.0 };
+   Vec<std::string> rowNames{ "A1" };
+   Vec<std::string> columnNames{ "c1", "c2" };
+   Vec<std::tuple<int, int, double>> entries{
+       std::tuple<int, int, double>{ 0, 0, 6.0 },
+       std::tuple<int, int, double>{ 0, 1, 8.0 },
+   };
+
+   ProblemBuilder<double> pb;
+   pb.reserve( entries.size(), rowNames.size(), columnNames.size() );
+   pb.setNumRows( rowNames.size() );
+   pb.setNumCols( columnNames.size() );
+   pb.setColUbAll( upperBounds );
+   pb.setColLbAll( lowerBounds );
+   pb.setObjAll( coefficients );
+   pb.setObjOffset( 0.0 );
+   pb.setColIntegralAll( isIntegral );
+   pb.setRowRhsAll( rhs );
+   pb.addEntryAll( entries );
+   pb.setColNameAll( columnNames );
+   pb.setProblemName( "gcd(x,y) is not divisor of rhs" );
+   Problem<double> problem = pb.build();
+   problem.getConstraintMatrix().modifyLeftHandSide( 0,num, rhs[0] );
+   return problem;
+}
+
+Problem<double>
+setupProblemWithSimpleSubstitutionFeasibleGcd()
+{
+   // 6x + 9y = 15 with 15/6 and 9/6 no integer
+   // 0<= x,y y= 5
+   Num<double> num{};
+   Vec<double> coefficients{ 3.0, 1.0 };
+   Vec<double> upperBounds{ 5.0, 5.0 };
+   Vec<double> lowerBounds{ 0.0, 0.0 };
+   Vec<uint8_t> isIntegral{ 1, 1 };
+
+   Vec<double> rhs{ 15.0 };
+   Vec<std::string> rowNames{ "A1" };
+   Vec<std::string> columnNames{ "c1", "c2" };
+   Vec<std::tuple<int, int, double>> entries{
+       std::tuple<int, int, double>{ 0, 0, 6.0 },
+       std::tuple<int, int, double>{ 0, 1, 9.0 },
+   };
+
+   ProblemBuilder<double> pb;
+   pb.reserve( entries.size(), rowNames.size(), columnNames.size() );
+   pb.setNumRows( rowNames.size() );
+   pb.setNumCols( columnNames.size() );
+   pb.setColUbAll( upperBounds );
+   pb.setColLbAll( lowerBounds );
+   pb.setObjAll( coefficients );
+   pb.setObjOffset( 0.0 );
+   pb.setColIntegralAll( isIntegral );
+   pb.setRowRhsAll( rhs );
+   pb.addEntryAll( entries );
+   pb.setColNameAll( columnNames );
+   pb.setProblemName( "gcd(x,y) is divisor of rhs" );
+   Problem<double> problem = pb.build();
+   problem.getConstraintMatrix().modifyLeftHandSide( 0, num, rhs[0] );
    return problem;
 }

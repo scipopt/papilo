@@ -99,12 +99,19 @@ set(unit_tests
         "happy-path-singleton-column-equation"
 
         #Simple Probing
+        "failed-path-singleton-column-row"
+
+        #Simple Probing
         "happy-path-simple-probing"
 
         #Simple Substitution
         "happy-path-simple-substitution-for-2-int"
         "happy-path-simple-substitution-for-2-continuous"
         "happy-path-simple-substitution-for-continuous-and-integer"
+        "happy-path-simple-substitution-for-int-continuous-coeff"
+        "example_10_1_in_constraint_integer_programming"
+        "should_return_infeasible_if_gcd_of_coeff_is_in_rhs"
+        "should_return_feasible_if_gcd_of_coeff_is_in_rhs"
 
         #DualFix
         "happy-path-dual-fix"

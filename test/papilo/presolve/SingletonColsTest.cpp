@@ -122,7 +122,6 @@ TEST_CASE( "happy-path-singleton-column-equation", "[presolve]" )
    REQUIRE( reductions.getReduction( 4 ).col == RowReduction::LHS_INF );
    REQUIRE( reductions.getReduction( 4 ).row == 1 );
    REQUIRE( reductions.getReduction( 4 ).newval == 0 );
-
 }
 
 Problem<double>
