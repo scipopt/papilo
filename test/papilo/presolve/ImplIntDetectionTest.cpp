@@ -32,6 +32,7 @@ using namespace papilo;
 Problem<double>
 setupProblemImplIntDetection();
 
+
 TEST_CASE( "happy-path-implied-integer-detection", "[presolve]" )
 {
    Num<double> num{};
@@ -56,6 +57,7 @@ TEST_CASE( "happy-path-implied-integer-detection", "[presolve]" )
 Problem<double>
 setupProblemImplIntDetection()
 {
+   Num<double> num{};
    Vec<double> coefficients{ 1.0, 1.0, 1.0 };
    Vec<double> upperBounds{ 10.0, 10.0, 10.0 };
    Vec<double> lowerBounds{ 0.0, 0.0, 0.0 };
@@ -85,6 +87,6 @@ setupProblemImplIntDetection()
    pb.setColNameAll( columnNames );
    pb.setProblemName( "impl int detection" );
    Problem<double> problem = pb.build();
-   problem.getConstraintMatrix().modifyLeftHandSide( 0, 1 );
+   problem.getConstraintMatrix().modifyLeftHandSide( 0,num, 1 );
    return problem;
 }

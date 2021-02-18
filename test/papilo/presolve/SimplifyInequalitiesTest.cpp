@@ -45,10 +45,12 @@ setup_simplify_ineq_reduce_rhs();
 Problem<double>
 setup_simple_problem_for_simplify_inequalities_2();
 
+const Num<double> num{};
+
+
 TEST_CASE( "happy-path-simplify-inequalities", "[presolve]" )
 {
    // 15x1 +15x2 +7x3 +3x4 +y1 <= 26
-   Num<double> num{};
    Problem<double> problem = setupProblemForSimplifyingInequalities();
    problem.recomputeAllActivities();
    Statistics statistics{};
@@ -91,7 +93,6 @@ TEST_CASE( "happy-path-simplify-inequalities", "[presolve]" )
 
 TEST_CASE( "simplify_inequ_doesnt_lock_more_rows", "[presolve]" )
 {
-   Num<double> num{};
    Problem<double> problem = setup_simplify_ineq_reduce_rhs();
    Statistics statistics{};
    PresolveOptions presolveOptions{};
@@ -112,7 +113,6 @@ TEST_CASE( "simplify_inequ_doesnt_lock_more_rows", "[presolve]" )
 
 TEST_CASE( "simplify_inequ_doesnt_apply_lb_and_ub_on_one_row", "[presolve]" )
 {
-   Num<double> num{};
    Problem<double> problem = setup_simple_problem_for_simplify_inequalities_2();
    Statistics statistics{};
    PresolveOptions presolveOptions{};
@@ -131,7 +131,6 @@ TEST_CASE( "simplify_inequ_doesnt_apply_lb_and_ub_on_one_row", "[presolve]" )
 
 TEST_CASE( "example-1-from-3.5-Presolve-Reductions-in-MIP", "[presolve]" )
 {
-   Num<double> num{};
    Problem<double> problem = setupExample1ofChapter3Dot5InPresolveReductions();
    Statistics statistics{};
    PresolveOptions presolveOptions{};
@@ -159,7 +158,6 @@ TEST_CASE( "example-1-from-3.5-Presolve-Reductions-in-MIP", "[presolve]" )
  */
 TEST_CASE( "example-2-from-3.5-Presolve-Reductions-in-MIP", "[presolve]" )
 {
-   Num<double> num{};
    Problem<double> problem = setupExample2ofChapter3Dot5InPresolveReductions();
    Statistics statistics{};
    PresolveOptions presolveOptions{};
@@ -209,7 +207,7 @@ setupExample1ofChapter3Dot5InPresolveReductions()
    pb.setProblemName(
        "matrix Example 1 of chapter 3.5 in Presolve Reductions in MIP" );
    Problem<double> problem = pb.build();
-   problem.getConstraintMatrix().modifyLeftHandSide( 0, lhs[0] );
+   problem.getConstraintMatrix().modifyLeftHandSide( 0,num, lhs[0] );
    return problem;
 }
 
@@ -245,7 +243,7 @@ setupExample2ofChapter3Dot5InPresolveReductions()
    pb.setProblemName(
        "matrix Example 2 of chapter 3.5 in Presolve Reductions in MIP" );
    Problem<double> problem = pb.build();
-   problem.getConstraintMatrix().modifyLeftHandSide( 0, lhs[0] );
+   problem.getConstraintMatrix().modifyLeftHandSide( 0,num, lhs[0] );
    return problem;
 }
 

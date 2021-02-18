@@ -33,6 +33,8 @@ Problem<double>
 setupProblemWithSimpleSubstitution( uint8_t is_x_integer, uint8_t is_y_integer,
                                     double a_y );
 
+
+
 TEST_CASE( "happy-path-simple-substitution-for-2-int", "[presolve]" )
 {
    Num<double> num{};
@@ -176,6 +178,7 @@ setupProblemWithSimpleSubstitution( uint8_t is_x_integer, uint8_t is_y_integer,
 {
    // 2x + y = 4
    // 0<= x,y y= 3
+   Num<double> num{};
    Vec<double> coefficients{ 3.0, 1.0 };
    Vec<double> upperBounds{ 3.0, 3.0 };
    Vec<double> lowerBounds{ 0.0, 0.0 };
@@ -203,6 +206,6 @@ setupProblemWithSimpleSubstitution( uint8_t is_x_integer, uint8_t is_y_integer,
    pb.setColNameAll( columnNames );
    pb.setProblemName( "matrix for testing simple probing" );
    Problem<double> problem = pb.build();
-   problem.getConstraintMatrix().modifyLeftHandSide( 0, rhs[0] );
+   problem.getConstraintMatrix().modifyLeftHandSide( 0,num, rhs[0] );
    return problem;
 }

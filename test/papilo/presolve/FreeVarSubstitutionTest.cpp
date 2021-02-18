@@ -33,11 +33,12 @@
 papilo::Problem<double>
 setupProblemForFreeVariableSubstitution();
 
+
 TEST_CASE( "happy-path-test-free-variable-detection", "[presolve]" )
 {
+   papilo::Num<double> num{};
    papilo::Problem<double> problem = setupProblemForFreeVariableSubstitution();
 
-   papilo::Num<double> num{};
    papilo::Statistics statistics{};
    papilo::PresolveOptions presolveOptions{};
    papilo::Postsolve<double> postsolve =
@@ -82,6 +83,7 @@ setupProblemForFreeVariableSubstitution()
    // x + 2z <= 2
    // x + v + w = 1
    // |x| <= 3; y <= 1 ; z >= 0
+   papilo::Num<double> num{};
    double inf = 10000000;
    papilo::Vec<double> coefficients{ 1.0, 1.0, 1.0, 1.0, 1.0 };
    papilo::Vec<double> upperBounds{ 3.0, 1.0, inf, inf, inf };
@@ -119,6 +121,6 @@ setupProblemForFreeVariableSubstitution()
    pb.setColNameAll( columnNames );
    pb.setProblemName( "matrix with free variables (3,4)" );
    papilo::Problem<double> problem = pb.build();
-   problem.getConstraintMatrix().modifyLeftHandSide( 2, lhs[2] );
+   problem.getConstraintMatrix().modifyLeftHandSide( 2, num, lhs[2] );
    return problem;
 }

@@ -53,6 +53,8 @@ setupMatrixForDualSubstitutionIntegerRounding();
 Problem<double>
 setupMatrixForDualFixInfinity();
 
+
+
 TEST_CASE( "trivial-column-presolve-does-dual-presolve-already", "[presolve]" )
 {
    Num<double> num{};
@@ -258,13 +260,12 @@ TEST_CASE( "happy_path_dual_fix_on_infinity", "[presolve]" )
    REQUIRE( reductions.getReduction( 0 ).col == 0 );
    REQUIRE( reductions.getReduction( 0 ).newval == 0 );
 
-
    for( int i = 0; i < 3; i++ )
    {
-      REQUIRE( reductions.getReduction( 1 +i ).col ==
+      REQUIRE( reductions.getReduction( 1 + i ).col ==
                papilo::RowReduction::REDUNDANT );
-      REQUIRE( reductions.getReduction( 1+i ).row == i );
-      REQUIRE( reductions.getReduction( 1+i ).newval == 0 );
+      REQUIRE( reductions.getReduction( 1 + i ).row == i );
+      REQUIRE( reductions.getReduction( 1 + i ).newval == 0 );
    }
 
    REQUIRE( reductions.getReduction( 4 ).col == 0 );
@@ -272,14 +273,12 @@ TEST_CASE( "happy_path_dual_fix_on_infinity", "[presolve]" )
             papilo::ColReduction::FIXED_INFINITY );
    REQUIRE( reductions.getReduction( 4 ).newval == -1 );
 
-   REQUIRE( reductions.getTransactions( )[0].start == 0);
-   REQUIRE( reductions.getTransactions( )[0].end == 5);
-
+   REQUIRE( reductions.getTransactions()[0].start == 0 );
+   REQUIRE( reductions.getTransactions()[0].end == 5 );
 }
 
 TEST_CASE( "example-4-from-4.4-Presolve-Reductions-in-MIP", "[presolve]" )
 {
-
    Num<double> num{};
    Problem<double> problem = setupExample4ofChapter4Dot4InPresolveReductions();
    Statistics statistics{};
@@ -658,6 +657,7 @@ setupMatrixForDualSubstitutionWithUnboundedVar()
 Problem<double>
 setupMatrixForDualSubstitutionEquation()
 {
+   Num<double> num{};
    Vec<double> coefficients{ 0.0, 0.0 };
    Vec<double> upperBounds{ 1.0, 3.0 };
    Vec<double> lowerBounds{ 0.0, 0.0 };
@@ -691,7 +691,7 @@ setupMatrixForDualSubstitutionEquation()
    pb.setColNameAll( columnNames );
    pb.setProblemName( "matrix for dual substitution only equations" );
    Problem<double> problem = pb.build();
-   problem.getConstraintMatrix().modifyLeftHandSide( 0, rhs[0] );
-   problem.getConstraintMatrix().modifyLeftHandSide( 1, rhs[1] );
+   problem.getConstraintMatrix().modifyLeftHandSide( 0, num, rhs[0] );
+   problem.getConstraintMatrix().modifyLeftHandSide( 1, num, rhs[1] );
    return problem;
 }

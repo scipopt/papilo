@@ -30,15 +30,16 @@
 using namespace papilo;
 
 Problem<double>
-setupProblemWithSparsify( );
+setupProblemWithSparsify();
 
 Problem<double>
-setupProblemWithSparsifyMoreThanOneColumn( );
+setupProblemWithSparsifyMoreThanOneColumn();
+
+const Num<double> num{};
 
 TEST_CASE( "happy-path-sparsify", "[presolve]" )
 {
-   Num<double> num{};
-   Problem<double> problem = setupProblemWithSparsify( );
+   Problem<double> problem = setupProblemWithSparsify();
    Statistics statistics{};
    PresolveOptions presolveOptions{};
    presolveOptions.dualreds = 0;
@@ -58,18 +59,18 @@ TEST_CASE( "happy-path-sparsify", "[presolve]" )
    REQUIRE( reductions.getReduction( 0 ).newval == 0 );
 
    REQUIRE( reductions.getReduction( 1 ).row == 0 );
-   REQUIRE( reductions.getReduction( 1 ).col == papilo::RowReduction::SPARSIFY );
+   REQUIRE( reductions.getReduction( 1 ).col ==
+            papilo::RowReduction::SPARSIFY );
    REQUIRE( reductions.getReduction( 1 ).newval == 1 );
 
    REQUIRE( reductions.getReduction( 2 ).row == 1 );
    REQUIRE( reductions.getReduction( 2 ).col == RowReduction::NONE );
-   REQUIRE( reductions.getReduction( 2 ).newval ==  -1);
+   REQUIRE( reductions.getReduction( 2 ).newval == -1 );
 }
 
 TEST_CASE( "failed-path-sparsify", "[presolve]" )
 {
-   Num<double> num{};
-   Problem<double> problem = setupProblemWithSparsifyMoreThanOneColumn( );
+   Problem<double> problem = setupProblemWithSparsifyMoreThanOneColumn();
    Statistics statistics{};
    PresolveOptions presolveOptions{};
    presolveOptions.dualreds = 0;
@@ -82,14 +83,11 @@ TEST_CASE( "failed-path-sparsify", "[presolve]" )
 
    PresolveStatus presolveStatus =
        presolvingMethod.execute( problem, problemUpdate, num, reductions );
-//TODO:
-   //   REQUIRE( presolveStatus == PresolveStatus::kUnchanged );
-
+   // TODO: REQUIRE( presolveStatus == PresolveStatus::kUnchanged );
 }
 
-
 Problem<double>
-setupProblemWithSparsify( )
+setupProblemWithSparsify()
 {
    Vec<double> coefficients{ 3.0, 1.0, 1.0 };
    Vec<double> upperBounds{ 3.0, 3.0, 3.0 };
@@ -119,13 +117,12 @@ setupProblemWithSparsify( )
    pb.setColNameAll( columnNames );
    pb.setProblemName( "matrix for testing sparsify" );
    Problem<double> problem = pb.build();
-   problem.getConstraintMatrix().modifyLeftHandSide( 0, rhs[0] );
+   problem.getConstraintMatrix().modifyLeftHandSide( 0, num, rhs[0] );
    return problem;
 }
 
-
 Problem<double>
-setupProblemWithSparsifyMoreThanOneColumn( )
+setupProblemWithSparsifyMoreThanOneColumn()
 {
    // 2x + y = 4
    // 0<= x,y y= 3
@@ -156,8 +153,9 @@ setupProblemWithSparsifyMoreThanOneColumn( )
    pb.setRowRhsAll( rhs );
    pb.addEntryAll( entries );
    pb.setColNameAll( columnNames );
-   pb.setProblemName( "matrix for testing sparsify -> will fail because l1 !=l2 +1" );
+   pb.setProblemName(
+       "matrix for testing sparsify -> will fail because l1 !=l2 +1" );
    Problem<double> problem = pb.build();
-   problem.getConstraintMatrix().modifyLeftHandSide( 0, rhs[0] );
+   problem.getConstraintMatrix().modifyLeftHandSide( 0, num, rhs[0] );
    return problem;
 }

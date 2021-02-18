@@ -44,7 +44,7 @@ TEST_CASE( "happy-path-presolve-singleton-row", "[core]" )
        papilo::Postsolve<double>( problem, num );
    papilo::ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                                 presolveOptions, num );
-   papilo::PresolveStatus status = problemUpdate.trivialPresolve();
+   problemUpdate.trivialPresolve();
    REQUIRE( problem.getUpperBounds()[2] == 1 );
    REQUIRE( problem.getRowFlags()[1].test( papilo::RowFlag::kRedundant ) );
 }
@@ -59,7 +59,7 @@ TEST_CASE( "happy-path-presolve-singleton-row-fixed", "[core]" )
        papilo::Postsolve<double>( problem, num );
    papilo::ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                                 presolveOptions, num );
-   papilo::PresolveStatus status = problemUpdate.trivialPresolve();
+   problemUpdate.trivialPresolve();
 
    REQUIRE( problem.getUpperBounds()[2] == 1 );
    REQUIRE( problem.getLowerBounds()[2] == 1 );
@@ -70,7 +70,7 @@ TEST_CASE( "happy-path-presolve-singleton-row-fixed", "[core]" )
 papilo::Problem<double>
 setupProblemPresolveSingletonRow()
 {
-
+   papilo::Num<double> num{};
    const papilo::Vec<double> coefficients{ 3.0, 1.0, 1.0 };
    papilo::Vec<std::string> rowNames{ "A1", "A2" };
    papilo::Vec<std::string> columnNames{ "x", "y", "z" };
@@ -105,7 +105,7 @@ setupProblemPresolveSingletonRow()
 papilo::Problem<double>
 setupProblemPresolveSingletonRowFixed()
 {
-
+   papilo::Num<double> num{};
    const papilo::Vec<double> coefficients{ 3.0, 1.0, 1.0 };
    papilo::Vec<std::string> rowNames{ "A1", "A2" };
    papilo::Vec<std::string> columnNames{ "x", "y", "z" };
@@ -134,6 +134,6 @@ setupProblemPresolveSingletonRowFixed()
    pb.setColNameAll( columnNames );
    pb.setProblemName( "matrix for singleton row fixed" );
    papilo::Problem<double> problem = pb.build();
-   problem.getConstraintMatrix().modifyLeftHandSide( 1, rhs[1] );
+   problem.getConstraintMatrix().modifyLeftHandSide( 1,num, rhs[1] );
    return problem;
 }

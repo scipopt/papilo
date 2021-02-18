@@ -36,6 +36,8 @@ setupProblemWithOnlyOneEntryIn1stRowAndColumn();
 Problem<double>
 setupProblemWithSingletonColumn();
 
+const Num<double> num{};
+
 void
 forceCalculationOfSingletonRows( Problem<double>& problem,
                                  ProblemUpdate<double>& problemUpdate )
@@ -47,7 +49,6 @@ forceCalculationOfSingletonRows( Problem<double>& problem,
 
 TEST_CASE( "happy-path-singleton-column", "[presolve]" )
 {
-   Num<double> num{};
    Problem<double> problem = setupProblemWithSingletonColumn();
    Statistics statistics{};
    PresolveOptions presolveOptions{};
@@ -87,7 +88,6 @@ TEST_CASE( "happy-path-singleton-column", "[presolve]" )
 
 TEST_CASE( "happy-path-singleton-column-equation", "[presolve]" )
 {
-   Num<double> num{};
    Problem<double> problem = setupProblemWithOnlyOneEntryIn1stRowAndColumn();
    Statistics statistics{};
    PresolveOptions presolveOptions{};
@@ -162,7 +162,7 @@ setupProblemWithOnlyOneEntryIn1stRowAndColumn()
    pb.setColNameAll( columnNames );
    pb.setProblemName( "singleton column & row matrix with equation" );
    Problem<double> problem = pb.build();
-   problem.getConstraintMatrix().modifyLeftHandSide( 1, rhs[1] );
+   problem.getConstraintMatrix().modifyLeftHandSide( 1,num, rhs[1] );
    return problem;
 }
 
@@ -204,7 +204,7 @@ setupProblemWithSingletonColumn()
    pb.setColNameAll( columnNames );
    pb.setProblemName( "singleton column" );
    Problem<double> problem = pb.build();
-   problem.getConstraintMatrix().modifyLeftHandSide( 0, 1 );
+   problem.getConstraintMatrix().modifyLeftHandSide( 0, num, 1 );
    return problem;
 }
 

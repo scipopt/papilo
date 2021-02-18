@@ -35,6 +35,7 @@ setupProblemWithSimpleProbing();
 Problem<double>
 setupExample3ofChapter3Dot6InPresolveReductions();
 
+
 TEST_CASE( "happy-path-simple-probing", "[presolve]" )
 {
    Num<double> num{};
@@ -104,6 +105,7 @@ TEST_CASE( "example-3-from-3.6-Presolve-Reductions-in-MIP", "[presolve]" )
 Problem<double>
 setupExample3ofChapter3Dot6InPresolveReductions()
 {
+   Num<double> num{};
    // min sum(x)
    // s.t. 4 x + y + z + v + w = 4
    Vec<double> coefficients{ 1.0, 1.0, 1.0, 1.0, 1.0 };
@@ -139,7 +141,7 @@ setupExample3ofChapter3Dot6InPresolveReductions()
    pb.setProblemName(
        "matrix Example 3 of chapter 3.6 in Presolve Reductions in MIP" );
    Problem<double> problem = pb.build();
-   problem.getConstraintMatrix().modifyLeftHandSide( 0, lhs[0] );
+   problem.getConstraintMatrix().modifyLeftHandSide( 0,num, lhs[0] );
    return problem;
 }
 
@@ -153,6 +155,7 @@ setupProblemWithSimpleProbing()
    // - coeff = supp - rhs
    // i.e. 2x + y + z = 2 with (sup = 4 & x = binary)
    // -> lb + x (ub -lb) = y/z
+   Num<double> num{};
    Vec<double> coefficients{ 3.0, 1.0, 1.0, 1.0 };
    Vec<double> upperBounds{ 1.0, 1.0, 1.0, 1.0 };
    Vec<double> lowerBounds{ 0.0, 0.0, 0.0, 0.0 };
@@ -183,6 +186,6 @@ setupProblemWithSimpleProbing()
    pb.setColNameAll( columnNames );
    pb.setProblemName( "matrix for testing simple probing" );
    Problem<double> problem = pb.build();
-   problem.getConstraintMatrix().modifyLeftHandSide( 0, lhs[0] );
+   problem.getConstraintMatrix().modifyLeftHandSide( 0, num, lhs[0] );
    return problem;
 }
