@@ -32,12 +32,12 @@ if(NOT TBB_LIBRARY)
    tbb_build(TBB_ROOT ${CMAKE_CURRENT_LIST_DIR}/../../external/tbb CONFIG_DIR TBB_DIR MAKE_ARGS extra_inc=big_iron.inc tbb_build_dir=${CMAKE_CURRENT_BINARY_DIR} tbb_build_prefix=tbb)
    if(TBB_DIR)
       # building was successful
-      find_library(TBB_LIBRARY
+      find_library(TBB_STATIC_LIB
          NAMES tbb
          HINTS
             ${CMAKE_CURRENT_BINARY_DIR}/tbb_release
             ${CMAKE_CURRENT_BINARY_DIR}/tbb_debug)
-      if(TBB_LIBRARY)
+      if(TBB_STATIC_LIB)
          # create an imported target that also links the thread libraries via its interface
          set(TBB_BUILT_STATIC_LIB 1)
          find_package( Threads )
@@ -48,10 +48,8 @@ if(NOT TBB_LIBRARY)
          endif()
          add_library(tbb STATIC IMPORTED)
          set_target_properties(tbb PROPERTIES
-            IMPORTED_LOCATION "${TBB_LIBRARY}"
+            IMPORTED_LOCATION "${TBB_STATIC_LIB}"
             INTERFACE_LINK_LIBRARIES "${linkinterface}")
-         # add variable to hold the static lib so that it can be installed
-         set(TBB_STATIC_LIB ${TBB_LIBRARY})
          set(TBB_LIBRARY tbb)
       endif()
    endif()
