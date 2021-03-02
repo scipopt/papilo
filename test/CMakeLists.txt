@@ -222,7 +222,7 @@ if (TARGET papilo-executable AND PAPILO_HAVE_SCIP)
     macro(add_instancetests instances numtypes)
         foreach (instance ${${instances}})
             split_instance(instance)
-            file(TO_NATIVE_PATH ${PROJECT_SOURCE_DIR}/test/${path} instance_file)
+            file(TO_NATIVE_PATH "${PROJECT_SOURCE_DIR}/test/${path}" instance_file)
             foreach (numtype ${${numtypes}})
                 add_test(NAME ${numtype}-solve-${basename}
                         COMMAND $<TARGET_FILE:papilo-executable> solve -a ${numtype} -f ${instance_file} -o ${optval}
@@ -239,7 +239,7 @@ if (TARGET papilo-executable AND PAPILO_HAVE_SCIP)
     ##solving returns infeasible for these instances and every potential numtype
     macro(add_infeasible_instancetests instances numtypes)
         foreach (instance ${${instances}})
-            file(TO_NATIVE_PATH ${PROJECT_SOURCE_DIR}/test/${instance} instance_file)
+            file(TO_NATIVE_PATH "${PROJECT_SOURCE_DIR}/test/${instance}" instance_file)
             foreach (numtype ${${numtypes}})
                 add_test(NAME ${numtype}-infeas-${instance}
                         COMMAND $<TARGET_FILE:papilo-executable> solve -a ${numtype} -f ${instance_file}
@@ -259,9 +259,9 @@ if (TARGET papilo-executable AND PAPILO_HAVE_SCIP)
 endif ()
 
 set(filename_for_solutions "solutions.test")
-if (TARGET papilo-executable AND EXISTS ${PROJECT_SOURCE_DIR}/${filename_for_solutions})
+if (TARGET papilo-executable AND EXISTS "${PROJECT_SOURCE_DIR}/${filename_for_solutions}")
 
-    FILE(READ ${PROJECT_SOURCE_DIR}/${filename_for_solutions} content)
+    FILE(READ "${PROJECT_SOURCE_DIR}/${filename_for_solutions}" content)
     string(REPLACE "\n" ";" instances ${content})
 
     macro(split_solution solution)
@@ -274,9 +274,9 @@ if (TARGET papilo-executable AND EXISTS ${PROJECT_SOURCE_DIR}/${filename_for_sol
     #solution is still contained after presolving
     macro(validate_solution instance)
         split_solution(${instance})
-        file(TO_NATIVE_PATH ${path} instance_file)
-        file(TO_NATIVE_PATH ${path_solution} solution_file)
-        file(TO_NATIVE_PATH ${PROJECT_SOURCE_DIR}/settings/no_strong_dual_reductions.set settings_file)
+        file(TO_NATIVE_PATH "${path}" instance_file)
+        file(TO_NATIVE_PATH "${path_solution}" solution_file)
+        file(TO_NATIVE_PATH "${PROJECT_SOURCE_DIR}/settings/no_strong_dual_reductions.set" settings_file)
         #TODO find better testname -> solution file can be occur multiple times
         add_test(NAME validate-solution-${solution_file}
                 COMMAND $<TARGET_FILE:papilo-executable> presolve -f ${instance_file} -b ${solution_file} -p ${settings_file}
