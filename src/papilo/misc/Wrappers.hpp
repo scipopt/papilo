@@ -204,7 +204,7 @@ presolve_and_solve(
    case PresolveStatus::kInfeasible:
       fmt::print( "presolve detected infeasible problem\n" );
       return ResultStatus::kUnbndOrInfeas;
-   case PresolveStatus::kUnboundedIfFeasible:
+   case PresolveStatus::kUnbndOrInfeas:
       fmt::print( "presolve detected unbounded or infeasible problem\n" );
       return ResultStatus::kUnbndOrInfeas;
    case PresolveStatus::kUnbounded:

@@ -978,8 +978,8 @@ ProblemUpdate<REAL>::flush()
    }
 
    // fix empty columns
-   if( removeEmptyColumns() == PresolveStatus::kUnboundedIfFeasible )
-      return PresolveStatus::kUnboundedIfFeasible;
+   if( removeEmptyColumns() == PresolveStatus::kUnbndOrInfeas )
+      return PresolveStatus::kUnbndOrInfeas;
 
    return PresolveStatus::kReduced;
 }
@@ -1150,7 +1150,7 @@ ProblemUpdate<REAL>::trivialColumnPresolve()
 
       status = apply_dualfix( lbs, ubs, cflags, obj, locks, col );
       // TODO why not continue with this row
-      if( status == PresolveStatus::kUnboundedIfFeasible )
+      if( status == PresolveStatus::kUnbndOrInfeas )
          return status;
       else if( status == PresolveStatus::kReduced )
          continue;
@@ -1186,7 +1186,7 @@ ProblemUpdate<REAL>::apply_dualfix( Vec<REAL>& lbs, Vec<REAL>& ubs,
                                "[{}:{}] dual fixing in trivial presolve "
                                "detected status UNBND_OR_INFEAS\n",
                                __FILE__, __LINE__ );
-               return PresolveStatus::kUnboundedIfFeasible;
+               return PresolveStatus::kUnbndOrInfeas;
             }
          }
          else
@@ -1210,7 +1210,7 @@ ProblemUpdate<REAL>::apply_dualfix( Vec<REAL>& lbs, Vec<REAL>& ubs,
                                "[{}:{}] dual fixing in trivial presolve "
                                "detected status UNBND_OR_INFEAS\n",
                                __FILE__, __LINE__ );
-               return PresolveStatus::kUnboundedIfFeasible;
+               return PresolveStatus::kUnbndOrInfeas;
             }
          }
          else
@@ -1406,13 +1406,13 @@ ProblemUpdate<REAL>::trivialPresolve()
 
    PresolveStatus status = trivialColumnPresolve();
    if( status == PresolveStatus::kInfeasible ||
-       status == PresolveStatus::kUnboundedIfFeasible )
+       status == PresolveStatus::kUnbndOrInfeas )
       return status;
 
    problem.recomputeAllActivities();
    status = trivialRowPresolve();
    if( status == PresolveStatus::kInfeasible ||
-       status == PresolveStatus::kUnboundedIfFeasible )
+       status == PresolveStatus::kUnbndOrInfeas )
       return status;
 
    removeFixedCols();
@@ -1449,7 +1449,7 @@ ProblemUpdate<REAL>::trivialPresolve()
 
    status = checkChangedActivities();
    if( status == PresolveStatus::kInfeasible ||
-       status == PresolveStatus::kUnboundedIfFeasible )
+       status == PresolveStatus::kUnbndOrInfeas )
       return status;
 
    changed_activities.clear();
@@ -1647,7 +1647,7 @@ ProblemUpdate<REAL>::removeEmptyColumns()
                if( obj.coefficients[col] < 0 )
                {
                   if( domains.flags[col].test( ColFlag::kUbInf ) )
-                     return PresolveStatus::kUnboundedIfFeasible;
+                     return PresolveStatus::kUnbndOrInfeas;
 
                   fixval = domains.upper_bounds[col];
                }
@@ -1655,7 +1655,7 @@ ProblemUpdate<REAL>::removeEmptyColumns()
                {
                   assert( obj.coefficients[col] > 0 );
                   if( domains.flags[col].test( ColFlag::kLbInf ) )
-                     return PresolveStatus::kUnboundedIfFeasible;
+                     return PresolveStatus::kUnbndOrInfeas;
 
                   fixval = domains.lower_bounds[col];
                }

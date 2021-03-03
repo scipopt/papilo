@@ -263,7 +263,7 @@ SingletonStuffing<REAL>::execute( const Problem<REAL>& problem,
          if( cflags[col].test( ColFlag::kLbInf ) )
          {
             if( obj[col] != 0 )
-               return PresolveStatus::kUnboundedIfFeasible;
+               return PresolveStatus::kUnbndOrInfeas;
 
             continue;
          }
@@ -282,7 +282,7 @@ SingletonStuffing<REAL>::execute( const Problem<REAL>& problem,
          if( cflags[col].test( ColFlag::kUbInf ) )
          {
             if( obj[col] != 0 )
-               return PresolveStatus::kUnboundedIfFeasible;
+               return PresolveStatus::kUnbndOrInfeas;
 
             continue;
          }

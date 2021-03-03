@@ -199,7 +199,7 @@ enum class PresolveStatus : int
    kReduced = 1,
 
    /// problem was detected to be unbounded or infeasible
-   kUnboundedIfFeasible = 2,
+   kUnbndOrInfeas = 2,
 
    /// problem was detected to be unbounded
    kUnbounded = 3,

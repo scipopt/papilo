@@ -429,7 +429,7 @@ Presolve<REAL>::apply( Problem<REAL>& problem )
       result.status = probUpdate.trivialPresolve();
 
       if( result.status == PresolveStatus::kInfeasible ||
-          result.status == PresolveStatus::kUnboundedIfFeasible ||
+          result.status == PresolveStatus::kUnbndOrInfeas ||
           result.status == PresolveStatus::kUnbounded )
          return result;
 
@@ -519,7 +519,7 @@ Presolve<REAL>::apply( Problem<REAL>& problem )
       result.status = probUpdate.trivialPresolve();
 
       if( result.status == PresolveStatus::kInfeasible ||
-          result.status == PresolveStatus::kUnboundedIfFeasible ||
+          result.status == PresolveStatus::kUnbndOrInfeas ||
           result.status == PresolveStatus::kUnbounded )
          return result;
 
@@ -924,7 +924,7 @@ Presolve<REAL>::evaluate_and_apply( const Timer& timer, Problem<REAL>& problem,
    result.status = evaluateResults();
    switch( result.status )
    {
-   case PresolveStatus::kUnboundedIfFeasible:
+   case PresolveStatus::kUnbndOrInfeas:
    case PresolveStatus::kUnbounded:
    case PresolveStatus::kInfeasible:
       printPresolversStats();
@@ -955,7 +955,7 @@ bool
 Presolve<REAL>::is_status_infeasible_or_unbounded(
     const PresolveStatus& status ) const
 {
-   return status == PresolveStatus::kUnboundedIfFeasible ||
+   return status == PresolveStatus::kUnbndOrInfeas ||
           status == PresolveStatus::kUnbounded ||
           status == PresolveStatus::kInfeasible;
 }

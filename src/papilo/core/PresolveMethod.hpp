@@ -54,7 +54,7 @@ enum class PresolveStatus : int
 
    kReduced = 1,
 
-   kUnboundedIfFeasible = 2,
+   kUnbndOrInfeas = 2,
 
    kUnbounded = 3,
 
@@ -159,7 +159,7 @@ class PresolveMethod
       switch( result )
       {
       case PresolveStatus::kUnbounded:
-      case PresolveStatus::kUnboundedIfFeasible:
+      case PresolveStatus::kUnbndOrInfeas:
       case PresolveStatus::kInfeasible:
          Message::debug( &problemUpdate,
                          "[{}:{}] {} detected unboundedness or infeasibility\n",

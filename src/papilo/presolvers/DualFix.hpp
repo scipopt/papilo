@@ -135,7 +135,7 @@ DualFix<REAL>::execute( const Problem<REAL>& problem,
          }
          else if( objective[i] != 0 )
          {
-            return PresolveStatus::kUnboundedIfFeasible;
+            return PresolveStatus::kUnbndOrInfeas;
          }
          else
          {
@@ -160,7 +160,7 @@ DualFix<REAL>::execute( const Problem<REAL>& problem,
          }
          else if( objective[i] != 0 )
          {
-            return PresolveStatus::kUnboundedIfFeasible;
+            return PresolveStatus::kUnbndOrInfeas;
          }
          else
          {
