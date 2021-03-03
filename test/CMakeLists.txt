@@ -258,7 +258,14 @@ if (TARGET papilo-executable AND PAPILO_HAVE_SCIP)
     add_infeasible_instancetests(infeas numtypes)
 endif ()
 
+
+
 set(filename_for_solutions "solutions.test")
+# the following code block checks if a solution is contained in a reduced problem.
+# The input for solutions.test file can be done via a file with the following format:
+# PATH_TO_MPS_FILE_1,PATH_TO_SOL_FILE_1
+# PATH_TO_MPS_FILE_2,PATH_TO_SOL_FILE_2
+# ...
 if (TARGET papilo-executable AND EXISTS "${PROJECT_SOURCE_DIR}/${filename_for_solutions}")
 
     FILE(READ "${PROJECT_SOURCE_DIR}/${filename_for_solutions}" content)
