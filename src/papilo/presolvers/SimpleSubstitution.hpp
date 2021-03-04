@@ -33,6 +33,7 @@
 
 // TODO: before this presolver starts feasibility needs to be checked
 // TODO: -> maybe do the simple check before? that means inf <= b <= sup
+// TODO: 4x + 2y = 4; x,y in {0,1} is substitute false
 namespace papilo
 {
 
@@ -42,7 +43,8 @@ class SimpleSubstitution : public PresolveMethod<REAL>
  public:
    SimpleSubstitution() : PresolveMethod<REAL>()
    {
-      this->setName( "doubletoneq" );
+      this->setName(
+          "doubletoneq" ); // TODO: what is the intention of this name?
       this->setTiming( PresolverTiming::kMedium );
    }
 
