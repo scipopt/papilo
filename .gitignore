@@ -41,7 +41,7 @@ check/IP
 check/LP
 check/MINLP
 check/instancedata
-
+check/IP/miplib2017-benchmark/*
 
 #Generated Files
 build/

@@ -48,7 +48,7 @@ class Sparsify : public PresolveMethod<REAL>
       Vec<std::pair<int, REAL>> sparsify;
       Vec<std::tuple<int, int, int>> reductionBuffer;
 
-      SparsifyData( int nrows ) : candrowhits( nrows )
+      explicit SparsifyData( int nrows ) : candrowhits( nrows )
       {
          candrows.reserve( nrows );
       }
@@ -173,9 +173,9 @@ Sparsify<REAL>::execute( const Problem<REAL>& problem,
                 int ncont = 0;
                 int nbin = 0;
 
-                for( int i = 0; i != eqlen; ++i )
+                for( int counter = 0; counter != eqlen; ++counter )
                 {
-                   int col = eqcols[i];
+                   int col = eqcols[counter];
 
                    if( !cflags[col].test( ColFlag::kIntegral ) )
                       ++ncont;
@@ -248,9 +248,9 @@ Sparsify<REAL>::execute( const Problem<REAL>& problem,
 
              if( problem.getNumIntegralCols() == 0 || nint != 0 )
              {
-                for( int i = 0; i != eqlen; ++i )
+                for( int counter = 0; counter != eqlen; ++counter )
                 {
-                   int col = eqcols[i];
+                   int col = eqcols[counter];
 
                    if( problem.getNumIntegralCols() != 0 &&
                        ( !cflags[col].test( ColFlag::kIntegral ) ||
@@ -270,8 +270,7 @@ Sparsify<REAL>::execute( const Problem<REAL>& problem,
 
                       if( candrowhits[row] == 0 )
                       {
-                         //TODO: what means this expression
-                         if( i > eqlen - minhits )
+                         if( counter > eqlen - minhits )
                             continue;
 
                          candrows.push_back( row );
@@ -325,25 +324,25 @@ Sparsify<REAL>::execute( const Problem<REAL>& problem,
                          continue;
                    }
 
-                   int i = 0;
+                   int h = 0;
                    int j = 0;
 
                    int currcancel = 0;
 
-                   while( i != eqlen && j != candlen )
+                   while( h != eqlen && j != candlen )
                    {
-                      if( eqcols[i] == candcols[j] )
+                      if( eqcols[h] == candcols[j] )
                       {
-                         scales[i] = -candvals[j] / eqvals[i];
+                         scales[h] = -candvals[j] / eqvals[h];
 
-                         ++i;
+                         ++h;
                          ++j;
                       }
-                      else if( eqcols[i] < candcols[j] )
+                      else if( eqcols[h] < candcols[j] )
                       {
                          --currcancel;
-                         scales[i] = 0;
-                         ++i;
+                         scales[h] = 0;
+                         ++h;
                       }
                       else
                       {
@@ -351,11 +350,11 @@ Sparsify<REAL>::execute( const Problem<REAL>& problem,
                       }
                    }
 
-                   while( i != eqlen )
+                   while( h != eqlen )
                    {
                       --currcancel;
-                      scales[i] = 0;
-                      ++i;
+                      scales[h] = 0;
+                      ++h;
                    }
 
                    pdqsort( scales.begin(), scales.end() );
@@ -370,9 +369,9 @@ Sparsify<REAL>::execute( const Problem<REAL>& problem,
 
                       int ncancel = currcancel;
 
-                      for( int j = k + 1; j != eqlen; ++j )
+                      for( int l = k + 1; l != eqlen; ++l )
                       {
-                         if( num.isEq( scales[k], scales[j] ) )
+                         if( num.isEq( scales[k], scales[l] ) )
                             ++ncancel;
                          else
                             break;
@@ -397,8 +396,8 @@ Sparsify<REAL>::execute( const Problem<REAL>& problem,
                    }
                 }
 
-                for( int r : candrows )
-                   candrowhits[r] = 0;
+                for( int candrow : candrows )
+                   candrowhits[candrow] = 0;
                 candrows.clear();
 
                 if( sparsify.size() != sparsifyStart )
@@ -453,13 +452,13 @@ Sparsify<REAL>::execute( const Problem<REAL>& problem,
       for( const std::tuple<int, int, std::pair<int, REAL>*>& reductionTuple :
            reductionData )
       {
-         int eqrow = std::get<0>( reductionTuple );
-         int num = std::get<1>( reductionTuple );
+         int equality_row = std::get<0>( reductionTuple );
+         int numeric = std::get<1>( reductionTuple );
          const std::pair<int, REAL>* sparsify = std::get<2>( reductionTuple );
 
          TransactionGuard<REAL> tg{ reductions };
-         reductions.lockRow( eqrow );
-         reductions.sparsify( eqrow, num, sparsify );
+         reductions.lockRow( equality_row );
+         reductions.sparsify( equality_row, numeric, sparsify );
       }
    }
 
