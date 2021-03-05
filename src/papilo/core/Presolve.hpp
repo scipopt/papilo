@@ -258,7 +258,6 @@ class Presolve
    PresolveStatus
    evaluateResults();
 
-
    void
    finishRound( ProblemUpdate<REAL>& probUpdate );
 
@@ -1010,6 +1009,8 @@ Presolve<REAL>::apply_reduction_of_solver( ProblemUpdate<REAL>& probUpdate,
       presolverStats[index_presolver].first += statistics.first;
       presolverStats[index_presolver].second += statistics.second;
    }
+   else
+      results[index_presolver] = PresolveStatus::kInfeasible;
 }
 
 template <typename REAL>
