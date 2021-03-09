@@ -1,6 +1,7 @@
 cmake_minimum_required (VERSION 3.5.0)
 project(papilo VERSION 1.1.0.0)
 
+set(BOOST_MIN_VERSION 1.66)
 set(CMAKE_CXX_STANDARD 14)
 # set(CMAKE_CXX_EXTENSIONS OFF)
 # required for gcc if set(CMAKE_CXX_EXTENSIONS OFF) is used
@@ -31,7 +32,7 @@ if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Release)
 endif()
 
-find_package(Boost REQUIRED)
+find_package(Boost ${BOOST_MIN_VERSION} REQUIRED)
 
 if(GMP)
     find_package(GMP)
