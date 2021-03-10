@@ -886,6 +886,7 @@ Presolve<REAL>::apply_result_sequentiell( int index_presolver,
                                           ProblemUpdate<REAL>& probUpdate,
                                           bool& run_sequentiell )
 {
+   //TODO: check if not returned infeasible
    run_sequentiell = true;
    apply_reduction_of_solver( probUpdate, index_presolver );
    probUpdate.flushChangedCoeffs();
@@ -981,6 +982,10 @@ Presolve<REAL>::apply_all_presolver_reductions(
       apply_reduction_of_solver( probUpdate, i );
       postponedReductionToPresolver.push_back( postponedReductions.size() );
    }
+
+   PresolveStatus status = evaluateResults();
+   if(is_status_infeasible_or_unbounded(status))
+      return status;
 
    probUpdate.flushChangedCoeffs();
 
