@@ -102,6 +102,10 @@ set(unit_tests
         #singleton Column
         "happy-path-singleton-column"
         "happy-path-singleton-column-equation"
+        "happy-path-singleton-column-implied-bounds-negative-coeff-pos-bounds"
+        "happy-path-singleton-column-implied-bounds-negative-coeff-neg-bounds"
+        "happy-path-singleton-column-implied-bounds-positive-coeff-pos-bounds"
+        "happy-path-singleton-column-implied-bounds-positive-coeff-neg-bounds"
 
         #Simple Probing
         "failed-path-singleton-column-row"
