@@ -57,15 +57,13 @@ struct SolParser
       Solution<REAL> sol;
       sol.primal.resize( origcol_mapping.size(), REAL{ 0 } );
       String strline;
-      // TODO: not sure if this works for every solution files
-      // check if commentar syntax works with SCIP
-      getline( file, strline );
-      getline( file, strline );
+
+      skip_header( colnames, file, strline );
 
       REAL colval;
       String colname;
 
-      while( getline( file, strline ) )
+      do
       {
          auto tokens = split( strline.c_str() );
          assert( !tokens.empty() );
@@ -73,7 +71,6 @@ struct SolParser
          auto it = nameToCol.find( tokens[0] );
          if( it != nameToCol.end() )
          {
-            // TODO replace by exception
             assert( tokens.size() > 1 );
             sol.primal[it->second] = std::stod( tokens[1] );
          }
@@ -83,9 +80,24 @@ struct SolParser
                         "WARNING: skipping unknown column {} in solution\n",
                         tokens[0] );
          }
-      }
+      } while( getline( file, strline ) );
 
       return sol;
+   }
+
+ private:
+   static void
+   skip_header( const Vec<String>& colnames, std::ifstream& file,
+                String& strline )
+   {
+      while(getline( file, strline ))
+      {
+         for(const auto & colname : colnames)
+         {
+            if( strline.rfind( colname ) == 0 )
+               return;
+         }
+      }
    }
 
    Vec<String> static split( const char* str )
