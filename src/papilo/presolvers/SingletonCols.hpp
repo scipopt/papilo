@@ -132,52 +132,67 @@ SingletonCols<REAL>::execute( const Problem<REAL>& problem,
          // inequality and remove the columns coefficient
          reductions.changeMatrixEntry( row, col, 0 );
 
-         if( val < 0 && upper_bounds[col] <= 0 )
+         if( val < 0 )
          {
-            if( lowerboundImplied )
-               reductions.changeRowLHSInf( row );
-            else if( lower_bounds[col] != 0 )
-               reductions.changeRowLHS( row, side - lower_bounds[col] * val );
-            if( ubimplied )
-               reductions.changeRowRHSInf( row );
-            else if( upper_bounds[col] != 0 )
-               reductions.changeRowRHS( row, side - upper_bounds[col] * val );
-         }
-         else if( val < 0 && upper_bounds[col] > 0 )
-         {
-            if( ubimplied )
-               reductions.changeRowRHSInf( row );
-            else if( upper_bounds[col] != 0 )
-               reductions.changeRowRHS( row, side - upper_bounds[col] * val );
-            if( lowerboundImplied )
-               reductions.changeRowLHSInf( row );
-            else if( lower_bounds[col] != 0 )
-               reductions.changeRowLHS( row, side - lower_bounds[col] * val );
-         }
-         else if( upper_bounds[col] <= 0 )
-         {
-            if( lowerboundImplied )
-               reductions.changeRowRHSInf( row );
-            else if( lower_bounds[col] != 0 )
-               reductions.changeRowRHS( row, side - lower_bounds[col] * val );
+            if( upper_bounds[col] <= 0 && !cflags[col].test( ColFlag::kUbInf ) )
+            {
 
-            if( ubimplied )
-               reductions.changeRowLHSInf( row );
-            else if( upper_bounds[col] != 0 )
-               reductions.changeRowLHS( row, side - upper_bounds[col] * val );
+               if( lowerboundImplied )
+                  reductions.changeRowLHSInf( row );
+               else if( lower_bounds[col] != 0 )
+                  reductions.changeRowLHS( row,
+                                           side - lower_bounds[col] * val );
+               if( ubimplied )
+                  reductions.changeRowRHSInf( row );
+               else if( upper_bounds[col] != 0 )
+                  reductions.changeRowRHS( row,
+                                           side - upper_bounds[col] * val );
+            }
+            else
+            {
+               if( ubimplied )
+                  reductions.changeRowRHSInf( row );
+               else if( upper_bounds[col] != 0 )
+                  reductions.changeRowRHS( row,
+                                           side - upper_bounds[col] * val );
+               if( lowerboundImplied )
+                  reductions.changeRowLHSInf( row );
+               else if( lower_bounds[col] != 0 )
+                  reductions.changeRowLHS( row,
+                                           side - lower_bounds[col] * val );
+            }
          }
          else
          {
-            if( ubimplied )
-               reductions.changeRowLHSInf( row );
-            else if( upper_bounds[col] != 0 )
-               reductions.changeRowLHS( row, side - upper_bounds[col] * val );
+            if( upper_bounds[col] <= 0 && !cflags[col].test( ColFlag::kUbInf ) )
+            {
+               if( lowerboundImplied )
+                  reductions.changeRowRHSInf( row );
+               else if( lower_bounds[col] != 0 )
+                  reductions.changeRowRHS( row,
+                                           side - lower_bounds[col] * val );
 
-            if( lowerboundImplied )
-               reductions.changeRowRHSInf( row );
+               if( ubimplied )
+                  reductions.changeRowLHSInf( row );
+               else if( upper_bounds[col] != 0 )
+                  reductions.changeRowLHS( row,
+                                           side - upper_bounds[col] * val );
+            }
+            else
+            {
+               if( ubimplied )
+                  reductions.changeRowLHSInf( row );
+               else if( upper_bounds[col] != 0 )
+                  reductions.changeRowLHS( row,
+                                           side - upper_bounds[col] * val );
 
-            else if( lower_bounds[col] != 0 )
-               reductions.changeRowRHS( row, side - lower_bounds[col] * val );
+               if( lowerboundImplied )
+                  reductions.changeRowRHSInf( row );
+
+               else if( lower_bounds[col] != 0 )
+                  reductions.changeRowRHS( row,
+                                           side - lower_bounds[col] * val );
+            }
          }
       }
    };
