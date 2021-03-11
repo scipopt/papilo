@@ -108,10 +108,11 @@ set(unit_tests
         "happy-path-singleton-column-implied-bounds-positive-coeff-neg-bounds"
 
         #Simple Probing
-        "failed-path-singleton-column-row"
-
-        #Simple Probing
         "happy-path-simple-probing"
+        "happy-path-simple-probing-only-negative-coeff"
+        "happy-path-simple-probing-only-binary-negative-coefficient"
+        "happy-path-simple-probing-only-binary-positive-coefficient"
+
 
         #Simple Substitution
         "happy-path-simple-substitution-for-2-int"

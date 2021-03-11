@@ -49,11 +49,11 @@ class SimpleProbing : public PresolveMethod<REAL>
             Reductions<REAL>& reductions ) override;
 
    void
-   calculateReductionsForSimpleProbing( const Num<REAL>& num, Reductions<REAL>& reductions,
-              const VariableDomains<REAL>& domains,
-              const Vec<papilo::RowActivity<REAL>>& activities,
-              const REAL* rowvals, const int* rowcols, int rowlen,
-              REAL bincoef, int bincol );
+   calculateReductionsForSimpleProbing(
+       const Num<REAL>& num, Reductions<REAL>& reductions,
+       const VariableDomains<REAL>& domains,
+       const Vec<papilo::RowActivity<REAL>>& activities, const REAL* rowvals,
+       const int* rowcols, const int rowlen, int bincol );
 };
 
 #ifdef PAPILO_USE_EXTERN_TEMPLATES
@@ -114,7 +114,8 @@ SimpleProbing<REAL>::execute( const Problem<REAL>& problem,
              !num.isEq( abs( rowvals[k] ), bincoef ) )
             continue;
 
-         assert( num.isEq( abs( bincoef ), activities[i].max - rhs_values[i] ) );
+         assert(
+             num.isEq( abs( bincoef ), activities[i].max - rhs_values[i] ) );
          assert( domains.lower_bounds[col] == 0 );
          assert( domains.upper_bounds[col] == 1 );
          assert( cflags[col].test( ColFlag::kIntegral ) );
@@ -124,11 +125,9 @@ SimpleProbing<REAL>::execute( const Problem<REAL>& problem,
              rowlen - 1 );
          calculateReductionsForSimpleProbing( num, reductions, domains,
                                               activities, rowvals, rowcols,
-                                              rowlen, bincoef, col );
+                                              rowlen, col );
          return PresolveStatus::kReduced;
-
       }
-
    }
    return PresolveStatus::kUnchanged;
 }
@@ -138,8 +137,9 @@ SimpleProbing<REAL>::calculateReductionsForSimpleProbing(
     const Num<REAL>& num, Reductions<REAL>& reductions,
     const VariableDomains<REAL>& domains,
     const Vec<papilo::RowActivity<REAL>>& activities, const REAL* rowvals,
-    const int* rowcols, const int rowlen, REAL bincoef, int bincol )
+    const int* rowcols, const int rowlen, int bincol )
 {
+   REAL value = rowvals[bincol];
    for( int k = 0; k != rowlen; ++k )
    {
       int col = rowcols[k];
@@ -148,10 +148,9 @@ SimpleProbing<REAL>::calculateReductionsForSimpleProbing(
 
       REAL factor;
       REAL offset;
-      if( bincoef * rowvals[k] > 0 )
+      if( (rowvals[k] > 0 && value > 0) || (rowvals[k] < 0 && value < 0) )
       {
-         factor =
-             -( domains.upper_bounds[col] - domains.lower_bounds[col] );
+         factor = domains.lower_bounds[col] - domains.upper_bounds[col];
          offset = domains.upper_bounds[col];
       }
       else
