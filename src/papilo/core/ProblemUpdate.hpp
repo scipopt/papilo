@@ -266,8 +266,6 @@ class ProblemUpdate
    void
    clearChangeInfo( int size )
    {
-      // TODO: use std::remove?
-      // https://stackoverflow.com/questions/347441/erasing-elements-from-a-vector
       changed_activities.erase( changed_activities.begin(),
                                 changed_activities.begin() + size );
       firstNewSingletonCol = singletonColumns.size();

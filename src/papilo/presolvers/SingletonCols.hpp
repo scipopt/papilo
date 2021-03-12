@@ -134,27 +134,65 @@ SingletonCols<REAL>::execute( const Problem<REAL>& problem,
 
          if( val < 0 )
          {
-            if( lowerboundImplied )
-               reductions.changeRowLHSInf( row );
-            else if( lower_bounds[col] != 0 )
-               reductions.changeRowLHS( row, side - lower_bounds[col] * val );
+            if( upper_bounds[col] <= 0 && !cflags[col].test( ColFlag::kUbInf ) )
+            {
 
-            if( ubimplied )
-               reductions.changeRowRHSInf( row );
-            else if( upper_bounds[col] != 0 )
-               reductions.changeRowRHS( row, side - upper_bounds[col] * val );
+               if( lowerboundImplied )
+                  reductions.changeRowLHSInf( row );
+               else if( lower_bounds[col] != 0 )
+                  reductions.changeRowLHS( row,
+                                           side - lower_bounds[col] * val );
+               if( ubimplied )
+                  reductions.changeRowRHSInf( row );
+               else if( upper_bounds[col] != 0 )
+                  reductions.changeRowRHS( row,
+                                           side - upper_bounds[col] * val );
+            }
+            else
+            {
+               if( ubimplied )
+                  reductions.changeRowRHSInf( row );
+               else if( upper_bounds[col] != 0 )
+                  reductions.changeRowRHS( row,
+                                           side - upper_bounds[col] * val );
+               if( lowerboundImplied )
+                  reductions.changeRowLHSInf( row );
+               else if( lower_bounds[col] != 0 )
+                  reductions.changeRowLHS( row,
+                                           side - lower_bounds[col] * val );
+            }
          }
          else
          {
-            if( lowerboundImplied )
-               reductions.changeRowRHSInf( row );
-            else if( lower_bounds[col] != 0 )
-               reductions.changeRowRHS( row, side - lower_bounds[col] * val );
+            if( upper_bounds[col] <= 0 && !cflags[col].test( ColFlag::kUbInf ) )
+            {
+               if( lowerboundImplied )
+                  reductions.changeRowRHSInf( row );
+               else if( lower_bounds[col] != 0 )
+                  reductions.changeRowRHS( row,
+                                           side - lower_bounds[col] * val );
 
-            if( ubimplied )
-               reductions.changeRowLHSInf( row );
-            else if( upper_bounds[col] != 0 )
-               reductions.changeRowLHS( row, side - upper_bounds[col] * val );
+               if( ubimplied )
+                  reductions.changeRowLHSInf( row );
+               else if( upper_bounds[col] != 0 )
+                  reductions.changeRowLHS( row,
+                                           side - upper_bounds[col] * val );
+            }
+            else
+            {
+               if( ubimplied )
+                  reductions.changeRowLHSInf( row );
+               else if( upper_bounds[col] != 0 )
+                  reductions.changeRowLHS( row,
+                                           side - upper_bounds[col] * val );
+
+               if( lowerboundImplied )
+                  reductions.changeRowRHSInf( row );
+
+               else if( lower_bounds[col] != 0 )
+                  reductions.changeRowRHS( row,
+                                           side - lower_bounds[col] * val );
+            }
          }
       }
    };
@@ -178,7 +216,7 @@ SingletonCols<REAL>::execute( const Problem<REAL>& problem,
          assert( !rflags[row].test( RowFlag::kLhsInf, RowFlag::kRhsInf ) );
          assert( lhs_values[row] == rhs_values[row] );
 
-         //singleton rows are already check in trivial presolve
+         // singleton rows are already check in trivial presolve
          if( rowSizes[row] <= 1 )
             continue;
 

@@ -487,6 +487,7 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
          TransactionGuard<REAL> tg{ reductions };
          reductions.lockCol( dr.col1 );
          reductions.lockColBounds( dr.col1 );
+         reductions.lockCol( dr.col2 );
          reductions.lockColBounds( dr.col2 );
          if( dr.implrowlock > 0 )
             reductions.lockRow( dr.implrowlock );

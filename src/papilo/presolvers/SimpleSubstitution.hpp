@@ -43,8 +43,7 @@ class SimpleSubstitution : public PresolveMethod<REAL>
  public:
    SimpleSubstitution() : PresolveMethod<REAL>()
    {
-      this->setName(
-          "doubletoneq" ); // TODO: what is the intention of this name?
+      this->setName("doubletoneq" );
       this->setTiming( PresolverTiming::kMedium );
    }
 
