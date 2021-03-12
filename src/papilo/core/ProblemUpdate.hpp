@@ -250,7 +250,7 @@ class ProblemUpdate
 
    /// flush changes after applying several reductions
    PresolveStatus
-   flush();
+   flush( bool reset_changed_activities );
 
    /// flush changes coefficients after applying several reductions
    void
@@ -260,14 +260,6 @@ class ProblemUpdate
    clearChangeInfo()
    {
       changed_activities.clear();
-      firstNewSingletonCol = singletonColumns.size();
-   }
-
-   void
-   clearChangeInfo( int size )
-   {
-      changed_activities.erase( changed_activities.begin(),
-                                changed_activities.begin() + size );
       firstNewSingletonCol = singletonColumns.size();
    }
 
@@ -884,7 +876,7 @@ ProblemUpdate<REAL>::flushChangedCoeffs()
 
 template <typename REAL>
 PresolveStatus
-ProblemUpdate<REAL>::flush()
+ProblemUpdate<REAL>::flush( bool reset_changed_activities )
 {
    PresolveStatus status = PresolveStatus::kUnchanged;
 
@@ -921,13 +913,16 @@ ProblemUpdate<REAL>::flush()
    if( checkChangedActivities() == PresolveStatus::kInfeasible )
       return PresolveStatus::kInfeasible;
 
-   auto iter =
-       std::remove_if( changed_activities.begin(), changed_activities.end(),
-                       [&rflags]( int row ) {
-                          return rflags[row].test( RowFlag::kRedundant );
-                       } );
+   if( reset_changed_activities )
+   {
+      auto iter =
+          std::remove_if( changed_activities.begin(), changed_activities.end(),
+                          [&rflags]( int row ) {
+                             return rflags[row].test( RowFlag::kRedundant );
+                          } );
 
-   changed_activities.erase( iter, changed_activities.end() );
+      changed_activities.erase( iter, changed_activities.end() );
+   }
 
    // remove constants of fixed columns
    removeFixedCols();
@@ -1465,7 +1460,7 @@ ProblemUpdate<REAL>::trivialPresolve()
          changed_activities.push_back( r );
    }
 
-   flush();
+   flush( true );
 
    return status;
 }

@@ -309,8 +309,7 @@ class Presolve
    evaluate_and_apply( const Timer& timer, Problem<REAL>& problem,
                        PresolveResult<REAL>& result,
                        ProblemUpdate<REAL>& probUpdate,
-                       const Statistics& oldstats, int size,
-                       bool run_sequentiell );
+                       const Statistics& oldstats, bool run_sequentiell );
 
    void
    apply_reduction_of_solver( ProblemUpdate<REAL>& probUpdate,
@@ -439,10 +438,6 @@ Presolve<REAL>::apply( Problem<REAL>& problem )
       finishRound( probUpdate );
       ++stats.nrounds;
 
-      //#define PARALLEL_FAST_PRESOLVERS = false
-      //#define PARALLEL_MEDIUM_PRESOLVERS
-      //#define PARALLEL_EXHAUSTIVE_PRESOLVERS
-
       nunsuccessful = 0;
       rundelayed = true;
       for( int i = 0; i < npresolvers; ++i )
@@ -463,33 +458,11 @@ Presolve<REAL>::apply( Problem<REAL>& problem )
              probUpdate.getNActiveRows() == 0 )
             break;
 
-         int size = probUpdate.getChangedActivities().size();
          switch( round_to_evaluate )
          {
          case Delegator::kFast:
-#ifdef PARALLEL_FAST_PRESOLVERS
-            tbb::parallel_for(
-                tbb::blocked_range<int>( fastPresolvers.first,
-                                         fastPresolvers.second ),
-                [&]( const tbb::blocked_range<int>& r ) {
-                   for( int i = r.begin(); i != r.end(); ++i )
-                   {
-                      results[i] = presolvers[i]->run( problem, probUpdate, num,
-                                                       reductions[i] );
-                   }
-                },
-                tbb::simple_partitioner() );
-#else
-            for( int i = fastPresolvers.first; i != fastPresolvers.second; ++i )
-            {
-               results[i] = presolvers[i]->run( problem, probUpdate, num,
-                                                reductions[i] );
-               // TODO: this isn't currently not running because of
-               // changed_activities run_presolvers( problem, fastPresolvers,
-               // probUpdate,
-               //                               run_sequentiell );
-            }
-#endif
+            run_presolvers( problem, fastPresolvers, probUpdate,
+                            run_sequentiell );
             break;
          case Delegator::kMedium:
             run_presolvers( problem, mediumPresolvers, probUpdate,
@@ -505,7 +478,7 @@ Presolve<REAL>::apply( Problem<REAL>& problem )
 
          result.status =
              evaluate_and_apply( timer, problem, result, probUpdate,
-                                 last_rounds_stats, size, run_sequentiell );
+                                 last_rounds_stats, run_sequentiell );
          if( is_status_infeasible_or_unbounded( result.status ) )
             return result;
          last_rounds_stats = stats;
@@ -577,7 +550,7 @@ Presolve<REAL>::apply( Problem<REAL>& problem )
                {
                   probUpdate.markRowRedundant( equations[dependentEq] );
                }
-               probUpdate.flush();
+               probUpdate.flush( true );
             }
          }
 
@@ -634,7 +607,7 @@ Presolve<REAL>::apply( Problem<REAL>& problem )
                   for( int dependentFreeCol : dependentFreeCols )
                      probUpdate.fixCol( freeCols[dependentFreeCol], 0 );
 
-                  probUpdate.flush();
+                  probUpdate.flush( true );
                }
             }
          }
@@ -819,7 +792,7 @@ Presolve<REAL>::apply( Problem<REAL>& problem )
 
                if( nsolved != 0 )
                {
-                  if( probUpdate.flush() == PresolveStatus::kInfeasible )
+                  if( probUpdate.flush( true ) == PresolveStatus::kInfeasible )
                      assert( false );
 
                   probUpdate.compress();
@@ -863,7 +836,7 @@ Presolve<REAL>::run_presolvers( const Problem<REAL>& problem,
              presolvers[i]->run( problem, probUpdate, num, reductions[i] );
          apply_result_sequentiell( i, probUpdate, run_sequentiell );
          PresolveStatus status = probUpdate.trivialPresolve();
-         if(is_status_infeasible_or_unbounded( status ))
+         if( is_status_infeasible_or_unbounded( status ) )
             results[i] = status;
       }
    }
@@ -889,11 +862,12 @@ Presolve<REAL>::apply_result_sequentiell( int index_presolver,
                                           ProblemUpdate<REAL>& probUpdate,
                                           bool& run_sequentiell )
 {
-   //TODO: check if not returned infeasible
    run_sequentiell = true;
    apply_reduction_of_solver( probUpdate, index_presolver );
    probUpdate.flushChangedCoeffs();
+   probUpdate.flush( false );
    probUpdate.clearStates();
+   probUpdate.check_and_compress();
 }
 
 template <typename REAL>
@@ -921,12 +895,11 @@ PresolveStatus
 Presolve<REAL>::evaluate_and_apply( const Timer& timer, Problem<REAL>& problem,
                                     PresolveResult<REAL>& result,
                                     ProblemUpdate<REAL>& probUpdate,
-                                    const Statistics& oldstats, int size,
+                                    const Statistics& oldstats,
                                     bool run_sequentiell )
 {
    if( round_to_evaluate == Delegator::kFast )
    {
-      //      probUpdate.clearChangeInfo( size );
       probUpdate.clearChangeInfo();
       lastRoundReduced = false;
    }
@@ -948,8 +921,6 @@ Presolve<REAL>::evaluate_and_apply( const Timer& timer, Problem<REAL>& problem,
       PresolveStatus status;
       if( !run_sequentiell )
          status = apply_all_presolver_reductions( probUpdate );
-      else
-         status = probUpdate.flush();
       if( is_status_infeasible_or_unbounded( status ) )
          return status;
       round_to_evaluate = determine_next_round( problem, probUpdate,
@@ -987,14 +958,14 @@ Presolve<REAL>::apply_all_presolver_reductions(
    }
 
    PresolveStatus status = evaluateResults();
-   if(is_status_infeasible_or_unbounded(status))
+   if( is_status_infeasible_or_unbounded( status ) )
       return status;
 
    probUpdate.flushChangedCoeffs();
 
    applyPostponed( probUpdate );
 
-   return probUpdate.flush();
+   return probUpdate.flush( true );
 }
 
 template <typename REAL>
@@ -1186,7 +1157,7 @@ Presolve<REAL>::increase_round_if_last_run_was_not_successfull(
     const Problem<REAL>& problem, const ProblemUpdate<REAL>& probUpdate,
     const Statistics& roundStats, bool unchanged )
 {
-   Delegator next_round = Delegator::kExceeded;
+   Delegator next_round;
    if( !unchanged )
    {
       if( is_only_slighlty_changes( problem, probUpdate, roundStats ) )
