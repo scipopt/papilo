@@ -53,7 +53,7 @@ class SimpleProbing : public PresolveMethod<REAL>
        const Num<REAL>& num, Reductions<REAL>& reductions,
        const VariableDomains<REAL>& domains,
        const Vec<papilo::RowActivity<REAL>>& activities, const REAL* rowvals,
-       const int* rowcols, const int rowlen, int bincol );
+       const int* rowcols, const int rowlen, int bincol, REAL binary_coeff );
 };
 
 #ifdef PAPILO_USE_EXTERN_TEMPLATES
@@ -125,7 +125,7 @@ SimpleProbing<REAL>::execute( const Problem<REAL>& problem,
              rowlen - 1 );
          calculateReductionsForSimpleProbing( num, reductions, domains,
                                               activities, rowvals, rowcols,
-                                              rowlen, col );
+                                              rowlen, col, rowvals[k] );
          return PresolveStatus::kReduced;
       }
    }
@@ -137,9 +137,8 @@ SimpleProbing<REAL>::calculateReductionsForSimpleProbing(
     const Num<REAL>& num, Reductions<REAL>& reductions,
     const VariableDomains<REAL>& domains,
     const Vec<papilo::RowActivity<REAL>>& activities, const REAL* rowvals,
-    const int* rowcols, const int rowlen, int bincol )
+    const int* rowcols, const int rowlen, int bincol, REAL binary_coeff )
 {
-   REAL value = rowvals[bincol];
    for( int k = 0; k != rowlen; ++k )
    {
       int col = rowcols[k];
@@ -148,7 +147,7 @@ SimpleProbing<REAL>::calculateReductionsForSimpleProbing(
 
       REAL factor;
       REAL offset;
-      if( (rowvals[k] > 0 && value > 0) || (rowvals[k] < 0 && value < 0) )
+      if( (rowvals[k] > 0 && binary_coeff > 0) || (rowvals[k] < 0 && binary_coeff < 0) )
       {
          factor = domains.lower_bounds[col] - domains.upper_bounds[col];
          offset = domains.upper_bounds[col];
