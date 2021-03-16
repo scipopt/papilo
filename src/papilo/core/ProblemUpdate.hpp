@@ -1771,16 +1771,10 @@ ProblemUpdate<REAL>::checkTransactionConflicts( const Reduction<REAL>* first,
             break;
          case RowReduction::LHS_INF:
          case RowReduction::LHS:
-            // if the transaction wants to modify a rows left hand side the
-            // corresponding row must not be locked
-            if( row_state[reduction.row].test( State::kLocked ) )
-            {
-               msg.detailed( "CONFLICT lhs row {}\n", reduction.row );
-               return ConflictType::kConflict;
-            }
-            break;
+         case RowReduction::LHS_LESS_RESTRICTIVE:
          case RowReduction::RHS_INF:
          case RowReduction::RHS:
+         case RowReduction::RHS_LESS_RESTRICTIVE:
             // if the transaction wants to modify a rows right hand side the
             // corresponding row must neither be locked nor modified yet
             if( row_state[reduction.row].test( State::kLocked ) )
@@ -2486,6 +2480,37 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
                return ApplyResult::kInfeasible;
             }
 
+            constraintMatrix.modifyLeftHandSide( reduction.row,num,
+                                                 reduction.newval );
+
+            ++stats.nsidechgs;
+            break;
+         case RowReduction::LHS_LESS_RESTRICTIVE:
+            assert( rflags[reduction.row].test( RowFlag::kLhsInf ) ||
+                    reduction.newval !=
+                    constraintMatrix.getLeftHandSides()[reduction.row] );
+            setRowState( reduction.row, State::kBoundsModified );
+            if( !rflags[reduction.row].test( RowFlag::kRhsInf ) &&
+                num.isFeasGT(
+                    reduction.newval,
+                    constraintMatrix.getRightHandSides()[reduction.row] ) )
+            {
+               Message::debug(
+                   this,
+                   "fixing the lhs of row {} with bounds [{},{}] to value {} "
+                   "is "
+                   "detected to be infeasible\n",
+                   reduction.row,
+                   rflags[reduction.row].test( RowFlag::kLhsInf )
+                   ? -std::numeric_limits<double>::infinity()
+                   : double( constraintMatrix
+                                 .getLeftHandSides()[reduction.row] ),
+                   double(
+                       constraintMatrix.getRightHandSides()[reduction.row] ),
+                   double( reduction.newval ) );
+               return ApplyResult::kInfeasible;
+            }
+
             constraintMatrix.modifyLeftHandSide( reduction.row, num,
                                                  reduction.newval );
 
@@ -2526,6 +2551,37 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
                        ? -std::numeric_limits<double>::infinity()
                        : double( constraintMatrix
                                      .getRightHandSides()[reduction.row] ),
+
+                   double( reduction.newval ) );
+               return ApplyResult::kInfeasible;
+            }
+
+            constraintMatrix.modifyRightHandSide( reduction.row,num,
+                                                  reduction.newval );
+
+            ++stats.nsidechgs;
+            break;
+         case RowReduction::RHS_LESS_RESTRICTIVE:
+            assert( rflags[reduction.row].test( RowFlag::kRhsInf ) ||
+                    reduction.newval !=
+                    constraintMatrix.getRightHandSides()[reduction.row] );
+            setRowState( reduction.row, State::kBoundsModified );
+            if( !rflags[reduction.row].test( RowFlag::kLhsInf ) &&
+                num.isFeasGT(
+                    constraintMatrix.getLeftHandSides()[reduction.row],
+                    reduction.newval ) )
+            {
+               Message::debug(
+                   this,
+                   "fixing the rhs of row {} with bounds [{},{}] to value {} "
+                   "is "
+                   "detected to be infeasible\n",
+                   reduction.row,
+                   double( constraintMatrix.getLeftHandSides()[reduction.row] ),
+                   rflags[reduction.row].test( RowFlag::kRhsInf )
+                   ? -std::numeric_limits<double>::infinity()
+                   : double( constraintMatrix
+                                 .getRightHandSides()[reduction.row] ),
 
                    double( reduction.newval ) );
                return ApplyResult::kInfeasible;

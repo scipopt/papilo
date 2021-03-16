@@ -446,12 +446,12 @@ ParallelRowDetection<REAL>::execute( const Problem<REAL>& problem,
             if( !adjustedRHSInf &&
                 ( rflags[row1].test( RowFlag::kRhsInf ) ||
                   num.isLT( adjustedRHS, rhs_values[row1] ) ) )
-               reductions.changeRowRHS( row1, adjustedRHS );
+               reductions.change_row_rhs_parallel( row1, adjustedRHS );
 
             if( !adjustedLHSInf &&
                 ( rflags[row1].test( RowFlag::kLhsInf ) ||
                   num.isGT( adjustedLHS, lhs_values[row1] ) ) )
-               reductions.changeRowLHS( row1, adjustedLHS );
+               reductions.change_row_lhs_parallel( row1, adjustedLHS );
 
             reductions.markRowRedundant( row2 );
          }
