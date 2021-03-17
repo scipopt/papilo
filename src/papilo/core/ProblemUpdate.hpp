@@ -1706,7 +1706,6 @@ ProblemUpdate<REAL>::checkTransactionConflicts( const Reduction<REAL>* first,
          int colop = reduction.row;
          switch( colop )
          {
-         case ColReduction::LOCKED_STRONG:
          case ColReduction::LOCKED:
             // if the transaction wants to lock the column it must not be
             // modifed yet
@@ -1748,7 +1747,6 @@ ProblemUpdate<REAL>::checkTransactionConflicts( const Reduction<REAL>* first,
          int rowop = reduction.col;
          switch( rowop )
          {
-         case RowReduction::LOCKED_STRONG:
          case RowReduction::LOCKED:
             // if the transaction wants to lock the row it must not be
             // modified yet
@@ -1827,9 +1825,6 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
          {
          case ColReduction::NONE:
             assert( false );
-            break;
-         case ColReduction::LOCKED_STRONG:
-            setColState( reduction.col, State::kLocked );
             break;
          case ColReduction::OBJECTIVE:
             setColState( reduction.col, State::kModified );
@@ -2399,9 +2394,6 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
          {
          case RowReduction::NONE:
             assert( false );
-            break;
-         case RowReduction::LOCKED_STRONG:
-            setRowState( reduction.row, State::kLocked );
             break;
          case RowReduction::LHS:
             assert( rflags[reduction.row].test( RowFlag::kLhsInf ) ||
