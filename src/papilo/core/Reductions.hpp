@@ -40,7 +40,6 @@ struct ColReduction
       UPPER_BOUND = -4,
       FIXED = -5,
       LOCKED = -6,
-      LOCKED_STRONG = -7,
       SUBSTITUTE = -8,
       BOUNDS_LOCKED = -9,
       REPLACE = -10,
@@ -60,7 +59,6 @@ struct RowReduction
       LHS = -3,
       REDUNDANT = -4,
       LOCKED = -5,
-      LOCKED_STRONG = -6,
       RHS_INF = -7,
       LHS_INF = -8,
       SPARSIFY = -9,
@@ -209,18 +207,6 @@ class Reductions
       ++transactions.back().nlocks;
    }
 
-   /// lock column with a strong lock, i.e. modifications that come before or
-   /// after this transaction are conflicting
-   void
-   lockColStrong( int col )
-   {
-      assert( !transactions.empty() && transactions.back().end == -1 );
-      assert( transactions.back().start + transactions.back().nlocks ==
-              static_cast<int>( reductions.size() ) );
-
-      reductions.emplace_back( 0.0, ColReduction::LOCKED_STRONG, col );
-      ++transactions.back().nlocks;
-   }
 
    /// lock column lower and upper bounds
    void
