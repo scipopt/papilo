@@ -220,25 +220,27 @@ install(FILES
 install(FILES
         ${PROJECT_SOURCE_DIR}/src/papilo/core/Components.hpp
         ${PROJECT_SOURCE_DIR}/src/papilo/core/ConstraintMatrix.hpp
+        ${PROJECT_SOURCE_DIR}/src/papilo/core/MatrixBuffer.hpp
         ${PROJECT_SOURCE_DIR}/src/papilo/core/Objective.hpp
         ${PROJECT_SOURCE_DIR}/src/papilo/core/Postsolve.hpp
         ${PROJECT_SOURCE_DIR}/src/papilo/core/Presolve.hpp
         ${PROJECT_SOURCE_DIR}/src/papilo/core/PresolveMethod.hpp
         ${PROJECT_SOURCE_DIR}/src/papilo/core/PresolveOptions.hpp
         ${PROJECT_SOURCE_DIR}/src/papilo/core/ProbingView.hpp
-        ${PROJECT_SOURCE_DIR}/src/papilo/core/ProblemBuilder.hpp
         ${PROJECT_SOURCE_DIR}/src/papilo/core/Problem.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/core/ProblemUpdate.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/core/Reductions.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/core/RowFlags.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/core/SingleRow.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/core/Solution.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/core/SparseStorage.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/core/Statistics.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/core/VariableDomains.hpp
+        ${PROJECT_SOURCE_DIR}/src/papilo/core/ProblemBuilder.hpp
+      ${PROJECT_SOURCE_DIR}/src/papilo/core/ProblemUpdate.hpp
+      ${PROJECT_SOURCE_DIR}/src/papilo/core/Reductions.hpp
+      ${PROJECT_SOURCE_DIR}/src/papilo/core/RowFlags.hpp
+      ${PROJECT_SOURCE_DIR}/src/papilo/core/SingleRow.hpp
+      ${PROJECT_SOURCE_DIR}/src/papilo/core/Solution.hpp
+      ${PROJECT_SOURCE_DIR}/src/papilo/core/SparseStorage.hpp
+      ${PROJECT_SOURCE_DIR}/src/papilo/core/Statistics.hpp
+      ${PROJECT_SOURCE_DIR}/src/papilo/core/VariableDomains.hpp
    DESTINATION include/papilo/core)
 
 install(FILES
+   ${PROJECT_SOURCE_DIR}/src/papilo/interfaces/HighsInterface.hpp
    ${PROJECT_SOURCE_DIR}/src/papilo/interfaces/ScipInterface.hpp
    ${PROJECT_SOURCE_DIR}/src/papilo/interfaces/SolverInterface.hpp
    ${PROJECT_SOURCE_DIR}/src/papilo/interfaces/SoplexInterface.hpp
@@ -265,6 +267,7 @@ install(FILES
    ${PROJECT_SOURCE_DIR}/src/papilo/misc/KktCheckHelper.hpp
    ${PROJECT_SOURCE_DIR}/src/papilo/misc/MultiPrecision.hpp
    ${PROJECT_SOURCE_DIR}/src/papilo/misc/Num.hpp
+   ${PROJECT_SOURCE_DIR}/src/papilo/misc/NumericalStatistics.hpp.hpp
    ${PROJECT_SOURCE_DIR}/src/papilo/misc/OptionsParser.hpp
    ${PROJECT_SOURCE_DIR}/src/papilo/misc/ParameterSet.hpp
    ${PROJECT_SOURCE_DIR}/src/papilo/misc/Signature.hpp
