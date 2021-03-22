@@ -267,7 +267,7 @@ install(FILES
    ${PROJECT_SOURCE_DIR}/src/papilo/misc/KktCheckHelper.hpp
    ${PROJECT_SOURCE_DIR}/src/papilo/misc/MultiPrecision.hpp
    ${PROJECT_SOURCE_DIR}/src/papilo/misc/Num.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/misc/NumericalStatistics.hpp.hpp
+   ${PROJECT_SOURCE_DIR}/src/papilo/misc/NumericalStatistics.hpp
    ${PROJECT_SOURCE_DIR}/src/papilo/misc/OptionsParser.hpp
    ${PROJECT_SOURCE_DIR}/src/papilo/misc/ParameterSet.hpp
    ${PROJECT_SOURCE_DIR}/src/papilo/misc/Signature.hpp
