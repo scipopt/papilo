@@ -62,6 +62,8 @@ struct RowReduction
       RHS_INF = -7,
       LHS_INF = -8,
       SPARSIFY = -9,
+      RHS_LESS_RESTRICTIVE = -10,
+      LHS_LESS_RESTRICTIVE = -11
    };
 };
 
@@ -120,9 +122,21 @@ class Reductions
    }
 
    void
+   change_row_lhs_parallel( int row, REAL newval )
+   {
+      reductions.emplace_back( newval, row, RowReduction::LHS_LESS_RESTRICTIVE );
+   }
+
+   void
    changeRowRHS( int row, REAL newval )
    {
       reductions.emplace_back( newval, row, RowReduction::RHS );
+   }
+
+   void
+   change_row_rhs_parallel( int row, REAL newval )
+   {
+      reductions.emplace_back( newval, row, RowReduction::RHS_LESS_RESTRICTIVE );
    }
 
    void
@@ -206,7 +220,6 @@ class Reductions
       reductions.emplace_back( 0.0, ColReduction::LOCKED, col );
       ++transactions.back().nlocks;
    }
-
 
    /// lock column lower and upper bounds
    void
