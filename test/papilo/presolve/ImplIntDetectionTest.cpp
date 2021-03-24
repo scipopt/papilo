@@ -36,12 +36,13 @@ setupProblemImplIntDetection();
 TEST_CASE( "happy-path-implied-integer-detection", "[presolve]" )
 {
    Num<double> num{};
+   Message msg{};
    Problem<double> problem = setupProblemImplIntDetection();
    Statistics statistics{};
    PresolveOptions presolveOptions{};
    Postsolve<double> postsolve = Postsolve<double>( problem, num );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
-                                        presolveOptions, num );
+                                        presolveOptions, num, msg );
    ImplIntDetection<double> presolvingMethod{};
    Reductions<double> reductions{};
    problem.recomputeAllActivities();

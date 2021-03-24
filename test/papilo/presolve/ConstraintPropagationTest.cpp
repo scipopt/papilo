@@ -35,13 +35,14 @@ setupProblemWithConstraintPropagation();
 TEST_CASE( "happy-path-constraint-propagation", "[presolve]" )
 {
    Num<double> num{};
+   Message msg{};
    Problem<double> problem = setupProblemWithConstraintPropagation();
    Statistics statistics{};
    PresolveOptions presolveOptions{};
    presolveOptions.dualreds = 0;
    Postsolve<double> postsolve = Postsolve<double>( problem, num );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
-                                        presolveOptions, num );
+                                        presolveOptions, num, msg );
    ConstraintPropagation<double> presolvingMethod{};
    Reductions<double> reductions{};
    problem.recomputeAllActivities();

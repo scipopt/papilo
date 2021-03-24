@@ -35,12 +35,13 @@ setupProblemForTest( double upperBoundForVar3 );
 TEST_CASE( "happy-path-presolve-fix-continuous", "[presolve]" )
 {
    Num<double> num{};
+   Message msg{};
    Problem<double> problem = setupProblemForTest( num.getFeasTol() / 4 );
    Statistics statistics{};
    PresolveOptions presolveOptions{};
    Postsolve<double> postsolve = Postsolve<double>( problem, num );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
-                                        presolveOptions, num );
+                                        presolveOptions, num, msg );
    FixContinuous<double> presolvingMethod{};
    Reductions<double> reductions{};
 
@@ -60,12 +61,13 @@ TEST_CASE( "happy-path-presolve-fix-continuous", "[presolve]" )
 TEST_CASE( "happy-path-no-presolve-fix-continuous", "[presolve]" )
 {
    Num<double> num{};
+   Message msg{};
    Problem<double> problem = setupProblemForTest( num.getFeasTol() );
    Statistics statistics{};
    PresolveOptions presolveOptions{};
    Postsolve<double> postsolve = Postsolve<double>( problem, num );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
-                                        presolveOptions, num );
+                                        presolveOptions, num, msg );
    FixContinuous<double> presolvingMethod{};
    Reductions<double> reductions{};
    PresolveStatus presolveStatus =

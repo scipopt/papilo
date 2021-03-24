@@ -64,6 +64,7 @@ class ProblemUpdate
    Statistics& stats;
    const PresolveOptions& presolveOptions;
    const Num<REAL>& num;
+   const Message& msg;
 
    bool postponeSubstitutions;
    Vec<int> dirty_row_states;
@@ -143,7 +144,7 @@ class ProblemUpdate
  public:
    ProblemUpdate( Problem<REAL>& problem, Postsolve<REAL>& postsolve,
                   Statistics& stats, const PresolveOptions& presolveOptions,
-                  const Num<REAL>& num );
+                  const Num<REAL>& num, const Message& msg );
 
    void
    setPostponeSubstitutions( bool postponeSubstitutions )
@@ -371,6 +372,10 @@ class ProblemUpdate
    PresolveStatus
    apply_dualfix( Vec<REAL>& lbs, Vec<REAL>& ubs, Vec<ColFlags>& cflags,
                   const Vec<REAL>& obj, const Vec<Locks>& locks, int col );
+
+   void
+   print_detailed( const Reduction<REAL>* first,
+                   const Reduction<REAL>* last ) const;
 };
 
 #ifdef PAPILO_USE_EXTERN_TEMPLATES
@@ -384,9 +389,9 @@ ProblemUpdate<REAL>::ProblemUpdate( Problem<REAL>& problem,
                                     Postsolve<REAL>& postsolve,
                                     Statistics& stats,
                                     const PresolveOptions& presolveOptions,
-                                    const Num<REAL>& num )
+                                    const Num<REAL>& num, const Message& msg )
     : problem( problem ), postsolve( postsolve ), stats( stats ),
-      presolveOptions( presolveOptions ), num( num )
+      presolveOptions( presolveOptions ), num( num ), msg( msg )
 {
    row_state.resize( problem.getNRows() );
    col_state.resize( problem.getNCols() );
@@ -825,11 +830,11 @@ ProblemUpdate<REAL>::checkChangedActivities()
          status = PresolveStatus::kReduced;
          break;
       case RowStatus::kRedundantLhs:
-         consmatrix.template modifyLeftHandSide<true>( r , num);
+         consmatrix.template modifyLeftHandSide<true>( r, num );
          status = PresolveStatus::kReduced;
          break;
       case RowStatus::kRedundantRhs:
-         consmatrix.template modifyRightHandSide<true>( r , num);
+         consmatrix.template modifyRightHandSide<true>( r, num );
          status = PresolveStatus::kReduced;
          break;
       case RowStatus::kInfeasible:
@@ -1698,7 +1703,11 @@ ProblemUpdate<REAL>::checkTransactionConflicts( const Reduction<REAL>* first,
          // is neither locked
          if( col_state[reduction.col].test( State::kLocked ) ||
              row_state[reduction.row].test( State::kLocked ) )
+         {
+            msg.detailed( "CONFLICT coefficient col: {} row {}\n",
+                          reduction.col, reduction.row );
             return ConflictType::kConflict;
+         }
       }
       else if( reduction.row < 0 )
       {
@@ -1710,32 +1719,35 @@ ProblemUpdate<REAL>::checkTransactionConflicts( const Reduction<REAL>* first,
             // if the transaction wants to lock the column it must not be
             // modifed yet
             if( col_state[reduction.col].test( State::kModified ) )
+            {
+               msg.detailed( "CONFLICT lock col {}\n", reduction.col );
                return ConflictType::kConflict;
+            }
             break;
          case ColReduction::OBJECTIVE:
             // if the transaction wants to modify the column by changing its
             // objective coefficient the column must not be locked
             if( col_state[reduction.col].test( State::kLocked ) )
+            {
+               msg.detailed( "CONFLICT objective col {}\n", reduction.col );
                return ConflictType::kConflict;
+            }
             break;
          case ColReduction::BOUNDS_LOCKED:
             if( col_state[reduction.col].test( State::kBoundsModified ) )
+            {
+               msg.detailed( "CONFLICT bounds lock col {}\n", reduction.col );
                return ConflictType::kConflict;
+            }
             break;
          case ColReduction::PARALLEL:
          case ColReduction::SUBSTITUTE_OBJ:
-            // TODO I think columns in the substitution equation need to be
-            // checked for locks since they will be modified?
             break;
          case ColReduction::SUBSTITUTE:
          case ColReduction::REPLACE:
             // we postponed the substitution to be performed last
             if( postponeSubstitutions )
                return ConflictType::kPostpone;
-
-            // TODO I think columns in the substitution equation need to be
-            // checked for locks since they will be modified? (e.g. strong
-            // locks from dual fixing)
             break;
          default:
             break;
@@ -1752,14 +1764,20 @@ ProblemUpdate<REAL>::checkTransactionConflicts( const Reduction<REAL>* first,
             // modified yet
             if( row_state[reduction.row].test( State::kModified,
                                                State::kBoundsModified ) )
+            {
+               msg.detailed( "CONFLICT row lock row {}\n", reduction.row );
                return ConflictType::kConflict;
+            }
             break;
          case RowReduction::LHS_INF:
          case RowReduction::LHS:
             // if the transaction wants to modify a rows left hand side the
             // corresponding row must not be locked
             if( row_state[reduction.row].test( State::kLocked ) )
+            {
+               msg.detailed( "CONFLICT lhs row {}\n", reduction.row );
                return ConflictType::kConflict;
+            }
             break;
          case RowReduction::RHS_INF:
          case RowReduction::RHS:
@@ -1785,6 +1803,7 @@ ApplyResult
 ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
                                        const Reduction<REAL>* last )
 {
+
    Objective<REAL>& objective = problem.getObjective();
    Vec<REAL>& lbs = problem.getLowerBounds();
    Vec<REAL>& ubs = problem.getUpperBounds();
@@ -1801,11 +1820,16 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
    ConflictType conflictType = checkTransactionConflicts( first, last );
 
    if( conflictType == ConflictType::kConflict )
+   {
+      print_detailed( first, last );
       return ApplyResult::kRejected;
+   }
    else if( conflictType == ConflictType::kPostpone )
       return ApplyResult::kPostponed;
 
-   for( auto iter = first; iter != last; ++iter )
+   print_detailed( first, last );
+
+   for( auto iter = first; iter < last; ++iter )
    {
       const auto& reduction = *iter;
 
@@ -1905,7 +1929,10 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
                     col, constraintMatrix.getRowCoefficients( equalityrow ),
                     presolveOptions.maxfillinpersubstitution,
                     presolveOptions.maxshiftperrow, intbuffer ) )
+            {
+               msg.detailed( "canceled\n" );
                return ApplyResult::kRejected;
+            }
 
             const auto colvec = constraintMatrix.getColumnCoefficients( col );
             const int* colindices = colvec.getIndices();
@@ -1919,8 +1946,13 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
             problem.substituteVarInObj( num, col, equalityrow );
 
             // update row states
+            msg.detailed( "modified rows: " );
             for( int k = 0; k < nbrelevantrows; ++k )
+            {
+               msg.detailed( "{},", colindices[k] );
                setRowState( colindices[k], State::kModified );
+            }
+            msg.detailed( "\n" );
 
             // update col states
             const auto rowvec =
@@ -1928,8 +1960,13 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
             const int length = rowvec.getLength();
             const int* indices = rowvec.getIndices();
 
+            msg.detailed( "modified columns: " );
             for( int j = 0; j < length; ++j )
+            {
+               msg.detailed( "{},", indices[j] );
                setColState( indices[j], State::kModified );
+            }
+            msg.detailed( "\n" );
 
             auto eqRHS = constraintMatrix.getLeftHandSides()[equalityrow];
 
@@ -2015,8 +2052,14 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
             const int length = rowvec.getLength();
             const int* indices = rowvec.getIndices();
 
+            msg.detailed( "modified columns: ", ColReduction::SUBSTITUTE, col,
+                          equalityrow );
             for( int j = 0; j != length; ++j )
+            {
+               msg.detailed( "{},", indices[j] );
                setColState( indices[j], State::kModified );
+            }
+            msg.detailed( "\n" );
 
             // statistics
             ++stats.ndeletedcols;
@@ -2346,8 +2389,14 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
                   --problem.getNumContinuousCols();
 
                // update row flags
+
+               msg.detailed( "modified rows: " );
                for( int k = 0; k < length; ++k )
+               {
+                  msg.detailed( "{},", colindices[k] );
                   setRowState( colindices[k], State::kModified );
+               }
+               msg.detailed( "\n" );
 
                // perform changes in matrix and sides
                postsolve.notifySubstitution( col1, equalityLHS, offset );
@@ -2408,11 +2457,14 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
                const int rowlen = rowvec.getLength();
                const int* rowcols = rowvec.getIndices();
 
-               for( int i = 0; i != rowlen; ++i )
+               msg.detailed( "modified columns: " );
+               for( int i = 0; i < rowlen; ++i )
+               {
+                  msg.detailed( "{},", rowcols[i] );
                   setColState( rowcols[i], State::kModified );
+               }
+               msg.detailed( "\n" );
             }
-            // TODO: is this necessary-> bounds could be (actually not) changed
-            // by to independent
             if( !rflags[reduction.row].test( RowFlag::kRhsInf ) &&
                 num.isFeasGT(
                     reduction.newval,
@@ -2434,7 +2486,7 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
                return ApplyResult::kInfeasible;
             }
 
-            constraintMatrix.modifyLeftHandSide( reduction.row,num,
+            constraintMatrix.modifyLeftHandSide( reduction.row, num,
                                                  reduction.newval );
 
             ++stats.nsidechgs;
@@ -2450,11 +2502,14 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
                    constraintMatrix.getRowCoefficients( reduction.row );
                const int rowlen = rowvec.getLength();
                const int* rowcols = rowvec.getIndices();
-               for( int i = 0; i != rowlen; ++i )
+               msg.detailed( "modified columns: " );
+               for( int i = 0; i < rowlen; ++i )
+               {
+                  msg.detailed( "{},", rowcols[i] );
                   setColState( rowcols[i], State::kModified );
+               }
+               msg.detailed( "\n" );
             }
-            // TODO: is this necessary-> bounds could be (actually not) changed
-            // by to independent
             if( !rflags[reduction.row].test( RowFlag::kLhsInf ) &&
                 num.isFeasGT(
                     constraintMatrix.getLeftHandSides()[reduction.row],
@@ -2476,7 +2531,7 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
                return ApplyResult::kInfeasible;
             }
 
-            constraintMatrix.modifyRightHandSide( reduction.row,num,
+            constraintMatrix.modifyRightHandSide( reduction.row, num,
                                                   reduction.newval );
 
             ++stats.nsidechgs;
@@ -2538,6 +2593,7 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
                if( canceled != 0 )
                {
                   setRowState( candrow, State::kModified );
+                  msg.detailed( "modified rows: {}, \n", candrow );
                   ++ncanceledrows;
                   ncancel += canceled;
 
@@ -2557,8 +2613,13 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
                stats.ncoefchgs += eqlen * ncanceledrows;
                const int* eqrowcols = eqrowvec.getIndices();
 
+               msg.detailed( "modified columns: " );
                for( int j = 0; j != eqlen; ++j )
+               {
+                  msg.detailed( "{},", eqrowcols[j] );
                   setColState( eqrowcols[j], State::kModified );
+               }
+               msg.detailed( "\n" );
             }
          }
          break;
@@ -2570,6 +2631,23 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
 
    // no conflicts found
    return ApplyResult::kApplied;
+}
+
+template <typename REAL>
+void
+ProblemUpdate<REAL>::print_detailed( const Reduction<REAL>* first,
+                                     const Reduction<REAL>* last ) const
+{
+   if( msg.getVerbosityLevel() == VerbosityLevel::kDetailed )
+   {
+      for( auto iter = first; iter < last; ++iter )
+      {
+         const auto& reduction = *iter;
+         msg.detailed( "row {} col {} val {}\n", reduction.row, reduction.col,
+                       reduction.newval );
+      }
+      msg.detailed( "tsx\n" );
+   }
 }
 
 } // namespace papilo

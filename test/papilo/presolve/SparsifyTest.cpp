@@ -35,17 +35,17 @@ setupProblemWithSparsify();
 Problem<double>
 setupProblemWithSparsifyMoreThanOneColumn();
 
-const Num<double> num{};
-
 TEST_CASE( "happy-path-sparsify", "[presolve]" )
 {
-   Problem<double> problem = setupProblemWithSparsify();
+   Num<double> num{};
+   Message msg{};
+   Problem<double> problem = setupProblemWithSparsify( );
    Statistics statistics{};
    PresolveOptions presolveOptions{};
    presolveOptions.dualreds = 0;
    Postsolve<double> postsolve = Postsolve<double>( problem, num );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
-                                        presolveOptions, num );
+                                        presolveOptions, num, msg );
    Sparsify<double> presolvingMethod{};
    Reductions<double> reductions{};
    problem.recomputeAllActivities();
@@ -59,8 +59,7 @@ TEST_CASE( "happy-path-sparsify", "[presolve]" )
    REQUIRE( reductions.getReduction( 0 ).newval == 0 );
 
    REQUIRE( reductions.getReduction( 1 ).row == 0 );
-   REQUIRE( reductions.getReduction( 1 ).col ==
-            papilo::RowReduction::SPARSIFY );
+   REQUIRE( reductions.getReduction( 1 ).col == RowReduction::SPARSIFY );
    REQUIRE( reductions.getReduction( 1 ).newval == 1 );
 
    REQUIRE( reductions.getReduction( 2 ).row == 1 );
@@ -70,13 +69,16 @@ TEST_CASE( "happy-path-sparsify", "[presolve]" )
 
 TEST_CASE( "failed-path-sparsify", "[presolve]" )
 {
-   Problem<double> problem = setupProblemWithSparsifyMoreThanOneColumn();
+   Num<double> num{};
+   Message msg{};
+
+   Problem<double> problem = setupProblemWithSparsifyMoreThanOneColumn( );
    Statistics statistics{};
    PresolveOptions presolveOptions{};
    presolveOptions.dualreds = 0;
    Postsolve<double> postsolve = Postsolve<double>( problem, num );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
-                                        presolveOptions, num );
+                                        presolveOptions, num, msg );
    Sparsify<double> presolvingMethod{};
    Reductions<double> reductions{};
    problem.recomputeAllActivities();
@@ -89,6 +91,7 @@ TEST_CASE( "failed-path-sparsify", "[presolve]" )
 Problem<double>
 setupProblemWithSparsify()
 {
+   Num<double> num{};
    Vec<double> coefficients{ 3.0, 1.0, 1.0 };
    Vec<double> upperBounds{ 3.0, 3.0, 3.0 };
    Vec<double> lowerBounds{ 0.0, 0.0, 0.0 };
@@ -117,7 +120,7 @@ setupProblemWithSparsify()
    pb.setColNameAll( columnNames );
    pb.setProblemName( "matrix for testing sparsify" );
    Problem<double> problem = pb.build();
-   problem.getConstraintMatrix().modifyLeftHandSide( 0, num, rhs[0] );
+   problem.getConstraintMatrix().modifyLeftHandSide( 0,num, rhs[0] );
    return problem;
 }
 
@@ -126,6 +129,7 @@ setupProblemWithSparsifyMoreThanOneColumn()
 {
    // 2x + y = 4
    // 0<= x,y y= 3
+   Num<double> num{};
    Vec<double> coefficients{ 3.0, 1.0, 1.0, 1.0 };
    Vec<double> upperBounds{ 3.0, 3.0, 3.0, 3.0 };
    Vec<double> lowerBounds{ 0.0, 0.0, 0.0, 0.0 };

@@ -22,70 +22,71 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 #include "catch/catch.hpp"
-#include "papilo/core/Presolve.hpp"
 #include "papilo/core/Problem.hpp"
 #include "papilo/core/ProblemBuilder.hpp"
 #include "papilo/core/Reductions.hpp"
 #include "papilo/presolvers/ImplIntDetection.hpp"
 
-papilo::Problem<double>
+namespace papilo
+{
+Problem<double>
 setupProblemPresolveSingletonRow();
 
-papilo::Problem<double>
+Problem<double>
 setupProblemPresolveSingletonRowFixed();
 
 TEST_CASE( "happy-path-presolve-singleton-row", "[core]" )
 {
-   papilo::Num<double> num{};
-   papilo::Problem<double> problem = setupProblemPresolveSingletonRow();
-   papilo::Statistics statistics{};
-   papilo::PresolveOptions presolveOptions{};
-   papilo::Postsolve<double> postsolve =
-       papilo::Postsolve<double>( problem, num );
-   papilo::ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
-                                                presolveOptions, num );
+   Num<double> num{};
+   Message msg{};
+   Problem<double> problem = setupProblemPresolveSingletonRow();
+   Statistics statistics{};
+   PresolveOptions presolveOptions{};
+   Postsolve<double> postsolve = Postsolve<double>( problem, num );
+   ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
+                                        presolveOptions, num, msg );
    problemUpdate.trivialPresolve();
    REQUIRE( problem.getUpperBounds()[2] == 1 );
-   REQUIRE( problem.getRowFlags()[1].test( papilo::RowFlag::kRedundant ) );
+   REQUIRE( problem.getRowFlags()[1].test( RowFlag::kRedundant ) );
 }
 
 TEST_CASE( "happy-path-presolve-singleton-row-fixed", "[core]" )
 {
-   papilo::Num<double> num{};
-   papilo::Problem<double> problem = setupProblemPresolveSingletonRowFixed();
-   papilo::Statistics statistics{};
-   papilo::PresolveOptions presolveOptions{};
-   papilo::Postsolve<double> postsolve =
-       papilo::Postsolve<double>( problem, num );
-   papilo::ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
-                                                presolveOptions, num );
+   Num<double> num{};
+   Message msg{};
+   Problem<double> problem = setupProblemPresolveSingletonRowFixed();
+   Statistics statistics{};
+   PresolveOptions presolveOptions{};
+   Postsolve<double> postsolve = Postsolve<double>( problem, num );
+   ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
+                                        presolveOptions, num, msg );
    problemUpdate.trivialPresolve();
 
    REQUIRE( problem.getUpperBounds()[2] == 1 );
    REQUIRE( problem.getLowerBounds()[2] == 1 );
-   REQUIRE( problem.getRowFlags()[1].test( papilo::RowFlag::kRedundant ) );
-   REQUIRE( problem.getColFlags()[1].test( papilo::ColFlag::kFixed ) );
+   REQUIRE( problem.getRowFlags()[1].test( RowFlag::kRedundant ) );
+   REQUIRE( problem.getColFlags()[1].test( ColFlag::kFixed ) );
 }
 
-papilo::Problem<double>
+Problem<double>
 setupProblemPresolveSingletonRow()
 {
-   papilo::Num<double> num{};
-   const papilo::Vec<double> coefficients{ 3.0, 1.0, 1.0 };
-   papilo::Vec<std::string> rowNames{ "A1", "A2" };
-   papilo::Vec<std::string> columnNames{ "x", "y", "z" };
-   const papilo::Vec<double> rhs{ 3.0, 1.0 };
-   const papilo::Vec<double> upperBounds{ 3.0, 7.0, 7.0 };
-   const papilo::Vec<double> lowerBounds{ 0.0, 0.0, 0.0 };
-   papilo::Vec<uint8_t> integral = papilo::Vec<uint8_t>{ 1, 1, 1 };
 
-   papilo::Vec<std::tuple<int, int, double>> entries{
+   const Vec<double> coefficients{ 3.0, 1.0, 1.0 };
+   Vec<std::string> rowNames{ "A1", "A2" };
+   Vec<std::string> columnNames{ "x", "y", "z" };
+   const Vec<double> rhs{ 3.0, 1.0 };
+   const Vec<double> upperBounds{ 3.0, 7.0, 7.0 };
+   const Vec<double> lowerBounds{ 0.0, 0.0, 0.0 };
+   Vec<uint8_t> integral = Vec<uint8_t>{ 1, 1, 1 };
+
+   Vec<std::tuple<int, int, double>> entries{
        std::tuple<int, int, double>{ 0, 0, 2.0 },
        std::tuple<int, int, double>{ 0, 1, 1.0 },
        std::tuple<int, int, double>{ 0, 2, 1.0 },
        std::tuple<int, int, double>{ 1, 2, 1.0 } };
 
-   papilo::ProblemBuilder<double> pb;
+   ProblemBuilder<double> pb;
    pb.reserve( entries.size(), rowNames.size(), columnNames.size() );
    pb.setNumRows( rowNames.size() );
    pb.setNumCols( columnNames.size() );
@@ -98,29 +99,29 @@ setupProblemPresolveSingletonRow()
    pb.addEntryAll( entries );
    pb.setColNameAll( columnNames );
    pb.setProblemName( "matrix for singleton row" );
-   papilo::Problem<double> problem = pb.build();
+   Problem<double> problem = pb.build();
    return problem;
 }
 
-papilo::Problem<double>
+Problem<double>
 setupProblemPresolveSingletonRowFixed()
 {
-   papilo::Num<double> num{};
-   const papilo::Vec<double> coefficients{ 3.0, 1.0, 1.0 };
-   papilo::Vec<std::string> rowNames{ "A1", "A2" };
-   papilo::Vec<std::string> columnNames{ "x", "y", "z" };
-   const papilo::Vec<double> rhs{ 3.0, 1.0 };
-   const papilo::Vec<double> upperBounds{ 3.0, 7.0, 7.0 };
-   const papilo::Vec<double> lowerBounds{ 0.0, 0.0, 0.0 };
-   papilo::Vec<uint8_t> integral = papilo::Vec<uint8_t>{ 1, 1, 1 };
+   Num<double> num{};
+   const Vec<double> coefficients{ 3.0, 1.0, 1.0 };
+   Vec<std::string> rowNames{ "A1", "A2" };
+   Vec<std::string> columnNames{ "x", "y", "z" };
+   const Vec<double> rhs{ 3.0, 1.0 };
+   const Vec<double> upperBounds{ 3.0, 7.0, 7.0 };
+   const Vec<double> lowerBounds{ 0.0, 0.0, 0.0 };
+   Vec<uint8_t> integral = Vec<uint8_t>{ 1, 1, 1 };
 
-   papilo::Vec<std::tuple<int, int, double>> entries{
+   Vec<std::tuple<int, int, double>> entries{
        std::tuple<int, int, double>{ 0, 0, 2.0 },
        std::tuple<int, int, double>{ 0, 1, 1.0 },
        std::tuple<int, int, double>{ 0, 2, 1.0 },
        std::tuple<int, int, double>{ 1, 2, 1.0 } };
 
-   papilo::ProblemBuilder<double> pb;
+   ProblemBuilder<double> pb;
    pb.reserve( entries.size(), rowNames.size(), columnNames.size() );
    pb.setNumRows( rowNames.size() );
    pb.setNumCols( columnNames.size() );
@@ -133,7 +134,8 @@ setupProblemPresolveSingletonRowFixed()
    pb.addEntryAll( entries );
    pb.setColNameAll( columnNames );
    pb.setProblemName( "matrix for singleton row fixed" );
-   papilo::Problem<double> problem = pb.build();
+   Problem<double> problem = pb.build();
    problem.getConstraintMatrix().modifyLeftHandSide( 1,num, rhs[1] );
    return problem;
 }
+} // namespace papilo

@@ -35,12 +35,13 @@ setupProblemForCoefficientStrengthening();
 TEST_CASE( "happy-path-coefficient-strengthening", "[presolve]" )
 {
    Num<double> num{};
+   Message msg{};
    Problem<double> problem = setupProblemForCoefficientStrengthening();
    Statistics statistics{};
    PresolveOptions presolveOptions{};
    Postsolve<double> postsolve = Postsolve<double>( problem, num );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
-                                        presolveOptions, num );
+                                        presolveOptions, num, msg);
    CoefficientStrengthening<double> presolvingMethod{};
    Reductions<double> reductions{};
    problem.recomputeAllActivities();
@@ -64,7 +65,7 @@ TEST_CASE( "happy-path-coefficient-strengthening", "[presolve]" )
 Problem<double>
 setupProblemForCoefficientStrengthening()
 {
-//   1x + 2y <= 1
+//   1x + 2y <= 2
    Vec<double> coefficients{ 1.0, 1.0, 1.0 };
    Vec<double> upperBounds{ 1.0, 1.0, 1.0 };
    Vec<double> lowerBounds{ 0.0, 0.0, 0.0 };

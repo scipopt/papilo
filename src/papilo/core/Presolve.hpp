@@ -414,7 +414,7 @@ Presolve<REAL>::apply( Problem<REAL>& problem )
       presolverStats.resize( presolvers.size(), std::pair<int, int>( 0, 0 ) );
 
       ProblemUpdate<REAL> probUpdate( problem, result.postsolve, stats,
-                                      presolveOptions, num );
+                                      presolveOptions, num, msg );
 
       for( int i = 0; i != npresolvers; ++i )
       {
@@ -1005,6 +1005,8 @@ Presolve<REAL>::applyReductions( int p, const Reductions<REAL>& reductions,
    const auto& reds = reductions.getReductions();
    const auto& tsx = reductions.getTransactions();
 
+   msg.detailed( "Presolver {} applying \n", presolvers[p]->getName() );
+
    for( const auto& transaction : reductions.getTransactions() )
    {
       int start = transaction.start;
@@ -1067,6 +1069,9 @@ Presolve<REAL>::applyPostponed( ProblemUpdate<REAL>& probUpdate )
    {
       int first = postponedReductionToPresolver[presolver];
       int last = postponedReductionToPresolver[presolver + 1];
+      if( first < last )
+         msg.detailed( "Presolver {} applying \n",
+                       presolvers[presolver]->getName() );
       for( int i = first; i != last; ++i )
       {
          const auto& ptrpair = postponedReductions[i];

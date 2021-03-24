@@ -39,7 +39,7 @@ enum class VerbosityLevel : int
    kError = 1,
    kWarning = 2,
    kInfo = 3,
-   kExtra = 4,
+   kDetailed = 4,
 };
 
 struct EnableDebugOutput
@@ -93,7 +93,7 @@ class Message
    {
       paramSet.addParameter( "message.verbosity",
                              "verbosity to be used: 0 - quiet, 1 - errors, 2 - "
-                             "warnings, 3 - normal, 4 - extra",
+                             "warnings, 3 - normal, 4 - detailed",
                              verbosity, 0, 4 );
    }
 
@@ -111,12 +111,12 @@ class Message
 
    template <typename... Args>
    void
-   extra( Args&&... args ) const
+   detailed( Args&&... args ) const
    {
       switch( static_cast<VerbosityLevel>( verbosity ) )
       {
-      case VerbosityLevel::kExtra:
-         print( VerbosityLevel::kExtra, std::forward<Args>( args )... );
+      case VerbosityLevel::kDetailed:
+         print( VerbosityLevel::kDetailed, std::forward<Args>( args )... );
          break;
       case VerbosityLevel::kInfo:
       case VerbosityLevel::kWarning:
@@ -132,7 +132,7 @@ class Message
    {
       switch( static_cast<VerbosityLevel>( verbosity ) )
       {
-      case VerbosityLevel::kExtra:
+      case VerbosityLevel::kDetailed:
       case VerbosityLevel::kInfo:
          print( VerbosityLevel::kInfo, std::forward<Args>( args )... );
          break;
@@ -149,7 +149,7 @@ class Message
    {
       switch( static_cast<VerbosityLevel>( verbosity ) )
       {
-      case VerbosityLevel::kExtra:
+      case VerbosityLevel::kDetailed:
       case VerbosityLevel::kInfo:
       case VerbosityLevel::kWarning:
          print( VerbosityLevel::kWarning, std::forward<Args>( args )... );
@@ -166,7 +166,7 @@ class Message
    {
       switch( static_cast<VerbosityLevel>( verbosity ) )
       {
-      case VerbosityLevel::kExtra:
+      case VerbosityLevel::kDetailed:
       case VerbosityLevel::kInfo:
       case VerbosityLevel::kWarning:
       case VerbosityLevel::kError:

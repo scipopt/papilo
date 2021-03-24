@@ -36,12 +36,13 @@ setupExample10ofChapter7Dot5InPresolveReductions();
 TEST_CASE( "example-10-from-7.5-Presolve-Reductions-in-MIP", "[presolve]" )
 {
    Num<double> num{};
+   Message msg{};
    Problem<double> problem = setupExample10ofChapter7Dot5InPresolveReductions();
    Statistics statistics{};
    PresolveOptions presolveOptions{};
-   Postsolve<double> postsolve = Postsolve<double>( problem, num );
+   Postsolve<double> postsolve = Postsolve<double>( problem, num);
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
-                                        presolveOptions, num );
+                                        presolveOptions, num, msg );
    papilo::DualInfer<double> presolvingMethod{};
 
    problem.recomputeAllActivities();

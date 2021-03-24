@@ -38,13 +38,14 @@ setupProblemWithProbingWithNoBinary();
 TEST_CASE( "happy-path-probing", "[presolve]" )
 {
    Num<double> num{};
+   Message msg{};
    Problem<double> problem = setupProblemWithProbing();
    Statistics statistics{};
    PresolveOptions presolveOptions{};
    presolveOptions.dualreds = 0;
    Postsolve<double> postsolve = Postsolve<double>( problem, num );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
-                                        presolveOptions, num );
+                                        presolveOptions, num, msg );
    Probing<double> presolvingMethod{};
    Reductions<double> reductions{};
    problem.recomputeAllActivities();
@@ -63,13 +64,14 @@ TEST_CASE( "happy-path-probing", "[presolve]" )
 TEST_CASE( "failed-path-probing-on-not-binary-variables", "[presolve]" )
 {
    Num<double> num{};
+   Message msg{};
    Problem<double> problem = setupProblemWithProbingWithNoBinary();
    Statistics statistics{};
    PresolveOptions presolveOptions{};
    presolveOptions.dualreds = 0;
    Postsolve<double> postsolve = Postsolve<double>( problem, num );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
-                                        presolveOptions, num );
+                                        presolveOptions, num, msg );
    Probing<double> presolvingMethod{};
    Reductions<double> reductions{};
    problem.recomputeAllActivities();
@@ -96,9 +98,6 @@ setupProblemWithProbing()
    Vec<std::tuple<int, int, double>> entries{
        std::tuple<int, int, double>{ 0, 0, 1.0 },
        std::tuple<int, int, double>{ 0, 1, 2.0 },
-       //       std::tuple<int, int, double>{ 1, 1, 1.0 },
-       //       std::tuple<int, int, double>{ 1, 2, 1.0 },
-       //       std::tuple<int, int, double>{ 1, 3, 1.0 }
    };
 
    ProblemBuilder<double> pb;

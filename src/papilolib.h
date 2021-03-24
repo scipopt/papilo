@@ -175,7 +175,7 @@ extern "C"
 
    /// Set callback for message output. If the callback is set to NULL output is
    /// printed to stdout. The level argument is set as follows:
-   /// 1 - errors, 2 - warnings, 3 - info, 4 - extra
+   /// 1 - errors, 2 - warnings, 3 - info, 4 - detailed
    PAPILOLIB_EXPORT void
    papilo_solver_set_trace_callback( PAPILO_SOLVER* solver,
                                      void ( *thetracecb )( int level,

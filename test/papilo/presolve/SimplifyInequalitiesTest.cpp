@@ -45,19 +45,18 @@ setup_simplify_ineq_reduce_rhs();
 Problem<double>
 setup_simple_problem_for_simplify_inequalities_2();
 
-const Num<double> num{};
-
-
 TEST_CASE( "happy-path-simplify-inequalities", "[presolve]" )
 {
    // 15x1 +15x2 +7x3 +3x4 +y1 <= 26
+   Num<double> num{};
+   Message msg{};
    Problem<double> problem = setupProblemForSimplifyingInequalities();
    problem.recomputeAllActivities();
    Statistics statistics{};
    PresolveOptions presolveOptions{};
    Postsolve<double> postsolve = Postsolve<double>( problem, num );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
-                                        presolveOptions, num );
+                                        presolveOptions, num, msg );
    SimplifyInequalities<double> presolvingMethod{};
    Reductions<double> reductions{};
 
@@ -93,12 +92,14 @@ TEST_CASE( "happy-path-simplify-inequalities", "[presolve]" )
 
 TEST_CASE( "simplify_inequ_doesnt_lock_more_rows", "[presolve]" )
 {
+   Num<double> num{};
+   Message msg{};
    Problem<double> problem = setup_simplify_ineq_reduce_rhs();
    Statistics statistics{};
    PresolveOptions presolveOptions{};
    Postsolve<double> postsolve = Postsolve<double>( problem, num );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
-                                        presolveOptions, num );
+                                        presolveOptions, num, msg );
    problem.recomputeAllActivities();
    SimplifyInequalities<double> presolvingMethod{};
    Reductions<double> reductions{};
@@ -113,12 +114,14 @@ TEST_CASE( "simplify_inequ_doesnt_lock_more_rows", "[presolve]" )
 
 TEST_CASE( "simplify_inequ_doesnt_apply_lb_and_ub_on_one_row", "[presolve]" )
 {
+   Num<double> num{};
+   Message msg{};
    Problem<double> problem = setup_simple_problem_for_simplify_inequalities_2();
    Statistics statistics{};
    PresolveOptions presolveOptions{};
    Postsolve<double> postsolve = Postsolve<double>( problem, num );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
-                                        presolveOptions, num );
+                                        presolveOptions, num, msg );
    problem.recomputeAllActivities();
    SimplifyInequalities<double> presolvingMethod{};
    Reductions<double> reductions{};
@@ -131,12 +134,14 @@ TEST_CASE( "simplify_inequ_doesnt_apply_lb_and_ub_on_one_row", "[presolve]" )
 
 TEST_CASE( "example-1-from-3.5-Presolve-Reductions-in-MIP", "[presolve]" )
 {
+   Num<double> num{};
+   Message msg{};
    Problem<double> problem = setupExample1ofChapter3Dot5InPresolveReductions();
    Statistics statistics{};
    PresolveOptions presolveOptions{};
    Postsolve<double> postsolve = Postsolve<double>( problem, num );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
-                                        presolveOptions, num );
+                                        presolveOptions, num, msg );
    SimplifyInequalities<double> presolvingMethod{};
    Reductions<double> reductions{};
 
@@ -158,12 +163,14 @@ TEST_CASE( "example-1-from-3.5-Presolve-Reductions-in-MIP", "[presolve]" )
  */
 TEST_CASE( "example-2-from-3.5-Presolve-Reductions-in-MIP", "[presolve]" )
 {
+   Num<double> num{};
+   Message msg{};
    Problem<double> problem = setupExample2ofChapter3Dot5InPresolveReductions();
    Statistics statistics{};
    PresolveOptions presolveOptions{};
    Postsolve<double> postsolve = Postsolve<double>( problem, num );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
-                                        presolveOptions, num );
+                                        presolveOptions, num, msg );
    SimplifyInequalities<double> presolvingMethod{};
    Reductions<double> reductions{};
 
@@ -177,6 +184,7 @@ TEST_CASE( "example-2-from-3.5-Presolve-Reductions-in-MIP", "[presolve]" )
 Problem<double>
 setupExample1ofChapter3Dot5InPresolveReductions()
 {
+   Num<double> num{};
    Vec<double> coefficients{ 1.0, 1.0, 1.0 };
    Vec<double> lowerBounds{ 0.0, 0.0, 0.0 };
    Vec<uint8_t> isIntegral{ 0, 1, 1 };
@@ -214,6 +222,7 @@ setupExample1ofChapter3Dot5InPresolveReductions()
 Problem<double>
 setupExample2ofChapter3Dot5InPresolveReductions()
 {
+   Num<double> num{};
    Vec<double> coefficients{ 1.0, 1.0 };
    Vec<double> lowerBounds{ 0, 0 };
    Vec<uint8_t> isIntegral{ 0, 0 };
