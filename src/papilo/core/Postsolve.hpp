@@ -287,7 +287,7 @@ Postsolve<REAL>::push_back_row( int row, const Problem<REAL>& currentProblem )
 
    for( int i = 0; i < length; ++i )
    {
-      indices.push_back( columns[i] );
+      indices.push_back( origcol_mapping[columns[i]] );
       values.push_back( coefs[i] );
    }
 }
@@ -305,10 +305,10 @@ Postsolve<REAL>::notifyFixedInfCol( int col, REAL val, REAL bound,
 
    const auto& coefficients =
        currentProblem.getConstraintMatrix().getColumnCoefficients( col );
-   const int* column_indices = coefficients.getIndices();
+   const int* row_indices = coefficients.getIndices();
 
    for( int i = 0; i < coefficients.getLength(); i++ )
-      push_back_row( column_indices[i], currentProblem );
+      push_back_row( row_indices[i], currentProblem );
 
    finishNotify();
 }
@@ -715,18 +715,21 @@ Postsolve<REAL>::calculate_row_value_for_infinity_column(
       stableSum.add( rhs );
    else
       stableSum.add( lhs );
+   REAL coeff_of_column_in_row = 0;
    for( int l = 0; l < rowLength; l++ )
    {
       int row_index = row_indices[l];
       if( row_index == column )
       {
+         coeff_of_column_in_row = coefficients[l];
          continue;
       }
       // TODO: think about what to do if there are to infinity values ->
       // irrelevant?
       stableSum.add( -coefficients[l] * current_solution[row_index] );
    }
-   return ( stableSum.get() / coefficients[column] );
+   assert( coeff_of_column_in_row != 0 );
+   return ( stableSum.get() / coeff_of_column_in_row );
 }
 
 } // namespace papilo
