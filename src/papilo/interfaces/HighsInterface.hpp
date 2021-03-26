@@ -80,21 +80,16 @@ class HighsInterface : public SolverInterface<REAL>
       opts.simplex_update_limit = 500;
       HighsLp model;
 
-      /* set the objective sense and offset */
-      model.sense_ = OBJSENSE_MINIMIZE;
+      model.sense_ = ObjSense::MINIMIZE;
       model.offset_ = double( -obj.offset );
 
       model.numRow_ = nrows;
       model.numCol_ = ncols;
-      model.nnz_ = consMatrix.getNnz();
-      model.numInt_ = 0;
 
-      // model.col_names_.resize( ncols );
       model.colCost_.resize( ncols );
       model.colLower_.resize( ncols );
       model.colUpper_.resize( ncols );
 
-      // model.row_names_.resize( numrows );
       model.rowLower_.resize( nrows );
       model.rowUpper_.resize( nrows );
 
@@ -108,10 +103,10 @@ class HighsInterface : public SolverInterface<REAL>
       }
 
       model.integrality_.resize( ncols );
-      model.Aindex_.resize( model.nnz_ );
-      model.Avalue_.resize( model.nnz_ );
+      model.Aindex_.resize( consMatrix.getNnz() );
+      model.Avalue_.resize( consMatrix.getNnz() );
       model.Astart_.resize( ncols + 1 );
-      model.Astart_[ncols] = model.nnz_;
+      model.Astart_[ncols] = consMatrix.getNnz();
 
       int start = 0;
 
@@ -153,8 +148,6 @@ class HighsInterface : public SolverInterface<REAL>
           const Vec<int>& col_maps, const Components& components,
           const ComponentInfo& component ) override
    {
-      int ncols = problem.getNCols();
-      int nrows = problem.getNRows();
       const Vec<String>& varNames = problem.getVariableNames();
       const Vec<String>& consNames = problem.getConstraintNames();
       const VariableDomains<REAL>& domains = problem.getVariableDomains();
@@ -171,13 +164,11 @@ class HighsInterface : public SolverInterface<REAL>
       HighsLp model;
 
       /* set the objective sense and offset */
-      model.sense_ = OBJSENSE_MINIMIZE;
+      model.sense_ = ObjSense::MINIMIZE;
       model.offset_ = 0;
 
       model.numRow_ = numrows;
       model.numCol_ = numcols;
-      model.nnz_ = component.nnonz;
-      model.numInt_ = 0;
 
       model.colCost_.resize( numcols );
       model.colLower_.resize( numcols );
@@ -200,10 +191,10 @@ class HighsInterface : public SolverInterface<REAL>
                                   : double( rhs_values[row] );
       }
 
-      model.Aindex_.resize( model.nnz_ );
-      model.Avalue_.resize( model.nnz_ );
+      model.Aindex_.resize( component.nnonz );
+      model.Avalue_.resize( component.nnonz );
       model.Astart_.resize( numcols + 1 );
-      model.Astart_[numcols] = model.nnz_;
+      model.Astart_[numcols] = component.nnonz;
 
       int start = 0;
 
@@ -292,7 +283,7 @@ class HighsInterface : public SolverInterface<REAL>
       case VerbosityLevel::kError:
       case VerbosityLevel::kWarning:
       case VerbosityLevel::kInfo:
-      case VerbosityLevel::kExtra:
+      case VerbosityLevel::kDetailed:
          opts.message_level = ML_MINIMAL;
       }
    }
@@ -319,8 +310,6 @@ class HighsInterface : public SolverInterface<REAL>
           highsSol.row_value.size() != numrows )
          return false;
 
-      // skip objoffset var
-      --numcols;
 
       // get primal values
       sol.primal.resize( numcols );
@@ -406,10 +395,10 @@ class HighsInterface : public SolverInterface<REAL>
 template <typename REAL>
 class HighsFactory : public SolverFactory<REAL>
 {
-   HighsFactory() {}
+   HighsFactory() = default;
 
  public:
-   virtual std::unique_ptr<SolverInterface<REAL>>
+   std::unique_ptr<SolverInterface<REAL>>
    newSolver( VerbosityLevel verbosity ) const override
    {
       auto highs =
