@@ -178,26 +178,26 @@ DualFix<REAL>::execute( const Problem<REAL>& problem,
          auto check_row = []( int ninf, REAL activity, const REAL& side,
                               const REAL& coeff, const REAL& boundval,
                               bool boundinf, bool& skip, REAL& cand_bound ) {
-           switch( ninf )
-           {
-           case 0:
-              assert( !boundinf );
-              // calculate residual activity
-              activity -= boundval * coeff;
-              break;
-           case 1:
-              if( boundinf )
-                 break;
-           default:
-              // If one of the other variables with non-zero entry is
-              // unbounded, dual bound strengthening is not possible for this
-              // column; skip column.
-              skip = true;
-              return;
-           }
+            switch( ninf )
+            {
+            case 0:
+               assert( !boundinf );
+               // calculate residual activity
+               activity -= boundval * coeff;
+               break;
+            case 1:
+               if( boundinf )
+                  break;
+            default:
+               // If one of the other variables with non-zero entry is
+               // unbounded, dual bound strengthening is not possible for this
+               // column; skip column.
+               skip = true;
+               return;
+            }
 
-           // calculate candidate for new bound
-           cand_bound = ( side - activity ) / coeff;
+            // calculate candidate for new bound
+            cand_bound = ( side - activity ) / coeff;
          };
          // If c_i >= 0, we might derive a tighter upper bound.
          // We consider only rows of
@@ -248,7 +248,7 @@ DualFix<REAL>::execute( const Problem<REAL>& problem,
                      continue;
                }
 
-               if( skip == true )
+               if( skip )
                   break;
 
                // Only if variable is greater than or equal to new_UB, all rows
