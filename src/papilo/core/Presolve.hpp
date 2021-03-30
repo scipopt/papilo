@@ -865,7 +865,11 @@ Presolve<REAL>::apply_result_sequentiell( int index_presolver,
    run_sequentiell = true;
    apply_reduction_of_solver( probUpdate, index_presolver );
    probUpdate.flushChangedCoeffs();
-   probUpdate.flush( false );
+   if(probUpdate.flush( false ) == PresolveStatus::kInfeasible)
+   {
+      results[index_presolver] = PresolveStatus::kInfeasible;
+      return;
+   }
    probUpdate.clearStates();
    probUpdate.check_and_compress();
 }
