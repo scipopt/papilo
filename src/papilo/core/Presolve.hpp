@@ -835,6 +835,8 @@ Presolve<REAL>::run_presolvers( const Problem<REAL>& problem,
          results[i] =
              presolvers[i]->run( problem, probUpdate, num, reductions[i] );
          apply_result_sequentiell( i, probUpdate, run_sequentiell );
+         if(results[i]==PresolveStatus::kInfeasible)
+            return;
          PresolveStatus status = probUpdate.trivialPresolve();
          if( is_status_infeasible_or_unbounded( status ) )
             results[i] = status;
