@@ -1,5 +1,3 @@
-#message.verbosity = 4
-
 substitution.maxfillin = 3
 
 substitution.binarieswithints = 0
