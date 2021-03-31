@@ -835,11 +835,14 @@ Presolve<REAL>::run_presolvers( const Problem<REAL>& problem,
          results[i] =
              presolvers[i]->run( problem, probUpdate, num, reductions[i] );
          apply_result_sequentiell( i, probUpdate, run_sequentiell );
-         if(results[i]==PresolveStatus::kInfeasible)
+         if( results[i] == PresolveStatus::kInfeasible )
             return;
          PresolveStatus status = probUpdate.trivialPresolve();
          if( is_status_infeasible_or_unbounded( status ) )
+         {
             results[i] = status;
+            return;
+         }
       }
    }
    else
@@ -867,7 +870,7 @@ Presolve<REAL>::apply_result_sequentiell( int index_presolver,
    run_sequentiell = true;
    apply_reduction_of_solver( probUpdate, index_presolver );
    probUpdate.flushChangedCoeffs();
-   if(probUpdate.flush( false ) == PresolveStatus::kInfeasible)
+   if( probUpdate.flush( false ) == PresolveStatus::kInfeasible )
    {
       results[index_presolver] = PresolveStatus::kInfeasible;
       return;
