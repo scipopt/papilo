@@ -43,16 +43,11 @@ class HighsInterface : public SolverInterface<REAL>
  private:
    Highs solver;
    HighsOptions opts;
-   static constexpr double inf = 1e+25;
+   static constexpr double inf = std::numeric_limits<double>::infinity();
 
  public:
-   HighsInterface()
-   {
-      opts.infinite_bound = inf;
-      opts.infinite_cost = inf;
-      opts.presolve = "off";
-      opts.simplex_scale_strategy = 2;
-   }
+   HighsInterface() {}
+
    void
    setTimeLimit( double tlim ) override
    {
@@ -74,14 +69,10 @@ class HighsInterface : public SolverInterface<REAL>
       const auto& rhs_values = consMatrix.getRightHandSides();
       const auto& rflags = problem.getRowFlags();
 
-      opts.simplex_strategy = 3;
-      opts.highs_min_threads = 4;
-      opts.highs_max_threads = 4;
-      opts.simplex_update_limit = 500;
       HighsLp model;
 
       model.sense_ = ObjSense::MINIMIZE;
-      model.offset_ = double( -obj.offset );
+      model.offset_ = double( obj.offset );
 
       model.numRow_ = nrows;
       model.numCol_ = ncols;
@@ -89,6 +80,7 @@ class HighsInterface : public SolverInterface<REAL>
       model.colCost_.resize( ncols );
       model.colLower_.resize( ncols );
       model.colUpper_.resize( ncols );
+      model.integrality_.resize( ncols );
 
       model.rowLower_.resize( nrows );
       model.rowUpper_.resize( nrows );
@@ -102,7 +94,6 @@ class HighsInterface : public SolverInterface<REAL>
              rflags[i].test( RowFlag::kRhsInf ) ? inf : double( rhs_values[i] );
       }
 
-      model.integrality_.resize( ncols );
       model.Aindex_.resize( consMatrix.getNnz() );
       model.Avalue_.resize( consMatrix.getNnz() );
       model.Astart_.resize( ncols + 1 );
@@ -123,6 +114,13 @@ class HighsInterface : public SolverInterface<REAL>
 
          model.colCost_[i] = double( obj.coefficients[i] );
 
+         model.integrality_[i] =
+             domains.flags[i].test( ColFlag::kImplInt )
+                 ? HighsVarType::IMPLICIT_INTEGER
+                 : ( domains.flags[i].test( ColFlag::kIntegral )
+                         ? HighsVarType::INTEGER
+                         : HighsVarType::CONTINUOUS );
+
          auto colvec = consMatrix.getColumnCoefficients( i );
 
          int collen = colvec.getLength();
@@ -134,13 +132,13 @@ class HighsInterface : public SolverInterface<REAL>
          for( int k = 0; k != collen; ++k )
          {
             model.Avalue_[start + k] = double( colvals[k] );
-            model.Aindex_[start + k] = double( colrows[k] );
+            model.Aindex_[start + k] = colrows[k];
          }
 
          start += collen;
       }
 
-      solver.passModel( model );
+      solver.passModel( std::move( model ) );
    }
 
    void
@@ -173,6 +171,7 @@ class HighsInterface : public SolverInterface<REAL>
       model.colCost_.resize( numcols );
       model.colLower_.resize( numcols );
       model.colUpper_.resize( numcols );
+      model.integrality_.resize( numcols );
 
       model.rowLower_.resize( numrows );
       model.rowUpper_.resize( numrows );
@@ -214,6 +213,13 @@ class HighsInterface : public SolverInterface<REAL>
 
          model.colCost_[i] = double( obj.coefficients[col] );
 
+         model.integrality_[i] =
+             domains.flags[col].test( ColFlag::kImplInt )
+                 ? HighsVarType::IMPLICIT_INTEGER
+                 : ( domains.flags[col].test( ColFlag::kIntegral )
+                         ? HighsVarType::INTEGER
+                         : HighsVarType::CONTINUOUS );
+
          auto colvec = consMatrix.getColumnCoefficients( col );
 
          int collen = colvec.getLength();
@@ -232,7 +238,7 @@ class HighsInterface : public SolverInterface<REAL>
          start += collen;
       }
 
-      solver.passModel( model );
+      solver.passModel( std::move( model ) );
    }
 
    void
@@ -246,7 +252,7 @@ class HighsInterface : public SolverInterface<REAL>
          return;
       }
 
-      HighsModelStatus stat = solver.getModelStatus( true );
+      HighsModelStatus stat = solver.getModelStatus();
 
       switch( stat )
       {
@@ -274,27 +280,26 @@ class HighsInterface : public SolverInterface<REAL>
       switch( verbosity )
       {
       case VerbosityLevel::kQuiet:
-         opts.message_level = ML_NONE;
-         opts.logfile = nullptr;
-         opts.output = nullptr;
-         solver.setHighsOutput( nullptr );
-         solver.setHighsLogfile( nullptr );
+         opts.output_flag = false;
+         solver.setHighsOptionValue( "output_flag", false );
          break;
       case VerbosityLevel::kError:
       case VerbosityLevel::kWarning:
       case VerbosityLevel::kInfo:
       case VerbosityLevel::kDetailed:
-         opts.message_level = ML_MINIMAL;
+         opts.output_flag = true;
+         solver.setHighsOptionValue( "output_flag", true );
       }
    }
 
    REAL
    getDualBound() override
    {
+
       //      TODO
       //      if( this->status == SolverStatus::kOptimal )
       //         return -inf;
-      return -inf;
+      return solver.getHighsInfo().mip_dual_bound;
    }
 
    bool
@@ -304,12 +309,8 @@ class HighsInterface : public SolverInterface<REAL>
       int numcols = solver.getNumCols();
       int numrows = solver.getNumRows();
 
-      if( highsSol.col_value.size() != numcols ||
-          highsSol.col_dual.size() != numcols ||
-          highsSol.row_dual.size() != numrows ||
-          highsSol.row_value.size() != numrows )
+      if( highsSol.col_value.size() != numcols )
          return false;
-
 
       // get primal values
       sol.primal.resize( numcols );
@@ -319,6 +320,13 @@ class HighsInterface : public SolverInterface<REAL>
       // return if no dual requested
       if( sol.type == SolutionType::kPrimal )
          return true;
+
+      if( highsSol.col_dual.size() != numcols ||
+          highsSol.row_dual.size() != numrows )
+      {
+         sol.type = SolutionType::kPrimal;
+         return true;
+      }
 
       // get reduced costs
       sol.col_dual.resize( numcols );
@@ -343,10 +351,7 @@ class HighsInterface : public SolverInterface<REAL>
       int numcols = solver.getNumCols();
       int numrows = solver.getNumRows();
       const HighsSolution& highsSol = solver.getSolution();
-      if( highsSol.col_value.size() != numcols ||
-          highsSol.col_dual.size() != numcols ||
-          highsSol.row_dual.size() != numrows ||
-          highsSol.row_value.size() != numrows )
+      if( highsSol.col_value.size() != numcols )
          return false;
 
       assert( components.getComponentsNumCols( component ) == numcols );
@@ -357,6 +362,13 @@ class HighsInterface : public SolverInterface<REAL>
 
       if( sol.type == SolutionType::kPrimal )
          return true;
+
+      if( highsSol.col_dual.size() != numcols ||
+          highsSol.row_dual.size() != numrows )
+      {
+         sol.type = SolutionType::kPrimal;
+         return true;
+      }
 
       for( int i = 0; i != numcols; ++i )
          sol.col_dual[compcols[i]] = REAL( highsSol.col_dual[i] );
@@ -377,7 +389,8 @@ class HighsInterface : public SolverInterface<REAL>
    SolverType
    getType() override
    {
-      return SolverType::LP;
+      // todo, both types are correct now
+      return SolverType::MIP;
    }
 
    String
