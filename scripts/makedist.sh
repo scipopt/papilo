@@ -1,5 +1,8 @@
 #!/bin/bash -e
 
+# create tarball for release
+# usage: ./scripts/makedist.sh
+
 VERSION=$(grep project.papilo CMakeLists.txt | cut -d ' ' -f 3 | cut -d ')' -f 1)
 NAME="papilo-$VERSION"
 rm -f $NAME.tgz

@@ -28,11 +28,11 @@
 
 echo "This is jenkins_check_results_cmake.sh running."
 
-export PSMESSAGE=${PSMESSAGE}
-export IDENT=${IDENT}
+export PSMESSAGE="${PSMESSAGE}"
+export IDENT="${IDENT}"
 
 # set up environment for jenkins_failcheck_cmake.sh
-TESTSET=${TEST}
+TESTSET="${TEST}"
 if [ "${TESTSET}" == "" ]; then
    TESTSET=short
    echo "No testset provided, defaulting to '${TESTSET}'."
@@ -65,42 +65,42 @@ export OPT
 
 # if SEEDS is not a number, set it to 0
 re='^[0-9]+$'
-if ! [[ $SEEDS =~ $re ]] ; then
+if ! [[ ${SEEDS} =~ ${re} ]] ; then
    SEEDS="0"
 fi
 export SEEDS
 # if PERMUTE is not a number, set it to 0
 re='^[0-9]+$'
-if ! [[ $PERMUTE =~ $re ]] ; then
+if ! [[ ${PERMUTE} =~ ${re} ]] ; then
    PERMUTE="0"
 fi
 export PERMUTE
 export STARTPERM
 export GLBSEEDSHIFT
-export GITHASH=$(git describe --always --dirty  | sed -re 's/^.+-g//')
+export GITHASH="$(git describe --always --dirty  | sed -re 's/^.+-g//')"
 
 # read from stdin
 # OUTPUTDIR identifies a testrun uniquely
-CANCEL_FILE=${OUTPUTDIR}_cancel.txt
+CANCEL_FILE="${OUTPUTDIR}_cancel.txt"
 i=0
 while read line
 do
-   if [[ $line == Submitted[[:space:]]batch[[:space:]]job[[:space:]]* ]]
+   if [[ ${line} == Submitted[[:space:]]batch[[:space:]]job[[:space:]]* ]]
    then
-      stringarray=($line)
-      slurmjobids[$i]=${stringarray[-1]}
+      stringarray=(${line})
+      slurmjobids[${i}]=${stringarray[-1]}
       ((i++))
       echo "${stringarray[-1]}" >> "${CANCEL_FILE}"
    fi
 done < /dev/stdin
 
 echo "To cancel the jobs run"
-echo 'for jobid in `cat '$CANCEL_FILE'`; do scancel $jobid; done'
+echo 'for jobid in $(cat '${CANCEL_FILE}'); do scancel ${jobid}; done'
 echo "This is an experimental feature, use with caution. In particular, make sure no two jobs have the same TESTSET, SETTINGS and LPS combination!"
 
-# apparently `set` prints (almost) all environment vars
-# whereas `env` only prints exported ones
-set | sort > ${OUTPUTDIR}_envinfo.txt
+# apparently 'set' prints (almost) all environment vars
+# whereas 'env' only prints exported ones
+set | sort > "${OUTPUTDIR}_envinfo.txt"
 
 # build job ids string for sbatch dependency
 jobidsstr=$(printf ",%s" "${slurmjobids[@]}")
@@ -108,7 +108,7 @@ jobidsstr=${jobidsstr:1}
 
 # execute checker after all jobs completed
 if [ "${SLURMACCOUNT}" == "" ]; then
-   sbatch --dependency=afterany:${jobidsstr} --kill-on-invalid-dep=yes --cpus-per-task=1 --mem=4000 --time=500 --partition=opt check/jenkins_failcheck_cmake.sh
+   sbatch --dependency=afterany:"${jobidsstr}" --kill-on-invalid-dep=yes --cpus-per-task=1 --mem=4000 --time=500 --partition=opt check/jenkins_failcheck_cmake.sh
 else
-   sbatch --dependency=afterany:${jobidsstr} --kill-on-invalid-dep=yes --cpus-per-task=1 --mem=4000 --time=500 --partition=opt --account=${SLURMACCOUNT} check/jenkins_failcheck_cmake.sh
+   sbatch --dependency=afterany:"${jobidsstr}" --kill-on-invalid-dep=yes --cpus-per-task=1 --mem=4000 --time=500 --partition=opt --account="${SLURMACCOUNT}" check/jenkins_failcheck_cmake.sh
 fi
