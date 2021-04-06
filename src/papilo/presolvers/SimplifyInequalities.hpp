@@ -281,85 +281,115 @@ SimplifyInequalities<REAL>::execute( const Problem<REAL>& problem,
 
    PresolveStatus result = PresolveStatus::kUnchanged;
 
-   // allocate only once
-   Vec<int> colOrder;
-   Vec<int> coefficientsThatCanBeDeleted;
+
+
+   Vec<Reductions<REAL>> stored_reductions( nrows );
 
    // iterate over all constraints and try to simplify them
-   for( int row = 0; row < nrows; ++row )
+   tbb::parallel_for(
+       tbb::blocked_range<int>( 0, nrows ),
+       [&]( const tbb::blocked_range<int>& r ) {
+          for( int row = r.begin(); row < r.end(); ++row )
+          {
+             // allocate only once
+             Vec<int> colOrder;
+             Vec<int> coefficientsThatCanBeDeleted;
+             auto rowvec = consMatrix.getRowCoefficients( row );
+             int rowLength = rowvec.getLength();
+
+             if( isRedundant( row, rflags ) || isUnbounded( row, rflags ) ||
+                 isInfiniteActivity( activities, row ) ||
+                 // ignore empty or bound-constraints
+                 rowLength < 2 )
+                continue;
+
+             const int* colinds = rowvec.getIndices();
+
+             REAL greatestCommonDivisor = 0;
+             bool isSimplificationPossible = false;
+
+             colOrder.clear();
+             coefficientsThatCanBeDeleted.clear();
+
+             simplify( rowvec.getValues(), colinds, rowLength, activities[row],
+                       rflags[row], cflags, rhs[row], lhs[row], lbs, ubs,
+                       colOrder, coefficientsThatCanBeDeleted,
+                       greatestCommonDivisor, isSimplificationPossible, num );
+
+             if( isSimplificationPossible )
+             {
+                assert( greatestCommonDivisor >= 1 );
+                bool col_can_be_deleted = !coefficientsThatCanBeDeleted.empty();
+                bool rhs_needs_update = false;
+                bool lhs_needs_update = false;
+                REAL new_rhs = 0;
+                REAL new_lhs = 0;
+
+                if( !rflags[row].test( RowFlag::kRhsInf ) && rhs[row] != 0 )
+                {
+                   new_rhs = num.feasFloor( rhs[row] / greatestCommonDivisor ) *
+                             greatestCommonDivisor;
+                   rhs_needs_update = new_rhs != rhs[row];
+                }
+                else if( !rflags[row].test( RowFlag::kLhsInf ) &&
+                         lhs[row] != 0 )
+                {
+                   new_lhs = num.feasCeil( lhs[row] / greatestCommonDivisor ) *
+                             greatestCommonDivisor;
+                   lhs_needs_update = new_lhs != lhs[row];
+                }
+
+                if( !rhs_needs_update && !lhs_needs_update &&
+                    !col_can_be_deleted )
+                   continue;
+
+                Reductions<REAL> reduction;
+                TransactionGuard<REAL> guard{ reduction };
+                reduction.lockRow( row );
+
+                for( int col : coefficientsThatCanBeDeleted )
+                {
+                   reduction.changeMatrixEntry( row, colinds[col], 0 );
+                   result = PresolveStatus::kReduced;
+                }
+
+                // round side to multiple of greatestCommonDivisor; don't divide
+                // row by greatestCommonDivisor
+                if( rhs_needs_update )
+                {
+                   assert( rhs[row] != 0 );
+                   reduction.changeRowRHS( row, new_rhs );
+                   result = PresolveStatus::kReduced;
+                }
+                if( lhs_needs_update )
+                {
+                   assert( lhs[row] != 0 );
+                   reduction.changeRowLHS( row, new_lhs );
+                   result = PresolveStatus::kReduced;
+                }
+                stored_reductions[row] = reduction;
+
+             }
+          }
+       } );
+
+   // TODO: clear the vector?
+   if( result == PresolveStatus::kUnchanged )
+      return PresolveStatus::kUnchanged;
+
+   for( int i = 0; i < stored_reductions.size(); ++i )
    {
-      auto rowvec = consMatrix.getRowCoefficients( row );
-      int rowLength = rowvec.getLength();
-
-      if( isRedundant( row, rflags ) || isUnbounded( row, rflags ) ||
-          isInfiniteActivity( activities, row ) ||
-          // ignore empty or bound-constraints
-          rowLength < 2 )
-         continue;
-
-      const int* colinds = rowvec.getIndices();
-
-      REAL greatestCommonDivisor = 0;
-      bool isSimplificationPossible = false;
-
-      colOrder.clear();
-      coefficientsThatCanBeDeleted.clear();
-
-      simplify( rowvec.getValues(), colinds, rowLength, activities[row],
-                rflags[row], cflags, rhs[row], lhs[row], lbs, ubs, colOrder,
-                coefficientsThatCanBeDeleted, greatestCommonDivisor,
-                isSimplificationPossible, num );
-
-      if( isSimplificationPossible )
+      Reductions<REAL> reds = stored_reductions[i];
+      if( reds.size() > 0 )
       {
-         assert( greatestCommonDivisor >= 1 );
-         bool col_can_be_deleted = !coefficientsThatCanBeDeleted.empty();
-         bool rhs_needs_update = false;
-         bool lhs_needs_update = false;
-         REAL new_rhs = 0;
-         REAL new_lhs = 0;
-
-         if( !rflags[row].test( RowFlag::kRhsInf ) && rhs[row] != 0 )
-         {
-            new_rhs = num.feasFloor( rhs[row] / greatestCommonDivisor ) *
-                      greatestCommonDivisor;
-            rhs_needs_update = new_rhs != rhs[row];
-         }
-         else if( !rflags[row].test( RowFlag::kLhsInf ) && lhs[row] != 0 )
-         {
-            new_lhs = num.feasCeil( lhs[row] / greatestCommonDivisor ) *
-                      greatestCommonDivisor;
-            lhs_needs_update = new_lhs != lhs[row];
-         }
-
-         if( !rhs_needs_update && !lhs_needs_update && !col_can_be_deleted )
-            continue;
-
          TransactionGuard<REAL> guard{ reductions };
-         reductions.lockRow( row );
-
-         for( int col : coefficientsThatCanBeDeleted )
+         for( Reduction<REAL> red : reds.getReductions() )
          {
-            reductions.changeMatrixEntry( row, colinds[col], 0 );
-            result = PresolveStatus::kReduced;
-         }
-
-         // round side to multiple of greatestCommonDivisor; don't divide row by
-         // greatestCommonDivisor
-         if( rhs_needs_update )
-         {
-            assert( rhs[row] != 0 );
-            reductions.changeRowRHS( row, new_rhs );
-            result = PresolveStatus::kReduced;
-         }
-         if( lhs_needs_update )
-         {
-            assert( lhs[row] != 0 );
-            reductions.changeRowLHS( row, new_lhs );
-            result = PresolveStatus::kReduced;
+            reductions.add_reduction( red.row, red.col, red.newval );
          }
       }
    }
+
 
    return result;
 }
