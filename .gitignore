@@ -35,12 +35,17 @@
 .vscode
 .idea/
 
-#testcluster
-/check/results/
+# test and testcluster
+check/results/
+check/IP
+check/LP
+check/MINLP
+check/instancedata
+
 
 #Generated Files
-/build/
-/cmake-build-debug/
-/cmake-build-debug-coverage/
-/external/tbb/cmake/
+build/
+cmake-build-debug/
+cmake-build-debug-coverage/
+external/tbb/cmake/
 solutions.test
