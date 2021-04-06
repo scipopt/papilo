@@ -189,7 +189,7 @@ EOF
 
 # checks if branch has something pending
 function parse_git_dirty() {
-  git diff --quiet --ignore-submodules HEAD 2>/dev/null; [ $? -eq 1 ] && echo "*"
+  git diff --quiet --ignore-submodules HEAD 2>/dev/null; [ "$?" -eq 1 ] && echo "*"
 }
 
 # gets the current git branch
@@ -225,30 +225,30 @@ elif [ "${PERFORMANCE}" == "valgrind" ]; then
 fi
 
 # EXECUTABLE has form 'scipoptspx_bugfix_20180401/bin/scip', we only want 'scipoptspx'
-SCIP_BUILDDIR=$(echo ${EXECUTABLE} | cut -d '/' -f 1 | cut -d '_' -f 1)
-SOPLEX_HASH=$(${PWD}/${EXECUTABLE} -v | grep "  SoPlex" | grep "GitHash: .*]" -o | cut -d ' ' -f 2 | cut -d ']' -f 1)
+SCIP_BUILDDIR=$(echo "${EXECUTABLE}" | cut -d '/' -f 1 | cut -d '_' -f 1)
+SOPLEX_HASH=$("${PWD}/${EXECUTABLE}" -v | grep "  SoPlex" | grep "GitHash: .*]" -o | cut -d ' ' -f 2 | cut -d ']' -f 1)
 
 NEWTIMESTAMP=$(date '+%F-%H-%M')
 # The RBDB database has the form: timestamp_of_testrun rubberbandid p=PERM s=SEED
 if [ "${PERFORMANCE}" == "performance" ]; then
   RBDB="/nfs/OPTI/adm_timo/databases/rbdb/${GITBRANCH}_${MODE}_${TESTSET}_${SETTINGS}_${SCIP_BUILDDIR}_rbdb.txt"
-  touch $RBDB
+  touch "${RBDB}"
   OLDTIMESTAMP=$(tail -n 1 ${RBDB} | cut -d ' ' -f 1)
 elif [ "${PERFORMANCE}" == "mergerequest" ]; then
   RBDB="${PWD}/${MODE}_mergerequest_${TESTSET}_${gitlabMergeRequestIid}_rbdb.txt"
-  touch $RBDB
+  touch "${RBDB}"
 fi
 
-if [ "$PSMESSAGE" != "" ]; then
+if [ "${PSMESSAGE}" != "" ]; then
   PSMESSAGE="
-   PS: $PSMESSAGE"
+   PS: ${PSMESSAGE}"
 fi
 
 : ${GLBSEEDSHIFT:=0}
 : ${STARTPERM:=0}
 
-SEEDSBND=$(expr ${SEEDS} + ${GLBSEEDSHIFT})
-PERMUTEBND=$(expr ${PERMUTE} + ${STARTPERM})
+SEEDSBND=$((SEEDS + GLBSEEDSHIFT))
+PERMUTEBND=$((PERMUTE + STARTPERM))
 
 SEED=${GLBSEEDSHIFT}
 
@@ -259,7 +259,7 @@ while [ "${SEED}" -le "${SEEDSBND}" ]; do
   else
     SEED_ENDING="-s${SEED}"
   fi
-  PERM=${STARTPERM}
+  PERM="${STARTPERM}"
   while [ "${PERM}" -le "${PERMUTEBND}" ]; do
     # get ending given by permutation
     if [ "${PERM}" == "0" ]; then
@@ -276,23 +276,23 @@ while [ "${SEED}" -le "${SEEDSBND}" ]; do
     elif [ "${PERFORMANCE}" != "mergerequest" ]; then
       DATABASE="/nfs/OPTI/adm_timo/databases/${IDENT}${GITBRANCH}_${MODE}_${TESTSET}_${SETTINGS}_${SCIP_BUILDDIR}${SEED_ENDING}${PERM_ENDING}.txt"
     fi
-    touch ${DATABASE}
+    touch "${DATABASE}"
     TMPDATABASE="${DATABASE}.tmp"
     STILLFAILING="${DATABASE}_SF.tmp"
     OUTPUT="${DATABASE}_output.tmp"
-    touch ${STILLFAILING}
+    touch "${STILLFAILING}"
 
-    SUBJECTINFO="[BRANCH: $GITBRANCH] [TESTSET: $TESTSET] [SETTINGS: $SETTINGS] [GITHASH: $GITHASH] "
+    SUBJECTINFO="[BRANCH: ${GITBRANCH}] [TESTSET: ${TESTSET}] [SETTINGS: ${SETTINGS}] [GITHASH: ${GITHASH}] "
 
-    AWKARGS="-v GITBRANCH=$GITBRANCH -v TESTSET=$TESTSET -v SETTINGS=$SETTINGS -v SCIP_BUILDDIR=$SCIP_BUILDDIR -v DATABASE=$DATABASE -v TMPDATABASE=$TMPDATABASE -v STILLFAILING=$STILLFAILING -v PERM=$PERM -v SEED=$SEED -v MODE=$MODE"
-    echo $AWKARGS
+    AWKARGS="-v GITBRANCH=${GITBRANCH} -v TESTSET=${TESTSET} -v SETTINGS=${SETTINGS} -v SCIP_BUILDDIR=${SCIP_BUILDDIR} -v DATABASE=${DATABASE} -v TMPDATABASE=${TMPDATABASE} -v STILLFAILING=${STILLFAILING} -v PERM=${PERM} -v SEED=${SEED} -v MODE=${MODE}"
+    echo "${AWKARGS}"
 
     # the first time, the file might not exists so we create it
     # Even more, we have to write something to it, since otherwise
     # the awk scripts below won't work (NR and FNR will not be different)
-    if ! [[ -s $DATABASE ]]; then # check that file exists and has size larger that 0
+    if ! [[ -s "${DATABASE}" ]]; then # check that file exists and has size larger that 0
       echo "Preparing database."
-      echo "Instance Fail_reason Branch Testset Settings Opt_mode SCIP_BUILDDIR" >$DATABASE
+      echo "Instance Fail_reason Branch Testset Settings Opt_mode SCIP_BUILDDIR" > "${DATABASE}"
     fi
 
     EMAILFROM="adm_timo <timo-admin@zib.de>"
@@ -308,7 +308,7 @@ while [ "${SEED}" -le "${SEEDSBND}" ]; do
 
     # SCIP check files are in check/${OUTPUTDIR}
     BASEFILE="check/${OUTPUTDIR}/check.${TESTSET}.*.${SETTINGS}${SEED_ENDING}${PERM_ENDING}."
-    EVALFILE=$(ls ${BASEFILE}*eval)
+    EVALFILE=$(ls "${BASEFILE}*eval")
 
     # at this point we have exactly one evalfile
     BASENAME=${EVALFILE%.*} # remove extension
@@ -333,29 +333,29 @@ while [ "${SEED}" -le "${SEEDSBND}" ]; do
       # add tags to uploaded run
       export RBCLI_TAG="${GITBRANCH},${PERFORMANCE}"
       if [ "${MODE}" == "debug" ]; then
-        ./evalcheck_cluster.sh -E ${EVALFILE} >${OUTPUT}
+        ./evalcheck_cluster.sh -E "${EVALFILE}" > "${OUTPUT}"
       else
-        ./evalcheck_cluster.sh -U ${EVALFILE} >${OUTPUT}
+        ./evalcheck_cluster.sh -U "${EVALFILE}" > "${OUTPUT}"
       fi
-      NEWRBID=$(cat $OUTPUT | grep "rubberband.zib" | sed -e 's|https://rubberband.zib.de/result/||')
+      NEWRBID=$(cat "${OUTPUT}" | grep "rubberband.zib" | sed -e 's|https://rubberband.zib.de/result/||')
       if [ "${SOPLEX_HASH}" != "" ]; then
-        echo "${NEWTIMESTAMP} ${NEWRBID} p=${PERM} s=${SEED} fullgh=${FULLGITHASH} soplexhash=${SOPLEX_HASH}" >>$RBDB
+        echo "${NEWTIMESTAMP} ${NEWRBID} p=${PERM} s=${SEED} fullgh=${FULLGITHASH} soplexhash=${SOPLEX_HASH}" >> "${RBDB}"
       else
-        echo "${NEWTIMESTAMP} ${NEWRBID} p=${PERM} s=${SEED} fullgh=${FULLGITHASH}" >>$RBDB
+        echo "${NEWTIMESTAMP} ${NEWRBID} p=${PERM} s=${SEED} fullgh=${FULLGITHASH}" >> "${RBDB}"
       fi
     else
-      ./evalcheck_cluster.sh "-v useshortnames=0" ${EVALFILE} >${OUTPUT}
+      ./evalcheck_cluster.sh "-v useshortnames=0" "${EVALFILE}" > "${OUTPUT}"
     fi
-    cat ${OUTPUT}
-    rm ${OUTPUT}
+    cat "${OUTPUT}"
+    rm "${OUTPUT}"
     cd ..
 
     if [ "${CHECKFAILS}" == "yes" ]; then
       # check for fixed instances
       echo "Checking for fixed instances."
-      RESOLVEDINSTANCES=$(awk $AWKARGS "$awkscript_checkfixedinstances" $RESFILE $DATABASE)
-      echo "Temporary database: $TMPDATABASE\n"
-      mv $TMPDATABASE $DATABASE
+      RESOLVEDINSTANCES=$(awk "${AWKARGS}" "${awkscript_checkfixedinstances}" "${RESFILE}" "${DATABASE}")
+      echo "Temporary database: ${TMPDATABASE}\n"
+      mv "${TMPDATABASE}" "${DATABASE}"
 
       if [ "${PERFORMANCE}" == "debug" ]; then
         ###################
@@ -363,24 +363,24 @@ while [ "${SEED}" -le "${SEEDSBND}" ]; do
         ###################
 
         # if there are fails; process them and send email when there are new ones
-        NFAILS=$(grep -c fail $RESFILE)
-        if [ $NFAILS -gt 0 ]; then
+        NFAILS=$(grep -c fail "${RESFILE}")
+        if [ "${NFAILS}" -gt 0 ]; then
           echo "Detected ${NFAILS} fails."
           ## read all known bugs
-          ERRORINSTANCES=$(awk $AWKARGS "$awkscript_readknownbugs" $DATABASE $RESFILE)
-          STILLFAILINGDB=$(cat ${STILLFAILING})
+          ERRORINSTANCES=$(awk "${AWKARGS}" "${awkscript_readknownbugs}" "${DATABASE}" "${RESFILE}")
+          STILLFAILINGDB=$(cat "${STILLFAILING}")
 
           # check if there are new fails!
-          if [ -n "$ERRORINSTANCES" ]; then
+          if [ -n "${ERRORINSTANCES}" ]; then
             ###################
             ## Process fails ##
             ###################
 
             # get SCIP's header
-            SCIP_HEADER=$(awk "$awkscript_scipheader" $OUTFILE)
+            SCIP_HEADER=$(awk "${awkscript_scipheader}" "${OUTFILE}")
 
             # Get assertions and instance where they were generated
-            ERRORS_INFO=$(echo "${ERRORINSTANCES}" | awk "$awkscript_findasserts" - ${ERRFILE})
+            ERRORS_INFO=$(echo "${ERRORINSTANCES}" | awk "${awkscript_findasserts}" - "${ERRFILE}")
 
             ###############
             # ERROR EMAIL #
@@ -391,7 +391,7 @@ while [ "${SEED}" -le "${SEEDSBND}" ]; do
                   The instances run with the following SCIP version and setting file:
 
                   \`\`\`
-                  BRANCH: $GITBRANCH
+                  BRANCH: ${GITBRANCH}
 
                   SCIP HEADER:
                   ${SCIP_HEADER}
@@ -413,12 +413,12 @@ while [ "${SEED}" -le "${SEEDSBND}" ]; do
                   ${STILLFAILINGDB}
 
                   Finally, the err, out and res file can be found here:
-                  $ERRFILE
-                  $OUTFILE
-                  $RESFILE
+                  ${ERRFILE}
+                  ${OUTFILE}
+                  ${RESFILE}
 
                   Please note that they might be deleted soon
-                  ${PSMESSAGE}" | mailx -s "$SUBJECT" -r "$EMAILFROM" $EMAILTO
+                  ${PSMESSAGE}" | mailx -s "${SUBJECT}" -r "${EMAILFROM}" ${EMAILTO}
           else
             echo "No new errors, sending no emails."
           fi
@@ -428,7 +428,7 @@ while [ "${SEED}" -le "${SEEDSBND}" ]; do
       fi
 
       # send email if there are fixed instances
-      if [ -n "$RESOLVEDINSTANCES" ]; then
+      if [ -n "${RESOLVEDINSTANCES}" ]; then
         #########################
         # RESOLVED ERRORS EMAIL #
         #########################
@@ -439,14 +439,14 @@ while [ "${SEED}" -le "${SEEDSBND}" ]; do
             ${STILLFAILINGDB}
 
             The err, out and res file can be found here:
-            $ERRFILE
-            $OUTFILE
-            $RESFILE
+            ${ERRFILE}
+            ${OUTFILE}
+            ${RESFILE}
 
             The following errors have been fixed:
-            ${RESOLVEDINSTANCES}" | mailx -s "$SUBJECT" -r "$EMAILFROM" $EMAILTO
+            ${RESOLVEDINSTANCES}" | mailx -s "${SUBJECT}" -r "${EMAILFROM}" ${EMAILTO}
       fi
-      rm ${STILLFAILING}
+      rm "${STILLFAILING}"
     fi
 
     PERM=$((PERM + 1))
@@ -455,20 +455,20 @@ while [ "${SEED}" -le "${SEEDSBND}" ]; do
 done
 
 function geturl() {
-  RBDB_STRS="$1"
+  RBDB_STRS="${1}"
   i=0
   while read -r line; do
-    arr=($line)
-    RBIDS[$i]=${arr[-1]}
+    arr=(${line})
+    RBIDS[${i}]=${arr[-1]}
     ((i++))
   done <<<"${RBDB_STRS}"
 
   IDSTR=$(printf ",%s" "${RBIDS[@]}")
   IDSTR=${IDSTR:1}
 
-  URLSTR=$(echo ${IDSTR} | sed 's/,/?compare=/')
+  URLSTR=$(echo "${IDSTR}" | sed 's/,/?compare=/')
 
-  echo ${URLSTR}
+  echo "${URLSTR}"
 }
 
 # collect all ids with timestamps OLDTIMESTAMP NEWTIMESTAMP in RBIDS
@@ -480,6 +480,6 @@ PERF_MAIL=$(echo "The results of the papilo performance run are ready. Take a lo
 
 
 SUBJECT="PAPILO PERF_MAIL ${SUBJECTINFO}"
-echo -e "$PERF_MAIL" | mailx -s "$SUBJECT" -r "$EMAILFROM" $EMAILTO
-echo -e "$PERF_MAIL" | mailx -s "$SUBJECT" -r "$EMAILFROM" "hoen@zib.de"
-echo -e "$PERF_MAIL" | mailx -s "$SUBJECT" -r "$EMAILFROM" "$GIT_AUTHOR_EMAIL"
+echo -e "${PERF_MAIL}" | mailx -s "${SUBJECT}" -r "${EMAILFROM}" "${EMAILTO}"
+echo -e "${PERF_MAIL}" | mailx -s "${SUBJECT}" -r "${EMAILFROM}" "hoen@zib.de"
+echo -e "${PERF_MAIL}" | mailx -s "${SUBJECT}" -r "${EMAILFROM}" "${GIT_AUTHOR_EMAIL}"

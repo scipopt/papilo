@@ -21,6 +21,8 @@
 
 PAPILODIR=$(shell pwd -P)
 
+.DEFAULT_GOAL := help
+
 #-----------------------------------------------------------------------------
 # include make.project file
 #-----------------------------------------------------------------------------
@@ -35,18 +37,18 @@ include $(PAPILODIR)/make/make.project
 # Rules
 #-----------------------------------------------------------------------------
 
+.PHONY: help
+help:
+		@echo "  Main targets:"
+		@echo "  - test: start Papilo testrun locally."
+		@echo "  - testcluster: start Papilo testrun on the cluster."
+
 .PHONY: test
 test:
 		cd check; \
 		$(SHELL) ./check.sh $(TEST) $(EXECUTABLE) $(SETTINGS) $(BINID) $(OUTPUTDIR) $(TIME) $(NODES) $(MEM) $(THREADS) $(FEASTOL) $(DISPFREQ) \
 		$(CONTINUE) $(LOCK) $(VERSION) $(LPS) $(DEBUGTOOL) $(CLIENTTMPDIR) $(REOPT) $(PAPILO_OPT_COMMAND) $(SETCUTOFF) $(MAXJOBS) $(VISUALIZE) $(PERMUTE) \
                 $(SEEDS) $(GLBSEEDSHIFT) $(STARTPERM);
-
-.PHONY: help
-help:
-		@echo "  Main targets:"
-		@echo "  - test: start Papilo testrun locally."
-		@echo "  - testcluster: start Papilo testrun on the cluster."
 
 # --- EOF ---------------------------------------------------------------------
 # DO NOT DELETE

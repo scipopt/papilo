@@ -52,7 +52,7 @@ Steps:
     pip3 install -r requirements.txt
   ```
 - create the folder `.ipet/solver` in your home directory
-- copy the file `check/ipet-solver/test/data/PapiloSolver.py` to `~/.ipet/solvers`
+- copy the file `check/ipet/PapiloSolver.py` to `~/.ipet/solvers`
 - create the file `__init__.py` in `~/.ipet/solvers` with following content:
 
 ```
@@ -62,7 +62,7 @@ from .PapiloSolver import PaPILOSolver
 
 - parse file(s) `ipet-parse -l PATH_TO_DIR\filename.{err,out}`
 - parsing should generate an testrunfile `.trn`
-- download an evaluation file (i.e. papilo_evaluation.xml) from Rubberband: select one testrun -> go to tab `Evaluation` -> `Evaluate`
+- download an evaluation file (i.e. check/ipet/papilo_evaluation.xml) from Rubberband: select one testrun -> go to tab `Evaluation` -> `Evaluate`
   -> `Download evalfile`
 - replace `RubberbandId` in the evaluation file with `LogFileName`
 - `ipet-evaluate -t PATH_TO_TRN -l -e PATH_TO_EVALUTAION_XML`
