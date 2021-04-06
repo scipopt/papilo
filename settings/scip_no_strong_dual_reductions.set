@@ -1,0 +1,20 @@
+# 0: disable dual reductions, 1: allow dual reductions that never cut off optimal solutions, 2: allow all dual reductions  [Integer: [0,2]]
+presolve.dualreds = 1
+
+# epsilon tolerance to consider two values equal  [Numerical: [0,0.10000000000000001]]
+numerics.epsilon = 1.0000000000000001e-04
+
+substitution.maxfillin = 3
+
+substitution.binarieswithints = 0
+
+presolve.removeslackvars = 0
+
+presolve.detectlindep = 1
+
+presolve.threads = 1
+
+parallelcols.enabled = 0
+
+
+

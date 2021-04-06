@@ -284,16 +284,16 @@ if (TARGET papilo-executable AND EXISTS "${PROJECT_SOURCE_DIR}/${filename_for_so
     endmacro(split_solution)
 
     #solution is still contained after presolving
-    macro(validate_solution instance)
+    macro(validate_solution instance settings)
         split_solution(${instance})
         file(TO_NATIVE_PATH "${path}" instance_file)
         file(TO_NATIVE_PATH "${path_solution}" solution_file)
-        file(TO_NATIVE_PATH "${PROJECT_SOURCE_DIR}/settings/no_strong_dual_reductions.set" settings_file)
+        file(TO_NATIVE_PATH "${PROJECT_SOURCE_DIR}/settings/${settings}" settings_file)
         #TODO find better testname -> solution file can be occur multiple times
-        add_test(NAME validate-solution-${solution_file}
+        add_test(NAME validate-solution-${settings}-${solution_file}
                 COMMAND $<TARGET_FILE:papilo-executable> presolve -f ${instance_file} -b ${solution_file} -p ${settings_file}
                 )
-        set_tests_properties(validate-solution-${solution_file}
+        set_tests_properties(validate-solution-${settings}-${solution_file}
                 PROPERTIES
                 PASS_REGULAR_EXPRESSION "validation: SUCCESS\n"
                 DEPENDS papilo-build
@@ -301,6 +301,7 @@ if (TARGET papilo-executable AND EXISTS "${PROJECT_SOURCE_DIR}/${filename_for_so
     endmacro(validate_solution)
 
     foreach (instance ${instances})
-        validate_solution(${instance})
+        validate_solution(${instance}, "no_strong_dual_reductions.set")
+#        validate_solution(${instance}, "scip_no_strong_dual_reductions.set")
     endforeach (instance)
 endif ()
