@@ -40,6 +40,9 @@ Problem<double>
 setupProblemWithSingletonColumnInEquationWithNoImpliedBounds(
     double coefficient, double upper_bound, double lower_bound );
 
+Problem<double>
+setupProblemWithSingletonColumnInEquationWithInfinityBounds();
+
 void
 forceCalculationOfSingletonRows( Problem<double>& problem,
                                  ProblemUpdate<double>& problemUpdate )
@@ -316,6 +319,49 @@ TEST_CASE( "happy-path-singleton-column-implied-bounds-positive-coeff-neg-bounds
    REQUIRE( reductions.getReduction( 5 ).newval == 4 );
 }
 
+TEST_CASE( "happy-path-singleton-column-infinity-bounds-equation", "[presolve]" )
+{
+   Message msg{};
+   const Num<double> num{};
+   Problem<double> problem =
+       setupProblemWithSingletonColumnInEquationWithInfinityBounds();
+   Statistics statistics{};
+   PresolveOptions presolveOptions{};
+   Postsolve<double> postsolve = Postsolve<double>( problem, num );
+   ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
+                                        presolveOptions, num, msg );
+   forceCalculationOfSingletonRows( problem, problemUpdate );
+   SingletonCols<double> presolvingMethod{};
+   Reductions<double> reductions{};
+
+   PresolveStatus presolveStatus =
+       presolvingMethod.execute( problem, problemUpdate, num, reductions );
+
+   REQUIRE( presolveStatus == PresolveStatus::kReduced );
+   REQUIRE( reductions.size() == 5 );
+   REQUIRE( reductions.getReduction( 0 ).col == 0 );
+   REQUIRE( reductions.getReduction( 0 ).row == ColReduction::BOUNDS_LOCKED );
+   REQUIRE( reductions.getReduction( 0 ).newval == 0 );
+
+   REQUIRE( reductions.getReduction( 1 ).col == papilo::RowReduction::LOCKED );
+   REQUIRE( reductions.getReduction( 1 ).row == 0 );
+   REQUIRE( reductions.getReduction( 1 ).newval == 0 );
+
+   REQUIRE( reductions.getReduction( 2 ).col == 0 );
+   REQUIRE( reductions.getReduction( 2 ).row == ColReduction::SUBSTITUTE_OBJ );
+   REQUIRE( reductions.getReduction( 2 ).newval == 0 );
+
+   REQUIRE( reductions.getReduction( 3 ).col == 0 );
+   REQUIRE( reductions.getReduction( 3 ).row == 0 );
+   REQUIRE( reductions.getReduction( 3 ).newval == 0 );
+
+   REQUIRE( reductions.getReduction( 4 ).col == RowReduction::LHS_INF );
+   REQUIRE( reductions.getReduction( 4 ).row == 0 );
+   REQUIRE( reductions.getReduction( 4 ).newval == 0 );
+
+}
+
+
 
 Problem<double>
 setupProblemWithOnlyOneEntryIn1stRowAndColumn()
@@ -442,5 +488,45 @@ setupProblemWithSingletonColumnInEquationWithNoImpliedBounds(
    pb.setProblemName( "singleton column" );
    Problem<double> problem = pb.build();
    problem.getConstraintMatrix().modifyLeftHandSide( 0, num, 1 );
+   return problem;
+}
+
+Problem<double>
+setupProblemWithSingletonColumnInEquationWithInfinityBounds()
+{
+   const Num<double> num{};
+   Vec<double> coefficients{ 0.0, 1.0, 1.0 };
+   Vec<uint8_t> isIntegral{ 0, 0, 0 };
+   Vec<uint8_t> upper_bound_infinity{ 1, 1, 1 };
+   Vec<uint8_t> lower_bound_infinity{ 0, 0, 0 };
+
+   Vec<double> rhs{ 1.0, 2.0, 3.0};
+   Vec<std::string> rowNames{ "A1", "A2", "A3" };
+   Vec<std::string> columnNames{ "c1", "c2", "c3" };
+   Vec<std::tuple<int, int, double>> entries{
+       std::tuple<int, int, double>{ 0, 0, 1.0 },
+       std::tuple<int, int, double>{ 0, 1, 1.0 },
+       std::tuple<int, int, double>{ 0, 2, 1.0 },
+       std::tuple<int, int, double>{ 1, 1, 2.0 },
+       std::tuple<int, int, double>{ 1, 2, 3.0 },
+       std::tuple<int, int, double>{ 2, 1, -4.0 },
+       std::tuple<int, int, double>{ 2, 2, -5.0 },
+   };
+
+   ProblemBuilder<double> pb;
+   pb.reserve( entries.size(), rowNames.size(), columnNames.size() );
+   pb.setNumRows( rowNames.size() );
+   pb.setNumCols( columnNames.size() );
+   pb.setColUbInfAll(upper_bound_infinity);
+   pb.setColLbInfAll( lower_bound_infinity);
+   pb.setObjAll( coefficients );
+   pb.setObjOffset( 0.0 );
+   pb.setColIntegralAll( isIntegral );
+   pb.setRowRhsAll( rhs );
+   pb.addEntryAll( entries );
+   pb.setColNameAll( columnNames );
+   pb.setProblemName( "singleton column" );
+   Problem<double> problem = pb.build();
+   problem.getConstraintMatrix().modifyLeftHandSide( 0, num, rhs[0] );
    return problem;
 }
