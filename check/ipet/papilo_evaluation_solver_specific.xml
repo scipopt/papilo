@@ -1,5 +1,8 @@
 <?xml version="1.0" ?>
 <Evaluation comparecolformat="%.3f" index="ProblemName LogFileName" indexsplit="-1">
+	<Column active="True" alternative="-1" name="Presolve_time" origcolname="presolve_time" reduction="meanOrConcat">
+		<Aggregation aggregation="shmean" name="shmean" shiftby="1.0"/>
+	</Column>
 	<Column active="True" alternative="1e+30" name="tsx%colsingleton" origcolname="tsx%colsingleton" reduction="meanOrConcat">
 		<Aggregation aggregation="shmean" name="shmean" shiftby="1.0"/>
   </Column>
@@ -47,4 +50,19 @@
   </Column>
 
 	<FilterGroup active="True" filtertype="intersection" name="all"/>
+	<FilterGroup name="[0.01,tilim]">
+		<Filter anytestrun="one" expression1="Presolve_time" expression2="0.01" operator="ge"/>
+	</FilterGroup>
+	<FilterGroup name="[0.1,tilim]">
+		<Filter anytestrun="one" expression1="Presolve_time" expression2="0.1" operator="ge"/>
+	</FilterGroup>
+	<FilterGroup name="[1,tilim]">
+		<Filter anytestrun="one" expression1="Presolve_time" expression2="1" operator="ge"/>
+	</FilterGroup>
+	<FilterGroup name="[10,tilim]">
+		<Filter anytestrun="one" expression1="Presolve_time" expression2="10" operator="ge"/>
+	</FilterGroup>
+	<FilterGroup name="[100,tilim]">
+		<Filter anytestrun="one" expression1="Presolve_time" expression2="100" operator="ge"/>
+	</FilterGroup>
 </Evaluation>
