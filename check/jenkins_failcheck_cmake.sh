@@ -272,9 +272,9 @@ while [ "${SEED}" -le "${SEEDSBND}" ]; do
     # can have several tests sent to the cluster, that is why the jenkins job
     # name (i.e, the directory name) is not enough)
     if [ "${PERFORMANCE}" == "mergerequest" ]; then
-      DATABASE="${PWD}/${GITBRANCH}_${MODE}_${TESTSET}_${SETTINGS}_${SCIP_BUILDDIR}${SEED_ENDING}${PERM_ENDING}.txt"
+      DATABASE="${PWD}/papilo_${GITBRANCH}_${MODE}_${TESTSET}_${SETTINGS}_${SCIP_BUILDDIR}${SEED_ENDING}${PERM_ENDING}.txt"
     elif [ "${PERFORMANCE}" != "mergerequest" ]; then
-      DATABASE="/nfs/OPTI/adm_timo/databases/${IDENT}${GITBRANCH}_${MODE}_${TESTSET}_${SETTINGS}_${SCIP_BUILDDIR}${SEED_ENDING}${PERM_ENDING}.txt"
+      DATABASE="/nfs/OPTI/adm_timo/databases/${IDENT}_papilo_${GITBRANCH}_${MODE}_${TESTSET}_${SETTINGS}_${SCIP_BUILDDIR}${SEED_ENDING}${PERM_ENDING}.txt"
     fi
     touch "${DATABASE}"
     TMPDATABASE="${DATABASE}.tmp"
@@ -353,7 +353,8 @@ while [ "${SEED}" -le "${SEEDSBND}" ]; do
     if [ "${CHECKFAILS}" == "yes" ]; then
       # check for fixed instances
       echo "Checking for fixed instances."
-      RESOLVEDINSTANCES=$(awk "${AWKARGS}" "${awkscript_checkfixedinstances}" "${RESFILE}" "${DATABASE}")
+      # in the awk call it is important not to put quotationmarks around AWKARGS
+      RESOLVEDINSTANCES=$(awk ${AWKARGS} "${awkscript_checkfixedinstances}" "${RESFILE}" "${DATABASE}")
       echo "Temporary database: ${TMPDATABASE}\n"
       touch "${TMPDATABASE}"
       mv "${TMPDATABASE}" "${DATABASE}"
@@ -368,7 +369,8 @@ while [ "${SEED}" -le "${SEEDSBND}" ]; do
         if [ "${NFAILS}" -gt 0 ]; then
           echo "Detected ${NFAILS} fails."
           ## read all known bugs
-          ERRORINSTANCES=$(awk "${AWKARGS}" "${awkscript_readknownbugs}" "${DATABASE}" "${RESFILE}")
+          # in the awk call it is important not to put quotationmarks around AWKARGS
+          ERRORINSTANCES=$(awk ${AWKARGS} "${awkscript_readknownbugs}" "${DATABASE}" "${RESFILE}")
           STILLFAILINGDB=$(cat "${STILLFAILING}")
 
           # check if there are new fails!
