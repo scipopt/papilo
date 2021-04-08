@@ -308,7 +308,7 @@ while [ "${SEED}" -le "${SEEDSBND}" ]; do
 
     # SCIP check files are in check/${OUTPUTDIR}
     BASEFILE="check/${OUTPUTDIR}/check.${TESTSET}.*.${SETTINGS}${SEED_ENDING}${PERM_ENDING}."
-    EVALFILE=$(ls "${BASEFILE}*eval")
+    EVALFILE=$(ls ${BASEFILE}*eval)
 
     # at this point we have exactly one evalfile
     BASENAME=${EVALFILE%.*} # remove extension
