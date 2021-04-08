@@ -355,6 +355,7 @@ while [ "${SEED}" -le "${SEEDSBND}" ]; do
       echo "Checking for fixed instances."
       RESOLVEDINSTANCES=$(awk "${AWKARGS}" "${awkscript_checkfixedinstances}" "${RESFILE}" "${DATABASE}")
       echo "Temporary database: ${TMPDATABASE}\n"
+      touch "${TMPDATABASE}"
       mv "${TMPDATABASE}" "${DATABASE}"
 
       if [ "${PERFORMANCE}" == "debug" ]; then
@@ -418,7 +419,7 @@ while [ "${SEED}" -le "${SEEDSBND}" ]; do
                   ${RESFILE}
 
                   Please note that they might be deleted soon
-                  ${PSMESSAGE}" | mailx -s "${SUBJECT}" -r "${EMAILFROM}" ${EMAILTO}
+                  ${PSMESSAGE}" | mailx -s "${SUBJECT}" -r "${EMAILFROM}" -t "${EMAILTO}"
           else
             echo "No new errors, sending no emails."
           fi
@@ -444,7 +445,7 @@ while [ "${SEED}" -le "${SEEDSBND}" ]; do
             ${RESFILE}
 
             The following errors have been fixed:
-            ${RESOLVEDINSTANCES}" | mailx -s "${SUBJECT}" -r "${EMAILFROM}" ${EMAILTO}
+            ${RESOLVEDINSTANCES}" | mailx -s "${SUBJECT}" -r "${EMAILFROM}" -t "${EMAILTO}"
       fi
       rm "${STILLFAILING}"
     fi
@@ -480,6 +481,6 @@ PERF_MAIL=$(echo "The results of the papilo performance run are ready. Take a lo
 
 
 SUBJECT="PAPILO PERF_MAIL ${SUBJECTINFO}"
-echo -e "${PERF_MAIL}" | mailx -s "${SUBJECT}" -r "${EMAILFROM}" "${EMAILTO}"
-echo -e "${PERF_MAIL}" | mailx -s "${SUBJECT}" -r "${EMAILFROM}" "hoen@zib.de"
-echo -e "${PERF_MAIL}" | mailx -s "${SUBJECT}" -r "${EMAILFROM}" "${GIT_AUTHOR_EMAIL}"
+echo -e "${PERF_MAIL}" | mailx -s "${SUBJECT}" -r "${EMAILFROM}" -t "${EMAILTO}"
+echo -e "${PERF_MAIL}" | mailx -s "${SUBJECT}" -r "${EMAILFROM}" -t "hoen@zib.de"
+echo -e "${PERF_MAIL}" | mailx -s "${SUBJECT}" -r "${EMAILFROM}" -t "${GIT_AUTHOR_EMAIL}"
