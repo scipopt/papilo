@@ -139,6 +139,7 @@ set(unit_tests
 
         #Sparsify
         "happy-path-sparsify"
+        "happy-path-sparsify-two-equalities"
         "failed-path-sparsify"
 
         "example-1-from-3.5-Presolve-Reductions-in-MIP" # not working
