@@ -231,7 +231,7 @@ SOPLEX_HASH=$("${PWD}/${EXECUTABLE}" -v | grep "  SoPlex" | grep "GitHash: .*]" 
 NEWTIMESTAMP=$(date '+%F-%H-%M')
 # The RBDB database has the form: timestamp_of_testrun rubberbandid p=PERM s=SEED
 if [ "${PERFORMANCE}" == "performance" ]; then
-  RBDB="/nfs/OPTI/adm_timo/databases/rbdb/${GITBRANCH}_${MODE}_${TESTSET}_${SETTINGS}_${SCIP_BUILDDIR}_rbdb.txt"
+  RBDB="/nfs/OPTI/adm_timo/databases/rbdb/papilo_${GITBRANCH}_${MODE}_${TESTSET}_${SETTINGS}_${SCIP_BUILDDIR}_rbdb.txt"
   touch "${RBDB}"
   OLDTIMESTAMP=$(tail -n 1 ${RBDB} | cut -d ' ' -f 1)
 elif [ "${PERFORMANCE}" == "mergerequest" ]; then
