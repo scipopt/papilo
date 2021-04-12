@@ -71,6 +71,7 @@ SimpleProbing<REAL>::execute( const Problem<REAL>& problem,
 {
    assert( problem.getNumIntegralCols() != 0 );
 
+   PresolveStatus status = PresolveStatus::kUnchanged;
    const auto& domains = problem.getVariableDomains();
    const auto& cflags = domains.flags;
    const auto& activities = problem.getRowActivities();
@@ -126,10 +127,10 @@ SimpleProbing<REAL>::execute( const Problem<REAL>& problem,
          calculateReductionsForSimpleProbing( num, reductions, domains,
                                               activities, rowvals, rowcols,
                                               rowlen, col, rowvals[k] );
-         return PresolveStatus::kReduced;
+         status = PresolveStatus::kReduced;
       }
    }
-   return PresolveStatus::kUnchanged;
+   return status;
 }
 template <typename REAL>
 void
