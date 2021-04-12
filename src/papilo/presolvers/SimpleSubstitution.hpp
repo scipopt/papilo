@@ -43,7 +43,7 @@ class SimpleSubstitution : public PresolveMethod<REAL>
  public:
    SimpleSubstitution() : PresolveMethod<REAL>()
    {
-      this->setName("doubletoneq" );
+      this->setName( "doubletoneq" );
       this->setTiming( PresolverTiming::kMedium );
    }
 
@@ -55,8 +55,18 @@ class SimpleSubstitution : public PresolveMethod<REAL>
    bool
    isConstraintsFeasibleWithGivenBounds(
        const Num<REAL>& num, Vec<REAL> lower_bounds,
-       const Vec<REAL> upper_bounds, const REAL* vals, REAL rhs, int subst,
+       const Vec<REAL>& upper_bounds, const REAL* vals, REAL rhs, int subst,
        int stay, const boost::integer::euclidean_result_t<int64_t>& res ) const;
+
+ private:
+   PresolveStatus
+   perform_simple_subsitution_step(
+       const ProblemUpdate<REAL>& problemUpdate, const Num<REAL>& num,
+       Reductions<REAL>& reductions, const VariableDomains<REAL>& domains,
+       const Vec<ColFlags>& cflags, const ConstraintMatrix<REAL>& constMatrix,
+       const Vec<REAL>& lhs_values, const Vec<REAL>& rhs_values,
+       const Vec<REAL>& lower_bounds, const Vec<REAL>& upper_bounds,
+       const Vec<RowFlags>& rflags, const Vec<int>& rowperm, int k );
 };
 
 #ifdef PAPILO_USE_EXTERN_TEMPLATES
@@ -95,142 +105,203 @@ SimpleSubstitution<REAL>::execute( const Problem<REAL>& problem,
 
    PresolveStatus result = PresolveStatus::kUnchanged;
 
-   for( int k = 0; k < nrows; ++k )
+   if( problemUpdate.getPresolveOptions().runs_sequentiell() )
    {
-      int i = rowperm[k];
-      // check that equality flag is correct or row is redundant
-      assert( rflags[i].test( RowFlag::kRedundant ) ||
-              ( !rflags[i].test( RowFlag::kEquation ) &&
-                ( lhs_values[i] != rhs_values[i] ||
-                  rflags[i].test( RowFlag::kLhsInf, RowFlag::kRhsInf ) ) ) ||
-              ( rflags[i].test( RowFlag::kEquation ) &&
-                !rflags[i].test( RowFlag::kLhsInf, RowFlag::kRhsInf ) &&
-                lhs_values[i] == rhs_values[i] ) );
-
-      if( rflags[i].test( RowFlag::kRedundant ) ||
-          !rflags[i].test( RowFlag::kEquation ) ||
-          constMatrix.getRowSizes()[i] != 2 )
-         continue;
-
-      auto rowvec = constMatrix.getRowCoefficients( i );
-      assert( rowvec.getLength() == 2 );
-      const REAL* vals = rowvec.getValues();
-      const int* inds = rowvec.getIndices();
-      REAL rhs = rhs_values[i];
-
-      int subst;
-      int stay;
-
-      if( cflags[inds[0]].test( ColFlag::kIntegral ) !=
-          cflags[inds[1]].test( ColFlag::kIntegral ) )
+      for( int k = 0; k < nrows; ++k )
       {
-         if( cflags[inds[0]].test( ColFlag::kIntegral ) )
-            subst = 1;
-         else
-            subst = 0;
-
-         stay = 1 - subst;
+         PresolveStatus s = perform_simple_subsitution_step(
+             problemUpdate, num, reductions, domains, cflags, constMatrix,
+             lhs_values, rhs_values, lower_bounds, upper_bounds, rflags,
+             rowperm, k );
+         if( s == PresolveStatus::kReduced )
+            result = PresolveStatus::kReduced;
+         else if( s == PresolveStatus::kInfeasible )
+            return PresolveStatus::kInfeasible;
       }
-      else if( cflags[inds[0]].test( ColFlag::kIntegral ) )
+   }
+   else
+   {
+      PresolveStatus infeasible = PresolveStatus::kUnchanged;
+      Vec<Reductions<REAL>> stored_reductions( nrows );
+      tbb::parallel_for(
+          tbb::blocked_range<int>( 0, nrows ),
+          [&]( const tbb::blocked_range<int>& r ) {
+             for( int j = r.begin(); j < r.end(); ++j )
+             {
+                PresolveStatus s = perform_simple_subsitution_step(
+                    problemUpdate, num, stored_reductions[j], domains, cflags,
+                    constMatrix, lhs_values, rhs_values, lower_bounds,
+                    upper_bounds, rflags, rowperm, j );
+                assert( s == PresolveStatus::kUnchanged ||
+                        s == PresolveStatus::kReduced ||
+                        s == PresolveStatus::kInfeasible );
+                if( s == PresolveStatus::kReduced )
+                   result = PresolveStatus::kReduced;
+                else if( s == PresolveStatus::kInfeasible )
+                   infeasible = PresolveStatus::kInfeasible;
+             }
+          } );
+      if( infeasible == PresolveStatus::kInfeasible )
+         return PresolveStatus::kInfeasible;
+      if( result == PresolveStatus::kUnchanged )
+         return PresolveStatus::kUnchanged;
+
+      for( int i = 0; i < stored_reductions.size(); ++i )
       {
-         assert( cflags[inds[1]].test( ColFlag::kIntegral ) );
-         if( abs( vals[0] ) < abs( vals[1] ) ||
-             ( abs( vals[0] ) == abs( vals[1] ) &&
-               problemUpdate.isColBetterForSubstitution( inds[0], inds[1] ) ) )
-            subst = 0;
-         else
-            subst = 1;
-
-         stay = 1 - subst;
-
-         if( !num.isIntegral( vals[stay] / vals[subst] ) )
+         Reductions<REAL> reds = stored_reductions[i];
+         if( reds.size() > 0 )
          {
-            if( !num.isIntegral( vals[stay] ) ||
-                !num.isIntegral( vals[subst] ) )
-               continue;
-            auto res = boost::integer::extended_euclidean(
-                static_cast<int64_t>( vals[stay] ),
-                static_cast<int64_t>( vals[subst] ) );
-            bool b = num.isIntegral( rhs / res.gcd );
-            bool b1 = isConstraintsFeasibleWithGivenBounds(
-                num, lower_bounds, upper_bounds, vals, rhs, subst, stay, res );
-            if( b && b1 )
-               continue;
-            return PresolveStatus::kInfeasible;
+            TransactionGuard<REAL> guard{ reductions };
+            for( Reduction<REAL> red : reds.getReductions() )
+            {
+               reductions.add_reduction( red.row, red.col, red.newval );
+            }
          }
-         // problem is infeasible if gcd (i.e. vals[subst]) is not divisor of
-         // rhs
-         if( !num.isFeasIntegral( rhs / vals[subst] ) )
-            return PresolveStatus::kInfeasible;
       }
-      else
-      {
-         REAL absval0 = abs( vals[0] );
-         REAL absval1 = abs( vals[1] );
-         if( absval0 * problemUpdate.getPresolveOptions().markowitz_tolerance >
-             absval1 )
-            subst = 0;
-         else if( absval1 *
-                      problemUpdate.getPresolveOptions().markowitz_tolerance >
-                  absval0 )
-            subst = 1;
-         else if( problemUpdate.isColBetterForSubstitution( inds[0], inds[1] ) )
-            subst = 0;
-         else
-            subst = 1;
-
-         stay = 1 - subst;
-      }
-
-      result = PresolveStatus::kReduced;
-
-      TransactionGuard<REAL> guard{ reductions };
-
-      reductions.lockRow( i );
-
-      reductions.lockColBounds( inds[subst] );
-
-      REAL s = vals[subst] * vals[stay];
-      if( !cflags[inds[subst]].test( ColFlag::kLbInf ) )
-      {
-         REAL staybound =
-             ( rhs - vals[subst] * domains.lower_bounds[inds[subst]] ) /
-             vals[stay];
-         if( s < 0 &&
-             ( cflags[inds[stay]].test( ColFlag::kLbInf ) ||
-               num.isGT( staybound, domains.lower_bounds[inds[stay]] ) ) )
-            reductions.changeColLB( inds[stay], staybound );
-
-         if( s > 0 &&
-             ( cflags[inds[stay]].test( ColFlag::kUbInf ) ||
-               num.isLT( staybound, domains.upper_bounds[inds[stay]] ) ) )
-            reductions.changeColUB( inds[stay], staybound );
-      }
-
-      if( !cflags[inds[subst]].test( ColFlag::kUbInf ) )
-      {
-         REAL staybound =
-             ( rhs - vals[subst] * domains.upper_bounds[inds[subst]] ) /
-             vals[stay];
-         if( s > 0 && ( cflags[inds[stay]].test( ColFlag::kLbInf ) ||
-                        staybound > domains.lower_bounds[inds[stay]] ) )
-            reductions.changeColLB( inds[stay], staybound );
-
-         if( s < 0 && ( cflags[inds[stay]].test( ColFlag::kUbInf ) ||
-                        staybound < domains.upper_bounds[inds[stay]] ) )
-            reductions.changeColUB( inds[stay], staybound );
-      }
-
-      reductions.aggregateFreeCol( inds[subst], i );
    }
 
+   return result;
+}
+template <typename REAL>
+PresolveStatus
+SimpleSubstitution<REAL>::perform_simple_subsitution_step(
+    const ProblemUpdate<REAL>& problemUpdate, const Num<REAL>& num,
+    Reductions<REAL>& reductions, const VariableDomains<REAL>& domains,
+    const Vec<ColFlags>& cflags, const ConstraintMatrix<REAL>& constMatrix,
+    const Vec<REAL>& lhs_values, const Vec<REAL>& rhs_values,
+    const Vec<REAL>& lower_bounds, const Vec<REAL>& upper_bounds,
+    const Vec<RowFlags>& rflags, const Vec<int>& rowperm, int k )
+{
+   PresolveStatus result;
+   int i = rowperm[k];
+   // check that equality flag is correct or row is redundant
+   assert( rflags[i].test( RowFlag::kRedundant ) ||
+           ( !rflags[i].test( RowFlag::kEquation ) &&
+             ( lhs_values[i] != rhs_values[i] ||
+               rflags[i].test( RowFlag::kLhsInf, RowFlag::kRhsInf ) ) ) ||
+           ( rflags[i].test( RowFlag::kEquation ) &&
+             !rflags[i].test( RowFlag::kLhsInf, RowFlag::kRhsInf ) &&
+             lhs_values[i] == rhs_values[i] ) );
+
+   if( rflags[i].test( RowFlag::kRedundant ) ||
+       !rflags[i].test( RowFlag::kEquation ) ||
+       constMatrix.getRowSizes()[i] != 2 )
+      return PresolveStatus::kUnchanged;
+
+   auto rowvec = constMatrix.getRowCoefficients( i );
+   assert( rowvec.getLength() == 2 );
+   const REAL* vals = rowvec.getValues();
+   const int* inds = rowvec.getIndices();
+   REAL rhs = rhs_values[i];
+
+   int subst;
+   int stay;
+
+   if( cflags[inds[0]].test( ColFlag::kIntegral ) !=
+       cflags[inds[1]].test( ColFlag::kIntegral ) )
+   {
+      if( cflags[inds[0]].test( ColFlag::kIntegral ) )
+         subst = 1;
+      else
+         subst = 0;
+
+      stay = 1 - subst;
+   }
+   else if( cflags[inds[0]].test( ColFlag::kIntegral ) )
+   {
+      assert( cflags[inds[1]].test( ColFlag::kIntegral ) );
+      if( abs( vals[0] ) < abs( vals[1] ) ||
+          ( abs( vals[0] ) == abs( vals[1] ) &&
+            problemUpdate.isColBetterForSubstitution( inds[0], inds[1] ) ) )
+         subst = 0;
+      else
+         subst = 1;
+
+      stay = 1 - subst;
+
+      if( !num.isIntegral( vals[stay] / vals[subst] ) )
+      {
+         if( !num.isIntegral( vals[stay] ) || !num.isIntegral( vals[subst] ) )
+            return PresolveStatus::kUnchanged;
+         auto res = boost::integer::extended_euclidean(
+             static_cast<int64_t>( vals[stay] ),
+             static_cast<int64_t>( vals[subst] ) );
+         bool b = num.isIntegral( rhs / res.gcd );
+         bool b1 = isConstraintsFeasibleWithGivenBounds(
+             num, lower_bounds, upper_bounds, vals, rhs, subst, stay, res );
+         if( b && b1 )
+            return PresolveStatus::kUnchanged;
+         return PresolveStatus::kInfeasible;
+      }
+      // problem is infeasible if gcd (i.e. vals[subst]) is not divisor of
+      // rhs
+      if( !num.isFeasIntegral( rhs / vals[subst] ) )
+         return PresolveStatus::kInfeasible;
+   }
+   else
+   {
+      REAL absval0 = abs( vals[0] );
+      REAL absval1 = abs( vals[1] );
+      if( absval0 * problemUpdate.getPresolveOptions().markowitz_tolerance >
+          absval1 )
+         subst = 0;
+      else if( absval1 *
+                   problemUpdate.getPresolveOptions().markowitz_tolerance >
+               absval0 )
+         subst = 1;
+      else if( problemUpdate.isColBetterForSubstitution( inds[0], inds[1] ) )
+         subst = 0;
+      else
+         subst = 1;
+
+      stay = 1 - subst;
+   }
+
+   result = PresolveStatus::kReduced;
+
+   TransactionGuard<REAL> guard{ reductions };
+
+   reductions.lockRow( i );
+
+   reductions.lockColBounds( inds[subst] );
+
+   REAL s = vals[subst] * vals[stay];
+   if( !cflags[inds[subst]].test( ColFlag::kLbInf ) )
+   {
+      REAL staybound =
+          ( rhs - vals[subst] * domains.lower_bounds[inds[subst]] ) /
+          vals[stay];
+      if( s < 0 && ( cflags[inds[stay]].test( ColFlag::kLbInf ) ||
+                     num.isGT( staybound, domains.lower_bounds[inds[stay]] ) ) )
+         reductions.changeColLB( inds[stay], staybound );
+
+      if( s > 0 && ( cflags[inds[stay]].test( ColFlag::kUbInf ) ||
+                     num.isLT( staybound, domains.upper_bounds[inds[stay]] ) ) )
+         reductions.changeColUB( inds[stay], staybound );
+   }
+
+   if( !cflags[inds[subst]].test( ColFlag::kUbInf ) )
+   {
+      REAL staybound =
+          ( rhs - vals[subst] * domains.upper_bounds[inds[subst]] ) /
+          vals[stay];
+      if( s > 0 && ( cflags[inds[stay]].test( ColFlag::kLbInf ) ||
+                     staybound > domains.lower_bounds[inds[stay]] ) )
+         reductions.changeColLB( inds[stay], staybound );
+
+      if( s < 0 && ( cflags[inds[stay]].test( ColFlag::kUbInf ) ||
+                     staybound < domains.upper_bounds[inds[stay]] ) )
+         reductions.changeColUB( inds[stay], staybound );
+   }
+
+   reductions.aggregateFreeCol( inds[subst], i );
    return result;
 }
 template <typename REAL>
 bool
 SimpleSubstitution<REAL>::isConstraintsFeasibleWithGivenBounds(
     const Num<REAL>& num, const Vec<REAL> lower_bounds,
-    const Vec<REAL> upper_bounds, const REAL* vals, REAL rhs, int subst,
+    const Vec<REAL>& upper_bounds, const REAL* vals, REAL rhs, int subst,
     int stay, const boost::integer::euclidean_result_t<int64_t>& res ) const
 {
    int64_t initial_solution_for_x = res.x * rhs;
