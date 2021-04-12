@@ -118,10 +118,17 @@ CoefficientStrengthening<REAL>::execute(
          Reductions<REAL> reds = stored_reductions[i];
          if( reds.size() > 0 )
          {
-            TransactionGuard<REAL> guard{ reductions };
-            for( Reduction<REAL> red : reds.getReductions() )
+            for( const auto& transaction : reds.getTransactions() )
             {
-               reductions.add_reduction( red.row, red.col, red.newval );
+               int start = transaction.start;
+               int end = transaction.end;
+               TransactionGuard<REAL> guard{ reductions };
+               for( int c = 0; c < end; c++ )
+               {
+                  Reduction<REAL>& reduction = reds.getReduction( c );
+                  reductions.add_reduction( reduction.row,
+                                            reduction.col, reduction.newval );
+               }
             }
          }
       }

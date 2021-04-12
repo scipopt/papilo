@@ -57,7 +57,7 @@ class SimpleProbing : public PresolveMethod<REAL>
 
    PresolveStatus
    perform_simple_probing_step(
-       const Num<REAL>& num, Reductions<REAL> reductions,
+       const Num<REAL>& num, Reductions<REAL>& reductions,
        const VariableDomains<REAL>& domains, const Vec<ColFlags>& cflags,
        const Vec<RowActivity<REAL>>& activities,
        const ConstraintMatrix<REAL>& constMatrix, const Vec<REAL>& rhs_values,
@@ -96,12 +96,12 @@ SimpleProbing<REAL>::execute( const Problem<REAL>& problem,
 
    if( problemUpdate.getPresolveOptions().runs_sequentiell() )
    {
-      for( int i = 0; i != nrows; ++i )
+      for( int i = 0; i < nrows; ++i )
       {
          if( perform_simple_probing_step(
                  num, reductions, domains, cflags, activities, constMatrix,
                  rhs_values, rowsize, rflags, i ) == PresolveStatus::kReduced )
-            status= PresolveStatus::kReduced;
+            status = PresolveStatus::kReduced;
       }
    }
    else
@@ -112,9 +112,9 @@ SimpleProbing<REAL>::execute( const Problem<REAL>& problem,
                             for( int j = r.begin(); j < r.end(); ++j )
                             {
                                PresolveStatus s = perform_simple_probing_step(
-                                   num, reductions, domains, cflags, activities,
-                                   constMatrix, rhs_values, rowsize, rflags,
-                                   j );
+                                   num, stored_reductions[j], domains, cflags,
+                                   activities, constMatrix, rhs_values, rowsize,
+                                   rflags, j );
                                assert( s == PresolveStatus::kUnchanged ||
                                        s == PresolveStatus::kReduced );
                                if( s == PresolveStatus::kReduced )
@@ -130,10 +130,17 @@ SimpleProbing<REAL>::execute( const Problem<REAL>& problem,
          Reductions<REAL> reds = stored_reductions[i];
          if( reds.size() > 0 )
          {
-            TransactionGuard<REAL> guard{ reductions };
-            for( Reduction<REAL> red : reds.getReductions() )
+            for( const auto& transaction : reds.getTransactions() )
             {
-               reductions.add_reduction( red.row, red.col, red.newval );
+               int start = transaction.start;
+               int end = transaction.end;
+               TransactionGuard<REAL> guard{ reductions };
+               for( int c = 0; c < end; c++ )
+               {
+                  Reduction<REAL>& reduction = reds.getReduction( c );
+                  reductions.add_reduction( reduction.row,
+                                            reduction.col, reduction.newval );
+               }
             }
          }
       }
@@ -145,13 +152,13 @@ SimpleProbing<REAL>::execute( const Problem<REAL>& problem,
 template <typename REAL>
 PresolveStatus
 SimpleProbing<REAL>::perform_simple_probing_step(
-    const Num<REAL>& num, Reductions<REAL> reductions,
+    const Num<REAL>& num, Reductions<REAL>& reductions,
     const VariableDomains<REAL>& domains, const Vec<ColFlags>& cflags,
     const Vec<RowActivity<REAL>>& activities,
     const ConstraintMatrix<REAL>& constMatrix, const Vec<REAL>& rhs_values,
     const Vec<int>& rowsize, const Vec<RowFlags>& rflags, int i )
 {
-   PresolveStatus status;
+   PresolveStatus status = PresolveStatus::kUnchanged;
    if( !rflags[i].test( RowFlag::kEquation ) || rowsize[i] <= 2 ||
        activities[i].ninfmin != 0 || activities[i].ninfmax != 0 ||
        !num.isEq( activities[i].min + activities[i].max, 2 * rhs_values[i] ) )
