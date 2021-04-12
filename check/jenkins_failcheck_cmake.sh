@@ -231,7 +231,7 @@ SOPLEX_HASH=$("${PWD}/${EXECUTABLE}" -v | grep "  SoPlex" | grep "GitHash: .*]" 
 NEWTIMESTAMP=$(date '+%F-%H-%M')
 # The RBDB database has the form: timestamp_of_testrun rubberbandid p=PERM s=SEED
 if [ "${PERFORMANCE}" == "performance" ]; then
-  RBDB="/nfs/OPTI/adm_timo/databases/rbdb/${GITBRANCH}_${MODE}_${TESTSET}_${SETTINGS}_${SCIP_BUILDDIR}_rbdb.txt"
+  RBDB="/nfs/OPTI/adm_timo/databases/rbdb/papilo_${GITBRANCH}_${MODE}_${TESTSET}_${SETTINGS}_${SCIP_BUILDDIR}_rbdb.txt"
   touch "${RBDB}"
   OLDTIMESTAMP=$(tail -n 1 ${RBDB} | cut -d ' ' -f 1)
 elif [ "${PERFORMANCE}" == "mergerequest" ]; then
@@ -272,9 +272,9 @@ while [ "${SEED}" -le "${SEEDSBND}" ]; do
     # can have several tests sent to the cluster, that is why the jenkins job
     # name (i.e, the directory name) is not enough)
     if [ "${PERFORMANCE}" == "mergerequest" ]; then
-      DATABASE="${PWD}/${GITBRANCH}_${MODE}_${TESTSET}_${SETTINGS}_${SCIP_BUILDDIR}${SEED_ENDING}${PERM_ENDING}.txt"
+      DATABASE="${PWD}/papilo_${GITBRANCH}_${MODE}_${TESTSET}_${SETTINGS}_${SCIP_BUILDDIR}${SEED_ENDING}${PERM_ENDING}.txt"
     elif [ "${PERFORMANCE}" != "mergerequest" ]; then
-      DATABASE="/nfs/OPTI/adm_timo/databases/${IDENT}${GITBRANCH}_${MODE}_${TESTSET}_${SETTINGS}_${SCIP_BUILDDIR}${SEED_ENDING}${PERM_ENDING}.txt"
+      DATABASE="/nfs/OPTI/adm_timo/databases/${IDENT}_papilo_${GITBRANCH}_${MODE}_${TESTSET}_${SETTINGS}_${SCIP_BUILDDIR}${SEED_ENDING}${PERM_ENDING}.txt"
     fi
     touch "${DATABASE}"
     TMPDATABASE="${DATABASE}.tmp"
@@ -353,8 +353,10 @@ while [ "${SEED}" -le "${SEEDSBND}" ]; do
     if [ "${CHECKFAILS}" == "yes" ]; then
       # check for fixed instances
       echo "Checking for fixed instances."
-      RESOLVEDINSTANCES=$(awk "${AWKARGS}" "${awkscript_checkfixedinstances}" "${RESFILE}" "${DATABASE}")
+      # in the awk call it is important not to put quotationmarks around AWKARGS
+      RESOLVEDINSTANCES=$(awk ${AWKARGS} "${awkscript_checkfixedinstances}" "${RESFILE}" "${DATABASE}")
       echo "Temporary database: ${TMPDATABASE}\n"
+      touch "${TMPDATABASE}"
       mv "${TMPDATABASE}" "${DATABASE}"
 
       if [ "${PERFORMANCE}" == "debug" ]; then
@@ -367,7 +369,8 @@ while [ "${SEED}" -le "${SEEDSBND}" ]; do
         if [ "${NFAILS}" -gt 0 ]; then
           echo "Detected ${NFAILS} fails."
           ## read all known bugs
-          ERRORINSTANCES=$(awk "${AWKARGS}" "${awkscript_readknownbugs}" "${DATABASE}" "${RESFILE}")
+          # in the awk call it is important not to put quotationmarks around AWKARGS
+          ERRORINSTANCES=$(awk ${AWKARGS} "${awkscript_readknownbugs}" "${DATABASE}" "${RESFILE}")
           STILLFAILINGDB=$(cat "${STILLFAILING}")
 
           # check if there are new fails!
@@ -418,7 +421,7 @@ while [ "${SEED}" -le "${SEEDSBND}" ]; do
                   ${RESFILE}
 
                   Please note that they might be deleted soon
-                  ${PSMESSAGE}" | mailx -s "${SUBJECT}" -r "${EMAILFROM}" ${EMAILTO}
+                  ${PSMESSAGE}" | mailx -s "${SUBJECT}" -r "${EMAILFROM}" -t "${EMAILTO}"
           else
             echo "No new errors, sending no emails."
           fi
@@ -444,7 +447,7 @@ while [ "${SEED}" -le "${SEEDSBND}" ]; do
             ${RESFILE}
 
             The following errors have been fixed:
-            ${RESOLVEDINSTANCES}" | mailx -s "${SUBJECT}" -r "${EMAILFROM}" ${EMAILTO}
+            ${RESOLVEDINSTANCES}" | mailx -s "${SUBJECT}" -r "${EMAILFROM}" -t "${EMAILTO}"
       fi
       rm "${STILLFAILING}"
     fi
@@ -480,6 +483,6 @@ PERF_MAIL=$(echo "The results of the papilo performance run are ready. Take a lo
 
 
 SUBJECT="PAPILO PERF_MAIL ${SUBJECTINFO}"
-echo -e "${PERF_MAIL}" | mailx -s "${SUBJECT}" -r "${EMAILFROM}" "${EMAILTO}"
-echo -e "${PERF_MAIL}" | mailx -s "${SUBJECT}" -r "${EMAILFROM}" "hoen@zib.de"
-echo -e "${PERF_MAIL}" | mailx -s "${SUBJECT}" -r "${EMAILFROM}" "${GIT_AUTHOR_EMAIL}"
+echo -e "${PERF_MAIL}" | mailx -s "${SUBJECT}" -r "${EMAILFROM}" -t "${EMAILTO}"
+echo -e "${PERF_MAIL}" | mailx -s "${SUBJECT}" -r "${EMAILFROM}" -t "hoen@zib.de"
+echo -e "${PERF_MAIL}" | mailx -s "${SUBJECT}" -r "${EMAILFROM}" -t "${GIT_AUTHOR_EMAIL}"
