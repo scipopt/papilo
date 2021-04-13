@@ -156,7 +156,7 @@ SimpleSubstitution<REAL>::execute( const Problem<REAL>& problem,
                int start = transaction.start;
                int end = transaction.end;
                TransactionGuard<REAL> guard{ reductions };
-               for( int c = 0; c < end; c++ )
+               for( int c = start; c < end; c++ )
                {
                   Reduction<REAL>& reduction = reds.getReduction( c );
                   reductions.add_reduction( reduction.row,
