@@ -227,4 +227,4 @@ class PapiloSolver(SCIPSolver):
 
     def setup_time_expr_for_solver(self, name):
         return re.compile(
-            "\s+" + name + "\s+\d+\s+" + self.floating_point_expr + "\s+\d+\s" + self.floating_point_expr + "\s+(\S+)")
+            "\s+" + name + "\s+\d+\s+" + self.floating_point_expr + "\s+\d+\s+" + self.floating_point_expr + "\s+(\S+)")
