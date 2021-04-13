@@ -72,6 +72,7 @@ class SimplifyInequalities : public PresolveMethod<REAL>
             const ProblemUpdate<REAL>& problemUpdate, const Num<REAL>& num,
             Reductions<REAL>& reductions ) override;
 
+ private:
    bool
    isUnbounded( int row, const Vec<RowFlags>& rowFlags ) const;
 
@@ -81,6 +82,14 @@ class SimplifyInequalities : public PresolveMethod<REAL>
    bool
    isInfiniteActivity( const Vec<RowActivity<REAL>>& activities,
                        int row ) const;
+
+   PresolveStatus
+   perform_simplify_ineq_task(
+       const Num<REAL>& num, const ConstraintMatrix<REAL>& consMatrix,
+       const Vec<RowActivity<REAL>>& activities, const Vec<RowFlags>& rflags,
+       const Vec<ColFlags>& cflags, const Vec<REAL>& lhs, const Vec<REAL>& rhs,
+       const Vec<REAL>& lbs, const Vec<REAL>& ubs, int row,
+       Reductions<REAL>& reductions  );
 };
 
 #ifdef PAPILO_USE_EXTERN_TEMPLATES
@@ -281,122 +290,144 @@ SimplifyInequalities<REAL>::execute( const Problem<REAL>& problem,
 
    PresolveStatus result = PresolveStatus::kUnchanged;
 
-
-
-   Vec<Reductions<REAL>> stored_reductions( nrows );
-
-   // iterate over all constraints and try to simplify them
-   tbb::parallel_for(
-       tbb::blocked_range<int>( 0, nrows ),
-       [&]( const tbb::blocked_range<int>& r ) {
-          for( int row = r.begin(); row < r.end(); ++row )
-          {
-             // allocate only once
-             Vec<int> colOrder;
-             Vec<int> coefficientsThatCanBeDeleted;
-             auto rowvec = consMatrix.getRowCoefficients( row );
-             int rowLength = rowvec.getLength();
-
-             if( isRedundant( row, rflags ) || isUnbounded( row, rflags ) ||
-                 isInfiniteActivity( activities, row ) ||
-                 // ignore empty or bound-constraints
-                 rowLength < 2 )
-                continue;
-
-             const int* colinds = rowvec.getIndices();
-
-             REAL greatestCommonDivisor = 0;
-             bool isSimplificationPossible = false;
-
-             colOrder.clear();
-             coefficientsThatCanBeDeleted.clear();
-
-             simplify( rowvec.getValues(), colinds, rowLength, activities[row],
-                       rflags[row], cflags, rhs[row], lhs[row], lbs, ubs,
-                       colOrder, coefficientsThatCanBeDeleted,
-                       greatestCommonDivisor, isSimplificationPossible, num );
-
-             if( isSimplificationPossible )
-             {
-                assert( greatestCommonDivisor >= 1 );
-                bool col_can_be_deleted = !coefficientsThatCanBeDeleted.empty();
-                bool rhs_needs_update = false;
-                bool lhs_needs_update = false;
-                REAL new_rhs = 0;
-                REAL new_lhs = 0;
-
-                if( !rflags[row].test( RowFlag::kRhsInf ) && rhs[row] != 0 )
-                {
-                   new_rhs = num.feasFloor( rhs[row] / greatestCommonDivisor ) *
-                             greatestCommonDivisor;
-                   rhs_needs_update = new_rhs != rhs[row];
-                }
-                else if( !rflags[row].test( RowFlag::kLhsInf ) &&
-                         lhs[row] != 0 )
-                {
-                   new_lhs = num.feasCeil( lhs[row] / greatestCommonDivisor ) *
-                             greatestCommonDivisor;
-                   lhs_needs_update = new_lhs != lhs[row];
-                }
-
-                if( !rhs_needs_update && !lhs_needs_update &&
-                    !col_can_be_deleted )
-                   continue;
-
-                Reductions<REAL> reduction;
-                TransactionGuard<REAL> guard{ reduction };
-                reduction.lockRow( row );
-
-                for( int col : coefficientsThatCanBeDeleted )
-                {
-                   reduction.changeMatrixEntry( row, colinds[col], 0 );
-                   result = PresolveStatus::kReduced;
-                }
-
-                // round side to multiple of greatestCommonDivisor; don't divide
-                // row by greatestCommonDivisor
-                if( rhs_needs_update )
-                {
-                   assert( rhs[row] != 0 );
-                   reduction.changeRowRHS( row, new_rhs );
-                   result = PresolveStatus::kReduced;
-                }
-                if( lhs_needs_update )
-                {
-                   assert( lhs[row] != 0 );
-                   reduction.changeRowLHS( row, new_lhs );
-                   result = PresolveStatus::kReduced;
-                }
-                stored_reductions[row] = reduction;
-
-             }
-          }
-       } );
-
-   // TODO: clear the vector?
-   if( result == PresolveStatus::kUnchanged )
-      return PresolveStatus::kUnchanged;
-
-   for( int i = 0; i < stored_reductions.size(); ++i )
+   if( problemUpdate.getPresolveOptions().runs_sequentiell() )
    {
-      Reductions<REAL> reds = stored_reductions[i];
-      if( reds.size() > 0 )
+      for( int row = 0; row < nrows; row++ )
       {
-         for( const auto& transaction : reds.getTransactions() )
+         if( perform_simplify_ineq_task(
+                 num, consMatrix, activities, rflags, cflags, lhs, rhs, lbs,
+                 ubs, row, reductions ) == PresolveStatus::kReduced )
+            result = PresolveStatus::kReduced;
+      }
+   }
+   else
+   {
+      Vec<Reductions<REAL>> stored_reductions( nrows );
+      // iterate over all constraints and try to simplify them
+      tbb::parallel_for(
+          tbb::blocked_range<int>( 0, nrows ),
+          [&]( const tbb::blocked_range<int>& r ) {
+             for( int row = r.begin(); row < r.end(); ++row )
+             {
+                PresolveStatus status = perform_simplify_ineq_task(
+                    num, consMatrix, activities, rflags, cflags, lhs, rhs, lbs,
+                    ubs, row, stored_reductions[row] );
+                if( status == PresolveStatus::kReduced )
+                   result = PresolveStatus::kReduced;
+                assert( status == PresolveStatus::kReduced ||
+                        status == PresolveStatus::kUnchanged );
+             }
+          } );
+
+      if( result == PresolveStatus::kUnchanged )
+         return PresolveStatus::kUnchanged;
+
+      for( int i = 0; i < stored_reductions.size(); ++i )
+      {
+         Reductions<REAL> reds = stored_reductions[i];
+         if( reds.size() > 0 )
          {
-            int start = transaction.start;
-            int end = transaction.end;
-            TransactionGuard<REAL> guard{ reductions };
-            for( int c = 0; c < end; c++ )
+            for( const auto& transaction : reds.getTransactions() )
             {
-               Reduction<REAL>& reduction = reds.getReduction( c );
-               reductions.add_reduction( reduction.row,
-                                         reduction.col, reduction.newval );
+               int start = transaction.start;
+               int end = transaction.end;
+               TransactionGuard<REAL> guard{ reductions };
+               for( int c = 0; c < end; c++ )
+               {
+                  Reduction<REAL>& reduction = reds.getReduction( c );
+                  reductions.add_reduction( reduction.row, reduction.col,
+                                            reduction.newval );
+               }
             }
          }
       }
    }
+   return result;
+}
 
+template <typename REAL>
+PresolveStatus
+SimplifyInequalities<REAL>::perform_simplify_ineq_task(
+    const Num<REAL>& num, const ConstraintMatrix<REAL>& consMatrix,
+    const Vec<RowActivity<REAL>>& activities, const Vec<RowFlags>& rflags,
+    const Vec<ColFlags>& cflags, const Vec<REAL>& lhs, const Vec<REAL>& rhs,
+    const Vec<REAL>& lbs, const Vec<REAL>& ubs, int row,
+    Reductions<REAL>& reductions )
+{ // allocate only once
+   PresolveStatus result = PresolveStatus::kUnchanged;
+   Vec<int> colOrder;
+   Vec<int> coefficientsThatCanBeDeleted;
+   auto rowvec = consMatrix.getRowCoefficients( row );
+   int rowLength = rowvec.getLength();
+
+   if( isRedundant( row, rflags ) || isUnbounded( row, rflags ) ||
+       isInfiniteActivity( activities, row ) ||
+       // ignore empty or bound-constraints
+       rowLength < 2 )
+      return PresolveStatus::kUnchanged;
+
+   const int* colinds = rowvec.getIndices();
+
+   REAL greatestCommonDivisor = 0;
+   bool isSimplificationPossible = false;
+
+   colOrder.clear();
+   coefficientsThatCanBeDeleted.clear();
+
+   simplify( rowvec.getValues(), colinds, rowLength, activities[row],
+             rflags[row], cflags, rhs[row], lhs[row], lbs, ubs, colOrder,
+             coefficientsThatCanBeDeleted, greatestCommonDivisor,
+             isSimplificationPossible, num );
+
+   if( isSimplificationPossible )
+   {
+      assert( greatestCommonDivisor >= 1 );
+      bool col_can_be_deleted = !coefficientsThatCanBeDeleted.empty();
+      bool rhs_needs_update = false;
+      bool lhs_needs_update = false;
+      REAL new_rhs = 0;
+      REAL new_lhs = 0;
+
+      if( !rflags[row].test( RowFlag::kRhsInf ) && rhs[row] != 0 )
+      {
+         new_rhs = num.feasFloor( rhs[row] / greatestCommonDivisor ) *
+                   greatestCommonDivisor;
+         rhs_needs_update = new_rhs != rhs[row];
+      }
+      else if( !rflags[row].test( RowFlag::kLhsInf ) && lhs[row] != 0 )
+      {
+         new_lhs = num.feasCeil( lhs[row] / greatestCommonDivisor ) *
+                   greatestCommonDivisor;
+         lhs_needs_update = new_lhs != lhs[row];
+      }
+
+      if( !rhs_needs_update && !lhs_needs_update && !col_can_be_deleted )
+         return PresolveStatus::kUnchanged;
+
+      TransactionGuard<REAL> guard{ reductions };
+      reductions.lockRow( row );
+
+      for( int col : coefficientsThatCanBeDeleted )
+      {
+         reductions.changeMatrixEntry( row, colinds[col], 0 );
+         result = PresolveStatus::kReduced;
+      }
+
+      // round side to multiple of greatestCommonDivisor; don't divide
+      // row by greatestCommonDivisor
+      if( rhs_needs_update )
+      {
+         assert( rhs[row] != 0 );
+         reductions.changeRowRHS( row, new_rhs );
+         result = PresolveStatus::kReduced;
+      }
+      if( lhs_needs_update )
+      {
+         assert( lhs[row] != 0 );
+         reductions.changeRowLHS( row, new_lhs );
+         result = PresolveStatus::kReduced;
+      }
+   }
    return result;
 }
 

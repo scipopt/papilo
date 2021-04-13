@@ -109,7 +109,7 @@ CoefficientStrengthening<REAL>::execute(
                    result = PresolveStatus::kReduced;
              }
           } );
-      // TODO: clear the vector?
+
       if( result == PresolveStatus::kUnchanged )
          return PresolveStatus::kUnchanged;
 
