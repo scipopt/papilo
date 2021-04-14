@@ -148,12 +148,10 @@ ParallelRowDetection<REAL>::findParallelRows(
       const int length = row1.getLength();
       const REAL* coefs1 = row1.getValues();
 
-      // TODO: why are Columns with only one entry excluded? see ParallelColumn
       if( length < 2 )
          return;
 
       // TODO handle case of multiple parallel rows with one transaction:
-
       for( int j = i + 1; j < bucketsize; ++j )
       {
          auto row2 = constMatrix.getRowCoefficients( bucket[j] );
@@ -176,7 +174,6 @@ ParallelRowDetection<REAL>::findParallelRows(
             {
                if( !num.isEq( coefs1[k], scale2 * coefs2[k] ) )
                {
-                  // TODO wäre es nicht sinvoller einfach return zu machen
                   parallel = false;
                   break;
                }
@@ -239,8 +236,6 @@ ParallelRowDetection<REAL>::computeRowHashes(
                 // where two coefficients that are equal
                 // within epsilon get different values are
                 // more unlikely by choosing some irrational number
-                // TODO: define as constant to reduce the amount of arithmetic
-                // operations
                 REAL scale = REAL( 2.0 / ( 1.0 + sqrt( 5.0 ) ) ) / rowvals[0];
 
                 // add scaled coefficients of other row
