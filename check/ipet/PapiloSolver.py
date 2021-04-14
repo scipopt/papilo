@@ -58,6 +58,23 @@ TSX_RATE_probing = "tsx%probing"
 TSX_RATE_dom_colums = "tsx%domcol"
 TSX_RATE_sparsify = "tsx%sparsify"
 
+TIME_column_singleton = "time%colsingleton"
+TIME_coeff_tightening = "time%coefftightening"
+TIME_propagation = "time%propagation"
+TIME_simple_probing = "time%simpleprobing"
+TIME_stuffing = "time%stuffing"
+TIME_dual_fix = "time%dualfix"
+TIME_fix_continuous = "time%fixcontinuous"
+TIME_parallel_rows = "time%parallelrows"
+TIME_parallel_columns = "time%parallelcols"
+TIME_doubletoneq = "time%doubletoneq"
+TIME_simplify_inequality = "time%simplifyineq"
+TIME_dual_infer = "time%dualinfer"
+TIME_substitution = "time%substitution"
+TIME_probing = "time%probing"
+TIME_dom_colums = "time%domcol"
+TIME_sparsify = "time%sparsify"
+
 DEFAULT_VALUE = -1.0
 
 
@@ -155,23 +172,59 @@ class PapiloSolver(SCIPSolver):
         self.extractByExpression(line, self.transactions_applied, TSX_APPLIED_NAME)
         self.extractByExpression(line, self.transactions_conflicts, TSX_CONFLICTS_NAME)
 
-        self.extractByExpression(line, self.setup_expr_for_solver(SOLVER_column_singleton), TSX_RATE_column_singleton)
-        self.extractByExpression(line, self.setup_expr_for_solver(SOLVER_coeff_tightening), TSX_RATE_coeff_tightening)
-        self.extractByExpression(line, self.setup_expr_for_solver(SOLVER_probing), TSX_RATE_probing)
-        self.extractByExpression(line, self.setup_expr_for_solver(SOLVER_stuffing), TSX_RATE_stuffing)
-        self.extractByExpression(line, self.setup_expr_for_solver(SOLVER_sparsify), TSX_RATE_sparsify)
-        self.extractByExpression(line, self.setup_expr_for_solver(SOLVER_substitution), TSX_RATE_substitution, )
-        self.extractByExpression(line, self.setup_expr_for_solver(SOLVER_dual_fix), TSX_RATE_dual_fix)
-        self.extractByExpression(line, self.setup_expr_for_solver(SOLVER_dual_infer), TSX_RATE_dual_infer)
-        self.extractByExpression(line, self.setup_expr_for_solver(SOLVER_dom_colums), TSX_RATE_dom_colums)
-        self.extractByExpression(line, self.setup_expr_for_solver(SOLVER_fix_continuous), TSX_RATE_fix_continuous)
-        self.extractByExpression(line, self.setup_expr_for_solver(SOLVER_simplify_inequality),
-                                 TSX_RATE_simplify_inequality)
-        self.extractByExpression(line, self.setup_expr_for_solver(SOLVER_doubletoneq), TSX_RATE_doubletoneq)
-        self.extractByExpression(line, self.setup_expr_for_solver(SOLVER_parallel_columns), TSX_RATE_parallel_columns)
-        self.extractByExpression(line, self.setup_expr_for_solver(SOLVER_parallel_rows), TSX_RATE_parallel_rows)
-        self.extractByExpression(line, self.setup_expr_for_solver(SOLVER_propagation), TSX_RATE_propagation)
-        self.extractByExpression(line, self.setup_expr_for_solver(SOLVER_simple_probing), TSX_RATE_simple_probing)
+        self.extractByExpression(line, self.setup_time_expr_for_solver(SOLVER_column_singleton),
+                                 TIME_column_singleton)
+        self.extractByExpression(line, self.setup_time_expr_for_solver(SOLVER_coeff_tightening),
+                                 TIME_coeff_tightening)
+        self.extractByExpression(line, self.setup_time_expr_for_solver(SOLVER_probing), TIME_probing)
+        self.extractByExpression(line, self.setup_time_expr_for_solver(SOLVER_stuffing), TIME_stuffing)
+        self.extractByExpression(line, self.setup_time_expr_for_solver(SOLVER_sparsify), TIME_sparsify)
+        self.extractByExpression(line, self.setup_time_expr_for_solver(SOLVER_substitution),
+                                 TIME_substitution, )
+        self.extractByExpression(line, self.setup_time_expr_for_solver(SOLVER_dual_fix), TIME_dual_fix)
+        self.extractByExpression(line, self.setup_time_expr_for_solver(SOLVER_dual_infer), TIME_dual_infer)
+        self.extractByExpression(line, self.setup_time_expr_for_solver(SOLVER_dom_colums), TIME_dom_colums)
+        self.extractByExpression(line, self.setup_time_expr_for_solver(SOLVER_fix_continuous),
+                                 TIME_fix_continuous)
+        self.extractByExpression(line, self.setup_time_expr_for_solver(SOLVER_simplify_inequality),
+                                 TIME_simplify_inequality)
+        self.extractByExpression(line, self.setup_time_expr_for_solver(SOLVER_doubletoneq), TIME_doubletoneq)
+        self.extractByExpression(line, self.setup_time_expr_for_solver(SOLVER_parallel_columns),
+                                 TIME_parallel_columns)
+        self.extractByExpression(line, self.setup_time_expr_for_solver(SOLVER_parallel_rows),
+                                 TIME_parallel_rows)
+        self.extractByExpression(line, self.setup_time_expr_for_solver(SOLVER_propagation), TIME_propagation)
+        self.extractByExpression(line, self.setup_time_expr_for_solver(SOLVER_simple_probing),
+                                 TIME_simple_probing)
 
-    def setup_expr_for_solver(self, name):
+        self.extractByExpression(line, self.setup_tsx_rate_expr_for_solver(SOLVER_column_singleton),
+                                 TSX_RATE_column_singleton)
+        self.extractByExpression(line, self.setup_tsx_rate_expr_for_solver(SOLVER_coeff_tightening),
+                                 TSX_RATE_coeff_tightening)
+        self.extractByExpression(line, self.setup_tsx_rate_expr_for_solver(SOLVER_probing), TSX_RATE_probing)
+        self.extractByExpression(line, self.setup_tsx_rate_expr_for_solver(SOLVER_stuffing), TSX_RATE_stuffing)
+        self.extractByExpression(line, self.setup_tsx_rate_expr_for_solver(SOLVER_sparsify), TSX_RATE_sparsify)
+        self.extractByExpression(line, self.setup_tsx_rate_expr_for_solver(SOLVER_substitution),
+                                 TSX_RATE_substitution, )
+        self.extractByExpression(line, self.setup_tsx_rate_expr_for_solver(SOLVER_dual_fix), TSX_RATE_dual_fix)
+        self.extractByExpression(line, self.setup_tsx_rate_expr_for_solver(SOLVER_dual_infer), TSX_RATE_dual_infer)
+        self.extractByExpression(line, self.setup_tsx_rate_expr_for_solver(SOLVER_dom_colums), TSX_RATE_dom_colums)
+        self.extractByExpression(line, self.setup_tsx_rate_expr_for_solver(SOLVER_fix_continuous),
+                                 TSX_RATE_fix_continuous)
+        self.extractByExpression(line, self.setup_tsx_rate_expr_for_solver(SOLVER_simplify_inequality),
+                                 TSX_RATE_simplify_inequality)
+        self.extractByExpression(line, self.setup_tsx_rate_expr_for_solver(SOLVER_doubletoneq), TSX_RATE_doubletoneq)
+        self.extractByExpression(line, self.setup_tsx_rate_expr_for_solver(SOLVER_parallel_columns),
+                                 TSX_RATE_parallel_columns)
+        self.extractByExpression(line, self.setup_tsx_rate_expr_for_solver(SOLVER_parallel_rows),
+                                 TSX_RATE_parallel_rows)
+        self.extractByExpression(line, self.setup_tsx_rate_expr_for_solver(SOLVER_propagation), TSX_RATE_propagation)
+        self.extractByExpression(line, self.setup_tsx_rate_expr_for_solver(SOLVER_simple_probing),
+                                 TSX_RATE_simple_probing)
+
+    def setup_tsx_rate_expr_for_solver(self, name):
         return re.compile("\s+" + name + "\s+\d+\s+" + self.floating_point_expr + "\s+\d+\s+(\S+)")
+
+    def setup_time_expr_for_solver(self, name):
+        return re.compile(
+            "\s+" + name + "\s+\d+\s+" + self.floating_point_expr + "\s+\d+\s+" + self.floating_point_expr + "\s+(\S+)")

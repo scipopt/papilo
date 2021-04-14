@@ -296,11 +296,7 @@ while [ "${SEED}" -le "${SEEDSBND}" ]; do
     fi
 
     EMAILFROM="adm_timo <timo-admin@zib.de>"
-    EMAILTO="<timo-admin@zib.de>"
-
-    if [ "${GIT_AUTHOR_EMAIL}" != "" ]; then
-      EMAILTO="${GIT_AUTHOR_EMAIL}"
-    fi
+    EMAILTO="<timo-admin@zib.de>,hoen@zib.de,${GIT_AUTHOR_EMAIL}"
 
     #################
     # FIND evalfile #
@@ -421,7 +417,7 @@ while [ "${SEED}" -le "${SEEDSBND}" ]; do
                   ${RESFILE}
 
                   Please note that they might be deleted soon
-                  ${PSMESSAGE}" | mailx -s "${SUBJECT}" -r "${EMAILFROM}" -t "${EMAILTO}"
+                  ${PSMESSAGE}" | mailx -s "${SUBJECT}" -r "${EMAILFROM}" "${EMAILTO}"
           else
             echo "No new errors, sending no emails."
           fi
@@ -447,7 +443,7 @@ while [ "${SEED}" -le "${SEEDSBND}" ]; do
             ${RESFILE}
 
             The following errors have been fixed:
-            ${RESOLVEDINSTANCES}" | mailx -s "${SUBJECT}" -r "${EMAILFROM}" -t "${EMAILTO}"
+            ${RESOLVEDINSTANCES}" | mailx -s "${SUBJECT}" -r "${EMAILFROM}" "${EMAILTO}"
       fi
       rm "${STILLFAILING}"
     fi
@@ -483,6 +479,4 @@ PERF_MAIL=$(echo "The results of the papilo performance run are ready. Take a lo
 
 
 SUBJECT="PAPILO PERF_MAIL ${SUBJECTINFO}"
-echo -e "${PERF_MAIL}" | mailx -s "${SUBJECT}" -r "${EMAILFROM}" -t "${EMAILTO}"
-echo -e "${PERF_MAIL}" | mailx -s "${SUBJECT}" -r "${EMAILFROM}" -t "hoen@zib.de"
-echo -e "${PERF_MAIL}" | mailx -s "${SUBJECT}" -r "${EMAILFROM}" -t "${GIT_AUTHOR_EMAIL}"
+echo -e "${PERF_MAIL}" | mailx -s "${SUBJECT}" -r "${EMAILFROM}" "${EMAILTO}"

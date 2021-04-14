@@ -22,11 +22,11 @@ Generate build folder and build the project with Cmake (link SCIP & SOPLEX): (no
 ```
   mkdir build
   cd build
-  cmake -DSCIP_DIR=PATH-TO-SCIP -DSOPLEX_DIR=PATH-TO-SOPLEX -j3 ..
+  cmake -DSCIP_DIR=PATH-TO-SCIP -j3 ..
   cd ..
 ```
 
-Run local test:
+Run local test in the PaPILO directory:
 
 ```
   make test EXECUTABLE=build/bin/papilo TEST=short
@@ -59,12 +59,12 @@ Steps:
 __all__ = []
 from .PapiloSolver import PaPILOSolver
 ```
-
-- parse file(s) `ipet-parse -l PATH_TO_DIR\filename.{err,out}`
-- parsing should generate an testrunfile `.trn`
-- download an evaluation file (i.e. check/ipet/papilo_evaluation.xml) from Rubberband: select one testrun -> go to tab `Evaluation` -> `Evaluate`
-  -> `Download evalfile`
-- replace `RubberbandId` in the evaluation file with `LogFileName`
-- `ipet-evaluate -t PATH_TO_TRN -l -e PATH_TO_EVALUTAION_XML`
+- generate log files by executing `make test` in the PaPILO directory.
+- the log files are then in the folder `check/results`
+- parse these file(s) with the following command: `ipet-parse -l check/results/filename.{err,out}`
+- parsing should generate an testrunfile `check/results/filename.trn`
+- choose your eval file in the check/ipet/ folder (f.e. `check/ipet/papilo_evaluation.xml`) or download it from Rubberband
+- replace `RubberbandId` in the evaluation file with `LogFileName` (if not already happened)
+- evaluate the testrunfile: `ipet-evaluate -t check/results/filename.trn -l -e check/ipet/papilo_evaluation.xml`
 - exit virtual environment with `deactivate`
 
