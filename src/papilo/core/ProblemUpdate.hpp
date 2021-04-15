@@ -481,8 +481,6 @@ ProblemUpdate<REAL>::fixCol( int col, REAL val )
          return PresolveStatus::kInfeasible;
       }
 
-      // TODO: should be this case be already checked before (the stats may also
-      // be false)
       if( cflags[col].test( ColFlag::kFixed ) )
          return PresolveStatus::kUnchanged;
 
@@ -576,8 +574,6 @@ ProblemUpdate<REAL>::changeLB( int col, REAL val )
       ++stats.nboundchgs;
       if( !cflags[col].test( ColFlag::kUbInf ) && newbound > ubs[col] )
       {
-         // TODO: should be checking if to values are the same not be compared
-         // by isGT
          if( num.isFeasGT( newbound, ubs[col] ) )
          {
             Message::debug( this,
@@ -667,8 +663,6 @@ ProblemUpdate<REAL>::changeUB( int col, REAL val )
       ++stats.nboundchgs;
       if( !cflags[col].test( ColFlag::kLbInf ) && newbound < lbs[col] )
       {
-         // TODO: should be checking if to values are the same not be compared
-         // by isGT
          if( num.isFeasLT( newbound, lbs[col] ) )
          {
             Message::debug( this,
@@ -1259,7 +1253,6 @@ ProblemUpdate<REAL>::mark_huge_values( const Vec<REAL>& lbs,
       cflags[col].set( ColFlag::kUbHuge );
 }
 
-// TODO: for me think about it
 template <typename REAL>
 void
 ProblemUpdate<REAL>::roundIntegralColumns( Vec<REAL>& lbs, Vec<REAL>& ubs,

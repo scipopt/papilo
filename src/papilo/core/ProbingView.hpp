@@ -760,7 +760,6 @@ ProbingView<REAL>::propagateDomains()
                    bool finiteDomain =
                        !probing_domain_flags[colid].test( ColFlag::kUbInf );
 
-                   // TODO: abbreviations?
                    REAL mindomred = isint ? minintdomred : mincontdomred;
 
                    if( probing_domain_flags[colid].test(

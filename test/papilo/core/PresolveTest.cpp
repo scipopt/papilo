@@ -157,7 +157,6 @@ TEST_CASE( "happy-path-substitute-matrix-coefficient-into-objective", "[core]" )
       TransactionGuard<double> tg{ reductions };
       reductions.lockColBounds( 3 );
       reductions.lockRow( 1 );
-      // TODO: substitutColInObj + markRowRedudant = aggregateCol?
       reductions.substituteColInObjective( 3, 1 );
       reductions.markRowRedundant( 1 );
    }
@@ -183,9 +182,6 @@ TEST_CASE( "happy-path-substitute-matrix-coefficient-into-objective", "[core]" )
    REQUIRE( getEntry( problem, 1, 0 ) == 1.0 );
    REQUIRE( getEntry( problem, 1, 1 ) == 1.0 );
 
-   // TODO: if upperbound and lowerbound are equal this can be set to fixed or
-   // nah?
-   // TODO: where is the information w = 1 - z stored?
 }
 TEST_CASE( "happy-path-aggregate-free-column", "[core]" )
 {
@@ -216,7 +212,6 @@ TEST_CASE( "happy-path-aggregate-free-column", "[core]" )
    REQUIRE( problem.getConstraintMatrix().getColSizes() == expected_colsizes );
    REQUIRE( problem.getNRows() == 2 );
    REQUIRE( isRow( problem, RowFlag::kRedundant, 1 ) );
-   // TODO: where is the information w = 1 -z stored?
 }
 
 Problem<double>

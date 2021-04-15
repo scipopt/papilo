@@ -224,8 +224,6 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
                        minimplcoef,
                        REAL( rhs[row] - activities[row].min - abscoef ) );
 
-                // TODO: this could be else plus debug statement,
-                // because rows not fulfilling the constraint are excluded
                 if( activities[row].ninfmax == 0 &&
                     !rowFlags[row].test( RowFlag::kLhsInf ) )
                    minimplcoef =

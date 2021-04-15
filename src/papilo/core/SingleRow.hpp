@@ -145,7 +145,6 @@ struct RowActivity
 };
 
 /// counts the locks for the given row entry
-// TODO: shouldn't that be an updated field in constraint matrix
 template <typename REAL>
 void
 count_locks( const REAL& val, RowFlags rflags, int& ndownlocks, int& nuplocks )

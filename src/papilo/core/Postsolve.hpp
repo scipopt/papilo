@@ -63,8 +63,6 @@ enum class ReductionType : int
 enum class PostsolveStatus : int
 {
    kOk,
-   // TODO: fail is never used?
-   kFail
 };
 
 template <typename REAL>

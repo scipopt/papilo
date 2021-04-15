@@ -88,7 +88,6 @@ TEST_CASE( "sparse storage can be created from triplets", "[core]" )
       default:
          REQUIRE_FALSE( "case default should not be reached" );
       }
-      // todo check the rowValues and columns are correct
    }
 }
 
@@ -156,8 +155,6 @@ TEST_CASE( "sparse matrix can be compressed", "[core]" )
       default:
          REQUIRE_FALSE( "case default should not be reached" );
       }
-
-      // todo check the rowValues and columns are correct
    }
 }
 
@@ -167,7 +164,6 @@ TEST_CASE(
 {
    papilo::SparseStorage<double> transpose = setupSparseMatrix().getTranspose();
 
-   // TODO: getNnz refactor to getNonzeros??
    REQUIRE( transpose.getNnz() == 13 );
    REQUIRE( transpose.getNRows() == 9 );
    REQUIRE( transpose.getNCols() == 5 );
@@ -325,7 +321,6 @@ setupSparseMatrix()
    int numberRows = 5;
    int numberColumns = 9;
 
-   // TODO: Rename Triplet to IndicesToMatrixValue?
    papilo::Vec<papilo::Triplet<double>> triplets = {
        papilo::Triplet<double>{ 0, 0, 1.0 },
        papilo::Triplet<double>{ 0, 1, 2.0 },
@@ -341,7 +336,6 @@ setupSparseMatrix()
        papilo::Triplet<double>{ 4, 7, 12.0 },
        papilo::Triplet<double>{ 4, 8, 13.0 } };
 
-   // TODO: warum defineirt man rowSize als negativ
    papilo::Vec<int> rowSize = { 2, 5, 1, -1, 5 };
    papilo::Vec<int> colSize = { 2, 4, 2, 1, 1, 1, -1, 1, 1 };
    papilo::SparseStorage<double> matrix{ triplets, numberRows, numberColumns,

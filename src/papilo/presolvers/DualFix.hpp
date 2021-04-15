@@ -286,7 +286,6 @@ DualFix<REAL>::execute( const Problem<REAL>& problem,
 
                // A transaction is only needed to group several reductions that
                // belong together
-               // TODO are the locks to strict?
                TransactionGuard<REAL> guard{ reductions };
 
                reductions.lockCol( i );
@@ -391,7 +390,6 @@ DualFix<REAL>::execute( const Problem<REAL>& problem,
 
                // A transaction is only needed to group several reductions that
                // belong together
-               // TODO are the locks to strict?
                TransactionGuard<REAL> guard{ reductions };
 
                reductions.lockCol( i );
