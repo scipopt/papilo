@@ -42,21 +42,11 @@ class ConstraintPropagation : public PresolveMethod<REAL>
       this->setTiming( PresolverTiming::kFast );
    }
 
+   /// todo how to communicate about postsolve information
    PresolveStatus
    execute( const Problem<REAL>& problem,
             const ProblemUpdate<REAL>& problemUpdate, const Num<REAL>& num,
             Reductions<REAL>& reductions ) override;
-
- private:
-   PresolveStatus
-   perform_propagation_step( const Num<REAL>& num, Reductions<REAL>& reductions,
-                             const VariableDomains<REAL>& domains,
-                             const Vec<RowActivity<REAL>>& activities,
-                             const ConstraintMatrix<REAL>& consMatrix,
-                             const Vec<REAL>& lhsValues,
-                             const Vec<REAL>& rhsValues,
-                             const Vec<RowFlags>& rflags, REAL weakenbounds,
-                             int row ) const;
 };
 
 #ifdef PAPILO_USE_EXTERN_TEMPLATES
@@ -84,7 +74,7 @@ ConstraintPropagation<REAL>::execute( const Problem<REAL>& problem,
 
    // for LP constraint propagation we might want to weaken the bounds by some
    // small amount above the feasibility tolerance
-   REAL weakenbounds =
+   const REAL weakenbounds =
        problem.getNumIntegralCols() == 0
            ? REAL{ problemUpdate.getPresolveOptions().weakenlpvarbounds *
                    num.getFeasTol() }
@@ -92,89 +82,6 @@ ConstraintPropagation<REAL>::execute( const Problem<REAL>& problem,
 
    if( problemUpdate.getPresolveOptions().runs_sequentiell() )
    {
-      for( int row : changedactivities )
-      {
-         PresolveStatus local_result = perform_propagation_step(
-             num, reductions, domains, activities, consMatrix, lhsValues,
-             rhsValues, rflags, weakenbounds, row );
-         if( local_result == PresolveStatus::kInfeasible )
-            return PresolveStatus::kInfeasible;
-         if( local_result == PresolveStatus::kReduced )
-            result = PresolveStatus::kReduced;
-      }
-   }
-   else
-   {
-      bool infeasible = false;
-      Vec<Reductions<REAL>> stored_reductions( changedactivities.size() );
-      tbb::parallel_for(
-          tbb::blocked_range<int>( 0, changedactivities.size() ),
-          [&]( const tbb::blocked_range<int>& r ) {
-             for( int j = r.begin(); j < r.end(); ++j )
-             {
-                PresolveStatus local_result = perform_propagation_step(
-                    num, stored_reductions[j], domains, activities, consMatrix, lhsValues,
-                    rhsValues, rflags, weakenbounds, changedactivities[j] );
-                assert( local_result == PresolveStatus::kInfeasible ||
-                        local_result == PresolveStatus::kReduced ||
-                        local_result == PresolveStatus::kUnchanged );
-                if( local_result == PresolveStatus::kInfeasible )
-                   infeasible = true;
-                else if( local_result == PresolveStatus::kReduced )
-                   result = PresolveStatus::kReduced;
-             }
-          } );
-      if( infeasible )
-         return PresolveStatus::kInfeasible;
-      else if( result == PresolveStatus::kUnchanged )
-         return PresolveStatus::kUnchanged;
-
-      for( int i = 0; i < stored_reductions.size(); ++i )
-      {
-         Reductions<REAL> reds = stored_reductions[i];
-         if( reds.size() > 0 )
-         {
-            for( const auto& reduction : reds.getReductions() )
-            {
-               reductions.add_reduction( reduction.row, reduction.col,
-                                         reduction.newval );
-            }
-         }
-      }
-   }
-
-   return result;
-}
-template <typename REAL>
-PresolveStatus
-ConstraintPropagation<REAL>::perform_propagation_step(
-    const Num<REAL>& num, Reductions<REAL>& reductions,
-    const VariableDomains<REAL>& domains,
-    const Vec<RowActivity<REAL>>& activities,
-    const ConstraintMatrix<REAL>& consMatrix, const Vec<REAL>& lhsValues,
-    const Vec<REAL>& rhsValues, const Vec<RowFlags>& rflags, REAL weakenbounds,
-    int row ) const
-{
-   PresolveStatus result = PresolveStatus::kUnchanged;
-   auto rowvec = consMatrix.getRowCoefficients( row );
-
-   assert( !consMatrix.isRowRedundant( row ) );
-
-   switch( rowvec.getLength() )
-   {
-   case 0:
-      if( ( !rflags[row].test( RowFlag::kLhsInf ) &&
-            num.isFeasGT( lhsValues[row], 0 ) ) ||
-          ( !rflags[row].test( RowFlag::kRhsInf ) &&
-            num.isFeasLT( rhsValues[row], 0 ) ) )
-         return PresolveStatus::kInfeasible;
-      else
-         reductions.markRowRedundant( row );
-      break;
-   case 1:
-      // do nothing, singleton row presolver handles this bound change
-      break;
-   default:
       auto add_boundchange = [&]( BoundChange boundChange, int col, REAL val ) {
          // do not accept huge values as bounds
          if( num.isHugeVal( val ) )
@@ -208,6 +115,7 @@ ConstraintPropagation<REAL>::perform_propagation_step(
                                      consMatrix.getMaxFeasChange(
                                          col, bnddist ) <= num.getFeasTol() ) )
                {
+                  // todo reductions.forcingRowToUpper(currentrow, col);
                   reductions.fixCol( col, domains.upper_bounds[col] );
                   result = PresolveStatus::kReduced;
                   return;
@@ -251,6 +159,7 @@ ConstraintPropagation<REAL>::perform_propagation_step(
                                      consMatrix.getMaxFeasChange(
                                          col, bnddist ) <= num.getFeasTol() ) )
                {
+                  // todo reductions.forcingRowToLower(currentrow, col);
                   reductions.fixCol( col, domains.lower_bounds[col] );
                   result = PresolveStatus::kReduced;
                   return;
@@ -266,11 +175,209 @@ ConstraintPropagation<REAL>::perform_propagation_step(
             }
          }
       };
-      propagate_row( rowvec.getValues(), rowvec.getIndices(),
-                     rowvec.getLength(), activities[row], lhsValues[row],
-                     rhsValues[row], rflags[row], domains.lower_bounds,
-                     domains.upper_bounds, domains.flags, add_boundchange );
+      for( int row : changedactivities )
+      {
+         auto rowvec = consMatrix.getRowCoefficients( row );
+
+         assert( !consMatrix.isRowRedundant( row ) );
+
+         switch( rowvec.getLength() )
+         {
+         case 0:
+            if( ( !rflags[row].test( RowFlag::kLhsInf ) &&
+                  num.isFeasGT( lhsValues[row], 0 ) ) ||
+                ( !rflags[row].test( RowFlag::kRhsInf ) &&
+                  num.isFeasLT( rhsValues[row], 0 ) ) )
+               result = PresolveStatus::kInfeasible;
+            else
+               reductions.markRowRedundant( row );
+            break;
+         case 1:
+            // do nothing, singleton row presolver handles this bound change
+            break;
+         default:
+            propagate_row( rowvec.getValues(), rowvec.getIndices(),
+                           rowvec.getLength(), activities[row], lhsValues[row],
+                           rhsValues[row], rflags[row], domains.lower_bounds,
+                           domains.upper_bounds, domains.flags,
+                           add_boundchange );
+         }
+
+         if( result == PresolveStatus::kInfeasible )
+            break;
+      }
    }
+   else
+   {
+      Vec<Reductions<REAL>> stored_reductions( changedactivities.size() );
+      bool infeasible = false;
+      tbb::parallel_for(
+          tbb::blocked_range<int>( 0, changedactivities.size() ),
+          [&]( const tbb::blocked_range<int>& r ) {
+             for( int j = r.begin(); j < r.end(); ++j )
+             {
+                PresolveStatus local_status = PresolveStatus::kUnchanged;
+
+                auto add_boundchange = [&]( BoundChange boundChange, int col,
+                                            REAL val ) {
+                   // do not accept huge values as bounds
+                   if( num.isHugeVal( val ) )
+                      return;
+
+                   if( boundChange == BoundChange::kLower )
+                   {
+                      assert( domains.flags[col].test( ColFlag::kLbInf ) ||
+                              val > domains.lower_bounds[col] );
+
+                      if( domains.flags[col].test( ColFlag::kIntegral,
+                                                   ColFlag::kImplInt ) )
+                         val = num.feasCeil( val );
+
+                      if( !domains.flags[col].test( ColFlag::kUbInf ) )
+                      {
+                         // compute distance of new lower bound to the upper
+                         // bound
+                         REAL bnddist = domains.upper_bounds[col] - val;
+
+                         // bound exceeded by more then feastol means infeasible
+                         if( bnddist < -num.getFeasTol() )
+                         {
+                            local_status = PresolveStatus::kInfeasible;
+                            return;
+                         }
+
+                         // if the upper bound is reached, or reached within
+                         // tolerances and the change of feasibility is also
+                         // within tolerances fix to the upper bound
+                         if( bnddist <= 0 ||
+                             ( bnddist <= num.getFeasTol() &&
+                               consMatrix.getMaxFeasChange( col, bnddist ) <=
+                                   num.getFeasTol() ) )
+                         {
+                            stored_reductions[j].fixCol(
+                                col, domains.upper_bounds[col] );
+                            local_status = PresolveStatus::kReduced;
+                            return;
+                         }
+                      }
+
+                      val -= weakenbounds;
+                      if( domains.flags[col].test( ColFlag::kLbInf ) ||
+                          val - domains.lower_bounds[col] >
+                              +1000 * num.getFeasTol() )
+                      {
+                         stored_reductions[j].changeColLB( col, val );
+                         local_status = PresolveStatus::kReduced;
+                      }
+                   }
+                   else
+                   {
+                      assert( boundChange == BoundChange::kUpper );
+                      assert( domains.flags[col].test( ColFlag::kUbInf ) ||
+                              val < domains.upper_bounds[col] );
+
+                      if( domains.flags[col].test( ColFlag::kIntegral,
+                                                   ColFlag::kImplInt ) )
+                         val = num.feasFloor( val );
+
+                      if( !domains.flags[col].test( ColFlag::kLbInf ) )
+                      {
+                         // compute distance of new upper bound to the lower
+                         // bound
+                         REAL bnddist = val - domains.lower_bounds[col];
+
+                         // bound exceeded by more then feastol means infeasible
+                         if( bnddist < -num.getFeasTol() )
+                         {
+                            local_status = PresolveStatus::kInfeasible;
+                            return;
+                         }
+
+                         // if the lower bound is reached, or reached within
+                         // tolerances and the change of feasibility is also
+                         // within tolerances fix to the lower bound
+                         if( bnddist <= 0 ||
+                             ( bnddist <= num.getFeasTol() &&
+                               consMatrix.getMaxFeasChange( col, bnddist ) <=
+                                   num.getFeasTol() ) )
+                         {
+                            // todo reductions.forcingRowToLower(currentrow,
+                            // col);
+                            stored_reductions[j].fixCol(
+                                col, domains.lower_bounds[col] );
+                            local_status = PresolveStatus::kReduced;
+                            return;
+                         }
+                      }
+
+                      val += weakenbounds;
+                      if( domains.flags[col].test( ColFlag::kUbInf ) ||
+                          val - domains.upper_bounds[col] <
+                              -1000 * num.getFeasTol() )
+                      {
+                         stored_reductions[j].changeColUB( col, val );
+                         local_status = PresolveStatus::kReduced;
+                      }
+                   }
+                };
+
+                int row = changedactivities[j];
+                auto rowvec = consMatrix.getRowCoefficients( row );
+
+                assert( !consMatrix.isRowRedundant( row ) );
+
+                switch( rowvec.getLength() )
+                {
+                case 0:
+                   if( ( !rflags[row].test( RowFlag::kLhsInf ) &&
+                         num.isFeasGT( lhsValues[row], 0 ) ) ||
+                       ( !rflags[row].test( RowFlag::kRhsInf ) &&
+                         num.isFeasLT( rhsValues[row], 0 ) ) )
+                      local_status = PresolveStatus::kInfeasible;
+                   else
+                      reductions.markRowRedundant( row );
+                   break;
+                case 1:
+                   // do nothing, singleton row presolver handles this bound
+                   // change
+                   break;
+                default:
+                   propagate_row( rowvec.getValues(), rowvec.getIndices(),
+                                  rowvec.getLength(), activities[row],
+                                  lhsValues[row], rhsValues[row], rflags[row],
+                                  domains.lower_bounds, domains.upper_bounds,
+                                  domains.flags, add_boundchange );
+                }
+                assert( local_status == PresolveStatus::kReduced ||
+                        local_status == PresolveStatus::kInfeasible ||
+                        local_status == PresolveStatus::kUnchanged );
+                if( local_status == PresolveStatus::kInfeasible )
+                   infeasible = true;
+                else if( local_status == PresolveStatus::kReduced )
+                {
+                   result = PresolveStatus::kReduced;
+                }
+             }
+          } );
+      if(infeasible)
+         return PresolveStatus::kInfeasible;
+      else if( result == PresolveStatus::kUnchanged )
+         return PresolveStatus::kUnchanged;
+
+      for( int i = 0; i < stored_reductions.size(); ++i )
+      {
+         Reductions<REAL> reds = stored_reductions[i];
+         if( reds.size() > 0 )
+         {
+            for( const auto& reduction : reds.getReductions() )
+            {
+               reductions.add_reduction( reduction.row, reduction.col,
+                                         reduction.newval );
+            }
+         }
+      }
+   }
+
    return result;
 }
 
