@@ -25,12 +25,20 @@
     <Column active="True" alternative="-1" name="tsx%propagation" origcolname="tsx%propagation"
             reduction="meanOrConcat"/>
 
+    <Column active="True" alternative="-1" name="time%simplifyineq" origcolname="time%simplifyineq"
+            reduction="meanOrConcat">
+        <Aggregation aggregation="shmean" name="shmean" shiftby="1.0"/>
+    </Column>
+    <Column active="True" alternative="-1" name="tsx%simplifyineq" origcolname="tsx%simplifyineq"
+            reduction="meanOrConcat"/>
+
     <Column active="True" alternative="-1" name="time%simpleprobing" origcolname="time%simpleprobing"
             reduction="meanOrConcat">
         <Aggregation aggregation="shmean" name="shmean" shiftby="1.0"/>
     </Column>
     <Column active="True" alternative="-1" name="tsx%simpleprobing" origcolname="tsx%simpleprobing"
             reduction="meanOrConcat"/>
+
 
     <Column active="True" alternative="-1" name="time%stuffing" origcolname="time%stuffing" reduction="meanOrConcat">
         <Aggregation aggregation="shmean" name="shmean" shiftby="1.0"/>
