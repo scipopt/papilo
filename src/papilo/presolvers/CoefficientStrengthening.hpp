@@ -54,7 +54,8 @@ class CoefficientStrengthening : public PresolveMethod<REAL>
        const Vec<RowActivity<REAL>>& activities, int changed_activity,
        const ConstraintMatrix<REAL>& constMatrix, const Vec<REAL>& lhs_values,
        const Vec<REAL>& rhs_values, const Vec<RowFlags>& rflags,
-       const Vec<ColFlags>& cflags, Reductions<REAL>& reductions ) const;
+       const Vec<ColFlags>& cflags, Reductions<REAL>& reductions,
+       Vec<std::pair<REAL, int>>& integerCoefficients ) const;
 };
 
 #ifdef PAPILO_USE_EXTERN_TEMPLATES
@@ -85,12 +86,13 @@ CoefficientStrengthening<REAL>::execute(
 
    if( problemUpdate.getPresolveOptions().runs_sequentiell() )
    {
+      Vec<std::pair<REAL, int>> integerCoefficients;
       for( int i : changedActivities )
       {
          if( perform_coefficient_tightening(
                  num, domains, activities, i, constMatrix, lhs_values,
-                 rhs_values, rflags, cflags,
-                 reductions ) == PresolveStatus::kReduced )
+                 rhs_values, rflags, cflags, reductions,
+                 integerCoefficients ) == PresolveStatus::kReduced )
             result = PresolveStatus::kReduced;
       }
    }
@@ -100,12 +102,13 @@ CoefficientStrengthening<REAL>::execute(
       tbb::parallel_for(
           tbb::blocked_range<int>( 0, changedActivities.size() ),
           [&]( const tbb::blocked_range<int>& r ) {
+            Vec<std::pair<REAL, int>> integerCoefficients;
              for( int j = r.begin(); j < r.end(); ++j )
              {
                 if( perform_coefficient_tightening(
                         num, domains, activities, changedActivities[j],
                         constMatrix, lhs_values, rhs_values, rflags, cflags,
-                        stored_reductions[j] ) == PresolveStatus::kReduced )
+                        stored_reductions[j], integerCoefficients ) == PresolveStatus::kReduced )
                    result = PresolveStatus::kReduced;
              }
           } );
@@ -141,10 +144,11 @@ template <typename REAL>
 PresolveStatus
 CoefficientStrengthening<REAL>::perform_coefficient_tightening(
     const Num<REAL>& num, const VariableDomains<REAL>& domains,
-    const Vec<RowActivity<REAL>>& activities, const int changed_activity,
+    const Vec<RowActivity<REAL>>& activities, int changed_activity,
     const ConstraintMatrix<REAL>& constMatrix, const Vec<REAL>& lhs_values,
     const Vec<REAL>& rhs_values, const Vec<RowFlags>& rflags,
-    const Vec<ColFlags>& cflags, Reductions<REAL>& reductions ) const
+    const Vec<ColFlags>& cflags, Reductions<REAL>& reductions,
+    Vec<std::pair<REAL, int>>& integerCoefficients ) const
 {
    auto rowCoefficients = constMatrix.getRowCoefficients( changed_activity );
    const REAL* coefficients = rowCoefficients.getValues();
@@ -191,7 +195,6 @@ CoefficientStrengthening<REAL>::perform_coefficient_tightening(
 
    // remember the integer coefficients and the maximum absolute value
    // of an integer variable
-   Vec<std::pair<REAL, int>> integerCoefficients;
    integerCoefficients.clear();
    REAL newabscoef = maxact - rhs;
 
