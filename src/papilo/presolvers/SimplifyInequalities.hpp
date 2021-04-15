@@ -89,7 +89,8 @@ class SimplifyInequalities : public PresolveMethod<REAL>
        const Vec<RowActivity<REAL>>& activities, const Vec<RowFlags>& rflags,
        const Vec<ColFlags>& cflags, const Vec<REAL>& lhs, const Vec<REAL>& rhs,
        const Vec<REAL>& lbs, const Vec<REAL>& ubs, int row,
-       Reductions<REAL>& reductions  );
+       Reductions<REAL>& reductions, Vec<int>& coefficientsThatCanBeDeleted,
+       Vec<int>& colOrder );
 };
 
 #ifdef PAPILO_USE_EXTERN_TEMPLATES
@@ -292,11 +293,15 @@ SimplifyInequalities<REAL>::execute( const Problem<REAL>& problem,
 
    if( problemUpdate.getPresolveOptions().runs_sequentiell() )
    {
+      //allocate only once
+      Vec<int> colOrder;
+      Vec<int> coefficientsThatCanBeDeleted;
       for( int row = 0; row < nrows; row++ )
       {
          if( perform_simplify_ineq_task(
                  num, consMatrix, activities, rflags, cflags, lhs, rhs, lbs,
-                 ubs, row, reductions ) == PresolveStatus::kReduced )
+                 ubs, row, reductions, coefficientsThatCanBeDeleted,
+                 colOrder ) == PresolveStatus::kReduced )
             result = PresolveStatus::kReduced;
       }
    }
@@ -307,11 +312,15 @@ SimplifyInequalities<REAL>::execute( const Problem<REAL>& problem,
       tbb::parallel_for(
           tbb::blocked_range<int>( 0, nrows ),
           [&]( const tbb::blocked_range<int>& r ) {
+            //allocate only once per thread
+            Vec<int> colOrder;
+             Vec<int> coefficientsThatCanBeDeleted;
              for( int row = r.begin(); row < r.end(); ++row )
              {
                 PresolveStatus status = perform_simplify_ineq_task(
                     num, consMatrix, activities, rflags, cflags, lhs, rhs, lbs,
-                    ubs, row, stored_reductions[row] );
+                    ubs, row, stored_reductions[row],
+                    coefficientsThatCanBeDeleted, colOrder );
                 if( status == PresolveStatus::kReduced )
                    result = PresolveStatus::kReduced;
                 assert( status == PresolveStatus::kReduced ||
@@ -352,11 +361,11 @@ SimplifyInequalities<REAL>::perform_simplify_ineq_task(
     const Vec<RowActivity<REAL>>& activities, const Vec<RowFlags>& rflags,
     const Vec<ColFlags>& cflags, const Vec<REAL>& lhs, const Vec<REAL>& rhs,
     const Vec<REAL>& lbs, const Vec<REAL>& ubs, int row,
-    Reductions<REAL>& reductions )
-{ // allocate only once
+    Reductions<REAL>& reductions, Vec<int>& coefficientsThatCanBeDeleted,
+    Vec<int>& colOrder )
+{
    PresolveStatus result = PresolveStatus::kUnchanged;
-   Vec<int> colOrder;
-   Vec<int> coefficientsThatCanBeDeleted;
+
    auto rowvec = consMatrix.getRowCoefficients( row );
    int rowLength = rowvec.getLength();
 
