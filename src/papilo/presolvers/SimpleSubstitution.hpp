@@ -52,13 +52,15 @@ class SimpleSubstitution : public PresolveMethod<REAL>
             const ProblemUpdate<REAL>& problemUpdate, const Num<REAL>& num,
             Reductions<REAL>& reductions ) override;
 
+
+
+ private:
    bool
    isConstraintsFeasibleWithGivenBounds(
-       const Num<REAL>& num, Vec<REAL> lower_bounds,
+       const Num<REAL>& num, const Vec<REAL>& lower_bounds,
        const Vec<REAL>& upper_bounds, const REAL* vals, REAL rhs, int subst,
        int stay, const boost::integer::euclidean_result_t<int64_t>& res ) const;
 
- private:
    PresolveStatus
    perform_simple_subsitution_step(
        const ProblemUpdate<REAL>& problemUpdate, const Num<REAL>& num,
@@ -307,7 +309,7 @@ SimpleSubstitution<REAL>::perform_simple_subsitution_step(
 template <typename REAL>
 bool
 SimpleSubstitution<REAL>::isConstraintsFeasibleWithGivenBounds(
-    const Num<REAL>& num, const Vec<REAL> lower_bounds,
+    const Num<REAL>& num, const Vec<REAL>& lower_bounds,
     const Vec<REAL>& upper_bounds, const REAL* vals, REAL rhs, int subst,
     int stay, const boost::integer::euclidean_result_t<int64_t>& res ) const
 {

@@ -67,7 +67,7 @@ class SimplifyInequalities : public PresolveMethod<REAL>
       this->setType( PresolverType::kIntegralCols );
    }
 
-   virtual PresolveStatus
+   PresolveStatus
    execute( const Problem<REAL>& problem,
             const ProblemUpdate<REAL>& problemUpdate, const Num<REAL>& num,
             Reductions<REAL>& reductions ) override;
