@@ -76,8 +76,8 @@ class Substitution : public PresolveMethod<REAL>
             const ProblemUpdate<REAL>& problemUpdate, const Num<REAL>& num,
             Reductions<REAL>& reductions ) override;
    bool
-   is_divisible( const Num<REAL>& num, const int length, const REAL* rowvalues,
-                 REAL minabsintvalue ) const;
+   is_divisible( const Num<REAL>& num, int length, const REAL* row_values,
+                 REAL min_abs_int_value ) const;
 };
 
 #ifdef PAPILO_USE_EXTERN_TEMPLATES
