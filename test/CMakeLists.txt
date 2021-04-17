@@ -91,7 +91,28 @@ set(unit_tests
 
         "happy-path-implied-integer-detection"
 
-        "happy-path-parallel-row-detection"
+        #Parallel row Detection
+        "parallel-row-unchanged"
+        "parallel-row-two-equations-infeasible-second-row-dominant"
+        "parallel-row-two-equations-infeasible-first-row-dominant"
+        "parallel-row-two-equations-feasible-second-row-dominant"
+        "parallel-row-two-equations-feasible-first-row-dominant"
+        "parallel-row-two-inequalities-redundant-row-second-row-dominant"
+        "parallel-row-two-inequalities-redundant-row-first-row-dominant"
+        "parallel-row-two-inequalities-tighten-lower-bound-second-row-dominant"
+        "parallel-row-two-inequalities-tighten-lower-bound-first-row-dominant"
+        "parallel-row-two-inequalities-tighten-upper-bound-second-row-dominant"
+        "parallel-row-two-inequalities-tighten-upper-bound-first-row-dominant"
+        "parallel-row-two-inequalities-infeasible-first-row-dominant"
+        "parallel-row-two-inequalities-infeasible-second-row-dominant"
+        "parallel-row-two-inequalities-tighten-upper-bound-first-row-neg"
+        "parallel-row-overwrite-inf-first-row-rhs-inf"
+        "parallel-row-overwrite-inf-first-row-lhs-inf"
+        "parallel-row-overwrite-inf-first-row-lhs-inf-neg-factor"
+        "parallel-row-mixed-infeasible-first-row-equation"
+        "parallel-row-mixed-second-row-equation"
+        "parallel-row-mixed-infeasible-second-row-equation"
+        "parallel-row-multiple-parallel-rows"
 
         "happy-path-parallel-column-detection"
 

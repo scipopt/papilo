@@ -94,7 +94,7 @@ class ParallelRowDetection : public PresolveMethod<REAL>
    void
    findParallelRows( const Num<REAL>& num, const int* bucket, int bucketsize,
                      const ConstraintMatrix<REAL>& constMatrix,
-                     Vec<std::tuple<int, int, REAL>>& parallelRows );
+                     Vec<int>& parallel_rows );
 
    void
    computeRowHashes( const ConstraintMatrix<REAL>& constMatrix,
@@ -120,7 +120,7 @@ class ParallelRowDetection : public PresolveMethod<REAL>
       this->setTiming( PresolverTiming::kMedium );
    }
 
-   virtual PresolveStatus
+   PresolveStatus
    execute( const Problem<REAL>& problem,
             const ProblemUpdate<REAL>& problemUpdate, const Num<REAL>& num,
             Reductions<REAL>& reductions ) override;
@@ -136,76 +136,67 @@ template <typename REAL>
 void
 ParallelRowDetection<REAL>::findParallelRows(
     const Num<REAL>& num, const int* bucket, int bucketsize,
-    const ConstraintMatrix<REAL>& constMatrix,
-    Vec<std::tuple<int, int, REAL>>& parallelRows )
+    const ConstraintMatrix<REAL>& constMatrix, Vec<int>& parallel_rows )
 {
    // TODO if bucketsize too large do gurobi trick
+   auto row1 = constMatrix.getRowCoefficients( bucket[0] );
 
-   for( int i = 0; i < bucketsize; ++i )
+   const int length = row1.getLength();
+   const REAL* coefs1 = row1.getValues();
+
+   if( length < 2 )
+      return;
+
+   parallel_rows.push_back( bucket[0] );
+
+   // TODO handle case of multiple parallel rows with one transaction:
+   for( int j = 1; j < bucketsize; ++j )
    {
-      auto row1 = constMatrix.getRowCoefficients( bucket[i] );
+      auto row2 = constMatrix.getRowCoefficients( bucket[j] );
 
-      const int length = row1.getLength();
-      const REAL* coefs1 = row1.getValues();
+      // support should already be checked
+      assert( length == row2.getLength() );
+      assert( std::memcmp( static_cast<const void*>( row1.getIndices() ),
+                           static_cast<const void*>( row2.getIndices() ),
+                           length * sizeof( int ) ) == 0 );
 
-      if( length < 2 )
-         return;
+      const REAL* coefs2 = row2.getValues();
 
-      // TODO handle case of multiple parallel rows with one transaction:
-      for( int j = i + 1; j < bucketsize; ++j )
+      bool parallel = true;
+
+      if( num.isGE( abs( coefs1[0] ), abs( coefs2[0] ) ) )
       {
-         auto row2 = constMatrix.getRowCoefficients( bucket[j] );
+         REAL scale2 = coefs1[0] / coefs2[0];
 
-         // support should already be checked
-         assert( length == row2.getLength() );
-         assert( std::memcmp( static_cast<const void*>( row1.getIndices() ),
-                              static_cast<const void*>( row2.getIndices() ),
-                              length * sizeof( int ) ) == 0 );
-
-         const REAL* coefs2 = row2.getValues();
-
-         bool parallel = true;
-
-         if( num.isGE( abs( coefs1[0] ), abs( coefs2[0] ) ) )
+         for( int k = 1; k < length; ++k )
          {
-            REAL scale2 = coefs1[0] / coefs2[0];
-
-            for( int k = 1; k < length; ++k )
+            if( !num.isEq( coefs1[k], scale2 * coefs2[k] ) )
             {
-               if( !num.isEq( coefs1[k], scale2 * coefs2[k] ) )
-               {
-                  parallel = false;
-                  break;
-               }
-            }
-
-            if( parallel )
-            {
-               parallelRows.push_back(
-                   std::make_tuple( bucket[i], bucket[j], scale2 ) );
+               parallel = false;
+               break;
             }
          }
-         else
+
+         if( parallel )
+            parallel_rows.push_back( bucket[j] );
+      }
+      else
+      {
+         REAL scale1 = coefs2[0] / coefs1[0];
+         for( int k = 1; k < length; ++k )
          {
-            REAL scale1 = coefs2[0] / coefs1[0];
-
-            for( int k = 1; k < length; ++k )
+            if( !num.isEq( scale1 * coefs1[k], coefs2[k] ) )
             {
-               if( !num.isEq( scale1 * coefs1[k], coefs2[k] ) )
-               {
-                  parallel = false;
-                  break;
-               }
-            }
-
-            if( parallel )
-            {
-               parallelRows.push_back(
-                   std::make_tuple( bucket[j], bucket[i], scale1 ) );
+               parallel = false;
+               break;
             }
          }
+         if( parallel )
+            parallel_rows.push_back( bucket[j] );
       }
    }
+   if( parallel_rows.size() == 1 )
+      parallel_rows.clear();
 }
 
 template <typename REAL>
@@ -336,120 +327,182 @@ ParallelRowDetection<REAL>::execute( const Problem<REAL>& problem,
    // presolver can be expensive otherwise
    this->skipRounds( this->getNCalls() );
 
-   // lambda to handle the parallel rows
+   // lambda mark all reductions except one redundant and update rhs/lhs
    auto handleRows = [&reductions, &result, &lhs_values, &rhs_values, &rflags,
-                      &num]( int row1, int row2, REAL ratio ) {
-      bool firstconsEquality = rflags[row1].test( RowFlag::kEquation );
-      bool secondconsEquality = rflags[row2].test( RowFlag::kEquation );
-
-      assert( !firstconsEquality || ( !rflags[row1].test( RowFlag::kRhsInf ) &&
-                                      !rflags[row1].test( RowFlag::kLhsInf ) &&
-                                      rhs_values[row1] == lhs_values[row1] ) );
-      assert( !secondconsEquality || ( !rflags[row2].test( RowFlag::kRhsInf ) &&
-                                       !rflags[row2].test( RowFlag::kLhsInf ) &&
-                                       rhs_values[row2] == lhs_values[row2] ) );
-      assert( ratio != 0.0 );
-
-      REAL adjustedLHS = lhs_values[row2] * ratio;
-      REAL adjustedRHS = rhs_values[row2] * ratio;
-      bool adjustedLHSInf = rflags[row2].test( RowFlag::kLhsInf );
-      bool adjustedRHSInf = rflags[row2].test( RowFlag::kRhsInf );
-
+                      &num, &constMatrix]( Vec<int> parallel_rows ) {
       using std::swap;
-      if( ratio < REAL{ 0.0 } )
-      {
-         swap( adjustedLHS, adjustedRHS );
-         swap( adjustedLHSInf, adjustedRHSInf );
-      }
 
-      // l1 <= A1 <= r1, first row
-      // adjusted second row: s = A1 / A2
-      // s*l2 <= s*A2 <= s*r2, if s > 0
-      // s*r2 <= s*A2 <= s*l2, if s < 0
-      if( firstconsEquality && secondconsEquality )
+      assert( parallel_rows.size() >= 2 );
+      int remaining_row = parallel_rows[0];
+      bool is_remaining_row_equality =
+          rflags[remaining_row].test( RowFlag::kEquation );
+      REAL coefficient =
+          constMatrix.getRowCoefficients( remaining_row ).getValues()[0];
+      bool rhs_infinity = rflags[remaining_row].test( RowFlag::kRhsInf );
+      bool lhs_infinity = rflags[remaining_row].test( RowFlag::kLhsInf );
+      REAL rhs_value = rhs_values[remaining_row];
+      REAL lhs_value = lhs_values[remaining_row];
+      //iterates over parallel_rows, stores the remaining row and updates rhs/lhs
+      for( int i = 1; i < parallel_rows.size(); i++ )
       {
-         // l1 = r1, l2 = r2
-         // if r1 != r2 infeasible
-         if( num.isFeasEq( rhs_values[row1], adjustedRHS ) )
+         int parallel_row = parallel_rows[i];
+
+         const REAL coefs2 =
+             constMatrix.getRowCoefficients( parallel_row ).getValues()[0];
+
+         REAL ratio = coefficient / coefs2;
+         REAL scaled_rhs = rhs_values[parallel_row] * ratio;
+         REAL scaled_lhs = lhs_values[parallel_row] * ratio;
+         if( ratio < REAL{ 0.0 } )
+            swap( scaled_lhs, scaled_rhs );
+
+         // CASE 1: 2 equalities
+         if( rflags[parallel_row].test( RowFlag::kEquation ) and
+             is_remaining_row_equality )
          {
-            TransactionGuard<REAL> guard{ reductions };
-            reductions.lockRow( row1 );
-            reductions.lockRow( row2 );
-            reductions.markRowRedundant( row2 );
+            if( not num.isFeasEq( rhs_value, scaled_rhs ) )
+            {
+               result = PresolveStatus::kInfeasible;
+               break;
+            }
+            if( not num.isGE( abs( coefficient ), abs( coefs2 ) ) )
+            {
+               remaining_row = parallel_row;
+               coefficient = coefs2;
+               rhs_value = rhs_values[remaining_row];
+               lhs_value = lhs_values[remaining_row];
+            }
          }
+         // CASE 2: new equation is equality
+         else if( rflags[parallel_row].test( RowFlag::kEquation ) )
+         {
+            if( ( not rhs_infinity && num.isLT( rhs_value, scaled_rhs ) ) or
+                ( not lhs_infinity && num.isGT( lhs_value, scaled_lhs ) ) )
+            {
+               result = PresolveStatus::kInfeasible;
+               break;
+            }
+            remaining_row = parallel_row;
+            is_remaining_row_equality = true;
+            rhs_infinity = false;
+            lhs_infinity = false;
+            coefficient = coefs2;
+            rhs_value = rhs_values[remaining_row];
+            lhs_value = lhs_values[remaining_row];
+         }
+         // CASE 3: stored equation is equality
+         else if( is_remaining_row_equality )
+         {
+            bool scaled_lhs_inf = rflags[parallel_row].test( RowFlag::kLhsInf );
+            bool scaled_rhs_inf = rflags[parallel_row].test( RowFlag::kRhsInf );
+            if( ratio < REAL{ 0.0 } )
+               swap( scaled_lhs_inf, scaled_rhs_inf );
+            if( ( not scaled_rhs_inf &&
+                  num.isLT( scaled_rhs, rhs_value ) ) or
+                ( not scaled_lhs_inf &&
+                  num.isGT( scaled_lhs, lhs_value ) ) )
+            {
+               result = PresolveStatus::kInfeasible;
+               break;
+            }
+         }
+         // CASE 4: two inequalities
          else
          {
-            result = PresolveStatus::kInfeasible;
+            bool scaled_lhs_inf = rflags[parallel_row].test( RowFlag::kLhsInf );
+            bool scaled_rhs_inf = rflags[parallel_row].test( RowFlag::kRhsInf );
+            if( ratio < REAL{ 0.0 } )
+               swap( scaled_lhs_inf, scaled_rhs_inf );
+            if( ( !rflags[remaining_row].test( RowFlag::kRhsInf ) &&
+                  !scaled_lhs_inf &&
+                  num.isFeasLT( rhs_values[remaining_row], scaled_lhs ) ) ||
+                ( !rflags[remaining_row].test( RowFlag::kLhsInf ) &&
+                  !scaled_rhs_inf &&
+                  num.isFeasLT( scaled_rhs, lhs_values[remaining_row] ) ) )
+            {
+               result = PresolveStatus::kInfeasible;
+               break;
+            }
+            if( not num.isGE( abs( coefficient ), abs( coefs2 ) ) )
+            {
+               REAL new_ratio = coefs2 / coefficient;
+               REAL new_adjusted_rhs = rhs_value * new_ratio;
+               REAL new_adjusted_lhs = lhs_value * new_ratio;
+               if( new_ratio < REAL{ 0.0 } )
+               {
+                  swap( new_adjusted_lhs, new_adjusted_rhs );
+                  swap( lhs_infinity, rhs_infinity );
+               }
+
+               remaining_row = parallel_row;
+               coefficient = coefs2;
+               if( !rhs_infinity &&
+                   ( scaled_rhs_inf ||
+                     num.isLT( new_adjusted_rhs, rhs_values[parallel_row] ) ) )
+               {
+                  rhs_value = new_adjusted_rhs;
+                  rhs_infinity = false;
+               }
+               else
+               {
+                  rhs_value = rhs_values[parallel_row];
+                  rhs_infinity = rflags[parallel_row].test( RowFlag::kRhsInf );
+               }
+               if( !lhs_infinity &&
+                   ( scaled_rhs_inf ||
+                     num.isGT( new_adjusted_lhs, lhs_values[parallel_row] ) ) )
+               {
+                  lhs_value = new_adjusted_lhs;
+                  lhs_infinity = false;
+               }
+               else
+               {
+                  lhs_value = lhs_values[parallel_row];
+                  lhs_infinity = rflags[parallel_row].test( RowFlag::kLhsInf );
+               }
+            }
+            else
+            {
+               if( !scaled_rhs_inf &&
+                   ( rhs_infinity ||
+                     num.isLT( scaled_rhs, rhs_values[remaining_row] ) ) )
+               {
+                  rhs_value = scaled_rhs;
+                  rhs_infinity = false;
+               }
+
+               if( !scaled_lhs_inf &&
+                   ( lhs_infinity ||
+                     num.isGT( scaled_lhs, lhs_values[remaining_row] ) ) )
+               {
+                  lhs_value = scaled_lhs;
+                  lhs_infinity = false;
+               }
+            }
          }
       }
-      else if( firstconsEquality && !secondconsEquality )
+
+      TransactionGuard<REAL> guard{ reductions };
+      reductions.lockRow( remaining_row );
+      for( int parallel_row : parallel_rows )
       {
-         // l1 = r1, s > 0
-         // if r1 not in [s*l2, s*r2], infeasible
-         // else inequality redundant
-         if( ( adjustedRHSInf ||
-               num.isFeasLE( rhs_values[row1], adjustedRHS ) ) &&
-             ( adjustedLHSInf ||
-               num.isFeasGE( rhs_values[row1], adjustedLHS ) ) )
-         {
-            TransactionGuard<REAL> guard{ reductions };
-            reductions.lockRow( row1 );
-            reductions.lockRow( row2 );
-            reductions.markRowRedundant( row2 );
-         }
-         else
-         {
-            result = PresolveStatus::kInfeasible;
-         }
+         if( parallel_row != remaining_row )
+            reductions.lockRow( parallel_row );
       }
-      else if( !firstconsEquality && secondconsEquality )
+      if( lhs_infinity != rflags[remaining_row].test( RowFlag::kLhsInf ) ||
+          lhs_value != lhs_values[remaining_row] )
       {
-         // same as previous case, but row1 and row2 are flipped
-         if( ( rflags[row1].test( RowFlag::kRhsInf ) ||
-               num.isFeasGE( rhs_values[row1], adjustedRHS ) ) &&
-             ( rflags[row1].test( RowFlag::kLhsInf ) ||
-               num.isFeasLE( lhs_values[row1], adjustedRHS ) ) )
-         {
-            TransactionGuard<REAL> guard{ reductions };
-            reductions.lockRow( row1 );
-            reductions.lockRow( row2 );
-            reductions.markRowRedundant( row1 );
-         }
-         else
-         {
-            result = PresolveStatus::kInfeasible;
-         }
+         reductions.change_row_lhs_parallel( remaining_row, lhs_value );
       }
-      else
+      if( rhs_infinity != rflags[remaining_row].test( RowFlag::kRhsInf ) ||
+          rhs_value != rhs_values[remaining_row] )
       {
-         // l1 != r1, l2 != r2, s > 0
-         // if [l1, r1] inter [s*l2, s*r2] empty, infeasible
-         // else we keep one row and give it the tightest bounds
-         if( ( !rflags[row1].test( RowFlag::kRhsInf ) && !adjustedLHSInf &&
-               num.isFeasLT( rhs_values[row1], adjustedLHS ) ) ||
-             ( !rflags[row1].test( RowFlag::kLhsInf ) && !adjustedRHSInf &&
-               num.isFeasLT( adjustedRHS, lhs_values[row1] ) ) )
-         {
-            result = PresolveStatus::kInfeasible;
-         }
-         else
-         {
-            TransactionGuard<REAL> guard{ reductions };
-            reductions.lockRow( row1 );
-            reductions.lockRow( row2 );
-
-            if( !adjustedRHSInf &&
-                ( rflags[row1].test( RowFlag::kRhsInf ) ||
-                  num.isLT( adjustedRHS, rhs_values[row1] ) ) )
-               reductions.change_row_rhs_parallel( row1, adjustedRHS );
-
-            if( !adjustedLHSInf &&
-                ( rflags[row1].test( RowFlag::kLhsInf ) ||
-                  num.isGT( adjustedLHS, lhs_values[row1] ) ) )
-               reductions.change_row_lhs_parallel( row1, adjustedLHS );
-
-            reductions.markRowRedundant( row2 );
-         }
+         reductions.change_row_rhs_parallel( remaining_row, rhs_value );
+      }
+      for( int parallel_row : parallel_rows )
+      {
+         if( parallel_row != remaining_row )
+            reductions.markRowRedundant( parallel_row );
       }
    };
 
@@ -480,7 +533,7 @@ ParallelRowDetection<REAL>::execute( const Problem<REAL>& problem,
                rowperm[a] < rowperm[b] );
    } );
 
-   Vec<std::tuple<int, int, REAL>> parallelRows;
+   Vec<Vec<int>> stored_parallel_rows;
 
    for( int i = 0; i < nRows; )
    {
@@ -490,34 +543,25 @@ ParallelRowDetection<REAL>::execute( const Problem<REAL>& problem,
       // if more  than one row is in the bucket try to find parallel rows
       if( bucketSize > 1 )
       {
+         Vec<int> parallel_rows;
+         parallel_rows.reserve( bucketSize );
          findParallelRows( num, row.get() + i, bucketSize, constMatrix,
-                           parallelRows );
+                           parallel_rows );
+         if( !parallel_rows.empty() )
+            stored_parallel_rows.emplace_back( parallel_rows );
       }
       i = bucketSize + i;
    }
 
-   if( !parallelRows.empty() )
+   if( !stored_parallel_rows.empty() )
    {
-      pdqsort( parallelRows.begin(), parallelRows.end(),
-               [&rowperm]( const std::tuple<int, int, REAL>& a,
-                           const std::tuple<int, int, REAL>& b ) {
-                  return std::make_pair( rowperm[std::get<0>( a )],
-                                         rowperm[std::get<1>( a )] ) <
-                         std::make_pair( rowperm[std::get<0>( b )],
-                                         rowperm[std::get<1>( b )] );
-               } );
-
       result = PresolveStatus::kReduced;
 
-      for( const std::tuple<int, int, REAL>& parallelRow : parallelRows )
+      for( const Vec<int>& parallel_rows : stored_parallel_rows )
       {
-         int row1;
-         int row2;
-         REAL ratio;
 
-         std::tie( row1, row2, ratio ) = parallelRow;
-
-         handleRows( row1, row2, ratio );
+         assert( !parallel_rows.empty() );
+         handleRows( parallel_rows );
 
          if( result == PresolveStatus::kInfeasible )
             break;
