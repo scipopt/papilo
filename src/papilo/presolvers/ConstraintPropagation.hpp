@@ -80,7 +80,8 @@ ConstraintPropagation<REAL>::execute( const Problem<REAL>& problem,
                    num.getFeasTol() }
            : REAL{ 0 };
 
-   if( problemUpdate.getPresolveOptions().runs_sequentiell() )
+   if( problemUpdate.getPresolveOptions().runs_sequentiell() or
+       !problemUpdate.getPresolveOptions().constraint_propagation_parallel )
    {
       auto add_boundchange = [&]( BoundChange boundChange, int col, REAL val ) {
          // do not accept huge values as bounds
@@ -359,7 +360,7 @@ ConstraintPropagation<REAL>::execute( const Problem<REAL>& problem,
                 }
              }
           } );
-      if(infeasible)
+      if( infeasible )
          return PresolveStatus::kInfeasible;
       else if( result == PresolveStatus::kUnchanged )
          return PresolveStatus::kUnchanged;

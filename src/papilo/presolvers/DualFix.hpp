@@ -96,7 +96,8 @@ DualFix<REAL>::execute( const Problem<REAL>& problem,
 
    PresolveStatus result = PresolveStatus::kUnchanged;
    bool noStrongReductions = problemUpdate.getPresolveOptions().dualreds < 2;
-   if( problemUpdate.getPresolveOptions().runs_sequentiell() )
+   if( problemUpdate.getPresolveOptions().runs_sequentiell() or
+       !problemUpdate.getPresolveOptions().dual_fix_parallel )
    {
       for( int col = 0; col < ncols; ++col )
       {
@@ -123,7 +124,7 @@ DualFix<REAL>::execute( const Problem<REAL>& problem,
              {
                 PresolveStatus local_status = perform_dual_fix_step(
                     num, stored_reductions[col], consMatrix, activities, cflags,
-                    objective, lbs, ubs, rflags, lhs, rhs,col,
+                    objective, lbs, ubs, rflags, lhs, rhs, col,
                     noStrongReductions );
                 assert( local_status == PresolveStatus::kUnchanged ||
                         local_status == PresolveStatus::kReduced ||

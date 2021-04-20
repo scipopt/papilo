@@ -90,7 +90,8 @@ ImplIntDetection<REAL>::execute( const Problem<REAL>& problem,
 
    PresolveStatus result = PresolveStatus::kUnchanged;
 
-   if( problemUpdate.getPresolveOptions().runs_sequentiell() )
+   if( problemUpdate.getPresolveOptions().runs_sequentiell() or
+      !problemUpdate.getPresolveOptions().implied_integer_parallel )
    {
       for( int col = 0; col < ncols; ++col )
       {

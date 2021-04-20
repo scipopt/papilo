@@ -291,7 +291,8 @@ SimplifyInequalities<REAL>::execute( const Problem<REAL>& problem,
 
    PresolveStatus result = PresolveStatus::kUnchanged;
 
-   if( problemUpdate.getPresolveOptions().runs_sequentiell() )
+   if( problemUpdate.getPresolveOptions().runs_sequentiell() or
+       !problemUpdate.getPresolveOptions().simplify_inequalities_parallel)
    {
       //allocate only once
       Vec<int> colOrder;

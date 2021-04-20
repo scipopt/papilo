@@ -94,7 +94,8 @@ SimpleProbing<REAL>::execute( const Problem<REAL>& problem,
 
    int nrows = problem.getNRows();
 
-   if( problemUpdate.getPresolveOptions().runs_sequentiell() )
+   if( problemUpdate.getPresolveOptions().runs_sequentiell() or
+       !problemUpdate.getPresolveOptions().simple_probing_parallel )
    {
       for( int i = 0; i < nrows; ++i )
       {

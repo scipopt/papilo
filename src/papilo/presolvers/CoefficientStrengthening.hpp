@@ -84,7 +84,8 @@ CoefficientStrengthening<REAL>::execute(
 
    PresolveStatus result = PresolveStatus::kUnchanged;
 
-   if( problemUpdate.getPresolveOptions().runs_sequentiell() )
+   if( problemUpdate.getPresolveOptions().runs_sequentiell() or
+      !problemUpdate.getPresolveOptions().coefficient_strengthening_parallel )
    {
       Vec<std::pair<REAL, int>> integerCoefficients;
       for( int i : changedActivities )

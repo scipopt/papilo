@@ -73,7 +73,21 @@ struct PresolveOptions
 
    unsigned int randomseed = 0;
 
-   bool sequentiellreductionapplying =true;
+   bool sequentiellreductionapplying = true;
+
+   bool dual_fix_parallel = false;
+
+   bool simple_probing_parallel = false;
+
+   bool implied_integer_parallel = false;
+
+   bool simple_substitution_parallel = false;
+
+   bool constraint_propagation_parallel = true;
+
+   bool coefficient_strengthening_parallel = true;
+
+   bool simplify_inequalities_parallel = true;
 
    void
    addParameters( ParameterSet& paramSet )
@@ -152,16 +166,46 @@ struct PresolveOptions
       paramSet.addParameter( "presolve.threads",
                              "maximal number of threads to use (0: automatic)",
                              threads, 0 );
-      paramSet.addParameter( "presolve.sequentiellreductionapplying",
-                             "# if only one thread (presolve.threads = 0) is used, apply the reductions immediately afterwards",
-                             sequentiellreductionapplying );
+      paramSet.addParameter(
+          "presolve.sequentiellreductionapplying",
+          "# if only one thread (presolve.threads = 0) is used, apply the "
+          "reductions immediately afterwards",
+          sequentiellreductionapplying );
+      paramSet.addParameter(
+          "propagation.parallel",
+          "#execute loop over rows in constraintpropagation in parallel",
+          constraint_propagation_parallel );
+      paramSet.addParameter(
+          "coefftightening.parallel",
+          "#execute loop over rows in coefficientstrengthening in parallel",
+          coefficient_strengthening_parallel );
+      paramSet.addParameter(
+          "dualfix.parallel",
+          "#execute loop over columns in dualfix in parallel",
+          dual_fix_parallel );
+      paramSet.addParameter(
+          "implint.parallel",
+          "#execute loop over rows in impliedint in parallel",
+          implied_integer_parallel );
+      paramSet.addParameter(
+          "simpleprobing.parallel",
+          "#execute loop over rows in simpleprobing in parallel",
+          simple_probing_parallel );
+      paramSet.addParameter(
+          "doubletoneq.parallel",
+          "#execute loop over rows in simplesubstitution in parallel",
+          simple_substitution_parallel );
+      paramSet.addParameter(
+          "simplifyineq.parallel",
+          "#execute loop over rows in simplifyineq in parallel",
+          simplify_inequalities_parallel );
    }
 
    bool
-   runs_sequentiell() const{
-      return threads==1;
+   runs_sequentiell() const
+   {
+      return threads == 1;
    }
-
 };
 
 } // namespace papilo
