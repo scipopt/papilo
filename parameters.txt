@@ -1,6 +1,9 @@
 # is presolver coefftightening enabled  [Boolean: {0,1}]
 coefftightening.enabled = 1
 
+# is the iteration over the rows in coefftightening parallelised? [Boolean: {0,1}]
+coefftightening.parallel = 1
+
 # is presolver colsingleton enabled  [Boolean: {0,1}]
 colsingleton.enabled = 1
 
@@ -10,8 +13,14 @@ domcol.enabled = 1
 # is presolver doubletoneq enabled  [Boolean: {0,1}]
 doubletoneq.enabled = 1
 
+# is the iteration over the rows in doubletoneq parallelised? [Boolean: {0,1}]
+doubletoneq.parallel = 0
+
 # is presolver dualfix enabled  [Boolean: {0,1}]
 dualfix.enabled = 1
+
+# is the iteration over the columns in dualfix parallelised? [Boolean: {0,1}]
+dualfix.parallel = 0
 
 # is presolver dualinfer enabled  [Boolean: {0,1}]
 dualinfer.enabled = 1
@@ -21,6 +30,9 @@ fixcontinuous.enabled = 1
 
 # is presolver implint enabled  [Boolean: {0,1}]
 implint.enabled = 1
+
+# is the iteration over the rows in implied integer parallelised? [Boolean: {0,1}]
+implint.parallel = 0
 
 # verbosity to be used: 0 - quiet, 1 - errors, 2 - warnings, 3 - normal, 4 - detailed  [Integer: [0,4]]
 message.verbosity = 4
@@ -97,11 +109,20 @@ probing.mincontdomred = 0.29999999999999999
 # is presolver propagation enabled  [Boolean: {0,1}]
 propagation.enabled = 1
 
+# is the iteration over the rows in propagation parallelised? [Boolean: {0,1}]
+propagation.parallel = 1
+
 # is presolver simpleprobing enabled  [Boolean: {0,1}]
 simpleprobing.enabled = 1
 
+# is the iteration over the rows in simpleprobing parallelised? [Boolean: {0,1}]
+simpleprobing.parallel = 0
+
 # is presolver simplifyineq enabled  [Boolean: {0,1}]
 simplifyineq.enabled = 1
+
+# is the iteration over the rows in simplifyineq parallelised?    [Boolean: {0,1}]
+simplifyineq.parallel = 1
 
 # is presolver sparsify enabled  [Boolean: {0,1}]
 sparsify.enabled = 1

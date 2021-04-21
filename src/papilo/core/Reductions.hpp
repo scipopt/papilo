@@ -109,6 +109,12 @@ class Reductions
    }
 
    void
+   add_reduction( int row, int col, REAL newval )
+   {
+      reductions.emplace_back( newval, row, col );
+   }
+
+   void
    changeMatrixEntry( int row, int col, REAL newval )
    {
       assert( row >= 0 && col >= 0 );
