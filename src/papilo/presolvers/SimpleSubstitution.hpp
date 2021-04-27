@@ -314,12 +314,12 @@ SimpleSubstitution<REAL>::isConstraintsFeasibleWithGivenBounds(
     const Vec<REAL>& upper_bounds, const REAL* vals, REAL rhs, int subst,
     int stay, const boost::integer::euclidean_result_t<int64_t>& res ) const
 {
-   int64_t initial_solution_for_x = res.x * rhs;
-   int64_t initial_solution_for_y = res.y * rhs;
-   int64_t factor = (int)initial_solution_for_y * res.gcd / vals[stay];
-   int64_t solution_for_x =
+   REAL initial_solution_for_x = res.x * rhs;
+   REAL initial_solution_for_y = res.y * rhs;
+   REAL factor = (int)initial_solution_for_y * res.gcd / vals[stay];
+   REAL solution_for_x =
        initial_solution_for_x + factor / res.gcd * vals[subst];
-   int64_t solution_for_y =
+   REAL solution_for_y =
        initial_solution_for_y - factor / res.gcd * vals[stay];
 
    REAL ub_sol_y = ( solution_for_y - lower_bounds[stay] ) / vals[stay];
