@@ -316,7 +316,7 @@ SimpleSubstitution<REAL>::isConstraintsFeasibleWithGivenBounds(
 {
    REAL initial_solution_for_x = res.x * rhs;
    REAL initial_solution_for_y = res.y * rhs;
-   REAL factor = (int)initial_solution_for_y * res.gcd / vals[stay];
+   REAL factor = (int)(initial_solution_for_y * res.gcd / vals[stay]);
    REAL solution_for_x =
        initial_solution_for_x + factor / res.gcd * vals[subst];
    REAL solution_for_y =
