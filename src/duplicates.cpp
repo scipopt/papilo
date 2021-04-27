@@ -439,7 +439,7 @@ check_rows( const Problem<double>& prob1, const Problem<double>& prob2,
    const ConstraintMatrix<double>& cm2 = prob2.getConstraintMatrix();
 
    int nrows = permrow1.size();
-   int ncols = permcol1.size();
+
    // Row flags
    const Vec<RowFlags>& rflags1 = cm1.getRowFlags();
    const Vec<RowFlags>& rflags2 = cm2.getRowFlags();
