@@ -225,8 +225,6 @@ ParallelColDetection<REAL>::findParallelCols(
       const REAL* coefs1 = col1vec.getValues();
       bool col1integral = cflags[col1].test( ColFlag::kIntegral );
 
-      // TODO: why are Columns with only one entry excluded?
-      // ignoring this line would correct the result of Example 8
       if( length < 2 )
          return;
 

@@ -114,7 +114,14 @@ set(unit_tests
         "parallel-row-mixed-infeasible-second-row-equation"
         "parallel-row-multiple-parallel-rows"
 
-        "happy-path-parallel-column-detection"
+        #parallel_col_detection
+        "parallel_col_detection_2_integer_columns"
+        "parallel_col_detection_2_continuous_columns"
+        "parallel_col_detection_int_cont_merge_possible"
+        "parallel_col_detection_cont_int_merge_possible"
+        "parallel_col_detection_cont_int_merge_failed"
+        "parallel_col_detection_int_cont_merge_failed"
+        "parallel_col_detection_obj_not_parallel"
 
         #Probing
         "happy-path-probing"
@@ -168,10 +175,6 @@ set(unit_tests
         "example-3-from-3.6-Presolve-Reductions-in-MIP" # trivial presolve fixes this case
         "example-4-from-4.4-Presolve-Reductions-in-MIP" # not working
         "example-5-from-4.4-Presolve-Reductions-in-MIP"
-        # "example-6-from-4.5-Presolve-Reductions-in-MIP"
-        # "example-7-from-5.5-Presolve-Reductions-in-MIP"
-        "example-8-from-6.3-Presolve-Reductions-in-MIP" # not working because one Coefficients are excluded
-        # "example-9-from-7.1-Presolve-Reductions-in-MIP"
         "example-10-from-7.5-Presolve-Reductions-in-MIP"
 
 
