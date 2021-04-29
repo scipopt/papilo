@@ -69,6 +69,27 @@ TEST_CASE( "parallel_col_detection_2_integer_columns", "[presolve]" )
    REQUIRE( reductions.getReduction( 2 ).newval == 0 );
 }
 
+TEST_CASE( "parallel_col_detection_2_integer_columns-hole", "[presolve]" )
+{
+   Num<double> num{};
+   Message msg{};
+   Problem<double> problem =
+       setupProblemWithParallelColumns( true, true, 3.0, 1.0, 2.0, 0.0, 1.0 );
+   Statistics statistics{};
+   PresolveOptions presolveOptions{};
+   Postsolve<double> postsolve = Postsolve<double>( problem, num );
+   ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
+                                        presolveOptions, num, msg );
+   problemUpdate.checkChangedActivities();
+   ParallelColDetection<double> presolvingMethod{};
+   Reductions<double> reductions{};
+
+   PresolveStatus presolveStatus =
+       presolvingMethod.execute( problem, problemUpdate, num, reductions );
+
+   REQUIRE( presolveStatus == PresolveStatus::kUnchanged );
+}
+
 TEST_CASE( "parallel_col_detection_2_continuous_columns", "[presolve]" )
 {
    Num<double> num{};
