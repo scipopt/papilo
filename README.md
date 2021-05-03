@@ -97,7 +97,7 @@ papilo::Float500
 papilo::Float1000
 papilo::Rational
 ```
-The numeric type used by PaPILO will be refered to as REAL in the following section. It can be any of the above types as well as simply `double` for using standard double precision arithmetic.
+The numeric type used by PaPILO will be referred to as REAL in the following section. It can be any of the above types as well as simply `double` for using standard double precision arithmetic.
 
 To avoid confusion with types a short note on types like `papilo:Vec` and `papilo::String`.
 Those types are aliases for types from the standard library, `std::vector` and `std::string`, that possibly use an adjusted allocator. If nothing is altered regarding the allocator then the type `papilo::Vec` will be exactly the same as `std::vector`.
