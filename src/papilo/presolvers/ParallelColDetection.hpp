@@ -434,7 +434,7 @@ ParallelColDetection<REAL>::computeColHashes(
                 // where two coefficients that are equal
                 // within epsilon get different values are
                 // more unlikely by choose some irrational number
-                // TODO: define constant? bzw vorher berechnen
+                // TODO: define constant
                 REAL scale = REAL( 2.0 / ( 1.0 + sqrt( 5.0 ) ) ) / values[0];
 
                 // add scaled coefficients of other row

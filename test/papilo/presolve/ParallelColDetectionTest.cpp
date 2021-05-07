@@ -170,7 +170,7 @@ TEST_CASE( "parallel_col_detection_cont_int_merge_possible", "[presolve]" )
    REQUIRE( reductions.getReduction( 1 ).newval == 0 );
 
    REQUIRE( reductions.getReduction( 2 ).row == ColReduction::BOUNDS_LOCKED );
-   REQUIRE( reductions.getReduction( 2 ).col == 0);
+   REQUIRE( reductions.getReduction( 2 ).col == 0 );
    REQUIRE( reductions.getReduction( 2 ).newval == 0 );
 
    REQUIRE( reductions.getReduction( 3 ).row == ColReduction::PARALLEL );
