@@ -48,16 +48,7 @@ namespace papilo
 template <typename REAL>
 class SimplifyInequalities : public PresolveMethod<REAL>
 {
-   REAL
-   computeGreatestCommonDivisor( REAL val1, REAL val2, const Num<REAL>& num );
 
-   void
-   simplify( const REAL* values, const int* colinds, int rowLength,
-             const RowActivity<REAL>& activity, const RowFlags& rflag,
-             const Vec<ColFlags>& cflags, const REAL& rhs, const REAL& lhs,
-             const Vec<REAL>& lbs, const Vec<REAL>& ubs, Vec<int>& colOrder,
-             Vec<int>& coeffDelete, REAL& gcd, bool& change,
-             const Num<REAL>& num );
 
  public:
    SimplifyInequalities() : PresolveMethod<REAL>()
@@ -73,6 +64,17 @@ class SimplifyInequalities : public PresolveMethod<REAL>
             Reductions<REAL>& reductions ) override;
 
  private:
+   REAL
+   computeGreatestCommonDivisor( REAL val1, REAL val2, const Num<REAL>& num );
+
+   void
+   simplify( const REAL* values, const int* colinds, int rowLength,
+             const RowActivity<REAL>& activity, const RowFlags& rflag,
+             const Vec<ColFlags>& cflags, const REAL& rhs, const REAL& lhs,
+             const Vec<REAL>& lbs, const Vec<REAL>& ubs, Vec<int>& colOrder,
+             Vec<int>& coeffDelete, REAL& gcd, bool& change,
+             const Num<REAL>& num );
+
    bool
    isUnbounded( int row, const Vec<RowFlags>& rowFlags ) const;
 
