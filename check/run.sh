@@ -120,8 +120,8 @@ EXECNAME="${EXECNAME/ERRFILE_PLACEHOLDER/${ERRFILE}}"
 EXECNAME="${SRUN}${EXECNAME/RRTRACEFOLDER_PLACEHOLDER/${ERRFILE}}"
 
 # FILENAME is exported in the calling script check_cluster.sh
-echo ">>> Executing: ${EXECNAME} ${PAPILO_OPT_COMMAND} -f ${FILENAME} -p ${SETTING_PATH}"
-eval "${EXECNAME} ${PAPILO_OPT_COMMAND} -p ${SETTING_PATH} -f ${FILENAME}" 2>> "${ERRFILE}" | tee -a "${OUTFILE}"
+echo ">>> Executing: ${EXECNAME} ${PAPILO_OPT_COMMAND} -f ${FILENAME} -p ${SETTING_PATH} --tlim ${TIMELIMIT}"
+eval "${EXECNAME} ${PAPILO_OPT_COMMAND} -p ${SETTING_PATH} -f ${FILENAME}" --tlim ${TIMELIMIT} 2>> "${ERRFILE}" | tee -a "${OUTFILE}"
 echo "----------------------------------------------------------"
 
 retcode=${PIPESTATUS[0]}
