@@ -274,7 +274,7 @@ class Reductions
    /// where factor is computed by using the ratio between the two
    /// columns coefficients
    void
-   parallelCols( int col1, int col2 )
+   mark_parallel_cols( int col1, int col2 )
    {
       assert( col1 >= 0 && col2 >= 0 );
       reductions.emplace_back( static_cast<REAL>( col2 ),
