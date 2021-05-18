@@ -148,7 +148,7 @@ ImplIntDetection<REAL>::perform_implied_integer_task(
     const Vec<REAL>& rhs_values, const Vec<REAL>& lower_bounds,
     const Vec<REAL>& upper_bounds, const Vec<RowFlags>& rflags, int col ) const
 {
-   PresolveStatus result;
+   PresolveStatus result = PresolveStatus::kUnchanged;
    if( cflags[col].test( ColFlag::kIntegral, ColFlag::kImplInt,
                          ColFlag::kInactive ) )
       return PresolveStatus::kUnchanged;
