@@ -930,6 +930,8 @@ Presolve<REAL>::evaluate_and_apply( const Timer& timer, Problem<REAL>& problem,
       PresolveStatus status;
       if( !run_sequentiell )
          status = apply_all_presolver_reductions( probUpdate );
+      else
+         status = PresolveStatus::kReduced;
       if( is_status_infeasible_or_unbounded( status ) )
          return status;
       round_to_evaluate = determine_next_round( problem, probUpdate,
