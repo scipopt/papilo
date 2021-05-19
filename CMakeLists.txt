@@ -38,6 +38,7 @@ if(GMP)
 endif()
 if(GMP_FOUND)
     set(PAPILO_HAVE_GMP 1)
+    set(GMP_VERSION "${GMP_VERSION}")
 else()
     set(GMP_INCLUDE_DIRS "")
     set(GMP_LIBRARIES "")
@@ -266,6 +267,7 @@ install(FILES
    ${PROJECT_SOURCE_DIR}/src/papilo/misc/NumericalStatistics.hpp
    ${PROJECT_SOURCE_DIR}/src/papilo/misc/Num.hpp
    ${PROJECT_SOURCE_DIR}/src/papilo/misc/OptionsParser.hpp
+   ${PROJECT_SOURCE_DIR}/src/papilo/misc/VersionLogger.hpp
    ${PROJECT_SOURCE_DIR}/src/papilo/misc/ParameterSet.hpp
    ${PROJECT_SOURCE_DIR}/src/papilo/misc/Signature.hpp
    ${PROJECT_SOURCE_DIR}/src/papilo/misc/StableSum.hpp

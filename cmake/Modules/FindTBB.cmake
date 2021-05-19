@@ -55,4 +55,17 @@ if(NOT TBB_LIBRARY)
    endif()
 endif()
 
+
+#if(TBB_LIBRARY)
+#   message("hier")
+#   file(READ "${TBB_LIBRARY}/tbb/tbb_stddef.h" _tbb_version_file)
+#   string(REGEX REPLACE ".*#define TBB_VERSION_MAJOR ([0-9]+).*" "\\1"
+#           TBB_VERSION_MAJOR "${_tbb_version_file}")
+#   string(REGEX REPLACE ".*#define TBB_VERSION_MINOR ([0-9]+).*" "\\1"
+#           TBB_VERSION_MINOR "${_tbb_version_file}")
+#   string(REGEX REPLACE ".*#define TBB_INTERFACE_VERSION ([0-9]+).*" "\\1"
+#           TBB_INTERFACE_VERSION "${_tbb_version_file}")
+#   set(TBB_VERSION "${TBB_VERSION_MAJOR}.${TBB_VERSION_MINOR}")
+#   message("${TBB_VERSION}")
+#endif()
 find_package_handle_standard_args(TBB REQUIRED_VARS TBB_LIBRARY)

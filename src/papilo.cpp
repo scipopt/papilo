@@ -31,6 +31,7 @@
 #include "papilo/io/SolParser.hpp"
 #include "papilo/misc/MultiPrecision.hpp"
 #include "papilo/misc/OptionsParser.hpp"
+#include "papilo/misc/VersionLogger.hpp"
 #include "papilo/misc/Wrappers.hpp"
 #include "papilo/misc/tbb.hpp"
 
@@ -91,8 +92,7 @@ get_lp_solver_factory( papilo::OptionsInfo& optionsInfo )
 static void
 setupsoplex( soplex::SoPlex& spx, void* usrdata )
 {
-   papilo::OptionsInfo* optInfo =
-       reinterpret_cast<papilo::OptionsInfo*>( usrdata );
+   auto* optInfo = reinterpret_cast<papilo::OptionsInfo*>( usrdata );
 
    if( !optInfo->soplex_settings_file.empty() )
       spx.loadSettingsFile( optInfo->soplex_settings_file.c_str() );
@@ -119,6 +119,8 @@ int
 main( int argc, char* argv[] )
 {
    using namespace papilo;
+
+   print_header();
 
    // get the options passed by the user
    OptionsInfo optionsInfo;
