@@ -281,7 +281,8 @@ class Presolve
 
  private:
    void
-   logStatus( const Problem<REAL>& problem ) const;
+   logStatus( const Problem<REAL>& problem,
+              const Postsolve<REAL>& postsolve ) const;
 
    bool
    is_time_exceeded( const Timer& presolvetimer ) const;
@@ -805,13 +806,13 @@ Presolve<REAL>::apply( Problem<REAL>& problem )
             }
          }
 
-         logStatus( problem );
+         logStatus( problem, result.postsolve );
          result.status = PresolveStatus::kReduced;
          result.postsolve.getChecker().setReducedProblem( problem );
          return result;
       }
 
-      logStatus( problem );
+      logStatus( problem, result.postsolve );
 
       // problem was not changed
       result.status = PresolveStatus::kUnchanged;
@@ -1271,7 +1272,8 @@ Presolve<REAL>::printPresolversStats()
 
 template <typename REAL>
 void
-Presolve<REAL>::logStatus( const Problem<REAL>& problem ) const
+Presolve<REAL>::logStatus( const Problem<REAL>& problem,
+                           const Postsolve<REAL>& postsolve ) const
 {
    msg.info( "reduced problem:\n" );
    msg.info( "  reduced rows:     {}\n", problem.getNRows() );
@@ -1280,7 +1282,19 @@ Presolve<REAL>::logStatus( const Problem<REAL>& problem ) const
    msg.info( "  reduced cont. columns:  {}\n", problem.getNumContinuousCols() );
    msg.info( "  reduced nonzeros: {}\n",
              problem.getConstraintMatrix().getNnz() );
+   if( problem.getNCols() == 0 )
+   {
+      Solution<REAL> solution{};
+      const Solution<REAL> empty_sol{};
+      postsolve.undo( empty_sol, solution );
+      const Problem<REAL>& origprob = postsolve.getOriginalProblem();
+      REAL origobj = origprob.computeSolObjective( solution.primal );
+      msg.info(
+          "problem is solved [optimal solution found] [objective value: {}]\n",
+          origobj );
+   }
 }
+
 template <typename REAL>
 std::string
 Presolve<REAL>::get_round_type( Delegator delegator )
