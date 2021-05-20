@@ -843,6 +843,8 @@ Presolve<REAL>::run_presolvers( const Problem<REAL>& problem,
             results[i] = status;
             return;
          }
+         if( problem.getNRows() == 0 || problem.getNCols() == 0 )
+            return;
       }
    }
    else
