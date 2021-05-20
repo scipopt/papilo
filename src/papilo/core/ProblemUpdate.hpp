@@ -1722,7 +1722,7 @@ ProblemUpdate<REAL>::checkTransactionConflicts( const Reduction<REAL>* first,
                return ConflictType::kPostpone;
             break;
          default:
-            assert( false );
+            break;
          }
       }
       else if( reduction.col < 0 )
@@ -1752,7 +1752,7 @@ ProblemUpdate<REAL>::checkTransactionConflicts( const Reduction<REAL>* first,
             if( postponeSubstitutions )
                return ConflictType::kPostpone;
          default:
-            assert( false );
+           break;
          }
       }
    }
