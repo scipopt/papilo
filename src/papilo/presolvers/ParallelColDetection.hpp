@@ -274,6 +274,8 @@ ParallelColDetection<REAL>::findParallelCols(
             assert( cflags[col2].test( ColFlag::kIntegral ) );
             assert( num.isGE( abs( coefs1[0] ), abs( coefs2[0] ) ) );
 
+            // if scalefactor is not 1 then it is necessary to call
+            // checkholes and therefore this requirements needs to be checked
             if( cflags[col1].test( ColFlag::kLbInf, ColFlag::kUbInf ) ||
                 cflags[col2].test( ColFlag::kLbInf, ColFlag::kUbInf ) )
                continue;
