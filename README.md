@@ -352,9 +352,11 @@ For other licensing options we refer to https://scipopt.org/, where PaPILO can b
 
 # Contributors
 
-Leona Gottwald ([@lgottwald](https://github.com/lgottwald)) &mdash; main author
+[Alexander Hoen](https://www.zib.de/members/hoen) &mdash; main developer
 
 [Ivet Galabova](https://sites.google.com/view/ivetgalabova) ([@galabovaa](https://github.com/galabovaa)) &mdash; groundwork for dual postsolve, KKT checker
+
+[Leona Gottwald](https://www.zib.de/members/gottwald)  ([@lgottwald](https://github.com/lgottwald)) &mdash; creator and former main developer
 
 [Katrin Halbig](https://en.www.math.fau.de/edom/team/katrin-halbig/) &mdash; presolver for GCD based reductions on inequalities (simplifyineq)
 
