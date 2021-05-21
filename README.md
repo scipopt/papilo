@@ -12,6 +12,10 @@ Additionally, PaPILO can be linked to SCIP, SoPlex, and HiGHS (https://github.co
 
 When PaPILO is compiled as part of the SCIP Optimization Suite linking of SoPlex and SCIP solvers is performed automatically.
 
+*Note:* The original instance of this repository is hosted at  [git.zib.de](https://git.zib.de) and a read-only mirror is
+available at [github.com/scipopt/papilo](https://github.com/scipopt/papilo).
+
+
 # Dependencies
 
 External dependencies that need to be installed by the user are the Intel TBB runtime library and boost headers.
@@ -323,7 +327,7 @@ presolve.addPresolver( std::unique_ptr<papilo::PresolveMethod<REAL>>( new MyPres
 ```
 Getting the PaPILO binary to call your presolver could be achieved by adding an include for your presolver in `papilo/core/Presolve.hpp` and then adding it together with the other default presolvers in the member function `papilo::Presolve<REAL>::addDefaultPresolvers()`.
 
-# Algorithmic and implementation details
+# References and how to cite
 
 The release report of the SCIP Optimization Suite 7.0 contains a section about PaPILO. The report is available under http://www.optimization-online.org/DB_HTML/2020/03/7705.html.
 
@@ -355,7 +359,7 @@ Leona Gottwald ([@lgottwald](https://github.com/lgottwald)) &mdash; main author
 
 [Katrin Halbig](https://en.www.math.fau.de/edom/team/katrin-halbig/) &mdash; presolver for GCD based reductions on inequalities (simplifyineq)
 
-[Gabriel Kressin](https://www.zib.de/members/kressin) ([@GabrielKP](https://github.com/GabrielKP)) &mdash; numerical statistics, testing
+Gabriel Kressin ([@GabrielKP](https://github.com/GabrielKP)) &mdash; numerical statistics, testing
 
 Anass Meskini &mdash; general development and contributions to substitution presolver in terms of internship
 
