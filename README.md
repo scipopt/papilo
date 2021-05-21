@@ -343,7 +343,7 @@ For other licensing options we refer to https://scipopt.org/, where PaPILO can b
 
 [Katrin Halbig](https://en.www.math.fau.de/edom/team/katrin-halbig/) &mdash; presolver for GCD based reductions on inequalities (simplifyineq)
 
-[Gabriel Kressin](https://www.zib.de/members/kressin) ([@GabrielKP](https://github.com/GabrielKP)) &mdash; numerical statistics, testing
+Gabriel Kressin ([@GabrielKP](https://github.com/GabrielKP)) &mdash; numerical statistics, testing
 
 Anass Meskini &mdash; general development and contributions to substitution presolver in terms of internship
 
