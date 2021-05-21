@@ -341,7 +341,7 @@ For other licensing options we refer to https://scipopt.org/, where PaPILO can b
 
 [Leona Gottwald](https://www.zib.de/members/gottwald)  ([@lgottwald](https://github.com/lgottwald)) &mdash; creator and former main developer
 
-[Kathrin Halbig](https://en.www.math.fau.de/edom/team/katrin-halbig/) &mdash; presolver for GCD based reductions on inequalities (simplifyineq)
+[Katrin Halbig](https://en.www.math.fau.de/edom/team/katrin-halbig/) &mdash; presolver for GCD based reductions on inequalities (simplifyineq)
 
 [Gabriel Kressin](https://www.zib.de/members/kressin) ([@GabrielKP](https://github.com/GabrielKP)) &mdash; numerical statistics, testing
 
