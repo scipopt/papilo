@@ -55,9 +55,8 @@ if(NOT TBB_LIBRARY)
    endif()
 endif()
 
-
+# TODO: modify FindTBB so that the version is saved in the corresponding variables
 #if(TBB_LIBRARY)
-#   message("hier")
 #   file(READ "${TBB_LIBRARY}/tbb/tbb_stddef.h" _tbb_version_file)
 #   string(REGEX REPLACE ".*#define TBB_VERSION_MAJOR ([0-9]+).*" "\\1"
 #           TBB_VERSION_MAJOR "${_tbb_version_file}")
