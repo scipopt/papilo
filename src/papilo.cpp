@@ -92,7 +92,8 @@ get_lp_solver_factory( papilo::OptionsInfo& optionsInfo )
 static void
 setupsoplex( soplex::SoPlex& spx, void* usrdata )
 {
-   auto* optInfo = reinterpret_cast<papilo::OptionsInfo*>( usrdata );
+   papilo::OptionsInfo* optInfo =
+       reinterpret_cast<papilo::OptionsInfo*>( usrdata );
 
    if( !optInfo->soplex_settings_file.empty() )
       spx.loadSettingsFile( optInfo->soplex_settings_file.c_str() );
