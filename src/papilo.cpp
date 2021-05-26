@@ -31,6 +31,7 @@
 #include "papilo/io/SolParser.hpp"
 #include "papilo/misc/MultiPrecision.hpp"
 #include "papilo/misc/OptionsParser.hpp"
+#include "papilo/misc/VersionLogger.hpp"
 #include "papilo/misc/Wrappers.hpp"
 #include "papilo/misc/tbb.hpp"
 
@@ -119,6 +120,8 @@ int
 main( int argc, char* argv[] )
 {
    using namespace papilo;
+
+   print_header();
 
    // get the options passed by the user
    OptionsInfo optionsInfo;
