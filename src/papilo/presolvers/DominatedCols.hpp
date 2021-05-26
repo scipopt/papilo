@@ -94,7 +94,7 @@ class DominatedCols : public PresolveMethod<REAL>
       BoundChange boundchg;
    };
 
-   virtual PresolveStatus
+   PresolveStatus
    execute( const Problem<REAL>& problem,
             const ProblemUpdate<REAL>& problemUpdate, const Num<REAL>& num,
             Reductions<REAL>& reductions ) override;
@@ -375,7 +375,7 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
              int bestrow = -1;
              int bestrowsize = std::numeric_limits<int>::max();
 
-             for( int j = 0; j != collen; ++j )
+             for( int j = 0; j < collen; ++j )
              {
                 int row = colrows[j];
                 if( ( !rflags[row].test( RowFlag::kLhsInf, RowFlag::kRhsInf ) ||

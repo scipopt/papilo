@@ -43,6 +43,7 @@ add_executable(unit_test TestMain.cpp
         papilo/presolve/CoefficientStrengtheningTest.cpp
         papilo/presolve/ConstraintPropagationTest.cpp
         papilo/presolve/DualFixTest.cpp
+        papilo/presolve/DominatedColsTest.cpp
         papilo/presolve/DualInferTest.cpp
         papilo/presolve/FixContinuousTest.cpp
         papilo/presolve/FreeVarSubstitutionTest.cpp
@@ -81,6 +82,10 @@ set(unit_tests
         "happy-path-coefficient-strengthening"
 
         "happy-path-constraint-propagation"
+
+        #DomCol
+        "domcol-happy-path"
+        "domcol-multiple-column"
 
         # Fix Continuous
         "happy-path-presolve-fix-continuous"
