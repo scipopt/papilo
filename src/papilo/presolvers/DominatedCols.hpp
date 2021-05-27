@@ -473,17 +473,33 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
    if( !domcolreductions.empty() )
    {
       result = PresolveStatus::kReduced;
-      const Vec<int>& colperm = problemUpdate.getRandomColPerm();
+      // sort reductions by the smallest col in the domcol reduction, so that
+      // parallel ones are adjacent
+      pdqsort( domcolreductions.begin(), domcolreductions.end(),
+               []( const DomcolReduction& a, const DomcolReduction& b ) {
+                  bool smaller_first_a = a.col1 < a.col2;
+                  bool smaller_first_b = b.col1 < b.col2;
+                  int smaller_row_a = smaller_first_a ? a.col1 : a.col2;
+                  int smaller_row_b = smaller_first_b ? b.col1 : b.col2;
+                  if( smaller_row_a != smaller_row_b )
+                     return smaller_row_a < smaller_row_b;
+                  return ( ( not smaller_first_a ) ? a.col1 : a.col2 ) <
+                         ( ( not smaller_first_b ) ? b.col1 : b.col2 );
+               } );
 
-      pdqsort(
-          domcolreductions.begin(), domcolreductions.end(),
-          [&colperm]( const DomcolReduction& a, const DomcolReduction& b ) {
-             return std::make_pair( colperm[a.col1], colperm[a.col2] ) <
-                    std::make_pair( colperm[b.col1], colperm[b.col2] );
-          } );
-
-      for( const DomcolReduction& dr : domcolreductions )
+      for( int i = 0; i < domcolreductions.size(); i++ )
       {
+         const DomcolReduction dr = domcolreductions[i];
+         if( i < domcolreductions.size() - 1 )
+         {
+            const DomcolReduction dr2 = domcolreductions[i + 1];
+            if( dr2.col1 == dr.col2 && dr.col1 == dr2.col2 )
+            {
+               if( dr.implrowlock > 0 )
+                  continue;
+               i++;
+            }
+         }
          TransactionGuard<REAL> tg{ reductions };
          reductions.lockCol( dr.col1 );
          reductions.lockColBounds( dr.col1 );
@@ -497,6 +513,7 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
          else
             reductions.fixCol( dr.col2, ubValues[dr.col2] );
       }
+
    }
 
    return result;

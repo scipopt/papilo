@@ -85,6 +85,8 @@ set(unit_tests
 
         #DomCol
         "domcol-happy-path"
+        "domcol-parallel-columns"
+        "domcol-multiple-parallel-cols-generate_redundant-reductions"
         "domcol-multiple-column"
 
         # Fix Continuous
