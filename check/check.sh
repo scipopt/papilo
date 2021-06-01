@@ -125,7 +125,7 @@ do
     do
 
         #generate random seed for SCIP settings
-        SCIP_SETTINGS="${SCIPPATH}/${OUTPUTDIR}/check.${TSTNAME}.papilo.${QUEUE}.${s}.set"
+        SCIP_SETTINGS="${SCIPPATH}/${OUTPUTDIR}/scip_settings.${TSTNAME}.papilo.${QUEUE}.${s}.set"
         if [ ! -f "${SCIP_SETTINGS}" ]; then
           touch "${SCIP_SETTINGS}"
           echo randomization/randomseedshift = "${s}" >> "${SCIP_SETTINGS}"
