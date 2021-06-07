@@ -272,7 +272,7 @@ ParallelColDetection<REAL>::findParallelCols(
             const REAL* coefs2 =
                 constMatrix.getColumnCoefficients( col2 ).getValues();
             assert( cflags[col2].test( ColFlag::kIntegral ) );
-            assert( num.isGE( abs( coefs1[0] ), abs( coefs2[0] ) ) );
+            assert( num.isLE( abs( coefs1[0] ), abs( coefs2[0] ) ) );
 
             // if scalefactor is not 1 then it is necessary to call
             // checkholes and therefore this requirements needs to be checked
