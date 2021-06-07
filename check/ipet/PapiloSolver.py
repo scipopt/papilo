@@ -82,6 +82,7 @@ class PapiloSolver(SCIPSolver):
     solverId = "PaPILO"
     # used to identify the solver
     recognition_expr = re.compile("starting presolve of problem")
+    version_expr = re.compile("PaPILO version (\S+)")
 
     presolving_time_expr = re.compile("presolving finished after\s+(\S+)")
 
