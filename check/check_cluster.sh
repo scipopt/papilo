@@ -157,6 +157,15 @@ do
         # permute transformed problem
         for ((p = 0; ${p} <= ${PERMUTE}; p++))
         do
+
+            #generate random seed for SCIP settings
+            SCIP_SETTINGS="${SCIPPATH}/${OUTPUTDIR}/scip_settings.${TSTNAME}.papilo.${QUEUE}.${s}.set"
+            if [ ! -f "${SCIP_SETTINGS}" ]; then
+              touch "${SCIP_SETTINGS}"
+              echo randomization/randomseedshift = "${s}" >> "${SCIP_SETTINGS}"
+            fi
+            export SCIP_SETTINGS
+
             # the cluster queue has an upper bound of 2000 jobs; if this limit is
             # reached the submitted jobs are dumped; to avoid that we check the total
             # load of the cluster and wait until it is safe (total load not more than
