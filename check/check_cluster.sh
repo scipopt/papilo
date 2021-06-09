@@ -154,37 +154,39 @@ do
     # run different random seeds
     for ((s = 0; ${s} <= ${SEEDS}; s++))
     do
+
+        # generate random seed for SCIP settings
+        SCIP_SETTINGS="${SCIPPATH}/${OUTPUTDIR}/scip_settings.${TSTNAME}.papilo.${QUEUE}.${s}.set"
+        if [ ! -f "${SCIP_SETTINGS}" ]; then
+            touch "${SCIP_SETTINGS}"
+            echo randomization/randomseedshift = "${s}" >> "${SCIP_SETTINGS}"
+        fi
+        export SCIP_SETTINGS
+
         # permute transformed problem
         for ((p = 0; ${p} <= ${PERMUTE}; p++))
         do
 
-            #generate random seed for SCIP settings
-            SCIP_SETTINGS="${SCIPPATH}/${OUTPUTDIR}/scip_settings.${TSTNAME}.papilo.${QUEUE}.${s}.set"
-            if [ ! -f "${SCIP_SETTINGS}" ]; then
-              touch "${SCIP_SETTINGS}"
-              echo randomization/randomseedshift = "${s}" >> "${SCIP_SETTINGS}"
-            fi
-            export SCIP_SETTINGS
-
-            # the cluster queue has an upper bound of 2000 jobs; if this limit is
-            # reached the submitted jobs are dumped; to avoid that we check the total
-            # load of the cluster and wait until it is safe (total load not more than
-            # 1600 jobs) to submit the next job.
-            if test "${NOWAITCLUSTER}" -eq "0" && test "${QUEUETYPE}" = "qsub"
-            then
-                ./waitcluster.sh 1600 "${QUEUE}" 200
-            elif test "${NOWAITCLUSTER}" -eq "0"
-            then
-                echo "waitcluster does not work on slurm cluster"
-            fi
             # loop over settings
             for SETNAME in "${SETTINGSLIST[@]}"
             do
+                # the cluster queue has an upper bound of 2000 jobs; if this limit is
+                # reached the submitted jobs are dumped; to avoid that we check the total
+                # load of the cluster and wait until it is safe (total load not more than
+                # 1600 jobs) to submit the next job.
+                if test "${NOWAITCLUSTER}" -eq "0" && test "${QUEUETYPE}" = "qsub"
+                then
+                    ./waitcluster.sh 1600 "${QUEUE}" 200
+                elif test "${NOWAITCLUSTER}" -eq "0"
+                then
+                    echo "waitcluster does not work on slurm cluster"
+                fi
+
                 # infer the names of all involved files from the arguments
                 # defines the following environment variables: OUTFILE, ERRFILE, EVALFILE, OBJECTIVEVAL, SHORTPROBNAME,
                 #                                              FILENAME, SKIPINSTANCE, BASENAME, TMPFILE, SETFILE
-                . ./configuration_logfiles.sh "${INIT}" "${COUNT}" "${INSTANCE}" "${BINID}" "${PERMUTE}" "${SEEDS}" "${SETNAME}" "${TSTNAME}" "${CONTINUE}" "${QUEUE}" \
-                                              "${p}" "${s}" "${THREADS}" "${GLBSEEDSHIFT}" "${STARTPERM}"
+                . ./configuration_logfiles.sh "${INIT}" "${COUNT}" "${INSTANCE}" "${BINID}" "${PERMUTE}" "${SEEDS}" "${SETNAME}" \
+                    "${TSTNAME}" "${CONTINUE}" "${QUEUE}" "${p}" "${s}" "${THREADS}" "${GLBSEEDSHIFT}" "${STARTPERM}"
 
                 # skip instance if log file is present and we want to continue a previously launched test run
                 if test "${SKIPINSTANCE}" = "true"
