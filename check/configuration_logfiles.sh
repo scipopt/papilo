@@ -229,14 +229,10 @@ if ! test -f "${SETFILEPAPILO}"; then
     cp "${CHECKPATH}/../settings/${SETNAME}.set" "${SETFILEPAPILO}"
 fi
 
-# if seed is positive, add to scipsettings
-if test "${SEED}" -gt 0
-then
-    # generate random seed for SCIP settings
-    if [ ! -f "${SETFILESCIP}" ]; then
-        touch "${SETFILESCIP}"
-        echo randomization/randomseedshift = "${SEED}" >> "${SETFILESCIP}"
-    fi
+# generate random seed for SCIP settings
+if [ ! -f "${SETFILESCIP}" ]; then
+    touch "${SETFILESCIP}"
+    echo randomization/randomseedshift = "${SEED}" >> "${SETFILESCIP}"
 fi
 
 # even if we decide to skip this instance, we write the basename to the eval file
