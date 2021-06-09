@@ -65,7 +65,8 @@ do
 
     OUTFILE="${DIR}/${EVALFILE}.out"
     ERRFILE="${DIR}/${EVALFILE}.err"
-    SETFILE="${DIR}/${EVALFILE}.set"
+    SETFILESCIP="${DIR}/${EVALFILE}.scip.set"
+    SETFILEPAPILO="${DIR}/${EVALFILE}.papilo.set"
     METAFILE="${DIR}/${EVALFILE}.meta"
 
     # check if the eval file exists; if this is the case construct the overall solution files
@@ -146,10 +147,10 @@ do
                 echo                        >> "${ERRFILE}"
             fi
 
-            FILE="${i}.set"
+            FILE="${i}.scip.set"
             if test -e "${FILE}"
             then
-                cp "${FILE}" "${SETFILE}"
+                cp "${FILE}" "${SETFILESCIP}"
                 if test "${REMOVE}" = "1"
                 then
                     rm -f "${FILE}"
@@ -181,13 +182,13 @@ do
             if test "${EXPIRE}" = "1"
             then
                 RB_EXP_DATE=$(date '+%Y-%b-%d' -d "+6 weeks")
-                rbcli -e "${RB_EXP_DATE}" up "${OUTFILE}" "${ERRFILE}" "${SETFILE}" "${METAFILE}"
+                rbcli -e "${RB_EXP_DATE}" up "${OUTFILE}" "${ERRFILE}" "${SETFILESCIP}" "${METAFILE}"
             else
                 if test -z "${RBCLI_TAG}"
                 then
-                    rbcli up "${OUTFILE}" "${ERRFILE}" "${SETFILE}" "${METAFILE}"
+                    rbcli up "${OUTFILE}" "${ERRFILE}" "${SETFILESCIP}" "${METAFILE}"
                 else
-                    rbcli --tags "${RBCLI_TAG}" up "${OUTFILE}" "${ERRFILE}" "${SETFILE}" "${METAFILE}"
+                    rbcli --tags "${RBCLI_TAG}" up "${OUTFILE}" "${ERRFILE}" "${SETFILESCIP}" "${METAFILE}"
                 fi
             fi
         fi

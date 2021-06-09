@@ -19,7 +19,7 @@
 # This script cancels the process if required variables are not correctly set
 
 # new environment variables defined by this script:
-#    SCIPPATH - absolute path to invocation working directory
+#    CHECKPATH - absolute path to invocation working directory
 #    SETTINGSLIST - array of setting file basenames. script will abort if any of them doesn't exist
 #    SOLUFILE - .solu file for this test set, for parsing optimal solution values
 #    HARDMEMLIMIT - hard memory limit for the optimization call, that is given to slurm or the shell
@@ -66,7 +66,7 @@ DEBUGTOOL="${8}"  # which debug tool should be used, if any?
 SETCUTOFF="${9}"  # set this to 1 if you want the scripts to (try to) pass a best known primal bound (from .solu file) to the solver
 
 # get current SCIP path
-SCIPPATH=$(pwd)
+CHECKPATH=$(pwd)
 
 cd ..
 PROJECT_DIR=$(pwd)
@@ -84,9 +84,9 @@ then
 fi
 
 # create ${OUTPUTDIR} directory if it doesn't already exist
-if test ! -e "${SCIPPATH}/${OUTPUTDIR}"
+if test ! -e "${CHECKPATH}/${OUTPUTDIR}"
 then
-    mkdir "${SCIPPATH}/${OUTPUTDIR}"
+    mkdir "${CHECKPATH}/${OUTPUTDIR}"
 fi
 
 # create settings directory if non-existent
@@ -139,7 +139,7 @@ fi
 # check if the test run should be processed in a debug tool environment
 if test "${DEBUGTOOL}" = "valgrind"
 then
-    DEBUGTOOLCMD="valgrind --log-fd=1 --leak-check=full --suppressions=${SCIPPATH}/../suppressions.valgrind "
+    DEBUGTOOLCMD="valgrind --log-fd=1 --leak-check=full --suppressions=${CHECKPATH}/../suppressions.valgrind "
 elif test "${DEBUGTOOL}" = "rr"
 then
     DEBUGTOOLCMD="rr record --chaos -o RRTRACEFOLDER_PLACEHOLDER.rr "
@@ -152,7 +152,7 @@ else
 fi
 
 #check if additional instance paths are given
-POSSIBLEPATHS="${SCIPPATH}"
+POSSIBLEPATHS="${CHECKPATH}"
 if test -e paths.txt
 then
     POSSIBLEPATHS="${POSSIBLEPATHS} $(cat paths.txt)"
