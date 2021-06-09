@@ -82,15 +82,15 @@ export PAPILO_OPT_COMMAND
 
 # call routines for creating the result directory, checking for existence
 # of passed settings, etc
-# defines the following environment variables: SCIPPATH, SETTINGSLIST, SOLUFILE, HARDMEMLIMIT, DEBUGTOOLCMD, INSTANCELIST,
+# defines the following environment variables: CHECKPATH, SETTINGSLIST, SOLUFILE, HARDMEMLIMIT, DEBUGTOOLCMD, INSTANCELIST,
 #                                              TIMELIMLIST, HARDTIMELIMLIST
 TIMEFORMAT="sec"
 MEMFORMAT="kB"
 . ./configuration_set.sh "${BINNAME}" "${TSTNAME}" "${SETNAMES}" "${TIMELIMIT}" "${TIMEFORMAT}" "${MEMLIMIT}" "${MEMFORMAT}" "${DEBUGTOOL}" "${SETCUTOFF}"
 
-if test -e "${SCIPPATH}/../${BINNAME}"
+if test -e "${CHECKPATH}/../${BINNAME}"
 then
-    EXECNAME="${SCIPPATH}/../${BINNAME}"
+    EXECNAME="${CHECKPATH}/../${BINNAME}"
 
     # check if we can set hard memory limit (address, leak, or thread sanitzer don't like ulimit -v)
     if [ "$(uname)" == Linux ] && (ldd "${EXECNAME}" | grep -q lib[alt]san); then
@@ -123,14 +123,6 @@ do
     # run different random seeds
     for ((s = 0; ${s} <= ${SEEDS}; s++))
     do
-
-        # generate random seed for SCIP settings
-        SCIP_SETTINGS="${SCIPPATH}/${OUTPUTDIR}/scip_settings.${TSTNAME}.papilo.${QUEUE}.${s}.set"
-        if [ ! -f "${SCIP_SETTINGS}" ]; then
-            touch "${SCIP_SETTINGS}"
-            echo randomization/randomseedshift = "${s}" >> "${SCIP_SETTINGS}"
-        fi
-        export SCIP_SETTINGS
 
         # permute transformed problem
         for ((p = 0; ${p} <= ${PERMUTE}; p++))
@@ -175,20 +167,17 @@ do
                 SOLVER=$(stripversion "${BINNAME}")
 
                 # additional environment variables needed by run.sh
-                export SOLVERPATH="${SCIPPATH}"
+                export SOLVERPATH="${CHECKPATH}"
                 export BASENAME="${FILENAME}"
                 export FILENAME="${INSTANCE}"
-                export SOLNAME="${SOLCHECKFILE}"
-                export TIMELIMIT
                 export CLIENTTMPDIR
                 export OUTPUTDIR
+                export TIMELIMIT
                 export EXECNAME
-                export CHECKERPATH="${SCIPPATH}/solchecker"
-
-                SETTING_PATH="${SCIPPATH}/${OUTPUTDIR}/check.${TSTNAME}.papilo.${QUEUE}.${SETNAME}.set"
-
-                cp "${SCIPPATH}/../settings/${SETNAME}.set" "${SETTING_PATH}"
-                export SETTING_PATH
+                export CHECKERPATH="${CHECKPATH}/solchecker"
+                export SOLNAME="${SOLCHECKFILE}"
+                export SETFILESCIP
+                export SETFILEPAPILO
 
                 echo "Solving instance ${INSTANCE} with settings ${SETNAME}, hard time ${HARDTIMELIMIT}, hard mem ${HARDMEMLIMIT}"
                 if [ "${MAXJOBS}" -eq 1 ]

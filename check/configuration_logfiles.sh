@@ -27,7 +27,7 @@
 ### SHORTPROBNAME - the basename of ${INSTANCE} without file extension
 ### FILENAME - the basename of the local files (.out, .tmp, and .err)
 ### SKIPINSTANCE - should the instance be skipped because it was already evaluated in a previous setting?
-### BASENAME - ${SCIPPATH}/${OUTPUTDIR}/${FILENAME} cf. FILENAME argument
+### BASENAME - ${CHECKPATH}/${OUTPUTDIR}/${FILENAME} cf. FILENAME argument
 ### TMPFILE  - the batch file name to pass for solver instructions
 ### SETFILE  - the name of the settings file to save solver settings to
 
@@ -73,7 +73,7 @@ GLBSEEDSHIFT="${14}"     # the global seed shift
 STARTPERM="${15}"        # the starting permutation
 
 # common naming scheme for eval files
-EVALFILE="${SCIPPATH}/${OUTPUTDIR}/check.${TSTNAME}.${BINID}.${QUEUE}.${SETNAME}"
+EVALFILE="${CHECKPATH}/${OUTPUTDIR}/check.${TSTNAME}.${BINID}.${QUEUE}.${SETNAME}"
 
 # if number of threads is larger than 1, add postfix
 if test "${THREADS}" -gt 1
@@ -104,7 +104,7 @@ EVALFILE="${EVALFILE}.eval"
 # create meta file
 if test -e "${EVALFILE}"
 then
-    fname="${SCIPPATH}/${OUTPUTDIR}/$(basename ${EVALFILE} .eval).meta"
+    fname="${CHECKPATH}/${OUTPUTDIR}/$(basename ${EVALFILE} .eval).meta"
     if ! test -e "${fname}"
     then
         echo "@Permutation ${PERM}"                        > "${fname}"
@@ -220,9 +220,20 @@ then
 fi
 
 # configure global names TMPFILE (batch file) and SETFILE to save settings to
-BASENAME="${SCIPPATH}/${OUTPUTDIR}/${FILENAME}"
+BASENAME="${CHECKPATH}/${OUTPUTDIR}/${FILENAME}"
 TMPFILE="${BASENAME}.tmp"
-SETFILE="${BASENAME}.set"
+SETFILESCIP="${BASENAME}.scip.set"
+SETFILEPAPILO="${BASENAME}.papilo.set"
+
+if ! test -f "${SETFILEPAPILO}"; then
+    cp "${CHECKPATH}/../settings/${SETNAME}.set" "${SETFILEPAPILO}"
+fi
+
+# generate random seed for SCIP settings
+if [ ! -f "${SETFILESCIP}" ]; then
+    touch "${SETFILESCIP}"
+    echo randomization/randomseedshift = "${SEED}" >> "${SETFILESCIP}"
+fi
 
 # even if we decide to skip this instance, we write the basename to the eval file
 echo "${OUTPUTDIR}/${FILENAME}" >> "${EVALFILE}"

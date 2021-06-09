@@ -124,7 +124,7 @@ else
 fi
 # call routines for creating the result directory, checking for existence
 # of passed settings, etc
-# defines the following environment variables: SCIPPATH, SETTINGSLIST, SOLUFILE, HARDMEMLIMIT, DEBUGTOOLCMD, INSTANCELIST,
+# defines the following environment variables: CHECKPATH, SETTINGSLIST, SOLUFILE, HARDMEMLIMIT, DEBUGTOOLCMD, INSTANCELIST,
 #                                              TIMELIMLIST, HARDTIMELIMLIST
 . ./configuration_set.sh "${BINNAME}" "${TSTNAME}" "${SETNAMES}" "${TIMELIMIT}" "${TIMEFORMAT}" "${MEMLIMIT}" "${MEMFORMAT}" "${DEBUGTOOL}" "${SETCUTOFF}"
 
@@ -154,14 +154,6 @@ do
     # run different random seeds
     for ((s = 0; ${s} <= ${SEEDS}; s++))
     do
-
-        # generate random seed for SCIP settings
-        SCIP_SETTINGS="${SCIPPATH}/${OUTPUTDIR}/scip_settings.${TSTNAME}.papilo.${QUEUE}.${s}.set"
-        if [ ! -f "${SCIP_SETTINGS}" ]; then
-            touch "${SCIP_SETTINGS}"
-            echo randomization/randomseedshift = "${s}" >> "${SCIP_SETTINGS}"
-        fi
-        export SCIP_SETTINGS
 
         # permute transformed problem
         for ((p = 0; ${p} <= ${PERMUTE}; p++))
@@ -196,9 +188,9 @@ do
 
                 # check if binary exists. The second condition checks whether there is a binary of that name directly available
                 # independent of whether it is a symlink, file in the working directory, or application in the path
-                if test -e "${SCIPPATH}/../${BINNAME}"
+                if test -e "${CHECKPATH}/../${BINNAME}"
                 then
-                    EXECNAME="${DEBUGTOOLCMD}${SCIPPATH}/../${BINNAME}"
+                    EXECNAME="${DEBUGTOOLCMD}${CHECKPATH}/../${BINNAME}"
                 elif type "${BINNAME}" >/dev/null 2>&1
                 then
                     EXECNAME="${DEBUGTOOLCMD}${BINNAME}"
@@ -209,7 +201,7 @@ do
 
                 JOBNAME=$(capitalize "${SOLVER}")${SHORTPROBNAME}
                 # additional environment variables needed by run.sh
-                export SOLVERPATH="${SCIPPATH}"
+                export SOLVERPATH="${CHECKPATH}"
                 # this looks wrong but is totally correct
                 export BASENAME="${FILENAME}"
                 export FILENAME="${INSTANCE}"
@@ -217,13 +209,14 @@ do
                 export OUTPUTDIR
                 export HARDTIMELIMIT
                 export HARDMEMLIMIT
-                export CHECKERPATH="${SCIPPATH}/solchecker"
-                export SETFILE
+                export CHECKERPATH="${CHECKPATH}/solchecker"
                 export TIMELIMIT
                 export EXECNAME
+                export SETFILESCIP
+                export SETFILEPAPILO
 
-                SETTING_PATH="${SCIPPATH}/${OUTPUTDIR}/check.${TSTNAME}.papilo.${QUEUE}.${SETNAME}.set"
-                cp "${SCIPPATH}/../settings/${SETNAME}.set" "${SETTING_PATH}"
+                SETTING_PATH="${CHECKPATH}/${OUTPUTDIR}/check.${TSTNAME}.papilo.${QUEUE}.${SETNAME}.set"
+                cp "${CHECKPATH}/../settings/${SETNAME}.set" "${SETTING_PATH}"
                 export SETTING_PATH
 
                 # check queue type
