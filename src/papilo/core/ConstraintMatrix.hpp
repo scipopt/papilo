@@ -468,7 +468,10 @@ class ConstraintMatrix
                    case 1:
                       singletonCols.push_back( col );
                    }
-
+                   // in case that a singleton var is aggregated and has 2
+                   // appearances and then is reduced again immediately it may
+                   // appear two times in the list -> causes no bug but some
+                   // unneccessary overhead
                    colsize[col] = newsize;
                 }
              }
@@ -1391,7 +1394,7 @@ ConstraintMatrix<REAL>::aggregate(
             case 1:
                singletonCols.push_back( col );
             }
-
+            //TODO: remove column from singleton columns if necessary
             colsize[col] = newsize;
          }
       };

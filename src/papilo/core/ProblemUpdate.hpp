@@ -1427,6 +1427,8 @@ ProblemUpdate<REAL>::trivialPresolve()
       int numNewSingletonCols =
           static_cast<int>( singletonColumns.size() ) - firstNewSingletonCol;
       assert( numNewSingletonCols >= 0 );
+      // erasing variables from the singleton Cols with >1 or ==0
+      // if a variable is aggregated its appearance can again be raised
       auto it = std::remove_if(
           singletonColumns.begin(), singletonColumns.end(),
           [this]( int c ) { return problem.getColSizes()[c] != 1; } );
