@@ -111,7 +111,7 @@ class Postsolve
 
    Num<REAL> num;
 
-// #define CHECK_KKT
+ #define CHECK_KKT
 #ifndef CHECK_KKT
    using Kkt = KktChecker<REAL, CheckLevel::No_check>;
 #else
@@ -176,8 +176,8 @@ class Postsolve
 
    void
    notifyReducedBoundsAndCost( const Vec<REAL>& col_lb, const Vec<REAL>& col_ub,
-                               const Vec<REAL>& row_lb, const Vec<REAL>& row_ub,
-                               const Vec<REAL>& cost,
+                               const Vec<REAL>& row_lhs, const Vec<REAL>& row_rhs,
+                               const Vec<REAL>& coefficients,
                                const Vec<RowFlags>& row_flags,
                                const Vec<ColFlags>& col_flags );
 
@@ -376,8 +376,8 @@ Postsolve<REAL>::notifyBoundChange( const bool is_row, const bool is_lower,
 template <typename REAL>
 void
 Postsolve<REAL>::notifyReducedBoundsAndCost(
-    const Vec<REAL>& col_lb, const Vec<REAL>& col_ub, const Vec<REAL>& row_lb,
-    const Vec<REAL>& row_ub, const Vec<REAL>& cost,
+    const Vec<REAL>& col_lb, const Vec<REAL>& col_ub, const Vec<REAL>& row_lhs,
+    const Vec<REAL>& row_rhs, const Vec<REAL>& coefficients,
     const Vec<RowFlags>& row_flags, const Vec<ColFlags>& col_flags )
 {
    // TODO for what is this notification required? Can you add comments?
@@ -406,7 +406,7 @@ Postsolve<REAL>::notifyReducedBoundsAndCost(
    }
 
    // row bounds
-   for( int row = 0; row < row_lb.size(); row++ )
+   for( int row = 0; row < row_lhs.size(); row++ )
    {
       int flag_lb = 0;
       int flag_ub = 0;
@@ -415,16 +415,16 @@ Postsolve<REAL>::notifyReducedBoundsAndCost(
       if( row_flags[row].test( RowFlag::kRhsInf ) )
          flag_ub |= static_cast<int>( RowFlag::kRhsInf );
       indices.push_back( flag_lb );
-      values.push_back( row_lb[row] );
+      values.push_back( row_lhs[row] );
       indices.push_back( flag_ub );
-      values.push_back( row_ub[row] );
+      values.push_back( row_rhs[row] );
    }
 
-   // col cost
-   for( int col = 0; col < cost.size(); col++ )
+   // col coefficients
+   for( int col = 0; col < coefficients.size(); col++ )
    {
       indices.push_back( col );
-      values.push_back( cost[col] );
+      values.push_back( coefficients[col] );
    }
 
    finishNotify();
@@ -762,13 +762,13 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
    Vec<REAL> col_cost;
    Vec<REAL> col_lower;
    Vec<REAL> col_upper;
-   Vec<REAL> row_lower;
-   Vec<REAL> row_upper;
+   Vec<REAL> row_lhs;
+   Vec<REAL> row_rhs;
 
-   Vec<int> col_bound_lower;
-   Vec<int> col_bound_upper;
-   Vec<int> row_bound_lower;
-   Vec<int> row_bound_upper;
+   Vec<int> col_flag_lower;
+   Vec<int> col_flag_upper;
+   Vec<int> row_flag_lower;
+   Vec<int> row_flag_upper;
 
    Vec<int> col_lower_from_row;
    Vec<int> col_upper_from_row;
@@ -781,12 +781,12 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
       col_cost.assign( nColsOriginal, 0 );
       col_lower.assign( nColsOriginal, 0 );
       col_upper.assign( nColsOriginal, 0 );
-      row_lower.assign( nRowsOriginal, 0 );
-      row_upper.assign( nRowsOriginal, 0 );
-      col_bound_upper.assign( nColsOriginal, 0 );
-      col_bound_lower.assign( nColsOriginal, 0 );
-      row_bound_upper.assign( nRowsOriginal, 0 );
-      row_bound_lower.assign( nRowsOriginal, 0 );
+      row_lhs.assign( nRowsOriginal, 0 );
+      row_rhs.assign( nRowsOriginal, 0 );
+      col_flag_upper.assign( nColsOriginal, 0 );
+      col_flag_lower.assign( nColsOriginal, 0 );
+      row_flag_upper.assign( nRowsOriginal, 0 );
+      row_flag_lower.assign( nRowsOriginal, 0 );
 
       // // expand vectors.
       // Vec<REAL> tmp_col_cost = col_cost;
@@ -855,24 +855,24 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
          // get column bounds
          for( int j = 0; j < origcol_mapping.size(); j++ )
          {
-            int origcol = origcol_mapping[j];
+            int origCol = origcol_mapping[j];
             int index = first + 2 * j;
-            col_lower[origcol] = values[index];
-            col_upper[origcol] = values[index + 1];
-            col_bound_lower[origcol] = indices[index];
-            col_bound_upper[origcol] = indices[index + 1];
+            col_lower[origCol] = values[index];
+            col_upper[origCol] = values[index + 1];
+            col_flag_lower[origCol] = indices[index];
+            col_flag_upper[origCol] = indices[index + 1];
          }
 
          // get row bounds
          int first_row_bounds = first + 2 * origcol_mapping.size();
-         for( int i = 0; i < origrow_mapping.size(); i++ )
+         for( int k = 0; k < origrow_mapping.size(); k++ )
          {
-            int origrow = origrow_mapping[i];
-            int index = first_row_bounds + 2 * i;
-            row_lower[origrow] = values[index];
-            row_upper[origrow] = values[index + 1];
-            row_bound_lower[origrow] = indices[index];
-            row_bound_upper[origrow] = indices[index + 1];
+            int origRow = origrow_mapping[k];
+            int index = first_row_bounds + 2 * k;
+            row_lhs[origRow] = values[index];
+            row_rhs[origRow] = values[index + 1];
+            row_flag_lower[origRow] = indices[index];
+            row_flag_upper[origRow] = indices[index + 1];
          }
 
          // get cost
@@ -933,21 +933,23 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
          // todo: checker notify dual value if changed
          if( originalSolution.type == SolutionType::kPrimalDual )
          {
+
+            // TODO: this are the reduced costs
             // get dual value z_j = c_j - sum_i a_ij*y_i
             REAL value = 0;
 
             REAL objective_coefficient = values[first + 1];
             int col_length = indices[first + 1];
 
+            value = value + objective_coefficient;
             // no need to check for solSetRow because if it iz zero then the
             // row_dual value is zero.
-            for( int i = 0; i < col_length; ++i )
+            for( int k = 0; k < col_length; ++k )
             {
-               int index = first + 1 + i;
+               int index = first + 1 + k;
                value = value - values[index] *
                                    originalSolution.row_dual[indices[index]];
             }
-            value = value + objective_coefficient;
             originalSolution.col_dual[col] = value;
          }
          break;
@@ -1007,11 +1009,11 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
             col_cost[col] = old_value;
             break;
          case 0:
-            row_lower[row] = old_value;
+            row_lhs[row] = old_value;
             row_lower_from_col[row] = col;
             break;
          case 1:
-            row_upper[row] = old_value;
+            row_rhs[row] = old_value;
             row_upper_from_col[row] = col;
             break;
          case 2:

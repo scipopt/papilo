@@ -92,23 +92,23 @@ class Presolve
    {
       using uptr = std::unique_ptr<PresolveMethod<REAL>>;
 
-      addPresolveMethod( uptr( new SingletonCols<REAL>() ) );
-      addPresolveMethod( uptr( new CoefficientStrengthening<REAL>() ) );
-      addPresolveMethod( uptr( new SimpleProbing<REAL>() ) );
+//      addPresolveMethod( uptr( new SingletonCols<REAL>() ) );
+//      addPresolveMethod( uptr( new CoefficientStrengthening<REAL>() ) );
+//      addPresolveMethod( uptr( new SimpleProbing<REAL>() ) );
       addPresolveMethod( uptr( new ConstraintPropagation<REAL>() ) );
-      addPresolveMethod( uptr( new SingletonStuffing<REAL>() ) );
-      addPresolveMethod( uptr( new DualFix<REAL>() ) );
-      addPresolveMethod( uptr( new ImplIntDetection<REAL>() ) );
-      addPresolveMethod( uptr( new FixContinuous<REAL>() ) );
-      addPresolveMethod( uptr( new ParallelRowDetection<REAL>() ) );
-      addPresolveMethod( uptr( new ParallelColDetection<REAL>() ) );
-      addPresolveMethod( uptr( new SimpleSubstitution<REAL>() ) );
-      addPresolveMethod( uptr( new DualInfer<REAL> ) );
-      addPresolveMethod( uptr( new Substitution<REAL>() ) );
-      addPresolveMethod( uptr( new Probing<REAL>() ) );
-      addPresolveMethod( uptr( new DominatedCols<REAL>() ) );
-      addPresolveMethod( uptr( new Sparsify<REAL>() ) );
-      addPresolveMethod( uptr( new SimplifyInequalities<REAL>() ) );
+//      addPresolveMethod( uptr( new SingletonStuffing<REAL>() ) );
+//      addPresolveMethod( uptr( new DualFix<REAL>() ) );
+//      addPresolveMethod( uptr( new ImplIntDetection<REAL>() ) );
+//      addPresolveMethod( uptr( new FixContinuous<REAL>() ) );
+//      addPresolveMethod( uptr( new ParallelRowDetection<REAL>() ) );
+//      addPresolveMethod( uptr( new ParallelColDetection<REAL>() ) );
+//      addPresolveMethod( uptr( new SimpleSubstitution<REAL>() ) );
+//      addPresolveMethod( uptr( new DualInfer<REAL> ) );
+//      addPresolveMethod( uptr( new Substitution<REAL>() ) );
+//      addPresolveMethod( uptr( new Probing<REAL>() ) );
+//      addPresolveMethod( uptr( new DominatedCols<REAL>() ) );
+//      addPresolveMethod( uptr( new Sparsify<REAL>() ) );
+//      addPresolveMethod( uptr( new SimplifyInequalities<REAL>() ) );
    }
 
    ParameterSet
@@ -826,16 +826,16 @@ Presolve<REAL>::apply( Problem<REAL>& problem )
          result.status = PresolveStatus::kReduced;
          if( result.postsolve.postsolveType == PostsolveType::kFull )
          {
-            auto& col_cost = problem.getObjective().coefficients;
+            auto& coefficients = problem.getObjective().coefficients;
             auto& col_lower = problem.getLowerBounds();
-            auto& col_upper = problem.getLowerBounds();
-            auto& row_lower = problem.getConstraintMatrix().getLeftHandSides();
-            auto& row_upper = problem.getConstraintMatrix().getRightHandSides();
-            auto& col_flags = problem.getColFlags();
+            auto& col_upper = problem.getUpperBounds();
+            auto& row_lhs = problem.getConstraintMatrix().getLeftHandSides();
+            auto& row_rhs = problem.getConstraintMatrix().getRightHandSides();
             auto& row_flags = problem.getRowFlags();
+            auto& col_flags = problem.getColFlags();
 
             result.postsolve.notifyReducedBoundsAndCost(
-                col_lower, col_upper, row_lower, row_upper, col_cost, row_flags,
+                col_lower, col_upper, row_lhs, row_rhs, coefficients, row_flags,
                 col_flags );
          }
 

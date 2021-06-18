@@ -304,9 +304,10 @@ presolve_and_solve(
       if( result.postsolve.getOriginalProblem().getNumIntegralCols() == 0 )
          solution.type = SolutionType::kPrimalDual;
 
+      bool b = solver->getSolution( solution );
       if( ( status == SolverStatus::kOptimal ||
             status == SolverStatus::kInterrupted ) &&
-          solver->getSolution( solution ) )
+          b )
          postsolve( result.postsolve, solution, opts.objective_reference,
                     opts.orig_solution_file );
    }
