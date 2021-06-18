@@ -3,7 +3,7 @@
 /*               This file is part of the program and library                */
 /*    PaPILO --- Parallel Presolve for Integer and Linear Optimization       */
 /*                                                                           */
-/* Copyright (C) 2020  Konrad-Zuse-Zentrum                                   */
+/* Copyright (C) 2020-2021 Konrad-Zuse-Zentrum                               */
 /*                     fuer Informationstechnik Berlin                       */
 /*                                                                           */
 /* This program is free software: you can redistribute it and/or modify      */
@@ -311,13 +311,18 @@ class ConstraintMatrix
    /// modify the value of an element from the left hand side
    template <bool infval = false>
    void
-   modifyLeftHandSide( const int index, const REAL& value = 0 )
+   modifyLeftHandSide( const int index, const Num<REAL>& num,
+                       const REAL& value = 0)
    {
       assert( index >= 0 );
       assert( index < getNRows() );
       if( !infval )
       {
          flags[index].unset( RowFlag::kLhsInf );
+
+         if( num.isEq( value, rhs_values[index] ) )
+            lhs_values[index] = rhs_values[index];
+         else
          lhs_values[index] = value;
 
          if( !flags[index].test( RowFlag::kRhsInf ) &&
@@ -336,13 +341,17 @@ class ConstraintMatrix
    /// modify the value of an element from the right hand side
    template <bool infval = false>
    void
-   modifyRightHandSide( const int index, const REAL& value = 0 )
+   modifyRightHandSide( const int index, const Num<REAL>& num,
+                                         const REAL& value = 0)
    {
       assert( index >= 0 );
       assert( index < getNRows() );
       if( !infval )
       {
          flags[index].unset( RowFlag::kRhsInf );
+         if( num.isEq( value, lhs_values[index] ) )
+            rhs_values[index] = lhs_values[index];
+         else
          rhs_values[index] = value;
 
          if( !flags[index].test( RowFlag::kLhsInf ) &&

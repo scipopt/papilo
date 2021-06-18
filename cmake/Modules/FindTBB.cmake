@@ -32,12 +32,12 @@ if(NOT TBB_LIBRARY)
    tbb_build(TBB_ROOT ${CMAKE_CURRENT_LIST_DIR}/../../external/tbb CONFIG_DIR TBB_DIR MAKE_ARGS extra_inc=big_iron.inc tbb_build_dir=${CMAKE_CURRENT_BINARY_DIR} tbb_build_prefix=tbb)
    if(TBB_DIR)
       # building was successful
-      find_library(TBB_LIBRARY
+      find_library(TBB_STATIC_LIB
          NAMES tbb
          HINTS
             ${CMAKE_CURRENT_BINARY_DIR}/tbb_release
             ${CMAKE_CURRENT_BINARY_DIR}/tbb_debug)
-      if(TBB_LIBRARY)
+      if(TBB_STATIC_LIB)
          # create an imported target that also links the thread libraries via its interface
          set(TBB_BUILT_STATIC_LIB 1)
          find_package( Threads )
@@ -48,13 +48,23 @@ if(NOT TBB_LIBRARY)
          endif()
          add_library(tbb STATIC IMPORTED)
          set_target_properties(tbb PROPERTIES
-            IMPORTED_LOCATION "${TBB_LIBRARY}"
-            INTERFACE_LINK_LIBRARIES ${linkinterface})
-         # add variable to hold the static lib so that it can be installed
-         set(TBB_STATIC_LIB ${TBB_LIBRARY})
+            IMPORTED_LOCATION "${TBB_STATIC_LIB}"
+            INTERFACE_LINK_LIBRARIES "${linkinterface}")
          set(TBB_LIBRARY tbb)
       endif()
    endif()
 endif()
 
+# TODO: modify FindTBB so that the version is saved in the corresponding variables
+#if(TBB_LIBRARY)
+#   file(READ "${TBB_LIBRARY}/tbb/tbb_stddef.h" _tbb_version_file)
+#   string(REGEX REPLACE ".*#define TBB_VERSION_MAJOR ([0-9]+).*" "\\1"
+#           TBB_VERSION_MAJOR "${_tbb_version_file}")
+#   string(REGEX REPLACE ".*#define TBB_VERSION_MINOR ([0-9]+).*" "\\1"
+#           TBB_VERSION_MINOR "${_tbb_version_file}")
+#   string(REGEX REPLACE ".*#define TBB_INTERFACE_VERSION ([0-9]+).*" "\\1"
+#           TBB_INTERFACE_VERSION "${_tbb_version_file}")
+#   set(TBB_VERSION "${TBB_VERSION_MAJOR}.${TBB_VERSION_MINOR}")
+#   message("${TBB_VERSION}")
+#endif()
 find_package_handle_standard_args(TBB REQUIRED_VARS TBB_LIBRARY)

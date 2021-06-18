@@ -1,5 +1,5 @@
 cmake_minimum_required (VERSION 3.5.0)
-project(papilo VERSION 1.0.0.1)
+project(papilo VERSION 1.0.3.0)
 
 set(CMAKE_CXX_STANDARD 14)
 # set(CMAKE_CXX_EXTENSIONS OFF)
@@ -38,6 +38,7 @@ if(GMP)
 endif()
 if(GMP_FOUND)
     set(PAPILO_HAVE_GMP 1)
+    set(GMP_VERSION "${GMP_VERSION}")
 else()
     set(GMP_INCLUDE_DIRS "")
     set(GMP_LIBRARIES "")
@@ -60,10 +61,9 @@ find_program(GIT git)
 
 if((GIT) AND (EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/.git))
    execute_process(
-      COMMAND ${GIT} describe --always --dirty
+      COMMAND ${GIT} rev-parse --short HEAD
       WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
       OUTPUT_VARIABLE PAPILO_GITHASH OUTPUT_STRIP_TRAILING_WHITESPACE)
-   string(REGEX REPLACE \"^.*-g\" \"\" PAPILO_GITHASH ${PAPILO_GITHASH})
 else()
    file(STRINGS ${CMAKE_CURRENT_SOURCE_DIR}/src/papilo/Config.hpp githash_define REGEX "define PAPILO_GITHASH .*")
    if(githash_define)
@@ -170,22 +170,6 @@ else()
    set(PAPILO_USE_STANDARD_HASHMAP 1)
 endif()
 
-if(Boost_IOSTREAMS_FOUND)
-   set(CMAKE_REQUIRED_INCLUDES ${Boost_INCLUDE_DIRS})
-   set(CMAKE_REQUIRED_LIBRARIES ${Boost_LIBRARIES})
-   check_cxx_source_compiles(
-      "#include <boost/iostreams/filter/gzip.hpp>
-       int main() { auto decomp = boost::iostreams::gzip_decompressor(); (void)decomp; return 0; }"
-      PAPILO_USE_BOOST_IOSTREAMS_WITH_ZLIB )
-   check_cxx_source_compiles(
-      "#include <boost/iostreams/filter/bzip2.hpp>
-       int main() { auto decomp = boost::iostreams::bzip2_decompressor(); (void)decomp; return 0; }"
-      PAPILO_USE_BOOST_IOSTREAMS_WITH_BZIP2 )
-endif()
-
-configure_file("${PROJECT_SOURCE_DIR}/src/papilo/CMakeConfig.hpp.in"
-               "${PROJECT_BINARY_DIR}/papilo/CMakeConfig.hpp")
-
 add_library(papilo-core STATIC
    src/papilo/core/VariableDomains.cpp
    src/papilo/core/SparseStorage.cpp
@@ -218,6 +202,9 @@ target_compile_definitions(papilo-core PRIVATE PAPILO_USE_EXTERN_TEMPLATES)
 if(NOT PAPILO_NO_BINARIES)
    add_subdirectory(binaries)
 endif()
+
+configure_file("${PROJECT_SOURCE_DIR}/src/papilo/CMakeConfig.hpp.in"
+               "${PROJECT_BINARY_DIR}/papilo/CMakeConfig.hpp")
 
 # add tests
 enable_testing()
@@ -280,6 +267,7 @@ install(FILES
    ${PROJECT_SOURCE_DIR}/src/papilo/misc/NumericalStatistics.hpp
    ${PROJECT_SOURCE_DIR}/src/papilo/misc/Num.hpp
    ${PROJECT_SOURCE_DIR}/src/papilo/misc/OptionsParser.hpp
+   ${PROJECT_SOURCE_DIR}/src/papilo/misc/VersionLogger.hpp
    ${PROJECT_SOURCE_DIR}/src/papilo/misc/ParameterSet.hpp
    ${PROJECT_SOURCE_DIR}/src/papilo/misc/Signature.hpp
    ${PROJECT_SOURCE_DIR}/src/papilo/misc/StableSum.hpp

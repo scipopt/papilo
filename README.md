@@ -1,28 +1,28 @@
 # PaPILO &mdash; Parallel Presolve for Integer and Linear Optimization
 
-PaPILO, a C++14 based software package, provides parallel presolve routines for (mixed integer) linear programming problems. The routines
+PaPILO, a C++14-based software package, provides parallel presolve routines for (mixed integer) linear programming problems. The routines
 are implemented using templates which allows switching to higher precision or rational arithmetic using the boost multiprecision package.
 
-Additionally to the distribution here in github under the LGPLv3, PaPILO is also distributed as part of the
+Additionally to the distribution here under the LGPLv3, PaPILO is also distributed as part of the
 SCIP Optimization Suite which is available under https://scipopt.org/.
 
 PaPILO can be used as a header-based library and also provides an executable.
 Using the executable it is possible to presolve and postsolve MILP instances based on files.
-Additionaly PaPILO can be linked to SCIP, SoPlex, and HiGHS (https://github.com/ERGO-Code/HiGHS) solvers and act as a frontend. In this setting PaPILO passes the presolved problem to those solvers and applies the postsolve step to the optimal solution.
+Additionally, PaPILO can be linked to SCIP, SoPlex, and HiGHS (https://github.com/ERGO-Code/HiGHS) solvers and act as a frontend. In this setting PaPILO passes the presolved problem to those solvers and applies the postsolve step to the optimal solution.
 
 When PaPILO is compiled as part of the SCIP Optimization Suite linking of SoPlex and SCIP solvers is performed automatically.
 
 # Dependencies
 
 External dependencies that need to be installed by the user are the Intel TBB runtime library and boost headers.
-The executable additional requires some of the boost runtime libraries that are not required when papilo is used as
+The executable additionally requires some of the boost runtime libraries that are not required when PaPILO is used as
 a library.
 Under the folder external/ there are additional packages that are directly included within PaPILO and have a
 liberal open-source license.
 
 Intel TBB is also included and PaPILO tries to compile a static version of TBB if the runtime library is missing.
 This fails on some systems currently and if any problems occur it is recommended to install an Intel TBB runtime library
-from, e.g., the systems package manager (`libtbb2` on debian/ubuntu based distributions).
+from, e.g., the systems package manager (`libtbb2` on debian/ubuntu-based distributions).
 
 # Building
 
@@ -35,15 +35,15 @@ make
 ```
 
 Solvers that are found in the system are automatically linked to the executable.
-Additionally one can speciy the locations of solvers, e.g. with -DSCIP_DIR=<location of scip-config.cmake>, to allow
+Additionally one can specify the locations of solvers, e.g. with -DSCIP_DIR=<location of scip-config.cmake>, to allow
 PaPILO to find them in non-standard locations.
 
 # Usage of the binary
 
 The PaPILO binary provides a list of all available functionality when the help flag `-h` or `--help` is specified.
-The binary provides the three subcommands `solve`, `presolve`, and `postsolve`. If no solvers are linked the `solve` subcommand will fail and print that as a message.
+The binary provides the three subcommands `solve`, `presolve`, and `postsolve`. If no solvers are linked the `solve` subcommand will fail and print an error message.
 
-Next we provide a small example of how the binary can be used to apply presolving and postsolving to problem based on files.
+Next we provide a small example of how the binary can be used to apply presolving and postsolving based on files.
 
 Assuming a problem instance is stored in the file `problem.mps` the following call will apply presolving with standard settings and write the reduced problem to `reduced.mps` and all information that is needed for postsolve to the binary archive `reduced.postsolve`.
 ```
@@ -57,7 +57,7 @@ The format of the solution should be one value per line given like this:
 <variable name>        <value>
 ```
 This is compatible with the solutions given on the MIPLIB 2017 homepage https://miplib.zib.de and with the solutions written by the SCIP solver.
-Variable names that are not found in reduced problem are ignored.
+Variable names that are not found in the reduced problem are ignored.
 
 The command for applying the postsolve step to the solution `reduced.sol` is then
 ```
@@ -74,8 +74,8 @@ This will presolve the problem, pass the reduced problem to a solver, and subseq
 
 # Using PaPILO as a library
 
-As PaPILO provides a templated C++ interface the type used for numerical computations must be specified. During configuration time PaPILO scans the system and provides the fastest available numeric types for quadprecision and for exact rational arithmetic in the file
-`papilo/misc/MultiPrecision.hpp`. Including this file will introduce the types
+PaPILO provides a templated C++ interface that allows to specify the type used for numerical computations. During configuration time PaPILO scans the system and provides the fastest available numeric types for quadprecision and for exact rational arithmetic in the file
+`papilo/misc/MultiPrecision.hpp`. Including this file will currently introduce the types
 ```
 papilo::Quad
 papilo::Float100
@@ -83,17 +83,20 @@ papilo::Float500
 papilo::Float1000
 papilo::Rational
 ```
-The numeric type used by papilo will be reffered to as REAL in the following section. It can be any of above types as well as simply `double` for using standard double precision arithmetic.
+The numeric type used by PaPILO will be refered to as REAL in the following section. It can be any of the above types as well as simply `double` for using standard double precision arithmetic.
 
 To avoid confusion with types a short note on types like `papilo:Vec` and `papilo::String`.
-Those types are aliases for types from the standard library, `std::vector` and `std::string`, that possibly use an adjusted allocator. If nothing is altered regarding the allocator the type `papilo::Vec` will be exactly the same as `std::vector`.
-It can be changed by adding a partial specialization of `papilo::AllocatorTraits<T>` after including `papilo/misc/Alloc.hpp` but before including any other header of papilo.
+Those types are aliases for types from the standard library, `std::vector` and `std::string`, that possibly use an adjusted allocator. If nothing is altered regarding the allocator then the type `papilo::Vec` will be exactly the same as `std::vector`.
+It can be changed by adding a partial specialization of `papilo::AllocatorTraits<T>` after including `papilo/misc/Alloc.hpp` but before including any other header of PaPILO.
 
-The C++ interface for using PaPILO mainly evolves around the classes
-`papilo::Presolve<REAL>`, which controls the presolving routines, `papilo::Problem<REAL>` which holds the problem instance, and `papilo::Postsolve<REAL>`, which can transform solutions in the reduced space into solutions for the original problem space. The includes for those classes
-under `papilo/core/{Problem,Postsolve,Presolve}.hpp`.
+The C++ interface for using PaPILO mainly revolves around the classes
+*   `papilo::Presolve<REAL>`, which controls the presolving routines,
+*   `papilo::Problem<REAL>`, which holds the problem instance, and
+*   `papilo::Postsolve<REAL>`, which can transform solutions in the reduced space into solutions for the original problem space.
+The includes for those classes are under `papilo/core/{Problem,Postsolve,Presolve}.hpp`.
 
 ## Creating an instance of `papilo::Problem<REAL>`
+
 The PaPILO binary uses the MPS parsing routine to construct an instance of `papilo::Problem<REAL>` with the call `papilo::MpsParser<REAL>::loadProblem("problem.mps")`.
 
 For feeding a problem to PaPILO programmatically, there is the class
@@ -215,11 +218,11 @@ PostsolveStatus status = result.postsolve.undo(reducedsol, origsol);
 ```
 
 The value of `status` is `PostsolveStatus::kOk` if everything worked or `PostsolveStatus::kFail` otherwise.
-If everything worked then `origsol.primal` contains the primal solution values in the original problem space.
+If everything worked then the vector `origsol.primal` contains the primal solution values in the original problem space.
 
 # Presolve parameters
 
-There are several parameters that can be adjusted to influence the during presolving.
+There are several parameters that can be adjusted to influence the behavior during presolving.
 All the parameters and their default values are listed in the file `parameters.txt`.
 Adjusting a parameter via the command line when using the PaPILO exectuable works like this:
 ```
@@ -231,11 +234,11 @@ Alternatively a file with the same format as `parameters.txt` can be used to set
 passing the setting file with the `-p`/`--parameter-settings` flag.
 
 Passing the `--print-params` flag will print the parameters in a format similar to the one of `parameters.txt` before starting presolving.
-The printed parameters will have the values they where set to, not the default values.
+The printed parameters will have the values they were set to, not the default values.
 
 For adjusting the parameters programatically there are two ways.
 The first way is to obtain an instance of `papilo::ParameterSet` by calling `papilo::Presolve<REAL>::getParameters()`.
-It is important to call this member function after the `papilo::Presolve<REAL>` class has been fully configured and all presolvers have been added.
+It is important to call this member function after all presolvers have been added to the `papilo::Presolve<REAL>` class.
 Otherwise not all parameters are available, e.g. the ones that are added by individual presolvers.
 Now we can call `papilo::ParameterSet::setParameter( key, val )` to set parameters to their desired values.
 
@@ -248,15 +251,63 @@ papilo::Presolve<REAL> presolve;
 papilo::ParameterSet paramset = presolve.getParameters();
 paramset.setParameter("presolve.randomseed", 42);
 ```
-The function setParameter will throw exceptions if anything goes wrong.
-E.g. if the parameter key was not recognized or the type of the value is not suitable.
+The function `papilo::ParameterSet::setParameter()` will throw exceptions if anything goes wrong,
+e.g. if the parameter key was not recognized or the type of the value is not suitable.
 Possible exceptions are of the types `std::out_of_range`, `std::domain_error`, or `std::invalid_argument` and contain a suitable error message.
 For debugging it can be helpful to print the parameters stored within a `papilo::ParameterSet` which can be achieved by calling `paramset.printParams(std::cout)` and produces an output similar to the one in `parameters.txt`.
 
-The second way to set a subset of parameters is by directly accessing the instance of `papilo::PresolveOptions` that is stored within each instance of `papilo::Presolve`.
+The second way to set a subset of parameters is by directly accessing the instance of `papilo::PresolveOptions` that is stored within each instance of `papilo::Presolve<REAL>`.
 Setting the random seed with this method can simply be achieved by `presolve.getPresolveOptions().randomseed = 42`.
 The caveat with directly accessing the `papilo::PresolveOptions` is, that parameters added by individual presolvers cannot be set and that no error checking is performed in case the user sets a parameter to an invalid value.
 Nevertheless this can be convenient for setting basic things like tolerances, time limits, and thread limits.
+
+# Adding a presolver
+
+Adding a presolver to PaPILO requires the following steps. First create a class for your presolver that inherits publically from `papilo::PresolveMethod<REAL>`.
+In the constructor at least adjust the name and the timing of the new presolver.
+For the constraint propagation presolver this is done in the constructor by the following calls:
+```
+this->setName( "propagation" );
+this->setTiming( PresolverTiming::kFast );
+```
+Use the following rules to set a suitable value for `PresolverTiming`.
+* `PresolverTiming::kFast` for presolvers that work only on altered parts of the problem.
+  E.g. the constraint propagation presolver will only look at rows for which the activity was adjusted
+* `PresolverTiming::kMedium` for presolvers that run in $O(n \log n)$ of the problem size (number of rows/columns/nonzeros).
+  E.g. the parallel row/column presolvers compute hash values and sort on the order of the rows and columns.
+  Technically the runtime becomes quadratic in the worst case when many collisions occur, but practically the presolvers are fast.
+  They are the slowest in the category of medium timing presolvers included in the default.
+* `PresolverTiming::kExhaustive` for presolvers that neither fit into the fast or medium categories
+
+In addition, depending on the presolve method, it might be good to add restrictions on what type of problems a presolver is called.
+For this the `setType(PresolveType)` member function of `papilo::PresolveMethod<REAL>` should be used.
+If the type is set to `PresolverType::KIntegralCols` or `PresolverType::kContinuousCols` then the presolver only runs if integral or continuous columns are present respectively. The type `PresolverType::kMixedCols` runs only if both integral and continuous columns are present which is suitable for the implied integer detection presolver.
+
+For presolve methods that require internal state two additional virtual member functions need to be overriden.
+An example for this can be seen in the `papilo::Probing<REAL>` presolver.
+The probing presolver stores how often a variable has been probed between calls.
+For this it overrides the `papilo::PresolveMethod<REAL>::initialize()` member function which clears the internal data and
+adjusts it to the given problems dimension. The function must return a boolean value.
+The value `false` indicates that the presolver does not need to be informed in case the index space of the columns changes
+and the value `true` indicates the opposite. When `true` is returned in the initialize member function `papilo::PresolveMethod<REAL>::compress()`
+should additionally be overriden. The function is called with a mapping for the rows and columns and is called when
+PaPILO compresses the index space of the problem.
+In the compress callback the probing presolver uses the given column mapping to compress the vector that stores how often each variable has been probed.
+
+If the presolve method needs to add parameters that can be adjusted via the `papilo::ParameterSet`, then the member function `papilo::PresolveMethod<REAL>::addPresolverParams()` should be overridden.
+
+The member function `papilo::PresolveMethod<REAL>::execute()` is a pure virtual function and therefore must be implemented for every presolve method.
+This is where the presolver actually runs. The method grants read-only access to the `papilo::Problem<REAL>` that is being presolved
+and grants write access to an instance of `papilo::Reductions<REAL>`. A presolve method should scan the problem for possible reductions and add them
+to the reductions class. This is only the broad picture and there are some more details that we omit here for brevity.
+Looking at some of the default implemented presolvers can help for understanding further details and also the resources in the next section.
+
+Finally when a new presolve method is implemented it needs to be added to the `papilo::Presolve<REAL>` instance that is used for presolving.
+Assuming the new presolve method is called `MyPresolveMethod` this is achieved by the following call:
+```
+presolve.addPresolver( std::unique_ptr<papilo::PresolveMethod<REAL>>( new MyPresolveMethod<REAL>() ) );
+```
+Getting the PaPILO binary to call your presolver could be achieved by adding an include for your presolver in `papilo/core/Presolve.hpp` and then adding it together with the other default presolvers in the member function `papilo::Presolve<REAL>::addDefaultPresolvers()`.
 
 # Algorithmic and implementation details
 
@@ -284,13 +335,15 @@ For other licensing options we refer to https://scipopt.org/, where PaPILO can b
 
 # Contributors
 
-Leona Gottwald ([@lgottwald](https://github.com/lgottwald)) &mdash; main author
+[Alexander Hoen](https://www.zib.de/members/hoen) &mdash; main developer
 
 [Ivet Galabova](https://sites.google.com/view/ivetgalabova) ([@galabovaa](https://github.com/galabovaa)) &mdash; groundwork for dual postsolve, KKT checker
 
-[Kathrin Halbig](https://en.www.math.fau.de/edom/team/katrin-halbig/) &mdash; presolver for GCD based reductions on inequalities (simplifyineq)
+[Leona Gottwald](https://www.zib.de/members/gottwald)  ([@lgottwald](https://github.com/lgottwald)) &mdash; creator and former main developer
 
-[Gabriel Kressin](https://www.zib.de/members/kressin) ([@GabrielKP](https://github.com/GabrielKP)) &mdash; numerical statistics, testing
+[Katrin Halbig](https://en.www.math.fau.de/edom/team/katrin-halbig/) &mdash; presolver for GCD based reductions on inequalities (simplifyineq)
+
+Gabriel Kressin ([@GabrielKP](https://github.com/GabrielKP)) &mdash; numerical statistics, testing
 
 Anass Meskini &mdash; general development and contributions to substitution presolver in terms of internship
 

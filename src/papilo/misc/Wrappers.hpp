@@ -3,7 +3,7 @@
 /*               This file is part of the program and library                */
 /*    PaPILO --- Parallel Presolve for Integer and Linear Optimization       */
 /*                                                                           */
-/* Copyright (C) 2020  Konrad-Zuse-Zentrum                                   */
+/* Copyright (C) 2020-2021 Konrad-Zuse-Zentrum                               */
 /*                     fuer Informationstechnik Berlin                       */
 /*                                                                           */
 /* This program is free software: you can redistribute it and/or modify      */
@@ -61,11 +61,20 @@ presolve_and_solve(
 
    double readtime = 0;
    Problem<REAL> problem;
+   boost::optional<Problem<REAL>> prob;
 
    {
       Timer t( readtime );
-      problem = MpsParser<REAL>::loadProblem( opts.instance_file );
+      prob = MpsParser<REAL>::loadProblem( opts.instance_file );
    }
+
+   // Check wether reading was successfull or not
+   if( !prob )
+   {
+      fmt::print( "error loading problem {}\n", opts.instance_file );
+      return ResultStatus::kError;
+   }
+   problem = *prob;
 
    fmt::print( "reading took {:.3} seconds\n", readtime );
 

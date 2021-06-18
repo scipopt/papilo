@@ -3,7 +3,7 @@
 /*               This file is part of the program and library                */
 /*    PaPILO --- Parallel Presolve for Integer and Linear Optimization       */
 /*                                                                           */
-/* Copyright (C) 2020  Konrad-Zuse-Zentrum                                   */
+/* Copyright (C) 2020-2021 Konrad-Zuse-Zentrum                               */
 /*                     fuer Informationstechnik Berlin                       */
 /*                                                                           */
 /* This program is free software: you can redistribute it and/or modify      */
@@ -793,11 +793,11 @@ ProblemUpdate<REAL>::checkChangedActivities()
          status = PresolveStatus::kReduced;
          break;
       case RowStatus::kRedundantLhs:
-         consmatrix.template modifyLeftHandSide<true>( r );
+         consmatrix.template modifyLeftHandSide<true>( r , num);
          status = PresolveStatus::kReduced;
          break;
       case RowStatus::kRedundantRhs:
-         consmatrix.template modifyRightHandSide<true>( r );
+         consmatrix.template modifyRightHandSide<true>( r , num);
          status = PresolveStatus::kReduced;
          break;
       case RowStatus::kInfeasible:
@@ -1274,12 +1274,12 @@ ProblemUpdate<REAL>::trivialRowPresolve()
             status = PresolveStatus::kReduced;
             break;
          case RowStatus::kRedundantLhs:
-            consMatrix.template modifyLeftHandSide<true>( row );
+            consMatrix.template modifyLeftHandSide<true>( row, num );
             status = PresolveStatus::kReduced;
             cleanupSmallCoefficients( row );
             break;
          case RowStatus::kRedundantRhs:
-            consMatrix.template modifyRightHandSide<true>( row );
+            consMatrix.template modifyRightHandSide<true>( row, num );
             status = PresolveStatus::kReduced;
             cleanupSmallCoefficients( row );
             break;
@@ -2356,7 +2356,7 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
                   setColState( rowcols[i], State::kModified );
             }
 
-            constraintMatrix.modifyLeftHandSide( reduction.row,
+            constraintMatrix.modifyLeftHandSide( reduction.row,num,
                                                  reduction.newval );
 
             ++stats.nsidechgs;
@@ -2376,7 +2376,7 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
                   setColState( rowcols[i], State::kModified );
             }
 
-            constraintMatrix.modifyRightHandSide( reduction.row,
+            constraintMatrix.modifyRightHandSide( reduction.row,num,
                                                   reduction.newval );
 
             ++stats.nsidechgs;
@@ -2387,7 +2387,7 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
                setRowState( reduction.row, State::kBoundsModified );
 
                constraintMatrix.template modifyLeftHandSide<true>(
-                   reduction.row, REAL{ 0 } );
+                   reduction.row, num, REAL{ 0 } );
 
                ++stats.nsidechgs;
             }
@@ -2397,7 +2397,7 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
             {
                setRowState( reduction.row, State::kBoundsModified );
                constraintMatrix.template modifyRightHandSide<true>(
-                   reduction.row, REAL{ 0 } );
+                   reduction.row, num, REAL{ 0 } );
                ++stats.nsidechgs;
             }
             break;

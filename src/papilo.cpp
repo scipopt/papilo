@@ -3,7 +3,7 @@
 /*               This file is part of the program and library                */
 /*    PaPILO --- Parallel Presolve for Integer and Linear Optimization       */
 /*                                                                           */
-/* Copyright (C) 2020  Konrad-Zuse-Zentrum                                   */
+/* Copyright (C) 2020-2021 Konrad-Zuse-Zentrum                               */
 /*                     fuer Informationstechnik Berlin                       */
 /*                                                                           */
 /* This program is free software: you can redistribute it and/or modify      */
@@ -31,6 +31,7 @@
 #include "papilo/io/SolParser.hpp"
 #include "papilo/misc/MultiPrecision.hpp"
 #include "papilo/misc/OptionsParser.hpp"
+#include "papilo/misc/VersionLogger.hpp"
 #include "papilo/misc/Wrappers.hpp"
 #include "papilo/misc/tbb.hpp"
 
@@ -119,6 +120,8 @@ int
 main( int argc, char* argv[] )
 {
    using namespace papilo;
+
+   print_header();
 
    // get the options passed by the user
    OptionsInfo optionsInfo;

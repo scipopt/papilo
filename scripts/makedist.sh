@@ -1,5 +1,8 @@
 #!/bin/bash -e
 
+# create tarball for release
+# usage: ./scripts/makedist.sh
+
 VERSION=$(grep project.papilo CMakeLists.txt | cut -d ' ' -f 3 | cut -d ')' -f 1)
 NAME="papilo-$VERSION"
 rm -f $NAME.tgz
@@ -8,7 +11,7 @@ rm -f $NAME.tar
 echo ">>> Packaging $NAME."
 
 # echo "store git hash"
-GITHASH=`git describe --always --dirty  | sed 's/^.*-g//'`
+GITHASH=`git rev-parse --short HEAD`
 sed -i "s/undef PAPILO_GITHASH_AVAILABLE/define PAPILO_GITHASH_AVAILABLE/g" src/papilo/Config.hpp
 sed -i "s/undef PAPILO_GITHASH/define PAPILO_GITHASH \"$GITHASH\"/g" src/papilo/Config.hpp
 

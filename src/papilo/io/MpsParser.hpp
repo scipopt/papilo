@@ -3,7 +3,7 @@
 /*               This file is part of the program and library                */
 /*    PaPILO --- Parallel Presolve for Integer and Linear Optimization       */
 /*                                                                           */
-/* Copyright (C) 2020  Konrad-Zuse-Zentrum                                   */
+/* Copyright (C) 2020-2021 Konrad-Zuse-Zentrum                               */
 /*                     fuer Informationstechnik Berlin                       */
 /*                                                                           */
 /* This program is free software: you can redistribute it and/or modify      */
@@ -37,6 +37,7 @@
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/dynamic_bitset.hpp>
 #include <boost/iostreams/filtering_stream.hpp>
+#include <boost/optional.hpp>
 #include <boost/spirit/include/qi.hpp>
 #include <boost/utility/string_ref.hpp>
 #include <fstream>
@@ -78,7 +79,7 @@ class MpsParser
        "the parse type must be a floating point type" );
 
  public:
-   static Problem<REAL>
+   static boost::optional<Problem<REAL>>
    loadProblem( const std::string& filename )
    {
       MpsParser<REAL> parser;
@@ -86,7 +87,7 @@ class MpsParser
       Problem<REAL> problem;
 
       if( !parser.parseFile( filename ) )
-         return problem;
+         return boost::none;
 
       assert( parser.nnz >= 0 );
 

@@ -30,3 +30,21 @@
 *.exe
 *.out
 *.app
+
+#IDES
+.vscode
+.idea/
+
+# test and testcluster
+check/results/
+check/IP
+check/LP
+check/MINLP
+check/instancedata
+
+
+#Generated Files
+build/
+cmake-build-debug/
+cmake-build-debug-coverage/
+external/tbb/cmake/

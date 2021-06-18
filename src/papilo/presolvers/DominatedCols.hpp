@@ -3,7 +3,7 @@
 /*               This file is part of the program and library                */
 /*    PaPILO --- Parallel Presolve for Integer and Linear Optimization       */
 /*                                                                           */
-/* Copyright (C) 2020  Konrad-Zuse-Zentrum                                   */
+/* Copyright (C) 2020-2021 Konrad-Zuse-Zentrum                               */
 /*                     fuer Informationstechnik Berlin                       */
 /*                                                                           */
 /* This program is free software: you can redistribute it and/or modify      */
@@ -488,7 +488,7 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
          TransactionGuard<REAL> tg{ reductions };
          reductions.lockCol( dr.col1 );
          reductions.lockColBounds( dr.col1 );
-         reductions.lockCol( dr.col2 );
+         reductions.lockColBounds( dr.col2 );
          if( dr.implrowlock > 0 )
             reductions.lockRow( dr.implrowlock );
 
