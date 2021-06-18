@@ -58,7 +58,8 @@ enum CheckLevel
    Primal_only,
    Primal_and_dual,
    After_each_step_primal_only,
-   After_each_step_and_dual
+   After_each_step_and_dual,
+   Solver_and_primal_feas
 };
 
 /// class to hold all the data needed for the checks. The other class

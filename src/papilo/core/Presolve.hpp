@@ -337,64 +337,6 @@ extern template class Presolve<Quad>;
 extern template class Presolve<Rational>;
 #endif
 
-template <typename REAL>
-void
-Presolve<REAL>::printRoundStats( bool unchanged )
-{
-   std::string rndtype;
-   switch( roundCounter )
-   {
-   case 0:
-      rndtype = "Fast";
-      break;
-   case 1:
-      rndtype = "Medium";
-      break;
-   case 2:
-      rndtype = "Exhaustive";
-      break;
-   case 3:
-      rndtype = "Final";
-      break;
-   case 4:
-      rndtype = "Trivial";
-   }
-
-   if( unchanged )
-   {
-      msg.info( "round {:<3} ({:^10}): Unchanged\n", stats.nrounds, rndtype );
-      return;
-   }
-
-   msg.info( "round {:<3} ({:^10}): {:>4} del cols, {:>4} del rows, "
-             "{:>4} chg bounds, {:>4} chg sides, {:>4} chg coeffs, "
-             "{:>4} tsx applied, {:>4} tsx conflicts\n",
-             stats.nrounds, rndtype, stats.ndeletedcols, stats.ndeletedrows,
-             stats.nboundchgs, stats.nsidechgs, stats.ncoefchgs,
-             stats.ntsxapplied, stats.ntsxconflicts );
-}
-
-template <typename REAL>
-void
-Presolve<REAL>::printPresolversStats()
-{
-   msg.info( "presolved {} rounds: {:>4} del cols, {:>4} del rows, "
-             "{:>4} chg bounds, {:>4} chg sides, {:>4} chg coeffs, "
-             "{:>4} tsx applied, {:>4} tsx conflicts\n",
-             stats.nrounds, stats.ndeletedcols, stats.ndeletedrows,
-             stats.nboundchgs, stats.nsidechgs, stats.ncoefchgs,
-             stats.ntsxapplied, stats.ntsxconflicts );
-   msg.info( "\n {:>18} {:>12} {:>18} {:>18} {:>18} {:>18} \n", "presolver",
-             "nb calls", "success calls(%)", "nb transactions",
-             "tsx applied(%)", "execution time(s)" );
-   for( std::size_t i = 0; i < presolvers.size(); ++i )
-   {
-      presolvers[i]->printStats( msg, presolverStats[i] );
-   }
-
-   msg.info( "\n" );
-}
-
 /// apply presolving to problem
 template <typename REAL>
 PresolveResult<REAL>
@@ -472,14 +414,12 @@ Presolve<REAL>::apply( Problem<REAL>& problem )
       reductions.resize( presolvers.size() );
       results.resize( presolvers.size() );
 
-      roundCounter = 0;
+      round_to_evaluate = Delegator::kFast;
 
       presolverStats.resize( presolvers.size(), std::pair<int, int>( 0, 0 ) );
 
-      // todo move trivial round 0 to initiliaze function
-
       ProblemUpdate<REAL> probUpdate( problem, result.postsolve, stats,
-                                      presolveOptions, num );
+                                      presolveOptions, num, msg );
 
       for( int i = 0; i != npresolvers; ++i )
       {
