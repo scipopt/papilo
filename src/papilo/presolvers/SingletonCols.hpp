@@ -75,18 +75,18 @@ SingletonCols<REAL>::execute( const Problem<REAL>& problem,
    const auto& lhs_values = constMatrix.getLeftHandSides();
    const auto& rhs_values = constMatrix.getRightHandSides();
    const auto& rflags = constMatrix.getRowFlags();
-   const auto& nrows = constMatrix.getNRows();
-   const auto& ncols = constMatrix.getNCols();
-   const auto& colsize = constMatrix.getColSizes();
-   const auto& rowsize = constMatrix.getRowSizes();
+   const auto& nRows = constMatrix.getNRows();
+   const auto& nColumns = constMatrix.getNCols();
+   const auto& columnSize = constMatrix.getColSizes();
+   const auto& rowSizes = constMatrix.getRowSizes();
    const auto& obj = problem.getObjective().coefficients;
 
    PresolveStatus result = PresolveStatus::kUnchanged;
 
-   auto handleEquation = [&]( int col, bool lbimplied, bool ubimplied,
+   auto handleEquation = [&]( int col, bool lowerboundImplied, bool ubimplied,
                               const REAL& val, int row, bool impliedeq,
                               const REAL& side ) {
-      if( !impliedeq && rowsize[row] <= 1 )
+      if( !impliedeq && rowSizes[row] <= 1 )
          return;
 
       result = PresolveStatus::kReduced;
@@ -110,7 +110,7 @@ SingletonCols<REAL>::execute( const Problem<REAL>& problem,
             reductions.changeRowRHS( row, side );
          }
 
-         if( rowsize[row] <= 1 )
+         if( rowSizes[row] <= 1 )
             return;
       }
 
@@ -118,14 +118,14 @@ SingletonCols<REAL>::execute( const Problem<REAL>& problem,
       reductions.substituteColInObjective( col, row );
 
       // now check if the equation is redundant or needs to be modified
-      if( lbimplied && ubimplied )
+      if( lowerboundImplied && ubimplied )
       {
          // implied free -> just remove the equation completely
          reductions.markRowRedundant( row );
       }
       else
       {
-         assert( lbimplied || !cflags[col].test( ColFlag::kLbInf ) );
+         assert( lowerboundImplied || !cflags[col].test( ColFlag::kLbInf ) );
          assert( ubimplied || !cflags[col].test( ColFlag::kUbInf ) );
 
          // implied free only for one bound -> modify equation to be an
@@ -134,27 +134,65 @@ SingletonCols<REAL>::execute( const Problem<REAL>& problem,
 
          if( val < 0 )
          {
-            if( lbimplied )
-               reductions.changeRowLHSInf( row );
-            else if( lower_bounds[col] != 0 )
-               reductions.changeRowLHS( row, side - lower_bounds[col] * val );
+            if( upper_bounds[col] <= 0 && !cflags[col].test( ColFlag::kUbInf ) )
+            {
 
-            if( ubimplied )
-               reductions.changeRowRHSInf( row );
-            else if( upper_bounds[col] != 0 )
-               reductions.changeRowRHS( row, side - upper_bounds[col] * val );
+               if( lowerboundImplied )
+                  reductions.changeRowLHSInf( row );
+               else if( lower_bounds[col] != 0 )
+                  reductions.changeRowLHS( row,
+                                           side - lower_bounds[col] * val );
+               if( ubimplied )
+                  reductions.changeRowRHSInf( row );
+               else if( upper_bounds[col] != 0 )
+                  reductions.changeRowRHS( row,
+                                           side - upper_bounds[col] * val );
+            }
+            else
+            {
+               if( ubimplied )
+                  reductions.changeRowRHSInf( row );
+               else if( upper_bounds[col] != 0 )
+                  reductions.changeRowRHS( row,
+                                           side - upper_bounds[col] * val );
+               if( lowerboundImplied )
+                  reductions.changeRowLHSInf( row );
+               else if( lower_bounds[col] != 0 )
+                  reductions.changeRowLHS( row,
+                                           side - lower_bounds[col] * val );
+            }
          }
          else
          {
-            if( lbimplied )
-               reductions.changeRowRHSInf( row );
-            else if( lower_bounds[col] != 0 )
-               reductions.changeRowRHS( row, side - lower_bounds[col] * val );
+            if( upper_bounds[col] <= 0 && !cflags[col].test( ColFlag::kUbInf ) )
+            {
+               if( lowerboundImplied )
+                  reductions.changeRowRHSInf( row );
+               else if( lower_bounds[col] != 0 )
+                  reductions.changeRowRHS( row,
+                                           side - lower_bounds[col] * val );
 
-            if( ubimplied )
-               reductions.changeRowLHSInf( row );
-            else if( upper_bounds[col] != 0 )
-               reductions.changeRowLHS( row, side - upper_bounds[col] * val );
+               if( ubimplied )
+                  reductions.changeRowLHSInf( row );
+               else if( upper_bounds[col] != 0 )
+                  reductions.changeRowLHS( row,
+                                           side - upper_bounds[col] * val );
+            }
+            else
+            {
+               if( ubimplied )
+                  reductions.changeRowLHSInf( row );
+               else if( upper_bounds[col] != 0 )
+                  reductions.changeRowLHS( row,
+                                           side - upper_bounds[col] * val );
+
+               if( lowerboundImplied )
+                  reductions.changeRowRHSInf( row );
+
+               else if( lower_bounds[col] != 0 )
+                  reductions.changeRowRHS( row,
+                                           side - lower_bounds[col] * val );
+            }
          }
       }
    };
@@ -164,7 +202,7 @@ SingletonCols<REAL>::execute( const Problem<REAL>& problem,
    {
       int col = singletonCols[i];
 
-      assert( colsize[col] == 1 );
+      assert( columnSize[col] == 1 );
       assert( constMatrix.getColumnCoefficients( col ).getLength() == 1 );
 
       int row = constMatrix.getColumnCoefficients( col ).getIndices()[0];
@@ -178,7 +216,8 @@ SingletonCols<REAL>::execute( const Problem<REAL>& problem,
          assert( !rflags[row].test( RowFlag::kLhsInf, RowFlag::kRhsInf ) );
          assert( lhs_values[row] == rhs_values[row] );
 
-         if( rowsize[row] <= 1 )
+         // singleton rows are already check in trivial presolve
+         if( rowSizes[row] <= 1 )
             continue;
 
          // Found singleton column within an equation:
@@ -187,12 +226,13 @@ SingletonCols<REAL>::execute( const Problem<REAL>& problem,
          // constraint. Otherwise it is equaivalent to implied free variable
          // substitution.
 
-         bool lbimplied =
+         bool lowerboundImplied =
              row_implies_LB( num, lhs_values[row], rhs_values[row], rflags[row],
                              activities[row], val, lower_bounds[col],
                              upper_bounds[col], cflags[col] );
 
-         if( !lbimplied && !problemUpdate.getPresolveOptions().removeslackvars )
+         if( !lowerboundImplied &&
+             !problemUpdate.getPresolveOptions().removeslackvars )
             continue;
 
          bool ubimplied =
@@ -202,7 +242,7 @@ SingletonCols<REAL>::execute( const Problem<REAL>& problem,
 
          if( !ubimplied &&
              ( !problemUpdate.getPresolveOptions().removeslackvars ||
-               ( !lbimplied && obj[col] != 0 ) ) )
+               ( !lowerboundImplied && obj[col] != 0 ) ) )
             continue;
 
          if( cflags[col].test( ColFlag::kIntegral ) )
@@ -212,18 +252,13 @@ SingletonCols<REAL>::execute( const Problem<REAL>& problem,
             auto rowvec = constMatrix.getRowCoefficients( row );
             const int* rowinds = rowvec.getIndices();
             const REAL* rowvals = rowvec.getValues();
-            for( int i = 0; i != rowvec.getLength(); ++i )
+            for( int k = 0; k != rowvec.getLength(); ++k )
             {
-               if( rowinds[i] == col )
+               if( rowinds[k] == col )
                   continue;
 
-               if( !cflags[rowinds[i]].test( ColFlag::kIntegral ) )
-               {
-                  unsuitableForSubstitution = true;
-                  break;
-               }
-
-               if( !num.isIntegral( rowvals[i] / val ) )
+               if( !cflags[rowinds[k]].test( ColFlag::kIntegral ) ||
+                   !num.isIntegral( rowvals[k] / val ) )
                {
                   unsuitableForSubstitution = true;
                   break;
@@ -234,7 +269,7 @@ SingletonCols<REAL>::execute( const Problem<REAL>& problem,
                continue;
          }
 
-         handleEquation( col, lbimplied, ubimplied, val, row, false,
+         handleEquation( col, lowerboundImplied, ubimplied, val, row, false,
                          rhs_values[row] );
 
          continue;
@@ -256,8 +291,9 @@ SingletonCols<REAL>::execute( const Problem<REAL>& problem,
 
       count_locks( val, rflags[row], ndownlocks, nuplocks );
 
-      // ranged row -> not a singleton. @TODO: check if ranged row can be
-      // converted to an equation with dual infer technique below
+      // ranged row (-inf < lhs < rhs < inf) -> not a singleton. TODO: check if
+      // ranged row can be converted to an equation with dual infer technique
+      // below
       if( nuplocks != 0 && ndownlocks != 0 )
          continue;
 
@@ -273,7 +309,7 @@ SingletonCols<REAL>::execute( const Problem<REAL>& problem,
          }
 
          TransactionGuard<REAL> tg{ reductions };
-         reductions.lockColStrong( col );
+         reductions.lockCol( col );
          reductions.fixCol( col, lower_bounds[col] );
          result = PresolveStatus::kReduced;
 
@@ -292,7 +328,7 @@ SingletonCols<REAL>::execute( const Problem<REAL>& problem,
          }
 
          TransactionGuard<REAL> tg{ reductions };
-         reductions.lockColStrong( col );
+         reductions.lockCol( col );
          reductions.fixCol( col, upper_bounds[col] );
          result = PresolveStatus::kReduced;
 
@@ -316,7 +352,7 @@ SingletonCols<REAL>::execute( const Problem<REAL>& problem,
          REAL duallb = obj[col] / val;
          REAL dualub = duallb;
 
-         bool lbimplied =
+         bool lowerboundImplied =
              row_implies_LB( num, lhs_values[row], rhs_values[row], rflags[row],
                              activities[row], val, lower_bounds[col],
                              upper_bounds[col], cflags[col] );
@@ -325,12 +361,12 @@ SingletonCols<REAL>::execute( const Problem<REAL>& problem,
                              activities[row], val, lower_bounds[col],
                              upper_bounds[col], cflags[col] );
 
-         if( lbimplied && ubimplied )
+         if( lowerboundImplied && ubimplied )
          {
             duallbinf = false;
             dualubinf = false;
          }
-         else if( lbimplied )
+         else if( lowerboundImplied )
          {
             if( val > 0 )
                duallbinf = false;
@@ -355,14 +391,14 @@ SingletonCols<REAL>::execute( const Problem<REAL>& problem,
 
             // check again if row implies more bounds with new right hand
             // side
-            if( !lbimplied )
+            if( !lowerboundImplied )
             {
-               lbimplied = row_implies_LB(
+               lowerboundImplied = row_implies_LB(
                    num, lhs_values[row], lhs_values[row], RowFlag::kEquation,
                    activities[row], val, lower_bounds[col], upper_bounds[col],
                    cflags[col] );
 
-               if( !lbimplied &&
+               if( !lowerboundImplied &&
                    !problemUpdate.getPresolveOptions().removeslackvars )
                   removevar = false;
             }
@@ -376,14 +412,14 @@ SingletonCols<REAL>::execute( const Problem<REAL>& problem,
 
                if( !ubimplied &&
                    ( !problemUpdate.getPresolveOptions().removeslackvars ||
-                     ( !lbimplied && obj[col] != 0 ) ) )
+                     ( !lowerboundImplied && obj[col] != 0 ) ) )
                   removevar = false;
             }
 
             if( removevar )
             {
-               handleEquation( col, lbimplied, ubimplied, val, row, true,
-                               lhs_values[row] );
+               handleEquation( col, lowerboundImplied, ubimplied, val, row,
+                               true, lhs_values[row] );
             }
             else
             {
@@ -406,14 +442,14 @@ SingletonCols<REAL>::execute( const Problem<REAL>& problem,
                     rhs_values[row] != lhs_values[row] );
 
             // check again if row implies more bounds with new left hand side
-            if( !lbimplied )
+            if( !lowerboundImplied )
             {
-               lbimplied = row_implies_LB(
+               lowerboundImplied = row_implies_LB(
                    num, rhs_values[row], rhs_values[row], RowFlag::kEquation,
                    activities[row], val, lower_bounds[col], upper_bounds[col],
                    cflags[col] );
 
-               if( !lbimplied &&
+               if( !lowerboundImplied &&
                    !problemUpdate.getPresolveOptions().removeslackvars )
                   removevar = false;
             }
@@ -427,14 +463,14 @@ SingletonCols<REAL>::execute( const Problem<REAL>& problem,
 
                if( !ubimplied &&
                    ( !problemUpdate.getPresolveOptions().removeslackvars ||
-                     ( !lbimplied && obj[col] != 0 ) ) )
+                     ( !lowerboundImplied && obj[col] != 0 ) ) )
                   removevar = false;
             }
 
             if( removevar )
             {
-               handleEquation( col, lbimplied, ubimplied, val, row, true,
-                               rhs_values[row] );
+               handleEquation( col, lowerboundImplied, ubimplied, val, row,
+                               true, rhs_values[row] );
             }
             else
             {

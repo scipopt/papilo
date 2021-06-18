@@ -22,7 +22,7 @@ fixcontinuous.enabled = 0
 # is presolver implint enabled  [Boolean: {0,1}]
 implint.enabled = 0
 
-# verbosity to be used: 0 - quiet, 1 - errors, 2 - warnings, 3 - normal, 4 - extra  [Integer: [0,4]]
+# verbosity to be used: 0 - quiet, 1 - errors, 2 - warnings, 3 - normal, 4 - detailed  [Integer: [0,4]]
 message.verbosity = 3
 
 # epsilon tolerance to consider two values equal  [Numerical: [0,0.10000000000000001]]
@@ -123,3 +123,6 @@ substitution.maxfillin = 10
 
 # maximum amount of nonzeros being moved to make space for fillin from substitutions within a row  [Integer: [0,2147483647]]
 substitution.maxshiftperrow = 10
+
+# if only one thread (presolve.threads = 0) is used, apply the reductions immediately afterwards
+presolve.sequentiellreductionapplying = 1

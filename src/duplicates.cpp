@@ -52,9 +52,6 @@ compute_row_and_column_permutation( const Problem<double>& prob, bool verbose )
    if( verbose )
       fmt::print( "Computing Permutation for {}\n", prob.getName() );
 
-   // const Vec<String> rnames = prob.getConstraintNames();
-   // const Vec<String> cnames = prob.getVariableNames();
-
    std::pair<Vec<int>, Vec<int>> retval;
    Vec<uint64_t> rowhashes;
    Vec<uint64_t> colhashes;

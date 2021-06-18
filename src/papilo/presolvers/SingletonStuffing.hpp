@@ -269,7 +269,7 @@ SingletonStuffing<REAL>::execute( const Problem<REAL>& problem,
          }
 
          TransactionGuard<REAL> tg{ reductions };
-         reductions.lockColStrong( col );
+         reductions.lockCol( col );
          reductions.fixCol( col, lower_bounds[col] );
          result = PresolveStatus::kReduced;
 
@@ -288,7 +288,7 @@ SingletonStuffing<REAL>::execute( const Problem<REAL>& problem,
          }
 
          TransactionGuard<REAL> tg{ reductions };
-         reductions.lockColStrong( col );
+         reductions.lockCol( col );
          reductions.fixCol( col, upper_bounds[col] );
          result = PresolveStatus::kReduced;
 

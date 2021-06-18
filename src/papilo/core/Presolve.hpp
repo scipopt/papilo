@@ -74,6 +74,15 @@ struct PresolveResult
    PresolveStatus status;
 };
 
+enum class Delegator
+{
+   kAbort,
+   kFast,
+   kMedium,
+   kExhaustive,
+   kExceeded
+};
+
 template <typename REAL>
 class Presolve
 {
@@ -215,40 +224,16 @@ class Presolve
       return stats;
    }
 
- private:
-   /// evaluate result array of each presolver, return the largest result value
-   PresolveStatus
-   evaluateResults();
-
    std::pair<int, int>
    applyReductions( int p, const Reductions<REAL>& reductions,
                     ProblemUpdate<REAL>& probUpdate );
 
-   void
-   finishRound( ProblemUpdate<REAL>& probUpdate );
-
-   void
-   applyPostponed( ProblemUpdate<REAL>& probUpdate );
-
-   bool
-   updateRoundCounter( Problem<REAL>& problem, ProblemUpdate<REAL>& probUpdate,
-                       const Statistics& roundStats, const Timer& presolvetimer,
-                       bool unchanched = false );
-
-   bool
-   applyPresolversReductions( ProblemUpdate<REAL>& probUpdate );
-
-   void
-   printRoundStats( bool unchanged = false );
-
-   void
-   printPresolversStats();
-
+ private:
    // data to perform presolving
    Vec<PresolveStatus> results;
    Vec<std::unique_ptr<PresolveMethod<REAL>>> presolvers;
    Vec<Reductions<REAL>> reductions;
-   int roundCounter;
+   Delegator round_to_evaluate;
 
    Vec<std::pair<const Reduction<REAL>*, const Reduction<REAL>*>>
        postponedReductions;
@@ -270,8 +255,80 @@ class Presolve
    bool rundelayed;
    bool dual_solution = false;
 
+   /// evaluate result array of each presolver, return the largest result value
+   PresolveStatus
+   evaluateResults();
+
    void
-   logStatus( const Problem<REAL>& problem ) const;
+   finishRound( ProblemUpdate<REAL>& probUpdate );
+
+   void
+   applyPostponed( ProblemUpdate<REAL>& probUpdate );
+
+   Delegator
+   determine_next_round( Problem<REAL>& problem,
+                         ProblemUpdate<REAL>& probUpdate,
+                         const Statistics& roundStats,
+                         const Timer& presolvetimer, bool unchanged = false );
+
+   PresolveStatus
+   apply_all_presolver_reductions( ProblemUpdate<REAL>& probUpdate );
+
+   void
+   printRoundStats( bool unchanged, std::string rndtype );
+
+   void
+   printPresolversStats();
+
+ private:
+   void
+   logStatus( const Problem<REAL>& problem,
+              const Postsolve<REAL>& postsolve ) const;
+
+   bool
+   is_time_exceeded( const Timer& presolvetimer ) const;
+
+   bool
+   is_only_slighlty_changes( const Problem<REAL>& problem,
+                             const ProblemUpdate<REAL>& probUpdate,
+                             const Statistics& roundStats ) const;
+
+   Delegator
+   increase_delegator( Delegator delegator );
+
+   std::string
+   get_round_type( Delegator delegator );
+
+   Delegator
+   increase_round_if_last_run_was_not_successfull(
+       const Problem<REAL>& problem, const ProblemUpdate<REAL>& probUpdate,
+       const Statistics& roundStats, bool unchanged );
+
+   Delegator
+   handle_case_exceeded( Delegator& next_round );
+
+   PresolveStatus
+   evaluate_and_apply( const Timer& timer, Problem<REAL>& problem,
+                       PresolveResult<REAL>& result,
+                       ProblemUpdate<REAL>& probUpdate,
+                       const Statistics& oldstats, bool run_sequentiell );
+
+   void
+   apply_reduction_of_solver( ProblemUpdate<REAL>& probUpdate,
+                              size_t index_presolver );
+
+   void
+   apply_result_sequentiell( int index_presolver,
+                             ProblemUpdate<REAL>& probUpdate,
+                             bool& run_sequentiell );
+
+   void
+   run_presolvers( const Problem<REAL>& problem,
+                   const std::pair<int, int>& presolver_2_run,
+                   ProblemUpdate<REAL>& probUpdate, bool& run_sequentiell );
+
+   bool
+   is_status_infeasible_or_unbounded( const PresolveStatus& status ) const;
 };
 
 #ifdef PAPILO_USE_EXTERN_TEMPLATES
@@ -279,253 +336,6 @@ extern template class Presolve<double>;
 extern template class Presolve<Quad>;
 extern template class Presolve<Rational>;
 #endif
-
-/// evaluate result array of each presolver, return the largest result value
-template <typename REAL>
-PresolveStatus
-Presolve<REAL>::evaluateResults()
-{
-   int result = static_cast<int>( PresolveStatus::kUnchanged );
-
-   for( std::size_t i = 0; i < results.size(); ++i )
-      result = std::max( result, static_cast<int>( results[i] ) );
-
-   return static_cast<PresolveStatus>( result );
-}
-
-template <typename REAL>
-std::pair<int, int>
-Presolve<REAL>::applyReductions( int p, const Reductions<REAL>& reductions,
-                                 ProblemUpdate<REAL>& probUpdate )
-{
-   int k = 0;
-   ApplyResult result;
-   int nbtsxAppliedStart = stats.ntsxapplied;
-   int nbtsxTotal = 0;
-
-   const auto& reds = reductions.getReductions();
-   const auto& tsx = reductions.getTransactions();
-
-   for( const auto& transaction : reductions.getTransactions() )
-   {
-      int start = transaction.start;
-      int end = transaction.end;
-
-      for( ; k != start; ++k )
-      {
-         result = probUpdate.applyTransaction( &reds[k], &reds[k + 1] );
-         if( result == ApplyResult::kApplied )
-            ++stats.ntsxapplied;
-         else if( result == ApplyResult::kRejected )
-            ++stats.ntsxconflicts;
-         else if( result == ApplyResult::kInfeasible )
-            return std::make_pair( -1, -1 );
-         else if( result == ApplyResult::kPostponed )
-            postponedReductions.emplace_back( &reds[k], &reds[k + 1] );
-
-         ++nbtsxTotal;
-      }
-
-      result = probUpdate.applyTransaction( &reds[start], &reds[end] );
-      if( result == ApplyResult::kApplied )
-         ++stats.ntsxapplied;
-      else if( result == ApplyResult::kRejected )
-         ++stats.ntsxconflicts;
-      else if( result == ApplyResult::kInfeasible )
-         return std::make_pair( -1, -1 );
-      else if( result == ApplyResult::kPostponed )
-         postponedReductions.emplace_back( &reds[start], &reds[end] );
-
-      k = end;
-      ++nbtsxTotal;
-   }
-
-   for( ; k != static_cast<int>( reds.size() ); ++k )
-   {
-      result = probUpdate.applyTransaction( &reds[k], &reds[k + 1] );
-      if( result == ApplyResult::kApplied )
-         ++stats.ntsxapplied;
-      else if( result == ApplyResult::kRejected )
-         ++stats.ntsxconflicts;
-      else if( result == ApplyResult::kInfeasible )
-         return std::make_pair( -1, -1 );
-      else if( result == ApplyResult::kPostponed )
-         postponedReductions.emplace_back( &reds[k], &reds[k + 1] );
-
-      ++nbtsxTotal;
-   }
-
-   return std::pair<int, int>( nbtsxTotal,
-                               ( stats.ntsxapplied - nbtsxAppliedStart ) );
-}
-
-template <typename REAL>
-void
-Presolve<REAL>::finishRound( ProblemUpdate<REAL>& probUpdate )
-{
-   probUpdate.clearStates();
-
-   // clear reductions
-   for( auto& reduction : reductions )
-      reduction.clear();
-
-   std::fill( results.begin(), results.end(), PresolveStatus::kUnchanged );
-
-   // TODO compress if problem size decreased by some factor
-}
-
-template <typename REAL>
-void
-Presolve<REAL>::applyPostponed( ProblemUpdate<REAL>& probUpdate )
-{
-   probUpdate.setPostponeSubstitutions( false );
-
-   // apply all postponed reductions
-   for( int presolver = 0; presolver != presolvers.size(); ++presolver )
-   {
-      int first = postponedReductionToPresolver[presolver];
-      int last = postponedReductionToPresolver[presolver + 1];
-      for( int i = first; i != last; ++i )
-      {
-         const auto& ptrpair = postponedReductions[i];
-
-         ApplyResult r =
-             probUpdate.applyTransaction( ptrpair.first, ptrpair.second );
-         if( r == ApplyResult::kApplied )
-         {
-            ++stats.ntsxapplied;
-            ++presolverStats[presolver].second;
-         }
-         else if( r == ApplyResult::kRejected )
-            ++stats.ntsxconflicts;
-      }
-   }
-
-   postponedReductions.clear();
-   postponedReductionToPresolver.clear();
-}
-
-template <typename REAL>
-bool
-Presolve<REAL>::updateRoundCounter( Problem<REAL>& problem,
-                                    ProblemUpdate<REAL>& probUpdate,
-                                    const Statistics& roundStats,
-                                    const Timer& presolvetimer,
-                                    bool unchanched )
-{
-   if( presolveOptions.tlim != std::numeric_limits<double>::max() )
-   {
-      if( presolvetimer.getTime() >= presolveOptions.tlim )
-         return true;
-   }
-
-   if( !unchanched )
-   {
-      double abortfac = problem.getNumIntegralCols() == 0
-                            ? presolveOptions.lpabortfac
-                            : presolveOptions.abortfac;
-      // update statistics
-      bool increment =
-          ( 0.1 * roundStats.nboundchgs + roundStats.ndeletedcols ) <=
-          abortfac * probUpdate.getNActiveCols();
-      increment =
-          increment && ( roundStats.nsidechgs + roundStats.ndeletedrows ) <=
-                           abortfac * probUpdate.getNActiveRows();
-      increment =
-          increment && ( roundStats.ncoefchgs <=
-                         abortfac * problem.getConstraintMatrix().getNnz() );
-
-      if( increment )
-      {
-         lastRoundReduced =
-             lastRoundReduced || roundStats.nsidechgs > 0 ||
-             roundStats.nboundchgs > 0 || roundStats.ndeletedcols > 0 ||
-             roundStats.ndeletedrows > 0 || roundStats.ncoefchgs > 0;
-         ++roundCounter;
-      }
-      else
-      {
-         printRoundStats();
-         lastRoundReduced = true;
-         roundCounter = 0;
-         nunsuccessful = 0;
-      }
-   }
-   else
-      ++roundCounter;
-
-   bool abort = false;
-
-   if( roundCounter == 3 )
-   {
-      ++nunsuccessful;
-
-      abort = rundelayed && ( !lastRoundReduced || nunsuccessful == 2 );
-
-      if( !abort )
-      {
-         roundCounter = 2;
-         printRoundStats( !lastRoundReduced );
-
-         if( !rundelayed )
-         {
-            msg.info( "activating delayed presolvers\n" );
-            for( auto& p : presolvers )
-               p->setDelayed( false );
-            rundelayed = true;
-         }
-
-         roundCounter = 0;
-      }
-      else
-         printRoundStats( !lastRoundReduced );
-   }
-
-   if( roundCounter == 0 )
-      ++stats.nrounds;
-
-   assert( roundCounter != 3 || abort );
-
-   return abort;
-}
-
-template <typename REAL>
-bool
-Presolve<REAL>::applyPresolversReductions( ProblemUpdate<REAL>& probUpdate )
-{
-   probUpdate.setPostponeSubstitutions( true );
-
-   postponedReductionToPresolver.push_back( 0 );
-
-   for( std::size_t i = 0; i < presolvers.size(); ++i )
-   {
-      if( results[i] == PresolveStatus::kReduced )
-      {
-         Message::debug( this, "applying reductions of presolver {}\n",
-                         presolvers[i]->getName() );
-
-         auto stats = applyReductions( i, reductions[i], probUpdate );
-
-         if( stats.first < 0 || stats.second < 0 )
-            return false;
-
-         presolverStats[i].first += stats.first;
-         presolverStats[i].second += stats.second;
-         results[i] = PresolveStatus::kUnchanged;
-      }
-
-      postponedReductionToPresolver.push_back( postponedReductions.size() );
-   }
-
-   probUpdate.flushChangedCoeffs();
-
-   applyPostponed( probUpdate );
-
-   if( probUpdate.flush() == PresolveStatus::kInfeasible )
-      return false;
-
-   return true;
-}
 
 template <typename REAL>
 void
@@ -687,16 +497,11 @@ Presolve<REAL>::apply( Problem<REAL>& problem )
           result.status == PresolveStatus::kUnbounded )
          return result;
 
-      roundCounter = 4;
-      printRoundStats();
-      roundCounter = 0;
+      printRoundStats( false, "Trivial" );
+      round_to_evaluate = Delegator::kFast;
 
       finishRound( probUpdate );
       ++stats.nrounds;
-
-// #define PARALLEL_FAST_PRESOLVERS
-#define PARALLEL_MEDIUM_PRESOLVERS
-#define PARALLEL_EXHAUSTIVE_PRESOLVERS
 
       nunsuccessful = 0;
       rundelayed = true;
@@ -708,151 +513,42 @@ Presolve<REAL>::apply( Problem<REAL>& problem )
             break;
          }
       }
-      bool abort = false;
+
+      Statistics last_rounds_stats = stats;
       do
       {
+         bool run_sequentiell = false;
          // if problem is trivial abort here
          if( probUpdate.getNActiveCols() == 0 ||
              probUpdate.getNActiveRows() == 0 )
             break;
 
-         // call presolvers
-         switch( roundCounter )
+         switch( round_to_evaluate )
          {
-         case 0:
-#ifdef PARALLEL_FAST_PRESOLVERS
-            tbb::parallel_for(
-                tbb::blocked_range<int>( fastPresolvers.first,
-                                         fastPresolvers.second ),
-                [&]( const tbb::blocked_range<int>& r ) {
-                   for( int i = r.begin(); i != r.end(); ++i )
-                   {
-                      assert( presolvers[i]->runInRound( roundCounter ) );
-                      results[i] = presolvers[i]->run( problem, probUpdate, num,
-                                                       reductions[i] );
-                   }
-                },
-                tbb::simple_partitioner() );
-#else
-            for( int i = fastPresolvers.first; i != fastPresolvers.second; ++i )
-            {
-               assert( presolvers[i]->runInRound( roundCounter ) );
-               results[i] = presolvers[i]->run( problem, probUpdate, num,
-                                                reductions[i] );
-            }
-#endif
+         case Delegator::kFast:
+            run_presolvers( problem, fastPresolvers, probUpdate,
+                            run_sequentiell );
             break;
-         case 1:
-#ifdef PARALLEL_MEDIUM_PRESOLVERS
-            tbb::parallel_for(
-                tbb::blocked_range<int>( mediumPresolvers.first,
-                                         mediumPresolvers.second ),
-                [&]( const tbb::blocked_range<int>& r ) {
-                   for( int i = r.begin(); i != r.end(); ++i )
-                   {
-                      assert( presolvers[i]->runInRound( roundCounter ) );
-                      results[i] = presolvers[i]->run( problem, probUpdate, num,
-                                                       reductions[i] );
-                   }
-                },
-                tbb::simple_partitioner() );
-#else
-            for( int i = mediumPresolvers.first; i != mediumPresolvers.second;
-                 ++i )
-            {
-               assert( presolvers[i]->runInRound( roundCounter ) );
-               results[i] = presolvers[i]->run( problem, probUpdate, num,
-                                                reductions[i] );
-            }
-#endif
+         case Delegator::kMedium:
+            run_presolvers( problem, mediumPresolvers, probUpdate,
+                            run_sequentiell );
             break;
-         case 2:
-#ifdef PARALLEL_EXHAUSTIVE_PRESOLVERS
-            tbb::parallel_for(
-                tbb::blocked_range<int>( exhaustivePresolvers.first,
-                                         exhaustivePresolvers.second ),
-                [&]( const tbb::blocked_range<int>& r ) {
-                   for( int i = r.begin(); i != r.end(); ++i )
-                   {
-                      assert( presolvers[i]->runInRound( roundCounter ) );
-                      results[i] = presolvers[i]->run( problem, probUpdate, num,
-                                                       reductions[i] );
-                   }
-                },
-                tbb::simple_partitioner() );
-#else
-            for( int i = exhaustivePresolvers.first;
-                 i != exhaustivePresolvers.second; ++i )
-            {
-               assert( presolvers[i]->runInRound( roundCounter ) );
-               results[i] = presolvers[i]->run( problem, probUpdate, num,
-                                                reductions[i] );
-            }
-#endif
+         case Delegator::kExhaustive:
+            run_presolvers( problem, exhaustivePresolvers, probUpdate,
+                            run_sequentiell );
             break;
-         case 3:
+         default:
             assert( false );
          }
 
-         if( roundCounter == 0 )
-         {
-            probUpdate.clearChangeInfo();
-            lastRoundReduced = false;
-         }
-
-         Statistics oldstats = stats;
-
-         // evaluate results
-         result.status = evaluateResults();
-         switch( result.status )
-         {
-         case PresolveStatus::kUnbndOrInfeas:
-            // in case of unbounded or infeasible results we return immediately
-            printPresolversStats();
-            Message::debug(
-                this,
-                "[{}:{}] presolvers detected infeasibility or unboundedness\n",
-                __FILE__, __LINE__ );
+         result.status =
+             evaluate_and_apply( timer, problem, result, probUpdate,
+                                 last_rounds_stats, run_sequentiell );
+         if( is_status_infeasible_or_unbounded( result.status ) )
             return result;
-         case PresolveStatus::kUnbounded:
-            // in case of unbounded or infeasible results we return immediately
-            printPresolversStats();
-            Message::debug( this,
-                            "[{}:{}] presolvers detected unbounded problem\n",
-                            __FILE__, __LINE__ );
-            return result;
-         case PresolveStatus::kInfeasible:
-            // in case of unbounded or infeasible results we return immediately
-            printPresolversStats();
-            Message::debug( this, "[{}:{}] presolvers detected infeasibility\n",
-                            __FILE__, __LINE__ );
-            return result;
-         case PresolveStatus::kUnchanged:
-            // printRoundStats( true );
-            //++roundCounter;
-            abort = updateRoundCounter( problem, probUpdate,
-                                        ( stats - oldstats ), timer, true );
-            break;
-         case PresolveStatus::kReduced:
-            // problem reductions where found by at least one presolver
-            if( !applyPresolversReductions( probUpdate ) )
-            {
-               result.status = PresolveStatus::kInfeasible;
-               return result;
-            }
+         last_rounds_stats = stats;
 
-            abort = updateRoundCounter( problem, probUpdate,
-                                        ( stats - oldstats ), timer );
-
-            // end round
-            finishRound( probUpdate );
-
-#if 0
-         assertCorrectness( problem, num );
-#endif
-         }
-
-      } while( !abort );
+      } while( round_to_evaluate != Delegator::kAbort );
 
       if( stats.ntsxapplied > 0 || stats.nboundchgs > 0 ||
           stats.ncoefchgs > 0 || stats.ndeletedcols > 0 ||
@@ -866,6 +562,7 @@ Presolve<REAL>::apply( Problem<REAL>& problem )
             return result;
 
          probUpdate.clearStates();
+         probUpdate.check_and_compress();
       }
 
       printPresolversStats();
@@ -908,9 +605,9 @@ Presolve<REAL>::apply( Problem<REAL>& problem )
                Timer t{ factorTime };
                dependentEqs = depRows.getDependentRows( msg, num );
             }
-            msg.info(
-                "{} equations are redundant, factorization took {} seconds\n",
-                dependentEqs.size(), factorTime );
+            msg.info( "{} equations are redundant, factorization took {} "
+                      "seconds\n",
+                      dependentEqs.size(), factorTime );
 
             if( !dependentEqs.empty() )
             {
@@ -918,7 +615,7 @@ Presolve<REAL>::apply( Problem<REAL>& problem )
                {
                   probUpdate.markRowRedundant( equations[dependentEq] );
                }
-               probUpdate.flush();
+               probUpdate.flush( true );
             }
          }
 
@@ -975,7 +672,7 @@ Presolve<REAL>::apply( Problem<REAL>& problem )
                   for( int dependentFreeCol : dependentFreeCols )
                      probUpdate.fixCol( freeCols[dependentFreeCol], 0 );
 
-                  probUpdate.flush();
+                  probUpdate.flush( true );
                }
             }
          }
@@ -994,7 +691,7 @@ Presolve<REAL>::apply( Problem<REAL>& problem )
          {
             int nremoved;
             int nnewfreevars;
-            // todo check if lp solver is simplex solver / add options
+
             std::tie( nremoved, nnewfreevars ) =
                 probUpdate.removeRedundantBounds();
             if( nremoved != 0 )
@@ -1172,21 +869,20 @@ Presolve<REAL>::apply( Problem<REAL>& problem )
 
                if( nsolved != 0 )
                {
-                  if( probUpdate.flush() == PresolveStatus::kInfeasible )
+                  if( probUpdate.flush( true ) == PresolveStatus::kInfeasible )
                      assert( false );
 
                   probUpdate.compress();
 
-                  msg.info(
-                      "solved {} components: {} cols fixed, {} rows deleted\n",
-                      nsolved, stats.ndeletedcols - oldndelcols,
-                      stats.ndeletedrows - oldndelrows );
+                  msg.info( "solved {} components: {} cols fixed, {} rows "
+                            "deleted\n",
+                            nsolved, stats.ndeletedcols - oldndelcols,
+                            stats.ndeletedrows - oldndelrows );
                }
             }
          }
 
-         logStatus( problem );
-
+         logStatus( problem, result.postsolve );
          result.status = PresolveStatus::kReduced;
          if( result.postsolve.postsolveType == PostsolveType::kFull )
          {
@@ -1207,7 +903,7 @@ Presolve<REAL>::apply( Problem<REAL>& problem )
          return result;
       }
 
-      logStatus( problem );
+      logStatus( problem, result.postsolve );
 
       // problem was not changed
       result.status = PresolveStatus::kUnchanged;
@@ -1217,16 +913,497 @@ Presolve<REAL>::apply( Problem<REAL>& problem )
 
 template <typename REAL>
 void
-Presolve<REAL>::logStatus( const Problem<REAL>& problem ) const
+Presolve<REAL>::run_presolvers( const Problem<REAL>& problem,
+                                const std::pair<int, int>& presolver_2_run,
+                                ProblemUpdate<REAL>& probUpdate,
+                                bool& run_sequentiell )
+{
+   if( presolveOptions.runs_sequentiell() &&
+       presolveOptions.sequentiellreductionapplying )
+   {
+      probUpdate.setPostponeSubstitutions( false );
+      for( int i = presolver_2_run.first; i != presolver_2_run.second; ++i )
+      {
+         results[i] =
+             presolvers[i]->run( problem, probUpdate, num, reductions[i] );
+         apply_result_sequentiell( i, probUpdate, run_sequentiell );
+         if( results[i] == PresolveStatus::kInfeasible )
+            return;
+         PresolveStatus status = probUpdate.trivialPresolve();
+         if( is_status_infeasible_or_unbounded( status ) )
+         {
+            results[i] = status;
+            return;
+         }
+         if( problem.getNRows() == 0 || problem.getNCols() == 0 )
+            return;
+      }
+   }
+   else
+   {
+      tbb::parallel_for(
+          tbb::blocked_range<int>( presolver_2_run.first,
+                                   presolver_2_run.second ),
+          [&]( const tbb::blocked_range<int>& r ) {
+             for( int i = r.begin(); i != r.end(); ++i )
+             {
+                results[i] = presolvers[i]->run( problem, probUpdate, num,
+                                                 reductions[i] );
+             }
+          },
+          tbb::simple_partitioner() );
+   }
+}
+
+template <typename REAL>
+void
+Presolve<REAL>::apply_result_sequentiell( int index_presolver,
+                                          ProblemUpdate<REAL>& probUpdate,
+                                          bool& run_sequentiell )
+{
+   run_sequentiell = true;
+   apply_reduction_of_solver( probUpdate, index_presolver );
+   probUpdate.flushChangedCoeffs();
+   if( probUpdate.flush( false ) == PresolveStatus::kInfeasible )
+   {
+      results[index_presolver] = PresolveStatus::kInfeasible;
+      return;
+   }
+   probUpdate.clearStates();
+   probUpdate.check_and_compress();
+}
+
+template <typename REAL>
+Delegator
+Presolve<REAL>::determine_next_round( Problem<REAL>& problem,
+                                      ProblemUpdate<REAL>& probUpdate,
+                                      const Statistics& roundStats,
+                                      const Timer& presolvetimer,
+                                      bool unchanged )
+{
+   if( is_time_exceeded( presolvetimer ) )
+      return Delegator::kAbort;
+
+   Delegator next_round = increase_round_if_last_run_was_not_successfull(
+       problem, probUpdate, roundStats, unchanged );
+
+   next_round = handle_case_exceeded( next_round );
+
+   assert( next_round != Delegator::kExceeded );
+   return next_round;
+}
+
+template <typename REAL>
+PresolveStatus
+Presolve<REAL>::evaluate_and_apply( const Timer& timer, Problem<REAL>& problem,
+                                    PresolveResult<REAL>& result,
+                                    ProblemUpdate<REAL>& probUpdate,
+                                    const Statistics& oldstats,
+                                    bool run_sequentiell )
+{
+   if( round_to_evaluate == Delegator::kFast )
+   {
+      probUpdate.clearChangeInfo();
+      lastRoundReduced = false;
+   }
+
+   result.status = evaluateResults();
+   switch( result.status )
+   {
+   case PresolveStatus::kUnbndOrInfeas:
+   case PresolveStatus::kUnbounded:
+   case PresolveStatus::kInfeasible:
+      printPresolversStats();
+      return result.status;
+   case PresolveStatus::kUnchanged:
+      round_to_evaluate = determine_next_round(
+          problem, probUpdate, ( stats - oldstats ), timer, true );
+      return result.status;
+   case PresolveStatus::kReduced:
+      // problem reductions where found by at least one presolver
+      PresolveStatus status;
+      if( !run_sequentiell )
+         status = apply_all_presolver_reductions( probUpdate );
+      else
+         status = PresolveStatus::kReduced;
+      if( is_status_infeasible_or_unbounded( status ) )
+         return status;
+      round_to_evaluate = determine_next_round( problem, probUpdate,
+                                                ( stats - oldstats ), timer );
+      finishRound( probUpdate );
+      return status;
+   }
+   return result.status;
+}
+
+template <typename REAL>
+bool
+Presolve<REAL>::is_status_infeasible_or_unbounded(
+    const PresolveStatus& status ) const
+{
+   return status == PresolveStatus::kUnbndOrInfeas ||
+          status == PresolveStatus::kUnbounded ||
+          status == PresolveStatus::kInfeasible;
+}
+
+template <typename REAL>
+PresolveStatus
+Presolve<REAL>::apply_all_presolver_reductions(
+    ProblemUpdate<REAL>& probUpdate )
+{
+   // TODO: why is this isn't set globally
+   probUpdate.setPostponeSubstitutions( true );
+
+   postponedReductionToPresolver.push_back( 0 );
+
+   for( std::size_t i = 0; i < presolvers.size(); ++i )
+   {
+      apply_reduction_of_solver( probUpdate, i );
+      postponedReductionToPresolver.push_back( postponedReductions.size() );
+   }
+
+   PresolveStatus status = evaluateResults();
+   if( is_status_infeasible_or_unbounded( status ) )
+      return status;
+
+   probUpdate.flushChangedCoeffs();
+
+   applyPostponed( probUpdate );
+
+   return probUpdate.flush( true );
+}
+
+template <typename REAL>
+void
+Presolve<REAL>::apply_reduction_of_solver( ProblemUpdate<REAL>& probUpdate,
+                                           size_t index_presolver )
+{
+   if( results[index_presolver] != PresolveStatus::kReduced )
+      return;
+
+   Message::debug( this, "applying reductions of presolver {}\n",
+                   presolvers[index_presolver]->getName() );
+
+   auto statistics = applyReductions( index_presolver,
+                                      reductions[index_presolver], probUpdate );
+
+   // if infeasible it returns -1 -1
+   if( statistics.first >= 0 && statistics.second >= 0 )
+   {
+      presolverStats[index_presolver].first += statistics.first;
+      presolverStats[index_presolver].second += statistics.second;
+   }
+   else
+      results[index_presolver] = PresolveStatus::kInfeasible;
+}
+
+template <typename REAL>
+std::pair<int, int>
+Presolve<REAL>::applyReductions( int p, const Reductions<REAL>& reductions,
+                                 ProblemUpdate<REAL>& probUpdate )
+{
+   int k = 0;
+   ApplyResult result;
+   int nbtsxAppliedStart = stats.ntsxapplied;
+   int nbtsxTotal = 0;
+
+   const auto& reds = reductions.getReductions();
+   const auto& tsx = reductions.getTransactions();
+
+   msg.detailed( "Presolver {} applying \n", presolvers[p]->getName() );
+
+   for( const auto& transaction : reductions.getTransactions() )
+   {
+      int start = transaction.start;
+      int end = transaction.end;
+
+      for( ; k != start; ++k )
+      {
+         result = probUpdate.applyTransaction( &reds[k], &reds[k + 1] );
+         if( result == ApplyResult::kApplied )
+            ++stats.ntsxapplied;
+         else if( result == ApplyResult::kRejected )
+            ++stats.ntsxconflicts;
+         else if( result == ApplyResult::kInfeasible )
+            return std::make_pair( -1, -1 );
+         else if( result == ApplyResult::kPostponed )
+            postponedReductions.emplace_back( &reds[k], &reds[k + 1] );
+
+         ++nbtsxTotal;
+      }
+
+      result = probUpdate.applyTransaction( &reds[start], &reds[end] );
+      if( result == ApplyResult::kApplied )
+         ++stats.ntsxapplied;
+      else if( result == ApplyResult::kRejected )
+         ++stats.ntsxconflicts;
+      else if( result == ApplyResult::kInfeasible )
+         return std::make_pair( -1, -1 );
+      else if( result == ApplyResult::kPostponed )
+         postponedReductions.emplace_back( &reds[start], &reds[end] );
+
+      k = end;
+      ++nbtsxTotal;
+   }
+
+   for( ; k != static_cast<int>( reds.size() ); ++k )
+   {
+      result = probUpdate.applyTransaction( &reds[k], &reds[k + 1] );
+      if( result == ApplyResult::kApplied )
+         ++stats.ntsxapplied;
+      else if( result == ApplyResult::kRejected )
+         ++stats.ntsxconflicts;
+      else if( result == ApplyResult::kInfeasible )
+         return std::make_pair( -1, -1 );
+      else if( result == ApplyResult::kPostponed )
+         postponedReductions.emplace_back( &reds[k], &reds[k + 1] );
+
+      ++nbtsxTotal;
+   }
+
+   return { nbtsxTotal, ( stats.ntsxapplied - nbtsxAppliedStart ) };
+}
+
+template <typename REAL>
+void
+Presolve<REAL>::applyPostponed( ProblemUpdate<REAL>& probUpdate )
+{
+   probUpdate.setPostponeSubstitutions( false );
+
+   for( int presolver = 0; presolver != presolvers.size(); ++presolver )
+   {
+      int first = postponedReductionToPresolver[presolver];
+      int last = postponedReductionToPresolver[presolver + 1];
+      if( first < last )
+         msg.detailed( "Presolver {} applying \n",
+                       presolvers[presolver]->getName() );
+      for( int i = first; i != last; ++i )
+      {
+         const auto& ptrpair = postponedReductions[i];
+
+         ApplyResult r =
+             probUpdate.applyTransaction( ptrpair.first, ptrpair.second );
+         if( r == ApplyResult::kApplied )
+         {
+            ++stats.ntsxapplied;
+            ++presolverStats[presolver].second;
+         }
+         else if( r == ApplyResult::kRejected )
+            ++stats.ntsxconflicts;
+      }
+   }
+
+   postponedReductions.clear();
+   postponedReductionToPresolver.clear();
+}
+
+template <typename REAL>
+void
+Presolve<REAL>::finishRound( ProblemUpdate<REAL>& probUpdate )
+{
+   probUpdate.clearStates();
+   probUpdate.check_and_compress();
+
+   for( auto& reduction : reductions )
+      reduction.clear();
+
+   std::fill( results.begin(), results.end(), PresolveStatus::kUnchanged );
+}
+
+template <typename REAL>
+Delegator
+Presolve<REAL>::handle_case_exceeded( Delegator& next_round )
+{
+   if( next_round != Delegator::kExceeded )
+      return next_round;
+
+   ++nunsuccessful;
+
+   if( !( rundelayed && ( !lastRoundReduced || nunsuccessful == 2 ) ) )
+   {
+      printRoundStats( !lastRoundReduced, "Exhaustive" );
+      if( !rundelayed )
+      {
+         msg.info( "activating delayed presolvers\n" );
+         for( auto& p : presolvers )
+            p->setDelayed( false );
+         rundelayed = true;
+      }
+      ++stats.nrounds;
+      return Delegator::kFast;
+   }
+   printRoundStats( !lastRoundReduced, get_round_type( next_round ) );
+   return Delegator::kAbort;
+}
+
+template <typename REAL>
+bool
+Presolve<REAL>::is_time_exceeded( const Timer& presolvetimer ) const
+{
+   return presolveOptions.tlim != std::numeric_limits<double>::max() &&
+          presolvetimer.getTime() >= presolveOptions.tlim;
+}
+
+template <typename REAL>
+bool
+Presolve<REAL>::is_only_slighlty_changes( const Problem<REAL>& problem,
+                                          const ProblemUpdate<REAL>& probUpdate,
+                                          const Statistics& roundStats ) const
+{
+   double abort_factor = problem.getNumIntegralCols() == 0
+                             ? presolveOptions.lpabortfac
+                             : presolveOptions.abortfac;
+   return ( 0.1 * roundStats.nboundchgs + roundStats.ndeletedcols ) <=
+              abort_factor * probUpdate.getNActiveCols() &&
+          ( roundStats.nsidechgs + roundStats.ndeletedrows ) <=
+              abort_factor * probUpdate.getNActiveRows() &&
+          ( roundStats.ncoefchgs <=
+            abort_factor * problem.getConstraintMatrix().getNnz() );
+}
+
+template <typename REAL>
+Delegator
+Presolve<REAL>::increase_round_if_last_run_was_not_successfull(
+    const Problem<REAL>& problem, const ProblemUpdate<REAL>& probUpdate,
+    const Statistics& roundStats, bool unchanged )
+{
+   Delegator next_round;
+   if( !unchanged )
+   {
+      if( is_only_slighlty_changes( problem, probUpdate, roundStats ) )
+      {
+         lastRoundReduced =
+             lastRoundReduced || roundStats.nsidechgs > 0 ||
+             roundStats.nboundchgs > 0 || roundStats.ndeletedcols > 0 ||
+             roundStats.ndeletedrows > 0 || roundStats.ncoefchgs > 0;
+         next_round = increase_delegator( round_to_evaluate );
+      }
+      else
+      {
+         printRoundStats( false, get_round_type( round_to_evaluate ) );
+         lastRoundReduced = true;
+         next_round = Delegator::kFast;
+         nunsuccessful = 0;
+         ++stats.nrounds;
+      }
+   }
+   else
+      next_round = increase_delegator( round_to_evaluate );
+   return next_round;
+}
+
+template <typename REAL>
+Delegator
+Presolve<REAL>::increase_delegator( Delegator delegator )
+{
+   switch( delegator )
+   {
+   case Delegator::kFast:
+      return Delegator::kMedium;
+   case Delegator::kMedium:
+      return Delegator::kExhaustive;
+   case Delegator::kAbort:
+   case Delegator::kExhaustive:
+   case Delegator::kExceeded:
+      break;
+   }
+   return Delegator::kExceeded;
+}
+
+template <typename REAL>
+PresolveStatus
+Presolve<REAL>::evaluateResults()
+{
+   int largestValue = static_cast<int>( PresolveStatus::kUnchanged );
+
+   for( auto& i : results )
+      largestValue = std::max( largestValue, static_cast<int>( i ) );
+
+   return static_cast<PresolveStatus>( largestValue );
+}
+
+template <typename REAL>
+void
+Presolve<REAL>::printRoundStats( bool unchanged, std::string rndtype )
+{
+
+   if( unchanged )
+   {
+      msg.info( "round {:<3} ({:^10}): Unchanged\n", stats.nrounds, rndtype );
+      return;
+   }
+
+   msg.info( "round {:<3} ({:^10}): {:>4} del cols, {:>4} del rows, "
+             "{:>4} chg bounds, {:>4} chg sides, {:>4} chg coeffs, "
+             "{:>4} tsx applied, {:>4} tsx conflicts\n",
+             stats.nrounds, rndtype, stats.ndeletedcols, stats.ndeletedrows,
+             stats.nboundchgs, stats.nsidechgs, stats.ncoefchgs,
+             stats.ntsxapplied, stats.ntsxconflicts );
+}
+template <typename REAL>
+void
+Presolve<REAL>::printPresolversStats()
+{
+   msg.info( "presolved {} rounds: {:>4} del cols, {:>4} del rows, "
+             "{:>4} chg bounds, {:>4} chg sides, {:>4} chg coeffs, "
+             "{:>4} tsx applied, {:>4} tsx conflicts\n",
+             stats.nrounds, stats.ndeletedcols, stats.ndeletedrows,
+             stats.nboundchgs, stats.nsidechgs, stats.ncoefchgs,
+             stats.ntsxapplied, stats.ntsxconflicts );
+   msg.info( "\n {:>18} {:>12} {:>18} {:>18} {:>18} {:>18} \n", "presolver",
+             "nb calls", "success calls(%)", "nb transactions",
+             "tsx applied(%)", "execution time(s)" );
+   for( std::size_t i = 0; i < presolvers.size(); ++i )
+   {
+      presolvers[i]->printStats( msg, presolverStats[i] );
+   }
+
+   msg.info( "\n" );
+}
+
+template <typename REAL>
+void
+Presolve<REAL>::logStatus( const Problem<REAL>& problem,
+                           const Postsolve<REAL>& postsolve ) const
 {
    msg.info( "reduced problem:\n" );
    msg.info( "  reduced rows:     {}\n", problem.getNRows() );
    msg.info( "  reduced columns:  {}\n", problem.getNCols() );
    msg.info( "  reduced int. columns:  {}\n", problem.getNumIntegralCols() );
-   msg.info( "  reduced cont. columns:  {}\n",
-             problem.getNumContinuousCols() );
+   msg.info( "  reduced cont. columns:  {}\n", problem.getNumContinuousCols() );
    msg.info( "  reduced nonzeros: {}\n",
              problem.getConstraintMatrix().getNnz() );
+   if( problem.getNCols() == 0 )
+   {
+      Solution<REAL> solution{};
+      const Solution<REAL> empty_sol{};
+      postsolve.undo( empty_sol, solution );
+      const Problem<REAL>& origprob = postsolve.getOriginalProblem();
+      REAL origobj = origprob.computeSolObjective( solution.primal );
+      msg.info(
+          "problem is solved [optimal solution found] [objective value: {}]\n",
+          origobj );
+   }
+}
+
+template <typename REAL>
+std::string
+Presolve<REAL>::get_round_type( Delegator delegator )
+{
+   switch( delegator )
+   {
+   case Delegator::kFast:
+      return "Fast";
+   case Delegator::kMedium:
+      return "Medium";
+   case Delegator::kExhaustive:
+      return "Exhaustive";
+   case Delegator::kExceeded:
+      return "Final";
+   case Delegator::kAbort:
+      break;
+   }
+   return "Undefined";
 }
 
 } // namespace papilo

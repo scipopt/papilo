@@ -43,10 +43,25 @@ class SimpleProbing : public PresolveMethod<REAL>
       this->setTiming( PresolverTiming::kMedium );
    }
 
-   virtual PresolveStatus
+   PresolveStatus
    execute( const Problem<REAL>& problem,
             const ProblemUpdate<REAL>& problemUpdate, const Num<REAL>& num,
             Reductions<REAL>& reductions ) override;
+
+   void
+   calculateReductionsForSimpleProbing(
+       const Num<REAL>& num, Reductions<REAL>& reductions,
+       const VariableDomains<REAL>& domains,
+       const Vec<papilo::RowActivity<REAL>>& activities, const REAL* rowvals,
+       const int* rowcols, int rowlen, int bincol, REAL binary_coeff );
+
+   PresolveStatus
+   perform_simple_probing_step(
+       const Num<REAL>& num, Reductions<REAL>& reductions,
+       const VariableDomains<REAL>& domains, const Vec<ColFlags>& cflags,
+       const Vec<RowActivity<REAL>>& activities,
+       const ConstraintMatrix<REAL>& constMatrix, const Vec<REAL>& rhs_values,
+       const Vec<int>& rowsize, const Vec<RowFlags>& rflags, int i );
 };
 
 #ifdef PAPILO_USE_EXTERN_TEMPLATES
@@ -64,10 +79,11 @@ SimpleProbing<REAL>::execute( const Problem<REAL>& problem,
 {
    assert( problem.getNumIntegralCols() != 0 );
 
+   PresolveStatus status = PresolveStatus::kUnchanged;
    const auto& domains = problem.getVariableDomains();
    const auto& cflags = domains.flags;
    const auto& activities = problem.getRowActivities();
-   const auto& changedactivities = problemUpdate.getChangedActivities();
+   const auto& changedActivities = problemUpdate.getChangedActivities();
 
    const auto& rowsize = problem.getRowSizes();
 
@@ -76,83 +92,145 @@ SimpleProbing<REAL>::execute( const Problem<REAL>& problem,
    const auto& rhs_values = constMatrix.getRightHandSides();
    const auto& rflags = constMatrix.getRowFlags();
 
-   PresolveStatus result = PresolveStatus::kUnchanged;
    int nrows = problem.getNRows();
 
-   for( int i = 0; i != nrows; ++i )
+   if( problemUpdate.getPresolveOptions().runs_sequentiell() or
+       !problemUpdate.getPresolveOptions().simple_probing_parallel )
    {
-      if( !rflags[i].test( RowFlag::kEquation ) || rowsize[i] <= 2 ||
-          activities[i].ninfmin != 0 || activities[i].ninfmax != 0 ||
-          !num.isEq( activities[i].min + activities[i].max,
-                     2 * rhs_values[i] ) )
-         continue;
-
-      assert( rflags[i].test( RowFlag::kEquation ) );
-      assert( activities[i].ninfmin == 0 && activities[i].ninfmax == 0 );
-      assert( num.isEq( activities[i].min + activities[i].max,
-                        2 * rhs_values[i] ) );
-
-      auto rowvec = constMatrix.getRowCoefficients( i );
-      const REAL* rowvals = rowvec.getValues();
-      const int* rowcols = rowvec.getIndices();
-      const int rowlen = rowvec.getLength();
-
-      REAL bincoef = activities[i].max - rhs_values[i];
-      int bincol = -1;
-
-      for( int k = 0; k != rowlen; ++k )
+      for( int i = 0; i < nrows; ++i )
       {
-         int col = rowcols[k];
-         assert( !cflags[col].test( ColFlag::kUnbounded ) );
-         if( !cflags[col].test( ColFlag::kIntegral ) ||
-             domains.lower_bounds[col] != 0 || domains.upper_bounds[col] != 1 ||
-             !num.isEq( abs( rowvals[k] ), bincoef ) )
-            continue;
-
-         bincol = col;
-         // could be negative
-         bincoef = rowvals[k];
-         break;
+         if( perform_simple_probing_step(
+                 num, reductions, domains, cflags, activities, constMatrix,
+                 rhs_values, rowsize, rflags, i ) == PresolveStatus::kReduced )
+            status = PresolveStatus::kReduced;
       }
+   }
+   else
+   {
+      Vec<Reductions<REAL>> stored_reductions( nrows );
+      tbb::parallel_for( tbb::blocked_range<int>( 0, nrows ),
+                         [&]( const tbb::blocked_range<int>& r ) {
+                            for( int j = r.begin(); j < r.end(); ++j )
+                            {
+                               PresolveStatus s = perform_simple_probing_step(
+                                   num, stored_reductions[j], domains, cflags,
+                                   activities, constMatrix, rhs_values, rowsize,
+                                   rflags, j );
+                               assert( s == PresolveStatus::kUnchanged ||
+                                       s == PresolveStatus::kReduced );
+                               if( s == PresolveStatus::kReduced )
+                                  status = s;
+                            }
+                         } );
 
-      if( bincol != -1 )
+      if( status == PresolveStatus::kUnchanged )
+         return PresolveStatus::kUnchanged;
+
+      for( int i = 0; i < stored_reductions.size(); ++i )
       {
-         assert(
-             num.isEq( abs( bincoef ), activities[i].max - rhs_values[i] ) );
-         assert( domains.lower_bounds[bincol] == 0 );
-         assert( domains.upper_bounds[bincol] == 1 );
-         assert( cflags[bincol].test( ColFlag::kIntegral ) );
-
-         Message::debug(
-             this, "probing on simple equation detected {} subsitutions\n",
-             rowlen - 1 );
-
-         result = PresolveStatus::kReduced;
-         for( int k = 0; k != rowlen; ++k )
+         Reductions<REAL> reds = stored_reductions[i];
+         if( reds.size() > 0 )
          {
-            int col = rowcols[k];
-            if( col == bincol )
-               continue;
-
-            REAL factor;
-            REAL offset;
-            if( bincoef * rowvals[k] > 0 )
+            for( const auto& transaction : reds.getTransactions() )
             {
-               factor =
-                   -( domains.upper_bounds[col] - domains.lower_bounds[col] );
-               offset = domains.upper_bounds[col];
+               int start = transaction.start;
+               int end = transaction.end;
+               TransactionGuard<REAL> guard{ reductions };
+               for( int c = start; c < end; c++ )
+               {
+                  Reduction<REAL>& reduction = reds.getReduction( c );
+                  reductions.add_reduction( reduction.row,
+                                            reduction.col, reduction.newval );
+               }
             }
-            else
-            {
-               factor = domains.upper_bounds[col] - domains.lower_bounds[col];
-               offset = domains.lower_bounds[col];
-            }
-
-            reductions.replaceCol( col, bincol, factor, offset );
          }
       }
    }
-   return result;
+
+   return status;
+}
+
+template <typename REAL>
+PresolveStatus
+SimpleProbing<REAL>::perform_simple_probing_step(
+    const Num<REAL>& num, Reductions<REAL>& reductions,
+    const VariableDomains<REAL>& domains, const Vec<ColFlags>& cflags,
+    const Vec<RowActivity<REAL>>& activities,
+    const ConstraintMatrix<REAL>& constMatrix, const Vec<REAL>& rhs_values,
+    const Vec<int>& rowsize, const Vec<RowFlags>& rflags, int i )
+{
+   PresolveStatus status = PresolveStatus::kUnchanged;
+   if( !rflags[i].test( RowFlag::kEquation ) || rowsize[i] <= 2 ||
+       activities[i].ninfmin != 0 || activities[i].ninfmax != 0 ||
+       !num.isEq( activities[i].min + activities[i].max, 2 * rhs_values[i] ) )
+      return PresolveStatus::kUnchanged;
+
+   assert( rflags[i].test( RowFlag::kEquation ) );
+   assert( activities[i].ninfmin == 0 && activities[i].ninfmax == 0 );
+   assert(
+       num.isEq( activities[i].min + activities[i].max, 2 * rhs_values[i] ) );
+
+   auto rowvec = constMatrix.getRowCoefficients( i );
+   const REAL* rowvals = rowvec.getValues();
+   const int* rowcols = rowvec.getIndices();
+   const int rowlen = rowvec.getLength();
+
+   REAL bincoef = activities[i].max - rhs_values[i];
+
+   for( int k = 0; k != rowlen; ++k )
+   {
+      int col = rowcols[k];
+      assert( !cflags[col].test( ColFlag::kUnbounded ) );
+      if( !cflags[col].test( ColFlag::kIntegral ) ||
+          domains.lower_bounds[col] != 0 || domains.upper_bounds[col] != 1 ||
+          !num.isEq( abs( rowvals[k] ), bincoef ) )
+         continue;
+
+      assert( num.isEq( abs( bincoef ), activities[i].max - rhs_values[i] ) );
+      assert( domains.lower_bounds[col] == 0 );
+      assert( domains.upper_bounds[col] == 1 );
+      assert( cflags[col].test( ColFlag::kIntegral ) );
+
+      Message::debug( this,
+                      "probing on simple equation detected {} subsitutions\n",
+                      rowlen - 1 );
+      calculateReductionsForSimpleProbing( num, reductions, domains, activities,
+                                           rowvals, rowcols, rowlen, col,
+                                           rowvals[k] );
+      status = PresolveStatus::kReduced;
+   }
+   return status;
+}
+template <typename REAL>
+void
+SimpleProbing<REAL>::calculateReductionsForSimpleProbing(
+    const Num<REAL>& num, Reductions<REAL>& reductions,
+    const VariableDomains<REAL>& domains,
+    const Vec<papilo::RowActivity<REAL>>& activities, const REAL* rowvals,
+    const int* rowcols, int rowlen, int bincol, REAL binary_coeff )
+{
+   for( int k = 0; k != rowlen; ++k )
+   {
+      int col = rowcols[k];
+      if( col == bincol )
+         continue;
+
+      REAL factor;
+      REAL offset;
+      if( ( rowvals[k] > 0 && binary_coeff > 0 ) ||
+          ( rowvals[k] < 0 && binary_coeff < 0 ) )
+      {
+         factor = domains.lower_bounds[col] - domains.upper_bounds[col];
+         offset = domains.upper_bounds[col];
+      }
+      else
+      {
+         factor = domains.upper_bounds[col] - domains.lower_bounds[col];
+         offset = domains.lower_bounds[col];
+      }
+
+      reductions.replaceCol( col, bincol, factor, offset );
+   }
 }
 
 } // namespace papilo

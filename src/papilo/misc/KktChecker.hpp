@@ -89,7 +89,8 @@ class KktState
    const Vec<REAL>& colLower;
    const Vec<REAL>& colUpper;
 
-   // zero tolerance todo set on init
+   // zero tolerance
+   // todo set on initialisation and not "static"
    REAL tol = 10e-8;
 
  public:

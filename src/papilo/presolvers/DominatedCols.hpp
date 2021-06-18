@@ -337,7 +337,6 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
    tbb::concurrent_vector<DomcolReduction> domcolreductions;
 
    // scan unbounded columns if they dominate other columns
-   // for( int i : unboundedcols ) // = 0; i != ncols; ++i )
    tbb::parallel_for(
        tbb::blocked_range<int>( 0, unboundedcols.size() ),
        [&]( const tbb::blocked_range<int>& r ) {
@@ -488,6 +487,7 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
          TransactionGuard<REAL> tg{ reductions };
          reductions.lockCol( dr.col1 );
          reductions.lockColBounds( dr.col1 );
+         reductions.lockCol( dr.col2 );
          reductions.lockColBounds( dr.col2 );
          if( dr.implrowlock > 0 )
             reductions.lockRow( dr.implrowlock );

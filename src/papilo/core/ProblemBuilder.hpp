@@ -347,14 +347,14 @@ class ProblemBuilder
    {
       Problem<REAL> problem;
 
-      int nrows = lhs.size();
-      int ncols = obj.coefficients.size();
+      int nRows = lhs.size();
+      int nColumns = obj.coefficients.size();
 
       problem.setName( std::move( probname ) );
 
       problem.setConstraintMatrix( ConstraintMatrix<REAL>{
-          matrix_buffer.buildCSR( nrows, ncols ),
-          matrix_buffer.buildCSC( nrows, ncols ), std::move( lhs ),
+          matrix_buffer.buildCSR( nRows, nColumns ),
+          matrix_buffer.buildCSC( nRows, nColumns ), std::move( lhs ),
           std::move( rhs ), std::move( rflags ) } );
 
       matrix_buffer.clear();

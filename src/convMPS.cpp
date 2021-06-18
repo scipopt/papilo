@@ -171,9 +171,9 @@ main( int argc, char* argv[] )
    }
    assert( argc == 2 );
 
-   Problem<double> prob = MpsParser<double>::loadProblem( argv[1] );
+   auto prob = MpsParser<double>::loadProblem( argv[1] );
 
-   convMPS( prob );
+   convMPS( prob.get() );
 
    return 0;
 }

@@ -44,10 +44,20 @@ class ImplIntDetection : public PresolveMethod<REAL>
       this->setType( PresolverType::kMixedCols );
    }
 
-   virtual PresolveStatus
+   PresolveStatus
    execute( const Problem<REAL>& problem,
             const ProblemUpdate<REAL>& problemUpdate, const Num<REAL>& num,
             Reductions<REAL>& reductions ) override;
+
+ private:
+   PresolveStatus
+   perform_implied_integer_task(
+       const ProblemUpdate<REAL>& problemUpdate, const Num<REAL>& num,
+       Reductions<REAL>& reductions, const Vec<ColFlags>& cflags,
+       const ConstraintMatrix<REAL>& consmatrix, const Vec<REAL>& lhs_values,
+       const Vec<REAL>& rhs_values, const Vec<REAL>& lower_bounds,
+       const Vec<REAL>& upper_bounds, const Vec<RowFlags>& rflags,
+       int col ) const;
 };
 
 #ifdef PAPILO_USE_EXTERN_TEMPLATES
@@ -80,136 +90,189 @@ ImplIntDetection<REAL>::execute( const Problem<REAL>& problem,
 
    PresolveStatus result = PresolveStatus::kUnchanged;
 
-   for( int col = 0; col != ncols; ++col )
+   if( problemUpdate.getPresolveOptions().runs_sequentiell() or
+      !problemUpdate.getPresolveOptions().implied_integer_parallel )
    {
-      if( cflags[col].test( ColFlag::kIntegral, ColFlag::kImplInt,
-                            ColFlag::kInactive ) )
-         continue;
-
-      bool testinequalities =
-          problemUpdate.getPresolveOptions().dualreds == 2 ? true : false;
-      bool impliedint = false;
-
-      auto colvec = consmatrix.getColumnCoefficients( col );
-      int collen = colvec.getLength();
-      const int* colrows = colvec.getIndices();
-      const REAL* colvals = colvec.getValues();
-
-      for( int i = 0; i != collen; ++i )
+      for( int col = 0; col < ncols; ++col )
       {
-         int row = colrows[i];
+         if( perform_implied_integer_task(
+                 problemUpdate, num, reductions, cflags, consmatrix, lhs_values,
+                 rhs_values, lower_bounds, upper_bounds, rflags,
+                 col ) == PresolveStatus::kReduced )
+            result = PresolveStatus::kReduced;
+      }
+   }
+   else
+   {
+      Vec<Reductions<REAL>> stored_reductions( ncols );
+      tbb::parallel_for( tbb::blocked_range<int>( 0, ncols ),
+                         [&]( const tbb::blocked_range<int>& r ) {
+                            for( int col = r.begin(); col < r.end(); ++col )
+                            {
+                               if( perform_implied_integer_task(
+                                       problemUpdate, num,
+                                       stored_reductions[col], cflags,
+                                       consmatrix, lhs_values, rhs_values,
+                                       lower_bounds, upper_bounds, rflags,
+                                       col ) == PresolveStatus::kReduced )
+                                  result = PresolveStatus::kReduced;
+                            }
+                         } );
 
-         if( rflags[row].test( RowFlag::kRedundant ) ||
-             !rflags[row].test( RowFlag::kEquation ) )
-            continue;
+      if( result == PresolveStatus::kUnchanged )
+         return PresolveStatus::kUnchanged;
 
-         testinequalities = false;
-         REAL scale = 1 / colvals[i];
-         if( !num.isIntegral( scale * rhs_values[row] ) )
-            continue;
-
-         auto rowvec = consmatrix.getRowCoefficients( row );
-         int rowlen = rowvec.getLength();
-         const int* rowcols = rowvec.getIndices();
-         const REAL* rowvals = rowvec.getValues();
-
-         impliedint = true;
-
-         for( int j = 0; j != rowlen; ++j )
+      for( int i = 0; i < stored_reductions.size(); ++i )
+      {
+         Reductions<REAL> reds = stored_reductions[i];
+         if( reds.size() > 0 )
          {
-            int rowcol = rowcols[j];
-
-            if( rowcol == col )
-               continue;
-
-            if( !cflags[rowcol].test( ColFlag::kIntegral, ColFlag::kImplInt ) ||
-                !num.isIntegral( scale * rowvals[j] ) )
+            for( const auto& reduction : reds.getReductions() )
             {
-               impliedint = false;
-               break;
+               reductions.add_reduction( reduction.row, reduction.col,
+                                         reduction.newval );
             }
          }
-
-         if( impliedint )
-            break;
-      }
-
-      if( impliedint )
-      {
-         // add reduction
-         reductions.impliedInteger( col );
-         result = PresolveStatus::kReduced;
-         continue;
-      }
-
-      if( !testinequalities )
-         continue;
-
-      if( !cflags[col].test( ColFlag::kLbInf ) &&
-          !num.isIntegral( lower_bounds[col] ) )
-         continue;
-
-      if( !cflags[col].test( ColFlag::kUbInf ) &&
-          !num.isIntegral( upper_bounds[col] ) )
-         continue;
-
-      impliedint = true;
-
-      for( int i = 0; i != collen; ++i )
-      {
-         int row = colrows[i];
-
-         if( rflags[row].test( RowFlag::kRedundant ) )
-            continue;
-
-         REAL scale = 1 / colvals[i];
-
-         if( !rflags[row].test( RowFlag::kRhsInf ) &&
-             !num.isIntegral( scale * rhs_values[row] ) )
-         {
-            impliedint = false;
-            break;
-         }
-
-         if( !rflags[row].test( RowFlag::kLhsInf ) &&
-             !num.isIntegral( scale * lhs_values[row] ) )
-         {
-            impliedint = false;
-            break;
-         }
-
-         auto rowvec = consmatrix.getRowCoefficients( row );
-         int rowlen = rowvec.getLength();
-         const int* rowcols = rowvec.getIndices();
-         const REAL* rowvals = rowvec.getValues();
-
-         for( int j = 0; j != rowlen; ++j )
-         {
-            int rowcol = rowcols[j];
-
-            if( rowcol == col )
-               continue;
-
-            if( !cflags[rowcol].test( ColFlag::kIntegral, ColFlag::kImplInt ) ||
-                !num.isIntegral( scale * rowvals[j] ) )
-            {
-               impliedint = false;
-               break;
-            }
-         }
-
-         if( !impliedint )
-            break;
-      }
-
-      if( impliedint )
-      {
-         // add reduction
-         reductions.impliedInteger( col );
-         result = PresolveStatus::kReduced;
       }
    }
 
+   return result;
+}
+
+template <typename REAL>
+PresolveStatus
+ImplIntDetection<REAL>::perform_implied_integer_task(
+    const ProblemUpdate<REAL>& problemUpdate, const Num<REAL>& num,
+    Reductions<REAL>& reductions, const Vec<ColFlags>& cflags,
+    const ConstraintMatrix<REAL>& consmatrix, const Vec<REAL>& lhs_values,
+    const Vec<REAL>& rhs_values, const Vec<REAL>& lower_bounds,
+    const Vec<REAL>& upper_bounds, const Vec<RowFlags>& rflags, int col ) const
+{
+   PresolveStatus result = PresolveStatus::kUnchanged;
+   if( cflags[col].test( ColFlag::kIntegral, ColFlag::kImplInt,
+                         ColFlag::kInactive ) )
+      return PresolveStatus::kUnchanged;
+
+   bool testinequalities = problemUpdate.getPresolveOptions().dualreds == 2;
+   bool impliedint = false;
+
+   auto colvec = consmatrix.getColumnCoefficients( col );
+   int collen = colvec.getLength();
+   const int* colrows = colvec.getIndices();
+   const REAL* colvals = colvec.getValues();
+
+   for( int i = 0; i != collen; ++i )
+   {
+      int row = colrows[i];
+
+      if( rflags[row].test( RowFlag::kRedundant ) ||
+          !rflags[row].test( RowFlag::kEquation ) )
+         continue;
+
+      testinequalities = false;
+      REAL scale = 1 / colvals[i];
+      if( !num.isIntegral( scale * rhs_values[row] ) )
+         continue;
+
+      auto rowvec = consmatrix.getRowCoefficients( row );
+      int rowlen = rowvec.getLength();
+      const int* rowcols = rowvec.getIndices();
+      const REAL* rowvals = rowvec.getValues();
+
+      impliedint = true;
+
+      for( int j = 0; j != rowlen; ++j )
+      {
+         int rowcol = rowcols[j];
+
+         if( rowcol == col )
+            continue;
+
+         if( !cflags[rowcol].test( ColFlag::kIntegral, ColFlag::kImplInt ) ||
+             !num.isIntegral( scale * rowvals[j] ) )
+         {
+            impliedint = false;
+            break;
+         }
+      }
+
+      if( impliedint )
+         break;
+   }
+
+   if( impliedint )
+   {
+      // add reduction
+      reductions.impliedInteger( col );
+      return PresolveStatus::kReduced;
+   }
+
+   if( !testinequalities )
+      return PresolveStatus::kUnchanged;
+
+   if( !cflags[col].test( ColFlag::kLbInf ) &&
+       !num.isIntegral( lower_bounds[col] ) )
+      return PresolveStatus::kUnchanged;
+
+   if( !cflags[col].test( ColFlag::kUbInf ) &&
+       !num.isIntegral( upper_bounds[col] ) )
+      return PresolveStatus::kUnchanged;
+
+   impliedint = true;
+
+   for( int i = 0; i != collen; ++i )
+   {
+      int row = colrows[i];
+
+      if( rflags[row].test( RowFlag::kRedundant ) )
+         continue;
+
+      REAL scale = 1 / colvals[i];
+
+      if( !rflags[row].test( RowFlag::kRhsInf ) &&
+          !num.isIntegral( scale * rhs_values[row] ) )
+      {
+         impliedint = false;
+         break;
+      }
+
+      if( !rflags[row].test( RowFlag::kLhsInf ) &&
+          !num.isIntegral( scale * lhs_values[row] ) )
+      {
+         impliedint = false;
+         break;
+      }
+
+      auto rowvec = consmatrix.getRowCoefficients( row );
+      int rowlen = rowvec.getLength();
+      const int* rowcols = rowvec.getIndices();
+      const REAL* rowvals = rowvec.getValues();
+
+      for( int j = 0; j != rowlen; ++j )
+      {
+         int rowcol = rowcols[j];
+
+         if( rowcol == col )
+            continue;
+
+         if( !cflags[rowcol].test( ColFlag::kIntegral, ColFlag::kImplInt ) ||
+             !num.isIntegral( scale * rowvals[j] ) )
+         {
+            impliedint = false;
+            break;
+         }
+      }
+
+      if( !impliedint )
+         break;
+   }
+
+   if( impliedint )
+   {
+      // add reduction
+      reductions.impliedInteger( col );
+      result = PresolveStatus::kReduced;
+   }
    return result;
 }
 

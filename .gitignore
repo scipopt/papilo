@@ -41,10 +41,11 @@ check/IP
 check/LP
 check/MINLP
 check/instancedata
-
+check/IP/miplib2017-benchmark/*
 
 #Generated Files
 build/
 cmake-build-debug/
 cmake-build-debug-coverage/
 external/tbb/cmake/
+solutions.test

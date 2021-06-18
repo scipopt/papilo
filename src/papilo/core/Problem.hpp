@@ -352,6 +352,7 @@ class Problem
 
    /// fix infinite bounds to the correct value for presolve
    /// checking for double values at the moment
+   // TODO: why isn't this called anywhere?
    void
    fixInfiniteBounds( REAL inf )
    {
@@ -464,10 +465,22 @@ class Problem
          REAL activity = activitySum.get();
 
          if( !rflags[i].test( RowFlag::kRhsInf ) && activity > rhs[i] )
+         {
+            Message::debug( this,
+                            "the activity {} of constraint {}  "
+                            "{} is greater than the righthandside {}\n",
+                            activity, i, rhs[i] );
             rowviolation = num.max( rowviolation, activity - rhs[i] );
+         }
 
          if( !rflags[i].test( RowFlag::kLhsInf ) && activity < lhs[i] )
+         {
+            Message::debug( this,
+                            "the activity {} of constraint {}  "
+                            "{} is greater than the lefthandside {}\n",
+                            activity, i, lhs[i] );
             rowviolation = num.max( rowviolation, lhs[i] - activity );
+         }
       }
 
       return num.isFeasZero( boundviolation ) &&

@@ -50,32 +50,21 @@ namespace papilo
 enum class PostsolveType : int
 {
    kPrimal = 0,
-   kFull = 1,
 };
 
 enum class ReductionType : int
 {
-   kFixedCol,
-   kSubstitutedCol,
-   kParallelCol,
-   kSingletonRow,
-   kRedundantRow,
-   kDeletedCol,
-   kBoundChange,
-   kColumnDualValue,
-   kRowDualValue,
-   kReducedBoundsCost,
-   kSaveRow,
-   kSaveCol
+   kFixedCol = 0,
+   kSubstitutedCol = 1,
+   kParallelCol = 2,
+   kFixedInfCol = 5
 };
 
 enum class PostsolveStatus : int
 {
    kOk,
-   kFail
 };
 
-// forward declarations
 template <typename REAL>
 class SparseVectorView;
 
@@ -103,6 +92,7 @@ class Postsolve
    PostsolveType postsolveType = PostsolveType::kPrimal;
 
    Vec<ReductionType> types;
+
    Vec<int> indices;
    Vec<REAL> values;
    Vec<int> start;
@@ -120,7 +110,7 @@ class Postsolve
 
    mutable Kkt checker;
 
-   Postsolve() {}
+   Postsolve() = default;
 
    Postsolve( const int nrows, const int ncols )
    {
@@ -163,45 +153,12 @@ class Postsolve
       this->problem.compress( true );
    }
 
-   int
-   notifySavedRow( int row, const SparseVectorView<REAL>& coefficients,
-                   REAL lhs, REAL rhs, const RowFlags& flags );
+   void
+   notifyFixedCol( int col, REAL val );
 
    void
-   notifyModifiedRow( int row );
-
-   void
-   notifyRedundantRow( const int row );
-
-   void
-   notifyDeletedCol( const int col );
-
-   void
-   notifyBoundChange( const bool is_row, const bool is_lower, const int col,
-                      const int row, const REAL old_bound,
-                      const REAL new_bound );
-
-   void
-   notifyReducedBoundsAndCost( const Vec<REAL>& col_lb, const Vec<REAL>& col_ub,
-                               const Vec<REAL>& row_lb, const Vec<REAL>& row_ub,
-                               const Vec<REAL>& cost,
-                               const Vec<RowFlags>& row_flags,
-                               const Vec<ColFlags>& col_flags );
-
-   // todo: modify with colvec and col cost so if dual postsolve
-   // col values are added so we can get dual value
-   void
-   notifyFixedCol( const int col, const REAL val,
-                   const SparseVectorView<REAL>& colvec,
-                   const Vec<REAL>& cost );
-
-   void
-   notifySingletonRow( const int row, const int col, const REAL coeff,
-                       const Vec<REAL>& cost,
-                       const SparseVectorView<REAL>& colvec );
-
-   void
-   notifyDualValue( bool is_column_dual, int index, REAL value );
+   notifyFixedInfCol( int col, REAL val, REAL bound,
+                      const Problem<REAL>& currentProblem );
 
    void
    notifySubstitution( int col, SparseVectorView<REAL> equalityLHS,
@@ -284,8 +241,15 @@ class Postsolve
       start.push_back( values.size() );
    }
 
-   // TODO add mechanism for saving columns as well
-   Vec<int> row_stack_index;
+   void
+   push_back_row( int row, const Problem<REAL>& currentProblem );
+
+   REAL
+   calculate_row_value_for_infinity_column( REAL lhs, REAL rhs, int rowLength,
+                                            int column, const int* row_indices,
+                                            const REAL* coefficients,
+                                            Vec<REAL>& current_solution,
+                                            bool is_negative ) const;
 };
 
 #ifdef PAPILO_USE_EXTERN_TEMPLATES
@@ -545,36 +509,18 @@ Postsolve<REAL>::notifyDualValue( bool is_column_dual, int index, REAL value )
 
 template <typename REAL>
 void
-Postsolve<REAL>::notifyModifiedRow( int row )
+Postsolve<REAL>::push_back_row( int row, const Problem<REAL>& currentProblem )
 {
-   int origrow = origrow_mapping[row];
-   row_stack_index[origrow] = -1;
-}
-
-template <typename REAL>
-int
-Postsolve<REAL>::notifySavedRow( int row,
-                                 const SparseVectorView<REAL>& coefficients,
-                                 REAL lhs, REAL rhs, const RowFlags& flags )
-{
-   // initialize arrays if necessary
-   if( row_stack_index.size() == 0 )
-   {
-      int nrows = problem.getNRows();
-      row_stack_index.resize( nrows, -1 );
-   }
-
-   // check if row is valid on the postsolve stack
-   if( row_stack_index[row] >= 0 )
-      return row_stack_index[row];
+   const auto& coefficients =
+       currentProblem.getConstraintMatrix().getRowCoefficients( row );
+   REAL lhs = currentProblem.getConstraintMatrix().getLeftHandSides()[row];
+   REAL rhs = currentProblem.getConstraintMatrix().getRightHandSides()[row];
+   const auto& flags = currentProblem.getConstraintMatrix().getRowFlags()[row];
 
    const REAL* coefs = coefficients.getValues();
    const int* columns = coefficients.getIndices();
    const int length = coefficients.getLength();
 
-   types.push_back( ReductionType::kSaveRow );
-
-   int stack_index = indices.size();
    indices.push_back( origrow_mapping[row] );
    values.push_back( (double)length );
 
@@ -594,15 +540,30 @@ Postsolve<REAL>::notifySavedRow( int row,
 
    for( int i = 0; i < length; ++i )
    {
-      indices.push_back( columns[i] );
+      indices.push_back( origcol_mapping[columns[i]] );
       values.push_back( coefs[i] );
    }
+}
+
+template <typename REAL>
+void
+Postsolve<REAL>::notifyFixedInfCol( int col, REAL val, REAL bound,
+                                    const Problem<REAL>& currentProblem )
+{
+   types.push_back( ReductionType::kFixedInfCol );
+   indices.push_back( origcol_mapping[col] );
+   values.push_back( val );
+   indices.push_back( 0 );
+   values.push_back( bound );
+
+   const auto& coefficients =
+       currentProblem.getConstraintMatrix().getColumnCoefficients( col );
+   const int* row_indices = coefficients.getIndices();
+
+   for( int i = 0; i < coefficients.getLength(); i++ )
+      push_back_row( row_indices[i], currentProblem );
 
    finishNotify();
-
-   row_stack_index[row] = stack_index;
-
-   return stack_index;
 }
 
 template <typename REAL>
@@ -627,7 +588,6 @@ Postsolve<REAL>::notifySubstitution( int col,
 
    types.push_back( ReductionType::kSubstitutedCol );
    values.push_back( equalityRHS );
-   // values.insert( values.end(), coefs, coefs + length );
    indices.push_back( origcol_mapping[col] );
    for( int i = 0; i < length; ++i )
    {
@@ -691,6 +651,7 @@ PostsolveStatus
 Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
                        Solution<REAL>& originalSolution ) const
 {
+
    const Vec<REAL>& reducedSol = reducedSolution.primal;
    Vec<REAL>& origSol = originalSolution.primal;
 
@@ -737,13 +698,13 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
    if( origrow_mapping.size() < nRowsOriginal ||
        origcol_mapping.size() < nColsOriginal )
    {
-      CheckLevel level = CheckLevel::Primal_only;
-      if( originalSolution.type == SolutionType::kPrimalDual )
-         CheckLevel level = CheckLevel::Primal_and_dual;
-
+      // originalSolution is already the reduced solution padded with zeros
       auto kktState =
           checker.initState( ProblemType::kReduced, originalSolution,
-                             origcol_mapping, origrow_mapping, level );
+                             origcol_mapping, origrow_mapping, checker.level );
+
+      if( originalSolution.type == SolutionType::kPrimalDual )
+         checker.level = CheckLevel::Solver_and_primal_feas;
 
       checker.checkSolution( kktState );
       checker.level = CheckLevel::After_each_step_primal_only;
@@ -846,84 +807,14 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
 
       switch( type )
       {
-      case ReductionType::kReducedBoundsCost:
-      {
-         // get column bounds
-         for( int j = 0; j < origcol_mapping.size(); j++ )
-         {
-            int origcol = origcol_mapping[j];
-            int index = first + 2 * j;
-            col_lower[origcol] = values[index];
-            col_upper[origcol] = values[index + 1];
-            col_bound_lower[origcol] = indices[index];
-            col_bound_upper[origcol] = indices[index + 1];
-         }
-
-         // get row bounds
-         int first_row_bounds = first + 2 * origcol_mapping.size();
-         for( int i = 0; i < origrow_mapping.size(); i++ )
-         {
-            int origrow = origrow_mapping[i];
-            int index = first_row_bounds + 2 * i;
-            row_lower[origrow] = values[index];
-            row_upper[origrow] = values[index + 1];
-            row_bound_lower[origrow] = indices[index];
-            row_bound_upper[origrow] = indices[index + 1];
-         }
-
-         // get cost
-         int first_cost = first_row_bounds + 2 * origrow_mapping.size();
-         for( int j = 0; j < origcol_mapping.size(); j++ )
-         {
-            int origcol = origcol_mapping[j];
-            col_cost[origcol] = values[first_cost + j];
-            assert( j == indices[first_cost + j] );
-         }
-         break;
-      }
-      case ReductionType::kColumnDualValue:
-         originalSolution.col_dual[indices[first]] = values[indices[first]];
-         break;
-      case ReductionType::kRedundantRow:
-         checker.undoRedundantRow( indices[first] );
-         break;
-      case ReductionType::kDeletedCol:
-         checker.undoDeletedCol( indices[first] );
-         break;
-      case ReductionType::kRowDualValue:
-         originalSolution.row_dual[indices[first]] = values[indices[first]];
-         break;
-      case ReductionType::kSaveRow:
-      {
-         // TODO I think this and the SAVE_COL step should just be skipped
-         //     we only want to restore redundant rows that have been removed
-         //     not all saved rows. Saved row has no logical implications for
-         //     postsolve it should just give the deleted row a new index within
-         //     the postsolve structure this index would be used by the undo
-         //     redundant col I guess.
-         int row = indices[first];
-         int length = (int)values[first];
-         bool lb_inf = false;
-         bool ub_inf = false;
-         if( indices[first + 1] )
-            lb_inf = true;
-         if( indices[first + 2] )
-            ub_inf = true;
-
-         checker.addRowToProblem( row, length, &values[first + 3],
-                                  &indices[first + 3], values[first + 1],
-                                  values[first + 2], lb_inf, ub_inf );
-         break;
-      }
-      case ReductionType::kSaveCol:
-      {
-         break;
-      }
       case ReductionType::kFixedCol:
       {
          // At the moment saves column to the postsolve stack. todo:
          // use notifySavedCol and current index of column on the stack.
          int col = indices[first];
+         // todo: move to KKTChecker
+         // assert( !solSet[col] );
+         // solSet[col] = true;
          origSol[col] = values[first];
          checker.undoFixedCol( col, values[first] );
          // todo: checker notify dual value if changed
@@ -948,118 +839,75 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
          }
          break;
       }
-      case ReductionType::kSingletonRow:
+      case ReductionType::kFixedInfCol:
       {
-         int row = indices[first];
-         int col = indices[first + 1];
-         if( originalSolution.type == SolutionType::kPrimalDual )
-         // code below saves column on stack for the calculation of dual values.
-         // todo: use column on stack
+         int column = indices[first];
+         REAL bound = values[first + 1];
+         REAL solution = bound;
+
+         bool isNegativeInfinity = values[first] < 0;
+         if( isNegativeInfinity )
          {
-            REAL coeff = values[first + 1];
-            REAL cost = values[first + 2];
-            assert( indices[first + 1] == col );
-
-            REAL value = 0;
-            int col_length_minus_one = indices[first + 2];
-
-            // no need to check for solSetRow because if it iz zero then the
-            // row_dual value is zero.
-            for( int i = 0; i < col_length_minus_one; ++i )
+            int current_row_counter = first + 2;
+            while( current_row_counter != last )
             {
-               int index = first + 3 + i;
-               value = value + values[index] *
-                                   originalSolution.row_dual[indices[index]];
+               int length = (int)values[current_row_counter];
+
+               REAL lhs = values[current_row_counter + 1];
+               REAL rhs = values[current_row_counter + 2];
+               const REAL* coefficients = &values[current_row_counter + 3];
+               const int* row_indices = &indices[current_row_counter + 3];
+
+               REAL newValue = calculate_row_value_for_infinity_column(
+                   lhs, rhs, length, column, row_indices, coefficients, origSol,
+                   true );
+               if( newValue < solution )
+               {
+                  solution = newValue;
+               }
+               current_row_counter += 3 + length;
             }
+            if( problem.getColFlags()[column].test(
+                    papilo::ColFlag::kIntegral ) )
+            {
+               solution = num.epsFloor( solution );
+            }
+            origSol[column] = solution;
+         }
+         else
+         {
+            int current_row_counter = first + 2;
+            while( current_row_counter != last )
+            {
+               int length = (int)values[current_row_counter];
 
-            value = cost - value;
-            value = value / coeff;
+               REAL lhs = values[current_row_counter + 1];
+               REAL rhs = values[current_row_counter + 2];
+               const REAL* coefficients = &values[current_row_counter + 3];
+               const int* row_indices = &indices[current_row_counter + 3];
 
-            originalSolution.row_dual[row] = value;
-            originalSolution.col_dual[col] = 0;
+               REAL newValue = calculate_row_value_for_infinity_column(
+                   lhs, rhs, length, column, row_indices, coefficients, origSol,
+                   false );
+               if( newValue > solution )
+               {
+                  solution = newValue;
+               }
+               current_row_counter += 3 + length;
+            }
+            if( problem.getColFlags()[column].test(
+                    papilo::ColFlag::kIntegral ) )
+            {
+               solution = num.epsCeil( solution );
+            }
+            origSol[column] = solution;
          }
          checker.undoSingletonRow( row );
          break;
       }
-      case ReductionType::kBoundChange:
-      {
-         // -1 column cost
-         // 0 primal row lower
-         // 1 primal row upper
-         // 2 primal col lower
-         // 3 primal col upper
-         // .. dual strong
-         // .. dual weak
-         int type = indices[first];
-         int row = indices[first + 1];
-         int col = indices[first + 2];
-         REAL old_value = values[first + 1];
-         REAL new_value = values[first + 2];
-
-         // todo: also set flags for rows and columns which have a bound now
-         switch( type )
-         {
-         case -1:
-            col_cost[col] = old_value;
-            break;
-         case 0:
-            row_lower[row] = old_value;
-            row_lower_from_col[row] = col;
-            break;
-         case 1:
-            row_upper[row] = old_value;
-            row_upper_from_col[row] = col;
-            break;
-         case 2:
-            col_lower[col] = old_value;
-            col_lower_from_row[col] = row;
-            break;
-         case 3:
-            col_upper[col] = old_value;
-            col_upper_from_row[col] = row;
-            break;
-         }
-
-         break;
-      }
-         // todo: modify, unused right now
-         // case ReductionType::kRedundantRow:
-         //{
-         // if( originalSolution.type == SolutionType::kPrimalDual )
-         // {
-         //    int row = indices[first];
-         //    int col_lo = indices[first + 1];
-         //    int col_up = indices[first + 2];
-         //    // todo: it happens sometimes like deteq8, debug.
-         //    assert( ( col_lo == -1 ) != ( col_up == -1 ) );
-
-         //    REAL coeff = 0;
-         //    int col = 0;
-         //    if( col_lo != -1 )
-         //    {
-         //       col = col_lo;
-         //       coeff = values[first + 1];
-         //    }
-         //    else
-         //    {
-         //       col = col_up;
-         //       coeff = values[first + 2];
-         //    }
-
-         //    originalSolution.row_dual[row] =
-         //        originalSolution.row_dual[row] +
-         //        originalSolution.col_dual[col] / coeff;
-         //    originalSolution.col_dual[col] = 0;
-
-         //    solSetRow[row] = true;
-         // }
-         //         break;
-         //     }
       case ReductionType::kSubstitutedCol:
       {
          int col = indices[first];
-         checker.undoSubstitutedCol( col );
-
          REAL side = values[first];
          REAL colCoef = 0.0;
          StableSum<REAL> sumcols;
@@ -1069,7 +917,6 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
                colCoef = values[j];
             else
             {
-               // assert( solSet[indices[j]] );
                sumcols.add( origSol[indices[j]] * values[j] );
             }
          }
@@ -1097,28 +944,6 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
          const REAL& col2ub = values[first + 3];
          const REAL& col2scale = values[first + 4];
          const REAL& solval = origSol[col2];
-         // assert( !solSet[col1] );
-         // assert( solSet[col2] );
-
-         // fmt::print( "uncrushing solval {} for parallel cols with scale
-         // {}: col1 "
-         //            "([{},{}], {}) col2 ([{},{}], {})\n",
-         //            solval,
-         //            col2scale,
-         //            col1boundFlags & IS_LBINF
-         //                ? -std::numeric_limits<double>::infinity()
-         //                : double( col1lb ),
-         //            col1boundFlags& IS_UBINF
-         //                ? std::numeric_limits<double>::infinity()
-         //                : double( col1ub ),
-         //            col1boundFlags& IS_INTEGRAL ? "int." : "cont.",
-         //            col2boundFlags& IS_LBINF
-         //                ? -std::numeric_limits<double>::infinity()
-         //                : double( col2lb ),
-         //            col2boundFlags& IS_UBINF
-         //                ? std::numeric_limits<double>::infinity()
-         //                : double( col2ub ),
-         //            col2boundFlags& IS_INTEGRAL ? "int." : "cont." );
 
          REAL col1val;
          REAL col2val;
@@ -1244,11 +1069,45 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
       }
    }
 
+   // todo: move to KKTChecker
+   // assert( std::all_of( solSet.begin(), solSet.end(),
+   //                      []( uint8_t isset ) { return isset; } ) );
+
    auto kktStateOriginalProblem = checker.initState(
        ProblemType::kOriginal, originalSolution, checker.level );
    checker.checkSolution( kktStateOriginalProblem );
 
    return PostsolveStatus::kOk;
+}
+
+template <typename REAL>
+REAL
+Postsolve<REAL>::calculate_row_value_for_infinity_column(
+    REAL lhs, REAL rhs, int rowLength, int column, const int* row_indices,
+    const REAL* coefficients, Vec<REAL>& current_solution,
+    bool is_negative ) const
+{
+   StableSum<REAL> stableSum;
+   if( ( coefficients[column] > 0 && is_negative ) ||
+       ( coefficients[column] < 0 && !is_negative ) )
+      stableSum.add( rhs );
+   else
+      stableSum.add( lhs );
+   REAL coeff_of_column_in_row = 0;
+   for( int l = 0; l < rowLength; l++ )
+   {
+      int row_index = row_indices[l];
+      if( row_index == column )
+      {
+         coeff_of_column_in_row = coefficients[l];
+         continue;
+      }
+      // TODO: think about what to do if there are to infinity values ->
+      // irrelevant?
+      stableSum.add( -coefficients[l] * current_solution[row_index] );
+   }
+   assert( coeff_of_column_in_row != 0 );
+   return ( stableSum.get() / coeff_of_column_in_row );
 }
 
 } // namespace papilo

@@ -32,20 +32,23 @@
 
 namespace papilo
 {
-
+/**
+ * Simplify Inequalities removes the "unneccessary" variables in a constraint:
+ * Example:
+ * 15x1 +15x2 +7x3 +3x4 +y1 <= 26
+ * <=> 15x1 +15x2 <= 26  # delete variables
+ * <=> x1 +x2 <=1  # divide by greatestCommonDivisor and round right side down
+ *
+ * if this is not possible, then the GCD is calculated, so this is used to
+ * reduce rhs/lhs -> (floor[rhs/gcd]* gcd )
+ * Example
+ * 15x1 +15x2 +10x3 +5x4 <= 18 -> 18 can be reduced to 15
+ * @tparam REAL
+ */
 template <typename REAL>
 class SimplifyInequalities : public PresolveMethod<REAL>
 {
-   REAL
-   computeGCD( REAL gcd, REAL val, const Num<REAL>& num );
 
-   void
-   simplify( const REAL* values, const int* colinds, int rowlen,
-             const RowActivity<REAL>& activity, const RowFlags& rflag,
-             const Vec<ColFlags>& cflags, const REAL& rhs, const REAL& lhs,
-             const Vec<REAL>& lbs, const Vec<REAL>& ubs, Vec<int>& colOrder,
-             Vec<int>& coeffDelete, REAL& gcd, bool& change,
-             const Num<REAL>& num );
 
  public:
    SimplifyInequalities() : PresolveMethod<REAL>()
@@ -55,11 +58,41 @@ class SimplifyInequalities : public PresolveMethod<REAL>
       this->setType( PresolverType::kIntegralCols );
    }
 
-   /// todo how to communicate about postsolve information
-   virtual PresolveStatus
+   PresolveStatus
    execute( const Problem<REAL>& problem,
             const ProblemUpdate<REAL>& problemUpdate, const Num<REAL>& num,
             Reductions<REAL>& reductions ) override;
+
+ private:
+   REAL
+   computeGreatestCommonDivisor( REAL val1, REAL val2, const Num<REAL>& num );
+
+   void
+   simplify( const REAL* values, const int* colinds, int rowLength,
+             const RowActivity<REAL>& activity, const RowFlags& rflag,
+             const Vec<ColFlags>& cflags, const REAL& rhs, const REAL& lhs,
+             const Vec<REAL>& lbs, const Vec<REAL>& ubs, Vec<int>& colOrder,
+             Vec<int>& coeffDelete, REAL& gcd, bool& change,
+             const Num<REAL>& num );
+
+   bool
+   isUnbounded( int row, const Vec<RowFlags>& rowFlags ) const;
+
+   bool
+   isRedundant( int row, const Vec<RowFlags>& rflags ) const;
+
+   bool
+   isInfiniteActivity( const Vec<RowActivity<REAL>>& activities,
+                       int row ) const;
+
+   PresolveStatus
+   perform_simplify_ineq_task(
+       const Num<REAL>& num, const ConstraintMatrix<REAL>& consMatrix,
+       const Vec<RowActivity<REAL>>& activities, const Vec<RowFlags>& rflags,
+       const Vec<ColFlags>& cflags, const Vec<REAL>& lhs, const Vec<REAL>& rhs,
+       const Vec<REAL>& lbs, const Vec<REAL>& ubs, int row,
+       Reductions<REAL>& reductions, Vec<int>& coefficientsThatCanBeDeleted,
+       Vec<int>& colOrder );
 };
 
 #ifdef PAPILO_USE_EXTERN_TEMPLATES
@@ -68,33 +101,48 @@ extern template class SimplifyInequalities<Quad>;
 extern template class SimplifyInequalities<Rational>;
 #endif
 
+/***
+ * to calculate the Greatest Common Divisor heuristics are used according to
+ * "Presolve Reductions in Mixed Integer Programming" from T. Achterberg et. al.
+ *
+ * - Euclidian algorithm for integral values (numerical issues for flaoting
+ * point)
+ *
+ * 1. Divide all coefficients by a_min = min{|a_ij| j in supp(A_i)}. If this
+ * leads to integer values for all coefficients return
+ *  d= a_min * gcd(a_i1/a_min,..., a_in /a_min)
+ *
+ * 2. Use a_min = 1/600 (multiply by 600), because it is a multiple of many
+ * small integer values that arise as denominators in real-world problems
+ *
+ * @tparam REAL
+ * @param val1
+ * @param val2
+ * @param num
+ * @return gcd (with heuristics for floating points)
+ */
 template <typename REAL>
 REAL
-SimplifyInequalities<REAL>::computeGCD( REAL val1, REAL val2,
-                                        const Num<REAL>& num )
+SimplifyInequalities<REAL>::computeGreatestCommonDivisor( REAL val1, REAL val2,
+                                                          const Num<REAL>& num )
 {
-   // check if value is integral
-   auto isIntegral = [&num]( REAL val, int64_t& intval ) {
+   auto isIntegral = [&num]( REAL val ) {
       if( val > std::numeric_limits<int64_t>::max() ||
           val < std::numeric_limits<int64_t>::min() )
          return false;
-      REAL intval_real = num.round( val );
-      if( !num.isEq( intval_real, val ) )
+      if( !num.isEq( num.round( val ), val ) )
          return false;
-      intval = static_cast<int64_t>( intval_real );
       return true;
    };
 
    if( num.isZero( val1 ) || num.isZero( val2 ) )
       return 0;
 
-   int64_t intval1;
-   int64_t intval2;
-
    // gcd for integer values
-   if( isIntegral( val1, intval1 ) && isIntegral( val2, intval2 ) )
+   if( isIntegral( val1 ) && isIntegral( val2 ) )
    {
-      return boost::gcd( intval1, intval2 );
+      return boost::gcd( static_cast<int64_t>( val1 ),
+                         static_cast<int64_t>( val2 ) );
    }
 
    // heuristic for fractional values
@@ -102,54 +150,47 @@ SimplifyInequalities<REAL>::computeGCD( REAL val1, REAL val2,
    // integral, return d
    if( abs( val2 ) < abs( val1 ) )
    {
-      int64_t intval3;
-      if( isIntegral( val1 / val2, intval3 ) )
+      if( isIntegral( val1 / val2 ) )
          return abs( val2 );
    }
    else
    {
-      int64_t intval3;
-      if( isIntegral( val2 / val1, intval3 ) )
+      if( isIntegral( val2 / val1 ) )
          return abs( val1 );
    }
-   // multiply with 600; if values are integral, return gcd
-   int64_t intval4;
-   int64_t intval5;
-   if( isIntegral( 600 * val1, intval4 ) && isIntegral( 600 * val2, intval5 ) )
-      return boost::gcd( intval4, intval5 ) / REAL{ 600 };
 
-   // gcd not defined
+   double multiplier = 600;
+   if( isIntegral( multiplier * val1 ) && isIntegral( multiplier * val2 ) )
+      return boost::gcd( static_cast<int64_t>( val1 * multiplier ),
+                         static_cast<int64_t>( val2 * multiplier ) ) /
+             REAL{ multiplier };
+
+   // applied heuristics didn't find an greatest common divisor
    return 0;
 }
 
 template <typename REAL>
 void
 SimplifyInequalities<REAL>::simplify(
-    const REAL* values, const int* colinds, int rowlen,
+    const REAL* values, const int* colinds, int rowLength,
     const RowActivity<REAL>& activity, const RowFlags& rflag,
     const Vec<ColFlags>& cflags, const REAL& rhs, const REAL& lhs,
     const Vec<REAL>& lbs, const Vec<REAL>& ubs, Vec<int>& colOrder,
     Vec<int>& coeffDelete, REAL& gcd, bool& change, const Num<REAL>& num )
 {
-   auto maxact = activity.max;
-   auto minact = activity.min;
+   auto maxActivity = activity.max;
+   auto minActivity = activity.min;
 
-   // 'colOrder' contains indices of 'values'; colOrder[0] is index of biggest
-   // absolut coefficient in 'values' (of integer variables)
+   // sort the list 'colOrder' for integer/continuous and then for absolute
+   // coefficient
 
-   // order variables
-   for( int i = 0; i != rowlen; ++i )
-   {
+   for( int i = 0; i < rowLength; ++i )
       colOrder.push_back( i );
-   }
-   // continuous variables to the end
    Vec<int>::iterator start_cont;
    start_cont = partition(
        colOrder.begin(), colOrder.end(), [&colinds, &cflags]( int const& a ) {
           return cflags[colinds[a]].test( ColFlag::kIntegral );
        } );
-   // integer variables after non-increasing absolute value of the
-   // coefficients
    pdqsort( colOrder.begin(), start_cont,
             [&values]( int const& a, int const& b ) {
                return abs( values[a] ) > abs( values[b] );
@@ -157,46 +198,46 @@ SimplifyInequalities<REAL>::simplify(
 
    // check if continuous variables or variables with small absolut value
    // always fit into the constraint
-   REAL resmaxact = maxact;
-   REAL resminact = minact;
+   REAL resmaxact = maxActivity;
+   REAL resminact = minActivity;
    assert( num.isGE( resmaxact, resminact ) );
 
    // start value important for first variable
    gcd = values[colOrder[0]];
    assert( gcd != 0 );
-   REAL siderest = 0;
+   REAL siderest;
    bool redundant = false;
    // i is index of last non-redundant variable
    int i = 0;
 
    // iterate over ordered non-zero entries
-   for( ; i != rowlen; ++i )
+   for( ; i != rowLength; ++i )
    {
-      // index of variable in rowvec
-      int v = colOrder[i];
+      int column_index = colOrder[i];
 
       // break if variable not integral
-      if( !cflags[colinds[v]].test( ColFlag::kIntegral ) )
+      if( !cflags[colinds[column_index]].test( ColFlag::kIntegral ) )
          break;
 
       // update gcd
-      gcd = computeGCD( gcd, values[v], num );
+      gcd = computeGreatestCommonDivisor( gcd, values[column_index], num );
       if( num.isLE( gcd, 1 ) )
          break;
 
-      assert( !cflags[colinds[v]].test( ColFlag::kLbInf, ColFlag::kUbInf ) );
+      assert( !cflags[colinds[column_index]].test( ColFlag::kLbInf,
+                                                   ColFlag::kUbInf ) );
 
       // update residual activities
       // attention: the calculation inaccuracy can be greater than epsilon
-      if( values[v] > 0 )
+      if( values[column_index] > 0 )
       {
-         resmaxact -= values[v] * ubs[colinds[v]];
-         resminact -= values[v] * lbs[colinds[v]];
+         resmaxact -= values[column_index] * ubs[colinds[column_index]];
+         resminact -= values[column_index] * lbs[colinds[column_index]];
       }
       else
       {
-         resmaxact -= values[v] * lbs[colinds[v]];
-         resminact -= values[v] * ubs[colinds[v]];
+         resmaxact -= values[column_index] * lbs[colinds[column_index]];
+         resminact -= values[column_index] * ubs[colinds[column_index]];
       }
 
       // calculate siderest
@@ -226,7 +267,7 @@ SimplifyInequalities<REAL>::simplify(
    {
       change = true;
       // safe indices of redundant variables
-      for( int w = i + 1; w < rowlen; ++w )
+      for( int w = i + 1; w < rowLength; ++w )
       {
          coeffDelete.push_back( colOrder[w] );
       }
@@ -252,103 +293,178 @@ SimplifyInequalities<REAL>::execute( const Problem<REAL>& problem,
 
    PresolveStatus result = PresolveStatus::kUnchanged;
 
-   // allocate only once
-   Vec<int> colOrder;
-   Vec<int> coeffDelete;
-
-   // iterate over all constraints and try to simplify it
-   for( int row = 0; row != nrows; ++row )
+   if( problemUpdate.getPresolveOptions().runs_sequentiell() or
+       !problemUpdate.getPresolveOptions().simplify_inequalities_parallel)
    {
-      auto rowvec = consMatrix.getRowCoefficients( row );
-      int rowlen = rowvec.getLength();
-      const REAL* values = rowvec.getValues();
-      const int* colinds = rowvec.getIndices();
-
-      if( rflags[row].test( RowFlag::kRedundant ) )
-         continue;
-      // don't check empty or bound-constraints
-      if( rowlen < 2 )
-         continue;
-      // cannot work with infinite activities
-      if( activities[row].ninfmax != 0 || activities[row].ninfmin != 0 )
-         continue;
-      // consider only inequalities
-      if( !rflags[row].test( RowFlag::kRhsInf, RowFlag::kLhsInf ) )
-         continue;
-
-      REAL gcd = 0;
-      bool change = false;
-
-      colOrder.clear();
-      coeffDelete.clear();
-
-      // if variables always fit into the constraint, delete them
-      // e.g. x are binary and y is continuous with 0 <= y <= 1
-      // 15x1 +15x2 +7x3 +3x4 +y1 <= 26
-      // <=> 15x1 +15x2 <= 26  # delete variables
-      // <=> x1 +x2 <=1  # divide by gcd and round right side down
-      //
-      // if no variables can be deleted, but the gcd of all coefficients is
-      // greater than 1, round side to multiple of gcd
-      // e.g. x are binary
-      // 15x1 +15x2 +10x3 +5x4 <= 18
-      // 15x1 +15x2 +10x3 +5x4 <= 15  # round right side down
-      simplify( values, colinds, rowlen, activities[row], rflags[row], cflags,
-                rhs[row], lhs[row], lbs, ubs, colOrder, coeffDelete, gcd,
-                change, num );
-
-      // simplification is possible
-      if( change )
+      //allocate only once
+      Vec<int> colOrder;
+      Vec<int> coefficientsThatCanBeDeleted;
+      for( int row = 0; row < nrows; row++ )
       {
-         assert( gcd >= 1 );
-
-         TransactionGuard<REAL> guard{ reductions };
-         reductions.lockRow( row );
-         // TODO other locks needed?
-
-         // remove redundant variables
-         for( int col : coeffDelete )
-         {
-            reductions.changeMatrixEntry( row, colinds[col], 0 );
-
-            Message::debug( this, "removed variable {} in row {}\n", col, row );
-
+         if( perform_simplify_ineq_task(
+                 num, consMatrix, activities, rflags, cflags, lhs, rhs, lbs,
+                 ubs, row, reductions, coefficientsThatCanBeDeleted,
+                 colOrder ) == PresolveStatus::kReduced )
             result = PresolveStatus::kReduced;
-         }
+      }
+   }
+   else
+   {
+      Vec<Reductions<REAL>> stored_reductions( nrows );
+      // iterate over all constraints and try to simplify them
+      tbb::parallel_for(
+          tbb::blocked_range<int>( 0, nrows ),
+          [&]( const tbb::blocked_range<int>& r ) {
+            //allocate only once per thread
+            Vec<int> colOrder;
+             Vec<int> coefficientsThatCanBeDeleted;
+             for( int row = r.begin(); row < r.end(); ++row )
+             {
+                PresolveStatus status = perform_simplify_ineq_task(
+                    num, consMatrix, activities, rflags, cflags, lhs, rhs, lbs,
+                    ubs, row, stored_reductions[row],
+                    coefficientsThatCanBeDeleted, colOrder );
+                if( status == PresolveStatus::kReduced )
+                   result = PresolveStatus::kReduced;
+                assert( status == PresolveStatus::kReduced ||
+                        status == PresolveStatus::kUnchanged );
+             }
+          } );
 
-         // round side to multiple of gcd; don't divide row by gcd
-         if( !rflags[row].test( RowFlag::kRhsInf ) && rhs[row] != 0 )
+      if( result == PresolveStatus::kUnchanged )
+         return PresolveStatus::kUnchanged;
+
+      for( int i = 0; i < stored_reductions.size(); ++i )
+      {
+         Reductions<REAL> reds = stored_reductions[i];
+         if( reds.size() > 0 )
          {
-            REAL newrhs = num.feasFloor( rhs[row] / gcd ) * gcd;
-            // side is really changed
-            if( newrhs != rhs[row] )
+            for( const auto& transaction : reds.getTransactions() )
             {
-               assert( rhs[row] != 0 );
-               reductions.changeRowRHS( row, newrhs );
-
-               Message::debug( this, "changed rhs of row {}\n", row );
-
-               result = PresolveStatus::kReduced;
-            }
-         }
-         else if( !rflags[row].test( RowFlag::kLhsInf ) && lhs[row] != 0 )
-         {
-            REAL newlhs = num.feasCeil( lhs[row] / gcd ) * gcd;
-            // side is really changed
-            if( newlhs != lhs[row] )
-            {
-               assert( lhs[row] != 0 );
-               reductions.changeRowLHS( row, newlhs );
-
-               Message::debug( this, "changed lhs of row {}\n", row );
-
-               result = PresolveStatus::kReduced;
+               int start = transaction.start;
+               int end = transaction.end;
+               TransactionGuard<REAL> guard{ reductions };
+               for( int c = start; c < end; c++ )
+               {
+                  Reduction<REAL>& reduction = reds.getReduction( c );
+                  reductions.add_reduction( reduction.row, reduction.col,
+                                            reduction.newval );
+               }
             }
          }
       }
    }
-
    return result;
+}
+
+template <typename REAL>
+PresolveStatus
+SimplifyInequalities<REAL>::perform_simplify_ineq_task(
+    const Num<REAL>& num, const ConstraintMatrix<REAL>& consMatrix,
+    const Vec<RowActivity<REAL>>& activities, const Vec<RowFlags>& rflags,
+    const Vec<ColFlags>& cflags, const Vec<REAL>& lhs, const Vec<REAL>& rhs,
+    const Vec<REAL>& lbs, const Vec<REAL>& ubs, int row,
+    Reductions<REAL>& reductions, Vec<int>& coefficientsThatCanBeDeleted,
+    Vec<int>& colOrder )
+{
+   PresolveStatus result = PresolveStatus::kUnchanged;
+
+   auto rowvec = consMatrix.getRowCoefficients( row );
+   int rowLength = rowvec.getLength();
+
+   if( isRedundant( row, rflags ) || isUnbounded( row, rflags ) ||
+       isInfiniteActivity( activities, row ) ||
+       // ignore empty or bound-constraints
+       rowLength < 2 )
+      return PresolveStatus::kUnchanged;
+
+   const int* colinds = rowvec.getIndices();
+
+   REAL greatestCommonDivisor = 0;
+   bool isSimplificationPossible = false;
+
+   colOrder.clear();
+   coefficientsThatCanBeDeleted.clear();
+
+   simplify( rowvec.getValues(), colinds, rowLength, activities[row],
+             rflags[row], cflags, rhs[row], lhs[row], lbs, ubs, colOrder,
+             coefficientsThatCanBeDeleted, greatestCommonDivisor,
+             isSimplificationPossible, num );
+
+   if( isSimplificationPossible )
+   {
+      assert( greatestCommonDivisor >= 1 );
+      bool col_can_be_deleted = !coefficientsThatCanBeDeleted.empty();
+      bool rhs_needs_update = false;
+      bool lhs_needs_update = false;
+      REAL new_rhs = 0;
+      REAL new_lhs = 0;
+
+      if( !rflags[row].test( RowFlag::kRhsInf ) && rhs[row] != 0 )
+      {
+         new_rhs = num.feasFloor( rhs[row] / greatestCommonDivisor ) *
+                   greatestCommonDivisor;
+         rhs_needs_update = new_rhs != rhs[row];
+      }
+      else if( !rflags[row].test( RowFlag::kLhsInf ) && lhs[row] != 0 )
+      {
+         new_lhs = num.feasCeil( lhs[row] / greatestCommonDivisor ) *
+                   greatestCommonDivisor;
+         lhs_needs_update = new_lhs != lhs[row];
+      }
+
+      if( !rhs_needs_update && !lhs_needs_update && !col_can_be_deleted )
+         return PresolveStatus::kUnchanged;
+
+      TransactionGuard<REAL> guard{ reductions };
+      reductions.lockRow( row );
+
+      for( int col : coefficientsThatCanBeDeleted )
+      {
+         reductions.changeMatrixEntry( row, colinds[col], 0 );
+         result = PresolveStatus::kReduced;
+      }
+
+      // round side to multiple of greatestCommonDivisor; don't divide
+      // row by greatestCommonDivisor
+      if( rhs_needs_update )
+      {
+         assert( rhs[row] != 0 );
+         reductions.changeRowRHS( row, new_rhs );
+         result = PresolveStatus::kReduced;
+      }
+      if( lhs_needs_update )
+      {
+         assert( lhs[row] != 0 );
+         reductions.changeRowLHS( row, new_lhs );
+         result = PresolveStatus::kReduced;
+      }
+   }
+   return result;
+}
+
+template <typename REAL>
+bool
+SimplifyInequalities<REAL>::isInfiniteActivity(
+    const Vec<RowActivity<REAL>>& activities, int row ) const
+{
+   return activities[row].ninfmax != 0 || activities[row].ninfmin != 0;
+}
+
+template <typename REAL>
+bool
+SimplifyInequalities<REAL>::isRedundant( int row,
+                                         const Vec<RowFlags>& rflags ) const
+{
+   return rflags[row].test( RowFlag::kRedundant );
+}
+
+template <typename REAL>
+bool
+SimplifyInequalities<REAL>::isUnbounded( int row,
+                                         const Vec<RowFlags>& rowFlags ) const
+{
+   return !rowFlags[row].test( RowFlag::kRhsInf, RowFlag::kLhsInf );
 }
 
 } // namespace papilo

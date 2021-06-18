@@ -1,6 +1,9 @@
 # is presolver coefftightening enabled  [Boolean: {0,1}]
 coefftightening.enabled = 1
 
+# is the iteration over the rows in coefftightening parallelised? [Boolean: {0,1}]
+coefftightening.parallel = 1
+
 # is presolver colsingleton enabled  [Boolean: {0,1}]
 colsingleton.enabled = 1
 
@@ -10,8 +13,14 @@ domcol.enabled = 1
 # is presolver doubletoneq enabled  [Boolean: {0,1}]
 doubletoneq.enabled = 1
 
+# is the iteration over the rows in doubletoneq parallelised? [Boolean: {0,1}]
+doubletoneq.parallel = 0
+
 # is presolver dualfix enabled  [Boolean: {0,1}]
 dualfix.enabled = 1
+
+# is the iteration over the columns in dualfix parallelised? [Boolean: {0,1}]
+dualfix.parallel = 0
 
 # is presolver dualinfer enabled  [Boolean: {0,1}]
 dualinfer.enabled = 1
@@ -22,8 +31,11 @@ fixcontinuous.enabled = 1
 # is presolver implint enabled  [Boolean: {0,1}]
 implint.enabled = 1
 
-# verbosity to be used: 0 - quiet, 1 - errors, 2 - warnings, 3 - normal, 4 - extra  [Integer: [0,4]]
-message.verbosity = 3
+# is the iteration over the rows in implied integer parallelised? [Boolean: {0,1}]
+implint.parallel = 0
+
+# verbosity to be used: 0 - quiet, 1 - errors, 2 - warnings, 3 - normal, 4 - detailed  [Integer: [0,4]]
+message.verbosity = 4
 
 # epsilon tolerance to consider two values equal  [Numerical: [0,0.10000000000000001]]
 numerics.epsilon = 1.0000000000000001e-09
@@ -73,6 +85,9 @@ presolve.removeslackvars = 1
 # maximal number of threads to use (0: automatic)  [Integer: [0,2147483647]]
 presolve.threads = 0
 
+# if only one thread (presolve.threads = 0) is used, apply the reductions immediately afterwards
+presolve.sequentiellreductionapplying = 1
+
 # time limit for presolve  [Numerical: [0,1.7976931348623157e+308]]
 presolve.tlim = 1.7976931348623157e+308
 
@@ -94,11 +109,20 @@ probing.mincontdomred = 0.29999999999999999
 # is presolver propagation enabled  [Boolean: {0,1}]
 propagation.enabled = 1
 
+# is the iteration over the rows in propagation parallelised? [Boolean: {0,1}]
+propagation.parallel = 1
+
 # is presolver simpleprobing enabled  [Boolean: {0,1}]
 simpleprobing.enabled = 1
 
+# is the iteration over the rows in simpleprobing parallelised? [Boolean: {0,1}]
+simpleprobing.parallel = 0
+
 # is presolver simplifyineq enabled  [Boolean: {0,1}]
 simplifyineq.enabled = 1
+
+# is the iteration over the rows in simplifyineq parallelised?    [Boolean: {0,1}]
+simplifyineq.parallel = 1
 
 # is presolver sparsify enabled  [Boolean: {0,1}]
 sparsify.enabled = 1
@@ -123,3 +147,4 @@ substitution.maxfillin = 10
 
 # maximum amount of nonzeros being moved to make space for fillin from substitutions within a row  [Integer: [0,2147483647]]
 substitution.maxshiftperrow = 10
+

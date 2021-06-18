@@ -67,33 +67,6 @@ class Solution
    }
 };
 
-/*
-template <typename REAL>
-class PrimalSolution : public Solution<REAL>
-{
- public:
-   PrimalSolution() : Solution<REAL>( SolutionType::kPrimal ) {}
-   PrimalSolution( std::vector<REAL> values )
-       : Solution<REAL>( SolutionType::kPrimal, values )
-   {
-   }
-};
-
-template <typename REAL>
-class PrimalDualSolution : public Solution<REAL>
-{
- public:
-   std::vector<REAL> col_dual;
-   std::vector<REAL> row_dual;
-
-   PrimalDualSolution() : Solution<REAL>( SolutionType::kPrimalDual ) {}
-   PrimalDualSolution( std::vector<REAL> primal_values )
-       : Solution<REAL>( SolutionType::kPrimal, primal_values )
-   {
-   }
-};
-*/
-
 } // namespace papilo
 
 #endif

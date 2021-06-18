@@ -32,6 +32,7 @@
 #include "papilo/io/SolWriter.hpp"
 #include "papilo/misc/NumericalStatistics.hpp"
 #include "papilo/misc/OptionsParser.hpp"
+#include "papilo/misc/Validation.hpp"
 #include "papilo/misc/tbb.hpp"
 
 #include <boost/archive/binary_iarchive.hpp>
@@ -68,7 +69,7 @@ presolve_and_solve(
       prob = MpsParser<REAL>::loadProblem( opts.instance_file );
    }
 
-   // Check wether reading was successfull or not
+   // Check whether reading was successful or not
    if( !prob )
    {
       fmt::print( "error loading problem {}\n", opts.instance_file );
@@ -199,6 +200,14 @@ presolve_and_solve(
 
    auto result = presolve.apply( problem );
 
+   if( !opts.optimal_solution_file.empty() )
+   {
+      if(presolve.getPresolveOptions().dualreds!=0){
+         fmt::print("**WARNING: Enabling dual reductions might cut of feasible or optimal solution\n");
+      }
+      Validation<REAL>::validateProblem(problem, result.postsolve, opts.optimal_solution_file, result.status);
+   }
+
    switch( result.status )
    {
    case PresolveStatus::kInfeasible:
@@ -222,13 +231,11 @@ presolve_and_solve(
    if( !opts.reduced_problem_file.empty() )
    {
       Timer t( writetime );
-      const auto t0 = tbb::tick_count::now();
 
       MpsWriter<REAL>::writeProb( opts.reduced_problem_file, problem,
                                   result.postsolve.origrow_mapping,
                                   result.postsolve.origcol_mapping );
 
-      const auto t1 = tbb::tick_count::now();
       fmt::print( "reduced problem written to {} in {:.3f} seconds\n\n",
                   opts.reduced_problem_file, t.getTime() );
    }
@@ -245,6 +252,8 @@ presolve_and_solve(
       fmt::print( "postsolve archive written to {} in {:.3f} seconds\n\n",
                   opts.postsolve_archive_file, t.getTime() );
    }
+
+
 
    if( opts.command == Command::kPresolve )
       return ResultStatus::kOk;
@@ -317,7 +326,7 @@ postsolve( Postsolve<REAL>& postsolve, const Solution<REAL>& reduced_sol,
    Solution<REAL> original_sol;
 
    auto t0 = tbb::tick_count::now();
-   PostsolveStatus status = postsolve.undo( reduced_sol, original_sol );
+   postsolve.undo( reduced_sol, original_sol );
    auto t1 = tbb::tick_count::now();
 
    fmt::print( "\npostsolve finished after {:.3f} seconds\n",

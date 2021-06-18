@@ -553,31 +553,6 @@ class DependentRows
    MatrixBuffer<REAL> mat;
 };
 
-// TODO: convert to unit test
-// int
-// main()
-// {
-//    Vec<int64_t> indc{1, 1, 2, 2, 2, 3, 3, 1, 1, 2, 2, 3, 3};
-//    Vec<int64_t> indr{1, 2, 2, 3, 4, 4, 5, 6, 7, 6, 7, 6, 7};
-//    Vec<double> a{1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 2.0, 1.0, 2.0};
-//
-//    a.reserve( 100 );
-//    indc.reserve( 100 );
-//    indr.reserve( 100 );
-//
-//    DependentColumns dependentCols;
-//
-//    Vec<int64_t> dependent_cols = presolvelib_detect_linear_dependent_rows(
-//        a.data(), indc.data(), indr.data(), a.size(), a.capacity(), 3, 7 );
-//
-//    std::cout << dependent_cols.size() << " dependent cols\n";
-//
-//    for( int64_t col : dependent_cols )
-//       std::cout << col << " is dependent\n";
-//
-//    return 0;
-// }
-
 } // namespace papilo
 
 #endif

@@ -31,7 +31,6 @@ namespace papilo
 
 enum class RowFlag : uint8_t
 {
-   NONE = 0,
    kLhsInf = 1 << 0,
    kRhsInf = 1 << 1,
    kEquation = 1 << 2,

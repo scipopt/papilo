@@ -312,7 +312,7 @@ class ScipInterface : public SolverInterface<REAL>
       case VerbosityLevel::kInfo:
          SCIP_CALL_ABORT( SCIPsetIntParam( scip, "display/verblevel", 4 ) );
          break;
-      case VerbosityLevel::kExtra:
+      case VerbosityLevel::kDetailed:
          SCIP_CALL_ABORT( SCIPsetIntParam( scip, "display/verblevel", 5 ) );
       }
    }

@@ -24,6 +24,7 @@
 #ifndef PAPILO_TEST_INSTANCES
 #define PAPILO_TEST_INSTANCES
 
+// TODO: how to deal with the Problem that one instance can be imported only once?
 #include "../test/instances/bell5.hpp"
 #include "../test/instances/blend2.hpp"
 #include "../test/instances/dcmulti.hpp"

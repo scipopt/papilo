@@ -142,7 +142,7 @@ class NumericalStatistics
          const SparseVectorView<REAL>& col = cm.getColumnCoefficients( c );
          std::pair<REAL, REAL> minmax = col.getMinMaxAbsValue();
 
-         REAL dyn = minmax.second / minmax.first;
+         REAL dyn = minmax.first == 0 ? (REAL) 0 : minmax.second / minmax.first;
          stats.colDynamism = std::max( dyn, stats.colDynamism );
 
          // Bounds

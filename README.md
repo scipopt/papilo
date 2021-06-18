@@ -9,8 +9,11 @@ SCIP Optimization Suite which is available under https://scipopt.org/.
 PaPILO can be used as a header-based library and also provides an executable.
 Using the executable it is possible to presolve and postsolve MILP instances based on files.
 Additionally, PaPILO can be linked to SCIP, SoPlex, and HiGHS (https://github.com/ERGO-Code/HiGHS) solvers and act as a frontend. In this setting PaPILO passes the presolved problem to those solvers and applies the postsolve step to the optimal solution.
-
 When PaPILO is compiled as part of the SCIP Optimization Suite linking of SoPlex and SCIP solvers is performed automatically.
+
+*Note:* The original instance of this repository is hosted at  [git.zib.de](https://git.zib.de) and a read-only mirror is
+available at [github.com/scipopt/papilo](https://github.com/scipopt/papilo).
+
 
 # Dependencies
 
@@ -32,6 +35,20 @@ mkdir build
 cd build
 cmake ..
 make
+```
+
+Building PaPILO with SCIP and SOPELX works also with the standard cmake workflow:
+```
+mkdir build
+cd build
+cmake -DSCIP_DIR=PATH_TO_SCIP_BUILD_DIR ..
+make
+```
+If you use a relative path to SCIP, then the reference point is the location of the `CMakeLists.txt`.
+If you want to build PaPILO with a provided Boost version please add one of these option to the cmake command:
+```
+-DBOOST_ROOT=../boost_1_66_0
+-DBOOST_INCLUDEDIR=../boost_1_66_0/include
 ```
 
 Solvers that are found in the system are automatically linked to the executable.
@@ -83,7 +100,7 @@ papilo::Float500
 papilo::Float1000
 papilo::Rational
 ```
-The numeric type used by PaPILO will be refered to as REAL in the following section. It can be any of the above types as well as simply `double` for using standard double precision arithmetic.
+The numeric type used by PaPILO will be referred to as REAL in the following section. It can be any of the above types as well as simply `double` for using standard double precision arithmetic.
 
 To avoid confusion with types a short note on types like `papilo:Vec` and `papilo::String`.
 Those types are aliases for types from the standard library, `std::vector` and `std::string`, that possibly use an adjusted allocator. If nothing is altered regarding the allocator then the type `papilo::Vec` will be exactly the same as `std::vector`.
@@ -309,7 +326,7 @@ presolve.addPresolver( std::unique_ptr<papilo::PresolveMethod<REAL>>( new MyPres
 ```
 Getting the PaPILO binary to call your presolver could be achieved by adding an include for your presolver in `papilo/core/Presolve.hpp` and then adding it together with the other default presolvers in the member function `papilo::Presolve<REAL>::addDefaultPresolvers()`.
 
-# Algorithmic and implementation details
+# References and how to cite
 
 The release report of the SCIP Optimization Suite 7.0 contains a section about PaPILO. The report is available under http://www.optimization-online.org/DB_HTML/2020/03/7705.html.
 

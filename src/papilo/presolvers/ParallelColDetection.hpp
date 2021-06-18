@@ -39,7 +39,7 @@ class ParallelColDetection : public PresolveMethod<REAL>
 {
    struct SupportHashCompare
    {
-      SupportHashCompare() {}
+      SupportHashCompare() = default;
 
       static size_t
       hash( const std::pair<int, const int*>& row )
@@ -91,18 +91,18 @@ class ParallelColDetection : public PresolveMethod<REAL>
    };
 
    void
-   findParallelCols( const Num<REAL>& num, const int* bucket, int bucketsize,
+   findParallelCols( const Num<REAL>& num, const int* bucket, int bucketSize,
                      const ConstraintMatrix<REAL>& constMatrix,
                      const Vec<REAL>& obj, const VariableDomains<REAL>& domains,
-                     Vec<std::pair<int, int>>& parallelCols );
+                     Reductions<REAL>& reductions );
 
    void
    computeColHashes( const ConstraintMatrix<REAL>& constMatrix,
-                     const Vec<REAL>& obj, unsigned int* colhashes );
+                     const Vec<REAL>& obj, unsigned int* columnHashes );
 
    void
    computeSupportId( const ConstraintMatrix<REAL>& constMatrix,
-                     unsigned int* supporthashes );
+                     unsigned int* supportHashes );
 
  public:
    ParallelColDetection() : PresolveMethod<REAL>()
@@ -120,11 +120,27 @@ class ParallelColDetection : public PresolveMethod<REAL>
       return false;
    }
 
-   /// todo how to communicate about postsolve information
-   virtual PresolveStatus
+   PresolveStatus
    execute( const Problem<REAL>& problem,
             const ProblemUpdate<REAL>& problemUpdate, const Num<REAL>& num,
             Reductions<REAL>& reductions ) override;
+
+ private:
+   int
+   determineBucketSize( int nColumns,
+                        std::unique_ptr<unsigned int[]>& supportid,
+                        std::unique_ptr<unsigned int[]>& coefficentHashes,
+                        std::unique_ptr<int[]>& column, int i );
+
+   bool
+   check_parallelity( const Num<REAL>& num, const Vec<REAL>& obj, int col1,
+                      int length, const REAL* coefs1, int col2,
+                      const REAL* coefs2 ) const;
+
+   bool
+   can_be_merged( const Num<REAL>& num, const Vec<REAL>& lbs,
+                  const Vec<REAL>& ubs, int col1, const REAL* coefs1,
+                  const REAL* coefs2, const Vec<ColFlags>& cflags ) const;
 };
 
 #ifdef PAPILO_USE_EXTERN_TEMPLATES
@@ -136,12 +152,11 @@ extern template class ParallelColDetection<Rational>;
 template <typename REAL>
 void
 ParallelColDetection<REAL>::findParallelCols(
-    const Num<REAL>& num, const int* bucket, int bucketsize,
+    const Num<REAL>& num, const int* bucket, int bucketSize,
     const ConstraintMatrix<REAL>& constMatrix, const Vec<REAL>& obj,
-    const VariableDomains<REAL>& domains,
-    Vec<std::pair<int, int>>& parallelCols )
+    const VariableDomains<REAL>& domains, Reductions<REAL>& reductions )
 {
-   // TODO if bucketsize too large do gurobi trick
+   // TODO if bucketSize too large do gurobi trick
    const Vec<ColFlags>& cflags = domains.flags;
    const Vec<REAL>& lbs = domains.lower_bounds;
    const Vec<REAL>& ubs = domains.upper_bounds;
@@ -174,7 +189,7 @@ ParallelColDetection<REAL>::findParallelCols(
       // find a value in the domain of column 2 to constitute the
       // value the all values in the domain of the merged column.
       // If no such value is found the columns cannot be merged
-      bool foundhole = false;
+      bool foundHole = false;
       while( num.isLE( mergeval, mergeub ) )
       {
          // initialize col1val with the lower bound of column 1
@@ -186,7 +201,7 @@ ParallelColDetection<REAL>::findParallelCols(
          // 1, otherwise we found a hole If that check failed for
          // the current col1val we increase it by 1 the upper bound
          // of column 1 is reached
-         foundhole = true;
+         foundHole = true;
          while( num.isLE( col1val, ubs[col1] ) )
          {
             REAL col2val = mergeval - col1val * scale2;
@@ -194,7 +209,7 @@ ParallelColDetection<REAL>::findParallelCols(
             if( num.isIntegral( col2val ) && num.isGE( col2val, lbs[col2] ) &&
                 num.isLE( col2val, ubs[col2] ) )
             {
-               foundhole = false;
+               foundHole = false;
                break;
             }
 
@@ -202,153 +217,204 @@ ParallelColDetection<REAL>::findParallelCols(
          }
 
          // if a hole was found we can stop
-         if( foundhole )
+         if( foundHole )
             break;
 
          // test next value in domain
          mergeval += 1;
       }
 
-      return foundhole;
+      return foundHole;
    };
 
-   for( int i = 0; i < bucketsize; ++i )
-   {
-      int col1 = bucket[i];
-      auto col1vec = constMatrix.getColumnCoefficients( col1 );
+   if( constMatrix.getColumnCoefficients( bucket[0] ).getLength() <= 1 )
+      return;
 
+   assert( not cflags[bucket[bucketSize - 1]].test( ColFlag::kInactive ) );
+   // only continuous columns
+   if( not cflags[bucket[bucketSize - 1]].test( ColFlag::kIntegral ) )
+   {
+
+      int col1 = bucket[0];
+      auto col1vec = constMatrix.getColumnCoefficients( col1 );
       const int length = col1vec.getLength();
       const REAL* coefs1 = col1vec.getValues();
-      bool col1integral = cflags[col1].test( ColFlag::kIntegral );
-
-      if( length < 2 )
-         return;
-
-      for( int j = i + 1; j < bucketsize; ++j )
+      for( int j = 1; j < bucketSize; ++j )
       {
          int col2 = bucket[j];
-         auto col2vec = constMatrix.getColumnCoefficients( col2 );
+         assert( not cflags[col2].test( ColFlag::kIntegral ) );
+         const REAL* coefs2 =
+             constMatrix.getColumnCoefficients( col2 ).getValues();
 
-         if( ( obj[col1] == 0 ) != ( obj[col2] == 0 ) )
-            continue;
-
-         // support should already be checked
-         assert( length == col2vec.getLength() );
-         assert( std::memcmp( static_cast<const void*>( col1vec.getIndices() ),
-                              static_cast<const void*>( col2vec.getIndices() ),
-                              length * sizeof( int ) ) == 0 );
-
-         const REAL* coefs2 = col2vec.getValues();
-         bool col2integral = cflags[col2].test( ColFlag::kIntegral );
-
-         bool checkdomains = false;
-         bool scalecol2;
-
-         if( col1integral != col2integral )
+         if( check_parallelity( num, obj, col1, length, coefs1, col2, coefs2 ) )
          {
-            scalecol2 = col2integral;
-            if( scalecol2 )
-            {
-               assert( !col1integral );
-               if( !cflags[col1].test( ColFlag::kLbInf, ColFlag::kUbInf ) &&
-                   num.isLT(
-                       abs( ( ubs[col1] - lbs[col1] ) * coefs1[0] / coefs2[0] ),
-                       1 ) )
-                  continue;
-            }
-            else
-            {
-               assert( !col2integral );
-
-               if( !cflags[col2].test( ColFlag::kLbInf, ColFlag::kUbInf ) &&
-                   num.isLT(
-                       abs( ( ubs[col2] - lbs[col2] ) * coefs2[0] / coefs1[0] ),
-                       1 ) )
-                  continue;
-            }
+            TransactionGuard<REAL> tg{ reductions };
+            reductions.lockCol( col2 );
+            reductions.lockCol( col1 );
+            reductions.mark_parallel_cols( col2, col1 );
          }
-         else
+      }
+      return;
+   }
+   // only integer columns
+   else if( cflags[bucket[0]].test( ColFlag::kIntegral ) )
+   {
+      for( int i = 0; i < bucketSize; i++ )
+      {
+         int col1 = bucket[i];
+         auto col1vec = constMatrix.getColumnCoefficients( col1 );
+         const int length = col1vec.getLength();
+         const REAL* coefs1 = col1vec.getValues();
+         assert( cflags[col1].test( ColFlag::kIntegral ) );
+         for( int j = i + 1; j < bucketSize; ++j )
          {
-            scalecol2 = num.isGE( abs( coefs1[0] ), abs( coefs2[0] ) );
+            int col2 = bucket[j];
+            const REAL* coefs2 =
+                constMatrix.getColumnCoefficients( col2 ).getValues();
+            assert( cflags[col2].test( ColFlag::kIntegral ) );
+            assert( num.isLE( abs( coefs1[0] ), abs( coefs2[0] ) ) );
 
-            if( col1integral &&
-                !num.isEq( abs( coefs1[0] ), abs( coefs2[0] ) ) )
-            {
-               assert( col2integral );
-
-               if( cflags[col1].test( ColFlag::kLbInf, ColFlag::kUbInf ) ||
-                   cflags[col2].test( ColFlag::kLbInf, ColFlag::kUbInf ) )
-                  continue;
-
-               if( scalecol2 && !num.isIntegral( coefs1[0] / coefs2[0] ) )
-                  continue;
-
-               if( !scalecol2 && !num.isIntegral( coefs2[0] / coefs1[0] ) )
-                  continue;
-
-               checkdomains = true;
-            }
-         }
-
-         bool parallel = true;
-
-         if( scalecol2 )
-         {
-            REAL scale2 = coefs1[0] / coefs2[0];
-
-            if( !num.isEq( obj[col1], scale2 * obj[col2] ) )
+            // if scalefactor is not 1 then it is necessary to call
+            // checkholes and therefore this requirements needs to be checked
+            if( cflags[col1].test( ColFlag::kLbInf, ColFlag::kUbInf ) ||
+                cflags[col2].test( ColFlag::kLbInf, ColFlag::kUbInf ) )
                continue;
 
-            for( int k = 1; k < length; ++k )
+            bool parallel = check_parallelity( num, obj, col1, length, coefs1,
+                                               col2, coefs2 );
+            if( parallel and
+                not checkDomainsForHoles( col1, col2, coefs1[0] / coefs2[0] ) )
             {
-               if( !num.isEq( coefs1[k], scale2 * coefs2[k] ) )
-               {
-                  parallel = false;
-                  break;
-               }
-            }
-
-            if( parallel )
-            {
-               if( checkdomains && checkDomainsForHoles( col1, col2, scale2 ) )
-                  continue;
-
-               parallelCols.push_back( std::make_pair( col1, col2 ) );
-            }
-         }
-         else
-         {
-            REAL scale1 = coefs2[0] / coefs1[0];
-
-            if( !num.isEq( scale1 * obj[col1], obj[col2] ) )
-               continue;
-
-            for( int k = 1; k < length; ++k )
-            {
-               if( !num.isEq( scale1 * coefs1[k], coefs2[k] ) )
-               {
-                  parallel = false;
-                  break;
-               }
-            }
-
-            if( parallel )
-            {
-               if( checkdomains && checkDomainsForHoles( col2, col1, scale1 ) )
-                  continue;
-
-               parallelCols.push_back( std::make_pair( col2, col1 ) );
+               TransactionGuard<REAL> tg{ reductions };
+               reductions.lockCol( col2 );
+               reductions.lockCol( col1 );
+               reductions.mark_parallel_cols( col2, col1 );
             }
          }
       }
+      return;
    }
+   else
+   {
+      int col1 = bucket[0];
+      auto col1vec = constMatrix.getColumnCoefficients( col1 );
+      const int length = col1vec.getLength();
+      int continuous_cols;
+
+      assert( not cflags[col1].test( ColFlag::kIntegral ) );
+      {
+         const REAL* coefs1 = col1vec.getValues();
+
+         Vec<std::pair<int, int>> continuous_parallel_cols;
+         for( continuous_cols = 1; continuous_cols < bucketSize;
+              ++continuous_cols )
+         {
+            int col2 = bucket[continuous_cols];
+            if( cflags[col2].test( ColFlag::kIntegral ) )
+               break;
+            const REAL* coefs2 =
+                constMatrix.getColumnCoefficients( col2 ).getValues();
+            if( check_parallelity( num, obj, col1, length, coefs1, col2,
+                                   coefs2 ) )
+            {
+               continuous_parallel_cols.emplace_back( col2, col1 );
+            }
+         }
+         // TODO: use the updated bounds of the cont parallel columns
+         int col2 = bucket[continuous_cols];
+         assert( cflags[col2].test( ColFlag::kIntegral ) );
+         const REAL* coefs2 =
+             constMatrix.getColumnCoefficients( col2 ).getValues();
+         if( ( can_be_merged( num, lbs, ubs, col1, coefs1, coefs2,
+                              cflags ) ) and
+             check_parallelity( num, obj, col1, length, coefs1, col2, coefs2 ) )
+         {
+            TransactionGuard<REAL> tg{ reductions };
+            reductions.lockCol( col1 );
+            for( std::pair<int, int> pair : continuous_parallel_cols )
+               reductions.lockCol( pair.first );
+            reductions.lockCol( col2 );
+            reductions.lockColBounds( col1 );
+            for( std::pair<int, int> pair : continuous_parallel_cols )
+               reductions.mark_parallel_cols( pair.first, pair.second );
+            reductions.mark_parallel_cols( col1, col2 );
+         }
+         else
+         {
+            for( std::pair<int, int> pair : continuous_parallel_cols )
+            {
+               TransactionGuard<REAL> tg{ reductions };
+               reductions.lockCol( pair.first );
+               reductions.lockCol( pair.second );
+               reductions.mark_parallel_cols( pair.first, pair.second );
+            }
+         }
+      }
+      for( int int_cols = continuous_cols; int_cols < bucketSize; ++int_cols )
+      {
+         int int_col = bucket[int_cols];
+         auto int_col1vec = constMatrix.getColumnCoefficients( int_col );
+         assert( cflags[int_col].test( ColFlag::kIntegral ) );
+         assert( int_col1vec.getLength() == length );
+         const REAL* int_coefs1 = int_col1vec.getValues();
+         for( int j = int_cols + 1; j < bucketSize; ++j )
+         {
+            int col2 = bucket[j];
+            const REAL* coefs2 =
+                constMatrix.getColumnCoefficients( col2 ).getValues();
+
+            if( cflags[int_col].test( ColFlag::kLbInf, ColFlag::kUbInf ) ||
+                cflags[col2].test( ColFlag::kLbInf, ColFlag::kUbInf ) )
+               continue;
+
+            bool parallel = check_parallelity( num, obj, int_col, length,
+                                               int_coefs1, col2, coefs2 );
+            if( parallel and not checkDomainsForHoles(
+                                 int_col, col2, int_coefs1[0] / coefs2[0] ) )
+            {
+               TransactionGuard<REAL> tg{ reductions };
+               reductions.lockCol( col2 );
+               reductions.lockCol( int_col );
+               reductions.mark_parallel_cols( col2, int_col );
+            }
+         }
+      }
+      return;
+   }
+}
+template <typename REAL>
+bool
+ParallelColDetection<REAL>::can_be_merged(
+    const Num<REAL>& num, const Vec<REAL>& lbs, const Vec<REAL>& ubs, int col1,
+    const REAL* coefs1, const REAL* coefs2, const Vec<ColFlags>& cflags ) const
+{
+   return cflags[col1].test( ColFlag::kLbInf, ColFlag::kUbInf ) or
+          not num.isLT(
+              abs( ( ubs[col1] - lbs[col1] ) * coefs1[0] / coefs2[0] ), 1 );
+}
+
+template <typename REAL>
+bool
+ParallelColDetection<REAL>::check_parallelity( const Num<REAL>& num,
+                                               const Vec<REAL>& obj, int col1,
+                                               int length, const REAL* coefs1,
+                                               int col2,
+                                               const REAL* coefs2 ) const
+{
+   REAL scale = coefs1[0] / coefs2[0];
+   if( !num.isEq( obj[col1], obj[col2] * scale ) )
+      return false;
+   for( int k = 1; k < length; ++k )
+      if( !num.isEq( coefs1[k], coefs2[k] * scale ) )
+         return false;
+   return true;
 }
 
 template <typename REAL>
 void
 ParallelColDetection<REAL>::computeColHashes(
     const ConstraintMatrix<REAL>& constMatrix, const Vec<REAL>& obj,
-    unsigned int* colhashes )
+    unsigned int* columnHashes )
 {
    tbb::parallel_for(
        tbb::blocked_range<int>( 0, constMatrix.getNCols() ),
@@ -356,10 +422,9 @@ ParallelColDetection<REAL>::computeColHashes(
           for( int i = r.begin(); i != r.end(); ++i )
           {
              // compute hash-value for coefficients
-
-             auto colcoefs = constMatrix.getColumnCoefficients( i );
-             const REAL* vals = colcoefs.getValues();
-             const int len = colcoefs.getLength();
+             auto columnCoefficients = constMatrix.getColumnCoefficients( i );
+             const REAL* values = columnCoefficients.getValues();
+             const int len = columnCoefficients.getLength();
 
              Hasher<unsigned int> hasher( len );
 
@@ -370,19 +435,21 @@ ParallelColDetection<REAL>::computeColHashes(
                 // the constant is arbitrary and is used to make cases
                 // where two coefficients that are equal
                 // within epsilon get different values are
-                // more unlikely by choosign some irrational number
-                REAL scale = REAL( 2.0 / ( 1.0 + sqrt( 5.0 ) ) ) / vals[0];
+                // more unlikely by choose some irrational number
+                // TODO: define constant
+                REAL scale = REAL( 2.0 / ( 1.0 + sqrt( 5.0 ) ) ) / values[0];
 
                 // add scaled coefficients of other row
                 // entries to compute the hash
                 for( int j = 1; j != len; ++j )
-                   hasher.addValue( Num<REAL>::hashCode( vals[j] * scale ) );
-
+                {
+                   hasher.addValue( Num<REAL>::hashCode( values[j] * scale ) );
+                }
                 if( obj[i] != 0 )
                    hasher.addValue( Num<REAL>::hashCode( obj[i] * scale ) );
              }
 
-             colhashes[i] = hasher.getHash();
+             columnHashes[i] = hasher.getHash();
           }
        } );
 }
@@ -390,7 +457,7 @@ ParallelColDetection<REAL>::computeColHashes(
 template <typename REAL>
 void
 ParallelColDetection<REAL>::computeSupportId(
-    const ConstraintMatrix<REAL>& constMatrix, unsigned int* supporthashes )
+    const ConstraintMatrix<REAL>& constMatrix, unsigned int* supportHashes )
 {
    using SupportMap =
        HashMap<std::pair<int, const int*>, int, SupportHash, SupportEqual>;
@@ -408,13 +475,12 @@ ParallelColDetection<REAL>::computeSupportId(
           supportMap.emplace( std::make_pair( length, support ), i );
 
       if( insResult.second )
-         supporthashes[i] = i;
+         supportHashes[i] = i;
       else // support already exists, use the previous support id
-         supporthashes[i] = insResult.first->second;
+         supportHashes[i] = insResult.first->second;
    }
 }
 
-/// todo how to communicate about postsolve information
 template <typename REAL>
 PresolveStatus
 ParallelColDetection<REAL>::execute( const Problem<REAL>& problem,
@@ -456,69 +522,62 @@ ParallelColDetection<REAL>::execute( const Problem<REAL>& problem,
        } );
 
    pdqsort( col.get(), col.get() + ncols, [&]( int a, int b ) {
-      return supportid[a] < supportid[b] ||
-             ( supportid[a] == supportid[b] && coefhash[a] < coefhash[b] ) ||
-             ( supportid[a] == supportid[b] && coefhash[a] == coefhash[b] &&
-               colperm[a] < colperm[b] );
-   } );
+      if( supportid[a] < supportid[b] ||
+          ( supportid[a] == supportid[b] && coefhash[a] < coefhash[b] ) )
+         return true;
+      else if( not( supportid[a] == supportid[b] &&
+                    coefhash[a] == coefhash[b] ) )
+         return false;
+      assert( supportid[a] == supportid[b] && coefhash[a] == coefhash[b] );
 
-   Vec<std::pair<int, int>> parallelCols;
+      bool flag_a_integer = cflags[a].test( ColFlag::kIntegral );
+      bool flag_b_integer = cflags[b].test( ColFlag::kIntegral );
+      return ( flag_a_integer != flag_b_integer and not flag_a_integer ) or
+             // sort by scale factor
+             ( flag_a_integer == flag_b_integer and
+               abs( obj[a] ) < abs( obj[b] ) ) or
+             // sort by permutation
+             ( flag_a_integer == flag_b_integer and
+               abs( obj[a] ) == abs( obj[b] ) and colperm[a] < colperm[b] );
+   } );
 
    for( int i = 0; i < ncols; )
    {
-      // determine size of bucket
-      int j;
-      for( j = i + 1; j < ncols; ++j )
-      {
-         if( coefhash[col[i]] != coefhash[col[j]] ||
-             supportid[col[i]] != supportid[col[j]] )
-            break;
-      }
-      int len = j - i;
+      int bucketSize =
+          determineBucketSize( ncols, supportid, coefhash, col, i );
 
-      // if more  than one col is in the bucket try to find parallel
-      // cols
-      if( len > 1 )
+      // if more than one col is in the bucket find parallel cols
+      if( bucketSize > 1 )
       {
-         // fmt::print( "bucket of length {} starting at {}\n", len, i
-         // );
-         findParallelCols( num, col.get() + i, len, constMatrix, obj,
-                           problem.getVariableDomains(), parallelCols );
+         findParallelCols( num, col.get() + i, bucketSize, constMatrix, obj,
+                           problem.getVariableDomains(), reductions );
       }
 
-      assert( j > i );
-      // set i to start of next bucket
-      i = j;
+      i = i + bucketSize;
    }
-
-   if( !parallelCols.empty() )
-   {
-      pdqsort( parallelCols.begin(), parallelCols.end(),
-               [&colperm]( const std::pair<int, int>& a,
-                           const std::pair<int, int>& b ) {
-                  return std::make_pair( colperm[a.first], colperm[a.second] ) <
-                         std::make_pair( colperm[b.first], colperm[b.second] );
-               } );
+   if( reductions.getTransactions().size() > 0 )
       result = PresolveStatus::kReduced;
-      // fmt::print( "found {} parallel columns\n", parallelCols.size() );
-      for( const std::pair<int, int>& parallelCol : parallelCols )
+   return result;
+}
+
+template <typename REAL>
+int
+ParallelColDetection<REAL>::determineBucketSize(
+    int nColumns, std::unique_ptr<unsigned int[]>& supportid,
+    std::unique_ptr<unsigned int[]>& coefficentHashes,
+    std::unique_ptr<int[]>& column, int i )
+{
+   int j;
+   for( j = i + 1; j < nColumns; ++j )
+   {
+      if( coefficentHashes[column[i]] != coefficentHashes[column[j]] ||
+          supportid[column[i]] != supportid[column[j]] )
       {
-         int col1 = parallelCol.first;
-         int col2 = parallelCol.second;
-
-         TransactionGuard<REAL> tg{ reductions };
-         reductions.lockCol( col1 );
-         reductions.lockCol( col2 );
-
-         if( cflags[col2].test( ColFlag::kIntegral ) !=
-             cflags[col1].test( ColFlag::kIntegral ) )
-            reductions.lockColBounds( col1 );
-
-         reductions.parallelCols( col1, col2 );
+         break;
       }
    }
-
-   return result;
+   assert( j > i );
+   return j - i;
 }
 
 } // namespace papilo
