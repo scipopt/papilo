@@ -1407,11 +1407,6 @@ ProblemUpdate<REAL>::trivialPresolve()
 
    removeFixedCols();
 
-   // for( auto row : redundant_rows )
-   //    postsolve.notifyRedundantRow( row );
-   // for( auto col : deleted_cols )
-   //    postsolve.notifyDeletedCol( col );
-
    problem.getConstraintMatrix().deleteRowsAndCols(
        redundant_rows, deleted_cols, problem.getRowActivities(), singletonRows,
        singletonColumns, emptyColumns );

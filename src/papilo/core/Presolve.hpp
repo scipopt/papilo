@@ -680,8 +680,8 @@ Presolve<REAL>::apply( Problem<REAL>& problem )
                if( result.postsolve.postsolveType == PostsolveType::kFull )
                {
                   solution.type = SolutionType::kPrimalDual;
-                  solution.col_dual.resize( problem.getNCols() );
-                  solution.row_dual.resize( problem.getNRows() );
+                  solution.reducedCosts.resize( problem.getNCols() );
+                  solution.dual.resize( problem.getNRows() );
                }
 
                tbb::parallel_for(
@@ -794,7 +794,7 @@ Presolve<REAL>::apply( Problem<REAL>& problem )
                         if( result.postsolve.postsolveType ==
                             PostsolveType::kFull )
                            result.postsolve.notifyDualValue(
-                               true, col, solution.col_dual[col] );
+                               true, col, solution.reducedCosts[col] );
                      }
 
                      const int* comprows = components.getComponentsRows( i );

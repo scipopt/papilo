@@ -389,6 +389,9 @@ class Problem
    void
    substituteVarInObj( const Num<REAL>& num, int col, int equalityrow );
 
+   void
+   addCol( int col, const SparseVectorView<REAL>& view, REAL lb, REAL ub, ColFlag cflag );
+
    bool
    computeSolViolations( const Num<REAL>& num, const Vec<REAL>& sol,
                          REAL& boundviolation, REAL& rowviolation,
@@ -768,6 +771,14 @@ class Problem
    /// up and down locks for each column
    Vec<Locks> locks;
 };
+
+
+template <typename REAL>
+void
+Problem<REAL>::addCol( int col, const SparseVectorView<REAL>& view, REAL lb, REAL ub, ColFlag cflag )
+{
+
+}
 
 template <typename REAL>
 void

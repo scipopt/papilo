@@ -99,7 +99,7 @@ class KktState
              const Solution<REAL>& solution, const Vec<uint8_t>& solSetColumns,
              const Vec<uint8_t>& solSetRows )
        : problem( prob ), colValues( solution.primal ),
-         colDuals( solution.col_dual ), rowDuals( solution.row_dual ),
+         colDuals( solution.reducedCosts ), rowDuals( solution.dual ),
          solSetCol( solSetColumns ), solSetRow( solSetRows ),
          matrixRW( problem.getConstraintMatrix().getConstraintMatrix() ),
          objective( problem.getObjective() ),
@@ -133,7 +133,7 @@ class KktState
              const Vec<REAL>& rowUpper_, const Vec<REAL>& colLower_,
              const Vec<REAL>& colUpper_ )
        : problem( prob ), colValues( solution.primal ),
-         colDuals( solution.col_dual ), rowDuals( solution.row_dual ),
+         colDuals( solution.reducedCosts ), rowDuals( solution.dual ),
          solSetCol( solSetColumns ), solSetRow( solSetRows ),
          matrixRW( problem.getConstraintMatrix().getConstraintMatrix() ),
          objective( problem.getObjective() ), rowLower( rowLower_ ),
@@ -179,7 +179,7 @@ class KktState
 
          int index =
              ( problem.getNCols() < solSetCol.size() ) ? reduced_index : col;
-         if( !colLBInf( problem, index ) &&
+         if( !isLowerBoundInfinity( problem, index ) &&
              colLower[col] - colValues[col] > tol )
          {
             message.info( "Column {:<3} violates lower column bound.\n", col );
@@ -188,7 +188,7 @@ class KktState
             status = kkt_status::Fail_Primal_Bound;
          }
 
-         if( !colUBInf( problem, index ) &&
+         if( !isUpperBoundInfinity( problem, index ) &&
              colValues[col] - colUpper[col] > tol )
          {
             message.info( "Column {:<3} violates upper column bound.\n", col );
@@ -266,8 +266,8 @@ class KktState
    kkt_status
    checkDualFeasibility()
    {
-      const Vec<REAL>& colLower = problem.getVariableDomains().lower_bounds;
-      const Vec<REAL>& colUpper = problem.getVariableDomains().upper_bounds;
+      const Vec<REAL>& lowerBounds = problem.getVariableDomains().lower_bounds;
+      const Vec<REAL>& upperBounds = problem.getVariableDomains().upper_bounds;
 
       // check values of z_j are dual feasible
       int reduced_index = 0;
@@ -276,23 +276,23 @@ class KktState
          if( !solSetCol[col] )
             continue;
 
-         // no lower or upper bound on column
-         if( colLBInf( problem, reduced_index ) &&
-             colUBInf( problem, reduced_index ) )
+         // no lower or upper bound on infinity
+         if( isLowerBoundInfinity( problem, reduced_index ) &&
+             isUpperBoundInfinity( problem, reduced_index ) )
          {
             if( abs( colDuals[col] ) > tol )
                return kkt_status::Fail_Dual_Feasibility;
          }
-         // column at lower bound: x=l and l<u
-         else if( abs( colValues[col] - colLower[col] ) < tol &&
-                  colLower[col] < colUpper[col] )
+         // non fixed variable at lower bound: x=l and l<u
+         else if( abs( colValues[col] - lowerBounds[col] ) < tol &&
+                  lowerBounds[col] < upperBounds[col] )
          {
             if( colDuals[col] < 0 && abs( colDuals[col] ) > tol )
                return kkt_status::Fail_Dual_Feasibility;
          }
-         // column at upper bound: x=u and l<u
-         else if( abs( colValues[col] - colUpper[col] ) < tol &&
-                  colLower[col] < colUpper[col] )
+         // non fixed variable at upper bound: x=u and l<u
+         else if( abs( colValues[col] - upperBounds[col] ) < tol &&
+                  lowerBounds[col] < upperBounds[col] )
          {
             if( colDuals[col] > tol )
                return kkt_status::Fail_Dual_Feasibility;
@@ -300,13 +300,10 @@ class KktState
          reduced_index++;
       }
 
-      // check values of y_i are dual feasible
-      const Vec<REAL>& rowLower =
-          problem.getConstraintMatrix().getLeftHandSides();
-      const Vec<REAL>& rowUpper =
-          problem.getConstraintMatrix().getRightHandSides();
+
 
       std::vector<int> orig_col_index( matrixRW.getNCols(), 0 );
+//      int reduced_col_index = count( solSetCol.begin(), solSetCol.end(), true );
       int reduced_col_index = 0;
       for( int col = 0; col < solSetCol.size(); col++ )
       {
@@ -316,7 +313,12 @@ class KktState
          reduced_col_index++;
       }
 
-      assert( matrixRW.getNCols() == reduced_col_index );
+//      TODO
+//      assert( matrixRW.getNCols() == reduced_col_index  );
+
+      // check values of y_i are dual feasible
+      const Vec<REAL>& lhs = problem.getConstraintMatrix().getLeftHandSides();
+      const Vec<REAL>& rhs = problem.getConstraintMatrix().getRightHandSides();
 
       for( int row = 0; row < solSetRow.size(); row++ )
       {
@@ -324,26 +326,26 @@ class KktState
             continue;
 
          // L = Ax = U can be any sign
-         if( abs( rowLower[row] - rowValues[row] ) < tol &&
-             abs( rowUpper[row] - rowValues[row] ) < tol )
+         if( abs( lhs[row] - rowValues[row] ) < tol &&
+             abs( rhs[row] - rowValues[row] ) < tol )
             continue;
          // L = Ax < U
-         else if( abs( rowLower[row] - rowValues[row] ) < tol &&
-                  rowValues[row] < rowUpper[row] )
+         else if( abs( lhs[row] - rowValues[row] ) < tol &&
+                  rowValues[row] < rhs[row] )
          {
             if( rowDuals[row] < -tol )
                return kkt_status::Fail_Dual_Feasibility;
          }
          // L < Ax = U
-         else if( rowLower[row] < rowValues[row] &&
-                  abs( rowValues[row] - rowUpper[row] ) < tol )
+         else if( lhs[row] < rowValues[row] &&
+                  abs( rowValues[row] - rhs[row] ) < tol )
          {
             if( rowDuals[row] > tol )
                return kkt_status::Fail_Dual_Feasibility;
          }
          // L < Ax < U
-         else if( rowLower[row] < ( rowValues[row] + tol ) &&
-                  rowValues[row] < ( rowUpper[row] + tol ) )
+         else if( lhs[row] < ( rowValues[row] + tol ) &&
+                  rowValues[row] < ( rhs[row] + tol ) )
          {
             if( abs( rowDuals[row] ) > tol )
                return kkt_status::Fail_Dual_Feasibility;
@@ -362,13 +364,13 @@ class KktState
          if( !solSetCol[col] )
             continue;
 
-         if( !colLBInf( problem, reduced_index ) )
+         if( !isLowerBoundInfinity( problem, reduced_index ) )
             if( abs( ( colValues[col] - colLower[col] ) * ( colDuals[col] ) ) >
                     tol &&
                 colValues[col] != colUpper[col] && abs( colDuals[col] ) > tol )
                return kkt_status::Fail_Complementary_Slackness;
 
-         if( !colUBInf( problem, reduced_index ) )
+         if( !isUpperBoundInfinity( problem, reduced_index ) )
             if( abs( ( colUpper[col] - colValues[col] ) * ( colDuals[col] ) ) >
                     tol &&
                 colValues[col] != colLower[col] && abs( colDuals[col] ) > tol )
@@ -530,6 +532,9 @@ enum class ProblemType
 template <typename REAL, CheckLevel CHECK_LEVEL>
 class KktChecker;
 
+/*
+ * no check is done
+ */
 template <typename REAL>
 class KktChecker<REAL, CheckLevel::No_check>
 {
@@ -567,6 +572,7 @@ class KktChecker<REAL, CheckLevel::No_check>
    void
    checkSolution( State&, bool intermediate = false ) const
    {
+      //no implementation needed
    }
 
    bool
@@ -583,11 +589,13 @@ class KktChecker<REAL, CheckLevel::No_check>
    void
    setOriginalProblem( const Problem<REAL>& ) const
    {
+      //no implementation needed
    }
 
    void
    setReducedProblem( const Problem<REAL>& ) const
    {
+      //no implementation needed
    }
 
    void
@@ -595,36 +603,43 @@ class KktChecker<REAL, CheckLevel::No_check>
                     const int* coeffs, const REAL lhs, const REAL rhs,
                     const bool lb_inf, const bool ub_inf )
    {
+      //no implementation needed
    }
 
    void
    undoSubstitutedCol( const int col )
    {
+      //no implementation needed
    }
 
    void
    undoParallelCol( const int col )
    {
+      //no implementation needed
    }
 
    void
    undoFixedCol( const int col, const REAL value )
    {
+      //no implementation needed
    }
 
    void
    undoSingletonRow( const int row )
    {
+      //no implementation needed
    }
 
    void
    undoDeletedCol( const int col )
    {
+      //no implementation needed
    }
 
    void
    undoRedundantRow( const int row )
    {
+      //no implementation needed
    }
 };
 
@@ -687,17 +702,11 @@ class KktChecker<REAL, CheckLevel::Check>
       solSetRow.resize( nrows );
       solSetRow.assign( nrows, 0 );
 
-      for( int k = 0; k < origcol_map.size(); ++k )
-      {
-         int origcol = origcol_map[k];
+      for(int origcol : origcol_map)
          solSetCol[origcol] = true;
-      }
 
-      for( int k = 0; k < origrow_map.size(); ++k )
-      {
-         int origrow = origrow_map[k];
+      for(int origrow : origrow_map)
          solSetRow[origrow] = true;
-      }
 
       return initState( type, solution, solSetCol, solSetRow, checker_level );
    }
@@ -1113,12 +1122,13 @@ class KktChecker<REAL, CheckLevel::Check>
    }
 
    void
-   undoFixedCol( const int col, const REAL value )
+   undoFixedCol( const int col, const REAL value, SparseVectorView<REAL>& view, REAL objective)
    {
       assert( !solSetCol[col] );
       solSetCol[col] = true;
+//      problem.addCol(col, length, values, coeffs, l, u, lb_inf, ub_inf ):
       // todo:
-      // addCol( problem, col, length, values, coeffs, l, u, lb_inf, ub_inf );
+//       addCol( problem, );
    }
 
    void
@@ -1142,7 +1152,8 @@ class KktChecker<REAL, CheckLevel::Check>
    void
    undoRedundantRow( const int row )
    {
-      assert( !solSetRow[row] );
+      //TODO: duplicated row reduction
+//      assert( !solSetRow[row] );
       solSetRow[row] = true;
    }
 
@@ -1165,14 +1176,14 @@ rowRHSInf( const Problem<REAL>& problem, const int row )
 
 template <typename REAL>
 bool
-colLBInf( const Problem<REAL>& problem, const int col )
+isLowerBoundInfinity( const Problem<REAL>& problem, const int col )
 {
    return problem.getColFlags()[col].test( ColFlag::kLbInf );
 }
 
 template <typename REAL>
 bool
-colUBInf( const Problem<REAL>& problem, const int col )
+isUpperBoundInfinity( const Problem<REAL>& problem, const int col )
 {
    return problem.getColFlags()[col].test( ColFlag::kUbInf );
 }

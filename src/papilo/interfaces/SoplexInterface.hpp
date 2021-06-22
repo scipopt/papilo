@@ -303,9 +303,9 @@ class SoplexInterface : public SolverInterface<REAL>
       if( !spx.getRedCostReal( buffer.data(), numcols ) )
          return false;
 
-      sol.col_dual.resize( numcols );
+      sol.reducedCosts.resize( numcols );
       for( int i = 0; i != numcols; ++i )
-         sol.col_dual[i] = REAL( buffer[i] );
+         sol.reducedCosts[i] = REAL( buffer[i] );
 
       int numrows = spx.numRowsReal();
 
@@ -313,9 +313,9 @@ class SoplexInterface : public SolverInterface<REAL>
       if( !spx.getDualReal( buffer.data(), numrows ) )
          return false;
 
-      sol.row_dual.resize( numrows );
+      sol.dual.resize( numrows );
       for( int i = 0; i != numrows; ++i )
-         sol.row_dual[i] = REAL( buffer[i] );
+         sol.dual[i] = REAL( buffer[i] );
 
       return true;
    }
@@ -345,7 +345,7 @@ class SoplexInterface : public SolverInterface<REAL>
          return false;
 
       for( int i = 0; i != numcols; ++i )
-         sol.col_dual[compcols[i]] = REAL( buffer[i] );
+         sol.reducedCosts[compcols[i]] = REAL( buffer[i] );
 
       int numrows = spx.numRowsReal();
       buffer.resize( numrows );
@@ -355,7 +355,7 @@ class SoplexInterface : public SolverInterface<REAL>
          return false;
 
       for( int i = 0; i != numrows; ++i )
-         sol.row_dual[comprows[i]] = REAL( buffer[i] );
+         sol.dual[comprows[i]] = REAL( buffer[i] );
 
       return true;
    }

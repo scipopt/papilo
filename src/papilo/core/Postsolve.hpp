@@ -713,22 +713,22 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
 
    if( originalSolution.type == SolutionType::kPrimalDual )
    {
-      assert( reducedSolution.col_dual.size() == origcol_mapping.size() );
-      originalSolution.col_dual.clear();
-      originalSolution.col_dual.resize( nColsOriginal );
+      assert( reducedSolution.reducedCosts.size() == origcol_mapping.size() );
+      originalSolution.reducedCosts.clear();
+      originalSolution.reducedCosts.resize( nColsOriginal );
       for( int k = 0; k < origcol_mapping.size(); k++ )
       {
          int origcol = origcol_mapping[k];
-         originalSolution.col_dual[origcol] = reducedSolution.col_dual[k];
+         originalSolution.reducedCosts[origcol] = reducedSolution.reducedCosts[k];
       }
 
-      assert( reducedSolution.row_dual.size() == origrow_mapping.size() );
-      originalSolution.row_dual.clear();
-      originalSolution.row_dual.resize( nRowsOriginal );
+      assert( reducedSolution.dual.size() == origrow_mapping.size() );
+      originalSolution.dual.clear();
+      originalSolution.dual.resize( nRowsOriginal );
       for( int k = 0; k < origrow_mapping.size(); k++ )
       {
          int origrow = origrow_mapping[k];
-         originalSolution.row_dual[origrow] = reducedSolution.row_dual[k];
+         originalSolution.dual[origrow] = reducedSolution.dual[k];
       }
    }
 
@@ -740,17 +740,21 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
    if( origrow_mapping.size() < nRowsOriginal ||
        origcol_mapping.size() < nColsOriginal )
    {
-      // originalSoluiton is already the reduced solution padded with zeros
+      CheckLevel level = Primal_only;
+      if(reducedSolution.type == SolutionType::kPrimalDual)
+         level = Primal_and_dual;
+      // original solution is already the reduced solution padded with zeros
       auto kktState =
           checker.initState( ProblemType::kReduced, originalSolution,
-                             origcol_mapping, origrow_mapping, checker.level );
+                             origcol_mapping, origrow_mapping, level );
 
       if( originalSolution.type == SolutionType::kPrimalDual )
          checker.level = CheckLevel::Solver_and_primal_feas;
-      //   checker.setLevel( CheckLevel::After_each_postsolve_step);
 
       checker.checkSolution( kktState );
       checker.level = CheckLevel::After_each_step_primal_only;
+      if(reducedSolution.type == SolutionType::kPrimalDual)
+         checker.level = CheckLevel::After_each_step_and_dual;
 
       checker.expandProblem();
       auto kktState_expand = checker.initState(
@@ -765,10 +769,10 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
    Vec<REAL> row_lhs;
    Vec<REAL> row_rhs;
 
-   Vec<int> col_flag_lower;
-   Vec<int> col_flag_upper;
-   Vec<int> row_flag_lower;
-   Vec<int> row_flag_upper;
+   Vec<int> col_infinity_lower;
+   Vec<int> col_infinity_upper;
+   Vec<int> row_infinity_lower;
+   Vec<int> row_infinity_upper;
 
    Vec<int> col_lower_from_row;
    Vec<int> col_upper_from_row;
@@ -783,10 +787,10 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
       col_upper.assign( nColsOriginal, 0 );
       row_lhs.assign( nRowsOriginal, 0 );
       row_rhs.assign( nRowsOriginal, 0 );
-      col_flag_upper.assign( nColsOriginal, 0 );
-      col_flag_lower.assign( nColsOriginal, 0 );
-      row_flag_upper.assign( nRowsOriginal, 0 );
-      row_flag_lower.assign( nRowsOriginal, 0 );
+      col_infinity_upper.assign( nColsOriginal, 0 );
+      col_infinity_lower.assign( nColsOriginal, 0 );
+      row_infinity_upper.assign( nRowsOriginal, 0 );
+      row_infinity_lower.assign( nRowsOriginal, 0 );
 
       // // expand vectors.
       // Vec<REAL> tmp_col_cost = col_cost;
@@ -859,8 +863,8 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
             int index = first + 2 * j;
             col_lower[origCol] = values[index];
             col_upper[origCol] = values[index + 1];
-            col_flag_lower[origCol] = indices[index];
-            col_flag_upper[origCol] = indices[index + 1];
+            col_infinity_lower[origCol] = indices[index];
+            col_infinity_upper[origCol] = indices[index + 1];
          }
 
          // get row bounds
@@ -871,8 +875,8 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
             int index = first_row_bounds + 2 * k;
             row_lhs[origRow] = values[index];
             row_rhs[origRow] = values[index + 1];
-            row_flag_lower[origRow] = indices[index];
-            row_flag_upper[origRow] = indices[index + 1];
+            row_infinity_lower[origRow] = indices[index];
+            row_infinity_upper[origRow] = indices[index + 1];
          }
 
          // get cost
@@ -886,7 +890,7 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
          break;
       }
       case ReductionType::kColumnDualValue:
-         originalSolution.col_dual[indices[first]] = values[indices[first]];
+         originalSolution.reducedCosts[indices[first]] = values[indices[first]];
          break;
       case ReductionType::kRedundantRow:
          checker.undoRedundantRow( indices[first] );
@@ -895,7 +899,7 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
          checker.undoDeletedCol( indices[first] );
          break;
       case ReductionType::kRowDualValue:
-         originalSolution.row_dual[indices[first]] = values[indices[first]];
+         originalSolution.dual[indices[first]] = values[indices[first]];
          break;
       case ReductionType::kSaveRow:
       {
@@ -929,28 +933,32 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
          // use notifySavedCol and current index of column on the stack.
          int col = indices[first];
          origSol[col] = values[first];
-         checker.undoFixedCol( col, values[first] );
          // todo: checker notify dual value if changed
          if( originalSolution.type == SolutionType::kPrimalDual )
          {
 
-            // TODO: this are the reduced costs
-            // get dual value z_j = c_j - sum_i a_ij*y_i
-            REAL value = 0;
-
+            // get dual reducedCosts z_j = c_j - sum_i a_ij*y_i
             REAL objective_coefficient = values[first + 1];
             int col_length = indices[first + 1];
+            int* inds = new int[col_length];
+            REAL* vals = new REAL[col_length];
 
-            value = value + objective_coefficient;
-            // no need to check for solSetRow because if it iz zero then the
-            // row_dual value is zero.
+            REAL reducedCosts = objective_coefficient;
+            // no need to check for solSetRow because if it is zero then the
+            // dual reducedCosts is zero.
             for( int k = 0; k < col_length; ++k )
             {
-               int index = first + 1 + k;
-               value = value - values[index] *
-                                   originalSolution.row_dual[indices[index]];
+               int index = first + 2 + k;
+               inds[k] = indices[index];
+               vals[k] = values[index];
+               reducedCosts =
+                   reducedCosts - values[index] *
+                                   originalSolution.dual[indices[index]];
             }
-            originalSolution.col_dual[col] = value;
+            originalSolution.reducedCosts[col] = reducedCosts;
+            SparseVectorView<REAL> view = SparseVectorView<REAL>{vals, inds, col_length};
+            checker.undoFixedCol( col, values[first], view, objective_coefficient);
+
          }
          break;
       }
@@ -962,27 +970,26 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
          // code below saves column on stack for the calculation of dual values.
          // todo: use column on stack
          {
+
             REAL coeff = values[first + 1];
             REAL cost = values[first + 2];
             assert( indices[first + 1] == col );
 
-            REAL value = 0;
+            REAL value = cost;
             int col_length_minus_one = indices[first + 2];
 
-            // no need to check for solSetRow because if it iz zero then the
-            // row_dual value is zero.
-            for( int i = 0; i < col_length_minus_one; ++i )
+            // no need to check for solSetRow because if it is zero then the
+            // dual value is zero.
+            for( int k = 0; k < col_length_minus_one; ++k )
             {
-               int index = first + 3 + i;
-               value = value + values[index] *
-                                   originalSolution.row_dual[indices[index]];
+               int index = first + 3 + k;
+               value -= values[index] * originalSolution.dual[indices[index]];
             }
 
-            value = cost - value;
             value = value / coeff;
 
-            originalSolution.row_dual[row] = value;
-            originalSolution.col_dual[col] = 0;
+            originalSolution.dual[row] = value;
+            originalSolution.reducedCosts[col] = 0;
          }
          checker.undoSingletonRow( row );
          break;
@@ -1052,10 +1059,10 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
          //       coeff = values[first + 2];
          //    }
 
-         //    originalSolution.row_dual[row] =
-         //        originalSolution.row_dual[row] +
-         //        originalSolution.col_dual[col] / coeff;
-         //    originalSolution.col_dual[col] = 0;
+         //    originalSolution.dual[row] =
+         //        originalSolution.dual[row] +
+         //        originalSolution.reducedCosts[col] / coeff;
+         //    originalSolution.reducedCosts[col] = 0;
 
          //    solSetRow[row] = true;
          // }
@@ -1063,6 +1070,7 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
          //     }
       case ReductionType::kFixedInfCol:
       {
+         //TODO dual case missing
          int column = indices[first];
          REAL bound = values[first + 1];
          REAL solution = bound;
@@ -1286,7 +1294,6 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
           checker.level == CheckLevel::After_each_step_and_dual )
       {
          auto kktStatePostsolvedProblem = checker.initState(
-
              ProblemType::kPostsolved, originalSolution, checker.level );
          checker.checkSolution( kktStatePostsolvedProblem, true );
       }

@@ -39,8 +39,8 @@ class Solution
  public:
    SolutionType type;
    Vec<REAL> primal;
-   Vec<REAL> col_dual;
-   Vec<REAL> row_dual;
+   Vec<REAL> reducedCosts;
+   Vec<REAL> dual;
 
    // Default type primal only.
    Solution() : type( SolutionType::kPrimal ) {}
@@ -61,8 +61,8 @@ class Solution
              Vec<REAL> dual_row_values )
        : type( SolutionType::kPrimalDual ),
          primal( std::move( primal_values ) ),
-         col_dual( std::move( dual_col_values ) ),
-         row_dual( std::move( dual_row_values ) )
+         reducedCosts( std::move( dual_col_values ) ),
+         dual( std::move( dual_row_values ) )
    {
    }
 };
