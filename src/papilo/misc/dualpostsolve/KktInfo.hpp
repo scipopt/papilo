@@ -1,4 +1,3 @@
-
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 /*                                                                           */
 /*               This file is part of the program and library                */
@@ -22,16 +21,8 @@
 /*                                                                           */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef _PAPILO_MISC_KKT_CHECK_HELPER_HPP_
-#define _PAPILO_MISC_KKT_CHECK_HELPER_HPP_
-
-#include <iostream>
-
-#include "papilo/core/Problem.hpp"
-#include "papilo/io/Message.hpp"
-
-namespace papilo
-{
+#ifndef _KKT_INFO_H
+#define _KKT_INFO_H
 
 template <typename REAL>
 struct KktRuleInfo
@@ -43,22 +34,6 @@ struct KktRuleInfo
    std::vector<REAL> values;
 };
 
-template <typename REAL>
-void
-updateRuleInfo( KktRuleInfo<REAL>& info )
-{
-   if( info.values.size() == 0 )
-      return;
-   info.num_violated = info.values.size();
-   info.max = info.values[0];
-   info.sum = info.values[0];
-   for( int i = 1; i < info.values.size(); i++ )
-   {
-      info.sum += info.values[i];
-      if( info.max < info.values[i] )
-         info.max = info.values[i];
-   }
-}
 
 template <typename REAL>
 struct KktInfo
@@ -72,43 +47,5 @@ struct KktInfo
 
    // todo: dual.
 };
-
-template <typename REAL>
-void
-updateKktInfo( const int cols, const int rows, KktInfo<REAL>& info )
-{
-   info.num_col = cols;
-   info.num_row = rows;
-
-   // Primal.
-   updateRuleInfo( info.primal_row_bounds );
-   updateRuleInfo( info.primal_row_bounds );
-
-   // todo: dual
-}
-
-template <typename REAL>
-void
-addRow( Problem<REAL>& problem, const int row, const int length,
-        const REAL* values, const int* coeffs, const REAL lhs, const REAL rhs,
-        const bool lb_inf, const bool ub_inf )
-{
-   // Assuming problem is expanded and row will be added at the preacllocated
-   // space.
-
-   // Modify lhs, rhs.
-   // Modify rowFlags and colFlags.
-
-   // Modify matrix.
-}
-
-// todo:
-template <typename REAL>
-void
-addColToProblem()
-{
-}
-
-} // namespace papilo
 
 #endif

@@ -264,8 +264,8 @@ install(FILES
    ${PROJECT_SOURCE_DIR}/src/papilo/misc/tbb.hpp
    ${PROJECT_SOURCE_DIR}/src/papilo/misc/fmt.hpp
    ${PROJECT_SOURCE_DIR}/src/papilo/misc/Hash.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/misc/KktChecker.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/misc/KktCheckHelper.hpp
+        src/papilo/misc/dualpostsolve/KktChecker.hpp
+        src/papilo/misc/dualpostsolve/KktCheckHelper.hpp
    ${PROJECT_SOURCE_DIR}/src/papilo/misc/MultiPrecision.hpp
    ${PROJECT_SOURCE_DIR}/src/papilo/misc/Num.hpp
    ${PROJECT_SOURCE_DIR}/src/papilo/misc/NumericalStatistics.hpp

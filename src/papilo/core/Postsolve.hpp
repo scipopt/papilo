@@ -25,13 +25,14 @@
 #define _PAPILO_CORE_POSTSOLVE_HPP_
 
 #include "papilo/core/Problem.hpp"
-#include "papilo/misc/KktChecker.hpp"
 #include "papilo/misc/MultiPrecision.hpp"
 #include "papilo/misc/Num.hpp"
 #include "papilo/misc/StableSum.hpp"
 #include "papilo/misc/Vec.hpp"
 #include "papilo/misc/compress_vector.hpp"
+#include "papilo/misc/dualpostsolve/KktChecker.hpp"
 #include "papilo/misc/fmt.hpp"
+#include "papilo/misc/dualpostsolve/CheckLevel.hpp"
 #include "papilo/misc/tbb.hpp"
 #include <fstream>
 
