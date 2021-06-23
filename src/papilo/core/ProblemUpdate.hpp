@@ -569,7 +569,8 @@ ProblemUpdate<REAL>::changeLB( int col, REAL val )
    if( cflags[col].test( ColFlag::kIntegral, ColFlag::kImplInt ) )
       newbound = num.feasCeil( newbound );
 
-   if( cflags[col].test( ColFlag::kLbInf ) || newbound > lbs[col] )
+   bool isInfinity = cflags[col].test( ColFlag::kLbInf );
+   if( isInfinity || newbound > lbs[col] )
    {
       ++stats.nboundchgs;
       if( !cflags[col].test( ColFlag::kUbInf ) && newbound > ubs[col] )
@@ -614,6 +615,8 @@ ProblemUpdate<REAL>::changeLB( int col, REAL val )
       else
          cflags[col].unset( ColFlag::kLbInf );
 
+      postsolve.notifyVarBoundChange( true, -1, col, lbs[col],
+                                      isInfinity,newbound );
       lbs[col] = newbound;
 
       if( !cflags[col].test( ColFlag::kUbInf ) && ubs[col] == lbs[col] )
@@ -658,7 +661,8 @@ ProblemUpdate<REAL>::changeUB( int col, REAL val )
    if( cflags[col].test( ColFlag::kIntegral, ColFlag::kImplInt ) )
       newbound = num.feasFloor( newbound );
 
-   if( cflags[col].test( ColFlag::kUbInf ) || newbound < ubs[col] )
+   bool isInfinity = cflags[col].test( ColFlag::kUbInf );
+   if( isInfinity || newbound < ubs[col] )
    {
       ++stats.nboundchgs;
       if( !cflags[col].test( ColFlag::kLbInf ) && newbound < lbs[col] )
@@ -702,6 +706,8 @@ ProblemUpdate<REAL>::changeUB( int col, REAL val )
       else
          cflags[col].unset( ColFlag::kUbInf );
 
+      postsolve.notifyVarBoundChange( false, -1, col, ubs[col],
+                                      isInfinity,newbound );
       ubs[col] = newbound;
 
       if( !cflags[col].test( ColFlag::kLbInf ) && ubs[col] == lbs[col] )
@@ -1182,6 +1188,7 @@ ProblemUpdate<REAL>::apply_dualfix( Vec<REAL>& lbs, Vec<REAL>& ubs,
          }
          else
          {
+            postsolve.notifyVarBoundChange(false, -1, col, ubs[col], cflags[col].test(ColFlag::kUbInf), lbs[col]);
             ubs[col] = lbs[col];
             cflags[col].unset( ColFlag::kUbInf );
             ++stats.nboundchgs;
@@ -1206,6 +1213,7 @@ ProblemUpdate<REAL>::apply_dualfix( Vec<REAL>& lbs, Vec<REAL>& ubs,
          }
          else
          {
+            postsolve.notifyVarBoundChange(true, -1, col, lbs[col], cflags[col].test(ColFlag::kLbInf), ubs[col]);
             lbs[col] = ubs[col];
             cflags[col].unset( ColFlag::kLbInf );
             ++stats.nboundchgs;
@@ -1486,33 +1494,37 @@ ProblemUpdate<REAL>::removeSingletonRow( int row )
    const int col = rowvec.getIndices()[0];
    const REAL lhs = consMatrix.getLeftHandSides()[row];
    const REAL rhs = consMatrix.getRightHandSides()[row];
+   const bool isLhsInfinity = rflags[row].test( RowFlag::kLhsInf );
+   const bool isRhsInfinity = rflags[row].test( RowFlag::kRhsInf );
 
    if( rflags[row].test( RowFlag::kEquation ) )
       status = fixCol( col, rhs / val );
-   else if( val < 0 )
-   {
-      if( !rflags[row].test( RowFlag::kLhsInf ) )
-         status = changeUB( col, lhs / val );
-
-      if( !rflags[row].test( RowFlag::kRhsInf ) &&
-          status != PresolveStatus::kInfeasible )
-         status = changeLB( col, rhs / val );
-   }
    else
    {
-      assert( val > 0 );
+      if( val < 0 )
+      {
+         if( !isLhsInfinity )
+            status = changeUB( col, lhs / val );
 
-      if( !rflags[row].test( RowFlag::kLhsInf ) )
-         status = changeLB( col, lhs / val );
+         if( !isRhsInfinity && status != PresolveStatus::kInfeasible )
+            status = changeLB( col, rhs / val );
+      }
+      else
+      {
+         assert( val > 0 );
 
-      if( !rflags[row].test( RowFlag::kRhsInf ) &&
-          status != PresolveStatus::kInfeasible )
-         status = changeUB( col, rhs / val );
+         if( !isLhsInfinity )
+            status = changeLB( col, lhs / val );
+
+         if( !isRhsInfinity && status != PresolveStatus::kInfeasible )
+            status = changeUB( col, rhs / val );
+      }
    }
 
    auto colvec = consMatrix.getColumnCoefficients( col );
-   Objective<REAL>& obj = problem.getObjective();
-   postsolve.notifySingletonRow( row, col, val, obj.coefficients, colvec );
+   postsolve.notifySingletonRow( row, col, val,
+                                 problem.getObjective().coefficients, colvec,
+                                 lhs, isLhsInfinity, rhs, isRhsInfinity );
    markRowRedundant( row );
 
    return status;

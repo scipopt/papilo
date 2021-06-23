@@ -93,7 +93,7 @@ class KktChecker<REAL, CheckLevel::No_check>
    void
    checkSolution( State&, bool intermediate = false ) const
    {
-      //no implementation needed
+      // no implementation needed
    }
 
    bool
@@ -110,13 +110,13 @@ class KktChecker<REAL, CheckLevel::No_check>
    void
    setOriginalProblem( const Problem<REAL>& ) const
    {
-      //no implementation needed
+      // no implementation needed
    }
 
    void
    setReducedProblem( const Problem<REAL>& ) const
    {
-      //no implementation needed
+      // no implementation needed
    }
 
    void
@@ -124,43 +124,43 @@ class KktChecker<REAL, CheckLevel::No_check>
                     const int* coeffs, const REAL lhs, const REAL rhs,
                     const bool lb_inf, const bool ub_inf )
    {
-      //no implementation needed
+      // no implementation needed
    }
 
    void
    undoSubstitutedCol( const int col )
    {
-      //no implementation needed
+      // no implementation needed
    }
 
    void
    undoParallelCol( const int col )
    {
-      //no implementation needed
+      // no implementation needed
    }
 
    void
    undoFixedCol( const int col, const REAL value )
    {
-      //no implementation needed
+      // no implementation needed
    }
 
    void
    undoSingletonRow( const int row )
    {
-      //no implementation needed
+      // no implementation needed
    }
 
    void
    undoDeletedCol( const int col )
    {
-      //no implementation needed
+      // no implementation needed
    }
 
    void
    undoRedundantRow( const int row )
    {
-      //no implementation needed
+      // no implementation needed
    }
 };
 
@@ -223,10 +223,10 @@ class KktChecker<REAL, CheckLevel::Check>
       solSetRow.resize( nrows );
       solSetRow.assign( nrows, 0 );
 
-      for(int origcol : origcol_map)
+      for( int origcol : origcol_map )
          solSetCol[origcol] = true;
 
-      for(int origrow : origrow_map)
+      for( int origrow : origrow_map )
          solSetRow[origrow] = true;
 
       return initState( type, solution, solSetCol, solSetRow, checker_level );
@@ -619,11 +619,59 @@ class KktChecker<REAL, CheckLevel::Check>
    }
 
    void
+   addCol( const int col, const SparseVectorView<REAL>& view,
+           const REAL objective, const REAL lb, REAL ub, bool lb_inf,
+           bool ub_inf )
+   {
+      problem.getObjective().coefficients[col] = objective;
+      problem.getLowerBounds()[col] = lb;
+      problem.getUpperBounds()[col] = ub;
+      if( lb_inf )
+         problem.getColFlags()[col].set( ColFlag::kLbInf );
+      if( ub_inf )
+         problem.getColFlags()[col].set( ColFlag::kUbInf );
+   }
+
+   void
+   addRow( const int row, const REAL lhs ,bool lhs_inf, REAL rhs,
+           bool rhs_inf )
+   {
+      problem.getConstraintMatrix().getLeftHandSides()[row] = lhs;
+      problem.getConstraintMatrix().getRightHandSides()[row] = rhs;
+      if( lhs_inf )
+         problem.getRowFlags()[row].set( RowFlag::kLhsInf );
+      else
+         problem.getRowFlags()[row].unset(RowFlag::kLhsInf);
+      if( rhs_inf )
+         problem.getRowFlags()[row].set( RowFlag::kRhsInf );
+      else
+         problem.getRowFlags()[row].unset(RowFlag::kRhsInf);
+   }
+
+   void
+   undoUbChange(int col, REAL value, bool isInfinity){
+      problem.getUpperBounds()[col] = value;
+      if( problem.getColFlags()[col].test( ColFlag::kFixed ) )
+         problem.getColFlags()[col].unset(ColFlag::kFixed);
+      if(isInfinity)
+         problem.getColFlags()[col].set(ColFlag::kUbInf);
+   }
+
+   void
+   undoLbChange(int col, REAL value, bool isInfinity){
+      problem.getLowerBounds()[col] = value;
+      if(problem.getColFlags()[col].test(ColFlag::kFixed))
+         problem.getColFlags()[col].unset(ColFlag::kFixed);
+      if(isInfinity)
+         problem.getColFlags()[col].set(ColFlag::kLbInf);
+   }
+
+   void
    addRowToProblem( const int row, const int length, const REAL* values,
                     const int* coeffs, const REAL lhs, const REAL rhs,
                     const bool lb_inf, const bool ub_inf )
    {
-      addRow( problem, row, length, values, coeffs, lhs, rhs, lb_inf, ub_inf );
+      addRow( row, lhs, lb_inf, rhs, ub_inf );
    }
 
    void
@@ -642,24 +690,30 @@ class KktChecker<REAL, CheckLevel::Check>
       // todo: ...
    }
 
+
+
    void
-   undoFixedCol( const int col, const REAL value, SparseVectorView<REAL>& view, REAL objective)
+   undoFixedCol( const int col, const REAL value,
+                 const SparseVectorView<REAL>& view, REAL objective )
    {
       assert( !solSetCol[col] );
       solSetCol[col] = true;
-
-//      problem.addCol(col, length, values, coeffs, l, u, lb_inf, ub_inf ):
-      // todo:
-//       addCol( problem, );
+      //TODO: set bounds correctly
+      REAL lb = value;
+      REAL ub = value;
+      bool lb_inf = false;
+      bool ub_inf = false;
+      problem.getColFlags()[col].unset(ColFlag::kLbInf);
+      problem.getColFlags()[col].unset(ColFlag::kUbInf);
+      problem.getColFlags()[col].unset(ColFlag::kFixed);
+      addCol( col, view, objective, lb, ub, lb_inf, ub_inf );
    }
 
    void
-   undoSingletonRow( const int row )
+   undoSingletonRow( const int row, const REAL lhs, bool isLhsInfinity, const REAL rhs, bool isRhsInfinity )
    {
       assert( solSetRow[row] );
-      // todo:
-      // addRow( problem, row, length, values, coeffs, lhs, rhs, lhs_inf,
-      // rhs_inf );
+      addRow(row, lhs, isLhsInfinity, rhs, isRhsInfinity);
    }
 
    void
@@ -674,9 +728,12 @@ class KktChecker<REAL, CheckLevel::Check>
    void
    undoRedundantRow( const int row )
    {
-      //TODO: duplicated row reduction
-//      assert( !solSetRow[row] );
+      // TODO: duplicated row reduction
+      //      assert( !solSetRow[row] );
+      assert(problem.getRowFlags()[row].test(RowFlag::kLhsInf, RowFlag::kRhsInf));
       solSetRow[row] = true;
+      bool v = problem.getRowFlags()[row].test(RowFlag::kRedundant);
+      problem.getRowFlags()[row].unset(RowFlag::kRedundant);
    }
 
    Message message;

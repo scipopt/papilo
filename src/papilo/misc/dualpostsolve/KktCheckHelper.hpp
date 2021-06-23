@@ -84,8 +84,10 @@ addRow( Problem<REAL>& problem, const int row, const int length,
 // todo:
 template <typename REAL>
 void
-addColToProblem()
+addCol(Problem<REAL> problem, const int col, const SparseVectorView<REAL>& view,
+       const REAL objective, const REAL lb, REAL ub, bool lb_inf, bool ub_inf)
 {
+
 }
 
 } // namespace papilo

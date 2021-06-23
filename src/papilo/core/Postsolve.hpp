@@ -65,7 +65,8 @@ enum class ReductionType : int
    kSingletonRow = 6,
    kRedundantRow = 7,
    kDeletedCol = 8,
-   kBoundChange = 9,
+   kVarBoundChange = 9,
+   kRowBoundChange = 13,
    kColumnDualValue = 10,
    kRowDualValue = 11,
    kReducedBoundsCost = 12
@@ -171,9 +172,16 @@ class Postsolve
    notifyDeletedCol( const int col );
 
    void
-   notifyBoundChange( const bool is_row, const bool is_lower, const int col,
-                      const int row, const REAL old_bound,
-                      const REAL new_bound );
+   notifyVarBoundChange( const bool isLowerBound,
+                         const int row, const int col, const REAL oldBound,
+                         bool isInfinity, const REAL newBound )
+   ;
+
+   void
+   notifyRowBoundChange( const bool isLhs,
+                         const int row, const int col,
+                         const REAL oldBound, const REAL newBound );
+
 
    void
    notifyReducedBoundsAndCost( const Vec<REAL>& col_lb, const Vec<REAL>& col_ub,
@@ -190,9 +198,12 @@ class Postsolve
                    const Vec<REAL>& cost );
 
    void
-   notifySingletonRow( const int row, const int col, const REAL coeff,
-                       const Vec<REAL>& cost,
-                       const SparseVectorView<REAL>& colvec );
+   notifySingletonRow( const int row, const int col,
+                       const REAL coeff, const Vec<REAL>& cost,
+                       const SparseVectorView<REAL>& colvec,
+                       const REAL lhs, bool isLhsInfinity,
+                       const REAL rhs, bool isRhsInfinity )
+   ;
 
    void
    notifyDualValue( bool is_column_dual, int index, REAL value );
@@ -346,30 +357,52 @@ Postsolve<REAL>::notifyDeletedCol( const int col )
 
 template <typename REAL>
 void
-Postsolve<REAL>::notifyBoundChange( const bool is_row, const bool is_lower,
-                                    const int row, const int col,
-                                    const REAL old_bound, const REAL new_bound )
+Postsolve<REAL>::notifyVarBoundChange( const bool isLowerBound,
+                                       const int row, const int col, const REAL oldBound,
+                                       bool isInfinity, const REAL newBound )
 {
    // TODO, this is not needed due to the bound relaxing strategy I'll
    // add for constraint propagation, instead there should only be a function
    // notifyForcingRow. This is called for the case where a row forces a column
    // upper bound to its lower bound and the column is fixed as a result, or the
    // other way around.
-   types.push_back( ReductionType::kBoundChange );
-   if( is_row && is_lower )
-      indices.push_back( 0 );
-   else if( is_row )
+   types.push_back( ReductionType::kVarBoundChange );
+   if( isLowerBound )
       indices.push_back( 1 );
-   else if( is_lower )
-      indices.push_back( 2 );
    else
-      indices.push_back( 3 );
+      indices.push_back( 0 );
    values.push_back( 0 );
 
-   indices.push_back( row );
    indices.push_back( col );
-   values.push_back( old_bound );
-   values.push_back( new_bound );
+   values.push_back( newBound );
+
+   indices.push_back( isInfinity );
+   values.push_back( oldBound );
+
+   finishNotify();
+}
+
+template <typename REAL>
+void
+Postsolve<REAL>::notifyRowBoundChange( const bool isLhs,
+                                       const int row, const int col,
+                                       const REAL oldBound, const REAL newBound )
+{
+   // TODO, this is not needed due to the bound relaxing strategy I'll
+   // add for constraint propagation, instead there should only be a function
+   // notifyForcingRow. This is called for the case where a row forces a column
+   // upper bound to its lower bound and the column is fixed as a result, or the
+   // other way around.
+   types.push_back( ReductionType::kRowBoundChange );
+   if( isLhs )
+      indices.push_back( 1 );
+   else
+      indices.push_back( 0 );
+   values.push_back( 0 );
+   indices.push_back( 0 );
+   indices.push_back( col );
+   values.push_back( oldBound );
+   values.push_back( newBound );
 
    finishNotify();
 }
@@ -462,20 +495,39 @@ Postsolve<REAL>::notifyFixedCol( int col, const REAL val,
    finishNotify();
 }
 
+/**
+ * If a singleton row is deleted aka converted to an lower or upper bound,
+ * this function saves the information to recalculate the dual solution.
+ * This function should only be called if the singletonRow implies an tighter
+ * bound. (TO BE CHECKED)
+ * In this case the c^T - y^T *A needs to be zero because the original bound is not going to be met.
+ * Therefore save the current column vector to recalculate.
+ * (c^T-(y^T*A\{col}))/a_col.
+ * @tparam REAL
+ * @param row row index of singleton row
+ * @param col column index of singleton row
+ * @param coeff a_col
+ * @param cost obj_col = c^T
+ * @param colvec A\{col}
+ */
 template <typename REAL>
 void
 Postsolve<REAL>::notifySingletonRow( const int row, const int col,
                                      const REAL coeff, const Vec<REAL>& cost,
-                                     const SparseVectorView<REAL>& colvec )
+                                     const SparseVectorView<REAL>& colvec,
+                                     const REAL lhs, bool isLhsInfinity,
+                                     const REAL rhs, bool isRhsInfinity )
 {
-   // TODO: in general it would be good for all the notify functions, now that
-   // there are so many to have comments that say which information needs to be
-   // stored for which postsolve type
    types.push_back( ReductionType::kSingletonRow );
    indices.push_back( origrow_mapping[row] );
    values.push_back( 0 );
    indices.push_back( origcol_mapping[col] );
    values.push_back( coeff );
+
+   indices.push_back( isLhsInfinity );
+   values.push_back( lhs );
+   indices.push_back( isRhsInfinity );
+   values.push_back( rhs );
 
    const int length = colvec.getLength();
    indices.push_back( length - 1 );
@@ -483,6 +535,7 @@ Postsolve<REAL>::notifySingletonRow( const int row, const int col,
 
    const REAL* vals = colvec.getValues();
    const int* inds = colvec.getIndices();
+
 
    for( int j = 0; j < length; j++ )
    {
@@ -934,12 +987,20 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
          // use notifySavedCol and current index of column on the stack.
          int col = indices[first];
          origSol[col] = values[first];
+
          // todo: checker notify dual value if changed
          if( originalSolution.type == SolutionType::kPrimalDual )
          {
-
             // get dual reducedCosts z_j = c_j - sum_i a_ij*y_i
             REAL objective_coefficient = values[first + 1];
+
+            //modify changes
+            col_cost[origcol_mapping[col]] = objective_coefficient;
+            col_infinity_lower[col] = false;
+            col_infinity_upper[col] = false;
+            col_upper[col] = values[first];
+            col_lower[col] = values[first];
+
             int col_length = indices[first + 1];
             int* inds = new int[col_length];
             REAL* vals = new REAL[col_length];
@@ -957,6 +1018,7 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
                                    originalSolution.dual[indices[index]];
             }
             originalSolution.reducedCosts[col] = reducedCosts;
+
             SparseVectorView<REAL> view = SparseVectorView<REAL>{vals, inds, col_length};
             checker.undoFixedCol( col, values[first], view, objective_coefficient);
 
@@ -973,17 +1035,22 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
          {
 
             REAL coeff = values[first + 1];
-            REAL cost = values[first + 2];
+            REAL cost = values[first + 4];
             assert( indices[first + 1] == col );
 
             REAL value = cost;
-            int col_length_minus_one = indices[first + 2];
+            int col_length_minus_one = indices[first + 4];
+
+            int isLhsInfinity = indices[first + 2]==1;
+            REAL lhs = values[first + 2];
+            int isRhsInfinity = indices[first + 3]==1;
+            REAL rhs = values[first + 3];
 
             // no need to check for solSetRow because if it is zero then the
             // dual value is zero.
             for( int k = 0; k < col_length_minus_one; ++k )
             {
-               int index = first + 3 + k;
+               int index = first + 5 + k;
                value -= values[index] * originalSolution.dual[indices[index]];
             }
 
@@ -991,12 +1058,38 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
 
             originalSolution.dual[row] = value;
             originalSolution.reducedCosts[col] = 0;
+            checker.undoSingletonRow( row, lhs, isLhsInfinity, rhs, isRhsInfinity );
+            col_lower[col] = lhs;
+            col_upper[col] = rhs;
+            col_infinity_lower[col] = isLhsInfinity;
+            col_infinity_upper[col] = isRhsInfinity;
          }
-         checker.undoSingletonRow( row );
          break;
       }
-      case ReductionType::kBoundChange:
+      case ReductionType::kVarBoundChange:
       {
+         bool isLowerBound = indices[first]==1;
+         int col = indices[first + 1];
+         REAL old_value = values[first + 2];
+         REAL new_value = values[first + 1];
+         bool isInfinity = indices[first + 2] == 1;
+         if( isLowerBound )
+         {
+            col_lower[col] = old_value;
+            col_infinity_lower[col] = isInfinity;
+            checker.undoLbChange( col, old_value, isInfinity );
+            // TODO: what is that
+//            col_lower_from_row[col] = row;
+         }
+         else
+         {
+            col_upper[col] = old_value;
+            col_infinity_upper[col] = isInfinity;
+            checker.undoUbChange( col, old_value, isInfinity );
+//            col_infinity_upper[col] = row;
+         }
+
+         // todo: also set flags for rows and columns which have a bound now
          // -1 column cost
          // 0 primal row lower
          // 1 primal row upper
@@ -1004,35 +1097,28 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
          // 3 primal col upper
          // .. dual strong
          // .. dual weak
-         int type = indices[first];
-         int row = indices[first + 1];
-         int col = indices[first + 2];
-         REAL old_value = values[first + 1];
-         REAL new_value = values[first + 2];
-
-         // todo: also set flags for rows and columns which have a bound now
-         switch( type )
-         {
-         case -1:
-            col_cost[col] = old_value;
-            break;
-         case 0:
-            row_lhs[row] = old_value;
-            row_lower_from_col[row] = col;
-            break;
-         case 1:
-            row_rhs[row] = old_value;
-            row_upper_from_col[row] = col;
-            break;
-         case 2:
-            col_lower[col] = old_value;
-            col_lower_from_row[col] = row;
-            break;
-         case 3:
-            col_upper[col] = old_value;
-            col_upper_from_row[col] = row;
-            break;
-         }
+//         switch( type )
+//         {
+//         case -1:
+//            col_cost[col] = old_value;
+//            break;
+//         case 0:
+//            row_lhs[row] = old_value;
+//            row_lower_from_col[row] = col;
+//            break;
+//         case 1:
+//            row_rhs[row] = old_value;
+//            row_upper_from_col[row] = col;
+//            break;
+//         case 2:
+//            col_lower[col] = old_value;
+//            col_lower_from_row[col] = row;
+//            break;
+//         case 3:
+//            col_upper[col] = old_value;
+//            col_upper_from_row[col] = row;
+//            break;
+//         }
 
          break;
       }

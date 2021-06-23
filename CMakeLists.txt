@@ -196,7 +196,7 @@ add_library(papilo-core STATIC
    src/papilo/presolvers/SingletonStuffing.cpp
    src/papilo/presolvers/Sparsify.cpp
    src/papilo/presolvers/SimplifyInequalities.cpp
-        )
+  )
 
 target_link_libraries(papilo-core papilo)
 target_compile_definitions(papilo-core PRIVATE PAPILO_USE_EXTERN_TEMPLATES)
@@ -256,30 +256,34 @@ install(FILES
    DESTINATION include/papilo/io)
 
 install(FILES
-   ${PROJECT_SOURCE_DIR}/src/papilo/misc/Alloc.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/misc/Array.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/misc/compress_vector.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/misc/DependentRows.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/misc/Flags.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/misc/tbb.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/misc/fmt.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/misc/Hash.hpp
-        src/papilo/misc/dualpostsolve/KktChecker.hpp
-        src/papilo/misc/dualpostsolve/KktCheckHelper.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/misc/MultiPrecision.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/misc/Num.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/misc/NumericalStatistics.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/misc/OptionsParser.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/misc/VersionLogger.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/misc/ParameterSet.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/misc/Signature.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/misc/StableSum.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/misc/String.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/misc/Timer.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/misc/Validation.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/misc/Vec.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/misc/VectorUtils.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/misc/Wrappers.hpp
+        ${PROJECT_SOURCE_DIR}/src/papilo/misc/Alloc.hpp
+        ${PROJECT_SOURCE_DIR}/src/papilo/misc/Array.hpp
+        ${PROJECT_SOURCE_DIR}/src/papilo/misc/compress_vector.hpp
+        ${PROJECT_SOURCE_DIR}/src/papilo/misc/DependentRows.hpp
+        ${PROJECT_SOURCE_DIR}/src/papilo/misc/Flags.hpp
+        ${PROJECT_SOURCE_DIR}/src/papilo/misc/tbb.hpp
+        ${PROJECT_SOURCE_DIR}/src/papilo/misc/fmt.hpp
+        ${PROJECT_SOURCE_DIR}/src/papilo/misc/Hash.hpp
+        ${PROJECT_SOURCE_DIR}/src/papilo/misc/dualpostsolve/CheckLevel.hpp
+        ${PROJECT_SOURCE_DIR}/src/papilo/misc/dualpostsolve/kkt_status.hpp
+        ${PROJECT_SOURCE_DIR}/src/papilo/misc/dualpostsolve/KktChecker.hpp
+        ${PROJECT_SOURCE_DIR}/src/papilo/misc/dualpostsolve/KktCheckHelper.hpp
+        ${PROJECT_SOURCE_DIR}/src/papilo/misc/dualpostsolve/KktInfo.hpp
+        ${PROJECT_SOURCE_DIR}/src/papilo/misc/dualpostsolve/KktState.hpp
+        ${PROJECT_SOURCE_DIR}/src/papilo/misc/MultiPrecision.hpp
+        ${PROJECT_SOURCE_DIR}/src/papilo/misc/Num.hpp
+        ${PROJECT_SOURCE_DIR}/src/papilo/misc/NumericalStatistics.hpp
+        ${PROJECT_SOURCE_DIR}/src/papilo/misc/OptionsParser.hpp
+        ${PROJECT_SOURCE_DIR}/src/papilo/misc/VersionLogger.hpp
+        ${PROJECT_SOURCE_DIR}/src/papilo/misc/ParameterSet.hpp
+        ${PROJECT_SOURCE_DIR}/src/papilo/misc/Signature.hpp
+        ${PROJECT_SOURCE_DIR}/src/papilo/misc/StableSum.hpp
+        ${PROJECT_SOURCE_DIR}/src/papilo/misc/String.hpp
+        ${PROJECT_SOURCE_DIR}/src/papilo/misc/Timer.hpp
+        ${PROJECT_SOURCE_DIR}/src/papilo/misc/Validation.hpp
+        ${PROJECT_SOURCE_DIR}/src/papilo/misc/Vec.hpp
+        ${PROJECT_SOURCE_DIR}/src/papilo/misc/VectorUtils.hpp
+        ${PROJECT_SOURCE_DIR}/src/papilo/misc/Wrappers.hpp
    DESTINATION include/papilo/misc)
 
 install(FILES
