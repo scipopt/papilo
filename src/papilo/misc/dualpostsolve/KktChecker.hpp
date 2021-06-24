@@ -500,7 +500,7 @@ class KktChecker<REAL, CheckLevel::Check>
             const int* columns_reduced = row_coeff.getIndices();
             for( int i = 0; i < len_r; i++ )
             {
-               assert( len_r = row_coeff.getLength() );
+               assert( len_r == row_coeff.getLength() );
                int col = columns_reduced[i];
                assert( col < original_index_col.size() && col >= 0 );
                columns[i] = original_index_col[col];
@@ -514,7 +514,8 @@ class KktChecker<REAL, CheckLevel::Check>
             // todo: // saved row at elimination.
             // empty with size of original.
             int len = len_o;
-            std::vector<int> zeros( len, 0 );
+            // set
+            std::vector<int> zeros( len, len+1 );
             std::vector<REAL> orig_ones( len, 1 );
             const int* cols = &zeros[0];
             const REAL* vals = &orig_ones[0];
@@ -591,11 +592,11 @@ class KktChecker<REAL, CheckLevel::Check>
          }
          else
          {
-            // todo: add bounds of row at elimination?
             builder.setRowLhsInf( row, true );
             builder.setRowRhsInf( row, true );
          }
       }
+
       assert( reduced == reduced_problem.getNRows() );
 
       problem = builder.build();

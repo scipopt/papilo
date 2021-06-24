@@ -455,6 +455,8 @@ namespace papilo
                int col = matrixRW.getColumns()[j];
                assert( col >= 0 );
                assert( col < (int)nCols );
+//               if(col >= (int) nCols)
+//                  continue;
 
                // col is index of the column in reduced problem and colValues is
                // expanded.

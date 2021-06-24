@@ -1058,6 +1058,9 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
 
             originalSolution.dual[row] = value;
             originalSolution.reducedCosts[col] = 0;
+            int index[1] = {col};
+            REAL vals[1] = {coeff};
+            SparseVectorView<REAL> view {vals, index, 1};
             checker.undoSingletonRow( row, lhs, isLhsInfinity, rhs, isRhsInfinity );
             col_lower[col] = lhs;
             col_upper[col] = rhs;
