@@ -41,9 +41,9 @@ namespace papilo
       // values in postsolve
       const papilo::Problem<REAL>& problem;
 
-      const papilo::Vec<REAL>& colValues;
-      const papilo::Vec<REAL>& colDuals;
-      const papilo::Vec<REAL>& rowDuals;
+      const papilo::Vec<REAL>& primalSolution;
+      const papilo::Vec<REAL>& reducedCosts;
+      const papilo::Vec<REAL>& dualSolution;
       papilo::Vec<REAL> rowValues;
 
       const papilo::Vec<uint8_t>& solSetCol;
@@ -66,8 +66,9 @@ namespace papilo
                 const papilo::Solution<REAL>& solution,
                 const papilo::Vec<uint8_t>& solSetColumns,
                 const papilo::Vec<uint8_t>& solSetRows )
-          : problem( prob ), colValues( solution.primal ),
-            colDuals( solution.reducedCosts ), rowDuals( solution.dual ),
+          : problem( prob ), primalSolution( solution.primal ),
+            reducedCosts( solution.reducedCosts ),
+            dualSolution( solution.dual ),
             solSetCol( solSetColumns ), solSetRow( solSetRows ),
             matrixRW( problem.getConstraintMatrix().getConstraintMatrix() ),
             objective( problem.getObjective() ),
@@ -89,9 +90,9 @@ namespace papilo
          assert( colLower.size() == nCols );
          assert( colLower.size() == nCols );
 
-         assert( solSetCol.size() == colValues.size() );
-         assert( solSetCol.size() == colDuals.size() || 0 == colDuals.size() );
-         assert( solSetRow.size() == rowDuals.size() || 0 == rowDuals.size() );
+         assert( solSetCol.size() == primalSolution.size() );
+         assert( solSetCol.size() == reducedCosts.size() || 0 == reducedCosts.size() );
+         assert( solSetRow.size() == dualSolution.size() || 0 == dualSolution.size() );
          assert( solSetRow.size() == rowValues.size() ||
                  0 == rowValues.size() );
       }
@@ -104,8 +105,9 @@ namespace papilo
                 const papilo::Vec<REAL>& rowUpper_,
                 const papilo::Vec<REAL>& colLower_,
                 const papilo::Vec<REAL>& colUpper_ )
-          : problem( prob ), colValues( solution.primal ),
-            colDuals( solution.reducedCosts ), rowDuals( solution.dual ),
+          : problem( prob ), primalSolution( solution.primal ),
+            reducedCosts( solution.reducedCosts ),
+            dualSolution( solution.dual ),
             solSetCol( solSetColumns ), solSetRow( solSetRows ),
             matrixRW( problem.getConstraintMatrix().getConstraintMatrix() ),
             objective( problem.getObjective() ), rowLower( rowLower_ ),
@@ -119,9 +121,9 @@ namespace papilo
          if( nRows == 0 && nCols == 0 )
             return;
 
-         assert( solSetCol.size() == colValues.size() );
-         assert( solSetCol.size() == colDuals.size() || 0 == colDuals.size() );
-         assert( solSetRow.size() == rowDuals.size() || 0 == rowDuals.size() );
+         assert( solSetCol.size() == primalSolution.size() );
+         assert( solSetCol.size() == reducedCosts.size() || 0 == reducedCosts.size() );
+         assert( solSetRow.size() == dualSolution.size() || 0 == dualSolution.size() );
          assert( solSetRow.size() == rowValues.size() ||
                  0 == rowValues.size() );
       }
@@ -153,21 +155,21 @@ namespace papilo
             int index =
                 ( problem.getNCols() < solSetCol.size() ) ? reduced_index : col;
             if( !isLowerBoundInfinity( problem, index ) &&
-                colLower[col] - colValues[col] > tol )
+                colLower[col] - primalSolution[col] > tol )
             {
                message.info( "Column {:<3} violates lower column bound.\n",
                              col );
-               REAL value = colLower[col] - colValues[col];
+               REAL value = colLower[col] - primalSolution[col];
                info.primal_col_bounds.values.push_back( value );
                status = kkt_status::Fail_Primal_Bound;
             }
 
             if( !isUpperBoundInfinity( problem, index ) &&
-                colValues[col] - colUpper[col] > tol )
+                primalSolution[col] - colUpper[col] > tol )
             {
                message.info( "Column {:<3} violates upper column bound.\n",
                              col );
-               REAL value = colValues[col] - colUpper[col];
+               REAL value = primalSolution[col] - colUpper[col];
                info.primal_col_bounds.values.push_back( value );
                status = kkt_status::Fail_Primal_Bound;
             }
@@ -184,7 +186,7 @@ namespace papilo
          const int nCols = solSetCol.size();
 
          if( colLower.size() != nCols || colUpper.size() != nCols ||
-             colValues.size() != nCols )
+             primalSolution.size() != nCols )
             return kkt_status::Fail_Length;
 
          const int nRows = solSetRow.size();
@@ -195,7 +197,7 @@ namespace papilo
 
          if( level == CheckLevel::After_each_step_and_dual ||
              level == CheckLevel::Primal_and_dual )
-            if( colDuals.size() != nCols || rowDuals.size() != nRows )
+            if( reducedCosts.size() != nCols || dualSolution.size() != nRows )
                return kkt_status::Fail_Length;
 
          return kkt_status::OK;
@@ -253,25 +255,25 @@ namespace papilo
             if( !solSetCol[col] )
                continue;
 
-            // no lower or upper bound on infinity
-            if( isLowerBoundInfinity( problem, reduced_index ) &&
-                isUpperBoundInfinity( problem, reduced_index ) )
+            // no lower and upper bound on infinity
+            if( isLowerBoundInfinity( problem, col ) &&
+                isUpperBoundInfinity( problem, col ) )
             {
-               if( abs( colDuals[col] ) > tol )
+               if( abs( reducedCosts[col] ) > tol )
                   return kkt_status::Fail_Dual_Feasibility;
             }
             // non fixed variable at lower bound: x=l and l<u
-            else if( abs( colValues[col] - lowerBounds[col] ) < tol &&
+            else if( abs( primalSolution[col] - lowerBounds[col] ) < tol &&
                      lowerBounds[col] < upperBounds[col] )
             {
-               if( colDuals[col] < 0 && abs( colDuals[col] ) > tol )
+               if( reducedCosts[col] < 0 && abs( reducedCosts[col] ) > tol )
                   return kkt_status::Fail_Dual_Feasibility;
             }
             // non fixed variable at upper bound: x=u and l<u
-            else if( abs( colValues[col] - upperBounds[col] ) < tol &&
+            else if( abs( primalSolution[col] - upperBounds[col] ) < tol &&
                      lowerBounds[col] < upperBounds[col] )
             {
-               if( colDuals[col] > tol )
+               if( reducedCosts[col] > tol )
                   return kkt_status::Fail_Dual_Feasibility;
             }
             reduced_index++;
@@ -310,21 +312,21 @@ namespace papilo
             else if( abs( lhs[row] - rowValues[row] ) < tol &&
                      rowValues[row] < rhs[row] )
             {
-               if( rowDuals[row] < -tol )
+               if( dualSolution[row] < -tol )
                   return kkt_status::Fail_Dual_Feasibility;
             }
             // L < Ax = U
             else if( lhs[row] < rowValues[row] &&
                      abs( rowValues[row] - rhs[row] ) < tol )
             {
-               if( rowDuals[row] > tol )
+               if( dualSolution[row] > tol )
                   return kkt_status::Fail_Dual_Feasibility;
             }
             // L < Ax < U
             else if( lhs[row] < ( rowValues[row] + tol ) &&
                      rowValues[row] < ( rhs[row] + tol ) )
             {
-               if( abs( rowDuals[row] ) > tol )
+               if( abs( dualSolution[row] ) > tol )
                   return kkt_status::Fail_Dual_Feasibility;
             }
          }
@@ -342,17 +344,17 @@ namespace papilo
                continue;
 
             if( !isLowerBoundInfinity( problem, reduced_index ) )
-               if( abs( ( colValues[col] - colLower[col] ) *
-                        ( colDuals[col] ) ) > tol &&
-                   colValues[col] != colUpper[col] &&
-                   abs( colDuals[col] ) > tol )
+               if( abs( ( primalSolution[col] - colLower[col] ) *
+                        ( reducedCosts[col] ) ) > tol &&
+                   primalSolution[col] != colUpper[col] &&
+                   abs( reducedCosts[col] ) > tol )
                   return kkt_status::Fail_Complementary_Slackness;
 
             if( !isUpperBoundInfinity( problem, reduced_index ) )
-               if( abs( ( colUpper[col] - colValues[col] ) *
-                        ( colDuals[col] ) ) > tol &&
-                   colValues[col] != colLower[col] &&
-                   abs( colDuals[col] ) > tol )
+               if( abs( ( colUpper[col] - primalSolution[col] ) *
+                        ( reducedCosts[col] ) ) > tol &&
+                   primalSolution[col] != colLower[col] &&
+                   abs( reducedCosts[col] ) > tol )
                   return kkt_status::Fail_Complementary_Slackness;
          }
          reduced_index++;
@@ -398,11 +400,12 @@ namespace papilo
             for( int k = index_range.start; k < index_range.end; k++ )
             {
                int row = matrixCW.getColumns()[k];
-               lagrV += rowDuals[orig_row_index[row]] * matrixCW.getValues()[k];
+               lagrV +=
+                   dualSolution[orig_row_index[row]] * matrixCW.getValues()[k];
             }
 
             lagrV =
-                lagrV + colDuals[col] - objective.coefficients[reduced_index];
+                lagrV + reducedCosts[col] - objective.coefficients[reduced_index];
 
             if( abs( lagrV ) > tol )
                return kkt_status::Fail_Stationarity_Lagrangian;
@@ -454,16 +457,17 @@ namespace papilo
             {
                int col = matrixRW.getColumns()[j];
                assert( col >= 0 );
-               assert( col < (int)nCols );
-//               if(col >= (int) nCols)
-//                  continue;
+//               assert( col < (int)nCols );
+               // if this value is greater then nCols it was generated for default
+               if(col >= (int) nCols)
+                  continue;
 
-               // col is index of the column in reduced problem and colValues is
+               // col is index of the column in reduced problem and primalSolution is
                // expanded.
                if( reduced )
-                  rowValue += values[j] * colValues[orig_col_index[col]];
+                  rowValue += values[j] * primalSolution[orig_col_index[col]];
                else
-                  rowValue += values[j] * colValues[col];
+                  rowValue += values[j] * primalSolution[col];
             }
             rowValues[row] = rowValue;
             reduced_row_index++;

@@ -40,6 +40,25 @@
 #include "papilo/misc/VectorUtils.hpp"
 #include "papilo/misc/fmt.hpp"
 
+// min x_0 + 4x_1 + 9x_2
+// s.t. x_0 + x_2 >= 10
+// s.t. -x_1 + x_2 >= 7
+// s.t. x_0 + x_1 <= 5
+// x>=0
+
+// x_1=0
+
+// presolved (sol 3/7)
+// min x_0 + 9x_2
+// s.t. x_0 + x_2 >= 10
+// x_2>=7 ; x_0 <=5
+// x>=0
+
+// dual (1/8)
+// max 10 y_0 + 7 y_1 + y_2
+// s.t. y_0 + y_2 <= 1
+// s.t. y_0 + y_1 >= 9
+
 namespace papilo
 {
 
@@ -190,9 +209,8 @@ class KktChecker<REAL, CheckLevel::Check>
 
  public:
    CheckLevel level = CheckLevel::Primal_only;
-   using State = KktState<REAL>;
 
-   State
+   KktState<REAL>
    initState( ProblemType type, Solution<REAL>& solution,
               CheckLevel checker_level )
    {
@@ -211,7 +229,7 @@ class KktChecker<REAL, CheckLevel::Check>
       return initState( type, solution, solSetCol, solSetRow, checker_level );
    }
 
-   State
+   KktState<REAL>
    initState( ProblemType type, Solution<REAL>& solution,
               const Vec<int>& origcol_map, const Vec<int>& origrow_map,
               CheckLevel checker_level )
@@ -232,7 +250,7 @@ class KktChecker<REAL, CheckLevel::Check>
       return initState( type, solution, solSetCol, solSetRow, checker_level );
    }
 
-   State
+   KktState<REAL>
    initState( ProblemType type, Solution<REAL>& solution,
               const Vec<uint8_t>& solSetColumns, const Vec<uint8_t>& solSetRows,
               CheckLevel checker_level )
@@ -248,7 +266,7 @@ class KktChecker<REAL, CheckLevel::Check>
       {
          compareMatrixToTranspose( problem.getConstraintMatrix(), num );
          message.info( "\nInitializing check of postsolved solution\n" );
-         return State( level, problem, solution, solSetColumns, solSetRows );
+         return KktState<REAL>( level, problem, solution, solSetColumns, solSetRows );
       }
       case ProblemType::kOriginal:
       {
@@ -263,7 +281,7 @@ class KktChecker<REAL, CheckLevel::Check>
          }
          message.info( "Initializing check of original solution\n" );
 
-         if( solSetCol.size() == 0 )
+         if( solSetCol.empty() )
          {
             solSetCol.resize( original_problem.getNCols() );
             solSetCol.assign( original_problem.getNCols(), true );
@@ -272,7 +290,7 @@ class KktChecker<REAL, CheckLevel::Check>
          assert( std::all_of( solSetCol.begin(), solSetCol.end(),
                               []( uint8_t isset ) { return isset; } ) );
 
-         if( solSetRow.size() == 0 )
+         if( solSetRow.empty() )
          {
             solSetRow.resize( original_problem.getNRows() );
             solSetRow.assign( original_problem.getNRows(), true );
@@ -283,7 +301,7 @@ class KktChecker<REAL, CheckLevel::Check>
 
          // todo: for LP set CheckLevel to prima and dual, once dual postsolve
          // is implemented.
-         return State( CheckLevel::Primal_only, original_problem, solution,
+         return KktState<REAL>( CheckLevel::Primal_only, original_problem, solution,
                        solSetColumns, solSetRows );
       }
       case ProblemType::kReduced:
@@ -366,18 +384,36 @@ class KktChecker<REAL, CheckLevel::Check>
          }
 
          message.info( "\nInitializing check of reduced solution\n" );
-         return State( level, reduced_problem, solution, solSetColumns,
+         return KktState<REAL>( level, reduced_problem, solution, solSetColumns,
                        solSetRows, rowLower_reduced, rowUpper_reduced,
                        colLower_reduced, colUpper_reduced );
       }
       }
    }
 
+//   void
+//   verifySolution(Solution<REAL> solution, Problem<REAL>, CheckLevel level){
+//      if( level == CheckLevel::Primal_only ||
+//          evel == CheckLevel::After_each_step_primal_only )
+//         status = checkPrimalFeasibility();
+//      else
+//         status = checkKKT( state );
+//
+//      if( status )
+//      {
+//         message.info( "Check solution: FAIL, status: " );
+//         message.info( std::to_string( status ) );
+//         message.info( "\n" );
+//      }
+//      else
+//         message.info( "Solution verified: OK\n" );
+//   }
+
    void
-   checkSolution( State& state, bool intermediate = false ) const
+   checkSolution( KktState<REAL>& state, bool intermediate = false ) const
    {
       state.getRowValues();
-      kkt_status status = kkt_status::OK;
+      kkt_status status;
       if( state.level == CheckLevel::Primal_only ||
           state.level == CheckLevel::After_each_step_primal_only )
          status = state.checkPrimalFeasibility();
@@ -403,48 +439,46 @@ class KktChecker<REAL, CheckLevel::Check>
    }
 
    kkt_status
-   checkKKT( State& state ) const
+   checkKKT( KktState<REAL>& state ) const
    {
-      kkt_status status;
-      kkt_status return_status = kkt_status::OK;
-      status = state.checkLength();
-      if( status != kkt_status::OK )
+      kkt_status statusLength = state.checkLength();
+      if( statusLength != kkt_status::OK )
       {
          message.info( "Solution vector length check failed.\n" );
-         return status;
+         return statusLength;
       }
 
-      state.getRowValues();
-
-      status = state.checkPrimalFeasibility();
-      if( status != kkt_status::OK )
+//      state.getRowValues();
+      kkt_status statusPrimal = state.checkPrimalFeasibility();
+      if( statusPrimal != kkt_status::OK )
       {
-         return_status = status;
          message.info( "Primal feasibility failed.\n" );
+         return statusPrimal;
       }
 
-      status = state.checkDualFeasibility();
-      if( status != kkt_status::OK )
+      kkt_status statusDual = state.checkDualFeasibility();
+      if( statusDual != kkt_status::OK )
       {
-         return_status = status;
          message.info( "Dual feasibility check failed.\n" );
+         return statusDual;
       }
 
-      status = state.checkComplementarySlackness();
-      if( status != kkt_status::OK )
+      kkt_status statusSlackness = state.checkComplementarySlackness();
+      if( statusSlackness != kkt_status::OK )
       {
-         return_status = status;
          message.info( "Complementary slackness check failed.\n" );
+         return statusSlackness;
       }
 
-      status = state.checkStOfLagrangian();
-      if( status != kkt_status::OK )
-      {
-         return_status = status;
-         message.info( "Stationarity of Lagrangian check failed.\n" );
-      }
+//     TODO:
+//      kkt_status statusLagrangian = state.checkStOfLagrangian();
+//      if( statusLagrangian != kkt_status::OK )
+//      {
+//         message.info( "Stationarity of Lagrangian check failed.\n" );
+//         return statusLagrangian;
+//      }
 
-      return return_status;
+      return OK;
    }
 
    // Expand problem from reduced according to solSet* vectors.
@@ -511,12 +545,11 @@ class KktChecker<REAL, CheckLevel::Check>
          }
          else
          {
-            // todo: // saved row at elimination.
-            // empty with size of original.
+            //TODO: reserve space to len_o
             int len = len_o;
             // set
-            std::vector<int> zeros( len, len+1 );
-            std::vector<REAL> orig_ones( len, 1 );
+            std::vector<int> zeros( len, 0 );
+            std::vector<REAL> orig_ones( len, 2 );
             const int* cols = &zeros[0];
             const REAL* vals = &orig_ones[0];
             builder.addRowEntries( row, len, cols, vals );
@@ -634,8 +667,21 @@ class KktChecker<REAL, CheckLevel::Check>
    }
 
    void
-   addRow( const int row, const REAL lhs ,bool lhs_inf, REAL rhs,
-           bool rhs_inf )
+   flush( const MatrixBuffer<REAL>& matrix_buffer )
+   {
+      auto coeffChanged = [this ](
+          int row, int col, REAL oldval, REAL newval ) {
+      };
+      Vec<int> empty {};
+      problem.getConstraintMatrix().changeCoefficients(
+          matrix_buffer, empty, empty, empty,
+          problem.getRowActivities(), coeffChanged );
+      int i=0;
+   }
+
+   void
+   addRow( const int row, const SparseVectorView<REAL>& entries, const REAL lhs,
+           bool lhs_inf, REAL rhs, bool rhs_inf )
    {
       problem.getConstraintMatrix().getLeftHandSides()[row] = lhs;
       problem.getConstraintMatrix().getRightHandSides()[row] = rhs;
@@ -647,7 +693,15 @@ class KktChecker<REAL, CheckLevel::Check>
          problem.getRowFlags()[row].set( RowFlag::kRhsInf );
       else
          problem.getRowFlags()[row].unset(RowFlag::kRhsInf);
+
+      MatrixBuffer<REAL> matrix_buffer{};
+      matrix_buffer.clear();
+      for(int i=0; i< entries.getLength(); i++){
+         matrix_buffer.addEntry(row, entries.getIndices()[i], entries.getValues()[i]);
+      }
+      flush( matrix_buffer );
    }
+
 
    void
    undoUbChange(int col, REAL value, bool isInfinity){
@@ -672,7 +726,8 @@ class KktChecker<REAL, CheckLevel::Check>
                     const int* coeffs, const REAL lhs, const REAL rhs,
                     const bool lb_inf, const bool ub_inf )
    {
-      addRow( row, lhs, lb_inf, rhs, ub_inf );
+      SparseVectorView<REAL> entries {values, coeffs, length};
+      addRow( row, entries, lhs, lb_inf, rhs, ub_inf );
    }
 
    void
@@ -711,10 +766,10 @@ class KktChecker<REAL, CheckLevel::Check>
    }
 
    void
-   undoSingletonRow( const int row, const REAL lhs, bool isLhsInfinity, const REAL rhs, bool isRhsInfinity )
+   undoSingletonRow( const int row, const SparseVectorView<REAL>& entries,  const REAL lhs, bool isLhsInfinity, const REAL rhs, bool isRhsInfinity )
    {
       assert( solSetRow[row] );
-      addRow(row, lhs, isLhsInfinity, rhs, isRhsInfinity);
+      addRow(row, entries, lhs, isLhsInfinity, rhs, isRhsInfinity);
    }
 
    void

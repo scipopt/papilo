@@ -908,6 +908,7 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
 
       switch( type )
       {
+         //TODO: stack information
       case ReductionType::kReducedBoundsCost:
       {
          // get column bounds
@@ -1061,7 +1062,7 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
             int index[1] = {col};
             REAL vals[1] = {coeff};
             SparseVectorView<REAL> view {vals, index, 1};
-            checker.undoSingletonRow( row, lhs, isLhsInfinity, rhs, isRhsInfinity );
+            checker.undoSingletonRow( row, view, lhs, isLhsInfinity, rhs, isRhsInfinity );
             col_lower[col] = lhs;
             col_upper[col] = rhs;
             col_infinity_lower[col] = isLhsInfinity;
@@ -1391,6 +1392,7 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
 
    auto kktStateOriginalProblem = checker.initState(
        ProblemType::kOriginal, originalSolution, checker.level );
+//   checker.verifySolution(originalSolution, getOriginalProblem(), checker.level);
    checker.checkSolution( kktStateOriginalProblem );
 
    return PostsolveStatus::kOk;
