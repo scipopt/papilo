@@ -372,7 +372,7 @@ Presolve<REAL>::apply( Problem<REAL>& problem )
       PresolveResult<REAL> result;
 
       result.postsolve = Postsolve<REAL>( problem, num );
-      result.postsolve.getChecker().setOriginalProblem( problem );
+//      result.postsolve.getChecker().setOriginalProblem( problem );
 
       if( problem.getNumIntegralCols() == 0 )
          result.postsolve.postsolveType = PostsolveType::kFull;
@@ -839,7 +839,8 @@ Presolve<REAL>::apply( Problem<REAL>& problem )
                 col_flags );
          }
 
-         result.postsolve.getChecker().setReducedProblem( problem );
+         //TODO:
+//         result.postsolve.getChecker().setReducedProblem( problem );
          return result;
       }
 

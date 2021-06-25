@@ -180,7 +180,7 @@ namespace papilo
       }
 
       // called when dual values are being checked too
-      kkt_status
+      bool
       checkLength()
       {
          const int nCols = solSetCol.size();

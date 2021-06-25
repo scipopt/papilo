@@ -35,6 +35,7 @@
 #include "papilo/misc/dualpostsolve/CheckLevel.hpp"
 #include "papilo/misc/tbb.hpp"
 #include <fstream>
+#include "papilo/misc/dualpostsolve/PrimalDualSolValidation.hpp"
 
 #include <boost/archive/text_iarchive.hpp>
 #include <boost/archive/text_oarchive.hpp>
@@ -113,14 +114,6 @@ class Postsolve
 
    Num<REAL> num;
 
- #define CHECK_KKT
-#ifndef CHECK_KKT
-   using Kkt = KktChecker<REAL, CheckLevel::No_check>;
-#else
-   using Kkt = KktChecker<REAL, CheckLevel::Check>;
-#endif
-
-   mutable Kkt checker;
 
    Postsolve() = default;
 
@@ -276,12 +269,6 @@ class Postsolve
    getNum() const
    {
       return num;
-   }
-
-   Kkt&
-   getChecker()
-   {
-      return checker;
    }
 
  private:
@@ -742,12 +729,15 @@ Postsolve<REAL>::notifyParallelCols( int col1, bool col1integral,
    finishNotify();
 }
 
+
+
 template <typename REAL>
 PostsolveStatus
 Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
                        Solution<REAL>& originalSolution ) const
 {
 
+   PrimalDualSolValidation<REAL> validation{};
    const Vec<REAL>& reducedSol = reducedSolution.primal;
    Vec<REAL>& origSol = originalSolution.primal;
 
@@ -791,29 +781,14 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
    // At the moment not all row and column changes are notified. The check
    // below handles the case when some trivial presolve elimination is applied,
    // but types.size() is still zero.
+   CheckLevel level = Primal_only;
+   if(reducedSolution.type == SolutionType::kPrimalDual)
+      level = Primal_and_dual;
    if( origrow_mapping.size() < nRowsOriginal ||
        origcol_mapping.size() < nColsOriginal )
    {
-      CheckLevel level = Primal_only;
-      if(reducedSolution.type == SolutionType::kPrimalDual)
-         level = Primal_and_dual;
-      // original solution is already the reduced solution padded with zeros
-      auto kktState =
-          checker.initState( ProblemType::kReduced, originalSolution,
-                             origcol_mapping, origrow_mapping, level );
-
-      if( originalSolution.type == SolutionType::kPrimalDual )
-         checker.level = CheckLevel::Solver_and_primal_feas;
-
-      checker.checkSolution( kktState );
-      checker.level = CheckLevel::After_each_step_primal_only;
-      if(reducedSolution.type == SolutionType::kPrimalDual)
-         checker.level = CheckLevel::After_each_step_and_dual;
-
-      checker.expandProblem();
-      auto kktState_expand = checker.initState(
-          ProblemType::kPostsolved, originalSolution, checker.level );
-      checker.checkSolution( kktState_expand );
+      //TODO: verify solution
+//      verifySolution(reducedSolution, r)
    }
 
    // Will be used during dual postsolve for fast access to bound values.
@@ -948,10 +923,8 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
          originalSolution.reducedCosts[indices[first]] = values[indices[first]];
          break;
       case ReductionType::kRedundantRow:
-         checker.undoRedundantRow( indices[first] );
          break;
       case ReductionType::kDeletedCol:
-         checker.undoDeletedCol( indices[first] );
          break;
       case ReductionType::kRowDualValue:
          originalSolution.dual[indices[first]] = values[indices[first]];
@@ -973,9 +946,6 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
          if( indices[first + 2] )
             ub_inf = true;
 
-         checker.addRowToProblem( row, length, &values[first + 3],
-                                  &indices[first + 3], values[first + 1],
-                                  values[first + 2], lb_inf, ub_inf );
          break;
       }
       case ReductionType::kSaveCol:
@@ -1021,8 +991,6 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
             originalSolution.reducedCosts[col] = reducedCosts;
 
             SparseVectorView<REAL> view = SparseVectorView<REAL>{vals, inds, col_length};
-            checker.undoFixedCol( col, values[first], view, objective_coefficient);
-
          }
          break;
       }
@@ -1062,7 +1030,6 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
             int index[1] = {col};
             REAL vals[1] = {coeff};
             SparseVectorView<REAL> view {vals, index, 1};
-            checker.undoSingletonRow( row, view, lhs, isLhsInfinity, rhs, isRhsInfinity );
             col_lower[col] = lhs;
             col_upper[col] = rhs;
             col_infinity_lower[col] = isLhsInfinity;
@@ -1081,7 +1048,6 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
          {
             col_lower[col] = old_value;
             col_infinity_lower[col] = isInfinity;
-            checker.undoLbChange( col, old_value, isInfinity );
             // TODO: what is that
 //            col_lower_from_row[col] = row;
          }
@@ -1089,7 +1055,6 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
          {
             col_upper[col] = old_value;
             col_infinity_upper[col] = isInfinity;
-            checker.undoUbChange( col, old_value, isInfinity );
 //            col_infinity_upper[col] = row;
          }
 
@@ -1228,7 +1193,6 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
       case ReductionType::kSubstitutedCol:
       {
          int col = indices[first];
-         checker.undoSubstitutedCol( col );
 
          REAL side = values[first];
          REAL colCoef = 0.0;
@@ -1371,7 +1335,6 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
                  num.isFeasIntegral( col2val ) );
          assert( num.isFeasEq( solval, col2scale * col1val + col2val ) );
 
-         checker.undoParallelCol( col1 );
          // solSet[col1] = true;
          origSol[col1] = col1val;
          origSol[col2] = col2val;
@@ -1380,20 +1343,10 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
       }
       }
 
-      // intermediate kkt check
-      if( checker.level == CheckLevel::After_each_step_primal_only ||
-          checker.level == CheckLevel::After_each_step_and_dual )
-      {
-         auto kktStatePostsolvedProblem = checker.initState(
-             ProblemType::kPostsolved, originalSolution, checker.level );
-         checker.checkSolution( kktStatePostsolvedProblem, true );
-      }
+      // TODO: do check after every step
    }
 
-   auto kktStateOriginalProblem = checker.initState(
-       ProblemType::kOriginal, originalSolution, checker.level );
-//   checker.verifySolution(originalSolution, getOriginalProblem(), checker.level);
-   checker.checkSolution( kktStateOriginalProblem );
+   validation.verifySolution( originalSolution, problem );
 
    return PostsolveStatus::kOk;
 }
