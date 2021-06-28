@@ -90,10 +90,15 @@ print_header()
       solvers = "none";
    else
       join( list_of_solvers, ',', solvers );
-
+#ifdef PAPILO_GITHASH_AVAILABLE
    fmt::print( "PaPILO version {}.{}.{} [mode: {}][Solvers: {}][GitHash: {}]\n",
                PAPILO_VERSION_MAJOR, PAPILO_VERSION_MINOR, PAPILO_VERSION_PATCH,
                mode, solvers, PAPILO_GITHASH );
+#else
+   fmt::print( "PaPILO version {}.{}.{} [mode: {}][Solvers: {}][GitHash: ]\n",
+               PAPILO_VERSION_MAJOR, PAPILO_VERSION_MINOR, PAPILO_VERSION_PATCH,
+               mode, solvers );
+#endif
    fmt::print( "Copyright (C) 2020-2021 Zuse Institute Berlin (ZIB)\n" );
    fmt::print( "\n" );
 
