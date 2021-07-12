@@ -32,6 +32,9 @@ if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Release)
 endif()
 
+# please make sure to have installed libbz2-dev
+find_package(BZip2 REQUIRED)
+
 find_package(Boost ${BOOST_MIN_VERSION} REQUIRED)
 
 if(GMP)
