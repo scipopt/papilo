@@ -102,6 +102,8 @@ class ProblemUpdate
    Vec<Flags<State>> row_state;
    Vec<Flags<State>> col_state;
 
+
+
    template <typename... Args>
    void
    setColState( int col, Args... flags )
@@ -281,6 +283,12 @@ class ProblemUpdate
    {
       return singletonColumns;
    }
+
+    void
+    addDeletedVar(int col)
+    {
+        deleted_cols.push_back(col);
+    }
 
    const Vec<int>&
    getRandomColPerm() const
@@ -498,8 +506,6 @@ ProblemUpdate<REAL>::fixCol( int col, REAL val )
 
       if( ubchanged )
       {
-         // TODO: warum benutzt man nicht die bereits vorhandenen Funktionen,
-         // wie changeUB
          update_activities_after_boundchange(
              colvec.getValues(), colvec.getIndices(), colvec.getLength(),
              BoundChange::kUpper, ubs[col], val,
@@ -1058,17 +1064,17 @@ ProblemUpdate<REAL>::removeFixedCols()
       auto colvec = consMatrix.getColumnCoefficients( col );
       postsolve.notifyFixedCol( col, lbs[col], colvec, obj.coefficients );
 
+       // update objective offset
+       if( obj.coefficients[col] != 0 )
+       {
+           obj.offset += lbs[col] * obj.coefficients[col];
+           obj.coefficients[col] = 0;
+       }
+
       // if it is fixed to zero activities and sides do not need to be
       // updated
       if( lbs[col] == 0 )
          continue;
-
-      // update objective offset
-      if( obj.coefficients[col] != 0 )
-      {
-         obj.offset += lbs[col] * obj.coefficients[col];
-         obj.coefficients[col] = 0;
-      }
 
       // fixed to nonzero value, so update sides and activities
       int collen = colvec.getLength();

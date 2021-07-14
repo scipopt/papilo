@@ -332,7 +332,7 @@ postsolve( PostsolveListener<REAL>& postsolveListener, const Solution<REAL>& red
    postsolve1.undo( reduced_sol, original_sol, postsolveListener );
    auto t1 = tbb::tick_count::now();
 
-   fmt::print( "\npostsolveListener finished after {:.3f} seconds\n",
+   fmt::print( "\npostsolve finished after {:.3f} seconds\n",
                ( t1 - t0 ).seconds() );
 
    const Problem<REAL>& origprob = postsolveListener.getOriginalProblem();

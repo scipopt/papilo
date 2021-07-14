@@ -24,22 +24,23 @@
 #ifndef _PAPILO_CORE_POSTSOLVE_SERVICE_HPP_
 #define _PAPILO_CORE_POSTSOLVE_SERVICE_HPP_
 
+#include "PostsolveListener.hpp"
 #include "papilo/core/Problem.hpp"
+#include "papilo/core/ProblemUpdate.hpp"
+#include "papilo/core/postsolve/PostsolveStatus.hpp"
+#include "papilo/core/postsolve/PostsolveType.hpp"
+#include "papilo/core/postsolve/ReductionType.hpp"
 #include "papilo/misc/MultiPrecision.hpp"
 #include "papilo/misc/Num.hpp"
 #include "papilo/misc/StableSum.hpp"
 #include "papilo/misc/Vec.hpp"
 #include "papilo/misc/compress_vector.hpp"
-#include "papilo/misc/dualpostsolve/KktChecker.hpp"
-#include "papilo/misc/fmt.hpp"
 #include "papilo/misc/dualpostsolve/CheckLevel.hpp"
-#include "papilo/core/postsolve/PostsolveType.hpp"
-#include "papilo/core/postsolve/ReductionType.hpp"
-#include "papilo/core/postsolve/PostsolveStatus.hpp"
-#include "PostsolveListener.hpp"
+#include "papilo/misc/dualpostsolve/KktChecker.hpp"
+#include "papilo/misc/dualpostsolve/PrimalDualSolValidation.hpp"
+#include "papilo/misc/fmt.hpp"
 #include "papilo/misc/tbb.hpp"
 #include <fstream>
-#include "papilo/misc/dualpostsolve/PrimalDualSolValidation.hpp"
 
 #include <boost/archive/text_iarchive.hpp>
 #include <boost/archive/text_oarchive.hpp>
@@ -52,11 +53,6 @@
 namespace papilo
 {
 
-
-template <typename REAL>
-class SparseVectorView;
-
-/// type to store necessary data for post solve
 template <typename REAL>
 class Postsolve
 {
@@ -68,13 +64,20 @@ class Postsolve
          Solution<REAL>& originalSolution,
          PostsolveListener<REAL> postsolveListener ) const;
 
+ private:
+   Message message{};
+
    REAL
    calculate_row_value_for_infinity_column( REAL lhs, REAL rhs, int rowLength,
                                             int column, const int* row_indices,
                                             const REAL* coefficients,
                                             Vec<REAL>& current_solution,
                                             bool is_negative ) const;
-
+   void
+   verify_current_solution( const Solution<REAL>& originalSolution,
+                            PrimalDualSolValidation<REAL>& validation,
+                            const PostsolveListener<REAL>& listener,
+                            const Num<REAL>& num, int current_index ) const;
 };
 
 #ifdef PAPILO_USE_EXTERN_TEMPLATES
@@ -110,16 +113,19 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
 
    if( originalSolution.type == SolutionType::kPrimalDual )
    {
-      assert( reducedSolution.reducedCosts.size() == postsolveListener.origcol_mapping.size() );
+      assert( reducedSolution.reducedCosts.size() ==
+              postsolveListener.origcol_mapping.size() );
       originalSolution.reducedCosts.clear();
       originalSolution.reducedCosts.resize( postsolveListener.nColsOriginal );
       for( int k = 0; k < postsolveListener.origcol_mapping.size(); k++ )
       {
          int origcol = postsolveListener.origcol_mapping[k];
-         originalSolution.reducedCosts[origcol] = reducedSolution.reducedCosts[k];
+         originalSolution.reducedCosts[origcol] =
+             reducedSolution.reducedCosts[k];
       }
 
-      assert( reducedSolution.dual.size() == postsolveListener.origrow_mapping.size() );
+      assert( reducedSolution.dual.size() ==
+              postsolveListener.origrow_mapping.size() );
       originalSolution.dual.clear();
       originalSolution.dual.resize( postsolveListener.nRowsOriginal );
       for( int k = 0; k < postsolveListener.origrow_mapping.size(); k++ )
@@ -135,13 +141,15 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
    // below handles the case when some trivial presolve elimination is applied,
    // but types.size() is still zero.
    CheckLevel level = Primal_only;
-   if(reducedSolution.type == SolutionType::kPrimalDual)
+   if( reducedSolution.type == SolutionType::kPrimalDual )
       level = Primal_and_dual;
-   if( postsolveListener.origrow_mapping.size() < postsolveListener.nRowsOriginal ||
-       postsolveListener.origcol_mapping.size() < postsolveListener.nColsOriginal )
+   if( postsolveListener.origrow_mapping.size() <
+           postsolveListener.nRowsOriginal ||
+       postsolveListener.origcol_mapping.size() <
+           postsolveListener.nColsOriginal )
    {
-      //TODO: verify solution
-//      verifySolution(reducedSolution, r)
+      // TODO: verify solution
+      //      verifySolution(reducedSolution, r)
    }
 
    // Will be used during dual postsolve for fast access to bound values.
@@ -244,7 +252,7 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
 
       switch( type )
       {
-         //TODO: stack information
+         // TODO: stack information
       case ReductionType::kReducedBoundsCost:
       {
          // get column bounds
@@ -259,7 +267,8 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
          }
 
          // get row bounds
-         int first_row_bounds = first + 2 * postsolveListener.origcol_mapping.size();
+         int first_row_bounds =
+             first + 2 * postsolveListener.origcol_mapping.size();
          for( int k = 0; k < postsolveListener.origrow_mapping.size(); k++ )
          {
             int origRow = postsolveListener.origrow_mapping[k];
@@ -271,7 +280,8 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
          }
 
          // get cost
-         int first_cost = first_row_bounds + 2 * postsolveListener.origrow_mapping.size();
+         int first_cost =
+             first_row_bounds + 2 * postsolveListener.origrow_mapping.size();
          for( int j = 0; j < postsolveListener.origcol_mapping.size(); j++ )
          {
             int origcol = postsolveListener.origcol_mapping[j];
@@ -281,14 +291,16 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
          break;
       }
       case ReductionType::kColumnDualValue:
-         originalSolution.reducedCosts[postsolveListener.indices[first]] = postsolveListener.values[postsolveListener.indices[first]];
+         originalSolution.reducedCosts[postsolveListener.indices[first]] =
+             postsolveListener.values[postsolveListener.indices[first]];
          break;
       case ReductionType::kRedundantRow:
          break;
       case ReductionType::kDeletedCol:
          break;
       case ReductionType::kRowDualValue:
-         originalSolution.dual[postsolveListener.indices[first]] = postsolveListener.values[postsolveListener.indices[first]];
+         originalSolution.dual[postsolveListener.indices[first]] =
+             postsolveListener.values[postsolveListener.indices[first]];
          break;
       case ReductionType::kSaveRow:
       {
@@ -326,7 +338,7 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
             // get dual reducedCosts z_j = c_j - sum_i a_ij*y_i
             REAL objective_coefficient = values[first + 1];
 
-            //modify changes
+            // modify changes
             col_cost[origcol_mapping[col]] = objective_coefficient;
             col_infinity_lower[col] = false;
             col_infinity_upper[col] = false;
@@ -346,12 +358,13 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
                inds[k] = indices[index];
                vals[k] = values[index];
                reducedCosts =
-                   reducedCosts - values[index] *
-                                   originalSolution.dual[indices[index]];
+                   reducedCosts -
+                   values[index] * originalSolution.dual[indices[index]];
             }
             originalSolution.reducedCosts[col] = reducedCosts;
 
-            SparseVectorView<REAL> view = SparseVectorView<REAL>{vals, inds, col_length};
+            SparseVectorView<REAL> view =
+                SparseVectorView<REAL>{ vals, inds, col_length };
          }
          break;
       }
@@ -371,9 +384,9 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
             REAL value = cost;
             int col_length_minus_one = indices[first + 4];
 
-            int isLhsInfinity = indices[first + 2]==1;
+            int isLhsInfinity = indices[first + 2] == 1;
             REAL lhs = values[first + 2];
-            int isRhsInfinity = indices[first + 3]==1;
+            int isRhsInfinity = indices[first + 3] == 1;
             REAL rhs = values[first + 3];
 
             // no need to check for solSetRow because if it is zero then the
@@ -388,9 +401,9 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
 
             originalSolution.dual[row] = value;
             originalSolution.reducedCosts[col] = 0;
-            int index[1] = {col};
-            REAL vals[1] = {coeff};
-            SparseVectorView<REAL> view {vals, index, 1};
+            int index[1] = { col };
+            REAL vals[1] = { coeff };
+            SparseVectorView<REAL> view{ vals, index, 1 };
             col_lower[col] = lhs;
             col_upper[col] = rhs;
             col_infinity_lower[col] = isLhsInfinity;
@@ -400,7 +413,7 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
       }
       case ReductionType::kVarBoundChange:
       {
-         bool isLowerBound = indices[first]==1;
+         bool isLowerBound = indices[first] == 1;
          int col = indices[first + 1];
          REAL old_value = values[first + 2];
          REAL new_value = values[first + 1];
@@ -410,13 +423,13 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
             col_lower[col] = old_value;
             col_infinity_lower[col] = isInfinity;
             // TODO: what is that
-//            col_lower_from_row[col] = row;
+            //            col_lower_from_row[col] = row;
          }
          else
          {
             col_upper[col] = old_value;
             col_infinity_upper[col] = isInfinity;
-//            col_infinity_upper[col] = row;
+            //            col_infinity_upper[col] = row;
          }
 
          // todo: also set flags for rows and columns which have a bound now
@@ -427,28 +440,28 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
          // 3 primal col upper
          // .. dual strong
          // .. dual weak
-//         switch( type )
-//         {
-//         case -1:
-//            col_cost[col] = old_value;
-//            break;
-//         case 0:
-//            row_lhs[row] = old_value;
-//            row_lower_from_col[row] = col;
-//            break;
-//         case 1:
-//            row_rhs[row] = old_value;
-//            row_upper_from_col[row] = col;
-//            break;
-//         case 2:
-//            col_lower[col] = old_value;
-//            col_lower_from_row[col] = row;
-//            break;
-//         case 3:
-//            col_upper[col] = old_value;
-//            col_upper_from_row[col] = row;
-//            break;
-//         }
+         //         switch( type )
+         //         {
+         //         case -1:
+         //            col_cost[col] = old_value;
+         //            break;
+         //         case 0:
+         //            row_lhs[row] = old_value;
+         //            row_lower_from_col[row] = col;
+         //            break;
+         //         case 1:
+         //            row_rhs[row] = old_value;
+         //            row_upper_from_col[row] = col;
+         //            break;
+         //         case 2:
+         //            col_lower[col] = old_value;
+         //            col_lower_from_row[col] = row;
+         //            break;
+         //         case 3:
+         //            col_upper[col] = old_value;
+         //            col_upper_from_row[col] = row;
+         //            break;
+         //         }
 
          break;
       }
@@ -487,7 +500,7 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
          //     }
       case ReductionType::kFixedInfCol:
       {
-         //TODO dual case missing
+         // TODO dual case missing
          int column = indices[first];
          REAL bound = values[first + 1];
          REAL solution = bound;
@@ -703,13 +716,96 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
          break;
       }
       }
-
-      // TODO: do check after every step
+      verify_current_solution( originalSolution, validation, postsolveListener,
+                               num, i );
    }
 
    validation.verifySolution( originalSolution, problem );
 
    return PostsolveStatus::kOk;
+}
+template <typename REAL>
+void
+Postsolve<REAL>::verify_current_solution(
+    const Solution<REAL>& originalSolution,
+    PrimalDualSolValidation<REAL>& validation,
+    const PostsolveListener<REAL>& listener, const Num<REAL>& num,
+    int current_index ) const
+{
+
+   auto types = listener.types;
+   auto start = listener.start;
+   auto indices = listener.indices;
+   auto values = listener.values;
+   auto origcol_mapping = listener.origcol_mapping;
+   auto origrow_mapping = listener.origrow_mapping;
+   auto problem = listener.problem;
+
+   // TODO: do check after every step
+   Problem<REAL> reduced = Problem<REAL>( problem );
+   reduced.recomputeAllActivities();
+   Statistics statistics{};
+   PresolveOptions presolveOptions{};
+   PostsolveListener<REAL> postsolveListener1 =
+       PostsolveListener<REAL>( reduced, num );
+   ProblemUpdate<REAL> problemUpdate( reduced, postsolveListener1, statistics,
+                                      presolveOptions, num, message );
+
+   for( int j = 0; j <= current_index; j++ )
+   {
+      auto type = types[j];
+      int first = start[j];
+      int last = start[j + 1];
+
+      switch( type )
+      {
+      case ReductionType::kRedundantRow:
+         problemUpdate.markRowRedundant( indices[first] );
+         break;
+      case ReductionType::kFixedCol:
+      {
+         // At the moment saves column to the postsolve stack. todo:
+         // use notifySavedCol and current index of column on the stack.
+         int col = indices[first];
+         REAL val = values[first];
+         problemUpdate.fixCol( col, val );
+         problemUpdate.addDeletedVar( col );
+         break;
+      }
+      case ReductionType::kSingletonRow:
+      {
+         int row = indices[first];
+         problemUpdate.removeSingletonRow( row );
+         break;
+      }
+      case ReductionType::kVarBoundChange:
+      {
+         bool isLowerBound = indices[first] == 1;
+         int col = indices[first + 1];
+         REAL old_value = values[first + 2];
+         REAL new_value = values[first + 1];
+         if( isLowerBound )
+            problemUpdate.changeLB( col, new_value );
+         else
+            problemUpdate.changeUB( col, new_value );
+         break;
+      }
+      case ReductionType::kParallelCol:
+      case ReductionType::kFixedInfCol:
+      case ReductionType::kReducedBoundsCost:
+      case ReductionType::kColumnDualValue:
+      case ReductionType::kDeletedCol:
+      case ReductionType::kRowDualValue:
+      case ReductionType::kSaveRow:
+      case ReductionType::kSaveCol:
+         break;
+      default:
+         assert( false );
+      }
+   }
+   problemUpdate.removeFixedCols();
+   message.info( "Validation of partial ({}) reconstr. sol : ", current_index );
+   validation.verifySolution( originalSolution, reduced );
 }
 
 template <typename REAL>
@@ -741,7 +837,6 @@ Postsolve<REAL>::calculate_row_value_for_infinity_column(
    assert( coeff_of_column_in_row != 0 );
    return ( stableSum.get() / coeff_of_column_in_row );
 }
-
 
 } // namespace papilo
 

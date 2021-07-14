@@ -284,7 +284,7 @@ class PrimalDualSolValidation
                         const Problem<REAL>& problem )
 
    {
-      // A'y + z = c
+      // A'y + reduced_costs = c
 
       const papilo::SparseStorage<REAL>& transposed =
           problem.getConstraintMatrix().getMatrixTranspose();
@@ -293,6 +293,8 @@ class PrimalDualSolValidation
 
       for( int col = 0; col < transposed.getNCols(); col++ )
       {
+         if(problem.getRowFlags()[col].test(RowFlag::kRedundant))
+            continue;
          REAL lagrV = 0;
 
          auto index_range = transposed.getRowRanges()[col];
@@ -302,9 +304,8 @@ class PrimalDualSolValidation
             lagrV += dualSolution[row] * transposed.getValues()[k];
          }
 
-         lagrV = lagrV + reducedCosts[col] - problem.getObjective().coefficients[col];
-
-         if( not num.isZero( lagrV ) )
+         if( not num.isEq( lagrV + reducedCosts[col],
+                           problem.getObjective().coefficients[col] ) )
             return true;
       }
 
@@ -353,7 +354,7 @@ class PrimalDualSolValidation
                                         solution.reducedCosts, problem );
          if( failure )
          {
-            message.info( "Complementary slack check FAILED.\n" );
+            message.info( "Lagrangian check FAILED.\n" );
             return;
          }
       }
