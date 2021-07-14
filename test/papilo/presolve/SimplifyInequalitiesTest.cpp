@@ -54,7 +54,8 @@ TEST_CASE( "happy-path-simplify-inequalities", "[presolve]" )
    problem.recomputeAllActivities();
    Statistics statistics{};
    PresolveOptions presolveOptions{};
-   Postsolve<double> postsolve = Postsolve<double>( problem, num );
+   PostsolveListener<double> postsolve =
+       PostsolveListener<double>( problem, num );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
    SimplifyInequalities<double> presolvingMethod{};
@@ -97,7 +98,8 @@ TEST_CASE( "simplify_inequ_doesnt_lock_more_rows", "[presolve]" )
    Problem<double> problem = setup_simplify_ineq_reduce_rhs();
    Statistics statistics{};
    PresolveOptions presolveOptions{};
-   Postsolve<double> postsolve = Postsolve<double>( problem, num );
+   PostsolveListener<double> postsolve =
+       PostsolveListener<double>( problem, num );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
    problem.recomputeAllActivities();
@@ -119,7 +121,8 @@ TEST_CASE( "simplify_inequ_doesnt_apply_lb_and_ub_on_one_row", "[presolve]" )
    Problem<double> problem = setup_simple_problem_for_simplify_inequalities_2();
    Statistics statistics{};
    PresolveOptions presolveOptions{};
-   Postsolve<double> postsolve = Postsolve<double>( problem, num );
+   PostsolveListener<double> postsolve =
+       PostsolveListener<double>( problem, num );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
    problem.recomputeAllActivities();
@@ -139,7 +142,8 @@ TEST_CASE( "example-1-from-3.5-Presolve-Reductions-in-MIP", "[presolve]" )
    Problem<double> problem = setupExample1ofChapter3Dot5InPresolveReductions();
    Statistics statistics{};
    PresolveOptions presolveOptions{};
-   Postsolve<double> postsolve = Postsolve<double>( problem, num );
+   PostsolveListener<double> postsolve =
+       PostsolveListener<double>( problem, num );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
    SimplifyInequalities<double> presolvingMethod{};
@@ -168,7 +172,8 @@ TEST_CASE( "example-2-from-3.5-Presolve-Reductions-in-MIP", "[presolve]" )
    Problem<double> problem = setupExample2ofChapter3Dot5InPresolveReductions();
    Statistics statistics{};
    PresolveOptions presolveOptions{};
-   Postsolve<double> postsolve = Postsolve<double>( problem, num );
+   PostsolveListener<double> postsolve =
+       PostsolveListener<double>( problem, num );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
    SimplifyInequalities<double> presolvingMethod{};

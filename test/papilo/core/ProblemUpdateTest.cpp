@@ -42,7 +42,8 @@ TEST_CASE( "happy-path-presolve-singleton-row", "[core]" )
    Problem<double> problem = setupProblemPresolveSingletonRow();
    Statistics statistics{};
    PresolveOptions presolveOptions{};
-   Postsolve<double> postsolve = Postsolve<double>( problem, num );
+   PostsolveListener<double> postsolve =
+       PostsolveListener<double>( problem, num );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
    problemUpdate.trivialPresolve();
@@ -57,7 +58,8 @@ TEST_CASE( "happy-path-presolve-singleton-row-fixed", "[core]" )
    Problem<double> problem = setupProblemPresolveSingletonRowFixed();
    Statistics statistics{};
    PresolveOptions presolveOptions{};
-   Postsolve<double> postsolve = Postsolve<double>( problem, num );
+   PostsolveListener<double> postsolve =
+       PostsolveListener<double>( problem, num );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
    problemUpdate.trivialPresolve();

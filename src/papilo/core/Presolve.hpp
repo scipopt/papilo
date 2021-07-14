@@ -46,6 +46,7 @@
 #include "papilo/misc/Timer.hpp"
 #include "papilo/misc/Vec.hpp"
 #include "papilo/misc/tbb.hpp"
+#include "papilo/core/postsolve/PostsolveListener.hpp"
 #include "papilo/presolvers/CoefficientStrengthening.hpp"
 #include "papilo/presolvers/ConstraintPropagation.hpp"
 #include "papilo/presolvers/DominatedCols.hpp"
@@ -70,7 +71,7 @@ namespace papilo
 template <typename REAL>
 struct PresolveResult
 {
-   Postsolve<REAL> postsolve;
+   PostsolveListener<REAL> postsolve;
    PresolveStatus status;
 };
 
@@ -283,7 +284,7 @@ class Presolve
  private:
    void
    logStatus( const Problem<REAL>& problem,
-              const Postsolve<REAL>& postsolve ) const;
+              const PostsolveListener<REAL>& postsolve ) const;
 
    bool
    is_time_exceeded( const Timer& presolvetimer ) const;
@@ -371,7 +372,7 @@ Presolve<REAL>::apply( Problem<REAL>& problem )
 
       PresolveResult<REAL> result;
 
-      result.postsolve = Postsolve<REAL>( problem, num );
+      result.postsolve = PostsolveListener<REAL>( problem, num );
 //      result.postsolve.getChecker().setOriginalProblem( problem );
 
       if( problem.getNumIntegralCols() == 0 )
@@ -1305,7 +1306,7 @@ Presolve<REAL>::printPresolversStats()
 template <typename REAL>
 void
 Presolve<REAL>::logStatus( const Problem<REAL>& problem,
-                           const Postsolve<REAL>& postsolve ) const
+                           const PostsolveListener<REAL>& postsolve ) const
 {
    msg.info( "reduced problem:\n" );
    msg.info( "  reduced rows:     {}\n", problem.getNRows() );
@@ -1318,7 +1319,8 @@ Presolve<REAL>::logStatus( const Problem<REAL>& problem,
    {
       Solution<REAL> solution{};
       const Solution<REAL> empty_sol{};
-      postsolve.undo( empty_sol, solution );
+      //TODO: use postsolve
+//      postsolve.undo( empty_sol, solution );
       const Problem<REAL>& origprob = postsolve.getOriginalProblem();
       REAL origobj = origprob.computeSolObjective( solution.primal );
       msg.info(

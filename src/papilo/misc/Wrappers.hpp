@@ -24,8 +24,9 @@
 #ifndef _PAPILO_MISC_WRAPPERS_HPP_
 #define _PAPILO_MISC_WRAPPERS_HPP_
 
-#include "papilo/core/Postsolve.hpp"
+#include "papilo/core/postsolve/Postsolve.hpp"
 #include "papilo/core/Presolve.hpp"
+#include "papilo/core/postsolve/Postsolve.hpp"
 #include "papilo/io/MpsParser.hpp"
 #include "papilo/io/MpsWriter.hpp"
 #include "papilo/io/SolParser.hpp"
@@ -320,27 +321,27 @@ presolve_and_solve(
 
 template <typename REAL>
 void
-postsolve( Postsolve<REAL>& postsolve, const Solution<REAL>& reduced_sol,
+postsolve( PostsolveListener<REAL>& postsolveListener, const Solution<REAL>& reduced_sol,
            const std::string& objective_reference = "",
            const std::string& solution_output = "" )
 {
    Solution<REAL> original_sol;
 
    auto t0 = tbb::tick_count::now();
-   postsolve.undo( reduced_sol, original_sol );
+   Postsolve<REAL> postsolve1{};
+   postsolve1.undo( reduced_sol, original_sol, postsolveListener );
    auto t1 = tbb::tick_count::now();
 
-   fmt::print( "\npostsolve finished after {:.3f} seconds\n",
+   fmt::print( "\npostsolveListener finished after {:.3f} seconds\n",
                ( t1 - t0 ).seconds() );
 
-   const Problem<REAL>& origprob = postsolve.getOriginalProblem();
+   const Problem<REAL>& origprob = postsolveListener.getOriginalProblem();
    REAL origobj = origprob.computeSolObjective( original_sol.primal );
 
    REAL boundviol;
    REAL intviol;
    REAL rowviol;
-   bool origfeas = origprob.computeSolViolations(
-       postsolve.getNum(), original_sol.primal, boundviol, rowviol, intviol );
+   bool origfeas = origprob.computeSolViolations( postsolveListener.getNum(), original_sol.primal, boundviol, rowviol, intviol );
 
    fmt::print( "feasible: {}\nobjective value: {:.15}\n", origfeas,
                double( origobj ) );
@@ -365,7 +366,7 @@ postsolve( Postsolve<REAL>& postsolve, const Solution<REAL>& reduced_sol,
    if( !objective_reference.empty() )
    {
       if( origfeas &&
-          postsolve.num.isFeasEq(
+          postsolveListener.num.isFeasEq(
               boost::lexical_cast<double>( objective_reference ), origobj ) )
          fmt::print( "validation: SUCCESS\n" );
       else
@@ -377,7 +378,7 @@ template <typename REAL>
 void
 postsolve( const OptionsInfo& opts )
 {
-   Postsolve<REAL> ps;
+   PostsolveListener<REAL> ps;
    std::ifstream inArchiveFile( opts.postsolve_archive_file,
                                 std::ios_base::binary );
    boost::archive::binary_iarchive inputArchive( inArchiveFile );

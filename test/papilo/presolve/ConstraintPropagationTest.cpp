@@ -40,7 +40,8 @@ TEST_CASE( "happy-path-constraint-propagation", "[presolve]" )
    Statistics statistics{};
    PresolveOptions presolveOptions{};
    presolveOptions.dualreds = 0;
-   Postsolve<double> postsolve = Postsolve<double>( problem, num );
+   PostsolveListener<double> postsolve =
+       PostsolveListener<double>( problem, num );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
    ConstraintPropagation<double> presolvingMethod{};

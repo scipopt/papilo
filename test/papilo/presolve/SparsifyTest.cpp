@@ -51,7 +51,8 @@ TEST_CASE( "happy-path-sparsify", "[presolve]" )
    Problem<double> problem = setupProblemWithSparsify();
    Statistics statistics{};
    PresolveOptions presolveOptions{};
-   Postsolve<double> postsolve = Postsolve<double>( problem, num );
+   PostsolveListener<double> postsolve =
+       PostsolveListener<double>( problem, num );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
    Sparsify<double> presolvingMethod{};
@@ -81,7 +82,8 @@ TEST_CASE( "happy-path-sparsify-two-equalities", "[presolve]" )
    Message msg{};
    Problem<double> problem = setupProblemWithSparsify2Equalities();
    Statistics statistics{};
-   Postsolve<double> postsolve = Postsolve<double>( problem, num );
+   PostsolveListener<double> postsolve =
+       PostsolveListener<double>( problem, num );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         ( PresolveOptions ){}, num, msg );
    Sparsify<double> presolvingMethod{};
@@ -125,7 +127,8 @@ TEST_CASE( "failed-path-sparsify-if-misses-one-for-integer", "[presolve]" )
    Problem<double> problem = setupProblemForSparsifyWithOneMiss( 1 );
    Statistics statistics{};
    PresolveOptions presolveOptions{};
-   Postsolve<double> postsolve = Postsolve<double>( problem, num );
+   PostsolveListener<double> postsolve =
+       PostsolveListener<double>( problem, num );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
    Sparsify<double> presolvingMethod{};
@@ -146,7 +149,8 @@ TEST_CASE( "happy-path-sparsify-if-misses-one-for-continuous", "[presolve]" )
    Problem<double> problem = setupProblemForSparsifyWithOneMiss( 0 );
    Statistics statistics{};
    PresolveOptions presolveOptions{};
-   Postsolve<double> postsolve = Postsolve<double>( problem, num );
+   PostsolveListener<double> postsolve =
+       PostsolveListener<double>( problem, num );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
    Sparsify<double> presolvingMethod{};
@@ -166,7 +170,8 @@ TEST_CASE( "happy-path-sparsify-if-misses-one-for-continuous_2", "[presolve]" )
    Problem<double> problem = setupProblemForSparsifyWithOneMiss_2( 0 );
    Statistics statistics{};
    PresolveOptions presolveOptions{};
-   Postsolve<double> postsolve = Postsolve<double>( problem, num );
+   PostsolveListener<double> postsolve =
+       PostsolveListener<double>( problem, num );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
    Sparsify<double> presolvingMethod{};
@@ -188,7 +193,8 @@ TEST_CASE( "failed-path-sparsify-if-misses-two-for-continuous", "[presolve]" )
        setupProblemForSparsifyWithContinuousVariableMissTwo();
    Statistics statistics{};
    PresolveOptions presolveOptions{};
-   Postsolve<double> postsolve = Postsolve<double>( problem, num );
+   PostsolveListener<double> postsolve =
+       PostsolveListener<double>( problem, num );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg);
    Sparsify<double> presolvingMethod{};

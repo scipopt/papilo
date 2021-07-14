@@ -46,7 +46,8 @@ TEST_CASE( "parallel_col_detection_2_integer_columns", "[presolve]" )
        setupProblemWithParallelColumns( true, true, 3.0, 10.0, 10.0, 0.0, 0.0 );
    Statistics statistics{};
    PresolveOptions presolveOptions{};
-   Postsolve<double> postsolve = Postsolve<double>( problem, num );
+   PostsolveListener<double> postsolve =
+       PostsolveListener<double>( problem, num );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
    problemUpdate.checkChangedActivities();
@@ -79,7 +80,8 @@ TEST_CASE( "parallel_col_detection_2_continuous_columns", "[presolve]" )
        false, false, 2.0, 10.0, 10.0, 0.0, 0.0 );
    Statistics statistics{};
    PresolveOptions presolveOptions{};
-   Postsolve<double> postsolve = Postsolve<double>( problem, num );
+   PostsolveListener<double> postsolve =
+       PostsolveListener<double>( problem, num );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
    problemUpdate.checkChangedActivities();
@@ -112,7 +114,8 @@ TEST_CASE( "parallel_col_detection_int_cont_merge_possible", "[presolve]" )
        true, false, 2.0, 10.0, 10.0, 0.0, 0.0 );
    Statistics statistics{};
    PresolveOptions presolveOptions{};
-   Postsolve<double> postsolve = Postsolve<double>( problem, num );
+   PostsolveListener<double> postsolve =
+       PostsolveListener<double>( problem, num );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
    problemUpdate.checkChangedActivities();
@@ -149,7 +152,8 @@ TEST_CASE( "parallel_col_detection_cont_int_merge_possible", "[presolve]" )
        false, true, 0.5, 10.0, 10.0, 0.0, 0.0 );
    Statistics statistics{};
    PresolveOptions presolveOptions{};
-   Postsolve<double> postsolve = Postsolve<double>( problem, num );
+   PostsolveListener<double> postsolve =
+       PostsolveListener<double>( problem, num );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
    problemUpdate.checkChangedActivities();
@@ -186,7 +190,8 @@ TEST_CASE( "parallel_col_detection_cont_int_merge_failed", "[presolve]" )
        setupProblemWithParallelColumns( false, true, 1.0, 0.9, 10.0, 0.0, 0.0 );
    Statistics statistics{};
    PresolveOptions presolveOptions{};
-   Postsolve<double> postsolve = Postsolve<double>( problem, num );
+   PostsolveListener<double> postsolve =
+       PostsolveListener<double>( problem, num );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
    problemUpdate.checkChangedActivities();
@@ -207,7 +212,8 @@ TEST_CASE( "parallel_col_detection_int_cont_merge_failed", "[presolve]" )
        setupProblemWithParallelColumns( true, false, 1.0, 10.0, 0.9, 0.0, 0.0 );
    Statistics statistics{};
    PresolveOptions presolveOptions{};
-   Postsolve<double> postsolve = Postsolve<double>( problem, num );
+   PostsolveListener<double> postsolve =
+       PostsolveListener<double>( problem, num );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
    problemUpdate.checkChangedActivities();
@@ -228,7 +234,8 @@ TEST_CASE( "parallel_col_detection_int_merge_failed_hole", "[presolve]" )
        setupProblemWithParallelColumns( true, true, 1.33333, 5.0, 7, 3.0, 5.0 );
    Statistics statistics{};
    PresolveOptions presolveOptions{};
-   Postsolve<double> postsolve = Postsolve<double>( problem, num );
+   PostsolveListener<double> postsolve =
+       PostsolveListener<double>( problem, num );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
    problemUpdate.checkChangedActivities();
@@ -251,7 +258,8 @@ TEST_CASE( "parallel_col_detection_obj_not_parallel", "[presolve]" )
    problem.setObjective( obj, 0 );
    Statistics statistics{};
    PresolveOptions presolveOptions{};
-   Postsolve<double> postsolve = Postsolve<double>( problem, num );
+   PostsolveListener<double> postsolve =
+       PostsolveListener<double>( problem, num );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
    problemUpdate.checkChangedActivities();
@@ -271,7 +279,8 @@ TEST_CASE( "parallel_col_detection_multiple_parallel_columns", "[presolve]" )
    Problem<double> problem = setupProblemWithMultipleParallelColumns();
    Statistics statistics{};
    PresolveOptions presolveOptions{};
-   Postsolve<double> postsolve = Postsolve<double>( problem, num );
+   PostsolveListener<double> postsolve =
+       PostsolveListener<double>( problem, num );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
    problemUpdate.checkChangedActivities();

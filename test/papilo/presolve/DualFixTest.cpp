@@ -63,7 +63,8 @@ TEST_CASE( "trivial-column-presolve-does-dual-presolve-already", "[presolve]" )
        setupMatrixForDualFixFirstColumnOnlyPositiveValues();
    Statistics statistics{};
    PresolveOptions presolveOptions{};
-   Postsolve<double> postsolve = Postsolve<double>( problem, num );
+   PostsolveListener<double> postsolve =
+       PostsolveListener<double>( problem, num );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
 
@@ -82,7 +83,8 @@ TEST_CASE( "happy-path-dual-fix", "[presolve]" )
        setupMatrixForDualFixFirstColumnOnlyPositiveValues();
    Statistics statistics{};
    PresolveOptions presolveOptions{};
-   Postsolve<double> postsolve = Postsolve<double>( problem, num );
+   PostsolveListener<double> postsolve =
+       PostsolveListener<double>( problem, num );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
 
@@ -109,7 +111,8 @@ TEST_CASE( "happy_path_dual_substitution", "[presolve]" )
    Problem<double> problem = setupMatrixForDualSubstitution();
    Statistics statistics{};
    PresolveOptions presolveOptions{};
-   Postsolve<double> postsolve = Postsolve<double>( problem, num );
+   PostsolveListener<double> postsolve =
+       PostsolveListener<double>( problem, num );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
 
@@ -143,7 +146,8 @@ TEST_CASE( "happy_path_dual_substitution_rounding", "[presolve]" )
    Problem<double> problem = setupMatrixForDualSubstitutionIntegerRounding();
    Statistics statistics{};
    PresolveOptions presolveOptions{};
-   Postsolve<double> postsolve = Postsolve<double>( problem, num );
+   PostsolveListener<double> postsolve =
+       PostsolveListener<double>( problem, num );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
 
@@ -192,7 +196,8 @@ TEST_CASE( "happy_path_dual_substitution_unbounded_variables", "[presolve]" )
    Problem<double> problem = setupMatrixForDualSubstitutionWithUnboundedVar();
    Statistics statistics{};
    PresolveOptions presolveOptions{};
-   Postsolve<double> postsolve = Postsolve<double>( problem, num );
+   PostsolveListener<double> postsolve =
+       PostsolveListener<double>( problem, num );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
 
@@ -213,7 +218,8 @@ TEST_CASE( "happy_path_dual_substitution_for_equations", "[presolve]" )
    Problem<double> problem = setupMatrixForDualSubstitutionEquation();
    Statistics statistics{};
    PresolveOptions presolveOptions{};
-   Postsolve<double> postsolve = Postsolve<double>( problem, num );
+   PostsolveListener<double> postsolve =
+       PostsolveListener<double>( problem, num );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
 
@@ -249,7 +255,8 @@ TEST_CASE( "happy_path_dual_fix_on_infinity", "[presolve]" )
    Problem<double> problem = setupMatrixForDualFixInfinity();
    Statistics statistics{};
    PresolveOptions presolveOptions{};
-   Postsolve<double> postsolve = Postsolve<double>( problem, num );
+   PostsolveListener<double> postsolve =
+       PostsolveListener<double>( problem, num );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
 
@@ -291,7 +298,8 @@ TEST_CASE( "example-4-from-4.4-Presolve-Reductions-in-MIP", "[presolve]" )
    Problem<double> problem = setupExample4ofChapter4Dot4InPresolveReductions();
    Statistics statistics{};
    PresolveOptions presolveOptions{};
-   Postsolve<double> postsolve = Postsolve<double>( problem, num );
+   PostsolveListener<double> postsolve =
+       PostsolveListener<double>( problem, num );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
    problemUpdate.trivialPresolve();
@@ -311,7 +319,8 @@ TEST_CASE( "example-5-from-4.4-Presolve-Reductions-in-MIP", "[presolve]" )
    Problem<double> problem = setupExample5ofChapter4Dot4InPresolveReductions();
    Statistics statistics{};
    PresolveOptions presolveOptions{};
-   Postsolve<double> postsolve = Postsolve<double>( problem, num );
+   PostsolveListener<double> postsolve =
+       PostsolveListener<double>( problem, num );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
    papilo::DualFix<double> presolvingMethod{};

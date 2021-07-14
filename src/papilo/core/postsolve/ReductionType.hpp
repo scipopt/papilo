@@ -21,13 +21,27 @@
 /*                                                                           */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#include "papilo/core/Postsolve.hpp"
+#ifndef _PAPILO_CORE_REDUCTION_TYPE_HPP_
+#define _PAPILO_CORE_REDUCTION_TYPE_HPP_
 
-namespace papilo
+
+/// possible types of post solving
+enum class ReductionType : int
 {
+   kFixedCol = 0,
+   kSubstitutedCol = 1,
+   kParallelCol = 2,
+   kSaveRow = 3,
+   kSaveCol = 4,
+   kFixedInfCol = 5,
+   kSingletonRow = 6,
+   kRedundantRow = 7,
+   kDeletedCol = 8,
+   kVarBoundChange = 9,
+   kRowBoundChange = 13,
+   kColumnDualValue = 10,
+   kRowDualValue = 11,
+   kReducedBoundsCost = 12
+};
 
-template class Postsolve<double>;
-template class Postsolve<Quad>;
-template class Postsolve<Rational>;
-
-} // namespace papilo
+#endif

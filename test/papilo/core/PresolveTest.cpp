@@ -77,7 +77,7 @@ row_sizes()
 papilo::Problem<double>
 setupProblemWithMultiplePresolvingOptions();
 
-std::pair<std::pair<papilo::Problem<double>, papilo::Postsolve<double>>,
+std::pair<std::pair<papilo::Problem<double>, papilo::PostsolveListener<double>>,
           std::pair<int, int>>
 applyReductions( const papilo::Reductions<double>& reductions,
                  bool substitutions );
@@ -97,7 +97,7 @@ TEST_CASE( "replacing-variables-is-postponed-by-flag", "[core]" )
    reductions.replaceCol( 0, 1, -1, 0 );
    reductions.replaceCol( 0, 2, -1, 0 );
 
-   std::pair<std::pair<papilo::Problem<double>, papilo::Postsolve<double>>,
+   std::pair<std::pair<papilo::Problem<double>, papilo::PostsolveListener<double>>,
              std::pair<int, int>>
        pair = applyReductions( reductions, true );
    std::pair<int, int>& result = pair.second;
@@ -113,7 +113,7 @@ TEST_CASE( "happy-path-replace-variable", "[core]" )
    reductions.replaceCol( 0, 1, -1, 0 );
    reductions.replaceCol( 0, 2, -1, 0 );
 
-   std::pair<std::pair<papilo::Problem<double>, papilo::Postsolve<double>>,
+   std::pair<std::pair<papilo::Problem<double>, papilo::PostsolveListener<double>>,
              std::pair<int, int>>
        pair = applyReductions( reductions, false );
    std::pair<int, int>& result = pair.second;
@@ -161,7 +161,7 @@ TEST_CASE( "happy-path-substitute-matrix-coefficient-into-objective", "[core]" )
       reductions.markRowRedundant( 1 );
    }
 
-   std::pair<std::pair<papilo::Problem<double>, papilo::Postsolve<double>>,
+   std::pair<std::pair<papilo::Problem<double>, papilo::PostsolveListener<double>>,
              std::pair<int, int>>
        pair = applyReductions( reductions, false );
    Problem<double> problem = pair.first.first;
@@ -194,7 +194,7 @@ TEST_CASE( "happy-path-aggregate-free-column", "[core]" )
       reductions.aggregateFreeCol( 3, 1 );
    }
 
-   std::pair<std::pair<Problem<double>, Postsolve<double>>,
+   std::pair<std::pair<Problem<double>, PostsolveListener<double>>,
              std::pair<int, int>>
        pair = applyReductions( reductions, false );
    std::pair<int, int>& result = pair.second;
@@ -250,7 +250,7 @@ setupProblemWithMultiplePresolvingOptions()
    return problem;
 }
 
-std::pair<std::pair<Problem<double>, Postsolve<double>>,
+std::pair<std::pair<Problem<double>, PostsolveListener<double>>,
           std::pair<int, int>>
 applyReductions( const Reductions<double>& reductions,
                  bool substitutions )
@@ -261,8 +261,8 @@ applyReductions( const Reductions<double>& reductions,
        setupProblemWithMultiplePresolvingOptions();
    Statistics statistics{};
    PresolveOptions presolveOptions{};
-   Postsolve<double> postsolve =
-       Postsolve<double>( problem, num );
+   PostsolveListener<double> postsolve =
+       PostsolveListener<double>( problem, num );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                                 presolveOptions, num, msg );
    problem.recomputeLocks();

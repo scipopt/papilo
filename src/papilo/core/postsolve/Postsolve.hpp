@@ -21,8 +21,8 @@
 /*                                                                           */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef _PAPILO_CORE_POSTSOLVE_HPP_
-#define _PAPILO_CORE_POSTSOLVE_HPP_
+#ifndef _PAPILO_CORE_POSTSOLVE_SERVICE_HPP_
+#define _PAPILO_CORE_POSTSOLVE_SERVICE_HPP_
 
 #include "papilo/core/Problem.hpp"
 #include "papilo/misc/MultiPrecision.hpp"
@@ -33,6 +33,10 @@
 #include "papilo/misc/dualpostsolve/KktChecker.hpp"
 #include "papilo/misc/fmt.hpp"
 #include "papilo/misc/dualpostsolve/CheckLevel.hpp"
+#include "papilo/core/postsolve/PostsolveType.hpp"
+#include "papilo/core/postsolve/ReductionType.hpp"
+#include "papilo/core/postsolve/PostsolveStatus.hpp"
+#include "PostsolveListener.hpp"
 #include "papilo/misc/tbb.hpp"
 #include <fstream>
 #include "papilo/misc/dualpostsolve/PrimalDualSolValidation.hpp"
@@ -48,242 +52,21 @@
 namespace papilo
 {
 
-/// possible types of post solving
-enum class PostsolveType : int
-{
-   kPrimal = 0,
-   kFull = 0,
-};
-
-enum class ReductionType : int
-{
-   kFixedCol = 0,
-   kSubstitutedCol = 1,
-   kParallelCol = 2,
-   kSaveRow = 3,
-   kSaveCol = 4,
-   kFixedInfCol = 5,
-   kSingletonRow = 6,
-   kRedundantRow = 7,
-   kDeletedCol = 8,
-   kVarBoundChange = 9,
-   kRowBoundChange = 13,
-   kColumnDualValue = 10,
-   kRowDualValue = 11,
-   kReducedBoundsCost = 12
-};
-
-enum class PostsolveStatus : int
-{
-   kOk,
-};
 
 template <typename REAL>
 class SparseVectorView;
-
-struct IndexRange;
 
 /// type to store necessary data for post solve
 template <typename REAL>
 class Postsolve
 {
  public:
-   unsigned int nColsOriginal;
-   unsigned int nRowsOriginal;
-
-   /// mapping of reduced problems column indices to column indices in the
-   /// original problem
-   Vec<int> origcol_mapping;
-
-   /// mapping of reduced problems row indices to row indices in the original
-   /// problem
-   Vec<int> origrow_mapping;
-
-   // set to full for development of postsolve,
-   // later will not be default value
-   // PostsolveType postsolveType = PostsolveType::kFull;
-   PostsolveType postsolveType = PostsolveType::kPrimal;
-
-   Vec<ReductionType> types;
-
-   Vec<int> indices;
-   Vec<REAL> values;
-   Vec<int> start;
-
-   Problem<REAL> problem;
-
-   Num<REAL> num;
-
-
    Postsolve() = default;
-
-   Postsolve( const int nrows, const int ncols )
-   {
-      origrow_mapping.reserve( nrows );
-      origrow_mapping.reserve( ncols );
-
-      for( int i = 0; i < nrows; ++i )
-         origrow_mapping.push_back( i );
-
-      for( int i = 0; i < ncols; ++i )
-         origcol_mapping.push_back( i );
-
-      nColsOriginal = ncols;
-      nRowsOriginal = nrows;
-
-      start.push_back( 0 );
-   }
-
-   Postsolve( const Problem<REAL>& problem, const Num<REAL>& num )
-       : problem( problem ), num( num )
-   {
-      int nrows = problem.getNRows();
-      int ncols = problem.getNCols();
-
-      origrow_mapping.reserve( nrows );
-      origrow_mapping.reserve( ncols );
-
-      for( int i = 0; i < nrows; ++i )
-         origrow_mapping.push_back( i );
-
-      for( int i = 0; i < ncols; ++i )
-         origcol_mapping.push_back( i );
-
-      nColsOriginal = ncols;
-      nRowsOriginal = nrows;
-
-      start.push_back( 0 );
-
-      // release excess storage in original problem copy
-      this->problem.compress( true );
-   }
-
-   void
-   notifyRedundantRow( const int row );
-
-   void
-   notifyDeletedCol( const int col );
-
-   void
-   notifyVarBoundChange( const bool isLowerBound,
-                         const int row, const int col, const REAL oldBound,
-                         bool isInfinity, const REAL newBound )
-   ;
-
-   void
-   notifyRowBoundChange( const bool isLhs,
-                         const int row, const int col,
-                         const REAL oldBound, const REAL newBound );
-
-
-   void
-   notifyReducedBoundsAndCost( const Vec<REAL>& col_lb, const Vec<REAL>& col_ub,
-                               const Vec<REAL>& row_lhs, const Vec<REAL>& row_rhs,
-                               const Vec<REAL>& coefficients,
-                               const Vec<RowFlags>& row_flags,
-                               const Vec<ColFlags>& col_flags );
-
-   // todo: modify with colvec and col cost so if dual postsolve
-   // col values are added so we can get dual value
-   void
-   notifyFixedCol( const int col, const REAL val,
-                   const SparseVectorView<REAL>& colvec,
-                   const Vec<REAL>& cost );
-
-   void
-   notifySingletonRow( const int row, const int col,
-                       const REAL coeff, const Vec<REAL>& cost,
-                       const SparseVectorView<REAL>& colvec,
-                       const REAL lhs, bool isLhsInfinity,
-                       const REAL rhs, bool isRhsInfinity )
-   ;
-
-   void
-   notifyDualValue( bool is_column_dual, int index, REAL value );
-
-   void
-   notifyFixedInfCol( int col, REAL val, REAL bound,
-                      const Problem<REAL>& currentProblem );
-
-   void
-   notifySubstitution( int col, SparseVectorView<REAL> equalityLHS,
-                       REAL equalityRHS );
-
-   /// col1 = col2scale * col2 and are merged into a new column y = col2 +
-   /// col2scale * col1 which takes over the index of col2
-   void
-   notifyParallelCols( int col1, bool col1integral, bool col1lbinf,
-                       const REAL& col1lb, bool col1ubinf, const REAL& col1ub,
-                       int col2, bool col2integral, bool col2lbinf,
-                       const REAL& col2lb, bool col2ubinf, const REAL& col2ub,
-                       const REAL& col2scale );
-
-   void
-   compress( const Vec<int>& rowmapping, const Vec<int>& colmapping,
-             bool full = false )
-   {
-      tbb::parallel_invoke(
-          [this, &colmapping, full]() {
-             compress_vector( colmapping, origcol_mapping );
-             if( full )
-                origcol_mapping.shrink_to_fit();
-          },
-          [this, &rowmapping, full]() {
-             // update information about rows that is stored by index
-             compress_vector( rowmapping, origrow_mapping );
-             if( full )
-                origrow_mapping.shrink_to_fit();
-          } );
-   }
-
-   template <typename Archive>
-   void
-   serialize( Archive& ar, const unsigned int version )
-   {
-      ar& nColsOriginal;
-      ar& nRowsOriginal;
-      ar& origcol_mapping;
-      ar& origrow_mapping;
-      ar& postsolveType;
-      ar& types;
-      ar& indices;
-      ar& values;
-      ar& start;
-
-      ar& problem;
-
-      ar& num;
-   }
 
    PostsolveStatus
    undo( const Solution<REAL>& reducedSolution,
-         Solution<REAL>& originalSolution ) const;
-
-   const Problem<REAL>&
-   getOriginalProblem() const
-   {
-      return problem;
-   }
-
-   const Num<REAL>&
-   getNum() const
-   {
-      return num;
-   }
-
- private:
-   void
-   finishNotify()
-   {
-      assert( types.size() == start.size() );
-      assert( values.size() == indices.size() );
-      start.push_back( values.size() );
-   }
-
-   // TODO add mechanism for saving columns as well
-   Vec<int> row_stack_index;
-   void
-   push_back_row( int row, const Problem<REAL>& currentProblem );
+         Solution<REAL>& originalSolution,
+         PostsolveListener<REAL> postsolveListener ) const;
 
    REAL
    calculate_row_value_for_infinity_column( REAL lhs, REAL rhs, int rowLength,
@@ -291,6 +74,7 @@ class Postsolve
                                             const REAL* coefficients,
                                             Vec<REAL>& current_solution,
                                             bool is_negative ) const;
+
 };
 
 #ifdef PAPILO_USE_EXTERN_TEMPLATES
@@ -300,441 +84,10 @@ extern template class Postsolve<Rational>;
 #endif
 
 template <typename REAL>
-void
-Postsolve<REAL>::notifyRedundantRow( const int row )
-{
-   // TODO2: actually this should not require to have the row stored on
-   // postsolve at all but you might need the row for the checker. Therefore
-   // the row should only be stored in the checker. To make this easier
-   // the checker should just store a reference to the problem
-   // that is passed in during construction of the postsolve, which wil always
-   // correspond to the current reduced problem. Then we do not need to pass
-   // extra information to the checker and it can store the additional
-   // information by itself.
-
-   // Apart from that the value should be able to store a
-   // dual value so that this function can also be used when components are
-   // solved individually. For that case the postsolve will just restore exactly
-   // that dual value and not care about reduced costs as they would be fixed
-   // separately to the values returned by the solver for one component.
-
-   types.push_back( ReductionType::kRedundantRow );
-   indices.push_back(
-       origrow_mapping[row] ); // TODO: this was an error! this must map to
-                               // original space, check at other places too! I
-                               // added it for here
-   values.push_back( 0 );
-
-   finishNotify();
-}
-
-template <typename REAL>
-void
-Postsolve<REAL>::notifyDeletedCol( const int col )
-{
-   // TODO I think we do not need notifyDeletedCol. A column is deleted when it
-   // is fixed or substituted or a parallel column. But all those have their own
-   // postsolve notify function that must handle all necessary information.
-   types.push_back( ReductionType::kDeletedCol );
-   indices.push_back( col );
-   values.push_back( 0 );
-
-   finishNotify();
-}
-
-template <typename REAL>
-void
-Postsolve<REAL>::notifyVarBoundChange( const bool isLowerBound,
-                                       const int row, const int col, const REAL oldBound,
-                                       bool isInfinity, const REAL newBound )
-{
-   // TODO, this is not needed due to the bound relaxing strategy I'll
-   // add for constraint propagation, instead there should only be a function
-   // notifyForcingRow. This is called for the case where a row forces a column
-   // upper bound to its lower bound and the column is fixed as a result, or the
-   // other way around.
-   types.push_back( ReductionType::kVarBoundChange );
-   if( isLowerBound )
-      indices.push_back( 1 );
-   else
-      indices.push_back( 0 );
-   values.push_back( 0 );
-
-   indices.push_back( col );
-   values.push_back( newBound );
-
-   indices.push_back( isInfinity );
-   values.push_back( oldBound );
-
-   finishNotify();
-}
-
-template <typename REAL>
-void
-Postsolve<REAL>::notifyRowBoundChange( const bool isLhs,
-                                       const int row, const int col,
-                                       const REAL oldBound, const REAL newBound )
-{
-   // TODO, this is not needed due to the bound relaxing strategy I'll
-   // add for constraint propagation, instead there should only be a function
-   // notifyForcingRow. This is called for the case where a row forces a column
-   // upper bound to its lower bound and the column is fixed as a result, or the
-   // other way around.
-   types.push_back( ReductionType::kRowBoundChange );
-   if( isLhs )
-      indices.push_back( 1 );
-   else
-      indices.push_back( 0 );
-   values.push_back( 0 );
-   indices.push_back( 0 );
-   indices.push_back( col );
-   values.push_back( oldBound );
-   values.push_back( newBound );
-
-   finishNotify();
-}
-
-template <typename REAL>
-void
-Postsolve<REAL>::notifyReducedBoundsAndCost(
-    const Vec<REAL>& col_lb, const Vec<REAL>& col_ub, const Vec<REAL>& row_lhs,
-    const Vec<REAL>& row_rhs, const Vec<REAL>& coefficients,
-    const Vec<RowFlags>& row_flags, const Vec<ColFlags>& col_flags )
-{
-   // TODO for what is this notification required? Can you add comments?
-   // the postsolve stores the original problem. The notify functions are not
-   // for the checker, the checker must get around without notifies and is only
-   // informed about changes from within postsolve notify functions. As
-   // mentioned in the above comment, the checker can store a reference that
-   // always contains the current reduced problem
-
-   types.push_back( ReductionType::kReducedBoundsCost );
-
-   // would be better to only pass finite values, not all
-   // col bounds
-   for( int col = 0; col < col_lb.size(); col++ )
-   {
-      int flag_lb = 0;
-      int flag_ub = 0;
-      if( col_flags[col].test( ColFlag::kLbInf ) )
-         flag_lb |= static_cast<int>( ColFlag::kLbInf );
-      if( col_flags[col].test( ColFlag::kUbInf ) )
-         flag_ub |= static_cast<int>( ColFlag::kUbInf );
-      indices.push_back( flag_lb );
-      values.push_back( col_lb[col] );
-      indices.push_back( flag_ub );
-      values.push_back( col_ub[col] );
-   }
-
-   // row bounds
-   for( int row = 0; row < row_lhs.size(); row++ )
-   {
-      int flag_lb = 0;
-      int flag_ub = 0;
-      if( row_flags[row].test( RowFlag::kLhsInf ) )
-         flag_lb |= static_cast<int>( RowFlag::kLhsInf );
-      if( row_flags[row].test( RowFlag::kRhsInf ) )
-         flag_ub |= static_cast<int>( RowFlag::kRhsInf );
-      indices.push_back( flag_lb );
-      values.push_back( row_lhs[row] );
-      indices.push_back( flag_ub );
-      values.push_back( row_rhs[row] );
-   }
-
-   // col coefficients
-   for( int col = 0; col < coefficients.size(); col++ )
-   {
-      indices.push_back( col );
-      values.push_back( coefficients[col] );
-   }
-
-   finishNotify();
-}
-
-template <typename REAL>
-void
-Postsolve<REAL>::notifyFixedCol( int col, const REAL val,
-                                 const SparseVectorView<REAL>& colvec,
-                                 const Vec<REAL>& cost )
-{
-   types.push_back( ReductionType::kFixedCol );
-   indices.push_back( origcol_mapping[col] );
-   values.push_back( val );
-
-   if( postsolveType == PostsolveType::kFull )
-   {
-      // TODO this should probably use the saveCol mechanism if the column
-      // values are needed
-      const int length = colvec.getLength();
-      indices.push_back( length );
-      values.push_back( cost[origcol_mapping[col]] );
-
-      const REAL* vals = colvec.getValues();
-      const int* inds = colvec.getIndices();
-
-      for( int j = 0; j < length; j++ )
-      {
-         indices.push_back( inds[j] );
-         values.push_back( vals[j] );
-      }
-   }
-
-   finishNotify();
-}
-
-/**
- * If a singleton row is deleted aka converted to an lower or upper bound,
- * this function saves the information to recalculate the dual solution.
- * This function should only be called if the singletonRow implies an tighter
- * bound. (TO BE CHECKED)
- * In this case the c^T - y^T *A needs to be zero because the original bound is not going to be met.
- * Therefore save the current column vector to recalculate.
- * (c^T-(y^T*A\{col}))/a_col.
- * @tparam REAL
- * @param row row index of singleton row
- * @param col column index of singleton row
- * @param coeff a_col
- * @param cost obj_col = c^T
- * @param colvec A\{col}
- */
-template <typename REAL>
-void
-Postsolve<REAL>::notifySingletonRow( const int row, const int col,
-                                     const REAL coeff, const Vec<REAL>& cost,
-                                     const SparseVectorView<REAL>& colvec,
-                                     const REAL lhs, bool isLhsInfinity,
-                                     const REAL rhs, bool isRhsInfinity )
-{
-   types.push_back( ReductionType::kSingletonRow );
-   indices.push_back( origrow_mapping[row] );
-   values.push_back( 0 );
-   indices.push_back( origcol_mapping[col] );
-   values.push_back( coeff );
-
-   indices.push_back( isLhsInfinity );
-   values.push_back( lhs );
-   indices.push_back( isRhsInfinity );
-   values.push_back( rhs );
-
-   const int length = colvec.getLength();
-   indices.push_back( length - 1 );
-   values.push_back( cost[origcol_mapping[col]] );
-
-   const REAL* vals = colvec.getValues();
-   const int* inds = colvec.getIndices();
-
-
-   for( int j = 0; j < length; j++ )
-   {
-      if( inds[j] != row )
-      {
-         indices.push_back( inds[j] );
-         values.push_back( vals[j] );
-      }
-   }
-
-   finishNotify();
-}
-
-template <typename REAL>
-void
-Postsolve<REAL>::notifyDualValue( bool is_column_dual, int index, REAL value )
-{
-   // TODO, for which reduction is this notify function for?
-   // Pushing zero so I don't modity finishNotify()'s assert (for the moment)
-   if( is_column_dual )
-      types.push_back( ReductionType::kColumnDualValue );
-   else
-      types.push_back( ReductionType::kRowDualValue );
-
-   indices.push_back( index );
-   values.push_back( value );
-   finishNotify();
-}
-
-// TODO remove dead code if not needed anymore
-// template <typename REAL>
-// void
-// Postsolve<REAL>::notifySavedRow( int row,
-//                                  const SparseVectorView<REAL>& coefficients,
-//                                  REAL lhs, REAL rhs, const RowFlags& flags )
-// {
-//    const REAL* coefs = coefficients.getValues();
-//    const int* columns = coefficients.getIndices();
-//    const int length = coefficients.getLength();
-
-//    types.push_back( ReductionType::kSaveRow );
-//    indices.push_back( origrow_mapping[row] );
-//    values.push_back( (double)length );
-
-//    // LB
-//    if( flags.test( RowFlag::kLhsInf ) )
-//       indices.push_back( 1 );
-//    else
-//       indices.push_back( 0 );
-//    values.push_back( lhs );
-
-//    // UB
-//    if( flags.test( RowFlag::kRhsInf ) )
-//       indices.push_back( 1 );
-//    else
-//       indices.push_back( 0 );
-//    values.push_back( rhs );
-
-//    for( int i = 0; i < length; ++i )
-//    {
-//       indices.push_back( columns[i] );
-//       values.push_back( coefs[i] );
-//    }
-
-//    finishNotify();
-// }
-
-template <typename REAL>
-void
-Postsolve<REAL>::push_back_row( int row, const Problem<REAL>& currentProblem )
-{
-   const auto& coefficients =
-       currentProblem.getConstraintMatrix().getRowCoefficients( row );
-   REAL lhs = currentProblem.getConstraintMatrix().getLeftHandSides()[row];
-   REAL rhs = currentProblem.getConstraintMatrix().getRightHandSides()[row];
-   const auto& flags = currentProblem.getConstraintMatrix().getRowFlags()[row];
-
-   const REAL* coefs = coefficients.getValues();
-   const int* columns = coefficients.getIndices();
-   const int length = coefficients.getLength();
-
-   indices.push_back( origrow_mapping[row] );
-   values.push_back( (double)length );
-
-   // LB
-   if( flags.test( RowFlag::kLhsInf ) )
-      indices.push_back( 1 );
-   else
-      indices.push_back( 0 );
-   values.push_back( lhs );
-
-   // UB
-   if( flags.test( RowFlag::kRhsInf ) )
-      indices.push_back( 1 );
-   else
-      indices.push_back( 0 );
-   values.push_back( rhs );
-
-   for( int i = 0; i < length; ++i )
-   {
-      indices.push_back( origcol_mapping[columns[i]] );
-      values.push_back( coefs[i] );
-   }
-}
-
-template <typename REAL>
-void
-Postsolve<REAL>::notifyFixedInfCol( int col, REAL val, REAL bound,
-                                    const Problem<REAL>& currentProblem )
-{
-   types.push_back( ReductionType::kFixedInfCol );
-   indices.push_back( origcol_mapping[col] );
-   values.push_back( val );
-   indices.push_back( 0 );
-   values.push_back( bound );
-
-   const auto& coefficients =
-       currentProblem.getConstraintMatrix().getColumnCoefficients( col );
-   const int* row_indices = coefficients.getIndices();
-
-   for( int i = 0; i < coefficients.getLength(); i++ )
-      push_back_row( row_indices[i], currentProblem );
-
-   finishNotify();
-}
-
-template <typename REAL>
-void
-Postsolve<REAL>::notifySubstitution( int col,
-                                     SparseVectorView<REAL> equalityLHS,
-                                     REAL equalityRHS )
-{
-   // TODO: depending on the postsolve type I guess we need to save also the
-   //       column, but for this branch lets focus on a working dual postsolve
-   //       only for the trivial presolve and lets add tests for that. Simple
-   //       tests could basically just read the MIP  instances in test/instances
-   //       folder, then discard integrality information, and apply a presolve
-   //       procedure that only uses trivial presolve. I think when this is done
-   //       I will add a flag to the presolvers for which postsolve type they
-   //       are compatible and default all to only primal. Then we can work on
-   //       adding more and more presolvers in later merge requests.
-   const REAL* coefs = equalityLHS.getValues();
-   const int* columns = equalityLHS.getIndices();
-   const int length = equalityLHS.getLength();
-   assert( length > 1 );
-
-   types.push_back( ReductionType::kSubstitutedCol );
-   values.push_back( equalityRHS );
-   indices.push_back( origcol_mapping[col] );
-   for( int i = 0; i < length; ++i )
-   {
-      indices.push_back( origcol_mapping[columns[i]] );
-      values.push_back( coefs[i] );
-   }
-
-   finishNotify();
-}
-
-/// col1 = col2scale * col2 and are merged into a new column y = col2 +
-/// col2scale * col1 which takes over the index of col2
-template <typename REAL>
-void
-Postsolve<REAL>::notifyParallelCols( int col1, bool col1integral,
-                                     bool col1lbinf, const REAL& col1lb,
-                                     bool col1ubinf, const REAL& col1ub,
-                                     int col2, bool col2integral,
-                                     bool col2lbinf, const REAL& col2lb,
-                                     bool col2ubinf, const REAL& col2ub,
-                                     const REAL& col2scale )
-{
-   // encode the finiteness of the bounds in one integer and store it as
-   // value for column 1
-   int col1BoundFlags = 0;
-   int col2BoundFlags = 0;
-
-   if( col1integral )
-      col1BoundFlags |= static_cast<int>( ColFlag::kIntegral );
-   if( col1lbinf )
-      col1BoundFlags |= static_cast<int>( ColFlag::kLbInf );
-   if( col1ubinf )
-      col1BoundFlags |= static_cast<int>( ColFlag::kUbInf );
-   if( col2integral )
-      col2BoundFlags |= static_cast<int>( ColFlag::kIntegral );
-   if( col2lbinf )
-      col2BoundFlags |= static_cast<int>( ColFlag::kLbInf );
-   if( col2ubinf )
-      col2BoundFlags |= static_cast<int>( ColFlag::kUbInf );
-
-   // add all information
-   indices.push_back( origcol_mapping[col1] );
-   indices.push_back( col1BoundFlags );
-   indices.push_back( origcol_mapping[col2] );
-   indices.push_back( col2BoundFlags );
-   indices.push_back( -1 ); // last index slot is not used
-   values.push_back( col1lb );
-   values.push_back( col1ub );
-   values.push_back( col2lb );
-   values.push_back( col2ub );
-   values.push_back( col2scale );
-
-   // add the range and the type of the reduction
-   types.push_back( ReductionType::kParallelCol );
-
-   finishNotify();
-}
-
-
-
-template <typename REAL>
 PostsolveStatus
 Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
-                       Solution<REAL>& originalSolution ) const
+                       Solution<REAL>& originalSolution,
+                       PostsolveListener<REAL> postsolveListener ) const
 {
 
    PrimalDualSolValidation<REAL> validation{};
@@ -747,31 +100,31 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
    }
 
    origSol.clear();
-   origSol.resize( nColsOriginal );
+   origSol.resize( postsolveListener.nColsOriginal );
 
    for( int k = 0; k < reducedSol.size(); ++k )
    {
-      int origcol = origcol_mapping[k];
+      int origcol = postsolveListener.origcol_mapping[k];
       origSol[origcol] = reducedSol[k];
    }
 
    if( originalSolution.type == SolutionType::kPrimalDual )
    {
-      assert( reducedSolution.reducedCosts.size() == origcol_mapping.size() );
+      assert( reducedSolution.reducedCosts.size() == postsolveListener.origcol_mapping.size() );
       originalSolution.reducedCosts.clear();
-      originalSolution.reducedCosts.resize( nColsOriginal );
-      for( int k = 0; k < origcol_mapping.size(); k++ )
+      originalSolution.reducedCosts.resize( postsolveListener.nColsOriginal );
+      for( int k = 0; k < postsolveListener.origcol_mapping.size(); k++ )
       {
-         int origcol = origcol_mapping[k];
+         int origcol = postsolveListener.origcol_mapping[k];
          originalSolution.reducedCosts[origcol] = reducedSolution.reducedCosts[k];
       }
 
-      assert( reducedSolution.dual.size() == origrow_mapping.size() );
+      assert( reducedSolution.dual.size() == postsolveListener.origrow_mapping.size() );
       originalSolution.dual.clear();
-      originalSolution.dual.resize( nRowsOriginal );
-      for( int k = 0; k < origrow_mapping.size(); k++ )
+      originalSolution.dual.resize( postsolveListener.nRowsOriginal );
+      for( int k = 0; k < postsolveListener.origrow_mapping.size(); k++ )
       {
-         int origrow = origrow_mapping[k];
+         int origrow = postsolveListener.origrow_mapping[k];
          originalSolution.dual[origrow] = reducedSolution.dual[k];
       }
    }
@@ -784,8 +137,8 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
    CheckLevel level = Primal_only;
    if(reducedSolution.type == SolutionType::kPrimalDual)
       level = Primal_and_dual;
-   if( origrow_mapping.size() < nRowsOriginal ||
-       origcol_mapping.size() < nColsOriginal )
+   if( postsolveListener.origrow_mapping.size() < postsolveListener.nRowsOriginal ||
+       postsolveListener.origcol_mapping.size() < postsolveListener.nColsOriginal )
    {
       //TODO: verify solution
 //      verifySolution(reducedSolution, r)
@@ -811,15 +164,15 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
    if( originalSolution.type == SolutionType::kPrimalDual )
    {
 
-      col_cost.assign( nColsOriginal, 0 );
-      col_lower.assign( nColsOriginal, 0 );
-      col_upper.assign( nColsOriginal, 0 );
-      row_lhs.assign( nRowsOriginal, 0 );
-      row_rhs.assign( nRowsOriginal, 0 );
-      col_infinity_upper.assign( nColsOriginal, 0 );
-      col_infinity_lower.assign( nColsOriginal, 0 );
-      row_infinity_upper.assign( nRowsOriginal, 0 );
-      row_infinity_lower.assign( nRowsOriginal, 0 );
+      col_cost.assign( postsolveListener.nColsOriginal, 0 );
+      col_lower.assign( postsolveListener.nColsOriginal, 0 );
+      col_upper.assign( postsolveListener.nColsOriginal, 0 );
+      row_lhs.assign( postsolveListener.nRowsOriginal, 0 );
+      row_rhs.assign( postsolveListener.nRowsOriginal, 0 );
+      col_infinity_upper.assign( postsolveListener.nColsOriginal, 0 );
+      col_infinity_lower.assign( postsolveListener.nColsOriginal, 0 );
+      row_infinity_upper.assign( postsolveListener.nRowsOriginal, 0 );
+      row_infinity_lower.assign( postsolveListener.nRowsOriginal, 0 );
 
       // // expand vectors.
       // Vec<REAL> tmp_col_cost = col_cost;
@@ -869,13 +222,21 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
       // flags = expanded_flags;
       // activity = expanded_activity;
 
-      col_lower_from_row.assign( nColsOriginal, -1 );
-      col_upper_from_row.assign( nColsOriginal, -1 );
-      row_lower_from_col.assign( nRowsOriginal, -1 );
-      row_upper_from_col.assign( nRowsOriginal, -1 );
+      col_lower_from_row.assign( postsolveListener.nColsOriginal, -1 );
+      col_upper_from_row.assign( postsolveListener.nColsOriginal, -1 );
+      row_lower_from_col.assign( postsolveListener.nRowsOriginal, -1 );
+      row_upper_from_col.assign( postsolveListener.nRowsOriginal, -1 );
    }
 
-   for( int i = types.size() - 1; i >= 0; --i )
+   auto types = postsolveListener.types;
+   auto start = postsolveListener.start;
+   auto indices = postsolveListener.indices;
+   auto values = postsolveListener.values;
+   auto origcol_mapping = postsolveListener.origcol_mapping;
+   auto origrow_mapping = postsolveListener.origrow_mapping;
+   auto problem = postsolveListener.problem;
+   auto num = postsolveListener.getNum();
+   for( int i = postsolveListener.types.size() - 1; i >= 0; --i )
    {
       auto type = types[i];
       int first = start[i];
@@ -887,47 +248,47 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
       case ReductionType::kReducedBoundsCost:
       {
          // get column bounds
-         for( int j = 0; j < origcol_mapping.size(); j++ )
+         for( int j = 0; j < postsolveListener.origcol_mapping.size(); j++ )
          {
-            int origCol = origcol_mapping[j];
+            int origCol = postsolveListener.origcol_mapping[j];
             int index = first + 2 * j;
-            col_lower[origCol] = values[index];
-            col_upper[origCol] = values[index + 1];
-            col_infinity_lower[origCol] = indices[index];
-            col_infinity_upper[origCol] = indices[index + 1];
+            col_lower[origCol] = postsolveListener.values[index];
+            col_upper[origCol] = postsolveListener.values[index + 1];
+            col_infinity_lower[origCol] = postsolveListener.indices[index];
+            col_infinity_upper[origCol] = postsolveListener.indices[index + 1];
          }
 
          // get row bounds
-         int first_row_bounds = first + 2 * origcol_mapping.size();
-         for( int k = 0; k < origrow_mapping.size(); k++ )
+         int first_row_bounds = first + 2 * postsolveListener.origcol_mapping.size();
+         for( int k = 0; k < postsolveListener.origrow_mapping.size(); k++ )
          {
-            int origRow = origrow_mapping[k];
+            int origRow = postsolveListener.origrow_mapping[k];
             int index = first_row_bounds + 2 * k;
-            row_lhs[origRow] = values[index];
-            row_rhs[origRow] = values[index + 1];
-            row_infinity_lower[origRow] = indices[index];
-            row_infinity_upper[origRow] = indices[index + 1];
+            row_lhs[origRow] = postsolveListener.values[index];
+            row_rhs[origRow] = postsolveListener.values[index + 1];
+            row_infinity_lower[origRow] = postsolveListener.indices[index];
+            row_infinity_upper[origRow] = postsolveListener.indices[index + 1];
          }
 
          // get cost
-         int first_cost = first_row_bounds + 2 * origrow_mapping.size();
-         for( int j = 0; j < origcol_mapping.size(); j++ )
+         int first_cost = first_row_bounds + 2 * postsolveListener.origrow_mapping.size();
+         for( int j = 0; j < postsolveListener.origcol_mapping.size(); j++ )
          {
-            int origcol = origcol_mapping[j];
-            col_cost[origcol] = values[first_cost + j];
-            assert( j == indices[first_cost + j] );
+            int origcol = postsolveListener.origcol_mapping[j];
+            col_cost[origcol] = postsolveListener.values[first_cost + j];
+            assert( j == postsolveListener.indices[first_cost + j] );
          }
          break;
       }
       case ReductionType::kColumnDualValue:
-         originalSolution.reducedCosts[indices[first]] = values[indices[first]];
+         originalSolution.reducedCosts[postsolveListener.indices[first]] = postsolveListener.values[postsolveListener.indices[first]];
          break;
       case ReductionType::kRedundantRow:
          break;
       case ReductionType::kDeletedCol:
          break;
       case ReductionType::kRowDualValue:
-         originalSolution.dual[indices[first]] = values[indices[first]];
+         originalSolution.dual[postsolveListener.indices[first]] = postsolveListener.values[postsolveListener.indices[first]];
          break;
       case ReductionType::kSaveRow:
       {
@@ -1380,6 +741,7 @@ Postsolve<REAL>::calculate_row_value_for_infinity_column(
    assert( coeff_of_column_in_row != 0 );
    return ( stableSum.get() / coeff_of_column_in_row );
 }
+
 
 } // namespace papilo
 

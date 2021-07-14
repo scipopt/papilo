@@ -44,8 +44,8 @@ TEST_CASE( "happy-path-test-free-variable-detection", "[presolve]" )
    Message msg{};
    Statistics statistics{};
    PresolveOptions presolveOptions{};
-   Postsolve<double> postsolve =
-       Postsolve<double>( problem, num );
+   PostsolveListener<double> postsolve =
+       PostsolveListener<double>( problem, num );
    problem.recomputeAllActivities();
    auto& activities = problem.getRowActivities();
 

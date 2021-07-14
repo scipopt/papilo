@@ -177,7 +177,8 @@ add_library(papilo-core STATIC
    src/papilo/core/ConstraintMatrix.cpp
    src/papilo/core/ProblemUpdate.cpp
    src/papilo/core/Presolve.cpp
-   src/papilo/core/Postsolve.cpp
+   src/papilo/core/postsolve/PostsolveListener.cpp
+        src/papilo/core/postsolve/Postsolve.cpp
    src/papilo/core/ProbingView.cpp
    src/papilo/presolvers/CoefficientStrengthening.cpp
    src/papilo/presolvers/ConstraintPropagation.cpp
@@ -223,7 +224,12 @@ install(FILES
         ${PROJECT_SOURCE_DIR}/src/papilo/core/ConstraintMatrix.hpp
         ${PROJECT_SOURCE_DIR}/src/papilo/core/MatrixBuffer.hpp
         ${PROJECT_SOURCE_DIR}/src/papilo/core/Objective.hpp
-        ${PROJECT_SOURCE_DIR}/src/papilo/core/Postsolve.hpp
+        ${PROJECT_SOURCE_DIR}/src/papilo/core/Objective.hpp
+        ${PROJECT_SOURCE_DIR}/src/papilo/core/postsolve/PostsolveListener.hpp
+        ${PROJECT_SOURCE_DIR}/src/papilo/core/postsolve/Postsolve.hpp
+        ${PROJECT_SOURCE_DIR}/src/papilo/core/postsolve/PostsolveStatus.hpp
+        ${PROJECT_SOURCE_DIR}/src/papilo/core/postsolve/ReductionType.hpp
+        ${PROJECT_SOURCE_DIR}/src/papilo/core/postsolve/PostsolveType.hpp
         ${PROJECT_SOURCE_DIR}/src/papilo/core/Presolve.hpp
         ${PROJECT_SOURCE_DIR}/src/papilo/core/PresolveMethod.hpp
         ${PROJECT_SOURCE_DIR}/src/papilo/core/PresolveOptions.hpp

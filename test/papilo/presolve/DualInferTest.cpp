@@ -40,7 +40,8 @@ TEST_CASE( "example-10-from-7.5-Presolve-Reductions-in-MIP", "[presolve]" )
    Problem<double> problem = setupExample10ofChapter7Dot5InPresolveReductions();
    Statistics statistics{};
    PresolveOptions presolveOptions{};
-   Postsolve<double> postsolve = Postsolve<double>( problem, num);
+   PostsolveListener<double> postsolve =
+       PostsolveListener<double>( problem, num);
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
    papilo::DualInfer<double> presolvingMethod{};
@@ -123,4 +124,3 @@ setupExample10ofChapter7Dot5InPresolveReductions()
    Problem<double> problem = pb.build();
    return problem;
 }
-

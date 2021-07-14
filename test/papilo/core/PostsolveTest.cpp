@@ -21,10 +21,12 @@
 /*                                                                           */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#include "papilo/core/Postsolve.hpp"
+#include "papilo/core/postsolve/Postsolve.hpp"
 #include "catch/catch.hpp"
+#include "papilo/core/postsolve/PostsolveStatus.hpp"
 #include <boost/archive/binary_iarchive.hpp>
 
+using namespace papilo;
 
 TEST_CASE( "finding-the-right-value-in-postsolve-for-a-column-fixed-neg-inf",
            "[core]" )
@@ -41,7 +43,7 @@ TEST_CASE( "finding-the-right-value-in-postsolve-for-a-column-fixed-neg-inf",
    papilo::Solution<double> original_solution{};
 
    REQUIRE( postsolve.undo( reduced_solution, original_solution ) ==
-            papilo::PostsolveStatus::kOk );
+            PostsolveStatus::kOk );
    papilo::Vec<double> values = original_solution.primal;
    papilo::Vec<double> expected_values{ -11, -5, -5 };
    REQUIRE( values == expected_values );

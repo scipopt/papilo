@@ -25,7 +25,7 @@
 #define _PAPILO_CORE_PROBLEM_UPDATE_HPP_
 
 #include "papilo/core/MatrixBuffer.hpp"
-#include "papilo/core/Postsolve.hpp"
+#include "papilo/core/postsolve/PostsolveListener.hpp"
 #include "papilo/core/PresolveMethod.hpp"
 #include "papilo/core/PresolveOptions.hpp"
 #include "papilo/core/Problem.hpp"
@@ -60,7 +60,7 @@ template <typename REAL>
 class ProblemUpdate
 {
    Problem<REAL>& problem;
-   Postsolve<REAL>& postsolve;
+   PostsolveListener<REAL>& postsolve;
    Statistics& stats;
    const PresolveOptions& presolveOptions;
    const Num<REAL>& num;
@@ -141,7 +141,7 @@ class ProblemUpdate
    }
 
  public:
-   ProblemUpdate( Problem<REAL>& problem, Postsolve<REAL>& postsolve,
+   ProblemUpdate( Problem<REAL>& problem, PostsolveListener<REAL>& postsolve,
                   Statistics& stats, const PresolveOptions& presolveOptions,
                   const Num<REAL>& num, const Message& msg );
 
@@ -386,7 +386,7 @@ extern template class ProblemUpdate<Rational>;
 
 template <typename REAL>
 ProblemUpdate<REAL>::ProblemUpdate( Problem<REAL>& problem,
-                                    Postsolve<REAL>& postsolve,
+                                    PostsolveListener<REAL>& postsolve,
                                     Statistics& stats,
                                     const PresolveOptions& presolveOptions,
                                     const Num<REAL>& num, const Message& msg )
