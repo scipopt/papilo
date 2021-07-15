@@ -338,7 +338,7 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
             REAL objective_coefficient = values[first + 1];
 
             // modify changes
-            col_cost[origcol_mapping[col]] = objective_coefficient;
+            col_cost[col] = objective_coefficient;
             col_infinity_lower[col] = false;
             col_infinity_upper[col] = false;
             col_upper[col] = values[first];
