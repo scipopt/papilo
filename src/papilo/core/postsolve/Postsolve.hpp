@@ -407,23 +407,26 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
       }
       case ReductionType::kVarBoundChange:
       {
-         bool isLowerBound = indices[first] == 1;
-         int col = indices[first + 1];
-         REAL old_value = values[first + 2];
-         REAL new_value = values[first + 1];
-         bool isInfinity = indices[first + 2] == 1;
-         if( isLowerBound )
+         if(originalSolution.type == SolutionType::kPrimalDual)
          {
-            col_lower[col] = old_value;
-            col_infinity_lower[col] = isInfinity;
-            // TODO: what is that
-            //            col_lower_from_row[col] = row;
-         }
-         else
-         {
-            col_upper[col] = old_value;
-            col_infinity_upper[col] = isInfinity;
-            //            col_infinity_upper[col] = row;
+            bool isLowerBound = indices[first] == 1;
+            int col = indices[first + 1];
+            REAL old_value = values[first + 2];
+            REAL new_value = values[first + 1];
+            bool isInfinity = indices[first + 2] == 1;
+            if( isLowerBound )
+            {
+               col_lower[col] = old_value;
+               col_infinity_lower[col] = isInfinity;
+               // TODO: what is that
+               //            col_lower_from_row[col] = row;
+            }
+            else
+            {
+               col_upper[col] = old_value;
+               col_infinity_upper[col] = isInfinity;
+               //            col_infinity_upper[col] = row;
+            }
          }
 
          // todo: also set flags for rows and columns which have a bound now
