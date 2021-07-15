@@ -47,6 +47,7 @@
 #include "papilo/misc/Vec.hpp"
 #include "papilo/misc/tbb.hpp"
 #include "papilo/core/postsolve/PostsolveListener.hpp"
+#include "papilo/core/postsolve/Postsolve.hpp"
 #include "papilo/presolvers/CoefficientStrengthening.hpp"
 #include "papilo/presolvers/ConstraintPropagation.hpp"
 #include "papilo/presolvers/DominatedCols.hpp"
@@ -93,23 +94,23 @@ class Presolve
    {
       using uptr = std::unique_ptr<PresolveMethod<REAL>>;
 
-//      addPresolveMethod( uptr( new SingletonCols<REAL>() ) );
-//      addPresolveMethod( uptr( new CoefficientStrengthening<REAL>() ) );
-//      addPresolveMethod( uptr( new SimpleProbing<REAL>() ) );
+      addPresolveMethod( uptr( new SingletonCols<REAL>() ) );
+      addPresolveMethod( uptr( new CoefficientStrengthening<REAL>() ) );
+      addPresolveMethod( uptr( new SimpleProbing<REAL>() ) );
       addPresolveMethod( uptr( new ConstraintPropagation<REAL>() ) );
-//      addPresolveMethod( uptr( new SingletonStuffing<REAL>() ) );
-//      addPresolveMethod( uptr( new DualFix<REAL>() ) );
-//      addPresolveMethod( uptr( new ImplIntDetection<REAL>() ) );
-//      addPresolveMethod( uptr( new FixContinuous<REAL>() ) );
-//      addPresolveMethod( uptr( new ParallelRowDetection<REAL>() ) );
-//      addPresolveMethod( uptr( new ParallelColDetection<REAL>() ) );
-//      addPresolveMethod( uptr( new SimpleSubstitution<REAL>() ) );
-//      addPresolveMethod( uptr( new DualInfer<REAL> ) );
-//      addPresolveMethod( uptr( new Substitution<REAL>() ) );
-//      addPresolveMethod( uptr( new Probing<REAL>() ) );
-//      addPresolveMethod( uptr( new DominatedCols<REAL>() ) );
-//      addPresolveMethod( uptr( new Sparsify<REAL>() ) );
-//      addPresolveMethod( uptr( new SimplifyInequalities<REAL>() ) );
+      addPresolveMethod( uptr( new SingletonStuffing<REAL>() ) );
+      addPresolveMethod( uptr( new DualFix<REAL>() ) );
+      addPresolveMethod( uptr( new ImplIntDetection<REAL>() ) );
+      addPresolveMethod( uptr( new FixContinuous<REAL>() ) );
+      addPresolveMethod( uptr( new ParallelRowDetection<REAL>() ) );
+      addPresolveMethod( uptr( new ParallelColDetection<REAL>() ) );
+      addPresolveMethod( uptr( new SimpleSubstitution<REAL>() ) );
+      addPresolveMethod( uptr( new DualInfer<REAL> ) );
+      addPresolveMethod( uptr( new Substitution<REAL>() ) );
+      addPresolveMethod( uptr( new Probing<REAL>() ) );
+      addPresolveMethod( uptr( new DominatedCols<REAL>() ) );
+      addPresolveMethod( uptr( new Sparsify<REAL>() ) );
+      addPresolveMethod( uptr( new SimplifyInequalities<REAL>() ) );
    }
 
    ParameterSet
@@ -373,7 +374,6 @@ Presolve<REAL>::apply( Problem<REAL>& problem )
       PresolveResult<REAL> result;
 
       result.postsolve = PostsolveListener<REAL>( problem, num );
-//      result.postsolve.getChecker().setOriginalProblem( problem );
 
       if( problem.getNumIntegralCols() == 0 )
          result.postsolve.postsolveType = PostsolveType::kFull;
@@ -1306,7 +1306,7 @@ Presolve<REAL>::printPresolversStats()
 template <typename REAL>
 void
 Presolve<REAL>::logStatus( const Problem<REAL>& problem,
-                           const PostsolveListener<REAL>& postsolve ) const
+                           const PostsolveListener<REAL>& postsolveListener ) const
 {
    msg.info( "reduced problem:\n" );
    msg.info( "  reduced rows:     {}\n", problem.getNRows() );
@@ -1319,9 +1319,9 @@ Presolve<REAL>::logStatus( const Problem<REAL>& problem,
    {
       Solution<REAL> solution{};
       const Solution<REAL> empty_sol{};
-      //TODO: use postsolve
-//      postsolve.undo( empty_sol, solution );
-      const Problem<REAL>& origprob = postsolve.getOriginalProblem();
+      Postsolve<REAL> postsolve{msg, num};
+      postsolve.undo( empty_sol, solution, postsolveListener );
+      const Problem<REAL>& origprob = postsolveListener.getOriginalProblem();
       REAL origobj = origprob.computeSolObjective( solution.primal );
       msg.info(
           "problem is solved [optimal solution found] [objective value: {}]\n",
