@@ -28,8 +28,6 @@
 
 using namespace papilo;
 
-//TODO: fix this fails
-
 TEST_CASE( "finding-the-right-value-in-postsolve-for-a-column-fixed-neg-inf",
            "[core]" )
 {
