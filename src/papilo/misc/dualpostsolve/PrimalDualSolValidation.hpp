@@ -25,6 +25,7 @@
 #define _PAPILO_CORE_PRIMAL_DUAL_SOL_VALIDATION_HPP_
 
 #include "papilo/core/Solution.hpp"
+#include "papilo/core/postsolve/PostsolveStatus.hpp"
 
 namespace papilo
 {
@@ -313,7 +314,7 @@ class PrimalDualSolValidation
    }
 
  public:
-   void
+   PostsolveStatus
    verifySolution( const Solution<REAL>& solution,
                    const Problem<REAL>& problem )
    {
@@ -322,14 +323,14 @@ class PrimalDualSolValidation
       if( failure )
       {
          message.info( "Solution vector length check FAILED.\n" );
-         return;
+         return PostsolveStatus::kFailed;
       }
 
       failure = checkPrimalFeasibility( solution.primal, problem );
       if( failure )
       {
          message.info( "Primal feasibility check FAILED.\n" );
-         return;
+         return PostsolveStatus::kFailed;
       }
 
       if( solution.type == SolutionType::kPrimalDual )
@@ -339,7 +340,7 @@ class PrimalDualSolValidation
          if( failure )
          {
             message.info( "Dual feasibility check FAILED.\n" );
-            return;
+            return PostsolveStatus::kFailed;
          }
 
          failure = checkComplementarySlackness(
@@ -347,7 +348,8 @@ class PrimalDualSolValidation
          if( failure )
          {
             message.info( "Complementary slack check FAILED.\n" );
-            return;
+            return PostsolveStatus::kFailed;
+
          }
 
          failure = checkStOfLagrangian( solution.primal, solution.dual,
@@ -355,11 +357,13 @@ class PrimalDualSolValidation
          if( failure )
          {
             message.info( "Lagrangian check FAILED.\n" );
-            return;
+            return PostsolveStatus::kFailed;
          }
       }
 
       message.info( "Solution passed validation\n" );
+      return PostsolveStatus::kOk;
+
    }
 };
 } // namespace papilo

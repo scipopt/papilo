@@ -719,9 +719,11 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
 #endif
    }
 
-   validation.verifySolution( originalSolution, problem );
-
-   return PostsolveStatus::kOk;
+   PostsolveStatus status =
+       validation.verifySolution( originalSolution, problem );
+   if(status== PostsolveStatus::kFailed)
+      message.error("Postsolving solution failed. Please use debug mode to obtain more information.");
+   return status;
 }
 template <typename REAL>
 void
