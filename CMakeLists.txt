@@ -1,7 +1,7 @@
 cmake_minimum_required (VERSION 3.5.0)
 project(papilo VERSION 1.1.0.0)
 
-set(BOOST_MIN_VERSION 1.66)
+set(BOOST_MIN_VERSION 1.72)
 set(CMAKE_CXX_STANDARD 14)
 # set(CMAKE_CXX_EXTENSIONS OFF)
 # required for gcc if set(CMAKE_CXX_EXTENSIONS OFF) is used
@@ -31,6 +31,9 @@ option(SCIP "should SCIP solver be linked if found" ON)
 if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Release)
 endif()
+
+# please make sure to have installed libbz2-dev
+find_package(BZip2 REQUIRED)
 
 find_package(Boost ${BOOST_MIN_VERSION} REQUIRED)
 

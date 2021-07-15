@@ -271,6 +271,7 @@ applyReductions( const Reductions<double>& reductions,
    problem.recomputeAllActivities();
    problemUpdate.setPostponeSubstitutions( substitutions );
    Presolve<double> presolve{};
+   presolve.addDefaultPresolvers();
    const std::pair<int, int>& result =
        presolve.applyReductions( 0, reductions, problemUpdate );
    return { { problem, postsolve }, result };
