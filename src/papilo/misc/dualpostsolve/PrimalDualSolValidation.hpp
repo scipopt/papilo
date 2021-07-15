@@ -76,9 +76,11 @@ class PrimalDualSolValidation
    {
       const int nCols = problem.getNCols();
 
-      return solution.primal.size() != nCols ||
-             solution.reducedCosts.size() != nCols ||
-             solution.dual.size() != problem.getNRows();
+      bool primal_check = solution.primal.size() != nCols;
+      if( solution.type == SolutionType::kPrimalDual )
+         return primal_check || solution.reducedCosts.size() != nCols ||
+                solution.dual.size() != problem.getNRows();
+      return primal_check;
    }
 
    bool

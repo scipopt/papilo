@@ -715,8 +715,9 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
 
 //#todo only in debug mode
 #ifndef NDEBUG
-      verify_current_solution( originalSolution, validation, postsolveListener,
-                               i );
+      if( reducedSolution.type == SolutionType::kPrimalDual )
+         verify_current_solution( originalSolution, validation,
+                                  postsolveListener, i );
 #endif
    }
 
