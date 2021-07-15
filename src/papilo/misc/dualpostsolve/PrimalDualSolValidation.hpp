@@ -293,7 +293,7 @@ class PrimalDualSolValidation
 
       for( int col = 0; col < transposed.getNCols(); col++ )
       {
-         if(problem.getRowFlags()[col].test(RowFlag::kRedundant))
+         if( problem.getColFlags()[col].test( ColFlag::kFixed ) )
             continue;
          REAL lagrV = 0;
 
@@ -311,6 +311,10 @@ class PrimalDualSolValidation
 
       return false;
    }
+
+
+
+
 
  public:
    void

@@ -1064,6 +1064,11 @@ ProblemUpdate<REAL>::removeFixedCols()
       auto colvec = consMatrix.getColumnCoefficients( col );
       postsolve.notifyFixedCol( col, lbs[col], colvec, obj.coefficients );
 
+      // if it is fixed to zero activities and sides do not need to be
+      // updated
+      if( lbs[col] == 0 )
+         continue;
+
        // update objective offset
        if( obj.coefficients[col] != 0 )
        {
@@ -1071,12 +1076,8 @@ ProblemUpdate<REAL>::removeFixedCols()
            obj.coefficients[col] = 0;
        }
 
-      // if it is fixed to zero activities and sides do not need to be
-      // updated
-      if( lbs[col] == 0 )
-         continue;
 
-      // fixed to nonzero value, so update sides and activities
+       // fixed to nonzero value, so update sides and activities
       int collen = colvec.getLength();
       const int* colrows = colvec.getIndices();
       const REAL* colvals = colvec.getValues();

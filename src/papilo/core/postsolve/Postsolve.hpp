@@ -140,9 +140,6 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
    // At the moment not all row and column changes are notified. The check
    // below handles the case when some trivial presolve elimination is applied,
    // but types.size() is still zero.
-   CheckLevel level = Primal_only;
-   if( reducedSolution.type == SolutionType::kPrimalDual )
-      level = Primal_and_dual;
    if( postsolveListener.origrow_mapping.size() <
            postsolveListener.nRowsOriginal ||
        postsolveListener.origcol_mapping.size() <
@@ -355,16 +352,12 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
             for( int k = 0; k < col_length; ++k )
             {
                int index = first + 2 + k;
-               inds[k] = indices[index];
-               vals[k] = values[index];
                reducedCosts =
                    reducedCosts -
                    values[index] * originalSolution.dual[indices[index]];
             }
             originalSolution.reducedCosts[col] = reducedCosts;
 
-            SparseVectorView<REAL> view =
-                SparseVectorView<REAL>{ vals, inds, col_length };
          }
          break;
       }
@@ -372,9 +365,9 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
       {
          int row = indices[first];
          int col = indices[first + 1];
-         if( originalSolution.type == SolutionType::kPrimalDual )
          // code below saves column on stack for the calculation of dual values.
          // todo: use column on stack
+         if( originalSolution.type == SolutionType::kPrimalDual )
          {
 
             REAL coeff = values[first + 1];
@@ -382,11 +375,13 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
             assert( indices[first + 1] == col );
 
             REAL value = cost;
+
             int col_length_minus_one = indices[first + 4];
 
             int isLhsInfinity = indices[first + 2] == 1;
-            REAL lhs = values[first + 2];
             int isRhsInfinity = indices[first + 3] == 1;
+
+            REAL lhs = values[first + 2];
             REAL rhs = values[first + 3];
 
             // no need to check for solSetRow because if it is zero then the
@@ -401,9 +396,7 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
 
             originalSolution.dual[row] = value;
             originalSolution.reducedCosts[col] = 0;
-            int index[1] = { col };
-            REAL vals[1] = { coeff };
-            SparseVectorView<REAL> view{ vals, index, 1 };
+
             col_lower[col] = lhs;
             col_upper[col] = rhs;
             col_infinity_lower[col] = isLhsInfinity;
