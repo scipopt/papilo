@@ -35,8 +35,6 @@
 #include "papilo/misc/StableSum.hpp"
 #include "papilo/misc/Vec.hpp"
 #include "papilo/misc/compress_vector.hpp"
-#include "papilo/misc/dualpostsolve/CheckLevel.hpp"
-#include "papilo/misc/dualpostsolve/KktChecker.hpp"
 #include "papilo/misc/dualpostsolve/PrimalDualSolValidation.hpp"
 #include "papilo/misc/fmt.hpp"
 #include "papilo/misc/tbb.hpp"

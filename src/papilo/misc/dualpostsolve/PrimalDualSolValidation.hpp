@@ -24,10 +24,6 @@
 #ifndef _PAPILO_CORE_PRIMAL_DUAL_SOL_VALIDATION_HPP_
 #define _PAPILO_CORE_PRIMAL_DUAL_SOL_VALIDATION_HPP_
 
-#include "CheckLevel.hpp"
-#include "KktChecker.hpp"
-#include "KktInfo.hpp"
-#include "kkt_status.hpp"
 #include "papilo/core/Solution.hpp"
 
 namespace papilo
