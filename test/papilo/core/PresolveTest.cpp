@@ -106,6 +106,7 @@ TEST_CASE( "replacing-variables-is-postponed-by-flag", "[core]" )
    REQUIRE( result.second == 0 );
 }
 
+//todo #fails
 TEST_CASE( "happy-path-replace-variable", "[core]" )
 {
    papilo::Reductions<double> reductions{};

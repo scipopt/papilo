@@ -64,7 +64,8 @@ struct Validation
 
       Solution<REAL> calculated_orig_solution{};
       Solution<REAL> reducedSolution = Solution<REAL>( vec );
-      Postsolve<REAL> postsolve{};
+      const Message msg{};
+      Postsolve<REAL> postsolve{msg, postsolveListener.getNum()};
       postsolve.undo( reducedSolution, calculated_orig_solution, postsolveListener );
       for( int i = 0; i < postsolveListener.nColsOriginal; i++ )
       {

@@ -328,7 +328,8 @@ postsolve( PostsolveListener<REAL>& postsolveListener, const Solution<REAL>& red
    Solution<REAL> original_sol;
 
    auto t0 = tbb::tick_count::now();
-   Postsolve<REAL> postsolve1{};
+   const Message msg{};
+   Postsolve<REAL> postsolve1{ msg, postsolveListener.getNum() };
    postsolve1.undo( reduced_sol, original_sol, postsolveListener );
    auto t1 = tbb::tick_count::now();
 

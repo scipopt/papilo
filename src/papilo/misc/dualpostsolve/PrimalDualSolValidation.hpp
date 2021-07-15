@@ -35,6 +35,8 @@ namespace papilo
 template <typename REAL>
 class PrimalDualSolValidation
 {
+
+ private:
    const Num<REAL> num;
    Message message{};
 
@@ -311,10 +313,6 @@ class PrimalDualSolValidation
 
       return false;
    }
-
-
-
-
 
  public:
    void

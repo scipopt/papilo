@@ -50,11 +50,6 @@
 namespace papilo
 {
 
-enum class PostsolveStatus : int
-{
-   kOk,
-};
-
 template <typename REAL>
 class SparseVectorView;
 

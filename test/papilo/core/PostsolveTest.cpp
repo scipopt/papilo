@@ -28,21 +28,26 @@
 
 using namespace papilo;
 
+//TODO: fix this fails
+
 TEST_CASE( "finding-the-right-value-in-postsolve-for-a-column-fixed-neg-inf",
            "[core]" )
 {
 
-   papilo::Postsolve<double> postsolve{};
+   const Num<double> num{};
+   Message msg{};
+   PostsolveListener<double> postsolveListener{};
 
    std::ifstream inArchiveFile( "./resources/dual_fix_neg_inf.postsolve",
                                 std::ios_base::binary );
    boost::archive::binary_iarchive inputArchive( inArchiveFile );
-   inputArchive >> postsolve;
+   inputArchive >> postsolveListener;
    inArchiveFile.close();
-   papilo::Solution<double> reduced_solution{};
-   papilo::Solution<double> original_solution{};
+   Solution<double> reduced_solution{};
+   Solution<double> original_solution{};
+   Postsolve<double> postsolve{msg, num};
 
-   REQUIRE( postsolve.undo( reduced_solution, original_solution ) ==
+   REQUIRE( postsolve.undo( reduced_solution, original_solution, postsolveListener) ==
             PostsolveStatus::kOk );
    papilo::Vec<double> values = original_solution.primal;
    papilo::Vec<double> expected_values{ -11, -5, -5 };
@@ -53,18 +58,21 @@ TEST_CASE( "finding-the-right-value-in-postsolve-for-a-column-fixed-pos-inf",
            "[core]" )
 {
 
-   papilo::Postsolve<double> postsolve{};
+   const Num<double> num{};
+   Message msg{};
+   PostsolveListener<double> postsolveListener{};
 
    std::ifstream inArchiveFile( "./resources/dual_fix_pos_inf.postsolve",
                                 std::ios_base::binary );
    boost::archive::binary_iarchive inputArchive( inArchiveFile );
-   inputArchive >> postsolve;
+   inputArchive >> postsolveListener;
    inArchiveFile.close();
-   papilo::Solution<double> reduced_solution{};
-   papilo::Solution<double> original_solution{};
+   Solution<double> reduced_solution{};
+   Solution<double> original_solution{};
+   Postsolve<double> postsolve{msg, num};
 
-   REQUIRE( postsolve.undo( reduced_solution, original_solution ) ==
-            papilo::PostsolveStatus::kOk );
+   REQUIRE( postsolve.undo( reduced_solution, original_solution, postsolveListener ) ==
+            PostsolveStatus::kOk );
    papilo::Vec<double> values = original_solution.primal;
    papilo::Vec<double> expected_values{ 13, 9, -5, -2.5 };
    REQUIRE( values == expected_values );

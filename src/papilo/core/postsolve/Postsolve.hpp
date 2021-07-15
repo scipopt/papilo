@@ -56,8 +56,15 @@ namespace papilo
 template <typename REAL>
 class Postsolve
 {
+ private:
+   Message message{};
+   Num<REAL> num{};
+
  public:
-   Postsolve() = default;
+   Postsolve( const Message msg, const Num<REAL> n ){
+       message = msg;
+       num = n;
+   };
 
    PostsolveStatus
    undo( const Solution<REAL>& reducedSolution,
@@ -65,8 +72,6 @@ class Postsolve
          PostsolveListener<REAL> postsolveListener ) const;
 
  private:
-   Message message{};
-
    REAL
    calculate_row_value_for_infinity_column( REAL lhs, REAL rhs, int rowLength,
                                             int column, const int* row_indices,
@@ -77,7 +82,7 @@ class Postsolve
    verify_current_solution( const Solution<REAL>& originalSolution,
                             PrimalDualSolValidation<REAL>& validation,
                             const PostsolveListener<REAL>& listener,
-                            const Num<REAL>& num, int current_index ) const;
+                            int current_index ) const;
 };
 
 #ifdef PAPILO_USE_EXTERN_TEMPLATES
@@ -240,7 +245,6 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
    auto origcol_mapping = postsolveListener.origcol_mapping;
    auto origrow_mapping = postsolveListener.origrow_mapping;
    auto problem = postsolveListener.problem;
-   auto num = postsolveListener.getNum();
    for( int i = postsolveListener.types.size() - 1; i >= 0; --i )
    {
       auto type = types[i];
@@ -357,7 +361,6 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
                    values[index] * originalSolution.dual[indices[index]];
             }
             originalSolution.reducedCosts[col] = reducedCosts;
-
          }
          break;
       }
@@ -709,8 +712,12 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
          break;
       }
       }
+
+//#todo only in debug mode
+#ifndef NDEBUG
       verify_current_solution( originalSolution, validation, postsolveListener,
-                               num, i );
+                               i );
+#endif
    }
 
    validation.verifySolution( originalSolution, problem );
@@ -722,8 +729,7 @@ void
 Postsolve<REAL>::verify_current_solution(
     const Solution<REAL>& originalSolution,
     PrimalDualSolValidation<REAL>& validation,
-    const PostsolveListener<REAL>& listener, const Num<REAL>& num,
-    int current_index ) const
+    const PostsolveListener<REAL>& listener, int current_index ) const
 {
 
    auto types = listener.types;

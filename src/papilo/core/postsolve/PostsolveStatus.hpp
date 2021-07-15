@@ -28,7 +28,8 @@
 /// possible types of post solving
 enum class PostsolveStatus : int
 {
-   kOk = 0
+   kOk = 0,
+   kFailed = 1
 };
 
 #endif

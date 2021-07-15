@@ -51,6 +51,7 @@ TEST_CASE( "happy-path-presolve-singleton-row", "[core]" )
    REQUIRE( problem.getRowFlags()[1].test( RowFlag::kRedundant ) );
 }
 
+//TODO:
 TEST_CASE( "happy-path-presolve-singleton-row-fixed", "[core]" )
 {
    Num<double> num{};
