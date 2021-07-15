@@ -22,6 +22,7 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 #include "papilolib.h"
+#include "papilo/core/postsolve/Postsolve.hpp"
 #include "scip/pub_message.h"
 #include "scip/scipdefplugins.h"
 #include <cassert>
@@ -1258,9 +1259,10 @@ papilo_solver_start( PAPILO_SOLVER* solver )
          if( solverInterface != nullptr &&
              !solverInterface->getSolution( solution ) )
             break;
-
-         if( solver->presolveResult.postsolve.undo(
-                 solution, solver->solution ) == PostsolveStatus::kOk )
+         Postsolve postsolve{msg, presolveResult.postsolve.getNum()};
+         if( postsolve.undo( solution, solver->solution,
+                             solver->presolveResult.postsolve ) ==
+             PostsolveStatus::kOk )
          {
             solver->solveinfo.bestsol = solver->solution.primal.data();
             solver->solveinfo.solve_result = PAPILO_SOLVE_RESULT_OPTIMAL;
