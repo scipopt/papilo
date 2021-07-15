@@ -1251,6 +1251,8 @@ papilo_solver_start( PAPILO_SOLVER* solver )
       }
 
       Solution<double> solution;
+      Postsolve postsolve{ msg, presolveResult.postsolve.getNum() };
+
       switch( status )
       {
       case SolverStatus::kOptimal:
@@ -1259,7 +1261,6 @@ papilo_solver_start( PAPILO_SOLVER* solver )
          if( solverInterface != nullptr &&
              !solverInterface->getSolution( solution ) )
             break;
-         Postsolve postsolve{msg, presolveResult.postsolve.getNum()};
          if( postsolve.undo( solution, solver->solution,
                              solver->presolveResult.postsolve ) ==
              PostsolveStatus::kOk )
@@ -1295,8 +1296,9 @@ papilo_solver_start( PAPILO_SOLVER* solver )
              !solverInterface->getSolution( solution ) )
             break;
 
-         if( solver->presolveResult.postsolve.undo(
-                 solution, solver->solution ) == PostsolveStatus::kOk )
+         if( postsolve.undo( solution, solver->solution,
+                             solver->presolveResult.postsolve ) ==
+             PostsolveStatus::kOk )
          {
             solver->solveinfo.bestsol = solver->solution.primal.data();
             solver->solveinfo.solve_result = PAPILO_SOLVE_RESULT_FEASIBLE;
