@@ -260,14 +260,14 @@ class PrimalDualSolValidation
          if( problem.getColFlags()[col].test( ColFlag::kInactive ) )
             continue;
 
-         if( !problem.getColFlags()[col].test( ColFlag::kLbInf ) )
+         if( not problem.getColFlags()[col].test( ColFlag::kLbInf ) )
             if( not num.isZero( ( primalSolution[col] - lb[col] ) *
                                 ( reducedCosts[col] ) ) and
                 num.isEq( primalSolution[col], ub[col] ) and
                 not num.isZero( reducedCosts[col] ) )
                return true;
 
-         if( !problem.getColFlags()[col].test( ColFlag::kUbInf ) )
+         if( not problem.getColFlags()[col].test( ColFlag::kUbInf ) )
             if( num.isZero( ( ub[col] - primalSolution[col] ) *
                             ( reducedCosts[col] ) ) &&
                 num.isEq( primalSolution[col], lb[col] ) &&

@@ -354,8 +354,7 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
             for( int k = 0; k < col_length; ++k )
             {
                int index = first + 2 + k;
-               reducedCosts =
-                   reducedCosts -
+               reducedCosts -=
                    values[index] * originalSolution.dual[indices[index]];
             }
             originalSolution.reducedCosts[col] = reducedCosts;
@@ -744,7 +743,6 @@ Postsolve<REAL>::verify_current_solution(
    auto origrow_mapping = listener.origrow_mapping;
    auto problem = listener.problem;
 
-   // TODO: do check after every step
    Problem<REAL> reduced = Problem<REAL>( problem );
    reduced.recomputeAllActivities();
    Statistics statistics{};
