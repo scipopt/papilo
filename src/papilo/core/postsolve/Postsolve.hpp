@@ -38,6 +38,8 @@
 #include "papilo/misc/dualpostsolve/PrimalDualSolValidation.hpp"
 #include "papilo/misc/fmt.hpp"
 #include "papilo/misc/tbb.hpp"
+#include "papilo/io/MpsWriter.hpp"
+
 #include <fstream>
 
 #include <boost/archive/text_iarchive.hpp>
@@ -389,13 +391,15 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
             for( int k = 0; k < col_length_minus_one; ++k )
             {
                int index = first + 5 + k;
-               value -= values[index] * originalSolution.dual[indices[index]];
+               int col_index = indices[index];
+               value -= values[index] * originalSolution.dual[col_index];
             }
 
             value = value / coeff;
 
             originalSolution.dual[row] = value;
             originalSolution.reducedCosts[col] = 0;
+//            originalSolution.reducedCosts[col] -= coeff * value;
 
             col_lower[col] = lhs;
             col_upper[col] = rhs;
@@ -711,6 +715,36 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
 
          break;
       }
+      case ReductionType::kRowBoundChange:{
+         if(originalSolution.type == SolutionType::kPrimalDual)
+         {
+            bool isLhs = indices[first] == 1;
+            bool isInfinity = indices[first + 1];
+            int row = (int) values[first];
+            REAL new_value = values[first +1];
+            if( isLhs )
+            {
+               if(isInfinity){
+                  row_infinity_lower[row] = true;
+               }
+               else{
+                  row_infinity_lower[row] = false;
+                  row_lhs[row] = new_value;
+
+               }
+            }
+            else
+            {
+               if(isInfinity){
+                  row_infinity_upper[row] = true;
+               }
+               else{
+                  row_infinity_upper[row] = false;
+                  row_rhs[row] = new_value;
+               }
+            }
+         }
+      }
       }
 
 //#todo only in debug mode
@@ -769,14 +803,18 @@ Postsolve<REAL>::verify_current_solution(
          // use notifySavedCol and current index of column on the stack.
          int col = indices[first];
          REAL val = values[first];
-         problemUpdate.fixCol( col, val );
-         problemUpdate.addDeletedVar( col );
+         problemUpdate.getProblem().getLowerBounds()[col] = val;
+         problemUpdate.getProblem().getUpperBounds()[col] = val;
+         problemUpdate.getProblem().getColFlags()[col].set(ColFlag::kFixed);
+         problemUpdate.addDeletedVar(col);
+         problemUpdate.removeFixedCols();
+         problemUpdate.clearDeletedCols();
          break;
       }
       case ReductionType::kSingletonRow:
       {
-         int row = indices[first];
-         problemUpdate.removeSingletonRow( row );
+//         int row = indices[first];
+//         problemUpdate.removeSingletonRow( row );
          break;
       }
       case ReductionType::kVarBoundChange:
@@ -786,9 +824,49 @@ Postsolve<REAL>::verify_current_solution(
          REAL old_value = values[first + 2];
          REAL new_value = values[first + 1];
          if( isLowerBound )
-            problemUpdate.changeLB( col, new_value );
+         {
+            problemUpdate.getProblem().getLowerBounds()[col] = new_value;
+            problemUpdate.getProblem().getColFlags()[col].unset(ColFlag::kLbInf);
+         }
          else
-            problemUpdate.changeUB( col, new_value );
+         {
+            problemUpdate.getProblem().getUpperBounds()[col] = new_value;
+            problemUpdate.getProblem().getColFlags()[col].unset(ColFlag::kUbInf);
+         }
+         break;
+      }
+      case ReductionType::kRowBoundChange:
+      {
+         bool isLhs = indices[first] == 1;
+         bool isInfinity = indices[first + 1];
+         int row = (int)values[first];
+         REAL new_value = values[first + 1];
+         if( isLhs )
+         {
+            if( isInfinity )
+            {
+               problemUpdate.getConstraintMatrix()
+                   .template modifyLeftHandSide<true>( row, num );
+            }
+            else
+            {
+               problemUpdate.getConstraintMatrix()
+                   .modifyLeftHandSide( row, num, new_value );
+            }
+         }
+         else
+         {
+            if( isInfinity )
+            {
+               problemUpdate.getConstraintMatrix()
+                   .template modifyRightHandSide<true>( row, num );
+            }
+            else
+            {
+               problemUpdate.getConstraintMatrix()
+                   .modifyRightHandSide( row, num, new_value );
+            }
+         }
          break;
       }
       case ReductionType::kParallelCol:
@@ -804,7 +882,18 @@ Postsolve<REAL>::verify_current_solution(
          assert( false );
       }
    }
-   problemUpdate.removeFixedCols();
+   MpsWriter<REAL> write{};
+   std::string filename = "problem_index_" +
+                          boost::lexical_cast<std::string>( current_index ) +
+                          ".mps";
+
+   Vec<int> col_mapping{};
+   Vec<int> row_mapping{};
+   for(int i=0; i<problem.getNRows(); i++)
+      row_mapping.push_back(i);
+   for(int i=0; i<problem.getNCols(); i++)
+      col_mapping.push_back(i);
+   write.writeProb( filename, reduced, row_mapping, col_mapping);
    message.info( "Validation of partial ({}) reconstr. sol : ", current_index );
    validation.verifySolution( originalSolution, reduced );
 }

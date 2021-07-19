@@ -166,6 +166,24 @@ class ProblemUpdate
    PresolveStatus
    changeLB( int col, REAL val );
 
+   ConstraintMatrix<REAL>&
+   getConstraintMatrix()
+   {
+      return problem.getConstraintMatrix();
+   }
+
+   Problem<REAL>&
+   getProblem()
+   {
+      return problem;
+   }
+
+   void
+   clearDeletedCols()
+   {
+      deleted_cols.clear();
+   }
+
    PresolveStatus
    changeUB( int col, REAL val );
 
@@ -621,8 +639,8 @@ ProblemUpdate<REAL>::changeLB( int col, REAL val )
       else
          cflags[col].unset( ColFlag::kLbInf );
 
-      postsolve.notifyVarBoundChange( true, -1, col, lbs[col],
-                                      isInfinity,newbound );
+      postsolve.notifyVarBoundChange( true, col, lbs[col], isInfinity,
+                                      newbound );
       lbs[col] = newbound;
 
       if( !cflags[col].test( ColFlag::kUbInf ) && ubs[col] == lbs[col] )
@@ -712,8 +730,8 @@ ProblemUpdate<REAL>::changeUB( int col, REAL val )
       else
          cflags[col].unset( ColFlag::kUbInf );
 
-      postsolve.notifyVarBoundChange( false, -1, col, ubs[col],
-                                      isInfinity,newbound );
+      postsolve.notifyVarBoundChange( false, col, ubs[col], isInfinity,
+                                      newbound );
       ubs[col] = newbound;
 
       if( !cflags[col].test( ColFlag::kLbInf ) && ubs[col] == lbs[col] )
@@ -837,10 +855,12 @@ ProblemUpdate<REAL>::checkChangedActivities()
          break;
       case RowStatus::kRedundantLhs:
          consmatrix.template modifyLeftHandSide<true>( r, num );
+         postsolve.notifyRowBoundChange( true, r, REAL{ 0 }, true );
          status = PresolveStatus::kReduced;
          break;
       case RowStatus::kRedundantRhs:
          consmatrix.template modifyRightHandSide<true>( r, num );
+         postsolve.notifyRowBoundChange( false, r, REAL{ 0 }, true );
          status = PresolveStatus::kReduced;
          break;
       case RowStatus::kInfeasible:
@@ -1195,7 +1215,9 @@ ProblemUpdate<REAL>::apply_dualfix( Vec<REAL>& lbs, Vec<REAL>& ubs,
          }
          else
          {
-            postsolve.notifyVarBoundChange(false, -1, col, ubs[col], cflags[col].test(ColFlag::kUbInf), lbs[col]);
+            postsolve.notifyVarBoundChange( false, col, ubs[col],
+                                            cflags[col].test( ColFlag::kUbInf ),
+                                            lbs[col] );
             ubs[col] = lbs[col];
             cflags[col].unset( ColFlag::kUbInf );
             ++stats.nboundchgs;
@@ -1220,7 +1242,9 @@ ProblemUpdate<REAL>::apply_dualfix( Vec<REAL>& lbs, Vec<REAL>& ubs,
          }
          else
          {
-            postsolve.notifyVarBoundChange(true, -1, col, lbs[col], cflags[col].test(ColFlag::kLbInf), ubs[col]);
+            postsolve.notifyVarBoundChange( true, col, lbs[col],
+                                            cflags[col].test( ColFlag::kLbInf ),
+                                            ubs[col] );
             lbs[col] = ubs[col];
             cflags[col].unset( ColFlag::kLbInf );
             ++stats.nboundchgs;
@@ -1361,11 +1385,13 @@ ProblemUpdate<REAL>::trivialRowPresolve()
             break;
          case RowStatus::kRedundantLhs:
             consMatrix.template modifyLeftHandSide<true>( row, num );
+            postsolve.notifyRowBoundChange( true, row, REAL{ 0 }, true );
             status = PresolveStatus::kReduced;
             cleanupSmallCoefficients( row );
             break;
          case RowStatus::kRedundantRhs:
             consMatrix.template modifyRightHandSide<true>( row, num );
+            postsolve.notifyRowBoundChange( false, row, REAL{ 0 }, true );
             status = PresolveStatus::kReduced;
             cleanupSmallCoefficients( row );
             break;
@@ -2482,6 +2508,8 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
 
             constraintMatrix.modifyLeftHandSide( reduction.row, num,
                                                  reduction.newval );
+            postsolve.notifyRowBoundChange( true, reduction.row,
+                                            reduction.newval, false );
 
             ++stats.nsidechgs;
             break;
@@ -2513,6 +2541,8 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
 
             constraintMatrix.modifyLeftHandSide( reduction.row, num,
                                                  reduction.newval );
+            postsolve.notifyRowBoundChange( true, reduction.row,
+                                            reduction.newval, false );
 
             ++stats.nsidechgs;
             break;
@@ -2558,6 +2588,8 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
 
             constraintMatrix.modifyRightHandSide( reduction.row, num,
                                                   reduction.newval );
+            postsolve.notifyRowBoundChange( false, reduction.row,
+                                            reduction.newval, false );
 
             ++stats.nsidechgs;
             break;
@@ -2589,6 +2621,8 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
 
             constraintMatrix.modifyRightHandSide( reduction.row, num,
                                                   reduction.newval );
+            postsolve.notifyRowBoundChange( false, reduction.row,
+                                            reduction.newval, false );
 
             ++stats.nsidechgs;
             break;
@@ -2599,6 +2633,8 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
 
                constraintMatrix.template modifyLeftHandSide<true>(
                    reduction.row, num, REAL{ 0 } );
+               postsolve.notifyRowBoundChange( true, reduction.row,
+                                               REAL{ 0 }, true );
 
                ++stats.nsidechgs;
             }
@@ -2609,6 +2645,7 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
                setRowState( reduction.row, State::kBoundsModified );
                constraintMatrix.template modifyRightHandSide<true>(
                    reduction.row, num, REAL{ 0 } );
+               postsolve.notifyRowBoundChange( false, reduction.row, REAL{ 0 }, true );
                ++stats.nsidechgs;
             }
             break;

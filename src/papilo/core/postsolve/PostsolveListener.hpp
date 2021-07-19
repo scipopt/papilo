@@ -134,16 +134,12 @@ class PostsolveListener
    notifyDeletedCol( const int col );
 
    void
-   notifyVarBoundChange( const bool isLowerBound,
-                         const int row, const int col, const REAL oldBound,
-                         bool isInfinity, const REAL newBound )
-   ;
+   notifyVarBoundChange( const bool isLowerBound, const int col,
+                         const REAL oldBound, bool isInfinity,
+                         const REAL newBound );
 
    void
-   notifyRowBoundChange( const bool isLhs,
-                         const int row, const int col,
-                         const REAL oldBound, const REAL newBound );
-
+   notifyRowBoundChange( bool isLhs, int row, REAL newBound, bool isInfinity );
 
    void
    notifyReducedBoundsAndCost( const Vec<REAL>& col_lb, const Vec<REAL>& col_ub,
@@ -305,8 +301,10 @@ PostsolveListener<REAL>::notifyDeletedCol( const int col )
 template <typename REAL>
 void
 PostsolveListener<REAL>::notifyVarBoundChange( const bool isLowerBound,
-                                       const int row, const int col, const REAL oldBound,
-                                       bool isInfinity, const REAL newBound )
+                                               const int col,
+                                               const REAL oldBound,
+                                               bool isInfinity,
+                                               const REAL newBound )
 {
    // TODO, this is not needed due to the bound relaxing strategy I'll
    // add for constraint propagation, instead there should only be a function
@@ -320,7 +318,7 @@ PostsolveListener<REAL>::notifyVarBoundChange( const bool isLowerBound,
       indices.push_back( 0 );
    values.push_back( 0 );
 
-   indices.push_back( col );
+   indices.push_back( origcol_mapping[col] );
    values.push_back( newBound );
 
    indices.push_back( isInfinity );
@@ -331,10 +329,7 @@ PostsolveListener<REAL>::notifyVarBoundChange( const bool isLowerBound,
 
 template <typename REAL>
 void
-PostsolveListener<REAL>::notifyRowBoundChange( const bool isLhs,
-                                       const int row, const int col,
-                                       const REAL oldBound, const REAL newBound )
-{
+PostsolveListener<REAL>::notifyRowBoundChange( bool isLhs, int row, REAL newBound, bool isInfinity ){
    // TODO, this is not needed due to the bound relaxing strategy I'll
    // add for constraint propagation, instead there should only be a function
    // notifyForcingRow. This is called for the case where a row forces a column
@@ -345,10 +340,8 @@ PostsolveListener<REAL>::notifyRowBoundChange( const bool isLhs,
       indices.push_back( 1 );
    else
       indices.push_back( 0 );
-   values.push_back( 0 );
-   indices.push_back( 0 );
-   indices.push_back( col );
-   values.push_back( oldBound );
+   values.push_back( origrow_mapping[row] );
+   indices.push_back( isInfinity );
    values.push_back( newBound );
 
    finishNotify();
@@ -488,7 +481,7 @@ PostsolveListener<REAL>::notifySingletonRow( const int row, const int col,
    {
       if( inds[j] != row )
       {
-         indices.push_back( inds[j] );
+         indices.push_back( origrow_mapping[inds[j]] );
          values.push_back( vals[j] );
       }
    }

@@ -296,7 +296,7 @@ class ConstraintMatrix
          if( num.isEq( value, rhs_values[index] ) )
             lhs_values[index] = rhs_values[index];
          else
-         lhs_values[index] = value;
+            lhs_values[index] = value;
 
          if( !flags[index].test( RowFlag::kRhsInf ) &&
              lhs_values[index] == rhs_values[index] )

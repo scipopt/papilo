@@ -88,8 +88,9 @@ struct MpsWriter
       for( int i = 0; i < consmatrix.getNRows(); ++i )
       {
          // discard redundant rows when writing problem
-         assert( !consmatrix.isRowRedundant( i ) );
-
+//         assert( !consmatrix.isRowRedundant( i ) );
+         if(consmatrix.isRowRedundant( i ))
+            continue;
          char type;
 
          if( row_flags[i].test( RowFlag::kLhsInf ) &&

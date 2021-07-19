@@ -97,9 +97,8 @@ class PrimalDualSolValidation
          for( int j = 0; j < entries.getLength(); j++ )
          {
             int col = entries.getIndices()[j];
-            //            TODO
-            //            assert(
-            //            problem.getColFlags()[col].test(ColFlag::kInactive) );
+            if( problem.getColFlags()[col].test( ColFlag::kFixed ) )
+               continue;
             rowValue += entries.getValues()[j] * primalSolution[col];
          }
 
@@ -175,6 +174,8 @@ class PrimalDualSolValidation
          for( int j = 0; j < entries.getLength(); j++ )
          {
             int col = entries.getIndices()[j];
+            if( problem.getColFlags()[col].test( ColFlag::kFixed ) )
+               continue;
             rowValue += entries.getValues()[j] * primalSolution[col];
          }
 
@@ -191,15 +192,16 @@ class PrimalDualSolValidation
          }
          else if( isLhsInf )
          {
+            assert( not isRhsInf );
             if( num.isLT( rowValue, rhs[row] ) )
             {
-               if( num.isZero( dualSolution[row] ) )
+               if( not num.isZero( dualSolution[row] ) )
                   return true;
             }
             else
             {
                assert( num.isEq( rowValue, rhs[row] ) );
-               if( not num.isZero( dualSolution[row] ) )
+               if( num.isZero( dualSolution[row] ) )
                   return true;
             }
          }
@@ -207,13 +209,13 @@ class PrimalDualSolValidation
          {
             if( num.isGT( rowValue, lhs[row] ) )
             {
-               if( num.isZero( dualSolution[row] ) )
+               if( not num.isZero( dualSolution[row] ) )
                   return true;
             }
             else
             {
                assert( num.isEq( rowValue, lhs[row] ) );
-               if( not num.isZero( dualSolution[row] ) )
+               if( num.isZero( dualSolution[row] ) )
                   return false;
             }
          }
@@ -260,19 +262,33 @@ class PrimalDualSolValidation
          if( problem.getColFlags()[col].test( ColFlag::kInactive ) )
             continue;
 
-         if( not problem.getColFlags()[col].test( ColFlag::kLbInf ) )
-            if( not num.isZero( ( primalSolution[col] - lb[col] ) *
-                                ( reducedCosts[col] ) ) and
-                num.isEq( primalSolution[col], ub[col] ) and
-                not num.isZero( reducedCosts[col] ) )
-               return true;
+         bool isLbInf = problem.getColFlags()[col].test( ColFlag::kLbInf );
+         bool isUbInf = problem.getColFlags()[col].test( ColFlag::kUbInf );
+         REAL upperBound = ub[col];
+         REAL lowerBound = lb[col];
+         REAL reducedCost = reducedCosts[col];
+         REAL sol = primalSolution[col];
 
-         if( not problem.getColFlags()[col].test( ColFlag::kUbInf ) )
-            if( num.isZero( ( ub[col] - primalSolution[col] ) *
-                            ( reducedCosts[col] ) ) &&
-                num.isEq( primalSolution[col], lb[col] ) &&
-                not num.isZero( reducedCosts[col] ) )
+         if( upperBound == lowerBound and not isLbInf and not isUbInf )
+            continue;
+
+         if( not isLbInf )
+         {
+            if( num.isZero( sol - lowerBound ) or num.isZero( reducedCost ) )
+               continue;
+            //TODO check if this is ok
+            if( not isUbInf and num.isEq( sol, upperBound ) )
                return true;
+         }
+
+         if( not isUbInf )
+         {
+            if( num.isZero( upperBound - sol ) or num.isZero( reducedCost ) )
+               continue;
+            //TODO check if this is ok
+            if( not isLbInf and num.isEq( sol, lowerBound ) )
+               return true;
+         }
       }
 
       return false;
@@ -349,7 +365,6 @@ class PrimalDualSolValidation
          {
             message.info( "Complementary slack check FAILED.\n" );
             return PostsolveStatus::kFailed;
-
          }
 
          failure = checkStOfLagrangian( solution.primal, solution.dual,
@@ -363,7 +378,6 @@ class PrimalDualSolValidation
 
       message.info( "Solution passed validation\n" );
       return PostsolveStatus::kOk;
-
    }
 };
 } // namespace papilo
