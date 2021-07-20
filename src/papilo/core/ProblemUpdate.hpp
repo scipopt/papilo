@@ -1380,8 +1380,6 @@ ProblemUpdate<REAL>::trivialRowPresolve()
          switch( st )
          {
          case RowStatus::kRedundant:
-            markRowRedundant( row );
-            status = PresolveStatus::kReduced;
             break;
          case RowStatus::kRedundantLhs:
             consMatrix.template modifyLeftHandSide<true>( row, num );
