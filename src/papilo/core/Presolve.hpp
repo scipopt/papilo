@@ -90,27 +90,33 @@ class Presolve
 {
  public:
    void
+
    addDefaultPresolvers()
    {
       using uptr = std::unique_ptr<PresolveMethod<REAL>>;
 
-//      addPresolveMethod( uptr( new SingletonCols<REAL>() ) );
-//      addPresolveMethod( uptr( new CoefficientStrengthening<REAL>() ) );
-//      addPresolveMethod( uptr( new SimpleProbing<REAL>() ) );
-//      addPresolveMethod( uptr( new ConstraintPropagation<REAL>() ) );
-//      addPresolveMethod( uptr( new SingletonStuffing<REAL>() ) );
+      // fast presolvers
+      addPresolveMethod( uptr( new SingletonCols<REAL>() ) );
+      addPresolveMethod( uptr( new CoefficientStrengthening<REAL>() ) );
+      addPresolveMethod( uptr( new ConstraintPropagation<REAL>() ) );
+
+      //medium presolvers
+      addPresolveMethod( uptr( new SimpleProbing<REAL>() ) );
+      addPresolveMethod( uptr( new ParallelRowDetection<REAL>() ) );
+      addPresolveMethod( uptr( new ParallelColDetection<REAL>() ) );
+      addPresolveMethod( uptr( new SingletonStuffing<REAL>() ) );
       addPresolveMethod( uptr( new DualFix<REAL>() ) );
-//      addPresolveMethod( uptr( new ImplIntDetection<REAL>() ) );
-//      addPresolveMethod( uptr( new FixContinuous<REAL>() ) );
-//      addPresolveMethod( uptr( new ParallelRowDetection<REAL>() ) );
-//      addPresolveMethod( uptr( new ParallelColDetection<REAL>() ) );
-//      addPresolveMethod( uptr( new SimpleSubstitution<REAL>() ) );
+      addPresolveMethod( uptr( new FixContinuous<REAL>() ) );
+      addPresolveMethod( uptr( new SimplifyInequalities<REAL>() ) );
+      addPresolveMethod( uptr( new SimpleSubstitution<REAL>() ) );
+
+      //exhaustive presolvers
+      addPresolveMethod( uptr( new ImplIntDetection<REAL>() ) );
+      addPresolveMethod( uptr( new DominatedCols<REAL>() ) );
       addPresolveMethod( uptr( new DualInfer<REAL> ) );
-//      addPresolveMethod( uptr( new Substitution<REAL>() ) );
-//      addPresolveMethod( uptr( new Probing<REAL>() ) );
-//      addPresolveMethod( uptr( new DominatedCols<REAL>() ) );
-//      addPresolveMethod( uptr( new Sparsify<REAL>() ) );
-//      addPresolveMethod( uptr( new SimplifyInequalities<REAL>() ) );
+      addPresolveMethod( uptr( new Probing<REAL>() ) );
+      addPresolveMethod( uptr( new Substitution<REAL>() ) );
+      addPresolveMethod( uptr( new Sparsify<REAL>() ) );
    }
 
    ParameterSet
