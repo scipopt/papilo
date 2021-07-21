@@ -1324,14 +1324,17 @@ Presolve<REAL>::logStatus( const Problem<REAL>& problem,
    if( problem.getNCols() == 0 )
    {
       Solution<REAL> solution{};
-      const Solution<REAL> empty_sol{};
-      Postsolve<REAL> postsolve{msg, num};
-      postsolve.undo( empty_sol, solution, postsolveListener );
-      const Problem<REAL>& origprob = postsolveListener.getOriginalProblem();
-      REAL origobj = origprob.computeSolObjective( solution.primal );
-      msg.info(
-          "problem is solved [optimal solution found] [objective value: {}]\n",
-          origobj );
+      Solution<REAL> empty_sol{};
+      if(postsolveListener.getOriginalProblem().getNumIntegralCols()==0)
+         empty_sol.type = SolutionType::kPrimalDual;
+      //TODO: enable again
+//      Postsolve<REAL> postsolve{msg, num};
+//      postsolve.undo( empty_sol, solution, postsolveListener );
+//      const Problem<REAL>& origprob = postsolveListener.getOriginalProblem();
+//      REAL origobj = origprob.computeSolObjective( solution.primal );
+//      msg.info(
+//          "problem is solved [optimal solution found] [objective value: {}]\n",
+//          origobj );
    }
 }
 

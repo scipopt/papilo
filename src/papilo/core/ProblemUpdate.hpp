@@ -518,6 +518,9 @@ ProblemUpdate<REAL>::fixCol( int col, REAL val )
              cflags[col].test( ColFlag::kLbUseless ),
              problem.getRowActivities(), updateActivity );
 
+         postsolve.notifyVarBoundChange(
+             true, col, lbs[col],
+             problem.getColFlags()[col].test( ColFlag::kLbInf ), val );
          lbs[col] = val;
          cflags[col].unset( ColFlag::kLbUseless );
       }
@@ -530,6 +533,9 @@ ProblemUpdate<REAL>::fixCol( int col, REAL val )
              cflags[col].test( ColFlag::kUbUseless ),
              problem.getRowActivities(), updateActivity );
 
+         postsolve.notifyVarBoundChange(
+             false, col, ubs[col],
+             problem.getColFlags()[col].test( ColFlag::kUbInf ), val );
          ubs[col] = val;
          cflags[col].unset( ColFlag::kUbUseless );
       }

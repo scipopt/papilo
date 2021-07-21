@@ -29,19 +29,23 @@
 enum class ReductionType : int
 {
    kFixedCol = 0,
-   kSubstitutedCol = 1,
-   kParallelCol = 2,
-   kSaveRow = 3,
-   kSaveCol = 4,
    kFixedInfCol = 5,
-   kSingletonRow = 6,
-   kRedundantRow = 7,
-   kDeletedCol = 8,
-   kVarBoundChange = 9,
-   kRowBoundChange = 13,
-   kColumnDualValue = 10,
-   kRowDualValue = 11,
-   kReducedBoundsCost = 12
+   kSubstitutedCol = 2,
+   kVarBoundChange = 3,
+   kVarBoundChangeForced = 4,
+   kParallelCol = 1,
+   kDeletedCol = 6,
+
+   kSingletonRow = 7,
+   kRedundantRow = 8,
+   kRowBoundChange = 9,
+
+   kSaveCol = 10,
+   kSaveRow = 11,
+
+   kReducedBoundsCost = 12,
+   kColumnDualValue = 13,
+   kRowDualValue = 14,
 };
 
 #endif
