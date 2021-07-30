@@ -211,13 +211,16 @@ presolve_and_solve(
    switch( result.status )
    {
    case PresolveStatus::kInfeasible:
-      fmt::print( "presolve detected infeasible problem\n" );
+      fmt::print( "presolving detected infeasible problem after {:.3f} seconds\n",
+                  presolve.getStatistics().presolvetime  );
       return ResultStatus::kUnbndOrInfeas;
    case PresolveStatus::kUnbndOrInfeas:
-      fmt::print( "presolve detected unbounded or infeasible problem\n" );
+      fmt::print( "presolving detected unbounded or infeasible problem after {:.3f} seconds\n",
+                  presolve.getStatistics().presolvetime  );
       return ResultStatus::kUnbndOrInfeas;
    case PresolveStatus::kUnbounded:
-      fmt::print( "presolve detected unbounded problem\n" );
+      fmt::print( "presolving detected unbounded problem after {:.3f} seconds\n",
+                  presolve.getStatistics().presolvetime  );
       return ResultStatus::kUnbndOrInfeas;
    case PresolveStatus::kUnchanged:
    case PresolveStatus::kReduced:

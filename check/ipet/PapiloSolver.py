@@ -1,4 +1,5 @@
 import re
+
 from ipet.parsing.Solver import SCIPSolver
 
 PRESOLVE_TIME_NAME = "presolve_time"
@@ -84,7 +85,7 @@ class PapiloSolver(SCIPSolver):
     recognition_expr = re.compile("starting presolve of problem")
     version_expr = re.compile("PaPILO version (\S+)")
 
-    presolving_time_expr = re.compile("presolving finished after\s+(\S+)")
+    presolving_time_expr = re.compile("presolving (.*?) after\s+(\S+)")
 
     floating_point_expr = "[-+]?[0-9]*\.?[0-9]*"
 
