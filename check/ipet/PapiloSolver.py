@@ -88,7 +88,7 @@ class PapiloSolver(SCIPSolver):
     presolving_time_expr = re.compile("presolving finished after\s+(\S+)")
     presolving_time_inf_expr = re.compile("presolving detected infeasible problem after\s+(\S+)")
     presolving_time_unb_expr = re.compile("presolving detected unbounded problem after\s+(\S+)")
-    presolving_time_unb_inf_expr = re.compile("presolving detected unbounded or infeasible problem\s+(\S+)")
+    presolving_time_unb_inf_expr = re.compile("presolving detected unbounded or infeasible problem after\s+(\S+)")
 
     floating_point_expr = "[-+]?[0-9]*\.?[0-9]*"
 
