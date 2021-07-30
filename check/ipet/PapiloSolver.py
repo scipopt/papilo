@@ -85,7 +85,10 @@ class PapiloSolver(SCIPSolver):
     recognition_expr = re.compile("starting presolve of problem")
     version_expr = re.compile("PaPILO version (\S+)")
 
-    presolving_time_expr = re.compile("presolving (.*?) after\s+(\S+)")
+    presolving_time_expr = re.compile("presolving finished after\s+(\S+)")
+    presolving_time_inf_expr = re.compile("presolving detected infeasible problem after\s+(\S+)")
+    presolving_time_unb_expr = re.compile("presolving detected unbounded problem after\s+(\S+)")
+    presolving_time_unb_inf_expr = re.compile("presolving detected unbounded or infeasible problem\s+(\S+)")
 
     floating_point_expr = "[-+]?[0-9]*\.?[0-9]*"
 
@@ -151,7 +154,14 @@ class PapiloSolver(SCIPSolver):
         pass
 
     def extractOptionalInformation(self, line: str):
-        self.extractByExpression(line, self.presolving_time_expr, PRESOLVE_TIME_NAME)
+        if line.startswith("presolving finished"):
+            self.extractByExpression(line, self.presolving_time_expr, PRESOLVE_TIME_NAME)
+        elif line.startswith("presolving detected infeasible problem"):
+            self.extractByExpression(line, self.presolving_time_inf_expr, PRESOLVE_TIME_NAME)
+        elif line.startswith("presolving detected unbounded or infeasible problem"):
+            self.extractByExpression(line, self.presolving_time_unb_inf_expr, PRESOLVE_TIME_NAME)
+        elif line.startswith("presolving detected unbounded problem"):
+            self.extractByExpression(line, self.presolving_time_unb_expr, PRESOLVE_TIME_NAME)
 
         self.extractByExpression(line, self.rows_expr, ROWS_NAME)
         self.extractByExpression(line, self.columns_expr, COLUMNS_NAME)
@@ -230,3 +240,20 @@ class PapiloSolver(SCIPSolver):
     def setup_time_expr_for_solver(self, name):
         return re.compile(
             "\s+" + name + "\s+\d+\s+" + self.floating_point_expr + "\s+\d+\s+" + self.floating_point_expr + "\s+(\S+)")
+
+def main():
+    expr = re.compile("presolving (.*?) after\s+(\S+)")
+    # line = "presolving detected infeasible problem after 0.010 seconds"
+    line = "presolving finished after 0.005 seconds"
+    m = expr.match(line)
+    print(m)
+    if m is not None:
+        try:
+            print(m.groups())
+            for i in m.groups():
+                print(i)
+        except:
+            pass
+
+if __name__ == "__main__":
+    main()
