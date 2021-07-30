@@ -240,20 +240,3 @@ class PapiloSolver(SCIPSolver):
     def setup_time_expr_for_solver(self, name):
         return re.compile(
             "\s+" + name + "\s+\d+\s+" + self.floating_point_expr + "\s+\d+\s+" + self.floating_point_expr + "\s+(\S+)")
-
-def main():
-    expr = re.compile("presolving (.*?) after\s+(\S+)")
-    # line = "presolving detected infeasible problem after 0.010 seconds"
-    line = "presolving finished after 0.005 seconds"
-    m = expr.match(line)
-    print(m)
-    if m is not None:
-        try:
-            print(m.groups())
-            for i in m.groups():
-                print(i)
-        except:
-            pass
-
-if __name__ == "__main__":
-    main()
