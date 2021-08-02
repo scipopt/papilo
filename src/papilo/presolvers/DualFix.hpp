@@ -106,9 +106,11 @@ DualFix<REAL>::execute( const Problem<REAL>& problem,
              ubs, rflags, lhs, rhs, col, noStrongReductions );
          assert( local_status == PresolveStatus::kUnchanged ||
                  local_status == PresolveStatus::kReduced ||
+                 local_status == PresolveStatus::kUnbndOrInfeas ||
                  local_status == PresolveStatus::kUnbounded );
-         if( local_status == PresolveStatus::kUnbounded )
-            return PresolveStatus::kUnbounded;
+         if( local_status == PresolveStatus::kUnbounded ||
+             local_status == PresolveStatus::kUnbndOrInfeas)
+            return local_status;
          else if( local_status == PresolveStatus::kReduced )
             result = PresolveStatus::kReduced;
       }
