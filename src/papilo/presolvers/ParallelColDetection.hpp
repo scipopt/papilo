@@ -141,6 +141,10 @@ class ParallelColDetection : public PresolveMethod<REAL>
    can_be_merged( const Num<REAL>& num, const Vec<REAL>& lbs,
                   const Vec<REAL>& ubs, int col1, const REAL* coefs1,
                   const REAL* coefs2, const Vec<ColFlags>& cflags ) const;
+
+   bool
+   determineOderingForZeroObj( REAL val1, REAL val2, int colpermCol1,
+            int colpermCol2 ) const;
 };
 
 #ifdef PAPILO_USE_EXTERN_TEMPLATES
@@ -521,25 +525,34 @@ ParallelColDetection<REAL>::execute( const Problem<REAL>& problem,
           computeSupportId( constMatrix, supportid.get() );
        } );
 
-   pdqsort( col.get(), col.get() + ncols, [&]( int a, int b ) {
-      if( supportid[a] < supportid[b] ||
-          ( supportid[a] == supportid[b] && coefhash[a] < coefhash[b] ) )
-         return true;
-      else if( not( supportid[a] == supportid[b] &&
-                    coefhash[a] == coefhash[b] ) )
-         return false;
-      assert( supportid[a] == supportid[b] && coefhash[a] == coefhash[b] );
+   pdqsort(
+       col.get(), col.get() + ncols,
+       [&]( int a, int b )
+       {
+          if( supportid[a] < supportid[b] ||
+              ( supportid[a] == supportid[b] && coefhash[a] < coefhash[b] ) )
+             return true;
+          else if( not( supportid[a] == supportid[b] &&
+                        coefhash[a] == coefhash[b] ) )
+             return false;
+          assert( supportid[a] == supportid[b] && coefhash[a] == coefhash[b] );
 
-      bool flag_a_integer = cflags[a].test( ColFlag::kIntegral );
-      bool flag_b_integer = cflags[b].test( ColFlag::kIntegral );
-      return ( flag_a_integer != flag_b_integer and not flag_a_integer ) or
-             // sort by scale factor
-             ( flag_a_integer == flag_b_integer and
-               abs( obj[a] ) < abs( obj[b] ) ) or
-             // sort by permutation
-             ( flag_a_integer == flag_b_integer and
-               abs( obj[a] ) == abs( obj[b] ) and colperm[a] < colperm[b] );
-   } );
+          bool flag_a_integer = cflags[a].test( ColFlag::kIntegral );
+          bool flag_b_integer = cflags[b].test( ColFlag::kIntegral );
+          if( flag_a_integer != flag_b_integer )
+             return not flag_a_integer;
+          return // sort by scale factor
+              abs( obj[a] ) < abs( obj[b] ) or
+              // sort by scale factor if obj is zero
+              ( abs( obj[a] ) == abs( obj[b] ) and obj[a] == 0 and
+                determineOderingForZeroObj(
+                    constMatrix.getColumnCoefficients( a ).getValues()[0],
+                    constMatrix.getColumnCoefficients( b ).getValues()[0],
+                    colperm[a], colperm[b] ) ) or
+              // sort by permutation
+              ( abs( obj[a] ) == abs( obj[b] ) and not obj[a] == 0 and
+                colperm[a] < colperm[b] );
+       } );
 
    for( int i = 0; i < ncols; )
    {
@@ -578,6 +591,15 @@ ParallelColDetection<REAL>::determineBucketSize(
    }
    assert( j > i );
    return j - i;
+}
+template <typename REAL>
+bool
+ParallelColDetection<REAL>::determineOderingForZeroObj( REAL val1, REAL val2,
+                                     int colpermCol1, int colpermCol2 ) const
+{
+   if(val1 == val2)
+      return colpermCol1 < colpermCol2;
+   return abs(val1) < abs(val2);
 }
 
 } // namespace papilo

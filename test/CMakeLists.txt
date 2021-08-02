@@ -131,6 +131,7 @@ set(unit_tests
         "parallel_col_detection_int_merge_failed_hole"
         "parallel_col_detection_obj_not_parallel"
         "parallel_col_detection_multiple_parallel_columns"
+        "parallel_col_detection_objective_zero"
 
         #Probing
         "happy-path-probing"
