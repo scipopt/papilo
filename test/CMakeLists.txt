@@ -73,6 +73,7 @@ set(unit_tests
         "happy-path-replace-variable"
         "happy-path-substitute-matrix-coefficient-into-objective"
         "happy-path-aggregate-free-column"
+        "presolve-activity-is-updated-correctly-huge-values"
 
         #ProblemUpdate
         "happy-path-presolve-singleton-row"
