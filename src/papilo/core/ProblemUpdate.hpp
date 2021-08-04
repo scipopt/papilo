@@ -854,12 +854,14 @@ ProblemUpdate<REAL>::flushChangedCoeffs()
 
       auto coeffChanged = [this, &lbs, &cflags, &ubs, &activities](
                               int row, int col, REAL oldval, REAL newval ) {
-         update_activities_after_coeffchange(
+         auto rowvec = problem.getConstraintMatrix().getRowCoefficients( row );
+         update_activity_after_coeffchange(
              lbs[col], ubs[col], cflags[col], oldval, newval, activities[row],
+             rowvec.getLength(), rowvec.getIndices(), rowvec.getValues(),
+             problem.getVariableDomains(), num,
              [this, row]( ActivityChange actChange,
-                          RowActivity<REAL>& activity ) {
-                update_activity( actChange, row, activity );
-             } );
+                          RowActivity<REAL>& activity )
+             { update_activity( actChange, row, activity ); } );
          ++stats.ncoefchgs;
          // TODO update up/down-locks -> so that i.e. DualFix can use it
       };

@@ -1177,9 +1177,12 @@ ConstraintMatrix<REAL>::sparsify(
          activity.lastchange = presolveround;
          changedActivities.push_back( row );
       };
-      update_activities_after_coeffchange(
+      const SparseVectorView<REAL>& rowvec = getRowCoefficients( row );
+      update_activity_after_coeffchange(
           domains.lower_bounds[col], domains.upper_bounds[col],
-          domains.flags[col], oldval, newval, activities[row], activityChange );
+          domains.flags[col], oldval, newval, activities[row], rowvec.getLength(),
+          rowvec.getIndices(), rowvec.getValues(), domains, num,
+          activityChange );
    };
 
    int newsize = cons_matrix.changeRow(
@@ -1242,7 +1245,7 @@ ConstraintMatrix<REAL>::aggregate(
    tripletbuffer.reserve( equalitylen * colsize[col] );
 
    auto updateActivity = [presolveround, &changedActivities, &domains,
-                          &activities, &tripletbuffer](
+                          &activities, &tripletbuffer, this, num](
                              int row, int col, REAL oldval, REAL newval ) {
       if( oldval == newval )
          return;
@@ -1265,9 +1268,12 @@ ConstraintMatrix<REAL>::aggregate(
 
       tripletbuffer.emplace_back( col, row, newval );
 
-      update_activities_after_coeffchange(
+      const SparseVectorView<REAL>& rowVec = getRowCoefficients( row );
+      update_activity_after_coeffchange(
           domains.lower_bounds[col], domains.upper_bounds[col],
-          domains.flags[col], oldval, newval, activities[row], activityChange );
+          domains.flags[col], oldval, newval, activities[row],
+          rowVec.getLength(), rowVec.getIndices(), rowVec.getValues(), domains,
+          num, activityChange );
    };
 
    auto mergeVal = [&]( const REAL& oldval, const REAL& addition ) {

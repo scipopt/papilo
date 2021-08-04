@@ -181,8 +181,8 @@ TEST_CASE( "happy-path-substitute-matrix-coefficient-into-objective", "[core]" )
    REQUIRE( getRowIndex( problem, 1, 1 ) == 3 );
    REQUIRE( getEntry( problem, 1, 0 ) == 1.0 );
    REQUIRE( getEntry( problem, 1, 1 ) == 1.0 );
-
 }
+
 TEST_CASE( "happy-path-aggregate-free-column", "[core]" )
 {
    Reductions<double> reductions{};
@@ -212,6 +212,36 @@ TEST_CASE( "happy-path-aggregate-free-column", "[core]" )
    REQUIRE( problem.getConstraintMatrix().getColSizes() == expected_colsizes );
    REQUIRE( problem.getNRows() == 2 );
    REQUIRE( isRow( problem, RowFlag::kRedundant, 1 ) );
+}
+
+TEST_CASE( "presolve-activity-is-updated-correctly-huge-values", "[core]" )
+{
+   double lb = 0;
+   double ub = 1;
+   ColFlags cflags;
+   double oldcolcoef = -1e17;
+   double newcolcoef = -2265603.6036036061;
+   RowActivity<double> activity{};
+   int rowLength = 1;
+   int colindices [1] = {0};
+   double rowvals [1] = {newcolcoef};
+   Vec<double> lower_bounds{};
+   Vec<double> upper_bounds{};
+   Vec<ColFlags> flags{};
+   lower_bounds.push_back(lb);
+   upper_bounds.push_back(ub);
+   flags.push_back(cflags);
+   VariableDomains<double> domains{lower_bounds, upper_bounds, flags};
+   const Num<double> num{};
+   auto activityChange = []( ActivityChange actChange,
+                             RowActivity<double>& activity ) {};
+
+   update_activity_after_coeffchange( lb, ub, cflags, oldcolcoef, newcolcoef,
+                                      activity, rowLength, colindices, rowvals,
+                                      domains, num, activityChange );
+
+   REQUIRE( activity.min == -2265603.6036036061);
+
 }
 
 Problem<double>
