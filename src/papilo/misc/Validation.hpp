@@ -63,12 +63,12 @@ struct Validation
       postsolve.undo( reducedSolution, calculated_orig_solution );
       for( int i = 0; i < postsolve.nColsOriginal; i++ )
       {
-         if( !postsolve.getNum().isEq( optimal_solution.primal[i],
-                                       calculated_orig_solution.primal[i] ) )
+         if( not postsolve.getNum().isFeasEq( optimal_solution.primal[i],
+                 calculated_orig_solution.primal[i] ) )
          {
             fmt::print(
                 "postsolve for variable {} not equal {} !={}\n",
-                problem.getVariableNames()[postsolve.origcol_mapping[i]],
+                problem.getVariableNames()[i],
                 optimal_solution.primal[i],
                 calculated_orig_solution.primal[i] );
             validation_succcess = false;
