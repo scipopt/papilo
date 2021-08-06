@@ -63,7 +63,8 @@ struct RowReduction
       LHS_INF = -8,
       SPARSIFY = -9,
       RHS_LESS_RESTRICTIVE = -10,
-      LHS_LESS_RESTRICTIVE = -11
+      LHS_LESS_RESTRICTIVE = -11,
+      SAVE_ROW = -12
    };
 };
 
@@ -179,14 +180,19 @@ class Reductions
    }
 
    void
-   changeColLB( int col, REAL newval )
+   changeColLB( int col, REAL newval, int row = -1 )
    {
+      if(row > -1)
+         reductions.emplace_back(0, 0, RowReduction::SAVE_ROW);
       reductions.emplace_back( newval, ColReduction::LOWER_BOUND, col );
    }
 
    void
-   changeColUB( int col, REAL newval )
+   changeColUB( int col, REAL newval, int row = -1 )
    {
+      //TODO: only full mode
+      if(row > -1)
+         reductions.emplace_back(0, 0, RowReduction::SAVE_ROW);
       reductions.emplace_back( newval, ColReduction::UPPER_BOUND, col );
    }
 

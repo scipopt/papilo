@@ -170,6 +170,10 @@ class PostsolveListener
    notifyDualValue( bool is_column_dual, int index, REAL value );
 
    void
+   notifySavedRow( int row, const SparseVectorView<REAL>& coefficients,
+                   REAL lhs, REAL rhs, const RowFlags& flags );
+
+   void
    notifyFixedInfCol( int col, REAL val, REAL bound,
                       const Problem<REAL>& currentProblem );
 
@@ -557,43 +561,42 @@ PostsolveListener<REAL>::notifyDualValue( bool is_column_dual, int index, REAL v
    finishNotify();
 }
 
-// TODO remove dead code if not needed anymore
-// template <typename REAL>
-// void
-// PostsolveListener<REAL>::notifySavedRow( int row,
-//                                  const SparseVectorView<REAL>& coefficients,
-//                                  REAL lhs, REAL rhs, const RowFlags& flags )
-// {
-//    const REAL* coefs = coefficients.getValues();
-//    const int* columns = coefficients.getIndices();
-//    const int length = coefficients.getLength();
+ template <typename REAL>
+ void
+ PostsolveListener<REAL>::notifySavedRow( int row,
+                                  const SparseVectorView<REAL>& coefficients,
+                                  REAL lhs, REAL rhs, const RowFlags& flags )
+ {
+    const REAL* coefs = coefficients.getValues();
+    const int* columns = coefficients.getIndices();
+    const int length = coefficients.getLength();
 
-//    types.push_back( ReductionType::kSaveRow );
-//    indices.push_back( origrow_mapping[row] );
-//    values.push_back( (double)length );
+    types.push_back( ReductionType::kSaveRow );
+    indices.push_back( origrow_mapping[row] );
+    values.push_back( (double)length );
 
-//    // LB
-//    if( flags.test( RowFlag::kLhsInf ) )
-//       indices.push_back( 1 );
-//    else
-//       indices.push_back( 0 );
-//    values.push_back( lhs );
+    // LB
+    if( flags.test( RowFlag::kLhsInf ) )
+       indices.push_back( 1 );
+    else
+       indices.push_back( 0 );
+    values.push_back( lhs );
 
-//    // UB
-//    if( flags.test( RowFlag::kRhsInf ) )
-//       indices.push_back( 1 );
-//    else
-//       indices.push_back( 0 );
-//    values.push_back( rhs );
+    // UB
+    if( flags.test( RowFlag::kRhsInf ) )
+       indices.push_back( 1 );
+    else
+       indices.push_back( 0 );
+    values.push_back( rhs );
 
-//    for( int i = 0; i < length; ++i )
-//    {
-//       indices.push_back( columns[i] );
-//       values.push_back( coefs[i] );
-//    }
+    for( int i = 0; i < length; ++i )
+    {
+       indices.push_back( origcol_mapping[columns[i]] );
+       values.push_back( coefs[i] );
+    }
 
-//    finishNotify();
-// }
+    finishNotify();
+ }
 
 template <typename REAL>
 void

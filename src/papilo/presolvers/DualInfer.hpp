@@ -429,7 +429,7 @@ DualInfer<REAL>::execute( const Problem<REAL>& problem,
 
          auto colvec = consMatrix.getColumnCoefficients( dualRow );
 
-         propagate_row( colvec.getValues(), colvec.getIndices(),
+         propagate_row( dualRow, colvec.getValues(), colvec.getIndices(),
                         colvec.getLength(), dualActivities[dualRow],
                         dualLHS[dualRow], dualRHS[dualRow],
                         dualRowFlags[dualRow], dualLB, dualUB, dualColFlags,

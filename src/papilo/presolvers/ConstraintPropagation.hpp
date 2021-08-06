@@ -197,7 +197,7 @@ ConstraintPropagation<REAL>::execute( const Problem<REAL>& problem,
             // do nothing, singleton row presolver handles this bound change
             break;
          default:
-            propagate_row( rowvec.getValues(), rowvec.getIndices(),
+            propagate_row( row, rowvec.getValues(), rowvec.getIndices(),
                            rowvec.getLength(), activities[row], lhsValues[row],
                            rhsValues[row], rflags[row], domains.lower_bounds,
                            domains.upper_bounds, domains.flags,
@@ -343,7 +343,7 @@ ConstraintPropagation<REAL>::execute( const Problem<REAL>& problem,
                    // change
                    break;
                 default:
-                   propagate_row( rowvec.getValues(), rowvec.getIndices(),
+                   propagate_row( row, rowvec.getValues(), rowvec.getIndices(),
                                   rowvec.getLength(), activities[row],
                                   lhsValues[row], rhsValues[row], rflags[row],
                                   domains.lower_bounds, domains.upper_bounds,

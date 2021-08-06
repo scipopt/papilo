@@ -30,6 +30,7 @@
 #include "papilo/core/postsolve/PostsolveStatus.hpp"
 #include "papilo/core/postsolve/PostsolveType.hpp"
 #include "papilo/core/postsolve/ReductionType.hpp"
+#include "papilo/io/MpsWriter.hpp"
 #include "papilo/misc/MultiPrecision.hpp"
 #include "papilo/misc/Num.hpp"
 #include "papilo/misc/StableSum.hpp"
@@ -38,7 +39,6 @@
 #include "papilo/misc/dualpostsolve/PrimalDualSolValidation.hpp"
 #include "papilo/misc/fmt.hpp"
 #include "papilo/misc/tbb.hpp"
-#include "papilo/io/MpsWriter.hpp"
 
 #include <fstream>
 
@@ -61,9 +61,10 @@ class Postsolve
    Num<REAL> num{};
 
  public:
-   Postsolve( const Message msg, const Num<REAL> n ){
-       message = msg;
-       num = n;
+   Postsolve( const Message msg, const Num<REAL> n )
+   {
+      message = msg;
+      num = n;
    };
 
    PostsolveStatus
@@ -265,8 +266,17 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
          //     redundant col I guess.
          int row = indices[first];
          int length = (int)values[first];
-         bool lb_inf = indices[first + 1] ==true;
-         bool ub_inf = indices[first + 2] ==true;
+         bool lhs_inf = indices[first + 1] == true;
+         bool lhs = values[first + 1] == true;
+         bool rhs_inf = indices[first + 2] == true;
+         bool rhs = values[first + 2] == true;
+         REAL coeff[length];
+         int col_indices[length];
+         for( int j = 0; j < length; ++j )
+         {
+            col_indices[j] = indices[first + 3 + j];
+            coeff[j] = values[first + 3 + j];
+         }
          break;
       }
       case ReductionType::kSaveCol:
@@ -303,9 +313,9 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
                REAL coeff = values[index];
                reducedCosts -= coeff * originalSolution.dual[row];
 
-               if(row_infinity_rhs[row] == false)
+               if( row_infinity_rhs[row] == false )
                   row_rhs[row] += coeff * origSol[col];
-               if(row_infinity_lhs[row] == false)
+               if( row_infinity_lhs[row] == false )
                   row_lhs[row] += coeff * origSol[col];
             }
 
@@ -315,52 +325,44 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
       }
       case ReductionType::kSingletonRow:
       {
-         int row = indices[first];
-         int col = indices[first + 1];
-         // code below saves column on stack for the calculation of dual values.
-         // todo: use column on stack
          if( originalSolution.type == SolutionType::kPrimalDual )
          {
+            int row = indices[first];
 
-            REAL coeff = values[first + 1];
-            REAL cost = values[first + 4];
-            assert( indices[first + 1] == col );
+            row_lhs[row] = values[first + 3];
+            row_rhs[row] = values[first + 2];
+            row_infinity_lhs[row] = indices[first + 3] == 1;
+            row_infinity_rhs[row] = indices[first + 2] == 1;
 
-            REAL value = cost;
-
-            int col_length_minus_one = indices[first + 4];
-
-            int isLhsInfinity = indices[first + 3] == 1;
-            int isRhsInfinity = indices[first + 2] == 1;
-
-            REAL lhs = values[first + 3];
-            REAL rhs = values[first + 2];
-
+            //            int col = indices[first + 1];
+            //         // code below saves column on stack for the calculation
+            //         of dual values.
+            //            REAL coeff = values[first + 1];
+            //            REAL cost = values[first + 4];
+            //            assert( indices[first + 1] == col );
+            //            REAL value = cost;
+            //            int col_length_minus_one = indices[first + 4];
             // no need to check for solSetRow because if it is zero then the
             // dual value is zero.
-            for( int k = 0; k < col_length_minus_one; ++k )
-            {
-               int index = first + 5 + k;
-               int col_index = indices[index];
-               value -= values[index] * originalSolution.dual[col_index];
-            }
-
-            value = value / coeff;
-
-//            originalSolution.dual[row] = value;
-//            originalSolution.reducedCosts[col] = 0;
-//            originalSolution.reducedCosts[col] -= coeff * value;
-
-            row_lhs[row] = lhs;
-            row_rhs[row] = rhs;
-            row_infinity_lhs[row] = isLhsInfinity;
-            row_infinity_rhs[row] = isRhsInfinity;
+            //            for( int k = 0; k < col_length_minus_one; ++k )
+            //            {
+            //               int index = first + 5 + k;
+            //               int col_index = indices[index];
+            //               value -= values[index] *
+            //               originalSolution.dual[col_index];
+            //            }
+            //
+            //            value = value / coeff;
+            //            originalSolution.dual[row] = value;
+            //            originalSolution.reducedCosts[col] = 0;
+            //            originalSolution.reducedCosts[col] -= coeff * value;
          }
+
          break;
       }
       case ReductionType::kVarBoundChange:
       {
-         assert(originalSolution.type == SolutionType::kPrimalDual);
+         assert( originalSolution.type == SolutionType::kPrimalDual );
          bool isLowerBound = indices[first] == 1;
          int col = indices[first + 1];
          REAL old_value = values[first + 2];
@@ -377,6 +379,31 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
             col_infinity_upper[col] = isInfinity;
          }
 
+         const REAL reduced_costs = originalSolution.reducedCosts[col];
+         bool changes_neg_reduced_costs =
+             not isLowerBound and num.isLT( reduced_costs, 0 );
+         bool changes_pos_reduced_costs =
+             isLowerBound and num.isGT( reduced_costs, 0 );
+
+         if( num.isEq( new_value, originalSolution.primal[col] ) and
+             ( changes_neg_reduced_costs or changes_pos_reduced_costs ) )
+         {
+            assert(not num.isZero( reduced_costs ));
+            int next_saved = i - 1;
+            assert( types[next_saved] == ReductionType::kSaveRow );
+            int first_saved_row = start[next_saved];
+            int row = indices[first_saved_row];
+            int length = (int)values[first_saved_row];
+            for( int j = 0; j < length; ++j )
+            {
+               int col_index = indices[first_saved_row + 3 + j];
+               if( col_index != col )
+                  originalSolution.reducedCosts[col_index] -= reduced_costs;
+            }
+
+            originalSolution.dual[row] += reduced_costs;
+            originalSolution.reducedCosts[col] = 0;
+         }
          break;
       }
       case ReductionType::kFixedInfCol:
@@ -596,30 +623,34 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
 
          break;
       }
-      case ReductionType::kRowBoundChange:{
-         if(originalSolution.type == SolutionType::kPrimalDual)
+      case ReductionType::kRowBoundChange:
+      {
+         if( originalSolution.type == SolutionType::kPrimalDual )
          {
             bool isLhs = indices[first] == 1;
             bool isInfinity = indices[first + 1];
-            int row = (int) values[first];
-            REAL new_value = values[first +1];
+            int row = (int)values[first];
+            REAL new_value = values[first + 1];
             if( isLhs )
             {
-               if(isInfinity){
+               if( isInfinity )
+               {
                   row_infinity_lhs[row] = true;
                }
-               else{
+               else
+               {
                   row_infinity_lhs[row] = false;
                   row_lhs[row] = new_value;
-
                }
             }
             else
             {
-               if(isInfinity){
+               if( isInfinity )
+               {
                   row_infinity_rhs[row] = true;
                }
-               else{
+               else
+               {
                   row_infinity_rhs[row] = false;
                   row_rhs[row] = new_value;
                }
@@ -638,8 +669,9 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
 
    PostsolveStatus status =
        validation.verifySolution( originalSolution, problem );
-   if(status== PostsolveStatus::kFailed)
-      message.error("Postsolving solution failed. Please use debug mode to obtain more information.");
+   if( status == PostsolveStatus::kFailed )
+      message.error( "Postsolving solution failed. Please use debug mode to "
+                     "obtain more information." );
    return status;
 }
 template <typename REAL>
@@ -667,12 +699,11 @@ Postsolve<REAL>::verify_current_solution(
    ProblemUpdate<REAL> problemUpdate( reduced, postsolveListener1, statistics,
                                       presolveOptions, num, message );
 
-   for( int j = 0; j <= current_index; j++ )
+   for( int j = 0; j < current_index; j++ )
    {
       auto type = types[j];
       int first = start[j];
       int last = start[j + 1];
-
       switch( type )
       {
       case ReductionType::kRedundantRow:
@@ -687,8 +718,8 @@ Postsolve<REAL>::verify_current_solution(
          problemUpdate.getProblem().getLowerBounds()[col] = val;
          REAL obj = problemUpdate.getProblem().getObjective().coefficients[col];
          problemUpdate.getProblem().getUpperBounds()[col] = val;
-         problemUpdate.getProblem().getColFlags()[col].set(ColFlag::kFixed);
-         problemUpdate.addDeletedVar(col);
+         problemUpdate.getProblem().getColFlags()[col].set( ColFlag::kFixed );
+         problemUpdate.addDeletedVar( col );
          problemUpdate.removeFixedCols();
          problemUpdate.clearDeletedCols();
          problemUpdate.getProblem().getObjective().coefficients[col] = obj;
@@ -696,8 +727,8 @@ Postsolve<REAL>::verify_current_solution(
       }
       case ReductionType::kSingletonRow:
       {
-//         int row = indices[first];
-//         problemUpdate.removeSingletonRow( row );
+         //         int row = indices[first];
+         //         problemUpdate.removeSingletonRow( row );
          break;
       }
       case ReductionType::kVarBoundChange:
@@ -709,12 +740,14 @@ Postsolve<REAL>::verify_current_solution(
          if( isLowerBound )
          {
             problemUpdate.getProblem().getLowerBounds()[col] = new_value;
-            problemUpdate.getProblem().getColFlags()[col].unset(ColFlag::kLbInf);
+            problemUpdate.getProblem().getColFlags()[col].unset(
+                ColFlag::kLbInf );
          }
          else
          {
             problemUpdate.getProblem().getUpperBounds()[col] = new_value;
-            problemUpdate.getProblem().getColFlags()[col].unset(ColFlag::kUbInf);
+            problemUpdate.getProblem().getColFlags()[col].unset(
+                ColFlag::kUbInf );
          }
          break;
       }
@@ -733,8 +766,8 @@ Postsolve<REAL>::verify_current_solution(
             }
             else
             {
-               problemUpdate.getConstraintMatrix()
-                   .modifyLeftHandSide( row, num, new_value );
+               problemUpdate.getConstraintMatrix().modifyLeftHandSide(
+                   row, num, new_value );
             }
          }
          else
@@ -746,8 +779,8 @@ Postsolve<REAL>::verify_current_solution(
             }
             else
             {
-               problemUpdate.getConstraintMatrix()
-                   .modifyRightHandSide( row, num, new_value );
+               problemUpdate.getConstraintMatrix().modifyRightHandSide(
+                   row, num, new_value );
             }
          }
          break;
@@ -760,6 +793,7 @@ Postsolve<REAL>::verify_current_solution(
       case ReductionType::kRowDualValue:
       case ReductionType::kSaveRow:
       case ReductionType::kSaveCol:
+      case ReductionType::kSubstitutedCol:
          break;
       default:
          assert( false );
@@ -772,11 +806,11 @@ Postsolve<REAL>::verify_current_solution(
 
    Vec<int> col_mapping{};
    Vec<int> row_mapping{};
-   for(int i=0; i<problem.getNRows(); i++)
-      row_mapping.push_back(i);
-   for(int i=0; i<problem.getNCols(); i++)
-      col_mapping.push_back(i);
-//   write.writeProb( filename, reduced, row_mapping, col_mapping);
+   for( int i = 0; i < problem.getNRows(); i++ )
+      row_mapping.push_back( i );
+   for( int i = 0; i < problem.getNCols(); i++ )
+      col_mapping.push_back( i );
+   //   write.writeProb( filename, reduced, row_mapping, col_mapping);
    message.info( "Validation of partial ({}) reconstr. sol : ", current_index );
    validation.verifySolution( originalSolution, reduced );
 }

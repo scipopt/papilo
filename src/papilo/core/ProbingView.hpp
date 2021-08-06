@@ -721,7 +721,7 @@ ProbingView<REAL>::propagateDomains()
 
          auto rowvec = consMatrix.getRowCoefficients( candrow );
 
-         propagate_row(
+         propagate_row(candrow,
              rowvec.getValues(), rowvec.getIndices(), rowvec.getLength(),
              probing_activities[candrow], lhs[candrow], rhs[candrow],
              rflags[candrow], probing_lower_bounds, probing_upper_bounds,

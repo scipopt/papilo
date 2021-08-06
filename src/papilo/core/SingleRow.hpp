@@ -539,7 +539,7 @@ update_activities_after_coeffchange( REAL collb, REAL colub, ColFlags cflags,
 /// and is called to inform about column bounds that changed.
 template <typename REAL, typename BOUNDCHANGE>
 void
-propagate_row( const REAL* rowvals, const int* colindices, int rowlen,
+propagate_row( int row, const REAL* rowvals, const int* colindices, int rowlen,
                const RowActivity<REAL>& activity, REAL lhs, REAL rhs,
                RowFlags rflags, const Vec<REAL>& lower_bounds,
                const Vec<REAL>& upper_bounds, const Vec<ColFlags>& domainFlags,

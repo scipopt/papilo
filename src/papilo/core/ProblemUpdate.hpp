@@ -1541,20 +1541,32 @@ ProblemUpdate<REAL>::removeSingletonRow( int row )
       if( val < 0 )
       {
          if( !isLhsInfinity )
+         {
+            postsolve.notifySavedRow(row, rowvec, lhs, rhs, rflags[row]);
             status = changeUB( col, lhs / val );
+         }
 
          if( !isRhsInfinity && status != PresolveStatus::kInfeasible )
+         {
+            postsolve.notifySavedRow(row, rowvec, lhs, rhs, rflags[row]);
             status = changeLB( col, rhs / val );
+         }
       }
       else
       {
          assert( val > 0 );
 
          if( !isLhsInfinity )
+         {
+            postsolve.notifySavedRow(row, rowvec, lhs, rhs, rflags[row]);
             status = changeLB( col, lhs / val );
+         }
 
          if( !isRhsInfinity && status != PresolveStatus::kInfeasible )
+         {
+            postsolve.notifySavedRow(row, rowvec, lhs, rhs, rflags[row]);
             status = changeUB( col, rhs / val );
+         }
       }
    }
 
@@ -1807,6 +1819,7 @@ ProblemUpdate<REAL>::checkTransactionConflicts( const Reduction<REAL>* first,
          case RowReduction::RHS_INF:
          case RowReduction::RHS:
          case RowReduction::RHS_LESS_RESTRICTIVE:
+         case RowReduction::SAVE_ROW:
             break;
          case RowReduction::SPARSIFY:
             if( postponeSubstitutions )
@@ -2468,6 +2481,17 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
          case RowReduction::NONE:
             assert( false );
             break;
+         case RowReduction::SAVE_ROW:
+         {
+            int row = reduction.row;
+            postsolve.notifySavedRow(
+                row,
+                constraintMatrix.getRowCoefficients( row ),
+                constraintMatrix.getLeftHandSides()[row],
+                constraintMatrix.getRightHandSides()[row],
+                problem.getRowFlags()[row] );
+         }
+         break;
          case RowReduction::LHS:
             assert( rflags[reduction.row].test( RowFlag::kLhsInf ) ||
                     reduction.newval !=

@@ -348,7 +348,7 @@ class PrimalDualSolValidation
          if( ( not problem.getRowFlags()[row].test( RowFlag::kLhsInf ) ) &&
              num.isGT( rowValue, lhs[row] ) )
          {
-            assert( problem.getRowFlags()[row].test( RowFlag::kLhsInf ) );
+            assert( problem.getRowFlags()[row].test( RowFlag::kRhsInf ) );
             if( num.isLT( rhs[row], rowValue ) and
                 not num.isZero( dualSolution[row] ) )
                return true;
