@@ -179,7 +179,7 @@ class PostsolveListener
 
    void
    notifySubstitution( int col, SparseVectorView<REAL> equalityLHS,
-                       REAL equalityRHS );
+                       REAL equalityRHS, int row );
 
    /// col1 = col2scale * col2 and are merged into a new column y = col2 +
    /// col2scale * col1 which takes over the index of col2
@@ -567,6 +567,8 @@ PostsolveListener<REAL>::notifyDualValue( bool is_column_dual, int index, REAL v
                                   const SparseVectorView<REAL>& coefficients,
                                   REAL lhs, REAL rhs, const RowFlags& flags )
  {
+    if( postsolveType == PostsolveType::kPrimal )
+       return;
     const REAL* coefs = coefficients.getValues();
     const int* columns = coefficients.getIndices();
     const int length = coefficients.getLength();
@@ -661,7 +663,7 @@ template <typename REAL>
 void
 PostsolveListener<REAL>::notifySubstitution( int col,
                                      SparseVectorView<REAL> equalityLHS,
-                                     REAL equalityRHS )
+                                     REAL equalityRHS, int row )
 {
    // TODO: depending on the postsolve type I guess we need to save also the
    //       column, but for this branch lets focus on a working dual postsolve
@@ -685,7 +687,11 @@ PostsolveListener<REAL>::notifySubstitution( int col,
       indices.push_back( origcol_mapping[columns[i]] );
       values.push_back( coefs[i] );
    }
-
+   if( postsolveType == PostsolveType::kFull )
+   {
+      indices.push_back( row );
+      values.push_back( 0 );
+   }
    finishNotify();
 }
 

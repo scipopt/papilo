@@ -388,7 +388,7 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
          if( num.isEq( new_value, originalSolution.primal[col] ) and
              ( changes_neg_reduced_costs or changes_pos_reduced_costs ) )
          {
-            assert(not num.isZero( reduced_costs ));
+            assert( not num.isZero( reduced_costs ) );
             int next_saved = i - 1;
             assert( types[next_saved] == ReductionType::kSaveRow );
             int first_saved_row = start[next_saved];
@@ -479,7 +479,7 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
          REAL side = values[first];
          REAL colCoef = 0.0;
          StableSum<REAL> sumcols;
-         for( int j = first + 1; j < last; ++j )
+         for( int j = first + 1; j < last - 1; ++j )
          {
             if( indices[j] == col )
                colCoef = values[j];
@@ -761,12 +761,12 @@ Postsolve<REAL>::verify_current_solution(
          {
             if( isInfinity )
             {
-               problemUpdate.getConstraintMatrix()
+               problemUpdate.getProblem().getConstraintMatrix()
                    .template modifyLeftHandSide<true>( row, num );
             }
             else
             {
-               problemUpdate.getConstraintMatrix().modifyLeftHandSide(
+               problemUpdate.getProblem().getConstraintMatrix().modifyLeftHandSide(
                    row, num, new_value );
             }
          }
@@ -774,15 +774,24 @@ Postsolve<REAL>::verify_current_solution(
          {
             if( isInfinity )
             {
-               problemUpdate.getConstraintMatrix()
+               problemUpdate.getProblem().getConstraintMatrix()
                    .template modifyRightHandSide<true>( row, num );
             }
             else
             {
-               problemUpdate.getConstraintMatrix().modifyRightHandSide(
+               problemUpdate.getProblem().getConstraintMatrix().modifyRightHandSide(
                    row, num, new_value );
             }
          }
+         break;
+      }
+      case ReductionType::kSubstitutedCol:
+      {
+         int col = indices[first];
+         int row = indices[last - 1];
+
+         assert(problemUpdate.getProblem().getRowFlags()[row].test(RowFlag::kEquation));
+         problemUpdate.getProblem().substituteVarInObj( num, col, row );
          break;
       }
       case ReductionType::kParallelCol:
@@ -793,7 +802,6 @@ Postsolve<REAL>::verify_current_solution(
       case ReductionType::kRowDualValue:
       case ReductionType::kSaveRow:
       case ReductionType::kSaveCol:
-      case ReductionType::kSubstitutedCol:
          break;
       default:
          assert( false );
