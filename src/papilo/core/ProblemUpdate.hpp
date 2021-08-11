@@ -2007,7 +2007,7 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
 
             auto eqRHS = constraintMatrix.getLeftHandSides()[equalityrow];
 
-            postsolve.notifySubstitution( col, rowvec, eqRHS, equalityrow );
+            postsolve.notifySubstitution( col, equalityrow, problem );
             // make the changes in the constraint matrix
             constraintMatrix.aggregate(
                 num, col, rowvec, eqRHS, problem.getVariableDomains(),
@@ -2055,6 +2055,11 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
             assert( !cflags[col].test( ColFlag::kInactive ) );
             cflags[col].set( ColFlag::kSubstituted );
 
+            const auto rowvec =
+                constraintMatrix.getRowCoefficients( equalityrow );
+
+            postsolve.notifySubstitution(col, equalityrow, problem );
+
             // change the objective coefficients and offset
             problem.substituteVarInObj( num, col, equalityrow );
 
@@ -2078,13 +2083,6 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
             lbs[col] = 0;
             ubs[col] = 0;
             deleted_cols.push_back( col );
-
-            // update col states
-            const auto rowvec =
-                constraintMatrix.getRowCoefficients( equalityrow );
-
-            postsolve.notifySubstitution(
-                col, rowvec, constraintMatrix.getLeftHandSides()[equalityrow], equalityrow );
 
             const int length = rowvec.getLength();
             const int* indices = rowvec.getIndices();
@@ -2437,7 +2435,7 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
 
                // perform changes in matrix and sides
                //TODO:
-               postsolve.notifySubstitution( col1, equalityLHS, offset, -1);
+               postsolve.notifySubstitution( col1, equalityLHS, offset);
 
                constraintMatrix.aggregate(
                    num, col1, equalityLHS, offset, problem.getVariableDomains(),

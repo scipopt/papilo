@@ -178,8 +178,11 @@ class PostsolveListener
                       const Problem<REAL>& currentProblem );
 
    void
+   notifySubstitution( int col, int row, const Problem<REAL>& currentProblem );
+
+   void
    notifySubstitution( int col, SparseVectorView<REAL> equalityLHS,
-                       REAL equalityRHS, int row );
+                       REAL equalityRHS );
 
    /// col1 = col2scale * col2 and are merged into a new column y = col2 +
    /// col2scale * col1 which takes over the index of col2
@@ -254,6 +257,9 @@ class PostsolveListener
 
    void
    push_back_row( int row, const Problem<REAL>& currentProblem );
+
+   void
+   push_back_col( int col, const Problem<REAL>& currentProblem );
 
 };
 
@@ -640,6 +646,31 @@ PostsolveListener<REAL>::push_back_row( int row, const Problem<REAL>& currentPro
 
 template <typename REAL>
 void
+PostsolveListener<REAL>::push_back_col( int col, const Problem<REAL>& currentProblem )
+{
+   const auto& coefficients =
+       currentProblem.getConstraintMatrix().getColumnCoefficients( col );
+   REAL obj = currentProblem.getObjective().coefficients[col];
+
+   const REAL* coefs = coefficients.getValues();
+   const int* row_indices = coefficients.getIndices();
+   const int length = coefficients.getLength();
+
+   indices.push_back( origrow_mapping[col] );
+   values.push_back( (double)length );
+
+   indices.push_back( 0 );
+   values.push_back( obj );
+
+   for( int i = 0; i < length; ++i )
+   {
+      indices.push_back( origrow_mapping[row_indices[i]] );
+      values.push_back( coefs[i] );
+   }
+}
+
+template <typename REAL>
+void
 PostsolveListener<REAL>::notifyFixedInfCol( int col, REAL val, REAL bound,
                                     const Problem<REAL>& currentProblem )
 {
@@ -661,9 +692,26 @@ PostsolveListener<REAL>::notifyFixedInfCol( int col, REAL val, REAL bound,
 
 template <typename REAL>
 void
+PostsolveListener<REAL>::notifySubstitution( int col, int row,
+                                             const Problem<REAL>& currentProblem )
+{
+   types.push_back( ReductionType::kSubstitutedCol );
+   push_back_row(row, currentProblem );
+   if( postsolveType == PostsolveType::kFull )
+      push_back_col(col, currentProblem );
+   else{
+      indices.push_back(col);
+      values.push_back(0);
+   }
+
+   finishNotify();
+}
+
+template <typename REAL>
+void
 PostsolveListener<REAL>::notifySubstitution( int col,
-                                     SparseVectorView<REAL> equalityLHS,
-                                     REAL equalityRHS, int row )
+                                             SparseVectorView<REAL> equalityLHS,
+                                             REAL equalityRHS )
 {
    // TODO: depending on the postsolve type I guess we need to save also the
    //       column, but for this branch lets focus on a working dual postsolve
@@ -679,7 +727,7 @@ PostsolveListener<REAL>::notifySubstitution( int col,
    const int length = equalityLHS.getLength();
    assert( length > 1 );
 
-   types.push_back( ReductionType::kSubstitutedCol );
+   types.push_back( ReductionType::kSubstitutedColShort );
    values.push_back( equalityRHS );
    indices.push_back( origcol_mapping[col] );
    for( int i = 0; i < length; ++i )
@@ -687,15 +735,10 @@ PostsolveListener<REAL>::notifySubstitution( int col,
       indices.push_back( origcol_mapping[columns[i]] );
       values.push_back( coefs[i] );
    }
-   if( postsolveType == PostsolveType::kFull )
-   {
-      indices.push_back( row );
-      values.push_back( 0 );
-   }
    finishNotify();
 }
 
-/// col1 = col2scale * col2 and are merged into a new column y = col2 +
+                                             /// col1 = col2scale * col2 and are merged into a new column y = col2 +
 /// col2scale * col1 which takes over the index of col2
 template <typename REAL>
 void

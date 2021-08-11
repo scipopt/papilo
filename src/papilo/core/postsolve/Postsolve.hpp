@@ -209,6 +209,7 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
          // TODO: stack information
       case ReductionType::kReducedBoundsCost:
       {
+         assert(originalSolution.type == SolutionType::kPrimalDual);
          // get column bounds
          for( int j = 0; j < postsolveListener.origcol_mapping.size(); j++ )
          {
@@ -245,19 +246,24 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
          break;
       }
       case ReductionType::kColumnDualValue:
+         assert(originalSolution.type == SolutionType::kPrimalDual);
          originalSolution.reducedCosts[postsolveListener.indices[first]] =
              postsolveListener.values[postsolveListener.indices[first]];
          break;
       case ReductionType::kRedundantRow:
+         assert(originalSolution.type == SolutionType::kPrimalDual);
          break;
       case ReductionType::kDeletedCol:
+         assert(originalSolution.type == SolutionType::kPrimalDual);
          break;
       case ReductionType::kRowDualValue:
+         assert(originalSolution.type == SolutionType::kPrimalDual);
          originalSolution.dual[postsolveListener.indices[first]] =
              postsolveListener.values[postsolveListener.indices[first]];
          break;
       case ReductionType::kSaveRow:
       {
+         assert(originalSolution.type == SolutionType::kPrimalDual);
          // TODO I think this and the SAVE_COL step should just be skipped
          //     we only want to restore redundant rows that have been removed
          //     not all saved rows. Saved row has no logical implications for
@@ -280,6 +286,7 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
          break;
       }
       case ReductionType::kSaveCol:
+         assert(originalSolution.type == SolutionType::kPrimalDual);
          break;
       case ReductionType::kFixedCol:
       {
@@ -325,8 +332,8 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
       }
       case ReductionType::kSingletonRow:
       {
-         if( originalSolution.type == SolutionType::kPrimalDual )
-         {
+         assert(originalSolution.type == SolutionType::kPrimalDual);
+
             int row = indices[first];
 
             row_lhs[row] = values[first + 3];
@@ -356,7 +363,7 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
             //            originalSolution.dual[row] = value;
             //            originalSolution.reducedCosts[col] = 0;
             //            originalSolution.reducedCosts[col] -= coeff * value;
-         }
+
 
          break;
       }
@@ -472,26 +479,76 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
          }
          break;
       }
-      case ReductionType::kSubstitutedCol:
+      case ReductionType::kSubstitutedColShort:
       {
          int col = indices[first];
-
          REAL side = values[first];
          REAL colCoef = 0.0;
          StableSum<REAL> sumcols;
-         for( int j = first + 1; j < last - 1; ++j )
+         for( int j = first + 1; j < last; ++j )
          {
             if( indices[j] == col )
                colCoef = values[j];
             else
-            {
                sumcols.add( origSol[indices[j]] * values[j] );
-            }
          }
          sumcols.add( -side );
 
          assert( colCoef != 0.0 );
          origSol[col] = ( -sumcols.get() ) / colCoef;
+         break;
+      }
+      case ReductionType::kSubstitutedCol:
+      {
+         int row = indices[first];
+         int row_length = (int)values[first];
+         assert( indices[first + 1] == 0 );
+         int lhs = values[first + 1];
+         assert( lhs == values[first + 2] );
+         assert( indices[first + 2] == 0 );
+
+         int col = indices[first + 3 + row_length];
+
+         // calculate the primal solution
+         REAL colCoef = 0.0;
+         StableSum<REAL> sumcols;
+         for( int j = first + 3; j < first + 3 + row_length; ++j )
+         {
+            if( indices[j] == col )
+               colCoef = values[j];
+            else
+               sumcols.add( origSol[indices[j]] * values[j] );
+         }
+         sumcols.add( -lhs );
+         assert( colCoef != 0.0 );
+         origSol[col] = ( -sumcols.get() ) / colCoef;
+
+         //calculate the dual solution
+         assert( (originalSolution.type == SolutionType::kPrimalDual and
+                 values[first + 3 + row_length] > 0) or
+                 (originalSolution.type != SolutionType::kPrimalDual and
+                 values[first + 3 + row_length] == 0 ));
+         if( originalSolution.type == SolutionType::kPrimalDual )
+         {
+
+            int col_length = (int)values[first + 3 + row_length];
+            assert( indices[first + 4 + row_length] == 0 );
+            REAL obj = values[first + 4 + row_length];
+
+            REAL rowCoef = 0.0;
+            StableSum<REAL> sum_dual;
+            for( int j = first + 5 + row_length; j < last; ++j )
+            {
+               if( indices[j] == col )
+                  rowCoef = values[j];
+               else
+                  sum_dual.add( originalSolution.dual[indices[j]] * values[j] );
+            }
+            assert(rowCoef != 0);
+            sum_dual.add( -obj );
+            originalSolution.dual[row] = ( -sum_dual.get() ) / rowCoef;
+            assert( row_length + col_length + 5 == last - first );
+         }
          break;
       }
       case ReductionType::kParallelCol:
@@ -625,35 +682,34 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
       }
       case ReductionType::kRowBoundChange:
       {
-         if( originalSolution.type == SolutionType::kPrimalDual )
+         assert( originalSolution.type == SolutionType::kPrimalDual );
+
+         bool isLhs = indices[first] == 1;
+         bool isInfinity = indices[first + 1];
+         int row = (int)values[first];
+         REAL new_value = values[first + 1];
+         if( isLhs )
          {
-            bool isLhs = indices[first] == 1;
-            bool isInfinity = indices[first + 1];
-            int row = (int)values[first];
-            REAL new_value = values[first + 1];
-            if( isLhs )
+            if( isInfinity )
             {
-               if( isInfinity )
-               {
-                  row_infinity_lhs[row] = true;
-               }
-               else
-               {
-                  row_infinity_lhs[row] = false;
-                  row_lhs[row] = new_value;
-               }
+               row_infinity_lhs[row] = true;
             }
             else
             {
-               if( isInfinity )
-               {
-                  row_infinity_rhs[row] = true;
-               }
-               else
-               {
-                  row_infinity_rhs[row] = false;
-                  row_rhs[row] = new_value;
-               }
+               row_infinity_lhs[row] = false;
+               row_lhs[row] = new_value;
+            }
+         }
+         else
+         {
+            if( isInfinity )
+            {
+               row_infinity_rhs[row] = true;
+            }
+            else
+            {
+               row_infinity_rhs[row] = false;
+               row_rhs[row] = new_value;
             }
          }
       }
@@ -786,6 +842,7 @@ Postsolve<REAL>::verify_current_solution(
          break;
       }
       case ReductionType::kSubstitutedCol:
+      case ReductionType::kSubstitutedColShort:
       {
          int col = indices[first];
          int row = indices[last - 1];
