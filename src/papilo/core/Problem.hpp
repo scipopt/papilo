@@ -464,7 +464,8 @@ class Problem
 
          REAL activity = activitySum.get();
 
-         if( !rflags[i].test( RowFlag::kRhsInf ) && activity > rhs[i] )
+         if( !rflags[i].test( RowFlag::kRhsInf )
+             && num.isFeasGT( activity, rhs[i] ) )
          {
             Message::debug( this,
                             "the activity {} of constraint {}  "
@@ -473,7 +474,8 @@ class Problem
             rowviolation = num.max( rowviolation, activity - rhs[i] );
          }
 
-         if( !rflags[i].test( RowFlag::kLhsInf ) && activity < lhs[i] )
+         if( !rflags[i].test( RowFlag::kLhsInf )
+             && num.isFeasLT( activity, rhs[i] ) )
          {
             Message::debug( this,
                             "the activity {} of constraint {}  "

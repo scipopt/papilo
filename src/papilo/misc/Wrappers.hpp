@@ -387,14 +387,13 @@ postsolve( const OptionsInfo& opts )
    inArchiveFile.close();
 
    SolParser<REAL> parser;
-   std::ifstream solFile( opts.reduced_solution_file );
-   Solution<REAL> reduced_solution =
-       parser.read( solFile, ps.origcol_mapping,
-                    ps.getOriginalProblem().getVariableNames() );
-   solFile.close();
-
-   postsolve( ps, reduced_solution, opts.objective_reference,
-              opts.orig_solution_file );
+   Solution<REAL> reduced_solution;
+   bool success = parser.read( opts.reduced_solution_file, ps.origcol_mapping,
+                               ps.getOriginalProblem().getVariableNames(),
+                               reduced_solution );
+   if( success )
+      postsolve( ps, reduced_solution, opts.objective_reference,
+                 opts.orig_solution_file );
 }
 
 } // namespace papilo

@@ -42,10 +42,28 @@ template <typename REAL>
 struct SolParser
 {
 
-   static Solution<REAL>
-   read( std::ifstream& file, const Vec<int>& origcol_mapping,
-         const Vec<String>& colnames )
+   static bool
+   read( const std::string& filename, const Vec<int>& origcol_mapping,
+         const Vec<String>& colnames, Solution<REAL>& sol)
    {
+      std::ifstream file( filename, std::ifstream::in );
+      boost::iostreams::filtering_istream in;
+
+      if( !file )
+         return false;
+
+#ifdef PAPILO_USE_BOOST_IOSTREAMS_WITH_ZLIB
+      if( boost::algorithm::ends_with( filename, ".gz" ) )
+         in.push( boost::iostreams::gzip_decompressor() );
+#endif
+
+#ifdef PAPILO_USE_BOOST_IOSTREAMS_WITH_BZIP2
+      if( boost::algorithm::ends_with( filename, ".bz2" ) )
+      in.push( boost::iostreams::bzip2_decompressor() );
+#endif
+
+      in.push( file );
+
       HashMap<String, int> nameToCol;
 
       for( size_t i = 0; i != origcol_mapping.size(); ++i )
@@ -54,11 +72,10 @@ struct SolParser
          nameToCol.emplace( colnames[origcol], i );
       }
 
-      Solution<REAL> sol;
       sol.primal.resize( origcol_mapping.size(), REAL{ 0 } );
       String strline;
 
-      skip_header( colnames, file, strline );
+      skip_header( colnames, in, strline );
 
       REAL colval;
       String colname;
@@ -80,17 +97,19 @@ struct SolParser
                         "WARNING: skipping unknown column {} in solution\n",
                         tokens[0] );
          }
-      } while( getline( file, strline ) );
+      } while( getline( in, strline ) );
 
-      return sol;
+      return true;
    }
 
  private:
+
    static void
-   skip_header( const Vec<String>& colnames, std::ifstream& file,
+   skip_header( const Vec<String>& colnames,
+                boost::iostreams::filtering_istream& filteringIstream,
                 String& strline )
    {
-      while(getline( file, strline ))
+      while(getline( filteringIstream, strline ))
       {
          for(const auto & colname : colnames)
          {
