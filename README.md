@@ -30,13 +30,15 @@ from, e.g., the systems package manager (`libtbb2` on debian/ubuntu-based distri
 # Building
 
 Building PaPILO works with the standard cmake workflow:
+(_we recommend running the make command without specifying the number of jobs
+that can run simultaneously (no -j n), since this may cause large memory consumption and freeze of the machine_)
+
 ```
 mkdir build
 cd build
 cmake ..
 make
 ```
-
 Building PaPILO with SCIP and SOPELX works also with the standard cmake workflow:
 ```
 mkdir build
