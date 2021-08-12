@@ -1252,7 +1252,7 @@ papilo_solver_start( PAPILO_SOLVER* solver )
 
       Solution<double> solution;
       Postsolve<double> postsolve{ solver->presolve.message(),
-                                   solver->presolve.postsolve.getNum() };
+                                   solver->presolveResult.postsolve.num };
 
       switch( status )
       {

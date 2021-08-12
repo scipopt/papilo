@@ -550,7 +550,7 @@ ParallelColDetection<REAL>::execute( const Problem<REAL>& problem,
                     constMatrix.getColumnCoefficients( b ).getValues()[0],
                     colperm[a], colperm[b] ) ) or
               // sort by permutation
-              ( abs( obj[a] ) == abs( obj[b] ) and not obj[a] == 0 and
+              ( abs( obj[a] ) == abs( obj[b] ) and obj[a] != 0 and
                 colperm[a] < colperm[b] );
        } );
 

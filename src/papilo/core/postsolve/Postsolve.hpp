@@ -285,6 +285,7 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
          }
          break;
       }
+      case ReductionType::kVarBoundChangeForced:
       case ReductionType::kSaveCol:
          assert(originalSolution.type == SolutionType::kPrimalDual);
          break;
@@ -503,7 +504,7 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
          int row = indices[first];
          int row_length = (int)values[first];
          assert( indices[first + 1] == 0 );
-         int lhs = values[first + 1];
+         REAL lhs = values[first + 1];
          assert( lhs == values[first + 2] );
          assert( indices[first + 2] == 0 );
 

@@ -80,7 +80,7 @@ TEST_CASE( "parallel_col_detection_objective_zero", "[presolve]" )
        true, true, 0.5, 10.0, 10.0, 0.0, 0.0, true );
    Statistics statistics{};
    PresolveOptions presolveOptions{};
-   Postsolve<double> postsolve = Postsolve<double>( problem, num );
+   PostsolveListener<double> postsolve = PostsolveListener<double>( problem, num );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
    problemUpdate.checkChangedActivities();

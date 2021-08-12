@@ -48,7 +48,7 @@ TEST_CASE( "domcol-happy-path", "[presolve]" )
    Problem<double> problem = setupMatrixForDominatedCols();
    Statistics statistics{};
    PresolveOptions presolveOptions{};
-   Postsolve<double> postsolve = Postsolve<double>( problem, num );
+   PostsolveListener<double> postsolve = PostsolveListener<double>( problem, num );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
 
@@ -86,7 +86,7 @@ TEST_CASE( "domcol-parallel-columns", "[presolve]" )
    Problem<double> problem = setupMatrixForDominatedColsParallel();
    Statistics statistics{};
    PresolveOptions presolveOptions{};
-   Postsolve<double> postsolve = Postsolve<double>( problem, num );
+   PostsolveListener<double> postsolve = PostsolveListener<double>( problem, num );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
 
@@ -124,7 +124,7 @@ TEST_CASE( "domcol-multiple-parallel-cols-generate_redundant-reductions", "[pres
    Problem<double> problem = setupMatrixForDominatedColsMultipleParallel();
    Statistics statistics{};
    PresolveOptions presolveOptions{};
-   Postsolve<double> postsolve = Postsolve<double>( problem, num );
+   PostsolveListener<double> postsolve = PostsolveListener<double>( problem, num );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
 
@@ -146,7 +146,7 @@ TEST_CASE( "domcol-multiple-columns", "[presolve]" )
    Problem<double> problem = setupMatrixForMultipleDominatedCols();
    Statistics statistics{};
    PresolveOptions presolveOptions{};
-   Postsolve<double> postsolve = Postsolve<double>( problem, num );
+   PostsolveListener<double> postsolve = PostsolveListener<double>( problem, num );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
 
