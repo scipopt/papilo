@@ -22,7 +22,6 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 #include "papilolib.h"
-#include "papilo/core/postsolve/Postsolve.hpp"
 #include "scip/pub_message.h"
 #include "scip/scipdefplugins.h"
 #include <cassert>
@@ -116,6 +115,7 @@ struct AllocatorTraits<T>
 #include "papilo/interfaces/SoplexInterface.hpp"
 #include "papilo/misc/MultiPrecision.hpp"
 #include "papilo/misc/tbb.hpp"
+#include "papilo/core/postsolve/Postsolve.hpp"
 #ifdef PAPILO_MPS_WRITER
 #include "papilo/io/MpsWriter.hpp"
 #endif

@@ -700,7 +700,7 @@ PostsolveListener<REAL>::notifySubstitution( int col, int row,
    if( postsolveType == PostsolveType::kFull )
       push_back_col(col, currentProblem );
    else{
-      indices.push_back(col);
+      indices.push_back(origcol_mapping[col]);
       values.push_back(0);
    }
 
