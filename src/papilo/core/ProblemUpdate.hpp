@@ -893,12 +893,14 @@ ProblemUpdate<REAL>::flushChangedCoeffs()
 
       auto coeffChanged = [this, &lbs, &cflags, &ubs, &activities](
                               int row, int col, REAL oldval, REAL newval ) {
-         update_activities_after_coeffchange(
+         auto rowvec = problem.getConstraintMatrix().getRowCoefficients( row );
+         update_activity_after_coeffchange(
              lbs[col], ubs[col], cflags[col], oldval, newval, activities[row],
+             rowvec.getLength(), rowvec.getIndices(), rowvec.getValues(),
+             problem.getVariableDomains(), num,
              [this, row]( ActivityChange actChange,
-                          RowActivity<REAL>& activity ) {
-                update_activity( actChange, row, activity );
-             } );
+                          RowActivity<REAL>& activity )
+             { update_activity( actChange, row, activity ); } );
          ++stats.ncoefchgs;
          // TODO update up/down-locks -> so that i.e. DualFix can use it
       };
@@ -1680,7 +1682,7 @@ ProblemUpdate<REAL>::removeEmptyColumns()
          if( colsize[col] != 0 )
             continue;
 
-         if( presolveOptions.dualreds == 1 && obj.coefficients[col] == 0 )
+         if( presolveOptions.dualreds == 1 && num.isZero(obj.coefficients[col]) )
             continue;
 
          if( !domains.flags[col].test( ColFlag::kInactive ) )
@@ -1689,7 +1691,7 @@ ProblemUpdate<REAL>::removeEmptyColumns()
 
             REAL fixval, cost;
 
-            if( obj.coefficients[col] == 0 )
+            if( num.isZero(obj.coefficients[col]) )
             {
                fixval = 0;
 
@@ -1736,7 +1738,7 @@ ProblemUpdate<REAL>::removeEmptyColumns()
                --problem.getNumContinuousCols();
          }
 
-         assert( obj.coefficients[col] == 0 );
+         assert( num.isZero(obj.coefficients[col]) );
 
          colsize[col] = -1;
       }

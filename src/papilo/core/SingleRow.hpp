@@ -141,7 +141,7 @@ struct RowActivity
       ar& lastchange;
    }
 
-   RowActivity() {}
+   RowActivity() = default;
 };
 
 /// counts the locks for the given row entry
@@ -169,7 +169,6 @@ count_locks( const REAL& val, RowFlags rflags, int& ndownlocks, int& nuplocks )
    }
 }
 
-/// computes activity of single row from scratch
 template <typename REAL>
 RowActivity<REAL>
 compute_row_activity( const REAL* rowvals, const int* colindices, int rowlen,
@@ -222,6 +221,45 @@ compute_row_activity( const REAL* rowvals, const int* colindices, int rowlen,
    }
 
    return activity;
+}
+
+template <typename REAL>
+REAL
+compute_minimal_row_activity( const REAL* rowvals, const int* colindices, int rowlen,
+                      const Vec<REAL>& lower_bounds,
+                      const Vec<REAL>& upper_bounds, const Vec<ColFlags>& flags)
+{
+   REAL min = 0.0;
+
+   for( int j = 0; j < rowlen; ++j )
+   {
+      int col = colindices[j];
+      if( !flags[col].test( ColFlag::kUbUseless ) and  rowvals[j] < 0 )
+            min += rowvals[j] * upper_bounds[col];
+      if( !flags[col].test( ColFlag::kLbUseless ) and rowvals[j] > 0 )
+            min += rowvals[j] * lower_bounds[col];
+   }
+   return min ;
+}
+
+template <typename REAL>
+REAL
+compute_maximal_row_activity( const REAL* rowvals, const int* colindices, int rowlen,
+                      const Vec<REAL>& lower_bounds,
+                      const Vec<REAL>& upper_bounds, const Vec<ColFlags>& flags)
+{
+   REAL max = 0.0;
+
+   for( int j = 0; j < rowlen; ++j )
+   {
+      int col = colindices[j];
+      if( !flags[col].test( ColFlag::kUbUseless ) and rowvals[j] > 0 )
+            max += rowvals[j] * upper_bounds[col];
+      if( !flags[col].test( ColFlag::kLbUseless ) and rowvals[j] < 0 )
+            max += rowvals[j] * lower_bounds[col];
+   }
+
+   return max;
 }
 
 /// update the vector of row activities after lower or upper bounds of a column
@@ -395,16 +433,37 @@ update_activities_after_boundchange( const REAL* colvals, const int* colrows,
    }
 }
 
-/// update the vector of row activities after the coefficient of a column within
-/// a row changed. The last argument must be callable with arguments
-/// (ActivityChange, RowActivity) and is called to inform about row activities
-/// that changed
+/**
+ * updates the row activity for a changed coefficient in the matrix.
+ * In case that the difference between the old and new coefficient is large,
+ * the activity is recalculated entirely to prevent numerical difficulties.
+ * The last argument must be callable with arguments (ActivityChange,
+ * RowActivity) and is called to inform about row activities that changed.
+ * @tparam REAL
+ * @tparam ACTIVITYCHANGE
+ * @param collb
+ * @param colub
+ * @param cflags
+ * @param oldcolcoef
+ * @param newcolcoef
+ * @param activity
+ * @param rowLength
+ * @param colindices
+ * @param rowvals
+ * @param domains
+ * @param num
+ * @param activityChange
+ */
 template <typename REAL, typename ACTIVITYCHANGE>
 void
-update_activities_after_coeffchange( REAL collb, REAL colub, ColFlags cflags,
-                                     REAL oldcolcoef, REAL newcolcoef,
-                                     RowActivity<REAL>& activity,
-                                     ACTIVITYCHANGE&& activityChange )
+update_activity_after_coeffchange( REAL collb, REAL colub, ColFlags cflags,
+                                   REAL oldcolcoef, REAL newcolcoef,
+                                   RowActivity<REAL>& activity,
+                                   int rowLength, const int* colindices,
+                                   const REAL* rowvals,
+                                   const VariableDomains<REAL>& domains,
+                                   const Num<REAL> num,
+                                   ACTIVITYCHANGE&& activityChange )
 {
    assert( oldcolcoef != newcolcoef );
 
@@ -500,17 +559,30 @@ update_activities_after_coeffchange( REAL collb, REAL colub, ColFlags cflags,
    else
    { // the sign of the coefficient did not flip, so the column bounds still
      // contribute to the same activity bound
+      bool isDifferenceHugeVal = num.isHugeVal( newcolcoef - oldcolcoef );
       if( !cflags.test( ColFlag::kLbUseless ) && collb != 0.0 )
       {
          if( newcolcoef < REAL{ 0.0 } )
          {
-            activity.max += collb * ( newcolcoef - oldcolcoef );
+            if( isDifferenceHugeVal )
+               activity.max = compute_maximal_row_activity(
+                   rowvals, colindices, rowLength, domains.lower_bounds,
+                   domains.upper_bounds, domains.flags );
+            else
+               activity.max += collb * ( newcolcoef - oldcolcoef );
+
             if( activity.ninfmax == 0 )
                activityChange( ActivityChange::kMax, activity );
          }
          else
          {
-            activity.min += collb * ( newcolcoef - oldcolcoef );
+            if( isDifferenceHugeVal )
+               activity.min = compute_minimal_row_activity(
+                   rowvals, colindices, rowLength, domains.lower_bounds,
+                   domains.upper_bounds, domains.flags );
+
+            else
+               activity.min += collb * ( newcolcoef - oldcolcoef );
             if( activity.ninfmin == 0 )
                activityChange( ActivityChange::kMin, activity );
          }
@@ -520,13 +592,23 @@ update_activities_after_coeffchange( REAL collb, REAL colub, ColFlags cflags,
       {
          if( newcolcoef < REAL{ 0.0 } )
          {
-            activity.min += colub * ( newcolcoef - oldcolcoef );
+            if( isDifferenceHugeVal )
+               activity.min = compute_minimal_row_activity(
+                   rowvals, colindices, rowLength, domains.lower_bounds,
+                   domains.upper_bounds, domains.flags );
+            else
+               activity.min += colub * ( newcolcoef - oldcolcoef );
             if( activity.ninfmin == 0 )
                activityChange( ActivityChange::kMin, activity );
          }
          else
          {
-            activity.max += colub * ( newcolcoef - oldcolcoef );
+            if( isDifferenceHugeVal )
+               activity.max = compute_maximal_row_activity(
+                   rowvals, colindices, rowLength, domains.lower_bounds,
+                   domains.upper_bounds, domains.flags );
+            else
+               activity.max += colub * ( newcolcoef - oldcolcoef );
             if( activity.ninfmax == 0 )
                activityChange( ActivityChange::kMax, activity );
          }
@@ -554,7 +636,7 @@ propagate_row( int row, const REAL* rowvals, const int* colindices, int rowlen,
       rhs = activity.max;
    }
 
-   if( (!rflags.test( RowFlag::kRhsInf ) && activity.ninfmin <= 1) ||
+   if( ( !rflags.test( RowFlag::kRhsInf ) && activity.ninfmin <= 1 ) ||
        adj_rhs )
    {
       for( int j = 0; j < rowlen; ++j )
@@ -614,7 +696,8 @@ propagate_row( int row, const REAL* rowvals, const int* colindices, int rowlen,
       lhs = activity.min;
    }
 
-   if( (!rflags.test( RowFlag::kLhsInf ) && activity.ninfmax <= 1) || adj_lhs )
+   if( ( !rflags.test( RowFlag::kLhsInf ) && activity.ninfmax <= 1 ) ||
+       adj_lhs )
    {
       for( int j = 0; j < rowlen; ++j )
       {

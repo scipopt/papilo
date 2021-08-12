@@ -37,13 +37,14 @@ struct Validation
                     const std::string& optimal_solution_file,
                     const PresolveStatus status )
    {
-      Solution<REAL> optimal_solution =
-          parse_solution( postsolve, optimal_solution_file );
+      Solution<REAL> optimal_solution;
+      bool success = parse_solution( postsolve, optimal_solution_file, optimal_solution );
 
-      if( (status == PresolveStatus::kUnchanged ||
-          status == PresolveStatus::kReduced) &&
+      if( success and
+          ( status == PresolveStatus::kUnchanged or
+            status == PresolveStatus::kReduced ) and
           check_if_solution_is_contained_in_problem( problem, postsolve,
-                                                     optimal_solution ) &&
+                                                     optimal_solution ) and
           can_reduced_solution_be_recalculated( problem, postsolve,
                                                 optimal_solution ) )
          fmt::print( "validation: SUCCESS\n" );
@@ -69,12 +70,12 @@ struct Validation
       postsolve.undo( reducedSolution, calculated_orig_solution, postsolveListener );
       for( int i = 0; i < postsolveListener.nColsOriginal; i++ )
       {
-         if( !postsolveListener.getNum().isEq( optimal_solution.primal[i],
-                                       calculated_orig_solution.primal[i] ) )
+         if( not postsolveListener.getNum().isFeasEq( optimal_solution.primal[i],
+                 calculated_orig_solution.primal[i] ) )
          {
             fmt::print(
-                "postsolveListener for variable {} not equal {} !={}\n",
-                problem.getVariableNames()[postsolveListener.origcol_mapping[i]],
+                "postsolve for variable {} not equal {} !={}\n",
+                problem.getVariableNames()[i],
                 optimal_solution.primal[i],
                 calculated_orig_solution.primal[i] );
             validation_succcess = false;
@@ -83,22 +84,20 @@ struct Validation
       return validation_succcess;
    }
 
-   static Solution<REAL>
+   static bool
    parse_solution( const PostsolveListener<REAL>& postsolve,
-                   const std::string& optimal_solution_file )
+                   const std::string& optimal_solution_file,
+                   Solution<REAL>& optimal_solution)
    {
-      std::ifstream solFile( optimal_solution_file );
-
       SolParser<REAL> parser;
 
       std::vector<int> one_to_one_mapping;
       for( int i = 0; i < postsolve.nColsOriginal; i++ )
          one_to_one_mapping.push_back( i );
 
-      Solution<REAL> optimal_solution =
-          parser.read( solFile, one_to_one_mapping,
-                       postsolve.getOriginalProblem().getVariableNames() );
-      return optimal_solution;
+      return parser.read(
+          optimal_solution_file, one_to_one_mapping,
+          postsolve.getOriginalProblem().getVariableNames(), optimal_solution );
    }
 
    static bool

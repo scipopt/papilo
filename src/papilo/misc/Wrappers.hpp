@@ -212,13 +212,16 @@ presolve_and_solve(
    switch( result.status )
    {
    case PresolveStatus::kInfeasible:
-      fmt::print( "presolve detected infeasible problem\n" );
+      fmt::print( "presolving detected infeasible problem after {:.3f} seconds\n",
+                  presolve.getStatistics().presolvetime  );
       return ResultStatus::kUnbndOrInfeas;
    case PresolveStatus::kUnbndOrInfeas:
-      fmt::print( "presolve detected unbounded or infeasible problem\n" );
+      fmt::print( "presolving detected unbounded or infeasible problem after {:.3f} seconds\n",
+                  presolve.getStatistics().presolvetime  );
       return ResultStatus::kUnbndOrInfeas;
    case PresolveStatus::kUnbounded:
-      fmt::print( "presolve detected unbounded problem\n" );
+      fmt::print( "presolving detected unbounded problem after {:.3f} seconds\n",
+                  presolve.getStatistics().presolvetime  );
       return ResultStatus::kUnbndOrInfeas;
    case PresolveStatus::kUnchanged:
    case PresolveStatus::kReduced:
@@ -387,14 +390,13 @@ postsolve( const OptionsInfo& opts )
    inArchiveFile.close();
 
    SolParser<REAL> parser;
-   std::ifstream solFile( opts.reduced_solution_file );
-   Solution<REAL> reduced_solution =
-       parser.read( solFile, ps.origcol_mapping,
-                    ps.getOriginalProblem().getVariableNames() );
-   solFile.close();
-
-   postsolve( ps, reduced_solution, opts.objective_reference,
-              opts.orig_solution_file );
+   Solution<REAL> reduced_solution;
+   bool success = parser.read( opts.reduced_solution_file, ps.origcol_mapping,
+                               ps.getOriginalProblem().getVariableNames(),
+                               reduced_solution );
+   if( success )
+      postsolve( ps, reduced_solution, opts.objective_reference,
+                 opts.orig_solution_file );
 }
 
 } // namespace papilo

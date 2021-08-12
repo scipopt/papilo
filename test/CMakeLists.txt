@@ -43,6 +43,7 @@ add_executable(unit_test TestMain.cpp
         papilo/presolve/CoefficientStrengtheningTest.cpp
         papilo/presolve/ConstraintPropagationTest.cpp
         papilo/presolve/DualFixTest.cpp
+        papilo/presolve/DominatedColsTest.cpp
         papilo/presolve/DualInferTest.cpp
         papilo/presolve/FixContinuousTest.cpp
         papilo/presolve/FreeVarSubstitutionTest.cpp
@@ -72,6 +73,7 @@ set(unit_tests
         "happy-path-replace-variable"
         "happy-path-substitute-matrix-coefficient-into-objective"
         "happy-path-aggregate-free-column"
+        "presolve-activity-is-updated-correctly-huge-values"
 
         #ProblemUpdate
         "happy-path-presolve-singleton-row"
@@ -81,6 +83,12 @@ set(unit_tests
         "happy-path-coefficient-strengthening"
 
         "happy-path-constraint-propagation"
+
+        #DomCol
+        "domcol-happy-path"
+        "domcol-parallel-columns"
+        "domcol-multiple-parallel-cols-generate_redundant-reductions"
+        "domcol-multiple-column"
 
         # Fix Continuous
         "happy-path-presolve-fix-continuous"
@@ -124,6 +132,7 @@ set(unit_tests
         "parallel_col_detection_int_merge_failed_hole"
         "parallel_col_detection_obj_not_parallel"
         "parallel_col_detection_multiple_parallel_columns"
+        "parallel_col_detection_objective_zero"
 
         #Probing
         "happy-path-probing"
@@ -278,7 +287,7 @@ if (TARGET papilo-executable AND PAPILO_HAVE_SCIP)
                         )
                 set_tests_properties(${numtype}-infeas-${instance}
                         PROPERTIES
-                        PASS_REGULAR_EXPRESSION "presolve detected infeasible problem"
+                        PASS_REGULAR_EXPRESSION "presolving detected infeasible problem after 0.[0-9][0-9][0-9] seconds"
                         DEPENDS papilo-build
                         )
             endforeach (numtype)

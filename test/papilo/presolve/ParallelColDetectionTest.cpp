@@ -33,7 +33,7 @@ Problem<double>
 setupProblemWithParallelColumns( bool first_col_int, bool second_col_int,
                                  double factor, double ub_first_col,
                                  double ub_second_col, double lb_first_col,
-                                 double lb_second_col );
+                                 double lb_second_col, bool objectiveZero );
 
 Problem<double>
 setupProblemWithMultipleParallelColumns();
@@ -42,8 +42,8 @@ TEST_CASE( "parallel_col_detection_2_integer_columns", "[presolve]" )
 {
    Num<double> num{};
    Message msg{};
-   Problem<double> problem =
-       setupProblemWithParallelColumns( true, true, 3.0, 10.0, 10.0, 0.0, 0.0 );
+   Problem<double> problem = setupProblemWithParallelColumns(
+       true, true, 3.0, 10.0, 10.0, 0.0, 0.0, false );
    Statistics statistics{};
    PresolveOptions presolveOptions{};
    PostsolveListener<double> postsolve =
@@ -72,12 +72,46 @@ TEST_CASE( "parallel_col_detection_2_integer_columns", "[presolve]" )
    REQUIRE( reductions.getReduction( 2 ).newval == 0 );
 }
 
+TEST_CASE( "parallel_col_detection_objective_zero", "[presolve]" )
+{
+   Num<double> num{};
+   Message msg{};
+   Problem<double> problem = setupProblemWithParallelColumns(
+       true, true, 0.5, 10.0, 10.0, 0.0, 0.0, true );
+   Statistics statistics{};
+   PresolveOptions presolveOptions{};
+   Postsolve<double> postsolve = Postsolve<double>( problem, num );
+   ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
+                                        presolveOptions, num, msg );
+   problemUpdate.checkChangedActivities();
+   ParallelColDetection<double> presolvingMethod{};
+   Reductions<double> reductions{};
+
+   PresolveStatus presolveStatus =
+       presolvingMethod.execute( problem, problemUpdate, num, reductions );
+
+   REQUIRE( presolveStatus == PresolveStatus::kReduced );
+   REQUIRE( reductions.size() == 3 );
+   REQUIRE( reductions.getReduction( 0 ).row == ColReduction::LOCKED );
+   REQUIRE( reductions.getReduction( 0 ).col == 0 );
+   REQUIRE( reductions.getReduction( 0 ).newval == 0 );
+
+   REQUIRE( reductions.getReduction( 1 ).row == ColReduction::LOCKED );
+   REQUIRE( reductions.getReduction( 1 ).col == 1 );
+   REQUIRE( reductions.getReduction( 1 ).newval == 0 );
+
+   REQUIRE( reductions.getReduction( 2 ).row == ColReduction::PARALLEL );
+   REQUIRE( reductions.getReduction( 2 ).col == 0 );
+   REQUIRE( reductions.getReduction( 2 ).newval == 1 );
+}
+
+
 TEST_CASE( "parallel_col_detection_2_continuous_columns", "[presolve]" )
 {
    Num<double> num{};
    Message msg{};
    Problem<double> problem = setupProblemWithParallelColumns(
-       false, false, 2.0, 10.0, 10.0, 0.0, 0.0 );
+       false, false, 2.0, 10.0, 10.0, 0.0, 0.0, false );
    Statistics statistics{};
    PresolveOptions presolveOptions{};
    PostsolveListener<double> postsolve =
@@ -111,7 +145,7 @@ TEST_CASE( "parallel_col_detection_int_cont_merge_possible", "[presolve]" )
    Num<double> num{};
    Message msg{};
    Problem<double> problem = setupProblemWithParallelColumns(
-       true, false, 2.0, 10.0, 10.0, 0.0, 0.0 );
+       true, false, 2.0, 10.0, 10.0, 0.0, 0.0, false );
    Statistics statistics{};
    PresolveOptions presolveOptions{};
    PostsolveListener<double> postsolve =
@@ -149,7 +183,7 @@ TEST_CASE( "parallel_col_detection_cont_int_merge_possible", "[presolve]" )
    Num<double> num{};
    Message msg{};
    Problem<double> problem = setupProblemWithParallelColumns(
-       false, true, 0.5, 10.0, 10.0, 0.0, 0.0 );
+       false, true, 0.5, 10.0, 10.0, 0.0, 0.0, false );
    Statistics statistics{};
    PresolveOptions presolveOptions{};
    PostsolveListener<double> postsolve =
@@ -186,8 +220,8 @@ TEST_CASE( "parallel_col_detection_cont_int_merge_failed", "[presolve]" )
 {
    Num<double> num{};
    Message msg{};
-   Problem<double> problem =
-       setupProblemWithParallelColumns( false, true, 1.0, 0.9, 10.0, 0.0, 0.0 );
+   Problem<double> problem = setupProblemWithParallelColumns(
+       false, true, 1.0, 0.9, 10.0, 0.0, 0.0, false );
    Statistics statistics{};
    PresolveOptions presolveOptions{};
    PostsolveListener<double> postsolve =
@@ -208,8 +242,8 @@ TEST_CASE( "parallel_col_detection_int_cont_merge_failed", "[presolve]" )
 {
    Num<double> num{};
    Message msg{};
-   Problem<double> problem =
-       setupProblemWithParallelColumns( true, false, 1.0, 10.0, 0.9, 0.0, 0.0 );
+   Problem<double> problem = setupProblemWithParallelColumns(
+       true, false, 1.0, 10.0, 0.9, 0.0, 0.0, false );
    Statistics statistics{};
    PresolveOptions presolveOptions{};
    PostsolveListener<double> postsolve =
@@ -230,8 +264,8 @@ TEST_CASE( "parallel_col_detection_int_merge_failed_hole", "[presolve]" )
 {
    Num<double> num{};
    Message msg{};
-   Problem<double> problem =
-       setupProblemWithParallelColumns( true, true, 1.33333, 5.0, 7, 3.0, 5.0 );
+   Problem<double> problem = setupProblemWithParallelColumns(
+       true, true, 1.33333, 5.0, 7, 3.0, 5.0, false );
    Statistics statistics{};
    PresolveOptions presolveOptions{};
    PostsolveListener<double> postsolve =
@@ -253,8 +287,8 @@ TEST_CASE( "parallel_col_detection_obj_not_parallel", "[presolve]" )
    Num<double> num{};
    Message msg{};
    Vec<double> obj = { 3, 2 };
-   Problem<double> problem =
-       setupProblemWithParallelColumns( true, true, 1.0, 10.0, 10.0, 0.0, 0.0 );
+   Problem<double> problem = setupProblemWithParallelColumns(
+       true, true, 1.0, 10.0, 10.0, 0.0, 0.0, false );
    problem.setObjective( obj, 0 );
    Statistics statistics{};
    PresolveOptions presolveOptions{};
@@ -336,9 +370,10 @@ Problem<double>
 setupProblemWithParallelColumns( bool first_col_int, bool second_col_int,
                                  double factor, double ub_first_col,
                                  double ub_second_col, double lb_first_col,
-                                 double lb_second_col )
+                                 double lb_second_col, bool objectiveZero )
 {
-   Vec<double> coefficients{ 1.0, 1.0 * factor };
+   Vec<double> coefficients{ not objectiveZero ? 1.0 : 0.0,
+                             not objectiveZero ? 1.0 * factor : 0.0 };
    Vec<double> lowerBounds{ lb_first_col, lb_second_col };
    Vec<double> upperBounds{ ub_first_col, ub_second_col };
    Vec<uint8_t> isIntegral{ first_col_int, second_col_int };

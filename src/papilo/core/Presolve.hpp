@@ -132,7 +132,17 @@ class Presolve
       return paramSet;
    }
 
-   /// apply presolving to problem
+   /***
+    * presolves the problem and applies the reductions found by the presolvers
+    * immediately to it.
+    * The functions returns the PresolveStatus (Reduced, Unchanged, ) and the
+    * postsolve information
+    *
+    * @tparam REAL: computational accuracy template
+    * @param problem: the problem to be presolved
+    * @return: presolved problem and PresolveResult contains postsolve
+    * information
+    */
    PresolveResult<REAL>
    apply( Problem<REAL>& problem );
 
@@ -345,7 +355,16 @@ extern template class Presolve<Quad>;
 extern template class Presolve<Rational>;
 #endif
 
-/// apply presolving to problem
+/***
+ * presolves the problem and applies the reductions found by the presolvers
+ * immediately to it.
+ * The functions returns the PresolveStatus (Reduced, Unchanged, ) and the
+ * postsolve information
+ *
+ * @tparam REAL: computational accuracy template
+ * @param problem: the problem to be presolved
+ * @return: presolved problem and PresolveResult contains postsolve information
+ */
 template <typename REAL>
 PresolveResult<REAL>
 Presolve<REAL>::apply( Problem<REAL>& problem )
