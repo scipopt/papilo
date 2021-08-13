@@ -656,7 +656,7 @@ PostsolveListener<REAL>::push_back_col( int col, const Problem<REAL>& currentPro
    const int* row_indices = coefficients.getIndices();
    const int length = coefficients.getLength();
 
-   indices.push_back( origrow_mapping[col] );
+   indices.push_back( origcol_mapping[col] );
    values.push_back( (double)length );
 
    indices.push_back( 0 );

@@ -540,7 +540,7 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
             StableSum<REAL> sum_dual;
             for( int j = first + 5 + row_length; j < last; ++j )
             {
-               if( indices[j] == col )
+               if( indices[j] == row )
                   rowCoef = values[j];
                else
                   sum_dual.add( originalSolution.dual[indices[j]] * values[j] );
@@ -845,8 +845,10 @@ Postsolve<REAL>::verify_current_solution(
       case ReductionType::kSubstitutedCol:
       case ReductionType::kSubstitutedColShort:
       {
-         int col = indices[first];
-         int row = indices[last - 1];
+         int row = indices[first];
+         int row_length = (int)values[first];
+         assert( indices[first + 1] == 0 );
+         int col = indices[first + 3 + row_length];
 
          assert(problemUpdate.getProblem().getRowFlags()[row].test(RowFlag::kEquation));
          problemUpdate.getProblem().substituteVarInObj( num, col, row );
