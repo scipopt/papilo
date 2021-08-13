@@ -141,9 +141,8 @@ class PrimalDualSolValidation
 
       for( int variable = 0; variable < problem.getNCols(); variable++ )
       {
-         if( problem.getColFlags()[variable].test( ColFlag::kFixed ) )
+         if( problem.getColFlags()[variable].test( ColFlag::kInactive ) )
             continue;
-
          REAL colValue = 0;
 
          auto coeff =
@@ -160,107 +159,6 @@ class PrimalDualSolValidation
             return true;
       }
       return false;
-
-      //      // check values of z_j are dual feasible
-      //      for( int col = 0; col < problem.getNCols(); col++ )
-      //      {
-      //         if( problem.getColFlags()[col].test( ColFlag::kInactive ) )
-      //            continue;
-      //
-      //         // no lower and upper bound on infinity
-      //         if( problem.getColFlags()[col].test( ColFlag::kLbInf ) &&
-      //             problem.getColFlags()[col].test( ColFlag::kUbInf ) )
-      //         {
-      //            if( not num.isZero( reducedCosts[col] ) )
-      //               return true;
-      //         }
-      //         // non fixed variable at lower bound: x=l and l<u
-      //         else if( num.isEq( primalSolution[col], lowerBounds[col] ) &&
-      //                  num.isLT( lowerBounds[col], upperBounds[col] ) )
-      //         {
-      //            if( num.isLT( reducedCosts[col], 0 ) )
-      //               return true;
-      //         }
-      //         // non fixed variable at upper bound: x=u and l<u
-      //         else if( num.isEq( primalSolution[col], upperBounds[col] ) &&
-      //                  num.isLT( lowerBounds[col], upperBounds[col] ) )
-      //         {
-      //            if( num.isGT( reducedCosts[col], 0 ) )
-      //               return true;
-      //         }
-      //      }
-      //
-      //      // check values of y_i are dual feasible
-      //      const papilo::Vec<REAL>& lhs =
-      //          problem.getConstraintMatrix().getLeftHandSides();
-      //      const papilo::Vec<REAL>& rhs =
-      //          problem.getConstraintMatrix().getRightHandSides();
-      //
-      //      for( int row = 0; row < problem.getNRows(); row++ )
-      //      {
-      //         if( problem.getRowFlags()[row].test( RowFlag::kRedundant ) )
-      //            continue;
-      //
-      //         REAL rowValue = 0;
-      //         auto entries =
-      //         problem.getConstraintMatrix().getRowCoefficients( row ); for(
-      //         int j = 0; j < entries.getLength(); j++ )
-      //         {
-      //            int col = entries.getIndices()[j];
-      //            if( problem.getColFlags()[col].test( ColFlag::kFixed ) )
-      //               continue;
-      //            rowValue += entries.getValues()[j] * primalSolution[col];
-      //         }
-      //
-      //         bool isLhsInf = problem.getRowFlags()[row].test(
-      //         RowFlag::kLhsInf ); bool isRhsInf =
-      //         problem.getRowFlags()[row].test( RowFlag::kRhsInf ); assert(
-      //         not( isLhsInf and isRhsInf ) );
-      //
-      //         // L = Ax = U can be any sign
-      //         if( problem.getRowFlags()[row].test( RowFlag::kEquation ) )
-      //         {
-      //            assert( num.isEq( lhs[row], rowValue ) and
-      //                    num.isEq( rhs[row], rowValue ) );
-      //            continue;
-      //         }
-      //         else if( isLhsInf )
-      //         {
-      //            assert( not isRhsInf );
-      //            if( num.isLT( rowValue, rhs[row] ) and  not num.isZero(
-      //            dualSolution[row] ) )
-      //                  return true;
-      //
-      //         }
-      //         else if( isRhsInf )
-      //         {
-      //            if( num.isGT( rowValue, lhs[row] ) and  not num.isZero(
-      //            dualSolution[row] ) )
-      //                  return true;
-      //         }
-      //         else
-      //         {
-      //            if( num.isGT( rowValue, lhs[row] ) and
-      //                num.isEq( rowValue, rhs[row] ) )
-      //            {
-      //               if( not num.isZero( dualSolution[row] ) )
-      //                  return true;
-      //            }
-      //            else if( num.isEq( rowValue, lhs[row] ) and
-      //                     num.isLT( rowValue, rhs[row] ) )
-      //            {
-      //               if( not num.isZero( dualSolution[row] ) )
-      //                  return true;
-      //            }
-      //            else
-      //            {
-      //               assert( num.isGT( rowValue, lhs[row] ) and
-      //                       num.isLT( rowValue, rhs[row] ) );
-      //               if( num.isZero( dualSolution[row] ) )
-      //                  return true;
-      //            }
-      //         }
-      //      }
    }
 
    bool
