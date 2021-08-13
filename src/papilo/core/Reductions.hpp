@@ -188,17 +188,18 @@ class Reductions
    }
 
    void
-   changeColUB( int col, REAL newval, int row = -1 )
+   changeColUB( int col, REAL newval, int forcing_row = -1 )
    {
-      //TODO: only full mode
-      if(row > -1)
-         reductions.emplace_back(0, 0, RowReduction::SAVE_ROW);
+      if( forcing_row > -1)
+         reductions.emplace_back(0, forcing_row, RowReduction::SAVE_ROW);
       reductions.emplace_back( newval, ColReduction::UPPER_BOUND, col );
    }
 
    void
-   fixCol( int col, REAL val )
+   fixCol( int col, REAL val, int forcing_row = -1 )
    {
+      if(forcing_row > -1)
+         reductions.emplace_back(0, forcing_row, RowReduction::SAVE_ROW);
       reductions.emplace_back( val, ColReduction::FIXED, col );
    }
 

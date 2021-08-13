@@ -489,6 +489,7 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
 
       for( int i = 0; i < domcolreductions.size(); i++ )
       {
+         // check if consecutively reductions are equal
          const DomcolReduction dr = domcolreductions[i];
          if( i < domcolreductions.size() - 1 )
          {
@@ -505,13 +506,14 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
          reductions.lockColBounds( dr.col1 );
          reductions.lockCol( dr.col2 );
          reductions.lockColBounds( dr.col2 );
-         if( dr.implrowlock > 0 )
+         //TODO: check if >=0 is correct instead of >0
+         if( dr.implrowlock >= 0 )
             reductions.lockRow( dr.implrowlock );
 
          if( dr.boundchg == BoundChange::kUpper )
-            reductions.fixCol( dr.col2, lbValues[dr.col2] );
+            reductions.fixCol( dr.col2, lbValues[dr.col2], dr.implrowlock );
          else
-            reductions.fixCol( dr.col2, ubValues[dr.col2] );
+            reductions.fixCol( dr.col2, ubValues[dr.col2], dr.implrowlock);
       }
 
    }
