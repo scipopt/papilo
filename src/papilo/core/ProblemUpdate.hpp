@@ -1984,6 +1984,8 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
                 !cflags[col].test( ColFlag::kSubstituted, ColFlag::kFixed ) );
             cflags[col].set( ColFlag::kSubstituted );
 
+            postsolve.notifySubstitution( col, equalityrow, problem );
+
             // change the objective coefficients and offset
             problem.substituteVarInObj( num, col, equalityrow );
 
@@ -2012,7 +2014,7 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
 
             auto eqRHS = constraintMatrix.getLeftHandSides()[equalityrow];
 
-            postsolve.notifySubstitution( col, equalityrow, problem );
+
             // make the changes in the constraint matrix
             constraintMatrix.aggregate(
                 num, col, rowvec, eqRHS, problem.getVariableDomains(),

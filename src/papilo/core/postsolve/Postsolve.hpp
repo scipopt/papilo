@@ -481,7 +481,7 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
          }
          break;
       }
-      case ReductionType::kSubstitutedColShort:
+      case ReductionType::kSubstitutedColNoDual:
       {
          int col = indices[first];
          REAL side = values[first];
@@ -498,6 +498,7 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
 
          assert( colCoef != 0.0 );
          origSol[col] = ( -sumcols.get() ) / colCoef;
+         //TODO: modify stored objective
          break;
       }
       case ReductionType::kSubstitutedCol:
@@ -550,6 +551,8 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
             sum_dual.add( -obj );
             originalSolution.dual[row] = ( -sum_dual.get() ) / rowCoef;
             assert( row_length + col_length + 5 == last - first );
+            //TODO: modify stored objective
+
          }
          break;
       }
@@ -729,9 +732,9 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
    if( status == PostsolveStatus::kFailed )
       message.error( "Postsolving solution failed. Please use debug mode to "
                      "obtain more information." );
-   for( int i = 0; i < problem.getNRows(); i++ )
-      message.info( "{} {}\n", problem.getConstraintNames()[i],
-                    originalSolution.dual[i] );
+//   for( int i = 0; i < problem.getNRows(); i++ )
+//      message.info( "{} {}\n", problem.getConstraintNames()[i],
+//                    originalSolution.dual[i] );
    return status;
 }
 template <typename REAL>
@@ -850,16 +853,32 @@ Postsolve<REAL>::verify_current_solution(
          break;
       }
       case ReductionType::kSubstitutedCol:
-      case ReductionType::kSubstitutedColShort:
+      case ReductionType::kSubstitutedColNoDual:
       {
          int row = indices[first];
          int row_length = (int)values[first];
          assert( indices[first + 1] == 0 );
          int col = indices[first + 3 + row_length];
+         int colsize = problemUpdate.getProblem().getConstraintMatrix().getColSizes()[col];
+
 
          assert( problemUpdate.getProblem().getRowFlags()[row].test(
              RowFlag::kEquation ) );
+         problemUpdate.getProblem().getColFlags()[col].set(ColFlag::kSubstituted);
          problemUpdate.getProblem().substituteVarInObj( num, col, row );
+
+         if(colsize > 1){
+            auto eqRHS = problemUpdate.getProblem()
+                             .getConstraintMatrix()
+                             .getLeftHandSides()[row];
+
+            // TODO: make the changes in the constraint matrix
+//            problemUpdate.getProblem().getConstraintMatrix().aggregate(
+//                num, col, rowvec, eqRHS, problemUpdate.getProblem().getVariableDomains(),
+//                intbuffer, realbuffer, tripletbuffer, changed_activities,
+//                problem.getRowActivities(), singletonRows, singletonColumns,
+//                emptyColumns, stats.nrounds );
+         }
          break;
       }
       case ReductionType::kParallelCol:

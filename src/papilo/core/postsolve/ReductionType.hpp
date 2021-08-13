@@ -31,7 +31,7 @@ enum class ReductionType : int
    kFixedCol = 0,
    kFixedInfCol = 5,
    kSubstitutedCol = 2,
-   kSubstitutedColShort = 15,
+   kSubstitutedColNoDual = 15,
    kVarBoundChange = 3,
    kVarBoundChangeForced = 4,
    kParallelCol = 1,

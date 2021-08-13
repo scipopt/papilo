@@ -727,7 +727,7 @@ PostsolveListener<REAL>::notifySubstitution( int col,
    const int length = equalityLHS.getLength();
    assert( length > 1 );
 
-   types.push_back( ReductionType::kSubstitutedColShort );
+   types.push_back( ReductionType::kSubstitutedColNoDual );
    values.push_back( equalityRHS );
    indices.push_back( origcol_mapping[col] );
    for( int i = 0; i < length; ++i )
