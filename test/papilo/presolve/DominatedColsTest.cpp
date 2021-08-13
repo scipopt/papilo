@@ -232,9 +232,9 @@ setupMatrixForDominatedCols()
    };
 
    ProblemBuilder<double> pb;
-   pb.reserve( entries.size(), rowNames.size(), columnNames.size() );
-   pb.setNumRows( rowNames.size() );
-   pb.setNumCols( columnNames.size() );
+   pb.reserve( (int) entries.size(), (int) rowNames.size(), (int) columnNames.size() );
+   pb.setNumRows( (int) rowNames.size() );
+   pb.setNumCols( (int) columnNames.size() );
    pb.setColUbAll( upperBounds );
    pb.setColLbAll( lowerBounds );
    pb.setObjAll( coefficients );
@@ -279,9 +279,9 @@ setupMatrixForDominatedColsParallel()
    };
 
    ProblemBuilder<double> pb;
-   pb.reserve( entries.size(), rowNames.size(), columnNames.size() );
-   pb.setNumRows( rowNames.size() );
-   pb.setNumCols( columnNames.size() );
+   pb.reserve( (int) entries.size(), (int) rowNames.size(), (int) columnNames.size() );
+   pb.setNumRows( (int) rowNames.size() );
+   pb.setNumCols( (int) columnNames.size() );
    pb.setColUbAll( upperBounds );
    pb.setColLbAll( lowerBounds );
    pb.setObjAll( coefficients );
@@ -322,9 +322,9 @@ setupMatrixForDominatedColsMultipleParallel()
    };
 
    ProblemBuilder<double> pb;
-   pb.reserve( entries.size(), rowNames.size(), columnNames.size() );
-   pb.setNumRows( rowNames.size() );
-   pb.setNumCols( columnNames.size() );
+   pb.reserve( (int) entries.size(), (int) rowNames.size(), (int) columnNames.size() );
+   pb.setNumRows( (int) rowNames.size() );
+   pb.setNumCols( (int) columnNames.size() );
    pb.setColUbAll( upperBounds );
    pb.setColLbAll( lowerBounds );
    pb.setObjAll( coefficients );
@@ -371,9 +371,9 @@ setupMatrixForMultipleDominatedCols()
    };
 
    ProblemBuilder<double> pb;
-   pb.reserve( entries.size(), rowNames.size(), columnNames.size() );
-   pb.setNumRows( rowNames.size() );
-   pb.setNumCols( columnNames.size() );
+   pb.reserve( (int) entries.size(), (int) rowNames.size(), (int) columnNames.size() );
+   pb.setNumRows( (int) rowNames.size() );
+   pb.setNumCols( (int) columnNames.size() );
    pb.setColUbAll( upperBounds );
    pb.setColLbAll( lowerBounds );
    pb.setObjAll( coefficients );
