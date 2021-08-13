@@ -1537,7 +1537,10 @@ ProblemUpdate<REAL>::removeSingletonRow( int row )
    const bool isRhsInfinity = rflags[row].test( RowFlag::kRhsInf );
 
    if( rflags[row].test( RowFlag::kEquation ) )
+   {
+      postsolve.notifySavedRow(row, rowvec, lhs, rhs, rflags[row]);
       status = fixCol( col, rhs / val );
+   }
    else
    {
       if( val < 0 )
