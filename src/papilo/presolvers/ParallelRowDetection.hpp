@@ -341,7 +341,10 @@ ParallelRowDetection<REAL>::execute( const Problem<REAL>& problem,
       bool rhs_infinity = rflags[remaining_row].test( RowFlag::kRhsInf );
       bool lhs_infinity = rflags[remaining_row].test( RowFlag::kLhsInf );
       REAL rhs_value = rhs_values[remaining_row];
+      int row_with_best_rhs_value = remaining_row;
       REAL lhs_value = lhs_values[remaining_row];
+      int row_with_best_lhs_value = remaining_row;
+
       //iterates over parallel_rows, stores the remaining row and updates rhs/lhs
       for( int i = 1; i < parallel_rows.size(); i++ )
       {
@@ -371,6 +374,8 @@ ParallelRowDetection<REAL>::execute( const Problem<REAL>& problem,
                coefficient = coefs2;
                rhs_value = rhs_values[remaining_row];
                lhs_value = lhs_values[remaining_row];
+               row_with_best_rhs_value = parallel_row;
+               row_with_best_lhs_value = parallel_row;
             }
          }
          // CASE 2: new equation is equality
@@ -389,6 +394,8 @@ ParallelRowDetection<REAL>::execute( const Problem<REAL>& problem,
             coefficient = coefs2;
             rhs_value = rhs_values[remaining_row];
             lhs_value = lhs_values[remaining_row];
+            row_with_best_rhs_value = parallel_row;
+            row_with_best_lhs_value = parallel_row;
          }
          // CASE 3: stored equation is equality
          else if( is_remaining_row_equality )
@@ -447,6 +454,8 @@ ParallelRowDetection<REAL>::execute( const Problem<REAL>& problem,
                {
                   rhs_value = rhs_values[parallel_row];
                   rhs_infinity = rflags[parallel_row].test( RowFlag::kRhsInf );
+                  row_with_best_rhs_value = parallel_row;
+
                }
                if( !lhs_infinity &&
                    ( scaled_rhs_inf ||
@@ -459,6 +468,7 @@ ParallelRowDetection<REAL>::execute( const Problem<REAL>& problem,
                {
                   lhs_value = lhs_values[parallel_row];
                   lhs_infinity = rflags[parallel_row].test( RowFlag::kLhsInf );
+                  row_with_best_lhs_value = parallel_row;
                }
             }
             else
@@ -469,6 +479,7 @@ ParallelRowDetection<REAL>::execute( const Problem<REAL>& problem,
                {
                   rhs_value = scaled_rhs;
                   rhs_infinity = false;
+                  row_with_best_rhs_value = parallel_row;
                }
 
                if( !scaled_lhs_inf &&
@@ -477,6 +488,7 @@ ParallelRowDetection<REAL>::execute( const Problem<REAL>& problem,
                {
                   lhs_value = scaled_lhs;
                   lhs_infinity = false;
+                  row_with_best_lhs_value = parallel_row;
                }
             }
          }
@@ -492,11 +504,13 @@ ParallelRowDetection<REAL>::execute( const Problem<REAL>& problem,
       if( lhs_infinity != rflags[remaining_row].test( RowFlag::kLhsInf ) ||
           lhs_value != lhs_values[remaining_row] )
       {
+         reductions.bound_change_caused_by_row( remaining_row, row_with_best_lhs_value );
          reductions.change_row_lhs_parallel( remaining_row, lhs_value );
       }
       if( rhs_infinity != rflags[remaining_row].test( RowFlag::kRhsInf ) ||
           rhs_value != rhs_values[remaining_row] )
       {
+         reductions.bound_change_caused_by_row( remaining_row, row_with_best_rhs_value );
          reductions.change_row_rhs_parallel( remaining_row, rhs_value );
       }
       for( int parallel_row : parallel_rows )

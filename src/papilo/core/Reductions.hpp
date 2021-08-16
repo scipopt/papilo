@@ -64,7 +64,8 @@ struct RowReduction
       SPARSIFY = -9,
       RHS_LESS_RESTRICTIVE = -10,
       LHS_LESS_RESTRICTIVE = -11,
-      SAVE_ROW = -12
+      REASON_FOR_LESS_RESTRICTIVE_BOUND_CHANGE = -12,
+      SAVE_ROW = -13
    };
 };
 
@@ -144,6 +145,14 @@ class Reductions
    change_row_rhs_parallel( int row, REAL newval )
    {
       reductions.emplace_back( newval, row, RowReduction::RHS_LESS_RESTRICTIVE );
+   }
+
+   void
+   bound_change_caused_by_row( int remaining_row, int deleted_row )
+   {
+      reductions.emplace_back(
+          remaining_row, deleted_row,
+          RowReduction::REASON_FOR_LESS_RESTRICTIVE_BOUND_CHANGE );
    }
 
    void

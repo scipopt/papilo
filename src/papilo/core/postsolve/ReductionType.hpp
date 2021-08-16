@@ -40,13 +40,15 @@ enum class ReductionType : int
    kSingletonRow = 7,
    kRedundantRow = 8,
    kRowBoundChange = 9,
+   kReasonForRowBoundChangeForcedByRow = 10,
+   kRowBoundChangeForcedByRow = 11,
 
-   kSaveCol = 10,
-   kSaveRow = 11,
+   kSaveCol = 12,
+   kSaveRow = 13,
 
-   kReducedBoundsCost = 12,
-   kColumnDualValue = 13,
-   kRowDualValue = 14,
+   kReducedBoundsCost = 14,
+   kColumnDualValue = 16,
+   kRowDualValue = 17,
 };
 
 #endif

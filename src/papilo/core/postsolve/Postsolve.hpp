@@ -717,9 +717,7 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
          if( isLhs )
          {
             if( isInfinity )
-            {
                row_infinity_lhs[row] = true;
-            }
             else
             {
                row_infinity_lhs[row] = false;
@@ -729,16 +727,63 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
          else
          {
             if( isInfinity )
-            {
                row_infinity_rhs[row] = true;
-            }
             else
             {
                row_infinity_rhs[row] = false;
                row_rhs[row] = new_value;
             }
          }
+         break;
       }
+      case ReductionType::kRowBoundChangeForcedByRow:
+      {
+         assert( originalSolution.type == SolutionType::kPrimalDual );
+
+         bool isLhs = indices[first] == 1;
+         bool isInfinity = indices[first + 1];
+         int row = (int)values[first];
+         REAL new_value = values[first + 1];
+         if( isLhs )
+         {
+            if( isInfinity )
+               row_infinity_lhs[row] = true;
+            else
+            {
+               row_infinity_lhs[row] = false;
+               row_lhs[row] = new_value;
+            }
+         }
+         else
+         {
+            if( isInfinity )
+               row_infinity_rhs[row] = true;
+            else
+            {
+               row_infinity_rhs[row] = false;
+               row_rhs[row] = new_value;
+            }
+         }
+
+         int next_type = i - 1;
+         int start_reason = start[next_type];
+         assert( types[next_type] == ReductionType::kReasonForRowBoundChangeForcedByRow );
+         int remained_row = indices[start_reason];
+         int deleted_row = indices[start_reason +1];
+         REAL factor = values[start_reason];
+         assert(remained_row == row);
+         REAL dual_row_value = originalSolution.dual[remained_row];
+         if( ( isLhs and dual_row_value > 0 ) or
+             ( not isLhs and dual_row_value < 0 ) )
+         {
+            originalSolution.dual[deleted_row] = dual_row_value * factor;
+            originalSolution.dual[remained_row] = 0;
+         }
+         break;
+      }
+      case ReductionType::kReasonForRowBoundChangeForcedByRow:
+         assert( originalSolution.type == SolutionType::kPrimalDual );
+         continue;
       }
 
 //#todo only in debug mode
@@ -837,6 +882,7 @@ Postsolve<REAL>::verify_current_solution(
          break;
       }
       case ReductionType::kRowBoundChange:
+      case ReductionType::kRowBoundChangeForcedByRow:
       {
          bool isLhs = indices[first] == 1;
          bool isInfinity = indices[first + 1];
@@ -911,6 +957,7 @@ Postsolve<REAL>::verify_current_solution(
       case ReductionType::kRowDualValue:
       case ReductionType::kSaveRow:
       case ReductionType::kSaveCol:
+      case ReductionType::kReasonForRowBoundChangeForcedByRow:
          break;
       default:
          assert( false );

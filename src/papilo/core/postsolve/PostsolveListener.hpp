@@ -146,6 +146,12 @@ class PostsolveListener
    notifyRowBoundChange( bool isLhs, int row, REAL newBound, bool isInfinity );
 
    void
+   notifyRowBoundChangeForcedByRow( bool isLhs, int row, REAL newBound, bool isInfinity );
+
+   void
+   notifyReasonForRowBoundChangeForcedByRow( int remained_row, int deleted_row, REAL factor);
+
+   void
    notifyReducedBoundsAndCost( const Vec<REAL>& col_lb, const Vec<REAL>& col_ub,
                                const Vec<REAL>& row_lhs, const Vec<REAL>& row_rhs,
                                const Vec<REAL>& coefficients,
@@ -402,6 +408,43 @@ PostsolveListener<REAL>::notifyRowBoundChange( bool isLhs, int row, REAL newBoun
 
    finishNotify();
 }
+
+template <typename REAL>
+void
+PostsolveListener<REAL>::notifyRowBoundChangeForcedByRow(  bool isLhs, int row, REAL newBound, bool isInfinity ){
+   if( postsolveType == PostsolveType::kPrimal )
+      return;
+   // TODO, this is not needed due to the bound relaxing strategy I'll
+   // add for constraint propagation, instead there should only be a function
+   // notifyForcingRow. This is called for the case where a row forces a column
+   // upper bound to its lower bound and the column is fixed as a result, or the
+   // other way around.
+   types.push_back( ReductionType::kRowBoundChangeForcedByRow );
+   if( isLhs )
+      indices.push_back( 1 );
+   else
+      indices.push_back( 0 );
+   values.push_back( origrow_mapping[row] );
+   indices.push_back( isInfinity );
+   values.push_back( newBound );
+
+   finishNotify();
+}
+
+template <typename REAL>
+void
+PostsolveListener<REAL>::notifyReasonForRowBoundChangeForcedByRow( int remained_row, int deleted_row, REAL factor){
+   if( postsolveType == PostsolveType::kPrimal )
+      return;
+   types.push_back( ReductionType::kReasonForRowBoundChangeForcedByRow );
+   indices.push_back( origrow_mapping[remained_row] );
+   values.push_back( factor );
+   indices.push_back( origrow_mapping[deleted_row] );
+   values.push_back( 0 );
+
+   finishNotify();
+}
+
 
 template <typename REAL>
 void

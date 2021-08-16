@@ -2575,11 +2575,23 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
 
             constraintMatrix.modifyLeftHandSide( reduction.row, num,
                                                  reduction.newval );
-            postsolve.notifyRowBoundChange( true, reduction.row,
+            postsolve.notifyRowBoundChangeForcedByRow( true, reduction.row,
                                             reduction.newval, false );
 
             ++stats.nsidechgs;
             break;
+         case RowReduction::REASON_FOR_LESS_RESTRICTIVE_BOUND_CHANGE:
+         {
+            REAL factor = problem.getConstraintMatrix()
+                              .getRowCoefficients( (int)reduction.newval )
+                              .getValues()[0] /
+                          problem.getConstraintMatrix()
+                              .getRowCoefficients( reduction.row )
+                              .getValues()[0];
+            postsolve.notifyReasonForRowBoundChangeForcedByRow(
+                (int)reduction.newval, reduction.row, factor );
+            break;
+         }
          case RowReduction::RHS:
             assert( rflags[reduction.row].test( RowFlag::kRhsInf ) ||
                     reduction.newval !=
@@ -2655,7 +2667,7 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
 
             constraintMatrix.modifyRightHandSide( reduction.row, num,
                                                   reduction.newval );
-            postsolve.notifyRowBoundChange( false, reduction.row,
+            postsolve.notifyRowBoundChangeForcedByRow( false, reduction.row,
                                             reduction.newval, false );
 
             ++stats.nsidechgs;
