@@ -539,6 +539,7 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
             REAL obj = values[first + 4 + row_length];
 
             REAL rowCoef = 0.0;
+
             StableSum<REAL> sum_dual;
             for( int j = first + 5 + row_length; j < last; ++j )
             {
@@ -547,12 +548,21 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
                else
                   sum_dual.add( originalSolution.dual[indices[j]] * values[j] );
             }
+
             assert( rowCoef != 0 );
             sum_dual.add( -obj );
-            originalSolution.dual[row] = ( -sum_dual.get() ) / rowCoef;
+            originalSolution.reducedCosts[col] = ( -sum_dual.get() ) / rowCoef;
             assert( row_length + col_length + 5 == last - first );
             //TODO: modify stored objective
 
+            //TODO: update reduced costs
+//            for( int j = first + 3; j < first + 3 + row_length; ++j )
+//            {
+//               if( indices[j] == col )
+//                  continue;
+//               REAL old_obj = obj * values[j] / colCoef;
+//               originalSolution.reducedCosts[indices[j]] -= old_obj;
+//            }
          }
          break;
       }
