@@ -1980,11 +1980,11 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
             const int* colindices = colvec.getIndices();
             const int nbrelevantrows = colvec.getLength();
 
+            postsolve.notifySubstitution( col, equalityrow, problem );
+
             assert(
                 !cflags[col].test( ColFlag::kSubstituted, ColFlag::kFixed ) );
             cflags[col].set( ColFlag::kSubstituted );
-
-            postsolve.notifySubstitution( col, equalityrow, problem );
 
             // change the objective coefficients and offset
             problem.substituteVarInObj( num, col, equalityrow );

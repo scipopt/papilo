@@ -650,6 +650,7 @@ PostsolveListener<REAL>::push_back_col( int col, const Problem<REAL>& currentPro
 {
    const auto& coefficients =
        currentProblem.getConstraintMatrix().getColumnCoefficients( col );
+   ColFlags flags = currentProblem.getColFlags()[col];
    REAL obj = currentProblem.getObjective().coefficients[col];
 
    const REAL* coefs = coefficients.getValues();
@@ -661,6 +662,20 @@ PostsolveListener<REAL>::push_back_col( int col, const Problem<REAL>& currentPro
 
    indices.push_back( 0 );
    values.push_back( obj );
+
+   // LB
+   if( flags.test( ColFlag::kUbInf ) )
+      indices.push_back( 1 );
+   else
+      indices.push_back( 0 );
+   values.push_back( currentProblem.getUpperBounds()[col] );
+
+   // UB
+   if( flags.test( ColFlag::kLbInf ) )
+      indices.push_back( 1 );
+   else
+      indices.push_back( 0 );
+   values.push_back( currentProblem.getLowerBounds()[col] );
 
    for( int i = 0; i < length; ++i )
    {

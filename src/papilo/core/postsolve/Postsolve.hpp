@@ -538,10 +538,17 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
             assert( indices[first + 4 + row_length] == 0 );
             REAL obj = values[first + 4 + row_length];
 
+            bool ub_infinity = indices[first + 5 + row_length] == 1;
+            REAL ub = values[first + 5 + row_length];
+            bool lb_infinity = indices[first + 6 + row_length] == 1;
+            REAL lb = values[first + 6 + row_length];
+
+            assert(lb_infinity or ub_infinity or lb <= ub);
+
             REAL rowCoef = 0.0;
 
             StableSum<REAL> sum_dual;
-            for( int j = first + 5 + row_length; j < last; ++j )
+            for( int j = first + 7 + row_length; j < last; ++j )
             {
                if( indices[j] == row )
                   rowCoef = values[j];
@@ -551,8 +558,13 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
 
             assert( rowCoef != 0 );
             sum_dual.add( -obj );
-            originalSolution.reducedCosts[col] = ( -sum_dual.get() ) / rowCoef;
-            assert( row_length + col_length + 5 == last - first );
+            if((origSol[col] == lb and not lb_infinity) or (origSol[col] == ub and not ub_infinity))
+               originalSolution.reducedCosts[col] = ( -sum_dual.get() ) ;
+            else
+            {
+               originalSolution.dual[row] = ( -sum_dual.get() ) / rowCoef;
+            }
+            assert( row_length + col_length + 7 == last - first );
             //TODO: modify stored objective
 
             //TODO: update reduced costs
