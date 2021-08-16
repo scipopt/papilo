@@ -704,6 +704,48 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
          origSol[col1] = col1val;
          origSol[col2] = col2val;
 
+         if( originalSolution.type == SolutionType::kPrimalDual ) {
+            assert( col1val == col1ub or col1val == col1lb or
+                    col2val == col2lb or col2val == col2ub );
+            if( ( num.isEq( col1val, col1ub ) and
+                  num.isEq( col2val, col2ub ) ) or
+                ( num.isEq( col1val, col1lb ) and
+                  num.isEq( col2val, col2lb ) ) )
+            {
+               if( not num.isZero( originalSolution.reducedCosts[col2] ) )
+               {
+                  originalSolution.reducedCosts[col1] =
+                      originalSolution.reducedCosts[col2] * col2scale;
+               }
+               else
+               {
+                  assert(not num.isZero( originalSolution.reducedCosts[col1] ));
+                  originalSolution.reducedCosts[col2] =
+                      originalSolution.reducedCosts[col1] / col2scale;
+               }
+            }
+            else if( ( num.isGT( col1val, col1lb ) or
+                       col1boundFlags & IS_UBINF ) and
+                     ( num.isLT( col1val, col1ub ) or
+                       col1boundFlags & IS_UBINF ) )
+            {
+               assert( col2val == col2lb or col2val == col2ub );
+            }
+            else if( ( num.isGT( col2val, col2lb ) or
+                       col2boundFlags & IS_UBINF ) and
+                     ( num.isLT( col1val, col1ub ) or
+                       col2boundFlags & IS_UBINF ) )
+            {
+               assert( col1val == col1ub or col1val == col1lb or
+                       col2val == col2lb or col2val == col2ub );
+            }
+            else
+            {
+               assert( false );
+            }
+         }
+
+
          break;
       }
       case ReductionType::kRowBoundChange:
@@ -950,6 +992,17 @@ Postsolve<REAL>::verify_current_solution(
          break;
       }
       case ReductionType::kParallelCol:
+      {
+         int col1 = indices[first];
+         int col2 = indices[first + 2];
+         const REAL& col2scale = values[first + 4];
+
+         problemUpdate.merge_parallel_columns(
+             col1, col2, col2scale, problemUpdate.getConstraintMatrix(),
+             problemUpdate.getProblem().getLowerBounds(),
+             problemUpdate.getProblem().getUpperBounds(),
+             problemUpdate.getProblem().getColFlags() );
+      }
       case ReductionType::kFixedInfCol:
       case ReductionType::kReducedBoundsCost:
       case ReductionType::kColumnDualValue:
