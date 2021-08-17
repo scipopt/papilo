@@ -313,7 +313,6 @@ if (TARGET papilo-executable)
                 add_test(NAME ${numtype}-solve-${basename}
                         COMMAND $<TARGET_FILE:papilo-executable> solve -a ${numtype} -f ${instance_file} -o ${optval} -p ${settings_file}
                         )
-                message(solve -a ${numtype} -f ${instance_file} -o ${optval} -p ${settings_file})
                 set_tests_properties(${numtype}-solve-${basename}
                         PROPERTIES
                         PASS_REGULAR_EXPRESSION "validation: SUCCESS"
@@ -331,7 +330,6 @@ if (TARGET papilo-executable)
                 add_test(NAME ${numtype}-infeas-${instance}
                         COMMAND $<TARGET_FILE:papilo-executable> solve -a ${numtype} -f ${instance_file}
                         )
-                message(solve -a ${numtype} -f ${instance_file} -o ${optval} -p ${settings_file})
                 set_tests_properties(${numtype}-infeas-${instance}
                         PROPERTIES
                         PASS_REGULAR_EXPRESSION "presolving detected infeasible problem after 0.[0-9][0-9][0-9] seconds"
