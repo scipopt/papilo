@@ -167,36 +167,34 @@ class PrimalDualSolValidation
                            const Vec<REAL>& reducedCosts,
                            const Problem<REAL>& problem )
    {
-      REAL primalObjectiveValue = 0;
+      StableSum<REAL> primal_objective;
       for( int i = 0; i < problem.getNCols(); i++ )
       {
-         primalObjectiveValue +=
-             primalSolution[i] * problem.getObjective().coefficients[i];
+         primal_objective.add(
+             primalSolution[i] * problem.getObjective().coefficients[i]);
       }
-      REAL dualObjectiveValue = 0;
+      StableSum<REAL> dual_objective;
       for( int i = 0; i < problem.getNRows(); i++ )
       {
          REAL dual = dualSolution[i];
+         REAL side;
          if(dual < 0)
-            dualObjectiveValue +=
-                dual * problem.getConstraintMatrix().getRightHandSides()[i];
+            side = problem.getConstraintMatrix().getRightHandSides()[i];
          else
-            dualObjectiveValue +=
-                dual * problem.getConstraintMatrix().getLeftHandSides()[i];
+            side = problem.getConstraintMatrix().getLeftHandSides()[i];
+         dual_objective.add( dual * side );
       }
       for( int i = 0; i < problem.getNCols(); i++ )
       {
-
          REAL reducedCost = reducedCosts[i];
+         REAL side;
          if(reducedCost < 0)
-            dualObjectiveValue +=
-                reducedCost * problem.getUpperBounds()[i];
+            side = problem.getUpperBounds()[i];
          else
-            dualObjectiveValue +=
-                reducedCost * problem.getLowerBounds()[i];
-
+            side = problem.getLowerBounds()[i];
+         dual_objective.add( reducedCost * side );
       }
-      return not num.isEq( primalObjectiveValue, dualObjectiveValue );
+      return not num.isFeasEq( primal_objective.get(), dual_objective.get() );
    }
 
    bool
@@ -290,41 +288,6 @@ class PrimalDualSolValidation
       return false;
    }
 
-   //   bool
-   //   checkStOfLagrangian( const Vec<REAL>& primalSolution,
-   //                        const Vec<REAL>& dualSolution,
-   //                        const Vec<REAL>& reducedCosts,
-   //                        const Problem<REAL>& problem )
-   //
-   //   {
-   //      // A'y + reduced_costs = c
-   //
-   //      const papilo::SparseStorage<REAL>& transposed =
-   //          problem.getConstraintMatrix().getMatrixTranspose();
-   //
-   //      std::vector<int> orig_row_index( transposed.getNCols(), 0 );
-   //
-   //      for( int col = 0; col < transposed.getNCols(); col++ )
-   //      {
-   //         if( problem.getColFlags()[col].test( ColFlag::kFixed ) )
-   //            continue;
-   //         REAL lagrV = 0;
-   //
-   //         auto index_range = transposed.getRowRanges()[col];
-   //         for( int k = index_range.start; k < index_range.end; k++ )
-   //         {
-   //            int row = transposed.getColumns()[k];
-   //            lagrV += dualSolution[row] * transposed.getValues()[k];
-   //         }
-   //
-   //         if( not num.isEq( lagrV + reducedCosts[col],
-   //                           problem.getObjective().coefficients[col] ) )
-   //            return true;
-   //      }
-   //
-   //      return false;
-   //   }
-
  public:
    PostsolveStatus
    verifySolution( const Solution<REAL>& solution,
@@ -347,30 +310,28 @@ class PrimalDualSolValidation
 
       if( solution.type == SolutionType::kPrimalDual )
       {
-         failure = checkDualFeasibility( solution.primal, solution.dual,
-                                         solution.reducedCosts, problem );
-         if( failure )
+         if( checkDualFeasibility( solution.primal, solution.dual,
+                                   solution.reducedCosts, problem ) )
          {
             message.info( "Dual feasibility check FAILED.\n" );
-            return PostsolveStatus::kFailed;
+            failure = true;
          }
 
-         failure = checkObjectiveFunction( solution.primal, solution.dual,
-                                           solution.reducedCosts, problem );
-         if( failure )
-         {
-            message.info( "Objective function failed.\n" );
-            return PostsolveStatus::kFailed;
-         }
-
-         failure = checkComplementarySlackness(
-             solution.primal, solution.dual, solution.reducedCosts, problem );
-         if( failure )
+         if( checkComplementarySlackness(
+             solution.primal, solution.dual, solution.reducedCosts, problem ) )
          {
             message.info( "Complementary slack check FAILED.\n" );
-            return PostsolveStatus::kFailed;
+            failure = true;
          }
 
+         if( checkObjectiveFunction( solution.primal, solution.dual,
+                                     solution.reducedCosts, problem ) )
+         {
+            message.info( "Objective function failed.\n" );
+            failure = true;
+         }
+         if(failure)
+            return PostsolveStatus::kFailed;
       }
 
       message.info( "Solution passed validation\n" );
