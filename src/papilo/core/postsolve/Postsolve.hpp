@@ -344,7 +344,7 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
          REAL col_coefficents[number_rows];
          if( isNegativeInfinity )
          {
-            while( current_counter < first + 2 + number_rows )
+            while( row_counter < number_rows )
             {
                int length = (int)values[current_counter];
                row_indices[row_counter] = indices[row_counter];
@@ -369,7 +369,7 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
          }
          else
          {
-            while( current_counter < first + 2 + number_rows  )
+            while( row_counter < number_rows )
             {
                int length = (int)values[current_counter];
                row_indices[row_counter] = indices[row_counter];
