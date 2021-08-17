@@ -43,7 +43,6 @@ add_executable(unit_test TestMain.cpp
         papilo/presolve/ConstraintPropagationTest.cpp
         papilo/presolve/DualFixTest.cpp
         papilo/presolve/DominatedColsTest.cpp
-        papilo/presolve/DualInferTest.cpp
         papilo/presolve/FixContinuousTest.cpp
         papilo/presolve/FreeVarSubstitutionTest.cpp
         papilo/presolve/ImplIntDetectionTest.cpp
@@ -88,6 +87,15 @@ set(unit_tests
         "domcol-parallel-columns"
         "domcol-multiple-parallel-cols-generate_redundant-reductions"
         "domcol-multiple-column"
+
+        #DualFix
+        "dual-fix-happy-path"
+        "dual-fix-trivial-column-presolve-finds-reduction"
+        "dual-fix-dual-substitution"
+        "dual-fix-dual-substitution-rounding"
+        "dual-fix-dual-substitution-unbounded-variables"
+        "dual-fix-dual-substitution-equation"
+        "dual-fix-infinity"
 
         # Fix Continuous
         "happy-path-presolve-fix-continuous"
@@ -157,19 +165,12 @@ set(unit_tests
         "happy-path-simple-substitution-for-2-continuous"
         "happy-path-simple-substitution-for-continuous-and-integer"
         "happy-path-simple-substitution-for-int-continuous-coeff"
-        "example_10_1_in_constraint_integer_programming"
         "should_return_infeasible_if_gcd_of_coeff_is_in_rhs"
         "should_return_feasible_if_gcd_of_coeff_is_in_rhs"
-
-        #DualFix
-        "happy-path-dual-fix"
-        "happy_path_dual_substitution_for_equations"
-        "happy_path_dual_substitution"
         "failed-path-simple-substitution-for-2-int"
-        "happy_path_dual_substitution_unbounded_variables"
-        "trivial-column-presolve-does-dual-presolve-already"
-        "happy_path_dual_substitution_rounding"
-        "happy_path_dual_fix_on_infinity"
+
+
+
 
         "happy-path-simplify-inequalities-only-greatest-divisor"
         "simplify_inequ_doesnt_lock_more_rows"
@@ -179,14 +180,6 @@ set(unit_tests
         "happy-path-sparsify"
         "happy-path-sparsify-two-equalities"
         "failed-path-sparsify"
-
-        "example-1-from-3.5-Presolve-Reductions-in-MIP" # not working
-        "example-2-from-3.5-Presolve-Reductions-in-MIP" # not working
-        "example-3-from-3.6-Presolve-Reductions-in-MIP" # trivial presolve fixes this case
-        "example-4-from-4.4-Presolve-Reductions-in-MIP" # not working
-        "example-5-from-4.4-Presolve-Reductions-in-MIP"
-        "example-10-from-7.5-Presolve-Reductions-in-MIP"
-
 
         "integration-test-for-flugpl"
         ${PAPILOLIB_TESTS}

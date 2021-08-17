@@ -298,11 +298,12 @@ DualFix<REAL>::perform_dual_fix_step(
       if( objective[i] >= 0 )
       {
          bool skip = false;
-         bool new_UB_init = false;
-         REAL new_UB;
+         bool new_ub_init = false;
+         REAL new_ub;
+         int best_row = -1;
 
          // go through all rows with non-zero entry
-         for( int j = 0; j != collen; ++j )
+         for( int j = 0; j < collen; ++j )
          {
             int row = rowinds[j];
             // candidate for new upper bound
@@ -348,16 +349,17 @@ DualFix<REAL>::perform_dual_fix_step(
             if( cflags[i].test( ColFlag::kIntegral ) )
                cand_bound = num.epsCeil( cand_bound );
 
-            if( !new_UB_init || cand_bound > new_UB )
+            if( !new_ub_init || cand_bound > new_ub )
             {
-               new_UB = cand_bound;
-               new_UB_init = true;
+               new_ub = cand_bound;
+               new_ub_init = true;
+               best_row = row;
 
                // check if bound is already equal or worse than current bound
                // and abort in that case
                if( ( !cflags[i].test( ColFlag::kUbInf ) &&
-                     num.isGE( new_UB, ubs[i] ) ) ||
-                   new_UB >= num.getHugeVal() )
+                     num.isGE( new_ub, ubs[i] ) ) ||
+                   new_ub >= num.getHugeVal() )
                {
                   skip = true;
                   break;
@@ -366,25 +368,26 @@ DualFix<REAL>::perform_dual_fix_step(
          }
 
          // set new upper bound
-         if( !skip && new_UB_init && !num.isHugeVal( new_UB ) )
+         if( !skip && new_ub_init && !num.isHugeVal( new_ub ) )
          {
-            assert( cflags[i].test( ColFlag::kUbInf ) || new_UB < ubs[i] );
+            assert( cflags[i].test( ColFlag::kUbInf ) || new_ub < ubs[i] );
 
             // cannot detect infeasibility with this method, so at most
             // tighten the bound to the lower bound
             if( !cflags[i].test( ColFlag::kLbInf ) )
-               new_UB = num.max( lbs[i], new_UB );
+               new_ub = num.max( lbs[i], new_ub );
 
             // A transaction is only needed to group several reductions that
             // belong together
 
             TransactionGuard<REAL> guard{ reductions };
 
+            assert(best_row >= 0);
             reductions.lockCol( i );
             reductions.lockColBounds( i );
-            reductions.changeColUB( i, new_UB );
+            reductions.changeColUB( i, new_ub, best_row );
             Message::debug( this, "tightened upper bound of col {} to {}\n", i,
-                            double( new_UB ) );
+                            double( new_ub ) );
 
             return PresolveStatus::kReduced;
 
@@ -403,8 +406,9 @@ DualFix<REAL>::perform_dual_fix_step(
       if( objective[i] <= 0 )
       {
          bool skip = false;
-         bool new_LB_init = false;
-         REAL new_LB;
+         bool new_lb_init = false;
+         REAL new_lb;
+         int best_row = -1;
 
          // go through all rows with non-zero entry
          for( int j = 0; j != collen; ++j )
@@ -444,7 +448,7 @@ DualFix<REAL>::perform_dual_fix_step(
                   continue;
             }
 
-            if( skip == true )
+            if( skip )
                break;
 
             // Only if variable is less than or equal to new_LB, all rows in
@@ -452,16 +456,17 @@ DualFix<REAL>::perform_dual_fix_step(
             if( cflags[i].test( ColFlag::kIntegral ) )
                cand_bound = num.epsFloor( cand_bound );
 
-            if( !new_LB_init || cand_bound < new_LB )
+            if( !new_lb_init || cand_bound < new_lb )
             {
-               new_LB = cand_bound;
-               new_LB_init = true;
+               new_lb = cand_bound;
+               new_lb_init = true;
+               best_row = row;
 
                // check if bound is already equal or worse than current bound
                // and abort in that case
                if( ( !cflags[i].test( ColFlag::kLbInf ) &&
-                     num.isLE( new_LB, lbs[i] ) ) ||
-                   new_LB <= -num.getHugeVal() )
+                     num.isLE( new_lb, lbs[i] ) ) ||
+                   new_lb <= -num.getHugeVal() )
                {
                   skip = true;
                   break;
@@ -470,14 +475,14 @@ DualFix<REAL>::perform_dual_fix_step(
          }
 
          // set new lower bound
-         if( !skip && new_LB_init && !num.isHugeVal( new_LB ) )
+         if( !skip && new_lb_init && !num.isHugeVal( new_lb ) )
          {
-            assert( cflags[i].test( ColFlag::kLbInf ) || new_LB > lbs[i] );
+            assert( cflags[i].test( ColFlag::kLbInf ) || new_lb > lbs[i] );
 
             // cannot detect infeasibility with this method, so at most
             // tighten the bound to the upper bound
             if( !cflags[i].test( ColFlag::kUbInf ) )
-               new_LB = num.min( ubs[i], new_LB );
+               new_lb = num.min( ubs[i], new_lb );
 
             // A transaction is only needed to group several reductions that
             // belong together
@@ -486,10 +491,10 @@ DualFix<REAL>::perform_dual_fix_step(
 
             reductions.lockCol( i );
             reductions.lockColBounds( i );
-            reductions.changeColLB( i, new_LB );
+            reductions.changeColLB( i, new_lb, best_row );
 
             Message::debug( this, "tightened lower bound of col {} to {}\n", i,
-                            double( new_LB ) );
+                            double( new_lb ) );
 
             return PresolveStatus::kReduced;
          }

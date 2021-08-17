@@ -693,7 +693,7 @@ Postsolve<REAL>::apply_var_bound_change_forced_by_column_in_original_solution(
       int next_but_one_type = i - 2;
       int saved_row = start[next_type];
 
-      // TODO:
+      // TODO: this fails for dualfix for the instance finnis
 
       if( types[next_type] == ReductionType::kSaveRow )
          saved_row = start[next_type];
