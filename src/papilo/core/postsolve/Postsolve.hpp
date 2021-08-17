@@ -703,18 +703,17 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
          assert( col1onBounds or col2onBounds );
 
          if( originalSolution.type == SolutionType::kPrimalDual ) {
-//            assert( col1val == col1ub or col1val == col1lb or
-//                    col2val == col2lb or col2val == col2ub );
             if( col1onBounds and col2onBounds )
             {
                if( not num.isZero( originalSolution.reducedCosts[col2] ) )
                {
+                  assert(num.isZero( originalSolution.reducedCosts[col1] ));
                   originalSolution.reducedCosts[col1] =
                       originalSolution.reducedCosts[col2] * col2scale;
                }
                else
                {
-                  assert(not num.isZero( originalSolution.reducedCosts[col1] ));
+                  assert(num.isZero( originalSolution.reducedCosts[col2] ));
                   originalSolution.reducedCosts[col2] =
                       originalSolution.reducedCosts[col1] / col2scale;
                }
