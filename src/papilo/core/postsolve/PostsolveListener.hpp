@@ -277,6 +277,86 @@ extern template class PostsolveListener<Rational>;
 
 template <typename REAL>
 void
+PostsolveListener<REAL>::push_back_row( int row,
+                                        const Problem<REAL>& currentProblem )
+{
+   const auto& coefficients =
+       currentProblem.getConstraintMatrix().getRowCoefficients( row );
+   REAL lhs = currentProblem.getConstraintMatrix().getLeftHandSides()[row];
+   REAL rhs = currentProblem.getConstraintMatrix().getRightHandSides()[row];
+   const auto& flags = currentProblem.getConstraintMatrix().getRowFlags()[row];
+
+   const REAL* coefs = coefficients.getValues();
+   const int* columns = coefficients.getIndices();
+   const int length = coefficients.getLength();
+
+   indices.push_back( origrow_mapping[row] );
+   values.push_back( (double)length );
+
+   // LB
+   if( flags.test( RowFlag::kLhsInf ) )
+      indices.push_back( 1 );
+   else
+      indices.push_back( 0 );
+   values.push_back( lhs );
+
+   // UB
+   if( flags.test( RowFlag::kRhsInf ) )
+      indices.push_back( 1 );
+   else
+      indices.push_back( 0 );
+   values.push_back( rhs );
+
+   for( int i = 0; i < length; ++i )
+   {
+      indices.push_back( origcol_mapping[columns[i]] );
+      values.push_back( coefs[i] );
+   }
+}
+
+template <typename REAL>
+void
+PostsolveListener<REAL>::push_back_col( int col,
+                                        const Problem<REAL>& currentProblem )
+{
+   const auto& coefficients =
+       currentProblem.getConstraintMatrix().getColumnCoefficients( col );
+   ColFlags flags = currentProblem.getColFlags()[col];
+   REAL obj = currentProblem.getObjective().coefficients[col];
+
+   const REAL* coefs = coefficients.getValues();
+   const int* row_indices = coefficients.getIndices();
+   const int length = coefficients.getLength();
+
+   indices.push_back( origcol_mapping[col] );
+   values.push_back( (double)length );
+
+   indices.push_back( 0 );
+   values.push_back( obj );
+
+   // LB
+   if( flags.test( ColFlag::kUbInf ) )
+      indices.push_back( 1 );
+   else
+      indices.push_back( 0 );
+   values.push_back( currentProblem.getUpperBounds()[col] );
+
+   // UB
+   if( flags.test( ColFlag::kLbInf ) )
+      indices.push_back( 1 );
+   else
+      indices.push_back( 0 );
+   values.push_back( currentProblem.getLowerBounds()[col] );
+
+   for( int i = 0; i < length; ++i )
+   {
+      indices.push_back( origrow_mapping[row_indices[i]] );
+      values.push_back( coefs[i] );
+   }
+}
+
+template <typename REAL>
+void
 PostsolveListener<REAL>::notifyRedundantRow( int row )
 {
    if( postsolveType == PostsolveType::kPrimal )
@@ -306,21 +386,6 @@ PostsolveListener<REAL>::notifyRedundantRow( int row )
    finishNotify();
 }
 
-template <typename REAL>
-void
-PostsolveListener<REAL>::notifyDeletedCol( int col )
-{
-   if( postsolveType == PostsolveType::kPrimal )
-      return;
-   // TODO I think we do not need notifyDeletedCol. A column is deleted when it
-   // is fixed or substituted or a parallel column. But all those have their own
-   // postsolve notify function that must handle all necessary information.
-   types.push_back( ReductionType::kDeletedCol );
-   indices.push_back( col );
-   values.push_back( 0 );
-
-   finishNotify();
-}
 
 template <typename REAL>
 void
@@ -349,39 +414,6 @@ PostsolveListener<REAL>::notifyVarBoundChange( bool isLowerBound,
 
    indices.push_back( isInfinity );
    values.push_back( oldBound );
-
-   finishNotify();
-}
-
-template <typename REAL>
-void
-PostsolveListener<REAL>::notifyVarBoundChangeForcedByRow(
-    bool isLowerBound, int col, REAL oldBound, bool isInfinity, REAL newBound,
-    int row, const SparseVectorView<REAL>& coefficients )
-{
-   if( postsolveType == PostsolveType::kPrimal )
-      return;
-   types.push_back( ReductionType::kVarBoundChangeForced );
-   if( isLowerBound )
-      indices.push_back( 1 );
-   else
-      indices.push_back( 0 );
-   values.push_back( 0 );
-
-   indices.push_back( origcol_mapping[col] );
-   values.push_back( newBound );
-
-   indices.push_back( isInfinity );
-   values.push_back( oldBound );
-
-   indices.push_back( row );
-   values.push_back( coefficients.getLength() );
-
-   for( int i = 0; i < coefficients.getLength(); ++i )
-   {
-      indices.push_back( origcol_mapping[coefficients.getIndices()[i]] );
-      values.push_back( coefficients.getValues()[i] );
-   }
 
    finishNotify();
 }
@@ -448,65 +480,6 @@ PostsolveListener<REAL>::notifyReasonForRowBoundChangeForcedByRow( int remained_
 
 template <typename REAL>
 void
-PostsolveListener<REAL>::notifyReducedBoundsAndCost(
-    const Vec<REAL>& col_lb, const Vec<REAL>& col_ub, const Vec<REAL>& row_lhs,
-    const Vec<REAL>& row_rhs, const Vec<REAL>& coefficients,
-    const Vec<RowFlags>& row_flags, const Vec<ColFlags>& col_flags )
-{
-   if( postsolveType == PostsolveType::kPrimal )
-      return;
-   // TODO for what is this notification required? Can you add comments?
-   // the postsolve stores the original problem. The notify functions are not
-   // for the checker, the checker must get around without notifies and is only
-   // informed about changes from within postsolve notify functions. As
-   // mentioned in the above comment, the checker can store a reference that
-   // always contains the current reduced problem
-
-   types.push_back( ReductionType::kReducedBoundsCost );
-
-   // would be better to only pass finite values, not all
-   // col bounds
-   for( int col = 0; col < col_lb.size(); col++ )
-   {
-      int flag_lb = 0;
-      int flag_ub = 0;
-      if( col_flags[col].test( ColFlag::kLbInf ) )
-         flag_lb |= static_cast<int>( ColFlag::kLbInf );
-      if( col_flags[col].test( ColFlag::kUbInf ) )
-         flag_ub |= static_cast<int>( ColFlag::kUbInf );
-      indices.push_back( flag_lb );
-      values.push_back( col_lb[col] );
-      indices.push_back( flag_ub );
-      values.push_back( col_ub[col] );
-   }
-
-   // row bounds
-   for( int row = 0; row < row_lhs.size(); row++ )
-   {
-      int flag_lb = 0;
-      int flag_ub = 0;
-      if( row_flags[row].test( RowFlag::kLhsInf ) )
-         flag_lb |= static_cast<int>( RowFlag::kLhsInf );
-      if( row_flags[row].test( RowFlag::kRhsInf ) )
-         flag_ub |= static_cast<int>( RowFlag::kRhsInf );
-      indices.push_back( flag_lb );
-      values.push_back( row_lhs[row] );
-      indices.push_back( flag_ub );
-      values.push_back( row_rhs[row] );
-   }
-
-   // col coefficients
-   for( int col = 0; col < coefficients.size(); col++ )
-   {
-      indices.push_back( col );
-      values.push_back( coefficients[col] );
-   }
-
-   finishNotify();
-}
-
-template <typename REAL>
-void
 PostsolveListener<REAL>::notifyFixedCol( int col, REAL val,
                                  const SparseVectorView<REAL>& colvec,
                                  const Vec<REAL>& cost )
@@ -533,6 +506,29 @@ PostsolveListener<REAL>::notifyFixedCol( int col, REAL val,
 
    finishNotify();
 }
+
+template <typename REAL>
+void
+PostsolveListener<REAL>::notifyFixedInfCol( int col, REAL val, REAL bound,
+                                            const Problem<REAL>& currentProblem )
+                                            {
+   types.push_back( ReductionType::kFixedInfCol );
+   indices.push_back( origcol_mapping[col] );
+   values.push_back( val );
+
+
+   const auto& coefficients =
+       currentProblem.getConstraintMatrix().getColumnCoefficients( col );
+   const int* row_indices = coefficients.getIndices();
+
+   indices.push_back( coefficients.getLength() );
+   values.push_back( bound );
+
+   for( int i = 0; i < coefficients.getLength(); i++ )
+      push_back_row( row_indices[i], currentProblem );
+
+   finishNotify();
+                                            }
 
 /**
  * If a singleton row is deleted aka converted to an lower or upper bound,
@@ -647,106 +643,8 @@ PostsolveListener<REAL>::notifyDualValue( bool is_column_dual, int index, REAL v
     finishNotify();
  }
 
-template <typename REAL>
-void
-PostsolveListener<REAL>::push_back_row( int row, const Problem<REAL>& currentProblem )
-{
-   const auto& coefficients =
-       currentProblem.getConstraintMatrix().getRowCoefficients( row );
-   REAL lhs = currentProblem.getConstraintMatrix().getLeftHandSides()[row];
-   REAL rhs = currentProblem.getConstraintMatrix().getRightHandSides()[row];
-   const auto& flags = currentProblem.getConstraintMatrix().getRowFlags()[row];
-
-   const REAL* coefs = coefficients.getValues();
-   const int* columns = coefficients.getIndices();
-   const int length = coefficients.getLength();
-
-   indices.push_back( origrow_mapping[row] );
-   values.push_back( (double)length );
-
-   // LB
-   if( flags.test( RowFlag::kLhsInf ) )
-      indices.push_back( 1 );
-   else
-      indices.push_back( 0 );
-   values.push_back( lhs );
-
-   // UB
-   if( flags.test( RowFlag::kRhsInf ) )
-      indices.push_back( 1 );
-   else
-      indices.push_back( 0 );
-   values.push_back( rhs );
-
-   for( int i = 0; i < length; ++i )
-   {
-      indices.push_back( origcol_mapping[columns[i]] );
-      values.push_back( coefs[i] );
-   }
-}
-
-template <typename REAL>
-void
-PostsolveListener<REAL>::push_back_col( int col, const Problem<REAL>& currentProblem )
-{
-   const auto& coefficients =
-       currentProblem.getConstraintMatrix().getColumnCoefficients( col );
-   ColFlags flags = currentProblem.getColFlags()[col];
-   REAL obj = currentProblem.getObjective().coefficients[col];
-
-   const REAL* coefs = coefficients.getValues();
-   const int* row_indices = coefficients.getIndices();
-   const int length = coefficients.getLength();
-
-   indices.push_back( origcol_mapping[col] );
-   values.push_back( (double)length );
-
-   indices.push_back( 0 );
-   values.push_back( obj );
-
-   // LB
-   if( flags.test( ColFlag::kUbInf ) )
-      indices.push_back( 1 );
-   else
-      indices.push_back( 0 );
-   values.push_back( currentProblem.getUpperBounds()[col] );
-
-   // UB
-   if( flags.test( ColFlag::kLbInf ) )
-      indices.push_back( 1 );
-   else
-      indices.push_back( 0 );
-   values.push_back( currentProblem.getLowerBounds()[col] );
-
-   for( int i = 0; i < length; ++i )
-   {
-      indices.push_back( origrow_mapping[row_indices[i]] );
-      values.push_back( coefs[i] );
-   }
-}
-
-template <typename REAL>
-void
-PostsolveListener<REAL>::notifyFixedInfCol( int col, REAL val, REAL bound,
-                                    const Problem<REAL>& currentProblem )
-{
-   types.push_back( ReductionType::kFixedInfCol );
-   indices.push_back( origcol_mapping[col] );
-   values.push_back( val );
 
 
-   const auto& coefficients =
-       currentProblem.getConstraintMatrix().getColumnCoefficients( col );
-   const int* row_indices = coefficients.getIndices();
-
-   indices.push_back( coefficients.getLength() );
-   values.push_back( bound );
-
-   for( int i = 0; i < coefficients.getLength(); i++ )
-      push_back_row( row_indices[i], currentProblem );
-
-   finishNotify();
-}
 
 template <typename REAL>
 void
@@ -844,7 +742,64 @@ PostsolveListener<REAL>::notifyParallelCols( int col1, bool col1integral,
    finishNotify();
 }
 
+template <typename REAL>
+void
+PostsolveListener<REAL>::notifyReducedBoundsAndCost(
+    const Vec<REAL>& col_lb, const Vec<REAL>& col_ub, const Vec<REAL>& row_lhs,
+    const Vec<REAL>& row_rhs, const Vec<REAL>& coefficients,
+    const Vec<RowFlags>& row_flags, const Vec<ColFlags>& col_flags )
+    {
+   if( postsolveType == PostsolveType::kPrimal )
+      return;
+   // TODO for what is this notification required? Can you add comments?
+   // the postsolve stores the original problem. The notify functions are not
+   // for the checker, the checker must get around without notifies and is only
+   // informed about changes from within postsolve notify functions. As
+   // mentioned in the above comment, the checker can store a reference that
+   // always contains the current reduced problem
 
+   types.push_back( ReductionType::kReducedBoundsCost );
+
+   // would be better to only pass finite values, not all
+   // col bounds
+   for( int col = 0; col < col_lb.size(); col++ )
+   {
+      int flag_lb = 0;
+      int flag_ub = 0;
+      if( col_flags[col].test( ColFlag::kLbInf ) )
+         flag_lb |= static_cast<int>( ColFlag::kLbInf );
+      if( col_flags[col].test( ColFlag::kUbInf ) )
+         flag_ub |= static_cast<int>( ColFlag::kUbInf );
+      indices.push_back( flag_lb );
+      values.push_back( col_lb[col] );
+      indices.push_back( flag_ub );
+      values.push_back( col_ub[col] );
+   }
+
+   // row bounds
+   for( int row = 0; row < row_lhs.size(); row++ )
+   {
+      int flag_lb = 0;
+      int flag_ub = 0;
+      if( row_flags[row].test( RowFlag::kLhsInf ) )
+         flag_lb |= static_cast<int>( RowFlag::kLhsInf );
+      if( row_flags[row].test( RowFlag::kRhsInf ) )
+         flag_ub |= static_cast<int>( RowFlag::kRhsInf );
+      indices.push_back( flag_lb );
+      values.push_back( row_lhs[row] );
+      indices.push_back( flag_ub );
+      values.push_back( row_rhs[row] );
+   }
+
+   // col coefficients
+   for( int col = 0; col < coefficients.size(); col++ )
+   {
+      indices.push_back( col );
+      values.push_back( coefficients[col] );
+   }
+
+   finishNotify();
+    }
 
 
 } // namespace papilo

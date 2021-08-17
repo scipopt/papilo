@@ -30,25 +30,22 @@ enum class ReductionType : int
 {
    kFixedCol = 0,
    kFixedInfCol = 5,
-   kSubstitutedCol = 2,
-   kSubstitutedColNoDual = 15,
-   kVarBoundChange = 3,
-   kVarBoundChangeForced = 4,
    kParallelCol = 1,
-   kDeletedCol = 6,
+   kSubstitutedCol = 2,
+   kSubstitutedColNoDual = 3,
+   kVarBoundChange = 4,
 
-   kSingletonRow = 7,
-   kRedundantRow = 8,
-   kRowBoundChange = 9,
-   kReasonForRowBoundChangeForcedByRow = 10,
-   kRowBoundChangeForcedByRow = 11,
+   kSingletonRow = 6,
+   kRedundantRow = 7,
+   kRowBoundChange = 8,
+   kReasonForRowBoundChangeForcedByRow = 9,
+   kRowBoundChangeForcedByRow = 10,
 
-   kSaveCol = 12,
-   kSaveRow = 13,
+   kSaveRow = 11,
 
-   kReducedBoundsCost = 14,
-   kColumnDualValue = 16,
-   kRowDualValue = 17,
+   kReducedBoundsCost = 12,
+   kColumnDualValue = 13,
+   kRowDualValue = 14,
 };
 
 #endif
