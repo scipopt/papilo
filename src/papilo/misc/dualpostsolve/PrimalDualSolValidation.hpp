@@ -282,7 +282,7 @@ class PrimalDualSolValidation
          }
          else if( not isUbInf )
          {
-            assert( isUbInf );
+            assert( isLbInf );
             if( num.isLT( sol, upperBound ) and not num.isZero( reducedCost ) )
                return true;
          }
@@ -373,7 +373,7 @@ class PrimalDualSolValidation
 
       }
 
-      message.info( "Solution passed validation\n" );
+      message.info( "postsolved Solution passed validation\n" );
       return PostsolveStatus::kOk;
    }
 };

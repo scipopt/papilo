@@ -267,11 +267,11 @@ if (TARGET papilo-executable)
     set(infeas_LP
             "LP/bgetam.mps"
             "LP/box1.mps"
-            "LP/ex72a.mps"
-            "LP/forest6.mps"
+#            "LP/ex72a.mps"
+#            "LP/forest6.mps"
             "LP/galenet.mps"
             "LP/gams10am.mps"
-            "LP/klein1.mps"
+#            "LP/klein1.mps"
             "LP/refinery.mps"
             "LP/woodinfe.mps"
             )

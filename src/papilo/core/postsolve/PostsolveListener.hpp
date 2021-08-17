@@ -735,12 +735,14 @@ PostsolveListener<REAL>::notifyFixedInfCol( int col, REAL val, REAL bound,
    types.push_back( ReductionType::kFixedInfCol );
    indices.push_back( origcol_mapping[col] );
    values.push_back( val );
-   indices.push_back( 0 );
-   values.push_back( bound );
+
 
    const auto& coefficients =
        currentProblem.getConstraintMatrix().getColumnCoefficients( col );
    const int* row_indices = coefficients.getIndices();
+
+   indices.push_back( coefficients.getLength() );
+   values.push_back( bound );
 
    for( int i = 0; i < coefficients.getLength(); i++ )
       push_back_row( row_indices[i], currentProblem );
