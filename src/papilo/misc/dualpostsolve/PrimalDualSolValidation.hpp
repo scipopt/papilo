@@ -373,7 +373,7 @@ class PrimalDualSolValidation
 
       }
 
-      message.info( "postsolved Solution passed validation\n" );
+      message.info( "Solution passed validation\n" );
       return PostsolveStatus::kOk;
    }
 };
