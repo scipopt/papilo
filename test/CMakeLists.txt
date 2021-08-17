@@ -281,7 +281,6 @@ if (TARGET papilo-executable)
 #            "r"
             )
 
-
     # add a test to build the SCIP binary that all further tests depend on
     add_test(NAME papilo-build
             COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target papilo-executable
@@ -302,12 +301,12 @@ if (TARGET papilo-executable)
     endmacro(split_instance)
 
     ##solving these instances returns the defined optimal value for every numtype
-    macro(add_instancetests instances numtypes)
+    macro(add_instancetests instances numtypes settings)
         foreach (instance ${${instances}})
             split_instance(instance)
             file(TO_NATIVE_PATH "${PROJECT_SOURCE_DIR}/check/instances/${path}" instance_file)
             #TODO: configure settingsfile
-            file(TO_NATIVE_PATH "${PROJECT_SOURCE_DIR}/settings/default.set" settings_file)
+            file(TO_NATIVE_PATH "${PROJECT_SOURCE_DIR}/settings/${settings}" settings_file)
             foreach (numtype ${${numtypes}})
                 add_test(NAME ${numtype}-solve-${basename}
                         COMMAND $<TARGET_FILE:papilo-executable> solve -a ${numtype} -f ${instance_file} -o ${optval} -p ${settings_file}
@@ -340,11 +339,11 @@ if (TARGET papilo-executable)
 
 
     if(PAPILO_HAVE_SCIP)
-        add_instancetests(instances_MIP numtypes)
+        add_instancetests(instances_MIP numtypes "default.set")
 #        add_infeasible_instancetests(infeas numtypes)
     endif()
     if(PAPILO_HAVE_SOPLEX)
-        add_instancetests(instances_LP numtypes)
+        add_instancetests(instances_LP numtypes "presolvers_dual_postsolve.set")
         add_infeasible_instancetests(infeas_LP numtypes)
     endif()
 endif ()
