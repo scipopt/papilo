@@ -617,7 +617,7 @@ update_activity_after_coeffchange( REAL collb, REAL colub, ColFlags cflags,
 }
 
 /// propagate domains of variables using the given a row and its activity. The
-/// last argument must be callable with arguments (BoundChange, colid, newbound)
+/// last argument must be callable with arguments (BoundChange, colid, newbound, row)
 /// and is called to inform about column bounds that changed.
 template <typename REAL, typename BOUNDCHANGE>
 void
@@ -664,7 +664,7 @@ propagate_row( int row, const REAL* rowvals, const int* colindices, int rowlen,
 
             REAL newlb = ( rhs - minresact ) / val;
             if( domainFlags[col].test( ColFlag::kLbInf ) || newlb > lb )
-               boundchange( BoundChange::kLower, col, newlb );
+               boundchange( BoundChange::kLower, col, newlb, row );
          }
          else
          {
@@ -683,7 +683,7 @@ propagate_row( int row, const REAL* rowvals, const int* colindices, int rowlen,
 
             REAL newub = ( rhs - minresact ) / val;
             if( domainFlags[col].test( ColFlag::kUbInf ) || newub < ub )
-               boundchange( BoundChange::kUpper, col, newub );
+               boundchange( BoundChange::kUpper, col, newub, row );
          }
       }
    }
@@ -724,7 +724,7 @@ propagate_row( int row, const REAL* rowvals, const int* colindices, int rowlen,
 
             REAL newub = ( lhs - maxresact ) / val;
             if( domainFlags[col].test( ColFlag::kUbInf ) || newub < ub )
-               boundchange( BoundChange::kUpper, col, newub );
+               boundchange( BoundChange::kUpper, col, newub, row );
          }
          else
          {
@@ -743,7 +743,7 @@ propagate_row( int row, const REAL* rowvals, const int* colindices, int rowlen,
 
             REAL newlb = ( lhs - maxresact ) / val;
             if( domainFlags[col].test( ColFlag::kLbInf ) || newlb > lb )
-               boundchange( BoundChange::kLower, col, newlb );
+               boundchange( BoundChange::kLower, col, newlb, row );
          }
       }
    }

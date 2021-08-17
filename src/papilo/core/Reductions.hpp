@@ -189,19 +189,19 @@ class Reductions
    }
 
    void
-   changeColLB( int col, REAL newval, int row = -1 )
+   changeColLB( int col, REAL new_val, int forcing_row = -1 )
    {
-      if(row > -1)
-         reductions.emplace_back(0, 0, RowReduction::SAVE_ROW);
-      reductions.emplace_back( newval, ColReduction::LOWER_BOUND, col );
+      if(forcing_row > -1)
+         reductions.emplace_back(0, forcing_row, RowReduction::SAVE_ROW);
+      reductions.emplace_back( new_val, ColReduction::LOWER_BOUND, col );
    }
 
    void
-   changeColUB( int col, REAL newval, int forcing_row = -1 )
+   changeColUB( int col, REAL new_val, int forcing_row = -1 )
    {
       if( forcing_row > -1)
          reductions.emplace_back(0, forcing_row, RowReduction::SAVE_ROW);
-      reductions.emplace_back( newval, ColReduction::UPPER_BOUND, col );
+      reductions.emplace_back( new_val, ColReduction::UPPER_BOUND, col );
    }
 
    void
