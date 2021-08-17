@@ -517,18 +517,16 @@ PostsolveListener<REAL>::notifyFixedCol( int col, REAL val,
 
    if( postsolveType == PostsolveType::kFull )
    {
-      // TODO this should probably use the saveCol mechanism if the column
-      // values are needed
       const int length = colvec.getLength();
       indices.push_back( length );
-      values.push_back( cost[origcol_mapping[col]] );
+      values.push_back( cost[col] );
 
       const REAL* vals = colvec.getValues();
       const int* inds = colvec.getIndices();
 
       for( int j = 0; j < length; j++ )
       {
-         indices.push_back( inds[j] );
+         indices.push_back( origrow_mapping[inds[j]] );
          values.push_back( vals[j] );
       }
    }

@@ -104,18 +104,13 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
    Vec<REAL>& origSol = originalSolution.primal;
 
    if( reducedSolution.type == SolutionType::kPrimalDual )
-   {
       originalSolution.type = SolutionType::kPrimalDual;
-   }
 
    origSol.clear();
    origSol.resize( postsolveListener.nColsOriginal );
 
    for( int k = 0; k < reducedSol.size(); ++k )
-   {
-      int origcol = postsolveListener.origcol_mapping[k];
-      origSol[origcol] = reducedSol[k];
-   }
+      origSol[postsolveListener.origcol_mapping[k]] = reducedSol[k];
 
    if( originalSolution.type == SolutionType::kPrimalDual )
    {
@@ -124,35 +119,16 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
       originalSolution.reducedCosts.clear();
       originalSolution.reducedCosts.resize( postsolveListener.nColsOriginal );
       for( int k = 0; k < postsolveListener.origcol_mapping.size(); k++ )
-      {
-         int origcol = postsolveListener.origcol_mapping[k];
-         originalSolution.reducedCosts[origcol] =
+         originalSolution.reducedCosts[postsolveListener.origcol_mapping[k]] =
              reducedSolution.reducedCosts[k];
-      }
 
       assert( reducedSolution.dual.size() ==
               postsolveListener.origrow_mapping.size() );
       originalSolution.dual.clear();
       originalSolution.dual.resize( postsolveListener.nRowsOriginal );
       for( int k = 0; k < postsolveListener.origrow_mapping.size(); k++ )
-      {
-         int origrow = postsolveListener.origrow_mapping[k];
-         originalSolution.dual[origrow] = reducedSolution.dual[k];
-      }
-   }
-
-   // If problem has been reduced, check solution of reduced problem returned by
-   // solver.
-   // At the moment not all row and column changes are notified. The check
-   // below handles the case when some trivial presolve elimination is applied,
-   // but types.size() is still zero.
-   if( postsolveListener.origrow_mapping.size() <
-           postsolveListener.nRowsOriginal ||
-       postsolveListener.origcol_mapping.size() <
-           postsolveListener.nColsOriginal )
-   {
-      // TODO: verify solution
-      //      verifySolution(reducedSolution, r)
+         originalSolution.dual[postsolveListener.origrow_mapping[k]] =
+             reducedSolution.dual[k];
    }
 
    // Will be used during dual postsolve for fast access to bound values.
@@ -310,7 +286,8 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
 
             int col_length = indices[first + 1];
 
-            REAL reducedCosts = objective_coefficient;
+            StableSum<REAL> stablesum;
+            stablesum.add(objective_coefficient);
             // no need to check for solSetRow because if it is zero then the
             // dual reducedCosts is zero.
             for( int k = 0; k < col_length; ++k )
@@ -318,7 +295,7 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
                int index = first + 2 + k;
                int row = indices[index];
                REAL coeff = values[index];
-               reducedCosts -= coeff * originalSolution.dual[row];
+               stablesum.add(- coeff * originalSolution.dual[row]);
 
                if( row_infinity_rhs[row] == false )
                   row_rhs[row] += coeff * origSol[col];
@@ -326,7 +303,7 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
                   row_lhs[row] += coeff * origSol[col];
             }
 
-            originalSolution.reducedCosts[col] = reducedCosts;
+            originalSolution.reducedCosts[col] = stablesum.get();
          }
          break;
       }
