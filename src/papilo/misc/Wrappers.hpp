@@ -332,8 +332,8 @@ postsolve( PostsolveListener<REAL>& postsolveListener, const Solution<REAL>& red
 
    auto t0 = tbb::tick_count::now();
    const Message msg{};
-   Postsolve<REAL> postsolve1{ msg, postsolveListener.getNum() };
-   postsolve1.undo( reduced_sol, original_sol, postsolveListener );
+   Postsolve<REAL> postsolve{ msg, postsolveListener.getNum() };
+   PostsolveStatus status = postsolve.undo( reduced_sol, original_sol, postsolveListener );
    auto t1 = tbb::tick_count::now();
 
    fmt::print( "\npostsolve finished after {:.3f} seconds\n",
@@ -357,19 +357,19 @@ postsolve( PostsolveListener<REAL>& postsolveListener, const Solution<REAL>& red
 
    if( !solution_output.empty() )
    {
-      auto t0 = tbb::tick_count::now();
+      auto t2 = tbb::tick_count::now();
       SolWriter<REAL>::writeSol( solution_output, original_sol.primal,
                                  origprob.getObjective().coefficients, origobj,
                                  origprob.getVariableNames() );
-      auto t1 = tbb::tick_count::now();
+      auto t3 = tbb::tick_count::now();
 
       fmt::print( "solution written to file {} in {:.3} seconds\n",
-                  solution_output, ( t1 - t0 ).seconds() );
+                  solution_output, ( t3 - t2 ).seconds() );
    }
 
    if( !objective_reference.empty() )
    {
-      if( origfeas &&
+      if( origfeas and status == PostsolveStatus::kOk and
           postsolveListener.num.isFeasEq(
               boost::lexical_cast<double>( objective_reference ), origobj ) )
          fmt::print( "validation: SUCCESS\n" );
