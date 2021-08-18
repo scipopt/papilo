@@ -130,17 +130,10 @@ class PostsolveListener
    void
    notifyRedundantRow( int row );
 
-   void
-   notifyDeletedCol( int col );
 
    void
    notifyVarBoundChange( bool isLowerBound, int col, REAL oldBound,
                          bool isInfinity, REAL newBound );
-
-   void
-   notifyVarBoundChangeForcedByRow(
-       bool isLowerBound, int col, REAL oldBound, bool isInfinity,
-       REAL newBound, int row, const SparseVectorView<REAL>& coefficients );
 
    void
    notifyRowBoundChange( bool isLhs, int row, REAL newBound, bool isInfinity );
@@ -158,12 +151,13 @@ class PostsolveListener
                                const Vec<RowFlags>& row_flags,
                                const Vec<ColFlags>& col_flags );
 
-   // todo: modify with colvec and col cost so if dual postsolve
-   // col values are added so we can get dual value
    void
    notifyFixedCol( int col, REAL val,
                    const SparseVectorView<REAL>& colvec,
                    const Vec<REAL>& cost );
+
+   void
+   notifyCoefficientChange(int row, int col, REAL new_value);
 
    void
    notifySingletonRow(  int row,  int col,
@@ -509,13 +503,12 @@ PostsolveListener<REAL>::notifyFixedCol( int col, REAL val,
 
 template <typename REAL>
 void
-PostsolveListener<REAL>::notifyFixedInfCol( int col, REAL val, REAL bound,
-                                            const Problem<REAL>& currentProblem )
-                                            {
+PostsolveListener<REAL>::notifyFixedInfCol(
+    int col, REAL val, REAL bound, const Problem<REAL>& currentProblem )
+{
    types.push_back( ReductionType::kFixedInfCol );
    indices.push_back( origcol_mapping[col] );
    values.push_back( val );
-
 
    const auto& coefficients =
        currentProblem.getConstraintMatrix().getColumnCoefficients( col );
@@ -528,7 +521,21 @@ PostsolveListener<REAL>::notifyFixedInfCol( int col, REAL val, REAL bound,
       push_back_row( row_indices[i], currentProblem );
 
    finishNotify();
-                                            }
+}
+
+template <typename REAL>
+void
+PostsolveListener<REAL>::notifyCoefficientChange( int row, int col,
+                                                  REAL new_value )
+{
+   types.push_back( ReductionType::kCoefficientChange );
+   indices.push_back( origrow_mapping[row] );
+   indices.push_back( origcol_mapping[col] );
+   values.push_back( new_value );
+   values.push_back( 0 );
+   finishNotify();
+
+}
 
 /**
  * If a singleton row is deleted aka converted to an lower or upper bound,

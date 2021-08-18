@@ -46,6 +46,7 @@ enum class ReductionType : int
    kReducedBoundsCost = 12,
    kColumnDualValue = 13,
    kRowDualValue = 14,
+   kCoefficientChange = 15,
 };
 
 #endif

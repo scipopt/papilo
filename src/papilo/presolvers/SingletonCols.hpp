@@ -182,14 +182,14 @@ SingletonCols<REAL>::execute( const Problem<REAL>& problem,
             {
                if( ubimplied )
                   reductions.changeRowLHSInf( row );
-               else if( upper_bounds[col] != 0 )
+               else if( not num.isZero(upper_bounds[col])  )
                   reductions.changeRowLHS( row,
                                            side - upper_bounds[col] * val );
 
                if( lowerboundImplied )
                   reductions.changeRowRHSInf( row );
 
-               else if( lower_bounds[col] != 0 )
+               else if( not num.isZero(lower_bounds[col]) )
                   reductions.changeRowRHS( row,
                                            side - lower_bounds[col] * val );
             }

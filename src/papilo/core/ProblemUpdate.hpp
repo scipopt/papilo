@@ -1889,6 +1889,8 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
          setRowState( reduction.row, State::kModified );
          setColState( reduction.col, State::kModified );
 
+         postsolve.notifyCoefficientChange(reduction.row, reduction.col,
+                                           reduction.newval);
          matrix_buffer.addEntry( reduction.row, reduction.col,
                                  reduction.newval );
       }
