@@ -144,6 +144,7 @@ class PrimalDualSolValidation
    checkDualFeasibility( const Vec<REAL>& primalSolution,
                          const Vec<REAL>& dualSolution,
                          const Vec<REAL>& reducedCosts,
+                         const Vec<VarBasisStatus>& basis,
                          const Problem<REAL>& problem )
    {
       const papilo::Vec<REAL>& lowerBounds = problem.getLowerBounds();
@@ -169,7 +170,55 @@ class PrimalDualSolValidation
 
          if( not num.isEq( colValue + reducedCosts[variable],
                            problem.getObjective().coefficients[variable] ) )
+         {
+            message.info(
+                "Dual row {:<3} violates dual row bounds ({:<3} != {:<3}).\n",
+                variable, problem.getObjective().coefficients[variable],
+                colValue + reducedCosts[variable],
+                problem.getObjective().coefficients[variable] );
             return true;
+         }
+
+         bool ub_infinity =
+             problem.getColFlags()[variable].test( ColFlag::kUbInf );
+         bool lb_infinity =
+             problem.getColFlags()[variable].test( ColFlag::kLbInf );
+         REAL lb = problem.getLowerBounds()[variable];
+         REAL ub = problem.getUpperBounds()[variable];
+         REAL sol = primalSolution[variable];
+
+         assert( ub_infinity or lb_infinity or num.isFeasGE( ub, lb ) );
+         switch( basis[variable] )
+         {
+         case VarBasisStatus::FIXED:
+            if( ub_infinity or lb_infinity or not num.isEq( lb, ub ) or
+                not num.isEq( sol, ub ) )
+               return true;
+            break;
+         case VarBasisStatus::ON_LOWER:
+            if( lb_infinity or not num.isEq( sol, lb ) or
+                ( ub_infinity and num.isEq( sol, ub ) ) or
+                ( num.isZero( lb ) and ub_infinity ) )
+               return true;
+            break;
+         case VarBasisStatus::ON_UPPER:
+            if( ub_infinity or not num.isEq( sol, ub ) or
+                ( lb_infinity and num.isEq( sol, lb ) ) )
+               return true;
+            break;
+         case VarBasisStatus::ZERO:
+            if( lb_infinity or not num.isZero( sol ) or
+                not num.isZero( lb ) and not ub_infinity )
+               return true;
+            break;
+         case VarBasisStatus::BASIC:
+            if( ( not lb_infinity and num.isEq( sol, lb ) ) or
+                ( not ub_infinity and num.isEq( sol, ub ) ) )
+               return true;
+            break;
+         case VarBasisStatus::UNDEFINED:
+            return true;
+         }
       }
       return false;
    }
@@ -231,7 +280,7 @@ class PrimalDualSolValidation
                return true;
          }
          else if( ( not problem.getRowFlags()[row].test( RowFlag::kLhsInf ) ) &&
-             num.isGT( rowValue, lhs[row] ) )
+                  num.isGT( rowValue, lhs[row] ) )
          {
             assert( problem.getRowFlags()[row].test( RowFlag::kRhsInf ) );
             if( num.isLT( rhs[row], rowValue ) and
@@ -301,14 +350,15 @@ class PrimalDualSolValidation
       if( solution.type == SolutionType::kPrimalDual )
       {
          if( checkDualFeasibility( solution.primal, solution.dual,
-                                   solution.reducedCosts, problem ) )
+                                   solution.reducedCosts,
+                                   solution.varBasisStatus, problem ) )
          {
             message.info( "Dual feasibility check FAILED.\n" );
             failure = true;
          }
 
-         if( checkComplementarySlackness(
-             solution.primal, solution.dual, solution.reducedCosts, problem ) )
+         if( checkComplementarySlackness( solution.primal, solution.dual,
+                                          solution.reducedCosts, problem ) )
          {
             message.info( "Complementary slack check FAILED.\n" );
             failure = true;
@@ -318,9 +368,9 @@ class PrimalDualSolValidation
                                      solution.reducedCosts, problem ) )
          {
             message.info( "Objective function failed.\n" );
-//            failure = true;
+            //            failure = true;
          }
-         if(failure)
+         if( failure )
             return PostsolveStatus::kFailed;
       }
 

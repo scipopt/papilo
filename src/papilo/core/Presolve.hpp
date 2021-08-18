@@ -708,6 +708,7 @@ Presolve<REAL>::apply( Problem<REAL>& problem )
                   solution.type = SolutionType::kPrimalDual;
                   solution.reducedCosts.resize( problem.getNCols() );
                   solution.dual.resize( problem.getNRows() );
+                  solution.varBasisStatus.resize( problem.getNCols() );
                }
 
                tbb::parallel_for(

@@ -661,14 +661,37 @@ Postsolve<REAL>::apply_parallel_col_to_original_solution(
             originalSolution.reducedCosts[col2] =
                 originalSolution.reducedCosts[col1] / col2scale;
          }
+         if( num.isEq( col1val, col1ub ) )
+            originalSolution.varBasisStatus[col1] = VarBasisStatus::ON_UPPER;
+         else
+            originalSolution.varBasisStatus[col1] = VarBasisStatus::ON_LOWER;
+         if( num.isEq( col2val, col2ub ) )
+            originalSolution.varBasisStatus[col2] = VarBasisStatus::ON_UPPER;
+         else
+            originalSolution.varBasisStatus[col2] = VarBasisStatus::ON_LOWER;
       }
       else if( col1onBounds )
       {
+         originalSolution.varBasisStatus[col2] = VarBasisStatus::BASIC;
+         if( num.isEq( col1val, col1ub ) )
+            originalSolution.varBasisStatus[col1] = VarBasisStatus::ON_UPPER;
+         else if( num.isZero( col1lb ) and col1boundFlags & IS_UBINF )
+            originalSolution.varBasisStatus[col1] = VarBasisStatus::ZERO;
+         else
+            originalSolution.varBasisStatus[col1] = VarBasisStatus::ON_LOWER;
+
          // TODO:
          assert( not col2onBounds );
       }
       else if( col2onBounds )
       {
+         originalSolution.varBasisStatus[col1] = VarBasisStatus::BASIC;
+         if( num.isEq( col2val, col2ub ) )
+            originalSolution.varBasisStatus[col2] = VarBasisStatus::ON_UPPER;
+         else if( num.isZero( col1lb ) and col1boundFlags & IS_UBINF )
+            originalSolution.varBasisStatus[col2] = VarBasisStatus::ZERO;
+         else
+            originalSolution.varBasisStatus[col2] = VarBasisStatus::ON_LOWER;
          // TODO:
          assert( not col1onBounds );
       }
@@ -751,6 +774,15 @@ Postsolve<REAL>::apply_var_bound_change_forced_by_column_in_original_solution(
 
       originalSolution.reducedCosts[col] = 0;
    }
+
+   if(originalSolution.varBasisStatus[col] == VarBasisStatus::FIXED){
+      if( isLowerBound )
+         originalSolution.varBasisStatus[col] = VarBasisStatus::ON_UPPER;
+      else if( isInfinity and old_value == 0 )
+         originalSolution.varBasisStatus[col] = VarBasisStatus::ZERO;
+      else
+         originalSolution.varBasisStatus[col] = VarBasisStatus::ON_LOWER;
+   }
 }
 
 template <typename REAL>
@@ -788,6 +820,7 @@ Postsolve<REAL>::apply_fix_var_in_original_solution(
       }
 
       originalSolution.reducedCosts[col] = stablesum.get();
+      originalSolution.varBasisStatus[col] = VarBasisStatus::FIXED;
       //            // modify changes
       //            col_cost[col] = objective_coefficient;
       //            col_infinity_lower[col] = false;
@@ -877,6 +910,13 @@ Postsolve<REAL>::apply_fix_infinity_variable_in_original_solution(
          sum.add( -col_coefficents[k] * originalSolution.dual[row_indices[k]] );
 
       originalSolution.reducedCosts[col] = sum.get();
+      if( num.isEq( bound, originalSolution.primal[col] ) )
+         if( num.isZero( bound ) )
+            originalSolution.varBasisStatus[col] = VarBasisStatus::ZERO;
+         else
+            originalSolution.varBasisStatus[col] = VarBasisStatus::ON_LOWER;
+      else
+         originalSolution.varBasisStatus[col] = VarBasisStatus::BASIC;
    }
 }
 
@@ -893,22 +933,28 @@ Postsolve<REAL>::copy_from_reduced_to_original(
    originalSolution.primal.clear();
    originalSolution.primal.resize( postsolveListener.nColsOriginal );
 
-   for( int k = 0; k < reducedSolution.primal.size(); ++k )
+   int reduced_columns = (int) reducedSolution.primal.size();
+   for( int k = 0; k < reduced_columns; ++k )
       originalSolution.primal[postsolveListener.origcol_mapping[k]] =
           reducedSolution.primal[k];
 
    if( originalSolution.type == SolutionType::kPrimalDual )
    {
-      assert( reducedSolution.reducedCosts.size() ==
-              postsolveListener.origcol_mapping.size() );
+      assert( reducedSolution.reducedCosts.size() == reduced_columns );
       originalSolution.reducedCosts.clear();
       originalSolution.reducedCosts.resize( postsolveListener.nColsOriginal );
-      for( int k = 0; k < postsolveListener.origcol_mapping.size(); k++ )
+      for( int k = 0; k < reduced_columns; k++ )
          originalSolution.reducedCosts[postsolveListener.origcol_mapping[k]] =
              reducedSolution.reducedCosts[k];
 
-      assert( reducedSolution.dual.size() ==
-              postsolveListener.origrow_mapping.size() );
+      assert( reducedSolution.varBasisStatus.size() == reduced_columns );
+      originalSolution.varBasisStatus.clear();
+      originalSolution.varBasisStatus.resize( postsolveListener.nColsOriginal );
+      for( int k = 0; k < reduced_columns; k++ )
+         originalSolution.varBasisStatus[postsolveListener.origcol_mapping[k]] =
+             reducedSolution.varBasisStatus[k];
+
+      assert( reducedSolution.dual.size() == postsolveListener.origrow_mapping.size() );
       originalSolution.dual.clear();
       originalSolution.dual.resize( postsolveListener.nRowsOriginal );
       for( int k = 0; k < postsolveListener.origrow_mapping.size(); k++ )

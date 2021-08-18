@@ -33,6 +33,16 @@ enum class SolutionType
    kPrimalDual
 };
 
+enum class VarBasisStatus : int
+{
+   ON_UPPER = 0,
+   ON_LOWER = 1,
+   FIXED = 2,
+   ZERO = 3,
+   BASIC = 4,
+   UNDEFINED = 5
+};
+
 template <typename REAL>
 class Solution
 {
@@ -42,6 +52,7 @@ class Solution
    Vec<REAL> reducedCosts;
    Vec<REAL> dual;
    Vec<REAL> slack;
+   Vec<VarBasisStatus> varBasisStatus;
 
    // Default type primal only.
    Solution() : type( SolutionType::kPrimal ) {}
@@ -59,11 +70,13 @@ class Solution
    }
 
    Solution( Vec<REAL> primal_values, Vec<REAL> dual_col_values,
-             Vec<REAL> dual_row_values, Vec<REAL> slack )
+             Vec<REAL> dual_row_values, Vec<VarBasisStatus> var_basis_status, Vec<REAL> slack )
        : type( SolutionType::kPrimalDual ),
          primal( std::move( primal_values ) ),
+         dual( std::move( dual_row_values ),
          reducedCosts( std::move( dual_col_values ) ),
-         dual( std::move( dual_row_values ), slack(std::move(slack)) )
+               slack(std::move(slack)) ),
+         varBasisStatus( std::move( var_basis_status ) )
    {
    }
 };
