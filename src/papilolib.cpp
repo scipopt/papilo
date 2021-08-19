@@ -1240,9 +1240,19 @@ papilo_solver_start( PAPILO_SOLVER* solver )
          }
          status = solverInterface->getStatus();
 
-         solver->presolve.message().info(
-             "\nsolving finished after {:.3f} seconds\n\n",
-             solver->solveinfo.solvingtime + solver->solveinfo.presolvetime );
+         if( status == SolverStatus::kInfeasible )
+            fmt::print( "\nsolving detected infeasible problem after {:.3f} seconds\n",
+                        solver->solveinfo.solvingtime + solver->solveinfo.presolvetime );
+         else if( status == SolverStatus::kUnbounded )
+            fmt::print( "\nsolving detected unbounded problem after {:.3f} seconds\n",
+                        solver->solveinfo.solvingtime + solver->solveinfo.presolvetime );
+         else if( status == SolverStatus::kUnbndOrInfeas )
+            fmt::print( "\nsolving detected unbounded or infeasible problem after "
+                        "{:.3f} seconds\n",
+                        solver->solveinfo.solvingtime + solver->solveinfo.presolvetime );
+         else
+            fmt::print( "\nsolving finished after {:.3f} seconds\n",
+                        solver->solveinfo.solvingtime + solver->solveinfo.presolvetime );
       }
       else
       {

@@ -47,9 +47,9 @@ template <typename REAL>
 struct SolWriter
 {
    static void
-   writeSol( const std::string& filename, const Vec<REAL>& sol,
-             const Vec<REAL>& objective, const REAL& solobj,
-             const Vec<std::string>& colnames )
+   writePrimalSol( const std::string& filename, const Vec<REAL>& sol,
+                   const Vec<REAL>& objective, const REAL& solobj,
+                   const Vec<std::string>& colnames )
    {
       std::ofstream file( filename, std::ofstream::out );
       boost::iostreams::filtering_ostream out;
@@ -73,6 +73,74 @@ struct SolWriter
          {
             fmt::print( out, "{: <50} {: <18.15}   obj({:.15})\n", colnames[i],
                         double( sol[i] ), double( objective[i] ) );
+         }
+      }
+   }
+
+   static void
+   writeDualSol( const std::string& filename, const Vec<REAL>& sol,
+                 const Vec<REAL>& rhs, const Vec<REAL>& lhs,
+                 const REAL& obj_value, const Vec<std::string>& row_names )
+   {
+      std::ofstream file( filename, std::ofstream::out );
+      boost::iostreams::filtering_ostream out;
+
+#ifdef PAPILO_USE_BOOST_IOSTREAMS_WITH_ZLIB
+      if( boost::algorithm::ends_with( filename, ".gz" ) )
+         out.push( boost::iostreams::gzip_compressor() );
+#endif
+#ifdef PAPILO_USE_BOOST_IOSTREAMS_WITH_BZIP2
+      if( boost::algorithm::ends_with( filename, ".bz2" ) )
+         out.push( boost::iostreams::bzip2_compressor() );
+#endif
+
+      out.push( file );
+
+      fmt::print( out, "{: <50} {: <18.15}\n", "=obj=", double( obj_value ) );
+
+      for( int i = 0; i < sol.size(); ++i )
+      {
+         if( sol[i] != 0.0 )
+         {
+            REAL objective = lhs[i];
+            if( sol[i] < 0 )
+               objective = rhs[i];
+            fmt::print( out, "{: <50} {: <18.15}   obj({:.15})\n", row_names[i],
+                        double( sol[i] ), double( objective ) );
+         }
+      }
+   }
+
+   static void
+   writeReducedCostsSol( const std::string& filename, const Vec<REAL>& sol,
+                         const Vec<REAL>& ub, const Vec<REAL>& lb,
+                         const REAL& solobj, const Vec<std::string>& col_names )
+   {
+      std::ofstream file( filename, std::ofstream::out );
+      boost::iostreams::filtering_ostream out;
+
+#ifdef PAPILO_USE_BOOST_IOSTREAMS_WITH_ZLIB
+      if( boost::algorithm::ends_with( filename, ".gz" ) )
+         out.push( boost::iostreams::gzip_compressor() );
+#endif
+#ifdef PAPILO_USE_BOOST_IOSTREAMS_WITH_BZIP2
+      if( boost::algorithm::ends_with( filename, ".bz2" ) )
+         out.push( boost::iostreams::bzip2_compressor() );
+#endif
+
+      out.push( file );
+
+      fmt::print( out, "{: <50} {: <18.15}\n", "=obj=", double( solobj ) );
+
+      for( int i = 0; i < sol.size(); ++i )
+      {
+         if( sol[i] != 0.0 )
+         {
+            REAL objective = lb[i];
+            if( sol[i] < 0 )
+               objective = ub[i];
+            fmt::print( out, "{: <50} {: <18.15}   obj({:.15})\n", col_names[i],
+                        double( sol[i] ), double( objective ) );
          }
       }
    }

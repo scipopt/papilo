@@ -495,7 +495,7 @@ class Problem
       assert( sol.size() == getNCols() );
 
       StableSum<REAL> obj( objective.offset );
-      for( int i = 0; i != getNCols(); ++i )
+      for( int i = 0; i < getNCols(); ++i )
          obj.add( sol[i] * objective.coefficients[i] );
 
       return obj.get();

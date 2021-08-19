@@ -63,6 +63,8 @@ struct OptionsInfo
    std::string postsolve_archive_file;
    std::string reduced_solution_file;
    std::string orig_solution_file;
+   std::string orig_dual_solution_file;
+   std::string orig_reduced_solution_file;
    std::string scip_settings_file;
    std::string optimal_solution_file;
    std::string soplex_settings_file;
@@ -199,6 +201,10 @@ struct OptionsInfo
                              "filename for solution of reduced problem" );
          desc.add_options()( "solution,l", value( &orig_solution_file ),
                              "filename for solution" );
+         desc.add_options()( "dualsolution", value( &orig_dual_solution_file ),
+                             "filename for dual solution" );
+         desc.add_options()( "reducedsolution", value( &orig_reduced_solution_file ),
+                             "filename for reduced solution" );
          desc.add_options()( "reference-objective,o",
                              value( &objective_reference ),
                              "correct objective value for validation" );

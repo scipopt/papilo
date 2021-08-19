@@ -137,6 +137,7 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
 {
 
    PrimalDualSolValidation<REAL> validation{};
+
    const Vec<REAL>& reducedSol = reducedSolution.primal;
 
    copy_from_reduced_to_original( reducedSolution, originalSolution,
@@ -185,6 +186,7 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
    auto origcol_mapping = postsolveListener.origcol_mapping;
    auto origrow_mapping = postsolveListener.origrow_mapping;
    auto problem = postsolveListener.problem;
+
    for( int i = postsolveListener.types.size() - 1; i >= 0; --i )
    {
       auto type = types[i];
@@ -255,10 +257,15 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
       {
          assert( originalSolution.type == SolutionType::kPrimalDual );
 
-                  bool isLhs = indices[first] == 1;
-                  bool isInfinity = indices[first + 1];
-                  int row = (int)values[first];
-                  REAL new_value = values[first + 1];
+         bool isLhs = indices[first] == 1;
+         bool isInfinity = indices[first + 1];
+         int row = (int)values[first];
+         REAL new_value = values[first + 1];
+         // if a row bound change happened because of a substitution skip the
+         // verification for this step
+         if( i >= 2 and types[i - 1] == ReductionType::kCoefficientChange and
+             types[i - 2] == ReductionType::kSubstitutedCol )
+            continue;
          //         if( isLhs )
          //         {
          //            if( isInfinity )
@@ -332,6 +339,10 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
       }
       case ReductionType::kCoefficientChange:
       {
+         // if a row bound change happened because of a substitution skip the
+         // verification for this step
+         if( i >= 1 and types[i - 1] == ReductionType::kSubstitutedCol )
+            continue;
          break;
       }
       case ReductionType::kReasonForRowBoundChangeForcedByRow:
@@ -347,13 +358,13 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
          Problem<REAL> problem_at_step_i =
              calculate_current_problem( postsolveListener, i );
          message.info( "Validation of partial ({}) reconstr. sol : ", i );
-         validation.verifySolution( originalSolution, problem_at_step_i );
+         validation.verifySolution( originalSolution, problem_at_step_i, false );
       }
 #endif
    }
 
    PostsolveStatus status =
-       validation.verifySolution( originalSolution, problem );
+       validation.verifySolution( originalSolution, problem, true );
    if( status == PostsolveStatus::kFailed )
       message.error( "Postsolving solution failed. Please use debug mode to "
                      "obtain more information." );
@@ -409,10 +420,11 @@ Postsolve<REAL>::apply_substituted_column_to_original_solution(
       bool lb_infinity = indices[first + 6 + row_length] == 1;
       REAL lb = values[first + 6 + row_length];
 
-      assert( lb_infinity or ub_infinity or lb <= ub );
+      assert( lb_infinity or ub_infinity or num.isGE( ub, lb ) );
 
-      if( ( originalSolution.primal[col] == lb and not lb_infinity ) or
-          ( originalSolution.primal[col] == ub and not ub_infinity ) )
+      if( ( num.isEq( originalSolution.primal[col], lb ) and
+            not lb_infinity ) or
+          ( num.isEq( originalSolution.primal[col], ub ) and not ub_infinity ) )
       {
          // adjust the dual solution to the obj coefficient change and calculate
          // the reduced costs
@@ -444,8 +456,7 @@ Postsolve<REAL>::apply_substituted_column_to_original_solution(
 
          assert( rowCoef != 0 );
          sum_dual.add( obj );
-         if( originalSolution.dual[row] != 0 )
-            message.template info("case not considered obj: {}, old {}, new {}\n", obj,originalSolution.dual[row],  sum_dual.get() / rowCoef);
+         assert( num.isZero(originalSolution.dual[row]) );
          originalSolution.dual[row] = sum_dual.get() / rowCoef;
       }
       assert( row_length + col_length + 7 == last - first );
@@ -809,7 +820,7 @@ Postsolve<REAL>::apply_fix_infinity_variable_in_original_solution(
       while( row_counter < number_rows )
       {
          int length = (int)values[current_counter];
-         row_indices[row_counter] = indices[row_counter];
+         row_indices[row_counter] = indices[current_counter];
 
          REAL lhs = values[current_counter + 1];
          REAL rhs = values[current_counter + 2];
@@ -833,7 +844,7 @@ Postsolve<REAL>::apply_fix_infinity_variable_in_original_solution(
       while( row_counter < number_rows )
       {
          int length = (int)values[current_counter];
-         row_indices[row_counter] = indices[row_counter];
+         row_indices[row_counter] = indices[current_counter];
 
          REAL lhs = values[current_counter + 1];
          REAL rhs = values[current_counter + 2];

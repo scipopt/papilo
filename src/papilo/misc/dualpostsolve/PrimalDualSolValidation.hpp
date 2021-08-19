@@ -36,6 +36,10 @@ class PrimalDualSolValidation
  private:
    const Num<REAL> num;
    Message message{};
+   REAL maximal_allowed_in_duality_gap = 0;
+
+
+
 
    bool
    checkLength( const Solution<REAL>& solution, const Problem<REAL>& problem )
@@ -81,11 +85,16 @@ class PrimalDualSolValidation
    }
 
    bool
-   checkPrimalConstraint( const Vec<REAL>& primalSolution,
-                          const Problem<REAL>& problem ) const
+   checkPrimalConstraint( Solution<REAL>& solution,
+                          const Problem<REAL>& problem, bool update_slack ) const
    {
       const Vec<REAL> rhs = problem.getConstraintMatrix().getRightHandSides();
       const Vec<REAL> lhs = problem.getConstraintMatrix().getLeftHandSides();
+      if( update_slack )
+      {
+         solution.slack.clear();
+         solution.slack.resize( problem.getNRows() );
+      }
       for( int row = 0; row < problem.getNRows(); row++ )
       {
          if( problem.getRowFlags()[row].test( RowFlag::kRedundant ) )
@@ -98,33 +107,37 @@ class PrimalDualSolValidation
             int col = entries.getIndices()[j];
             if( problem.getColFlags()[col].test( ColFlag::kFixed ) )
                continue;
-            rowValue += entries.getValues()[j] * primalSolution[col];
+            rowValue += entries.getValues()[j] * solution.primal[col];
          }
 
-         if( ( not problem.getRowFlags()[row].test( RowFlag::kLhsInf ) ) &&
+         bool lhs_inf = problem.getRowFlags()[row].test( RowFlag::kLhsInf );
+         if( ( not lhs_inf ) &&
              num.isLT( rowValue, lhs[row] ) )
          {
             message.info( "Row {:<3} violates row bounds ({:<3} < {:<3}).\n",
                           row, lhs[row], rowValue );
             return true;
          }
-         if( ( not problem.getRowFlags()[row].test( RowFlag::kRhsInf ) ) &&
+         bool rhs_inf = problem.getRowFlags()[row].test( RowFlag::kRhsInf );
+         if( ( not rhs_inf ) &&
              num.isGT( rowValue, rhs[row] ) )
          {
             message.info( "Row {:<3} violates row bounds ({:<3} < {:<3}).\n",
                           row, rowValue, rhs[row] );
             return true;
          }
+         if( update_slack )
+            solution.slack[row] = num.isZero( rowValue ) ? 0 : rowValue;
       }
       return false;
    }
 
    bool
-   checkPrimalFeasibility( const Vec<REAL>& primalSolution,
-                           const Problem<REAL>& problem )
+   checkPrimalFeasibility( Solution<REAL>& solution,
+                           const Problem<REAL>& problem, bool update_slack )
    {
-      return checkPrimalBounds( primalSolution, problem ) and
-             checkPrimalConstraint( primalSolution, problem );
+      return checkPrimalBounds( solution.primal, problem ) or
+             checkPrimalConstraint( solution, problem, update_slack );
    }
 
    bool
@@ -167,35 +180,12 @@ class PrimalDualSolValidation
                            const Vec<REAL>& reducedCosts,
                            const Problem<REAL>& problem )
    {
-      StableSum<REAL> primal_objective;
-      for( int i = 0; i < problem.getNCols(); i++ )
-      {
-         primal_objective.add(
-             primalSolution[i] * problem.getObjective().coefficients[i]);
-      }
-      StableSum<REAL> dual_objective;
-      for( int i = 0; i < problem.getNRows(); i++ )
-      {
-         REAL dual = dualSolution[i];
-         REAL side;
-         if(dual < 0)
-            side = problem.getConstraintMatrix().getRightHandSides()[i];
-         else
-            side = problem.getConstraintMatrix().getLeftHandSides()[i];
-         dual_objective.add( dual * side );
-      }
-      for( int i = 0; i < problem.getNCols(); i++ )
-      {
-         REAL reducedCost = reducedCosts[i];
-         REAL side;
-         if(reducedCost < 0)
-            side = problem.getUpperBounds()[i];
-         else
-            side = problem.getLowerBounds()[i];
-         dual_objective.add( reducedCost * side );
-      }
-      return not num.isFeasEq( primal_objective.get(), dual_objective.get() );
+      REAL duality_gap =
+          getDualityGap( primalSolution, dualSolution, reducedCosts, problem );
+      return not( num.isFeasZero( duality_gap ) or
+                  num.isLT( duality_gap, maximal_allowed_in_duality_gap ) );
    }
+
 
    bool
    checkComplementarySlackness( const Vec<REAL>& primalSolution,
@@ -263,7 +253,7 @@ class PrimalDualSolValidation
          REAL sol = primalSolution[col];
 
          // TODO: check this
-         if( upperBound == lowerBound and not isLbInf and not isUbInf )
+         if( num.isEq(upperBound, lowerBound) and not isLbInf and not isUbInf )
             continue;
 
          if( not isLbInf and not isUbInf )
@@ -290,8 +280,8 @@ class PrimalDualSolValidation
 
  public:
    PostsolveStatus
-   verifySolution( const Solution<REAL>& solution,
-                   const Problem<REAL>& problem )
+   verifySolution( Solution<REAL>& solution,
+                   const Problem<REAL>& problem, bool update_slack )
    {
 
       bool failure = checkLength( solution, problem );
@@ -301,7 +291,7 @@ class PrimalDualSolValidation
          return PostsolveStatus::kFailed;
       }
 
-      failure = checkPrimalFeasibility( solution.primal, problem );
+      failure = checkPrimalFeasibility( solution, problem, update_slack );
       if( failure )
       {
          message.info( "Primal feasibility check FAILED.\n" );
@@ -328,7 +318,6 @@ class PrimalDualSolValidation
                                      solution.reducedCosts, problem ) )
          {
             message.info( "Objective function failed.\n" );
-//            TODO: this may fall because of Numerics
 //            failure = true;
          }
          if(failure)
@@ -338,6 +327,48 @@ class PrimalDualSolValidation
       message.info( "Solution passed validation\n" );
       return PostsolveStatus::kOk;
    }
+
+   void
+   setDualityGap( REAL duality_gap )
+   {
+      maximal_allowed_in_duality_gap = duality_gap * 10;
+   }
+
+   REAL
+   getDualityGap( const Vec<REAL>& primalSolution,
+                  const Vec<REAL>& dualSolution, const Vec<REAL>& reducedCosts,
+                  const Problem<REAL>& problem )
+                  {
+      StableSum<REAL> primal_objective;
+      for( int i = 0; i < problem.getNCols(); i++ )
+      {
+         primal_objective.add( primalSolution[i] *
+         problem.getObjective().coefficients[i] );
+      }
+      StableSum<REAL> dual_objective;
+      for( int i = 0; i < problem.getNRows(); i++ )
+      {
+         REAL dual = dualSolution[i];
+         REAL side;
+         if( dual < 0 )
+            side = problem.getConstraintMatrix().getRightHandSides()[i];
+         else
+            side = problem.getConstraintMatrix().getLeftHandSides()[i];
+         dual_objective.add( dual * side );
+      }
+      for( int i = 0; i < problem.getNCols(); i++ )
+      {
+         REAL reducedCost = reducedCosts[i];
+         REAL side;
+         if( reducedCost < 0 )
+            side = problem.getUpperBounds()[i];
+         else
+            side = problem.getLowerBounds()[i];
+         dual_objective.add( reducedCost * side );
+      }
+      return primal_objective.get() - dual_objective.get();
+                  }
+
 };
 } // namespace papilo
 

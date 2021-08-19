@@ -41,6 +41,7 @@ class Solution
    Vec<REAL> primal;
    Vec<REAL> reducedCosts;
    Vec<REAL> dual;
+   Vec<REAL> slack;
 
    // Default type primal only.
    Solution() : type( SolutionType::kPrimal ) {}
@@ -58,11 +59,11 @@ class Solution
    }
 
    Solution( Vec<REAL> primal_values, Vec<REAL> dual_col_values,
-             Vec<REAL> dual_row_values )
+             Vec<REAL> dual_row_values, Vec<REAL> slack )
        : type( SolutionType::kPrimalDual ),
          primal( std::move( primal_values ) ),
          reducedCosts( std::move( dual_col_values ) ),
-         dual( std::move( dual_row_values ) )
+         dual( std::move( dual_row_values ), slack(std::move(slack)) )
    {
    }
 };
