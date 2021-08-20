@@ -160,13 +160,6 @@ class PostsolveListener
    notifyCoefficientChange(int row, int col, REAL new_value);
 
    void
-   notifySingletonRow(  int row,  int col,
-                       REAL coeff, const Vec<REAL>& cost,
-                       const SparseVectorView<REAL>& colvec,
-                       REAL lhs, bool isLhsInfinity,
-                       REAL rhs, bool isRhsInfinity );
-
-   void
    notifyDualValue( bool is_column_dual, int index, REAL value );
 
    void
@@ -535,62 +528,6 @@ PostsolveListener<REAL>::notifyCoefficientChange( int row, int col,
    values.push_back( 0 );
    finishNotify();
 
-}
-
-/**
- * If a singleton row is deleted aka converted to an lower or upper bound,
- * this function saves the information to recalculate the dual solution.
- * This function should only be called if the singletonRow implies an tighter
- * bound. (TO BE CHECKED)
- * In this case the c^T - y^T *A needs to be zero because the original bound is not going to be met.
- * Therefore save the current column vector to recalculate.
- * (c^T-(y^T*A\{col}))/a_col.
- * @tparam REAL
- * @param row row index of singleton row
- * @param col column index of singleton row
- * @param coeff a_col
- * @param cost obj_col = c^T
- * @param colvec A\{col}
- */
-template <typename REAL>
-void
-PostsolveListener<REAL>::notifySingletonRow( int row, int col,
-                                     REAL coeff, const Vec<REAL>& cost,
-                                     const SparseVectorView<REAL>& colvec,
-                                     REAL lhs, bool isLhsInfinity,
-                                     REAL rhs, bool isRhsInfinity )
-{
-   if( postsolveType == PostsolveType::kPrimal )
-      return;
-   types.push_back( ReductionType::kSingletonRow );
-   indices.push_back( origrow_mapping[row] );
-   values.push_back( 0 );
-   indices.push_back( origcol_mapping[col] );
-   values.push_back( coeff );
-
-   indices.push_back( isLhsInfinity );
-   values.push_back( lhs );
-   indices.push_back( isRhsInfinity );
-   values.push_back( rhs );
-
-   const int length = colvec.getLength();
-   indices.push_back( length - 1 );
-   values.push_back( cost[origcol_mapping[col]] );
-
-   const REAL* vals = colvec.getValues();
-   const int* inds = colvec.getIndices();
-
-
-   for( int j = 0; j < length; j++ )
-   {
-      if( inds[j] != row )
-      {
-         indices.push_back( origrow_mapping[inds[j]] );
-         values.push_back( vals[j] );
-      }
-   }
-
-   finishNotify();
 }
 
 template <typename REAL>

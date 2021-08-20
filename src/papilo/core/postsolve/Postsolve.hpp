@@ -143,41 +143,7 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
    copy_from_reduced_to_original( reducedSolution, originalSolution,
                                   postsolveListener );
 
-   // Will be used during dual postsolve for fast access to bound values.
-   Vec<REAL> col_cost;
-   Vec<REAL> col_lower;
-   Vec<REAL> col_upper;
-   Vec<REAL> row_lhs;
-   Vec<REAL> row_rhs;
 
-   Vec<int> col_infinity_lower;
-   Vec<int> col_infinity_upper;
-   Vec<int> row_infinity_lhs;
-   Vec<int> row_infinity_rhs;
-
-   Vec<int> col_lower_from_row;
-   Vec<int> col_upper_from_row;
-   Vec<int> row_lower_from_col;
-   Vec<int> row_upper_from_col;
-
-   if( originalSolution.type == SolutionType::kPrimalDual )
-   {
-
-      col_cost.assign( postsolveListener.nColsOriginal, 0 );
-      col_lower.assign( postsolveListener.nColsOriginal, 0 );
-      col_upper.assign( postsolveListener.nColsOriginal, 0 );
-      row_lhs.assign( postsolveListener.nRowsOriginal, 0 );
-      row_rhs.assign( postsolveListener.nRowsOriginal, 0 );
-      col_infinity_upper.assign( postsolveListener.nColsOriginal, 1 );
-      col_infinity_lower.assign( postsolveListener.nColsOriginal, 1 );
-      row_infinity_rhs.assign( postsolveListener.nRowsOriginal, 1 );
-      row_infinity_lhs.assign( postsolveListener.nRowsOriginal, 1 );
-
-      col_lower_from_row.assign( postsolveListener.nColsOriginal, -1 );
-      col_upper_from_row.assign( postsolveListener.nColsOriginal, -1 );
-      row_lower_from_col.assign( postsolveListener.nRowsOriginal, -1 );
-      row_upper_from_col.assign( postsolveListener.nRowsOriginal, -1 );
-   }
 
    auto types = postsolveListener.types;
    auto start = postsolveListener.start;
@@ -257,39 +223,52 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
       {
          assert( originalSolution.type == SolutionType::kPrimalDual );
 
-         bool isLhs = indices[first] == 1;
-         bool isInfinity = indices[first + 1];
-         int row = (int)values[first];
-         REAL new_value = values[first + 1];
          // if a row bound change happened because of a substitution skip the
          // verification for this step
          if( i >= 2 and types[i - 1] == ReductionType::kCoefficientChange and
              types[i - 2] == ReductionType::kSubstitutedCol )
             continue;
-         //         if( isLhs )
-         //         {
-         //            if( isInfinity )
-         //               row_infinity_lhs[row] = true;
-         //            else
-         //            {
-         //               row_infinity_lhs[row] = false;
-         //               row_lhs[row] = new_value;
-         //            }
-         //         }
-         //         else
-         //         {
-         //            if( isInfinity )
-         //               row_infinity_rhs[row] = true;
-         //            else
-         //            {
-         //               row_infinity_rhs[row] = false;
-         //               row_rhs[row] = new_value;
-         //            }
-         //         }
          break;
       }
       case ReductionType::kReducedBoundsCost:
       {
+
+         // Will be used during dual postsolve for fast access to bound values.
+         Vec<REAL> col_cost;
+         Vec<REAL> col_lower;
+         Vec<REAL> col_upper;
+         Vec<REAL> row_lhs;
+         Vec<REAL> row_rhs;
+
+         Vec<int> col_infinity_lower;
+         Vec<int> col_infinity_upper;
+         Vec<int> row_infinity_lhs;
+         Vec<int> row_infinity_rhs;
+
+         Vec<int> col_lower_from_row;
+         Vec<int> col_upper_from_row;
+         Vec<int> row_lower_from_col;
+         Vec<int> row_upper_from_col;
+
+         if( originalSolution.type == SolutionType::kPrimalDual )
+         {
+
+            col_cost.assign( postsolveListener.nColsOriginal, 0 );
+            col_lower.assign( postsolveListener.nColsOriginal, 0 );
+            col_upper.assign( postsolveListener.nColsOriginal, 0 );
+            row_lhs.assign( postsolveListener.nRowsOriginal, 0 );
+            row_rhs.assign( postsolveListener.nRowsOriginal, 0 );
+            col_infinity_upper.assign( postsolveListener.nColsOriginal, 1 );
+            col_infinity_lower.assign( postsolveListener.nColsOriginal, 1 );
+            row_infinity_rhs.assign( postsolveListener.nRowsOriginal, 1 );
+            row_infinity_lhs.assign( postsolveListener.nRowsOriginal, 1 );
+
+            col_lower_from_row.assign( postsolveListener.nColsOriginal, -1 );
+            col_upper_from_row.assign( postsolveListener.nColsOriginal, -1 );
+            row_lower_from_col.assign( postsolveListener.nRowsOriginal, -1 );
+            row_upper_from_col.assign( postsolveListener.nRowsOriginal, -1 );
+         }
+
          assert( originalSolution.type == SolutionType::kPrimalDual );
          // get column bounds
          for( int j = 0; j < postsolveListener.origcol_mapping.size(); j++ )
@@ -324,17 +303,6 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
             col_cost[origcol] = postsolveListener.values[first_cost + j];
             assert( j == postsolveListener.indices[first_cost + j] );
          }
-         break;
-      }
-      case ReductionType::kSingletonRow:
-      {
-         assert( originalSolution.type == SolutionType::kPrimalDual );
-         //         int row = indices[first];
-         //
-         //         row_lhs[row] = values[first + 3];
-         //         row_rhs[row] = values[first + 2];
-         //         row_infinity_lhs[row] = indices[first + 3] == 1;
-         //         row_infinity_rhs[row] = indices[first + 2] == 1;
          break;
       }
       case ReductionType::kCoefficientChange:
@@ -1042,10 +1010,6 @@ Postsolve<REAL>::calculate_current_problem(
          problemUpdate.removeFixedCols();
          problemUpdate.clearDeletedCols();
          problemUpdate.getProblem().getObjective().coefficients[col] = obj;
-         break;
-      }
-      case ReductionType::kSingletonRow:
-      {
          break;
       }
       case ReductionType::kVarBoundChange:

@@ -1584,10 +1584,6 @@ ProblemUpdate<REAL>::removeSingletonRow( int row )
       }
    }
 
-   auto colvec = consMatrix.getColumnCoefficients( col );
-   postsolve.notifySingletonRow( row, col, val,
-                                 problem.getObjective().coefficients, colvec,
-                                 lhs, isLhsInfinity, rhs, isRhsInfinity );
    markRowRedundant( row );
 
    return status;

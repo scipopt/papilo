@@ -35,7 +35,6 @@ enum class ReductionType : int
    kSubstitutedColNoDual = 3,
    kVarBoundChange = 4,
 
-   kSingletonRow = 6,
    kRedundantRow = 7,
    kRowBoundChange = 8,
    kReasonForRowBoundChangeForcedByRow = 9,

@@ -339,7 +339,31 @@ class SoplexInterface : public SolverInterface<REAL>
          case soplex::SPxSolverBase<soplex::Real>::VarStatus::UNDEFINED:
             sol.varBasisStatus[i] = VarBasisStatus::UNDEFINED;
             break;
-         };
+         }
+
+      sol.rowBasisStatus.resize( numrows, VarBasisStatus::UNDEFINED );
+      for( int i = 0; i < numcols; ++i )
+         switch( spx.basisRowStatus( i ) )
+         {
+         case soplex::SPxSolverBase<soplex::Real>::VarStatus::BASIC:
+            sol.rowBasisStatus[i] = VarBasisStatus::BASIC;
+            break;
+         case soplex::SPxSolverBase<soplex::Real>::VarStatus::ON_LOWER:
+            sol.rowBasisStatus[i] = VarBasisStatus::ON_LOWER;
+            break;
+         case soplex::SPxSolverBase<soplex::Real>::VarStatus::ON_UPPER:
+            sol.rowBasisStatus[i] = VarBasisStatus::ON_UPPER;
+            break;
+         case soplex::SPxSolverBase<soplex::Real>::VarStatus::FIXED:
+            sol.rowBasisStatus[i] = VarBasisStatus::FIXED;
+            break;
+         case soplex::SPxSolverBase<soplex::Real>::VarStatus::ZERO:
+            sol.rowBasisStatus[i] = VarBasisStatus::ZERO;
+            break;
+         case soplex::SPxSolverBase<soplex::Real>::VarStatus::UNDEFINED:
+            sol.rowBasisStatus[i] = VarBasisStatus::UNDEFINED;
+            break;
+         }
 
       return true;
    }
