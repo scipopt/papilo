@@ -310,10 +310,9 @@ class HighsInterface : public SolverInterface<REAL>
           highsSol.row_value.size() != numrows )
          return false;
 
-
       // get primal values
       sol.primal.resize( numcols );
-      for( int i = 0; i != numcols; ++i )
+      for( int i = 0; i < numcols; ++i )
          sol.primal[i] = highsSol.col_value[i];
 
       // return if no dual requested
@@ -321,14 +320,18 @@ class HighsInterface : public SolverInterface<REAL>
          return true;
 
       // get reduced costs
-      sol.col_dual.resize( numcols );
-      for( int i = 0; i != numcols; ++i )
-         sol.col_dual[i] = REAL( highsSol.col_dual[i] );
+      sol.reducedCosts.resize( numcols );
+      for( int i = 0; i < numcols; ++i )
+         sol.reducedCosts[i] = REAL( highsSol.col_dual[i] );
 
       // get row duals
-      sol.row_dual.resize( numrows );
-      for( int i = 0; i != numrows; ++i )
-         sol.row_dual[i] = REAL( highsSol.row_dual[i] );
+      sol.dual.resize( numrows );
+      for( int i = 0; i < numrows; ++i )
+         sol.dual[i] = REAL( highsSol.row_dual[i] );
+
+      sol.basisAvailabe = false;
+      sol.varBasisStatus.resize( numcols, VarBasisStatus::UNDEFINED );
+      sol.rowBasisStatus.resize( numrows, VarBasisStatus::UNDEFINED );
 
       return true;
    }
@@ -359,12 +362,12 @@ class HighsInterface : public SolverInterface<REAL>
          return true;
 
       for( int i = 0; i != numcols; ++i )
-         sol.col_dual[compcols[i]] = REAL( highsSol.col_dual[i] );
+         sol.reducedCosts[compcols[i]] = REAL( highsSol.col_dual[i] );
 
       const int* comprows = components.getComponentsRows( component );
 
       for( int i = 0; i != numrows; ++i )
-         sol.row_dual[comprows[i]] = REAL( highsSol.row_dual[i] );
+         sol.dual[comprows[i]] = REAL( highsSol.row_dual[i] );
 
       return true;
    }

@@ -129,8 +129,8 @@ class SoplexInterface : public SolverInterface<REAL>
          }
          else
          {
-            for( int i = 0; i != collen; ++i )
-               vec.add( colrows[i], Real( colvals[i] ) );
+            for( int j = 0; j != collen; ++j )
+               vec.add( colrows[j], Real( colvals[j] ) );
          }
 
          cols.add( Real( obj.coefficients[i] ), lb, vec, ub );
@@ -316,6 +316,7 @@ class SoplexInterface : public SolverInterface<REAL>
       sol.dual.resize( numrows );
       for( int i = 0; i != numrows; ++i )
          sol.dual[i] = REAL( buffer[i] );
+      sol.basisAvailabe = true;
 
       sol.varBasisStatus.resize( numcols, VarBasisStatus::UNDEFINED );
       for( int i = 0; i < numcols; ++i )
@@ -342,7 +343,7 @@ class SoplexInterface : public SolverInterface<REAL>
          }
 
       sol.rowBasisStatus.resize( numrows, VarBasisStatus::UNDEFINED );
-      for( int i = 0; i < numcols; ++i )
+      for( int i = 0; i < numrows; ++i )
          switch( spx.basisRowStatus( i ) )
          {
          case soplex::SPxSolverBase<soplex::Real>::VarStatus::BASIC:
@@ -426,10 +427,30 @@ class SoplexInterface : public SolverInterface<REAL>
          case soplex::SPxSolverBase<soplex::Real>::VarStatus::UNDEFINED:
             sol.varBasisStatus[comprows[i]] = VarBasisStatus::UNDEFINED;
             break;
-         };
+         }
 
-      //      for( int i = 0; i != numcols; ++i )
-
+      for( int i = 0; i < numrows; ++i )
+         switch( spx.basisRowStatus( i ) )
+         {
+         case soplex::SPxSolverBase<soplex::Real>::VarStatus::BASIC:
+            sol.rowBasisStatus[comprows[i]] = VarBasisStatus::BASIC;
+            break;
+         case soplex::SPxSolverBase<soplex::Real>::VarStatus::ON_LOWER:
+            sol.rowBasisStatus[comprows[i]] = VarBasisStatus::ON_LOWER;
+            break;
+         case soplex::SPxSolverBase<soplex::Real>::VarStatus::ON_UPPER:
+            sol.rowBasisStatus[comprows[i]] = VarBasisStatus::ON_UPPER;
+            break;
+         case soplex::SPxSolverBase<soplex::Real>::VarStatus::FIXED:
+            sol.rowBasisStatus[comprows[i]] = VarBasisStatus::FIXED;
+            break;
+         case soplex::SPxSolverBase<soplex::Real>::VarStatus::ZERO:
+            sol.rowBasisStatus[comprows[i]] = VarBasisStatus::ZERO;
+            break;
+         case soplex::SPxSolverBase<soplex::Real>::VarStatus::UNDEFINED:
+            sol.rowBasisStatus[comprows[i]] = VarBasisStatus::UNDEFINED;
+            break;
+         }
       return true;
    }
 

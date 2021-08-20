@@ -326,13 +326,13 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
          Problem<REAL> problem_at_step_i =
              calculate_current_problem( postsolveListener, i );
          message.info( "Validation of partial ({}) reconstr. sol : ", i );
-         validation.verifySolution( originalSolution, problem_at_step_i, false );
+         validation.verifySolutionAndUpdateSlack( originalSolution, problem_at_step_i );
       }
 #endif
    }
 
    PostsolveStatus status =
-       validation.verifySolution( originalSolution, problem, true );
+       validation.verifySolutionAndUpdateSlack( originalSolution, problem );
    if( status == PostsolveStatus::kFailed )
       message.error( "Postsolving solution failed. Please use debug mode to "
                      "obtain more information." );
@@ -921,6 +921,14 @@ Postsolve<REAL>::copy_from_reduced_to_original(
       for( int k = 0; k < reduced_columns; k++ )
          originalSolution.varBasisStatus[postsolveListener.origcol_mapping[k]] =
              reducedSolution.varBasisStatus[k];
+
+      assert( reducedSolution.rowBasisStatus.size() ==
+              postsolveListener.origrow_mapping.size() );
+      originalSolution.rowBasisStatus.clear();
+      originalSolution.rowBasisStatus.resize( postsolveListener.nRowsOriginal );
+      for( int k = 0; k < postsolveListener.origrow_mapping.size(); k++ )
+         originalSolution.rowBasisStatus[postsolveListener.origcol_mapping[k]] =
+             reducedSolution.rowBasisStatus[k];
 
       assert( reducedSolution.dual.size() == postsolveListener.origrow_mapping.size() );
       originalSolution.dual.clear();

@@ -38,9 +38,6 @@ class PrimalDualSolValidation
    Message message{};
    REAL maximal_allowed_in_duality_gap = 0;
 
-
-
-
    bool
    checkLength( const Solution<REAL>& solution, const Problem<REAL>& problem )
    {
@@ -85,16 +82,18 @@ class PrimalDualSolValidation
    }
 
    bool
-   checkPrimalConstraint( Solution<REAL>& solution,
-                          const Problem<REAL>& problem, bool update_slack ) const
+   checkPrimalConstraintAndUpdateSlack( Solution<REAL>& solution,
+                                        const Problem<REAL>& problem ) const
    {
       const Vec<REAL> rhs = problem.getConstraintMatrix().getRightHandSides();
       const Vec<REAL> lhs = problem.getConstraintMatrix().getLeftHandSides();
-      if( update_slack )
+
+      if(solution.type == SolutionType::kPrimalDual)
       {
          solution.slack.clear();
-         solution.slack.resize( problem.getNRows() );
+         solution.slack.resize(problem.getNRows());
       }
+
       for( int row = 0; row < problem.getNRows(); row++ )
       {
          if( problem.getRowFlags()[row].test( RowFlag::kRedundant ) )
@@ -105,39 +104,39 @@ class PrimalDualSolValidation
          for( int j = 0; j < entries.getLength(); j++ )
          {
             int col = entries.getIndices()[j];
-            if( problem.getColFlags()[col].test( ColFlag::kFixed ) )
+            if( problem.getColFlags()[col].test( ColFlag::kInactive ) )
                continue;
-            rowValue += entries.getValues()[j] * solution.primal[col];
+            REAL x = entries.getValues()[j];
+            REAL primal = solution.primal[col];
+            rowValue += x * primal;
          }
 
          bool lhs_inf = problem.getRowFlags()[row].test( RowFlag::kLhsInf );
-         if( ( not lhs_inf ) &&
-             num.isLT( rowValue, lhs[row] ) )
+         if( ( not lhs_inf ) && num.isLT( rowValue, lhs[row] ) )
          {
             message.info( "Row {:<3} violates row bounds ({:<3} < {:<3}).\n",
                           row, lhs[row], rowValue );
             return true;
          }
          bool rhs_inf = problem.getRowFlags()[row].test( RowFlag::kRhsInf );
-         if( ( not rhs_inf ) &&
-             num.isGT( rowValue, rhs[row] ) )
+         if( ( not rhs_inf ) && num.isGT( rowValue, rhs[row] ) )
          {
             message.info( "Row {:<3} violates row bounds ({:<3} < {:<3}).\n",
                           row, rowValue, rhs[row] );
             return true;
          }
-         if( update_slack )
+         if(solution.type == SolutionType::kPrimalDual)
             solution.slack[row] = num.isZero( rowValue ) ? 0 : rowValue;
       }
       return false;
    }
 
    bool
-   checkPrimalFeasibility( Solution<REAL>& solution,
-                           const Problem<REAL>& problem, bool update_slack )
+   checkPrimalFeasibilityAndUpdateSlack( Solution<REAL>& solution,
+                                         const Problem<REAL>& problem )
    {
       return checkPrimalBounds( solution.primal, problem ) or
-             checkPrimalConstraint( solution, problem, update_slack );
+             checkPrimalConstraintAndUpdateSlack( solution, problem );
    }
 
    bool
@@ -178,63 +177,9 @@ class PrimalDualSolValidation
                 problem.getObjective().coefficients[variable] );
             return true;
          }
-
-         bool ub_infinity =
-             problem.getColFlags()[variable].test( ColFlag::kUbInf );
-         bool lb_infinity =
-             problem.getColFlags()[variable].test( ColFlag::kLbInf );
-         REAL lb = problem.getLowerBounds()[variable];
-         REAL ub = problem.getUpperBounds()[variable];
-         REAL sol = primalSolution[variable];
-
-         assert( ub_infinity or lb_infinity or num.isFeasGE( ub, lb ) );
-         switch( basis[variable] )
-         {
-         case VarBasisStatus::FIXED:
-            if( ub_infinity or lb_infinity or not num.isEq( lb, ub ) or
-                not num.isEq( sol, ub ) )
-               return true;
-            break;
-         case VarBasisStatus::ON_LOWER:
-            if( lb_infinity or not num.isEq( sol, lb ) or
-                ( ub_infinity and num.isEq( sol, ub ) ) or
-                ( num.isZero( lb ) and ub_infinity ) )
-               return true;
-            break;
-         case VarBasisStatus::ON_UPPER:
-            if( ub_infinity or not num.isEq( sol, ub ) or
-                ( lb_infinity and num.isEq( sol, lb ) ) )
-               return true;
-            break;
-         case VarBasisStatus::ZERO:
-            if( lb_infinity or not num.isZero( sol ) or
-                not num.isZero( lb ) and not ub_infinity )
-               return true;
-            break;
-         case VarBasisStatus::BASIC:
-            if( ( not lb_infinity and num.isEq( sol, lb ) ) or
-                ( not ub_infinity and num.isEq( sol, ub ) ) )
-               return true;
-            break;
-         case VarBasisStatus::UNDEFINED:
-            return true;
-         }
       }
       return false;
    }
-
-   bool
-   checkObjectiveFunction( const Vec<REAL>& primalSolution,
-                           const Vec<REAL>& dualSolution,
-                           const Vec<REAL>& reducedCosts,
-                           const Problem<REAL>& problem )
-   {
-      REAL duality_gap =
-          getDualityGap( primalSolution, dualSolution, reducedCosts, problem );
-      return not( num.isFeasZero( duality_gap ) or
-                  num.isLT( duality_gap, maximal_allowed_in_duality_gap ) );
-   }
-
 
    bool
    checkComplementarySlackness( const Vec<REAL>& primalSolution,
@@ -302,7 +247,8 @@ class PrimalDualSolValidation
          REAL sol = primalSolution[col];
 
          // TODO: check this
-         if( num.isEq(upperBound, lowerBound) and not isLbInf and not isUbInf )
+         if( num.isEq( upperBound, lowerBound ) and not isLbInf and
+             not isUbInf )
             continue;
 
          if( not isLbInf and not isUbInf )
@@ -327,10 +273,115 @@ class PrimalDualSolValidation
       return false;
    }
 
+   bool
+   checkBasis( const Solution<REAL>& solution,
+               const Problem<REAL>& problem )
+   {
+      if(not solution.basisAvailabe)
+         return false;
+      for( int variable = 0; variable < problem.getNCols(); variable++ )
+      {
+         if( problem.getColFlags()[variable].test( ColFlag::kInactive ) )
+            continue;
+         bool ub_infinity =
+             problem.getColFlags()[variable].test( ColFlag::kUbInf );
+         bool lb_infinity =
+             problem.getColFlags()[variable].test( ColFlag::kLbInf );
+         REAL lb = problem.getLowerBounds()[variable];
+         REAL ub = problem.getUpperBounds()[variable];
+         REAL sol = solution.primal[variable];
+
+         assert( ub_infinity or lb_infinity or num.isFeasGE( ub, lb ) );
+         switch( solution.varBasisStatus[variable] )
+         {
+         case VarBasisStatus::FIXED:
+            if( ub_infinity or lb_infinity or not num.isEq( lb, ub ) or
+                not num.isEq( sol, ub ) )
+               return true;
+            break;
+         case VarBasisStatus::ON_LOWER:
+            if( lb_infinity or not num.isEq( sol, lb ) )
+               return true;
+            break;
+         case VarBasisStatus::ON_UPPER:
+            if( ub_infinity or not num.isEq( sol, ub ) )
+               return true;
+            break;
+         case VarBasisStatus::ZERO:
+            if( lb_infinity or not num.isZero( sol ) or
+                not num.isZero( lb ) and not ub_infinity )
+               return true;
+            break;
+         case VarBasisStatus::BASIC:
+            if( not num.isZero( solution.reducedCosts[variable] ) )
+               return true;
+            break;
+         case VarBasisStatus::UNDEFINED:
+            return true;
+         }
+      }
+//      for( int row = 0; row < problem.getNRows(); row++ )
+//      {
+//         if( problem.getRowFlags()[row].test( RowFlag::kRedundant ) )
+//            continue;
+//         bool lhs_infinity =
+//             problem.getRowFlags()[row].test( RowFlag::kLhsInf );
+//         bool rhs_infinity =
+//             problem.getRowFlags()[row].test( RowFlag::kRhsInf );
+//         bool equation =
+//             problem.getRowFlags()[row].test( RowFlag::kEquation );
+//         REAL lb = problem.getConstraintMatrix().getLeftHandSides()[row];
+//         REAL ub = problem.getConstraintMatrix().getRightHandSides()[row];
+//         REAL slack = solution.slack[row];
+//
+//         assert( lhs_infinity or rhs_infinity or num.isFeasGE( ub, lb ) );
+//         switch( solution.rowBasisStatus[row] )
+//         {
+//         case VarBasisStatus::FIXED:
+//            if( lhs_infinity or rhs_infinity or not num.isEq( lb, ub ) or
+//                not num.isEq( slack, ub ) )
+//               return true;
+//            break;
+//         case VarBasisStatus::ON_LOWER:
+//            if( lhs_infinity or not num.isEq( slack, lb ) )
+//               return true;
+//            break;
+//         case VarBasisStatus::ON_UPPER:
+//            if( rhs_infinity or not num.isEq( slack, ub ) )
+//               return true;
+//            break;
+//         case VarBasisStatus::ZERO:
+//            if( lhs_infinity or not num.isZero( slack ) or
+//                not num.isZero( lb ) and not rhs_infinity )
+//               return true;
+//            break;
+//         case VarBasisStatus::BASIC:
+//            if( not num.isZero( solution.dual[row] ) )
+//               return true;
+//            break;
+//         case VarBasisStatus::UNDEFINED:
+//            return true;
+//         }
+//      }
+      return false;
+   }
+
  public:
+   bool
+   checkObjectiveFunction( const Vec<REAL>& primalSolution,
+                           const Vec<REAL>& dualSolution,
+                           const Vec<REAL>& reducedCosts,
+                           const Problem<REAL>& problem )
+   {
+      REAL duality_gap =
+          getDualityGap( primalSolution, dualSolution, reducedCosts, problem );
+      return not( num.isFeasZero( duality_gap ) or
+                  num.isLT( duality_gap, maximal_allowed_in_duality_gap ) );
+   }
+
    PostsolveStatus
-   verifySolution( Solution<REAL>& solution,
-                   const Problem<REAL>& problem, bool update_slack )
+   verifySolutionAndUpdateSlack( Solution<REAL>& solution,
+                                 const Problem<REAL>& problem )
    {
 
       bool failure = checkLength( solution, problem );
@@ -340,7 +391,7 @@ class PrimalDualSolValidation
          return PostsolveStatus::kFailed;
       }
 
-      failure = checkPrimalFeasibility( solution, problem, update_slack );
+      failure = checkPrimalFeasibilityAndUpdateSlack( solution, problem );
       if( failure )
       {
          message.info( "Primal feasibility check FAILED.\n" );
@@ -361,6 +412,12 @@ class PrimalDualSolValidation
                                           solution.reducedCosts, problem ) )
          {
             message.info( "Complementary slack check FAILED.\n" );
+            failure = true;
+         }
+
+         if( checkBasis( solution, problem ) )
+         {
+            message.info( "Basis check FAILED.\n" );
             failure = true;
          }
 
@@ -388,12 +445,12 @@ class PrimalDualSolValidation
    getDualityGap( const Vec<REAL>& primalSolution,
                   const Vec<REAL>& dualSolution, const Vec<REAL>& reducedCosts,
                   const Problem<REAL>& problem )
-                  {
+   {
       StableSum<REAL> primal_objective;
       for( int i = 0; i < problem.getNCols(); i++ )
       {
          primal_objective.add( primalSolution[i] *
-         problem.getObjective().coefficients[i] );
+                               problem.getObjective().coefficients[i] );
       }
       StableSum<REAL> dual_objective;
       for( int i = 0; i < problem.getNRows(); i++ )
@@ -417,8 +474,7 @@ class PrimalDualSolValidation
          dual_objective.add( reducedCost * side );
       }
       return primal_objective.get() - dual_objective.get();
-                  }
-
+   }
 };
 } // namespace papilo
 
