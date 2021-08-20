@@ -1,5 +1,6 @@
 message.verbosity = 4
 presolve.componentsmaxint = -1
+presolve.detectlindep = 0
 
 domcol.enabled = 1
 dualfix.enabled = 1
