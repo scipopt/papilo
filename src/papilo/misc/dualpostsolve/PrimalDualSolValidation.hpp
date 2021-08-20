@@ -279,6 +279,8 @@ class PrimalDualSolValidation
    {
       if(not solution.basisAvailabe)
          return false;
+      int number_basic_variable = 0;
+      int number_rows = 0;
       for( int variable = 0; variable < problem.getNCols(); variable++ )
       {
          if( problem.getColFlags()[variable].test( ColFlag::kInactive ) )
@@ -315,55 +317,58 @@ class PrimalDualSolValidation
          case VarBasisStatus::BASIC:
             if( not num.isZero( solution.reducedCosts[variable] ) )
                return true;
+            number_basic_variable++;
             break;
          case VarBasisStatus::UNDEFINED:
             return true;
          }
       }
-//      for( int row = 0; row < problem.getNRows(); row++ )
-//      {
-//         if( problem.getRowFlags()[row].test( RowFlag::kRedundant ) )
-//            continue;
-//         bool lhs_infinity =
-//             problem.getRowFlags()[row].test( RowFlag::kLhsInf );
-//         bool rhs_infinity =
-//             problem.getRowFlags()[row].test( RowFlag::kRhsInf );
-//         bool equation =
-//             problem.getRowFlags()[row].test( RowFlag::kEquation );
-//         REAL lb = problem.getConstraintMatrix().getLeftHandSides()[row];
-//         REAL ub = problem.getConstraintMatrix().getRightHandSides()[row];
-//         REAL slack = solution.slack[row];
-//
-//         assert( lhs_infinity or rhs_infinity or num.isFeasGE( ub, lb ) );
-//         switch( solution.rowBasisStatus[row] )
-//         {
-//         case VarBasisStatus::FIXED:
-//            if( lhs_infinity or rhs_infinity or not num.isEq( lb, ub ) or
-//                not num.isEq( slack, ub ) )
-//               return true;
-//            break;
-//         case VarBasisStatus::ON_LOWER:
-//            if( lhs_infinity or not num.isEq( slack, lb ) )
-//               return true;
-//            break;
-//         case VarBasisStatus::ON_UPPER:
-//            if( rhs_infinity or not num.isEq( slack, ub ) )
-//               return true;
-//            break;
-//         case VarBasisStatus::ZERO:
-//            if( lhs_infinity or not num.isZero( slack ) or
-//                not num.isZero( lb ) and not rhs_infinity )
-//               return true;
-//            break;
-//         case VarBasisStatus::BASIC:
-//            if( not num.isZero( solution.dual[row] ) )
-//               return true;
-//            break;
-//         case VarBasisStatus::UNDEFINED:
-//            return true;
-//         }
-//      }
-      return false;
+      for( int row = 0; row < problem.getNRows(); row++ )
+      {
+         if( problem.getRowFlags()[row].test( RowFlag::kRedundant ) )
+            continue;
+         number_rows++;
+         bool lhs_infinity =
+             problem.getRowFlags()[row].test( RowFlag::kLhsInf );
+         bool rhs_infinity =
+             problem.getRowFlags()[row].test( RowFlag::kRhsInf );
+
+         REAL lb = problem.getConstraintMatrix().getLeftHandSides()[row];
+         REAL ub = problem.getConstraintMatrix().getRightHandSides()[row];
+         REAL slack = solution.slack[row];
+
+         assert( lhs_infinity or rhs_infinity or num.isFeasGE( ub, lb ) );
+         switch( solution.rowBasisStatus[row] )
+         {
+         case VarBasisStatus::FIXED:
+            if( lhs_infinity or rhs_infinity or not num.isEq( lb, ub ) or
+                not num.isEq( slack, ub ) )
+               return true;
+            assert( problem.getRowFlags()[row].test( RowFlag::kEquation ) );
+            break;
+         case VarBasisStatus::ON_LOWER:
+            if( lhs_infinity or not num.isEq( slack, lb ) )
+               return true;
+            break;
+         case VarBasisStatus::ON_UPPER:
+            if( rhs_infinity or not num.isEq( slack, ub ) )
+               return true;
+            break;
+         case VarBasisStatus::ZERO:
+            if( lhs_infinity or not num.isZero( slack ) or
+                not num.isZero( lb ) and not rhs_infinity )
+               return true;
+            break;
+         case VarBasisStatus::BASIC:
+            if( not num.isZero( solution.dual[row] ) )
+               return true;
+            number_basic_variable++;
+            break;
+         case VarBasisStatus::UNDEFINED:
+            return true;
+         }
+      }
+      return number_basic_variable != number_rows;
    }
 
  public:

@@ -440,29 +440,8 @@ Postsolve<REAL>::apply_row_bound_chang_to_original_solution(
     int i, int first ) const
 {
    bool isLhs = indices[first] == 1;
-   bool isInfinity = indices[first + 1];
    int row = (int)values[first];
    REAL new_value = values[first + 1];
-//   if( isLhs )
-//   {
-//      if( isInfinity )
-//         row_infinity_lhs[row] = true;
-//      else
-//      {
-//         row_infinity_lhs[row] = false;
-//         row_lhs[row] = new_value;
-//      }
-//   }
-//   else
-//   {
-//      if( isInfinity )
-//         row_infinity_rhs[row] = true;
-//      else
-//      {
-//         row_infinity_rhs[row] = false;
-//         row_rhs[row] = new_value;
-//      }
-//   }
 
    int next_type = i - 1;
    int start_reason = start[next_type];
@@ -908,6 +887,16 @@ Postsolve<REAL>::copy_from_reduced_to_original(
 
    if( originalSolution.type == SolutionType::kPrimalDual )
    {
+      originalSolution.basisAvailabe = reducedSolution.basisAvailabe;
+      int reduced_rows = (int) reducedSolution.dual.size();
+
+      assert( reducedSolution.dual.size() == reduced_rows );
+      originalSolution.dual.clear();
+      originalSolution.dual.resize( postsolveListener.nRowsOriginal );
+      for( int k = 0; k < reduced_rows; k++ )
+         originalSolution.dual[postsolveListener.origrow_mapping[k]] =
+             reducedSolution.dual[k];
+
       assert( reducedSolution.reducedCosts.size() == reduced_columns );
       originalSolution.reducedCosts.clear();
       originalSolution.reducedCosts.resize( postsolveListener.nColsOriginal );
@@ -922,20 +911,13 @@ Postsolve<REAL>::copy_from_reduced_to_original(
          originalSolution.varBasisStatus[postsolveListener.origcol_mapping[k]] =
              reducedSolution.varBasisStatus[k];
 
-      assert( reducedSolution.rowBasisStatus.size() ==
-              postsolveListener.origrow_mapping.size() );
+      assert( reducedSolution.rowBasisStatus.size() == reduced_rows );
+
       originalSolution.rowBasisStatus.clear();
       originalSolution.rowBasisStatus.resize( postsolveListener.nRowsOriginal );
-      for( int k = 0; k < postsolveListener.origrow_mapping.size(); k++ )
-         originalSolution.rowBasisStatus[postsolveListener.origcol_mapping[k]] =
+      for( int k = 0; k < reduced_rows; k++ )
+         originalSolution.rowBasisStatus[postsolveListener.origrow_mapping[k]] =
              reducedSolution.rowBasisStatus[k];
-
-      assert( reducedSolution.dual.size() == postsolveListener.origrow_mapping.size() );
-      originalSolution.dual.clear();
-      originalSolution.dual.resize( postsolveListener.nRowsOriginal );
-      for( int k = 0; k < postsolveListener.origrow_mapping.size(); k++ )
-         originalSolution.dual[postsolveListener.origrow_mapping[k]] =
-             reducedSolution.dual[k];
    }
 }
 

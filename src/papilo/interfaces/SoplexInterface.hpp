@@ -342,8 +342,7 @@ class SoplexInterface : public SolverInterface<REAL>
             break;
          }
 
-      sol.rowBasisStatus.resize( numrows, VarBasisStatus::UNDEFINED );
-      for( int i = 0; i < numrows; ++i )
+      sol.rowBasisStatus.resize( numrows, VarBasisStatus::UNDEFINED );for( int i = 0; i < numrows; ++i )
          switch( spx.basisRowStatus( i ) )
          {
          case soplex::SPxSolverBase<soplex::Real>::VarStatus::BASIC:
