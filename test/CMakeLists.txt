@@ -271,8 +271,8 @@ if (TARGET papilo-executable)
 
     set(numtypes
             "d"
-            "q"
-            "r"
+#            "q"
+#            "r"
             )
 
     # add a test to build the SCIP binary that all further tests depend on

@@ -313,9 +313,13 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
             continue;
          break;
       }
+      case ReductionType::kRedundantRow:
+         assert( originalSolution.type == SolutionType::kPrimalDual );
+         if(originalSolution.basisAvailabe)
+            originalSolution.rowBasisStatus[indices[first]] = VarBasisStatus::BASIC;
+         break;
       case ReductionType::kReasonForRowBoundChangeForcedByRow:
       case ReductionType::kSaveRow:
-      case ReductionType::kRedundantRow:
          assert( originalSolution.type == SolutionType::kPrimalDual );
          break;
       }
@@ -405,12 +409,28 @@ Postsolve<REAL>::apply_substituted_column_to_original_solution(
          sum_dual.add( obj );
 
          originalSolution.reducedCosts[col] = ( sum_dual.get() );
+         if( originalSolution.basisAvailabe )
+         {
+            if( num.isEq( originalSolution.primal[col], lb ) and
+                not lb_infinity )
+            {
+               if( num.isZero( lb ) and ub_infinity )
+                  originalSolution.varBasisStatus[col] = VarBasisStatus::ZERO;
+               else
+                  originalSolution.varBasisStatus[col] =
+                      VarBasisStatus::ON_LOWER;
+            }
+            else if( num.isEq( originalSolution.primal[col], ub ) and
+                     not ub_infinity )
+               originalSolution.varBasisStatus[col] = VarBasisStatus::ON_UPPER;
+            else
+               assert(false);
+         }
       }
       else
       {
          // since variable is not at its bounds the reduced costs are 0 and calculate the dual variable
          originalSolution.reducedCosts[col] = 0;
-
 
          REAL rowCoef = 0.0;
          StableSum<REAL> sum_dual;
@@ -426,6 +446,31 @@ Postsolve<REAL>::apply_substituted_column_to_original_solution(
          sum_dual.add( obj );
          assert( num.isZero(originalSolution.dual[row]) );
          originalSolution.dual[row] = sum_dual.get() / rowCoef;
+
+         if( originalSolution.basisAvailabe )
+         {
+            if( num.isEq( originalSolution.primal[col], lb ) and
+                not lb_infinity )
+            {
+               if( num.isZero( lb ) )
+                  originalSolution.varBasisStatus[col] = VarBasisStatus::ZERO;
+               else
+                  originalSolution.varBasisStatus[col] =
+                      VarBasisStatus::ON_LOWER;
+            }
+            else if( num.isEq( originalSolution.primal[col], ub ) and
+                     not ub_infinity )
+               originalSolution.varBasisStatus[col] = VarBasisStatus::ON_UPPER;
+            else
+            {
+               assert( originalSolution.rowBasisStatus[row] ==
+                       VarBasisStatus::BASIC );
+               // TODO is this correct
+               originalSolution.varBasisStatus[col] = VarBasisStatus::BASIC;
+               //TODO:
+               originalSolution.rowBasisStatus[row] = VarBasisStatus::NON_BASIC;
+            }
+         }
       }
       assert( row_length + col_length + 7 == last - first );
 
@@ -617,30 +662,42 @@ Postsolve<REAL>::apply_parallel_col_to_original_solution(
          else
             originalSolution.varBasisStatus[col2] = VarBasisStatus::ON_LOWER;
       }
-      else if( col1onBounds )
+
+      if(originalSolution.basisAvailabe)
       {
-         originalSolution.varBasisStatus[col2] = VarBasisStatus::BASIC;
-         if( num.isEq( col1val, col1ub ) )
+         bool on_basis =
+             originalSolution.varBasisStatus[col1] == VarBasisStatus::BASIC or
+             originalSolution.varBasisStatus[col2] == VarBasisStatus::BASIC;
+
+         if( not col1onBounds )
+            originalSolution.varBasisStatus[col1] = VarBasisStatus::BASIC;
+         else if( not( col1boundFlags & IS_UBINF ) and
+                  num.isEq( col1val, col1ub ) )
             originalSolution.varBasisStatus[col1] = VarBasisStatus::ON_UPPER;
-         else if( num.isZero( col1lb ) and col1boundFlags & IS_UBINF )
+         else if( not( col1boundFlags & IS_LBINF ) and
+                  ( col1boundFlags & IS_UBINF ) and
+                  num.isEq( col1val, col1lb ) and num.isZero( col1lb ) )
             originalSolution.varBasisStatus[col1] = VarBasisStatus::ZERO;
-         else
+         else if( not( col1boundFlags & IS_LBINF ) and
+                  num.isEq( col1val, col1lb ) )
             originalSolution.varBasisStatus[col1] = VarBasisStatus::ON_LOWER;
 
-         // TODO:
-         assert( not col2onBounds );
-      }
-      else if( col2onBounds )
-      {
-         originalSolution.varBasisStatus[col1] = VarBasisStatus::BASIC;
-         if( num.isEq( col2val, col2ub ) )
+         if( not col2onBounds )
+            originalSolution.varBasisStatus[col2] = VarBasisStatus::BASIC;
+         else if( not( col1boundFlags & IS_UBINF ) and
+                  num.isEq( col2val, col2ub ) )
             originalSolution.varBasisStatus[col2] = VarBasisStatus::ON_UPPER;
-         else if( num.isZero( col1lb ) and col1boundFlags & IS_UBINF )
+         else if( not( col2boundFlags & IS_LBINF ) and
+                  ( col2boundFlags & IS_UBINF ) and
+                  num.isEq( col2val, col2lb ) and num.isZero( col2lb ) )
             originalSolution.varBasisStatus[col2] = VarBasisStatus::ZERO;
-         else
+         else if( not( col2boundFlags & IS_LBINF ) and
+                  num.isEq( col2val, col2lb ) )
             originalSolution.varBasisStatus[col2] = VarBasisStatus::ON_LOWER;
-         // TODO:
-         assert( not col1onBounds );
+
+         assert(
+             originalSolution.varBasisStatus[col2] != VarBasisStatus::BASIC and
+             originalSolution.varBasisStatus[col2] != VarBasisStatus::BASIC );
       }
    }
 }
@@ -657,18 +714,7 @@ Postsolve<REAL>::apply_var_bound_change_forced_by_column_in_original_solution(
    int col = indices[first + 1];
    REAL old_value = values[first + 2];
    REAL new_value = values[first + 1];
-   bool isInfinity = indices[first + 2] == 1;
-
-   //         if( isLowerBound )
-   //         {
-   //            col_lower[col] = old_value;
-   //            col_infinity_lower[col] = isInfinity;
-   //         }
-   //         else
-   //         {
-   //            col_upper[col] = old_value;
-   //            col_infinity_upper[col] = isInfinity;
-   //         }
+   bool was_infinity = indices[first + 2] == 1;
 
    const REAL reduced_costs = originalSolution.reducedCosts[col];
    bool changes_neg_reduced_costs =
@@ -684,8 +730,6 @@ Postsolve<REAL>::apply_var_bound_change_forced_by_column_in_original_solution(
       int next_type = i - 1;
       int next_but_one_type = i - 2;
       int saved_row = start[next_type];
-
-      // TODO: this fails for dualfix for the instance finnis
 
       if( types[next_type] == ReductionType::kSaveRow )
          saved_row = start[next_type];
@@ -708,6 +752,18 @@ Postsolve<REAL>::apply_var_bound_change_forced_by_column_in_original_solution(
       assert( coeff != 0.0 );
 
       REAL increasing_value = reduced_costs / coeff;
+      bool should_a_variable_be_added_to_the_basis = false;
+
+      if(originalSolution.basisAvailabe and originalSolution.rowBasisStatus[row] == VarBasisStatus::BASIC){
+         assert( num.isZero( originalSolution.dual[row] ) );
+         // TODO:
+         originalSolution.rowBasisStatus[row] = VarBasisStatus::NON_BASIC;
+         if( originalSolution.varBasisStatus[col] == VarBasisStatus::FIXED )
+            should_a_variable_be_added_to_the_basis = true;
+         else
+            originalSolution.varBasisStatus[col] = VarBasisStatus::BASIC;
+      }
+
       originalSolution.dual[row] += increasing_value;
 
       for( int j = 0; j < length; ++j )
@@ -717,18 +773,65 @@ Postsolve<REAL>::apply_var_bound_change_forced_by_column_in_original_solution(
             continue;
          originalSolution.reducedCosts[col_index] -=
              increasing_value * values[saved_row + 3 + j];
-      }
 
+         if( originalSolution.basisAvailabe and
+             num.isZero( originalSolution.reducedCosts[col_index] ) )
+         {
+            assert( should_a_variable_be_added_to_the_basis );
+            originalSolution.varBasisStatus[col_index] = VarBasisStatus::BASIC;
+            should_a_variable_be_added_to_the_basis = false;
+         }
+         assert( not originalSolution.basisAvailabe or
+                 not num.isZero( originalSolution.reducedCosts[col_index] or
+                                 originalSolution.varBasisStatus[col_index] !=
+                                     VarBasisStatus::BASIC ) );
+      }
+      if( originalSolution.basisAvailabe and
+          should_a_variable_be_added_to_the_basis )
+      {
+         assert( originalSolution.varBasisStatus[col] ==
+                 VarBasisStatus::FIXED );
+         originalSolution.varBasisStatus[col] = VarBasisStatus::BASIC;
+         should_a_variable_be_added_to_the_basis = false;
+      }
+      assert( not should_a_variable_be_added_to_the_basis );
       originalSolution.reducedCosts[col] = 0;
    }
 
-   if(originalSolution.varBasisStatus[col] == VarBasisStatus::FIXED){
-      if( isLowerBound )
-         originalSolution.varBasisStatus[col] = VarBasisStatus::ON_UPPER;
-      else if( isInfinity and old_value == 0 )
-         originalSolution.varBasisStatus[col] = VarBasisStatus::ZERO;
-      else
-         originalSolution.varBasisStatus[col] = VarBasisStatus::ON_LOWER;
+   if(originalSolution.basisAvailabe){
+      if( originalSolution.varBasisStatus[col] == VarBasisStatus::FIXED )
+      {
+         if(isLowerBound)
+            originalSolution.varBasisStatus[col] = VarBasisStatus::ON_UPPER;
+         else if( was_infinity and num.isZero(new_value) )
+            originalSolution.varBasisStatus[col] = VarBasisStatus::ZERO;
+         else
+            originalSolution.varBasisStatus[col] = VarBasisStatus::ON_LOWER;
+
+      }
+      else if( ( isLowerBound and ( originalSolution.varBasisStatus[col] ==
+                                        VarBasisStatus::ON_LOWER or
+                                    originalSolution.varBasisStatus[col] ==
+                                        VarBasisStatus::ZERO ) ) or
+               ( originalSolution.varBasisStatus[col] ==
+                     VarBasisStatus::ON_UPPER and
+                 not isLowerBound ) )
+      {
+         int next_type = i - 1;
+         int next_but_one_type = i - 2;
+         int saved_row = start[next_type];
+         if( types[next_type] == ReductionType::kSaveRow )
+            saved_row = start[next_type];
+         else if( types[next_but_one_type] == ReductionType::kSaveRow )
+            saved_row = start[next_but_one_type];
+         else
+            assert( false );
+         int row = indices[saved_row];
+         originalSolution.varBasisStatus[col] = VarBasisStatus::BASIC;
+         assert( originalSolution.rowBasisStatus[row] ==
+                 VarBasisStatus::BASIC );
+         originalSolution.rowBasisStatus[row] = VarBasisStatus::NON_BASIC;
+      }
    }
 }
 
@@ -759,22 +862,11 @@ Postsolve<REAL>::apply_fix_var_in_original_solution(
          int row = indices[index];
          REAL coeff = values[index];
          stablesum.add( -coeff * originalSolution.dual[row] );
-
-         //               if( row_infinity_rhs[row] == false )
-         //                  row_rhs[row] += coeff * origSol[col];
-         //               if( row_infinity_lhs[row] == false )
-         //                  row_lhs[row] += coeff * origSol[col];
       }
 
       originalSolution.reducedCosts[col] = stablesum.get();
-      originalSolution.varBasisStatus[col] = VarBasisStatus::FIXED;
-      //            // modify changes
-      //            col_cost[col] = objective_coefficient;
-      //            col_infinity_lower[col] = false;
-      //            col_infinity_upper[col] = false;
-      //            col_upper[col] = values[first];
-      //            col_lower[col] = values[first];
-
+      if( originalSolution.basisAvailabe )
+         originalSolution.varBasisStatus[col] = VarBasisStatus::FIXED;
    }
 }
 
@@ -857,13 +949,17 @@ Postsolve<REAL>::apply_fix_infinity_variable_in_original_solution(
          sum.add( -col_coefficents[k] * originalSolution.dual[row_indices[k]] );
 
       originalSolution.reducedCosts[col] = sum.get();
-      if( num.isEq( bound, originalSolution.primal[col] ) )
-         if( num.isZero( bound ) )
-            originalSolution.varBasisStatus[col] = VarBasisStatus::ZERO;
+      if(originalSolution.basisAvailabe)
+      {
+         if( num.isEq( bound, originalSolution.primal[col] ) )
+            if( num.isZero( bound ) )
+               originalSolution.varBasisStatus[col] = VarBasisStatus::ZERO;
+            else
+               originalSolution.varBasisStatus[col] = VarBasisStatus::ON_LOWER;
+         // TODO is this correct
          else
-            originalSolution.varBasisStatus[col] = VarBasisStatus::ON_LOWER;
-      else
-         originalSolution.varBasisStatus[col] = VarBasisStatus::BASIC;
+            originalSolution.varBasisStatus[col] = VarBasisStatus::BASIC;
+      }
    }
 }
 
@@ -906,7 +1002,7 @@ Postsolve<REAL>::copy_from_reduced_to_original(
 
       assert( reducedSolution.varBasisStatus.size() == reduced_columns );
       originalSolution.varBasisStatus.clear();
-      originalSolution.varBasisStatus.resize( postsolveListener.nColsOriginal );
+      originalSolution.varBasisStatus.resize( postsolveListener.nColsOriginal, VarBasisStatus::UNDEFINED );
       for( int k = 0; k < reduced_columns; k++ )
          originalSolution.varBasisStatus[postsolveListener.origcol_mapping[k]] =
              reducedSolution.varBasisStatus[k];
@@ -914,7 +1010,7 @@ Postsolve<REAL>::copy_from_reduced_to_original(
       assert( reducedSolution.rowBasisStatus.size() == reduced_rows );
 
       originalSolution.rowBasisStatus.clear();
-      originalSolution.rowBasisStatus.resize( postsolveListener.nRowsOriginal );
+      originalSolution.rowBasisStatus.resize( postsolveListener.nRowsOriginal, VarBasisStatus::UNDEFINED );
       for( int k = 0; k < reduced_rows; k++ )
          originalSolution.rowBasisStatus[postsolveListener.origrow_mapping[k]] =
              reducedSolution.rowBasisStatus[k];

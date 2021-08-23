@@ -246,7 +246,6 @@ class PrimalDualSolValidation
          REAL reducedCost = reducedCosts[col];
          REAL sol = primalSolution[col];
 
-         // TODO: check this
          if( num.isEq( upperBound, lowerBound ) and not isLbInf and
              not isUbInf )
             continue;
@@ -274,8 +273,7 @@ class PrimalDualSolValidation
    }
 
    bool
-   checkBasis( const Solution<REAL>& solution,
-               const Problem<REAL>& problem )
+   checkBasis( const Solution<REAL>& solution, const Problem<REAL>& problem )
    {
       if(not solution.basisAvailabe)
          return false;
@@ -297,10 +295,14 @@ class PrimalDualSolValidation
          switch( solution.varBasisStatus[variable] )
          {
          case VarBasisStatus::FIXED:
+         {
+            bool b = problem.getColFlags()[variable].test(
+                ColFlag::kFixed );
             if( ub_infinity or lb_infinity or not num.isEq( lb, ub ) or
                 not num.isEq( sol, ub ) )
                return true;
             break;
+         }
          case VarBasisStatus::ON_LOWER:
             if( lb_infinity or not num.isEq( sol, lb ) )
                return true;
@@ -319,6 +321,14 @@ class PrimalDualSolValidation
                return true;
             number_basic_variable++;
             break;
+         case VarBasisStatus::NON_BASIC:
+         {
+            bool on_lb = not lb_infinity and num.isEq( sol, lb );
+            bool on_ub = not ub_infinity and num.isEq( sol, ub );
+            if( not on_lb and not on_ub )
+               return true;
+            break;
+         }
          case VarBasisStatus::UNDEFINED:
             return true;
          }
@@ -364,6 +374,14 @@ class PrimalDualSolValidation
                return true;
             number_basic_variable++;
             break;
+         case VarBasisStatus::NON_BASIC:
+         {
+            bool on_lhs = not lhs_infinity and num.isEq( slack, lb );
+            bool on_rhs = not rhs_infinity and num.isEq( slack, ub );
+            if( not on_lhs and not on_rhs )
+               return true;
+            break;
+         }
          case VarBasisStatus::UNDEFINED:
             return true;
          }

@@ -40,7 +40,8 @@ enum class VarBasisStatus : int
    FIXED = 2,
    ZERO = 3,
    BASIC = 4,
-   UNDEFINED = 5
+   NON_BASIC = 5,
+   UNDEFINED = 6
 };
 
 template <typename REAL>

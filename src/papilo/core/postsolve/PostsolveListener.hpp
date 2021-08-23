@@ -133,7 +133,7 @@ class PostsolveListener
 
    void
    notifyVarBoundChange( bool isLowerBound, int col, REAL oldBound,
-                         bool isInfinity, REAL newBound );
+                         bool was_infinity, REAL newBound );
 
    void
    notifyRowBoundChange( bool isLhs, int row, REAL newBound, bool isInfinity );
@@ -379,7 +379,7 @@ void
 PostsolveListener<REAL>::notifyVarBoundChange( bool isLowerBound,
                                                int col,
                                                REAL oldBound,
-                                               bool isInfinity,
+                                               bool was_infinity,
                                                REAL newBound )
 {
    if( postsolveType == PostsolveType::kPrimal )
@@ -399,7 +399,7 @@ PostsolveListener<REAL>::notifyVarBoundChange( bool isLowerBound,
    indices.push_back( origcol_mapping[col] );
    values.push_back( newBound );
 
-   indices.push_back( isInfinity );
+   indices.push_back( was_infinity );
    values.push_back( oldBound );
 
    finishNotify();
