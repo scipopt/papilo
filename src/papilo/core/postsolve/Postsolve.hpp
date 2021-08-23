@@ -60,6 +60,10 @@ class Postsolve
    Message message{};
    Num<REAL> num{};
 
+   static constexpr int IS_INTEGRAL = static_cast<int>( ColFlag::kIntegral );
+   static constexpr int IS_LBINF = static_cast<int>( ColFlag::kLbInf );
+   static constexpr int IS_UBINF = static_cast<int>( ColFlag::kUbInf );
+
  public:
    Postsolve( const Message msg, const Num<REAL> n )
    {
@@ -121,6 +125,10 @@ class Postsolve
        Solution<REAL>& originalSolution,  const Vec<int>& indices,
        const Vec<REAL>& values, int first,
        int last ) const;
+
+   VarBasisStatus
+   set_basis( int flags, const REAL lb, const REAL ub, REAL solution,
+              bool is_on_bounds ) const;
 };
 
 #ifdef PAPILO_USE_EXTERN_TEMPLATES
@@ -502,6 +510,14 @@ Postsolve<REAL>::apply_row_bound_chang_to_original_solution(
    {
       originalSolution.dual[deleted_row] = dual_row_value * factor;
       originalSolution.dual[remained_row] = 0;
+      if(originalSolution.basisAvailabe)
+      {
+         assert( originalSolution.rowBasisStatus[deleted_row] ==
+                 VarBasisStatus::BASIC );
+         originalSolution.rowBasisStatus[deleted_row] =
+             originalSolution.rowBasisStatus[remained_row];
+         originalSolution.rowBasisStatus[remained_row] = VarBasisStatus::BASIC;
+      }
    }
 }
 
@@ -513,9 +529,7 @@ Postsolve<REAL>::apply_parallel_col_to_original_solution(
 {
    // calculate values of the parallel cols such that at least one is at its
    // bounds
-   constexpr int IS_INTEGRAL = static_cast<int>( ColFlag::kIntegral );
-   constexpr int IS_LBINF = static_cast<int>( ColFlag::kLbInf );
-   constexpr int IS_UBINF = static_cast<int>( ColFlag::kUbInf );
+
 
    assert( last - first == 5 );
 
@@ -653,53 +667,46 @@ Postsolve<REAL>::apply_parallel_col_to_original_solution(
             originalSolution.reducedCosts[col2] =
                 originalSolution.reducedCosts[col1] / col2scale;
          }
-         if( num.isEq( col1val, col1ub ) )
-            originalSolution.varBasisStatus[col1] = VarBasisStatus::ON_UPPER;
-         else
-            originalSolution.varBasisStatus[col1] = VarBasisStatus::ON_LOWER;
-         if( num.isEq( col2val, col2ub ) )
-            originalSolution.varBasisStatus[col2] = VarBasisStatus::ON_UPPER;
-         else
-            originalSolution.varBasisStatus[col2] = VarBasisStatus::ON_LOWER;
       }
 
       if(originalSolution.basisAvailabe)
       {
-         bool on_basis =
-             originalSolution.varBasisStatus[col1] == VarBasisStatus::BASIC or
-             originalSolution.varBasisStatus[col2] == VarBasisStatus::BASIC;
 
-         if( not col1onBounds )
-            originalSolution.varBasisStatus[col1] = VarBasisStatus::BASIC;
-         else if( not( col1boundFlags & IS_UBINF ) and
-                  num.isEq( col1val, col1ub ) )
-            originalSolution.varBasisStatus[col1] = VarBasisStatus::ON_UPPER;
-         else if( not( col1boundFlags & IS_LBINF ) and
-                  ( col1boundFlags & IS_UBINF ) and
-                  num.isEq( col1val, col1lb ) and num.isZero( col1lb ) )
-            originalSolution.varBasisStatus[col1] = VarBasisStatus::ZERO;
-         else if( not( col1boundFlags & IS_LBINF ) and
-                  num.isEq( col1val, col1lb ) )
-            originalSolution.varBasisStatus[col1] = VarBasisStatus::ON_LOWER;
+         originalSolution.varBasisStatus[col1] =
+             set_basis( col1boundFlags, col1lb, col1ub, col1val, col1onBounds );
 
-         if( not col2onBounds )
-            originalSolution.varBasisStatus[col2] = VarBasisStatus::BASIC;
-         else if( not( col1boundFlags & IS_UBINF ) and
-                  num.isEq( col2val, col2ub ) )
-            originalSolution.varBasisStatus[col2] = VarBasisStatus::ON_UPPER;
-         else if( not( col2boundFlags & IS_LBINF ) and
-                  ( col2boundFlags & IS_UBINF ) and
-                  num.isEq( col2val, col2lb ) and num.isZero( col2lb ) )
-            originalSolution.varBasisStatus[col2] = VarBasisStatus::ZERO;
-         else if( not( col2boundFlags & IS_LBINF ) and
-                  num.isEq( col2val, col2lb ) )
-            originalSolution.varBasisStatus[col2] = VarBasisStatus::ON_LOWER;
-
+         if( col1onBounds and col2onBounds and
+             originalSolution.varBasisStatus[col2] == VarBasisStatus::BASIC )
+         {
+            message.template info("hier\n");
+         }
+         else
+         {
+            originalSolution.varBasisStatus[col2] = set_basis(
+                col2boundFlags, col2lb, col2ub, col2val, col2onBounds );
+         }
          assert(
-             originalSolution.varBasisStatus[col2] != VarBasisStatus::BASIC and
+             originalSolution.varBasisStatus[col1] != VarBasisStatus::BASIC or
              originalSolution.varBasisStatus[col2] != VarBasisStatus::BASIC );
       }
    }
+}
+template <typename REAL>
+VarBasisStatus
+Postsolve<REAL>::set_basis( int flags, const REAL lb, const REAL ub,
+                            REAL solution, bool is_on_bounds ) const
+{
+   if( not is_on_bounds )
+      return  VarBasisStatus::BASIC;
+   else if( not( flags & IS_UBINF ) and num.isEq( solution, ub ) )
+      return VarBasisStatus::ON_UPPER;
+   else if( not( flags & IS_LBINF ) and
+            ( flags & IS_UBINF ) and num.isEq( solution, lb ) and
+            num.isZero( lb ) )
+      return VarBasisStatus::ZERO;
+   else if( not( flags & IS_LBINF ) and num.isEq( solution, lb ) )
+      return VarBasisStatus::ON_LOWER;
+   return VarBasisStatus::UNDEFINED;
 }
 
 template <typename REAL>
@@ -933,10 +940,11 @@ Postsolve<REAL>::apply_fix_infinity_variable_in_original_solution(
          current_counter += 3 + length;
          row_counter ++;
       }
-      if( problem.getColFlags()[col].test(
-          ColFlag::kIntegral ) )
+      if( problem.getColFlags()[col].test( ColFlag::kIntegral ) )
          solution = num.epsCeil( solution );
       originalSolution.primal[col] = solution;
+      if( originalSolution.basisAvailabe )
+         originalSolution.varBasisStatus[col] = VarBasisStatus::FIXED;
    }
 
    if( originalSolution.type == SolutionType::kPrimalDual )
@@ -1159,9 +1167,9 @@ Postsolve<REAL>::calculate_current_problem(
       }
       case ReductionType::kCoefficientChange:
          {
-         int row = indices[first];
-         int col = indices[first + 1];
-         REAL value = values[first];
+//         int row = indices[first];
+//         int col = indices[first + 1];
+//         REAL value = values[first];
          // TODO:
          //         problemUpdate.matr
          break;
@@ -1185,9 +1193,9 @@ Postsolve<REAL>::calculate_current_problem(
 
          if( colsize > 1 )
          {
-            auto eqRHS = problemUpdate.getProblem()
-                             .getConstraintMatrix()
-                             .getLeftHandSides()[row];
+//            auto eqRHS = problemUpdate.getProblem()
+//                             .getConstraintMatrix()
+//                             .getLeftHandSides()[row];
 
             // TODO: make the changes in the constraint matrix?
             //            problemUpdate.getProblem().getConstraintMatrix().aggregate(

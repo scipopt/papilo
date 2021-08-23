@@ -3,7 +3,7 @@ presolve.componentsmaxint = -1
 presolve.detectlindep = 0
 
 domcol.enabled = 0
-dualfix.enabled = 0
+dualfix.enabled = 1
 parallelcols.enabled = 0
 parallelrows.enabled = 0
 propagation.enabled = 0

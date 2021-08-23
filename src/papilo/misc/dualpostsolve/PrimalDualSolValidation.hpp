@@ -296,8 +296,6 @@ class PrimalDualSolValidation
          {
          case VarBasisStatus::FIXED:
          {
-            bool b = problem.getColFlags()[variable].test(
-                ColFlag::kFixed );
             if( ub_infinity or lb_infinity or not num.isEq( lb, ub ) or
                 not num.isEq( sol, ub ) )
                return true;
