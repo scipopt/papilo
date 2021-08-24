@@ -77,8 +77,7 @@ class NumericalStatistics
       for( int r = 0; r < nrows; ++r )
       {
          // matrixMin/Max
-         const SparseVectorView<REAL>& row = cm.getRowCoefficients( r );
-         std::pair<REAL, REAL> minmax = row.getMinMaxAbsValue();
+         const SparseVectorView<REAL>& row = cm.getRowCoefficients( r );std::pair<REAL, REAL> minmax = row.getMinMaxAbsValue();
 
          stats.matrixMax = std::max( minmax.second, stats.matrixMax );
          if( r == 0 )
@@ -87,8 +86,11 @@ class NumericalStatistics
             stats.matrixMin = std::min( minmax.first, stats.matrixMin );
 
          // Row dynamism
-         REAL dyn = minmax.second / minmax.first;
-         stats.rowDynamism = std::max( dyn, stats.rowDynamism );
+         if(minmax.first != 0)
+         {
+            REAL dyn = minmax.second / minmax.first;
+            stats.rowDynamism = std::max( dyn, stats.rowDynamism );
+         }
 
          // RHS min/max
 
@@ -198,7 +200,8 @@ class NumericalStatistics
                 std::max( stats.boundsMax, REAL( abs( vd.upper_bounds[c] ) ) );
       }
 
-      stats.dynamism = stats.matrixMax / stats.matrixMin;
+      if(stats.matrixMin != 0)
+         stats.dynamism = stats.matrixMax / stats.matrixMin;
 
       // Objective
       const Objective<REAL>& obj = prob.getObjective();
