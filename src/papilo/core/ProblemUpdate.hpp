@@ -1378,6 +1378,7 @@ ProblemUpdate<REAL>::trivialRowPresolve()
          }
          rflags[row].set( RowFlag::kRedundant );
          rowsize[row] = -1;
+         postsolve.notifyRedundantRow(row);
          status = PresolveStatus::kReduced;
          break;
       case 1:

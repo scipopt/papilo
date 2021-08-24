@@ -226,6 +226,7 @@ if (TARGET papilo-executable)
             "LP/afiro.mps\;-0.46475314285714285714285714285714e3"
             "LP/agg.mps\;-0.35991767286576506712640824319636e8"
             "LP/beaconfd.mps\;0.335924858072e5"
+            "LP/brandy.mps\;0.15185098964881283835426751550618e4"
             "LP/bore3d.mps\;0.13730803942084927215581987251301e4"
             "LP/capri.mps\;0.26900129137681610087717280693754e4"
             "LP/finnis.mps\;0.17279106559561159432297900375543e6"
@@ -233,6 +234,10 @@ if (TARGET papilo-executable)
             "LP/kb2.mps\;-0.17499001299062057129526866493726e4"
             "LP/lotfi.mps\;-0.2526470606188e2"
             "LP/recipe.mps\;-0.266616e3"
+            "LP/sc105.mps\;-0.52202061211707248062628010857689e2"
+            "LP/sc205.mps\;-0.52202061211707248062628010857689e2"
+            "LP/sc50a.mps\;-0.64575077058564509026860413914575e2"
+            "LP/sc50b.mps\;-0.7e2"
             "LP/scagr7.mps\;-0.2331389824330984e7"
             "LP/scagr25.mps\;-0.14753433060768523167790925075974e8"
             "LP/scfxm1.mps\;0.18416759028348943683579089143655e5"
@@ -244,14 +249,8 @@ if (TARGET papilo-executable)
             "LP/share2b.mps\;-0.41573224074141948654519910873841e3"
             "LP/shell.mps\;0.1208825346e10"
             "LP/vtp-base.mps\;0.1298314624613613657395984384889e6"
-            #TODO: MPS reader doesn't read the entries correctly if option -a r is used
-            #"LP/blend.mps\;-0.30812149845828220173774356124984e2"
-            #"LP/sc105.mps\;-0.52202061211707248062628010857689e2"
-            #"LP/sc205.mps\;-0.52202061211707248062628010857689e2"
-            #"LP/sc50a.mps\;-0.64575077058564509026860413914575e2"
-            #"LP/sc50b.mps\;-0.7e2"
-            #TODO: MPS error when using option -a r
-            #"LP/brandy.mps\;0.15185098964881283835426751550618e4"
+            #TODO: MPS error while RHS identifier is missing
+#            "LP/blend.mps\;-0.30812149845828220173774356124984e2"
             #TODO: objective value differs slightly
             #"LP/etamacro.mps\;-0.7557152333749133350792583667773e3"
 
