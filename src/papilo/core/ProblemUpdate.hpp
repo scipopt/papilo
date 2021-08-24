@@ -1217,11 +1217,11 @@ ProblemUpdate<REAL>::apply_dualfix( Vec<REAL>& lbs, Vec<REAL>& ubs,
 {
    if( is_dualfix_enabled( obj, col ) )
    {
-      if( locks[col].down == 0 && num.isGE(obj[col], 0) )
+      if( locks[col].down == 0 && obj[col] >= 0 )
       {
          if( cflags[col].test( ColFlag::kLbInf ) )
          {
-            if( not num.isZero(obj[col]) )
+            if( obj[col] != 0 )
             {
                Message::debug( this,
                                "[{}:{}] dual fixing in trivial presolve "
@@ -1244,11 +1244,11 @@ ProblemUpdate<REAL>::apply_dualfix( Vec<REAL>& lbs, Vec<REAL>& ubs,
          }
       }
 
-      if( locks[col].up == 0 && num.isLE(obj[col], 0) )
+      if( locks[col].up == 0 && obj[col] <= 0 )
       {
          if( cflags[col].test( ColFlag::kUbInf ) )
          {
-            if( not num.isZero(obj[col]) )
+            if( obj[col] != 0 )
             {
                Message::debug( this,
                                "[{}:{}] dual fixing in trivial presolve "
@@ -1704,50 +1704,34 @@ ProblemUpdate<REAL>::removeEmptyColumns()
                fixval = 0;
 
                if( !domains.flags[col].test( ColFlag::kUbInf ) &&
-                   num.isLT(domains.upper_bounds[col], 0) )
-               {
+                   domains.upper_bounds[col] < 0 )
                   fixval = domains.upper_bounds[col];
-                  postsolve.notifyVarBoundChange(
-                      true, col, domains.lower_bounds[col],
-                      domains.flags[col].test( ColFlag::kUbInf ), fixval );
-               }
                else if( !domains.flags[col].test( ColFlag::kLbInf ) &&
-                        num.isGT(domains.lower_bounds[col], 0) )
-               {
+                        domains.lower_bounds[col] > 0 )
                   fixval = domains.lower_bounds[col];
-                  postsolve.notifyVarBoundChange(
-                      false, col, domains.upper_bounds[col],
-                      domains.flags[col].test( ColFlag::kUbInf ), fixval );
-               }
             }
             else
             {
-               if( num.isGT(obj.coefficients[col], 0) )
+               if( obj.coefficients[col] < 0 )
                {
                   if( domains.flags[col].test( ColFlag::kUbInf ) )
                      return PresolveStatus::kUnbndOrInfeas;
 
                   fixval = domains.upper_bounds[col];
-                  postsolve.notifyVarBoundChange(
-                      true, col, domains.lower_bounds[col],
-                      domains.flags[col].test( ColFlag::kUbInf ), fixval );
                }
                else
                {
-                  assert( num.isGT(obj.coefficients[col], 0) );
+                  assert( obj.coefficients[col] > 0 );
                   if( domains.flags[col].test( ColFlag::kLbInf ) )
                      return PresolveStatus::kUnbndOrInfeas;
 
                   fixval = domains.lower_bounds[col];
-                  postsolve.notifyVarBoundChange(
-                      false, col, domains.upper_bounds[col],
-                      domains.flags[col].test( ColFlag::kUbInf ), fixval );
                }
             }
 
             postsolve.notifyFixedCol( col, fixval, empty_column,
                                       obj.coefficients );
-            if( not num.isZero(obj.coefficients[col] ) )
+            if( obj.coefficients[col] != 0 )
             {
                obj.offset += obj.coefficients[col] * fixval;
                obj.coefficients[col] = 0;
