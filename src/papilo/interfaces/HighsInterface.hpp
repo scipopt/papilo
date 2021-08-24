@@ -327,7 +327,7 @@ class HighsInterface : public SolverInterface<REAL>
       // get row duals
       sol.dual.resize( numrows );
       for( int i = 0; i < numrows; ++i )
-         sol.dual[i] = REAL( highsSol.row_dual[i] );
+         sol.dual[i] = - REAL( highsSol.row_dual[i] );
 
       sol.basisAvailabe = false;
       sol.varBasisStatus.resize( numcols, VarBasisStatus::UNDEFINED );
