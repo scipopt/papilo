@@ -3,9 +3,9 @@ presolve.componentsmaxint = -1
 presolve.detectlindep = 0
 
 domcol.enabled = 0
-dualfix.enabled = 1
-parallelcols.enabled = 0
-parallelrows.enabled = 0
+dualfix.enabled = 0
+parallelcols.enabled = 1
+parallelrows.enabled = 1
 propagation.enabled = 0
 fixcontinuous.enabled = 0
 colsingleton.enabled = 0

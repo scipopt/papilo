@@ -1705,10 +1705,20 @@ ProblemUpdate<REAL>::removeEmptyColumns()
 
                if( !domains.flags[col].test( ColFlag::kUbInf ) &&
                    domains.upper_bounds[col] < 0 )
+               {
                   fixval = domains.upper_bounds[col];
+                  postsolve.notifyVarBoundChange(
+                      false, col, domains.lower_bounds[col],
+                      domains.flags[col].test( ColFlag::kLbInf ), fixval );
+               }
                else if( !domains.flags[col].test( ColFlag::kLbInf ) &&
                         domains.lower_bounds[col] > 0 )
+               {
                   fixval = domains.lower_bounds[col];
+                  postsolve.notifyVarBoundChange(
+                      false, col, domains.upper_bounds[col],
+                      domains.flags[col].test( ColFlag::kUbInf ), fixval );
+               }
             }
             else
             {
@@ -1718,6 +1728,9 @@ ProblemUpdate<REAL>::removeEmptyColumns()
                      return PresolveStatus::kUnbndOrInfeas;
 
                   fixval = domains.upper_bounds[col];
+                  postsolve.notifyVarBoundChange(
+                      false, col, domains.lower_bounds[col],
+                      domains.flags[col].test( ColFlag::kLbInf ), fixval );
                }
                else
                {
@@ -1726,6 +1739,9 @@ ProblemUpdate<REAL>::removeEmptyColumns()
                      return PresolveStatus::kUnbndOrInfeas;
 
                   fixval = domains.lower_bounds[col];
+                  postsolve.notifyVarBoundChange(
+                      false, col, domains.upper_bounds[col],
+                      domains.flags[col].test( ColFlag::kUbInf ), fixval );
                }
             }
 
