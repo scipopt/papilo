@@ -246,6 +246,36 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
          if( i >= 2 and types[i - 1] == ReductionType::kCoefficientChange and
              types[i - 2] == ReductionType::kSubstitutedCol )
             continue;
+
+         bool isLhs = indices[first] == 1;
+         bool isInfinity = indices[first + 1];
+         int row = (int)values[first];
+         REAL new_value = values[first + 1];
+         switch( originalSolution.rowBasisStatus[row] )
+         {
+         case VarBasisStatus::FIXED:
+            if( isLhs )
+               originalSolution.rowBasisStatus[row] = VarBasisStatus::ON_UPPER;
+            //TODO: ZERO missing
+            else
+               originalSolution.rowBasisStatus[row] = VarBasisStatus::ON_LOWER;
+            break;
+         case VarBasisStatus::ZERO:
+         case VarBasisStatus::ON_LOWER:
+            if( isLhs )
+               originalSolution.rowBasisStatus[row] = VarBasisStatus::BASIC;
+            break;
+         case VarBasisStatus::ON_UPPER:
+            if( not isLhs )
+               originalSolution.rowBasisStatus[row] = VarBasisStatus::BASIC;
+            break;
+         case VarBasisStatus::NON_BASIC:
+            //TODO:
+            assert(false);
+         case VarBasisStatus::BASIC:
+            break;
+         }
+
          break;
       }
       case ReductionType::kReducedBoundsCost:
@@ -419,6 +449,7 @@ Postsolve<REAL>::apply_substituted_column_to_original_solution(
          // adjust the dual solution to the obj coefficient change and calculate
          // the reduced costs
          originalSolution.dual[row] += obj /colCoef;
+
          StableSum<REAL> sum_dual;
          for( int j = first + 7 + row_length; j < last; ++j )
          {
@@ -427,9 +458,18 @@ Postsolve<REAL>::apply_substituted_column_to_original_solution(
          sum_dual.add( obj );
 
          originalSolution.reducedCosts[col] = ( sum_dual.get() );
+
+
          if( originalSolution.basisAvailabe )
          {
-            if( num.isEq( originalSolution.primal[col], lb ) and
+            if(not num.isZero(originalSolution.dual[row]) and
+                originalSolution.rowBasisStatus[row] == VarBasisStatus::BASIC)
+            {
+               originalSolution.rowBasisStatus[row] = VarBasisStatus::FIXED;
+               assert( num.isZero( originalSolution.reducedCosts[col] ) );
+               originalSolution.varBasisStatus[col] = VarBasisStatus::BASIC;
+            }
+            else if( num.isEq( originalSolution.primal[col], lb ) and
                 not lb_infinity )
             {
                if( num.isZero( lb ) and ub_infinity )
@@ -485,8 +525,7 @@ Postsolve<REAL>::apply_substituted_column_to_original_solution(
                        VarBasisStatus::BASIC );
                // TODO is this correct
                originalSolution.varBasisStatus[col] = VarBasisStatus::BASIC;
-               //TODO:
-               originalSolution.rowBasisStatus[row] = VarBasisStatus::NON_BASIC;
+               originalSolution.rowBasisStatus[row] = VarBasisStatus::FIXED;
             }
          }
       }
@@ -757,7 +796,13 @@ Postsolve<REAL>::apply_var_bound_change_forced_by_column_in_original_solution(
          assert( false );
       int row = indices[saved_row];
       int length = (int)values[saved_row];
+//      bool is_lhs_inf = indices[saved_row] ==1;
+//      REAL lhs = values[saved_row];
+//      bool is_rhs_inf = indices[saved_row]==1;
+//      int rhs = values[saved_row];
+
       REAL coeff = 0.0;
+
       for( int j = 0; j < length; ++j )
       {
          int col_index = indices[saved_row + 3 + j];
