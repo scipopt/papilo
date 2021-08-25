@@ -582,6 +582,14 @@ ProblemUpdate<REAL>::fixColInfinity( int col, REAL val )
    markColFixed( col );
 
    setColState( col, State::kBoundsModified );
+   if( cflags[col].test( ColFlag::kLbInf ) )
+   {
+      postsolve.notifyFixedInfCol( col, -1, ubs[col], problem );
+   }
+   if( cflags[col].test( ColFlag::kUbInf ) )
+   {
+      postsolve.notifyFixedInfCol( col, 1, lbs[col], problem );
+   }
 
    return PresolveStatus::kReduced;
 }
@@ -1085,17 +1093,11 @@ ProblemUpdate<REAL>::removeFixedCols()
       if( !cflags[col].test( ColFlag::kFixed ) )
          continue;
 
-      if( cflags[col].test( ColFlag::kLbInf ) )
-      {
-         postsolve.notifyFixedInfCol( col, -1, problem.getUpperBounds()[col],
-                                      problem );
-         continue;
-      }
-      if( cflags[col].test( ColFlag::kUbInf ) )
-      {
-         postsolve.notifyFixedInfCol( col, 1, lbs[col], problem );
-         continue;
-      }
+//      if( cflags[col].test( ColFlag::kLbInf ) or  cflags[col].test( ColFlag::kUbInf ) )
+//      {
+//         postsolve.notifyFixedInfCol( col, 1, lbs[col], problem );
+//         continue;
+//      }
 
       assert( lbs[col] == problem.getUpperBounds()[col] );
       auto colvec = consMatrix.getColumnCoefficients( col );

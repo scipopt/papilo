@@ -98,7 +98,7 @@ class Postsolve
                                  const Vec<int>& indices,
                                  const Vec<REAL>& values, int current_index ) const;
 
-   void
+   int
    apply_fix_infinity_variable_in_original_solution(
        Solution<REAL>& originalSolution, Vec<int>& indices, Vec<REAL>& values,
        int first, const Problem<REAL>& problem ) const;
@@ -127,7 +127,7 @@ class Postsolve
        int last ) const;
 
    VarBasisStatus
-   set_basis( int flags, const REAL lb, const REAL ub, REAL solution,
+   set_basis( int flags, REAL lb, REAL ub, REAL solution,
               bool is_on_bounds ) const;
 };
 
@@ -185,8 +185,18 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
                                              first );
          break;
       case ReductionType::kFixedInfCol:
-         apply_fix_infinity_variable_in_original_solution(originalSolution, indices, values, first, problem);
+      {
+         int redundant_rows = apply_fix_infinity_variable_in_original_solution(
+             originalSolution, indices, values, first, problem );
+         // skip redundant rows because basis for those is already set and
+         // should not be overwritten
+         // TODO: write in a assert
+         for( int j = 0; j < redundant_rows; j++ )
+            assert( types[i - j - 1] == ReductionType::kRedundantRow );
+         i -= redundant_rows;
+         assert( i >= 0 );
          break;
+      }
       case ReductionType::kVarBoundChange:
       {
          assert( originalSolution.type == SolutionType::kPrimalDual );
@@ -691,9 +701,10 @@ Postsolve<REAL>::apply_parallel_col_to_original_solution(
       }
    }
 }
+
 template <typename REAL>
 VarBasisStatus
-Postsolve<REAL>::set_basis( int flags, const REAL lb, const REAL ub,
+Postsolve<REAL>::set_basis( int flags, REAL lb, REAL ub,
                             REAL solution, bool is_on_bounds ) const
 {
    if( not is_on_bounds )
@@ -878,7 +889,7 @@ Postsolve<REAL>::apply_fix_var_in_original_solution(
 }
 
 template <typename REAL>
-void
+int
 Postsolve<REAL>::apply_fix_infinity_variable_in_original_solution(
     Solution<REAL>& originalSolution, Vec<int>& indices, Vec<REAL>& values,
     int first, const Problem<REAL>& problem ) const
@@ -909,8 +920,22 @@ Postsolve<REAL>::apply_fix_infinity_variable_in_original_solution(
          REAL newValue = calculate_row_value_for_infinity_column(
              lhs, rhs, length, col, col_indices, coefficients, originalSolution.primal,
              true, col_coefficents[row_counter]);
-         if( newValue < solution )
+         if( num.isLT(newValue, solution) )
+         {
+            if(originalSolution.basisAvailabe)
+            {
+               if( num.isGT( col_coefficents[row_counter], 0 ) )
+                  originalSolution.rowBasisStatus[row_indices[row_counter]] =
+                      VarBasisStatus::ON_UPPER;
+               else
+                  originalSolution.rowBasisStatus[row_indices[row_counter]] =
+                      VarBasisStatus::ON_LOWER;
+            }
             solution = newValue;
+         }
+         else if (originalSolution.basisAvailabe)
+            originalSolution.rowBasisStatus[row_indices[row_counter]] = VarBasisStatus::BASIC;
+
          current_counter += 3 + length;
          row_counter ++;
       }
@@ -927,15 +952,25 @@ Postsolve<REAL>::apply_fix_infinity_variable_in_original_solution(
 
          REAL lhs = values[current_counter + 1];
          REAL rhs = values[current_counter + 2];
+
          const REAL* coefficients = &values[current_counter + 3];
          const int* col_indices = &indices[current_counter + 3];
 
          REAL newValue = calculate_row_value_for_infinity_column(
              lhs, rhs, length, col, col_indices, coefficients, originalSolution.primal,
              false, col_coefficents[row_counter] );
-         if( newValue > solution )
-
+         if( num.isGT(newValue, solution) )
+         {
+            if( num.isGT( col_coefficents[row_counter], 0 ) )
+               originalSolution.rowBasisStatus[row_indices[row_counter]] =
+                   VarBasisStatus::ON_LOWER;
+            else
+               originalSolution.rowBasisStatus[row_indices[row_counter]] =
+                   VarBasisStatus::ON_UPPER;
             solution = newValue;
+         }
+         else if (originalSolution.basisAvailabe)
+            originalSolution.rowBasisStatus[row_indices[row_counter]] = VarBasisStatus::BASIC;
 
          current_counter += 3 + length;
          row_counter ++;
@@ -943,8 +978,6 @@ Postsolve<REAL>::apply_fix_infinity_variable_in_original_solution(
       if( problem.getColFlags()[col].test( ColFlag::kIntegral ) )
          solution = num.epsCeil( solution );
       originalSolution.primal[col] = solution;
-      if( originalSolution.basisAvailabe )
-         originalSolution.varBasisStatus[col] = VarBasisStatus::FIXED;
    }
 
    if( originalSolution.type == SolutionType::kPrimalDual )
@@ -955,20 +988,19 @@ Postsolve<REAL>::apply_fix_infinity_variable_in_original_solution(
       // objective is zero otherwise the problem would be infeasible
       for( int k = 0; k < number_rows; ++k )
          sum.add( -col_coefficents[k] * originalSolution.dual[row_indices[k]] );
-
       originalSolution.reducedCosts[col] = sum.get();
-      if(originalSolution.basisAvailabe)
-      {
-         if( num.isEq( bound, originalSolution.primal[col] ) )
-            if( num.isZero( bound ) )
-               originalSolution.varBasisStatus[col] = VarBasisStatus::ZERO;
+
+      if( originalSolution.basisAvailabe ){
+         if( num.isEq( solution, bound ) )
+            if(isNegativeInfinity)
+               originalSolution.varBasisStatus[col] = VarBasisStatus::ON_UPPER;
             else
                originalSolution.varBasisStatus[col] = VarBasisStatus::ON_LOWER;
-         // TODO is this correct
          else
             originalSolution.varBasisStatus[col] = VarBasisStatus::BASIC;
       }
    }
+   return number_rows;
 }
 
 
@@ -1035,11 +1067,7 @@ Postsolve<REAL>::calculate_row_value_for_infinity_column(
     bool is_negative, REAL& coeff_of_column_in_row ) const
 {
    StableSum<REAL> stableSum;
-   if( ( coefficients[column] > 0 && is_negative ) ||
-       ( coefficients[column] < 0 && !is_negative ) )
-      stableSum.add( rhs );
-   else
-      stableSum.add( lhs );
+
    coeff_of_column_in_row = 0;
    for( int l = 0; l < rowLength; l++ )
    {
@@ -1052,6 +1080,11 @@ Postsolve<REAL>::calculate_row_value_for_infinity_column(
 
       stableSum.add( -coefficients[l] * current_solution[row_index] );
    }
+   if( ( coeff_of_column_in_row > 0 and is_negative ) or
+       ( coeff_of_column_in_row < 0 and not is_negative ) )
+      stableSum.add( rhs );
+   else
+      stableSum.add( lhs );
    assert( coeff_of_column_in_row != 0 );
    return ( stableSum.get() / coeff_of_column_in_row );
 }

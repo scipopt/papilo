@@ -341,30 +341,30 @@ class PrimalDualSolValidation
          bool rhs_infinity =
              problem.getRowFlags()[row].test( RowFlag::kRhsInf );
 
-         REAL lb = problem.getConstraintMatrix().getLeftHandSides()[row];
-         REAL ub = problem.getConstraintMatrix().getRightHandSides()[row];
+         REAL lhs = problem.getConstraintMatrix().getLeftHandSides()[row];
+         REAL rhs = problem.getConstraintMatrix().getRightHandSides()[row];
          REAL slack = solution.slack[row];
 
-         assert( lhs_infinity or rhs_infinity or num.isFeasGE( ub, lb ) );
+         assert( lhs_infinity or rhs_infinity or num.isFeasGE( rhs, lhs ) );
          switch( solution.rowBasisStatus[row] )
          {
          case VarBasisStatus::FIXED:
-            if( lhs_infinity or rhs_infinity or not num.isEq( lb, ub ) or
-                not num.isEq( slack, ub ) )
+            if( lhs_infinity or rhs_infinity or not num.isEq( lhs, rhs ) or
+                not num.isEq( slack, rhs ) )
                return true;
             assert( problem.getRowFlags()[row].test( RowFlag::kEquation ) );
             break;
          case VarBasisStatus::ON_LOWER:
-            if( lhs_infinity or not num.isEq( slack, lb ) )
+            if( lhs_infinity or not num.isEq( slack, lhs ) )
                return true;
             break;
          case VarBasisStatus::ON_UPPER:
-            if( rhs_infinity or not num.isEq( slack, ub ) )
+            if( rhs_infinity or not num.isEq( slack, rhs ) )
                return true;
             break;
          case VarBasisStatus::ZERO:
             if( lhs_infinity or not num.isZero( slack ) or
-                not num.isZero( lb ) and not rhs_infinity )
+                not num.isZero( lhs ) and not rhs_infinity )
                return true;
             break;
          case VarBasisStatus::BASIC:
@@ -374,8 +374,8 @@ class PrimalDualSolValidation
             break;
          case VarBasisStatus::NON_BASIC:
          {
-            bool on_lhs = not lhs_infinity and num.isEq( slack, lb );
-            bool on_rhs = not rhs_infinity and num.isEq( slack, ub );
+            bool on_lhs = not lhs_infinity and num.isEq( slack, lhs );
+            bool on_rhs = not rhs_infinity and num.isEq( slack, rhs );
             if( not on_lhs and not on_rhs )
                return true;
             break;
