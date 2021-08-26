@@ -317,7 +317,7 @@ presolve_and_solve(
           solver->getSolution( solution ) )
          postsolve( result.postsolve, solution, opts.objective_reference,
                     opts.orig_solution_file, opts.orig_dual_solution_file,
-                    opts.orig_reduced_solution_file );
+                    opts.orig_reduced_costs_file, opts.orig_basis_file );
 
       if( status == SolverStatus::kInfeasible )
          fmt::print( "\nsolving detected infeasible problem after {:.3f} seconds\n",
@@ -351,7 +351,8 @@ postsolve( PostsolveListener<REAL>& postsolveListener,
            const std::string& objective_reference = "",
            const std::string& primal_solution_output = "",
            const std::string& dual_solution_output = "",
-           const std::string& reduced_solution_output = "" )
+           const std::string& reduced_solution_output = "",
+           const std::string& basis_output= "" )
 {
    Solution<REAL> original_sol;
 
@@ -428,6 +429,21 @@ postsolve( PostsolveListener<REAL>& postsolveListener,
                   reduced_solution_output, ( t3 - t2 ).seconds() );
    }
 
+   if( not basis_output.empty() and
+       original_sol.type == SolutionType::kPrimalDual )
+   {
+      auto t2 = tbb::tick_count::now();
+
+      SolWriter<REAL>::writeBasis(
+          basis_output, original_sol.varBasisStatus,
+          original_sol.rowBasisStatus,
+          origprob.getVariableNames(), origprob.getConstraintNames() );
+      auto t3 = tbb::tick_count::now();
+
+      fmt::print( "basis written to file {} in {:.3} seconds\n",
+                  basis_output, ( t3 - t2 ).seconds() );
+   }
+
    if( !objective_reference.empty() )
    {
       if( origfeas and status == PostsolveStatus::kOk and
@@ -458,7 +474,7 @@ postsolve( const OptionsInfo& opts )
    if( success )
       postsolve( ps, reduced_solution, opts.objective_reference,
                  opts.orig_solution_file, opts.orig_dual_solution_file,
-                 opts.orig_reduced_solution_file );
+                 opts.orig_reduced_costs_file, opts.orig_basis_file  );
 }
 
 } // namespace papilo

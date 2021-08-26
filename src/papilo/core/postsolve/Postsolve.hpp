@@ -151,8 +151,6 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
    copy_from_reduced_to_original( reducedSolution, originalSolution,
                                   postsolveListener );
 
-
-
    auto types = postsolveListener.types;
    auto start = postsolveListener.start;
    auto indices = postsolveListener.indices;
@@ -271,7 +269,7 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
             break;
          case VarBasisStatus::NON_BASIC:
             //TODO:
-            assert(false);
+//            assert(false);
          case VarBasisStatus::BASIC:
             break;
          }
@@ -779,6 +777,8 @@ Postsolve<REAL>::apply_var_bound_change_forced_by_column_in_original_solution(
    bool changes_pos_reduced_costs =
        isLowerBound and num.isGT( reduced_costs, 0 );
 
+   int variables_added_to_basis = 0;
+
    //calculate the reduced costs if loosens variable at a bound
    if( num.isEq( new_value, originalSolution.primal[col] ) and
        ( changes_neg_reduced_costs or changes_pos_reduced_costs ) )
@@ -796,10 +796,10 @@ Postsolve<REAL>::apply_var_bound_change_forced_by_column_in_original_solution(
          assert( false );
       int row = indices[saved_row];
       int length = (int)values[saved_row];
-//      bool is_lhs_inf = indices[saved_row] ==1;
-//      REAL lhs = values[saved_row];
-//      bool is_rhs_inf = indices[saved_row]==1;
-//      int rhs = values[saved_row];
+      bool is_lhs_inf = indices[saved_row] ==1;
+      REAL lhs = values[saved_row];
+      bool is_rhs_inf = indices[saved_row]==1;
+      int rhs = values[saved_row];
 
       REAL coeff = 0.0;
 
@@ -815,19 +815,17 @@ Postsolve<REAL>::apply_var_bound_change_forced_by_column_in_original_solution(
       assert( coeff != 0.0 );
 
       REAL increasing_value = reduced_costs / coeff;
-      bool should_a_variable_be_added_to_the_basis = false;
-
-      if(originalSolution.basisAvailabe and originalSolution.rowBasisStatus[row] == VarBasisStatus::BASIC){
-         assert( num.isZero( originalSolution.dual[row] ) );
-         // TODO:
-         originalSolution.rowBasisStatus[row] = VarBasisStatus::NON_BASIC;
-         if( originalSolution.varBasisStatus[col] == VarBasisStatus::FIXED )
-            should_a_variable_be_added_to_the_basis = true;
-         else
-            originalSolution.varBasisStatus[col] = VarBasisStatus::BASIC;
-      }
 
       originalSolution.dual[row] += increasing_value;
+
+      if( originalSolution.basisAvailabe and
+          originalSolution.rowBasisStatus[row] == VarBasisStatus::BASIC and
+          not num.isZero( originalSolution.dual[row] ) )
+      {
+         //TODO: define correct basis
+         originalSolution.rowBasisStatus[row] = VarBasisStatus::NON_BASIC;
+         variables_added_to_basis ++;
+      }
 
       for( int j = 0; j < length; ++j )
       {
@@ -837,64 +835,87 @@ Postsolve<REAL>::apply_var_bound_change_forced_by_column_in_original_solution(
          originalSolution.reducedCosts[col_index] -=
              increasing_value * values[saved_row + 3 + j];
 
+
          if( originalSolution.basisAvailabe and
-             num.isZero( originalSolution.reducedCosts[col_index] ) )
+             originalSolution.varBasisStatus[col_index] == VarBasisStatus::BASIC and
+             not num.isZero( originalSolution.reducedCosts[col_index] ) )
          {
-            assert( should_a_variable_be_added_to_the_basis );
-            originalSolution.varBasisStatus[col_index] = VarBasisStatus::BASIC;
-            should_a_variable_be_added_to_the_basis = false;
+            //TODO: define correct basis
+            originalSolution.varBasisStatus[col_index] = VarBasisStatus::NON_BASIC;
+            variables_added_to_basis++;
          }
+
          assert( not originalSolution.basisAvailabe or
                  not num.isZero( originalSolution.reducedCosts[col_index] or
                                  originalSolution.varBasisStatus[col_index] !=
                                      VarBasisStatus::BASIC ) );
       }
-      if( originalSolution.basisAvailabe and
-          should_a_variable_be_added_to_the_basis )
+      if( originalSolution.basisAvailabe and variables_added_to_basis > 0 )
       {
-         assert( originalSolution.varBasisStatus[col] ==
-                 VarBasisStatus::FIXED );
          originalSolution.varBasisStatus[col] = VarBasisStatus::BASIC;
-         should_a_variable_be_added_to_the_basis = false;
+         variables_added_to_basis--;
       }
-      assert( not should_a_variable_be_added_to_the_basis );
+      assert( variables_added_to_basis == 0 );
       originalSolution.reducedCosts[col] = 0;
    }
 
    if(originalSolution.basisAvailabe){
-      if( originalSolution.varBasisStatus[col] == VarBasisStatus::FIXED )
-      {
-         if(isLowerBound)
-            originalSolution.varBasisStatus[col] = VarBasisStatus::ON_UPPER;
-         else if( was_infinity and num.isZero(new_value) )
-            originalSolution.varBasisStatus[col] = VarBasisStatus::ZERO;
-         else
-            originalSolution.varBasisStatus[col] = VarBasisStatus::ON_LOWER;
-
-      }
-      else if( ( isLowerBound and ( originalSolution.varBasisStatus[col] ==
-                                        VarBasisStatus::ON_LOWER or
-                                    originalSolution.varBasisStatus[col] ==
-                                        VarBasisStatus::ZERO ) ) or
-               ( originalSolution.varBasisStatus[col] ==
-                     VarBasisStatus::ON_UPPER and
-                 not isLowerBound ) )
-      {
-         int next_type = i - 1;
-         int next_but_one_type = i - 2;
-         int saved_row = start[next_type];
-         if( types[next_type] == ReductionType::kSaveRow )
-            saved_row = start[next_type];
-         else if( types[next_but_one_type] == ReductionType::kSaveRow )
-            saved_row = start[next_but_one_type];
-         else
-            assert( false );
-         int row = indices[saved_row];
-         originalSolution.varBasisStatus[col] = VarBasisStatus::BASIC;
-         assert( originalSolution.rowBasisStatus[row] ==
-                 VarBasisStatus::BASIC );
-         originalSolution.rowBasisStatus[row] = VarBasisStatus::NON_BASIC;
-      }
+      switch(originalSolution.varBasisStatus[col]){
+         case VarBasisStatus::FIXED:
+            if(isLowerBound)
+               originalSolution.varBasisStatus[col] = VarBasisStatus::ON_UPPER;
+            else if( was_infinity and num.isZero(new_value) )
+               originalSolution.varBasisStatus[col] = VarBasisStatus::ZERO;
+            else
+               originalSolution.varBasisStatus[col] = VarBasisStatus::ON_LOWER;
+            break;
+         case VarBasisStatus::ON_LOWER:
+         case VarBasisStatus::ZERO:
+         {
+            if( not isLowerBound )
+               break;
+            int next_type = i - 1;
+            int next_but_one_type = i - 2;
+            int saved_row = start[next_type];
+            if( types[next_type] == ReductionType::kSaveRow )
+               saved_row = start[next_type];
+            else if( types[next_but_one_type] == ReductionType::kSaveRow )
+               saved_row = start[next_but_one_type];
+            else
+               assert( false );
+            int row = indices[saved_row];
+            originalSolution.varBasisStatus[col] = VarBasisStatus::BASIC;
+            //TODO: reduce Basicvariable
+//            assert( originalSolution.rowBasisStatus[row] ==
+//                    VarBasisStatus::BASIC );
+            //TODO: define correct basis
+//            originalSolution.rowBasisStatus[row] = VarBasisStatus::NON_BASIC;
+         }
+         case VarBasisStatus::ON_UPPER:
+         {
+            if( isLowerBound )
+               break;
+            int next_type = i - 1;
+            int next_but_one_type = i - 2;
+            int saved_row = start[next_type];
+            if( types[next_type] == ReductionType::kSaveRow )
+               saved_row = start[next_type];
+            else if( types[next_but_one_type] == ReductionType::kSaveRow )
+               saved_row = start[next_but_one_type];
+            else
+               assert( false );
+            int row = indices[saved_row];
+            originalSolution.varBasisStatus[col] = VarBasisStatus::BASIC;
+            assert( originalSolution.rowBasisStatus[row] ==
+                    VarBasisStatus::BASIC );
+            originalSolution.rowBasisStatus[row] = VarBasisStatus::NON_BASIC;
+         }
+         case VarBasisStatus::UNDEFINED:
+         case VarBasisStatus::NON_BASIC:
+//        TODO    assert( false );
+         case VarBasisStatus::BASIC:
+            break;
+         }
    }
 }
 

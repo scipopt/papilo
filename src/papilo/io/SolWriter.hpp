@@ -144,6 +144,85 @@ struct SolWriter
          }
       }
    }
+
+   static void
+   writeBasis( const std::string& filename, const Vec<VarBasisStatus>& colBasis,
+               const Vec<VarBasisStatus>& rowBasis, const Vec<std::string>& col_names, const Vec<std::string>& row_names )
+   {
+      std::ofstream file( filename, std::ofstream::out );
+      boost::iostreams::filtering_ostream out;
+
+#ifdef PAPILO_USE_BOOST_IOSTREAMS_WITH_ZLIB
+      if( boost::algorithm::ends_with( filename, ".gz" ) )
+         out.push( boost::iostreams::gzip_compressor() );
+#endif
+#ifdef PAPILO_USE_BOOST_IOSTREAMS_WITH_BZIP2
+      if( boost::algorithm::ends_with( filename, ".bz2" ) )
+         out.push( boost::iostreams::bzip2_compressor() );
+#endif
+
+      int rowSize = (int) rowBasis.size();
+      assert(colBasis.size() == col_names.size());
+      assert( rowSize == row_names.size());
+
+
+      out.push( file );
+      int row = 0;
+      fmt::print( out, "NAME  papilo.bas\n");
+
+      for( int col = 0; col < colBasis.size(); ++col )
+      {
+         if( colBasis[col] == VarBasisStatus::BASIC )
+         {
+            /* Find non basic row */
+            for(; row < rowSize; row++)
+            {
+               if(rowBasis[row] != VarBasisStatus::BASIC)
+                  break;
+            }
+            assert( rowBasis[row] == VarBasisStatus::ON_UPPER or
+                    rowBasis[row] == VarBasisStatus::ON_LOWER or
+                    rowBasis[row] == VarBasisStatus::ZERO or
+                    rowBasis[row] == VarBasisStatus::FIXED
+                    );
+            if( colBasis[col] == VarBasisStatus::ON_UPPER )
+               fmt::print( out, "  XU {: <50} {: <50}\n", col_names[col],
+                           row_names[row]);
+            else
+               fmt::print( out, "  XL {: <50} {: <50}\n", col_names[col],
+                           row_names[row]);
+            row++;
+         }
+         else if( colBasis[col] == VarBasisStatus::ON_UPPER )
+            fmt::print( out, "  UL {: <50}\n", col_names[col]);
+         else if( colBasis[col] == VarBasisStatus::ON_LOWER or
+                  colBasis[col] == VarBasisStatus::ZERO )
+         {
+            /* Default is all non-basic variables on lower bound (if finite) or
+             * at zero (if free). nothing to do in this case.
+             */
+         }
+         else
+            assert( false );
+      }
+      fmt::print( out, "ENDDATA\n");
+
+//      assert(check_if_remaining_rows_are_basic( rowBasis, rowSize, row ));
+   }
+
+   static bool
+   check_if_remaining_rows_are_basic( const Vec<VarBasisStatus>& rowBasis,
+                                      int rowSize, int row )
+   {
+      // Check that we covered all nonbasic rows - the remaining should be basic.
+      for(; row < rowSize; row++)
+      {
+         if(rowBasis[row] != VarBasisStatus::BASIC)
+            break;
+      }
+
+      return row == rowSize ;
+   }
 };
 
 } // namespace papilo
