@@ -711,9 +711,9 @@ PostsolveListener<REAL>::notifyReducedBoundsAndCost(
       int flag_lb = 0;
       int flag_ub = 0;
       if( col_flags[col].test( ColFlag::kLbInf ) )
-         flag_lb |= static_cast<int>( ColFlag::kLbInf );
+         flag_lb = 1;
       if( col_flags[col].test( ColFlag::kUbInf ) )
-         flag_ub |= static_cast<int>( ColFlag::kUbInf );
+         flag_ub = 1;
       indices.push_back( flag_lb );
       values.push_back( col_lb[col] );
       indices.push_back( flag_ub );
@@ -726,9 +726,9 @@ PostsolveListener<REAL>::notifyReducedBoundsAndCost(
       int flag_lb = 0;
       int flag_ub = 0;
       if( row_flags[row].test( RowFlag::kLhsInf ) )
-         flag_lb |= static_cast<int>( RowFlag::kLhsInf );
+         flag_lb = 1;
       if( row_flags[row].test( RowFlag::kRhsInf ) )
-         flag_ub |= static_cast<int>( RowFlag::kRhsInf );
+         flag_ub = 1;
       indices.push_back( flag_lb );
       values.push_back( row_lhs[row] );
       indices.push_back( flag_ub );

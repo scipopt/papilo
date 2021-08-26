@@ -319,14 +319,14 @@ class PrimalDualSolValidation
                return true;
             number_basic_variable++;
             break;
-         case VarBasisStatus::NON_BASIC:
-         {
-            bool on_lb = not lb_infinity and num.isEq( sol, lb );
-            bool on_ub = not ub_infinity and num.isEq( sol, ub );
-            if( not on_lb and not on_ub )
-               return true;
-            break;
-         }
+//         case VarBasisStatus::NON_BASIC:
+//         {
+//            bool on_lb = not lb_infinity and num.isEq( sol, lb );
+//            bool on_ub = not ub_infinity and num.isEq( sol, ub );
+//            if( not on_lb and not on_ub )
+//               return true;
+//            break;
+//         }
          case VarBasisStatus::UNDEFINED:
             return true;
          }
@@ -372,14 +372,14 @@ class PrimalDualSolValidation
                return true;
             number_basic_variable++;
             break;
-         case VarBasisStatus::NON_BASIC:
-         {
-            bool on_lhs = not lhs_infinity and num.isEq( slack, lhs );
-            bool on_rhs = not rhs_infinity and num.isEq( slack, rhs );
-            if( not on_lhs and not on_rhs )
-               return true;
-            break;
-         }
+//         case VarBasisStatus::NON_BASIC:
+//         {
+//            bool on_lhs = not lhs_infinity and num.isEq( slack, lhs );
+//            bool on_rhs = not rhs_infinity and num.isEq( slack, rhs );
+//            if( not on_lhs and not on_rhs )
+//               return true;
+//            break;
+//         }
          case VarBasisStatus::UNDEFINED:
             return true;
          }

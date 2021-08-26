@@ -866,8 +866,6 @@ Presolve<REAL>::apply( Problem<REAL>& problem )
                 col_flags );
          }
 
-         //TODO:
-//         result.postsolve.getChecker().setReducedProblem( problem );
          return result;
       }
 
