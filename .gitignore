@@ -45,6 +45,7 @@ check/IP/miplib2017-benchmark/*
 
 #Generated Files
 build/
+debug/
 cmake-build-debug/
 cmake-build-debug-coverage/
 external/tbb/cmake/
