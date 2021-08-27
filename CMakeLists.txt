@@ -3,7 +3,7 @@ project(papilo VERSION 1.1.0.0)
 
 set(BOOST_MIN_VERSION 1.72)
 set(CMAKE_CXX_STANDARD 14)
-# set(CMAKE_CXX_EXTENSIONS OFF)
+# set(CMAKE_CXX_EXTENSIONS OFF) # use -std=c++... instead of -std=gnu++...
 # required for gcc if set(CMAKE_CXX_EXTENSIONS OFF) is used
 # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fext-numeric-literals")
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
@@ -31,9 +31,6 @@ option(SCIP "should SCIP solver be linked if found" ON)
 if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Release)
 endif()
-
-# please make sure to have installed libbz2-dev
-find_package(BZip2 REQUIRED)
 
 find_package(Boost ${BOOST_MIN_VERSION} REQUIRED)
 
@@ -97,10 +94,24 @@ target_include_directories(papilo INTERFACE
    ${GMP_INCLUDE_DIRS}
    ${Quadmath_INCLUDE_DIRS})
 
-find_package(TBB MODULE REQUIRED)
-if(TBB_BUILT_STATIC_LIB)
-   install(FILES ${TBB_STATIC_LIB} DESTINATION lib)
-endif()
+
+# Utilities to automatically download missing dependencies
+include(cmake/Dependencies.cmake)
+find_or_download_package(
+    NAME TBB
+    VERSION 2021
+    URL https://github.com/oneapi-src/oneTBB/archive/refs/tags/v2021.3.0.tar.gz
+    COMPONENTS tbb
+    URL_HASH SHA256=8f616561603695bbb83871875d2c6051ea28f8187dbe59299961369904d1d49e
+    CONFIGURE_ARGS -DTBB_TEST=OFF -DTBB_EXAMPLES=OFF -DTBB4PY_BUILD=OFF -DBUILD_SHARED_LIBS=OFF)
+find_package(Threads REQUIRED)
+
+target_link_libraries(papilo
+    INTERFACE TBB::tbb Threads::Threads $<$<PLATFORM_ID:Linux>:rt>)
+target_compile_options(papilo
+    PRIVATE ${TBB_CXX_STD_FLAG})
+
+
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
    file(TO_CMAKE_PATH "$ENV{TBBROOT}" TBB_ROOTDIR)
    if(CMAKE_CL_64)
@@ -113,7 +124,8 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
    endif()
 endif()
 
-target_link_libraries(papilo INTERFACE ${TBB_LIBRARY} ${Quadmath_IMPORTED_TARGET} ${GMP_LIBRARIES})
+target_link_libraries(papilo
+    INTERFACE ${Quadmath_IMPORTED_TARGET} ${GMP_LIBRARIES})
 
 if(MSVC)
    target_compile_definitions(papilo INTERFACE BOOST_ALL_NO_LIB)
@@ -361,7 +373,7 @@ if(PAPILO_HAVE_FLOAT128)
 endif()
 
 # export targets for build-tree linking
-export(TARGETS papilo ${CLUSOL_TARGET} FILE "${CMAKE_BINARY_DIR}/papilo-targets.cmake")
+#export(TARGETS papilo ${CLUSOL_TARGET} FILE "${CMAKE_BINARY_DIR}/papilo-targets.cmake")
 
 # install targets
 install(TARGETS papilo ${CLUSOL_TARGET} EXPORT papilo-targets ARCHIVE DESTINATION lib LIBRARY DESTINATION lib)
