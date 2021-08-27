@@ -398,7 +398,7 @@ Presolve<REAL>::apply( Problem<REAL>& problem )
 
       PresolveResult<REAL> result;
 
-      result.postsolve = PostsolveListener<REAL>( problem, num );
+      result.postsolve = PostsolveListener<REAL>( problem, num, presolveOptions );
 
       if( problem.getNumIntegralCols() == 0 )
          result.postsolve.postsolveType = PostsolveType::kFull;

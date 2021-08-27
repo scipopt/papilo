@@ -89,6 +89,8 @@ struct PresolveOptions
 
    bool simplify_inequalities_parallel = true;
 
+   bool calculate_basis_for_dual = true;
+
    void
    addParameters( ParameterSet& paramSet )
    {
@@ -199,6 +201,10 @@ struct PresolveOptions
           "simplifyineq.parallel",
           "#execute loop over rows in simplifyineq in parallel",
           simplify_inequalities_parallel );
+      paramSet.addParameter(
+          "calculate_basis_for_dual",
+          "#if basis for LP should be calculated presolving steps tightening the variable bounds can not be applied.",
+          calculate_basis_for_dual );
    }
 
    bool

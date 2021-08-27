@@ -1707,7 +1707,7 @@ ProblemUpdate<REAL>::removeEmptyColumns()
                fixval = 0;
 
                if( !domains.flags[col].test( ColFlag::kUbInf ) &&
-                   domains.upper_bounds[col] < 0 )
+                   num.isLT(domains.upper_bounds[col], 0) )
                {
                   fixval = domains.upper_bounds[col];
                   postsolve.notifyVarBoundChange(
@@ -1715,12 +1715,25 @@ ProblemUpdate<REAL>::removeEmptyColumns()
                       domains.flags[col].test( ColFlag::kLbInf ), fixval );
                }
                else if( !domains.flags[col].test( ColFlag::kLbInf ) &&
-                        domains.lower_bounds[col] > 0 )
+                        num.isGT(domains.lower_bounds[col], 0) )
                {
                   fixval = domains.lower_bounds[col];
                   postsolve.notifyVarBoundChange(
                       false, col, domains.upper_bounds[col],
                       domains.flags[col].test( ColFlag::kUbInf ), fixval );
+               }
+               else{
+                  //notify for storing the bound for recalculation
+                  if( domains.flags[col].test( ColFlag::kLbInf ) or
+                      not num.isZero(domains.lower_bounds[col] ) )
+                     postsolve.notifyVarBoundChange(
+                         true, col, domains.lower_bounds[col],
+                         domains.flags[col].test( ColFlag::kLbInf ), fixval );
+                  if( domains.flags[col].test( ColFlag::kUbInf ) or
+                      not num.isZero(domains.upper_bounds[col] ) )
+                     postsolve.notifyVarBoundChange(
+                         false, col, domains.upper_bounds[col],
+                         domains.flags[col].test( ColFlag::kUbInf ), fixval );
                }
             }
             else

@@ -40,7 +40,7 @@ TEST_CASE( "happy-path-presolve-fix-continuous", "[presolve]" )
    Statistics statistics{};
    PresolveOptions presolveOptions{};
    PostsolveListener<double> postsolve =
-       PostsolveListener<double>( problem, num );
+       PostsolveListener<double>( problem, num, presolveOptions );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
    FixContinuous<double> presolvingMethod{};
@@ -67,7 +67,7 @@ TEST_CASE( "happy-path-no-presolve-fix-continuous", "[presolve]" )
    Statistics statistics{};
    PresolveOptions presolveOptions{};
    PostsolveListener<double> postsolve =
-       PostsolveListener<double>( problem, num );
+       PostsolveListener<double>( problem, num, presolveOptions );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
    FixContinuous<double> presolvingMethod{};

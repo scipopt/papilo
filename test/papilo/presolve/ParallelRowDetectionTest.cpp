@@ -63,7 +63,7 @@ TEST_CASE( "parallel-row-unchanged", "[presolve]" )
    Statistics statistics{};
    PresolveOptions presolveOptions{};
    PostsolveListener<double> postsolve =
-       PostsolveListener<double>( problem, num );
+       PostsolveListener<double>( problem, num, presolveOptions );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
    problemUpdate.checkChangedActivities();
@@ -86,7 +86,7 @@ TEST_CASE( "parallel-row-two-equations-infeasible-second-row-dominant",
    Statistics statistics{};
    PresolveOptions presolveOptions{};
    PostsolveListener<double> postsolve =
-       PostsolveListener<double>( problem, num );
+       PostsolveListener<double>( problem, num, presolveOptions );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
    problemUpdate.checkChangedActivities();
@@ -109,7 +109,7 @@ TEST_CASE( "parallel-row-two-equations-infeasible-first-row-dominant",
    Statistics statistics{};
    PresolveOptions presolveOptions{};
    PostsolveListener<double> postsolve =
-       PostsolveListener<double>( problem, num );
+       PostsolveListener<double>( problem, num, presolveOptions );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
    problemUpdate.checkChangedActivities();
@@ -132,7 +132,7 @@ TEST_CASE( "parallel-row-two-equations-feasible-second-row-dominant",
    Statistics statistics{};
    PresolveOptions presolveOptions{};
    PostsolveListener<double> postsolve =
-       PostsolveListener<double>( problem, num );
+       PostsolveListener<double>( problem, num, presolveOptions );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
    problemUpdate.checkChangedActivities();
@@ -167,7 +167,7 @@ TEST_CASE( "parallel-row-two-equations-feasible-first-row-dominant",
    Statistics statistics{};
    PresolveOptions presolveOptions{};
    PostsolveListener<double> postsolve =
-       PostsolveListener<double>( problem, num );
+       PostsolveListener<double>( problem, num, presolveOptions );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
    problemUpdate.checkChangedActivities();
@@ -202,7 +202,7 @@ TEST_CASE( "parallel-row-two-inequalities-redundant-row-second-row-dominant",
    Statistics statistics{};
    PresolveOptions presolveOptions{};
    PostsolveListener<double> postsolve =
-       PostsolveListener<double>( problem, num );
+       PostsolveListener<double>( problem, num, presolveOptions );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
    problemUpdate.checkChangedActivities();
@@ -237,7 +237,7 @@ TEST_CASE( "parallel-row-two-inequalities-redundant-row-first-row-dominant",
    Statistics statistics{};
    PresolveOptions presolveOptions{};
    PostsolveListener<double> postsolve =
-       PostsolveListener<double>( problem, num );
+       PostsolveListener<double>( problem, num, presolveOptions );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
    problemUpdate.checkChangedActivities();
@@ -273,7 +273,7 @@ TEST_CASE(
    Statistics statistics{};
    PresolveOptions presolveOptions{};
    PostsolveListener<double> postsolve =
-       PostsolveListener<double>( problem, num );
+       PostsolveListener<double>( problem, num, presolveOptions );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
    problemUpdate.checkChangedActivities();
@@ -319,7 +319,7 @@ TEST_CASE(
    Statistics statistics{};
    PresolveOptions presolveOptions{};
    PostsolveListener<double> postsolve =
-       PostsolveListener<double>( problem, num );
+       PostsolveListener<double>( problem, num, presolveOptions );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
    problemUpdate.checkChangedActivities();
@@ -365,7 +365,7 @@ TEST_CASE(
    Statistics statistics{};
    PresolveOptions presolveOptions{};
    PostsolveListener<double> postsolve =
-       PostsolveListener<double>( problem, num );
+       PostsolveListener<double>( problem, num, presolveOptions );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
    problemUpdate.checkChangedActivities();
@@ -411,7 +411,7 @@ TEST_CASE(
    Statistics statistics{};
    PresolveOptions presolveOptions{};
    PostsolveListener<double> postsolve =
-       PostsolveListener<double>( problem, num );
+       PostsolveListener<double>( problem, num, presolveOptions );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
    problemUpdate.checkChangedActivities();
@@ -456,7 +456,7 @@ TEST_CASE( "parallel-row-two-inequalities-infeasible-first-row-dominant",
    Statistics statistics{};
    PresolveOptions presolveOptions{};
    PostsolveListener<double> postsolve =
-       PostsolveListener<double>( problem, num );
+       PostsolveListener<double>( problem, num, presolveOptions );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
    problemUpdate.checkChangedActivities();
@@ -479,7 +479,7 @@ TEST_CASE( "parallel-row-two-inequalities-infeasible-second-row-dominant",
    Statistics statistics{};
    PresolveOptions presolveOptions{};
    PostsolveListener<double> postsolve =
-       PostsolveListener<double>( problem, num );
+       PostsolveListener<double>( problem, num, presolveOptions );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
    problemUpdate.checkChangedActivities();
@@ -503,7 +503,7 @@ TEST_CASE( "parallel-row-two-inequalities-tighten-upper-bound-first-row-neg"
    Statistics statistics{};
    PresolveOptions presolveOptions{};
    PostsolveListener<double> postsolve =
-       PostsolveListener<double>( problem, num );
+       PostsolveListener<double>( problem, num, presolveOptions );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
    problemUpdate.checkChangedActivities();
@@ -548,7 +548,7 @@ TEST_CASE( "parallel-row-overwrite-inf-first-row-rhs-inf","[presolve]" )
    Statistics statistics{};
    PresolveOptions presolveOptions{};
    PostsolveListener<double> postsolve =
-       PostsolveListener<double>( problem, num );
+       PostsolveListener<double>( problem, num, presolveOptions );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
    problemUpdate.checkChangedActivities();
@@ -591,7 +591,7 @@ TEST_CASE( "parallel-row-overwrite-inf-first-row-lhs-inf","[presolve]" )
    Statistics statistics{};
    PresolveOptions presolveOptions{};
    PostsolveListener<double> postsolve =
-       PostsolveListener<double>( problem, num );
+       PostsolveListener<double>( problem, num, presolveOptions );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
    problemUpdate.checkChangedActivities();
@@ -634,7 +634,7 @@ TEST_CASE( "parallel-row-overwrite-inf-first-row-lhs-inf-neg-factor","[presolve]
    Statistics statistics{};
    PresolveOptions presolveOptions{};
    PostsolveListener<double> postsolve =
-       PostsolveListener<double>( problem, num );
+       PostsolveListener<double>( problem, num, presolveOptions );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
    problemUpdate.checkChangedActivities();
@@ -677,7 +677,7 @@ TEST_CASE( "parallel-row-mixed-infeasible-first-row-equation","[presolve]" )
    Statistics statistics{};
    PresolveOptions presolveOptions{};
    PostsolveListener<double> postsolve =
-       PostsolveListener<double>( problem, num );
+       PostsolveListener<double>( problem, num, presolveOptions );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
    problemUpdate.checkChangedActivities();
@@ -699,7 +699,7 @@ TEST_CASE( "parallel-row-mixed-second-row-equation","[presolve]" )
    Statistics statistics{};
    PresolveOptions presolveOptions{};
    PostsolveListener<double> postsolve =
-       PostsolveListener<double>( problem, num );
+       PostsolveListener<double>( problem, num, presolveOptions );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
    problemUpdate.checkChangedActivities();
@@ -733,7 +733,7 @@ TEST_CASE( "parallel-row-mixed-infeasible-second-row-equation","[presolve]" )
    Statistics statistics{};
    PresolveOptions presolveOptions{};
    PostsolveListener<double> postsolve =
-       PostsolveListener<double>( problem, num );
+       PostsolveListener<double>( problem, num, presolveOptions );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
    problemUpdate.checkChangedActivities();
@@ -755,7 +755,7 @@ TEST_CASE( "parallel-row-multiple-parallel-rows", "[presolve]" )
    Statistics statistics{};
    PresolveOptions presolveOptions{};
    PostsolveListener<double> postsolve =
-       PostsolveListener<double>( problem, num );
+       PostsolveListener<double>( problem, num, presolveOptions );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
    problemUpdate.checkChangedActivities();

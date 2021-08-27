@@ -1,0 +1,19 @@
+message.verbosity = 4
+presolve.componentsmaxint = -1
+presolve.detectlindep = 0
+
+domcol.enabled = 1
+dualfix.enabled = 1
+parallelcols.enabled = 1
+parallelrows.enabled = 1
+propagation.enabled = 1
+fixcontinuous.enabled = 1
+colsingleton.enabled = 0
+stuffing.enabled = 0
+
+doubletoneq.enabled = 0
+dualinfer.enabled = 0
+substitution.enabled = 0
+sparsify.enabled = 0
+
+calculate_basis_for_dual = 0

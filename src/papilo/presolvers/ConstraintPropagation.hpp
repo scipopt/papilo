@@ -80,6 +80,13 @@ ConstraintPropagation<REAL>::execute( const Problem<REAL>& problem,
                    num.getFeasTol() }
            : REAL{ 0 };
 
+   // calculating the basis for variable tightening (not fixings) may lead in
+   // the postsolving step to a solution that is not in a vertex. In this case a
+   // crossover would be required is too expensive performance wise
+   const bool skip_variable_tightening =
+       problem.getNumIntegralCols() == 0 and
+       problemUpdate.getPresolveOptions().calculate_basis_for_dual;
+
    if( problemUpdate.getPresolveOptions().runs_sequentiell() or
        !problemUpdate.getPresolveOptions().constraint_propagation_parallel )
    {
@@ -116,6 +123,7 @@ ConstraintPropagation<REAL>::execute( const Problem<REAL>& problem,
                                      consMatrix.getMaxFeasChange(
                                          col, bnddist ) <= num.getFeasTol() ) )
                {
+//                  reductions.changeColLB( col, domains.upper_bounds[col], row );
                   reductions.fixCol( col, domains.upper_bounds[col], row );
                   result = PresolveStatus::kReduced;
                   return;
@@ -126,8 +134,11 @@ ConstraintPropagation<REAL>::execute( const Problem<REAL>& problem,
             if( domains.flags[col].test( ColFlag::kLbInf ) ||
                 val - domains.lower_bounds[col] > +1000 * num.getFeasTol() )
             {
-               reductions.changeColLB( col, val, row );
-               result = PresolveStatus::kReduced;
+               if(not skip_variable_tightening)
+               {
+                  reductions.changeColLB( col, val, row );
+                  result = PresolveStatus::kReduced;
+               }
             }
          }
          else
@@ -159,6 +170,7 @@ ConstraintPropagation<REAL>::execute( const Problem<REAL>& problem,
                                      consMatrix.getMaxFeasChange(
                                          col, bnddist ) <= num.getFeasTol() ) )
                {
+//                  reductions.changeColUB( col, domains.lower_bounds[col], row );
                   reductions.fixCol( col, domains.lower_bounds[col], row );
                   result = PresolveStatus::kReduced;
                   return;
@@ -169,8 +181,11 @@ ConstraintPropagation<REAL>::execute( const Problem<REAL>& problem,
             if( domains.flags[col].test( ColFlag::kUbInf ) ||
                 val - domains.upper_bounds[col] < -1000 * num.getFeasTol() )
             {
-               reductions.changeColUB( col, val, row );
-               result = PresolveStatus::kReduced;
+               if(not skip_variable_tightening)
+               {
+                  reductions.changeColUB( col, val, row );
+                  result = PresolveStatus::kReduced;
+               }
             }
          }
       };
@@ -265,8 +280,11 @@ ConstraintPropagation<REAL>::execute( const Problem<REAL>& problem,
                           val - domains.lower_bounds[col] >
                               +1000 * num.getFeasTol() )
                       {
-                         stored_reductions[j].changeColLB( col, val, row );
-                         local_status = PresolveStatus::kReduced;
+                         if( not skip_variable_tightening )
+                         {
+                            stored_reductions[j].changeColLB( col, val, row );
+                            local_status = PresolveStatus::kReduced;
+                         }
                       }
                    }
                    else
@@ -314,8 +332,11 @@ ConstraintPropagation<REAL>::execute( const Problem<REAL>& problem,
                           val - domains.upper_bounds[col] <
                               -1000 * num.getFeasTol() )
                       {
-                         stored_reductions[j].changeColUB( col, val, row );
-                         local_status = PresolveStatus::kReduced;
+                         if(not skip_variable_tightening)
+                         {
+                            stored_reductions[j].changeColUB( col, val, row );
+                            local_status = PresolveStatus::kReduced;
+                         }
                       }
                    }
                 };

@@ -82,6 +82,8 @@ class PostsolveListener
 
    Problem<REAL> problem;
 
+   PresolveOptions presolveOptions;
+
    Num<REAL> num;
 
    PostsolveListener() = default;
@@ -103,8 +105,8 @@ class PostsolveListener
       start.push_back( 0 );
    }
 
-   PostsolveListener( const Problem<REAL>& problem, const Num<REAL>& num )
-       : problem( problem ), num( num )
+   PostsolveListener( const Problem<REAL>& problem, const Num<REAL>& num, const PresolveOptions options )
+       : problem( problem ), num( num ), presolveOptions(options)
    {
       int nrows = problem.getNRows();
       int ncols = problem.getNCols();

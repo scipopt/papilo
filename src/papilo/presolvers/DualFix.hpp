@@ -67,7 +67,7 @@ class DualFix : public PresolveMethod<REAL>
                           const Vec<REAL>& objective, const Vec<REAL>& lbs,
                           const Vec<REAL>& ubs, const Vec<RowFlags>& rflags,
                           const Vec<REAL>& lhs, const Vec<REAL>& rhs, int& i,
-                          bool no_strong_reductions ) const;
+                          bool no_strong_reductions, bool skip_variable_tightening ) const;
 };
 
 #ifdef PAPILO_USE_EXTERN_TEMPLATES
@@ -96,6 +96,14 @@ DualFix<REAL>::execute( const Problem<REAL>& problem,
 
    PresolveStatus result = PresolveStatus::kUnchanged;
    bool noStrongReductions = problemUpdate.getPresolveOptions().dualreds < 2;
+
+   // calculating the basis for variable tightening (not fixings) may lead in
+   // the postsolving step to a solution that is not in a vertex. In this case a
+   // crossover would be required is too expensive performance wise
+   const bool skip_variable_tightening =
+       problem.getNumIntegralCols() == 0 and
+       problemUpdate.getPresolveOptions().calculate_basis_for_dual;
+
    if( problemUpdate.getPresolveOptions().runs_sequentiell() or
        !problemUpdate.getPresolveOptions().dual_fix_parallel )
    {
@@ -103,7 +111,7 @@ DualFix<REAL>::execute( const Problem<REAL>& problem,
       {
          PresolveStatus local_status = perform_dual_fix_step(
              num, reductions, consMatrix, activities, cflags, objective, lbs,
-             ubs, rflags, lhs, rhs, col, noStrongReductions );
+             ubs, rflags, lhs, rhs, col, noStrongReductions, skip_variable_tightening );
          assert( local_status == PresolveStatus::kUnchanged ||
                  local_status == PresolveStatus::kReduced ||
                  local_status == PresolveStatus::kUnbndOrInfeas ||
@@ -127,7 +135,7 @@ DualFix<REAL>::execute( const Problem<REAL>& problem,
                 PresolveStatus local_status = perform_dual_fix_step(
                     num, stored_reductions[col], consMatrix, activities, cflags,
                     objective, lbs, ubs, rflags, lhs, rhs, col,
-                    noStrongReductions );
+                    noStrongReductions, skip_variable_tightening );
                 assert( local_status == PresolveStatus::kUnchanged ||
                         local_status == PresolveStatus::kReduced ||
                         local_status == PresolveStatus::kUnbounded );
@@ -174,7 +182,7 @@ DualFix<REAL>::perform_dual_fix_step(
     const Vec<RowActivity<REAL>>& activities, const Vec<ColFlags>& cflags,
     const Vec<REAL>& objective, const Vec<REAL>& lbs, const Vec<REAL>& ubs,
     const Vec<RowFlags>& rflags, const Vec<REAL>& lhs, const Vec<REAL>& rhs,
-    int& i, bool no_strong_reductions ) const
+    int& i, bool no_strong_reductions, bool skip_variable_tightening ) const
 {
    // skip inactive columns
    if( cflags[i].test( ColFlag::kInactive ) )
@@ -264,6 +272,8 @@ DualFix<REAL>::perform_dual_fix_step(
    // apply dual substitution
    else
    {
+      if( skip_variable_tightening )
+         return PresolveStatus::kUnchanged;
       // Function checks if considered row allows dual bound strengthening
       // and calculates tightest bound for this row.
       auto check_row = []( int ninf, REAL activity, const REAL& side,

@@ -29,12 +29,11 @@
 
 using namespace papilo;
 
-
 Problem<double>
 setupMatrixForDualFixFirstColumnOnlyPositiveValues();
 
 Problem<double>
-setupMatrixForDualSubstitution();
+setupMatrixForDualSubstitution( bool integer_variables );
 
 Problem<double>
 setupMatrixForDualSubstitutionEquation();
@@ -48,8 +47,6 @@ setupMatrixForDualSubstitutionIntegerRounding();
 Problem<double>
 setupMatrixForDualFixInfinity();
 
-
-
 TEST_CASE( "dual-fix-trivial-column-presolve-finds-reduction", "[presolve]" )
 {
    Num<double> num{};
@@ -59,7 +56,7 @@ TEST_CASE( "dual-fix-trivial-column-presolve-finds-reduction", "[presolve]" )
    Statistics statistics{};
    PresolveOptions presolveOptions{};
    PostsolveListener<double> postsolve =
-       PostsolveListener<double>( problem, num );
+       PostsolveListener<double>( problem, num, presolveOptions );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
 
@@ -79,7 +76,7 @@ TEST_CASE( "dual-fix-happy-path", "[presolve]" )
    Statistics statistics{};
    PresolveOptions presolveOptions{};
    PostsolveListener<double> postsolve =
-       PostsolveListener<double>( problem, num );
+       PostsolveListener<double>( problem, num, presolveOptions );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
 
@@ -99,15 +96,37 @@ TEST_CASE( "dual-fix-happy-path", "[presolve]" )
    REQUIRE( reductions.getReduction( 1 ).newval == 1 );
 }
 
+TEST_CASE( "dual-fix-no-dual-substitution-for-lp", "[presolve]" )
+{
+   Num<double> num{};
+   Message msg{};
+   Problem<double> problem = setupMatrixForDualSubstitution( false );
+   Statistics statistics{};
+   PresolveOptions presolveOptions{};
+   PostsolveListener<double> postsolve =
+       PostsolveListener<double>( problem, num, presolveOptions );
+   ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
+                                        presolveOptions, num, msg );
+
+   problemUpdate.trivialPresolve();
+   papilo::DualFix<double> presolvingMethod{};
+   Reductions<double> reductions{};
+
+   PresolveStatus presolveStatus =
+       presolvingMethod.execute( problem, problemUpdate, num, reductions );
+
+   REQUIRE( presolveStatus == PresolveStatus::kUnchanged );
+}
+
 TEST_CASE( "dual-fix-dual-substitution", "[presolve]" )
 {
    Num<double> num{};
    Message msg{};
-   Problem<double> problem = setupMatrixForDualSubstitution();
+   Problem<double> problem = setupMatrixForDualSubstitution( true );
    Statistics statistics{};
    PresolveOptions presolveOptions{};
    PostsolveListener<double> postsolve =
-       PostsolveListener<double>( problem, num );
+       PostsolveListener<double>( problem, num, presolveOptions );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
 
@@ -130,7 +149,7 @@ TEST_CASE( "dual-fix-dual-substitution", "[presolve]" )
    REQUIRE( reductions.getReduction( 1 ).newval == 0 );
 
    REQUIRE( reductions.getReduction( 2 ).col == RowReduction::SAVE_ROW );
-   REQUIRE( reductions.getReduction( 2 ).row == 2);
+   REQUIRE( reductions.getReduction( 2 ).row == 2 );
 
    REQUIRE( reductions.getReduction( 3 ).col == 0 );
    REQUIRE( reductions.getReduction( 3 ).row ==
@@ -146,7 +165,7 @@ TEST_CASE( "dual-fix-dual-substitution-rounding", "[presolve]" )
    Statistics statistics{};
    PresolveOptions presolveOptions{};
    PostsolveListener<double> postsolve =
-       PostsolveListener<double>( problem, num );
+       PostsolveListener<double>( problem, num, presolveOptions );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
 
@@ -169,7 +188,7 @@ TEST_CASE( "dual-fix-dual-substitution-rounding", "[presolve]" )
    REQUIRE( reductions.getReduction( 1 ).newval == 0 );
 
    REQUIRE( reductions.getReduction( 6 ).col == RowReduction::SAVE_ROW );
-   REQUIRE( reductions.getReduction( 6 ).row == 1);
+   REQUIRE( reductions.getReduction( 6 ).row == 1 );
 
    REQUIRE( reductions.getReduction( 3 ).col == 0 );
    REQUIRE( reductions.getReduction( 3 ).row ==
@@ -186,7 +205,7 @@ TEST_CASE( "dual-fix-dual-substitution-rounding", "[presolve]" )
    REQUIRE( reductions.getReduction( 5 ).newval == 0 );
 
    REQUIRE( reductions.getReduction( 6 ).col == RowReduction::SAVE_ROW );
-   REQUIRE( reductions.getReduction( 6 ).row == 1);
+   REQUIRE( reductions.getReduction( 6 ).row == 1 );
 
    REQUIRE( reductions.getReduction( 7 ).col == 1 );
    REQUIRE( reductions.getReduction( 7 ).row ==
@@ -202,7 +221,7 @@ TEST_CASE( "dual-fix-dual-substitution-unbounded-variables", "[presolve]" )
    Statistics statistics{};
    PresolveOptions presolveOptions{};
    PostsolveListener<double> postsolve =
-       PostsolveListener<double>( problem, num );
+       PostsolveListener<double>( problem, num, presolveOptions );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
 
@@ -224,7 +243,7 @@ TEST_CASE( "dual-fix-dual-substitution-equation", "[presolve]" )
    Statistics statistics{};
    PresolveOptions presolveOptions{};
    PostsolveListener<double> postsolve =
-       PostsolveListener<double>( problem, num );
+       PostsolveListener<double>( problem, num, presolveOptions );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
 
@@ -248,7 +267,7 @@ TEST_CASE( "dual-fix-dual-substitution-equation", "[presolve]" )
    REQUIRE( reductions.getReduction( 1 ).newval == 0 );
 
    REQUIRE( reductions.getReduction( 2 ).col == RowReduction::SAVE_ROW );
-   REQUIRE( reductions.getReduction( 2 ).row == 0);
+   REQUIRE( reductions.getReduction( 2 ).row == 0 );
 
    REQUIRE( reductions.getReduction( 3 ).col == 1 );
    REQUIRE( reductions.getReduction( 3 ).row ==
@@ -264,7 +283,7 @@ TEST_CASE( "dual-fix-infinity", "[presolve]" )
    Statistics statistics{};
    PresolveOptions presolveOptions{};
    PostsolveListener<double> postsolve =
-       PostsolveListener<double>( problem, num );
+       PostsolveListener<double>( problem, num, presolveOptions );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
 
@@ -276,7 +295,7 @@ TEST_CASE( "dual-fix-infinity", "[presolve]" )
        presolvingMethod.execute( problem, problemUpdate, num, reductions );
 
    REQUIRE( presolveStatus == PresolveStatus::kReduced );
-   REQUIRE( reductions.size() >= 6 );
+   REQUIRE( reductions.size() >= 5 );
 
    REQUIRE( reductions.getReduction( 0 ).row == papilo::ColReduction::LOCKED );
    REQUIRE( reductions.getReduction( 0 ).col == 0 );
@@ -399,7 +418,7 @@ setupMatrixForDualFixFirstColumnOnlyPositiveValues()
 }
 
 Problem<double>
-setupMatrixForDualSubstitution()
+setupMatrixForDualSubstitution( bool integer_variables )
 {
    // min y - z
    // 4 y -3 z <= 6
@@ -409,7 +428,7 @@ setupMatrixForDualSubstitution()
    Vec<double> coefficients{ 1.0, -1.0 };
    Vec<double> upperBounds{ 10.0, 10.0 };
    Vec<double> lowerBounds{ 0.0, 0.0 };
-   Vec<uint8_t> isIntegral{ 0, 0 };
+   Vec<uint8_t> isIntegral{ integer_variables, integer_variables };
    Vec<uint8_t> lhsInfinity{ 1, 1, 1 };
    Vec<uint8_t> rhsInfinity{ 0, 0, 0 };
 

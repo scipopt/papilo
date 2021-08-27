@@ -78,9 +78,12 @@ set(unit_tests
 
         "problem-comparisons"
 
+        #Coefficient-strengthening
         "happy-path-coefficient-strengthening"
 
-        "happy-path-constraint-propagation"
+        #ConstraintPropagation
+        "constraint-propagation-happy-path"
+        "constraint-propagation-no-tightening-for-lp"
 
         #DomCol
         "domcol-happy-path"
@@ -91,6 +94,7 @@ set(unit_tests
         #DualFix
         "dual-fix-happy-path"
         "dual-fix-trivial-column-presolve-finds-reduction"
+        "dual-fix-no-dual-substitution-for-lp"
         "dual-fix-dual-substitution"
         "dual-fix-dual-substitution-rounding"
         "dual-fix-dual-substitution-unbounded-variables"
@@ -104,9 +108,10 @@ set(unit_tests
         #FreeVarSubstitution
         "happy-path-test-free-variable-detection"
 
+        #Implied Integer
         "happy-path-implied-integer-detection"
 
-        #Parallel row Detection
+        #Parallel Row Detection
         "parallel-row-unchanged"
         "parallel-row-two-equations-infeasible-second-row-dominant"
         "parallel-row-two-equations-infeasible-first-row-dominant"
@@ -129,7 +134,7 @@ set(unit_tests
         "parallel-row-mixed-infeasible-second-row-equation"
         "parallel-row-multiple-parallel-rows"
 
-        #parallel_col_detection
+        #parallel Column Detection
         "parallel_col_detection_2_integer_columns"
         "parallel_col_detection_2_continuous_columns"
         "parallel_col_detection_int_cont_merge_possible"
@@ -168,7 +173,7 @@ set(unit_tests
         "should_return_feasible_if_gcd_of_coeff_is_in_rhs"
         "failed-path-simple-substitution-for-2-int"
 
-        #Simplify Ineq
+        #Simplify Inequality
         "happy-path-simplify-inequalities-only-greatest-divisor"
         "simplify_inequ_doesnt_lock_more_rows"
         "simplify_inequ_doesnt_apply_lb_and_ub_on_one_row"
@@ -300,10 +305,10 @@ if (TARGET papilo-executable)
             file(TO_NATIVE_PATH "${PROJECT_SOURCE_DIR}/check/instances/${path}" instance_file)
             file(TO_NATIVE_PATH "${PROJECT_SOURCE_DIR}/settings/${settings}" settings_file)
             foreach (numtype ${${numtypes}})
-                add_test(NAME ${numtype}-solve-${basename}
+                add_test(NAME ${numtype}-solve-${basename}-${settings}
                         COMMAND $<TARGET_FILE:papilo-executable> solve -a ${numtype} -f ${instance_file} -o ${optval} -p ${settings_file}
                         )
-                set_tests_properties(${numtype}-solve-${basename}
+                set_tests_properties(${numtype}-solve-${basename}-${settings}
                         PROPERTIES
                         PASS_REGULAR_EXPRESSION "validation: SUCCESS"
                         DEPENDS papilo-build
@@ -313,12 +318,14 @@ if (TARGET papilo-executable)
     endmacro(add_instancetests)
 
     ##solving returns infeasible for these instances and every potential numtype
-    macro(add_infeasible_instancetests instances numtypes)
+    macro(add_infeasible_instancetests instances numtypes settings)
         foreach (instance ${${instances}})
             file(TO_NATIVE_PATH "${PROJECT_SOURCE_DIR}/check/instances/${instance}" instance_file)
+            file(TO_NATIVE_PATH "${PROJECT_SOURCE_DIR}/settings/${settings}" settings_file)
+
             foreach (numtype ${${numtypes}})
                 add_test(NAME ${numtype}-infeas-${instance}
-                        COMMAND $<TARGET_FILE:papilo-executable> solve -a ${numtype} -f ${instance_file}
+                        COMMAND $<TARGET_FILE:papilo-executable> solve -a ${numtype} -f ${instance_file}  -p ${settings_file}
                         )
                 set_tests_properties(${numtype}-infeas-${instance}
                         PROPERTIES
@@ -334,8 +341,9 @@ if (TARGET papilo-executable)
         add_instancetests(instances_MIP numtypes "default.set")
     endif()
     if(PAPILO_HAVE_SOPLEX OR PAPILO_HAVE_HIGHS)
-        add_instancetests(instances_LP numtypes "presolvers_dual_postsolve.set")
-        add_infeasible_instancetests(infeas_LP numtypes)
+        add_instancetests(instances_LP numtypes "lp_presolvers_with_basis.set")
+        add_instancetests(instances_LP numtypes "lp_presolvers_without_basis.set")
+        add_infeasible_instancetests(infeas_LP numtypes "lp_presolvers_with_basis.set")
     endif()
 endif ()
 

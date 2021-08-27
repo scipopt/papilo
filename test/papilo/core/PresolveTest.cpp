@@ -293,7 +293,7 @@ applyReductions( const Reductions<double>& reductions,
    Statistics statistics{};
    PresolveOptions presolveOptions{};
    PostsolveListener<double> postsolve =
-       PostsolveListener<double>( problem, num );
+       PostsolveListener<double>( problem, num, presolveOptions);
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                                 presolveOptions, num, msg );
    problem.recomputeLocks();

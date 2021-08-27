@@ -138,7 +138,7 @@ class Postsolve
    are_the_next_n_types_redundant_rows( const Vec<ReductionType>& types, int i,
                                         int redundant_rows ) const;
    void
-   remove_var_from_basis( Solution<REAL>& originalSolution,
+   remove_row_from_basis( Solution<REAL>& originalSolution,
                           const Vec<ReductionType>& types,
                           const Vec<int>& start, const Vec<int>& indices,
                           const Vec<REAL>& values, int i,
@@ -855,7 +855,7 @@ Postsolve<REAL>::apply_var_bound_change_forced_by_column_in_original_solution(
          {
             if( not isLowerBound )
                break;
-            remove_var_from_basis( originalSolution, types, start, indices,
+            remove_row_from_basis( originalSolution, types, start, indices,
                                    values, i, stored_bounds );
             originalSolution.varBasisStatus[col] = VarBasisStatus::BASIC;
             break;
@@ -864,7 +864,7 @@ Postsolve<REAL>::apply_var_bound_change_forced_by_column_in_original_solution(
          {
             if( isLowerBound )
                break;
-            remove_var_from_basis( originalSolution, types, start, indices,
+            remove_row_from_basis( originalSolution, types, start, indices,
                                    values, i, stored_bounds );
             originalSolution.varBasisStatus[col] = VarBasisStatus::BASIC;
             break;
@@ -897,7 +897,7 @@ Postsolve<REAL>::get_var_basis_status( Stored<REAL>& stored_bounds,
 
 template <typename REAL>
 void
-Postsolve<REAL>::remove_var_from_basis( Solution<REAL>& originalSolution,
+Postsolve<REAL>::remove_row_from_basis( Solution<REAL>& originalSolution,
                                         const Vec<ReductionType>& types,
                                         const Vec<int>& start,
                                         const Vec<int>& indices,
@@ -906,38 +906,12 @@ Postsolve<REAL>::remove_var_from_basis( Solution<REAL>& originalSolution,
 {
    SavedRow<REAL> saved_row {num, i, types, start, indices, values, originalSolution.primal};
 
-   if( originalSolution.rowBasisStatus[saved_row.getRow()] != VarBasisStatus::BASIC or
-       ( not saved_row.is_on_lhs() and not saved_row.is_on_lhs() ) )
-   {
-      for( int j = 0; j < saved_row.getLength(); ++j )
-      {
-         int col_index = saved_row.getCoeff(j);
-         //check if variable is in Basis and can be removed
-         if( originalSolution.varBasisStatus[col_index] ==
-             VarBasisStatus::BASIC )
-         {
-            REAL sol = originalSolution.primal[col_index];
-            if( stored_bounds.is_on_lower_bound( col_index, sol ) )
-            {
-               originalSolution.varBasisStatus[col_index] =
-                   VarBasisStatus::ON_LOWER;
-               return;
-            }
-            else if( stored_bounds.is_on_upper_bound( col_index, sol ) )
-            {
-               originalSolution.varBasisStatus[col_index] =
-                   VarBasisStatus::ON_UPPER;
-               return;
-            }
-         }
-      }
-      assert(false);
-   }
-   else{
-      originalSolution.rowBasisStatus[saved_row.getRow()] = saved_row.getVBS();
-      assert( originalSolution.rowBasisStatus[saved_row.getRow()] !=
-              VarBasisStatus::BASIC );
-   }
+   assert( originalSolution.rowBasisStatus[saved_row.getRow()] ==
+               VarBasisStatus::BASIC and
+           ( saved_row.is_on_rhs() or saved_row.is_on_lhs() ) );
+   originalSolution.rowBasisStatus[saved_row.getRow()] = saved_row.getVBS();
+   assert( originalSolution.rowBasisStatus[saved_row.getRow()] !=
+           VarBasisStatus::BASIC );
 }
 
 template <typename REAL>
@@ -1116,7 +1090,10 @@ Postsolve<REAL>::copy_from_reduced_to_original(
 
    if( originalSolution.type == SolutionType::kPrimalDual )
    {
-      originalSolution.basisAvailabe = reducedSolution.basisAvailabe;
+      originalSolution.basisAvailabe =
+          reducedSolution.basisAvailabe and
+          postsolveListener.problem.getNumIntegralCols() == 0 and
+          postsolveListener.presolveOptions.calculate_basis_for_dual;
       int reduced_rows = (int) reducedSolution.dual.size();
 
       assert( reducedSolution.dual.size() == reduced_rows );
@@ -1201,7 +1178,7 @@ Postsolve<REAL>::calculate_current_problem(
    Statistics statistics{};
    PresolveOptions presolveOptions{};
    PostsolveListener<REAL> postsolveListener1 =
-       PostsolveListener<REAL>( reduced, num );
+       PostsolveListener<REAL>( reduced, num, presolveOptions );
    ProblemUpdate<REAL> problemUpdate( reduced, postsolveListener1, statistics,
                                       presolveOptions, num, message );
 

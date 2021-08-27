@@ -51,7 +51,7 @@ TEST_CASE( "happy-path-simple-substitution-for-2-int", "[presolve]" )
    PresolveOptions presolveOptions{};
    presolveOptions.dualreds = 0;
    PostsolveListener<double> postsolve =
-       PostsolveListener<double>( problem, num );
+       PostsolveListener<double>( problem, num, presolveOptions );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
    SimpleSubstitution<double> presolvingMethod{};
@@ -99,7 +99,7 @@ TEST_CASE( "happy-path-simple-substitution-for-int-continuous-coeff",
    PresolveOptions presolveOptions{};
    presolveOptions.dualreds = 0;
    PostsolveListener<double> postsolve =
-       PostsolveListener<double>( problem, num );
+       PostsolveListener<double>( problem, num, presolveOptions );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
    SimpleSubstitution<double> presolvingMethod{};
@@ -120,7 +120,7 @@ TEST_CASE( "happy-path-simple-substitution-for-2-continuous", "[presolve]" )
    PresolveOptions presolveOptions{};
    presolveOptions.dualreds = 0;
    PostsolveListener<double> postsolve =
-       PostsolveListener<double>( problem, num );
+       PostsolveListener<double>( problem, num, presolveOptions );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
    SimpleSubstitution<double> presolvingMethod{};
@@ -158,7 +158,7 @@ TEST_CASE( "happy-path-simple-substitution-for-continuous-and-integer",
    PresolveOptions presolveOptions{};
    presolveOptions.dualreds = 0;
    PostsolveListener<double> postsolve =
-       PostsolveListener<double>( problem, num );
+       PostsolveListener<double>( problem, num, presolveOptions );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
    SimpleSubstitution<double> presolvingMethod{};
@@ -195,7 +195,7 @@ TEST_CASE( "failed-path-simple-substitution-for-2-int", "[presolve]" )
    PresolveOptions presolveOptions{};
    presolveOptions.dualreds = 0;
    PostsolveListener<double> postsolve =
-       PostsolveListener<double>( problem, num );
+       PostsolveListener<double>( problem, num, presolveOptions );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
    SimpleSubstitution<double> presolvingMethod{};
@@ -217,7 +217,7 @@ TEST_CASE( "example_10_1_in_constraint_integer_programming", "[presolve]" )
    PresolveOptions presolveOptions{};
    presolveOptions.dualreds = 0;
    PostsolveListener<double> postsolve =
-       PostsolveListener<double>( problem, num );
+       PostsolveListener<double>( problem, num, presolveOptions );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
    SimpleSubstitution<double> presolvingMethod{};
@@ -239,7 +239,7 @@ TEST_CASE( "should_return_feasible_if_gcd_of_coeff_is_in_rhs", "[presolve]" )
    PresolveOptions presolveOptions{};
    presolveOptions.dualreds = 0;
    PostsolveListener<double> postsolve =
-       PostsolveListener<double>( problem, num );
+       PostsolveListener<double>( problem, num, presolveOptions );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
    SimpleSubstitution<double> presolvingMethod{};
@@ -261,7 +261,7 @@ TEST_CASE( "should_return_infeasible_if_gcd_of_coeff_is_in_rhs", "[presolve]" )
    PresolveOptions presolveOptions{};
    presolveOptions.dualreds = 0;
    PostsolveListener<double> postsolve =
-       PostsolveListener<double>( problem, num );
+       PostsolveListener<double>( problem, num, presolveOptions );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
    SimpleSubstitution<double> presolvingMethod{};
