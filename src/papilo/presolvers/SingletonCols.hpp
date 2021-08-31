@@ -125,8 +125,13 @@ SingletonCols<REAL>::execute( const Problem<REAL>& problem,
       }
       else
       {
-         assert( lowerboundImplied || !cflags[col].test( ColFlag::kLbInf ) );
-         assert( ubimplied || !cflags[col].test( ColFlag::kUbInf ) );
+         bool lbinf = cflags[col].test( ColFlag::kLbInf );
+         bool ubinf = cflags[col].test( ColFlag::kUbInf );
+         bool rhs = constMatrix.getRowFlags()[row].template test(RowFlag::kRhsInf);
+         bool lhs = constMatrix.getRowFlags()[row].template test(RowFlag::kLhsInf);
+         bool eq = constMatrix.getRowFlags()[row].template test(RowFlag::kEquation);
+         assert( lowerboundImplied || !lbinf );
+         assert( ubimplied || !ubinf );
 
          // implied free only for one bound -> modify equation to be an
          // inequality and remove the columns coefficient

@@ -24,14 +24,14 @@
 #ifndef _PAPILO_CORE_POSTSOLVE_SERVICE_HPP_
 #define _PAPILO_CORE_POSTSOLVE_SERVICE_HPP_
 
-#include "PostsolveListener.hpp"
+#include "PostsolveStorage.hpp"
+#include "papilo/core/BoundStorage.hpp"
 #include "papilo/core/Problem.hpp"
 #include "papilo/core/ProblemUpdate.hpp"
+#include "papilo/core/SavedRow.hpp"
 #include "papilo/core/postsolve/PostsolveStatus.hpp"
 #include "papilo/core/postsolve/PostsolveType.hpp"
 #include "papilo/core/postsolve/ReductionType.hpp"
-#include "papilo/core/Stored.hpp"
-#include "papilo/core/SavedRow.hpp"
 #include "papilo/io/MpsWriter.hpp"
 #include "papilo/misc/MultiPrecision.hpp"
 #include "papilo/misc/Num.hpp"
@@ -59,8 +59,8 @@ template <typename REAL>
 class Postsolve
 {
  private:
-   Message message{};
-   Num<REAL> num{};
+   Message message;
+   Num<REAL> num;
 
    static constexpr int IS_INTEGRAL = static_cast<int>( ColFlag::kIntegral );
    static constexpr int IS_LBINF = static_cast<int>( ColFlag::kLbInf );
@@ -76,62 +76,63 @@ class Postsolve
    PostsolveStatus
    undo( const Solution<REAL>& reducedSolution,
          Solution<REAL>& originalSolution,
-         PostsolveListener<REAL> postsolveListener ) const;
+         PostsolveStorage<REAL> postsolveStorage ) const;
 
  private:
    REAL
-   calculate_row_value_for_infinity_column( REAL lhs, REAL rhs, int rowLength,
-                                            int column, const int* row_indices,
-                                            const REAL* coefficients,
-                                            Vec<REAL>& current_solution,
-                                            bool is_negative, REAL& coeff_of_column_in_row ) const;
+   calculate_row_value_for_fixed_infinity_variable(
+       REAL lhs, REAL rhs, int rowLength, int column, const int* row_indices,
+       const REAL* coefficients, Vec<REAL>& current_solution, bool is_negative,
+       REAL& coeff_of_column_in_row ) const;
 
    Problem<REAL>
-   calculate_current_problem( const PostsolveListener<REAL>& listener,
-                              int current_index ) const;
+   recalculate_current_problem_from_the_original_problem(
+       const PostsolveStorage<REAL>& listener, int current_index ) const;
 
    void
    copy_from_reduced_to_original(
        const Solution<REAL>& reducedSolution, Solution<REAL>& originalSolution,
-       const PostsolveListener<REAL>& postsolveListener) const;
+       const PostsolveStorage<REAL>& postsolveStorage ) const;
 
    void
    apply_fix_var_in_original_solution( Solution<REAL>& originalSolution,
-                                 const Vec<int>& indices,
-                                 const Vec<REAL>& values, int current_index ) const;
+                                       const Vec<int>& indices,
+                                       const Vec<REAL>& values,
+                                       int current_index ) const;
 
    int
    apply_fix_infinity_variable_in_original_solution(
        Solution<REAL>& originalSolution, Vec<int>& indices, Vec<REAL>& values,
-       int first, const Problem<REAL>& problem,  Stored<REAL>& stored_bounds  ) const;
+       int first, const Problem<REAL>& problem,
+       BoundStorage<REAL>& stored_bounds ) const;
 
    void
    apply_var_bound_change_forced_by_column_in_original_solution(
        Solution<REAL>& originalSolution, const Vec<ReductionType>& types,
        const Vec<int>& start, const Vec<int>& indices, const Vec<REAL>& values,
-       int i, int first, Stored<REAL>& stored_bounds ) const;
+       int i, int first, BoundStorage<REAL>& stored_bounds ) const;
 
    void
    apply_parallel_col_to_original_solution( Solution<REAL>& originalSolution,
                                             const Vec<int>& indices,
                                             const Vec<REAL>& values, int first,
                                             int last,
-                                            Stored<REAL>& stored ) const;
+                                            BoundStorage<REAL>& stored ) const;
 
    void
-   apply_row_bound_chang_to_original_solution(
+   apply_row_bound_change_to_original_solution(
        Solution<REAL>& originalSolution, const Vec<ReductionType>& types,
        const Vec<int>& start, const Vec<int>& indices, const Vec<REAL>& values,
-       int i, int first) const;
+       int i, int first ) const;
 
    void
    apply_substituted_column_to_original_solution(
-       Solution<REAL>& originalSolution,  const Vec<int>& indices,
-       const Vec<REAL>& values, int first,
-       int last ) const;
+       Solution<REAL>& originalSolution, const Vec<int>& indices,
+       const Vec<REAL>& values, int first, int last,
+       BoundStorage<REAL>& stored ) const;
 
    VarBasisStatus
-   set_basis( int flags, REAL lb, REAL ub, REAL solution,
+   calculate_basis( int flags, REAL lb, REAL ub, REAL solution,
               bool is_on_bounds ) const;
 
    bool
@@ -142,11 +143,26 @@ class Postsolve
                           const Vec<ReductionType>& types,
                           const Vec<int>& start, const Vec<int>& indices,
                           const Vec<REAL>& values, int i,
-                          Stored<REAL>& stored_bounds ) const;
+                          BoundStorage<REAL>& stored_bounds ) const;
 
    VarBasisStatus
-   get_var_basis_status( Stored<REAL>& stored_bounds,
-                     int index, REAL val) const;
+   get_var_basis_status( BoundStorage<REAL>& stored_bounds, int index,
+                         REAL val ) const;
+
+   bool
+   is_variable_on_lower_bound( bool lb_infinity, REAL lb,
+                               REAL primal_solution ) const;
+
+   bool
+   is_variable_on_upper_bound( bool ub_infinity, REAL ub,
+                               REAL primal_solution ) const;
+
+   bool
+   skip_if_row_bound_belongs_to_substitution( const Vec<ReductionType>& types,
+                                              const Vec<int>& start,
+                                              const Vec<int>& indices,
+                                              const Vec<REAL>& values, int i,
+                                              int row ) const;
 };
 
 #ifdef PAPILO_USE_EXTERN_TEMPLATES
@@ -159,7 +175,7 @@ template <typename REAL>
 PostsolveStatus
 Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
                        Solution<REAL>& originalSolution,
-                       PostsolveListener<REAL> postsolveListener ) const
+                       PostsolveStorage<REAL> postsolveStorage ) const
 {
 
    PrimalDualSolValidation<REAL> validation{};
@@ -167,49 +183,57 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
    const Vec<REAL>& reducedSol = reducedSolution.primal;
 
    copy_from_reduced_to_original( reducedSolution, originalSolution,
-                                  postsolveListener );
+                                  postsolveStorage );
 
+   auto types = postsolveStorage.types;
+   auto start = postsolveStorage.start;
+   auto indices = postsolveStorage.indices;
+   auto values = postsolveStorage.values;
+   auto origcol_mapping = postsolveStorage.origcol_mapping;
+   auto origrow_mapping = postsolveStorage.origrow_mapping;
+   auto problem = postsolveStorage.problem;
 
-   auto types = postsolveListener.types;
-   auto start = postsolveListener.start;
-   auto indices = postsolveListener.indices;
-   auto values = postsolveListener.values;
-   auto origcol_mapping = postsolveListener.origcol_mapping;
-   auto origrow_mapping = postsolveListener.origrow_mapping;
-   auto problem = postsolveListener.problem;
-
+   // if kReducedBoundsCost was saved (is 1 presolver (except trivialpresolve)
+   // finds a reduction)
    bool significant_changes_during_presolve = false;
+
    // Will be used during dual postsolve for fast access to bound values.
    // TODO: rows bounds are currently not updated during
-   Stored<REAL> stored_bounds{ num, (int)postsolveListener.nColsOriginal,
-                        (int)postsolveListener.nRowsOriginal,
-                        originalSolution.type == SolutionType::kPrimalDual };
+   BoundStorage<REAL> stored_bounds{ num, (int)postsolveStorage.nColsOriginal,
+                               (int)postsolveStorage.nRowsOriginal,
+                               originalSolution.type ==
+                                   SolutionType::kPrimalDual };
 
-   for( int i = postsolveListener.types.size() - 1; i >= 0; --i )
+   for( int i = postsolveStorage.types.size() - 1; i >= 0; --i )
    {
       auto type = types[i];
       int first = start[i];
       int last = start[i + 1];
 
+      //check which type is done:
+      // - calculate the primal solution
+      //only in primal-dual mode:
+      // - update stored variable bound
+      // - calculate dual, reduced and basis (optional)
       switch( type )
       {
       case ReductionType::kColumnDualValue:
          assert( originalSolution.type == SolutionType::kPrimalDual );
-         originalSolution.reducedCosts[postsolveListener.indices[first]] =
-             postsolveListener.values[postsolveListener.indices[first]];
+         originalSolution.reducedCosts[postsolveStorage.indices[first]] =
+             postsolveStorage.values[postsolveStorage.indices[first]];
          break;
       case ReductionType::kRowDualValue:
          assert( originalSolution.type == SolutionType::kPrimalDual );
-         originalSolution.dual[postsolveListener.indices[first]] =
-             postsolveListener.values[postsolveListener.indices[first]];
+         originalSolution.dual[postsolveStorage.indices[first]] =
+             postsolveStorage.values[postsolveStorage.indices[first]];
          break;
       case ReductionType::kFixedCol:
       {
          apply_fix_var_in_original_solution( originalSolution, indices, values,
                                              first );
-         if(SolutionType::kPrimalDual == originalSolution.type)
-            stored_bounds.set_bounds_of_variable( indices[first], false, false, values[first],
-                                           values[first] );
+         if( SolutionType::kPrimalDual == originalSolution.type )
+            stored_bounds.set_bounds_of_variable(
+                indices[first], false, false, values[first], values[first] );
          break;
       }
       case ReductionType::kFixedInfCol:
@@ -218,7 +242,8 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
              originalSolution, indices, values, first, problem, stored_bounds );
          // skip redundant rows because basis for those is already set and
          // should not be overwritten
-         assert(are_the_next_n_types_redundant_rows( types, i, redundant_rows ));
+         assert(
+             are_the_next_n_types_redundant_rows( types, i, redundant_rows ) );
          i -= redundant_rows;
          assert( i >= 0 );
          break;
@@ -227,13 +252,15 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
       {
          assert( originalSolution.type == SolutionType::kPrimalDual );
          apply_var_bound_change_forced_by_column_in_original_solution(
-             originalSolution, types, start, indices, values, i, first, stored_bounds );
+             originalSolution, types, start, indices, values, i, first,
+             stored_bounds );
 
          bool isLowerBound = indices[first] == 1;
          int col = indices[first + 1];
          REAL old_value = values[first + 2];
          bool isInfinity = indices[first + 2] == 1;
-         stored_bounds.set_bound_of_variable(col, isLowerBound, isInfinity, old_value);
+         stored_bounds.set_bound_of_variable( col, isLowerBound, isInfinity,
+                                              old_value );
 
          break;
       }
@@ -254,45 +281,50 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
 
          assert( colCoef != 0.0 );
          originalSolution.primal[col] = ( -sumcols.get() ) / colCoef;
-         //TODO: modify stored objective
          break;
       }
       case ReductionType::kSubstitutedCol:
-         //TODO: restore information bout the bounds
          apply_substituted_column_to_original_solution(
-             originalSolution, indices, values, first, last );
+             originalSolution, indices, values, first, last, stored_bounds );
          break;
       case ReductionType::kParallelCol:
-         apply_parallel_col_to_original_solution( originalSolution, indices,
-                                                  values, first, last, stored_bounds );
+         apply_parallel_col_to_original_solution(
+             originalSolution, indices, values, first, last, stored_bounds );
          break;
       case ReductionType::kRowBoundChangeForcedByRow:
          assert( originalSolution.type == SolutionType::kPrimalDual );
-         apply_row_bound_chang_to_original_solution(
-             originalSolution, types, start, indices, values, i, first);
+         apply_row_bound_change_to_original_solution(
+             originalSolution, types, start, indices, values, i, first );
          break;
       case ReductionType::kRowBoundChange:
       {
          assert( originalSolution.type == SolutionType::kPrimalDual );
 
+         bool isLhs = indices[first] == 1;
+         int row = (int)values[first];
+         bool is_infinity = indices[first + 1] ==1;
+         bool was_infinity = indices[first + 2] ==1;
+         REAL new_value = values[first + 1];
+         REAL old_value = values[first + 2];
+
          // if a row bound change happened because of a substitution skip the
          // verification for this step
-         if( i >= 2 and types[i - 1] == ReductionType::kCoefficientChange and
-             types[i - 2] == ReductionType::kSubstitutedCol )
+         if(skip_if_row_bound_belongs_to_substitution( types, start, indices,
+                                                    values, i, row ))
             continue;
 
-         bool isLhs = indices[first] == 1;
-         bool isInfinity = indices[first + 1];
-         int row = (int)values[first];
-         REAL new_value = values[first + 1];
          switch( originalSolution.rowBasisStatus[row] )
          {
          case VarBasisStatus::FIXED:
             if( isLhs )
                originalSolution.rowBasisStatus[row] = VarBasisStatus::ON_UPPER;
-            //TODO: ZERO missing
             else
-               originalSolution.rowBasisStatus[row] = VarBasisStatus::ON_LOWER;
+            {
+               if(num.template isZero(old_value) and is_infinity)
+                  originalSolution.rowBasisStatus[row] = VarBasisStatus::ZERO;
+               else
+                  originalSolution.rowBasisStatus[row] = VarBasisStatus::ON_LOWER;
+            }
             break;
          case VarBasisStatus::ZERO:
          case VarBasisStatus::ON_LOWER:
@@ -313,30 +345,31 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
       {
          significant_changes_during_presolve = true;
          assert( originalSolution.type == SolutionType::kPrimalDual );
+
          // get column bounds
-         for( int j = 0; j < postsolveListener.origcol_mapping.size(); j++ )
+         for( int j = 0; j < postsolveStorage.origcol_mapping.size(); j++ )
          {
-            int origCol = postsolveListener.origcol_mapping[j];
+            int origCol = postsolveStorage.origcol_mapping[j];
             int index = first + 2 * j;
             stored_bounds.set_bounds_of_variable(
-                origCol, postsolveListener.indices[index] == 1,
-                postsolveListener.indices[index + 1] == 1,
-                postsolveListener.values[index],
-                postsolveListener.values[index + 1] );
+                origCol, postsolveStorage.indices[index] == 1,
+                postsolveStorage.indices[index + 1] == 1,
+                postsolveStorage.values[index],
+                postsolveStorage.values[index + 1] );
          }
 
          // get row bounds
          int first_row_bounds =
-             first + 2 * postsolveListener.origcol_mapping.size();
-         for( int k = 0; k < postsolveListener.origrow_mapping.size(); k++ )
+             first + 2 * postsolveStorage.origcol_mapping.size();
+         for( int k = 0; k < postsolveStorage.origrow_mapping.size(); k++ )
          {
-            int origRow = postsolveListener.origrow_mapping[k];
+            int origRow = postsolveStorage.origrow_mapping[k];
             int index = first_row_bounds + 2 * k;
-            stored_bounds.set_bounds_of_row( origRow,
-                                      postsolveListener.indices[index] == 1,
-                                      postsolveListener.indices[index + 1] == 1,
-                                      postsolveListener.values[index],
-                                      postsolveListener.values[index + 1] );
+            stored_bounds.set_bounds_of_row(
+                origRow, postsolveStorage.indices[index] == 1,
+                postsolveStorage.indices[index + 1] == 1,
+                postsolveStorage.values[index],
+                postsolveStorage.values[index + 1] );
          }
 
          break;
@@ -351,9 +384,14 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
       }
       case ReductionType::kRedundantRow:
          assert( originalSolution.type == SolutionType::kPrimalDual );
-         if(originalSolution.basisAvailabe)
-            originalSolution.rowBasisStatus[indices[first]] = VarBasisStatus::BASIC;
+         if( originalSolution.basisAvailabe )
+            originalSolution.rowBasisStatus[indices[first]] =
+                VarBasisStatus::BASIC;
+         if( types[i - 1] == ReductionType::kSubstitutedCol )
+            continue;
          break;
+         // the remaining Types are used as additional information for other
+         // types and therefore have no own case
       case ReductionType::kReasonForRowBoundChangeForcedByRow:
       case ReductionType::kSaveRow:
          assert( originalSolution.type == SolutionType::kPrimalDual );
@@ -364,9 +402,11 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
       if( reducedSolution.type == SolutionType::kPrimalDual )
       {
          Problem<REAL> problem_at_step_i =
-             calculate_current_problem( postsolveListener, i );
+             recalculate_current_problem_from_the_original_problem(
+                 postsolveStorage, i );
          message.info( "Validation of partial ({}) reconstr. sol : ", i );
-         validation.verifySolutionAndUpdateSlack( originalSolution, problem_at_step_i );
+         validation.verifySolutionAndUpdateSlack( originalSolution,
+                                                  problem_at_step_i );
          assert( not significant_changes_during_presolve or
                  stored_bounds.check_bounds( problem_at_step_i ) );
       }
@@ -386,21 +426,253 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
 
 template <typename REAL>
 bool
-Postsolve<REAL>::are_the_next_n_types_redundant_rows(
-    const Vec<ReductionType>& types, int i, int redundant_rows ) const
+Postsolve<REAL>::skip_if_row_bound_belongs_to_substitution(
+    const Vec<ReductionType>& types, const Vec<int>& start,
+    const Vec<int>& indices, const Vec<REAL>& values, int i, int row ) const
 {
-   for( int j = 0; j < redundant_rows; j++ )
-      if( types[i - j - 1] != ReductionType::kRedundantRow )
-         return false;
-   return true;
+   if( i >= 2 and types[i - 1] == ReductionType::kCoefficientChange and
+       types[i - 2] == ReductionType::kSubstitutedCol )
+   {
+      int row_of_coefficient_change = indices[start[i - 1]];
+      int row_of_substitution = indices[start[i - 2]];
+      if( row == row_of_coefficient_change and row_of_substitution == row )
+         return true;
+   }
+   if( i >= 3 and types[i - 2] == ReductionType::kCoefficientChange and
+       types[i - 3] == ReductionType::kSubstitutedCol )
+   {
+      int row_of_row_bound_change = values[start[i - 1]];
+      int row_of_coefficient_change = indices[start[i - 2]];
+      int row_of_substitution = indices[start[i - 3]];
+      if( row_of_coefficient_change == row and row_of_substitution == row and
+          row == row_of_row_bound_change )
+         return true;
+   }
+   return false;
+}
+
+template <typename REAL>
+void
+Postsolve<REAL>::copy_from_reduced_to_original(
+    const Solution<REAL>& reducedSolution, Solution<REAL>& originalSolution,
+    const PostsolveStorage<REAL>& postsolveStorage ) const
+{
+   if( reducedSolution.type == SolutionType::kPrimalDual )
+      originalSolution.type = SolutionType::kPrimalDual;
+
+   originalSolution.primal.clear();
+   originalSolution.primal.resize( postsolveStorage.nColsOriginal );
+
+   int reduced_columns = (int)reducedSolution.primal.size();
+   for( int k = 0; k < reduced_columns; ++k )
+      originalSolution.primal[postsolveStorage.origcol_mapping[k]] =
+          reducedSolution.primal[k];
+
+   if( originalSolution.type == SolutionType::kPrimalDual )
+   {
+      originalSolution.basisAvailabe =
+          reducedSolution.basisAvailabe and
+          postsolveStorage.problem.getNumIntegralCols() == 0 and
+          postsolveStorage.presolveOptions.calculate_basis_for_dual;
+      int reduced_rows = (int)reducedSolution.dual.size();
+
+      assert( reducedSolution.dual.size() == reduced_rows );
+      originalSolution.dual.clear();
+      originalSolution.dual.resize( postsolveStorage.nRowsOriginal );
+      for( int k = 0; k < reduced_rows; k++ )
+         originalSolution.dual[postsolveStorage.origrow_mapping[k]] =
+             reducedSolution.dual[k];
+
+      assert( reducedSolution.reducedCosts.size() == reduced_columns );
+      originalSolution.reducedCosts.clear();
+      originalSolution.reducedCosts.resize( postsolveStorage.nColsOriginal );
+      for( int k = 0; k < reduced_columns; k++ )
+         originalSolution.reducedCosts[postsolveStorage.origcol_mapping[k]] =
+             reducedSolution.reducedCosts[k];
+
+      assert( reducedSolution.varBasisStatus.size() == reduced_columns );
+      originalSolution.varBasisStatus.clear();
+      originalSolution.varBasisStatus.resize( postsolveStorage.nColsOriginal,
+                                              VarBasisStatus::UNDEFINED );
+      for( int k = 0; k < reduced_columns; k++ )
+         originalSolution.varBasisStatus[postsolveStorage.origcol_mapping[k]] =
+             reducedSolution.varBasisStatus[k];
+
+      assert( reducedSolution.rowBasisStatus.size() == reduced_rows );
+
+      originalSolution.rowBasisStatus.clear();
+      originalSolution.rowBasisStatus.resize( postsolveStorage.nRowsOriginal,
+                                              VarBasisStatus::UNDEFINED );
+      for( int k = 0; k < reduced_rows; k++ )
+         originalSolution.rowBasisStatus[postsolveStorage.origrow_mapping[k]] =
+             reducedSolution.rowBasisStatus[k];
+   }
+}
+
+template <typename REAL>
+void
+Postsolve<REAL>::apply_fix_var_in_original_solution(
+    Solution<REAL>& originalSolution, const Vec<int>& indices,
+    const Vec<REAL>& values, int current_index ) const
+{
+   // fix variable in the primal solution
+   int col = indices[current_index];
+   originalSolution.primal[col] = values[current_index];
+
+   if( originalSolution.type == SolutionType::kPrimalDual )
+   {
+      // calculate the reduced costs in the dual z_j = c_j - sum_i a_ij*y_i
+      REAL objective_coefficient = values[current_index + 1];
+
+      int col_length = indices[current_index + 1];
+      StableSum<REAL> stablesum;
+      stablesum.add( objective_coefficient );
+      for( int k = 0; k < col_length; ++k )
+      {
+         int index = current_index + 2 + k;
+         int row = indices[index];
+         REAL coeff = values[index];
+         stablesum.add( -coeff * originalSolution.dual[row] );
+      }
+      originalSolution.reducedCosts[col] = stablesum.get();
+
+      // mark the variable as fixed in the basis
+      if( originalSolution.basisAvailabe )
+         originalSolution.varBasisStatus[col] = VarBasisStatus::FIXED;
+   }
+}
+
+template <typename REAL>
+int
+Postsolve<REAL>::apply_fix_infinity_variable_in_original_solution(
+    Solution<REAL>& originalSolution, Vec<int>& indices, Vec<REAL>& values,
+    int first, const Problem<REAL>& problem,
+    BoundStorage<REAL>& stored_bounds ) const
+{
+   // calculate the feasible (minimal) value for the infinity variable
+   int col = indices[first];
+   REAL bound = values[first + 1];
+   int number_rows = indices[first + 1];
+   REAL solution = bound;
+   int row_counter = 0;
+   int current_counter = first + 2;
+
+   bool isNegativeInfinity = values[first] < 0;
+   int row_indices[number_rows];
+   REAL col_coefficents[number_rows];
+   if( isNegativeInfinity )
+   {
+      while( row_counter < number_rows )
+      {
+         int length = (int)values[current_counter];
+         row_indices[row_counter] = indices[current_counter];
+
+         REAL lhs = values[current_counter + 1];
+         REAL rhs = values[current_counter + 2];
+         const REAL* coefficients = &values[current_counter + 3];
+         const int* col_indices = &indices[current_counter + 3];
+
+         REAL newValue = calculate_row_value_for_fixed_infinity_variable(
+             lhs, rhs, length, col, col_indices, coefficients,
+             originalSolution.primal, true, col_coefficents[row_counter] );
+         if( num.isLT( newValue, solution ) )
+         {
+            if( originalSolution.basisAvailabe )
+            {
+               if( num.isGT( col_coefficents[row_counter], 0 ) )
+                  originalSolution.rowBasisStatus[row_indices[row_counter]] =
+                      VarBasisStatus::ON_UPPER;
+               else
+                  originalSolution.rowBasisStatus[row_indices[row_counter]] =
+                      VarBasisStatus::ON_LOWER;
+            }
+            solution = newValue;
+         }
+         else if( originalSolution.basisAvailabe )
+            originalSolution.rowBasisStatus[row_indices[row_counter]] =
+                VarBasisStatus::BASIC;
+
+         current_counter += 3 + length;
+         row_counter++;
+      }
+      if( problem.getColFlags()[col].test( ColFlag::kIntegral ) )
+         solution = num.epsFloor( solution );
+      originalSolution.primal[col] = solution;
+   }
+   else
+   {
+      while( row_counter < number_rows )
+      {
+         int length = (int)values[current_counter];
+         row_indices[row_counter] = indices[current_counter];
+
+         REAL lhs = values[current_counter + 1];
+         REAL rhs = values[current_counter + 2];
+
+         const REAL* coefficients = &values[current_counter + 3];
+         const int* col_indices = &indices[current_counter + 3];
+
+         REAL newValue = calculate_row_value_for_fixed_infinity_variable(
+             lhs, rhs, length, col, col_indices, coefficients,
+             originalSolution.primal, false, col_coefficents[row_counter] );
+         if( num.isGT( newValue, solution ) )
+         {
+            if( num.isGT( col_coefficents[row_counter], 0 ) )
+               originalSolution.rowBasisStatus[row_indices[row_counter]] =
+                   VarBasisStatus::ON_LOWER;
+            else
+               originalSolution.rowBasisStatus[row_indices[row_counter]] =
+                   VarBasisStatus::ON_UPPER;
+            solution = newValue;
+         }
+         else if( originalSolution.basisAvailabe )
+            originalSolution.rowBasisStatus[row_indices[row_counter]] =
+                VarBasisStatus::BASIC;
+
+         current_counter += 3 + length;
+         row_counter++;
+      }
+      if( problem.getColFlags()[col].test( ColFlag::kIntegral ) )
+         solution = num.epsCeil( solution );
+      originalSolution.primal[col] = solution;
+   }
+
+   if( originalSolution.type == SolutionType::kPrimalDual )
+   {
+      // calculate the reduced costs (analogous for the case FIXED)
+      StableSum<REAL> sum;
+      // objective is zero as condition for this presolve result
+      for( int k = 0; k < number_rows; ++k )
+         sum.add( -col_coefficents[k] * originalSolution.dual[row_indices[k]] );
+      originalSolution.reducedCosts[col] = sum.get();
+
+      // store the bounds of the variable
+      if( isNegativeInfinity )
+         stored_bounds.set_bounds_of_variable( col, true, false, 0, bound );
+      else
+         stored_bounds.set_bounds_of_variable( col, false, true, bound, 0 );
+
+      // set the basis depending on the status
+      if( originalSolution.basisAvailabe )
+      {
+         if( num.isEq( solution, bound ) )
+            if( isNegativeInfinity )
+               originalSolution.varBasisStatus[col] = VarBasisStatus::ON_UPPER;
+            else
+               originalSolution.varBasisStatus[col] = VarBasisStatus::ON_LOWER;
+         else
+            originalSolution.varBasisStatus[col] = VarBasisStatus::BASIC;
+      }
+   }
+   return number_rows;
 }
 
 template <typename REAL>
 void
 Postsolve<REAL>::apply_substituted_column_to_original_solution(
-    Solution<REAL>& originalSolution,
-    const Vec<int>& indices, const Vec<REAL>& values, int first,
-    int last ) const
+    Solution<REAL>& originalSolution, const Vec<int>& indices,
+    const Vec<REAL>& values, int first, int last,
+    BoundStorage<REAL>& stored ) const
 {
    int row = indices[first];
    int row_length = (int)values[first];
@@ -408,10 +680,9 @@ Postsolve<REAL>::apply_substituted_column_to_original_solution(
    REAL lhs = values[first + 1];
    assert( lhs == values[first + 2] );
    assert( indices[first + 2] == 0 );
-
    int col = indices[first + 3 + row_length];
 
-   // calculate the primal solution
+   // calculate the primal solution by solving the stored equation
    REAL colCoef = 0.0;
    StableSum<REAL> sumcols;
    for( int j = first + 3; j < first + 3 + row_length; ++j )
@@ -425,7 +696,6 @@ Postsolve<REAL>::apply_substituted_column_to_original_solution(
    assert( colCoef != 0.0 );
    originalSolution.primal[col] = ( -sumcols.get() ) / colCoef;
 
-   // calculate the dual solution
    assert( ( originalSolution.type == SolutionType::kPrimalDual and
              values[first + 3 + row_length] > 0 ) or
            ( originalSolution.type != SolutionType::kPrimalDual and
@@ -441,55 +711,67 @@ Postsolve<REAL>::apply_substituted_column_to_original_solution(
       REAL ub = values[first + 5 + row_length];
       bool lb_infinity = indices[first + 6 + row_length] == 1;
       REAL lb = values[first + 6 + row_length];
-
       assert( lb_infinity or ub_infinity or num.isGE( ub, lb ) );
 
-      if( ( num.isEq( originalSolution.primal[col], lb ) and
-            not lb_infinity ) or
-          ( num.isEq( originalSolution.primal[col], ub ) and not ub_infinity ) )
+      // update the stored variable bounds
+      stored.set_bound_of_variable( col, true, lb_infinity, lb );
+      stored.set_bound_of_variable( col, false, ub_infinity, ub );
+
+      // calculate the dual solution
+      bool variableOnLowerBound = is_variable_on_lower_bound(
+          lb_infinity, lb, originalSolution.primal[col] );
+      bool variableOnUpperBound = is_variable_on_upper_bound(
+          ub_infinity, ub, originalSolution.primal[col] );
+
+      if( variableOnLowerBound or variableOnUpperBound )
       {
-         // adjust the dual solution to the obj coefficient change and calculate
-         // the reduced costs
-         originalSolution.dual[row] += obj /colCoef;
+         // since the variable is not at its bounds calculate the reduced costs
+         // and update the dual solution
+         originalSolution.dual[row] += obj / colCoef;
 
          StableSum<REAL> sum_dual;
          for( int j = first + 7 + row_length; j < last; ++j )
-         {
-            sum_dual.add( - originalSolution.dual[indices[j]] * values[j] );
-         }
+            sum_dual.add( -originalSolution.dual[indices[j]] * values[j] );
          sum_dual.add( obj );
 
          originalSolution.reducedCosts[col] = ( sum_dual.get() );
+         assert( variableOnLowerBound or variableOnUpperBound );
 
-
+         // set the basis of the variable
          if( originalSolution.basisAvailabe )
          {
-            if(not num.isZero(originalSolution.dual[row]) and
-                originalSolution.rowBasisStatus[row] == VarBasisStatus::BASIC)
+            if( originalSolution.rowBasisStatus[row] ==
+                    VarBasisStatus::BASIC and
+                not num.isZero( originalSolution.dual[row] ) )
             {
-               originalSolution.rowBasisStatus[row] = VarBasisStatus::FIXED;
                assert( num.isZero( originalSolution.reducedCosts[col] ) );
                originalSolution.varBasisStatus[col] = VarBasisStatus::BASIC;
+               originalSolution.rowBasisStatus[row] = VarBasisStatus::FIXED;
             }
-            else if( num.isEq( originalSolution.primal[col], lb ) and
-                not lb_infinity )
-            {
-               if( num.isZero( lb ) and ub_infinity )
-                  originalSolution.varBasisStatus[col] = VarBasisStatus::ZERO;
-               else
-                  originalSolution.varBasisStatus[col] =
-                      VarBasisStatus::ON_LOWER;
-            }
-            else if( num.isEq( originalSolution.primal[col], ub ) and
-                     not ub_infinity )
-               originalSolution.varBasisStatus[col] = VarBasisStatus::ON_UPPER;
             else
-               assert(false);
+            {
+               // set the variable on its bounds
+               if( variableOnLowerBound and variableOnUpperBound )
+                  originalSolution.varBasisStatus[col] = VarBasisStatus::FIXED;
+               else if( variableOnLowerBound )
+               {
+                  if( num.isZero( lb ) and ub_infinity )
+                     originalSolution.varBasisStatus[col] =
+                         VarBasisStatus::ZERO;
+                  else
+                     originalSolution.varBasisStatus[col] =
+                         VarBasisStatus::ON_LOWER;
+               }
+               else if( variableOnUpperBound )
+                  originalSolution.varBasisStatus[col] =
+                      VarBasisStatus::ON_UPPER;
+            }
          }
       }
       else
       {
-         // since variable is not at its bounds the reduced costs are 0 and calculate the dual variable
+         // since variable is not at its bounds the reduced costs are 0 and
+         // calculate the dual variable
          originalSolution.reducedCosts[col] = 0;
 
          REAL rowCoef = 0.0;
@@ -499,46 +781,46 @@ Postsolve<REAL>::apply_substituted_column_to_original_solution(
             if( indices[j] == row )
                rowCoef = values[j];
             else
-               sum_dual.add(- originalSolution.dual[indices[j]] * values[j] );
+               sum_dual.add( -originalSolution.dual[indices[j]] * values[j] );
          }
 
          assert( rowCoef != 0 );
+         assert( num.isZero( originalSolution.dual[row] ) );
+         assert( not variableOnLowerBound and not variableOnUpperBound );
          sum_dual.add( obj );
-         assert( num.isZero(originalSolution.dual[row]) );
          originalSolution.dual[row] = sum_dual.get() / rowCoef;
 
          if( originalSolution.basisAvailabe )
          {
-            if( num.isEq( originalSolution.primal[col], lb ) and
-                not lb_infinity )
-            {
-               if( num.isZero( lb ) )
-                  originalSolution.varBasisStatus[col] = VarBasisStatus::ZERO;
-               else
-                  originalSolution.varBasisStatus[col] =
-                      VarBasisStatus::ON_LOWER;
-            }
-            else if( num.isEq( originalSolution.primal[col], ub ) and
-                     not ub_infinity )
-               originalSolution.varBasisStatus[col] = VarBasisStatus::ON_UPPER;
-            else
-            {
-               assert( originalSolution.rowBasisStatus[row] ==
-                       VarBasisStatus::BASIC );
-               // TODO is this correct
-               originalSolution.varBasisStatus[col] = VarBasisStatus::BASIC;
-               originalSolution.rowBasisStatus[row] = VarBasisStatus::FIXED;
-            }
+            assert( originalSolution.rowBasisStatus[row] ==
+                    VarBasisStatus::BASIC );
+            originalSolution.varBasisStatus[col] = VarBasisStatus::BASIC;
+            originalSolution.rowBasisStatus[row] = VarBasisStatus::FIXED;
          }
       }
       assert( row_length + col_length + 7 == last - first );
-
    }
 }
 
 template <typename REAL>
+bool
+Postsolve<REAL>::is_variable_on_upper_bound( bool ub_infinity, REAL ub,
+                                             REAL primal_solution ) const
+{
+   return num.isEq( primal_solution, ub ) and not ub_infinity;
+}
+
+template <typename REAL>
+bool
+Postsolve<REAL>::is_variable_on_lower_bound( bool lb_infinity, REAL lb,
+                                             REAL primal_solution ) const
+{
+   return ( num.isEq( primal_solution, lb ) and not lb_infinity );
+}
+
+template <typename REAL>
 void
-Postsolve<REAL>::apply_row_bound_chang_to_original_solution(
+Postsolve<REAL>::apply_row_bound_change_to_original_solution(
     Solution<REAL>& originalSolution, const Vec<ReductionType>& types,
     const Vec<int>& start, const Vec<int>& indices, const Vec<REAL>& values,
     int i, int first ) const
@@ -561,7 +843,7 @@ Postsolve<REAL>::apply_row_bound_chang_to_original_solution(
    {
       originalSolution.dual[deleted_row] = dual_row_value * factor;
       originalSolution.dual[remained_row] = 0;
-      if(originalSolution.basisAvailabe)
+      if( originalSolution.basisAvailabe )
       {
          assert( originalSolution.rowBasisStatus[deleted_row] ==
                  VarBasisStatus::BASIC );
@@ -574,9 +856,126 @@ Postsolve<REAL>::apply_row_bound_chang_to_original_solution(
 
 template <typename REAL>
 void
+Postsolve<REAL>::apply_var_bound_change_forced_by_column_in_original_solution(
+    Solution<REAL>& originalSolution, const Vec<ReductionType>& types,
+    const Vec<int>& start, const Vec<int>& indices, const Vec<REAL>& values,
+    int i, int first, BoundStorage<REAL>& stored_bounds ) const
+{
+
+   bool isLowerBound = indices[first] == 1;
+   int col = indices[first + 1];
+   REAL old_value = values[first + 2];
+   REAL new_value = values[first + 1];
+   bool was_infinity = indices[first + 2] == 1;
+
+   const REAL reduced_costs = originalSolution.reducedCosts[col];
+   bool changes_neg_reduced_costs =
+       not isLowerBound and num.isLT( reduced_costs, 0 );
+   bool changes_pos_reduced_costs =
+       isLowerBound and num.isGT( reduced_costs, 0 );
+
+   int variables_removed_from_basis = 0;
+
+   // calculate the reduced costs if loosens variable at a bound
+   if( num.isEq( new_value, originalSolution.primal[col] ) and
+       ( changes_neg_reduced_costs or changes_pos_reduced_costs ) )
+   {
+      assert( not num.isZero( reduced_costs ) );
+      SavedRow<REAL> saved_row{
+          num, i, types, start, indices, values, originalSolution.primal };
+      int row = saved_row.getRow();
+      REAL increasing_value = reduced_costs / saved_row.getCoeffOfCol( col );
+
+      originalSolution.dual[saved_row.getRow()] += increasing_value;
+
+      if( originalSolution.basisAvailabe and
+          originalSolution.rowBasisStatus[row] == VarBasisStatus::BASIC and
+          not num.isZero( originalSolution.dual[row] ) )
+      {
+         originalSolution.rowBasisStatus[row] = saved_row.getVBS();
+         assert( originalSolution.rowBasisStatus[row] !=
+                 VarBasisStatus::BASIC );
+         variables_removed_from_basis++;
+      }
+
+      for( int j = 0; j < saved_row.getLength(); ++j )
+      {
+         int col_index = saved_row.getCoeff( j );
+         if( col_index == col )
+            continue;
+         originalSolution.reducedCosts[col_index] -=
+             increasing_value * saved_row.getValue( j );
+
+         if( originalSolution.basisAvailabe and
+             originalSolution.varBasisStatus[col_index] ==
+                 VarBasisStatus::BASIC and
+             not num.isZero( originalSolution.reducedCosts[col_index] ) )
+         {
+            originalSolution.varBasisStatus[col_index] = get_var_basis_status(
+                stored_bounds, col_index, originalSolution.primal[col_index] );
+            assert( originalSolution.varBasisStatus[col_index] !=
+                    VarBasisStatus::BASIC );
+            variables_removed_from_basis++;
+         }
+
+         assert( not originalSolution.basisAvailabe or
+                 not num.isZero( originalSolution.reducedCosts[col_index] or
+                                 originalSolution.varBasisStatus[col_index] !=
+                                     VarBasisStatus::BASIC ) );
+      }
+      if( originalSolution.basisAvailabe and variables_removed_from_basis > 0 )
+      {
+         originalSolution.varBasisStatus[col] = VarBasisStatus::BASIC;
+         variables_removed_from_basis--;
+      }
+      assert( variables_removed_from_basis == 0 );
+      originalSolution.reducedCosts[col] = 0;
+   }
+
+   if( originalSolution.basisAvailabe )
+   {
+      switch( originalSolution.varBasisStatus[col] )
+      {
+      case VarBasisStatus::FIXED:
+         if( isLowerBound )
+            originalSolution.varBasisStatus[col] = VarBasisStatus::ON_UPPER;
+         else if( was_infinity and num.isZero( new_value ) )
+            originalSolution.varBasisStatus[col] = VarBasisStatus::ZERO;
+         else
+            originalSolution.varBasisStatus[col] = VarBasisStatus::ON_LOWER;
+         break;
+      case VarBasisStatus::ON_LOWER:
+      case VarBasisStatus::ZERO:
+      {
+         if( not isLowerBound )
+            break;
+         remove_row_from_basis( originalSolution, types, start, indices, values,
+                                i, stored_bounds );
+         originalSolution.varBasisStatus[col] = VarBasisStatus::BASIC;
+         break;
+      }
+      case VarBasisStatus::ON_UPPER:
+      {
+         if( isLowerBound )
+            break;
+         remove_row_from_basis( originalSolution, types, start, indices, values,
+                                i, stored_bounds );
+         originalSolution.varBasisStatus[col] = VarBasisStatus::BASIC;
+         break;
+      }
+      case VarBasisStatus::UNDEFINED:
+      case VarBasisStatus::BASIC:
+         break;
+      }
+   }
+}
+
+template <typename REAL>
+void
 Postsolve<REAL>::apply_parallel_col_to_original_solution(
     Solution<REAL>& originalSolution, const Vec<int>& indices,
-    const Vec<REAL>& values, int first, int last, Stored<REAL>& stored ) const
+    const Vec<REAL>& values, int first, int last,
+    BoundStorage<REAL>& stored ) const
 {
    // calculate values of the parallel cols such that at least one is at its
    // bounds
@@ -699,7 +1098,6 @@ Postsolve<REAL>::apply_parallel_col_to_original_solution(
        ( not( col1boundFlags & IS_LBINF ) and num.isEq( col2val, col2lb ) );
    assert( col1onBounds or col2onBounds );
 
-
    if( originalSolution.type == SolutionType::kPrimalDual )
    {
       stored.set_bounds_of_variable(
@@ -724,20 +1122,20 @@ Postsolve<REAL>::apply_parallel_col_to_original_solution(
          }
       }
 
-      if(originalSolution.basisAvailabe)
+      if( originalSolution.basisAvailabe )
       {
 
-         originalSolution.varBasisStatus[col1] =
-             set_basis( col1boundFlags, col1lb, col1ub, col1val, col1onBounds );
+         originalSolution.varBasisStatus[col1] = calculate_basis(
+             col1boundFlags, col1lb, col1ub, col1val, col1onBounds );
 
          if( col1onBounds and col2onBounds and
              originalSolution.varBasisStatus[col2] == VarBasisStatus::BASIC )
          {
-            message.template info("hier\n");
+            message.template info( "hier\n" );
          }
          else
          {
-            originalSolution.varBasisStatus[col2] = set_basis(
+            originalSolution.varBasisStatus[col2] = calculate_basis(
                 col2boundFlags, col2lb, col2ub, col2val, col2onBounds );
          }
          assert(
@@ -748,17 +1146,37 @@ Postsolve<REAL>::apply_parallel_col_to_original_solution(
 }
 
 template <typename REAL>
+bool
+Postsolve<REAL>::are_the_next_n_types_redundant_rows(
+    const Vec<ReductionType>& types, int i, int redundant_rows ) const
+{
+   for( int j = 0; j < redundant_rows; j++ )
+      if( types[i - j - 1] != ReductionType::kRedundantRow )
+         return false;
+   return true;
+}
+
+/**
+ * checks if variable is in BASIS, ON_LOWER etc
+ * @tparam REAL
+ * @param flags
+ * @param lb
+ * @param ub
+ * @param solution
+ * @param is_on_bounds
+ * @return
+ */
+template <typename REAL>
 VarBasisStatus
-Postsolve<REAL>::set_basis( int flags, REAL lb, REAL ub,
-                            REAL solution, bool is_on_bounds ) const
+Postsolve<REAL>::calculate_basis( int flags, REAL lb, REAL ub, REAL solution,
+                            bool is_on_bounds ) const
 {
    if( not is_on_bounds )
-      return  VarBasisStatus::BASIC;
+      return VarBasisStatus::BASIC;
    else if( not( flags & IS_UBINF ) and num.isEq( solution, ub ) )
       return VarBasisStatus::ON_UPPER;
-   else if( not( flags & IS_LBINF ) and
-            ( flags & IS_UBINF ) and num.isEq( solution, lb ) and
-            num.isZero( lb ) )
+   else if( not( flags & IS_LBINF ) and ( flags & IS_UBINF ) and
+            num.isEq( solution, lb ) and num.isZero( lb ) )
       return VarBasisStatus::ZERO;
    else if( not( flags & IS_LBINF ) and num.isEq( solution, lb ) )
       return VarBasisStatus::ON_LOWER;
@@ -766,120 +1184,9 @@ Postsolve<REAL>::set_basis( int flags, REAL lb, REAL ub,
 }
 
 template <typename REAL>
-void
-Postsolve<REAL>::apply_var_bound_change_forced_by_column_in_original_solution(
-    Solution<REAL>& originalSolution, const Vec<ReductionType>& types,
-    const Vec<int>& start, const Vec<int>& indices, const Vec<REAL>& values,
-    int i, int first, Stored<REAL>& stored_bounds ) const
-{
-
-   bool isLowerBound = indices[first] == 1;
-   int col = indices[first + 1];
-   REAL old_value = values[first + 2];
-   REAL new_value = values[first + 1];
-   bool was_infinity = indices[first + 2] == 1;
-
-   const REAL reduced_costs = originalSolution.reducedCosts[col];
-   bool changes_neg_reduced_costs =
-       not isLowerBound and num.isLT( reduced_costs, 0 );
-   bool changes_pos_reduced_costs =
-       isLowerBound and num.isGT( reduced_costs, 0 );
-
-   int variables_removed_from_basis = 0;
-
-   //calculate the reduced costs if loosens variable at a bound
-   if( num.isEq( new_value, originalSolution.primal[col] ) and
-       ( changes_neg_reduced_costs or changes_pos_reduced_costs ) )
-   {
-      assert( not num.isZero( reduced_costs ) );
-      SavedRow<REAL> saved_row {num, i, types, start, indices, values, originalSolution.primal};
-      int row = saved_row.getRow();
-      REAL increasing_value = reduced_costs / saved_row.getCoeffOfCol( col );
-
-      originalSolution.dual[saved_row.getRow()] += increasing_value;
-
-      if( originalSolution.basisAvailabe and
-          originalSolution.rowBasisStatus[row] == VarBasisStatus::BASIC and
-          not num.isZero( originalSolution.dual[row] ) )
-      {
-         originalSolution.rowBasisStatus[row] = saved_row.getVBS();
-         assert( originalSolution.rowBasisStatus[row] !=
-                 VarBasisStatus::BASIC );
-         variables_removed_from_basis++;
-      }
-
-      for( int j = 0; j < saved_row.getLength(); ++j )
-      {
-         int col_index = saved_row.getCoeff( j );
-         if( col_index == col )
-            continue;
-         originalSolution.reducedCosts[col_index] -=
-             increasing_value * saved_row.getValue( j );
-
-         if( originalSolution.basisAvailabe and
-             originalSolution.varBasisStatus[col_index] == VarBasisStatus::BASIC and
-             not num.isZero( originalSolution.reducedCosts[col_index] ) )
-         {
-            originalSolution.varBasisStatus[col_index] = get_var_basis_status(
-                stored_bounds, col_index, originalSolution.primal[col_index] );
-            assert(originalSolution.varBasisStatus[col_index] != VarBasisStatus::BASIC);
-            variables_removed_from_basis++;
-         }
-
-         assert( not originalSolution.basisAvailabe or
-                 not num.isZero( originalSolution.reducedCosts[col_index] or
-                                 originalSolution.varBasisStatus[col_index] !=
-                                     VarBasisStatus::BASIC ) );
-      }
-      if( originalSolution.basisAvailabe and variables_removed_from_basis > 0 )
-      {
-         originalSolution.varBasisStatus[col] = VarBasisStatus::BASIC;
-         variables_removed_from_basis--;
-      }
-      assert( variables_removed_from_basis == 0 );
-      originalSolution.reducedCosts[col] = 0;
-   }
-
-   if(originalSolution.basisAvailabe){
-      switch(originalSolution.varBasisStatus[col]){
-         case VarBasisStatus::FIXED:
-            if(isLowerBound)
-               originalSolution.varBasisStatus[col] = VarBasisStatus::ON_UPPER;
-            else if( was_infinity and num.isZero(new_value) )
-               originalSolution.varBasisStatus[col] = VarBasisStatus::ZERO;
-            else
-               originalSolution.varBasisStatus[col] = VarBasisStatus::ON_LOWER;
-            break;
-         case VarBasisStatus::ON_LOWER:
-         case VarBasisStatus::ZERO:
-         {
-            if( not isLowerBound )
-               break;
-            remove_row_from_basis( originalSolution, types, start, indices,
-                                   values, i, stored_bounds );
-            originalSolution.varBasisStatus[col] = VarBasisStatus::BASIC;
-            break;
-         }
-         case VarBasisStatus::ON_UPPER:
-         {
-            if( isLowerBound )
-               break;
-            remove_row_from_basis( originalSolution, types, start, indices,
-                                   values, i, stored_bounds );
-            originalSolution.varBasisStatus[col] = VarBasisStatus::BASIC;
-            break;
-         }
-         case VarBasisStatus::UNDEFINED:
-         case VarBasisStatus::BASIC:
-            break;
-         }
-   }
-}
-
-template <typename REAL>
 VarBasisStatus
-Postsolve<REAL>::get_var_basis_status( Stored<REAL>& stored_bounds,
-                                   int index, REAL val ) const
+Postsolve<REAL>::get_var_basis_status( BoundStorage<REAL>& stored_bounds, int index,
+                                       REAL val ) const
 {
    bool isOnUpperBound = stored_bounds.is_on_upper_bound( index, val );
    bool isOnLowerBound = stored_bounds.is_on_lower_bound( index, val );
@@ -889,11 +1196,10 @@ Postsolve<REAL>::get_var_basis_status( Stored<REAL>& stored_bounds,
       return VarBasisStatus::ON_UPPER;
    else if( isOnLowerBound and num.isZero( val ) )
       return VarBasisStatus::ZERO;
-   else if( isOnLowerBound)
+   else if( isOnLowerBound )
       return VarBasisStatus::ON_LOWER;
    return VarBasisStatus::BASIC;
 }
-
 
 template <typename REAL>
 void
@@ -901,10 +1207,10 @@ Postsolve<REAL>::remove_row_from_basis( Solution<REAL>& originalSolution,
                                         const Vec<ReductionType>& types,
                                         const Vec<int>& start,
                                         const Vec<int>& indices,
-                                        const Vec<REAL>& values, int i,
-                                        Stored<REAL>& stored_bounds ) const
+                                        const Vec<REAL>& values, int i, BoundStorage<REAL>& stored_bounds ) const
 {
-   SavedRow<REAL> saved_row {num, i, types, start, indices, values, originalSolution.primal};
+   SavedRow<REAL> saved_row{
+       num, i, types, start, indices, values, originalSolution.primal };
 
    assert( originalSolution.rowBasisStatus[saved_row.getRow()] ==
                VarBasisStatus::BASIC and
@@ -915,226 +1221,11 @@ Postsolve<REAL>::remove_row_from_basis( Solution<REAL>& originalSolution,
 }
 
 template <typename REAL>
-void
-Postsolve<REAL>::apply_fix_var_in_original_solution(
-    Solution<REAL>& originalSolution, const Vec<int>& indices,
-    const Vec<REAL>& values, int current_index ) const
-{
-   //fix variable in the primal solution
-   int col = indices[current_index];
-   originalSolution.primal[col] = values[current_index];
-
-   if( originalSolution.type == SolutionType::kPrimalDual )
-   {
-      // calculate the reduced costs in the dual z_j = c_j - sum_i a_ij*y_i
-      REAL objective_coefficient = values[current_index + 1];
-
-      int col_length = indices[current_index + 1];
-
-      StableSum<REAL> stablesum;
-      stablesum.add( objective_coefficient );
-      // no need to check for solSetRow because if it is zero then the
-      // dual reducedCosts is zero.
-      for( int k = 0; k < col_length; ++k )
-      {
-         int index = current_index + 2 + k;
-         int row = indices[index];
-         REAL coeff = values[index];
-         stablesum.add( -coeff * originalSolution.dual[row] );
-      }
-
-      originalSolution.reducedCosts[col] = stablesum.get();
-      if( originalSolution.basisAvailabe )
-         originalSolution.varBasisStatus[col] = VarBasisStatus::FIXED;
-   }
-}
-
-template <typename REAL>
-int
-Postsolve<REAL>::apply_fix_infinity_variable_in_original_solution(
-    Solution<REAL>& originalSolution, Vec<int>& indices, Vec<REAL>& values,
-    int first, const Problem<REAL>& problem, Stored<REAL>& stored_bounds ) const
-{
-   //calculate the feasible (minimal) value for the infinity variable
-   int col = indices[first];
-   REAL bound = values[first + 1];
-   int number_rows = indices[first + 1];
-   REAL solution = bound;
-   int row_counter = 0;
-   int current_counter = first + 2;
-
-   bool isNegativeInfinity = values[first] < 0;
-   int row_indices[number_rows];
-   REAL col_coefficents[number_rows];
-   if( isNegativeInfinity )
-   {
-      while( row_counter < number_rows )
-      {
-         int length = (int)values[current_counter];
-         row_indices[row_counter] = indices[current_counter];
-
-         REAL lhs = values[current_counter + 1];
-         REAL rhs = values[current_counter + 2];
-         const REAL* coefficients = &values[current_counter + 3];
-         const int* col_indices = &indices[current_counter + 3];
-
-         REAL newValue = calculate_row_value_for_infinity_column(
-             lhs, rhs, length, col, col_indices, coefficients, originalSolution.primal,
-             true, col_coefficents[row_counter]);
-         if( num.isLT(newValue, solution) )
-         {
-            if(originalSolution.basisAvailabe)
-            {
-               if( num.isGT( col_coefficents[row_counter], 0 ) )
-                  originalSolution.rowBasisStatus[row_indices[row_counter]] =
-                      VarBasisStatus::ON_UPPER;
-               else
-                  originalSolution.rowBasisStatus[row_indices[row_counter]] =
-                      VarBasisStatus::ON_LOWER;
-            }
-            solution = newValue;
-         }
-         else if (originalSolution.basisAvailabe)
-            originalSolution.rowBasisStatus[row_indices[row_counter]] = VarBasisStatus::BASIC;
-
-         current_counter += 3 + length;
-         row_counter ++;
-      }
-      if( problem.getColFlags()[col].test( ColFlag::kIntegral ) )
-         solution = num.epsFloor( solution );
-      originalSolution.primal[col] = solution;
-   }
-   else
-   {
-      while( row_counter < number_rows )
-      {
-         int length = (int)values[current_counter];
-         row_indices[row_counter] = indices[current_counter];
-
-         REAL lhs = values[current_counter + 1];
-         REAL rhs = values[current_counter + 2];
-
-         const REAL* coefficients = &values[current_counter + 3];
-         const int* col_indices = &indices[current_counter + 3];
-
-         REAL newValue = calculate_row_value_for_infinity_column(
-             lhs, rhs, length, col, col_indices, coefficients, originalSolution.primal,
-             false, col_coefficents[row_counter] );
-         if( num.isGT(newValue, solution) )
-         {
-            if( num.isGT( col_coefficents[row_counter], 0 ) )
-               originalSolution.rowBasisStatus[row_indices[row_counter]] =
-                   VarBasisStatus::ON_LOWER;
-            else
-               originalSolution.rowBasisStatus[row_indices[row_counter]] =
-                   VarBasisStatus::ON_UPPER;
-            solution = newValue;
-         }
-         else if (originalSolution.basisAvailabe)
-            originalSolution.rowBasisStatus[row_indices[row_counter]] = VarBasisStatus::BASIC;
-
-         current_counter += 3 + length;
-         row_counter ++;
-      }
-      if( problem.getColFlags()[col].test( ColFlag::kIntegral ) )
-         solution = num.epsCeil( solution );
-      originalSolution.primal[col] = solution;
-   }
-
-   if( originalSolution.type == SolutionType::kPrimalDual )
-   {
-      // calculate the reduced costs for the fixed variable with the stored
-      // information of calculation of the primal solution
-      StableSum<REAL> sum;
-      // objective is zero otherwise the problem would be infeasible
-      for( int k = 0; k < number_rows; ++k )
-         sum.add( -col_coefficents[k] * originalSolution.dual[row_indices[k]] );
-      originalSolution.reducedCosts[col] = sum.get();
-
-      if(isNegativeInfinity)
-         stored_bounds.set_bounds_of_variable(col, true, false, 0, bound);
-      else
-         stored_bounds.set_bounds_of_variable(col, false, true, bound, 0);
-
-      if( originalSolution.basisAvailabe )
-      {
-         if( num.isEq( solution, bound ) )
-            if(isNegativeInfinity)
-               originalSolution.varBasisStatus[col] = VarBasisStatus::ON_UPPER;
-            else
-               originalSolution.varBasisStatus[col] = VarBasisStatus::ON_LOWER;
-         else
-            originalSolution.varBasisStatus[col] = VarBasisStatus::BASIC;
-      }
-   }
-   return number_rows;
-}
-
-
-template <typename REAL>
-void
-Postsolve<REAL>::copy_from_reduced_to_original(
-    const Solution<REAL>& reducedSolution, Solution<REAL>& originalSolution,
-    const PostsolveListener<REAL>& postsolveListener) const
-{
-   if( reducedSolution.type == SolutionType::kPrimalDual )
-      originalSolution.type = SolutionType::kPrimalDual;
-
-   originalSolution.primal.clear();
-   originalSolution.primal.resize( postsolveListener.nColsOriginal );
-
-   int reduced_columns = (int) reducedSolution.primal.size();
-   for( int k = 0; k < reduced_columns; ++k )
-      originalSolution.primal[postsolveListener.origcol_mapping[k]] =
-          reducedSolution.primal[k];
-
-   if( originalSolution.type == SolutionType::kPrimalDual )
-   {
-      originalSolution.basisAvailabe =
-          reducedSolution.basisAvailabe and
-          postsolveListener.problem.getNumIntegralCols() == 0 and
-          postsolveListener.presolveOptions.calculate_basis_for_dual;
-      int reduced_rows = (int) reducedSolution.dual.size();
-
-      assert( reducedSolution.dual.size() == reduced_rows );
-      originalSolution.dual.clear();
-      originalSolution.dual.resize( postsolveListener.nRowsOriginal );
-      for( int k = 0; k < reduced_rows; k++ )
-         originalSolution.dual[postsolveListener.origrow_mapping[k]] =
-             reducedSolution.dual[k];
-
-      assert( reducedSolution.reducedCosts.size() == reduced_columns );
-      originalSolution.reducedCosts.clear();
-      originalSolution.reducedCosts.resize( postsolveListener.nColsOriginal );
-      for( int k = 0; k < reduced_columns; k++ )
-         originalSolution.reducedCosts[postsolveListener.origcol_mapping[k]] =
-             reducedSolution.reducedCosts[k];
-
-      assert( reducedSolution.varBasisStatus.size() == reduced_columns );
-      originalSolution.varBasisStatus.clear();
-      originalSolution.varBasisStatus.resize( postsolveListener.nColsOriginal, VarBasisStatus::UNDEFINED );
-      for( int k = 0; k < reduced_columns; k++ )
-         originalSolution.varBasisStatus[postsolveListener.origcol_mapping[k]] =
-             reducedSolution.varBasisStatus[k];
-
-      assert( reducedSolution.rowBasisStatus.size() == reduced_rows );
-
-      originalSolution.rowBasisStatus.clear();
-      originalSolution.rowBasisStatus.resize( postsolveListener.nRowsOriginal, VarBasisStatus::UNDEFINED );
-      for( int k = 0; k < reduced_rows; k++ )
-         originalSolution.rowBasisStatus[postsolveListener.origrow_mapping[k]] =
-             reducedSolution.rowBasisStatus[k];
-   }
-}
-
-
-
-template <typename REAL>
 REAL
-Postsolve<REAL>::calculate_row_value_for_infinity_column(
+Postsolve<REAL>::calculate_row_value_for_fixed_infinity_variable(
     REAL lhs, REAL rhs, int rowLength, int column, const int* row_indices,
-    const REAL* coefficients, Vec<REAL>& current_solution,
-    bool is_negative, REAL& coeff_of_column_in_row ) const
+    const REAL* coefficients, Vec<REAL>& current_solution, bool is_negative,
+    REAL& coeff_of_column_in_row ) const
 {
    StableSum<REAL> stableSum;
 
@@ -1161,8 +1252,8 @@ Postsolve<REAL>::calculate_row_value_for_infinity_column(
 
 template <typename REAL>
 Problem<REAL>
-Postsolve<REAL>::calculate_current_problem(
-    const PostsolveListener<REAL>& listener, int current_index ) const
+Postsolve<REAL>::recalculate_current_problem_from_the_original_problem(
+    const PostsolveStorage<REAL>& listener, int current_index ) const
 {
 
    auto types = listener.types;
@@ -1177,16 +1268,15 @@ Postsolve<REAL>::calculate_current_problem(
    reduced.recomputeAllActivities();
    Statistics statistics{};
    PresolveOptions presolveOptions{};
-   PostsolveListener<REAL> postsolveListener1 =
-       PostsolveListener<REAL>( reduced, num, presolveOptions );
-   ProblemUpdate<REAL> problemUpdate( reduced, postsolveListener1, statistics,
+   PostsolveStorage<REAL> postsolveStorage =
+       PostsolveStorage<REAL>( reduced, num, presolveOptions );
+   ProblemUpdate<REAL> problemUpdate( reduced, postsolveStorage, statistics,
                                       presolveOptions, num, message );
 
    for( int j = 0; j < current_index; j++ )
    {
       auto type = types[j];
       int first = start[j];
-      int last = start[j + 1];
       switch( type )
       {
       case ReductionType::kRedundantRow:
@@ -1195,8 +1285,6 @@ Postsolve<REAL>::calculate_current_problem(
       case ReductionType::kFixedCol:
       case ReductionType::kFixedInfCol:
       {
-         // At the moment saves column to the postsolve stack. todo:
-         // use notifySavedCol and current index of column on the stack.
          int col = indices[first];
          REAL val = values[first];
          problemUpdate.getProblem().getLowerBounds()[col] = val;
@@ -1269,12 +1357,11 @@ Postsolve<REAL>::calculate_current_problem(
          break;
       }
       case ReductionType::kCoefficientChange:
-         {
-//         int row = indices[first];
-//         int col = indices[first + 1];
-//         REAL value = values[first];
+      {
+         //         int row = indices[first];
+         //         int col = indices[first + 1];
+         //         REAL value = values[first];
          // TODO:
-         //         problemUpdate.matr
          break;
       }
       case ReductionType::kSubstitutedCol:
@@ -1296,9 +1383,9 @@ Postsolve<REAL>::calculate_current_problem(
 
          if( colsize > 1 )
          {
-//            auto eqRHS = problemUpdate.getProblem()
-//                             .getConstraintMatrix()
-//                             .getLeftHandSides()[row];
+            //            auto eqRHS = problemUpdate.getProblem()
+            //                             .getConstraintMatrix()
+            //                             .getLeftHandSides()[row];
 
             // TODO: make the changes in the constraint matrix?
             //            problemUpdate.getProblem().getConstraintMatrix().aggregate(
@@ -1331,20 +1418,9 @@ Postsolve<REAL>::calculate_current_problem(
          assert( false );
       }
    }
-   MpsWriter<REAL> write{};
-   std::string filename = "problem_index_" +
-       boost::lexical_cast<std::string>( current_index ) +
-       ".mps";
-
-   Vec<int> col_mapping{};
-   Vec<int> row_mapping{};
-   for( int i = 0; i < problem.getNRows(); i++ )
-      row_mapping.push_back( i );
-   for( int i = 0; i < problem.getNCols(); i++ )
-      col_mapping.push_back( i );
 
    return reduced;
-    }
+}
 
 } // namespace papilo
 

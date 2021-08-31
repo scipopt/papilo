@@ -299,7 +299,7 @@ class ConstraintMatrix
             lhs_values[index] = value;
 
          if( !flags[index].test( RowFlag::kRhsInf ) &&
-             lhs_values[index] == rhs_values[index] )
+             lhs_values[index] == rhs_values[index]  )
             flags[index].set( RowFlag::kEquation );
          else
             flags[index].unset( RowFlag::kEquation );

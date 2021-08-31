@@ -21,13 +21,13 @@
 /*                                                                           */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#include "PostsolveListener.hpp"
+#include "PostsolveStorage.hpp"
 
 namespace papilo
 {
 
-template class PostsolveListener<double>;
-template class PostsolveListener<Quad>;
-template class PostsolveListener<Rational>;
+template class PostsolveStorage<double>;
+template class PostsolveStorage<Quad>;
+template class PostsolveStorage<Rational>;
 
 } // namespace papilo

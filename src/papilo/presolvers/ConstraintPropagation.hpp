@@ -123,7 +123,6 @@ ConstraintPropagation<REAL>::execute( const Problem<REAL>& problem,
                                      consMatrix.getMaxFeasChange(
                                          col, bnddist ) <= num.getFeasTol() ) )
                {
-//                  reductions.changeColLB( col, domains.upper_bounds[col], row );
                   reductions.fixCol( col, domains.upper_bounds[col], row );
                   result = PresolveStatus::kReduced;
                   return;
@@ -170,7 +169,6 @@ ConstraintPropagation<REAL>::execute( const Problem<REAL>& problem,
                                      consMatrix.getMaxFeasChange(
                                          col, bnddist ) <= num.getFeasTol() ) )
                {
-//                  reductions.changeColUB( col, domains.lower_bounds[col], row );
                   reductions.fixCol( col, domains.lower_bounds[col], row );
                   result = PresolveStatus::kReduced;
                   return;
@@ -318,8 +316,6 @@ ConstraintPropagation<REAL>::execute( const Problem<REAL>& problem,
                                consMatrix.getMaxFeasChange( col, bnddist ) <=
                                    num.getFeasTol() ) )
                          {
-                            // todo reductions.forcingRowToLower(currentrow,
-                            // col);
                             stored_reductions[j].fixCol(
                                 col, domains.lower_bounds[col], row );
                             local_status = PresolveStatus::kReduced;

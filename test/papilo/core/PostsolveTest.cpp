@@ -34,18 +34,18 @@ TEST_CASE( "finding-the-right-value-in-postsolve-for-a-column-fixed-neg-inf",
 
    const Num<double> num{};
    Message msg{};
-   PostsolveListener<double> postsolveListener{};
+   PostsolveStorage<double> postsolveStorage{};
 
    std::ifstream inArchiveFile( "./resources/dual_fix_neg_inf.postsolve",
                                 std::ios_base::binary );
    boost::archive::binary_iarchive inputArchive( inArchiveFile );
-   inputArchive >> postsolveListener;
+   inputArchive >> postsolveStorage;
    inArchiveFile.close();
    Solution<double> reduced_solution{};
    Solution<double> original_solution{};
    Postsolve<double> postsolve{msg, num};
 
-   REQUIRE( postsolve.undo( reduced_solution, original_solution, postsolveListener) ==
+   REQUIRE( postsolve.undo( reduced_solution, original_solution, postsolveStorage) ==
             PostsolveStatus::kOk );
    papilo::Vec<double> values = original_solution.primal;
    papilo::Vec<double> expected_values{ -11, -5, -5 };
@@ -58,18 +58,18 @@ TEST_CASE( "finding-the-right-value-in-postsolve-for-a-column-fixed-pos-inf",
 
    const Num<double> num{};
    Message msg{};
-   PostsolveListener<double> postsolveListener{};
+   PostsolveStorage<double> postsolveStorage{};
 
    std::ifstream inArchiveFile( "./resources/dual_fix_pos_inf.postsolve",
                                 std::ios_base::binary );
    boost::archive::binary_iarchive inputArchive( inArchiveFile );
-   inputArchive >> postsolveListener;
+   inputArchive >> postsolveStorage;
    inArchiveFile.close();
    Solution<double> reduced_solution{};
    Solution<double> original_solution{};
    Postsolve<double> postsolve{msg, num};
 
-   REQUIRE( postsolve.undo( reduced_solution, original_solution, postsolveListener ) ==
+   REQUIRE( postsolve.undo( reduced_solution, original_solution, postsolveStorage ) ==
             PostsolveStatus::kOk );
    papilo::Vec<double> values = original_solution.primal;
    papilo::Vec<double> expected_values{ 13, 9, -5, -2.5 };

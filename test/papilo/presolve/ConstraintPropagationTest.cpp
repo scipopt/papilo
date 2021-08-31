@@ -40,8 +40,8 @@ TEST_CASE( "constraint-propagation-happy-path", "[presolve]" )
    Statistics statistics{};
    PresolveOptions presolveOptions{};
    presolveOptions.dualreds = 0;
-   PostsolveListener<double> postsolve =
-       PostsolveListener<double>( problem, num, presolveOptions );
+   PostsolveStorage<double> postsolve =
+       PostsolveStorage<double>( problem, num, presolveOptions );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
    ConstraintPropagation<double> presolvingMethod{};
@@ -92,8 +92,8 @@ TEST_CASE( "constraint-propagation-no-tightening-for-lp", "[presolve]" )
    Statistics statistics{};
    PresolveOptions presolveOptions{};
    presolveOptions.dualreds = 0;
-   PostsolveListener<double> postsolve =
-       PostsolveListener<double>( problem, num , presolveOptions);
+   PostsolveStorage<double> postsolve =
+       PostsolveStorage<double>( problem, num , presolveOptions);
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
    ConstraintPropagation<double> presolvingMethod{};

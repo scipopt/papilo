@@ -24,7 +24,6 @@
 #ifndef __PAPILOLIB_H__
 #define __PAPILOLIB_H__
 
-//TODO: this file isn't found anywhere
 #include "papilolib_export.h"
 
 #ifdef __cplusplus

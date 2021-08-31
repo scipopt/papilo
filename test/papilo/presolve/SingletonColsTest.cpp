@@ -59,8 +59,8 @@ TEST_CASE( "happy-path-singleton-column", "[presolve]" )
    Problem<double> problem = setupProblemWithSingletonColumn();
    Statistics statistics{};
    PresolveOptions presolveOptions{};
-   PostsolveListener<double> postsolve =
-       PostsolveListener<double>( problem, num, presolveOptions );
+   PostsolveStorage<double> postsolve =
+       PostsolveStorage<double>( problem, num, presolveOptions );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num , msg);
    forceCalculationOfSingletonRows( problem, problemUpdate );
@@ -101,8 +101,8 @@ TEST_CASE( "happy-path-singleton-column-equation", "[presolve]" )
    Problem<double> problem = setupProblemWithOnlyOneEntryIn1stRowAndColumn();
    Statistics statistics{};
    PresolveOptions presolveOptions{};
-   PostsolveListener<double> postsolve =
-       PostsolveListener<double>( problem, num, presolveOptions );
+   PostsolveStorage<double> postsolve =
+       PostsolveStorage<double>( problem, num, presolveOptions );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
    forceCalculationOfSingletonRows( problem, problemUpdate );
@@ -144,8 +144,8 @@ TEST_CASE( "happy-path-singleton-column-implied-bounds-negative-coeff-pos-bounds
                                                                      3.0 );
    Statistics statistics{};
    PresolveOptions presolveOptions{};
-   PostsolveListener<double> postsolve =
-       PostsolveListener<double>( problem, num, presolveOptions );
+   PostsolveStorage<double> postsolve =
+       PostsolveStorage<double>( problem, num, presolveOptions );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
    forceCalculationOfSingletonRows( problem, problemUpdate );
@@ -191,8 +191,8 @@ TEST_CASE( "happy-path-singleton-column-implied-bounds-negative-coeff-neg-bounds
                                                                      -10.0 );
    Statistics statistics{};
    PresolveOptions presolveOptions{};
-   PostsolveListener<double> postsolve =
-       PostsolveListener<double>( problem, num, presolveOptions );
+   PostsolveStorage<double> postsolve =
+       PostsolveStorage<double>( problem, num, presolveOptions );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
    forceCalculationOfSingletonRows( problem, problemUpdate );
@@ -238,8 +238,8 @@ TEST_CASE( "happy-path-singleton-column-implied-bounds-positive-coeff-pos-bounds
                                                                      3.0 );
    Statistics statistics{};
    PresolveOptions presolveOptions{};
-   PostsolveListener<double> postsolve =
-       PostsolveListener<double>( problem, num, presolveOptions );
+   PostsolveStorage<double> postsolve =
+       PostsolveStorage<double>( problem, num, presolveOptions );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
    forceCalculationOfSingletonRows( problem, problemUpdate );
@@ -287,8 +287,8 @@ TEST_CASE( "happy-path-singleton-column-implied-bounds-positive-coeff-neg-bounds
                                                                      -10.0 );
    Statistics statistics{};
    PresolveOptions presolveOptions{};
-   PostsolveListener<double> postsolve =
-       PostsolveListener<double>( problem, num, presolveOptions );
+   PostsolveStorage<double> postsolve =
+       PostsolveStorage<double>( problem, num, presolveOptions );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
    forceCalculationOfSingletonRows( problem, problemUpdate );
@@ -333,8 +333,8 @@ TEST_CASE( "happy-path-singleton-column-infinity-bounds-equation", "[presolve]" 
        setupProblemWithSingletonColumnInEquationWithInfinityBounds();
    Statistics statistics{};
    PresolveOptions presolveOptions{};
-   PostsolveListener<double> postsolve =
-       PostsolveListener<double>( problem, num, presolveOptions );
+   PostsolveStorage<double> postsolve =
+       PostsolveStorage<double>( problem, num, presolveOptions );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
    forceCalculationOfSingletonRows( problem, problemUpdate );

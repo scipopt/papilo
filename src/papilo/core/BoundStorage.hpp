@@ -28,7 +28,7 @@ namespace papilo
 {
 
 template <typename REAL>
-class Stored
+class BoundStorage
 {
  private:
    Num<REAL> num;
@@ -44,7 +44,7 @@ class Stored
    Vec<int> row_infinity_rhs;
 
  public:
-   Stored( const Num<REAL>& n, int cols, int rows, bool is_primal_dual )
+   BoundStorage( const Num<REAL>& n, int cols, int rows, bool is_primal_dual )
    {
       if( not is_primal_dual )
          return;

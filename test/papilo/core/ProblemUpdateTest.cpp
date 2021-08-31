@@ -42,8 +42,8 @@ TEST_CASE( "happy-path-presolve-singleton-row", "[core]" )
    Problem<double> problem = setupProblemPresolveSingletonRow();
    Statistics statistics{};
    PresolveOptions presolveOptions{};
-   PostsolveListener<double> postsolve =
-       PostsolveListener<double>( problem, num, presolveOptions );
+   PostsolveStorage<double> postsolve =
+       PostsolveStorage<double>( problem, num, presolveOptions );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
    problemUpdate.trivialPresolve();
@@ -51,7 +51,6 @@ TEST_CASE( "happy-path-presolve-singleton-row", "[core]" )
    REQUIRE( problem.getRowFlags()[1].test( RowFlag::kRedundant ) );
 }
 
-//TODO:
 TEST_CASE( "happy-path-presolve-singleton-row-fixed", "[core]" )
 {
    Num<double> num{};
@@ -59,8 +58,8 @@ TEST_CASE( "happy-path-presolve-singleton-row-fixed", "[core]" )
    Problem<double> problem = setupProblemPresolveSingletonRowFixed();
    Statistics statistics{};
    PresolveOptions presolveOptions{};
-   PostsolveListener<double> postsolve =
-       PostsolveListener<double>( problem, num, presolveOptions );
+   PostsolveStorage<double> postsolve =
+       PostsolveStorage<double>( problem, num, presolveOptions );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
    problemUpdate.trivialPresolve();

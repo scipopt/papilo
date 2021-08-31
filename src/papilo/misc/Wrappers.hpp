@@ -346,7 +346,7 @@ presolve_and_solve(
 
 template <typename REAL>
 void
-postsolve( PostsolveListener<REAL>& postsolveListener,
+postsolve( PostsolveStorage<REAL>& postsolveStorage,
            const Solution<REAL>& reduced_sol,
            const std::string& objective_reference = "",
            const std::string& primal_solution_output = "",
@@ -358,21 +358,21 @@ postsolve( PostsolveListener<REAL>& postsolveListener,
 
    auto t0 = tbb::tick_count::now();
    const Message msg{};
-   Postsolve<REAL> postsolve{ msg, postsolveListener.getNum() };
+   Postsolve<REAL> postsolve{ msg, postsolveStorage.getNum() };
    PostsolveStatus status =
-       postsolve.undo( reduced_sol, original_sol, postsolveListener );
+       postsolve.undo( reduced_sol, original_sol, postsolveStorage );
    auto t1 = tbb::tick_count::now();
 
    fmt::print( "\npostsolve finished after {:.3f} seconds\n",
                ( t1 - t0 ).seconds() );
 
-   const Problem<REAL>& origprob = postsolveListener.getOriginalProblem();
+   const Problem<REAL>& origprob = postsolveStorage.getOriginalProblem();
    REAL origobj = origprob.computeSolObjective( original_sol.primal );
 
    REAL boundviol;
    REAL intviol;
    REAL rowviol;
-   bool origfeas = origprob.computeSolViolations( postsolveListener.getNum(),
+   bool origfeas = origprob.computeSolViolations( postsolveStorage.getNum(),
                                                   original_sol.primal,
                                                   boundviol, rowviol, intviol );
 
@@ -447,7 +447,7 @@ postsolve( PostsolveListener<REAL>& postsolveListener,
    if( !objective_reference.empty() )
    {
       if( origfeas and status == PostsolveStatus::kOk and
-          postsolveListener.num.isFeasEq(
+          postsolveStorage.num.isFeasEq(
               boost::lexical_cast<double>( objective_reference ), origobj ) )
          fmt::print( "validation: SUCCESS\n" );
       else
@@ -459,7 +459,7 @@ template <typename REAL>
 void
 postsolve( const OptionsInfo& opts )
 {
-   PostsolveListener<REAL> ps;
+   PostsolveStorage<REAL> ps;
    std::ifstream inArchiveFile( opts.postsolve_archive_file,
                                 std::ios_base::binary );
    boost::archive::binary_iarchive inputArchive( inArchiveFile );

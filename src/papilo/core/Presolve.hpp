@@ -39,6 +39,8 @@
 #include "papilo/core/Problem.hpp"
 #include "papilo/core/ProblemUpdate.hpp"
 #include "papilo/core/Statistics.hpp"
+#include "papilo/core/postsolve/Postsolve.hpp"
+#include "papilo/core/postsolve/PostsolveStorage.hpp"
 #include "papilo/interfaces/SolverInterface.hpp"
 #include "papilo/io/Message.hpp"
 #include "papilo/misc/DependentRows.hpp"
@@ -46,8 +48,6 @@
 #include "papilo/misc/Timer.hpp"
 #include "papilo/misc/Vec.hpp"
 #include "papilo/misc/tbb.hpp"
-#include "papilo/core/postsolve/PostsolveListener.hpp"
-#include "papilo/core/postsolve/Postsolve.hpp"
 #include "papilo/presolvers/CoefficientStrengthening.hpp"
 #include "papilo/presolvers/ConstraintPropagation.hpp"
 #include "papilo/presolvers/DominatedCols.hpp"
@@ -72,7 +72,7 @@ namespace papilo
 template <typename REAL>
 struct PresolveResult
 {
-   PostsolveListener<REAL> postsolve;
+   PostsolveStorage<REAL> postsolve;
    PresolveStatus status;
 };
 
@@ -301,7 +301,7 @@ class Presolve
  private:
    void
    logStatus( const Problem<REAL>& problem,
-              const PostsolveListener<REAL>& postsolve ) const;
+              const PostsolveStorage<REAL>& postsolveStorage ) const;
 
    bool
    is_time_exceeded( const Timer& presolvetimer ) const;
@@ -398,7 +398,8 @@ Presolve<REAL>::apply( Problem<REAL>& problem )
 
       PresolveResult<REAL> result;
 
-      result.postsolve = PostsolveListener<REAL>( problem, num, presolveOptions );
+      result.postsolve =
+          PostsolveStorage<REAL>( problem, num, presolveOptions );
 
       if( problem.getNumIntegralCols() == 0 )
          result.postsolve.postsolveType = PostsolveType::kFull;
@@ -820,7 +821,7 @@ Presolve<REAL>::apply( Problem<REAL>& problem )
                         probUpdate.markColFixed( col );
                         if( result.postsolve.postsolveType ==
                             PostsolveType::kFull )
-                           result.postsolve.notifyDualValue(
+                           result.postsolve.storeDualValue(
                                true, col, solution.reducedCosts[col] );
                      }
 
@@ -861,7 +862,7 @@ Presolve<REAL>::apply( Problem<REAL>& problem )
             auto& row_flags = problem.getRowFlags();
             auto& col_flags = problem.getColFlags();
 
-            result.postsolve.notifyReducedBoundsAndCost(
+            result.postsolve.storeReducedBoundsAndCost(
                 col_lower, col_upper, row_lhs, row_rhs, coefficients, row_flags,
                 col_flags );
          }
@@ -1330,7 +1331,7 @@ Presolve<REAL>::printPresolversStats()
 template <typename REAL>
 void
 Presolve<REAL>::logStatus( const Problem<REAL>& problem,
-                           const PostsolveListener<REAL>& postsolveListener ) const
+                           const PostsolveStorage<REAL>& postsolveStorage ) const
 {
    msg.info( "reduced problem:\n" );
    msg.info( "  reduced rows:     {}\n", problem.getNRows() );
@@ -1343,16 +1344,15 @@ Presolve<REAL>::logStatus( const Problem<REAL>& problem,
    {
       Solution<REAL> solution{};
       Solution<REAL> empty_sol{};
-      if(postsolveListener.getOriginalProblem().getNumIntegralCols()==0)
+      if( postsolveStorage.getOriginalProblem().getNumIntegralCols() == 0 )
          empty_sol.type = SolutionType::kPrimalDual;
-      //TODO: enable again
-//      Postsolve<REAL> postsolve{msg, num};
-//      postsolve.undo( empty_sol, solution, postsolveListener );
-//      const Problem<REAL>& origprob = postsolveListener.getOriginalProblem();
-//      REAL origobj = origprob.computeSolObjective( solution.primal );
-//      msg.info(
-//          "problem is solved [optimal solution found] [objective value: {}]\n",
-//          origobj );
+      Postsolve<REAL> postsolve{ msg, num };
+      postsolve.undo( empty_sol, solution, postsolveStorage );
+      const Problem<REAL>& origprob = postsolveStorage.getOriginalProblem();
+      REAL origobj = origprob.computeSolObjective( solution.primal );
+      msg.info(
+          "problem is solved [optimal solution found] [objective value: {}]\n",
+          origobj );
    }
 }
 

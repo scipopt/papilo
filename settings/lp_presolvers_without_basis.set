@@ -8,8 +8,8 @@ parallelcols.enabled = 1
 parallelrows.enabled = 1
 propagation.enabled = 1
 fixcontinuous.enabled = 1
-colsingleton.enabled = 0
-stuffing.enabled = 0
+colsingleton.enabled = 1
+stuffing.enabled = 1
 
 doubletoneq.enabled = 0
 dualinfer.enabled = 0

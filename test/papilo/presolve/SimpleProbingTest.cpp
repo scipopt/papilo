@@ -45,8 +45,8 @@ TEST_CASE( "happy-path-simple-probing", "[presolve]" )
    Problem<double> problem = setupProblemWithSimpleProbing(true, true);
    Statistics statistics{};
    PresolveOptions presolveOptions{};
-   PostsolveListener<double> postsolve =
-       PostsolveListener<double>( problem, num, presolveOptions );
+   PostsolveStorage<double> postsolve =
+       PostsolveStorage<double>( problem, num, presolveOptions );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
    SimpleProbing<double> presolvingMethod{};
@@ -85,8 +85,8 @@ TEST_CASE( "happy-path-simple-probing-only-negative-coeff", "[presolve]" )
    Problem<double> problem = setupProblemWithSimpleProbing(true, true);
    Statistics statistics{};
    PresolveOptions presolveOptions{};
-   PostsolveListener<double> postsolve =
-       PostsolveListener<double>( problem, num, presolveOptions );
+   PostsolveStorage<double> postsolve =
+       PostsolveStorage<double>( problem, num, presolveOptions );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
    SimpleProbing<double> presolvingMethod{};
@@ -128,8 +128,8 @@ TEST_CASE( "happy-path-simple-probing-only-binary-negative-coefficient",
        setupProblemWithSimpleProbingMaxActEqualMinAct( true, false );
    Statistics statistics{};
    PresolveOptions presolveOptions{};
-   PostsolveListener<double> postsolve =
-       PostsolveListener<double>( problem, num, presolveOptions );
+   PostsolveStorage<double> postsolve =
+       PostsolveStorage<double>( problem, num, presolveOptions );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
    SimpleProbing<double> presolvingMethod{};
@@ -164,8 +164,8 @@ TEST_CASE( "happy-path-simple-probing-only-binary-positive-coefficient",
        setupProblemWithSimpleProbingMaxActEqualMinAct( false, true );
    Statistics statistics{};
    PresolveOptions presolveOptions{};
-   PostsolveListener<double> postsolve =
-       PostsolveListener<double>( problem, num, presolveOptions );
+   PostsolveStorage<double> postsolve =
+       PostsolveStorage<double>( problem, num, presolveOptions );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
    SimpleProbing<double> presolvingMethod{};

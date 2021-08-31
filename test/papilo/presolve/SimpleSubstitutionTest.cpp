@@ -50,8 +50,8 @@ TEST_CASE( "happy-path-simple-substitution-for-2-int", "[presolve]" )
    Statistics statistics{};
    PresolveOptions presolveOptions{};
    presolveOptions.dualreds = 0;
-   PostsolveListener<double> postsolve =
-       PostsolveListener<double>( problem, num, presolveOptions );
+   PostsolveStorage<double> postsolve =
+       PostsolveStorage<double>( problem, num, presolveOptions );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
    SimpleSubstitution<double> presolvingMethod{};
@@ -98,8 +98,8 @@ TEST_CASE( "happy-path-simple-substitution-for-int-continuous-coeff",
    Statistics statistics{};
    PresolveOptions presolveOptions{};
    presolveOptions.dualreds = 0;
-   PostsolveListener<double> postsolve =
-       PostsolveListener<double>( problem, num, presolveOptions );
+   PostsolveStorage<double> postsolve =
+       PostsolveStorage<double>( problem, num, presolveOptions );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
    SimpleSubstitution<double> presolvingMethod{};
@@ -119,8 +119,8 @@ TEST_CASE( "happy-path-simple-substitution-for-2-continuous", "[presolve]" )
    Statistics statistics{};
    PresolveOptions presolveOptions{};
    presolveOptions.dualreds = 0;
-   PostsolveListener<double> postsolve =
-       PostsolveListener<double>( problem, num, presolveOptions );
+   PostsolveStorage<double> postsolve =
+       PostsolveStorage<double>( problem, num, presolveOptions );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
    SimpleSubstitution<double> presolvingMethod{};
@@ -157,8 +157,8 @@ TEST_CASE( "happy-path-simple-substitution-for-continuous-and-integer",
    Statistics statistics{};
    PresolveOptions presolveOptions{};
    presolveOptions.dualreds = 0;
-   PostsolveListener<double> postsolve =
-       PostsolveListener<double>( problem, num, presolveOptions );
+   PostsolveStorage<double> postsolve =
+       PostsolveStorage<double>( problem, num, presolveOptions );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
    SimpleSubstitution<double> presolvingMethod{};
@@ -194,8 +194,8 @@ TEST_CASE( "failed-path-simple-substitution-for-2-int", "[presolve]" )
    Statistics statistics{};
    PresolveOptions presolveOptions{};
    presolveOptions.dualreds = 0;
-   PostsolveListener<double> postsolve =
-       PostsolveListener<double>( problem, num, presolveOptions );
+   PostsolveStorage<double> postsolve =
+       PostsolveStorage<double>( problem, num, presolveOptions );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
    SimpleSubstitution<double> presolvingMethod{};
@@ -216,8 +216,8 @@ TEST_CASE( "example_10_1_in_constraint_integer_programming", "[presolve]" )
    Statistics statistics{};
    PresolveOptions presolveOptions{};
    presolveOptions.dualreds = 0;
-   PostsolveListener<double> postsolve =
-       PostsolveListener<double>( problem, num, presolveOptions );
+   PostsolveStorage<double> postsolve =
+       PostsolveStorage<double>( problem, num, presolveOptions );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
    SimpleSubstitution<double> presolvingMethod{};
@@ -238,8 +238,8 @@ TEST_CASE( "should_return_feasible_if_gcd_of_coeff_is_in_rhs", "[presolve]" )
    Statistics statistics{};
    PresolveOptions presolveOptions{};
    presolveOptions.dualreds = 0;
-   PostsolveListener<double> postsolve =
-       PostsolveListener<double>( problem, num, presolveOptions );
+   PostsolveStorage<double> postsolve =
+       PostsolveStorage<double>( problem, num, presolveOptions );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
    SimpleSubstitution<double> presolvingMethod{};
@@ -260,8 +260,8 @@ TEST_CASE( "should_return_infeasible_if_gcd_of_coeff_is_in_rhs", "[presolve]" )
    Statistics statistics{};
    PresolveOptions presolveOptions{};
    presolveOptions.dualreds = 0;
-   PostsolveListener<double> postsolve =
-       PostsolveListener<double>( problem, num, presolveOptions );
+   PostsolveStorage<double> postsolve =
+       PostsolveStorage<double>( problem, num, presolveOptions );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
    SimpleSubstitution<double> presolvingMethod{};

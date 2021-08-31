@@ -55,8 +55,8 @@ TEST_CASE( "dual-fix-trivial-column-presolve-finds-reduction", "[presolve]" )
        setupMatrixForDualFixFirstColumnOnlyPositiveValues();
    Statistics statistics{};
    PresolveOptions presolveOptions{};
-   PostsolveListener<double> postsolve =
-       PostsolveListener<double>( problem, num, presolveOptions );
+   PostsolveStorage<double> postsolve =
+       PostsolveStorage<double>( problem, num, presolveOptions );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
 
@@ -75,8 +75,8 @@ TEST_CASE( "dual-fix-happy-path", "[presolve]" )
        setupMatrixForDualFixFirstColumnOnlyPositiveValues();
    Statistics statistics{};
    PresolveOptions presolveOptions{};
-   PostsolveListener<double> postsolve =
-       PostsolveListener<double>( problem, num, presolveOptions );
+   PostsolveStorage<double> postsolve =
+       PostsolveStorage<double>( problem, num, presolveOptions );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
 
@@ -103,8 +103,8 @@ TEST_CASE( "dual-fix-no-dual-substitution-for-lp", "[presolve]" )
    Problem<double> problem = setupMatrixForDualSubstitution( false );
    Statistics statistics{};
    PresolveOptions presolveOptions{};
-   PostsolveListener<double> postsolve =
-       PostsolveListener<double>( problem, num, presolveOptions );
+   PostsolveStorage<double> postsolve =
+       PostsolveStorage<double>( problem, num, presolveOptions );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
 
@@ -125,8 +125,8 @@ TEST_CASE( "dual-fix-dual-substitution", "[presolve]" )
    Problem<double> problem = setupMatrixForDualSubstitution( true );
    Statistics statistics{};
    PresolveOptions presolveOptions{};
-   PostsolveListener<double> postsolve =
-       PostsolveListener<double>( problem, num, presolveOptions );
+   PostsolveStorage<double> postsolve =
+       PostsolveStorage<double>( problem, num, presolveOptions );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
 
@@ -164,8 +164,8 @@ TEST_CASE( "dual-fix-dual-substitution-rounding", "[presolve]" )
    Problem<double> problem = setupMatrixForDualSubstitutionIntegerRounding();
    Statistics statistics{};
    PresolveOptions presolveOptions{};
-   PostsolveListener<double> postsolve =
-       PostsolveListener<double>( problem, num, presolveOptions );
+   PostsolveStorage<double> postsolve =
+       PostsolveStorage<double>( problem, num, presolveOptions );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
 
@@ -220,8 +220,8 @@ TEST_CASE( "dual-fix-dual-substitution-unbounded-variables", "[presolve]" )
    Problem<double> problem = setupMatrixForDualSubstitutionWithUnboundedVar();
    Statistics statistics{};
    PresolveOptions presolveOptions{};
-   PostsolveListener<double> postsolve =
-       PostsolveListener<double>( problem, num, presolveOptions );
+   PostsolveStorage<double> postsolve =
+       PostsolveStorage<double>( problem, num, presolveOptions );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
 
@@ -242,8 +242,8 @@ TEST_CASE( "dual-fix-dual-substitution-equation", "[presolve]" )
    Problem<double> problem = setupMatrixForDualSubstitutionEquation();
    Statistics statistics{};
    PresolveOptions presolveOptions{};
-   PostsolveListener<double> postsolve =
-       PostsolveListener<double>( problem, num, presolveOptions );
+   PostsolveStorage<double> postsolve =
+       PostsolveStorage<double>( problem, num, presolveOptions );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
 
@@ -282,8 +282,8 @@ TEST_CASE( "dual-fix-infinity", "[presolve]" )
    Problem<double> problem = setupMatrixForDualFixInfinity();
    Statistics statistics{};
    PresolveOptions presolveOptions{};
-   PostsolveListener<double> postsolve =
-       PostsolveListener<double>( problem, num, presolveOptions );
+   PostsolveStorage<double> postsolve =
+       PostsolveStorage<double>( problem, num, presolveOptions );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
 

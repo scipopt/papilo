@@ -25,15 +25,15 @@ namespace papilo
 {
 
 #include "papilo/core/postsolve/Postsolve.hpp"
-#include "papilo/core/postsolve/PostsolveListener.hpp"
-#include <papilo/core/postsolve/PostsolveListener.hpp>
+#include "papilo/core/postsolve/PostsolveStorage.hpp"
+#include <papilo/core/postsolve/PostsolveStorage.hpp>
 
 template <typename REAL>
 struct Validation
 {
    static void
    validateProblem( const Problem<REAL>& problem,
-                    const PostsolveListener<REAL>& postsolve,
+                    const PostsolveStorage<REAL>& postsolve,
                     const std::string& optimal_solution_file,
                     const PresolveStatus status )
    {
@@ -55,22 +55,23 @@ struct Validation
  private:
    static bool
    can_reduced_solution_be_recalculated(
-       const Problem<REAL>& problem, const PostsolveListener<REAL>& postsolveListener,
+       const Problem<REAL>& problem, const PostsolveStorage<REAL>& postsolveStorage,
        const Solution<REAL>& optimal_solution )
    {
       bool validation_succcess = true;
       Vec<REAL> vec{};
-      for( int i = 0; i < postsolveListener.origcol_mapping.size(); i++ )
-         vec.push_back( optimal_solution.primal[postsolveListener.origcol_mapping[i]] );
+      for( int i = 0; i < postsolveStorage.origcol_mapping.size(); i++ )
+         vec.push_back( optimal_solution.primal[postsolveStorage.origcol_mapping[i]] );
 
       Solution<REAL> calculated_orig_solution{};
       Solution<REAL> reducedSolution = Solution<REAL>( vec );
       const Message msg{};
-      Postsolve<REAL> postsolve{msg, postsolveListener.getNum()};
-      postsolve.undo( reducedSolution, calculated_orig_solution, postsolveListener );
-      for( int i = 0; i < postsolveListener.nColsOriginal; i++ )
+      Postsolve<REAL> postsolve{msg, postsolveStorage.getNum()};
+      postsolve.undo( reducedSolution, calculated_orig_solution,
+                      postsolveStorage );
+      for( int i = 0; i < postsolveStorage.nColsOriginal; i++ )
       {
-         if( not postsolveListener.getNum().isFeasEq( optimal_solution.primal[i],
+         if( not postsolveStorage.getNum().isFeasEq( optimal_solution.primal[i],
                  calculated_orig_solution.primal[i] ) )
          {
             fmt::print(
@@ -85,24 +86,24 @@ struct Validation
    }
 
    static bool
-   parse_solution( const PostsolveListener<REAL>& postsolve,
+   parse_solution( const PostsolveStorage<REAL>& postsolveStorage,
                    const std::string& optimal_solution_file,
                    Solution<REAL>& optimal_solution)
    {
       SolParser<REAL> parser;
 
       std::vector<int> one_to_one_mapping;
-      for( int i = 0; i < postsolve.nColsOriginal; i++ )
+      for( int i = 0; i < postsolveStorage.nColsOriginal; i++ )
          one_to_one_mapping.push_back( i );
 
       return parser.read(
           optimal_solution_file, one_to_one_mapping,
-          postsolve.getOriginalProblem().getVariableNames(), optimal_solution );
+          postsolveStorage.getOriginalProblem().getVariableNames(), optimal_solution );
    }
 
    static bool
    check_if_solution_is_contained_in_problem(
-       const Problem<REAL>& problem, const PostsolveListener<REAL>& postsolve,
+       const Problem<REAL>& problem, const PostsolveStorage<REAL>& postsolve,
        const Solution<REAL> optimal_solution )
    {
       bool validation_success = true;
@@ -189,7 +190,7 @@ struct Validation
 
    static REAL
    calculateRowValueForSolution( const Problem<REAL>& problem,
-                                 const PostsolveListener<REAL>& postsolve,
+                                 const PostsolveStorage<REAL>& postsolve,
                                  const Solution<REAL>& optimal_solution, int i )
    {
       const SparseVectorView<REAL>& row =

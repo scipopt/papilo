@@ -39,8 +39,8 @@ TEST_CASE( "happy-path-coefficient-strengthening", "[presolve]" )
    Problem<double> problem = setupProblemForCoefficientStrengthening();
    Statistics statistics{};
    PresolveOptions presolveOptions{};
-   PostsolveListener<double> postsolve =
-       PostsolveListener<double>( problem, num, presolveOptions );
+   PostsolveStorage<double> postsolve =
+       PostsolveStorage<double>( problem, num, presolveOptions );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg);
    CoefficientStrengthening<double> presolvingMethod{};

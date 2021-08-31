@@ -220,8 +220,6 @@ if (TARGET papilo-executable)
             "MIP/misc03.mps\;3360"
             "MIP/p0548.mps\;8691"
             "MIP/rgn.mps\;82.19999924"
-#            "MIP/dual_fix_pos_inf.mps\;-7.5"
-#            "MIP/dual_fix_neg_inf.mps\;-10"
             )
 
 
@@ -231,9 +229,13 @@ if (TARGET papilo-executable)
             "LP/afiro.mps\;-0.46475314285714285714285714285714e3"
             "LP/agg.mps\;-0.35991767286576506712640824319636e8"
             "LP/beaconfd.mps\;0.335924858072e5"
-            "LP/brandy.mps\;0.15185098964881283835426751550618e4"
+            #TODO: MPS error while RHS identifier is missing
+            #"LP/blend.mps\;-0.30812149845828220173774356124984e2"
             "LP/bore3d.mps\;0.13730803942084927215581987251301e4"
+            "LP/brandy.mps\;0.15185098964881283835426751550618e4"
             "LP/capri.mps\;0.26900129137681610087717280693754e4"
+            #TODO: objective value differs slightly
+            #"LP/etamacro.mps\;-0.7557152333749133350792583667773e3"
             "LP/finnis.mps\;0.17279106559561159432297900375543e6"
             "LP/israel.mps\;-0.89664482186304572966200464196045e6"
             "LP/kb2.mps\;-0.17499001299062057129526866493726e4"
@@ -254,11 +256,6 @@ if (TARGET papilo-executable)
             "LP/share2b.mps\;-0.41573224074141948654519910873841e3"
             "LP/shell.mps\;0.1208825346e10"
             "LP/vtp-base.mps\;0.1298314624613613657395984384889e6"
-            #TODO: MPS error while RHS identifier is missing
-#            "LP/blend.mps\;-0.30812149845828220173774356124984e2"
-            #TODO: objective value differs slightly
-            #"LP/etamacro.mps\;-0.7557152333749133350792583667773e3"
-
             )
 
     set(infeas_LP
@@ -275,8 +272,8 @@ if (TARGET papilo-executable)
 
     set(numtypes
             "d"
-#            "q"
-#            "r"
+            "q"
+            "r"
             )
 
     # add a test to build the SCIP binary that all further tests depend on
@@ -337,9 +334,11 @@ if (TARGET papilo-executable)
     endmacro(add_infeasible_instancetests)
 
 
+    # comparing the objective value for MIP instances and check if primal postsolve works
     if(PAPILO_HAVE_SCIP)
         add_instancetests(instances_MIP numtypes "default.set")
     endif()
+    # comparing the objective value for LP instances and check if dual postsolve works (with/out basis calculation)
     if(PAPILO_HAVE_SOPLEX OR PAPILO_HAVE_HIGHS)
         add_instancetests(instances_LP numtypes "lp_presolvers_with_basis.set")
         add_instancetests(instances_LP numtypes "lp_presolvers_without_basis.set")

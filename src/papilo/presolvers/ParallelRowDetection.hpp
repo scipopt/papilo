@@ -149,7 +149,6 @@ ParallelRowDetection<REAL>::findParallelRows(
 
    parallel_rows.push_back( bucket[0] );
 
-   // TODO handle case of multiple parallel rows with one transaction:
    for( int j = 1; j < bucketsize; ++j )
    {
       auto row2 = constMatrix.getRowCoefficients( bucket[j] );

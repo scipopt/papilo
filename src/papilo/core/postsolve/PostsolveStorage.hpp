@@ -55,7 +55,7 @@ struct IndexRange;
 
 /// type to store necessary data for post solve
 template <typename REAL>
-class PostsolveListener
+class PostsolveStorage
 {
  public:
    unsigned int nColsOriginal;
@@ -74,10 +74,17 @@ class PostsolveListener
    // PostsolveType postsolveType = PostsolveType::kFull;
    PostsolveType postsolveType = PostsolveType::kPrimal;
 
+   //types containes the Reductiontypes
    Vec<ReductionType> types;
 
+   // indices/values can be considered als Vec<Vec<int/REAL>>
+   // To reduce the number of vectors and hence speedup there is only one vector and
+   // start indicates by saving the start index where the information of the Reduction type begins
    Vec<int> indices;
    Vec<REAL> values;
+
+   // indices where the information of the i-th reduction inside start/values starts
+   // information go from [start[i], start [i])
    Vec<int> start;
 
    Problem<REAL> problem;
@@ -86,9 +93,9 @@ class PostsolveListener
 
    Num<REAL> num;
 
-   PostsolveListener() = default;
+   PostsolveStorage() = default;
 
-   PostsolveListener( int nrows, int ncols )
+   PostsolveStorage( int nrows, int ncols )
    {
       origrow_mapping.reserve( nrows );
       origrow_mapping.reserve( ncols );
@@ -105,7 +112,7 @@ class PostsolveListener
       start.push_back( 0 );
    }
 
-   PostsolveListener( const Problem<REAL>& problem, const Num<REAL>& num, const PresolveOptions options )
+   PostsolveStorage( const Problem<REAL>& problem, const Num<REAL>& num, const PresolveOptions options )
        : problem( problem ), num( num ), presolveOptions(options)
    {
       int nrows = problem.getNRows();
@@ -130,59 +137,59 @@ class PostsolveListener
    }
 
    void
-   notifyRedundantRow( int row );
+   storeRedundantRow( int row );
 
 
    void
-   notifyVarBoundChange( bool isLowerBound, int col, REAL oldBound,
+   storeVarBoundChange( bool isLowerBound, int col, REAL oldBound,
                          bool was_infinity, REAL newBound );
 
    void
-   notifyRowBoundChange( bool isLhs, int row, REAL newBound, bool isInfinity );
+   storeRowBoundChange( bool isLhs, int row, REAL newBound, bool isInfinity, REAL oldBound, bool wasInfinity  );
 
    void
-   notifyRowBoundChangeForcedByRow( bool isLhs, int row, REAL newBound, bool isInfinity );
+   storeRowBoundChangeForcedByRow( bool isLhs, int row, REAL newBound, bool isInfinity );
 
    void
-   notifyReasonForRowBoundChangeForcedByRow( int remained_row, int deleted_row, REAL factor);
+   storeReasonForRowBoundChangeForcedByRow( int remained_row, int deleted_row, REAL factor);
 
    void
-   notifyReducedBoundsAndCost( const Vec<REAL>& col_lb, const Vec<REAL>& col_ub,
+   storeReducedBoundsAndCost( const Vec<REAL>& col_lb, const Vec<REAL>& col_ub,
                                const Vec<REAL>& row_lhs, const Vec<REAL>& row_rhs,
                                const Vec<REAL>& coefficients,
                                const Vec<RowFlags>& row_flags,
                                const Vec<ColFlags>& col_flags );
 
    void
-   notifyFixedCol( int col, REAL val,
+   storeFixedCol( int col, REAL val,
                    const SparseVectorView<REAL>& colvec,
                    const Vec<REAL>& cost );
 
    void
-   notifyCoefficientChange(int row, int col, REAL new_value);
+   storeCoefficientChange(int row, int col, REAL new_value);
 
    void
-   notifyDualValue( bool is_column_dual, int index, REAL value );
+   storeDualValue( bool is_column_dual, int index, REAL value );
 
    void
-   notifySavedRow( int row, const SparseVectorView<REAL>& coefficients,
+   storeSavedRow( int row, const SparseVectorView<REAL>& coefficients,
                    REAL lhs, REAL rhs, const RowFlags& flags );
 
    void
-   notifyFixedInfCol( int col, REAL val, REAL bound,
+   storeFixedInfCol( int col, REAL val, REAL bound,
                       const Problem<REAL>& currentProblem );
 
    void
-   notifySubstitution( int col, int row, const Problem<REAL>& currentProblem );
+   storeSubstitution( int col, int row, const Problem<REAL>& currentProblem );
 
    void
-   notifySubstitution( int col, SparseVectorView<REAL> equalityLHS,
+   storeSubstitution( int col, SparseVectorView<REAL> equalityLHS,
                        REAL equalityRHS );
 
    /// col1 = col2scale * col2 and are merged into a new column y = col2 +
    /// col2scale * col1 which takes over the index of col2
    void
-   notifyParallelCols( int col1, bool col1integral, bool col1lbinf,
+   storeParallelCols( int col1, bool col1integral, bool col1lbinf,
                        REAL& col1lb, bool col1ubinf, REAL& col1ub,
                        int col2, bool col2integral, bool col2lbinf,
                        REAL& col2lb, bool col2ubinf, REAL& col2ub,
@@ -240,15 +247,12 @@ class PostsolveListener
 
  private:
    void
-   finishNotify()
+   finishStorage()
    {
       assert( types.size() == start.size() );
       assert( values.size() == indices.size() );
       start.push_back( values.size() );
    }
-
-   // TODO add mechanism for saving columns as well
-   Vec<int> row_stack_index;
 
    void
    push_back_row( int row, const Problem<REAL>& currentProblem );
@@ -259,14 +263,14 @@ class PostsolveListener
 };
 
 #ifdef PAPILO_USE_EXTERN_TEMPLATES
-extern template class PostsolveListener<double>;
-extern template class PostsolveListener<Quad>;
-extern template class PostsolveListener<Rational>;
+extern template class PostsolveStorage<double>;
+extern template class PostsolveStorage<Quad>;
+extern template class PostsolveStorage<Rational>;
 #endif
 
 template <typename REAL>
 void
-PostsolveListener<REAL>::push_back_row( int row,
+PostsolveStorage<REAL>::push_back_row( int row,
                                         const Problem<REAL>& currentProblem )
 {
    const auto& coefficients =
@@ -305,7 +309,7 @@ PostsolveListener<REAL>::push_back_row( int row,
 
 template <typename REAL>
 void
-PostsolveListener<REAL>::push_back_col( int col,
+PostsolveStorage<REAL>::push_back_col( int col,
                                         const Problem<REAL>& currentProblem )
 {
    const auto& coefficients =
@@ -323,14 +327,14 @@ PostsolveListener<REAL>::push_back_col( int col,
    indices.push_back( 0 );
    values.push_back( obj );
 
-   // LB
+   // UB
    if( flags.test( ColFlag::kUbInf ) )
       indices.push_back( 1 );
    else
       indices.push_back( 0 );
    values.push_back( currentProblem.getUpperBounds()[col] );
 
-   // UB
+   // LB
    if( flags.test( ColFlag::kLbInf ) )
       indices.push_back( 1 );
    else
@@ -346,39 +350,22 @@ PostsolveListener<REAL>::push_back_col( int col,
 
 template <typename REAL>
 void
-PostsolveListener<REAL>::notifyRedundantRow( int row )
+PostsolveStorage<REAL>::storeRedundantRow( int row )
 {
    if( postsolveType == PostsolveType::kPrimal )
       return;
-   // TODO2: actually this should not require to have the row stored on
-   // postsolve at all but you might need the row for the checker. Therefore
-   // the row should only be stored in the checker. To make this easier
-   // the checker should just store a reference to the problem
-   // that is passed in during construction of the postsolve, which wil always
-   // correspond to the current reduced problem. Then we do not need to pass
-   // extra information to the checker and it can store the additional
-   // information by itself.
-
-   // Apart from that the value should be able to store a
-   // dual value so that this function can also be used when components are
-   // solved individually. For that case the postsolve will just restore exactly
-   // that dual value and not care about reduced costs as they would be fixed
-   // separately to the values returned by the solver for one component.
 
    types.push_back( ReductionType::kRedundantRow );
-   indices.push_back(
-       origrow_mapping[row] ); // TODO: this was an error! this must map to
-                               // original space, check at other places too! I
-                               // added it for here
+   indices.push_back(origrow_mapping[row] );
    values.push_back( 0 );
 
-   finishNotify();
+   finishStorage();
 }
 
 
 template <typename REAL>
 void
-PostsolveListener<REAL>::notifyVarBoundChange( bool isLowerBound,
+PostsolveStorage<REAL>::storeVarBoundChange( bool isLowerBound,
                                                int col,
                                                REAL oldBound,
                                                bool was_infinity,
@@ -386,11 +373,6 @@ PostsolveListener<REAL>::notifyVarBoundChange( bool isLowerBound,
 {
    if( postsolveType == PostsolveType::kPrimal )
       return;
-   // TODO, this is not needed due to the bound relaxing strategy I'll
-   // add for constraint propagation, instead there should only be a function
-   // notifyForcingRow. This is called for the case where a row forces a column
-   // upper bound to its lower bound and the column is fixed as a result, or the
-   // other way around.
    types.push_back( ReductionType::kVarBoundChange );
    if( isLowerBound )
       indices.push_back( 1 );
@@ -404,20 +386,15 @@ PostsolveListener<REAL>::notifyVarBoundChange( bool isLowerBound,
    indices.push_back( was_infinity );
    values.push_back( oldBound );
 
-   finishNotify();
+   finishStorage();
 }
 
 
 template <typename REAL>
 void
-PostsolveListener<REAL>::notifyRowBoundChange( bool isLhs, int row, REAL newBound, bool isInfinity ){
+PostsolveStorage<REAL>::storeRowBoundChange( bool isLhs, int row, REAL newBound, bool isInfinity, REAL oldBound, bool wasInfinity  ){
    if( postsolveType == PostsolveType::kPrimal )
       return;
-   // TODO, this is not needed due to the bound relaxing strategy I'll
-   // add for constraint propagation, instead there should only be a function
-   // notifyForcingRow. This is called for the case where a row forces a column
-   // upper bound to its lower bound and the column is fixed as a result, or the
-   // other way around.
    types.push_back( ReductionType::kRowBoundChange );
    if( isLhs )
       indices.push_back( 1 );
@@ -426,20 +403,17 @@ PostsolveListener<REAL>::notifyRowBoundChange( bool isLhs, int row, REAL newBoun
    values.push_back( origrow_mapping[row] );
    indices.push_back( isInfinity );
    values.push_back( newBound );
+   indices.push_back( wasInfinity );
+   values.push_back( oldBound );
 
-   finishNotify();
+   finishStorage();
 }
 
 template <typename REAL>
 void
-PostsolveListener<REAL>::notifyRowBoundChangeForcedByRow(  bool isLhs, int row, REAL newBound, bool isInfinity ){
+PostsolveStorage<REAL>::storeRowBoundChangeForcedByRow(  bool isLhs, int row, REAL newBound, bool isInfinity ){
    if( postsolveType == PostsolveType::kPrimal )
       return;
-   // TODO, this is not needed due to the bound relaxing strategy I'll
-   // add for constraint propagation, instead there should only be a function
-   // notifyForcingRow. This is called for the case where a row forces a column
-   // upper bound to its lower bound and the column is fixed as a result, or the
-   // other way around.
    types.push_back( ReductionType::kRowBoundChangeForcedByRow );
    if( isLhs )
       indices.push_back( 1 );
@@ -449,12 +423,12 @@ PostsolveListener<REAL>::notifyRowBoundChangeForcedByRow(  bool isLhs, int row, 
    indices.push_back( isInfinity );
    values.push_back( newBound );
 
-   finishNotify();
+   finishStorage();
 }
 
 template <typename REAL>
 void
-PostsolveListener<REAL>::notifyReasonForRowBoundChangeForcedByRow( int remained_row, int deleted_row, REAL factor){
+PostsolveStorage<REAL>::storeReasonForRowBoundChangeForcedByRow( int remained_row, int deleted_row, REAL factor){
    if( postsolveType == PostsolveType::kPrimal )
       return;
    types.push_back( ReductionType::kReasonForRowBoundChangeForcedByRow );
@@ -463,13 +437,13 @@ PostsolveListener<REAL>::notifyReasonForRowBoundChangeForcedByRow( int remained_
    indices.push_back( origrow_mapping[deleted_row] );
    values.push_back( 0 );
 
-   finishNotify();
+   finishStorage();
 }
 
 
 template <typename REAL>
 void
-PostsolveListener<REAL>::notifyFixedCol( int col, REAL val,
+PostsolveStorage<REAL>::storeFixedCol( int col, REAL val,
                                  const SparseVectorView<REAL>& colvec,
                                  const Vec<REAL>& cost )
 {
@@ -493,12 +467,12 @@ PostsolveListener<REAL>::notifyFixedCol( int col, REAL val,
       }
    }
 
-   finishNotify();
+   finishStorage();
 }
 
 template <typename REAL>
 void
-PostsolveListener<REAL>::notifyFixedInfCol(
+PostsolveStorage<REAL>::storeFixedInfCol(
     int col, REAL val, REAL bound, const Problem<REAL>& currentProblem )
 {
    types.push_back( ReductionType::kFixedInfCol );
@@ -515,12 +489,12 @@ PostsolveListener<REAL>::notifyFixedInfCol(
    for( int i = 0; i < coefficients.getLength(); i++ )
       push_back_row( row_indices[i], currentProblem );
 
-   finishNotify();
+   finishStorage();
 }
 
 template <typename REAL>
 void
-PostsolveListener<REAL>::notifyCoefficientChange( int row, int col,
+PostsolveStorage<REAL>::storeCoefficientChange( int row, int col,
                                                   REAL new_value )
 {
    types.push_back( ReductionType::kCoefficientChange );
@@ -528,18 +502,16 @@ PostsolveListener<REAL>::notifyCoefficientChange( int row, int col,
    indices.push_back( origcol_mapping[col] );
    values.push_back( new_value );
    values.push_back( 0 );
-   finishNotify();
+   finishStorage();
 
 }
 
 template <typename REAL>
 void
-PostsolveListener<REAL>::notifyDualValue( bool is_column_dual, int index, REAL value )
+PostsolveStorage<REAL>::storeDualValue( bool is_column_dual, int index, REAL value )
 {
    if( postsolveType == PostsolveType::kPrimal )
       return;
-   // TODO, for which reduction is this notify function for?
-   // Pushing zero so I don't modity finishNotify()'s assert (for the moment)
    if( is_column_dual )
       types.push_back( ReductionType::kColumnDualValue );
    else
@@ -547,12 +519,12 @@ PostsolveListener<REAL>::notifyDualValue( bool is_column_dual, int index, REAL v
 
    indices.push_back( index );
    values.push_back( value );
-   finishNotify();
+   finishStorage();
 }
 
  template <typename REAL>
  void
- PostsolveListener<REAL>::notifySavedRow( int row,
+PostsolveStorage<REAL>::storeSavedRow( int row,
                                   const SparseVectorView<REAL>& coefficients,
                                   REAL lhs, REAL rhs, const RowFlags& flags )
  {
@@ -586,15 +558,12 @@ PostsolveListener<REAL>::notifyDualValue( bool is_column_dual, int index, REAL v
        values.push_back( coefs[i] );
     }
 
-    finishNotify();
+    finishStorage();
  }
-
-
-
 
 template <typename REAL>
 void
-PostsolveListener<REAL>::notifySubstitution( int col, int row,
+ PostsolveStorage<REAL>::storeSubstitution( int col, int row,
                                              const Problem<REAL>& currentProblem )
 {
    types.push_back( ReductionType::kSubstitutedCol );
@@ -606,24 +575,15 @@ PostsolveListener<REAL>::notifySubstitution( int col, int row,
       values.push_back(0);
    }
 
-   finishNotify();
+   finishStorage();
 }
 
 template <typename REAL>
 void
-PostsolveListener<REAL>::notifySubstitution( int col,
+PostsolveStorage<REAL>::storeSubstitution( int col,
                                              SparseVectorView<REAL> equalityLHS,
                                              REAL equalityRHS )
 {
-   // TODO: depending on the postsolve type I guess we need to save also the
-   //       column, but for this branch lets focus on a working dual postsolve
-   //       only for the trivial presolve and lets add tests for that. Simple
-   //       tests could basically just read the MIP  instances in test/instances
-   //       folder, then discard integrality information, and apply a presolve
-   //       procedure that only uses trivial presolve. I think when this is done
-   //       I will add a flag to the presolvers for which postsolve type they
-   //       are compatible and default all to only primal. Then we can work on
-   //       adding more and more presolvers in later merge requests.
    const REAL* coefs = equalityLHS.getValues();
    const int* columns = equalityLHS.getIndices();
    const int length = equalityLHS.getLength();
@@ -637,14 +597,14 @@ PostsolveListener<REAL>::notifySubstitution( int col,
       indices.push_back( origcol_mapping[columns[i]] );
       values.push_back( coefs[i] );
    }
-   finishNotify();
+   finishStorage();
 }
 
                                              /// col1 = col2scale * col2 and are merged into a new column y = col2 +
 /// col2scale * col1 which takes over the index of col2
 template <typename REAL>
 void
-PostsolveListener<REAL>::notifyParallelCols( int col1, bool col1integral,
+PostsolveStorage<REAL>::storeParallelCols( int col1, bool col1integral,
                                      bool col1lbinf, REAL& col1lb,
                                      bool col1ubinf, REAL& col1ub,
                                      int col2, bool col2integral,
@@ -685,29 +645,22 @@ PostsolveListener<REAL>::notifyParallelCols( int col1, bool col1integral,
    // add the range and the type of the reduction
    types.push_back( ReductionType::kParallelCol );
 
-   finishNotify();
+   finishStorage();
 }
 
 template <typename REAL>
 void
-PostsolveListener<REAL>::notifyReducedBoundsAndCost(
+PostsolveStorage<REAL>::storeReducedBoundsAndCost(
     const Vec<REAL>& col_lb, const Vec<REAL>& col_ub, const Vec<REAL>& row_lhs,
     const Vec<REAL>& row_rhs, const Vec<REAL>& coefficients,
     const Vec<RowFlags>& row_flags, const Vec<ColFlags>& col_flags )
-    {
+{
+   // store the row/col bounds and the objective of the reduced problem
    if( postsolveType == PostsolveType::kPrimal )
       return;
-   // TODO for what is this notification required? Can you add comments?
-   // the postsolve stores the original problem. The notify functions are not
-   // for the checker, the checker must get around without notifies and is only
-   // informed about changes from within postsolve notify functions. As
-   // mentioned in the above comment, the checker can store a reference that
-   // always contains the current reduced problem
-
    types.push_back( ReductionType::kReducedBoundsCost );
 
-   // would be better to only pass finite values, not all
-   // col bounds
+   // col bound
    for( int col = 0; col < col_lb.size(); col++ )
    {
       int flag_lb = 0;
@@ -744,9 +697,8 @@ PostsolveListener<REAL>::notifyReducedBoundsAndCost(
       values.push_back( coefficients[col] );
    }
 
-   finishNotify();
-    }
-
+   finishStorage();
+}
 
 } // namespace papilo
 

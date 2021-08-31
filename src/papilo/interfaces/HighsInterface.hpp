@@ -291,7 +291,7 @@ class HighsInterface : public SolverInterface<REAL>
    REAL
    getDualBound() override
    {
-      //      TODO
+      //      TODO:
       //      if( this->status == SolverStatus::kOptimal )
       //         return -inf;
       return -inf;
