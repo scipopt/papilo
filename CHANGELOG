@@ -69,7 +69,8 @@ Fixed bugs
 ----------
 
 - DomCol: adding additional locks in DomCol to prevent applying false reductions
-- SingletonCol: no longer declaring feasible problems as infeasible
+- SingletonCol: reordering bound changes in presolvers to avoid infeasibility when applying the changes to the data structure
+- SingletonStuffing: reordering bound changes in presolvers to avoid infeasibility when applying the changes to the data structure
 - SimpleProbing: handling the case (coefficients <= 0) correctly
 - recalculating the activities if the activity is huge to avoid numerical problems
 - fixing bug in stated solutions of solver as infeasible due to numerical issues
