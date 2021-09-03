@@ -178,7 +178,7 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
                        PostsolveStorage<REAL> postsolveStorage ) const
 {
 
-   PrimalDualSolValidation<REAL> validation{};
+   PrimalDualSolValidation<REAL> validation{message, num};
 
    const Vec<REAL>& reducedSol = reducedSolution.primal;
 

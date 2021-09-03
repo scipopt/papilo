@@ -33,10 +33,18 @@ template <typename REAL>
 class PrimalDualSolValidation
 {
 
+ public:
+   PrimalDualSolValidation( const Message msg, const Num<REAL> n )
+   {
+      message = msg;
+      num = n;
+   };
+
  private:
-   const Num<REAL> num;
+   Num<REAL> num;
    Message message{};
-   REAL maximal_allowed_in_duality_gap = 0;
+
+ private:
 
    bool
    checkLength( const Solution<REAL>& solution, const Problem<REAL>& problem )
@@ -380,8 +388,7 @@ class PrimalDualSolValidation
    {
       REAL duality_gap =
           getDualityGap( primalSolution, dualSolution, reducedCosts, problem );
-      return not( num.isFeasZero( duality_gap ) or
-                  num.isLT( duality_gap, maximal_allowed_in_duality_gap ) );
+      return not num.isFeasZero( duality_gap )  ;
    }
 
    PostsolveStatus
@@ -438,12 +445,6 @@ class PrimalDualSolValidation
 
       message.info( "Solution passed validation\n" );
       return PostsolveStatus::kOk;
-   }
-
-   void
-   setDualityGap( REAL duality_gap )
-   {
-      maximal_allowed_in_duality_gap = duality_gap * 10;
    }
 
    REAL
