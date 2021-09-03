@@ -70,6 +70,7 @@ Fixed bugs
 
 - DomCol: adding additional locks in DomCol to prevent applying false reductions
 - SingletonCol: reordering bound changes in presolvers to avoid infeasibility when applying the changes to the data structure
+- SingletonCol: using Numerics functions (including epsilson) for Less/greater-or-equal to avoid slightly false objective values
 - SingletonStuffing: reordering bound changes in presolvers to avoid infeasibility when applying the changes to the data structure
 - SimpleProbing: handling the case (coefficients <= 0) correctly
 - recalculating the activities if the activity is huge to avoid numerical problems
