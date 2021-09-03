@@ -137,19 +137,19 @@ SingletonCols<REAL>::execute( const Problem<REAL>& problem,
          // inequality and remove the columns coefficient
          reductions.changeMatrixEntry( row, col, 0 );
 
-         if( val < 0 )
+         if( num.isLT(val, 0) )
          {
-            if( upper_bounds[col] <= 0 && !cflags[col].test( ColFlag::kUbInf ) )
+            if( num.isLE(upper_bounds[col], 0) && !cflags[col].test( ColFlag::kUbInf ) )
             {
 
                if( lowerboundImplied )
                   reductions.changeRowLHSInf( row );
-               else if( lower_bounds[col] != 0 )
+               else if( not num.isZero(lower_bounds[col]) )
                   reductions.changeRowLHS( row,
                                            side - lower_bounds[col] * val );
                if( ubimplied )
                   reductions.changeRowRHSInf( row );
-               else if( upper_bounds[col] != 0 )
+               else if( not num.isZero(upper_bounds[col]) )
                   reductions.changeRowRHS( row,
                                            side - upper_bounds[col] * val );
             }
@@ -157,29 +157,29 @@ SingletonCols<REAL>::execute( const Problem<REAL>& problem,
             {
                if( ubimplied )
                   reductions.changeRowRHSInf( row );
-               else if( upper_bounds[col] != 0 )
+               else if( not num.isZero(upper_bounds[col]) )
                   reductions.changeRowRHS( row,
                                            side - upper_bounds[col] * val );
                if( lowerboundImplied )
                   reductions.changeRowLHSInf( row );
-               else if( lower_bounds[col] != 0 )
+               else if( not num.isZero(lower_bounds[col]) )
                   reductions.changeRowLHS( row,
                                            side - lower_bounds[col] * val );
             }
          }
          else
          {
-            if( upper_bounds[col] <= 0 && !cflags[col].test( ColFlag::kUbInf ) )
+            if( num.isLE(upper_bounds[col], 0) && !cflags[col].test( ColFlag::kUbInf ) )
             {
                if( lowerboundImplied )
                   reductions.changeRowRHSInf( row );
-               else if( lower_bounds[col] != 0 )
+               else if( not num.isZero(lower_bounds[col]))
                   reductions.changeRowRHS( row,
                                            side - lower_bounds[col] * val );
 
                if( ubimplied )
                   reductions.changeRowLHSInf( row );
-               else if( upper_bounds[col] != 0 )
+               else if( not num.isZero(upper_bounds[col]) )
                   reductions.changeRowLHS( row,
                                            side - upper_bounds[col] * val );
             }
@@ -203,7 +203,7 @@ SingletonCols<REAL>::execute( const Problem<REAL>& problem,
    };
 
    int firstNewSingleton = problemUpdate.getFirstNewSingletonCol();
-   for( std::size_t i = firstNewSingleton; i != singletonCols.size(); ++i )
+   for( std::size_t i = firstNewSingleton; i < singletonCols.size(); ++i )
    {
       int col = singletonCols[i];
 
@@ -247,7 +247,7 @@ SingletonCols<REAL>::execute( const Problem<REAL>& problem,
 
          if( !ubimplied &&
              ( !problemUpdate.getPresolveOptions().removeslackvars ||
-               ( !lowerboundImplied && obj[col] != 0 ) ) )
+               ( !lowerboundImplied && not num.isZero(obj[col]) ) ) )
             continue;
 
          if( cflags[col].test( ColFlag::kIntegral ) )
@@ -257,7 +257,7 @@ SingletonCols<REAL>::execute( const Problem<REAL>& problem,
             auto rowvec = constMatrix.getRowCoefficients( row );
             const int* rowinds = rowvec.getIndices();
             const REAL* rowvals = rowvec.getValues();
-            for( int k = 0; k != rowvec.getLength(); ++k )
+            for( int k = 0; k < rowvec.getLength(); ++k )
             {
                if( rowinds[k] == col )
                   continue;
@@ -287,7 +287,7 @@ SingletonCols<REAL>::execute( const Problem<REAL>& problem,
          continue;
       case 1:
          // only weak dual reductions allowed
-         if( obj[col] == 0 )
+         if( num.isZero(obj[col]) )
             continue;
       }
 
@@ -296,18 +296,18 @@ SingletonCols<REAL>::execute( const Problem<REAL>& problem,
 
       count_locks( val, rflags[row], ndownlocks, nuplocks );
 
-      // ranged row (-inf < lhs < rhs < inf) -> not a singleton. TODO: check if
-      // ranged row can be converted to an equation with dual infer technique
-      // below
+      // ranged row (-inf < lhs < rhs < inf) -> not a singleton.
+      // TODO: check if ranged row can be converted to an equation with dual
+      // infer technique below
       if( nuplocks != 0 && ndownlocks != 0 )
          continue;
 
-      if( ndownlocks == 0 && obj[col] >= 0 )
+      if( ndownlocks == 0 && num.isGE(obj[col], 0) )
       {
          // dual fix to lower bound
          if( cflags[col].test( ColFlag::kLbInf ) )
          {
-            if( obj[col] != 0 )
+            if( not num.isZero(obj[col]) )
                return PresolveStatus::kUnbndOrInfeas;
 
             continue;
@@ -321,12 +321,12 @@ SingletonCols<REAL>::execute( const Problem<REAL>& problem,
          continue;
       }
 
-      if( nuplocks == 0 && obj[col] <= 0 )
+      if( nuplocks == 0 && num.isLE(obj[col], 0) )
       {
          // dual fix to upper bound
          if( cflags[col].test( ColFlag::kUbInf ) )
          {
-            if( obj[col] != 0 )
+            if( not num.isZero(obj[col]) )
                return PresolveStatus::kUnbndOrInfeas;
 
             continue;
@@ -340,8 +340,8 @@ SingletonCols<REAL>::execute( const Problem<REAL>& problem,
          continue;
       }
 
-      assert( ( obj[col] > 0 && ndownlocks == 1 && nuplocks == 0 ) ||
-              ( obj[col] < 0 && ndownlocks == 0 && nuplocks == 1 ) );
+      assert( ( num.isGT(obj[col] , 0) && ndownlocks == 1 && nuplocks == 0 ) ||
+              ( num.isLT(obj[col] , 0) && ndownlocks == 0 && nuplocks == 1 ) );
 
       // for continuous columns we have a singleton row in the dual which
       // directly implies a bound for the dualvariable of the primal row.
@@ -352,7 +352,7 @@ SingletonCols<REAL>::execute( const Problem<REAL>& problem,
          bool duallbinf = true;
          bool dualubinf = true;
 
-         assert( val != 0 );
+         assert( not num.isZero(val) );
 
          REAL duallb = obj[col] / val;
          REAL dualub = duallb;
@@ -373,20 +373,20 @@ SingletonCols<REAL>::execute( const Problem<REAL>& problem,
          }
          else if( lowerboundImplied )
          {
-            if( val > 0 )
+            if( num.isGT(val, 0) )
                duallbinf = false;
             else
                dualubinf = false;
          }
          else if( ubimplied )
          {
-            if( val > 0 )
+            if( num.isGT(val, 0) )
                dualubinf = false;
             else
                duallbinf = false;
          }
 
-         if( !duallbinf && num.isFeasGT( duallb, 0 ) )
+         if( !duallbinf && num.isGT( duallb, 0 ) )
          {
             bool removevar = true;
 
@@ -417,7 +417,7 @@ SingletonCols<REAL>::execute( const Problem<REAL>& problem,
 
                if( !ubimplied &&
                    ( !problemUpdate.getPresolveOptions().removeslackvars ||
-                     ( !lowerboundImplied && obj[col] != 0 ) ) )
+                     ( !lowerboundImplied && not num.isZero(obj[col]) ) ) )
                   removevar = false;
             }
 
@@ -438,7 +438,7 @@ SingletonCols<REAL>::execute( const Problem<REAL>& problem,
                reductions.changeRowRHS( row, lhs_values[row] );
             }
          }
-         else if( !dualubinf && num.isFeasLT( dualub, 0 ) )
+         else if( !dualubinf && num.isLT( dualub, 0 ) )
          {
             bool removevar = true;
 
@@ -468,7 +468,7 @@ SingletonCols<REAL>::execute( const Problem<REAL>& problem,
 
                if( !ubimplied &&
                    ( !problemUpdate.getPresolveOptions().removeslackvars ||
-                     ( !lowerboundImplied && obj[col] != 0 ) ) )
+                     ( !lowerboundImplied && not num.isZero(obj[col]) ) ) )
                   removevar = false;
             }
 

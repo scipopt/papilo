@@ -50,6 +50,7 @@ add_executable(unit_test TestMain.cpp
         papilo/presolve/ParallelColDetectionTest.cpp
         papilo/presolve/ProbingTest.cpp
         papilo/presolve/SingletonColsTest.cpp
+        papilo/presolve/SingletonStuffingTest.cpp
         papilo/presolve/SimpleProbingTest.cpp
         papilo/presolve/SimpleSubstitutionTest.cpp
         papilo/presolve/SimplifyInequalitiesTest.cpp
@@ -150,13 +151,16 @@ set(unit_tests
         "happy-path-probing"
         "failed-path-probing-on-not-binary-variables"
 
-        #singleton Column
+        #Singleton Column
         "happy-path-singleton-column"
         "happy-path-singleton-column-equation"
         "happy-path-singleton-column-implied-bounds-negative-coeff-pos-bounds"
         "happy-path-singleton-column-implied-bounds-negative-coeff-neg-bounds"
         "happy-path-singleton-column-implied-bounds-positive-coeff-pos-bounds"
         "happy-path-singleton-column-implied-bounds-positive-coeff-neg-bounds"
+
+        #Singleton Stuffing
+        "singleton-stuffing-make-sure-to-first-set-bounds-to-infinity"
 
         #Simple Probing
         "happy-path-simple-probing"

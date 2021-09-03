@@ -135,26 +135,29 @@ SingletonStuffing<REAL>::execute( const Problem<REAL>& problem,
 
          if( val < 0 )
          {
+            // set the Bound first to infinity to avoid infeasiblty during bounds changes
             if( lbimplied )
                reductions.changeRowLHSInf( row );
-            else if( lower_bounds[col] != 0 )
-               reductions.changeRowLHS( row, side - lower_bounds[col] * val );
-
             if( ubimplied )
                reductions.changeRowRHSInf( row );
-            else if( upper_bounds[col] != 0 )
+
+            if( not lbimplied and lower_bounds[col] != 0 )
+               reductions.changeRowLHS( row, side - lower_bounds[col] * val );
+            if(not ubimplied and  upper_bounds[col] != 0 )
                reductions.changeRowRHS( row, side - upper_bounds[col] * val );
+
          }
          else
          {
+            // set the Bound first to infinity to avoid infeasiblty during bounds changes
             if( lbimplied )
                reductions.changeRowRHSInf( row );
-            else if( lower_bounds[col] != 0 )
-               reductions.changeRowRHS( row, side - lower_bounds[col] * val );
-
             if( ubimplied )
                reductions.changeRowLHSInf( row );
-            else if( upper_bounds[col] != 0 )
+
+            if( not lbimplied and lower_bounds[col] != 0 )
+               reductions.changeRowRHS( row, side - lower_bounds[col] * val );
+            if( not ubimplied and upper_bounds[col] != 0 )
                reductions.changeRowLHS( row, side - upper_bounds[col] * val );
          }
       }
@@ -165,10 +168,14 @@ SingletonStuffing<REAL>::execute( const Problem<REAL>& problem,
       assert( colsize[col] == 1 );
       assert( constMatrix.getColumnCoefficients( col ).getLength() == 1 );
 
+
       int row = constMatrix.getColumnCoefficients( col ).getIndices()[0];
       const REAL& val = constMatrix.getColumnCoefficients( col ).getValues()[0];
 
       assert( !constMatrix.isRowRedundant( row ) );
+
+      REAL lhs = lhs_values[row];
+      REAL rhs = rhs_values[row];
 
       if( rflags[row].test( RowFlag::kEquation ) )
       {
@@ -184,7 +191,7 @@ SingletonStuffing<REAL>::execute( const Problem<REAL>& problem,
             continue;
 
          bool lbimplied =
-             row_implies_LB( num, lhs_values[row], rhs_values[row], rflags[row],
+             row_implies_LB( num, lhs, rhs, rflags[row],
                              activities[row], val, lower_bounds[col],
                              upper_bounds[col], cflags[col] );
 
@@ -192,7 +199,7 @@ SingletonStuffing<REAL>::execute( const Problem<REAL>& problem,
             continue;
 
          bool ubimplied =
-             row_implies_UB( num, lhs_values[row], rhs_values[row], rflags[row],
+             row_implies_UB( num, lhs, rhs, rflags[row],
                              activities[row], val, lower_bounds[col],
                              upper_bounds[col], cflags[col] );
 
@@ -230,8 +237,7 @@ SingletonStuffing<REAL>::execute( const Problem<REAL>& problem,
                continue;
          }
 
-         handleEquation( col, lbimplied, ubimplied, val, row, false,
-                         rhs_values[row] );
+         handleEquation( col, lbimplied, ubimplied, val, row, false, rhs );
 
          continue;
       }
@@ -325,11 +331,11 @@ SingletonStuffing<REAL>::execute( const Problem<REAL>& problem,
          REAL dualub = duallb;
 
          bool lbimplied =
-             row_implies_LB( num, lhs_values[row], rhs_values[row], rflags[row],
+             row_implies_LB( num, lhs, rhs, rflags[row],
                              activities[row], val, lower_bounds[col],
                              upper_bounds[col], cflags[col] );
          bool ubimplied =
-             row_implies_UB( num, lhs_values[row], rhs_values[row], rflags[row],
+             row_implies_UB( num, lhs, rhs, rflags[row],
                              activities[row], val, lower_bounds[col],
                              upper_bounds[col], cflags[col] );
 
@@ -358,15 +364,14 @@ SingletonStuffing<REAL>::execute( const Problem<REAL>& problem,
             bool removevar = true;
 
             assert( !rflags[row].test( RowFlag::kLhsInf ) );
-            assert( rflags[row].test( RowFlag::kRhsInf ) ||
-                    rhs_values[row] != lhs_values[row] );
+            assert( rflags[row].test( RowFlag::kRhsInf ) || not num.isEq(rhs, lhs) );
 
             // check again if row implies more bounds with new right hand
             // side
             if( !lbimplied )
             {
                lbimplied = row_implies_LB(
-                   num, lhs_values[row], lhs_values[row], RowFlag::kEquation,
+                   num, lhs, lhs, RowFlag::kEquation,
                    activities[row], val, lower_bounds[col], upper_bounds[col],
                    cflags[col] );
 
@@ -378,7 +383,7 @@ SingletonStuffing<REAL>::execute( const Problem<REAL>& problem,
             if( removevar && !ubimplied )
             {
                ubimplied = row_implies_UB(
-                   num, lhs_values[row], lhs_values[row], RowFlag::kEquation,
+                   num, lhs, lhs, RowFlag::kEquation,
                    activities[row], val, lower_bounds[col], upper_bounds[col],
                    cflags[col] );
 
@@ -390,8 +395,7 @@ SingletonStuffing<REAL>::execute( const Problem<REAL>& problem,
 
             if( removevar )
             {
-               handleEquation( col, lbimplied, ubimplied, val, row, true,
-                               lhs_values[row] );
+               handleEquation( col, lbimplied, ubimplied, val, row, true, lhs );
             }
             else
             {
@@ -402,7 +406,7 @@ SingletonStuffing<REAL>::execute( const Problem<REAL>& problem,
                TransactionGuard<REAL> tg{ reductions };
                reductions.lockColBounds( col );
                reductions.lockRow( row );
-               reductions.changeRowRHS( row, lhs_values[row] );
+               reductions.changeRowRHS( row, lhs );
             }
          }
          else if( !dualubinf && num.isFeasLT( dualub, 0 ) )
@@ -410,14 +414,13 @@ SingletonStuffing<REAL>::execute( const Problem<REAL>& problem,
             bool removevar = true;
 
             assert( !rflags[row].test( RowFlag::kRhsInf ) );
-            assert( rflags[row].test( RowFlag::kLhsInf ) ||
-                    rhs_values[row] != lhs_values[row] );
+            assert( rflags[row].test( RowFlag::kLhsInf ) || rhs != lhs );
 
             // check again if row implies more bounds with new left hand side
             if( !lbimplied )
             {
                lbimplied = row_implies_LB(
-                   num, rhs_values[row], rhs_values[row], RowFlag::kEquation,
+                   num, rhs, rhs, RowFlag::kEquation,
                    activities[row], val, lower_bounds[col], upper_bounds[col],
                    cflags[col] );
 
@@ -429,7 +432,7 @@ SingletonStuffing<REAL>::execute( const Problem<REAL>& problem,
             if( removevar && !ubimplied )
             {
                ubimplied = row_implies_UB(
-                   num, rhs_values[row], rhs_values[row], RowFlag::kEquation,
+                   num, rhs, rhs, RowFlag::kEquation,
                    activities[row], val, lower_bounds[col], upper_bounds[col],
                    cflags[col] );
 
@@ -441,8 +444,7 @@ SingletonStuffing<REAL>::execute( const Problem<REAL>& problem,
 
             if( removevar )
             {
-               handleEquation( col, lbimplied, ubimplied, val, row, true,
-                               rhs_values[row] );
+               handleEquation( col, lbimplied, ubimplied, val, row, true, rhs );
             }
             else
             {
@@ -453,7 +455,7 @@ SingletonStuffing<REAL>::execute( const Problem<REAL>& problem,
                TransactionGuard<REAL> tg{ reductions };
                reductions.lockColBounds( col );
                reductions.lockRow( row );
-               reductions.changeRowLHS( row, rhs_values[row] );
+               reductions.changeRowLHS( row, rhs );
             }
          }
          else

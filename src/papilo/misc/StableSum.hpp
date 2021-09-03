@@ -40,7 +40,8 @@ class StableSum<REAL, true>
 
  public:
    StableSum() = default;
-   StableSum( const REAL& init ) : sum( init ), c( 0 ) {}
+
+   explicit StableSum( const REAL& init ) : sum( init ), c( 0 ) {}
 
    void
    add( const REAL& input )
@@ -67,7 +68,8 @@ class StableSum<REAL, false>
 
  public:
    StableSum() = default;
-   StableSum( const REAL& init ) : sum( init ) {}
+
+   explicit StableSum( const REAL& init ) : sum( init ) {}
 
    void
    add( const REAL& input )
