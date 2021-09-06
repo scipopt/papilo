@@ -337,6 +337,9 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
             break;
          case VarBasisStatus::BASIC:
             break;
+         case VarBasisStatus::UNDEFINED:
+            assert( false );
+            break;
          }
 
          break;
@@ -441,7 +444,7 @@ Postsolve<REAL>::skip_if_row_bound_belongs_to_substitution(
    if( i >= 3 and types[i - 2] == ReductionType::kCoefficientChange and
        types[i - 3] == ReductionType::kSubstitutedCol )
    {
-      int row_of_row_bound_change = values[start[i - 1]];
+      int row_of_row_bound_change = (int) values[start[i - 1]];
       int row_of_coefficient_change = indices[start[i - 2]];
       int row_of_substitution = indices[start[i - 3]];
       if( row_of_coefficient_change == row and row_of_substitution == row and

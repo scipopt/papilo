@@ -319,7 +319,7 @@ class PrimalDualSolValidation
             break;
          case VarBasisStatus::ZERO:
             if( lb_infinity or not num.isZero( sol ) or
-                not num.isZero( lb ) and not ub_infinity )
+                ( not num.isZero( lb ) and not ub_infinity ) )
                return true;
             break;
          case VarBasisStatus::BASIC:

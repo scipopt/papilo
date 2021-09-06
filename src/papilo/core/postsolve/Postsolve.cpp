@@ -28,6 +28,6 @@ namespace papilo
 
 template class Postsolve<double>;
 template class Postsolve<Quad>;
-template class Postsolve<Rational>;
+template class Postsolve<papilo::Rational>;
 
 } // namespace papilo
