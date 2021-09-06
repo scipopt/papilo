@@ -163,9 +163,9 @@ main( int argc, char* argv[] )
             return 1;
          break;
       case ArithmeticType::kRational:
-         if( presolve_and_solve<Rational>(
-                 optionsInfo, get_lp_solver_factory<Rational>( optionsInfo ),
-                 get_mip_solver_factory<Rational>( optionsInfo ) ) !=
+         if( presolve_and_solve<papilo::Rational>(
+                 optionsInfo, get_lp_solver_factory<papilo::Rational>( optionsInfo ),
+                 get_mip_solver_factory<papilo::Rational>( optionsInfo ) ) !=
              ResultStatus::kOk )
             return 1;
       }
@@ -180,7 +180,7 @@ main( int argc, char* argv[] )
          postsolve<Quad>( optionsInfo );
          break;
       case ArithmeticType::kRational:
-         postsolve<Rational>( optionsInfo );
+         postsolve<papilo::Rational>( optionsInfo );
       }
    }
 
