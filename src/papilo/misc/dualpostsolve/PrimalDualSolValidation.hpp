@@ -364,7 +364,7 @@ class PrimalDualSolValidation
             break;
          case VarBasisStatus::ZERO:
             if( lhs_infinity or not num.isZero( slack ) or
-                not num.isZero( lhs ) and not rhs_infinity )
+                ( not num.isZero( lhs ) and not rhs_infinity ) )
                return true;
             break;
          case VarBasisStatus::BASIC:
