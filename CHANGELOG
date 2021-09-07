@@ -6,6 +6,10 @@
 Features
 --------
 
+- supporting dual postsolving for presolvers: DomCol, Dualfix, SingletonCol, ParallelCol, ParallelRow, Propagation, FixContinuous, SingletonCol, SingletonStuffing
+    - dual postsolve is activated if original problem has no integer variable
+    - note to turn off componentsmaxint = -1 and presolve.detectlindep = 0
+    - if calculate_basis_for_dual is activated (default), tightening the bounds (f.e. in Propagation and Dualfix) are avoided due to computional overhead to postsolve the basis information
 - applying the reductions of the presolver found immediately to the problem so that the next presolver can work with the reduced problem if PaPILO is used with one thread.
     This feature can be turned off by parameter (presolve.sequentialreductionapplying).
 - DualFix: setting the variable to infinity, if objective is zero and the bound unbounded
@@ -25,11 +29,27 @@ Interface changes
 -----------------
 ### Deleted and changed API methods
 
-- TODO for dual postsolve
+- extracted postsolve storage from Postsolve to a new class PostsolveStorage to store the steps required for Postsolving
+- Function undo in Postsolve requires now reducedSolution, originalSolution and PostsolveStorage
+- moved class Postsolve.hpp to src/core/postsolve
+- extracted class PostsolveType.hpp to src/core/postsolve
+- extracted class ReductionType.hpp to src/core/postsolve
+- extracted class PostsolveStatus.hpp to src/core/postsolve
 
 ### New API functions
 
 - new ReductionType in Postsolve: kFixedInfCol
+- new ReductionType in Postsolve for dual-postsolve: kSubstitutedColNoDual
+- new ReductionType in Postsolve for dual-postsolve: kVarBoundChange
+- new ReductionType in Postsolve for dual-postsolve: kRedundantRow =
+- new ReductionType in Postsolve for dual-postsolve: kRowBoundChange
+- new ReductionType in Postsolve for dual-postsolve: kReasonForRowBoundChangeForcedByRow
+- new ReductionType in Postsolve for dual-postsolve: kRowBoundChangeForcedByRow =
+- new ReductionType in Postsolve for dual-postsolve: kSaveRow
+- new ReductionType in Postsolve for dual-postsolve: kReducedBoundsCost
+- new ReductionType in Postsolve for dual-postsolve: kColumnDualValue
+- new ReductionType in Postsolve for dual-postsolve: kRowDualValue
+- new ReductionType in Postsolve for dual-postsolve: kCoefficientChange
 
 
 ### Changed parameters
@@ -39,6 +59,7 @@ Interface changes
 
 ### New parameters with default values
 
+- calculate_basis_for_dual = 1: Should the basis be calculated if dual postsolve is possible (1: yes 0: no)
 - presolve.sequentialreductionapplying = 1: If only one thread is used, should the results be applied immediately after the presolver returned the reductions? (1: yes 0: no)
 - coefftightening.parallel = 1: Should the presolver be run in parallel internally (1: yes 0: no)
 - doubletoneq.parallel = 0: Should the presolver be run in parallel internally (1: yes 0: no)
@@ -47,7 +68,6 @@ Interface changes
 - propagation.parallel = 1: Should the presolver be run in parallel internally (1: yes 0: no)
 - simpleprobing.parallel = 0: Should the presolver be run in parallel internally (1: yes 0: no)
 - simplifyineq.parallel = 1: Should the presolver be run in parallel internally (1: yes 0: no)
-
 
 ### Data structures
 
