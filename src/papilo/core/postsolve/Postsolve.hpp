@@ -831,28 +831,58 @@ Postsolve<REAL>::apply_row_bound_change_to_original_solution(
    bool isLhs = indices[first] == 1;
    int row = (int)values[first];
    REAL new_value = values[first + 1];
+   bool is_infinity = indices[first + 1] ==1 ;
+   REAL old_value = values[first + 2];
+   bool was_infinity = indices[first + 2] ==1 ;
 
    int next_type = i - 1;
    int start_reason = start[next_type];
    assert( types[next_type] ==
            ReductionType::kReasonForRowBoundChangeForcedByRow );
-   int remained_row = indices[start_reason];
    int deleted_row = indices[start_reason + 1];
    REAL factor = values[start_reason];
-   assert( remained_row == row );
-   REAL dual_row_value = originalSolution.dual[remained_row];
-   if( ( isLhs and dual_row_value > 0 ) or
-       ( not isLhs and dual_row_value < 0 ) )
+   assert( row == indices[start_reason] );
+   REAL dual_row_value = originalSolution.dual[row];
+   if( ( isLhs and num.isGT(dual_row_value, 0) ) or
+       ( not isLhs and num.template isLT(dual_row_value, 0) ) )
    {
       originalSolution.dual[deleted_row] = dual_row_value * factor;
-      originalSolution.dual[remained_row] = 0;
+      originalSolution.dual[row] = 0;
       if( originalSolution.basisAvailabe )
       {
          assert( originalSolution.rowBasisStatus[deleted_row] ==
                  VarBasisStatus::BASIC );
          originalSolution.rowBasisStatus[deleted_row] =
-             originalSolution.rowBasisStatus[remained_row];
-         originalSolution.rowBasisStatus[remained_row] = VarBasisStatus::BASIC;
+             originalSolution.rowBasisStatus[row];
+         originalSolution.rowBasisStatus[row] = VarBasisStatus::BASIC;
+      }
+   }
+   // check if bound is modified on non basic variable and dual solution is 0
+   // this can happen in ParallelRowDetection
+   else if( originalSolution.basisAvailabe)
+   {
+      if( ( isLhs and ( originalSolution.rowBasisStatus[row] ==
+                            VarBasisStatus::ON_LOWER or
+                        originalSolution.rowBasisStatus[row] ==
+                            VarBasisStatus::ZERO ) or
+            ( not isLhs and originalSolution.rowBasisStatus[row] ==
+                                VarBasisStatus::ON_UPPER ) ) )
+      {
+         originalSolution.rowBasisStatus[deleted_row] =
+             originalSolution.rowBasisStatus[row];
+         originalSolution.rowBasisStatus[row] = VarBasisStatus::BASIC;
+      }
+      else if( originalSolution.rowBasisStatus[row] == VarBasisStatus::FIXED )
+      {
+         if( isLhs)
+            originalSolution.rowBasisStatus[row] == VarBasisStatus::ON_UPPER;
+         else
+         {
+            if( was_infinity and num.isZero( new_value ) )
+               originalSolution.rowBasisStatus[row] == VarBasisStatus::ZERO;
+            else
+               originalSolution.rowBasisStatus[row] == VarBasisStatus::ON_LOWER;
+         }
       }
    }
 }
