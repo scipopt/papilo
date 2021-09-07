@@ -1,4 +1,3 @@
-message.verbosity = 4
 presolve.componentsmaxint = -1
 presolve.detectlindep = 0
 
