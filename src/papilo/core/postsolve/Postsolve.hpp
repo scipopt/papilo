@@ -745,9 +745,9 @@ Postsolve<REAL>::apply_substituted_column_to_original_solution(
          {
             if( originalSolution.rowBasisStatus[row] ==
                     VarBasisStatus::BASIC and
-                not num.isZero( originalSolution.dual[row] ) )
+                not num.isFeasZero( originalSolution.dual[row] ) )
             {
-               assert( num.isZero( originalSolution.reducedCosts[col] ) );
+               assert( num.isFeasZero( originalSolution.reducedCosts[col] ) );
                originalSolution.varBasisStatus[col] = VarBasisStatus::BASIC;
                originalSolution.rowBasisStatus[row] = VarBasisStatus::FIXED;
             }
@@ -810,7 +810,7 @@ bool
 Postsolve<REAL>::is_variable_on_upper_bound( bool ub_infinity, REAL ub,
                                              REAL primal_solution ) const
 {
-   return num.isEq( primal_solution, ub ) and not ub_infinity;
+   return num.isFeasEq( primal_solution, ub ) and not ub_infinity;
 }
 
 template <typename REAL>
@@ -818,7 +818,7 @@ bool
 Postsolve<REAL>::is_variable_on_lower_bound( bool lb_infinity, REAL lb,
                                              REAL primal_solution ) const
 {
-   return ( num.isEq( primal_solution, lb ) and not lb_infinity );
+   return ( num.isFeasEq( primal_solution, lb ) and not lb_infinity );
 }
 
 template <typename REAL>
