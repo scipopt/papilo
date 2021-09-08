@@ -313,33 +313,39 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
                                                     values, i, row ))
             continue;
 
-         switch( originalSolution.rowBasisStatus[row] )
+         if(originalSolution.basisAvailabe)
          {
-         case VarBasisStatus::FIXED:
-            if( isLhs )
-               originalSolution.rowBasisStatus[row] = VarBasisStatus::ON_UPPER;
-            else
+            switch( originalSolution.rowBasisStatus[row] )
             {
-               if(num.template isZero(old_value) and is_infinity)
-                  originalSolution.rowBasisStatus[row] = VarBasisStatus::ZERO;
+            case VarBasisStatus::FIXED:
+               if( isLhs )
+                  originalSolution.rowBasisStatus[row] =
+                      VarBasisStatus::ON_UPPER;
                else
-                  originalSolution.rowBasisStatus[row] = VarBasisStatus::ON_LOWER;
+               {
+                  if( num.template isZero( old_value ) and is_infinity )
+                     originalSolution.rowBasisStatus[row] =
+                         VarBasisStatus::ZERO;
+                  else
+                     originalSolution.rowBasisStatus[row] =
+                         VarBasisStatus::ON_LOWER;
+               }
+               break;
+            case VarBasisStatus::ZERO:
+            case VarBasisStatus::ON_LOWER:
+               if( isLhs )
+                  originalSolution.rowBasisStatus[row] = VarBasisStatus::BASIC;
+               break;
+            case VarBasisStatus::ON_UPPER:
+               if( not isLhs )
+                  originalSolution.rowBasisStatus[row] = VarBasisStatus::BASIC;
+               break;
+            case VarBasisStatus::BASIC:
+               break;
+            case VarBasisStatus::UNDEFINED:
+               assert( false );
+               break;
             }
-            break;
-         case VarBasisStatus::ZERO:
-         case VarBasisStatus::ON_LOWER:
-            if( isLhs )
-               originalSolution.rowBasisStatus[row] = VarBasisStatus::BASIC;
-            break;
-         case VarBasisStatus::ON_UPPER:
-            if( not isLhs )
-               originalSolution.rowBasisStatus[row] = VarBasisStatus::BASIC;
-            break;
-         case VarBasisStatus::BASIC:
-            break;
-         case VarBasisStatus::UNDEFINED:
-            assert( false );
-            break;
          }
 
          break;
