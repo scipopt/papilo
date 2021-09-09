@@ -88,13 +88,13 @@ class SavedRow
    bool
    is_on_lhs()
    {
-      return not is_lhs_inf and num.isEq( slack, lhs );
+      return not is_lhs_inf and num.isFeasEq( slack, lhs );
    }
 
    bool
    is_on_rhs()
    {
-      return not is_rhs_inf and num.isEq( slack, rhs );
+      return not is_rhs_inf and num.isFeasEq( slack, rhs );
    }
 
    int
