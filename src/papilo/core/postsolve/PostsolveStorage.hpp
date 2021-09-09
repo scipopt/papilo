@@ -566,7 +566,7 @@ void
  PostsolveStorage<REAL>::storeSubstitution( int col, int row,
                                              const Problem<REAL>& currentProblem )
 {
-   types.push_back( ReductionType::kSubstitutedCol );
+   types.push_back( ReductionType::kSubstitutedColWithDual );
    push_back_row(row, currentProblem );
    if( postsolveType == PostsolveType::kFull )
       push_back_col(col, currentProblem );
@@ -589,7 +589,7 @@ PostsolveStorage<REAL>::storeSubstitution( int col,
    const int length = equalityLHS.getLength();
    assert( length > 1 );
 
-   types.push_back( ReductionType::kSubstitutedColNoDual );
+   types.push_back( ReductionType::kSubstitutedCol );
    values.push_back( equalityRHS );
    indices.push_back( origcol_mapping[col] );
    for( int i = 0; i < length; ++i )

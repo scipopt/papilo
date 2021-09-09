@@ -39,12 +39,12 @@ Interface changes
 ### New API functions
 
 - new ReductionType in Postsolve: kFixedInfCol
-- new ReductionType in Postsolve for dual-postsolve: kSubstitutedColNoDual
+- new ReductionType in Postsolve for dual-postsolve: kSubstitutedColWithDual
 - new ReductionType in Postsolve for dual-postsolve: kVarBoundChange
-- new ReductionType in Postsolve for dual-postsolve: kRedundantRow =
+- new ReductionType in Postsolve for dual-postsolve: kRedundantRow
 - new ReductionType in Postsolve for dual-postsolve: kRowBoundChange
 - new ReductionType in Postsolve for dual-postsolve: kReasonForRowBoundChangeForcedByRow
-- new ReductionType in Postsolve for dual-postsolve: kRowBoundChangeForcedByRow =
+- new ReductionType in Postsolve for dual-postsolve: kRowBoundChangeForcedByRow
 - new ReductionType in Postsolve for dual-postsolve: kSaveRow
 - new ReductionType in Postsolve for dual-postsolve: kReducedBoundsCost
 - new ReductionType in Postsolve for dual-postsolve: kColumnDualValue

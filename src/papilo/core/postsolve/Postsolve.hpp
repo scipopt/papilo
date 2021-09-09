@@ -257,7 +257,7 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
 
          break;
       }
-      case ReductionType::kSubstitutedColNoDual:
+      case ReductionType::kSubstitutedCol:
       {
          int col = indices[first];
          REAL side = values[first];
@@ -276,7 +276,7 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
          originalSolution.primal[col] = ( -sumcols.get() ) / colCoef;
          break;
       }
-      case ReductionType::kSubstitutedCol:
+      case ReductionType::kSubstitutedColWithDual:
          apply_substituted_column_to_original_solution(
              originalSolution, indices, values, first, last, stored_bounds );
          break;
@@ -375,7 +375,7 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
       {
          // if a row bound change happened because of a substitution skip the
          // verification for this step
-         if( i >= 1 and types[i - 1] == ReductionType::kSubstitutedCol )
+         if( i >= 1 and types[i - 1] == ReductionType::kSubstitutedColWithDual )
             continue;
          break;
       }
@@ -384,7 +384,7 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
          if( originalSolution.basisAvailabe )
             originalSolution.rowBasisStatus[indices[first]] =
                 VarBasisStatus::BASIC;
-         if( types[i - 1] == ReductionType::kSubstitutedCol )
+         if( types[i - 1] == ReductionType::kSubstitutedColWithDual )
             continue;
          break;
          // the remaining Types are used as additional information for other
@@ -428,7 +428,7 @@ Postsolve<REAL>::skip_if_row_bound_belongs_to_substitution(
     const Vec<int>& indices, const Vec<REAL>& values, int i, int row ) const
 {
    if( i >= 2 and types[i - 1] == ReductionType::kCoefficientChange and
-       types[i - 2] == ReductionType::kSubstitutedCol )
+       types[i - 2] == ReductionType::kSubstitutedColWithDual )
    {
       int row_of_coefficient_change = indices[start[i - 1]];
       int row_of_substitution = indices[start[i - 2]];
@@ -436,7 +436,7 @@ Postsolve<REAL>::skip_if_row_bound_belongs_to_substitution(
          return true;
    }
    if( i >= 3 and types[i - 2] == ReductionType::kCoefficientChange and
-       types[i - 3] == ReductionType::kSubstitutedCol )
+       types[i - 3] == ReductionType::kSubstitutedColWithDual )
    {
       int row_of_row_bound_change = (int) values[start[i - 1]];
       int row_of_coefficient_change = indices[start[i - 2]];
@@ -1397,8 +1397,8 @@ Postsolve<REAL>::recalculate_current_problem_from_the_original_problem(
          // TODO:
          break;
       }
+      case ReductionType::kSubstitutedColWithDual:
       case ReductionType::kSubstitutedCol:
-      case ReductionType::kSubstitutedColNoDual:
       {
          int row = indices[first];
          int row_length = (int)values[first];

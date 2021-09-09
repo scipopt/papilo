@@ -1,5 +1,5 @@
 cmake_minimum_required (VERSION 3.5.0)
-project(papilo VERSION 1.1.0.0)
+project(papilo VERSION 2.0.0.0)
 
 set(BOOST_MIN_VERSION 1.72)
 set(CMAKE_CXX_STANDARD 14)
