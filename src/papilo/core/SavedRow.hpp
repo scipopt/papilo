@@ -140,10 +140,10 @@ class SavedRow
          return VarBasisStatus::FIXED;
       else if( is_on_rhs() )
          return VarBasisStatus::ON_UPPER;
-      else if( is_on_lhs() and num.isZero( slack ) )
-         return VarBasisStatus::ZERO;
       else if( is_on_lhs() )
          return VarBasisStatus::ON_LOWER;
+      else if( is_lhs_inf and is_rhs_inf and num.isZero( slack ) )
+         return VarBasisStatus::ZERO;
       return VarBasisStatus::BASIC;
    }
 };

@@ -304,13 +304,16 @@ class PrimalDualSolValidation
          assert( ub_infinity or lb_infinity or num.isFeasGE( ub, lb ) );
          switch( solution.varBasisStatus[variable] )
          {
+         case VarBasisStatus::BASIC:
+            if( not num.isZero( solution.reducedCosts[variable] ) )
+               return true;
+            number_basic_variable++;
+            break;
          case VarBasisStatus::FIXED:
-         {
             if( ub_infinity or lb_infinity or not num.isFeasEq( lb, ub ) or
                 not num.isFeasEq( sol, ub ) )
                return true;
             break;
-         }
          case VarBasisStatus::ON_LOWER:
             if( lb_infinity or not num.isFeasEq( sol, lb ) )
                return true;
@@ -320,14 +323,9 @@ class PrimalDualSolValidation
                return true;
             break;
          case VarBasisStatus::ZERO:
-            if( lb_infinity or not num.isZero( sol ) or
-                ( not num.isZero( lb ) and not ub_infinity ) )
+            if( not lb_infinity or not ub_infinity or
+                not num.isZero( sol ) )
                return true;
-            break;
-         case VarBasisStatus::BASIC:
-            if( not num.isZero( solution.reducedCosts[variable] ) )
-               return true;
-            number_basic_variable++;
             break;
          case VarBasisStatus::UNDEFINED:
             return true;
@@ -350,6 +348,11 @@ class PrimalDualSolValidation
          assert( lhs_infinity or rhs_infinity or num.isFeasGE( rhs, lhs ) );
          switch( solution.rowBasisStatus[row] )
          {
+         case VarBasisStatus::BASIC:
+            if( not num.isFeasZero( solution.dual[row] ) )
+               return true;
+            number_basic_variable++;
+            break;
          case VarBasisStatus::FIXED:
             if( lhs_infinity or rhs_infinity or not num.isFeasEq( lhs, rhs ) or
                 not num.isFeasEq( slack, rhs ) )
@@ -365,14 +368,9 @@ class PrimalDualSolValidation
                return true;
             break;
          case VarBasisStatus::ZERO:
-            if( lhs_infinity or not num.isFeasZero( slack ) or
-                ( not num.isFeasZero( lhs ) and not rhs_infinity ) )
+            if( not rhs_infinity or not lhs_infinity or
+                not num.isZero( slack ) )
                return true;
-            break;
-         case VarBasisStatus::BASIC:
-            if( not num.isFeasZero( solution.dual[row] ) )
-               return true;
-            number_basic_variable++;
             break;
          case VarBasisStatus::UNDEFINED:
             return true;

@@ -85,6 +85,12 @@ class BoundStorage
       }
    }
 
+   bool
+   is_lower_and_upper_bound_infinity( int col )
+   {
+      return col_infinity_lower[col] and col_infinity_upper[col];
+   }
+
    void
    set_bounds_of_row( int row, bool lhs_inf, bool rhs_inf, REAL lhs, REAL rhs )
    {
