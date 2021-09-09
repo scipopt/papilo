@@ -1333,6 +1333,8 @@ void
 Presolve<REAL>::logStatus( const Problem<REAL>& problem,
                            const PostsolveStorage<REAL>& postsolveStorage ) const
 {
+   if(msg.getVerbosityLevel() == VerbosityLevel::kQuiet)
+      return;
    msg.info( "reduced problem:\n" );
    msg.info( "  reduced rows:     {}\n", problem.getNRows() );
    msg.info( "  reduced columns:  {}\n", problem.getNCols() );
@@ -1340,12 +1342,12 @@ Presolve<REAL>::logStatus( const Problem<REAL>& problem,
    msg.info( "  reduced cont. columns:  {}\n", problem.getNumContinuousCols() );
    msg.info( "  reduced nonzeros: {}\n",
              problem.getConstraintMatrix().getNnz() );
-   if( problem.getNCols() == 0 )
+   if( problem.getNCols() == 0)
    {
+      // the primaldual can be disabled therefore calculate only primal for obj
       Solution<REAL> solution{};
       Solution<REAL> empty_sol{};
-      if( postsolveStorage.getOriginalProblem().getNumIntegralCols() == 0 )
-         empty_sol.type = SolutionType::kPrimalDual;
+      empty_sol.type = SolutionType::kPrimal;
       Postsolve<REAL> postsolve{ msg, num };
       postsolve.undo( empty_sol, solution, postsolveStorage );
       const Problem<REAL>& origprob = postsolveStorage.getOriginalProblem();

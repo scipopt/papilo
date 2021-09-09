@@ -497,6 +497,8 @@ void
 PostsolveStorage<REAL>::storeCoefficientChange( int row, int col,
                                                   REAL new_value )
 {
+   if( postsolveType == PostsolveType::kPrimal )
+      return;
    types.push_back( ReductionType::kCoefficientChange );
    indices.push_back( origrow_mapping[row] );
    indices.push_back( origcol_mapping[col] );
