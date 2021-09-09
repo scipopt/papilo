@@ -3,6 +3,7 @@ project(papilo VERSION 1.1.0.0)
 
 set(BOOST_MIN_VERSION 1.72)
 set(CMAKE_CXX_STANDARD 14)
+set(CXX_STANDARD_REQUIRED ON)
 # set(CMAKE_CXX_EXTENSIONS OFF) # use -std=c++... instead of -std=gnu++...
 # required for gcc if set(CMAKE_CXX_EXTENSIONS OFF) is used
 # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fext-numeric-literals")
@@ -11,7 +12,7 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
 endif()
 
 # path to e.g. findGMP module
-set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/Modules)
+list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/Modules/)
 set(CMAKE_CXX_VISIBILITY_PRESET hidden)
 set(CMAKE_VISIBILITY_INLINES_HIDDEN 1)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
@@ -87,16 +88,15 @@ target_include_directories(papilo INTERFACE
    $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}>
    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src>
    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/external>
-   $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/external/tbb/include>
    $<INSTALL_INTERFACE:include>
    $<INSTALL_INTERFACE:include/papilo-external>
    ${Boost_INCLUDE_DIRS}
    ${GMP_INCLUDE_DIRS}
    ${Quadmath_INCLUDE_DIRS})
 
-
 # Utilities to automatically download missing dependencies
 include(cmake/Dependencies.cmake)
+
 find_or_download_package(
     NAME TBB
     VERSION 2021
@@ -105,12 +105,6 @@ find_or_download_package(
     URL_HASH SHA256=8f616561603695bbb83871875d2c6051ea28f8187dbe59299961369904d1d49e
     CONFIGURE_ARGS -DTBB_TEST=OFF -DTBB_EXAMPLES=OFF -DTBB4PY_BUILD=OFF -DBUILD_SHARED_LIBS=OFF)
 find_package(Threads REQUIRED)
-
-target_link_libraries(papilo
-    INTERFACE TBB::tbb Threads::Threads $<$<PLATFORM_ID:Linux>:rt>)
-target_compile_options(papilo
-    PRIVATE ${TBB_CXX_STD_FLAG})
-
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
    file(TO_CMAKE_PATH "$ENV{TBBROOT}" TBB_ROOTDIR)
@@ -125,7 +119,12 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
 endif()
 
 target_link_libraries(papilo
+    INTERFACE TBB::tbb Threads::Threads $<$<PLATFORM_ID:Linux>:rt>)
+target_link_libraries(papilo
     INTERFACE ${Quadmath_IMPORTED_TARGET} ${GMP_LIBRARIES})
+
+target_compile_options(papilo
+    PRIVATE ${TBB_CXX_STD_FLAG})
 
 if(MSVC)
    target_compile_definitions(papilo INTERFACE BOOST_ALL_NO_LIB)
@@ -317,10 +316,10 @@ install(FILES
    ${PROJECT_SOURCE_DIR}/src/papilo/presolvers/Sparsify.hpp
    DESTINATION include/papilo/presolvers)
 
-# install external library header files
-install(DIRECTORY
-   ${PROJECT_SOURCE_DIR}/external/tbb/include/tbb
-   DESTINATION include/papilo-external)
+## install external library header files
+#install(DIRECTORY
+#   ${TBB_INCLUDE_DIR}/tbb
+#   DESTINATION include/papilo-external)
 
 install(FILES
    ${PROJECT_SOURCE_DIR}/external/fmt/chrono.h
@@ -373,7 +372,7 @@ if(PAPILO_HAVE_FLOAT128)
 endif()
 
 # export targets for build-tree linking
-#export(TARGETS papilo ${CLUSOL_TARGET} FILE "${CMAKE_BINARY_DIR}/papilo-targets.cmake")
+export(TARGETS papilo ${CLUSOL_TARGET} FILE "${CMAKE_BINARY_DIR}/papilo-targets.cmake")
 
 # install targets
 install(TARGETS papilo ${CLUSOL_TARGET} EXPORT papilo-targets ARCHIVE DESTINATION lib LIBRARY DESTINATION lib)
