@@ -144,7 +144,7 @@ class Presolve
     * information
     */
    PresolveResult<REAL>
-   apply( Problem<REAL>& problem );
+   apply( Problem<REAL>& problem, bool avoid_to_store_dual_postsolve = false );
 
    /// add presolve method to presolving
    void
@@ -367,13 +367,13 @@ extern template class Presolve<Rational>;
  */
 template <typename REAL>
 PresolveResult<REAL>
-Presolve<REAL>::apply( Problem<REAL>& problem )
+Presolve<REAL>::apply( Problem<REAL>& problem, bool avoid_to_store_dual_postsolve )
 {
    tbb::task_arena arena( presolveOptions.threads == 0
                               ? tbb::task_arena::automatic
                               : presolveOptions.threads );
 
-   return arena.execute( [this, &problem]() {
+   return arena.execute( [this, &problem, avoid_to_store_dual_postsolve]() {
       stats = Statistics();
       num.setFeasTol( REAL{ presolveOptions.feastol } );
       num.setEpsilon( REAL{ presolveOptions.epsilon } );
@@ -401,7 +401,7 @@ Presolve<REAL>::apply( Problem<REAL>& problem )
       result.postsolve =
           PostsolveStorage<REAL>( problem, num, presolveOptions );
 
-      if( problem.getNumIntegralCols() == 0 )
+      if( !avoid_to_store_dual_postsolve && problem.getNumIntegralCols() == 0 )
          result.postsolve.postsolveType = PostsolveType::kFull;
 
       result.status = PresolveStatus::kUnchanged;

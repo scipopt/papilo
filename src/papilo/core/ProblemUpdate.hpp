@@ -1097,10 +1097,14 @@ ProblemUpdate<REAL>::removeFixedCols()
       if( !cflags[col].test( ColFlag::kFixed ) )
          continue;
 
-      assert( lbs[col] == problem.getUpperBounds()[col]
-//              not colFlags[col].test( ColFlag::kUbInf ) and
-//              not colFlags[col].test( ColFlag::kLbInf )
-              );
+      if( cflags[col].test( ColFlag::kLbInf ) or cflags[col].test( ColFlag::kUbInf ) )
+         continue;
+
+      assert(
+          num.isEq( lbs[col], problem.getUpperBounds()[col] ) and  not colFlags[col]
+              .test( ColFlag::kUbInf ) and
+          not colFlags[col].test( ColFlag::kLbInf ) );
+
       auto colvec = consMatrix.getColumnCoefficients( col );
       postsolve.storeFixedCol( col, lbs[col], colvec, obj.coefficients );
 
