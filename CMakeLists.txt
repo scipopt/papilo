@@ -220,31 +220,30 @@ install(FILES
    DESTINATION include/papilo)
 
 install(FILES
-        ${PROJECT_SOURCE_DIR}/src/papilo/core/Components.hpp
-        ${PROJECT_SOURCE_DIR}/src/papilo/core/ConstraintMatrix.hpp
-        ${PROJECT_SOURCE_DIR}/src/papilo/core/MatrixBuffer.hpp
-        ${PROJECT_SOURCE_DIR}/src/papilo/core/Objective.hpp
-        ${PROJECT_SOURCE_DIR}/src/papilo/core/Objective.hpp
-        ${PROJECT_SOURCE_DIR}/src/papilo/core/postsolve/PostsolveStorage.hpp
-        ${PROJECT_SOURCE_DIR}/src/papilo/core/postsolve/Postsolve.hpp
-        ${PROJECT_SOURCE_DIR}/src/papilo/core/BoundStorage.hpp
-        ${PROJECT_SOURCE_DIR}/src/papilo/core/postsolve/PostsolveStatus.hpp
-        ${PROJECT_SOURCE_DIR}/src/papilo/core/postsolve/ReductionType.hpp
-        ${PROJECT_SOURCE_DIR}/src/papilo/core/postsolve/PostsolveType.hpp
-        ${PROJECT_SOURCE_DIR}/src/papilo/core/Presolve.hpp
-        ${PROJECT_SOURCE_DIR}/src/papilo/core/PresolveMethod.hpp
-        ${PROJECT_SOURCE_DIR}/src/papilo/core/PresolveOptions.hpp
-        ${PROJECT_SOURCE_DIR}/src/papilo/core/ProbingView.hpp
-        ${PROJECT_SOURCE_DIR}/src/papilo/core/Problem.hpp
-        ${PROJECT_SOURCE_DIR}/src/papilo/core/ProblemBuilder.hpp
-      ${PROJECT_SOURCE_DIR}/src/papilo/core/ProblemUpdate.hpp
-      ${PROJECT_SOURCE_DIR}/src/papilo/core/Reductions.hpp
-      ${PROJECT_SOURCE_DIR}/src/papilo/core/RowFlags.hpp
-      ${PROJECT_SOURCE_DIR}/src/papilo/core/SingleRow.hpp
-      ${PROJECT_SOURCE_DIR}/src/papilo/core/Solution.hpp
-      ${PROJECT_SOURCE_DIR}/src/papilo/core/SparseStorage.hpp
-      ${PROJECT_SOURCE_DIR}/src/papilo/core/Statistics.hpp
-      ${PROJECT_SOURCE_DIR}/src/papilo/core/VariableDomains.hpp
+     ${PROJECT_SOURCE_DIR}/src/papilo/core/Components.hpp
+     ${PROJECT_SOURCE_DIR}/src/papilo/core/ConstraintMatrix.hpp
+     ${PROJECT_SOURCE_DIR}/src/papilo/core/MatrixBuffer.hpp
+     ${PROJECT_SOURCE_DIR}/src/papilo/core/Objective.hpp
+     ${PROJECT_SOURCE_DIR}/src/papilo/core/postsolve/PostsolveStorage.hpp
+     ${PROJECT_SOURCE_DIR}/src/papilo/core/postsolve/Postsolve.hpp
+     ${PROJECT_SOURCE_DIR}/src/papilo/core/BoundStorage.hpp
+     ${PROJECT_SOURCE_DIR}/src/papilo/core/postsolve/PostsolveStatus.hpp
+     ${PROJECT_SOURCE_DIR}/src/papilo/core/postsolve/ReductionType.hpp
+     ${PROJECT_SOURCE_DIR}/src/papilo/core/postsolve/PostsolveType.hpp
+     ${PROJECT_SOURCE_DIR}/src/papilo/core/Presolve.hpp
+     ${PROJECT_SOURCE_DIR}/src/papilo/core/PresolveMethod.hpp
+     ${PROJECT_SOURCE_DIR}/src/papilo/core/PresolveOptions.hpp
+     ${PROJECT_SOURCE_DIR}/src/papilo/core/ProbingView.hpp
+     ${PROJECT_SOURCE_DIR}/src/papilo/core/Problem.hpp
+     ${PROJECT_SOURCE_DIR}/src/papilo/core/ProblemBuilder.hpp
+     ${PROJECT_SOURCE_DIR}/src/papilo/core/ProblemUpdate.hpp
+     ${PROJECT_SOURCE_DIR}/src/papilo/core/Reductions.hpp
+     ${PROJECT_SOURCE_DIR}/src/papilo/core/RowFlags.hpp
+     ${PROJECT_SOURCE_DIR}/src/papilo/core/SingleRow.hpp
+     ${PROJECT_SOURCE_DIR}/src/papilo/core/Solution.hpp
+     ${PROJECT_SOURCE_DIR}/src/papilo/core/SparseStorage.hpp
+     ${PROJECT_SOURCE_DIR}/src/papilo/core/Statistics.hpp
+     ${PROJECT_SOURCE_DIR}/src/papilo/core/VariableDomains.hpp
    DESTINATION include/papilo/core)
 
 install(FILES

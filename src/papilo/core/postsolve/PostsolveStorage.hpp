@@ -77,14 +77,14 @@ class PostsolveStorage
    //types containes the Reductiontypes
    Vec<ReductionType> types;
 
-   // indices/values can be considered als Vec<Vec<int/REAL>>
+   // indices/values can be considered as Vec<Vec<int/REAL>>
    // To reduce the number of vectors and hence speedup there is only one vector and
    // start indicates by saving the start index where the information of the Reduction type begins
    Vec<int> indices;
    Vec<REAL> values;
 
    // indices where the information of the i-th reduction inside start/values starts
-   // information go from [start[i], start [i])
+   // information go from [start[i], start [i+1])
    Vec<int> start;
 
    Problem<REAL> problem;
@@ -139,13 +139,12 @@ class PostsolveStorage
    void
    storeRedundantRow( int row );
 
-
    void
    storeVarBoundChange( bool isLowerBound, int col, REAL oldBound,
                          bool was_infinity, REAL newBound );
 
    void
-   storeRowBoundChange( bool isLhs, int row, REAL newBound, bool isInfinity, REAL oldBound, bool wasInfinity  );
+   storeRowBoundChange( bool isLhs, int row, REAL newBound, bool is_infinity, REAL oldBound, bool was_infinity );
 
    void
    storeRowBoundChangeForcedByRow( bool isLhs, int row, REAL newBound, bool isInfinity );
@@ -392,7 +391,7 @@ PostsolveStorage<REAL>::storeVarBoundChange( bool isLowerBound,
 
 template <typename REAL>
 void
-PostsolveStorage<REAL>::storeRowBoundChange( bool isLhs, int row, REAL newBound, bool isInfinity, REAL oldBound, bool wasInfinity  ){
+PostsolveStorage<REAL>::storeRowBoundChange( bool isLhs, int row, REAL newBound, bool is_infinity, REAL oldBound, bool was_infinity ){
    if( postsolveType == PostsolveType::kPrimal )
       return;
    types.push_back( ReductionType::kRowBoundChange );
@@ -401,9 +400,9 @@ PostsolveStorage<REAL>::storeRowBoundChange( bool isLhs, int row, REAL newBound,
    else
       indices.push_back( 0 );
    values.push_back( origrow_mapping[row] );
-   indices.push_back( isInfinity );
+   indices.push_back( is_infinity );
    values.push_back( newBound );
-   indices.push_back( wasInfinity );
+   indices.push_back( was_infinity );
    values.push_back( oldBound );
 
    finishStorage();
@@ -602,7 +601,7 @@ PostsolveStorage<REAL>::storeSubstitution( int col,
    finishStorage();
 }
 
-                                             /// col1 = col2scale * col2 and are merged into a new column y = col2 +
+/// col1 = col2scale * col2 and are merged into a new column y = col2 +
 /// col2scale * col1 which takes over the index of col2
 template <typename REAL>
 void
