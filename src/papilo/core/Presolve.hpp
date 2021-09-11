@@ -678,7 +678,8 @@ Presolve<REAL>::apply( Problem<REAL>& problem, bool avoid_to_store_dual_postsolv
          if( problem.getNCols() == 0 )
             detectComponents = false;
 
-         if( detectComponents )
+         //TODO: remove empty rows before (but currently buggy)
+         if( detectComponents  and probUpdate.getNActiveCols() > 0 )
          {
             assert( problem.getNCols() != 0 && problem.getNRows() != 0 );
             Components components;
