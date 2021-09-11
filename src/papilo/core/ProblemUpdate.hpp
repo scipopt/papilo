@@ -784,6 +784,9 @@ ProblemUpdate<REAL>::compress( bool full )
    if( problem.getNCols() == getNActiveCols() &&
        problem.getNRows() == getNActiveRows() && !full )
       return;
+   // TODO: do not compress if ActiveRows are zero because rowmapping in Postsolve is deleted.
+   if(getNActiveRows() <= 0)
+      return;
 
    Message::debug( this,
                    "compressing problem ({} rows, {} cols) to active problem "
