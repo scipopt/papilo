@@ -396,7 +396,8 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
       }
 
 #ifndef NDEBUG
-      if( reducedSolution.type == SolutionType::kPrimalDual )
+      if( postsolveStorage.presolveOptions
+              .validation_after_every_postsolving_step )
       {
          Problem<REAL> problem_at_step_i =
              recalculate_current_problem_from_the_original_problem(

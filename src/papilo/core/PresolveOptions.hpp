@@ -91,6 +91,8 @@ struct PresolveOptions
 
    bool calculate_basis_for_dual = true;
 
+   bool validation_after_every_postsolving_step = false;
+
    void
    addParameters( ParameterSet& paramSet )
    {
@@ -205,6 +207,10 @@ struct PresolveOptions
           "calculate_basis_for_dual",
           "#if basis for LP should be calculated presolving steps tightening the variable bounds can not be applied.",
           calculate_basis_for_dual );
+      paramSet.addParameter(
+          "validation_after_every_postsolving_step",
+          "# should the primal/dual solution be validated during after every postsolving step? ",
+          validation_after_every_postsolving_step );
    }
 
    bool
