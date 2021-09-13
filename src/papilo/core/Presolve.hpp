@@ -144,7 +144,7 @@ class Presolve
     * information
     */
    PresolveResult<REAL>
-   apply( Problem<REAL>& problem, bool avoid_to_store_dual_postsolve = false );
+   apply( Problem<REAL>& problem, bool store_dual_postsolve = true );
 
    /// add presolve method to presolving
    void
@@ -363,17 +363,18 @@ extern template class Presolve<Rational>;
  *
  * @tparam REAL: computational accuracy template
  * @param problem: the problem to be presolved
+ * @param store_dual_postsolve: should dual postsolve reductions stored in the postsolve stack
  * @return: presolved problem and PresolveResult contains postsolve information
  */
 template <typename REAL>
 PresolveResult<REAL>
-Presolve<REAL>::apply( Problem<REAL>& problem, bool avoid_to_store_dual_postsolve )
+Presolve<REAL>::apply( Problem<REAL>& problem, bool store_dual_postsolve )
 {
    tbb::task_arena arena( presolveOptions.threads == 0
                               ? tbb::task_arena::automatic
                               : presolveOptions.threads );
 
-   return arena.execute( [this, &problem, avoid_to_store_dual_postsolve]() {
+   return arena.execute( [this, &problem, store_dual_postsolve]() {
       stats = Statistics();
       num.setFeasTol( REAL{ presolveOptions.feastol } );
       num.setEpsilon( REAL{ presolveOptions.epsilon } );
@@ -401,7 +402,7 @@ Presolve<REAL>::apply( Problem<REAL>& problem, bool avoid_to_store_dual_postsolv
       result.postsolve =
           PostsolveStorage<REAL>( problem, num, presolveOptions );
 
-      if( !avoid_to_store_dual_postsolve && problem.getNumIntegralCols() == 0 )
+      if( store_dual_postsolve && problem.getNumIntegralCols() == 0 )
          result.postsolve.postsolveType = PostsolveType::kFull;
 
       result.status = PresolveStatus::kUnchanged;
