@@ -101,13 +101,6 @@ target_include_directories(papilo INTERFACE
 
 include(CMakePackageConfigHelpers)
 
-set_target_properties(papilo PROPERTIES
-        VERSION ${PAPILO_VERSION_MAJOR}.${PAPILO_VERSION_MINOR}.${PAPILO_VERSION_PATCH}
-        SOVERSION ${PAPILO_VERSION_MAJOR}.${PAPILO_VERSION_MINOR}
-        INSTALL_RPATH_USE_LINK_PATH TRUE)
-
-message( ${PAPILO_VERSION_MAJOR}.${PAPILO_VERSION_MINOR}.${PAPILO_VERSION_PATCH})
-
 write_basic_package_version_file(
    ${PROJECT_BINARY_DIR}/papilo-config-version.cmake
    VERSION ${PAPILO_VERSION_MAJOR}.${PAPILO_VERSION_MINOR}.${PAPILO_VERSION_PATCH}
