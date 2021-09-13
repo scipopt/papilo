@@ -35,7 +35,7 @@ setupProblemPresolveSingletonRow();
 Problem<double>
 setupProblemPresolveSingletonRowFixed();
 
-TEST_CASE( "happy-path-presolve-singleton-row", "[core]" )
+TEST_CASE( "trivial-presolve-singleton-row", "[core]" )
 {
    Num<double> num{};
    Message msg{};
@@ -51,7 +51,7 @@ TEST_CASE( "happy-path-presolve-singleton-row", "[core]" )
    REQUIRE( problem.getRowFlags()[1].test( RowFlag::kRedundant ) );
 }
 
-TEST_CASE( "happy-path-presolve-singleton-row-fixed", "[core]" )
+TEST_CASE( "trivial-presolve-singleton-row-pt-2", "[core]" )
 {
    Num<double> num{};
    Message msg{};
@@ -67,7 +67,7 @@ TEST_CASE( "happy-path-presolve-singleton-row-fixed", "[core]" )
    REQUIRE( problem.getUpperBounds()[2] == 1 );
    REQUIRE( problem.getLowerBounds()[2] == 1 );
    REQUIRE( problem.getRowFlags()[1].test( RowFlag::kRedundant ) );
-   REQUIRE( problem.getColFlags()[1].test( ColFlag::kFixed ) );
+   REQUIRE( problemUpdate.getSingletonCols().size() == 2 );
 }
 
 Problem<double>
@@ -89,9 +89,9 @@ setupProblemPresolveSingletonRow()
        std::tuple<int, int, double>{ 1, 2, 1.0 } };
 
    ProblemBuilder<double> pb;
-   pb.reserve( entries.size(), rowNames.size(), columnNames.size() );
-   pb.setNumRows( rowNames.size() );
-   pb.setNumCols( columnNames.size() );
+   pb.reserve( (int) entries.size(), (int)  rowNames.size(), (int) columnNames.size() );
+   pb.setNumRows( (int) rowNames.size() );
+   pb.setNumCols( (int) columnNames.size() );
    pb.setColUbAll( upperBounds );
    pb.setColLbAll( lowerBounds );
    pb.setObjAll( coefficients );
@@ -124,9 +124,9 @@ setupProblemPresolveSingletonRowFixed()
        std::tuple<int, int, double>{ 1, 2, 1.0 } };
 
    ProblemBuilder<double> pb;
-   pb.reserve( entries.size(), rowNames.size(), columnNames.size() );
-   pb.setNumRows( rowNames.size() );
-   pb.setNumCols( columnNames.size() );
+   pb.reserve( (int) entries.size(), (int) rowNames.size(), (int) columnNames.size() );
+   pb.setNumRows( (int) rowNames.size() );
+   pb.setNumCols( (int) columnNames.size() );
    pb.setColUbAll( upperBounds );
    pb.setColLbAll( lowerBounds );
    pb.setObjAll( coefficients );

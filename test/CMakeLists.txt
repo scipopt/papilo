@@ -74,8 +74,10 @@ set(unit_tests
         "happy-path-aggregate-free-column"
         "presolve-activity-is-updated-correctly-huge-values"
 
+
         #ProblemUpdate
-        "happy-path-presolve-singleton-row"
+        "trivial-presolve-singleton-row"
+        "trivial-presolve-singleton-row-pt-2"
 
         "problem-comparisons"
 

@@ -1171,7 +1171,7 @@ ProblemUpdate<REAL>::trivialColumnPresolve()
 
    PresolveStatus status = PresolveStatus::kUnchanged;
 
-   for( int col = 0; col != problem.getNCols(); ++col )
+   for( int col = 0; col < problem.getNCols(); ++col )
    {
       if( cflags[col].test( ColFlag::kInactive ) )
          continue;
