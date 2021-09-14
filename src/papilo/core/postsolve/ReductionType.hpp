@@ -30,9 +30,9 @@ enum class ReductionType : int
 {
    kFixedCol = 0,
    kFixedInfCol = 5,
-   kParallelCol = 1,
-   kSubstitutedColWithDual = 2,
-   kSubstitutedCol = 3,
+   kParallelCol = 2,
+   kSubstitutedColWithDual = 3,
+   kSubstitutedCol = 1,
    kVarBoundChange = 4,
 
    kRedundantRow = 7,
