@@ -854,10 +854,10 @@ Postsolve<REAL>::apply_row_bound_change_to_original_solution(
    // this can happen in ParallelRowDetection
    else if( originalSolution.basisAvailabe)
    {
-      if( ( isLhs and ( originalSolution.rowBasisStatus[row] ==
+      if( ( (isLhs and ( originalSolution.rowBasisStatus[row] ==
                             VarBasisStatus::ON_LOWER or
                         originalSolution.rowBasisStatus[row] ==
-                            VarBasisStatus::ZERO ) or
+                            VarBasisStatus::ZERO )) or
             ( not isLhs and originalSolution.rowBasisStatus[row] ==
                                 VarBasisStatus::ON_UPPER ) ) )
       {

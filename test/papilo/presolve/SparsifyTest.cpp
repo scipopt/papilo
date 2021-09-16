@@ -159,7 +159,7 @@ TEST_CASE( "happy-path-sparsify-if-misses-one-for-continuous", "[presolve]" )
    Reductions<double> reductions{};
    problem.recomputeAllActivities();
 
-   PresolveStatus presolveStatus =
+//   PresolveStatus presolveStatus =
        presolvingMethod.execute( problem, problemUpdate, num, reductions );
 //   REQUIRE( presolveStatus == PresolveStatus::kReduced );
 }
