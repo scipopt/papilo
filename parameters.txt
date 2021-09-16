@@ -133,7 +133,7 @@ sparsify.maxscale = 1000
 # is presolver stuffing enabled  [Boolean: {0,1}]
 stuffing.enabled = 1
 
-# should substitution of binary variables with general integers be allowd  [Boolean: {0,1}]
+# should substitution of binary variables with general integers be allowed  [Boolean: {0,1}]
 substitution.binarieswithints = 1
 
 # is presolver substitution enabled  [Boolean: {0,1}]

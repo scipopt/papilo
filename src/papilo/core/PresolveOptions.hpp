@@ -125,7 +125,7 @@ struct PresolveOptions
                              maxshiftperrow, 0 );
       paramSet.addParameter( "substitution.binarieswithints",
                              "should substitution of binary variables with "
-                             "general integers be allowd",
+                             "general integers be allowed",
                              substitutebinarieswithints );
       paramSet.addParameter(
           "presolve.boundrelax",
