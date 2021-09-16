@@ -64,6 +64,17 @@ get_mip_solver_factory( papilo::OptionsInfo& optionsInfo )
 {
    return papilo::ScipFactory<REAL>::create( setupscip, &optionsInfo );
 }
+#elif defined PAPILO_HAVE_HIGHS
+
+#include "papilo/interfaces/HighsInterface.hpp"
+
+template <typename REAL>
+static std::unique_ptr<papilo::SolverFactory<REAL>>
+get_mip_solver_factory( papilo::OptionsInfo& optionsInfo )
+{
+   return papilo::HighsFactory<REAL>::create();
+}
+
 #else
 
 template <typename REAL>
