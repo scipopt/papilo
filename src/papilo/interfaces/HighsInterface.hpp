@@ -71,33 +71,33 @@ class HighsInterface : public SolverInterface<REAL>
 
       HighsLp model;
 
-      model.sense_ = ObjSense::MINIMIZE;
+      model.sense_ = ObjSense::kMinimize;
       model.offset_ = double( obj.offset );
 
-      model.numRow_ = nrows;
-      model.numCol_ = ncols;
+      model.num_row_ = nrows;
+      model.num_col_ = ncols;
 
-      model.colCost_.resize( ncols );
-      model.colLower_.resize( ncols );
-      model.colUpper_.resize( ncols );
+      model.col_cost_.resize( ncols );
+      model.col_lower_.resize( ncols );
+      model.col_upper_.resize( ncols );
       model.integrality_.resize( ncols );
 
-      model.rowLower_.resize( nrows );
-      model.rowUpper_.resize( nrows );
+      model.row_lower_.resize( nrows );
+      model.row_upper_.resize( nrows );
 
       for( int i = 0; i != nrows; ++i )
       {
-         model.rowLower_[i] = rflags[i].test( RowFlag::kLhsInf )
+         model.row_lower_[i] = rflags[i].test( RowFlag::kLhsInf )
                                   ? -inf
                                   : double( lhs_values[i] );
-         model.rowUpper_[i] =
+         model.row_upper_[i] =
              rflags[i].test( RowFlag::kRhsInf ) ? inf : double( rhs_values[i] );
       }
 
-      model.Aindex_.resize( consMatrix.getNnz() );
-      model.Avalue_.resize( consMatrix.getNnz() );
-      model.Astart_.resize( ncols + 1 );
-      model.Astart_[ncols] = consMatrix.getNnz();
+      model.a_index_.resize( consMatrix.getNnz() );
+      model.a_value_.resize( consMatrix.getNnz() );
+      model.a_start_.resize( ncols + 1 );
+      model.a_start_[ncols] = consMatrix.getNnz();
 
       int start = 0;
 
@@ -105,21 +105,21 @@ class HighsInterface : public SolverInterface<REAL>
       {
          assert( !domains.flags[i].test( ColFlag::kInactive ) );
 
-         model.colLower_[i] = domains.flags[i].test( ColFlag::kLbInf )
+         model.col_lower_[i] = domains.flags[i].test( ColFlag::kLbInf )
                                   ? -inf
                                   : double( domains.lower_bounds[i] );
-         model.colUpper_[i] = domains.flags[i].test( ColFlag::kUbInf )
+         model.col_upper_[i] = domains.flags[i].test( ColFlag::kUbInf )
                                   ? inf
                                   : double( domains.upper_bounds[i] );
 
-         model.colCost_[i] = double( obj.coefficients[i] );
+         model.col_cost_[i] = double( obj.coefficients[i] );
 
          model.integrality_[i] =
              domains.flags[i].test( ColFlag::kImplInt )
-                 ? HighsVarType::IMPLICIT_INTEGER
+                 ? HighsVarType::kImplicitInteger
                  : ( domains.flags[i].test( ColFlag::kIntegral )
-                         ? HighsVarType::INTEGER
-                         : HighsVarType::CONTINUOUS );
+                         ? HighsVarType::kInteger
+                         : HighsVarType::kContinuous );
 
          auto colvec = consMatrix.getColumnCoefficients( i );
 
@@ -127,12 +127,12 @@ class HighsInterface : public SolverInterface<REAL>
          const int* colrows = colvec.getIndices();
          const REAL* colvals = colvec.getValues();
 
-         model.Astart_[i] = start;
+         model.a_start_[i] = start;
 
          for( int k = 0; k != collen; ++k )
          {
-            model.Avalue_[start + k] = double( colvals[k] );
-            model.Aindex_[start + k] = colrows[k];
+            model.a_value_[start + k] = double( colvals[k] );
+            model.a_index_[start + k] = colrows[k];
          }
 
          start += collen;
@@ -162,19 +162,19 @@ class HighsInterface : public SolverInterface<REAL>
       HighsLp model;
 
       /* set the objective sense and offset */
-      model.sense_ = ObjSense::MINIMIZE;
+      model.sense_ = ObjSense::kMinimize;
       model.offset_ = 0;
 
-      model.numRow_ = numrows;
-      model.numCol_ = numcols;
+      model.num_row_ = numrows;
+      model.num_col_ = numcols;
 
-      model.colCost_.resize( numcols );
-      model.colLower_.resize( numcols );
-      model.colUpper_.resize( numcols );
+      model.col_cost_.resize( numcols );
+      model.col_lower_.resize( numcols );
+      model.col_upper_.resize( numcols );
       model.integrality_.resize( numcols );
 
-      model.rowLower_.resize( numrows );
-      model.rowUpper_.resize( numrows );
+      model.row_lower_.resize( numrows );
+      model.row_upper_.resize( numrows );
 
       for( int i = 0; i != numrows; ++i )
       {
@@ -182,18 +182,18 @@ class HighsInterface : public SolverInterface<REAL>
 
          assert( components.getRowComponentIdx( row ) == i );
 
-         model.rowLower_[i] = rflags[row].test( RowFlag::kLhsInf )
+         model.row_lower_[i] = rflags[row].test( RowFlag::kLhsInf )
                                   ? -inf
                                   : double( lhs_values[row] );
-         model.rowUpper_[i] = rflags[row].test( RowFlag::kRhsInf )
+         model.row_upper_[i] = rflags[row].test( RowFlag::kRhsInf )
                                   ? inf
                                   : double( rhs_values[row] );
       }
 
-      model.Aindex_.resize( component.nnonz );
-      model.Avalue_.resize( component.nnonz );
-      model.Astart_.resize( numcols + 1 );
-      model.Astart_[numcols] = component.nnonz;
+      model.a_index_.resize( component.nnonz );
+      model.a_value_.resize( component.nnonz );
+      model.a_start_.resize( numcols + 1 );
+      model.a_start_[numcols] = component.nnonz;
 
       int start = 0;
 
@@ -204,21 +204,21 @@ class HighsInterface : public SolverInterface<REAL>
          assert( components.getColComponentIdx( col ) == i );
          assert( !domains.flags[col].test( ColFlag::kInactive ) );
 
-         model.colLower_[i] = domains.flags[col].test( ColFlag::kLbInf )
+         model.col_lower_[i] = domains.flags[col].test( ColFlag::kLbInf )
                                   ? -inf
                                   : double( domains.lower_bounds[col] );
-         model.colUpper_[i] = domains.flags[col].test( ColFlag::kUbInf )
+         model.col_upper_[i] = domains.flags[col].test( ColFlag::kUbInf )
                                   ? inf
                                   : double( domains.upper_bounds[col] );
 
-         model.colCost_[i] = double( obj.coefficients[col] );
+         model.col_cost_[i] = double( obj.coefficients[col] );
 
          model.integrality_[i] =
              domains.flags[col].test( ColFlag::kImplInt )
-                 ? HighsVarType::IMPLICIT_INTEGER
+                 ? HighsVarType::kImplicitInteger
                  : ( domains.flags[col].test( ColFlag::kIntegral )
-                         ? HighsVarType::INTEGER
-                         : HighsVarType::CONTINUOUS );
+                         ? HighsVarType::kInteger
+                         : HighsVarType::kContinuous );
 
          auto colvec = consMatrix.getColumnCoefficients( col );
 
@@ -226,12 +226,12 @@ class HighsInterface : public SolverInterface<REAL>
          const int* colrows = colvec.getIndices();
          const REAL* colvals = colvec.getValues();
 
-         model.Astart_[i] = start;
+         model.a_start_[i] = start;
 
          for( int k = 0; k != collen; ++k )
          {
-            model.Avalue_[start + k] = double( colvals[k] );
-            model.Aindex_[start + k] =
+            model.a_value_[start + k] = double( colvals[k] );
+            model.a_index_[start + k] =
                 components.getRowComponentIdx( colrows[k] );
          }
 
@@ -246,7 +246,7 @@ class HighsInterface : public SolverInterface<REAL>
    {
       solver.passHighsOptions( opts );
 
-      if( solver.run() == HighsStatus::Error )
+      if( solver.run() == HighsStatus::kError )
       {
          this->status = SolverStatus::kError;
          return;
@@ -259,17 +259,17 @@ class HighsInterface : public SolverInterface<REAL>
       default:
          this->status = SolverStatus::kError;
          return;
-      case HighsModelStatus::PRIMAL_INFEASIBLE:
+      case HighsModelStatus::kInfeasible:
          this->status = SolverStatus::kInfeasible;
          return;
-      case HighsModelStatus::PRIMAL_UNBOUNDED:
+      case HighsModelStatus::kUnbounded:
          this->status = SolverStatus::kUnbounded;
          return;
-      case HighsModelStatus::REACHED_TIME_LIMIT:
-      case HighsModelStatus::REACHED_ITERATION_LIMIT:
+      case HighsModelStatus::kTimeLimit:
+      case HighsModelStatus::kIterationLimit:
          this->status = SolverStatus::kInterrupted;
          return;
-      case HighsModelStatus::OPTIMAL:
+      case HighsModelStatus::kOptimal:
          this->status = SolverStatus::kOptimal;
       }
    }
