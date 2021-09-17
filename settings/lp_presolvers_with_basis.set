@@ -3,5 +3,5 @@ presolve.detectlindep = 0
 
 doubletoneq.enabled = 0
 dualinfer.enabled = 0
-substitution.enabled = 1
+substitution.enabled = 0
 sparsify.enabled = 0
