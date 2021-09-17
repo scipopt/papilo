@@ -13,7 +13,7 @@ Features
 - applying the reductions of the presolver found immediately to the problem so that the next presolver can work with the reduced problem if PaPILO is used with one thread.
     This feature can be turned off by parameter (presolve.sequentialreductionapplying).
 - DualFix: setting the variable to infinity, if objective is zero and the bound unbounded
-- ParallelRowDetection: adding new ReductionType RHS_LESS_RESTRICTIVE to reduce the number of conflicts to other presolvers
+- ParallelRowDetection: adding new ReductionType RHS_LESS_RESTRICTIVE/LHS_LESS_RESTRICTIVE to reduce the number of conflicts to other presolvers
 - SimpleSubstitution: adding detection for infeasibility
 - ConstraintPropagation, DualFix, SimplifyInequality, CoefficientStrengthening, SimpleSubstitution, SimpleProbing, ImpliedInteger: parallelising presolver internally
 - ParallelRowDetection, ParallelCol, DominatedCol: reordering the results to avoid internal conflicts

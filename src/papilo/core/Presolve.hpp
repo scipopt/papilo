@@ -347,6 +347,9 @@ class Presolve
 
    bool
    is_status_infeasible_or_unbounded( const PresolveStatus& status ) const;
+
+   bool
+   are_only_dual_postsolve_presolvers_enabled();
 };
 
 #ifdef PAPILO_USE_EXTERN_TEMPLATES
@@ -403,8 +406,15 @@ Presolve<REAL>::apply( Problem<REAL>& problem, bool store_dual_postsolve )
           PostsolveStorage<REAL>( problem, num, presolveOptions );
 
       if( store_dual_postsolve && problem.getNumIntegralCols() == 0 )
-         result.postsolve.postsolveType = PostsolveType::kFull;
-
+      {
+         if( presolveOptions.componentsmaxint == -1 and presolveOptions.detectlindep == 0 and
+             are_only_dual_postsolve_presolvers_enabled())
+            result.postsolve.postsolveType = PostsolveType::kFull;
+         else
+            msg.error(
+                "Please turn off the presolvers substitution and sparsify and "
+                "componentsdetection to use dual postsolving" );
+      }
       result.status = PresolveStatus::kUnchanged;
 
       std::stable_sort( presolvers.begin(), presolvers.end(),
@@ -1378,6 +1388,24 @@ Presolve<REAL>::get_round_type( Delegator delegator )
       break;
    }
    return "Undefined";
+}
+
+template <typename REAL>
+bool
+Presolve<REAL>::are_only_dual_postsolve_presolvers_enabled()
+{
+   for( int i = 0; i <= presolvers.size(); i++ )
+   {
+      if( presolvers[i]->isEnabled() )
+      {
+         if( presolvers[i]->getName().compare( "substitution" ) ||
+             presolvers[i]->getName().compare( "sparsify" ) ||
+             presolvers[i]->getName().compare( "dualinfer" ) ||
+             presolvers[i]->getName().compare( "doubletoneq" ) )
+            return false;
+      }
+   }
+   return true;
 }
 
 } // namespace papilo
