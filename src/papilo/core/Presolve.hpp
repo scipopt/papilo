@@ -408,7 +408,7 @@ Presolve<REAL>::apply( Problem<REAL>& problem, bool store_dual_postsolve )
       if( store_dual_postsolve && problem.getNumIntegralCols() == 0 )
       {
          if( presolveOptions.componentsmaxint == -1 and presolveOptions.detectlindep == 0 and
-             are_only_dual_postsolve_presolvers_enabled())
+             !are_only_dual_postsolve_presolvers_enabled())
             result.postsolve.postsolveType = PostsolveType::kFull;
          else
             msg.error(
