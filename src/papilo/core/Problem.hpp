@@ -350,40 +350,6 @@ class Problem
       return constraintMatrix.getRowSizes();
    }
 
-   /// fix infinite bounds to the correct value for presolve
-   /// checking for double values at the moment
-   // TODO: why isn't this called anywhere?
-   void
-   fixInfiniteBounds( REAL inf )
-   {
-      unsigned int numRows = getNRows();
-      Vec<REAL> lhs = constraintMatrix.getLeftHandSides();
-      Vec<REAL> rhs = constraintMatrix.getRightHandSides();
-
-      assert( lhs.size() == numRows );
-      assert( rhs.size() == numRows );
-
-      for( unsigned int i = 0; i < numRows; ++i )
-      {
-         if( lhs[i] <= -inf )
-            constraintMatrix.modifyLeftHandSide<true>( 0 );
-         if( rhs[i] >= inf )
-            constraintMatrix.modifyRightHandSide<true>( 0 );
-      }
-
-      unsigned int numCols = getNCols();
-      assert( variableDomains.lower_bounds.size() == numCols );
-      assert( variableDomains.upper_bounds.size() == numCols );
-
-      for( unsigned int i = 0; i < numCols; ++i )
-      {
-         if( variableDomains.lower_bounds[i] <= -inf )
-            variableDomains.flags[i].set( ColFlag::kLbInf );
-         if( variableDomains.upper_bounds[i] >= inf )
-            variableDomains.flags[i].set( ColFlag::kUbInf );
-      }
-   }
-
    /// substitute a variable in the objective using an equality constraint
    /// given by a row index
    void
@@ -464,7 +430,8 @@ class Problem
 
          REAL activity = activitySum.get();
 
-         if( !rflags[i].test( RowFlag::kRhsInf ) && activity > rhs[i] )
+         if( !rflags[i].test( RowFlag::kRhsInf )
+             && num.isFeasGT( activity, rhs[i] ) )
          {
             Message::debug( this,
                             "the activity {} of constraint {}  "
@@ -473,7 +440,8 @@ class Problem
             rowviolation = num.max( rowviolation, activity - rhs[i] );
          }
 
-         if( !rflags[i].test( RowFlag::kLhsInf ) && activity < lhs[i] )
+         if( !rflags[i].test( RowFlag::kLhsInf )
+             && num.isFeasLT( activity, rhs[i] ) )
          {
             Message::debug( this,
                             "the activity {} of constraint {}  "
@@ -521,14 +489,6 @@ class Problem
       return locks;
    }
 
-   /// returns a const reference to the vector of locks of each column, the
-   /// locks include the objective cutoff constraint
-   const Vec<Locks>&
-   getLocks() const
-   {
-      return locks;
-   }
-
    std::pair<Vec<int>, Vec<int>>
    compress( bool full = false )
    {
@@ -564,13 +524,6 @@ class Problem
    setInputTolerance( REAL inputTolerance )
    {
       this->inputTolerance = std::move( inputTolerance );
-   }
-
-   /// gets the tolerance of the input format (if it was set)
-   const REAL&
-   getInputTolerance() const
-   {
-      return inputTolerance;
    }
 
    void
@@ -618,20 +571,6 @@ class Problem
                                 locks[col].up );
              }
           } );
-   }
-
-   /// gets the maximum absolut coefficient value
-   REAL
-   getMaxAbsCoefficient()
-   {
-      REAL maxCoef{ 0 };
-
-      for( int i = 0; i != constraintMatrix.getNCols(); ++i )
-         maxCoef = std::max(
-             constraintMatrix.getColumnCoefficients( i ).getMaxAbsValue(),
-             maxCoef );
-
-      return maxCoef;
    }
 
    std::pair<int, int>

@@ -35,7 +35,7 @@ implint.enabled = 1
 implint.parallel = 0
 
 # verbosity to be used: 0 - quiet, 1 - errors, 2 - warnings, 3 - normal, 4 - detailed  [Integer: [0,4]]
-message.verbosity = 4
+message.verbosity = 3
 
 # epsilon tolerance to consider two values equal  [Numerical: [0,0.10000000000000001]]
 numerics.epsilon = 1.0000000000000001e-09
@@ -86,7 +86,7 @@ presolve.removeslackvars = 1
 presolve.threads = 0
 
 # if only one thread (presolve.threads = 0) is used, apply the reductions immediately afterwards
-presolve.sequentiellreductionapplying = 1
+presolve.sequentialreductionapplying = 1
 
 # time limit for presolve  [Numerical: [0,1.7976931348623157e+308]]
 presolve.tlim = 1.7976931348623157e+308
@@ -133,7 +133,7 @@ sparsify.maxscale = 1000
 # is presolver stuffing enabled  [Boolean: {0,1}]
 stuffing.enabled = 1
 
-# should substitution of binary variables with general integers be allowd  [Boolean: {0,1}]
+# should substitution of binary variables with general integers be allowed  [Boolean: {0,1}]
 substitution.binarieswithints = 1
 
 # is presolver substitution enabled  [Boolean: {0,1}]

@@ -642,6 +642,12 @@ MpsParser<REAL>::parseRhs( boost::iostreams::filtering_istream& file )
          }
       };
 
+      // Documentation Link to qi:
+      // https://www.boost.org/doc/libs/1_66_0/libs/spirit/doc/html/spirit/qi/tutorials/warming_up.html
+      // +: Parse a one or more times
+      // lexeme[a]: Disable skip parsing for a, does pre-skipping
+      // as_string: Force atomic assignment for string attributes
+      // graph: Matches a character based on the equivalent of std::isgraph in the current character set
       if( !qi::phrase_parse(
               it, strline.end(),
               +( qi::lexeme[qi::as_string[+qi::graph][( parsename )]] >>

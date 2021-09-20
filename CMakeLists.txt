@@ -1,5 +1,10 @@
 cmake_minimum_required (VERSION 3.5.0)
-project(papilo VERSION 1.1.0.0)
+
+set(PAPILO_VERSION_MAJOR 1)
+set(PAPILO_VERSION_MINOR 1)
+set(PAPILO_VERSION_PATCH 0)
+
+project(papilo VERSION ${PAPILO_VERSION_MAJOR}.${PAPILO_VERSION_MINOR}.${PAPILO_VERSION_PATCH}.0)
 
 set(BOOST_MIN_VERSION 1.72)
 set(CMAKE_CXX_STANDARD 14)
@@ -106,6 +111,18 @@ find_or_download_package(
     CONFIGURE_ARGS -DTBB_TEST=OFF -DTBB_EXAMPLES=OFF -DTBB4PY_BUILD=OFF -DBUILD_SHARED_LIBS=OFF)
 find_package(Threads REQUIRED)
 
+include(CMakePackageConfigHelpers)
+
+write_basic_package_version_file(
+   ${PROJECT_BINARY_DIR}/papilo-config-version.cmake
+   VERSION ${PAPILO_VERSION_MAJOR}.${PAPILO_VERSION_MINOR}.${PAPILO_VERSION_PATCH}
+   COMPATIBILITY SameMajorVersion
+)
+
+find_package(TBB MODULE REQUIRED)
+if(TBB_BUILT_STATIC_LIB)
+   install(FILES ${TBB_STATIC_LIB} DESTINATION lib)
+endif()
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
    file(TO_CMAKE_PATH "$ENV{TBBROOT}" TBB_ROOTDIR)
    if(CMAKE_CL_64)

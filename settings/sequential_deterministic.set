@@ -2,4 +2,4 @@
 presolve.threads = 1
 
 # if only one thread (presolve.threads = 0) is used, apply the reductions immediately afterwards
-presolve.sequentiellreductionapplying = 1
+presolve.sequentialreductionapplying = 0
