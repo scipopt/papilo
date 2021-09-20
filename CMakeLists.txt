@@ -316,11 +316,6 @@ install(FILES
    ${PROJECT_SOURCE_DIR}/src/papilo/presolvers/Sparsify.hpp
    DESTINATION include/papilo/presolvers)
 
-## install external library header files
-#install(DIRECTORY
-#   ${TBB_INCLUDE_DIR}/tbb
-#   DESTINATION include/papilo-external)
-
 install(FILES
    ${PROJECT_SOURCE_DIR}/external/fmt/chrono.h
    ${PROJECT_SOURCE_DIR}/external/fmt/color.h
@@ -353,14 +348,11 @@ install(FILES
 
 # configure the config file for the build tree
 set(QUADMATH_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/Modules)
-set(PAPILO_TBB_STATIC_LIB_LOCATION ${TBB_STATIC_LIB})
 configure_file(${PROJECT_SOURCE_DIR}/papilo-config.cmake.in
   "${CMAKE_BINARY_DIR}/papilo-config.cmake" @ONLY)
 
 # configure and install config file for installation
 set(QUADMATH_MODULE_PATH "\${CMAKE_CURRENT_LIST_DIR}")
-get_filename_component(TBB_STATIC_LIB_NAME "${TBB_STATIC_LIB}" NAME)
-set(PAPILO_TBB_STATIC_LIB_LOCATION "\${CMAKE_CURRENT_LIST_DIR}/../../${TBB_STATIC_LIB_NAME}")
 configure_file(${PROJECT_SOURCE_DIR}/papilo-config.cmake.in
     "${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/papilo-config.cmake" @ONLY)
 
