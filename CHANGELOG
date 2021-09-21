@@ -13,6 +13,7 @@ Features
 - SimpleSubstitution: adding detection for infeasibility
 - ConstraintPropagation, DualFix, SimplifyInequality, CoefficientStrengthening, SimpleSubstitution, SimpleProbing, ImpliedInteger: parallelising presolver internally
 - ParallelRowDetection, ParallelCol, DominatedCol: reordering the results to avoid internal conflicts
+- depending on TBB 2021 with the appropriate cmake module. TBB 2020 is not supported anymore
 - supporting backend solver HiGHS 1.0.0 (git hash: ca0c21da)
 
 Performance improvements
