@@ -244,6 +244,7 @@ add_subdirectory(${PROJECT_SOURCE_DIR}/test)
 install(FILES
    ${PROJECT_BINARY_DIR}/papilo/CMakeConfig.hpp
    ${PROJECT_SOURCE_DIR}/src/papilo/Config.hpp
+   ${PROJECT_BINARY_DIR}/papilo-config-version.cmake
    DESTINATION include/papilo)
 
 install(FILES
