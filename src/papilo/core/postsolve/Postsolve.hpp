@@ -868,9 +868,9 @@ Postsolve<REAL>::apply_row_bound_change_to_original_solution(
       else if( originalSolution.rowBasisStatus[row] == VarBasisStatus::FIXED )
       {
          if( isLhs)
-            originalSolution.rowBasisStatus[row] == VarBasisStatus::ON_UPPER;
+            originalSolution.rowBasisStatus[row] = VarBasisStatus::ON_UPPER;
          else
-            originalSolution.rowBasisStatus[row] == VarBasisStatus::ON_LOWER;
+            originalSolution.rowBasisStatus[row] = VarBasisStatus::ON_LOWER;
          // TODO: handle case ZERO
       }
    }
@@ -997,6 +997,7 @@ Postsolve<REAL>::apply_var_bound_change_forced_by_column_in_original_solution(
          originalSolution.varBasisStatus[col] = VarBasisStatus::BASIC;
          break;
       }
+      case VarBasisStatus::ZERO:
       case VarBasisStatus::UNDEFINED:
       case VarBasisStatus::BASIC:
          break;
