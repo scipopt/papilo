@@ -234,9 +234,9 @@ ParallelColDetection<REAL>::findParallelCols(
    if( constMatrix.getColumnCoefficients( bucket[0] ).getLength() <= 1 )
       return;
 
-   assert( not cflags[bucket[bucketSize - 1]].test( ColFlag::kInactive ) );
+   assert( !cflags[bucket[bucketSize - 1]].test( ColFlag::kInactive ) );
    // only continuous columns
-   if( not cflags[bucket[bucketSize - 1]].test( ColFlag::kIntegral ) )
+   if( !cflags[bucket[bucketSize - 1]].test( ColFlag::kIntegral ) )
    {
 
       int col1 = bucket[0];
@@ -246,7 +246,7 @@ ParallelColDetection<REAL>::findParallelCols(
       for( int j = 1; j < bucketSize; ++j )
       {
          int col2 = bucket[j];
-         assert( not cflags[col2].test( ColFlag::kIntegral ) );
+         assert( !cflags[col2].test( ColFlag::kIntegral ) );
          const REAL* coefs2 =
              constMatrix.getColumnCoefficients( col2 ).getValues();
 
@@ -286,8 +286,8 @@ ParallelColDetection<REAL>::findParallelCols(
 
             bool parallel = check_parallelity( num, obj, col1, length, coefs1,
                                                col2, coefs2 );
-            if( parallel and
-                not checkDomainsForHoles( col1, col2, coefs1[0] / coefs2[0] ) )
+            if( parallel &&
+                !checkDomainsForHoles( col1, col2, coefs1[0] / coefs2[0] ) )
             {
                TransactionGuard<REAL> tg{ reductions };
                reductions.lockCol( col2 );
@@ -305,7 +305,7 @@ ParallelColDetection<REAL>::findParallelCols(
       const int length = col1vec.getLength();
       int continuous_cols;
 
-      assert( not cflags[col1].test( ColFlag::kIntegral ) );
+      assert( !cflags[col1].test( ColFlag::kIntegral ) );
       {
          const REAL* coefs1 = col1vec.getValues();
 
@@ -330,7 +330,7 @@ ParallelColDetection<REAL>::findParallelCols(
          const REAL* coefs2 =
              constMatrix.getColumnCoefficients( col2 ).getValues();
          if( ( can_be_merged( num, lbs, ubs, col1, coefs1, coefs2,
-                              cflags ) ) and
+                              cflags ) ) &&
              check_parallelity( num, obj, col1, length, coefs1, col2, coefs2 ) )
          {
             TransactionGuard<REAL> tg{ reductions };
@@ -373,7 +373,7 @@ ParallelColDetection<REAL>::findParallelCols(
 
             bool parallel = check_parallelity( num, obj, int_col, length,
                                                int_coefs1, col2, coefs2 );
-            if( parallel and not checkDomainsForHoles(
+            if( parallel && !checkDomainsForHoles(
                                  int_col, col2, int_coefs1[0] / coefs2[0] ) )
             {
                TransactionGuard<REAL> tg{ reductions };
@@ -392,8 +392,8 @@ ParallelColDetection<REAL>::can_be_merged(
     const Num<REAL>& num, const Vec<REAL>& lbs, const Vec<REAL>& ubs, int col1,
     const REAL* coefs1, const REAL* coefs2, const Vec<ColFlags>& cflags ) const
 {
-   return cflags[col1].test( ColFlag::kLbInf, ColFlag::kUbInf ) or
-          not num.isLT(
+   return cflags[col1].test( ColFlag::kLbInf, ColFlag::kUbInf ) ||
+          !num.isLT(
               abs( ( ubs[col1] - lbs[col1] ) * coefs1[0] / coefs2[0] ), 1 );
 }
 
@@ -540,17 +540,17 @@ ParallelColDetection<REAL>::execute( const Problem<REAL>& problem,
           bool flag_a_integer = cflags[a].test( ColFlag::kIntegral );
           bool flag_b_integer = cflags[b].test( ColFlag::kIntegral );
           if( flag_a_integer != flag_b_integer )
-             return not flag_a_integer;
+             return !flag_a_integer;
           return // sort by scale factor
-              abs( obj[a] ) < abs( obj[b] ) or
+              abs( obj[a] ) < abs( obj[b] ) ||
               // sort by scale factor if obj is zero
-              ( abs( obj[a] ) == abs( obj[b] ) and obj[a] == 0 and
+              ( abs( obj[a] ) == abs( obj[b] ) && obj[a] == 0 &&
                 determineOderingForZeroObj(
                     constMatrix.getColumnCoefficients( a ).getValues()[0],
                     constMatrix.getColumnCoefficients( b ).getValues()[0],
-                    colperm[a], colperm[b] ) ) or
+                    colperm[a], colperm[b] ) ) ||
               // sort by permutation
-              ( abs( obj[a] ) == abs( obj[b] ) and obj[a] != 0 and
+              ( abs( obj[a] ) == abs( obj[b] ) && obj[a] != 0 &&
                 colperm[a] < colperm[b] );
        } );
 

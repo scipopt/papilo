@@ -366,8 +366,8 @@ class ProblemBuilder
       ConstraintMatrix<REAL>& matrix = problem.getConstraintMatrix();
       for(int i=0; i< problem.getNRows(); i++){
          RowFlags rowFlag = matrix.getRowFlags()[i];
-         if( not rowFlag.test( RowFlag::kRhsInf ) and
-             not rowFlag.test( RowFlag::kLhsInf ) and
+         if( !rowFlag.test( RowFlag::kRhsInf ) and
+             !rowFlag.test( RowFlag::kLhsInf ) and
              matrix.getLeftHandSides()[i] == matrix.getRightHandSides()[i] )
             matrix.getRowFlags()[i].set(RowFlag::kEquation);
       }

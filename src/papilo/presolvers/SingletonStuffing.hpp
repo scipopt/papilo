@@ -141,9 +141,9 @@ SingletonStuffing<REAL>::execute( const Problem<REAL>& problem,
             if( ubimplied )
                reductions.changeRowRHSInf( row );
 
-            if( not lbimplied and lower_bounds[col] != 0 )
+            if( !lbimplied  && lower_bounds[col] != 0 )
                reductions.changeRowLHS( row, side - lower_bounds[col] * val );
-            if(not ubimplied and  upper_bounds[col] != 0 )
+            if(!ubimplied  &&  upper_bounds[col] != 0 )
                reductions.changeRowRHS( row, side - upper_bounds[col] * val );
 
          }
@@ -155,9 +155,9 @@ SingletonStuffing<REAL>::execute( const Problem<REAL>& problem,
             if( ubimplied )
                reductions.changeRowLHSInf( row );
 
-            if( not lbimplied and lower_bounds[col] != 0 )
+            if( !lbimplied  && lower_bounds[col] != 0 )
                reductions.changeRowRHS( row, side - lower_bounds[col] * val );
-            if( not ubimplied and upper_bounds[col] != 0 )
+            if( !ubimplied  && upper_bounds[col] != 0 )
                reductions.changeRowLHS( row, side - upper_bounds[col] * val );
          }
       }

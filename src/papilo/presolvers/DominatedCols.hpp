@@ -482,8 +482,8 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
                   int smaller_row_b = smaller_first_b ? b.col1 : b.col2;
                   if( smaller_row_a != smaller_row_b )
                      return smaller_row_a < smaller_row_b;
-                  return ( ( not smaller_first_a ) ? a.col1 : a.col2 ) <
-                         ( ( not smaller_first_b ) ? b.col1 : b.col2 );
+                  return ( ( !smaller_first_a ) ? a.col1 : a.col2 ) <
+                         ( ( !smaller_first_b ) ? b.col1 : b.col2 );
                } );
 
       for( int i = 0; i < domcolreductions.size(); i++ )

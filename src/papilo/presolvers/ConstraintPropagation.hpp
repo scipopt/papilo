@@ -133,7 +133,7 @@ ConstraintPropagation<REAL>::execute( const Problem<REAL>& problem,
             if( domains.flags[col].test( ColFlag::kLbInf ) ||
                 val - domains.lower_bounds[col] > +1000 * num.getFeasTol() )
             {
-               if(not skip_variable_tightening)
+               if(!skip_variable_tightening)
                {
                   reductions.changeColLB( col, val, row );
                   result = PresolveStatus::kReduced;
@@ -179,7 +179,7 @@ ConstraintPropagation<REAL>::execute( const Problem<REAL>& problem,
             if( domains.flags[col].test( ColFlag::kUbInf ) ||
                 val - domains.upper_bounds[col] < -1000 * num.getFeasTol() )
             {
-               if(not skip_variable_tightening)
+               if(!skip_variable_tightening)
                {
                   reductions.changeColUB( col, val, row );
                   result = PresolveStatus::kReduced;
@@ -278,7 +278,7 @@ ConstraintPropagation<REAL>::execute( const Problem<REAL>& problem,
                           val - domains.lower_bounds[col] >
                               +1000 * num.getFeasTol() )
                       {
-                         if( not skip_variable_tightening )
+                         if( !skip_variable_tightening )
                          {
                             stored_reductions[j].changeColLB( col, val, row );
                             local_status = PresolveStatus::kReduced;
@@ -328,7 +328,7 @@ ConstraintPropagation<REAL>::execute( const Problem<REAL>& problem,
                           val - domains.upper_bounds[col] <
                               -1000 * num.getFeasTol() )
                       {
-                         if(not skip_variable_tightening)
+                         if(!skip_variable_tightening)
                          {
                             stored_reductions[j].changeColUB( col, val, row );
                             local_status = PresolveStatus::kReduced;

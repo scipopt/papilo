@@ -144,12 +144,12 @@ SingletonCols<REAL>::execute( const Problem<REAL>& problem,
 
                if( lowerboundImplied )
                   reductions.changeRowLHSInf( row );
-               else if( not num.isZero(lower_bounds[col]) )
+               else if( !num.isZero(lower_bounds[col]) )
                   reductions.changeRowLHS( row,
                                            side - lower_bounds[col] * val );
                if( ubimplied )
                   reductions.changeRowRHSInf( row );
-               else if( not num.isZero(upper_bounds[col]) )
+               else if( !num.isZero(upper_bounds[col]) )
                   reductions.changeRowRHS( row,
                                            side - upper_bounds[col] * val );
             }
@@ -157,12 +157,12 @@ SingletonCols<REAL>::execute( const Problem<REAL>& problem,
             {
                if( ubimplied )
                   reductions.changeRowRHSInf( row );
-               else if( not num.isZero(upper_bounds[col]) )
+               else if( !num.isZero(upper_bounds[col]) )
                   reductions.changeRowRHS( row,
                                            side - upper_bounds[col] * val );
                if( lowerboundImplied )
                   reductions.changeRowLHSInf( row );
-               else if( not num.isZero(lower_bounds[col]) )
+               else if( !num.isZero(lower_bounds[col]) )
                   reductions.changeRowLHS( row,
                                            side - lower_bounds[col] * val );
             }
@@ -173,13 +173,13 @@ SingletonCols<REAL>::execute( const Problem<REAL>& problem,
             {
                if( lowerboundImplied )
                   reductions.changeRowRHSInf( row );
-               else if( not num.isZero(lower_bounds[col]))
+               else if( !num.isZero(lower_bounds[col]))
                   reductions.changeRowRHS( row,
                                            side - lower_bounds[col] * val );
 
                if( ubimplied )
                   reductions.changeRowLHSInf( row );
-               else if( not num.isZero(upper_bounds[col]) )
+               else if( !num.isZero(upper_bounds[col]) )
                   reductions.changeRowLHS( row,
                                            side - upper_bounds[col] * val );
             }
@@ -187,14 +187,14 @@ SingletonCols<REAL>::execute( const Problem<REAL>& problem,
             {
                if( ubimplied )
                   reductions.changeRowLHSInf( row );
-               else if( not num.isZero(upper_bounds[col])  )
+               else if( !num.isZero(upper_bounds[col])  )
                   reductions.changeRowLHS( row,
                                            side - upper_bounds[col] * val );
 
                if( lowerboundImplied )
                   reductions.changeRowRHSInf( row );
 
-               else if( not num.isZero(lower_bounds[col]) )
+               else if( !num.isZero(lower_bounds[col]) )
                   reductions.changeRowRHS( row,
                                            side - lower_bounds[col] * val );
             }
@@ -247,7 +247,7 @@ SingletonCols<REAL>::execute( const Problem<REAL>& problem,
 
          if( !ubimplied &&
              ( !problemUpdate.getPresolveOptions().removeslackvars ||
-               ( !lowerboundImplied && not num.isZero(obj[col]) ) ) )
+               ( !lowerboundImplied && !num.isZero(obj[col]) ) ) )
             continue;
 
          if( cflags[col].test( ColFlag::kIntegral ) )
@@ -307,7 +307,7 @@ SingletonCols<REAL>::execute( const Problem<REAL>& problem,
          // dual fix to lower bound
          if( cflags[col].test( ColFlag::kLbInf ) )
          {
-            if( not num.isZero(obj[col]) )
+            if( !num.isZero(obj[col]) )
                return PresolveStatus::kUnbndOrInfeas;
 
             continue;
@@ -326,7 +326,7 @@ SingletonCols<REAL>::execute( const Problem<REAL>& problem,
          // dual fix to upper bound
          if( cflags[col].test( ColFlag::kUbInf ) )
          {
-            if( not num.isZero(obj[col]) )
+            if( !num.isZero(obj[col]) )
                return PresolveStatus::kUnbndOrInfeas;
 
             continue;
@@ -352,7 +352,7 @@ SingletonCols<REAL>::execute( const Problem<REAL>& problem,
          bool duallbinf = true;
          bool dualubinf = true;
 
-         assert( not num.isZero(val) );
+         assert( !num.isZero(val) );
 
          REAL duallb = obj[col] / val;
          REAL dualub = duallb;
@@ -417,7 +417,7 @@ SingletonCols<REAL>::execute( const Problem<REAL>& problem,
 
                if( !ubimplied &&
                    ( !problemUpdate.getPresolveOptions().removeslackvars ||
-                     ( !lowerboundImplied && not num.isZero(obj[col]) ) ) )
+                     ( !lowerboundImplied && !num.isZero(obj[col]) ) ) )
                   removevar = false;
             }
 
@@ -468,7 +468,7 @@ SingletonCols<REAL>::execute( const Problem<REAL>& problem,
 
                if( !ubimplied &&
                    ( !problemUpdate.getPresolveOptions().removeslackvars ||
-                     ( !lowerboundImplied && not num.isZero(obj[col]) ) ) )
+                     ( !lowerboundImplied && !num.isZero(obj[col]) ) ) )
                   removevar = false;
             }
 
