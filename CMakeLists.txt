@@ -379,6 +379,8 @@ endif()
 # export targets for build-tree linking
 export(TARGETS papilo ${CLUSOL_TARGET} FILE "${CMAKE_BINARY_DIR}/papilo-targets.cmake")
 
+install(DIRECTORY ${CMAKE_BINARY_DIR}/_deps DESTINATION .)
+
 # install targets
 install(TARGETS papilo ${CLUSOL_TARGET} EXPORT papilo-targets ARCHIVE DESTINATION lib LIBRARY DESTINATION lib)
 install(EXPORT papilo-targets DESTINATION lib/cmake/papilo)

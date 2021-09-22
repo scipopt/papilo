@@ -85,7 +85,7 @@ function(find_or_download_package)
             # FetchContent_Populate uses lower case name of FetchContent_Declare for directories
             string(TOLOWER "${ARG_NAME}" ARG_NAME_LOWER)
             build_package(
-                CONFIGURE_ARGS ${ARG_CONFIGURE_ARGS} -D "CMAKE_PREFIX_PATH=${FETCHCONTENT_INSTALL_DIR}"
+                CONFIGURE_ARGS ${ARG_CONFIGURE_ARGS} -D "CMAKE_PREFIX_PATH=${FETCHCONTENT_INSTALL_DIR}" -D "CMAKE_C_FLAGS=" -D "CMAKE_CXX_FLAGS="
                 SOURCE_DIR "${${ARG_NAME_LOWER}_SOURCE_DIR}"
                 BUILD_DIR "${${ARG_NAME_LOWER}_BINARY_DIR}"
                 INSTALL_DIR "${FETCHCONTENT_INSTALL_DIR}"
