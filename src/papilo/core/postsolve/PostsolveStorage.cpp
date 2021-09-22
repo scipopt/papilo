@@ -21,7 +21,7 @@
 /*                                                                           */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#include "PostsolveStorage.hpp"
+#include "papilo/core/postsolve/PostsolveStorage.hpp"
 
 namespace papilo
 {
