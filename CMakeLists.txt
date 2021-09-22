@@ -297,12 +297,6 @@ install(FILES
         ${PROJECT_SOURCE_DIR}/src/papilo/misc/tbb.hpp
         ${PROJECT_SOURCE_DIR}/src/papilo/misc/fmt.hpp
         ${PROJECT_SOURCE_DIR}/src/papilo/misc/Hash.hpp
-        ${PROJECT_SOURCE_DIR}/src/papilo/misc/dualpostsolve/CheckLevel.hpp
-        ${PROJECT_SOURCE_DIR}/src/papilo/misc/dualpostsolve/kkt_status.hpp
-        ${PROJECT_SOURCE_DIR}/src/papilo/misc/dualpostsolve/KktChecker.hpp
-        ${PROJECT_SOURCE_DIR}/src/papilo/misc/dualpostsolve/KktCheckHelper.hpp
-        ${PROJECT_SOURCE_DIR}/src/papilo/misc/dualpostsolve/KktInfo.hpp
-        ${PROJECT_SOURCE_DIR}/src/papilo/misc/dualpostsolve/KktState.hpp
         ${PROJECT_SOURCE_DIR}/src/papilo/misc/MultiPrecision.hpp
         ${PROJECT_SOURCE_DIR}/src/papilo/misc/Num.hpp
         ${PROJECT_SOURCE_DIR}/src/papilo/misc/NumericalStatistics.hpp
