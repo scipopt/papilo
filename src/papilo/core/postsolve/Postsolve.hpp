@@ -944,9 +944,9 @@ Postsolve<REAL>::apply_var_bound_change_forced_by_column_in_original_solution(
          }
 
          assert( not originalSolution.basisAvailabe or
-                 not num.isZero( originalSolution.reducedCosts[col_index] or
+                 not num.isZero( originalSolution.reducedCosts[col_index]) or
                                  originalSolution.varBasisStatus[col_index] !=
-                                     VarBasisStatus::BASIC ) );
+                                     VarBasisStatus::BASIC );
       }
       if( originalSolution.basisAvailabe and variables_removed_from_basis > 0 )
       {
