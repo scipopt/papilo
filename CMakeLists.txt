@@ -204,7 +204,7 @@ add_library(papilo-core STATIC
    src/papilo/core/ConstraintMatrix.cpp
    src/papilo/core/ProblemUpdate.cpp
    src/papilo/core/Presolve.cpp
-        src/papilo/core/postsolve/PostsolveStorage.cpp
+   src/papilo/core/postsolve/PostsolveStorage.cpp
    src/papilo/core/postsolve/Postsolve.cpp
    src/papilo/core/ProbingView.cpp
    src/papilo/presolvers/CoefficientStrengthening.cpp
@@ -273,6 +273,15 @@ install(FILES
      ${PROJECT_SOURCE_DIR}/src/papilo/core/Statistics.hpp
      ${PROJECT_SOURCE_DIR}/src/papilo/core/VariableDomains.hpp
    DESTINATION include/papilo/core)
+
+
+install(FILES
+     ${PROJECT_SOURCE_DIR}/src/papilo/core/postsolve/PostsolveStorage.hpp
+     ${PROJECT_SOURCE_DIR}/src/papilo/core/postsolve/Postsolve.hpp
+     ${PROJECT_SOURCE_DIR}/src/papilo/core/postsolve/PostsolveStatus.hpp
+     ${PROJECT_SOURCE_DIR}/src/papilo/core/postsolve/ReductionType.hpp
+     ${PROJECT_SOURCE_DIR}/src/papilo/core/postsolve/PostsolveType.hpp
+  DESTINATION include/papilo/core/postsolve)
 
 install(FILES
    ${PROJECT_SOURCE_DIR}/src/papilo/interfaces/HighsInterface.hpp
