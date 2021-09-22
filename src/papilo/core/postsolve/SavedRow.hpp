@@ -24,6 +24,12 @@
 #ifndef _PAPILO_CORE_SAVED_ROW_HPP_
 #define _PAPILO_CORE_SAVED_ROW_HPP_
 
+#include "papilo/misc/Num.hpp"
+#include "papilo/misc/Vec.hpp"
+#include "papilo/misc/StableSum.hpp"
+#include "papilo/core/Solution.hpp"
+#include "papilo/core/postsolve/ReductionType.hpp"
+
 namespace papilo
 {
 
