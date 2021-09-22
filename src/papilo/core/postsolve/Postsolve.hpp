@@ -24,10 +24,10 @@
 #ifndef _PAPILO_CORE_POSTSOLVE_SERVICE_HPP_
 #define _PAPILO_CORE_POSTSOLVE_SERVICE_HPP_
 
-#include "papilo/core/postsolve/BoundStorage.hpp"
+#include "SavedRow.hpp"
 #include "papilo/core/Problem.hpp"
 #include "papilo/core/ProblemUpdate.hpp"
-#include "papilo/core/SavedRow.hpp"
+#include "papilo/core/postsolve/BoundStorage.hpp"
 #include "papilo/core/postsolve/PostsolveStatus.hpp"
 #include "papilo/core/postsolve/PostsolveStorage.hpp"
 #include "papilo/core/postsolve/PostsolveType.hpp"

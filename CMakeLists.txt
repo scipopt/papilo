@@ -270,13 +270,14 @@ install(FILES
 
 
 install(FILES
-     ${PROJECT_SOURCE_DIR}/src/papilo/core/postsolve/PostsolveStorage.hpp
-     ${PROJECT_SOURCE_DIR}/src/papilo/core/postsolve/Postsolve.hpp
-     ${PROJECT_SOURCE_DIR}/src/papilo/core/postsolve/PostsolveStatus.hpp
-     ${PROJECT_SOURCE_DIR}/src/papilo/core/postsolve/ReductionType.hpp
-     ${PROJECT_SOURCE_DIR}/src/papilo/core/postsolve/PostsolveType.hpp
-     ${PROJECT_SOURCE_DIR}/src/papilo/core/postsolve/BoundStorage.hpp
-  DESTINATION include/papilo/core/postsolve)
+        ${PROJECT_SOURCE_DIR}/src/papilo/core/postsolve/BoundStorage.hpp
+        ${PROJECT_SOURCE_DIR}/src/papilo/core/postsolve/PostsolveStorage.hpp
+        ${PROJECT_SOURCE_DIR}/src/papilo/core/postsolve/Postsolve.hpp
+        ${PROJECT_SOURCE_DIR}/src/papilo/core/postsolve/PostsolveStatus.hpp
+        ${PROJECT_SOURCE_DIR}/src/papilo/core/postsolve/PostsolveType.hpp
+        ${PROJECT_SOURCE_DIR}/src/papilo/core/postsolve/ReductionType.hpp
+        ${PROJECT_SOURCE_DIR}/src/papilo/core/postsolve/SavedRow.hpp
+     DESTINATION include/papilo/core/postsolve)
 
 install(FILES
    ${PROJECT_SOURCE_DIR}/src/papilo/interfaces/HighsInterface.hpp
