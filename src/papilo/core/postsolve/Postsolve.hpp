@@ -24,7 +24,7 @@
 #ifndef _PAPILO_CORE_POSTSOLVE_SERVICE_HPP_
 #define _PAPILO_CORE_POSTSOLVE_SERVICE_HPP_
 
-#include "PostsolveStorage.hpp"
+#include "papilo/core/postsolve/PostsolveStorage.hpp"
 #include "papilo/core/BoundStorage.hpp"
 #include "papilo/core/Problem.hpp"
 #include "papilo/core/ProblemUpdate.hpp"

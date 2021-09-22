@@ -26,7 +26,6 @@ namespace papilo
 
 #include "papilo/core/postsolve/Postsolve.hpp"
 #include "papilo/core/postsolve/PostsolveStorage.hpp"
-#include <papilo/core/postsolve/PostsolveStorage.hpp>
 
 template <typename REAL>
 struct Validation

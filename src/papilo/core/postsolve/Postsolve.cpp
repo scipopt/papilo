@@ -21,7 +21,7 @@
 /*                                                                           */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#include "Postsolve.hpp"
+#include "papilo/core/postsolve/Postsolve.hpp"
 
 namespace papilo
 {
