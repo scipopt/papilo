@@ -25,17 +25,17 @@
 #define _PAPILO_CORE_POSTSOLVE_LISTENER_HPP_
 
 #include "papilo/core/Problem.hpp"
+#include "papilo/core/postsolve/PostsolveType.hpp"
+#include "papilo/core/postsolve/ReductionType.hpp"
 #include "papilo/misc/MultiPrecision.hpp"
 #include "papilo/misc/Num.hpp"
+#include "papilo/misc/PrimalDualSolValidation.hpp"
 #include "papilo/misc/StableSum.hpp"
 #include "papilo/misc/Vec.hpp"
 #include "papilo/misc/compress_vector.hpp"
 #include "papilo/misc/fmt.hpp"
 #include "papilo/misc/tbb.hpp"
 #include <fstream>
-#include "papilo/misc/dualpostsolve/PrimalDualSolValidation.hpp"
-#include "papilo/core/postsolve/PostsolveType.hpp"
-#include "papilo/core/postsolve/ReductionType.hpp"
 
 #include <boost/archive/text_iarchive.hpp>
 #include <boost/archive/text_oarchive.hpp>

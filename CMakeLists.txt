@@ -252,12 +252,7 @@ install(FILES
      ${PROJECT_SOURCE_DIR}/src/papilo/core/ConstraintMatrix.hpp
      ${PROJECT_SOURCE_DIR}/src/papilo/core/MatrixBuffer.hpp
      ${PROJECT_SOURCE_DIR}/src/papilo/core/Objective.hpp
-     ${PROJECT_SOURCE_DIR}/src/papilo/core/postsolve/PostsolveStorage.hpp
-     ${PROJECT_SOURCE_DIR}/src/papilo/core/postsolve/Postsolve.hpp
      ${PROJECT_SOURCE_DIR}/src/papilo/core/BoundStorage.hpp
-     ${PROJECT_SOURCE_DIR}/src/papilo/core/postsolve/PostsolveStatus.hpp
-     ${PROJECT_SOURCE_DIR}/src/papilo/core/postsolve/ReductionType.hpp
-     ${PROJECT_SOURCE_DIR}/src/papilo/core/postsolve/PostsolveType.hpp
      ${PROJECT_SOURCE_DIR}/src/papilo/core/Presolve.hpp
      ${PROJECT_SOURCE_DIR}/src/papilo/core/PresolveMethod.hpp
      ${PROJECT_SOURCE_DIR}/src/papilo/core/PresolveOptions.hpp
@@ -310,6 +305,7 @@ install(FILES
         ${PROJECT_SOURCE_DIR}/src/papilo/misc/MultiPrecision.hpp
         ${PROJECT_SOURCE_DIR}/src/papilo/misc/Num.hpp
         ${PROJECT_SOURCE_DIR}/src/papilo/misc/NumericalStatistics.hpp
+        ${PROJECT_SOURCE_DIR}/src/papilo/misc/PrimalDualSolValidation.hpp
         ${PROJECT_SOURCE_DIR}/src/papilo/misc/OptionsParser.hpp
         ${PROJECT_SOURCE_DIR}/src/papilo/misc/VersionLogger.hpp
         ${PROJECT_SOURCE_DIR}/src/papilo/misc/ParameterSet.hpp
