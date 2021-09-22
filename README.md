@@ -23,9 +23,8 @@ a library.
 Under the folder external/ there are additional packages that are directly included within PaPILO and have a
 liberal open-source license.
 
-Intel TBB is also included and PaPILO tries to compile a static version of TBB if the runtime library is missing.
-This fails on some systems currently and if any problems occur it is recommended to install an Intel TBB runtime library
-from, e.g., the systems package manager (`libtbb2` on debian/ubuntu-based distributions).
+Intel TBB 2021 is also included and PaPILO tries to compile a static version of TBB if the runtime library is missing.
+This fails on some systems currently and if any problems occur it is recommended to install an Intel TBB runtime library.
 
 # Building
 

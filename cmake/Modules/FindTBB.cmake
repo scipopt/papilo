@@ -1,101 +1,92 @@
+# Copyright (c) 2020-2021 Intel Corporation
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 include(FindPackageHandleStandardArgs)
 
-# Define search paths based on user input and environment variables
-set(TBB_SEARCH_DIR ${TBB_LIBRARY_DIR} ${TBB_ROOT_DIR} ${TBB_DIR} $ENV{TBB_INSTALL_DIR} $ENV{TBBROOT})
-
-# for windows add additional default search paths
-if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
-   set(TBB_DEFAULT_SEARCH_DIR  "C:/Program Files/Intel/TBB"
-                               "C:/Program Files (x86)/Intel/TBB")
-
-   if (CMAKE_CL_64)
-      list(APPEND TBB_LIB_PATH_SUFFIXES lib/intel64/vc14)
-      list(APPEND TBB_LIB_PATH_SUFFIXES bin/intel64/vc14)
-   else ()
-      list(APPEND TBB_LIB_PATH_SUFFIXES lib/ia32/vc14)
-      list(APPEND TBB_LIB_PATH_SUFFIXES bin/ia32/vc14)
-   endif ()
-
+# Firstly search for TBB in config mode (i.e. search for TBBConfig.cmake).
+find_package(TBB QUIET CONFIG)
+if (TBB_FOUND)
+    find_package_handle_standard_args(TBB CONFIG_MODE)
+    return()
 endif()
 
-# try to find the tbb library in the system
-
-if(APPLE)
-    foreach (i tbb tbb@2020 tbb@2020_U1 tbb@2020_U2 tbb@2020_U3 tbb@2020_U3_1)
-        foreach (j 2020_U1 2020_U2 2020_U3 2020_U3_1)
-            list(APPEND TBB_LIB_PATH_SUFFIXES ${i}/${j}/lib)
-        endforeach()
+if (NOT TBB_FIND_COMPONENTS)
+    set(TBB_FIND_COMPONENTS tbb tbbmalloc)
+    foreach (_tbb_component ${TBB_FIND_COMPONENTS})
+        set(TBB_FIND_REQUIRED_${_tbb_component} 1)
     endforeach()
-    find_library(TBB_LIBRARY
-                NAMES libtbb.dylib
-                HINTS ${TBB_SEARCH_DIR}
-                PATHS /usr/local/Cellar/
-                NO_DEFAULT_PATH
-                PATH_SUFFIXES ${TBB_LIB_PATH_SUFFIXES})
-elseif(CMAKE_SYSTEM_NAME STREQUAL "Windows")
-    find_library(TBB_LIBRARY
-                NAMES tbb
-                HINTS ${TBB_SEARCH_DIR}
-                PATHS ${TBB_DEFAULT_SEARCH_DIR}
-                PATH_SUFFIXES ${TBB_LIB_PATH_SUFFIXES})
+endif()
+
+if (WIN32)
+    list(APPEND ADDITIONAL_LIB_DIRS ENV PATH ENV LIB)
+    list(APPEND ADDITIONAL_INCLUDE_DIRS ENV INCLUDE ENV CPATH)
 else()
-    find_library(TBB_LIBRARY
-                NAMES libtbb.so.2
-                HINTS ${TBB_SEARCH_DIR}
-                PATHS ${TBB_DEFAULT_SEARCH_DIR}
-                PATH_SUFFIXES ${TBB_LIB_PATH_SUFFIXES})
+    list(APPEND ADDITIONAL_LIB_DIRS ENV LIBRARY_PATH ENV LD_LIBRARY_PATH ENV DYLD_LIBRARY_PATH)
+    list(APPEND ADDITIONAL_INCLUDE_DIRS ENV CPATH ENV C_INCLUDE_PATH ENV CPLUS_INCLUDE_PATH ENV INCLUDE_PATH)
 endif()
 
-set(TBB_BUILT_STATIC_LIB 0)
+find_path(_tbb_include_dir NAMES oneapi/tbb.h PATHS ${ADDITIONAL_INCLUDE_DIRS})
 
-# if the library was not found try to build a static library from source
-if((NOT TBB_LIBRARY) AND (NOT APPLE))
-   include(${CMAKE_CURRENT_LIST_DIR}/../../external/tbb/cmake/TBBBuild.cmake)
-   tbb_build(TBB_ROOT ${CMAKE_CURRENT_LIST_DIR}/../../external/tbb CONFIG_DIR TBB_DIR MAKE_ARGS extra_inc=big_iron.inc tbb_build_dir=${CMAKE_CURRENT_BINARY_DIR} tbb_build_prefix=tbb)
-   if(TBB_DIR)
-      # building was successful
-      find_library(TBB_STATIC_LIB
-         NAMES tbb
-         HINTS
-            ${CMAKE_CURRENT_BINARY_DIR}/tbb_release
-            ${CMAKE_CURRENT_BINARY_DIR}/tbb_debug)
-      if(TBB_STATIC_LIB)
-         # create an imported target that also links the thread libraries via its interface
-         set(TBB_BUILT_STATIC_LIB 1)
-         find_package( Threads )
-         list(APPEND linkinterface "${CMAKE_THREAD_LIBS_INIT}")
-         list(APPEND linkinterface $<$<PLATFORM_ID:Linux>:rt>)     # Link "rt" library on Linux
-         add_library(tbb STATIC IMPORTED)
-         set_target_properties(tbb PROPERTIES
-            IMPORTED_LOCATION "${TBB_STATIC_LIB}"
-            INTERFACE_LINK_LIBRARIES "${linkinterface}")
-         set(TBB_LIBRARY tbb)
-      endif()
-   endif()
+if (_tbb_include_dir)
+    # TODO: consider TBB_VERSION handling
+    set(_TBB_BUILD_MODES RELEASE DEBUG)
+    set(_TBB_DEBUG_SUFFIX _debug)
+
+    foreach (_tbb_component ${TBB_FIND_COMPONENTS})
+        if (NOT TARGET TBB::${_tbb_component})
+            add_library(TBB::${_tbb_component} SHARED IMPORTED)
+            set_property(TARGET TBB::${_tbb_component} APPEND PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${_tbb_include_dir})
+
+            foreach(_TBB_BUILD_MODE ${_TBB_BUILD_MODES})
+                set(_tbb_component_lib_name ${_tbb_component}${_TBB_${_TBB_BUILD_MODE}_SUFFIX})
+                if (WIN32)
+                    find_library(${_tbb_component_lib_name}_lib ${_tbb_component_lib_name}12.lib
+                        PATHS ${ADDITIONAL_LIB_DIRS})
+                    find_file(${_tbb_component_lib_name}_dll ${_tbb_component_lib_name}.dll
+                        PATHS ${ADDITIONAL_LIB_DIRS})
+
+                    set_target_properties(TBB::${_tbb_component} PROPERTIES
+                                          IMPORTED_LOCATION_${_TBB_BUILD_MODE} "${${_tbb_component_lib_name}_dll}"
+                                          IMPORTED_IMPLIB_${_TBB_BUILD_MODE}   "${${_tbb_component_lib_name}_lib}"
+                                          )
+                else()
+                    find_library(${_tbb_component_lib_name}_so lib${_tbb_component_lib_name}.so.12 lib${_tbb_component_lib_name}.12.dylib
+                        PATHS ${ADDITIONAL_LIB_DIRS})
+
+                    set_target_properties(TBB::${_tbb_component} PROPERTIES
+                                          IMPORTED_LOCATION_${_TBB_BUILD_MODE} "${${_tbb_component_lib_name}_so}"
+                                          )
+                endif()
+                if (${_tbb_component_lib_name}_lib AND ${_tbb_component_lib_name}_dll OR ${_tbb_component_lib_name}_so)
+                    set_property(TARGET TBB::${_tbb_component} APPEND PROPERTY IMPORTED_CONFIGURATIONS ${_TBB_BUILD_MODE})
+                    list(APPEND TBB_IMPORTED_TARGETS TBB::${_tbb_component})
+                    set(TBB_${_tbb_component}_FOUND 1)
+                endif()
+                unset(${_tbb_component_lib_name}_lib CACHE)
+                unset(${_tbb_component_lib_name}_dll CACHE)
+                unset(${_tbb_component_lib_name}_so CACHE)
+                unset(_tbb_component_lib_name)
+            endforeach()
+        endif()
+    endforeach()
+    unset(_TBB_BUILD_MODESS)
+    unset(_TBB_DEBUG_SUFFIX)
 endif()
+unset(_tbb_include_dir CACHE)
 
-if(NOT WIN32)
-  string(ASCII 27 Esc)
-  set(ColourReset "${Esc}[m")
-  set(Red         "${Esc}[31m")
-endif()
+list(REMOVE_DUPLICATES TBB_IMPORTED_TARGETS)
 
-if(APPLE)
-    message(STATUS "${Red}Please make sure that you have tbb 2020 installed, PaPILO < version 2 does not work with tbb 2021 and further. If the wrong version or none has been found, please specify TBB_DIR in you cmake call (i.e. cmake .. -DTBB_DIR=/path/to/tbb).${ColourReset}")
-elseif(NOT TBB_LIBRARY)
-    message(STATUS "${Red}If you have tbb 2020 installed and it has not been found, please specify TBB_DIR in you cmake call (i.e. cmake .. -DTBB_DIR=/path/to/tbb).${ColourReset}")
-endif()
-
-# TODO: modify FindTBB so that the version is saved in the corresponding variables
-#if(TBB_LIBRARY)
-#   file(READ "${TBB_LIBRARY}/tbb/tbb_stddef.h" _tbb_version_file)
-#   string(REGEX REPLACE ".*#define TBB_VERSION_MAJOR ([0-9]+).*" "\\1"
-#           TBB_VERSION_MAJOR "${_tbb_version_file}")
-#   string(REGEX REPLACE ".*#define TBB_VERSION_MINOR ([0-9]+).*" "\\1"
-#           TBB_VERSION_MINOR "${_tbb_version_file}")
-#   string(REGEX REPLACE ".*#define TBB_INTERFACE_VERSION ([0-9]+).*" "\\1"
-#           TBB_INTERFACE_VERSION "${_tbb_version_file}")
-#   set(TBB_VERSION "${TBB_VERSION_MAJOR}.${TBB_VERSION_MINOR}")
-#   message("${TBB_VERSION}")
-#endif()
-find_package_handle_standard_args(TBB REQUIRED_VARS TBB_LIBRARY)
+find_package_handle_standard_args(TBB
+                                  REQUIRED_VARS TBB_IMPORTED_TARGETS
+                                  HANDLE_COMPONENTS)
