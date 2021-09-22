@@ -14,7 +14,7 @@ When PaPILO is compiled as part of the SCIP Optimization Suite linking of SoPlex
 
 # Dependencies
 
-External dependencies that need to be installed by the user are the Intel TBB runtime library and boost headers.
+External dependencies that need to be installed by the user are the Intel TBB 2020 runtime library and boost headers.
 The executable additionally requires some of the boost runtime libraries that are not required when PaPILO is used as
 a library.
 Under the folder external/ there are additional packages that are directly included within PaPILO and have a
