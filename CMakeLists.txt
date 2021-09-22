@@ -252,7 +252,6 @@ install(FILES
      ${PROJECT_SOURCE_DIR}/src/papilo/core/ConstraintMatrix.hpp
      ${PROJECT_SOURCE_DIR}/src/papilo/core/MatrixBuffer.hpp
      ${PROJECT_SOURCE_DIR}/src/papilo/core/Objective.hpp
-     ${PROJECT_SOURCE_DIR}/src/papilo/core/BoundStorage.hpp
      ${PROJECT_SOURCE_DIR}/src/papilo/core/Presolve.hpp
      ${PROJECT_SOURCE_DIR}/src/papilo/core/PresolveMethod.hpp
      ${PROJECT_SOURCE_DIR}/src/papilo/core/PresolveOptions.hpp
@@ -276,6 +275,7 @@ install(FILES
      ${PROJECT_SOURCE_DIR}/src/papilo/core/postsolve/PostsolveStatus.hpp
      ${PROJECT_SOURCE_DIR}/src/papilo/core/postsolve/ReductionType.hpp
      ${PROJECT_SOURCE_DIR}/src/papilo/core/postsolve/PostsolveType.hpp
+     ${PROJECT_SOURCE_DIR}/src/papilo/core/postsolve/BoundStorage.hpp
   DESTINATION include/papilo/core/postsolve)
 
 install(FILES

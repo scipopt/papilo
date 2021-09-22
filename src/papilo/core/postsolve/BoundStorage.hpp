@@ -24,6 +24,9 @@
 #ifndef _PAPILO_CORE_STORED_HPP_
 #define _PAPILO_CORE_STORED_HPP_
 
+#include "papilo/misc/Num.hpp"
+#include "papilo/core/Problem.hpp"
+
 namespace papilo
 {
 
