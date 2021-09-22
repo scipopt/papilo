@@ -278,7 +278,7 @@ DualInfer<REAL>::execute( const Problem<REAL>& problem,
 
    // do domain propagation
    int nrounds = 0;
-   auto boundChanged = [&]( BoundChange boundChg, int dualCol, REAL newbound ) {
+   auto boundChanged = [&]( BoundChange boundChg, int dualCol, REAL newbound, int dualRow ) {
       auto rowvec = consMatrix.getRowCoefficients( dualCol );
 
       bool oldboundinf;
@@ -429,7 +429,7 @@ DualInfer<REAL>::execute( const Problem<REAL>& problem,
 
          auto colvec = consMatrix.getColumnCoefficients( dualRow );
 
-         propagate_row( colvec.getValues(), colvec.getIndices(),
+         propagate_row( dualRow, colvec.getValues(), colvec.getIndices(),
                         colvec.getLength(), dualActivities[dualRow],
                         dualLHS[dualRow], dualRHS[dualRow],
                         dualRowFlags[dualRow], dualLB, dualUB, dualColFlags,

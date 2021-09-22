@@ -62,7 +62,8 @@ TEST_CASE( "parallel-row-unchanged", "[presolve]" )
    Problem<double> problem = setupProblemWithNoParallelRows();
    Statistics statistics{};
    PresolveOptions presolveOptions{};
-   Postsolve<double> postsolve = Postsolve<double>( problem, num );
+   PostsolveStorage<double> postsolve =
+       PostsolveStorage<double>( problem, num, presolveOptions );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
    problemUpdate.checkChangedActivities();
@@ -84,7 +85,8 @@ TEST_CASE( "parallel-row-two-equations-infeasible-second-row-dominant",
        setupParallelRowWithTwoParallelEquations( 2.0, 3.0, 1, 3 );
    Statistics statistics{};
    PresolveOptions presolveOptions{};
-   Postsolve<double> postsolve = Postsolve<double>( problem, num );
+   PostsolveStorage<double> postsolve =
+       PostsolveStorage<double>( problem, num, presolveOptions );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
    problemUpdate.checkChangedActivities();
@@ -106,7 +108,8 @@ TEST_CASE( "parallel-row-two-equations-infeasible-first-row-dominant",
        setupParallelRowWithTwoParallelEquations( 2.0, 3.0, 3, 1 );
    Statistics statistics{};
    PresolveOptions presolveOptions{};
-   Postsolve<double> postsolve = Postsolve<double>( problem, num );
+   PostsolveStorage<double> postsolve =
+       PostsolveStorage<double>( problem, num, presolveOptions );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
    problemUpdate.checkChangedActivities();
@@ -128,7 +131,8 @@ TEST_CASE( "parallel-row-two-equations-feasible-second-row-dominant",
        setupParallelRowWithTwoParallelEquations( 1.0, 3.0, 1, 3 );
    Statistics statistics{};
    PresolveOptions presolveOptions{};
-   Postsolve<double> postsolve = Postsolve<double>( problem, num );
+   PostsolveStorage<double> postsolve =
+       PostsolveStorage<double>( problem, num, presolveOptions );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
    problemUpdate.checkChangedActivities();
@@ -162,7 +166,8 @@ TEST_CASE( "parallel-row-two-equations-feasible-first-row-dominant",
        setupParallelRowWithTwoParallelEquations( 3.0, 1.0, 3, 1 );
    Statistics statistics{};
    PresolveOptions presolveOptions{};
-   Postsolve<double> postsolve = Postsolve<double>( problem, num );
+   PostsolveStorage<double> postsolve =
+       PostsolveStorage<double>( problem, num, presolveOptions );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
    problemUpdate.checkChangedActivities();
@@ -196,7 +201,8 @@ TEST_CASE( "parallel-row-two-inequalities-redundant-row-second-row-dominant",
        setupProblemParallelRowWithTwoInequalities( 1.0, 3.0, -1.0, -3.0, 1, 3 );
    Statistics statistics{};
    PresolveOptions presolveOptions{};
-   Postsolve<double> postsolve = Postsolve<double>( problem, num );
+   PostsolveStorage<double> postsolve =
+       PostsolveStorage<double>( problem, num, presolveOptions );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
    problemUpdate.checkChangedActivities();
@@ -230,7 +236,8 @@ TEST_CASE( "parallel-row-two-inequalities-redundant-row-first-row-dominant",
        setupProblemParallelRowWithTwoInequalities( 1.0, 3.0, -1.0, -3.0, 3, 1 );
    Statistics statistics{};
    PresolveOptions presolveOptions{};
-   Postsolve<double> postsolve = Postsolve<double>( problem, num );
+   PostsolveStorage<double> postsolve =
+       PostsolveStorage<double>( problem, num, presolveOptions );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
    problemUpdate.checkChangedActivities();
@@ -265,7 +272,8 @@ TEST_CASE(
        setupProblemParallelRowWithTwoInequalities( 1.0, 3.0, 0.0, -3.0, 1, 3 );
    Statistics statistics{};
    PresolveOptions presolveOptions{};
-   Postsolve<double> postsolve = Postsolve<double>( problem, num );
+   PostsolveStorage<double> postsolve =
+       PostsolveStorage<double>( problem, num, presolveOptions );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
    problemUpdate.checkChangedActivities();
@@ -276,7 +284,7 @@ TEST_CASE(
        presolvingMethod.execute( problem, problemUpdate, num, reductions );
 
    REQUIRE( presolveStatus == PresolveStatus::kReduced );
-   REQUIRE( reductions.size() == 4 );
+   REQUIRE( reductions.size() == 5 );
    REQUIRE( reductions.getReduction( 0 ).col == RowReduction::LOCKED );
    REQUIRE( reductions.getReduction( 0 ).row == 2 );
    REQUIRE( reductions.getReduction( 0 ).newval == 0 );
@@ -286,13 +294,18 @@ TEST_CASE(
    REQUIRE( reductions.getReduction( 1 ).newval == 0 );
 
    REQUIRE( reductions.getReduction( 2 ).col ==
-            RowReduction::LHS_LESS_RESTRICTIVE );
-   REQUIRE( reductions.getReduction( 2 ).newval == 0 );
-   REQUIRE( reductions.getReduction( 2 ).row == 2 );
+            RowReduction::REASON_FOR_LESS_RESTRICTIVE_BOUND_CHANGE );
+   REQUIRE( reductions.getReduction( 2 ).newval == 2 );
+   REQUIRE( reductions.getReduction( 2 ).row == 0 );
 
-   REQUIRE( reductions.getReduction( 3 ).col == RowReduction::REDUNDANT );
+   REQUIRE( reductions.getReduction( 3 ).col ==
+            RowReduction::LHS_LESS_RESTRICTIVE );
    REQUIRE( reductions.getReduction( 3 ).newval == 0 );
-   REQUIRE( reductions.getReduction( 3 ).row == 0 );
+   REQUIRE( reductions.getReduction( 3 ).row == 2 );
+
+   REQUIRE( reductions.getReduction( 4 ).col == RowReduction::REDUNDANT );
+   REQUIRE( reductions.getReduction( 4 ).newval == 0 );
+   REQUIRE( reductions.getReduction( 4 ).row == 0 );
 }
 
 TEST_CASE(
@@ -305,7 +318,8 @@ TEST_CASE(
        setupProblemParallelRowWithTwoInequalities( 1.0, 3.0, -6.0, -1.0, 3, 1 );
    Statistics statistics{};
    PresolveOptions presolveOptions{};
-   Postsolve<double> postsolve = Postsolve<double>( problem, num );
+   PostsolveStorage<double> postsolve =
+       PostsolveStorage<double>( problem, num, presolveOptions );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
    problemUpdate.checkChangedActivities();
@@ -316,7 +330,7 @@ TEST_CASE(
        presolvingMethod.execute( problem, problemUpdate, num, reductions );
 
    REQUIRE( presolveStatus == PresolveStatus::kReduced );
-   REQUIRE( reductions.size() == 4 );
+   REQUIRE( reductions.size() == 5 );
    REQUIRE( reductions.getReduction( 0 ).col == RowReduction::LOCKED );
    REQUIRE( reductions.getReduction( 0 ).row == 0 );
    REQUIRE( reductions.getReduction( 0 ).newval == 0 );
@@ -326,13 +340,18 @@ TEST_CASE(
    REQUIRE( reductions.getReduction( 1 ).newval == 0 );
 
    REQUIRE( reductions.getReduction( 2 ).col ==
-            RowReduction::LHS_LESS_RESTRICTIVE );
-   REQUIRE( reductions.getReduction( 2 ).newval == -3 );
-   REQUIRE( reductions.getReduction( 2 ).row == 0 );
+            RowReduction::REASON_FOR_LESS_RESTRICTIVE_BOUND_CHANGE );
+   REQUIRE( reductions.getReduction( 2 ).newval == 0 );
+   REQUIRE( reductions.getReduction( 2 ).row == 2 );
 
-   REQUIRE( reductions.getReduction( 3 ).col == RowReduction::REDUNDANT );
-   REQUIRE( reductions.getReduction( 3 ).newval == 0 );
-   REQUIRE( reductions.getReduction( 3 ).row == 2 );
+   REQUIRE( reductions.getReduction( 3 ).col ==
+            RowReduction::LHS_LESS_RESTRICTIVE );
+   REQUIRE( reductions.getReduction( 3 ).newval == -3 );
+   REQUIRE( reductions.getReduction( 3 ).row == 0 );
+
+   REQUIRE( reductions.getReduction( 4 ).col == RowReduction::REDUNDANT );
+   REQUIRE( reductions.getReduction( 4 ).newval == 0 );
+   REQUIRE( reductions.getReduction( 4 ).row == 2 );
 }
 
 TEST_CASE(
@@ -345,7 +364,8 @@ TEST_CASE(
        setupProblemParallelRowWithTwoInequalities( 1.0, 5.0, 0.0, 0.0, 1, 3 );
    Statistics statistics{};
    PresolveOptions presolveOptions{};
-   Postsolve<double> postsolve = Postsolve<double>( problem, num );
+   PostsolveStorage<double> postsolve =
+       PostsolveStorage<double>( problem, num, presolveOptions );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
    problemUpdate.checkChangedActivities();
@@ -356,7 +376,7 @@ TEST_CASE(
        presolvingMethod.execute( problem, problemUpdate, num, reductions );
 
    REQUIRE( presolveStatus == PresolveStatus::kReduced );
-   REQUIRE( reductions.size() == 4 );
+   REQUIRE( reductions.size() == 5 );
    REQUIRE( reductions.getReduction( 0 ).col == RowReduction::LOCKED );
    REQUIRE( reductions.getReduction( 0 ).row == 2 );
    REQUIRE( reductions.getReduction( 0 ).newval == 0 );
@@ -366,13 +386,18 @@ TEST_CASE(
    REQUIRE( reductions.getReduction( 1 ).newval == 0 );
 
    REQUIRE( reductions.getReduction( 2 ).col ==
-            RowReduction::RHS_LESS_RESTRICTIVE );
-   REQUIRE( reductions.getReduction( 2 ).newval == 3 );
-   REQUIRE( reductions.getReduction( 2 ).row == 2 );
+            RowReduction::REASON_FOR_LESS_RESTRICTIVE_BOUND_CHANGE );
+   REQUIRE( reductions.getReduction( 2 ).newval == 2 );
+   REQUIRE( reductions.getReduction( 2 ).row == 0 );
 
-   REQUIRE( reductions.getReduction( 3 ).col == RowReduction::REDUNDANT );
-   REQUIRE( reductions.getReduction( 3 ).newval == 0 );
-   REQUIRE( reductions.getReduction( 3 ).row == 0 );
+   REQUIRE( reductions.getReduction( 3 ).col ==
+            RowReduction::RHS_LESS_RESTRICTIVE );
+   REQUIRE( reductions.getReduction( 3 ).newval == 3 );
+   REQUIRE( reductions.getReduction( 3 ).row == 2 );
+
+   REQUIRE( reductions.getReduction( 4 ).col == RowReduction::REDUNDANT );
+   REQUIRE( reductions.getReduction( 4 ).newval == 0 );
+   REQUIRE( reductions.getReduction( 4 ).row == 0 );
 }
 
 TEST_CASE(
@@ -385,7 +410,8 @@ TEST_CASE(
        setupProblemParallelRowWithTwoInequalities( 5.0, 1.0, 0.0, 0.0, 3, 1 );
    Statistics statistics{};
    PresolveOptions presolveOptions{};
-   Postsolve<double> postsolve = Postsolve<double>( problem, num );
+   PostsolveStorage<double> postsolve =
+       PostsolveStorage<double>( problem, num, presolveOptions );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
    problemUpdate.checkChangedActivities();
@@ -396,7 +422,7 @@ TEST_CASE(
        presolvingMethod.execute( problem, problemUpdate, num, reductions );
 
    REQUIRE( presolveStatus == PresolveStatus::kReduced );
-   REQUIRE( reductions.size() == 4 );
+   REQUIRE( reductions.size() == 5 );
    REQUIRE( reductions.getReduction( 0 ).col == RowReduction::LOCKED );
    REQUIRE( reductions.getReduction( 0 ).row == 0 );
    REQUIRE( reductions.getReduction( 0 ).newval == 0 );
@@ -406,13 +432,18 @@ TEST_CASE(
    REQUIRE( reductions.getReduction( 1 ).newval == 0 );
 
    REQUIRE( reductions.getReduction( 2 ).col ==
-            RowReduction::RHS_LESS_RESTRICTIVE );
-   REQUIRE( reductions.getReduction( 2 ).newval == 3 );
-   REQUIRE( reductions.getReduction( 2 ).row == 0 );
+            RowReduction::REASON_FOR_LESS_RESTRICTIVE_BOUND_CHANGE );
+   REQUIRE( reductions.getReduction( 2 ).newval == 0 );
+   REQUIRE( reductions.getReduction( 2 ).row == 2 );
 
-   REQUIRE( reductions.getReduction( 3 ).col == RowReduction::REDUNDANT );
-   REQUIRE( reductions.getReduction( 3 ).newval == 0 );
-   REQUIRE( reductions.getReduction( 3 ).row == 2 );
+   REQUIRE( reductions.getReduction( 3 ).col ==
+            RowReduction::RHS_LESS_RESTRICTIVE );
+   REQUIRE( reductions.getReduction( 3 ).newval == 3 );
+   REQUIRE( reductions.getReduction( 3 ).row == 0 );
+
+   REQUIRE( reductions.getReduction( 4 ).col == RowReduction::REDUNDANT );
+   REQUIRE( reductions.getReduction( 4 ).newval == 0 );
+   REQUIRE( reductions.getReduction( 4 ).row == 2 );
 }
 
 TEST_CASE( "parallel-row-two-inequalities-infeasible-first-row-dominant",
@@ -424,7 +455,8 @@ TEST_CASE( "parallel-row-two-inequalities-infeasible-first-row-dominant",
        setupProblemParallelRowWithTwoInequalities( 10.0, 2.0, 5.0, 0.0, 2, 1 );
    Statistics statistics{};
    PresolveOptions presolveOptions{};
-   Postsolve<double> postsolve = Postsolve<double>( problem, num );
+   PostsolveStorage<double> postsolve =
+       PostsolveStorage<double>( problem, num, presolveOptions );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
    problemUpdate.checkChangedActivities();
@@ -446,7 +478,8 @@ TEST_CASE( "parallel-row-two-inequalities-infeasible-second-row-dominant",
        setupProblemParallelRowWithTwoInequalities( 7.0, 2.0, 5.0, 0.0, 1, 2 );
    Statistics statistics{};
    PresolveOptions presolveOptions{};
-   Postsolve<double> postsolve = Postsolve<double>( problem, num );
+   PostsolveStorage<double> postsolve =
+       PostsolveStorage<double>( problem, num, presolveOptions );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
    problemUpdate.checkChangedActivities();
@@ -469,7 +502,8 @@ TEST_CASE( "parallel-row-two-inequalities-tighten-upper-bound-first-row-neg"
        setupProblemParallelRowWithTwoInequalities( 5.0, 0.0, 0.0, -1.0, 3, -1 );
    Statistics statistics{};
    PresolveOptions presolveOptions{};
-   Postsolve<double> postsolve = Postsolve<double>( problem, num );
+   PostsolveStorage<double> postsolve =
+       PostsolveStorage<double>( problem, num, presolveOptions );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
    problemUpdate.checkChangedActivities();
@@ -480,7 +514,7 @@ TEST_CASE( "parallel-row-two-inequalities-tighten-upper-bound-first-row-neg"
        presolvingMethod.execute( problem, problemUpdate, num, reductions );
 
    REQUIRE( presolveStatus == PresolveStatus::kReduced );
-   REQUIRE( reductions.size() == 4 );
+   REQUIRE( reductions.size() == 5 );
    REQUIRE( reductions.getReduction( 0 ).col == RowReduction::LOCKED );
    REQUIRE( reductions.getReduction( 0 ).row == 0 );
    REQUIRE( reductions.getReduction( 0 ).newval == 0 );
@@ -490,13 +524,18 @@ TEST_CASE( "parallel-row-two-inequalities-tighten-upper-bound-first-row-neg"
    REQUIRE( reductions.getReduction( 1 ).newval == 0 );
 
    REQUIRE( reductions.getReduction( 2 ).col ==
-            RowReduction::RHS_LESS_RESTRICTIVE );
-   REQUIRE( reductions.getReduction( 2 ).newval == 3 );
-   REQUIRE( reductions.getReduction( 2 ).row == 0 );
+            RowReduction::REASON_FOR_LESS_RESTRICTIVE_BOUND_CHANGE );
+   REQUIRE( reductions.getReduction( 2 ).newval == 0 );
+   REQUIRE( reductions.getReduction( 2 ).row == 2 );
 
-   REQUIRE( reductions.getReduction( 3 ).col == RowReduction::REDUNDANT );
-   REQUIRE( reductions.getReduction( 3 ).newval == 0 );
-   REQUIRE( reductions.getReduction( 3 ).row == 2 );
+   REQUIRE( reductions.getReduction( 3 ).col ==
+            RowReduction::RHS_LESS_RESTRICTIVE );
+   REQUIRE( reductions.getReduction( 3 ).newval == 3 );
+   REQUIRE( reductions.getReduction( 3 ).row == 0 );
+
+   REQUIRE( reductions.getReduction( 4 ).col == RowReduction::REDUNDANT );
+   REQUIRE( reductions.getReduction( 4 ).newval == 0 );
+   REQUIRE( reductions.getReduction( 4 ).row == 2 );
 }
 
 
@@ -508,7 +547,8 @@ TEST_CASE( "parallel-row-overwrite-inf-first-row-rhs-inf","[presolve]" )
        setupProblemParallelRowWithInfinity( true, 2, 2, 1, 1 );
    Statistics statistics{};
    PresolveOptions presolveOptions{};
-   Postsolve<double> postsolve = Postsolve<double>( problem, num );
+   PostsolveStorage<double> postsolve =
+       PostsolveStorage<double>( problem, num, presolveOptions );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
    problemUpdate.checkChangedActivities();
@@ -519,7 +559,7 @@ TEST_CASE( "parallel-row-overwrite-inf-first-row-rhs-inf","[presolve]" )
        presolvingMethod.execute( problem, problemUpdate, num, reductions );
 
    REQUIRE( presolveStatus == PresolveStatus::kReduced );
-   REQUIRE( reductions.size() == 4 );
+   REQUIRE( reductions.size() == 5 );
    REQUIRE( reductions.getReduction( 0 ).col == RowReduction::LOCKED );
    REQUIRE( reductions.getReduction( 0 ).row == 0 );
    REQUIRE( reductions.getReduction( 0 ).newval == 0 );
@@ -528,13 +568,18 @@ TEST_CASE( "parallel-row-overwrite-inf-first-row-rhs-inf","[presolve]" )
    REQUIRE( reductions.getReduction( 1 ).col == RowReduction::LOCKED );
    REQUIRE( reductions.getReduction( 1 ).newval == 0 );
 
-   REQUIRE( reductions.getReduction( 2 ).col == RowReduction::RHS_LESS_RESTRICTIVE );
-   REQUIRE( reductions.getReduction( 2 ).newval == 2 );
-   REQUIRE( reductions.getReduction( 2 ).row == 0 );
+   REQUIRE( reductions.getReduction( 2 ).col ==
+            RowReduction::REASON_FOR_LESS_RESTRICTIVE_BOUND_CHANGE );
+   REQUIRE( reductions.getReduction( 2 ).newval == 0 );
+   REQUIRE( reductions.getReduction( 2 ).row == 2 );
 
-   REQUIRE( reductions.getReduction( 3 ).col == RowReduction::REDUNDANT );
-   REQUIRE( reductions.getReduction( 3 ).newval == 0 );
-   REQUIRE( reductions.getReduction( 3 ).row == 2 );
+   REQUIRE( reductions.getReduction( 3 ).col == RowReduction::RHS_LESS_RESTRICTIVE );
+   REQUIRE( reductions.getReduction( 3 ).newval == 2 );
+   REQUIRE( reductions.getReduction( 3 ).row == 0 );
+
+   REQUIRE( reductions.getReduction( 4 ).col == RowReduction::REDUNDANT );
+   REQUIRE( reductions.getReduction( 4 ).newval == 0 );
+   REQUIRE( reductions.getReduction( 4 ).row == 2 );
 }
 
 TEST_CASE( "parallel-row-overwrite-inf-first-row-lhs-inf","[presolve]" )
@@ -545,7 +590,8 @@ TEST_CASE( "parallel-row-overwrite-inf-first-row-lhs-inf","[presolve]" )
        setupProblemParallelRowWithInfinity( false, 2, 2, 1, 1 );
    Statistics statistics{};
    PresolveOptions presolveOptions{};
-   Postsolve<double> postsolve = Postsolve<double>( problem, num );
+   PostsolveStorage<double> postsolve =
+       PostsolveStorage<double>( problem, num, presolveOptions );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
    problemUpdate.checkChangedActivities();
@@ -556,7 +602,7 @@ TEST_CASE( "parallel-row-overwrite-inf-first-row-lhs-inf","[presolve]" )
        presolvingMethod.execute( problem, problemUpdate, num, reductions );
 
    REQUIRE( presolveStatus == PresolveStatus::kReduced );
-   REQUIRE( reductions.size() == 4 );
+   REQUIRE( reductions.size() == 5 );
    REQUIRE( reductions.getReduction( 0 ).col == RowReduction::LOCKED );
    REQUIRE( reductions.getReduction( 0 ).row == 0 );
    REQUIRE( reductions.getReduction( 0 ).newval == 0 );
@@ -565,13 +611,18 @@ TEST_CASE( "parallel-row-overwrite-inf-first-row-lhs-inf","[presolve]" )
    REQUIRE( reductions.getReduction( 1 ).col == RowReduction::LOCKED );
    REQUIRE( reductions.getReduction( 1 ).newval == 0 );
 
-   REQUIRE( reductions.getReduction( 2 ).col == RowReduction::LHS_LESS_RESTRICTIVE );
-   REQUIRE( reductions.getReduction( 2 ).newval == 2 );
-   REQUIRE( reductions.getReduction( 2 ).row == 0 );
+   REQUIRE( reductions.getReduction( 2 ).col ==
+            RowReduction::REASON_FOR_LESS_RESTRICTIVE_BOUND_CHANGE );
+   REQUIRE( reductions.getReduction( 2 ).newval == 0 );
+   REQUIRE( reductions.getReduction( 2 ).row == 2 );
 
-   REQUIRE( reductions.getReduction( 3 ).col == RowReduction::REDUNDANT );
-   REQUIRE( reductions.getReduction( 3 ).newval == 0 );
-   REQUIRE( reductions.getReduction( 3 ).row == 2 );
+   REQUIRE( reductions.getReduction( 3 ).col == RowReduction::LHS_LESS_RESTRICTIVE );
+   REQUIRE( reductions.getReduction( 3 ).newval == 2 );
+   REQUIRE( reductions.getReduction( 3 ).row == 0 );
+
+   REQUIRE( reductions.getReduction( 4 ).col == RowReduction::REDUNDANT );
+   REQUIRE( reductions.getReduction( 4 ).newval == 0 );
+   REQUIRE( reductions.getReduction( 4 ).row == 2 );
 }
 
 TEST_CASE( "parallel-row-overwrite-inf-first-row-lhs-inf-neg-factor","[presolve]" )
@@ -582,7 +633,8 @@ TEST_CASE( "parallel-row-overwrite-inf-first-row-lhs-inf-neg-factor","[presolve]
        setupProblemParallelRowWithInfinity( false, -1, 2, -1, 1 );
    Statistics statistics{};
    PresolveOptions presolveOptions{};
-   Postsolve<double> postsolve = Postsolve<double>( problem, num );
+   PostsolveStorage<double> postsolve =
+       PostsolveStorage<double>( problem, num, presolveOptions );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
    problemUpdate.checkChangedActivities();
@@ -593,7 +645,7 @@ TEST_CASE( "parallel-row-overwrite-inf-first-row-lhs-inf-neg-factor","[presolve]
        presolvingMethod.execute( problem, problemUpdate, num, reductions );
 
    REQUIRE( presolveStatus == PresolveStatus::kReduced );
-   REQUIRE( reductions.size() == 4 );
+   REQUIRE( reductions.size() == 5 );
    REQUIRE( reductions.getReduction( 0 ).col == RowReduction::LOCKED );
    REQUIRE( reductions.getReduction( 0 ).row == 0 );
    REQUIRE( reductions.getReduction( 0 ).newval == 0 );
@@ -602,13 +654,18 @@ TEST_CASE( "parallel-row-overwrite-inf-first-row-lhs-inf-neg-factor","[presolve]
    REQUIRE( reductions.getReduction( 1 ).col == RowReduction::LOCKED );
    REQUIRE( reductions.getReduction( 1 ).newval == 0 );
 
-   REQUIRE( reductions.getReduction( 2 ).col == RowReduction::RHS_LESS_RESTRICTIVE );
-   REQUIRE( reductions.getReduction( 2 ).newval == 1 );
-   REQUIRE( reductions.getReduction( 2 ).row == 0 );
+   REQUIRE( reductions.getReduction( 2 ).col ==
+            RowReduction::REASON_FOR_LESS_RESTRICTIVE_BOUND_CHANGE );
+   REQUIRE( reductions.getReduction( 2 ).newval == 0 );
+   REQUIRE( reductions.getReduction( 2 ).row == 2 );
 
-   REQUIRE( reductions.getReduction( 3 ).col == RowReduction::REDUNDANT );
-   REQUIRE( reductions.getReduction( 3 ).newval == 0 );
-   REQUIRE( reductions.getReduction( 3 ).row == 2 );
+   REQUIRE( reductions.getReduction( 3 ).col == RowReduction::RHS_LESS_RESTRICTIVE );
+   REQUIRE( reductions.getReduction( 3 ).newval == 1 );
+   REQUIRE( reductions.getReduction( 3 ).row == 0 );
+
+   REQUIRE( reductions.getReduction( 4 ).col == RowReduction::REDUNDANT );
+   REQUIRE( reductions.getReduction( 4 ).newval == 0 );
+   REQUIRE( reductions.getReduction( 4 ).row == 2 );
 }
 
 TEST_CASE( "parallel-row-mixed-infeasible-first-row-equation","[presolve]" )
@@ -619,7 +676,8 @@ TEST_CASE( "parallel-row-mixed-infeasible-first-row-equation","[presolve]" )
        setupProblemParallelRowWithMixed( true, 2.2, 5.0, 2, 1 );
    Statistics statistics{};
    PresolveOptions presolveOptions{};
-   Postsolve<double> postsolve = Postsolve<double>( problem, num );
+   PostsolveStorage<double> postsolve =
+       PostsolveStorage<double>( problem, num, presolveOptions );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
    problemUpdate.checkChangedActivities();
@@ -640,7 +698,8 @@ TEST_CASE( "parallel-row-mixed-second-row-equation","[presolve]" )
        setupProblemParallelRowWithMixed( false, 0.0, 5.0, 2, 1 );
    Statistics statistics{};
    PresolveOptions presolveOptions{};
-   Postsolve<double> postsolve = Postsolve<double>( problem, num );
+   PostsolveStorage<double> postsolve =
+       PostsolveStorage<double>( problem, num, presolveOptions );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
    problemUpdate.checkChangedActivities();
@@ -673,7 +732,8 @@ TEST_CASE( "parallel-row-mixed-infeasible-second-row-equation","[presolve]" )
        setupProblemParallelRowWithMixed( false, 2.2, 5.0, 2, 1 );
    Statistics statistics{};
    PresolveOptions presolveOptions{};
-   Postsolve<double> postsolve = Postsolve<double>( problem, num );
+   PostsolveStorage<double> postsolve =
+       PostsolveStorage<double>( problem, num, presolveOptions );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
    problemUpdate.checkChangedActivities();
@@ -694,7 +754,8 @@ TEST_CASE( "parallel-row-multiple-parallel-rows", "[presolve]" )
    Problem<double> problem = setupParallelRowWithMultipleParallelRows();
    Statistics statistics{};
    PresolveOptions presolveOptions{};
-   Postsolve<double> postsolve = Postsolve<double>( problem, num );
+   PostsolveStorage<double> postsolve =
+       PostsolveStorage<double>( problem, num, presolveOptions );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
    problemUpdate.checkChangedActivities();

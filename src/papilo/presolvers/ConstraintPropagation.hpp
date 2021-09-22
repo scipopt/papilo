@@ -80,10 +80,17 @@ ConstraintPropagation<REAL>::execute( const Problem<REAL>& problem,
                    num.getFeasTol() }
            : REAL{ 0 };
 
+   // calculating the basis for variable tightening (not fixings) may lead in
+   // the postsolving step to a solution that is not in a vertex. In this case a
+   // crossover would be required is too expensive performance wise
+   const bool skip_variable_tightening =
+       problem.getNumIntegralCols() == 0 and
+       problemUpdate.getPresolveOptions().calculate_basis_for_dual;
+
    if( problemUpdate.getPresolveOptions().runs_sequentiell() or
        !problemUpdate.getPresolveOptions().constraint_propagation_parallel )
    {
-      auto add_boundchange = [&]( BoundChange boundChange, int col, REAL val ) {
+      auto add_boundchange = [&]( BoundChange boundChange, int col, REAL val, int row ) {
          // do not accept huge values as bounds
          if( num.isHugeVal( val ) )
             return;
@@ -116,8 +123,7 @@ ConstraintPropagation<REAL>::execute( const Problem<REAL>& problem,
                                      consMatrix.getMaxFeasChange(
                                          col, bnddist ) <= num.getFeasTol() ) )
                {
-                  // todo reductions.forcingRowToUpper(currentrow, col);
-                  reductions.fixCol( col, domains.upper_bounds[col] );
+                  reductions.fixCol( col, domains.upper_bounds[col], row );
                   result = PresolveStatus::kReduced;
                   return;
                }
@@ -127,8 +133,11 @@ ConstraintPropagation<REAL>::execute( const Problem<REAL>& problem,
             if( domains.flags[col].test( ColFlag::kLbInf ) ||
                 val - domains.lower_bounds[col] > +1000 * num.getFeasTol() )
             {
-               reductions.changeColLB( col, val );
-               result = PresolveStatus::kReduced;
+               if(!skip_variable_tightening)
+               {
+                  reductions.changeColLB( col, val, row );
+                  result = PresolveStatus::kReduced;
+               }
             }
          }
          else
@@ -160,8 +169,7 @@ ConstraintPropagation<REAL>::execute( const Problem<REAL>& problem,
                                      consMatrix.getMaxFeasChange(
                                          col, bnddist ) <= num.getFeasTol() ) )
                {
-                  // todo reductions.forcingRowToLower(currentrow, col);
-                  reductions.fixCol( col, domains.lower_bounds[col] );
+                  reductions.fixCol( col, domains.lower_bounds[col], row );
                   result = PresolveStatus::kReduced;
                   return;
                }
@@ -171,8 +179,11 @@ ConstraintPropagation<REAL>::execute( const Problem<REAL>& problem,
             if( domains.flags[col].test( ColFlag::kUbInf ) ||
                 val - domains.upper_bounds[col] < -1000 * num.getFeasTol() )
             {
-               reductions.changeColUB( col, val );
-               result = PresolveStatus::kReduced;
+               if(!skip_variable_tightening)
+               {
+                  reductions.changeColUB( col, val, row );
+                  result = PresolveStatus::kReduced;
+               }
             }
          }
       };
@@ -197,7 +208,7 @@ ConstraintPropagation<REAL>::execute( const Problem<REAL>& problem,
             // do nothing, singleton row presolver handles this bound change
             break;
          default:
-            propagate_row( rowvec.getValues(), rowvec.getIndices(),
+            propagate_row( row, rowvec.getValues(), rowvec.getIndices(),
                            rowvec.getLength(), activities[row], lhsValues[row],
                            rhsValues[row], rflags[row], domains.lower_bounds,
                            domains.upper_bounds, domains.flags,
@@ -220,7 +231,7 @@ ConstraintPropagation<REAL>::execute( const Problem<REAL>& problem,
                 PresolveStatus local_status = PresolveStatus::kUnchanged;
 
                 auto add_boundchange = [&]( BoundChange boundChange, int col,
-                                            REAL val ) {
+                                            REAL val, int row ) {
                    // do not accept huge values as bounds
                    if( num.isHugeVal( val ) )
                       return;
@@ -256,7 +267,7 @@ ConstraintPropagation<REAL>::execute( const Problem<REAL>& problem,
                                    num.getFeasTol() ) )
                          {
                             stored_reductions[j].fixCol(
-                                col, domains.upper_bounds[col] );
+                                col, domains.upper_bounds[col], row );
                             local_status = PresolveStatus::kReduced;
                             return;
                          }
@@ -267,8 +278,11 @@ ConstraintPropagation<REAL>::execute( const Problem<REAL>& problem,
                           val - domains.lower_bounds[col] >
                               +1000 * num.getFeasTol() )
                       {
-                         stored_reductions[j].changeColLB( col, val );
-                         local_status = PresolveStatus::kReduced;
+                         if( !skip_variable_tightening )
+                         {
+                            stored_reductions[j].changeColLB( col, val, row );
+                            local_status = PresolveStatus::kReduced;
+                         }
                       }
                    }
                    else
@@ -302,10 +316,8 @@ ConstraintPropagation<REAL>::execute( const Problem<REAL>& problem,
                                consMatrix.getMaxFeasChange( col, bnddist ) <=
                                    num.getFeasTol() ) )
                          {
-                            // todo reductions.forcingRowToLower(currentrow,
-                            // col);
                             stored_reductions[j].fixCol(
-                                col, domains.lower_bounds[col] );
+                                col, domains.lower_bounds[col], row );
                             local_status = PresolveStatus::kReduced;
                             return;
                          }
@@ -316,8 +328,11 @@ ConstraintPropagation<REAL>::execute( const Problem<REAL>& problem,
                           val - domains.upper_bounds[col] <
                               -1000 * num.getFeasTol() )
                       {
-                         stored_reductions[j].changeColUB( col, val );
-                         local_status = PresolveStatus::kReduced;
+                         if(!skip_variable_tightening)
+                         {
+                            stored_reductions[j].changeColUB( col, val, row );
+                            local_status = PresolveStatus::kReduced;
+                         }
                       }
                    }
                 };
@@ -343,7 +358,7 @@ ConstraintPropagation<REAL>::execute( const Problem<REAL>& problem,
                    // change
                    break;
                 default:
-                   propagate_row( rowvec.getValues(), rowvec.getIndices(),
+                   propagate_row( row, rowvec.getValues(), rowvec.getIndices(),
                                   rowvec.getLength(), activities[row],
                                   lhsValues[row], rhsValues[row], rflags[row],
                                   domains.lower_bounds, domains.upper_bounds,

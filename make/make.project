@@ -71,4 +71,3 @@ SHELL		= 	bash
 READ		=	read -e
 LN_s		= 	ln -s
 LN_sf		=	ln -sf
-

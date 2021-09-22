@@ -63,7 +63,9 @@ struct RowReduction
       LHS_INF = -8,
       SPARSIFY = -9,
       RHS_LESS_RESTRICTIVE = -10,
-      LHS_LESS_RESTRICTIVE = -11
+      LHS_LESS_RESTRICTIVE = -11,
+      REASON_FOR_LESS_RESTRICTIVE_BOUND_CHANGE = -12,
+      SAVE_ROW = -13
    };
 };
 
@@ -146,6 +148,14 @@ class Reductions
    }
 
    void
+   bound_change_caused_by_row( int remaining_row, int deleted_row )
+   {
+      reductions.emplace_back(
+          remaining_row, deleted_row,
+          RowReduction::REASON_FOR_LESS_RESTRICTIVE_BOUND_CHANGE );
+   }
+
+   void
    changeRowLHSInf( int row )
    {
       reductions.emplace_back( 0.0, row, RowReduction::LHS_INF );
@@ -179,20 +189,26 @@ class Reductions
    }
 
    void
-   changeColLB( int col, REAL newval )
+   changeColLB( int col, REAL new_val, int forcing_row = -1 )
    {
-      reductions.emplace_back( newval, ColReduction::LOWER_BOUND, col );
+      if(forcing_row > -1)
+         reductions.emplace_back(0, forcing_row, RowReduction::SAVE_ROW);
+      reductions.emplace_back( new_val, ColReduction::LOWER_BOUND, col );
    }
 
    void
-   changeColUB( int col, REAL newval )
+   changeColUB( int col, REAL new_val, int forcing_row = -1 )
    {
-      reductions.emplace_back( newval, ColReduction::UPPER_BOUND, col );
+      if( forcing_row > -1)
+         reductions.emplace_back(0, forcing_row, RowReduction::SAVE_ROW);
+      reductions.emplace_back( new_val, ColReduction::UPPER_BOUND, col );
    }
 
    void
-   fixCol( int col, REAL val )
+   fixCol( int col, REAL val, int forcing_row = -1 )
    {
+      if(forcing_row > -1)
+         reductions.emplace_back(0, forcing_row, RowReduction::SAVE_ROW);
       reductions.emplace_back( val, ColReduction::FIXED, col );
    }
 

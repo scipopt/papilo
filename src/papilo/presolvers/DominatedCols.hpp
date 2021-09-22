@@ -346,8 +346,7 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
              int lbfree = colinfo[i].lbfree;
              int ubfree = colinfo[i].ubfree;
 
-             if( lbfree == 0 && ubfree == 0 )
-                continue;
+             assert( lbfree != 0 or ubfree != 0 );
 
              auto colvec = consMatrix.getColumnCoefficients( i );
              int collen = colvec.getLength();
@@ -483,12 +482,13 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
                   int smaller_row_b = smaller_first_b ? b.col1 : b.col2;
                   if( smaller_row_a != smaller_row_b )
                      return smaller_row_a < smaller_row_b;
-                  return ( ( not smaller_first_a ) ? a.col1 : a.col2 ) <
-                         ( ( not smaller_first_b ) ? b.col1 : b.col2 );
+                  return ( ( !smaller_first_a ) ? a.col1 : a.col2 ) <
+                         ( ( !smaller_first_b ) ? b.col1 : b.col2 );
                } );
 
       for( int i = 0; i < domcolreductions.size(); i++ )
       {
+         // check if consecutively reductions are equal
          const DomcolReduction dr = domcolreductions[i];
          if( i < domcolreductions.size() - 1 )
          {
@@ -505,13 +505,14 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
          reductions.lockColBounds( dr.col1 );
          reductions.lockCol( dr.col2 );
          reductions.lockColBounds( dr.col2 );
-         if( dr.implrowlock > 0 )
+         //TODO: check if >=0 is correct instead of >0
+         if( dr.implrowlock >= 0 )
             reductions.lockRow( dr.implrowlock );
 
          if( dr.boundchg == BoundChange::kUpper )
-            reductions.fixCol( dr.col2, lbValues[dr.col2] );
+            reductions.fixCol( dr.col2, lbValues[dr.col2], dr.implrowlock );
          else
-            reductions.fixCol( dr.col2, ubValues[dr.col2] );
+            reductions.fixCol( dr.col2, ubValues[dr.col2], dr.implrowlock);
       }
 
    }

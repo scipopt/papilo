@@ -293,7 +293,7 @@ SimplifyInequalities<REAL>::execute( const Problem<REAL>& problem,
 
    PresolveStatus result = PresolveStatus::kUnchanged;
 
-   if( problemUpdate.getPresolveOptions().runs_sequentiell() or
+   if( problemUpdate.getPresolveOptions().runs_sequentiell() ||
        !problemUpdate.getPresolveOptions().simplify_inequalities_parallel)
    {
       //allocate only once

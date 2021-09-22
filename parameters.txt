@@ -148,3 +148,8 @@ substitution.maxfillin = 10
 # maximum amount of nonzeros being moved to make space for fillin from substitutions within a row  [Integer: [0,2147483647]]
 substitution.maxshiftperrow = 10
 
+# should the basis be calculated during postsolve? Deactivates variable bound tightening due to computational overhead.
+calculate_basis_for_dual = 1
+
+# should the primal/dual solution be validated during after every postsolving step?
+validation_after_every_postsolving_step = 0

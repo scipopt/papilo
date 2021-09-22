@@ -48,7 +48,8 @@ TEST_CASE( "domcol-happy-path", "[presolve]" )
    Problem<double> problem = setupMatrixForDominatedCols();
    Statistics statistics{};
    PresolveOptions presolveOptions{};
-   Postsolve<double> postsolve = Postsolve<double>( problem, num );
+   PostsolveStorage<double> postsolve =
+       PostsolveStorage<double>( problem, num, presolveOptions );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
 
@@ -60,7 +61,7 @@ TEST_CASE( "domcol-happy-path", "[presolve]" )
        presolvingMethod.execute( problem, problemUpdate, num, reductions );
 
    REQUIRE( presolveStatus == PresolveStatus::kReduced );
-   REQUIRE( reductions.size() == 5 );
+   REQUIRE( reductions.size() == 7 );
 
    REQUIRE( reductions.getReduction( 0 ).row == ColReduction::LOCKED );
    REQUIRE( reductions.getReduction( 0 ).col == 0 );
@@ -74,9 +75,15 @@ TEST_CASE( "domcol-happy-path", "[presolve]" )
    REQUIRE( reductions.getReduction( 3 ).row == ColReduction::BOUNDS_LOCKED );
    REQUIRE( reductions.getReduction( 3 ).col == 1 );
 
-   REQUIRE( reductions.getReduction( 4 ).row == ColReduction::FIXED );
-   REQUIRE( reductions.getReduction( 4 ).col == 1 );
-   REQUIRE( reductions.getReduction( 4 ).newval == 0 );
+   REQUIRE( reductions.getReduction( 4 ).row == 0 );
+   REQUIRE( reductions.getReduction( 4 ).col == RowReduction::LOCKED );
+
+   REQUIRE( reductions.getReduction( 5 ).row == 0 );
+   REQUIRE( reductions.getReduction( 5 ).col == RowReduction::SAVE_ROW );
+
+   REQUIRE( reductions.getReduction( 6 ).row == ColReduction::FIXED );
+   REQUIRE( reductions.getReduction( 6 ).col == 1 );
+   REQUIRE( reductions.getReduction( 6 ).newval == 0 );
 }
 
 TEST_CASE( "domcol-parallel-columns", "[presolve]" )
@@ -86,7 +93,8 @@ TEST_CASE( "domcol-parallel-columns", "[presolve]" )
    Problem<double> problem = setupMatrixForDominatedColsParallel();
    Statistics statistics{};
    PresolveOptions presolveOptions{};
-   Postsolve<double> postsolve = Postsolve<double>( problem, num );
+   PostsolveStorage<double> postsolve =
+       PostsolveStorage<double>( problem, num, presolveOptions );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
 
@@ -98,7 +106,7 @@ TEST_CASE( "domcol-parallel-columns", "[presolve]" )
        presolvingMethod.execute( problem, problemUpdate, num, reductions );
 
    REQUIRE( presolveStatus == PresolveStatus::kReduced );
-   REQUIRE( reductions.size() == 5 );
+   REQUIRE( reductions.size() == 7 );
 
    REQUIRE( reductions.getReduction( 0 ).row == ColReduction::LOCKED );
    REQUIRE( reductions.getReduction( 0 ).col == 0 );
@@ -112,9 +120,15 @@ TEST_CASE( "domcol-parallel-columns", "[presolve]" )
    REQUIRE( reductions.getReduction( 3 ).row ==ColReduction::BOUNDS_LOCKED );
    REQUIRE( reductions.getReduction( 3 ).col == 3 );
 
-   REQUIRE( reductions.getReduction( 4 ).row == ColReduction::FIXED );
-   REQUIRE( reductions.getReduction( 4 ).col == 3 );
-   REQUIRE( reductions.getReduction( 4 ).newval == 0 );
+   REQUIRE( reductions.getReduction( 4 ).row == 0 );
+   REQUIRE( reductions.getReduction( 4 ).col == RowReduction::LOCKED );
+
+   REQUIRE( reductions.getReduction( 5 ).row == 0 );
+   REQUIRE( reductions.getReduction( 5 ).col == RowReduction::SAVE_ROW );
+
+   REQUIRE( reductions.getReduction( 6 ).row == ColReduction::FIXED );
+   REQUIRE( reductions.getReduction( 6 ).col == 3 );
+   REQUIRE( reductions.getReduction( 6 ).newval == 0 );
 }
 
 TEST_CASE( "domcol-multiple-parallel-cols-generate_redundant-reductions", "[presolve]" )
@@ -124,7 +138,8 @@ TEST_CASE( "domcol-multiple-parallel-cols-generate_redundant-reductions", "[pres
    Problem<double> problem = setupMatrixForDominatedColsMultipleParallel();
    Statistics statistics{};
    PresolveOptions presolveOptions{};
-   Postsolve<double> postsolve = Postsolve<double>( problem, num );
+   PostsolveStorage<double> postsolve =
+       PostsolveStorage<double>( problem, num, presolveOptions );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
 
@@ -146,7 +161,8 @@ TEST_CASE( "domcol-multiple-columns", "[presolve]" )
    Problem<double> problem = setupMatrixForMultipleDominatedCols();
    Statistics statistics{};
    PresolveOptions presolveOptions{};
-   Postsolve<double> postsolve = Postsolve<double>( problem, num );
+   PostsolveStorage<double> postsolve =
+       PostsolveStorage<double>( problem, num, presolveOptions );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
 
@@ -158,11 +174,11 @@ TEST_CASE( "domcol-multiple-columns", "[presolve]" )
        presolvingMethod.execute( problem, problemUpdate, num, reductions );
 
    REQUIRE( presolveStatus == PresolveStatus::kReduced );
-   REQUIRE( reductions.size() == 15 );
+   REQUIRE( reductions.size() == 21 );
 
    Vec<int> dominating_cols = { 0, 0, 1 };
    Vec<int> dominated_cols = { 1, 2, 2 };
-   for( int i = 0; i < 15; i = i + 5 )
+   for( int i = 0; i < 21; i = i + 7 )
    {
       REQUIRE( reductions.getReduction( i ).row == ColReduction::LOCKED );
       REQUIRE( reductions.getReduction( i ).col == dominating_cols[i / 5] );
@@ -178,9 +194,15 @@ TEST_CASE( "domcol-multiple-columns", "[presolve]" )
                ColReduction::BOUNDS_LOCKED );
       REQUIRE( reductions.getReduction( i + 3 ).col == dominated_cols[i / 5] );
 
-      REQUIRE( reductions.getReduction( i + 4 ).row == ColReduction::FIXED );
-      REQUIRE( reductions.getReduction( i + 4 ).col == dominated_cols[i / 5] );
-      REQUIRE( reductions.getReduction( i + 4 ).newval == 0 );
+      REQUIRE( reductions.getReduction( i + 4 ).row == 0 );
+      REQUIRE( reductions.getReduction( i + 4 ).col == RowReduction::LOCKED );
+
+      REQUIRE( reductions.getReduction( i + 5 ).row == 0 );
+      REQUIRE( reductions.getReduction( i + 5 ).col == RowReduction::SAVE_ROW );
+
+      REQUIRE( reductions.getReduction( i + 6 ).row == ColReduction::FIXED );
+      REQUIRE( reductions.getReduction( i + 6 ).col == dominated_cols[i / 5] );
+      REQUIRE( reductions.getReduction( i + 6 ).newval == 0 );
    }
 }
 
@@ -214,9 +236,9 @@ setupMatrixForDominatedCols()
    };
 
    ProblemBuilder<double> pb;
-   pb.reserve( entries.size(), rowNames.size(), columnNames.size() );
-   pb.setNumRows( rowNames.size() );
-   pb.setNumCols( columnNames.size() );
+   pb.reserve( (int) entries.size(), (int) rowNames.size(), (int) columnNames.size() );
+   pb.setNumRows( (int) rowNames.size() );
+   pb.setNumCols( (int) columnNames.size() );
    pb.setColUbAll( upperBounds );
    pb.setColLbAll( lowerBounds );
    pb.setObjAll( coefficients );
@@ -261,9 +283,9 @@ setupMatrixForDominatedColsParallel()
    };
 
    ProblemBuilder<double> pb;
-   pb.reserve( entries.size(), rowNames.size(), columnNames.size() );
-   pb.setNumRows( rowNames.size() );
-   pb.setNumCols( columnNames.size() );
+   pb.reserve( (int) entries.size(), (int) rowNames.size(), (int) columnNames.size() );
+   pb.setNumRows( (int) rowNames.size() );
+   pb.setNumCols( (int) columnNames.size() );
    pb.setColUbAll( upperBounds );
    pb.setColLbAll( lowerBounds );
    pb.setObjAll( coefficients );
@@ -304,9 +326,9 @@ setupMatrixForDominatedColsMultipleParallel()
    };
 
    ProblemBuilder<double> pb;
-   pb.reserve( entries.size(), rowNames.size(), columnNames.size() );
-   pb.setNumRows( rowNames.size() );
-   pb.setNumCols( columnNames.size() );
+   pb.reserve( (int) entries.size(), (int) rowNames.size(), (int) columnNames.size() );
+   pb.setNumRows( (int) rowNames.size() );
+   pb.setNumCols( (int) columnNames.size() );
    pb.setColUbAll( upperBounds );
    pb.setColLbAll( lowerBounds );
    pb.setObjAll( coefficients );
@@ -353,9 +375,9 @@ setupMatrixForMultipleDominatedCols()
    };
 
    ProblemBuilder<double> pb;
-   pb.reserve( entries.size(), rowNames.size(), columnNames.size() );
-   pb.setNumRows( rowNames.size() );
-   pb.setNumCols( columnNames.size() );
+   pb.reserve( (int) entries.size(), (int) rowNames.size(), (int) columnNames.size() );
+   pb.setNumRows( (int) rowNames.size() );
+   pb.setNumCols( (int) columnNames.size() );
    pb.setColUbAll( upperBounds );
    pb.setColLbAll( lowerBounds );
    pb.setObjAll( coefficients );

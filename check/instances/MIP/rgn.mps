@@ -5,40 +5,40 @@
 *NONZERO:      460
 *BEST SOLN:    82.1999 (opt)
 *LP SOLN:      48.7999
-*SOURCE:       Linus E. Schrage (U. Chicago) 
+*SOURCE:       Linus E. Schrage (U. Chicago)
 *              Laurence A. Wolsey (University of Louvain)
 *              Martin W. P. Savelsbergh (Eindhoven Univ. of Technology)
 *APPLICATION:  unknown
 *COMMENTS:     all integer variables are binary
-*       
-*       
+*
+*
 NAME          RGN
 ROWS
- N  1       
- L  2       
- L  3       
- L  4       
- L  5       
- E  6       
- E  7       
- E  8       
- E  9       
- E  10      
- E  11      
- E  12      
- E  13      
- E  14      
- E  15      
- E  16      
- E  17      
- E  18      
- E  19      
- E  20      
- E  21      
- E  22      
- E  23      
- E  24      
- E  25      
+ N  1
+ L  2
+ L  3
+ L  4
+ L  5
+ E  6
+ E  7
+ E  8
+ E  9
+ E  10
+ E  11
+ E  12
+ E  13
+ E  14
+ E  15
+ E  16
+ E  17
+ E  18
+ E  19
+ E  20
+ E  21
+ E  22
+ E  23
+ E  24
+ E  25
 COLUMNS
     MARK0000  'MARKER'                 'INTORG'
     A1        2                    1   6          -4.60000002

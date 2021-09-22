@@ -1,4 +1,4 @@
-*NAME:         lseu   
+*NAME:         lseu
 *ROWS:         28
 *COLUMNS:      89
 *INTEGER:      89
@@ -6,43 +6,43 @@
 *BEST SOLN:    1120 (opt)
 *LP SOLN:      834.68
 *SOURCE:       C. E. Lemke and K. Spielberg
-*              Ellis L. Johnson and Uwe H. Suhl 
+*              Ellis L. Johnson and Uwe H. Suhl
 *              John J. Forrest (IBM)
 *APPLICATION:  unknown
 *COMMENTS:     pure 0/1 IP
-*              
-*      
+*
+*
 NAME          LSEU
 ROWS
- N  R100    
- L  R101    
- L  R102    
- L  R103    
- L  R104    
- L  R105    
- L  R106    
- L  R107    
- L  R108    
- L  R109    
- L  R110    
- L  R111    
- L  R112    
- L  R113    
- L  R114    
- L  R115    
- L  R116    
- L  R117    
- L  R118    
- L  R119    
- L  R120    
- L  R121    
- L  R122    
- L  R123    
- L  R124    
- L  R125    
- L  R126    
- L  R127    
- L  R128    
+ N  R100
+ L  R101
+ L  R102
+ L  R103
+ L  R104
+ L  R105
+ L  R106
+ L  R107
+ L  R108
+ L  R109
+ L  R110
+ L  R111
+ L  R112
+ L  R113
+ L  R114
+ L  R115
+ L  R116
+ L  R117
+ L  R118
+ L  R119
+ L  R120
+ L  R121
+ L  R122
+ L  R123
+ L  R124
+ L  R125
+ L  R126
+ L  R127
+ L  R128
 COLUMNS
     MARK0000  'MARKER'                 'INTORG'
     C101      R100                 7   R119               525

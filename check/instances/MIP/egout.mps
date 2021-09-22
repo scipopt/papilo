@@ -11,53 +11,53 @@
 *APPLICATION:  drainage system design, 42 nodes, 55 arcs
 *COMMENTS:     all integer variables are binary
 *              solution reported by Martin W. P. Savelsbergh
-*      
+*
 NAME          EGOUT
 ROWS
- N  COST    
- E  ...     
- E  001     
- E  002     
- E  004     
- E  006     
- E  007     
- E  009     
- E  010     
- E  011     
- E  013     
- E  014     
- E  015     
- E  017     
- E  019     
- E  020     
- E  021     
- E  023     
- E  025     
- E  026     
- E  028     
- E  029     
- E  030     
- E  031     
- E  033     
- E  034     
- E  035     
- E  036     
- E  038     
- E  039     
- E  040     
- E  041     
- E  042     
- E  003     
- E  005     
- E  008     
- E  012     
- E  016     
- E  018     
- E  024     
- E  022     
- E  027     
- E  032     
- E  037     
+ N  COST
+ E  ...
+ E  001
+ E  002
+ E  004
+ E  006
+ E  007
+ E  009
+ E  010
+ E  011
+ E  013
+ E  014
+ E  015
+ E  017
+ E  019
+ E  020
+ E  021
+ E  023
+ E  025
+ E  026
+ E  028
+ E  029
+ E  030
+ E  031
+ E  033
+ E  034
+ E  035
+ E  036
+ E  038
+ E  039
+ E  040
+ E  041
+ E  042
+ E  003
+ E  005
+ E  008
+ E  012
+ E  016
+ E  018
+ E  024
+ E  022
+ E  027
+ E  032
+ E  037
  L  U.001...
  L  U.001003
  L  U.002003

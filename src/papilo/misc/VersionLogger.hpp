@@ -24,8 +24,8 @@
 #ifndef _PAPILO_MISC_VERSION_LOGGER_HPP_
 #define _PAPILO_MISC_VERSION_LOGGER_HPP_
 
-#include "papilo/core/Postsolve.hpp"
 #include "papilo/core/Presolve.hpp"
+#include "papilo/core/postsolve/Postsolve.hpp"
 #include "papilo/io/MpsParser.hpp"
 #include "papilo/io/MpsWriter.hpp"
 #include "papilo/io/SolParser.hpp"

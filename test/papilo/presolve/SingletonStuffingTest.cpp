@@ -26,7 +26,7 @@
 #include "papilo/core/PresolveMethod.hpp"
 #include "papilo/core/Problem.hpp"
 #include "papilo/core/ProblemBuilder.hpp"
-#include "papilo/core/Postsolve.hpp"
+#include "papilo/core/postsolve/Postsolve.hpp"
 #include "papilo/core/RowFlags.hpp"
 
 using namespace papilo;
@@ -50,7 +50,7 @@ TEST_CASE( "singleton-stuffing-make-sure-to-first-set-bounds-to-infinity", "[pre
    Problem<double> problem = setupProblemWithSingletonStuffingColumn();
    Statistics statistics{};
    PresolveOptions presolveOptions{};
-   Postsolve<double> postsolve = Postsolve<double>( problem, num );
+   PostsolveStorage<double> postsolve = PostsolveStorage<double>( problem, num, presolveOptions );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num , msg);
    presolveOptions.dualreds = 0;

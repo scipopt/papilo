@@ -67,7 +67,7 @@ class DualFix : public PresolveMethod<REAL>
                           const Vec<REAL>& objective, const Vec<REAL>& lbs,
                           const Vec<REAL>& ubs, const Vec<RowFlags>& rflags,
                           const Vec<REAL>& lhs, const Vec<REAL>& rhs, int& i,
-                          bool no_strong_reductions ) const;
+                          bool no_strong_reductions, bool skip_variable_tightening ) const;
 };
 
 #ifdef PAPILO_USE_EXTERN_TEMPLATES
@@ -96,6 +96,14 @@ DualFix<REAL>::execute( const Problem<REAL>& problem,
 
    PresolveStatus result = PresolveStatus::kUnchanged;
    bool noStrongReductions = problemUpdate.getPresolveOptions().dualreds < 2;
+
+   // calculating the basis for variable tightening (not fixings) may lead in
+   // the postsolving step to a solution that is not in a vertex. In this case a
+   // crossover would be required is too expensive performance wise
+   const bool skip_variable_tightening =
+       problem.getNumIntegralCols() == 0 and
+       problemUpdate.getPresolveOptions().calculate_basis_for_dual;
+
    if( problemUpdate.getPresolveOptions().runs_sequentiell() or
        !problemUpdate.getPresolveOptions().dual_fix_parallel )
    {
@@ -103,7 +111,7 @@ DualFix<REAL>::execute( const Problem<REAL>& problem,
       {
          PresolveStatus local_status = perform_dual_fix_step(
              num, reductions, consMatrix, activities, cflags, objective, lbs,
-             ubs, rflags, lhs, rhs, col, noStrongReductions );
+             ubs, rflags, lhs, rhs, col, noStrongReductions, skip_variable_tightening );
          assert( local_status == PresolveStatus::kUnchanged ||
                  local_status == PresolveStatus::kReduced ||
                  local_status == PresolveStatus::kUnbndOrInfeas ||
@@ -127,7 +135,7 @@ DualFix<REAL>::execute( const Problem<REAL>& problem,
                 PresolveStatus local_status = perform_dual_fix_step(
                     num, stored_reductions[col], consMatrix, activities, cflags,
                     objective, lbs, ubs, rflags, lhs, rhs, col,
-                    noStrongReductions );
+                    noStrongReductions, skip_variable_tightening );
                 assert( local_status == PresolveStatus::kUnchanged ||
                         local_status == PresolveStatus::kReduced ||
                         local_status == PresolveStatus::kUnbounded );
@@ -174,7 +182,7 @@ DualFix<REAL>::perform_dual_fix_step(
     const Vec<RowActivity<REAL>>& activities, const Vec<ColFlags>& cflags,
     const Vec<REAL>& objective, const Vec<REAL>& lbs, const Vec<REAL>& ubs,
     const Vec<RowFlags>& rflags, const Vec<REAL>& lhs, const Vec<REAL>& rhs,
-    int& i, bool no_strong_reductions ) const
+    int& i, bool no_strong_reductions, bool skip_variable_tightening ) const
 {
    // skip inactive columns
    if( cflags[i].test( ColFlag::kInactive ) )
@@ -264,6 +272,8 @@ DualFix<REAL>::perform_dual_fix_step(
    // apply dual substitution
    else
    {
+      if( skip_variable_tightening )
+         return PresolveStatus::kUnchanged;
       // Function checks if considered row allows dual bound strengthening
       // and calculates tightest bound for this row.
       auto check_row = []( int ninf, REAL activity, const REAL& side,
@@ -298,11 +308,12 @@ DualFix<REAL>::perform_dual_fix_step(
       if( objective[i] >= 0 )
       {
          bool skip = false;
-         bool new_UB_init = false;
-         REAL new_UB;
+         bool new_ub_init = false;
+         REAL new_ub;
+         int best_row = -1;
 
          // go through all rows with non-zero entry
-         for( int j = 0; j != collen; ++j )
+         for( int j = 0; j < collen; ++j )
          {
             int row = rowinds[j];
             // candidate for new upper bound
@@ -348,16 +359,17 @@ DualFix<REAL>::perform_dual_fix_step(
             if( cflags[i].test( ColFlag::kIntegral ) )
                cand_bound = num.epsCeil( cand_bound );
 
-            if( !new_UB_init || cand_bound > new_UB )
+            if( !new_ub_init || cand_bound > new_ub )
             {
-               new_UB = cand_bound;
-               new_UB_init = true;
+               new_ub = cand_bound;
+               new_ub_init = true;
+               best_row = row;
 
                // check if bound is already equal or worse than current bound
                // and abort in that case
                if( ( !cflags[i].test( ColFlag::kUbInf ) &&
-                     num.isGE( new_UB, ubs[i] ) ) ||
-                   new_UB >= num.getHugeVal() )
+                     num.isGE( new_ub, ubs[i] ) ) ||
+                   new_ub >= num.getHugeVal() )
                {
                   skip = true;
                   break;
@@ -366,25 +378,26 @@ DualFix<REAL>::perform_dual_fix_step(
          }
 
          // set new upper bound
-         if( !skip && new_UB_init && !num.isHugeVal( new_UB ) )
+         if( !skip && new_ub_init && !num.isHugeVal( new_ub ) )
          {
-            assert( cflags[i].test( ColFlag::kUbInf ) || new_UB < ubs[i] );
+            assert( cflags[i].test( ColFlag::kUbInf ) || new_ub < ubs[i] );
 
             // cannot detect infeasibility with this method, so at most
             // tighten the bound to the lower bound
             if( !cflags[i].test( ColFlag::kLbInf ) )
-               new_UB = num.max( lbs[i], new_UB );
+               new_ub = num.max( lbs[i], new_ub );
 
             // A transaction is only needed to group several reductions that
             // belong together
 
             TransactionGuard<REAL> guard{ reductions };
 
+            assert(best_row >= 0);
             reductions.lockCol( i );
             reductions.lockColBounds( i );
-            reductions.changeColUB( i, new_UB );
+            reductions.changeColUB( i, new_ub, best_row );
             Message::debug( this, "tightened upper bound of col {} to {}\n", i,
-                            double( new_UB ) );
+                            double( new_ub ) );
 
             return PresolveStatus::kReduced;
 
@@ -403,8 +416,9 @@ DualFix<REAL>::perform_dual_fix_step(
       if( objective[i] <= 0 )
       {
          bool skip = false;
-         bool new_LB_init = false;
-         REAL new_LB;
+         bool new_lb_init = false;
+         REAL new_lb;
+         int best_row = -1;
 
          // go through all rows with non-zero entry
          for( int j = 0; j != collen; ++j )
@@ -444,7 +458,7 @@ DualFix<REAL>::perform_dual_fix_step(
                   continue;
             }
 
-            if( skip == true )
+            if( skip )
                break;
 
             // Only if variable is less than or equal to new_LB, all rows in
@@ -452,16 +466,17 @@ DualFix<REAL>::perform_dual_fix_step(
             if( cflags[i].test( ColFlag::kIntegral ) )
                cand_bound = num.epsFloor( cand_bound );
 
-            if( !new_LB_init || cand_bound < new_LB )
+            if( !new_lb_init || cand_bound < new_lb )
             {
-               new_LB = cand_bound;
-               new_LB_init = true;
+               new_lb = cand_bound;
+               new_lb_init = true;
+               best_row = row;
 
                // check if bound is already equal or worse than current bound
                // and abort in that case
                if( ( !cflags[i].test( ColFlag::kLbInf ) &&
-                     num.isLE( new_LB, lbs[i] ) ) ||
-                   new_LB <= -num.getHugeVal() )
+                     num.isLE( new_lb, lbs[i] ) ) ||
+                   new_lb <= -num.getHugeVal() )
                {
                   skip = true;
                   break;
@@ -470,14 +485,14 @@ DualFix<REAL>::perform_dual_fix_step(
          }
 
          // set new lower bound
-         if( !skip && new_LB_init && !num.isHugeVal( new_LB ) )
+         if( !skip && new_lb_init && !num.isHugeVal( new_lb ) )
          {
-            assert( cflags[i].test( ColFlag::kLbInf ) || new_LB > lbs[i] );
+            assert( cflags[i].test( ColFlag::kLbInf ) || new_lb > lbs[i] );
 
             // cannot detect infeasibility with this method, so at most
             // tighten the bound to the upper bound
             if( !cflags[i].test( ColFlag::kUbInf ) )
-               new_LB = num.min( ubs[i], new_LB );
+               new_lb = num.min( ubs[i], new_lb );
 
             // A transaction is only needed to group several reductions that
             // belong together
@@ -486,10 +501,10 @@ DualFix<REAL>::perform_dual_fix_step(
 
             reductions.lockCol( i );
             reductions.lockColBounds( i );
-            reductions.changeColLB( i, new_LB );
+            reductions.changeColLB( i, new_lb, best_row );
 
             Message::debug( this, "tightened lower bound of col {} to {}\n", i,
-                            double( new_LB ) );
+                            double( new_lb ) );
 
             return PresolveStatus::kReduced;
          }

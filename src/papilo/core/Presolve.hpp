@@ -39,6 +39,8 @@
 #include "papilo/core/Problem.hpp"
 #include "papilo/core/ProblemUpdate.hpp"
 #include "papilo/core/Statistics.hpp"
+#include "papilo/core/postsolve/Postsolve.hpp"
+#include "papilo/core/postsolve/PostsolveStorage.hpp"
 #include "papilo/interfaces/SolverInterface.hpp"
 #include "papilo/io/Message.hpp"
 #include "papilo/misc/DependentRows.hpp"
@@ -70,7 +72,7 @@ namespace papilo
 template <typename REAL>
 struct PresolveResult
 {
-   Postsolve<REAL> postsolve;
+   PostsolveStorage<REAL> postsolve;
    PresolveStatus status;
 };
 
@@ -142,7 +144,7 @@ class Presolve
     * information
     */
    PresolveResult<REAL>
-   apply( Problem<REAL>& problem );
+   apply( Problem<REAL>& problem, bool store_dual_postsolve = true );
 
    /// add presolve method to presolving
    void
@@ -269,6 +271,7 @@ class Presolve
    bool lastRoundReduced;
    int nunsuccessful;
    bool rundelayed;
+   bool dual_solution = false;
 
    /// evaluate result array of each presolver, return the largest result value
    PresolveStatus
@@ -298,7 +301,7 @@ class Presolve
  private:
    void
    logStatus( const Problem<REAL>& problem,
-              const Postsolve<REAL>& postsolve ) const;
+              const PostsolveStorage<REAL>& postsolveStorage ) const;
 
    bool
    is_time_exceeded( const Timer& presolvetimer ) const;
@@ -344,6 +347,9 @@ class Presolve
 
    bool
    is_status_infeasible_or_unbounded( const PresolveStatus& status ) const;
+
+   bool
+   are_only_dual_postsolve_presolvers_enabled();
 };
 
 #ifdef PAPILO_USE_EXTERN_TEMPLATES
@@ -360,17 +366,18 @@ extern template class Presolve<Rational>;
  *
  * @tparam REAL: computational accuracy template
  * @param problem: the problem to be presolved
+ * @param store_dual_postsolve: should dual postsolve reductions stored in the postsolve stack
  * @return: presolved problem and PresolveResult contains postsolve information
  */
 template <typename REAL>
 PresolveResult<REAL>
-Presolve<REAL>::apply( Problem<REAL>& problem )
+Presolve<REAL>::apply( Problem<REAL>& problem, bool store_dual_postsolve )
 {
    tbb::task_arena arena( presolveOptions.threads == 0
                               ? tbb::task_arena::automatic
                               : presolveOptions.threads );
 
-   return arena.execute( [this, &problem]() {
+   return arena.execute( [this, &problem, store_dual_postsolve]() {
       stats = Statistics();
       num.setFeasTol( REAL{ presolveOptions.feastol } );
       num.setEpsilon( REAL{ presolveOptions.epsilon } );
@@ -395,9 +402,19 @@ Presolve<REAL>::apply( Problem<REAL>& problem )
 
       PresolveResult<REAL> result;
 
-      result.postsolve = Postsolve<REAL>( problem, num );
-      result.postsolve.getChecker().setOriginalProblem( problem );
+      result.postsolve =
+          PostsolveStorage<REAL>( problem, num, presolveOptions );
 
+      if( store_dual_postsolve && problem.getNumIntegralCols() == 0 )
+      {
+         if( presolveOptions.componentsmaxint == -1 and presolveOptions.detectlindep == 0 and
+             !are_only_dual_postsolve_presolvers_enabled())
+            result.postsolve.postsolveType = PostsolveType::kFull;
+         else
+            msg.error(
+                "Please turn off the presolvers substitution and sparsify and "
+                "componentsdetection to use dual postsolving" );
+      }
       result.status = PresolveStatus::kUnchanged;
 
       std::stable_sort( presolvers.begin(), presolvers.end(),
@@ -672,7 +689,8 @@ Presolve<REAL>::apply( Problem<REAL>& problem )
          if( problem.getNCols() == 0 )
             detectComponents = false;
 
-         if( detectComponents )
+         //TODO: remove empty rows before (but currently buggy)
+         if( detectComponents  and probUpdate.getNActiveCols() > 0 )
          {
             assert( problem.getNCols() != 0 && problem.getNRows() != 0 );
             Components components;
@@ -697,6 +715,14 @@ Presolve<REAL>::apply( Problem<REAL>& problem )
                Solution<REAL> solution;
                solution.primal.resize( problem.getNCols() );
                Vec<uint8_t> componentSolved( ncomponents );
+
+               if( result.postsolve.postsolveType == PostsolveType::kFull )
+               {
+                  solution.type = SolutionType::kPrimalDual;
+                  solution.reducedCosts.resize( problem.getNCols() );
+                  solution.dual.resize( problem.getNRows() );
+                  solution.varBasisStatus.resize( problem.getNCols() );
+               }
 
                tbb::parallel_for(
                    tbb::blocked_range<int>( 0, ncomponents - 1 ),
@@ -801,9 +827,14 @@ Presolve<REAL>::apply( Problem<REAL>& problem )
 
                      for( int j = 0; j != numcompcols; ++j )
                      {
-                        lbs[compcols[j]] = solution.primal[compcols[j]];
-                        ubs[compcols[j]] = solution.primal[compcols[j]];
-                        probUpdate.markColFixed( compcols[j] );
+                        const int col = compcols[j];
+                        lbs[compcols[j]] = solution.primal[col];
+                        ubs[compcols[j]] = solution.primal[col];
+                        probUpdate.markColFixed( col );
+                        if( result.postsolve.postsolveType ==
+                            PostsolveType::kFull )
+                           result.postsolve.storeDualValue(
+                               true, col, solution.reducedCosts[col] );
                      }
 
                      const int* comprows = components.getComponentsRows( i );
@@ -833,7 +864,21 @@ Presolve<REAL>::apply( Problem<REAL>& problem )
 
          logStatus( problem, result.postsolve );
          result.status = PresolveStatus::kReduced;
-         result.postsolve.getChecker().setReducedProblem( problem );
+         if( result.postsolve.postsolveType == PostsolveType::kFull )
+         {
+            auto& coefficients = problem.getObjective().coefficients;
+            auto& col_lower = problem.getLowerBounds();
+            auto& col_upper = problem.getUpperBounds();
+            auto& row_lhs = problem.getConstraintMatrix().getLeftHandSides();
+            auto& row_rhs = problem.getConstraintMatrix().getRightHandSides();
+            auto& row_flags = problem.getRowFlags();
+            auto& col_flags = problem.getColFlags();
+
+            result.postsolve.storeReducedBoundsAndCost(
+                col_lower, col_upper, row_lhs, row_rhs, coefficients, row_flags,
+                col_flags );
+         }
+
          return result;
       }
 
@@ -1298,8 +1343,10 @@ Presolve<REAL>::printPresolversStats()
 template <typename REAL>
 void
 Presolve<REAL>::logStatus( const Problem<REAL>& problem,
-                           const Postsolve<REAL>& postsolve ) const
+                           const PostsolveStorage<REAL>& postsolveStorage ) const
 {
+   if(msg.getVerbosityLevel() == VerbosityLevel::kQuiet)
+      return;
    msg.info( "reduced problem:\n" );
    msg.info( "  reduced rows:     {}\n", problem.getNRows() );
    msg.info( "  reduced columns:  {}\n", problem.getNCols() );
@@ -1307,12 +1354,15 @@ Presolve<REAL>::logStatus( const Problem<REAL>& problem,
    msg.info( "  reduced cont. columns:  {}\n", problem.getNumContinuousCols() );
    msg.info( "  reduced nonzeros: {}\n",
              problem.getConstraintMatrix().getNnz() );
-   if( problem.getNCols() == 0 )
+   if( problem.getNCols() == 0)
    {
+      // the primaldual can be disabled therefore calculate only primal for obj
       Solution<REAL> solution{};
-      const Solution<REAL> empty_sol{};
-      postsolve.undo( empty_sol, solution );
-      const Problem<REAL>& origprob = postsolve.getOriginalProblem();
+      Solution<REAL> empty_sol{};
+      empty_sol.type = SolutionType::kPrimal;
+      Postsolve<REAL> postsolve{ msg, num };
+      postsolve.undo( empty_sol, solution, postsolveStorage );
+      const Problem<REAL>& origprob = postsolveStorage.getOriginalProblem();
       REAL origobj = origprob.computeSolObjective( solution.primal );
       msg.info(
           "problem is solved [optimal solution found] [objective value: {}]\n",
@@ -1338,6 +1388,24 @@ Presolve<REAL>::get_round_type( Delegator delegator )
       break;
    }
    return "Undefined";
+}
+
+template <typename REAL>
+bool
+Presolve<REAL>::are_only_dual_postsolve_presolvers_enabled()
+{
+   for( int i = 0; i <= presolvers.size(); i++ )
+   {
+      if( presolvers[i]->isEnabled() )
+      {
+         if( presolvers[i]->getName().compare( "substitution" ) ||
+             presolvers[i]->getName().compare( "sparsify" ) ||
+             presolvers[i]->getName().compare( "dualinfer" ) ||
+             presolvers[i]->getName().compare( "doubletoneq" ) )
+            return false;
+      }
+   }
+   return true;
 }
 
 } // namespace papilo

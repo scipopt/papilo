@@ -63,6 +63,9 @@ struct OptionsInfo
    std::string postsolve_archive_file;
    std::string reduced_solution_file;
    std::string orig_solution_file;
+   std::string orig_dual_solution_file;
+   std::string orig_reduced_costs_file;
+   std::string orig_basis_file;
    std::string scip_settings_file;
    std::string optimal_solution_file;
    std::string soplex_settings_file;
@@ -103,6 +106,26 @@ struct OptionsInfo
          return false;
       }
 
+      if( existsFile( optimal_solution_file ) )
+      {
+         fmt::print( "file {} is not valid\n", optimal_solution_file );
+         return false;
+      }
+      if( existsFile( orig_reduced_costs_file ) )
+      {
+         fmt::print( "file {} is not valid\n", orig_reduced_costs_file );
+         return false;
+      }
+      if( existsFile( orig_basis_file ) )
+      {
+         fmt::print( "file {} is not valid\n", orig_basis_file );
+         return false;
+      }
+      if( existsFile( orig_dual_solution_file ) )
+      {
+         fmt::print( "file {} is not valid\n", orig_dual_solution_file );
+         return false;
+      }
       if( existsFile( optimal_solution_file ) )
       {
          fmt::print( "file {} is not valid\n", optimal_solution_file );
@@ -199,6 +222,12 @@ struct OptionsInfo
                              "filename for solution of reduced problem" );
          desc.add_options()( "solution,l", value( &orig_solution_file ),
                              "filename for solution" );
+         desc.add_options()( "dualsolution", value( &orig_dual_solution_file ),
+                             "filename for dual solution" );
+         desc.add_options()( "reducedcosts,c", value( &orig_reduced_costs_file ),
+                             "filename for reduced costs" );
+         desc.add_options()( "basis,w", value( &orig_basis_file ),
+                             "filename for basis information" );
          desc.add_options()( "reference-objective,o",
                              value( &objective_reference ),
                              "correct objective value for validation" );

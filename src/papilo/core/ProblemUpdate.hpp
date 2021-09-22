@@ -25,13 +25,13 @@
 #define _PAPILO_CORE_PROBLEM_UPDATE_HPP_
 
 #include "papilo/core/MatrixBuffer.hpp"
-#include "papilo/core/Postsolve.hpp"
 #include "papilo/core/PresolveMethod.hpp"
 #include "papilo/core/PresolveOptions.hpp"
 #include "papilo/core/Problem.hpp"
 #include "papilo/core/Reductions.hpp"
 #include "papilo/core/SingleRow.hpp"
 #include "papilo/core/Statistics.hpp"
+#include "papilo/core/postsolve/PostsolveStorage.hpp"
 #include "papilo/misc/Flags.hpp"
 #include "papilo/misc/MultiPrecision.hpp"
 #include "papilo/misc/Num.hpp"
@@ -60,7 +60,7 @@ template <typename REAL>
 class ProblemUpdate
 {
    Problem<REAL>& problem;
-   Postsolve<REAL>& postsolve;
+   PostsolveStorage<REAL>& postsolve;
    Statistics& stats;
    const PresolveOptions& presolveOptions;
    const Num<REAL>& num;
@@ -102,6 +102,8 @@ class ProblemUpdate
    Vec<Flags<State>> row_state;
    Vec<Flags<State>> col_state;
 
+
+
    template <typename... Args>
    void
    setColState( int col, Args... flags )
@@ -141,7 +143,7 @@ class ProblemUpdate
    }
 
  public:
-   ProblemUpdate( Problem<REAL>& problem, Postsolve<REAL>& postsolve,
+   ProblemUpdate( Problem<REAL>& problem, PostsolveStorage<REAL>& postsolve,
                   Statistics& stats, const PresolveOptions& presolveOptions,
                   const Num<REAL>& num, const Message& msg );
 
@@ -164,6 +166,30 @@ class ProblemUpdate
    PresolveStatus
    changeLB( int col, REAL val );
 
+   void
+   merge_parallel_columns(
+       int col1, int col2, REAL col2scale,
+       ConstraintMatrix<REAL>& constraintMatrix, Vec<REAL>& lbs, Vec<REAL>& ubs,
+       Vec<ColFlags>& cflags );
+
+   ConstraintMatrix<REAL>&
+   getConstraintMatrix()
+   {
+      return problem.getConstraintMatrix();
+   }
+
+   Problem<REAL>&
+   getProblem()
+   {
+      return problem;
+   }
+
+   void
+   clearDeletedCols()
+   {
+      deleted_cols.clear();
+   }
+
    PresolveStatus
    changeUB( int col, REAL val );
 
@@ -177,6 +203,7 @@ class ProblemUpdate
          ++stats.ndeletedrows;
          rflags.set( RowFlag::kRedundant );
       }
+      postsolve.storeRedundantRow( row );
    }
 
    void
@@ -281,6 +308,12 @@ class ProblemUpdate
       return singletonColumns;
    }
 
+    void
+    addDeletedVar(int col)
+    {
+        deleted_cols.push_back(col);
+    }
+
    const Vec<int>&
    getRandomColPerm() const
    {
@@ -375,6 +408,9 @@ class ProblemUpdate
    void
    print_detailed( const Reduction<REAL>* first,
                    const Reduction<REAL>* last ) const;
+
+
+
 };
 
 #ifdef PAPILO_USE_EXTERN_TEMPLATES
@@ -385,7 +421,7 @@ extern template class ProblemUpdate<Rational>;
 
 template <typename REAL>
 ProblemUpdate<REAL>::ProblemUpdate( Problem<REAL>& problem,
-                                    Postsolve<REAL>& postsolve,
+                                    PostsolveStorage<REAL>& postsolve,
                                     Statistics& stats,
                                     const PresolveOptions& presolveOptions,
                                     const Num<REAL>& num, const Message& msg )
@@ -491,20 +527,24 @@ ProblemUpdate<REAL>::fixCol( int col, REAL val )
              cflags[col].test( ColFlag::kLbUseless ),
              problem.getRowActivities(), updateActivity );
 
+         postsolve.storeVarBoundChange(
+             true, col, lbs[col],
+             problem.getColFlags()[col].test( ColFlag::kLbInf ), val );
          lbs[col] = val;
          cflags[col].unset( ColFlag::kLbUseless );
       }
 
       if( ubchanged )
       {
-         // TODO: warum benutzt man nicht die bereits vorhandenen Funktionen,
-         // wie changeUB
          update_activities_after_boundchange(
              colvec.getValues(), colvec.getIndices(), colvec.getLength(),
              BoundChange::kUpper, ubs[col], val,
              cflags[col].test( ColFlag::kUbUseless ),
              problem.getRowActivities(), updateActivity );
 
+         postsolve.storeVarBoundChange(
+             false, col, ubs[col],
+             problem.getColFlags()[col].test( ColFlag::kUbInf ), val );
          ubs[col] = val;
          cflags[col].unset( ColFlag::kUbUseless );
       }
@@ -542,6 +582,14 @@ ProblemUpdate<REAL>::fixColInfinity( int col, REAL val )
    markColFixed( col );
 
    setColState( col, State::kBoundsModified );
+   if( cflags[col].test( ColFlag::kLbInf ) )
+   {
+      postsolve.storeFixedInfCol( col, -1, ubs[col], problem );
+   }
+   if( cflags[col].test( ColFlag::kUbInf ) )
+   {
+      postsolve.storeFixedInfCol( col, 1, lbs[col], problem );
+   }
 
    return PresolveStatus::kReduced;
 }
@@ -568,7 +616,8 @@ ProblemUpdate<REAL>::changeLB( int col, REAL val )
    if( cflags[col].test( ColFlag::kIntegral, ColFlag::kImplInt ) )
       newbound = num.feasCeil( newbound );
 
-   if( cflags[col].test( ColFlag::kLbInf ) || newbound > lbs[col] )
+   bool isInfinity = cflags[col].test( ColFlag::kLbInf );
+   if( isInfinity || newbound > lbs[col] )
    {
       ++stats.nboundchgs;
       if( !cflags[col].test( ColFlag::kUbInf ) && newbound > ubs[col] )
@@ -613,6 +662,8 @@ ProblemUpdate<REAL>::changeLB( int col, REAL val )
       else
          cflags[col].unset( ColFlag::kLbInf );
 
+      postsolve.storeVarBoundChange( true, col, lbs[col], isInfinity,
+                                     newbound );
       lbs[col] = newbound;
 
       if( !cflags[col].test( ColFlag::kUbInf ) && ubs[col] == lbs[col] )
@@ -657,7 +708,8 @@ ProblemUpdate<REAL>::changeUB( int col, REAL val )
    if( cflags[col].test( ColFlag::kIntegral, ColFlag::kImplInt ) )
       newbound = num.feasFloor( newbound );
 
-   if( cflags[col].test( ColFlag::kUbInf ) || newbound < ubs[col] )
+   bool isInfinity = cflags[col].test( ColFlag::kUbInf );
+   if( isInfinity || newbound < ubs[col] )
    {
       ++stats.nboundchgs;
       if( !cflags[col].test( ColFlag::kLbInf ) && newbound < lbs[col] )
@@ -701,6 +753,8 @@ ProblemUpdate<REAL>::changeUB( int col, REAL val )
       else
          cflags[col].unset( ColFlag::kUbInf );
 
+      postsolve.storeVarBoundChange( false, col, ubs[col], isInfinity,
+                                     newbound );
       ubs[col] = newbound;
 
       if( !cflags[col].test( ColFlag::kLbInf ) && ubs[col] == lbs[col] )
@@ -729,6 +783,9 @@ ProblemUpdate<REAL>::compress( bool full )
 {
    if( problem.getNCols() == getNActiveCols() &&
        problem.getNRows() == getNActiveRows() && !full )
+      return;
+   // TODO: do not compress if ActiveRows are zero because rowmapping in Postsolve is deleted.
+   if(getNActiveRows() <= 0)
       return;
 
    Message::debug( this,
@@ -823,10 +880,16 @@ ProblemUpdate<REAL>::checkChangedActivities()
          status = PresolveStatus::kReduced;
          break;
       case RowStatus::kRedundantLhs:
+         postsolve.storeRowBoundChange(
+             true, r, REAL{ 0 }, true, REAL{ 0 },
+             consmatrix.getRowFlags()[r].test( RowFlag::kLhsInf ) );
          consmatrix.template modifyLeftHandSide<true>( r, num );
          status = PresolveStatus::kReduced;
          break;
       case RowStatus::kRedundantRhs:
+         postsolve.storeRowBoundChange(
+             false, r, REAL{ 0 }, true, REAL{ 0 },
+             consmatrix.getRowFlags()[r].test( RowFlag::kRhsInf ) );
          consmatrix.template modifyRightHandSide<true>( r, num );
          status = PresolveStatus::kReduced;
          break;
@@ -863,7 +926,7 @@ ProblemUpdate<REAL>::flushChangedCoeffs()
                           RowActivity<REAL>& activity )
              { update_activity( actChange, row, activity ); } );
          ++stats.ncoefchgs;
-         // TODO update up/down-locks -> so that i.e. DualFix can use it
+         // TODO: update up/down-locks -> so that i.e. DualFix can use it
       };
 
       problem.getConstraintMatrix().changeCoefficients(
@@ -1037,35 +1100,31 @@ ProblemUpdate<REAL>::removeFixedCols()
       if( !cflags[col].test( ColFlag::kFixed ) )
          continue;
 
-      if( cflags[col].test( ColFlag::kLbInf ) )
-      {
-         postsolve.notifyFixedInfCol( col, -1, problem.getUpperBounds()[col],
-                                      problem );
+      if( cflags[col].test( ColFlag::kLbInf ) or cflags[col].test( ColFlag::kUbInf ) )
          continue;
-      }
-      if( cflags[col].test( ColFlag::kUbInf ) )
-      {
-         postsolve.notifyFixedInfCol( col, 1, lbs[col], problem );
-         continue;
-      }
 
-      assert( lbs[col] == problem.getUpperBounds()[col] );
-      postsolve.notifyFixedCol( col, lbs[col] );
+      assert(
+          num.isEq( lbs[col], problem.getUpperBounds()[col] ) and  not colFlags[col]
+              .test( ColFlag::kUbInf ) and
+          not colFlags[col].test( ColFlag::kLbInf ) );
+
+      auto colvec = consMatrix.getColumnCoefficients( col );
+      postsolve.storeFixedCol( col, lbs[col], colvec, obj.coefficients );
 
       // if it is fixed to zero activities and sides do not need to be
       // updated
       if( lbs[col] == 0 )
          continue;
 
-      // update objective offset
-      if( obj.coefficients[col] != 0 )
-      {
-         obj.offset += lbs[col] * obj.coefficients[col];
-         obj.coefficients[col] = 0;
-      }
+       // update objective offset
+       if( obj.coefficients[col] != 0 )
+       {
+           obj.offset += lbs[col] * obj.coefficients[col];
+           obj.coefficients[col] = 0;
+       }
 
-      // fixed to nonzero value, so update sides and activities
-      auto colvec = consMatrix.getColumnCoefficients( col );
+
+       // fixed to nonzero value, so update sides and activities
       int collen = colvec.getLength();
       const int* colrows = colvec.getIndices();
       const REAL* colvals = colvec.getValues();
@@ -1112,7 +1171,7 @@ ProblemUpdate<REAL>::trivialColumnPresolve()
 
    PresolveStatus status = PresolveStatus::kUnchanged;
 
-   for( int col = 0; col != problem.getNCols(); ++col )
+   for( int col = 0; col < problem.getNCols(); ++col )
    {
       if( cflags[col].test( ColFlag::kInactive ) )
          continue;
@@ -1183,6 +1242,9 @@ ProblemUpdate<REAL>::apply_dualfix( Vec<REAL>& lbs, Vec<REAL>& ubs,
          }
          else
          {
+            postsolve.storeVarBoundChange( false, col, ubs[col],
+                                           cflags[col].test( ColFlag::kUbInf ),
+                                           lbs[col] );
             ubs[col] = lbs[col];
             cflags[col].unset( ColFlag::kUbInf );
             ++stats.nboundchgs;
@@ -1207,6 +1269,9 @@ ProblemUpdate<REAL>::apply_dualfix( Vec<REAL>& lbs, Vec<REAL>& ubs,
          }
          else
          {
+            postsolve.storeVarBoundChange( true, col, lbs[col],
+                                           cflags[col].test( ColFlag::kLbInf ),
+                                           ubs[col] );
             lbs[col] = ubs[col];
             cflags[col].unset( ColFlag::kLbInf );
             ++stats.nboundchgs;
@@ -1323,6 +1388,7 @@ ProblemUpdate<REAL>::trivialRowPresolve()
          }
          rflags[row].set( RowFlag::kRedundant );
          rowsize[row] = -1;
+         postsolve.storeRedundantRow( row );
          status = PresolveStatus::kReduced;
          break;
       case 1:
@@ -1342,15 +1408,19 @@ ProblemUpdate<REAL>::trivialRowPresolve()
          switch( st )
          {
          case RowStatus::kRedundant:
-            markRowRedundant( row );
-            status = PresolveStatus::kReduced;
             break;
          case RowStatus::kRedundantLhs:
+            postsolve.storeRowBoundChange(
+                true, row, REAL{ 0 }, true, REAL{ 0 },
+                consMatrix.getRowFlags()[row].test( RowFlag::kLhsInf ) );
             consMatrix.template modifyLeftHandSide<true>( row, num );
             status = PresolveStatus::kReduced;
             cleanupSmallCoefficients( row );
             break;
          case RowStatus::kRedundantRhs:
+            postsolve.storeRowBoundChange(
+                false, row, REAL{ 0 }, true, REAL{ 0 },
+                consMatrix.getRowFlags()[row].test( RowFlag::kRhsInf ) );
             consMatrix.template modifyRightHandSide<true>( row, num );
             status = PresolveStatus::kReduced;
             cleanupSmallCoefficients( row );
@@ -1487,34 +1557,52 @@ ProblemUpdate<REAL>::removeSingletonRow( int row )
    const int col = rowvec.getIndices()[0];
    const REAL lhs = consMatrix.getLeftHandSides()[row];
    const REAL rhs = consMatrix.getRightHandSides()[row];
+   const bool isLhsInfinity = rflags[row].test( RowFlag::kLhsInf );
+   const bool isRhsInfinity = rflags[row].test( RowFlag::kRhsInf );
 
    if( rflags[row].test( RowFlag::kEquation ) )
-      status = fixCol( col, rhs / val );
-   else if( val < 0 )
    {
-      if( !rflags[row].test( RowFlag::kLhsInf ) )
-         status = changeUB( col, lhs / val );
-
-      if( !rflags[row].test( RowFlag::kRhsInf ) &&
-          status != PresolveStatus::kInfeasible )
-         status = changeLB( col, rhs / val );
+      postsolve.storeSavedRow( row, rowvec, lhs, rhs, rflags[row] );
+      status = fixCol( col, rhs / val );
    }
    else
    {
-      assert( val > 0 );
+      if( val < 0 )
+      {
+         if( !isLhsInfinity )
+         {
+            postsolve.storeSavedRow( row, rowvec, lhs, rhs, rflags[row] );
+            status = changeUB( col, lhs / val );
+         }
 
-      if( !rflags[row].test( RowFlag::kLhsInf ) )
-         status = changeLB( col, lhs / val );
+         if( !isRhsInfinity && status != PresolveStatus::kInfeasible )
+         {
+            postsolve.storeSavedRow( row, rowvec, lhs, rhs, rflags[row] );
+            status = changeLB( col, rhs / val );
+         }
+      }
+      else
+      {
+         assert( val > 0 );
 
-      if( !rflags[row].test( RowFlag::kRhsInf ) &&
-          status != PresolveStatus::kInfeasible )
-         status = changeUB( col, rhs / val );
+         if( !isLhsInfinity )
+         {
+            postsolve.storeSavedRow( row, rowvec, lhs, rhs, rflags[row] );
+            status = changeLB( col, lhs / val );
+         }
+
+         if( !isRhsInfinity && status != PresolveStatus::kInfeasible )
+         {
+            postsolve.storeSavedRow( row, rowvec, lhs, rhs, rflags[row] );
+            status = changeUB( col, rhs / val );
+         }
+      }
    }
 
    markRowRedundant( row );
 
    return status;
-}
+} // namespace papilo
 
 template <typename REAL>
 void
@@ -1610,6 +1698,8 @@ ProblemUpdate<REAL>::removeEmptyColumns()
       Objective<REAL>& obj = problem.getObjective();
       VariableDomains<REAL>& domains = problem.getVariableDomains();
       Vec<int>& colsize = problem.getConstraintMatrix().getColSizes();
+
+      SparseVectorView<REAL> empty_column;
       for( int col : emptyColumns )
       {
          if( colsize[col] != 0 )
@@ -1622,18 +1712,30 @@ ProblemUpdate<REAL>::removeEmptyColumns()
          {
             assert( colsize[col] == 0 );
 
-            REAL fixval;
+            REAL fixval, cost;
 
             if( num.isZero(obj.coefficients[col]) )
             {
                fixval = 0;
 
                if( !domains.flags[col].test( ColFlag::kUbInf ) &&
-                   domains.upper_bounds[col] < 0 )
+                   num.isLT(domains.upper_bounds[col], 0) )
                   fixval = domains.upper_bounds[col];
                else if( !domains.flags[col].test( ColFlag::kLbInf ) &&
-                        domains.lower_bounds[col] > 0 )
+                        num.isGT(domains.lower_bounds[col], 0) )
                   fixval = domains.lower_bounds[col];
+
+               // notify for storing the bound for recalculation
+               if( domains.flags[col].test( ColFlag::kLbInf ) or
+                   not num.isEq( domains.lower_bounds[col], fixval ) )
+                  postsolve.storeVarBoundChange(
+                      true, col, domains.lower_bounds[col],
+                      domains.flags[col].test( ColFlag::kLbInf ), fixval );
+               if( domains.flags[col].test( ColFlag::kUbInf ) or
+                   not num.isEq( domains.upper_bounds[col], fixval ) )
+                  postsolve.storeVarBoundChange(
+                      false, col, domains.upper_bounds[col],
+                      domains.flags[col].test( ColFlag::kUbInf ), fixval );
             }
             else
             {
@@ -1643,6 +1745,9 @@ ProblemUpdate<REAL>::removeEmptyColumns()
                      return PresolveStatus::kUnbndOrInfeas;
 
                   fixval = domains.upper_bounds[col];
+                  postsolve.storeVarBoundChange(
+                      true, col, domains.lower_bounds[col],
+                      domains.flags[col].test( ColFlag::kLbInf ), fixval );
                }
                else
                {
@@ -1651,13 +1756,18 @@ ProblemUpdate<REAL>::removeEmptyColumns()
                      return PresolveStatus::kUnbndOrInfeas;
 
                   fixval = domains.lower_bounds[col];
+                  postsolve.storeVarBoundChange(
+                      false, col, domains.upper_bounds[col],
+                      domains.flags[col].test( ColFlag::kUbInf ), fixval );
                }
-
+            }
+            postsolve.storeFixedCol( col, fixval, empty_column,
+                                     obj.coefficients );
+            if( obj.coefficients[col] != 0 )
+            {
                obj.offset += obj.coefficients[col] * fixval;
                obj.coefficients[col] = 0;
             }
-
-            postsolve.notifyFixedCol( col, fixval );
             domains.flags[col].set( ColFlag::kFixed );
 
             ++stats.ndeletedcols;
@@ -1751,6 +1861,7 @@ ProblemUpdate<REAL>::checkTransactionConflicts( const Reduction<REAL>* first,
          case RowReduction::RHS_INF:
          case RowReduction::RHS:
          case RowReduction::RHS_LESS_RESTRICTIVE:
+         case RowReduction::SAVE_ROW:
             break;
          case RowReduction::SPARSIFY:
             if( postponeSubstitutions )
@@ -1806,6 +1917,8 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
          setRowState( reduction.row, State::kModified );
          setColState( reduction.col, State::kModified );
 
+         postsolve.storeCoefficientChange( reduction.row, reduction.col,
+                                           reduction.newval );
          matrix_buffer.addEntry( reduction.row, reduction.col,
                                  reduction.newval );
       }
@@ -1906,6 +2019,8 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
             const int* colindices = colvec.getIndices();
             const int nbrelevantrows = colvec.getLength();
 
+            postsolve.storeSubstitution( col, equalityrow, problem );
+
             assert(
                 !cflags[col].test( ColFlag::kSubstituted, ColFlag::kFixed ) );
             cflags[col].set( ColFlag::kSubstituted );
@@ -1938,7 +2053,7 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
 
             auto eqRHS = constraintMatrix.getLeftHandSides()[equalityrow];
 
-            postsolve.notifySubstitution( col, rowvec, eqRHS );
+
             // make the changes in the constraint matrix
             constraintMatrix.aggregate(
                 num, col, rowvec, eqRHS, problem.getVariableDomains(),
@@ -1986,6 +2101,11 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
             assert( !cflags[col].test( ColFlag::kInactive ) );
             cflags[col].set( ColFlag::kSubstituted );
 
+            const auto rowvec =
+                constraintMatrix.getRowCoefficients( equalityrow );
+
+            postsolve.storeSubstitution( col, equalityrow, problem );
+
             // change the objective coefficients and offset
             problem.substituteVarInObj( num, col, equalityrow );
 
@@ -2009,13 +2129,6 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
             lbs[col] = 0;
             ubs[col] = 0;
             deleted_cols.push_back( col );
-
-            // update col states
-            const auto rowvec =
-                constraintMatrix.getRowCoefficients( equalityrow );
-
-            postsolve.notifySubstitution(
-                col, rowvec, constraintMatrix.getLeftHandSides()[equalityrow] );
 
             const int length = rowvec.getLength();
             const int* indices = rowvec.getIndices();
@@ -2054,211 +2167,24 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
             auto col1vec = constraintMatrix.getColumnCoefficients( col1 );
             auto col2vec = constraintMatrix.getColumnCoefficients( col2 );
 
-            const int* inds = col1vec.getIndices();
+
             const REAL* vals1 = col1vec.getValues();
             const REAL* vals2 = col2vec.getValues();
             const int collen = col1vec.getLength();
 
             assert( collen > 0 );
             REAL col2scale = vals1[0] / vals2[0];
-            assert( col2vec.getLength() == collen );
+            assert( col2vec.getLength() == col1vec.getLength() );
 
             assert( num.isEq( objective.coefficients[col1],
                               objective.coefficients[col2] * col2scale ) );
 
-            bool col1lbinf = cflags[col1].test( ColFlag::kLbInf );
-            bool col1ubinf = cflags[col1].test( ColFlag::kUbInf );
-            bool col1int = cflags[col1].test( ColFlag::kIntegral );
-            bool col2lbinf = cflags[col2].test( ColFlag::kLbInf );
-            bool col2ubinf = cflags[col2].test( ColFlag::kUbInf );
-            bool col2int = cflags[col2].test( ColFlag::kIntegral );
 
-            postsolve.notifyParallelCols( col1, col1int, col1lbinf, lbs[col1],
-                                          col1ubinf, ubs[col1], col2, col2int,
-                                          col2lbinf, lbs[col2], col2ubinf,
-                                          ubs[col2], col2scale );
             ++stats.ndeletedcols;
 
-            // compute the new domains for column 2
-            REAL newlb = 0;
-            REAL newub = 0;
-            bool newlbinf = true;
-            bool newubinf = true;
-            ColFlags newflags;
+            merge_parallel_columns( col1, col2, col2scale, constraintMatrix,
+                                    lbs, ubs, cflags );
 
-            newflags.set( ColFlag::kLbInf, ColFlag::kUbInf );
-
-            // in the case that column 1 is not integral the new column
-            // is also not integral regardless of whether column 2 is integral
-            // or not (the necessary conditions must have been checked by the
-            // presolver)
-            if( cflags[col1].test( ColFlag::kIntegral ) )
-            {
-               --problem.getNumIntegralCols();
-               newflags.set( ColFlag::kIntegral );
-            }
-            else if( cflags[col2].test( ColFlag::kIntegral ) )
-               --problem.getNumIntegralCols();
-            else
-               --problem.getNumContinuousCols();
-
-            if( col2scale < 0 )
-            {
-               if( !col2lbinf && !col1ubinf )
-               {
-                  newlb = lbs[col2] + col2scale * ubs[col1];
-                  newflags.unset( ColFlag::kLbInf );
-                  if( cflags[col1].test( ColFlag::kUbHuge ) ||
-                      cflags[col2].test( ColFlag::kLbHuge ) )
-                     newflags.set( ColFlag::kLbHuge );
-               }
-
-               if( !col2ubinf && !col1lbinf )
-               {
-                  newub = ubs[col2] + col2scale * lbs[col1];
-                  newflags.unset( ColFlag::kUbInf );
-                  if( cflags[col1].test( ColFlag::kLbHuge ) ||
-                      cflags[col2].test( ColFlag::kUbHuge ) )
-                     newflags.set( ColFlag::kUbHuge );
-               }
-            }
-            else
-            {
-               if( !col2lbinf && !col1lbinf )
-               {
-                  newlb = lbs[col2] + col2scale * lbs[col1];
-                  newflags.unset( ColFlag::kLbInf );
-                  if( cflags[col1].test( ColFlag::kLbHuge ) ||
-                      cflags[col2].test( ColFlag::kLbHuge ) )
-                     newflags.set( ColFlag::kLbHuge );
-               }
-
-               if( !col2ubinf && !col1ubinf )
-               {
-                  newub = ubs[col2] + col2scale * ubs[col1];
-                  newflags.unset( ColFlag::kUbInf );
-                  if( cflags[col1].test( ColFlag::kUbHuge ) ||
-                      cflags[col2].test( ColFlag::kUbHuge ) )
-                     newflags.set( ColFlag::kUbHuge );
-               }
-            }
-
-            // update the activities if required
-            if( newflags.test( ColFlag::kLbUseless ) )
-            {
-               // the new columns lower bound does not contribute to the
-               // activities
-
-               if( !cflags[col2].test( ColFlag::kLbUseless ) )
-               {
-                  // The current bound of column 2 contributes to the activity,
-                  // therefore column 1 must have a infinite or huge bound from
-                  // which we keep the infinite contribution for the new columns
-                  // domains. The finite constribution of the lower bound of
-                  // column 2 is removed.
-                  if( lbs[col2] != 0 )
-                  {
-                     update_activities_after_boundchange(
-                         vals2, inds, collen, BoundChange::kLower, lbs[col2],
-                         REAL{ 0 }, false, problem.getRowActivities(),
-                         []( ActivityChange, int, const RowActivity<REAL>& ) {
-                         } );
-                  }
-               }
-               else if( col2scale < 0 )
-               {
-                  // The lower bound of column 2 also does not contribute to the
-                  // activities, and we keep that infinite contribution for the
-                  // new column. Depending on the scale we remove any finite or
-                  // infinite contribution of column 1's bound. In this if case
-                  // the scale is negative, so the upper bound is removed.
-                  if( cflags[col1].test( ColFlag::kUbUseless ) ||
-                      ubs[col1] != 0 )
-                  {
-                     update_activities_after_boundchange(
-                         vals1, inds, collen, BoundChange::kUpper, ubs[col1],
-                         REAL{ 0 }, cflags[col1].test( ColFlag::kUbUseless ),
-                         problem.getRowActivities(),
-                         []( ActivityChange, int, const RowActivity<REAL>& ) {
-                         } );
-                  }
-               }
-               else
-               {
-                  // The lower bound of column 2 also does not contribute to the
-                  // activities, and we keep that infinite contribution for the
-                  // new column. Depending on the scale we remove any finite or
-                  // infinite contribution of column 1's bound. In this if case
-                  // the scale is positive, so the lower bound is removed.
-                  if( cflags[col1].test( ColFlag::kLbUseless ) ||
-                      lbs[col1] != 0 )
-                  {
-                     update_activities_after_boundchange(
-                         vals1, inds, collen, BoundChange::kLower, lbs[col1],
-                         REAL{ 0 }, cflags[col1].test( ColFlag::kLbUseless ),
-                         problem.getRowActivities(),
-                         []( ActivityChange, int, const RowActivity<REAL>& ) {
-                         } );
-                  }
-               }
-            }
-
-            if( newflags.test( ColFlag::kUbUseless ) )
-            {
-               // symmetric cases as above for the lower bound
-               if( !cflags[col2].test( ColFlag::kUbUseless ) )
-               {
-                  if( ubs[col2] != 0 )
-                  {
-                     update_activities_after_boundchange(
-                         vals2, inds, collen, BoundChange::kUpper, ubs[col2],
-                         REAL{ 0 }, false, problem.getRowActivities(),
-                         updateActivity );
-                  }
-               }
-               else if( col2scale < 0 )
-               {
-                  if( cflags[col1].test( ColFlag::kLbUseless ) ||
-                      lbs[col1] != 0 )
-                  {
-                     update_activities_after_boundchange(
-                         vals1, inds, collen, BoundChange::kLower, lbs[col1],
-                         REAL{ 0 }, cflags[col1].test( ColFlag::kLbUseless ),
-                         problem.getRowActivities(),
-                         []( ActivityChange, int, const RowActivity<REAL>& ) {
-                         } );
-                  }
-               }
-               else
-               {
-                  if( cflags[col1].test( ColFlag::kUbUseless ) ||
-                      ubs[col1] != 0 )
-                  {
-                     update_activities_after_boundchange(
-                         vals1, inds, collen, BoundChange::kUpper, ubs[col1],
-                         REAL{ 0 }, cflags[col1].test( ColFlag::kUbUseless ),
-                         problem.getRowActivities(),
-                         []( ActivityChange, int, const RowActivity<REAL>& ) {
-                         } );
-                  }
-               }
-            }
-
-            // column 1 can now be treated as if it fixed to zero
-            // the flag however is not set to ColFlag::kFixed since
-            // this indicates that their will be a notification to postsolve
-            // about that case, instead it is set to substituted
-            lbs[col1] = 0;
-            ubs[col1] = 0;
-            cflags[col1].unset( ColFlag::kLbUseless, ColFlag::kUbUseless );
-            cflags[col1].set( ColFlag::kSubstituted );
-            deleted_cols.push_back( col1 );
-
-            // the domains of column 2 are now set column 2 bounds are set to
-            // new bound values
-            lbs[col2] = newlb;
-            ubs[col2] = newub;
-            cflags[col2] = newflags;
             break;
          }
          case ColReduction::REPLACE:
@@ -2367,7 +2293,8 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
                msg.detailed( "\n" );
 
                // perform changes in matrix and sides
-               postsolve.notifySubstitution( col1, equalityLHS, offset );
+               //TODO:
+               postsolve.storeSubstitution( col1, equalityLHS, offset );
 
                constraintMatrix.aggregate(
                    num, col1, equalityLHS, offset, problem.getVariableDomains(),
@@ -2412,6 +2339,16 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
          case RowReduction::NONE:
             assert( false );
             break;
+         case RowReduction::SAVE_ROW:
+         {
+            int row = reduction.row;
+            postsolve.storeSavedRow( row,
+                                     constraintMatrix.getRowCoefficients( row ),
+                                     constraintMatrix.getLeftHandSides()[row],
+                                     constraintMatrix.getRightHandSides()[row],
+                                     problem.getRowFlags()[row] );
+         }
+         break;
          case RowReduction::LHS:
             assert( rflags[reduction.row].test( RowFlag::kLhsInf ) ||
                     reduction.newval !=
@@ -2454,6 +2391,11 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
                return ApplyResult::kInfeasible;
             }
 
+            postsolve.storeRowBoundChange(
+                true, reduction.row, reduction.newval, false,
+                constraintMatrix.getLeftHandSides()[reduction.row],
+                constraintMatrix.getRowFlags()[reduction.row].test(
+                    RowFlag::kLhsInf ) );
             constraintMatrix.modifyLeftHandSide( reduction.row, num,
                                                  reduction.newval );
 
@@ -2487,9 +2429,23 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
 
             constraintMatrix.modifyLeftHandSide( reduction.row, num,
                                                  reduction.newval );
+            postsolve.storeRowBoundChangeForcedByRow( true, reduction.row,
+                                                      reduction.newval, false );
 
             ++stats.nsidechgs;
             break;
+         case RowReduction::REASON_FOR_LESS_RESTRICTIVE_BOUND_CHANGE:
+         {
+            REAL factor = problem.getConstraintMatrix()
+                              .getRowCoefficients( (int)reduction.newval )
+                              .getValues()[0] /
+                          problem.getConstraintMatrix()
+                              .getRowCoefficients( reduction.row )
+                              .getValues()[0];
+            postsolve.storeReasonForRowBoundChangeForcedByRow(
+                (int)reduction.newval, reduction.row, factor );
+            break;
+         }
          case RowReduction::RHS:
             assert( rflags[reduction.row].test( RowFlag::kRhsInf ) ||
                     reduction.newval !=
@@ -2530,6 +2486,11 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
                return ApplyResult::kInfeasible;
             }
 
+            postsolve.storeRowBoundChange(
+                false, reduction.row, reduction.newval, false,
+                constraintMatrix.getRightHandSides()[reduction.row],
+                constraintMatrix.getRowFlags()[reduction.row].test(
+                    RowFlag::kRhsInf ) );
             constraintMatrix.modifyRightHandSide( reduction.row, num,
                                                   reduction.newval );
 
@@ -2563,6 +2524,8 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
 
             constraintMatrix.modifyRightHandSide( reduction.row, num,
                                                   reduction.newval );
+            postsolve.storeRowBoundChangeForcedByRow( false, reduction.row,
+                                                      reduction.newval, false );
 
             ++stats.nsidechgs;
             break;
@@ -2571,8 +2534,13 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
             {
                setRowState( reduction.row, State::kBoundsModified );
 
+               postsolve.storeRowBoundChange(
+                   true, reduction.row, REAL{ 0 }, true, REAL{ 0 },
+                   constraintMatrix.getRowFlags()[reduction.row].test(
+                       RowFlag::kLhsInf ) );
                constraintMatrix.template modifyLeftHandSide<true>(
                    reduction.row, num, REAL{ 0 } );
+
 
                ++stats.nsidechgs;
             }
@@ -2581,6 +2549,10 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
             if( !rflags[reduction.row].test( RowFlag::kRhsInf ) )
             {
                setRowState( reduction.row, State::kBoundsModified );
+               postsolve.storeRowBoundChange(
+                   false, reduction.row, REAL{ 0 }, true, REAL{ 0 },
+                   constraintMatrix.getRowFlags()[reduction.row].test(
+                       RowFlag::kRhsInf ) );
                constraintMatrix.template modifyRightHandSide<true>(
                    reduction.row, num, REAL{ 0 } );
                ++stats.nsidechgs;
@@ -2661,6 +2633,210 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
 
    // no conflicts found
    return ApplyResult::kApplied;
+}
+
+template <typename REAL>
+void
+ProblemUpdate<REAL>::merge_parallel_columns(
+    int col1, int col2, REAL col2scale,
+    ConstraintMatrix<REAL>& constraintMatrix, Vec<REAL>& lbs, Vec<REAL>& ubs,
+    Vec<ColFlags>& cflags )
+{
+   const SparseVectorView<REAL>& col1vec = constraintMatrix.getColumnCoefficients(col1);
+   const SparseVectorView<REAL>& col2vec = constraintMatrix.getColumnCoefficients(col2);
+
+   bool col1lbinf = cflags[col1].test( ColFlag::kLbInf );
+   bool col1ubinf = cflags[col1].test( ColFlag::kUbInf );
+   bool col1int = cflags[col1].test( ColFlag::kIntegral );
+   bool col2lbinf = cflags[col2].test( ColFlag::kLbInf );
+   bool col2ubinf = cflags[col2].test( ColFlag::kUbInf );
+   bool col2int = cflags[col2].test( ColFlag::kIntegral );
+
+   postsolve.storeParallelCols( col1, col1int, col1lbinf, lbs[col1], col1ubinf,
+                                ubs[col1], col2, col2int, col2lbinf, lbs[col2],
+                                col2ubinf, ubs[col2], col2scale );
+
+   auto updateActivity = [this]( ActivityChange actChange, int rowid,
+       RowActivity<REAL>& activity ) {
+      update_activity( actChange, rowid, activity );
+   };
+
+
+   const int* inds = col1vec.getIndices();
+   const REAL* vals1 = col1vec.getValues();
+   const REAL* vals2 = col2vec.getValues();
+   const int collen = col1vec.getLength();
+
+   // compute the new domains for column 2
+   REAL newlb = 0;
+   REAL newub = 0;
+   bool newlbinf = true;
+   bool newubinf = true;
+   ColFlags newflags;
+
+   newflags.set( ColFlag::kLbInf, ColFlag::kUbInf );
+
+   // in the case that column 1 is not integral the new column
+   // is also not integral regardless of whether column 2 is integral
+   // or not (the necessary conditions must have been checked by the
+   // presolver)
+   if( cflags[col1].test( ColFlag::kIntegral ) )
+   {
+      --problem.getNumIntegralCols();
+      newflags.set( ColFlag::kIntegral );
+   }
+   else if( cflags[col2].test( ColFlag::kIntegral ) )
+      --problem.getNumIntegralCols();
+   else
+      --problem.getNumContinuousCols();
+
+   if( col2scale < 0 )
+   {
+      if( !col2lbinf && !col1ubinf )
+      {
+         newlb = lbs[col2] + col2scale * ubs[col1];
+         newflags.unset( ColFlag::kLbInf );
+         if( cflags[col1].test( ColFlag::kUbHuge ) ||
+             cflags[col2].test( ColFlag::kLbHuge ) )
+            newflags.set( ColFlag::kLbHuge );
+      }
+
+      if( !col2ubinf && !col1lbinf )
+      {
+         newub = ubs[col2] + col2scale * lbs[col1];
+         newflags.unset( ColFlag::kUbInf );
+         if( cflags[col1].test( ColFlag::kLbHuge ) ||
+             cflags[col2].test( ColFlag::kUbHuge ) )
+            newflags.set( ColFlag::kUbHuge );
+      }
+   }
+   else
+   {
+      if( !col2lbinf && !col1lbinf )
+      {
+         newlb = lbs[col2] + col2scale * lbs[col1];
+         newflags.unset( ColFlag::kLbInf );
+         if( cflags[col1].test( ColFlag::kLbHuge ) ||
+             cflags[col2].test( ColFlag::kLbHuge ) )
+            newflags.set( ColFlag::kLbHuge );
+      }
+
+      if( !col2ubinf && !col1ubinf )
+      {
+         newub = ubs[col2] + col2scale * ubs[col1];
+         newflags.unset( ColFlag::kUbInf );
+         if( cflags[col1].test( ColFlag::kUbHuge ) ||
+             cflags[col2].test( ColFlag::kUbHuge ) )
+            newflags.set( ColFlag::kUbHuge );
+      }
+   }
+
+   // update the activities if required
+   if( newflags.test( ColFlag::kLbUseless ) )
+   {
+      // the new columns lower bound does not contribute to the
+      // activities
+
+      if( !cflags[col2].test( ColFlag::kLbUseless ) )
+      {
+         // The current bound of column 2 contributes to the activity,
+         // therefore column 1 must have a infinite or huge bound from
+         // which we keep the infinite contribution for the new columns
+         // domains. The finite constribution of the lower bound of
+         // column 2 is removed.
+         if( lbs[col2] != 0 )
+         {
+            update_activities_after_boundchange(
+                vals2, inds, collen, BoundChange::kLower, lbs[col2], REAL{ 0 },
+                false, problem.getRowActivities(),
+                []( ActivityChange, int, const RowActivity<REAL>& ) {} );
+         }
+      }
+      else if( col2scale < 0 )
+      {
+         // The lower bound of column 2 also does not contribute to the
+         // activities, and we keep that infinite contribution for the
+         // new column. Depending on the scale we remove any finite or
+         // infinite contribution of column 1's bound. In this if case
+         // the scale is negative, so the upper bound is removed.
+         if( cflags[col1].test( ColFlag::kUbUseless ) || ubs[col1] != 0 )
+         {
+            update_activities_after_boundchange(
+                vals1, inds, collen, BoundChange::kUpper, ubs[col1], REAL{ 0 },
+                cflags[col1].test( ColFlag::kUbUseless ),
+                problem.getRowActivities(),
+                []( ActivityChange, int, const RowActivity<REAL>& ) {} );
+         }
+      }
+      else
+      {
+         // The lower bound of column 2 also does not contribute to the
+         // activities, and we keep that infinite contribution for the
+         // new column. Depending on the scale we remove any finite or
+         // infinite contribution of column 1's bound. In this if case
+         // the scale is positive, so the lower bound is removed.
+         if( cflags[col1].test( ColFlag::kLbUseless ) || lbs[col1] != 0 )
+         {
+            update_activities_after_boundchange(
+                vals1, inds, collen, BoundChange::kLower, lbs[col1], REAL{ 0 },
+                cflags[col1].test( ColFlag::kLbUseless ),
+                problem.getRowActivities(),
+                []( ActivityChange, int, const RowActivity<REAL>& ) {} );
+         }
+      }
+   }
+
+   if( newflags.test( ColFlag::kUbUseless ) )
+   {
+      // symmetric cases as above for the lower bound
+      if( !cflags[col2].test( ColFlag::kUbUseless ) )
+      {
+         if( ubs[col2] != 0 )
+         {
+            update_activities_after_boundchange(
+                vals2, inds, collen, BoundChange::kUpper, ubs[col2], REAL{ 0 },
+                false, problem.getRowActivities(), updateActivity );
+         }
+      }
+      else if( col2scale < 0 )
+      {
+         if( cflags[col1].test( ColFlag::kLbUseless ) || lbs[col1] != 0 )
+         {
+            update_activities_after_boundchange(
+                vals1, inds, collen, BoundChange::kLower, lbs[col1], REAL{ 0 },
+                cflags[col1].test( ColFlag::kLbUseless ),
+                problem.getRowActivities(),
+                []( ActivityChange, int, const RowActivity<REAL>& ) {} );
+         }
+      }
+      else
+      {
+         if( cflags[col1].test( ColFlag::kUbUseless ) || ubs[col1] != 0 )
+         {
+            update_activities_after_boundchange(
+                vals1, inds, collen, BoundChange::kUpper, ubs[col1], REAL{ 0 },
+                cflags[col1].test( ColFlag::kUbUseless ),
+                problem.getRowActivities(),
+                []( ActivityChange, int, const RowActivity<REAL>& ) {} );
+         }
+      }
+   }
+
+   // column 1 can now be treated as if it fixed to zero
+   // the flag however is not set to ColFlag::kFixed since
+   // this indicates that their will be a notification to postsolve
+   // about that case, instead it is set to substituted
+   lbs[col1] = 0;
+   ubs[col1] = 0;
+   cflags[col1].unset( ColFlag::kLbUseless, ColFlag::kUbUseless );
+   cflags[col1].set( ColFlag::kSubstituted );
+   deleted_cols.push_back( col1 );
+
+   // the domains of column 2 are now set column 2 bounds are set to
+   // new bound values
+   lbs[col2] = newlb;
+   ubs[col2] = newub;
+   cflags[col2] = newflags;
 }
 
 template <typename REAL>

@@ -31,12 +31,6 @@
 using namespace papilo;
 
 Problem<double>
-setupExample1ofChapter3Dot5InPresolveReductions();
-
-Problem<double>
-setupExample2ofChapter3Dot5InPresolveReductions();
-
-Problem<double>
 setupProblemForSimplifyingInequalities();
 
 Problem<double>
@@ -54,7 +48,8 @@ TEST_CASE( "happy-path-simplify-inequalities", "[presolve]" )
    problem.recomputeAllActivities();
    Statistics statistics{};
    PresolveOptions presolveOptions{};
-   Postsolve<double> postsolve = Postsolve<double>( problem, num );
+   PostsolveStorage<double> postsolve =
+       PostsolveStorage<double>( problem, num, presolveOptions );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
    SimplifyInequalities<double> presolvingMethod{};
@@ -97,7 +92,8 @@ TEST_CASE( "simplify_inequ_doesnt_lock_more_rows", "[presolve]" )
    Problem<double> problem = setup_simplify_ineq_reduce_rhs();
    Statistics statistics{};
    PresolveOptions presolveOptions{};
-   Postsolve<double> postsolve = Postsolve<double>( problem, num );
+   PostsolveStorage<double> postsolve =
+       PostsolveStorage<double>( problem, num, presolveOptions );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
    problem.recomputeAllActivities();
@@ -119,7 +115,8 @@ TEST_CASE( "simplify_inequ_doesnt_apply_lb_and_ub_on_one_row", "[presolve]" )
    Problem<double> problem = setup_simple_problem_for_simplify_inequalities_2();
    Statistics statistics{};
    PresolveOptions presolveOptions{};
-   Postsolve<double> postsolve = Postsolve<double>( problem, num );
+   PostsolveStorage<double> postsolve =
+       PostsolveStorage<double>( problem, num, presolveOptions );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
    problem.recomputeAllActivities();
@@ -130,130 +127,6 @@ TEST_CASE( "simplify_inequ_doesnt_apply_lb_and_ub_on_one_row", "[presolve]" )
        presolvingMethod.execute( problem, problemUpdate, num, reductions );
 
    REQUIRE( presolveStatus == PresolveStatus::kUnchanged );
-}
-
-TEST_CASE( "example-1-from-3.5-Presolve-Reductions-in-MIP", "[presolve]" )
-{
-   Num<double> num{};
-   Message msg{};
-   Problem<double> problem = setupExample1ofChapter3Dot5InPresolveReductions();
-   Statistics statistics{};
-   PresolveOptions presolveOptions{};
-   Postsolve<double> postsolve = Postsolve<double>( problem, num );
-   ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
-                                        presolveOptions, num, msg );
-   SimplifyInequalities<double> presolvingMethod{};
-   Reductions<double> reductions{};
-
-   PresolveStatus presolveStatus =
-       presolvingMethod.execute( problem, problemUpdate, num, reductions );
-
-   // TODO:
-   REQUIRE( presolveStatus == PresolveStatus::kUnchanged );
-}
-
-/***
- * 1867x + 1913y = 3618894
- * 1867 & 1913 are primal and relatively primal (gcd(1867,1913)=1) and
- * 3618894/1913 in Z
- *
- * 1206 * 3618894 = 1009 (mod 1913) (modular multiplative inverse
- * x = 1913z + 1009 -> 3571571z +1913y = 1735091 -> 1867z + y = 907
- * -> y = 907; z= 0; x = 1009 (instead of 2000 b&b decisions))
- */
-TEST_CASE( "example-2-from-3.5-Presolve-Reductions-in-MIP", "[presolve]" )
-{
-   Num<double> num{};
-   Message msg{};
-   Problem<double> problem = setupExample2ofChapter3Dot5InPresolveReductions();
-   Statistics statistics{};
-   PresolveOptions presolveOptions{};
-   Postsolve<double> postsolve = Postsolve<double>( problem, num );
-   ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
-                                        presolveOptions, num, msg );
-   SimplifyInequalities<double> presolvingMethod{};
-   Reductions<double> reductions{};
-
-   PresolveStatus presolveStatus =
-       presolvingMethod.execute( problem, problemUpdate, num, reductions );
-
-   // TODO:
-   REQUIRE( presolveStatus == PresolveStatus::kUnchanged );
-}
-
-Problem<double>
-setupExample1ofChapter3Dot5InPresolveReductions()
-{
-   Num<double> num{};
-   Vec<double> coefficients{ 1.0, 1.0, 1.0 };
-   Vec<double> lowerBounds{ 0.0, 0.0, 0.0 };
-   Vec<uint8_t> isIntegral{ 0, 1, 1 };
-
-   Vec<double> rhs{ 9.0 };
-   Vec<double> lhs{ rhs[0] };
-   Vec<std::string> rowNames{
-       "A1",
-   };
-   Vec<std::string> columnNames{ "c1", "c2", "c3" };
-   Vec<std::tuple<int, int, double>> entries{
-       std::tuple<int, int, double>{ 0, 0, 1.0 },
-       std::tuple<int, int, double>{ 0, 1, 3.0 },
-       std::tuple<int, int, double>{ 0, 2, 6.0 } };
-
-   ProblemBuilder<double> pb;
-   pb.reserve( entries.size(), rowNames.size(), columnNames.size() );
-   pb.setNumRows( rowNames.size() );
-   pb.setNumCols( columnNames.size() );
-   pb.setColLbAll( lowerBounds );
-   pb.setObjAll( coefficients );
-   pb.setObjOffset( 0.0 );
-   pb.setColIntegralAll( isIntegral );
-   pb.setRowRhsAll( rhs );
-   pb.setRowLhsAll( lhs );
-   pb.addEntryAll( entries );
-   pb.setColNameAll( columnNames );
-   pb.setProblemName(
-       "matrix Example 1 of chapter 3.5 in Presolve Reductions in MIP" );
-   Problem<double> problem = pb.build();
-   problem.getConstraintMatrix().modifyLeftHandSide( 0,num, lhs[0] );
-   return problem;
-}
-
-Problem<double>
-setupExample2ofChapter3Dot5InPresolveReductions()
-{
-   Num<double> num{};
-   Vec<double> coefficients{ 1.0, 1.0 };
-   Vec<double> lowerBounds{ 0, 0 };
-   Vec<uint8_t> isIntegral{ 0, 0 };
-
-   Vec<double> rhs{ 3618894 };
-   Vec<double> lhs{ rhs[0] };
-   Vec<std::string> rowNames{
-       "A1",
-   };
-   Vec<std::string> columnNames{ "c1", "c2" };
-   Vec<std::tuple<int, int, double>> entries{
-       std::tuple<int, int, double>{ 0, 0, 1867.0 },
-       std::tuple<int, int, double>{ 0, 1, 1913.0 } };
-
-   ProblemBuilder<double> pb;
-   pb.reserve( entries.size(), rowNames.size(), columnNames.size() );
-   pb.setNumRows( rowNames.size() );
-   pb.setNumCols( columnNames.size() );
-   pb.setColLbAll( lowerBounds );
-   pb.setObjAll( coefficients );
-   pb.setObjOffset( 0.0 );
-   pb.setColIntegralAll( isIntegral );
-   pb.setRowRhsAll( rhs );
-   pb.setRowLhsAll( lhs );
-   pb.addEntryAll( entries );
-   pb.setColNameAll( columnNames );
-   pb.setProblemName(
-       "matrix Example 2 of chapter 3.5 in Presolve Reductions in MIP" );
-   Problem<double> problem = pb.build();
-   problem.getConstraintMatrix().modifyLeftHandSide( 0,num, lhs[0] );
-   return problem;
 }
 
 Problem<double>

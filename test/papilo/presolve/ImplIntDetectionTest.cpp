@@ -40,7 +40,8 @@ TEST_CASE( "happy-path-implied-integer-detection", "[presolve]" )
    Problem<double> problem = setupProblemImplIntDetection();
    Statistics statistics{};
    PresolveOptions presolveOptions{};
-   Postsolve<double> postsolve = Postsolve<double>( problem, num );
+   PostsolveStorage<double> postsolve =
+       PostsolveStorage<double>( problem, num, presolveOptions );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
    ImplIntDetection<double> presolvingMethod{};

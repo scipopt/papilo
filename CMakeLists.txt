@@ -1,7 +1,7 @@
 cmake_minimum_required (VERSION 3.5.0)
 
-set(PAPILO_VERSION_MAJOR 1)
-set(PAPILO_VERSION_MINOR 1)
+set(PAPILO_VERSION_MAJOR 2)
+set(PAPILO_VERSION_MINOR 0)
 set(PAPILO_VERSION_PATCH 0)
 
 project(papilo VERSION ${PAPILO_VERSION_MAJOR}.${PAPILO_VERSION_MINOR}.${PAPILO_VERSION_PATCH}.0)
@@ -204,7 +204,8 @@ add_library(papilo-core STATIC
    src/papilo/core/ConstraintMatrix.cpp
    src/papilo/core/ProblemUpdate.cpp
    src/papilo/core/Presolve.cpp
-   src/papilo/core/Postsolve.cpp
+   src/papilo/core/postsolve/PostsolveStorage.cpp
+   src/papilo/core/postsolve/Postsolve.cpp
    src/papilo/core/ProbingView.cpp
    src/papilo/presolvers/CoefficientStrengthening.cpp
    src/papilo/presolvers/ConstraintPropagation.cpp
@@ -223,7 +224,7 @@ add_library(papilo-core STATIC
    src/papilo/presolvers/SingletonStuffing.cpp
    src/papilo/presolvers/Sparsify.cpp
    src/papilo/presolvers/SimplifyInequalities.cpp
-        )
+  )
 
 target_link_libraries(papilo-core papilo)
 target_compile_definitions(papilo-core PRIVATE PAPILO_USE_EXTERN_TEMPLATES)
@@ -246,26 +247,40 @@ install(FILES
    DESTINATION include/papilo)
 
 install(FILES
-        ${PROJECT_SOURCE_DIR}/src/papilo/core/Components.hpp
-        ${PROJECT_SOURCE_DIR}/src/papilo/core/ConstraintMatrix.hpp
-        ${PROJECT_SOURCE_DIR}/src/papilo/core/MatrixBuffer.hpp
-        ${PROJECT_SOURCE_DIR}/src/papilo/core/Objective.hpp
-        ${PROJECT_SOURCE_DIR}/src/papilo/core/Postsolve.hpp
-        ${PROJECT_SOURCE_DIR}/src/papilo/core/Presolve.hpp
-        ${PROJECT_SOURCE_DIR}/src/papilo/core/PresolveMethod.hpp
-        ${PROJECT_SOURCE_DIR}/src/papilo/core/PresolveOptions.hpp
-        ${PROJECT_SOURCE_DIR}/src/papilo/core/ProbingView.hpp
-        ${PROJECT_SOURCE_DIR}/src/papilo/core/Problem.hpp
-        ${PROJECT_SOURCE_DIR}/src/papilo/core/ProblemBuilder.hpp
-      ${PROJECT_SOURCE_DIR}/src/papilo/core/ProblemUpdate.hpp
-      ${PROJECT_SOURCE_DIR}/src/papilo/core/Reductions.hpp
-      ${PROJECT_SOURCE_DIR}/src/papilo/core/RowFlags.hpp
-      ${PROJECT_SOURCE_DIR}/src/papilo/core/SingleRow.hpp
-      ${PROJECT_SOURCE_DIR}/src/papilo/core/Solution.hpp
-      ${PROJECT_SOURCE_DIR}/src/papilo/core/SparseStorage.hpp
-      ${PROJECT_SOURCE_DIR}/src/papilo/core/Statistics.hpp
-      ${PROJECT_SOURCE_DIR}/src/papilo/core/VariableDomains.hpp
+        ${PROJECT_BINARY_DIR}/papilo-config-version.cmake
+     DESTINATION lib/cmake/papilo)
+
+install(FILES
+     ${PROJECT_SOURCE_DIR}/src/papilo/core/Components.hpp
+     ${PROJECT_SOURCE_DIR}/src/papilo/core/ConstraintMatrix.hpp
+     ${PROJECT_SOURCE_DIR}/src/papilo/core/MatrixBuffer.hpp
+     ${PROJECT_SOURCE_DIR}/src/papilo/core/Objective.hpp
+     ${PROJECT_SOURCE_DIR}/src/papilo/core/Presolve.hpp
+     ${PROJECT_SOURCE_DIR}/src/papilo/core/PresolveMethod.hpp
+     ${PROJECT_SOURCE_DIR}/src/papilo/core/PresolveOptions.hpp
+     ${PROJECT_SOURCE_DIR}/src/papilo/core/ProbingView.hpp
+     ${PROJECT_SOURCE_DIR}/src/papilo/core/Problem.hpp
+     ${PROJECT_SOURCE_DIR}/src/papilo/core/ProblemBuilder.hpp
+     ${PROJECT_SOURCE_DIR}/src/papilo/core/ProblemUpdate.hpp
+     ${PROJECT_SOURCE_DIR}/src/papilo/core/Reductions.hpp
+     ${PROJECT_SOURCE_DIR}/src/papilo/core/RowFlags.hpp
+     ${PROJECT_SOURCE_DIR}/src/papilo/core/SingleRow.hpp
+     ${PROJECT_SOURCE_DIR}/src/papilo/core/Solution.hpp
+     ${PROJECT_SOURCE_DIR}/src/papilo/core/SparseStorage.hpp
+     ${PROJECT_SOURCE_DIR}/src/papilo/core/Statistics.hpp
+     ${PROJECT_SOURCE_DIR}/src/papilo/core/VariableDomains.hpp
    DESTINATION include/papilo/core)
+
+
+install(FILES
+        ${PROJECT_SOURCE_DIR}/src/papilo/core/postsolve/BoundStorage.hpp
+        ${PROJECT_SOURCE_DIR}/src/papilo/core/postsolve/PostsolveStorage.hpp
+        ${PROJECT_SOURCE_DIR}/src/papilo/core/postsolve/Postsolve.hpp
+        ${PROJECT_SOURCE_DIR}/src/papilo/core/postsolve/PostsolveStatus.hpp
+        ${PROJECT_SOURCE_DIR}/src/papilo/core/postsolve/PostsolveType.hpp
+        ${PROJECT_SOURCE_DIR}/src/papilo/core/postsolve/ReductionType.hpp
+        ${PROJECT_SOURCE_DIR}/src/papilo/core/postsolve/SavedRow.hpp
+     DESTINATION include/papilo/core/postsolve)
 
 install(FILES
    ${PROJECT_SOURCE_DIR}/src/papilo/interfaces/HighsInterface.hpp
@@ -283,30 +298,29 @@ install(FILES
    DESTINATION include/papilo/io)
 
 install(FILES
-   ${PROJECT_SOURCE_DIR}/src/papilo/misc/Alloc.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/misc/Array.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/misc/compress_vector.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/misc/DependentRows.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/misc/Flags.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/misc/tbb.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/misc/fmt.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/misc/Hash.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/misc/KktChecker.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/misc/KktCheckHelper.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/misc/MultiPrecision.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/misc/Num.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/misc/NumericalStatistics.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/misc/OptionsParser.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/misc/VersionLogger.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/misc/ParameterSet.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/misc/Signature.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/misc/StableSum.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/misc/String.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/misc/Timer.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/misc/Validation.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/misc/Vec.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/misc/VectorUtils.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/misc/Wrappers.hpp
+        ${PROJECT_SOURCE_DIR}/src/papilo/misc/Alloc.hpp
+        ${PROJECT_SOURCE_DIR}/src/papilo/misc/Array.hpp
+        ${PROJECT_SOURCE_DIR}/src/papilo/misc/compress_vector.hpp
+        ${PROJECT_SOURCE_DIR}/src/papilo/misc/DependentRows.hpp
+        ${PROJECT_SOURCE_DIR}/src/papilo/misc/Flags.hpp
+        ${PROJECT_SOURCE_DIR}/src/papilo/misc/tbb.hpp
+        ${PROJECT_SOURCE_DIR}/src/papilo/misc/fmt.hpp
+        ${PROJECT_SOURCE_DIR}/src/papilo/misc/Hash.hpp
+        ${PROJECT_SOURCE_DIR}/src/papilo/misc/MultiPrecision.hpp
+        ${PROJECT_SOURCE_DIR}/src/papilo/misc/Num.hpp
+        ${PROJECT_SOURCE_DIR}/src/papilo/misc/NumericalStatistics.hpp
+        ${PROJECT_SOURCE_DIR}/src/papilo/misc/PrimalDualSolValidation.hpp
+        ${PROJECT_SOURCE_DIR}/src/papilo/misc/OptionsParser.hpp
+        ${PROJECT_SOURCE_DIR}/src/papilo/misc/VersionLogger.hpp
+        ${PROJECT_SOURCE_DIR}/src/papilo/misc/ParameterSet.hpp
+        ${PROJECT_SOURCE_DIR}/src/papilo/misc/Signature.hpp
+        ${PROJECT_SOURCE_DIR}/src/papilo/misc/StableSum.hpp
+        ${PROJECT_SOURCE_DIR}/src/papilo/misc/String.hpp
+        ${PROJECT_SOURCE_DIR}/src/papilo/misc/Timer.hpp
+        ${PROJECT_SOURCE_DIR}/src/papilo/misc/Validation.hpp
+        ${PROJECT_SOURCE_DIR}/src/papilo/misc/Vec.hpp
+        ${PROJECT_SOURCE_DIR}/src/papilo/misc/VectorUtils.hpp
+        ${PROJECT_SOURCE_DIR}/src/papilo/misc/Wrappers.hpp
    DESTINATION include/papilo/misc)
 
 install(FILES

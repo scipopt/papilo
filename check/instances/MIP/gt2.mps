@@ -12,7 +12,7 @@
 *COMMENTS:      24 of the integer variables are binary
 *
 *
-NAME          GT2 
+NAME          GT2
 ROWS
  N  COST....
  G  dem...01

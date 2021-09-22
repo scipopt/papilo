@@ -24,8 +24,8 @@
 #ifndef _PAPILO_MISC_WRAPPERS_HPP_
 #define _PAPILO_MISC_WRAPPERS_HPP_
 
-#include "papilo/core/Postsolve.hpp"
 #include "papilo/core/Presolve.hpp"
+#include "papilo/core/postsolve/Postsolve.hpp"
 #include "papilo/io/MpsParser.hpp"
 #include "papilo/io/MpsWriter.hpp"
 #include "papilo/io/SolParser.hpp"
@@ -202,25 +202,32 @@ presolve_and_solve(
 
    if( !opts.optimal_solution_file.empty() )
    {
-      if(presolve.getPresolveOptions().dualreds!=0){
-         fmt::print("**WARNING: Enabling dual reductions might cut of feasible or optimal solution\n");
+      if( presolve.getPresolveOptions().dualreds != 0 )
+      {
+         fmt::print( "**WARNING: Enabling dual reductions might cut of "
+                     "feasible or optimal solution\n" );
       }
-      Validation<REAL>::validateProblem(problem, result.postsolve, opts.optimal_solution_file, result.status);
+      Validation<REAL>::validateProblem( problem, result.postsolve,
+                                         opts.optimal_solution_file,
+                                         result.status );
    }
 
    switch( result.status )
    {
    case PresolveStatus::kInfeasible:
-      fmt::print( "presolving detected infeasible problem after {:.3f} seconds\n",
-                  presolve.getStatistics().presolvetime  );
+      fmt::print(
+          "presolving detected infeasible problem after {:.3f} seconds\n",
+          presolve.getStatistics().presolvetime );
       return ResultStatus::kUnbndOrInfeas;
    case PresolveStatus::kUnbndOrInfeas:
-      fmt::print( "presolving detected unbounded or infeasible problem after {:.3f} seconds\n",
-                  presolve.getStatistics().presolvetime  );
+      fmt::print( "presolving detected unbounded or infeasible problem after "
+                  "{:.3f} seconds\n",
+                  presolve.getStatistics().presolvetime );
       return ResultStatus::kUnbndOrInfeas;
    case PresolveStatus::kUnbounded:
-      fmt::print( "presolving detected unbounded problem after {:.3f} seconds\n",
-                  presolve.getStatistics().presolvetime  );
+      fmt::print(
+          "presolving detected unbounded problem after {:.3f} seconds\n",
+          presolve.getStatistics().presolvetime );
       return ResultStatus::kUnbndOrInfeas;
    case PresolveStatus::kUnchanged:
    case PresolveStatus::kReduced:
@@ -255,8 +262,6 @@ presolve_and_solve(
       fmt::print( "postsolve archive written to {} in {:.3f} seconds\n\n",
                   opts.postsolve_archive_file, t.getTime() );
    }
-
-
 
    if( opts.command == Command::kPresolve )
       return ResultStatus::kOk;
@@ -311,38 +316,65 @@ presolve_and_solve(
             status == SolverStatus::kInterrupted ) &&
           solver->getSolution( solution ) )
          postsolve( result.postsolve, solution, opts.objective_reference,
-                    opts.orig_solution_file );
+                    opts.orig_solution_file, opts.orig_dual_solution_file,
+                    opts.orig_reduced_costs_file, opts.orig_basis_file );
+
+      if( status == SolverStatus::kInfeasible )
+         fmt::print( "\nsolving detected infeasible problem after {:.3f} seconds\n",
+                     presolve.getStatistics().presolvetime + solvetime +
+                        writetime );
+      else if( status == SolverStatus::kUnbounded )
+         fmt::print( "\nsolving detected unbounded problem after {:.3f} seconds\n",
+                     presolve.getStatistics().presolvetime + solvetime +
+                        writetime );
+      else if( status == SolverStatus::kUnbndOrInfeas )
+         fmt::print( "\nsolving detected unbounded or infeasible problem after "
+                     "{:.3f} seconds\n",
+                     presolve.getStatistics().presolvetime + solvetime +
+                        writetime );
+      else
+         fmt::print( "\nsolving finished after {:.3f} seconds\n",
+                     presolve.getStatistics().presolvetime + solvetime +
+                        writetime );
    }
 
-   fmt::print( "\nsolving finished after {:.3f} seconds\n",
-               presolve.getStatistics().presolvetime + solvetime + writetime );
+
+
 
    return ResultStatus::kOk;
 }
 
 template <typename REAL>
 void
-postsolve( Postsolve<REAL>& postsolve, const Solution<REAL>& reduced_sol,
+postsolve( PostsolveStorage<REAL>& postsolveStorage,
+           const Solution<REAL>& reduced_sol,
            const std::string& objective_reference = "",
-           const std::string& solution_output = "" )
+           const std::string& primal_solution_output = "",
+           const std::string& dual_solution_output = "",
+           const std::string& reduced_solution_output = "",
+           const std::string& basis_output= "" )
 {
    Solution<REAL> original_sol;
 
    auto t0 = tbb::tick_count::now();
-   postsolve.undo( reduced_sol, original_sol );
+   const Message msg{};
+   Postsolve<REAL> postsolve{ msg, postsolveStorage.getNum() };
+   PostsolveStatus status =
+       postsolve.undo( reduced_sol, original_sol, postsolveStorage );
    auto t1 = tbb::tick_count::now();
 
    fmt::print( "\npostsolve finished after {:.3f} seconds\n",
                ( t1 - t0 ).seconds() );
 
-   const Problem<REAL>& origprob = postsolve.getOriginalProblem();
+   const Problem<REAL>& origprob = postsolveStorage.getOriginalProblem();
    REAL origobj = origprob.computeSolObjective( original_sol.primal );
 
    REAL boundviol;
    REAL intviol;
    REAL rowviol;
-   bool origfeas = origprob.computeSolViolations(
-       postsolve.getNum(), original_sol.primal, boundviol, rowviol, intviol );
+   bool origfeas = origprob.computeSolViolations( postsolveStorage.getNum(),
+                                                  original_sol.primal,
+                                                  boundviol, rowviol, intviol );
 
    fmt::print( "feasible: {}\nobjective value: {:.15}\n", origfeas,
                double( origobj ) );
@@ -352,22 +384,70 @@ postsolve( Postsolve<REAL>& postsolve, const Solution<REAL>& reduced_sol,
    fmt::print( "  constraints: {:.15}\n", double( rowviol ) );
    fmt::print( "  integrality: {:.15}\n\n", double( intviol ) );
 
-   if( !solution_output.empty() )
+   if( not primal_solution_output.empty() )
    {
-      auto t0 = tbb::tick_count::now();
-      SolWriter<REAL>::writeSol( solution_output, original_sol.primal,
-                                 origprob.getObjective().coefficients, origobj,
-                                 origprob.getVariableNames() );
-      auto t1 = tbb::tick_count::now();
+      auto t2 = tbb::tick_count::now();
+      SolWriter<REAL>::writePrimalSol( primal_solution_output,
+                                       original_sol.primal,
+                                       origprob.getObjective().coefficients,
+                                       origobj, origprob.getVariableNames() );
+      auto t3 = tbb::tick_count::now();
 
       fmt::print( "solution written to file {} in {:.3} seconds\n",
-                  solution_output, ( t1 - t0 ).seconds() );
+                  primal_solution_output, ( t3 - t2 ).seconds() );
+   }
+
+   if( not dual_solution_output.empty() and
+       original_sol.type == SolutionType::kPrimalDual )
+   {
+
+      auto t2 = tbb::tick_count::now();
+      const ConstraintMatrix<REAL>& constraintMatrix =
+          origprob.getConstraintMatrix();
+      SolWriter<REAL>::writeDualSol( dual_solution_output, original_sol.dual,
+                                     constraintMatrix.getRightHandSides(),
+                                     constraintMatrix.getLeftHandSides(),
+                                     origobj, origprob.getConstraintNames() );
+      auto t3 = tbb::tick_count::now();
+
+      fmt::print( "dual solution written to file {} in {:.3} seconds\n",
+                  dual_solution_output, ( t3 - t2 ).seconds() );
+   }
+
+   if( not reduced_solution_output.empty() and
+       original_sol.type == SolutionType::kPrimalDual )
+   {
+      auto t2 = tbb::tick_count::now();
+
+      SolWriter<REAL>::writeReducedCostsSol(
+          reduced_solution_output, original_sol.reducedCosts,
+          origprob.getUpperBounds(), origprob.getLowerBounds(), origobj,
+          origprob.getVariableNames() );
+      auto t3 = tbb::tick_count::now();
+
+      fmt::print( "reduced solution written to file {} in {:.3} seconds\n",
+                  reduced_solution_output, ( t3 - t2 ).seconds() );
+   }
+
+   if( not basis_output.empty() and
+       original_sol.type == SolutionType::kPrimalDual )
+   {
+      auto t2 = tbb::tick_count::now();
+
+      SolWriter<REAL>::writeBasis(
+          basis_output, original_sol.varBasisStatus,
+          original_sol.rowBasisStatus,
+          origprob.getVariableNames(), origprob.getConstraintNames() );
+      auto t3 = tbb::tick_count::now();
+
+      fmt::print( "basis written to file {} in {:.3} seconds\n",
+                  basis_output, ( t3 - t2 ).seconds() );
    }
 
    if( !objective_reference.empty() )
    {
-      if( origfeas &&
-          postsolve.num.isFeasEq(
+      if( origfeas and status == PostsolveStatus::kOk and
+          postsolveStorage.num.isFeasEq(
               boost::lexical_cast<double>( objective_reference ), origobj ) )
          fmt::print( "validation: SUCCESS\n" );
       else
@@ -379,7 +459,7 @@ template <typename REAL>
 void
 postsolve( const OptionsInfo& opts )
 {
-   Postsolve<REAL> ps;
+   PostsolveStorage<REAL> ps;
    std::ifstream inArchiveFile( opts.postsolve_archive_file,
                                 std::ios_base::binary );
    boost::archive::binary_iarchive inputArchive( inArchiveFile );
@@ -393,7 +473,8 @@ postsolve( const OptionsInfo& opts )
                                reduced_solution );
    if( success )
       postsolve( ps, reduced_solution, opts.objective_reference,
-                 opts.orig_solution_file );
+                 opts.orig_solution_file, opts.orig_dual_solution_file,
+                 opts.orig_reduced_costs_file, opts.orig_basis_file  );
 }
 
 } // namespace papilo

@@ -14,16 +14,16 @@ else ()
 endif ()
 
 if (Boost_IOSTREAMS_FOUND AND Boost_SERIALIZATION_FOUND AND Boost_PROGRAM_OPTIONS_FOUND)
-    configure_file(resources/dual_fix_neg_inf.postsolve resources/dual_fix_neg_inf.postsolve COPYONLY)
-    configure_file(resources/dual_fix_pos_inf.postsolve resources/dual_fix_pos_inf.postsolve COPYONLY)
+#    configure_file(resources/dual_fix_neg_inf.postsolve resources/dual_fix_neg_inf.postsolve COPYONLY)
+#    configure_file(resources/dual_fix_pos_inf.postsolve resources/dual_fix_pos_inf.postsolve COPYONLY)
     configure_file(instances/dual_fix_neg_inf.mps resources/dual_fix_neg_inf.mps COPYONLY)
     set(BOOST_REQUIRED_TESTS
-            "finding-the-right-value-in-postsolve-for-a-column-fixed-pos-inf"
-            "finding-the-right-value-in-postsolve-for-a-column-fixed-neg-inf"
+#            "finding-the-right-value-in-postsolve-for-a-column-fixed-pos-inf"
+#            "finding-the-right-value-in-postsolve-for-a-column-fixed-neg-inf"
             "mps-parser-loading-simple-problem"
             )
     set(BOOST_REQUIRED_TEST_FILES
-            papilo/core/PostsolveTest.cpp
+#            papilo/core/PostsolveTest.cpp
             papilo/io/MpsParserTest.cpp
             )
 else ()
@@ -32,7 +32,6 @@ else ()
 endif ()
 
 add_executable(unit_test TestMain.cpp
-        papilo/InstancesTest.cpp
 
         papilo/core/MatrixBufferTest.cpp
         papilo/core/SparseStorageTest.cpp
@@ -44,7 +43,6 @@ add_executable(unit_test TestMain.cpp
         papilo/presolve/ConstraintPropagationTest.cpp
         papilo/presolve/DualFixTest.cpp
         papilo/presolve/DominatedColsTest.cpp
-        papilo/presolve/DualInferTest.cpp
         papilo/presolve/FixContinuousTest.cpp
         papilo/presolve/FreeVarSubstitutionTest.cpp
         papilo/presolve/ImplIntDetectionTest.cpp
@@ -76,20 +74,35 @@ set(unit_tests
         "happy-path-aggregate-free-column"
         "presolve-activity-is-updated-correctly-huge-values"
 
+
         #ProblemUpdate
-        "happy-path-presolve-singleton-row"
+        "trivial-presolve-singleton-row"
+        "trivial-presolve-singleton-row-pt-2"
 
         "problem-comparisons"
 
+        #Coefficient-strengthening
         "happy-path-coefficient-strengthening"
 
-        "happy-path-constraint-propagation"
+        #ConstraintPropagation
+        "constraint-propagation-happy-path"
+        "constraint-propagation-no-tightening-for-lp"
 
         #DomCol
         "domcol-happy-path"
         "domcol-parallel-columns"
         "domcol-multiple-parallel-cols-generate_redundant-reductions"
         "domcol-multiple-column"
+
+        #DualFix
+        "dual-fix-happy-path"
+        "dual-fix-trivial-column-presolve-finds-reduction"
+        "dual-fix-no-dual-substitution-for-lp"
+        "dual-fix-dual-substitution"
+        "dual-fix-dual-substitution-rounding"
+        "dual-fix-dual-substitution-unbounded-variables"
+        "dual-fix-dual-substitution-equation"
+        "dual-fix-infinity"
 
         # Fix Continuous
         "happy-path-presolve-fix-continuous"
@@ -98,9 +111,10 @@ set(unit_tests
         #FreeVarSubstitution
         "happy-path-test-free-variable-detection"
 
+        #Implied Integer
         "happy-path-implied-integer-detection"
 
-        #Parallel row Detection
+        #Parallel Row Detection
         "parallel-row-unchanged"
         "parallel-row-two-equations-infeasible-second-row-dominant"
         "parallel-row-two-equations-infeasible-first-row-dominant"
@@ -123,7 +137,7 @@ set(unit_tests
         "parallel-row-mixed-infeasible-second-row-equation"
         "parallel-row-multiple-parallel-rows"
 
-        #parallel_col_detection
+        #parallel Column Detection
         "parallel_col_detection_2_integer_columns"
         "parallel_col_detection_2_continuous_columns"
         "parallel_col_detection_int_cont_merge_possible"
@@ -156,26 +170,16 @@ set(unit_tests
         "happy-path-simple-probing-only-binary-negative-coefficient"
         "happy-path-simple-probing-only-binary-positive-coefficient"
 
-
         #Simple Substitution
         "happy-path-simple-substitution-for-2-int"
         "happy-path-simple-substitution-for-2-continuous"
         "happy-path-simple-substitution-for-continuous-and-integer"
         "happy-path-simple-substitution-for-int-continuous-coeff"
-        "example_10_1_in_constraint_integer_programming"
         "should_return_infeasible_if_gcd_of_coeff_is_in_rhs"
         "should_return_feasible_if_gcd_of_coeff_is_in_rhs"
-
-        #DualFix
-        "happy-path-dual-fix"
-        "happy_path_dual_substitution_for_equations"
-        "happy_path_dual_substitution"
         "failed-path-simple-substitution-for-2-int"
-        "happy_path_dual_substitution_unbounded_variables"
-        "trivial-column-presolve-does-dual-presolve-already"
-        "happy_path_dual_substitution_rounding"
-        "happy_path_dual_fix_on_infinity"
 
+        #Simplify Inequality
         "happy-path-simplify-inequalities-only-greatest-divisor"
         "simplify_inequ_doesnt_lock_more_rows"
         "simplify_inequ_doesnt_apply_lb_and_ub_on_one_row"
@@ -184,14 +188,6 @@ set(unit_tests
         "happy-path-sparsify"
         "happy-path-sparsify-two-equalities"
         "failed-path-sparsify"
-
-        "example-1-from-3.5-Presolve-Reductions-in-MIP" # not working
-        "example-2-from-3.5-Presolve-Reductions-in-MIP" # not working
-        "example-3-from-3.6-Presolve-Reductions-in-MIP" # trivial presolve fixes this case
-        "example-4-from-4.4-Presolve-Reductions-in-MIP" # not working
-        "example-5-from-4.4-Presolve-Reductions-in-MIP"
-        "example-10-from-7.5-Presolve-Reductions-in-MIP"
-
 
         "integration-test-for-flugpl"
         ${PAPILOLIB_TESTS}
@@ -215,34 +211,76 @@ foreach (test ${unit_tests})
             DEPENDS unit-test-build)
 endforeach ()
 
-if (TARGET papilo-executable AND PAPILO_HAVE_SCIP)
-
+if (TARGET papilo-executable)
 
     # MIP instances
     set(instances_MIP
-            "instances/bell5.mps\;8966406.49152"
-            "instances/blend2.mps\;7.598985"
-            "instances/dcmulti.mps\;188182"
-            "instances/egout.mps\;568.1007"
-            "instances/enigma.mps\;0"
-            "instances/flugpl.mps\;1201500"
-            "instances/gt2.mps\;21166"
-            "instances/lseu.mps\;1120"
-            "instances/misc03.mps\;3360"
-            "instances/p0548.mps\;8691"
-            "instances/rgn.mps\;82.19999924"
-            "instances/dual_fix_pos_inf.mps\;-7.5"
-            "instances/dual_fix_neg_inf.mps\;-10"
+            "MIP/bell5.mps\;8966406.49152"
+            "MIP/blend2.mps\;7.598985"
+            "MIP/dcmulti.mps\;188182"
+            "MIP/egout.mps\;568.1007"
+            "MIP/enigma.mps\;0"
+            "MIP/flugpl.mps\;1201500"
+            "MIP/gt2.mps\;21166"
+            "MIP/lseu.mps\;1120"
+            "MIP/misc03.mps\;3360"
+            "MIP/p0548.mps\;8691"
+            "MIP/rgn.mps\;82.19999924"
             )
 
-    set(infeas
-            "instances/presolved_ns2080781.mps"
+
+    # LP instances
+    set(instances_LP
+            "LP/adlittle.mps\;0.22549496316238038228101176621492e6"
+            "LP/afiro.mps\;-0.46475314285714285714285714285714e3"
+            "LP/agg.mps\;-0.35991767286576506712640824319636e8"
+            "LP/beaconfd.mps\;0.335924858072e5"
+            #TODO: MPS error while RHS identifier is missing
+            #"LP/blend.mps\;-0.30812149845828220173774356124984e2"
+            "LP/bore3d.mps\;0.13730803942084927215581987251301e4"
+            "LP/brandy.mps\;0.15185098964881283835426751550618e4"
+            "LP/capri.mps\;0.26900129137681610087717280693754e4"
+            #TODO: objective value differs slightly
+            #"LP/etamacro.mps\;-0.7557152333749133350792583667773e3"
+            "LP/finnis.mps\;0.17279106559561159432297900375543e6"
+            "LP/israel.mps\;-0.89664482186304572966200464196045e6"
+            "LP/kb2.mps\;-0.17499001299062057129526866493726e4"
+            "LP/lotfi.mps\;-0.2526470606188e2"
+            "LP/recipe.mps\;-0.266616e3"
+            "LP/sc105.mps\;-0.52202061211707248062628010857689e2"
+            "LP/sc205.mps\;-0.52202061211707248062628010857689e2"
+            "LP/sc50a.mps\;-0.64575077058564509026860413914575e2"
+            "LP/sc50b.mps\;-0.7e2"
+            "LP/scagr7.mps\;-0.2331389824330984e7"
+            "LP/scagr25.mps\;-0.14753433060768523167790925075974e8"
+            "LP/scfxm1.mps\;0.18416759028348943683579089143655e5"
+            "LP/scorpion.mps\;0.18781248227381066296479411763586e4"
+            "LP/scrs8.mps\;0.90429695380079143579923107948844e3"
+            "LP/scsd1.mps\;0.86666666743333647292533502995263e1"
+            "LP/seba.mps\;0.157116e5"
+            "LP/share1b.mps\;-0.7658931857918568112797274346007e5"
+            "LP/share2b.mps\;-0.41573224074141948654519910873841e3"
+            "LP/shell.mps\;0.1208825346e10"
+            "LP/vtp-base.mps\;0.1298314624613613657395984384889e6"
+            )
+
+    set(infeas_LP
+            "LP/bgetam.mps"
+            "LP/box1.mps"
+            "LP/galenet.mps"
+            "LP/gams10am.mps"
+            "LP/refinery.mps"
+            "LP/woodinfe.mps"
+            "LP/klein1.mps"
+            "LP/ex72a.mps"
+            "LP/forest6.mps"
             )
 
     set(numtypes
             "d"
             "q"
-            "r")
+            "r"
+            )
 
     # add a test to build the SCIP binary that all further tests depend on
     add_test(NAME papilo-build
@@ -264,15 +302,16 @@ if (TARGET papilo-executable AND PAPILO_HAVE_SCIP)
     endmacro(split_instance)
 
     ##solving these instances returns the defined optimal value for every numtype
-    macro(add_instancetests instances numtypes)
+    macro(add_instancetests instances numtypes settings)
         foreach (instance ${${instances}})
             split_instance(instance)
-            file(TO_NATIVE_PATH "${PROJECT_SOURCE_DIR}/test/${path}" instance_file)
+            file(TO_NATIVE_PATH "${PROJECT_SOURCE_DIR}/check/instances/${path}" instance_file)
+            file(TO_NATIVE_PATH "${PROJECT_SOURCE_DIR}/settings/${settings}" settings_file)
             foreach (numtype ${${numtypes}})
-                add_test(NAME ${numtype}-solve-${basename}
-                        COMMAND $<TARGET_FILE:papilo-executable> solve -a ${numtype} -f ${instance_file} -o ${optval}
+                add_test(NAME ${numtype}-solve-${basename}-${settings}
+                        COMMAND $<TARGET_FILE:papilo-executable> solve -a ${numtype} -f ${instance_file} -o ${optval} -p ${settings_file}
                         )
-                set_tests_properties(${numtype}-solve-${basename}
+                set_tests_properties(${numtype}-solve-${basename}-${settings}
                         PROPERTIES
                         PASS_REGULAR_EXPRESSION "validation: SUCCESS"
                         DEPENDS papilo-build
@@ -282,16 +321,18 @@ if (TARGET papilo-executable AND PAPILO_HAVE_SCIP)
     endmacro(add_instancetests)
 
     ##solving returns infeasible for these instances and every potential numtype
-    macro(add_infeasible_instancetests instances numtypes)
+    macro(add_infeasible_instancetests instances numtypes settings)
         foreach (instance ${${instances}})
-            file(TO_NATIVE_PATH "${PROJECT_SOURCE_DIR}/test/${instance}" instance_file)
+            file(TO_NATIVE_PATH "${PROJECT_SOURCE_DIR}/check/instances/${instance}" instance_file)
+            file(TO_NATIVE_PATH "${PROJECT_SOURCE_DIR}/settings/${settings}" settings_file)
+
             foreach (numtype ${${numtypes}})
                 add_test(NAME ${numtype}-infeas-${instance}
-                        COMMAND $<TARGET_FILE:papilo-executable> solve -a ${numtype} -f ${instance_file}
+                        COMMAND $<TARGET_FILE:papilo-executable> solve -a ${numtype} -f ${instance_file}  -p ${settings_file}
                         )
                 set_tests_properties(${numtype}-infeas-${instance}
                         PROPERTIES
-                        PASS_REGULAR_EXPRESSION "presolving detected infeasible problem after 0.[0-9][0-9][0-9] seconds"
+                        PASS_REGULAR_EXPRESSION "(presolving|solving) detected infeasible problem after [0-9].[0-9][0-9][0-9] seconds"
                         DEPENDS papilo-build
                         )
             endforeach (numtype)
@@ -299,8 +340,16 @@ if (TARGET papilo-executable AND PAPILO_HAVE_SCIP)
     endmacro(add_infeasible_instancetests)
 
 
-    add_instancetests(instances_MIP numtypes)
-    add_infeasible_instancetests(infeas numtypes)
+    # comparing the objective value for MIP instances and check if primal postsolve works
+    if(PAPILO_HAVE_SCIP)
+        add_instancetests(instances_MIP numtypes "default.set")
+    endif()
+    # comparing the objective value for LP instances and check if dual postsolve works (with/out basis calculation)
+    if(PAPILO_HAVE_SOPLEX OR PAPILO_HAVE_HIGHS)
+        add_instancetests(instances_LP numtypes "lp_presolvers_with_basis.set")
+        add_instancetests(instances_LP numtypes "lp_presolvers_without_basis.set")
+        add_infeasible_instancetests(infeas_LP numtypes "lp_presolvers_with_basis.set")
+    endif()
 endif ()
 
 

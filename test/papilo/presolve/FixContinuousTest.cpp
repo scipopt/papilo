@@ -39,7 +39,8 @@ TEST_CASE( "happy-path-presolve-fix-continuous", "[presolve]" )
    Problem<double> problem = setupProblemForTest( num.getFeasTol() / 4 );
    Statistics statistics{};
    PresolveOptions presolveOptions{};
-   Postsolve<double> postsolve = Postsolve<double>( problem, num );
+   PostsolveStorage<double> postsolve =
+       PostsolveStorage<double>( problem, num, presolveOptions );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
    FixContinuous<double> presolvingMethod{};
@@ -65,7 +66,8 @@ TEST_CASE( "happy-path-no-presolve-fix-continuous", "[presolve]" )
    Problem<double> problem = setupProblemForTest( num.getFeasTol() );
    Statistics statistics{};
    PresolveOptions presolveOptions{};
-   Postsolve<double> postsolve = Postsolve<double>( problem, num );
+   PostsolveStorage<double> postsolve =
+       PostsolveStorage<double>( problem, num, presolveOptions );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
    FixContinuous<double> presolvingMethod{};

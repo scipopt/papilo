@@ -67,4 +67,3 @@ from .PapiloSolver import PaPILOSolver
 - replace `RubberbandId` in the evaluation file with `LogFileName` (if not already happened)
 - evaluate the testrunfile: `ipet-evaluate -t check/results/filename.trn -l -e check/ipet/papilo_evaluation.xml`
 - exit virtual environment with `deactivate`
-

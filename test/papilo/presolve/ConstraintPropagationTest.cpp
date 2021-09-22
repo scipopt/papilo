@@ -30,17 +30,18 @@
 using namespace papilo;
 
 Problem<double>
-setupProblemWithConstraintPropagation();
+setupProblemWithConstraintPropagation( bool integer_values );
 
-TEST_CASE( "happy-path-constraint-propagation", "[presolve]" )
+TEST_CASE( "constraint-propagation-happy-path", "[presolve]" )
 {
    Num<double> num{};
    Message msg{};
-   Problem<double> problem = setupProblemWithConstraintPropagation();
+   Problem<double> problem = setupProblemWithConstraintPropagation( true );
    Statistics statistics{};
    PresolveOptions presolveOptions{};
    presolveOptions.dualreds = 0;
-   Postsolve<double> postsolve = Postsolve<double>( problem, num );
+   PostsolveStorage<double> postsolve =
+       PostsolveStorage<double>( problem, num, presolveOptions );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
    ConstraintPropagation<double> presolvingMethod{};
@@ -52,31 +53,67 @@ TEST_CASE( "happy-path-constraint-propagation", "[presolve]" )
        presolvingMethod.execute( problem, problemUpdate, num, reductions );
 
    REQUIRE( presolveStatus == PresolveStatus::kReduced );
-   REQUIRE( reductions.size() == 4 );
-   REQUIRE( reductions.getReduction( 0 ).col == 0 );
-   REQUIRE( reductions.getReduction( 0 ).row == ColReduction::UPPER_BOUND );
-   REQUIRE( reductions.getReduction( 0 ).newval == 1 );
+   REQUIRE( reductions.size() == 8 );
 
+   REQUIRE( reductions.getReduction( 0 ).col == RowReduction::SAVE_ROW );
+   REQUIRE( reductions.getReduction( 0 ).row == 0 );
+
+   REQUIRE( reductions.getReduction( 1 ).col == 0 );
    REQUIRE( reductions.getReduction( 1 ).row == ColReduction::UPPER_BOUND );
-   REQUIRE( reductions.getReduction( 1 ).col == 1 );
    REQUIRE( reductions.getReduction( 1 ).newval == 1 );
 
-   REQUIRE( reductions.getReduction( 2 ).col == 1 );
-   REQUIRE( reductions.getReduction( 2 ).row == ColReduction::FIXED );
-   REQUIRE( reductions.getReduction( 2 ).newval == 0 );
+   REQUIRE( reductions.getReduction( 2 ).col == RowReduction::SAVE_ROW );
+   REQUIRE( reductions.getReduction( 2 ).row == 0 );
 
-   REQUIRE( reductions.getReduction( 3 ).col == 2 );
-   REQUIRE( reductions.getReduction( 3 ).newval == 0.1 );
    REQUIRE( reductions.getReduction( 3 ).row == ColReduction::UPPER_BOUND );
+   REQUIRE( reductions.getReduction( 3 ).col == 1 );
+   REQUIRE( reductions.getReduction( 3 ).newval == 1 );
+
+   REQUIRE( reductions.getReduction( 4 ).col == RowReduction::SAVE_ROW );
+   REQUIRE( reductions.getReduction( 4 ).row == 1 );
+
+   REQUIRE( reductions.getReduction( 5 ).col == 1 );
+   REQUIRE( reductions.getReduction( 5 ).row == ColReduction::FIXED );
+   REQUIRE( reductions.getReduction( 5 ).newval == 0 );
+
+   REQUIRE( reductions.getReduction( 6 ).col == RowReduction::SAVE_ROW );
+   REQUIRE( reductions.getReduction( 6 ).row == 1 );
+
+   REQUIRE( reductions.getReduction( 7 ).col == 2 );
+   REQUIRE( reductions.getReduction( 7 ).newval == 0.1 );
+   REQUIRE( reductions.getReduction( 7 ).row == ColReduction::UPPER_BOUND );
+}
+
+TEST_CASE( "constraint-propagation-no-tightening-for-lp", "[presolve]" )
+{
+   Num<double> num{};
+   Message msg{};
+   Problem<double> problem = setupProblemWithConstraintPropagation( false );
+   Statistics statistics{};
+   PresolveOptions presolveOptions{};
+   presolveOptions.dualreds = 0;
+   PostsolveStorage<double> postsolve =
+       PostsolveStorage<double>( problem, num , presolveOptions);
+   ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
+                                        presolveOptions, num, msg );
+   ConstraintPropagation<double> presolvingMethod{};
+   Reductions<double> reductions{};
+   problem.recomputeAllActivities();
+   problemUpdate.trivialPresolve();
+
+   PresolveStatus presolveStatus =
+       presolvingMethod.execute( problem, problemUpdate, num, reductions );
+
+   REQUIRE( presolveStatus == PresolveStatus::kUnchanged );
 }
 
 Problem<double>
-setupProblemWithConstraintPropagation()
+setupProblemWithConstraintPropagation( bool integer_values )
 {
    Vec<double> coefficients{ 1.0, 1.0, 1.0 };
    Vec<double> upperBounds{ 10.0, 10.0, 10.0 };
    Vec<double> lowerBounds{ 0.0, 0.0, 0.0 };
-   Vec<uint8_t> isIntegral{ 0, 1, 0 };
+   Vec<uint8_t> isIntegral{ 0, integer_values, 0 };
 
    Vec<double> rhs{ 1.0, 2.0 };
    Vec<std::string> rowNames{ "A1", "A2" };
@@ -89,9 +126,10 @@ setupProblemWithConstraintPropagation()
    };
 
    ProblemBuilder<double> pb;
-   pb.reserve( entries.size(), rowNames.size(), columnNames.size() );
-   pb.setNumRows( rowNames.size() );
-   pb.setNumCols( columnNames.size() );
+   pb.reserve( (int)entries.size(), (int)rowNames.size(),
+               (int)columnNames.size() );
+   pb.setNumRows( (int)rowNames.size() );
+   pb.setNumCols( (int)columnNames.size() );
    pb.setColUbAll( upperBounds );
    pb.setColLbAll( lowerBounds );
    pb.setObjAll( coefficients );

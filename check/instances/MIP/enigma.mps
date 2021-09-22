@@ -5,37 +5,37 @@
 *NONZERO:      289
 *BEST SOLN:    0.0 (opt)
 *LP SOLN:      0.0
-*SOURCE:       Harlan Crowder (IBM)         
+*SOURCE:       Harlan Crowder (IBM)
 *              Harlan Crowder (IBM)
 *              E. Andrew Boyd (Rice University)
 *APPLICATION:  unknown
 *COMMENTS:     pure 0/1 IP
 *
-*      
+*
 NAME          ENIGMA
 ROWS
- N  OBJECT  
- E  SOS0    
- E  SOS1    
- E  SOS2    
- E  SOS3    
- E  SOS4    
- E  SOS5    
- E  SOS6    
- E  SOS7    
- E  SOS8    
- E  SOS9    
+ N  OBJECT
+ E  SOS0
+ E  SOS1
+ E  SOS2
+ E  SOS3
+ E  SOS4
+ E  SOS5
+ E  SOS6
+ E  SOS7
+ E  SOS8
+ E  SOS9
  E  BILANCIO
- E  SOSA    
- E  SOSB    
- E  SOSC    
- E  SOSD    
- E  SOSE    
- E  SOSF    
- E  SOSG    
- E  SOSH    
- E  SOSI    
- E  SOSL    
+ E  SOSA
+ E  SOSB
+ E  SOSC
+ E  SOSD
+ E  SOSE
+ E  SOSF
+ E  SOSG
+ E  SOSH
+ E  SOSI
+ E  SOSL
 COLUMNS
     MARK0000  'MARKER'                 'INTORG'
     A0        SOS0                 1   SOSA                 1

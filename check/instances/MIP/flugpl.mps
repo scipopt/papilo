@@ -5,34 +5,34 @@
 *NONZERO:      46
 *BEST SOLN:    1201500 (opt)
 *LP SOLN:      1167185.73
-*SOURCE:       Harvey M. Wagner              
+*SOURCE:       Harvey M. Wagner
 *              John W. Gregory (Cray Research)
 *              E. Andrew Boyd (Rice University)
 *APPLICATION:  airline model
-*COMMENTS:     no integer variables are binary 
-*              
-*      
+*COMMENTS:     no integer variables are binary
+*
+*
 NAME          FLUGPL
 ROWS
- N  KOSTEN  
- E  ANZ1    
- G  STD1    
- L  UEB1    
- E  ANZ2    
- G  STD2    
- L  UEB2    
- E  ANZ3    
- G  STD3    
- L  UEB3    
- E  ANZ4    
- G  STD4    
- L  UEB4    
- E  ANZ5    
- G  STD5    
- L  UEB5    
- E  ANZ6    
- G  STD6    
- L  UEB6    
+ N  KOSTEN
+ E  ANZ1
+ G  STD1
+ L  UEB1
+ E  ANZ2
+ G  STD2
+ L  UEB2
+ E  ANZ3
+ G  STD3
+ L  UEB3
+ E  ANZ4
+ G  STD4
+ L  UEB4
+ E  ANZ5
+ G  STD5
+ L  UEB5
+ E  ANZ6
+ G  STD6
+ L  UEB6
 COLUMNS
     STM1      KOSTEN            2700   ANZ1                 1
     STM1      STD1               150   UEB1               -20
