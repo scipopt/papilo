@@ -1394,7 +1394,7 @@ template <typename REAL>
 bool
 Presolve<REAL>::are_only_dual_postsolve_presolvers_enabled()
 {
-   for( int i = 0; i <= presolvers.size(); i++ )
+   for( int i = 0; i < presolvers.size(); i++ )
    {
       if( presolvers[i]->isEnabled() )
       {

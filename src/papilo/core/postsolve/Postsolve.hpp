@@ -824,9 +824,9 @@ Postsolve<REAL>::apply_row_bound_change_to_original_solution(
    bool isLhs = indices[first] == 1;
    int row = (int)values[first];
    REAL new_value = values[first + 1];
-   bool is_infinity = indices[first + 1] ==1 ;
+   bool is_infinity = indices[first + 1] == 1;
    REAL old_value = values[first + 2];
-   bool was_infinity = indices[first + 2] ==1 ;
+   bool was_infinity = indices[first + 2] == 1;
 
    int next_type = i - 1;
    int start_reason = start[next_type];
@@ -845,9 +845,48 @@ Postsolve<REAL>::apply_row_bound_change_to_original_solution(
       {
          assert( originalSolution.rowBasisStatus[deleted_row] ==
                  VarBasisStatus::BASIC );
-         originalSolution.rowBasisStatus[deleted_row] =
-             originalSolution.rowBasisStatus[row];
-         originalSolution.rowBasisStatus[row] = VarBasisStatus::BASIC;
+         if( originalSolution.rowBasisStatus[row] == VarBasisStatus::FIXED )
+         {
+            if( isLhs )
+            {
+               if( num.isLT( factor, 0 ) )
+                  originalSolution.rowBasisStatus[deleted_row] =
+                      VarBasisStatus::ON_UPPER;
+               else
+                  originalSolution.rowBasisStatus[deleted_row] =
+                      VarBasisStatus::ON_LOWER;
+               originalSolution.rowBasisStatus[row] =  VarBasisStatus::BASIC;
+            }
+            else
+            {
+               if( num.isLT( factor, 0 ) )
+                  originalSolution.rowBasisStatus[deleted_row] =
+                      VarBasisStatus::ON_LOWER;
+               else
+                  originalSolution.rowBasisStatus[deleted_row] =
+                      VarBasisStatus::ON_UPPER;
+               originalSolution.rowBasisStatus[row] =  VarBasisStatus::BASIC;
+            }
+         }
+         else
+         {
+            //consider case that the rhs/lhs are both passed to new constraint and rhs == lhs
+            //then the lhs is first transformed and then the rhs
+            if( !isLhs &&
+                originalSolution.rowBasisStatus[deleted_row] !=
+                    VarBasisStatus::UNDEFINED &&
+                originalSolution.rowBasisStatus[row] == VarBasisStatus::BASIC )
+            {
+               originalSolution.rowBasisStatus[deleted_row] =
+                   VarBasisStatus::FIXED;
+            }
+            else
+            {
+               originalSolution.rowBasisStatus[deleted_row] =
+                   originalSolution.rowBasisStatus[row];
+               originalSolution.rowBasisStatus[row] = VarBasisStatus::BASIC;
+            }
+         }
       }
    }
    // check if bound is modified on non basic variable and dual solution is 0
