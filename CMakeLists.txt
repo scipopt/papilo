@@ -111,6 +111,8 @@ find_or_download_package(
     CONFIGURE_ARGS -DTBB_TEST=OFF -DTBB_EXAMPLES=OFF -DTBB4PY_BUILD=OFF)
 find_package(Threads REQUIRED)
 
+message("-- TBB is installed: ${TBB_DOWNLOADED}")
+
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
    file(TO_CMAKE_PATH "$ENV{TBBROOT}" TBB_ROOTDIR)
    if(CMAKE_CL_64)
@@ -393,7 +395,9 @@ endif()
 # export targets for build-tree linking
 export(TARGETS papilo ${CLUSOL_TARGET} FILE "${CMAKE_BINARY_DIR}/papilo-targets.cmake")
 
-install(DIRECTORY ${CMAKE_BINARY_DIR}/_deps DESTINATION .)
+if(${TBB_DOWNLOADED})
+   install(DIRECTORY ${CMAKE_BINARY_DIR}/_deps DESTINATION .)
+endif()
 
 # install targets
 install(TARGETS papilo ${CLUSOL_TARGET} EXPORT papilo-targets ARCHIVE DESTINATION lib LIBRARY DESTINATION lib)
