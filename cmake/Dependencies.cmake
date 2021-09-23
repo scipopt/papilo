@@ -1,8 +1,8 @@
 # modified version from https://github.com/ds4dm/ecole
 #
-# Find or doawnload dependencies.
+# Find or download dependencies.
 #
-# Utility to try to find a package, or downloaad it, configure it, and install it inside
+# Utility to try to find a package, or download it, configure it, and install it inside
 # the build tree.
 # Based and fetch content, it avoids using `add_subdirectory` which exposes other project
 # targets and errors as part of this project.
