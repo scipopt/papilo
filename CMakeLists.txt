@@ -111,6 +111,8 @@ find_or_download_package(
     CONFIGURE_ARGS -DTBB_TEST=OFF -DTBB_EXAMPLES=OFF -DTBB4PY_BUILD=OFF)
 find_package(Threads REQUIRED)
 
+message("-- TBB is installed: ${TBB_DOWNLOADED}")
+
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
    file(TO_CMAKE_PATH "$ENV{TBBROOT}" TBB_ROOTDIR)
    if(CMAKE_CL_64)
@@ -375,11 +377,13 @@ install(FILES
 
 # configure the config file for the build tree
 set(QUADMATH_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/Modules)
+#set(PAPILO_TBB_STATIC_LIB_LOCATION ${TBB_STATIC_LIB})
 configure_file(${PROJECT_SOURCE_DIR}/papilo-config.cmake.in
   "${CMAKE_BINARY_DIR}/papilo-config.cmake" @ONLY)
 
 # configure and install config file for installation
 set(QUADMATH_MODULE_PATH "\${CMAKE_CURRENT_LIST_DIR}")
+#set(PAPILO_TBB_STATIC_LIB_LOCATION "\${PAPILO_DIR}/../../../_deps/local/")
 configure_file(${PROJECT_SOURCE_DIR}/papilo-config.cmake.in
     "${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/papilo-config.cmake" @ONLY)
 
@@ -393,7 +397,9 @@ endif()
 # export targets for build-tree linking
 export(TARGETS papilo ${CLUSOL_TARGET} FILE "${CMAKE_BINARY_DIR}/papilo-targets.cmake")
 
-install(DIRECTORY ${CMAKE_BINARY_DIR}/_deps DESTINATION .)
+if(${TBB_DOWNLOADED})
+   install(DIRECTORY ${CMAKE_BINARY_DIR}/_deps DESTINATION .)
+endif()
 
 # install targets
 install(TARGETS papilo ${CLUSOL_TARGET} EXPORT papilo-targets ARCHIVE DESTINATION lib LIBRARY DESTINATION lib)
