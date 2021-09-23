@@ -1104,9 +1104,9 @@ ProblemUpdate<REAL>::removeFixedCols()
          continue;
 
       assert(
-          num.isEq( lbs[col], problem.getUpperBounds()[col] ) and  not colFlags[col]
-              .test( ColFlag::kUbInf ) and
-          not colFlags[col].test( ColFlag::kLbInf ) );
+          num.isEq( lbs[col], problem.getUpperBounds()[col] ) && !colFlags[col]
+              .test( ColFlag::kUbInf ) &&
+          !colFlags[col].test( ColFlag::kLbInf ) );
 
       auto colvec = consMatrix.getColumnCoefficients( col );
       postsolve.storeFixedCol( col, lbs[col], colvec, obj.coefficients );
@@ -1726,13 +1726,13 @@ ProblemUpdate<REAL>::removeEmptyColumns()
                   fixval = domains.lower_bounds[col];
 
                // notify for storing the bound for recalculation
-               if( domains.flags[col].test( ColFlag::kLbInf ) or
-                   not num.isEq( domains.lower_bounds[col], fixval ) )
+               if( domains.flags[col].test( ColFlag::kLbInf ) ||
+                   !num.isEq( domains.lower_bounds[col], fixval ) )
                   postsolve.storeVarBoundChange(
                       true, col, domains.lower_bounds[col],
                       domains.flags[col].test( ColFlag::kLbInf ), fixval );
-               if( domains.flags[col].test( ColFlag::kUbInf ) or
-                   not num.isEq( domains.upper_bounds[col], fixval ) )
+               if( domains.flags[col].test( ColFlag::kUbInf ) ||
+                   !num.isEq( domains.upper_bounds[col], fixval ) )
                   postsolve.storeVarBoundChange(
                       false, col, domains.upper_bounds[col],
                       domains.flags[col].test( ColFlag::kUbInf ), fixval );

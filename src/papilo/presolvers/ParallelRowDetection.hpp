@@ -362,12 +362,12 @@ ParallelRowDetection<REAL>::execute( const Problem<REAL>& problem,
          if( rflags[parallel_row].test( RowFlag::kEquation ) and
              is_remaining_row_equality )
          {
-            if( not num.isFeasEq( rhs_value, scaled_rhs ) )
+            if( !num.isFeasEq( rhs_value, scaled_rhs ) )
             {
                result = PresolveStatus::kInfeasible;
                break;
             }
-            if( not num.isGE( abs( coefficient ), abs( coefs2 ) ) )
+            if( !num.isGE( abs( coefficient ), abs( coefs2 ) ) )
             {
                remaining_row = parallel_row;
                coefficient = coefs2;
