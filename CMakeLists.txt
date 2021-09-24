@@ -377,13 +377,13 @@ install(FILES
 
 # configure the config file for the build tree
 set(QUADMATH_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/Modules)
-#set(PAPILO_TBB_STATIC_LIB_LOCATION ${TBB_STATIC_LIB})
+set(PAPILO_TBB_STATIC_LIB_LOCATION ${CMAKE_BINARY_DIR}/_deps)
 configure_file(${PROJECT_SOURCE_DIR}/papilo-config.cmake.in
   "${CMAKE_BINARY_DIR}/papilo-config.cmake" @ONLY)
 
 # configure and install config file for installation
 set(QUADMATH_MODULE_PATH "\${CMAKE_CURRENT_LIST_DIR}")
-#set(PAPILO_TBB_STATIC_LIB_LOCATION "\${PAPILO_DIR}/../../../_deps/local/")
+set(PAPILO_TBB_STATIC_LIB_LOCATION "\${PAPILO_DIR}/../../../_deps/local/")
 configure_file(${PROJECT_SOURCE_DIR}/papilo-config.cmake.in
     "${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/papilo-config.cmake" @ONLY)
 
