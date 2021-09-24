@@ -898,7 +898,7 @@ Presolve<REAL>::run_presolvers( const Problem<REAL>& problem,
                                 bool& run_sequentiell )
 {
    if( presolveOptions.runs_sequentiell() &&
-       presolveOptions.apply_results_immediately_if_run_sequential )
+       presolveOptions.apply_results_immediately_if_run_sequentially )
    {
       probUpdate.setPostponeSubstitutions( false );
       for( int i = presolver_2_run.first; i != presolver_2_run.second; ++i )

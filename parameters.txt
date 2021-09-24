@@ -86,7 +86,7 @@ presolve.removeslackvars = 1
 presolve.threads = 0
 
 # if only one thread (presolve.threads = 1) is used, apply the reductions immediately afterwards
-presolve.apply_results_immediately_if_run_sequential = 1
+presolve.apply_results_immediately_if_run_sequentially = 1
 
 # time limit for presolve  [Numerical: [0,1.7976931348623157e+308]]
 presolve.tlim = 1.7976931348623157e+308
