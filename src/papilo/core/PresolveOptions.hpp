@@ -73,7 +73,7 @@ struct PresolveOptions
 
    unsigned int randomseed = 0;
 
-   bool sequentialreductionapplying = true;
+   bool apply_results_immediately_if_run_sequential = true;
 
    bool dual_fix_parallel = false;
 
@@ -171,10 +171,10 @@ struct PresolveOptions
                              "maximal number of threads to use (0: automatic)",
                              threads, 0 );
       paramSet.addParameter(
-          "presolve.sequentialreductionapplying",
-          "# if only one thread (presolve.threads = 0) is used, apply the "
+          "presolve.apply_results_immediately_if_run_sequential",
+          "# if only one thread (presolve.threads = 1) is used, apply the "
           "reductions immediately afterwards",
-          sequentialreductionapplying );
+          apply_results_immediately_if_run_sequential );
       paramSet.addParameter(
           "propagation.parallel",
           "#execute loop over rows in constraintpropagation in parallel",

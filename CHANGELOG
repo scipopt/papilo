@@ -11,7 +11,7 @@ Features
     - note to turn off componentsmaxint = -1 and presolve.detectlindep = 0
     - if calculate_basis_for_dual is activated (default), tightening the bounds (f.e. in Propagation and Dualfix) are avoided due to computional overhead to postsolve the basis information
 - applying the reductions of the presolver found immediately to the problem so that the next presolver can work with the reduced problem if PaPILO is used with one thread.
-    This feature can be turned off by parameter (presolve.sequentialreductionapplying).
+    This feature can be turned off by parameter (presolve.apply_results_immediately_if_run_sequential).
 - DualFix: setting the variable to infinity, if objective is zero and the bound unbounded
 - ParallelRowDetection: adding new ReductionType RHS_LESS_RESTRICTIVE/LHS_LESS_RESTRICTIVE to reduce the number of conflicts to other presolvers
 - SimpleSubstitution: adding detection for infeasibility
@@ -62,7 +62,7 @@ Interface changes
 
 - calculate_basis_for_dual = 1: Should the basis be calculated if dual postsolve is possible (1: yes 0: no)
 - validation_after_every_postsolving_step = 0: Should the primal/dual solution be validated during after every postsolving step? (1:yes 0: no)
-- presolve.sequentialreductionapplying = 1: If only one thread is used, should the results be applied immediately after the presolver returned the reductions? (1: yes 0: no)
+- presolve.apply_results_immediately_if_run_sequential = 1: If only one thread is used, should the results be applied immediately after the presolver returned the reductions? (1: yes 0: no)
 - coefftightening.parallel = 1: Should the presolver be run in parallel internally (1: yes 0: no)
 - doubletoneq.parallel = 0: Should the presolver be run in parallel internally (1: yes 0: no)
 - dualfix.parallel = 0: Should the presolver be run in parallel internally (1: yes 0: no)
