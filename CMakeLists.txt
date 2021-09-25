@@ -111,7 +111,11 @@ find_or_download_package(
     CONFIGURE_ARGS -DTBB_TEST=OFF -DTBB_EXAMPLES=OFF -DTBB4PY_BUILD=OFF)
 find_package(Threads REQUIRED)
 
-message("-- TBB is installed: ${TBB_DOWNLOADED}")
+if(TBB_DOWNLOADED)
+    message(STATUS "downloaded and built TBB")
+elseif()
+    message(STATUS "Found existing TBB")
+endif()
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
    file(TO_CMAKE_PATH "$ENV{TBBROOT}" TBB_ROOTDIR)
