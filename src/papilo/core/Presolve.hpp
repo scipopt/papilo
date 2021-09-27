@@ -413,7 +413,7 @@ Presolve<REAL>::apply( Problem<REAL>& problem, bool store_dual_postsolve )
          else
             msg.error(
                 "Please turn off the presolvers substitution and sparsify and "
-                "componentsdetection to use dual postsolving" );
+                "componentsdetection to use dual postsolving\n" );
       }
       result.status = PresolveStatus::kUnchanged;
 
