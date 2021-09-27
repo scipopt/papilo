@@ -99,6 +99,7 @@ target_include_directories(papilo INTERFACE
    ${GMP_INCLUDE_DIRS}
    ${Quadmath_INCLUDE_DIRS})
 
+
 # Utilities to automatically download missing dependencies
 include(cmake/Dependencies.cmake)
 
@@ -109,9 +110,8 @@ find_or_download_package(
     COMPONENTS tbb
     URL_HASH SHA256=8f616561603695bbb83871875d2c6051ea28f8187dbe59299961369904d1d49e
     CONFIGURE_ARGS -DTBB_TEST=OFF -DTBB_EXAMPLES=OFF -DTBB4PY_BUILD=OFF)
+find_package(TBB 2021 REQUIRED)
 find_package(Threads REQUIRED)
-
-message("-- TBB is installed: ${TBB_DOWNLOADED}")
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
    file(TO_CMAKE_PATH "$ENV{TBBROOT}" TBB_ROOTDIR)
@@ -377,11 +377,13 @@ install(FILES
 
 # configure the config file for the build tree
 set(QUADMATH_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/Modules)
+set(TBB_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/Modules)
 configure_file(${PROJECT_SOURCE_DIR}/papilo-config.cmake.in
   "${CMAKE_BINARY_DIR}/papilo-config.cmake" @ONLY)
 
 # configure and install config file for installation
 set(QUADMATH_MODULE_PATH "\${CMAKE_CURRENT_LIST_DIR}")
+set(TBB_MODULE_PATH "\${CMAKE_CURRENT_LIST_DIR}")
 configure_file(${PROJECT_SOURCE_DIR}/papilo-config.cmake.in
     "${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/papilo-config.cmake" @ONLY)
 
@@ -391,6 +393,12 @@ if(PAPILO_HAVE_FLOAT128)
    install(FILES ${PROJECT_SOURCE_DIR}/cmake/Modules/FindQuadmath.cmake
       DESTINATION lib/cmake/papilo)
 endif()
+
+# install tbb dependencies
+install(FILES ${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/papilo-config.cmake
+   DESTINATION lib/cmake/papilo)
+install(FILES ${PROJECT_SOURCE_DIR}/cmake/Modules/FindTBB.cmake
+   DESTINATION lib/cmake/papilo)
 
 # export targets for build-tree linking
 export(TARGETS papilo ${CLUSOL_TARGET} FILE "${CMAKE_BINARY_DIR}/papilo-targets.cmake")
