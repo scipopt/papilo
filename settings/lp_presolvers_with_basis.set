@@ -5,3 +5,5 @@ doubletoneq.enabled = 0
 dualinfer.enabled = 0
 substitution.enabled = 0
 sparsify.enabled = 0
+
+message.verbosity = 4

@@ -82,10 +82,14 @@ ConstraintPropagation<REAL>::execute( const Problem<REAL>& problem,
 
    // calculating the basis for variable tightening (not fixings) may lead in
    // the postsolving step to a solution that is not in a vertex. In this case a
-   // crossover would be required is too expensive performance wise
+   // crossover would be required is too expensive performance wise.
+   // Exception: for infinity bounds set a finite bound that is worse that the best possible bound
    const bool skip_variable_tightening =
        problem.getNumIntegralCols() == 0 and
        problemUpdate.getPresolveOptions().calculate_basis_for_dual;
+
+   const REAL bound_tightening_offset =
+       REAL(problemUpdate.getPresolveOptions().get_variable_bound_tightening_offset());
 
    if( problemUpdate.getPresolveOptions().runs_sequentiell() or
        !problemUpdate.getPresolveOptions().constraint_propagation_parallel )
@@ -138,6 +142,13 @@ ConstraintPropagation<REAL>::execute( const Problem<REAL>& problem,
                   reductions.changeColLB( col, val, row );
                   result = PresolveStatus::kReduced;
                }
+               else if( domains.flags[col].test( ColFlag::kLbInf ) )
+               {
+                  // in case of skip_variable_tightening set bounds to an
+                  // infinite value if possible
+                  reductions.changeColLB( col, val - bound_tightening_offset, row );
+                  result = PresolveStatus::kReduced;
+               }
             }
          }
          else
@@ -182,6 +193,13 @@ ConstraintPropagation<REAL>::execute( const Problem<REAL>& problem,
                if(!skip_variable_tightening)
                {
                   reductions.changeColUB( col, val, row );
+                  result = PresolveStatus::kReduced;
+               }
+               else if( domains.flags[col].test( ColFlag::kUbInf ) )
+               {
+                  // in case of skip_variable_tightening set bounds to an
+                  // infinite value if possible
+                  reductions.changeColUB( col, val + bound_tightening_offset, row );
                   result = PresolveStatus::kReduced;
                }
             }
@@ -283,6 +301,15 @@ ConstraintPropagation<REAL>::execute( const Problem<REAL>& problem,
                             stored_reductions[j].changeColLB( col, val, row );
                             local_status = PresolveStatus::kReduced;
                          }
+                         // in case of skip_variable_tightening set bounds to an
+                         // infinite value if possible
+                         else if( domains.flags[col].test( ColFlag::kLbInf ) )
+                         {
+                            // in case of skip_variable_tightening set bounds to an
+                            // infinite value if possible
+                            stored_reductions[j].changeColLB( col, val - bound_tightening_offset, row );
+                            result = PresolveStatus::kReduced;
+                         }
                       }
                    }
                    else
@@ -328,10 +355,17 @@ ConstraintPropagation<REAL>::execute( const Problem<REAL>& problem,
                           val - domains.upper_bounds[col] <
                               -1000 * num.getFeasTol() )
                       {
-                         if(!skip_variable_tightening)
+                         if( !skip_variable_tightening )
                          {
                             stored_reductions[j].changeColUB( col, val, row );
                             local_status = PresolveStatus::kReduced;
+                         }
+                         else if( domains.flags[col].test( ColFlag::kUbInf ) )
+                         {
+                            // in case of skip_variable_tightening set bounds to an
+                            // infinite value if possible
+                            stored_reductions[j].changeColUB( col, val + bound_tightening_offset, row );
+                            result = PresolveStatus::kReduced;
                          }
                       }
                    }

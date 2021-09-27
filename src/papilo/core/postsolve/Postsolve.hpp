@@ -405,7 +405,7 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
          message.info( "Validation of partial ({}) reconstr. sol : ", i );
          validation.verifySolutionAndUpdateSlack( originalSolution,
                                                   problem_at_step_i );
-         assert( ! significant_changes_during_presolve or
+         assert( ! significant_changes_during_presolve ||
                  stored_bounds.check_bounds( problem_at_step_i ) );
       }
 #endif
@@ -413,7 +413,7 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
 
    PostsolveStatus status =
        validation.verifySolutionAndUpdateSlack( originalSolution, problem );
-   assert( ! significant_changes_during_presolve or
+   assert( ! significant_changes_during_presolve ||
            stored_bounds.check_bounds( problem ) );
    if( status == PostsolveStatus::kFailed )
       message.error( "Postsolving solution failed. Please use debug mode to "
@@ -695,7 +695,7 @@ Postsolve<REAL>::apply_substituted_column_to_original_solution(
    originalSolution.primal[col] = ( -sumcols.get() ) / colCoef;
 
    assert( ( originalSolution.type == SolutionType::kPrimalDual &&
-             values[first + 3 + row_length] > 0 ) or
+             values[first + 3 + row_length] > 0 ) ||
            ( originalSolution.type != SolutionType::kPrimalDual &&
              values[first + 3 + row_length] == 0 ) );
    if( originalSolution.type == SolutionType::kPrimalDual )
@@ -836,7 +836,7 @@ Postsolve<REAL>::apply_row_bound_change_to_original_solution(
    REAL factor = values[start_reason];
    assert( row == indices[start_reason] );
    REAL dual_row_value = originalSolution.dual[row];
-   if( ( isLhs && num.isGT(dual_row_value, 0) ) or
+   if( ( isLhs && num.isGT(dual_row_value, 0) ) ||
        ( ! isLhs && num.template isLT(dual_row_value, 0) ) )
    {
       originalSolution.dual[deleted_row] = dual_row_value * factor;
@@ -894,9 +894,9 @@ Postsolve<REAL>::apply_row_bound_change_to_original_solution(
    else if( originalSolution.basisAvailabe)
    {
       if( ( (isLhs && ( originalSolution.rowBasisStatus[row] ==
-                            VarBasisStatus::ON_LOWER or
+                            VarBasisStatus::ON_LOWER ||
                         originalSolution.rowBasisStatus[row] ==
-                            VarBasisStatus::ZERO )) or
+                            VarBasisStatus::ZERO )) ||
             ( ! isLhs && originalSolution.rowBasisStatus[row] ==
                                 VarBasisStatus::ON_UPPER ) ) )
       {
@@ -931,6 +931,7 @@ Postsolve<REAL>::apply_var_bound_change_forced_by_column_in_original_solution(
 
    stored_bounds.set_bound_of_variable( col, isLowerBound, was_infinity,
                                         old_value );
+
 
    const REAL reduced_costs = originalSolution.reducedCosts[col];
    bool changes_neg_reduced_costs =
@@ -982,10 +983,24 @@ Postsolve<REAL>::apply_var_bound_change_forced_by_column_in_original_solution(
             variables_removed_from_basis++;
          }
 
-         assert( ! originalSolution.basisAvailabe or
-                 ! num.isZero( originalSolution.reducedCosts[col_index]) or
+         assert( ! originalSolution.basisAvailabe ||
+                 ! num.isZero( originalSolution.reducedCosts[col_index]) ||
                                  originalSolution.varBasisStatus[col_index] !=
                                      VarBasisStatus::BASIC );
+
+         // assert for bound tightening
+         assert( !originalSolution.basisAvailabe ||
+                 //whether variable was fixed
+                 originalSolution.varBasisStatus[col] == VarBasisStatus::FIXED ||
+                 // or lowerbound is not tight
+                 ( isLowerBound &&
+                   num.isGT( originalSolution.primal[col], new_value ) ) ||
+                 // or upperbound is not tight
+                 ( !isLowerBound &&
+                   num.isLT( originalSolution.primal[col], new_value ) ) ||
+                 // or singleton row since there bound-tightening is allowed
+                 saved_row.getLength() == 1
+                 );
       }
       if( originalSolution.basisAvailabe && variables_removed_from_basis > 0 )
       {
@@ -995,6 +1010,9 @@ Postsolve<REAL>::apply_var_bound_change_forced_by_column_in_original_solution(
       assert( variables_removed_from_basis == 0 );
       originalSolution.reducedCosts[col] = 0;
    }
+
+
+
 
    if( originalSolution.basisAvailabe )
    {
@@ -1165,10 +1183,10 @@ Postsolve<REAL>::apply_parallel_col_to_original_solution(
    originalSolution.primal[col2] = col2val;
 
    bool col1onBounds =
-       ( !( col1boundFlags & IS_UBINF ) && num.isEq( col1val, col1ub ) ) or
+       ( !( col1boundFlags & IS_UBINF ) && num.isEq( col1val, col1ub ) ) ||
        ( !( col1boundFlags & IS_LBINF ) && num.isEq( col1val, col1lb ) );
    bool col2onBounds =
-       ( !( col1boundFlags & IS_UBINF ) && num.isEq( col2val, col2ub ) ) or
+       ( !( col1boundFlags & IS_UBINF ) && num.isEq( col2val, col2ub ) ) ||
        ( !( col1boundFlags & IS_LBINF ) && num.isEq( col2val, col2lb ) );
    assert( col1onBounds || col2onBounds );
 
@@ -1213,7 +1231,7 @@ Postsolve<REAL>::apply_parallel_col_to_original_solution(
                 col2boundFlags, col2lb, col2ub, col2val, col2onBounds );
          }
          assert(
-             originalSolution.varBasisStatus[col1] != VarBasisStatus::BASIC or
+             originalSolution.varBasisStatus[col1] != VarBasisStatus::BASIC ||
              originalSolution.varBasisStatus[col2] != VarBasisStatus::BASIC );
       }
    }
@@ -1315,7 +1333,7 @@ Postsolve<REAL>::calculate_row_value_for_fixed_infinity_variable(
 
       stableSum.add( -coefficients[l] * current_solution[row_index] );
    }
-   if( ( coeff_of_column_in_row > 0 && is_negative ) or
+   if( ( coeff_of_column_in_row > 0 && is_negative ) ||
        ( coeff_of_column_in_row < 0 && ! is_negative ) )
       stableSum.add( rhs );
    else
