@@ -59,7 +59,6 @@ enum class ReductionType : int
    kSubstitutedCol = 1,
    kParallelCol = 2,
    kSaveRow = 3,
-   kSaveCol = 4
 };
 
 enum class PostsolveStatus : int
