@@ -379,7 +379,8 @@ PostsolveStorage<REAL>::storeVarBoundChange( bool isLowerBound,
       indices.push_back( 0 );
    values.push_back( 0 );
 
-   indices.push_back( origcol_mapping[col] );
+   int c = origcol_mapping[col];
+   indices.push_back( c );
    values.push_back( newBound );
 
    indices.push_back( was_infinity );

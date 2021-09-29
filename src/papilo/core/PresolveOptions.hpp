@@ -91,6 +91,8 @@ struct PresolveOptions
 
    bool calculate_basis_for_dual = true;
 
+   double bound_tightening_offset = 0.0001;
+
    bool validation_after_every_postsolving_step = false;
 
    void
@@ -211,6 +213,10 @@ struct PresolveOptions
           "validation_after_every_postsolving_step",
           "# should the primal/dual solution be validated during after every postsolving step? ",
           validation_after_every_postsolving_step );
+      paramSet.addParameter(
+          "bound_tightening_offset",
+          "# defines the offset for bound tightening ",
+          bound_tightening_offset );
    }
 
    bool
@@ -218,6 +224,14 @@ struct PresolveOptions
    {
       return threads == 1;
    }
+
+   double
+   get_variable_bound_tightening_offset() const
+   {
+      if( bound_tightening_offset > feastol )
+         return bound_tightening_offset;
+      return feastol * 10;
+   };
 };
 
 } // namespace papilo
