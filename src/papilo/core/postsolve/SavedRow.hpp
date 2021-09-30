@@ -94,13 +94,13 @@ class SavedRow
    bool
    is_on_lhs()
    {
-      return not is_lhs_inf and num.isFeasEq( slack, lhs );
+      return !is_lhs_inf && num.isFeasEq( slack, lhs );
    }
 
    bool
    is_on_rhs()
    {
-      return not is_rhs_inf and num.isFeasEq( slack, rhs );
+      return !is_rhs_inf && num.isFeasEq( slack, rhs );
    }
 
    int
@@ -142,13 +142,13 @@ class SavedRow
    VarBasisStatus
    getVBS()
    {
-      if( is_on_lhs() and is_on_rhs() )
+      if( is_on_lhs() && is_on_rhs() )
          return VarBasisStatus::FIXED;
       else if( is_on_rhs() )
          return VarBasisStatus::ON_UPPER;
       else if( is_on_lhs() )
          return VarBasisStatus::ON_LOWER;
-      else if( is_lhs_inf and is_rhs_inf and num.isZero( slack ) )
+      else if( is_lhs_inf && is_rhs_inf && num.isZero( slack ) )
          return VarBasisStatus::ZERO;
       return VarBasisStatus::BASIC;
    }
