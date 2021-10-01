@@ -959,7 +959,7 @@ Postsolve<REAL>::apply_var_bound_change_forced_by_column_in_original_solution(
       {
          originalSolution.rowBasisStatus[row] = saved_row.getVBS();
          assert( originalSolution.rowBasisStatus[row] !=
-                 VarBasisStatus::BASIC );
+                 VarBasisStatus::BASIC || saved_row.is_violated());
          variables_removed_from_basis++;
       }
 
@@ -999,7 +999,9 @@ Postsolve<REAL>::apply_var_bound_change_forced_by_column_in_original_solution(
                  ( !isLowerBound &&
                    num.isLT( originalSolution.primal[col], new_value ) ) ||
                  // or singleton row since there bound-tightening is allowed
-                 saved_row.getLength() == 1
+                 saved_row.getLength() == 1 ||
+                 // do not handle case if row is violated
+                 saved_row.is_violated()
                  );
       }
       if( originalSolution.basisAvailabe && variables_removed_from_basis > 0 )

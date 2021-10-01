@@ -152,6 +152,13 @@ class SavedRow
          return VarBasisStatus::ZERO;
       return VarBasisStatus::BASIC;
    }
+
+   bool
+   is_violated(){
+      bool rhs_violated = !is_rhs_inf && num.isFeasGT( slack, rhs );
+      bool lhs_violated = !is_lhs_inf && num.isFeasLT( slack, lhs );
+      return rhs_violated || lhs_violated;
+   }
 };
 
 } // namespace papilo
