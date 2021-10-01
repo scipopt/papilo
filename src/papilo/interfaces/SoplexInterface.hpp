@@ -74,8 +74,6 @@ class SoplexInterface : public SolverInterface<REAL>
 
       int ncols = problem.getNCols();
       int nrows = problem.getNRows();
-      const Vec<String>& varNames = problem.getVariableNames();
-      const Vec<String>& consNames = problem.getConstraintNames();
       const VariableDomains<REAL>& domains = problem.getVariableDomains();
       const Objective<REAL>& obj = problem.getObjective();
       const auto& consMatrix = problem.getConstraintMatrix();
@@ -146,10 +144,6 @@ class SoplexInterface : public SolverInterface<REAL>
    {
       using namespace soplex;
 
-      int ncols = problem.getNCols();
-      int nrows = problem.getNRows();
-      const Vec<String>& varNames = problem.getVariableNames();
-      const Vec<String>& consNames = problem.getConstraintNames();
       const VariableDomains<REAL>& domains = problem.getVariableDomains();
       const Objective<REAL>& obj = problem.getObjective();
       const auto& consMatrix = problem.getConstraintMatrix();

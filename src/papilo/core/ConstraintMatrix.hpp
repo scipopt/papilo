@@ -52,8 +52,8 @@ class SparseVectorView
 
    SparseVectorView() : vals( nullptr ), indices( nullptr ), len( 0 ) {}
 
-   SparseVectorView( const REAL* vals, const int* inds, int len )
-       : vals( vals ), indices( inds ), len( len )
+   SparseVectorView( const REAL* _vals, const int* _inds, int _len )
+       : vals( _vals ), indices( _inds ), len( _len )
    {
    }
 
@@ -138,7 +138,7 @@ template <typename REAL>
 class ConstraintMatrix
 {
  public:
-   ConstraintMatrix() {}
+   ConstraintMatrix() = default;
 
    /// construct the constraint matrix from the given values
    ConstraintMatrix( SparseStorage<REAL> cons_matrix_init,
@@ -469,6 +469,8 @@ class ConstraintMatrix
                       break;
                    case 1:
                       singletonCols.push_back( col );
+                   default:
+                      break;
                    }
                    // in case that a singleton var is aggregated and has 2
                    // appearances and then is reduced again immediately it may
@@ -528,13 +530,13 @@ class ConstraintMatrix
 
    /// perform the substitution of a column using an equality, and updates
    /// the sides
-   /// @param col the columns to substituted
+   /// @param substituted_col the columns to substituted
    /// @param equalityLHS the right hand side of the equality i.e sum{
    /// a_j*x_i }, (needs to be sorted)
    /// @param equalityRHS the left hand side of the equality such that sum{
    /// a_j*x_i } = equalityRHS
    void
-   aggregate( const Num<REAL>& num, int col, SparseVectorView<REAL> equalityLHS,
+   aggregate( const Num<REAL>& num, int substituted_col, SparseVectorView<REAL> equalityLHS,
               REAL equalityRHS, const VariableDomains<REAL>& domains,
               Vec<int>& indbuffer, Vec<REAL>& valbuffer,
               Vec<Triplet<REAL>>& tripletbuffer, Vec<int>& changedActivities,
@@ -1059,9 +1061,6 @@ ConstraintMatrix<REAL>::sparsify(
    if( ncancel <= 0 )
       return 0;
 
-   REAL* colvals = cons_matrix_transp.getValues();
-   int* colrows = cons_matrix_transp.getColumns();
-
    // change coefficients for column where fillin occurs (we allow at most one
    // such column, otherwise we return from this function before we reach this
    // part)
@@ -1220,7 +1219,7 @@ ConstraintMatrix<REAL>::sparsify(
 template <typename REAL>
 void
 ConstraintMatrix<REAL>::aggregate(
-    const Num<REAL>& num, int col, SparseVectorView<REAL> equalityLHS,
+    const Num<REAL>& num, int substituted_col, SparseVectorView<REAL> equalityLHS,
     REAL equalityRHS, const VariableDomains<REAL>& domains, Vec<int>& indbuffer,
     Vec<REAL>& valbuffer, Vec<Triplet<REAL>>& tripletbuffer,
     Vec<int>& changedActivities, Vec<RowActivity<REAL>>& activities,
@@ -1236,7 +1235,7 @@ ConstraintMatrix<REAL>::aggregate(
    int freeColPos;
    for( freeColPos = 0; freeColPos < equalitylen; ++freeColPos )
    {
-      if( equalityindices[freeColPos] == col )
+      if( equalityindices[freeColPos] == substituted_col )
          break;
    }
    assert( freeColPos != equalitylen );
@@ -1244,7 +1243,7 @@ ConstraintMatrix<REAL>::aggregate(
    REAL eqbasescale = REAL{ -1 } / equalityvalues[freeColPos];
 
    assert( tripletbuffer.empty() );
-   tripletbuffer.reserve( equalitylen * colsize[col] );
+   tripletbuffer.reserve( equalitylen * colsize[substituted_col] );
 
    auto updateActivity = [presolveround, &changedActivities, &domains,
                           &activities, &tripletbuffer, this, num](
@@ -1286,7 +1285,7 @@ ConstraintMatrix<REAL>::aggregate(
       return std::move( val );
    };
 
-   const auto& freecol = getColumnCoefficients( col );
+   const auto& freecol = getColumnCoefficients( substituted_col );
    const REAL* freecolcoef = freecol.getValues();
    const int* freecolindices = freecol.getIndices();
    const int freecollength = freecol.getLength();
@@ -1345,6 +1344,8 @@ ConstraintMatrix<REAL>::aggregate(
             break;
          case 1:
             singletonRows.push_back( row );
+         default:
+            break;
          }
 
          rowsize[row] = newsize;
@@ -1353,7 +1354,7 @@ ConstraintMatrix<REAL>::aggregate(
       assert(
           std::all_of( getRowCoefficients( row ).getIndices(),
                        getRowCoefficients( row ).getIndices() + rowsize[row],
-                       [&]( int rowcol ) { return rowcol != col; } ) );
+                       [&]( int rowcol ) { return rowcol != substituted_col; } ) );
 
       // change the bounds
       if( equalityRHS != 0 )
@@ -1401,6 +1402,8 @@ ConstraintMatrix<REAL>::aggregate(
                break;
             case 1:
                singletonCols.push_back( col );
+            default:
+               break;
             }
             //TODO: remove column from singleton columns if necessary
             colsize[col] = newsize;
@@ -1426,12 +1429,12 @@ ConstraintMatrix<REAL>::aggregate(
    }
 
    // set column size to zero
-   cons_matrix_transp.rowranges[col].start =
-       cons_matrix_transp.rowranges[col + 1].start;
-   cons_matrix_transp.rowranges[col].end =
-       cons_matrix_transp.rowranges[col + 1].start;
-   cons_matrix_transp.getNnz() -= colsize[col];
-   colsize[col] = -1;
+   cons_matrix_transp.rowranges[substituted_col].start =
+       cons_matrix_transp.rowranges[substituted_col + 1].start;
+   cons_matrix_transp.rowranges[substituted_col].end =
+       cons_matrix_transp.rowranges[substituted_col + 1].start;
+   cons_matrix_transp.getNnz() -= colsize[substituted_col];
+   colsize[substituted_col] = -1;
 
    assert( cons_matrix_transp.getNnz() == cons_matrix.getNnz() );
 }

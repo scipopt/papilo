@@ -53,8 +53,8 @@ struct MatrixEntry
 
    MatrixEntry() {}
 
-   MatrixEntry( int row, int col, const REAL& val )
-       : val( val ), row( row ), col( col )
+   MatrixEntry( int _row, int _col, const REAL& _val )
+       : val( _val ), row( _row ), col( _col )
    {
       row_major.left = 0;
       row_major.right = 0;

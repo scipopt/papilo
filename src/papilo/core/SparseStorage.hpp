@@ -527,10 +527,10 @@ SparseStorage<REAL>::SparseStorage( int nRows_in, int nCols_in, int nnz_in,
 template <typename REAL>
 SparseStorage<REAL>::SparseStorage( REAL* values_in, int* rowstart_in,
                                     int* columns_in, int nRows_in, int nCols_in,
-                                    int nnz_in, double spareRatio,
-                                    int minInterRowSpace )
+                                    int nnz_in, double spareRatio_in,
+                                    int minInterRowSpace_in )
     : nRows( nRows_in ), nCols( nCols_in ), nnz( nnz_in ),
-      spareRatio( spareRatio ), minInterRowSpace( minInterRowSpace )
+      spareRatio( spareRatio_in ), minInterRowSpace( minInterRowSpace_in )
 {
    assert( nRows_in >= 0 && nnz_in >= 0 && spareRatio >= 1.0 );
    assert( rowstart_in );

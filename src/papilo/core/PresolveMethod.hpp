@@ -94,7 +94,7 @@ class PresolveMethod
       nconsecutiveUnsuccessCall = 0;
    }
 
-   virtual ~PresolveMethod() {}
+   virtual ~PresolveMethod() = default;
 
    virtual void
    compress( const Vec<int>& rowmap, const Vec<int>& colmap )
@@ -223,15 +223,15 @@ class PresolveMethod
    }
 
    void
-   setDelayed( bool delayed )
+   setDelayed( bool value )
    {
-      this->delayed = delayed;
+      this->delayed = value;
    }
 
    void
-   setEnabled( bool enabled )
+   setEnabled( bool value )
    {
-      this->enabled = enabled;
+      this->enabled = value;
    }
 
  protected:
@@ -243,21 +243,21 @@ class PresolveMethod
             Reductions<REAL>& reductions ) = 0;
 
    void
-   setName( const std::string& name )
+   setName( const std::string& value )
    {
-      this->name = name;
+      this->name = value;
    }
 
    void
-   setTiming( PresolverTiming timing )
+   setTiming( PresolverTiming value )
    {
-      this->timing = timing;
+      this->timing = value;
    }
 
    void
-   setType( PresolverType type )
+   setType( PresolverType value )
    {
-      this->type = type;
+      this->type = value;
    }
 
    void

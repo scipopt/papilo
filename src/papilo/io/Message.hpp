@@ -98,9 +98,9 @@ class Message
    }
 
    void
-   setVerbosityLevel( VerbosityLevel verbosity )
+   setVerbosityLevel( VerbosityLevel value )
    {
-      this->verbosity = static_cast<int>( verbosity );
+      this->verbosity = static_cast<int>( value );
    }
 
    VerbosityLevel

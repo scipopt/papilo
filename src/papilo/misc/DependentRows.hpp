@@ -114,10 +114,10 @@ class DependentRows
       Vec<int64_t> indr;
 
       void
-      setSize( int64_t nrows, int64_t ncols, int64_t nnz )
+      setSize( int64_t _nrows, int64_t _ncols, int64_t nnz )
       {
-         this->nrows = nrows;
-         this->ncols = ncols;
+         this->nrows = _nrows;
+         this->ncols = _ncols;
 
          // preallocate enough storage for LUSOL to work
          int64_t alloc =

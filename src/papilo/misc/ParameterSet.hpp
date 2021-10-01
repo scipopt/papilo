@@ -244,7 +244,7 @@ class ParameterSet
       ValType val;
 
       template <typename T>
-      SetParameterVisitor( T&& val ) : val( val )
+      SetParameterVisitor( T&& _val ) : val( _val )
       {
       }
 
@@ -277,9 +277,9 @@ class ParameterSet
       const String& key;
       const String& desc;
 
-      PrintParameterVisitor( OutputIt out, const String& key,
-                             const String& desc )
-          : out( out ), key( key ), desc( desc )
+      PrintParameterVisitor( OutputIt _out, const String& _key,
+                             const String& _desc )
+          : out( _out ), key( _key ), desc( _desc )
       {
       }
 

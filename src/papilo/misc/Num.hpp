@@ -358,20 +358,18 @@ class Num
    static constexpr bool
    isSafeEq( const R1& a, const R2& b )
    {
-      return num_traits<REAL>::is_floating_point
-                 ? ( abs( relDiff( a, b ) ) <=
-                     ( 1024 * std::numeric_limits<REAL>::epsilon() ) )
-                 : true;
+      return !num_traits<REAL>::is_floating_point ||
+             ( abs( relDiff( a, b ) ) <=
+               ( 1024 * std::numeric_limits<REAL>::epsilon() ) );
    }
 
    template <typename R1, typename R2>
    static constexpr bool
    isSafeGE( const R1& a, const R2& b )
    {
-      return num_traits<REAL>::is_floating_point
-                 ? ( relDiff( a, b ) >=
-                     -( 1024 * std::numeric_limits<REAL>::epsilon() ) )
-                 : true;
+      return !num_traits<REAL>::is_floating_point ||
+             ( relDiff( a, b ) >=
+               -( 1024 * std::numeric_limits<REAL>::epsilon() ) );
    }
 
    template <typename R1, typename R2>
@@ -388,19 +386,17 @@ class Num
    static constexpr bool
    isSafeGT( const R1& a, const R2& b )
    {
-      return num_traits<REAL>::is_floating_point
-                 ? ( relDiff( a, b ) >
-                     ( 1024 * std::numeric_limits<REAL>::epsilon() ) )
-                 : true;
+      return !num_traits<REAL>::is_floating_point ||
+             ( relDiff( a, b ) >
+               ( 1024 * std::numeric_limits<REAL>::epsilon() ) );
    }
 
    template <typename R1, typename R2>
    bool static constexpr isSafeLT( const R1& a, const R2& b )
    {
-      return num_traits<REAL>::is_floating_point
-                 ? ( relDiff( a, b ) <
-                     -( 1024 * std::numeric_limits<REAL>::epsilon() ) )
-                 : true;
+      return !num_traits<REAL>::is_floating_point ||
+             ( relDiff( a, b ) <
+               -( 1024 * std::numeric_limits<REAL>::epsilon() ) );
    }
 
    template <typename R>
@@ -509,24 +505,24 @@ class Num
    }
 
    void
-   setEpsilon( REAL epsilon )
+   setEpsilon( REAL value )
    {
-      assert( epsilon >= 0 );
-      this->epsilon = epsilon;
+      assert( value >= 0 );
+      this->epsilon = value;
    }
 
    void
-   setFeasTol( REAL feastol )
+   setFeasTol( REAL value )
    {
-      assert( feastol >= 0 );
-      this->feastol = feastol;
+      assert( value >= 0 );
+      this->feastol = value;
    }
 
    void
-   setHugeVal( REAL hugeval )
+   setHugeVal( REAL value )
    {
-      assert( hugeval >= 0 );
-      this->hugeval = hugeval;
+      assert( value >= 0 );
+      this->hugeval = value;
    }
 
    template <typename Archive>

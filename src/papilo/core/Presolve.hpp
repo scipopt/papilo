@@ -154,15 +154,15 @@ class Presolve
    }
 
    void
-   setLPSolverFactory( std::unique_ptr<SolverFactory<REAL>> lpSolverFactory )
+   setLPSolverFactory( std::unique_ptr<SolverFactory<REAL>> value )
    {
-      this->lpSolverFactory = std::move( lpSolverFactory );
+      this->lpSolverFactory = std::move( value );
    }
 
    void
-   setMIPSolverFactory( std::unique_ptr<SolverFactory<REAL>> mipSolverFactory )
+   setMIPSolverFactory( std::unique_ptr<SolverFactory<REAL>> value )
    {
-      this->mipSolverFactory = std::move( mipSolverFactory );
+      this->mipSolverFactory = std::move( value );
    }
 
    const std::unique_ptr<SolverFactory<REAL>>&
@@ -178,9 +178,9 @@ class Presolve
    }
 
    void
-   setPresolverOptions( const PresolveOptions& presolveOptions )
+   setPresolverOptions( const PresolveOptions& value )
    {
-      this->presolveOptions = presolveOptions;
+      this->presolveOptions = value;
    }
 
    const PresolveOptions&
@@ -271,7 +271,6 @@ class Presolve
    bool lastRoundReduced;
    int nunsuccessful;
    bool rundelayed;
-   bool dual_solution = false;
 
    /// evaluate result array of each presolver, return the largest result value
    PresolveStatus
