@@ -24,6 +24,8 @@
 #ifndef _PAPILO_CORE_SOLUTION_HPP_
 #define _PAPILO_CORE_SOLUTION_HPP_
 
+#include "papilo/misc/Vec.hpp"
+
 namespace papilo
 {
 
