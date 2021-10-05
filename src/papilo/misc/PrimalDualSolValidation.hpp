@@ -134,7 +134,7 @@ class PrimalDualSolValidation
             return true;
          }
          if(solution.type == SolutionType::kPrimalDual)
-            solution.slack[row] = num.isZero( rowValue ) ? 0 : rowValue;
+            solution.slack[row] = num.isFeasZero( rowValue ) ? 0 : rowValue;
       }
       return false;
    }
@@ -324,7 +324,7 @@ class PrimalDualSolValidation
             break;
          case VarBasisStatus::ZERO:
             if( not lb_infinity or not ub_infinity or
-                not num.isZero( sol ) )
+                not num.isFeasZero( sol ) )
                return true;
             break;
          case VarBasisStatus::UNDEFINED:
@@ -369,7 +369,7 @@ class PrimalDualSolValidation
             break;
          case VarBasisStatus::ZERO:
             if( not rhs_infinity or not lhs_infinity or
-                not num.isZero( slack ) )
+                not num.isFeasZero( slack ) )
                return true;
             break;
          case VarBasisStatus::UNDEFINED:
