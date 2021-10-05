@@ -305,7 +305,7 @@ class PrimalDualSolValidation
          switch( solution.varBasisStatus[variable] )
          {
          case VarBasisStatus::BASIC:
-            if( not num.isZero( solution.reducedCosts[variable] ) )
+            if( not num.isFeasZero( solution.reducedCosts[variable] ) )
                return true;
             number_basic_variable++;
             break;
