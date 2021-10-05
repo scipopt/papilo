@@ -36,15 +36,16 @@ class BoundStorage
  private:
    Num<REAL> num;
    Vec<REAL> col_cost;
-   Vec<REAL> col_lower;
-   Vec<REAL> col_upper;
    Vec<REAL> row_lhs;
    Vec<REAL> row_rhs;
-
-   Vec<int> col_infinity_lower;
-   Vec<int> col_infinity_upper;
    Vec<int> row_infinity_lhs;
    Vec<int> row_infinity_rhs;
+
+ public:
+      Vec<int> col_infinity_lower;
+      Vec<int> col_infinity_upper;
+      Vec<REAL> col_lower;
+      Vec<REAL> col_upper;
 
  public:
    BoundStorage( const Num<REAL>& n, int cols, int rows, bool is_primal_dual )

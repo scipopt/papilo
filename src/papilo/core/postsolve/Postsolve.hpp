@@ -76,7 +76,7 @@ class Postsolve
    PostsolveStatus
    undo( const Solution<REAL>& reducedSolution,
          Solution<REAL>& originalSolution,
-         PostsolveStorage<REAL> postsolveStorage ) const;
+         PostsolveStorage<REAL> postsolveStorage, bool is_optimal = true ) const;
 
  private:
    REAL
@@ -129,7 +129,7 @@ class Postsolve
    apply_substituted_column_to_original_solution(
        Solution<REAL>& originalSolution, const Vec<int>& indices,
        const Vec<REAL>& values, int first, int last,
-       BoundStorage<REAL>& stored ) const;
+       BoundStorage<REAL>& stored, bool is_optimal ) const;
 
    VarBasisStatus
    calculate_basis( int flags, REAL lb, REAL ub, REAL solution,
@@ -175,7 +175,7 @@ template <typename REAL>
 PostsolveStatus
 Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
                        Solution<REAL>& originalSolution,
-                       PostsolveStorage<REAL> postsolveStorage ) const
+                       PostsolveStorage<REAL> postsolveStorage, bool is_optimal ) const
 {
 
    PrimalDualSolValidation<REAL> validation{message, num};
@@ -278,7 +278,7 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
       }
       case ReductionType::kSubstitutedColWithDual:
          apply_substituted_column_to_original_solution(
-             originalSolution, indices, values, first, last, stored_bounds );
+             originalSolution, indices, values, first, last, stored_bounds, is_optimal );
          break;
       case ReductionType::kParallelCol:
          apply_parallel_col_to_original_solution(
@@ -670,7 +670,7 @@ void
 Postsolve<REAL>::apply_substituted_column_to_original_solution(
     Solution<REAL>& originalSolution, const Vec<int>& indices,
     const Vec<REAL>& values, int first, int last,
-    BoundStorage<REAL>& stored ) const
+    BoundStorage<REAL>& stored, bool is_optimal ) const
 {
    int row = indices[first];
    int row_length = (int)values[first];
@@ -781,7 +781,7 @@ Postsolve<REAL>::apply_substituted_column_to_original_solution(
          }
 
          assert( rowCoef != 0 );
-         assert( num.isZero( originalSolution.dual[row] ) );
+         assert( num.isZero( originalSolution.dual[row] ) || !is_optimal );
          assert( ! variableOnLowerBound && ! variableOnUpperBound );
          sum_dual.add( obj );
          originalSolution.dual[row] = sum_dual.get() / rowCoef;
@@ -958,8 +958,9 @@ Postsolve<REAL>::apply_var_bound_change_forced_by_column_in_original_solution(
           ! num.isZero( originalSolution.dual[row] ) )
       {
          originalSolution.rowBasisStatus[row] = saved_row.getVBS();
+
          assert( originalSolution.rowBasisStatus[row] !=
-                 VarBasisStatus::BASIC || saved_row.is_violated());
+                 VarBasisStatus::BASIC || saved_row.is_violated(originalSolution.primal, stored_bounds));
          variables_removed_from_basis++;
       }
 
@@ -979,7 +980,9 @@ Postsolve<REAL>::apply_var_bound_change_forced_by_column_in_original_solution(
             originalSolution.varBasisStatus[col_index] = get_var_basis_status(
                 stored_bounds, col_index, originalSolution.primal[col_index] );
             assert( originalSolution.varBasisStatus[col_index] !=
-                    VarBasisStatus::BASIC );
+                        VarBasisStatus::BASIC ||
+                    saved_row.is_violated( originalSolution.primal,
+                                           stored_bounds ) );
             variables_removed_from_basis++;
          }
 
@@ -1001,7 +1004,7 @@ Postsolve<REAL>::apply_var_bound_change_forced_by_column_in_original_solution(
                  // or singleton row since there bound-tightening is allowed
                  saved_row.getLength() == 1 ||
                  // do not handle case if row is violated
-                 saved_row.is_violated()
+                 saved_row.is_violated(originalSolution.primal, stored_bounds)
                  );
       }
       if( originalSolution.basisAvailabe && variables_removed_from_basis > 0 )
@@ -1009,7 +1012,8 @@ Postsolve<REAL>::apply_var_bound_change_forced_by_column_in_original_solution(
          originalSolution.varBasisStatus[col] = VarBasisStatus::BASIC;
          variables_removed_from_basis--;
       }
-      assert( variables_removed_from_basis == 0 );
+      assert( variables_removed_from_basis == 0 ||
+              saved_row.is_violated( originalSolution.primal, stored_bounds ) );
       originalSolution.reducedCosts[col] = 0;
    }
 

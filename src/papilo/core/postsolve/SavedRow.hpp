@@ -24,11 +24,12 @@
 #ifndef _PAPILO_CORE_SAVED_ROW_HPP_
 #define _PAPILO_CORE_SAVED_ROW_HPP_
 
-#include "papilo/misc/Num.hpp"
-#include "papilo/misc/Vec.hpp"
-#include "papilo/misc/StableSum.hpp"
 #include "papilo/core/Solution.hpp"
+#include "papilo/core/postsolve/BoundStorage.hpp"
 #include "papilo/core/postsolve/ReductionType.hpp"
+#include "papilo/misc/Num.hpp"
+#include "papilo/misc/StableSum.hpp"
+#include "papilo/misc/Vec.hpp"
 
 namespace papilo
 {
@@ -52,12 +53,10 @@ class SavedRow
    REAL rhs;
    int length;
 
-
  public:
    SavedRow( const Num<REAL>& n, int i, const Vec<ReductionType>& types,
              const Vec<int>& start, const Vec<int>& indices,
-             const Vec<REAL>& values,
-             const Vec<REAL>& primal_solution )
+             const Vec<REAL>& values, const Vec<REAL>& primal_solution )
    {
       int next_type = i - 1;
       int next_but_one_type = i - 2;
@@ -71,13 +70,13 @@ class SavedRow
          assert( false );
       row = indices[saved_row];
       length = (int)values[saved_row];
-      is_lhs_inf = indices[saved_row+1] ==1;
-      lhs = values[saved_row+1];
-      is_rhs_inf = indices[saved_row+2]==1;
-      rhs = values[saved_row+2];
+      is_lhs_inf = indices[saved_row + 1] == 1;
+      lhs = values[saved_row + 1];
+      is_rhs_inf = indices[saved_row + 2] == 1;
+      rhs = values[saved_row + 2];
 
-      col_coefficients.resize(length);
-      row_values.resize(length);
+      col_coefficients.resize( length );
+      row_values.resize( length );
 
       StableSum<REAL> slack_of_row{};
       for( int j = 0; j < length; ++j )
@@ -86,7 +85,7 @@ class SavedRow
          REAL val = values[saved_row + 3 + j];
          col_coefficients[j] = col_index;
          row_values[j] = val;
-         slack_of_row.add(val * primal_solution[col_index]);
+         slack_of_row.add( val * primal_solution[col_index] );
       }
       slack = slack_of_row.get();
    }
@@ -116,25 +115,25 @@ class SavedRow
    }
 
    REAL
-   getCoeffOfCol(int col)
+   getCoeffOfCol( int col )
    {
       for( int j = 0; j < length; ++j )
       {
          if( col_coefficients[j] == col )
             return row_values[j];
       }
-      assert(false);
+      assert( false );
       return 0;
    }
 
    int
-   getCoeff(int index)
+   getCoeff( int index )
    {
       return col_coefficients[index];
    }
 
    REAL
-   getValue(int index)
+   getValue( int index )
    {
       return row_values[index];
    }
@@ -154,7 +153,20 @@ class SavedRow
    }
 
    bool
-   is_violated(){
+   is_violated( const Vec<REAL>& primal,
+                const BoundStorage<REAL>& stored_bounds )
+   {
+      for( int i = 0; i < length; i++ )
+      {
+         int index = col_coefficients[i];
+         REAL sol = primal[index];
+         bool is_lb_violated = !stored_bounds.col_infinity_lower[index] &&
+                               num.isLT( sol, stored_bounds.col_lower[index] );
+         bool is_ub_violated = !stored_bounds.col_infinity_upper[index] &&
+                               num.isGT( sol, stored_bounds.col_upper[index] );
+         if(is_lb_violated || is_ub_violated)
+            return true;
+      }
       bool rhs_violated = !is_rhs_inf && num.isFeasGT( slack, rhs );
       bool lhs_violated = !is_lhs_inf && num.isFeasLT( slack, lhs );
       return rhs_violated || lhs_violated;
