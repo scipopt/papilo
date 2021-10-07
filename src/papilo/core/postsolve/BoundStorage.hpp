@@ -132,9 +132,11 @@ class BoundStorage
             return false;
          if( col_infinity_upper[i] != colFlags[i].test( ColFlag::kUbInf ) )
             return false;
-         if( not num.isEq( col_upper[i], upperBounds[i] ) )
+         if( !num.isEq( col_upper[i], upperBounds[i] ) &&
+             !colFlags[i].test( ColFlag::kUbInf ) )
             return false;
-         if( not num.isEq( col_lower[i], lowerBounds[i] ) )
+         if( !num.isEq( col_lower[i], lowerBounds[i] ) &&
+             !colFlags[i].test( ColFlag::kLbInf ) )
             return false;
       }
       return true;
