@@ -1473,8 +1473,6 @@ Postsolve<REAL>::recalculate_current_problem_from_the_original_problem(
                            .getConstraintMatrix()
                            .getColSizes()[col];
 
-         assert( problemUpdate.getProblem().getRowFlags()[row].test(
-             RowFlag::kEquation ) );
          problemUpdate.getProblem().getColFlags()[col].set(
              ColFlag::kSubstituted );
          problemUpdate.getProblem().substituteVarInObj( num, col, row );
