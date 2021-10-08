@@ -29,7 +29,13 @@
 #include "papilo/core/ProblemUpdate.hpp"
 #include "papilo/misc/Num.hpp"
 #include "papilo/misc/fmt.hpp"
-#include <boost/integer/extended_euclidean.hpp>
+#if BOOST_VERSION >= 107200
+   #include <boost/integer/extended_euclidean.hpp>
+#else
+   // use a copy to enable also older boost versions
+   #include "papilo/misc/extended_euclidean.hpp"
+#endif
+
 
 // TODO: before this presolver starts feasibility needs to be checked
 // TODO: -> maybe do the simple check before? that means inf <= b <= sup
