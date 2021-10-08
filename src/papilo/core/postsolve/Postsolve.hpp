@@ -110,7 +110,7 @@ class Postsolve
    apply_var_bound_change_forced_by_column_in_original_solution(
        Solution<REAL>& originalSolution, const Vec<ReductionType>& types,
        const Vec<int>& start, const Vec<int>& indices, const Vec<REAL>& values,
-       int i, int first, BoundStorage<REAL>& stored_bounds ) const;
+       int i, int first, BoundStorage<REAL>& stored_bounds, bool is_optimal  ) const;
 
    void
    apply_parallel_col_to_original_solution( Solution<REAL>& originalSolution,
@@ -143,7 +143,8 @@ class Postsolve
                           const Vec<ReductionType>& types,
                           const Vec<int>& start, const Vec<int>& indices,
                           const Vec<REAL>& values, int i,
-                          BoundStorage<REAL>& stored_bounds ) const;
+                          BoundStorage<REAL>& stored_bounds,
+                          bool is_optimal ) const;
 
    VarBasisStatus
    get_var_basis_status( BoundStorage<REAL>& stored_bounds, int col,
@@ -253,7 +254,7 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
          assert( originalSolution.type == SolutionType::kPrimalDual );
          apply_var_bound_change_forced_by_column_in_original_solution(
              originalSolution, types, start, indices, values, i, first,
-             stored_bounds );
+             stored_bounds, is_optimal );
 
          break;
       }
@@ -920,7 +921,7 @@ void
 Postsolve<REAL>::apply_var_bound_change_forced_by_column_in_original_solution(
     Solution<REAL>& originalSolution, const Vec<ReductionType>& types,
     const Vec<int>& start, const Vec<int>& indices, const Vec<REAL>& values,
-    int i, int first, BoundStorage<REAL>& stored_bounds ) const
+    int i, int first, BoundStorage<REAL>& stored_bounds, bool is_optimal  ) const
 {
 
    bool isLowerBound = indices[first] == 1;
@@ -1041,7 +1042,7 @@ Postsolve<REAL>::apply_var_bound_change_forced_by_column_in_original_solution(
          if( ! isLowerBound )
             break;
          remove_row_from_basis( originalSolution, types, start, indices, values,
-                                i, stored_bounds );
+                                i, stored_bounds, is_optimal );
          originalSolution.varBasisStatus[col] = VarBasisStatus::BASIC;
          break;
       }
@@ -1056,7 +1057,7 @@ Postsolve<REAL>::apply_var_bound_change_forced_by_column_in_original_solution(
          if( isLowerBound )
             break;
          remove_row_from_basis( originalSolution, types, start, indices, values,
-                                i, stored_bounds );
+                                i, stored_bounds, is_optimal );
          originalSolution.varBasisStatus[col] = VarBasisStatus::BASIC;
          break;
       }
@@ -1305,17 +1306,17 @@ Postsolve<REAL>::remove_row_from_basis( Solution<REAL>& originalSolution,
                                         const Vec<ReductionType>& types,
                                         const Vec<int>& start,
                                         const Vec<int>& indices,
-                                        const Vec<REAL>& values, int i, BoundStorage<REAL>& stored_bounds ) const
+                                        const Vec<REAL>& values, int i, BoundStorage<REAL>& stored_bounds, bool is_optimal  ) const
 {
    SavedRow<REAL> saved_row{
        num, i, types, start, indices, values, originalSolution.primal };
 
    assert( originalSolution.rowBasisStatus[saved_row.getRow()] ==
                VarBasisStatus::BASIC &&
-           ( saved_row.is_on_rhs() || saved_row.is_on_lhs() ) );
+           ( saved_row.is_on_rhs() || saved_row.is_on_lhs() ) || !is_optimal );
    originalSolution.rowBasisStatus[saved_row.getRow()] = saved_row.getVBS();
    assert( originalSolution.rowBasisStatus[saved_row.getRow()] !=
-           VarBasisStatus::BASIC );
+           VarBasisStatus::BASIC || !is_optimal);
 }
 
 template <typename REAL>
