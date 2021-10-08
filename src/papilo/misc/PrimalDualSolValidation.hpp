@@ -434,7 +434,6 @@ class PrimalDualSolValidation
                                      solution.reducedCosts, problem ) )
          {
             message.info( "Objective function failed.\n" );
-            //            failure = true;
          }
          if( failure )
             return PostsolveStatus::kFailed;
