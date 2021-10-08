@@ -163,7 +163,7 @@ class PrimalDualSolValidation
       {
          if( problem.getColFlags()[variable].test( ColFlag::kInactive ) )
             continue;
-         REAL colValue = 0;
+         StableSum<REAL> colValue;
 
          auto coeff =
              problem.getConstraintMatrix().getColumnCoefficients( variable );
@@ -171,16 +171,16 @@ class PrimalDualSolValidation
          {
             REAL value = coeff.getValues()[counter];
             int rowIndex = coeff.getIndices()[counter];
-            colValue += dualSolution[rowIndex] * value;
+            colValue.add(dualSolution[rowIndex] * value);
          }
 
-         if( not num.isFeasEq( colValue + reducedCosts[variable],
+         if( not num.isFeasEq( colValue.get() + reducedCosts[variable],
                            problem.getObjective().coefficients[variable] ) )
          {
             message.info(
                 "Dual row {:<3} violates dual row bounds ({:<3} != {:<3}).\n",
                 variable, problem.getObjective().coefficients[variable],
-                colValue + reducedCosts[variable],
+                colValue.get() + reducedCosts[variable],
                 problem.getObjective().coefficients[variable] );
             return true;
          }
