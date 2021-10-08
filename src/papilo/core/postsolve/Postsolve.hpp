@@ -943,7 +943,7 @@ Postsolve<REAL>::apply_var_bound_change_forced_by_column_in_original_solution(
    int variables_removed_from_basis = 0;
 
    // calculate the reduced costs if loosens variable at a bound
-   if( num.isEq( new_value, originalSolution.primal[col] ) &&
+   if( num.isFeasEq( new_value, originalSolution.primal[col] ) &&
        ( changes_neg_reduced_costs || changes_pos_reduced_costs ) )
    {
       assert( ! num.isZero( reduced_costs ) );
