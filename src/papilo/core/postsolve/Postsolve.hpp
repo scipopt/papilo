@@ -296,8 +296,8 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
 
          bool isLhs = indices[first] == 1;
          int row = (int)values[first];
-         bool is_infinity = indices[first + 1] ==1;
-         bool was_infinity = indices[first + 2] ==1;
+         //         bool is_infinity = indices[first + 1] ==1;
+         //         bool was_infinity = indices[first + 2] ==1;
          REAL new_value = values[first + 1];
          REAL old_value = values[first + 2];
 

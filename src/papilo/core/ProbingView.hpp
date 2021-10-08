@@ -70,15 +70,15 @@ class ProbingView
    ProbingView( const Problem<REAL>& problem, const Num<REAL>& num );
 
    void
-   setMinIntDomRed( const REAL& minintdomred )
+   setMinIntDomRed( const REAL& value )
    {
-      this->minintdomred = minintdomred;
+      this->minintdomred = value;
    }
 
    void
-   setMinContDomRed( const REAL& mincontdomred )
+   setMinContDomRed( const REAL& value )
    {
-      this->mincontdomred = mincontdomred;
+      this->mincontdomred = value;
    }
 
    void

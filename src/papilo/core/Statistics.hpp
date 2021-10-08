@@ -39,13 +39,13 @@ struct Statistics
    int ndeletedcols;
    int ndeletedrows;
 
-   Statistics( double presolvetime, int ntsxapplied, int ntsxconflicts,
-               int nboundchgs, int nsidechgs, int ncoefchgs, int nrounds,
-               int ndeletedcols, int ndeletedrows )
-       : presolvetime( presolvetime ), ntsxapplied( ntsxapplied ),
-         ntsxconflicts( ntsxconflicts ), nboundchgs( nboundchgs ),
-         nsidechgs( nsidechgs ), ncoefchgs( ncoefchgs ), nrounds( nrounds ),
-         ndeletedcols( ndeletedcols ), ndeletedrows( ndeletedrows )
+   Statistics( double _presolvetime, int _ntsxapplied, int _ntsxconflicts,
+               int _nboundchgs, int _nsidechgs, int _ncoefchgs, int _nrounds,
+               int _ndeletedcols, int _ndeletedrows )
+       : presolvetime( _presolvetime ), ntsxapplied( _ntsxapplied ),
+         ntsxconflicts( _ntsxconflicts ), nboundchgs( _nboundchgs ),
+         nsidechgs( _nsidechgs ), ncoefchgs( _ncoefchgs ), nrounds( _nrounds ),
+         ndeletedcols( _ndeletedcols ), ndeletedrows( _ndeletedrows )
    {
    }
 
@@ -60,11 +60,11 @@ struct Statistics
 inline Statistics
 operator-( const Statistics& a, const Statistics& b )
 {
-   return Statistics(
+   return {
        0.0, a.ntsxapplied - b.ntsxapplied, a.ntsxconflicts - b.ntsxconflicts,
        a.nboundchgs - b.nboundchgs, a.nsidechgs - b.nsidechgs,
        a.ncoefchgs - b.ncoefchgs, a.nrounds - b.nrounds,
-       a.ndeletedcols - b.ndeletedcols, a.ndeletedrows - b.ndeletedrows );
+       a.ndeletedcols - b.ndeletedcols, a.ndeletedrows - b.ndeletedrows };
 }
 
 } // namespace papilo

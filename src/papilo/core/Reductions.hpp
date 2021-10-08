@@ -81,8 +81,8 @@ struct Reduction
    /// index of column or negative for row specific operations
    int col;
 
-   Reduction( REAL newval, int row, int col )
-       : newval( newval ), row( row ), col( col )
+   Reduction( REAL _newval, int _row, int _col )
+       : newval( _newval ), row( _row ), col( _col )
    {
    }
 };
@@ -368,9 +368,9 @@ template <typename REAL>
 class TransactionGuard
 {
  public:
-   TransactionGuard( Reductions<REAL>& reductions ) : reductions( reductions )
+   TransactionGuard( Reductions<REAL>& _reductions ) : reductions( _reductions )
    {
-      reductions.startTransaction();
+      _reductions.startTransaction();
    }
 
    ~TransactionGuard() { reductions.endTransaction(); }

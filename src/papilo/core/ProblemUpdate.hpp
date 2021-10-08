@@ -148,9 +148,9 @@ class ProblemUpdate
                   const Num<REAL>& num, const Message& msg );
 
    void
-   setPostponeSubstitutions( bool postponeSubstitutions )
+   setPostponeSubstitutions( bool value )
    {
-      this->postponeSubstitutions = postponeSubstitutions;
+      this->postponeSubstitutions = value;
    }
 
    void
@@ -421,30 +421,30 @@ extern template class ProblemUpdate<Rational>;
 #endif
 
 template <typename REAL>
-ProblemUpdate<REAL>::ProblemUpdate( Problem<REAL>& problem,
-                                    PostsolveStorage<REAL>& postsolve,
-                                    Statistics& stats,
-                                    const PresolveOptions& presolveOptions,
-                                    const Num<REAL>& num, const Message& msg )
-    : problem( problem ), postsolve( postsolve ), stats( stats ),
-      presolveOptions( presolveOptions ), num( num ), msg( msg )
+ProblemUpdate<REAL>::ProblemUpdate( Problem<REAL>& _problem,
+                                    PostsolveStorage<REAL>& _postsolve,
+                                    Statistics& _stats,
+                                    const PresolveOptions& _presolveOptions,
+                                    const Num<REAL>& _num, const Message& _msg )
+    : problem( _problem ), postsolve( _postsolve ), stats( _stats ),
+      presolveOptions( _presolveOptions ), num( _num ), msg( _msg )
 {
-   row_state.resize( problem.getNRows() );
-   col_state.resize( problem.getNCols() );
+   row_state.resize( _problem.getNRows() );
+   col_state.resize( _problem.getNCols() );
    postponeSubstitutions = true;
    firstNewSingletonCol = 0;
 
    lastcompress_ndelcols = 0;
    lastcompress_ndelrows = 0;
 
-   std::ranlux24 randgen( presolveOptions.randomseed );
-   random_col_perm.resize( problem.getNCols() );
-   for( int i = 0; i < problem.getNCols(); ++i )
+   std::ranlux24 randgen( _presolveOptions.randomseed );
+   random_col_perm.resize( _problem.getNCols() );
+   for( int i = 0; i < _problem.getNCols(); ++i )
       random_col_perm[i] = i;
    std::shuffle( random_col_perm.begin(), random_col_perm.end(), randgen );
 
-   random_row_perm.resize( problem.getNRows() );
-   for( int i = 0; i < problem.getNRows(); ++i )
+   random_row_perm.resize( _problem.getNRows() );
+   for( int i = 0; i < _problem.getNRows(); ++i )
       random_row_perm[i] = i;
    std::shuffle( random_row_perm.begin(), random_row_perm.end(), randgen );
 }
@@ -567,7 +567,6 @@ template <typename REAL>
 PresolveStatus
 ProblemUpdate<REAL>::fixColInfinity( int col, REAL val )
 {
-   ConstraintMatrix<REAL>& constraintMatrix = problem.getConstraintMatrix();
    Vec<REAL>& lbs = problem.getLowerBounds();
    Vec<REAL>& ubs = problem.getUpperBounds();
    Vec<ColFlags>& cflags = problem.getColFlags();
@@ -944,12 +943,8 @@ ProblemUpdate<REAL>::flush( bool reset_changed_activities )
 {
    PresolveStatus status = PresolveStatus::kUnchanged;
 
-   const Vec<REAL>& lbs = problem.getLowerBounds();
-   const Vec<REAL>& ubs = problem.getUpperBounds();
    Vec<RowFlags>& rflags = problem.getRowFlags();
-   const Vec<ColFlags>& cflags = problem.getColFlags();
    Vec<RowActivity<REAL>>& activities = problem.getRowActivities();
-   Vec<Locks>& locks = problem.getLocks();
    ConstraintMatrix<REAL>& consMatrix = problem.getConstraintMatrix();
 
    // apply outstanding coefficient change
@@ -1093,7 +1088,6 @@ ProblemUpdate<REAL>::removeFixedCols()
    ConstraintMatrix<REAL>& consMatrix = problem.getConstraintMatrix();
    Vec<RowFlags>& rflags = consMatrix.getRowFlags();
    Vec<REAL>& lhs = consMatrix.getLeftHandSides();
-   Vec<ColFlags>& colFlags = problem.getColFlags();
    Vec<REAL>& rhs = consMatrix.getRightHandSides();
 
    for( int col : deleted_cols )
@@ -1105,9 +1099,9 @@ ProblemUpdate<REAL>::removeFixedCols()
          continue;
 
       assert(
-          num.isEq( lbs[col], problem.getUpperBounds()[col] ) && !colFlags[col]
+          num.isEq( lbs[col], problem.getUpperBounds()[col] ) && !problem.getColFlags()[col]
               .test( ColFlag::kUbInf ) &&
-          !colFlags[col].test( ColFlag::kLbInf ) );
+          !problem.getColFlags()[col].test( ColFlag::kLbInf ) );
 
       auto colvec = consMatrix.getColumnCoefficients( col );
       postsolve.storeFixedCol( col, lbs[col], colvec, obj.coefficients );
@@ -2171,9 +2165,8 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
 
             const REAL* vals1 = col1vec.getValues();
             const REAL* vals2 = col2vec.getValues();
-            const int collen = col1vec.getLength();
 
-            assert( collen > 0 );
+            assert( col1vec.getLength() > 0 );
             REAL col2scale = vals1[0] / vals2[0];
             assert( col2vec.getLength() == col1vec.getLength() );
 
@@ -2671,8 +2664,7 @@ ProblemUpdate<REAL>::merge_parallel_columns(
    // compute the new domains for column 2
    REAL newlb = 0;
    REAL newub = 0;
-   bool newlbinf = true;
-   bool newubinf = true;
+
    ColFlags newflags;
 
    newflags.set( ColFlag::kLbInf, ColFlag::kUbInf );

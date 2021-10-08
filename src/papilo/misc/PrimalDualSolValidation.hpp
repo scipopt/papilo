@@ -156,9 +156,6 @@ class PrimalDualSolValidation
                          const Vec<VarBasisStatus>& basis,
                          const Problem<REAL>& problem )
    {
-      const papilo::Vec<REAL>& lowerBounds = problem.getLowerBounds();
-      const papilo::Vec<REAL>& upperBounds = problem.getUpperBounds();
-
       const Vec<REAL> rhs = problem.getConstraintMatrix().getRightHandSides();
       const Vec<REAL> lhs = problem.getConstraintMatrix().getLeftHandSides();
 

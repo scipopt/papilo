@@ -112,23 +112,20 @@ class PostsolveStorage
       start.push_back( 0 );
    }
 
-   PostsolveStorage( const Problem<REAL>& problem, const Num<REAL>& num, const PresolveOptions options )
-       : problem( problem ), num( num ), presolveOptions(options)
+   PostsolveStorage( const Problem<REAL>& _problem, const Num<REAL>& _num, const PresolveOptions _options )
+       : problem( _problem ), num( _num ), presolveOptions(_options)
    {
-      int nrows = problem.getNRows();
-      int ncols = problem.getNCols();
+      nRowsOriginal = _problem.getNRows();
+      nColsOriginal = _problem.getNCols();
 
-      origrow_mapping.reserve( nrows );
-      origrow_mapping.reserve( ncols );
+      origrow_mapping.reserve( nRowsOriginal );
+      origrow_mapping.reserve( nColsOriginal );
 
-      for( int i = 0; i < nrows; ++i )
+      for( unsigned int i = 0; i < nRowsOriginal; ++i )
          origrow_mapping.push_back( i );
 
-      for( int i = 0; i < ncols; ++i )
+      for( unsigned int i = 0; i < nColsOriginal; ++i )
          origcol_mapping.push_back( i );
-
-      nColsOriginal = ncols;
-      nRowsOriginal = nrows;
 
       start.push_back( 0 );
 
