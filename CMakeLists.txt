@@ -130,6 +130,11 @@ target_link_libraries(papilo
 target_link_libraries(papilo
     INTERFACE ${Quadmath_IMPORTED_TARGET} ${GMP_LIBRARIES})
 
+# on raspberry pi, we need to link libatomic, as libtbbmalloc_proxy depends on it
+if((CMAKE_HOST_SYSTEM_PROCESSOR STREQUAL "armv7l") AND (CMAKE_SYSTEM_NAME STREQUAL "Linux"))
+  target_link_libraries(papilo -latomic)
+endif()
+
 target_compile_options(papilo
     PRIVATE ${TBB_CXX_STD_FLAG})
 
