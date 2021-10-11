@@ -80,7 +80,6 @@ DualInfer<REAL>::execute( const Problem<REAL>& problem,
    const auto& rhsValues = consMatrix.getRightHandSides();
    const auto& rflags = consMatrix.getRowFlags();
    const auto& cflags = problem.getColFlags();
-   const auto& rowsize = consMatrix.getRowSizes();
    const auto& colsize = consMatrix.getColSizes();
    const int ncols = problem.getNCols();
    const int nrows = problem.getNRows();
@@ -156,7 +155,7 @@ DualInfer<REAL>::execute( const Problem<REAL>& problem,
       if( consMatrix.isRowRedundant( i ) )
          continue;
 
-      assert( rowsize[i] > 0 );
+      assert( consMatrix.getRowSizes()[i] > 0 );
 
       if( !rflags[i].test( RowFlag::kRhsInf ) )
          dualColFlags[i].set( ColFlag::kLbInf );
@@ -381,37 +380,37 @@ DualInfer<REAL>::execute( const Problem<REAL>& problem,
 
       for( int i = 0; i != len; ++i )
       {
-         int dualRow = inds[i];
+         int dual_row = inds[i];
 
-         if( dualRowFlags[dualRow].test( RowFlag::kRedundant ) )
+         if( dualRowFlags[dual_row].test( RowFlag::kRedundant ) )
             continue;
 
-         RowActivity<REAL>& activity = dualActivities[dualRow];
+         RowActivity<REAL>& activity = dualActivities[dual_row];
 
          ActivityChange actChange = update_activity_after_boundchange(
              vals[i], boundChg, oldbound, newbound, oldboundinf, activity );
 
-         if( checkRedundancy( dualRow ) )
+         if( checkRedundancy( dual_row ) )
          {
-            dualRowFlags[dualRow].set( RowFlag::kRedundant );
+            dualRowFlags[dual_row].set( RowFlag::kRedundant );
             continue;
          }
 
          if( activity.lastchange != nrounds )
          {
             if( actChange == ActivityChange::kMin &&
-                !dualRowFlags[dualRow].test( RowFlag::kRhsInf ) &&
+                !dualRowFlags[dual_row].test( RowFlag::kRhsInf ) &&
                 activity.ninfmin <= 1 )
             {
                activity.lastchange = nrounds;
-               nextChangedActivity.push_back( dualRow );
+               nextChangedActivity.push_back( dual_row );
             }
             else if( actChange == ActivityChange::kMax &&
-                     !dualRowFlags[dualRow].test( RowFlag::kLhsInf ) &&
+                     !dualRowFlags[dual_row].test( RowFlag::kLhsInf ) &&
                      activity.ninfmax <= 1 )
             {
                activity.lastchange = nrounds;
-               nextChangedActivity.push_back( dualRow );
+               nextChangedActivity.push_back( dual_row );
             }
          }
       }

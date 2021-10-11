@@ -88,7 +88,6 @@ SimpleProbing<REAL>::execute( const Problem<REAL>& problem,
    const auto& rowsize = problem.getRowSizes();
 
    const auto& constMatrix = problem.getConstraintMatrix();
-   const auto& lhs_values = constMatrix.getLeftHandSides();
    const auto& rhs_values = constMatrix.getRightHandSides();
    const auto& rflags = constMatrix.getRowFlags();
 
@@ -126,7 +125,7 @@ SimpleProbing<REAL>::execute( const Problem<REAL>& problem,
       if( status == PresolveStatus::kUnchanged )
          return PresolveStatus::kUnchanged;
 
-      for( int i = 0; i < stored_reductions.size(); ++i )
+      for( int i = 0; i < (int) stored_reductions.size(); ++i )
       {
          Reductions<REAL> reds = stored_reductions[i];
          if( reds.size() > 0 )

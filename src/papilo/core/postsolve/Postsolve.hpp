@@ -181,8 +181,6 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
 
    PrimalDualSolValidation<REAL> validation{message, num};
 
-   const Vec<REAL>& reducedSol = reducedSolution.primal;
-
    copy_from_reduced_to_original( reducedSolution, originalSolution,
                                   postsolveStorage );
 
@@ -298,8 +296,8 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
          int row = (int)values[first];
          //         bool is_infinity = indices[first + 1] ==1;
          //         bool was_infinity = indices[first + 2] ==1;
-         REAL new_value = values[first + 1];
-         REAL old_value = values[first + 2];
+         //         REAL new_value = values[first + 1];
+         //         REAL old_value = values[first + 2];
 
          // if a row bound change happened because of a substitution skip the
          // verification for this step
@@ -345,7 +343,7 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
          assert( originalSolution.type == SolutionType::kPrimalDual );
 
          // get column bounds
-         for( int j = 0; j < postsolveStorage.origcol_mapping.size(); j++ )
+         for( unsigned int j = 0; j < postsolveStorage.origcol_mapping.size(); j++ )
          {
             int origCol = postsolveStorage.origcol_mapping[j];
             int index = first + 2 * j;
@@ -359,7 +357,7 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
          // get row bounds
          int first_row_bounds =
              first + 2 * postsolveStorage.origcol_mapping.size();
-         for( int k = 0; k < postsolveStorage.origrow_mapping.size(); k++ )
+         for( unsigned int k = 0; k < postsolveStorage.origrow_mapping.size(); k++ )
          {
             int origRow = postsolveStorage.origrow_mapping[k];
             int index = first_row_bounds + 2 * k;
@@ -702,7 +700,7 @@ Postsolve<REAL>::apply_substituted_column_to_original_solution(
    if( originalSolution.type == SolutionType::kPrimalDual )
    {
 
-      int col_length = (int)values[first + 3 + row_length];
+//      int col_length = (int)values[first + 3 + row_length];
       assert( indices[first + 4 + row_length] == 0 );
       REAL obj = values[first + 4 + row_length];
 
@@ -795,7 +793,8 @@ Postsolve<REAL>::apply_substituted_column_to_original_solution(
             originalSolution.rowBasisStatus[row] = VarBasisStatus::FIXED;
          }
       }
-      assert( row_length + col_length + 7 == last - first );
+      assert( row_length + (int)values[first + 3 + row_length] + 7 ==
+              last - first );
    }
 }
 
@@ -824,10 +823,10 @@ Postsolve<REAL>::apply_row_bound_change_to_original_solution(
 {
    bool isLhs = indices[first] == 1;
    int row = (int)values[first];
-   REAL new_value = values[first + 1];
-   bool is_infinity = indices[first + 1] == 1;
-   REAL old_value = values[first + 2];
-   bool was_infinity = indices[first + 2] == 1;
+   //   REAL new_value = values[first + 1];
+   //   bool is_infinity = indices[first + 1] == 1;
+   //   REAL old_value = values[first + 2];
+   //   bool was_infinity = indices[first + 2] == 1;
 
    int next_type = i - 1;
    int start_reason = start[next_type];
@@ -1400,7 +1399,7 @@ Postsolve<REAL>::recalculate_current_problem_from_the_original_problem(
       {
          bool isLowerBound = indices[first] == 1;
          int col = indices[first + 1];
-         REAL old_value = values[first + 2];
+         //         REAL old_value = values[first + 2];
          REAL new_value = values[first + 1];
          if( isLowerBound )
          {

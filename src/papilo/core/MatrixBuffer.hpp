@@ -394,7 +394,7 @@ struct MatrixBuffer
    {
       assert( badge_start >= 0 && badge_start <= entries.size() );
 
-      for( int i = badge_start; i != entries.size(); ++i )
+      for( int i = badge_start; i != (int) entries.size(); ++i )
       {
          this->template link<true>( i );
          this->template link<false>( i );

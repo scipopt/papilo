@@ -98,17 +98,11 @@ Sparsify<REAL>::execute( const Problem<REAL>& problem,
    const auto& upper_bounds = domains.upper_bounds;
    const auto& cflags = domains.flags;
 
-   const auto& activities = problem.getRowActivities();
-
    const ConstraintMatrix<REAL>& consmatrix = problem.getConstraintMatrix();
 
-   const auto& lhs_values = consmatrix.getLeftHandSides();
-   const auto& rhs_values = consmatrix.getRightHandSides();
    const auto& rflags = consmatrix.getRowFlags();
    const auto& rowsize = consmatrix.getRowSizes();
-   const auto& colsize = consmatrix.getColSizes();
    const auto& nrows = consmatrix.getNRows();
-   const auto& ncols = consmatrix.getNCols();
 
    auto isBinaryCol = [&]( int col ) {
       return cflags[col].test( ColFlag::kIntegral ) &&
@@ -132,7 +126,8 @@ Sparsify<REAL>::execute( const Problem<REAL>& problem,
          continue;
 
       assert( !rflags[i].test( RowFlag::kLhsInf, RowFlag::kRhsInf ) &&
-              lhs_values[i] == rhs_values[i] );
+              consmatrix.getLeftHandSides()[i] ==
+                  consmatrix.getRightHandSides()[i] );
 
       equalities.emplace_back( i );
    }
@@ -310,17 +305,17 @@ Sparsify<REAL>::execute( const Problem<REAL>& problem,
 
                    if( !cancelint && candrowhits[candrow] != eqlen )
                    {
-                      bool skip = false;
+                      bool has_integral = false;
                       for( int j = 0; j != candlen; ++j )
                       {
                          if( cflags[candcols[j]].test( ColFlag::kIntegral ) )
                          {
-                            skip = true;
+                            has_integral = true;
                             break;
                          }
                       }
 
-                      if( skip )
+                      if( has_integral )
                          continue;
                    }
 

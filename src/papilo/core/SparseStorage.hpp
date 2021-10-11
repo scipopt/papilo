@@ -421,11 +421,11 @@ extern template class SparseStorage<Rational>;
 template <typename REAL>
 SparseStorage<REAL>::SparseStorage( Vec<Triplet<REAL>> entries, int nRows_in,
                                     int nCols_in, bool sorted,
-                                    double spareRatio, int minInterRowSpace )
-    : nRows( nRows_in ), nCols( nCols_in ), spareRatio( spareRatio ),
-      minInterRowSpace( minInterRowSpace )
+                                    double spareRatio_, int minInterRowSpace_ )
+    : nRows( nRows_in ), nCols( nCols_in ), spareRatio( spareRatio_ ),
+      minInterRowSpace( minInterRowSpace_ )
 {
-   assert( spareRatio >= 0.0 );
+   assert( spareRatio_ >= 0.0 );
    assert( !sorted || std::is_sorted( entries.begin(), entries.end() ) );
 
    if( !sorted )
@@ -509,12 +509,12 @@ SparseStorage<REAL>::SparseStorage( Vec<Triplet<REAL>> entries, int nRows_in,
 
 template <typename REAL>
 SparseStorage<REAL>::SparseStorage( int nRows_in, int nCols_in, int nnz_in,
-                                    double spareRatio, int minInterRowSpace )
+                                    double spareRatio_, int minInterRowSpace_ )
     : nRows( nRows_in ), nCols( nCols_in ), nnz( nnz_in ),
-      spareRatio( spareRatio ), minInterRowSpace( minInterRowSpace )
+      spareRatio( spareRatio_ ), minInterRowSpace( minInterRowSpace_ )
 {
    nAlloc = computeNAlloc();
-   assert( spareRatio >= 1.0 );
+   assert( spareRatio_ >= 1.0 );
 
    rowranges.resize( nRows + 1 );
    values.resize( nAlloc );

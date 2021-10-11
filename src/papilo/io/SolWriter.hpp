@@ -67,7 +67,7 @@ struct SolWriter
 
       fmt::print( out, "{: <50} {: <18.15}\n", "=obj=", double( solobj ) );
 
-      for( int i = 0; i != sol.size(); ++i )
+      for( int i = 0; i != (int) sol.size(); ++i )
       {
          if( sol[i] != 0.0 )
          {
@@ -98,7 +98,7 @@ struct SolWriter
 
       fmt::print( out, "{: <50} {: <18.15}\n", "=obj=", double( obj_value ) );
 
-      for( int i = 0; i < sol.size(); ++i )
+      for( int i = 0; i < (int) sol.size(); ++i )
       {
          if( sol[i] != 0.0 )
          {
@@ -132,7 +132,7 @@ struct SolWriter
 
       fmt::print( out, "{: <50} {: <18.15}\n", "=obj=", double( solobj ) );
 
-      for( int i = 0; i < sol.size(); ++i )
+      for( int i = 0; i < (int) sol.size(); ++i )
       {
          if( sol[i] != 0.0 )
          {
@@ -170,7 +170,7 @@ struct SolWriter
       int row = 0;
       fmt::print( out, "NAME  papilo.bas\n");
 
-      for( int col = 0; col < colBasis.size(); ++col )
+      for( int col = 0; col < (int) colBasis.size(); ++col )
       {
          if( colBasis[col] == VarBasisStatus::BASIC )
          {

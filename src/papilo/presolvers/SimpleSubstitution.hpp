@@ -92,17 +92,12 @@ SimpleSubstitution<REAL>::execute( const Problem<REAL>& problem,
    const auto& lower_bounds = domains.lower_bounds;
    const auto& upper_bounds = domains.upper_bounds;
    const auto& cflags = domains.flags;
-   const auto& domainFlags = domains.flags;
-   const auto& obj = problem.getObjective().coefficients;
-
-   const auto& activities = problem.getRowActivities();
 
    const auto& constMatrix = problem.getConstraintMatrix();
    const auto& lhs_values = constMatrix.getLeftHandSides();
    const auto& rhs_values = constMatrix.getRightHandSides();
    const auto& rflags = constMatrix.getRowFlags();
    const auto& nrows = constMatrix.getNRows();
-   const auto& ncols = constMatrix.getNCols();
    const auto& rowperm = problemUpdate.getRandomRowPerm();
 
    PresolveStatus result = PresolveStatus::kUnchanged;
@@ -149,7 +144,7 @@ SimpleSubstitution<REAL>::execute( const Problem<REAL>& problem,
       if( result == PresolveStatus::kUnchanged )
          return PresolveStatus::kUnchanged;
 
-      for( int i = 0; i < stored_reductions.size(); ++i )
+      for( int i = 0; i < (int) stored_reductions.size(); ++i )
       {
          Reductions<REAL> reds = stored_reductions[i];
          if( reds.size() > 0 )

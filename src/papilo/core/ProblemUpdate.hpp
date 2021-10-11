@@ -941,8 +941,6 @@ template <typename REAL>
 PresolveStatus
 ProblemUpdate<REAL>::flush( bool reset_changed_activities )
 {
-   PresolveStatus status = PresolveStatus::kUnchanged;
-
    Vec<RowFlags>& rflags = problem.getRowFlags();
    Vec<RowActivity<REAL>>& activities = problem.getRowActivities();
    ConstraintMatrix<REAL>& consMatrix = problem.getConstraintMatrix();
@@ -1707,7 +1705,7 @@ ProblemUpdate<REAL>::removeEmptyColumns()
          {
             assert( colsize[col] == 0 );
 
-            REAL fixval, cost;
+            REAL fixval;
 
             if( num.isZero(obj.coefficients[col]) )
             {

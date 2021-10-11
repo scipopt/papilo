@@ -101,7 +101,6 @@ Substitution<REAL>::execute( const Problem<REAL>& problem,
    const auto& lower_bounds = domains.lower_bounds;
    const auto& upper_bounds = domains.upper_bounds;
    const auto& cflags = domains.flags;
-   const auto& obj = problem.getObjective().coefficients;
 
    const auto& activities = problem.getRowActivities();
 
@@ -111,7 +110,6 @@ Substitution<REAL>::execute( const Problem<REAL>& problem,
    const auto& rflags = constMatrix.getRowFlags();
    const auto& nrows = constMatrix.getNRows();
    const auto& ncols = constMatrix.getNCols();
-   const auto& colsize = constMatrix.getColSizes();
    const auto& rowperm = problemUpdate.getRandomRowPerm();
 
    PresolveStatus result = PresolveStatus::kUnchanged;
@@ -188,8 +186,6 @@ Substitution<REAL>::execute( const Problem<REAL>& problem,
       for( int i = 0; i < length; ++i )
       {
          int col = rowindices[i];
-         auto colvec = constMatrix.getColumnCoefficients( col );
-
          // if the column has been already used for a substitution or known
          // to be not implied free we can skip it
          if( colUnusable[col] )
@@ -329,11 +325,11 @@ Substitution<REAL>::execute( const Problem<REAL>& problem,
             reductions.lockColBounds( col );
 
             reductions.aggregateFreeCol( col, row );
-            const int* colindices = colvec.getIndices();
-            const int collength = colvec.getLength();
+            const int* indices = colvec.getIndices();
+            const int len = colvec.getLength();
 
-            for( int i = 0; i != collength; ++i )
-               touchedRows.set( colindices[i] );
+            for( int j = 0; j != len; ++j )
+               touchedRows.set( indices[j] );
 
             break;
          }

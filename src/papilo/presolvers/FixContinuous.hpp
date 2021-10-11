@@ -72,7 +72,6 @@ FixContinuous<REAL>::execute( const Problem<REAL>& problem,
    const auto& ubs = problem.getUpperBounds();
 
    const int ncols = consMatrix.getNCols();
-   const auto& colsize = consMatrix.getColSizes();
 
    PresolveStatus result = PresolveStatus::kUnchanged;
    if( num.getFeasTol() == REAL{ 0 } )
@@ -88,7 +87,7 @@ FixContinuous<REAL>::execute( const Problem<REAL>& problem,
           ( ubs[i] - lbs[i] ) > num.getFeasTol() )
          continue;
 
-      assert( colsize[i] >= 0 );
+      assert( consMatrix.getColSizes()[i] >= 0 );
       assert( lbs[i] != ubs[i] );
 
       auto colvec = consMatrix.getColumnCoefficients( i );

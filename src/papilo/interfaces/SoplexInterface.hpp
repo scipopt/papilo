@@ -506,10 +506,10 @@ class SoplexFactory : public SolverFactory<REAL>
    void ( *soplexsetup )( soplex::SoPlex& soplex, void* usrdata );
    void* soplexsetup_usrdata;
 
-   SoplexFactory( void ( *soplexsetup )( soplex::SoPlex& soplex,
+   SoplexFactory( void ( *soplexsetup_ )( soplex::SoPlex& soplex,
                                          void* usrdata ),
-                  void* soplexsetup_usrdata )
-       : soplexsetup( soplexsetup ), soplexsetup_usrdata( soplexsetup_usrdata )
+                  void* soplexsetup_usrdata_ )
+       : soplexsetup( soplexsetup_ ), soplexsetup_usrdata( soplexsetup_usrdata_ )
    {
    }
 

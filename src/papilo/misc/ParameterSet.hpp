@@ -260,7 +260,7 @@ class ParameterSet
    {
       const char* val;
 
-      ParseParameterVisitor( const char* val ) : val( val ) {}
+      ParseParameterVisitor( const char* val_ ) : val( val_ ) {}
 
       template <typename OptionType>
       void

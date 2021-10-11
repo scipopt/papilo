@@ -123,9 +123,7 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
    const auto& cflags = problem.getColFlags();
    const auto& activities = problem.getRowActivities();
    const auto& rowsize = consMatrix.getRowSizes();
-   const auto& colsize = consMatrix.getColSizes();
    const int ncols = problem.getNCols();
-   const int nrows = problem.getNRows();
 
    PresolveStatus result = PresolveStatus::kUnchanged;
 
@@ -486,11 +484,11 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
                          ( ( !smaller_first_b ) ? b.col1 : b.col2 );
                } );
 
-      for( int i = 0; i < domcolreductions.size(); i++ )
+      for( int i = 0; i < (int) domcolreductions.size(); i++ )
       {
          // check if consecutively reductions are equal
          const DomcolReduction dr = domcolreductions[i];
-         if( i < domcolreductions.size() - 1 )
+         if( i < (int) domcolreductions.size() - 1 )
          {
             const DomcolReduction dr2 = domcolreductions[i + 1];
             if( dr2.col1 == dr.col2 && dr.col1 == dr2.col2 )

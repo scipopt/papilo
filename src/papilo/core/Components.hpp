@@ -138,8 +138,7 @@ class Components
       for( int i = 0; i != ncols; ++i )
       {
          int nextid = static_cast<int>( componentmap.size() );
-         auto insert_result =
-             componentmap.insert( { djsets.find_set( i ), nextid } );
+         componentmap.insert( { djsets.find_set( i ), nextid } );
       }
 
       int numcomponents = static_cast<int>( componentmap.size() );

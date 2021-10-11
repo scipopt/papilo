@@ -64,7 +64,7 @@ class DualFix : public PresolveMethod<REAL>
                           const ConstraintMatrix<REAL>& consMatrix,
                           const Vec<RowActivity<REAL>>& activities,
                           const Vec<ColFlags>& cflags,
-                          const Vec<REAL>& objective, const Vec<REAL>& lbs,
+                          const Vec<REAL>& objective, const Vec<REAL>& skip_variable,
                           const Vec<REAL>& ubs, const Vec<RowFlags>& rflags,
                           const Vec<REAL>& lhs, const Vec<REAL>& rhs, int& i,
                           bool no_strong_reductions,
@@ -92,7 +92,6 @@ DualFix<REAL>::execute( const Problem<REAL>& problem,
    const Vec<REAL>& ubs = problem.getUpperBounds();
    const int ncols = consMatrix.getNCols();
    const Vec<RowFlags>& rflags = consMatrix.getRowFlags();
-   const Vec<int>& colsize = consMatrix.getColSizes();
    const Vec<REAL>& lhs = consMatrix.getLeftHandSides();
    const Vec<REAL>& rhs = consMatrix.getRightHandSides();
 
@@ -157,7 +156,7 @@ DualFix<REAL>::execute( const Problem<REAL>& problem,
       else if( result == PresolveStatus::kUnchanged )
          return PresolveStatus::kUnchanged;
 
-      for( int i = 0; i < stored_reductions.size(); ++i )
+      for( int i = 0; i < (int) stored_reductions.size(); ++i )
       {
          Reductions<REAL> reds = stored_reductions[i];
          if( reds.size() > 0 )
@@ -283,7 +282,7 @@ DualFix<REAL>::perform_dual_fix_step(
       // and calculates tightest bound for this row.
       auto check_row = []( int ninf, REAL activity, const REAL& side,
                            const REAL& coeff, const REAL& boundval,
-                           bool boundinf, bool& skip, REAL& cand_bound ) {
+                           bool boundinf, bool& skip_variable, REAL& cand_bound ) {
          switch( ninf )
          {
          case 0:
@@ -298,7 +297,7 @@ DualFix<REAL>::perform_dual_fix_step(
             // If one of the other variables with non-zero entry is
             // unbounded, dual bound strengthening is not possible for this
             // column; skip column.
-            skip = true;
+            skip_variable = true;
             return;
          }
 
