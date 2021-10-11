@@ -3,8 +3,11 @@
 # create tarball for release
 # usage: ./scripts/makedist.sh
 
-VERSION=$(grep project.papilo CMakeLists.txt | cut -d ' ' -f 3 | cut -d ')' -f 1)
-NAME="papilo-$VERSION"
+V_MAJOR=$(grep PAPILO_VERSION_MAJOR CMakeLists.txt | head -n 1 | grep -o [0-9]*)
+V_MINOR=$(grep PAPILO_VERSION_MINOR CMakeLists.txt | head -n 1 | grep -o [0-9]*)
+V_PATCH=$(grep PAPILO_VERSION_PATCH CMakeLists.txt | head -n 1 | grep -o [0-9]*)
+VERSION=${V_MAJOR}.${V_MINOR}.${V_PATCH}
+NAME="papilo-${VERSION}"
 rm -f $NAME.tgz
 rm -f $NAME.tar
 
