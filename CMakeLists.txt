@@ -143,7 +143,7 @@ target_compile_options(papilo
 include(CMakePackageConfigHelpers)
 
 write_basic_package_version_file(
-   ${PROJECT_BINARY_DIR}/papilo-config-version.cmake
+    ${CMAKE_BINARY_DIR}/papilo-config-version.cmake
    VERSION ${PAPILO_VERSION_MAJOR}.${PAPILO_VERSION_MINOR}.${PAPILO_VERSION_PATCH}
    COMPATIBILITY SameMajorVersion
 )
