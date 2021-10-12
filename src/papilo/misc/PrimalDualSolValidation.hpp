@@ -51,10 +51,10 @@ class PrimalDualSolValidation
    {
       const int nCols = problem.getNCols();
 
-      bool primal_check = solution.primal.size() != nCols;
+      bool primal_check = (int) solution.primal.size() != nCols;
       if( solution.type == SolutionType::kPrimalDual )
-         return primal_check || solution.reducedCosts.size() != nCols ||
-                solution.dual.size() != problem.getNRows();
+         return primal_check || (int) solution.reducedCosts.size() != nCols ||
+                (int) solution.dual.size() != problem.getNRows();
       return primal_check;
    }
 
@@ -67,7 +67,7 @@ class PrimalDualSolValidation
       const Vec<REAL> ub = problem.getUpperBounds();
       const Vec<REAL> lb = problem.getLowerBounds();
 
-      for( unsigned int col = 0; col < problem.getNCols(); col++ )
+      for( int col = 0; col < problem.getNCols(); col++ )
       {
          if( problem.getColFlags()[col].test( ColFlag::kInactive ) )
             continue;

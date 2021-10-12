@@ -188,9 +188,9 @@ class Problem
 
    /// set problem name
    void
-   setName( String name )
+   setName( String name_ )
    {
-      this->name = std::move( name );
+      this->name = std::move( name_ );
    }
 
    /// get the problem matrix
@@ -360,7 +360,7 @@ class Problem
                          REAL& boundviolation, REAL& rowviolation,
                          REAL& intviolation ) const
    {
-      if( sol.size() != getNCols() )
+      if( (int) sol.size() != getNCols() )
          return false;
 
       boundviolation = 0;
@@ -521,9 +521,9 @@ class Problem
 
    /// sets the tolerance of the input format
    void
-   setInputTolerance( REAL inputTolerance )
+   setInputTolerance( REAL inputTolerance_ )
    {
-      this->inputTolerance = std::move( inputTolerance );
+      this->inputTolerance = std::move( inputTolerance_ );
    }
 
    void

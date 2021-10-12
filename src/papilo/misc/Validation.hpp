@@ -59,7 +59,7 @@ struct Validation
    {
       bool validation_succcess = true;
       Vec<REAL> vec{};
-      for( int i = 0; i < postsolveStorage.origcol_mapping.size(); i++ )
+      for( int i = 0; i < (int) postsolveStorage.origcol_mapping.size(); i++ )
          vec.push_back( optimal_solution.primal[postsolveStorage.origcol_mapping[i]] );
 
       Solution<REAL> calculated_orig_solution{};
@@ -68,7 +68,7 @@ struct Validation
       Postsolve<REAL> postsolve{msg, postsolveStorage.getNum()};
       postsolve.undo( reducedSolution, calculated_orig_solution,
                       postsolveStorage );
-      for( int i = 0; i < postsolveStorage.nColsOriginal; i++ )
+      for( int i = 0; i < (int) postsolveStorage.nColsOriginal; i++ )
       {
          if( not postsolveStorage.getNum().isFeasEq( optimal_solution.primal[i],
                  calculated_orig_solution.primal[i] ) )
@@ -92,7 +92,7 @@ struct Validation
       SolParser<REAL> parser;
 
       std::vector<int> one_to_one_mapping;
-      for( int i = 0; i < postsolveStorage.nColsOriginal; i++ )
+      for( int i = 0; i < (int) postsolveStorage.nColsOriginal; i++ )
          one_to_one_mapping.push_back( i );
 
       return parser.read(

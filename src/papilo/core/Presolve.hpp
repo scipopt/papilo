@@ -243,7 +243,7 @@ class Presolve
    }
 
    std::pair<int, int>
-   applyReductions( int p, const Reductions<REAL>& reductions,
+   applyReductions( int p, const Reductions<REAL>& reductions_,
                     ProblemUpdate<REAL>& probUpdate );
 
  private:
@@ -385,12 +385,9 @@ Presolve<REAL>::apply( Problem<REAL>& problem, bool store_dual_postsolve )
       Timer timer( stats.presolvetime );
 
       ConstraintMatrix<REAL>& constraintMatrix = problem.getConstraintMatrix();
-      VariableDomains<REAL>& variableDomains = problem.getVariableDomains();
-      Vec<REAL>& lhsVals = constraintMatrix.getLeftHandSides();
       Vec<REAL>& rhsVals = constraintMatrix.getRightHandSides();
       Vec<RowFlags>& rflags = constraintMatrix.getRowFlags();
       const Vec<int>& rowsize = constraintMatrix.getRowSizes();
-      Vec<RowActivity<REAL>>& rowActivities = problem.getRowActivities();
 
       msg.info( "\nstarting presolve of problem {}:\n", problem.getName() );
       msg.info( "  rows:     {}\n", problem.getNRows() );
@@ -605,8 +602,6 @@ Presolve<REAL>::apply( Problem<REAL>& problem, bool store_dual_postsolve )
             const Vec<ColFlags>& cflags = problem.getColFlags();
             const Vec<int>& colsize = problem.getColSizes();
             const Vec<REAL>& obj = problem.getObjective().coefficients;
-            const Vec<REAL>& lbs = problem.getLowerBounds();
-            const Vec<REAL>& ubs = problem.getUpperBounds();
 
             for( int col = 0; col != problem.getNCols(); ++col )
             {
@@ -1077,7 +1072,7 @@ Presolve<REAL>::apply_reduction_of_solver( ProblemUpdate<REAL>& probUpdate,
 
 template <typename REAL>
 std::pair<int, int>
-Presolve<REAL>::applyReductions( int p, const Reductions<REAL>& reductions,
+Presolve<REAL>::applyReductions( int p, const Reductions<REAL>& reductions_,
                                  ProblemUpdate<REAL>& probUpdate )
 {
    int k = 0;
@@ -1085,12 +1080,11 @@ Presolve<REAL>::applyReductions( int p, const Reductions<REAL>& reductions,
    int nbtsxAppliedStart = stats.ntsxapplied;
    int nbtsxTotal = 0;
 
-   const auto& reds = reductions.getReductions();
-   const auto& tsx = reductions.getTransactions();
+   const auto& reds = reductions_.getReductions();
 
    msg.detailed( "Presolver {} applying \n", presolvers[p]->getName() );
 
-   for( const auto& transaction : reductions.getTransactions() )
+   for( const auto& transaction : reductions_.getTransactions() )
    {
       int start = transaction.start;
       int end = transaction.end;
@@ -1148,7 +1142,7 @@ Presolve<REAL>::applyPostponed( ProblemUpdate<REAL>& probUpdate )
 {
    probUpdate.setPostponeSubstitutions( false );
 
-   for( int presolver = 0; presolver != presolvers.size(); ++presolver )
+   for( int presolver = 0; presolver != (int) presolvers.size(); ++presolver )
    {
       int first = postponedReductionToPresolver[presolver];
       int last = postponedReductionToPresolver[presolver + 1];
@@ -1393,7 +1387,7 @@ template <typename REAL>
 bool
 Presolve<REAL>::are_only_dual_postsolve_presolvers_enabled()
 {
-   for( int i = 0; i < presolvers.size(); i++ )
+   for( int i = 0; i < (int) presolvers.size(); i++ )
    {
       if( presolvers[i]->isEnabled() )
       {

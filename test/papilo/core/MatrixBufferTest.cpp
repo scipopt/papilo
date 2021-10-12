@@ -38,7 +38,7 @@ checkHeapProperty( MatrixBuffer<double>& M )
    else
       fmt::print( "check col major heap property\n" );
 
-   for( int i = 1; i != M.entries.size(); ++i )
+   for( int i = 1; i != (int) M.entries.size(); ++i )
    {
       int left = Node::left( M.entries[i] );
       int right = Node::right( M.entries[i] );
@@ -65,7 +65,7 @@ checkBstProperty( MatrixBuffer<double>& M )
 {
    using Node = GetNodeProperty<StorageOrder>;
 
-   for( int i = 1; i != M.entries.size(); ++i )
+   for( int i = 1; i != (int) M.entries.size(); ++i )
    {
       int left = Node::left( M.entries[i] );
       int right = Node::right( M.entries[i] );

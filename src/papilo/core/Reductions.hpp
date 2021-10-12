@@ -340,8 +340,8 @@ class Reductions
       int nlocks;
       int naddcoeffs;
 
-      Transaction( int start, int end )
-          : start( start ), end( end ), nlocks( 0 ), naddcoeffs( 0 )
+      Transaction( int start_, int end_ )
+          : start( start_ ), end( end_ ), nlocks( 0 ), naddcoeffs( 0 )
       {
       }
    };

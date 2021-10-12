@@ -69,12 +69,12 @@ compareColBounds( const Vec<REAL>& first_values, const Vec<REAL>& second_values,
                   const Vec<ColFlags>& first_flags,
                   const Vec<ColFlags>& second_flags, const Num<REAL>& num )
 {
-   int size = first_values.size();
-   if( size != first_flags.size() )
+   int size = (int) first_values.size();
+   if( size != (int) first_flags.size() )
       return false;
-   if( size != second_values.size() )
+   if( size != (int) second_values.size() )
       return false;
-   if( size != second_flags.size() )
+   if( size != (int) second_flags.size() )
       return false;
 
    for( int i = 0; i < size; i++ )
@@ -98,12 +98,12 @@ compareRowBounds( const Vec<REAL>& first_values, const Vec<REAL>& second_values,
                   const Vec<RowFlags>& first_flags,
                   const Vec<RowFlags>& second_flags, const Num<REAL>& num )
 {
-   int size = first_values.size();
-   if( size != first_flags.size() )
+   int size = (int) first_values.size();
+   if( size != (int) first_flags.size() )
       return false;
-   if( size != second_values.size() )
+   if( size != (int) second_values.size() )
       return false;
-   if( size != second_flags.size() )
+   if( size != (int) second_flags.size() )
       return false;
 
    for( int i = 0; i < size; i++ )

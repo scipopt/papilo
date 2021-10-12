@@ -75,7 +75,6 @@ SingletonStuffing<REAL>::execute( const Problem<REAL>& problem,
    const auto& rhs_values = constMatrix.getRightHandSides();
    const auto& rflags = constMatrix.getRowFlags();
    const auto& nrows = constMatrix.getNRows();
-   const auto& ncols = constMatrix.getNCols();
    const auto& colsize = constMatrix.getColSizes();
    const auto& rowsize = constMatrix.getRowSizes();
    const auto& obj = problem.getObjective().coefficients;
@@ -487,7 +486,6 @@ SingletonStuffing<REAL>::execute( const Problem<REAL>& problem,
 
       int scale;
       REAL rhs;
-      REAL maxresact = 0;
 
       if( rflags[row].test( RowFlag::kRhsInf ) )
       {
@@ -581,8 +579,6 @@ SingletonStuffing<REAL>::execute( const Problem<REAL>& problem,
          penaltyvars.clear();
          continue;
       }
-
-      int npenaltyvars = penaltyvars.size();
 
       pdqsort( penaltyvars.begin(), penaltyvars.end(),
                [&]( const std::pair<int, REAL>& c1,

@@ -369,9 +369,9 @@ postsolve( PostsolveStorage<REAL>& postsolveStorage,
    const Problem<REAL>& origprob = postsolveStorage.getOriginalProblem();
    REAL origobj = origprob.computeSolObjective( original_sol.primal );
 
-   REAL boundviol;
-   REAL intviol;
-   REAL rowviol;
+   REAL boundviol = 0;
+   REAL intviol = 0;
+   REAL rowviol = 0;
    bool origfeas = origprob.computeSolViolations( postsolveStorage.getNum(),
                                                   original_sol.primal,
                                                   boundviol, rowviol, intviol );

@@ -113,7 +113,7 @@ class PostsolveStorage
    }
 
    PostsolveStorage( const Problem<REAL>& _problem, const Num<REAL>& _num, const PresolveOptions _options )
-       : problem( _problem ), num( _num ), presolveOptions(_options)
+       : problem( _problem ), presolveOptions(_options), num( _num )
    {
       nRowsOriginal = _problem.getNRows();
       nColsOriginal = _problem.getNCols();
@@ -122,10 +122,10 @@ class PostsolveStorage
       origrow_mapping.reserve( nColsOriginal );
 
       for( unsigned int i = 0; i < nRowsOriginal; ++i )
-         origrow_mapping.push_back( i );
+         origrow_mapping.push_back( (int) i );
 
       for( unsigned int i = 0; i < nColsOriginal; ++i )
-         origcol_mapping.push_back( i );
+         origcol_mapping.push_back( (int) i );
 
       start.push_back( 0 );
 
@@ -660,7 +660,7 @@ PostsolveStorage<REAL>::storeReducedBoundsAndCost(
    types.push_back( ReductionType::kReducedBoundsCost );
 
    // col bound
-   for( int col = 0; col < col_lb.size(); col++ )
+   for( int col = 0; col < (int) col_lb.size(); col++ )
    {
       int flag_lb = 0;
       int flag_ub = 0;
@@ -675,7 +675,7 @@ PostsolveStorage<REAL>::storeReducedBoundsAndCost(
    }
 
    // row bounds
-   for( int row = 0; row < row_lhs.size(); row++ )
+   for( int row = 0; row < (int) row_lhs.size(); row++ )
    {
       int flag_lb = 0;
       int flag_ub = 0;
@@ -690,7 +690,7 @@ PostsolveStorage<REAL>::storeReducedBoundsAndCost(
    }
 
    // col coefficients
-   for( int col = 0; col < coefficients.size(); col++ )
+   for( int col = 0; col < (int) coefficients.size(); col++ )
    {
       indices.push_back( col );
       values.push_back( coefficients[col] );

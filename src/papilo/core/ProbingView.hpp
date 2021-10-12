@@ -40,11 +40,11 @@ struct ProbingBoundChg
    unsigned int col : 31;
    unsigned int upper : 1;
 
-   ProbingBoundChg( bool upper, int col, REAL bound )
+   ProbingBoundChg( bool upper_, int col_, REAL bound_ )
    {
-      this->upper = upper ? 1 : 0;
-      this->col = static_cast<unsigned int>( col );
-      this->bound = bound;
+      this->upper = upper_ ? 1 : 0;
+      this->col = static_cast<unsigned int>( col_ );
+      this->bound = bound_;
    }
 };
 
@@ -56,9 +56,9 @@ struct ProbingSubstitution
    int col1;
    int col2;
 
-   ProbingSubstitution( int col1, REAL col2scale, int col2, REAL col2const )
-       : col2scale( col2scale ), col2const( col2const ), col1( col1 ),
-         col2( col2 )
+   ProbingSubstitution( int col1_, REAL col2scale_, int col2_, REAL col2const_ )
+       : col2scale( col2scale_ ), col2const( col2const_ ), col1( col1_ ),
+         col2( col2_ )
    {
    }
 };
@@ -226,13 +226,13 @@ extern template class ProbingView<Rational>;
 #endif
 
 template <typename REAL>
-ProbingView<REAL>::ProbingView( const Problem<REAL>& problem,
-                                const Num<REAL>& num )
-    : problem( problem ), num( num ),
-      probing_lower_bounds( problem.getLowerBounds() ),
-      probing_upper_bounds( problem.getUpperBounds() ),
-      probing_domain_flags( problem.getColFlags() ),
-      probing_activities( problem.getRowActivities() )
+ProbingView<REAL>::ProbingView( const Problem<REAL>& problem_,
+                                const Num<REAL>& num_ )
+    : problem( problem_ ), num( num_ ),
+      probing_lower_bounds( problem_.getLowerBounds() ),
+      probing_upper_bounds( problem_.getUpperBounds() ),
+      probing_domain_flags( problem_.getColFlags() ),
+      probing_activities( problem_.getRowActivities() )
 {
    round = -2;
    infeasible = false;

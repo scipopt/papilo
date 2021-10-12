@@ -53,19 +53,19 @@ class DependentRows
    constexpr static bool Enabled = false;
 #endif
 
-   DependentRows( int64_t nrows, int64_t ncols, int64_t maxnnz )
+   DependentRows( int64_t nrows_, int64_t ncols_, int64_t maxnnz_ )
    {
-      this->nrows = nrows;
-      this->ncols = ncols + 1;
+      this->nrows = nrows_;
+      this->ncols = ncols_ + 1;
 
-      mat.reserve( maxnnz );
+      mat.reserve( maxnnz_ );
    }
 
    void
-   reset( int64_t nrows, int64_t ncols, int64_t maxnnz )
+   reset( int64_t nrows_, int64_t ncols_, int64_t maxnnz )
    {
-      this->nrows = nrows;
-      this->ncols = ncols + 1;
+      this->nrows = nrows_;
+      this->ncols = ncols_ + 1;
       mat.clear();
       mat.reserve( maxnnz );
    }
@@ -144,7 +144,7 @@ class DependentRows
          Vec<double> colmax( ncols );
          Vec<double> colmin( ncols );
 
-         for( int i = 0; i < A.size(); ++i )
+         for( int i = 0; i < (int) A.size(); ++i )
          {
             double absai = abs( A[i] );
             rowmax[indc[i] - 1] = std::max( rowmax[indc[i] - 1], absai );
@@ -157,41 +157,41 @@ class DependentRows
          }
 
          double maxrowratio = 1;
-         for( int i = 0; i < rowmax.size(); ++i )
+         for( int i = 0; i < (int) rowmax.size(); ++i )
             maxrowratio = std::max( maxrowratio, rowmax[i] / rowmin[i] );
 
          double maxcolratio = 1;
-         for( int i = 0; i < colmax.size(); ++i )
+         for( int i = 0; i < (int) colmax.size(); ++i )
             maxcolratio = std::max( maxcolratio, colmax[i] / colmin[i] );
 
          if( maxrowratio < maxcolratio )
          {
-            for( int i = 0; i < A.size(); ++i )
+            for( int i = 0; i < (int) A.size(); ++i )
                A[i] = ( A[i] / rowmax[indc[i] - 1] );
 
-            for( int i = 0; i < colmax.size(); ++i )
+            for( int i = 0; i < (int) colmax.size(); ++i )
                colmax[i] = 0;
 
-            for( int i = 0; i < A.size(); ++i )
+            for( int i = 0; i < (int) A.size(); ++i )
                colmax[indr[i] - 1] =
                    std::max( colmax[indr[i] - 1], abs( A[i] ) );
 
-            for( int i = 0; i < A.size(); ++i )
+            for( int i = 0; i < (int) A.size(); ++i )
                A[i] = ( A[i] / colmax[indr[i] - 1] );
          }
          else
          {
-            for( int i = 0; i < A.size(); ++i )
+            for( int i = 0; i < (int) A.size(); ++i )
                A[i] = ( A[i] / colmax[indr[i] - 1] );
 
-            for( int i = 0; i < rowmax.size(); ++i )
+            for( int i = 0; i < (int) rowmax.size(); ++i )
                rowmax[i] = 0;
 
-            for( int i = 0; i < A.size(); ++i )
+            for( int i = 0; i < (int) A.size(); ++i )
                rowmax[indc[i] - 1] =
                    std::max( rowmax[indc[i] - 1], abs( A[i] ) );
 
-            for( int i = 0; i < A.size(); ++i )
+            for( int i = 0; i < (int) A.size(); ++i )
                A[i] = ( A[i] / rowmax[indc[i] - 1] );
          }
       }
@@ -278,7 +278,7 @@ class DependentRows
       Vec<int> rowsize( nrows );
       Vec<int> colsize( ncols );
 
-      for( int i = 1; i != mat.entries.size(); ++i )
+      for( int i = 1; i != (int) mat.entries.size(); ++i )
       {
          assert( mat.entries[i].row < nrows );
          assert( mat.entries[i].col < ncols );
@@ -312,7 +312,7 @@ class DependentRows
 
       heap.reserve( 2 * mat.getNnz() );
 
-      for( int i = 1; i != mat.entries.size(); ++i )
+      for( int i = 1; i != (int) mat.entries.size(); ++i )
       {
          PivotCandidate p{ i, colsize[mat.entries[i].col],
                            rowsize[mat.entries[i].row] };
@@ -477,7 +477,7 @@ class DependentRows
 
       int64_t remainingnnz = 0;
 
-      for( int i = 0; i < rowsize.size(); ++i )
+      for( int i = 0; i < (int) rowsize.size(); ++i )
       {
          if( rowsize[i] != -1 )
          {
@@ -495,7 +495,7 @@ class DependentRows
 
       nrows = rowmapping.size();
       ncols = 0;
-      for( int i = 0; i < colsize.size(); ++i )
+      for( int i = 0; i < (int) colsize.size(); ++i )
       {
          if( colsize[i] != -1 )
          {
@@ -507,7 +507,7 @@ class DependentRows
       // add data to lusol transposed
       lusolInput.setSize( ncols, nrows, remainingnnz );
 
-      for( int i = 1; i != mat.entries.size(); ++i )
+      for( int i = 1; i != (int) mat.entries.size(); ++i )
       {
          if( mat.entries[i].val == 0 )
             continue;

@@ -32,7 +32,7 @@ namespace papilo
 class Timer
 {
  public:
-   Timer( double& time ) : time( time ) { start = tbb::tick_count::now(); }
+   Timer( double& time_ ) : time( time_ ) { start = tbb::tick_count::now(); }
 
    double
    getTime() const

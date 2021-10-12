@@ -75,9 +75,6 @@ SingletonCols<REAL>::execute( const Problem<REAL>& problem,
    const auto& lhs_values = constMatrix.getLeftHandSides();
    const auto& rhs_values = constMatrix.getRightHandSides();
    const auto& rflags = constMatrix.getRowFlags();
-   const auto& nRows = constMatrix.getNRows();
-   const auto& nColumns = constMatrix.getNCols();
-   const auto& columnSize = constMatrix.getColSizes();
    const auto& rowSizes = constMatrix.getRowSizes();
    const auto& obj = problem.getObjective().coefficients;
 
@@ -125,13 +122,8 @@ SingletonCols<REAL>::execute( const Problem<REAL>& problem,
       }
       else
       {
-         bool lbinf = cflags[col].test( ColFlag::kLbInf );
-         bool ubinf = cflags[col].test( ColFlag::kUbInf );
-         bool rhs = constMatrix.getRowFlags()[row].template test(RowFlag::kRhsInf);
-         bool lhs = constMatrix.getRowFlags()[row].template test(RowFlag::kLhsInf);
-         bool eq = constMatrix.getRowFlags()[row].template test(RowFlag::kEquation);
-         assert( lowerboundImplied || !lbinf );
-         assert( ubimplied || !ubinf );
+         assert( lowerboundImplied || !cflags[col].test( ColFlag::kLbInf ) );
+         assert( ubimplied || !cflags[col].test( ColFlag::kUbInf ) );
 
          // implied free only for one bound -> modify equation to be an
          // inequality and remove the columns coefficient
@@ -207,7 +199,7 @@ SingletonCols<REAL>::execute( const Problem<REAL>& problem,
    {
       int col = singletonCols[i];
 
-      assert( columnSize[col] == 1 );
+      assert( constMatrix.getColSizes()[col] == 1 );
       assert( constMatrix.getColumnCoefficients( col ).getLength() == 1 );
 
       int row = constMatrix.getColumnCoefficients( col ).getIndices()[0];

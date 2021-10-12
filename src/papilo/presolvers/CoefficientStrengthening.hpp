@@ -117,7 +117,7 @@ CoefficientStrengthening<REAL>::execute(
       if( result == PresolveStatus::kUnchanged )
          return PresolveStatus::kUnchanged;
 
-      for( int i = 0; i < stored_reductions.size(); ++i )
+      for( int i = 0; i < (int) stored_reductions.size(); ++i )
       {
          Reductions<REAL> reds = stored_reductions[i];
          if( reds.size() > 0 )
