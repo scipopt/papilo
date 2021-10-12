@@ -29,7 +29,7 @@
 #include "papilo/core/ProblemUpdate.hpp"
 #include "papilo/misc/Num.hpp"
 #include "papilo/misc/fmt.hpp"
-#if BOOST_VERSION >= 107200
+#if BOOST_VERSION >= 107000
    #include <boost/integer/extended_euclidean.hpp>
 #else
    // use a copy to enable also older boost versions
