@@ -108,6 +108,7 @@ Miscellaneous
 - printing information about reductions if message verbosity level 'detailed' is selected
 - printing the objective value if the problem can be solved during presolving
 - printing the header containing the version of the configured backend solver
+- boost minimum is 1.72 on mac, 1.65 otherwise
 
 Known bugs
 ----------
