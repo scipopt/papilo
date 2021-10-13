@@ -134,7 +134,7 @@ target_link_libraries(papilo
 
 # on raspberry pi, we need to link libatomic, as libtbbmalloc_proxy depends on it
 if((CMAKE_HOST_SYSTEM_PROCESSOR STREQUAL "armv7l") AND (CMAKE_SYSTEM_NAME STREQUAL "Linux"))
-  target_link_libraries(papilo -latomic)
+    target_link_libraries(papilo INTERFACE atomic)
 endif()
 
 target_compile_options(papilo
