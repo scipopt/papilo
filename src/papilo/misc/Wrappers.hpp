@@ -397,7 +397,7 @@ postsolve( PostsolveStorage<REAL>& postsolveStorage,
                   primal_solution_output, ( t3 - t2 ).seconds() );
    }
 
-   if( not dual_solution_output.empty() and
+   if( ! dual_solution_output.empty() &&
        original_sol.type == SolutionType::kPrimalDual )
    {
 
@@ -414,7 +414,7 @@ postsolve( PostsolveStorage<REAL>& postsolveStorage,
                   dual_solution_output, ( t3 - t2 ).seconds() );
    }
 
-   if( not reduced_solution_output.empty() and
+   if( ! reduced_solution_output.empty() &&
        original_sol.type == SolutionType::kPrimalDual )
    {
       auto t2 = tbb::tick_count::now();
@@ -429,7 +429,7 @@ postsolve( PostsolveStorage<REAL>& postsolveStorage,
                   reduced_solution_output, ( t3 - t2 ).seconds() );
    }
 
-   if( not basis_output.empty() and
+   if( ! basis_output.empty() &&
        original_sol.type == SolutionType::kPrimalDual )
    {
       auto t2 = tbb::tick_count::now();
@@ -446,7 +446,7 @@ postsolve( PostsolveStorage<REAL>& postsolveStorage,
 
    if( !objective_reference.empty() )
    {
-      if( origfeas and status == PostsolveStatus::kOk and
+      if( origfeas && status == PostsolveStatus::kOk &&
           postsolveStorage.num.isFeasEq(
               boost::lexical_cast<double>( objective_reference ), origobj ) )
          fmt::print( "validation: SUCCESS\n" );

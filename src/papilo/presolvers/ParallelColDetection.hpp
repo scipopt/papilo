@@ -494,9 +494,6 @@ ParallelColDetection<REAL>::execute( const Problem<REAL>& problem,
 {
    const auto& constMatrix = problem.getConstraintMatrix();
    const auto& obj = problem.getObjective().coefficients;
-   const auto& lhs_values = constMatrix.getLeftHandSides();
-   const auto& rhs_values = constMatrix.getRightHandSides();
-   const auto& rflags = constMatrix.getRowFlags();
    const auto& cflags = problem.getColFlags();
    const int ncols = constMatrix.getNCols();
    const Vec<int>& colperm = problemUpdate.getRandomColPerm();
@@ -532,7 +529,7 @@ ParallelColDetection<REAL>::execute( const Problem<REAL>& problem,
           if( supportid[a] < supportid[b] ||
               ( supportid[a] == supportid[b] && coefhash[a] < coefhash[b] ) )
              return true;
-          else if( not( supportid[a] == supportid[b] &&
+          else if( !( supportid[a] == supportid[b] &&
                         coefhash[a] == coefhash[b] ) )
              return false;
           assert( supportid[a] == supportid[b] && coefhash[a] == coefhash[b] );

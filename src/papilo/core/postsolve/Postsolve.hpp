@@ -192,10 +192,6 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
    auto origrow_mapping = postsolveStorage.origrow_mapping;
    auto problem = postsolveStorage.problem;
 
-   // if kReducedBoundsCost was saved (is 1 presolver (except trivialpresolve)
-   // finds a reduction)
-   bool significant_changes_during_presolve = false;
-
    // Will be used during dual postsolve for fast access to bound values.
    // TODO: rows bounds are currently not updated during
    BoundStorage<REAL> stored_bounds{ num, (int)postsolveStorage.nColsOriginal,
@@ -203,7 +199,7 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
                                originalSolution.type ==
                                    SolutionType::kPrimalDual };
 
-   for( int i = postsolveStorage.types.size() - 1; i >= 0; --i )
+   for( int i = (int) postsolveStorage.types.size() - 1; i >= 0; --i )
    {
       auto type = types[i];
       int first = start[i];
@@ -339,7 +335,6 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
       }
       case ReductionType::kReducedBoundsCost:
       {
-         significant_changes_during_presolve = true;
          assert( originalSolution.type == SolutionType::kPrimalDual );
 
          // get column bounds
@@ -404,7 +399,9 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
          message.info( "Validation of partial ({}) reconstr. sol : ", i );
          validation.verifySolutionAndUpdateSlack( originalSolution,
                                                   problem_at_step_i );
-         assert( ! significant_changes_during_presolve ||
+         assert( !( postsolveStorage.types.size() - 1 >= 0 &&
+                    types[postsolveStorage.types.size() - 1] ==
+                        ReductionType::kReducedBoundsCost ) ||
                  stored_bounds.check_bounds( problem_at_step_i ) );
       }
 #endif
@@ -412,7 +409,9 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
 
    PostsolveStatus status =
        validation.verifySolutionAndUpdateSlack( originalSolution, problem );
-   assert( ! significant_changes_during_presolve ||
+   assert( !( postsolveStorage.types.size() - 1 >= 0 &&
+              types[postsolveStorage.types.size() - 1] ==
+                  ReductionType::kReducedBoundsCost ) ||
            stored_bounds.check_bounds( problem ) );
    if( status == PostsolveStatus::kFailed )
       message.error( "Postsolving solution failed. Please use debug mode to "
@@ -1090,8 +1089,8 @@ Postsolve<REAL>::apply_parallel_col_to_original_solution(
    const REAL& col2scale = values[first + 4];
    const REAL& solval = originalSolution.primal[col2];
 
-   REAL col1val;
-   REAL col2val;
+   REAL col1val = 0;
+   REAL col2val = 0;
 
    if( col1boundFlags & IS_INTEGRAL )
    {

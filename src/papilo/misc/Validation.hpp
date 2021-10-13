@@ -70,7 +70,7 @@ struct Validation
                       postsolveStorage );
       for( int i = 0; i < (int) postsolveStorage.nColsOriginal; i++ )
       {
-         if( not postsolveStorage.getNum().isFeasEq( optimal_solution.primal[i],
+         if( ! postsolveStorage.getNum().isFeasEq( optimal_solution.primal[i],
                  calculated_orig_solution.primal[i] ) )
          {
             fmt::print(
