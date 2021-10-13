@@ -345,7 +345,7 @@ ParallelRowDetection<REAL>::execute( const Problem<REAL>& problem,
       int row_with_best_lhs_value = remaining_row;
 
       //iterates over parallel_rows, stores the remaining row and updates rhs/lhs
-      for( int i = 1; i < parallel_rows.size(); i++ )
+      for( int i = 1; i < (int) parallel_rows.size(); i++ )
       {
          int parallel_row = parallel_rows[i];
 

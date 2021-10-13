@@ -1090,8 +1090,8 @@ Postsolve<REAL>::apply_parallel_col_to_original_solution(
    const REAL& col2scale = values[first + 4];
    const REAL& solval = originalSolution.primal[col2];
 
-   REAL col1val;
-   REAL col2val;
+   REAL col1val = 0;
+   REAL col2val = 0;
 
    if( col1boundFlags & IS_INTEGRAL )
    {
