@@ -256,7 +256,7 @@ install(FILES
    DESTINATION include/papilo)
 
 install(FILES
-        ${PROJECT_BINARY_DIR}/papilo-config-version.cmake
+    ${CMAKE_BINARY_DIR}/papilo-config-version.cmake
      DESTINATION lib/cmake/papilo)
 
 install(FILES
