@@ -59,287 +59,294 @@ presolve_and_solve(
     std::unique_ptr<SolverFactory<REAL>> lpSolverFactory = nullptr,
     std::unique_ptr<SolverFactory<REAL>> mipSolverFactory = nullptr )
 {
-
-   double readtime = 0;
-   Problem<REAL> problem;
-   boost::optional<Problem<REAL>> prob;
-
+   try
    {
-      Timer t( readtime );
-      prob = MpsParser<REAL>::loadProblem( opts.instance_file );
-   }
+      double readtime = 0;
+      Problem<REAL> problem;
+      boost::optional<Problem<REAL>> prob;
 
-   // Check whether reading was successful or not
-   if( !prob )
-   {
-      fmt::print( "error loading problem {}\n", opts.instance_file );
-      return ResultStatus::kError;
-   }
-   problem = *prob;
-
-   fmt::print( "reading took {:.3} seconds\n", readtime );
-
-   NumericalStatistics<REAL> nstats( problem );
-   nstats.printStatistics();
-
-   Presolve<REAL> presolve;
-   presolve.addDefaultPresolvers();
-   presolve.getPresolveOptions().threads = std::max( 0, opts.nthreads );
-
-   if( !opts.param_settings_file.empty() || !opts.unparsed_options.empty() ||
-       opts.print_params )
-   {
-      ParameterSet paramSet = presolve.getParameters();
-
-      if( !opts.param_settings_file.empty() && !opts.print_params )
       {
-         std::ifstream input( opts.param_settings_file );
-         if( input )
-         {
-            String theoptionstr;
-            String thevaluestr;
-            for( String line; getline( input, line ); )
-            {
-               std::size_t pos = line.find_first_of( '#' );
-               if( pos != String::npos )
-                  line = line.substr( 0, pos );
-
-               pos = line.find_first_of( '=' );
-
-               if( pos == String::npos )
-                  continue;
-
-               theoptionstr = line.substr( 0, pos - 1 );
-               thevaluestr = line.substr( pos + 1 );
-
-               boost::algorithm::trim( theoptionstr );
-               boost::algorithm::trim( thevaluestr );
-
-               try
-               {
-                  paramSet.parseParameter( theoptionstr.c_str(),
-                                           thevaluestr.c_str() );
-                  fmt::print( "set {} = {}\n", theoptionstr, thevaluestr );
-               }
-               catch( const std::exception& e )
-               {
-                  fmt::print( "parameter '{}' could not be set: {}\n", line,
-                              e.what() );
-               }
-            }
-         }
-         else
-         {
-            fmt::print( "could not read parameter file '{}'\n",
-                        opts.param_settings_file );
-         }
+         Timer t( readtime );
+         prob = MpsParser<REAL>::loadProblem( opts.instance_file );
       }
 
-      if( !opts.unparsed_options.empty() )
+      // Check whether reading was successful or not
+      if( !prob )
       {
-         String theoptionstr;
-         String thevaluestr;
+         fmt::print( "error loading problem {}\n", opts.instance_file );
+         return ResultStatus::kError;
+      }
+      problem = *prob;
 
-         for( const auto& option : opts.unparsed_options )
+      fmt::print( "reading took {:.3} seconds\n", readtime );
+
+      NumericalStatistics<REAL> nstats( problem );
+      nstats.printStatistics();
+
+      Presolve<REAL> presolve;
+      presolve.addDefaultPresolvers();
+      presolve.getPresolveOptions().threads = std::max( 0, opts.nthreads );
+
+      if( !opts.param_settings_file.empty() || !opts.unparsed_options.empty() ||
+          opts.print_params )
+      {
+         ParameterSet paramSet = presolve.getParameters();
+
+         if( !opts.param_settings_file.empty() && !opts.print_params )
          {
-            std::size_t pos = option.find_first_of( '=' );
-            if( pos != String::npos && pos > 2 )
+            std::ifstream input( opts.param_settings_file );
+            if( input )
             {
-               theoptionstr = option.substr( 2, pos - 2 );
-               thevaluestr = option.substr( pos + 1 );
-               try
+               String theoptionstr;
+               String thevaluestr;
+               for( String line; getline( input, line ); )
                {
-                  paramSet.parseParameter( theoptionstr.c_str(),
-                                           thevaluestr.c_str() );
-                  fmt::print( "set {} = {}\n", theoptionstr, thevaluestr );
-               }
-               catch( const std::exception& e )
-               {
-                  fmt::print( "parameter '{}' could not be set: {}\n", option,
-                              e.what() );
+                  std::size_t pos = line.find_first_of( '#' );
+                  if( pos != String::npos )
+                     line = line.substr( 0, pos );
+
+                  pos = line.find_first_of( '=' );
+
+                  if( pos == String::npos )
+                     continue;
+
+                  theoptionstr = line.substr( 0, pos - 1 );
+                  thevaluestr = line.substr( pos + 1 );
+
+                  boost::algorithm::trim( theoptionstr );
+                  boost::algorithm::trim( thevaluestr );
+
+                  try
+                  {
+                     paramSet.parseParameter( theoptionstr.c_str(),
+                                              thevaluestr.c_str() );
+                     fmt::print( "set {} = {}\n", theoptionstr, thevaluestr );
+                  }
+                  catch( const std::exception& e )
+                  {
+                     fmt::print( "parameter '{}' could not be set: {}\n", line,
+                                 e.what() );
+                  }
                }
             }
             else
             {
-               fmt::print( "parameter '{}' could not be set: value expected\n",
-                           option );
-            }
-         }
-      }
-
-      if( opts.print_params )
-      {
-         if( !opts.param_settings_file.empty() )
-         {
-            std::ofstream outfile( opts.param_settings_file );
-
-            if( outfile )
-            {
-               std::ostream_iterator<char> out_it( outfile );
-               paramSet.printParams( out_it );
-            }
-            else
-            {
-               fmt::print( "could not write to parameter file '{}'\n",
+               fmt::print( "could not read parameter file '{}'\n",
                            opts.param_settings_file );
             }
          }
+
+         if( !opts.unparsed_options.empty() )
+         {
+            String theoptionstr;
+            String thevaluestr;
+
+            for( const auto& option : opts.unparsed_options )
+            {
+               std::size_t pos = option.find_first_of( '=' );
+               if( pos != String::npos && pos > 2 )
+               {
+                  theoptionstr = option.substr( 2, pos - 2 );
+                  thevaluestr = option.substr( pos + 1 );
+                  try
+                  {
+                     paramSet.parseParameter( theoptionstr.c_str(),
+                                              thevaluestr.c_str() );
+                     fmt::print( "set {} = {}\n", theoptionstr, thevaluestr );
+                  }
+                  catch( const std::exception& e )
+                  {
+                     fmt::print( "parameter '{}' could not be set: {}\n",
+                                 option, e.what() );
+                  }
+               }
+               else
+               {
+                  fmt::print(
+                      "parameter '{}' could not be set: value expected\n",
+                      option );
+               }
+            }
+         }
+
+         if( opts.print_params )
+         {
+            if( !opts.param_settings_file.empty() )
+            {
+               std::ofstream outfile( opts.param_settings_file );
+
+               if( outfile )
+               {
+                  std::ostream_iterator<char> out_it( outfile );
+                  paramSet.printParams( out_it );
+               }
+               else
+               {
+                  fmt::print( "could not write to parameter file '{}'\n",
+                              opts.param_settings_file );
+               }
+            }
+            else
+            {
+               String paramDesc;
+               paramSet.printParams( std::back_inserter( paramDesc ) );
+               puts( paramDesc.c_str() );
+            }
+         }
+      }
+
+      presolve.setLPSolverFactory( std::move( lpSolverFactory ) );
+      presolve.setMIPSolverFactory( std::move( mipSolverFactory ) );
+
+      presolve.getPresolveOptions().tlim = opts.tlim;
+
+      auto result = presolve.apply( problem );
+
+      if( !opts.optimal_solution_file.empty() )
+      {
+         if( presolve.getPresolveOptions().dualreds != 0 )
+         {
+            fmt::print( "**WARNING: Enabling dual reductions might cut of "
+                        "feasible or optimal solution\n" );
+         }
+         Validation<REAL>::validateProblem( problem, result.postsolve,
+                                            opts.optimal_solution_file,
+                                            result.status );
+      }
+
+      switch( result.status )
+      {
+      case PresolveStatus::kInfeasible:
+         fmt::print(
+             "presolving detected infeasible problem after {:.3f} seconds\n",
+             presolve.getStatistics().presolvetime );
+         return ResultStatus::kUnbndOrInfeas;
+      case PresolveStatus::kUnbndOrInfeas:
+         fmt::print(
+             "presolving detected unbounded or infeasible problem after "
+             "{:.3f} seconds\n",
+             presolve.getStatistics().presolvetime );
+         return ResultStatus::kUnbndOrInfeas;
+      case PresolveStatus::kUnbounded:
+         fmt::print(
+             "presolving detected unbounded problem after {:.3f} seconds\n",
+             presolve.getStatistics().presolvetime );
+         return ResultStatus::kUnbndOrInfeas;
+      case PresolveStatus::kUnchanged:
+      case PresolveStatus::kReduced:
+         break;
+      }
+
+      fmt::print( "\npresolving finished after {:.3f} seconds\n\n",
+                  presolve.getStatistics().presolvetime );
+
+      double writetime = 0;
+      if( !opts.reduced_problem_file.empty() )
+      {
+         Timer t( writetime );
+
+         MpsWriter<REAL>::writeProb( opts.reduced_problem_file, problem,
+                                     result.postsolve.origrow_mapping,
+                                     result.postsolve.origcol_mapping );
+
+         fmt::print( "reduced problem written to {} in {:.3f} seconds\n\n",
+                     opts.reduced_problem_file, t.getTime() );
+      }
+
+      if( !opts.postsolve_archive_file.empty() )
+      {
+
+         Timer t( writetime );
+         std::ofstream ofs( opts.postsolve_archive_file,
+                            std::ios_base::binary );
+         boost::archive::binary_oarchive oa( ofs );
+
+         // write class instance to archive
+         oa << result.postsolve;
+         fmt::print( "postsolve archive written to {} in {:.3f} seconds\n\n",
+                     opts.postsolve_archive_file, t.getTime() );
+      }
+
+      if( opts.command == Command::kPresolve )
+         return ResultStatus::kOk;
+
+      double solvetime = 0;
+      {
+         Timer t( solvetime );
+         std::unique_ptr<SolverInterface<REAL>> solver;
+
+         if( result.postsolve.getOriginalProblem().getNumIntegralCols() == 0 &&
+             presolve.getLPSolverFactory() )
+            solver = presolve.getLPSolverFactory()->newSolver(
+                presolve.getVerbosityLevel() );
+         else if( presolve.getMIPSolverFactory() )
+            solver = presolve.getMIPSolverFactory()->newSolver(
+                presolve.getVerbosityLevel() );
          else
          {
-            String paramDesc;
-            paramSet.printParams( std::back_inserter( paramDesc ) );
-            puts( paramDesc.c_str() );
+            fmt::print( "no solver available for solving\n" );
+            return ResultStatus::kError;
          }
-      }
-   }
 
-   presolve.setLPSolverFactory( std::move( lpSolverFactory ) );
-   presolve.setMIPSolverFactory( std::move( mipSolverFactory ) );
+         solver->setUp( problem, result.postsolve.origrow_mapping,
+                        result.postsolve.origcol_mapping );
 
-   presolve.getPresolveOptions().tlim = opts.tlim;
-
-   auto result = presolve.apply( problem );
-
-   if( !opts.optimal_solution_file.empty() )
-   {
-      if( presolve.getPresolveOptions().dualreds != 0 )
-      {
-         fmt::print( "**WARNING: Enabling dual reductions might cut of "
-                     "feasible or optimal solution\n" );
-      }
-      Validation<REAL>::validateProblem( problem, result.postsolve,
-                                         opts.optimal_solution_file,
-                                         result.status );
-   }
-
-   switch( result.status )
-   {
-   case PresolveStatus::kInfeasible:
-      fmt::print(
-          "presolving detected infeasible problem after {:.3f} seconds\n",
-          presolve.getStatistics().presolvetime );
-      return ResultStatus::kUnbndOrInfeas;
-   case PresolveStatus::kUnbndOrInfeas:
-      fmt::print( "presolving detected unbounded or infeasible problem after "
-                  "{:.3f} seconds\n",
-                  presolve.getStatistics().presolvetime );
-      return ResultStatus::kUnbndOrInfeas;
-   case PresolveStatus::kUnbounded:
-      fmt::print(
-          "presolving detected unbounded problem after {:.3f} seconds\n",
-          presolve.getStatistics().presolvetime );
-      return ResultStatus::kUnbndOrInfeas;
-   case PresolveStatus::kUnchanged:
-   case PresolveStatus::kReduced:
-      break;
-   }
-
-   fmt::print( "\npresolving finished after {:.3f} seconds\n\n",
-               presolve.getStatistics().presolvetime );
-
-   double writetime = 0;
-   if( !opts.reduced_problem_file.empty() )
-   {
-      Timer t( writetime );
-
-      MpsWriter<REAL>::writeProb( opts.reduced_problem_file, problem,
-                                  result.postsolve.origrow_mapping,
-                                  result.postsolve.origcol_mapping );
-
-      fmt::print( "reduced problem written to {} in {:.3f} seconds\n\n",
-                  opts.reduced_problem_file, t.getTime() );
-   }
-
-   if( !opts.postsolve_archive_file.empty() )
-   {
-
-      Timer t( writetime );
-      std::ofstream ofs( opts.postsolve_archive_file, std::ios_base::binary );
-      boost::archive::binary_oarchive oa( ofs );
-
-      // write class instance to archive
-      oa << result.postsolve;
-      fmt::print( "postsolve archive written to {} in {:.3f} seconds\n\n",
-                  opts.postsolve_archive_file, t.getTime() );
-   }
-
-   if( opts.command == Command::kPresolve )
-      return ResultStatus::kOk;
-
-   double solvetime = 0;
-   {
-      Timer t( solvetime );
-      std::unique_ptr<SolverInterface<REAL>> solver;
-
-      if( result.postsolve.getOriginalProblem().getNumIntegralCols() == 0 &&
-          presolve.getLPSolverFactory() )
-         solver = presolve.getLPSolverFactory()->newSolver(
-             presolve.getVerbosityLevel() );
-      else if( presolve.getMIPSolverFactory() )
-         solver = presolve.getMIPSolverFactory()->newSolver(
-             presolve.getVerbosityLevel() );
-      else
-      {
-         fmt::print( "no solver available for solving\n" );
-         return ResultStatus::kError;
-      }
-
-      solver->setUp( problem, result.postsolve.origrow_mapping,
-                     result.postsolve.origcol_mapping );
-
-      if( opts.tlim != std::numeric_limits<double>::max() )
-      {
-         double tlim =
-             opts.tlim - presolve.getStatistics().presolvetime - writetime;
-         if( tlim <= 0 )
+         if( opts.tlim != std::numeric_limits<double>::max() )
          {
-            fmt::print( "time limit reached in presolving\n" );
-            return ResultStatus::kOk;
+            double tlim =
+                opts.tlim - presolve.getStatistics().presolvetime - writetime;
+            if( tlim <= 0 )
+            {
+               fmt::print( "time limit reached in presolving\n" );
+               return ResultStatus::kOk;
+            }
+            solver->setTimeLimit( tlim );
          }
-         solver->setTimeLimit( tlim );
+
+         solver->solve();
+
+         SolverStatus status = solver->getStatus();
+
+         if( opts.print_stats )
+            solver->printDetails();
+
+         Solution<REAL> solution;
+         solution.type = SolutionType::kPrimal;
+
+         if( result.postsolve.getOriginalProblem().getNumIntegralCols() == 0 )
+            solution.type = SolutionType::kPrimalDual;
+
+         if( ( status == SolverStatus::kOptimal ||
+               status == SolverStatus::kInterrupted ) &&
+             solver->getSolution( solution ) )
+            postsolve( result.postsolve, solution, opts.objective_reference,
+                       opts.orig_solution_file, opts.orig_dual_solution_file,
+                       opts.orig_reduced_costs_file, opts.orig_basis_file );
+
+         if( status == SolverStatus::kInfeasible )
+            fmt::print(
+                "\nsolving detected infeasible problem after {:.3f} seconds\n",
+                presolve.getStatistics().presolvetime + solvetime + writetime );
+         else if( status == SolverStatus::kUnbounded )
+            fmt::print(
+                "\nsolving detected unbounded problem after {:.3f} seconds\n",
+                presolve.getStatistics().presolvetime + solvetime + writetime );
+         else if( status == SolverStatus::kUnbndOrInfeas )
+            fmt::print(
+                "\nsolving detected unbounded or infeasible problem after "
+                "{:.3f} seconds\n",
+                presolve.getStatistics().presolvetime + solvetime + writetime );
+         else
+            fmt::print( "\nsolving finished after {:.3f} seconds\n",
+                        presolve.getStatistics().presolvetime + solvetime +
+                            writetime );
       }
-
-      solver->solve();
-
-      SolverStatus status = solver->getStatus();
-
-      if( opts.print_stats )
-         solver->printDetails();
-
-      Solution<REAL> solution;
-      solution.type = SolutionType::kPrimal;
-
-      if( result.postsolve.getOriginalProblem().getNumIntegralCols() == 0 )
-         solution.type = SolutionType::kPrimalDual;
-
-      if( ( status == SolverStatus::kOptimal ||
-            status == SolverStatus::kInterrupted ) &&
-          solver->getSolution( solution ) )
-         postsolve( result.postsolve, solution, opts.objective_reference,
-                    opts.orig_solution_file, opts.orig_dual_solution_file,
-                    opts.orig_reduced_costs_file, opts.orig_basis_file );
-
-      if( status == SolverStatus::kInfeasible )
-         fmt::print( "\nsolving detected infeasible problem after {:.3f} seconds\n",
-                     presolve.getStatistics().presolvetime + solvetime +
-                        writetime );
-      else if( status == SolverStatus::kUnbounded )
-         fmt::print( "\nsolving detected unbounded problem after {:.3f} seconds\n",
-                     presolve.getStatistics().presolvetime + solvetime +
-                        writetime );
-      else if( status == SolverStatus::kUnbndOrInfeas )
-         fmt::print( "\nsolving detected unbounded or infeasible problem after "
-                     "{:.3f} seconds\n",
-                     presolve.getStatistics().presolvetime + solvetime +
-                        writetime );
-      else
-         fmt::print( "\nsolving finished after {:.3f} seconds\n",
-                     presolve.getStatistics().presolvetime + solvetime +
-                        writetime );
    }
-
-
-
+   catch( std::bad_alloc& ex )
+   {
+      fmt::print( "Memory out exception occured! Please assign more memory\n");
+      return ResultStatus::kError;
+   }
 
    return ResultStatus::kOk;
 }
