@@ -8,8 +8,8 @@ do
 done
 
 versionstring="${version[0]}.${version[1]}.${version[2]}.${version[3]}"
-cmakefile=`dirname $0`/CMakeLists.txt
-dummyconfig=`dirname $0`/src/papilo/Config.hpp
+cmakefile=`dirname $0`/../CMakeLists.txt
+dummyconfig=`dirname $0`/../src/papilo/Config.hpp
 
 sed -i "s/^#define PAPILO_VERSION_MAJOR .*/#define PAPILO_VERSION_MAJOR ${version[0]}/g" $dummyconfig
 sed -i "s/^#define PAPILO_VERSION_MINOR .*/#define PAPILO_VERSION_MINOR ${version[1]}/g" $dummyconfig
