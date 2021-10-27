@@ -102,17 +102,20 @@ target_include_directories(papilo INTERFACE
    ${GMP_INCLUDE_DIRS}
    ${Quadmath_INCLUDE_DIRS})
 
+# on windows we don't want to build tbb
+if(NOT WIN32)
+    # Utilities to automatically download missing dependencies
+    include(cmake/Dependencies.cmake)
 
-# Utilities to automatically download missing dependencies
-include(cmake/Dependencies.cmake)
+    find_or_download_package(
+        NAME TBB
+        URL https://github.com/oneapi-src/oneTBB/archive/refs/tags/v2021.3.0.tar.gz
+        COMPONENTS tbb tbbmalloc
+        URL_HASH SHA256=8f616561603695bbb83871875d2c6051ea28f8187dbe59299961369904d1d49e
+        CONFIGURE_ARGS -DTBB_TEST=OFF -DTBB_EXAMPLES=OFF -DTBB4PY_BUILD=OFF)
+endif()
 
-find_or_download_package(
-    NAME TBB
-    URL https://github.com/oneapi-src/oneTBB/archive/refs/tags/v2021.3.0.tar.gz
-    COMPONENTS tbb
-    URL_HASH SHA256=8f616561603695bbb83871875d2c6051ea28f8187dbe59299961369904d1d49e
-    CONFIGURE_ARGS -DTBB_TEST=OFF -DTBB_EXAMPLES=OFF -DTBB4PY_BUILD=OFF)
-find_package(TBB REQUIRED)
+find_package(TBB COMPONENTS tbb tbbmalloc REQUIRED)
 find_package(Threads REQUIRED)
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
