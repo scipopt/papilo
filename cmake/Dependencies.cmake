@@ -15,6 +15,9 @@ include(FetchContent)
 set(FETCHCONTENT_INSTALL_DIR "${FETCHCONTENT_BASE_DIR}/local")
 
 
+# Append our custom modules
+list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/Modules/)
+
 # Execute command at comfigure time and handle errors and output.
 function(execute_process_handle_output)
     execute_process(
@@ -63,7 +66,6 @@ function(find_or_download_package)
         return()
     endif()
 
-    message(STATUS "finding find_package(${ARG_NAME} ${ARG_VERSION} COMPONENTS ${ARG_COMPONENTS})")
     if(${ARG_COMPONENTS})
         find_package(${ARG_NAME} ${ARG_VERSION} COMPONENTS ${ARG_COMPONENTS})
     else()
