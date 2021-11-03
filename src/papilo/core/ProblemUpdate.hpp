@@ -2841,7 +2841,7 @@ ProblemUpdate<REAL>::print_detailed( const Reduction<REAL>* first,
       {
          const auto& reduction = *iter;
          msg.detailed( "row {} col {} val {}\n", reduction.row, reduction.col,
-                       reduction.newval );
+                       (double) reduction.newval );
       }
       msg.detailed( "tsx\n" );
    }

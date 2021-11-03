@@ -76,8 +76,8 @@ struct Validation
             fmt::print(
                 "postsolve for variable {} not equal {} !={}\n",
                 problem.getVariableNames()[i],
-                optimal_solution.primal[i],
-                calculated_orig_solution.primal[i] );
+                (double) optimal_solution.primal[i],
+                (double) calculated_orig_solution.primal[i] );
             validation_succcess = false;
          }
       }
@@ -117,9 +117,9 @@ struct Validation
          {
             fmt::print(
                 "lb {} of var {} violates bounds for value {} ",
-                problem.getLowerBounds()[i],
+                (double) problem.getLowerBounds()[i],
                 problem.getVariableNames()[postsolve.origcol_mapping[i]],
-                solution_coeff );
+                (double) solution_coeff );
             validation_success = false;
          }
          if( !problem.getColFlags()[i].test( ColFlag::kLbInf ) &&
@@ -128,9 +128,9 @@ struct Validation
          {
             fmt::print(
                 "ub {} of var {} violates bounds for value {} ",
-                problem.getUpperBounds()[i],
+                (double) problem.getUpperBounds()[i],
                 problem.getVariableNames()[postsolve.origcol_mapping[i]],
-                solution_coeff );
+                (double) solution_coeff );
             validation_success = false;
          }
       }
@@ -149,8 +149,8 @@ struct Validation
             fmt::print(
                 "equality in row {} is violated: {} != {}\n",
                 problem.getConstraintNames()[postsolve.origrow_mapping[i]],
-                row_value,
-                problem.getConstraintMatrix().getRightHandSides()[i] );
+                (double) row_value,
+                (double) problem.getConstraintMatrix().getRightHandSides()[i] );
             validation_success = false;
          }
          else
@@ -164,22 +164,22 @@ struct Validation
                fmt::print(
                    "LE inequality in row {} is violated: {} !<= {}\n",
                    problem.getConstraintNames()[postsolve.origrow_mapping[i]],
-                   row_value,
-                   problem.getConstraintMatrix().getRightHandSides()[i] );
+                   (double) row_value,
+                   (double) problem.getConstraintMatrix().getRightHandSides()[i] );
                validation_success = false;
             }
 
             if( !problem.getConstraintMatrix().getRowFlags()[i].test(
                     RowFlag::kLhsInf ) &&
                 !postsolve.getNum().isFeasGE(
-                    row_value,
-                    problem.getConstraintMatrix().getLeftHandSides()[i] ) )
+                    (double) row_value,
+                    (double) problem.getConstraintMatrix().getLeftHandSides()[i] ) )
             {
                fmt::print(
                    "GE inequality in row {} is violated: {} !>= {}\n",
                    problem.getConstraintNames()[postsolve.origrow_mapping[i]],
-                   row_value,
-                   problem.getConstraintMatrix().getLeftHandSides()[i] );
+                   (double) row_value,
+                   (double) problem.getConstraintMatrix().getLeftHandSides()[i] );
                validation_success = false;
             }
          }

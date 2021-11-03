@@ -1358,8 +1358,8 @@ Presolve<REAL>::logStatus( const Problem<REAL>& problem,
       const Problem<REAL>& origprob = postsolveStorage.getOriginalProblem();
       REAL origobj = origprob.computeSolObjective( solution.primal );
       msg.info(
-          "problem is solved [optimal solution found] [objective value: {}]\n",
-          origobj );
+          "problem is solved [optimal solution found] [objective value: {} (double precision)]\n",
+          (double) origobj );
    }
 }
 

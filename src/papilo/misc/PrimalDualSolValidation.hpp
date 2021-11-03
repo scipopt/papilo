@@ -123,14 +123,14 @@ class PrimalDualSolValidation
          if( ( ! lhs_inf ) && num.isFeasLT( rowValue, lhs[row] ) )
          {
             message.info( "Row {:<3} violates row bounds ({:<3} < {:<3}).\n",
-                          row, lhs[row], rowValue );
+                          row, (double) lhs[row], (double) rowValue );
             return true;
          }
          bool rhs_inf = problem.getRowFlags()[row].test( RowFlag::kRhsInf );
          if( ( ! rhs_inf ) && num.isFeasGT( rowValue, rhs[row] ) )
          {
             message.info( "Row {:<3} violates row bounds ({:<3} < {:<3}).\n",
-                          row, rowValue, rhs[row] );
+                          row, (double) rowValue, (double) rhs[row] );
             return true;
          }
          if(solution.type == SolutionType::kPrimalDual)
@@ -179,9 +179,9 @@ class PrimalDualSolValidation
          {
             message.info(
                 "Dual row {:<3} violates dual row bounds ({:<3} != {:<3}).\n",
-                variable, problem.getObjective().coefficients[variable],
-                colValue.get() + reducedCosts[variable],
-                problem.getObjective().coefficients[variable] );
+                variable, (double) problem.getObjective().coefficients[variable],
+                (double) (colValue.get() + reducedCosts[variable]),
+                (double) problem.getObjective().coefficients[variable] );
             return true;
          }
       }
