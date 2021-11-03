@@ -103,7 +103,9 @@ target_include_directories(papilo INTERFACE
    ${Quadmath_INCLUDE_DIRS})
 
 # on windows we don't want to build tbb
-if(NOT WIN32)
+if(WIN32)
+    find_package(TBB COMPONENTS tbb tbbmalloc REQUIRED)
+else()
     # Utilities to automatically download missing dependencies
     include(cmake/Dependencies.cmake)
 
@@ -115,7 +117,6 @@ if(NOT WIN32)
         CONFIGURE_ARGS -DTBB_TEST=OFF -DTBB_EXAMPLES=OFF -DTBB4PY_BUILD=OFF)
 endif()
 
-find_package(TBB COMPONENTS tbb tbbmalloc REQUIRED)
 find_package(Threads REQUIRED)
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
