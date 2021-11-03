@@ -180,9 +180,9 @@ struct SolWriter
                if(rowBasis[row] != VarBasisStatus::BASIC)
                   break;
             }
-            assert( rowBasis[row] == VarBasisStatus::ON_UPPER or
-                    rowBasis[row] == VarBasisStatus::ON_LOWER or
-                    rowBasis[row] == VarBasisStatus::ZERO or
+            assert( rowBasis[row] == VarBasisStatus::ON_UPPER ||
+                    rowBasis[row] == VarBasisStatus::ON_LOWER ||
+                    rowBasis[row] == VarBasisStatus::ZERO ||
                     rowBasis[row] == VarBasisStatus::FIXED
                     );
             if( colBasis[col] == VarBasisStatus::ON_UPPER )
@@ -195,7 +195,7 @@ struct SolWriter
          }
          else if( colBasis[col] == VarBasisStatus::ON_UPPER )
             fmt::print( out, "  UL {: <50}\n", col_names[col]);
-         else if( colBasis[col] == VarBasisStatus::ON_LOWER or
+         else if( colBasis[col] == VarBasisStatus::ON_LOWER ||
                   colBasis[col] == VarBasisStatus::ZERO )
          {
             /* Default is all non-basic variables on lower bound (if finite) or

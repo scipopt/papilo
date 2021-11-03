@@ -85,13 +85,13 @@ ConstraintPropagation<REAL>::execute( const Problem<REAL>& problem,
    // crossover would be required is too expensive performance wise.
    // Exception: for infinity bounds set a finite bound that is worse that the best possible bound
    const bool skip_variable_tightening =
-       problem.getNumIntegralCols() == 0 and
+       problem.getNumIntegralCols() == 0 &&
        problemUpdate.getPresolveOptions().calculate_basis_for_dual;
 
    const REAL bound_tightening_offset =
        REAL(problemUpdate.getPresolveOptions().get_variable_bound_tightening_offset());
 
-   if( problemUpdate.getPresolveOptions().runs_sequentiell() or
+   if( problemUpdate.getPresolveOptions().runs_sequentiell() ||
        !problemUpdate.getPresolveOptions().constraint_propagation_parallel )
    {
       auto add_boundchange = [&]( BoundChange boundChange, int col, REAL val, int row ) {

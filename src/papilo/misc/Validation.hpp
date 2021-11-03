@@ -39,11 +39,11 @@ struct Validation
       Solution<REAL> optimal_solution;
       bool success = parse_solution( postsolve, optimal_solution_file, optimal_solution );
 
-      if( success and
-          ( status == PresolveStatus::kUnchanged or
-            status == PresolveStatus::kReduced ) and
+      if( success &&
+          ( status == PresolveStatus::kUnchanged ||
+            status == PresolveStatus::kReduced ) &&
           check_if_solution_is_contained_in_problem( problem, postsolve,
-                                                     optimal_solution ) and
+                                                     optimal_solution ) &&
           can_reduced_solution_be_recalculated( problem, postsolve,
                                                 optimal_solution ) )
          fmt::print( "validation: SUCCESS\n" );

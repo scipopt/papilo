@@ -554,8 +554,8 @@ Postsolve<REAL>::apply_fix_infinity_variable_in_original_solution(
    int current_counter = first + 2;
 
    bool isNegativeInfinity = values[first] < 0;
-   int row_indices[number_rows];
-   REAL col_coefficents[number_rows];
+   int* row_indices = new int[number_rows];
+   REAL* col_coefficents = new REAL[number_rows];
    if( isNegativeInfinity )
    {
       while( row_counter < number_rows )
@@ -836,7 +836,7 @@ Postsolve<REAL>::apply_row_bound_change_to_original_solution(
    assert( row == indices[start_reason] );
    REAL dual_row_value = originalSolution.dual[row];
    if( ( isLhs && num.isGT(dual_row_value, 0) ) ||
-       ( ! isLhs && num.template isLT(dual_row_value, 0) ) )
+       ( ! isLhs && num.isLT(dual_row_value, 0) ) )
    {
       originalSolution.dual[deleted_row] = dual_row_value * factor;
       originalSolution.dual[row] = 0;
@@ -888,10 +888,10 @@ Postsolve<REAL>::apply_row_bound_change_to_original_solution(
          }
       }
    }
-   // check if bound is modified on non basic variable and dual solution is 0
-   // this can happen in ParallelRowDetection
    else if( originalSolution.basisAvailabe)
    {
+      // check if bound is modified on non basic variable and dual solution is 0
+      // this can happen in ParallelRowDetection
       if( ( (isLhs && ( originalSolution.rowBasisStatus[row] ==
                             VarBasisStatus::ON_LOWER ||
                         originalSolution.rowBasisStatus[row] ==
@@ -1225,12 +1225,8 @@ Postsolve<REAL>::apply_parallel_col_to_original_solution(
          originalSolution.varBasisStatus[col1] = calculate_basis(
              col1boundFlags, col1lb, col1ub, col1val, col1onBounds );
 
-         if( col1onBounds && col2onBounds &&
-             originalSolution.varBasisStatus[col2] == VarBasisStatus::BASIC )
-         {
-            message.template info( "hier\n" );
-         }
-         else
+         if(!( col1onBounds && col2onBounds &&
+             originalSolution.varBasisStatus[col2] == VarBasisStatus::BASIC ))
          {
             originalSolution.varBasisStatus[col2] = calculate_basis(
                 col2boundFlags, col2lb, col2ub, col2val, col2onBounds );

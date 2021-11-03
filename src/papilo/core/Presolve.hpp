@@ -403,7 +403,7 @@ Presolve<REAL>::apply( Problem<REAL>& problem, bool store_dual_postsolve )
 
       if( store_dual_postsolve && problem.getNumIntegralCols() == 0 )
       {
-         if( presolveOptions.componentsmaxint == -1 and presolveOptions.detectlindep == 0 and
+         if( presolveOptions.componentsmaxint == -1 && presolveOptions.detectlindep == 0 &&
              !are_only_dual_postsolve_presolvers_enabled())
             result.postsolve.postsolveType = PostsolveType::kFull;
          else
@@ -684,7 +684,7 @@ Presolve<REAL>::apply( Problem<REAL>& problem, bool store_dual_postsolve )
             detectComponents = false;
 
          //TODO: remove empty rows before (but currently buggy)
-         if( detectComponents  and probUpdate.getNActiveCols() > 0 )
+         if( detectComponents  && probUpdate.getNActiveCols() > 0 )
          {
             assert( problem.getNCols() != 0 && problem.getNRows() != 0 );
             Components components;

@@ -391,7 +391,7 @@ postsolve( PostsolveStorage<REAL>& postsolveStorage,
    fmt::print( "  constraints: {:.15}\n", double( rowviol ) );
    fmt::print( "  integrality: {:.15}\n\n", double( intviol ) );
 
-   if( not primal_solution_output.empty() )
+   if( ! primal_solution_output.empty() )
    {
       auto t2 = tbb::tick_count::now();
       SolWriter<REAL>::writePrimalSol( primal_solution_output,

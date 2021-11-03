@@ -373,8 +373,8 @@ setupProblemWithParallelColumns( bool first_col_int, bool second_col_int,
                                  double ub_second_col, double lb_first_col,
                                  double lb_second_col, bool objectiveZero )
 {
-   Vec<double> coefficients{ not objectiveZero ? 1.0 : 0.0,
-                             not objectiveZero ? 1.0 * factor : 0.0 };
+   Vec<double> coefficients{ ! objectiveZero ? 1.0 : 0.0,
+                             ! objectiveZero ? 1.0 * factor : 0.0 };
    Vec<double> lowerBounds{ lb_first_col, lb_second_col };
    Vec<double> upperBounds{ ub_first_col, ub_second_col };
    Vec<uint8_t> isIntegral{ first_col_int, second_col_int };

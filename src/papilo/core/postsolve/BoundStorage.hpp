@@ -50,7 +50,7 @@ class BoundStorage
  public:
    BoundStorage( const Num<REAL>& n, int cols, int rows, bool is_primal_dual )
    {
-      if( not is_primal_dual )
+      if( ! is_primal_dual )
          return;
       num = n;
       col_cost.assign( cols, 0 );
@@ -67,7 +67,7 @@ class BoundStorage
    void
    set_bounds_of_variable( int col, bool lb_inf, bool ub_inf, REAL lb, REAL ub )
    {
-      assert( lb_inf or ub_inf or lb <= ub );
+      assert( lb_inf || ub_inf || lb <= ub );
       col_lower[col] = lb;
       col_upper[col] = ub;
       col_infinity_lower[col] = lb_inf;
@@ -92,13 +92,13 @@ class BoundStorage
    bool
    is_lower_and_upper_bound_infinity( int col )
    {
-      return col_infinity_lower[col] and col_infinity_upper[col];
+      return col_infinity_lower[col] && col_infinity_upper[col];
    }
 
    void
    set_bounds_of_row( int row, bool lhs_inf, bool rhs_inf, REAL lhs, REAL rhs )
    {
-      assert( rhs_inf or lhs_inf or lhs <= rhs );
+      assert( rhs_inf || lhs_inf || lhs <= rhs );
       row_lhs[row] = lhs;
       row_rhs[row] = rhs;
       row_infinity_lhs[row] = rhs_inf;
@@ -108,13 +108,13 @@ class BoundStorage
    bool
    is_on_upper_bound( int col, REAL value )
    {
-      return not col_infinity_upper[col] and num.isEq( value, col_upper[col] );
+      return ! col_infinity_upper[col] && num.isEq( value, col_upper[col] );
    }
 
    bool
    is_on_lower_bound( int col, REAL value )
    {
-      return not col_infinity_lower[col] and num.isEq( value, col_lower[col] );
+      return ! col_infinity_lower[col] && num.isEq( value, col_lower[col] );
    }
 
    bool

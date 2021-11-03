@@ -359,7 +359,7 @@ ParallelRowDetection<REAL>::execute( const Problem<REAL>& problem,
             swap( scaled_lhs, scaled_rhs );
 
          // CASE 1: 2 equalities
-         if( rflags[parallel_row].test( RowFlag::kEquation ) and
+         if( rflags[parallel_row].test( RowFlag::kEquation ) &&
              is_remaining_row_equality )
          {
             if( !num.isFeasEq( rhs_value, scaled_rhs ) )
@@ -380,8 +380,8 @@ ParallelRowDetection<REAL>::execute( const Problem<REAL>& problem,
          // CASE 2: new equation is equality
          else if( rflags[parallel_row].test( RowFlag::kEquation ) )
          {
-            if( ( not rhs_infinity && num.isLT( rhs_value, scaled_rhs ) ) or
-                ( not lhs_infinity && num.isGT( lhs_value, scaled_lhs ) ) )
+            if( ( ! rhs_infinity && num.isLT( rhs_value, scaled_rhs ) ) ||
+                ( ! lhs_infinity && num.isGT( lhs_value, scaled_lhs ) ) )
             {
                result = PresolveStatus::kInfeasible;
                break;
@@ -403,9 +403,9 @@ ParallelRowDetection<REAL>::execute( const Problem<REAL>& problem,
             bool scaled_rhs_inf = rflags[parallel_row].test( RowFlag::kRhsInf );
             if( ratio < REAL{ 0.0 } )
                swap( scaled_lhs_inf, scaled_rhs_inf );
-            if( ( not scaled_rhs_inf &&
-                  num.isLT( scaled_rhs, rhs_value ) ) or
-                ( not scaled_lhs_inf &&
+            if( ( ! scaled_rhs_inf &&
+                  num.isLT( scaled_rhs, rhs_value ) ) ||
+                ( ! scaled_lhs_inf &&
                   num.isGT( scaled_lhs, lhs_value ) ) )
             {
                result = PresolveStatus::kInfeasible;
@@ -429,7 +429,7 @@ ParallelRowDetection<REAL>::execute( const Problem<REAL>& problem,
                result = PresolveStatus::kInfeasible;
                break;
             }
-            if( not num.isGE( abs( coefficient ), abs( coefs2 ) ) )
+            if( ! num.isGE( abs( coefficient ), abs( coefs2 ) ) )
             {
                REAL new_ratio = coefs2 / coefficient;
                REAL new_adjusted_rhs = rhs_value * new_ratio;
