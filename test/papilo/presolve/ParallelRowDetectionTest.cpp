@@ -979,10 +979,10 @@ setupProblemParallelRowWithMixed( bool firstRowEquation, double lhsIneq,
    Vec<uint8_t> isIntegral{ 1, 1, 1 };
    double rhs1 = firstRowEquation ? factorEquation : rhsIneq;
    double lhs1 = firstRowEquation ? factorEquation : lhsIneq;
-   double rhs2 = (not firstRowEquation) ? factorEquation : rhsIneq;
-   double lhs2 = (not firstRowEquation) ? factorEquation : lhsIneq;
+   double rhs2 = (! firstRowEquation) ? factorEquation : rhsIneq;
+   double lhs2 = (! firstRowEquation) ? factorEquation : lhsIneq;
    double factor1 = firstRowEquation ? factorEquation : factorIneq;
-   double factor2 = (not firstRowEquation) ? factorEquation : factorIneq;
+   double factor2 = (! firstRowEquation) ? factorEquation : factorIneq;
    Vec<double> rhs{ rhs1, 2.0, rhs2 };
    Vec<double> lhs{ lhs1, 2.0, lhs2 };
    Vec<std::string> rowNames{ "A1", "A2", "A3" };
@@ -1031,10 +1031,10 @@ setupProblemParallelRowWithInfinity( bool firstRowRhsInfinity, double lhs,
    Vec<double> lowerBounds{ 0.0, 0.0, 0.0 };
 
    Vec<uint8_t> isIntegral{ 1, 1, 1 };
-   Vec<uint8_t> lhs_infinity{ not firstRowRhsInfinity, 1, firstRowRhsInfinity };
-   Vec<uint8_t> rhs_infinity{ firstRowRhsInfinity, 1, not firstRowRhsInfinity };
+   Vec<uint8_t> lhs_infinity{ ! firstRowRhsInfinity, 1, firstRowRhsInfinity };
+   Vec<uint8_t> rhs_infinity{ firstRowRhsInfinity, 1, ! firstRowRhsInfinity };
    double factor1 = firstRowRhsInfinity ? factorlhs : factorrhs;
-   double factor2 = (not firstRowRhsInfinity) ? factorlhs : factorrhs;
+   double factor2 = (! firstRowRhsInfinity) ? factorlhs : factorrhs;
    Vec<double> rhs_all{ rhs, 2.0, rhs };
    Vec<double> lhs_all{ lhs, 2.0, lhs };
    Vec<std::string> rowNames{ "A1", "A2", "A3" };

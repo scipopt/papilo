@@ -234,9 +234,9 @@ compute_minimal_row_activity( const REAL* rowvals, const int* colindices, int ro
    for( int j = 0; j < rowlen; ++j )
    {
       int col = colindices[j];
-      if( !flags[col].test( ColFlag::kUbUseless ) and  rowvals[j] < 0 )
+      if( !flags[col].test( ColFlag::kUbUseless ) &&  rowvals[j] < 0 )
             min += rowvals[j] * upper_bounds[col];
-      if( !flags[col].test( ColFlag::kLbUseless ) and rowvals[j] > 0 )
+      if( !flags[col].test( ColFlag::kLbUseless ) && rowvals[j] > 0 )
             min += rowvals[j] * lower_bounds[col];
    }
    return min ;
@@ -253,9 +253,9 @@ compute_maximal_row_activity( const REAL* rowvals, const int* colindices, int ro
    for( int j = 0; j < rowlen; ++j )
    {
       int col = colindices[j];
-      if( !flags[col].test( ColFlag::kUbUseless ) and rowvals[j] > 0 )
+      if( !flags[col].test( ColFlag::kUbUseless ) && rowvals[j] > 0 )
             max += rowvals[j] * upper_bounds[col];
-      if( !flags[col].test( ColFlag::kLbUseless ) and rowvals[j] < 0 )
+      if( !flags[col].test( ColFlag::kLbUseless ) && rowvals[j] < 0 )
             max += rowvals[j] * lower_bounds[col];
    }
 

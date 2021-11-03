@@ -72,14 +72,14 @@ class PrimalDualSolValidation
          if( problem.getColFlags()[col].test( ColFlag::kInactive ) )
             continue;
 
-         if( ( not problem.getColFlags()[col].test( ColFlag::kLbInf ) ) &&
+         if( ( ! problem.getColFlags()[col].test( ColFlag::kLbInf ) ) &&
              num.isFeasLT( primalSolution[col], lb[col] ) )
          {
             message.info( "Column {:<3} violates lower column bound.\n", col );
             failure = true;
          }
 
-         if( ( not problem.getColFlags()[col].test( ColFlag::kUbInf ) ) &&
+         if( ( ! problem.getColFlags()[col].test( ColFlag::kUbInf ) ) &&
              num.isFeasGT( primalSolution[col], ub[col] ) )
          {
             message.info( "Column {:<3} violates upper column bound.\n", col );
@@ -120,17 +120,17 @@ class PrimalDualSolValidation
          }
 
          bool lhs_inf = problem.getRowFlags()[row].test( RowFlag::kLhsInf );
-         if( ( not lhs_inf ) && num.isFeasLT( rowValue, lhs[row] ) )
+         if( ( ! lhs_inf ) && num.isFeasLT( rowValue, lhs[row] ) )
          {
             message.info( "Row {:<3} violates row bounds ({:<3} < {:<3}).\n",
-                          row, lhs[row], rowValue );
+                          row, (double) lhs[row], (double) rowValue );
             return true;
          }
          bool rhs_inf = problem.getRowFlags()[row].test( RowFlag::kRhsInf );
-         if( ( not rhs_inf ) && num.isFeasGT( rowValue, rhs[row] ) )
+         if( ( ! rhs_inf ) && num.isFeasGT( rowValue, rhs[row] ) )
          {
             message.info( "Row {:<3} violates row bounds ({:<3} < {:<3}).\n",
-                          row, rowValue, rhs[row] );
+                          row, (double) rowValue, (double) rhs[row] );
             return true;
          }
          if(solution.type == SolutionType::kPrimalDual)
@@ -146,7 +146,7 @@ class PrimalDualSolValidation
       bool primalBounds = checkPrimalBounds( solution.primal, problem );
       bool primalConstraint =
           checkPrimalConstraintAndUpdateSlack( solution, problem );
-      return primalBounds or primalConstraint;
+      return primalBounds || primalConstraint;
    }
 
    bool
@@ -174,14 +174,14 @@ class PrimalDualSolValidation
             colValue.add(dualSolution[rowIndex] * value);
          }
 
-         if( not num.isFeasEq( colValue.get() + reducedCosts[variable],
+         if( ! num.isFeasEq( colValue.get() + reducedCosts[variable],
                            problem.getObjective().coefficients[variable] ) )
          {
             message.info(
                 "Dual row {:<3} violates dual row bounds ({:<3} != {:<3}).\n",
-                variable, problem.getObjective().coefficients[variable],
-                colValue.get() + reducedCosts[variable],
-                problem.getObjective().coefficients[variable] );
+                variable, (double) problem.getObjective().coefficients[variable],
+                (double) (colValue.get() + reducedCosts[variable]),
+                (double) problem.getObjective().coefficients[variable] );
             return true;
          }
       }
@@ -216,27 +216,27 @@ class PrimalDualSolValidation
             rowValue += entries.getValues()[j] * primalSolution[col];
          }
 
-         if( not problem.getRowFlags()[row].test( RowFlag::kLhsInf ) and
-             not problem.getRowFlags()[row].test( RowFlag::kRhsInf ) )
+         if( ! problem.getRowFlags()[row].test( RowFlag::kLhsInf ) &&
+             ! problem.getRowFlags()[row].test( RowFlag::kRhsInf ) )
          {
-            if( num.isFeasGT( lhs[row], rowValue ) and
-                num.isFeasLT( rhs[row], rowValue ) and
-                not num.isFeasZero( dualSolution[row] ) )
+            if( num.isFeasGT( lhs[row], rowValue ) &&
+                num.isFeasLT( rhs[row], rowValue ) &&
+                ! num.isFeasZero( dualSolution[row] ) )
                return true;
          }
-         else if( not problem.getRowFlags()[row].test( RowFlag::kLhsInf ) )
+         else if( ! problem.getRowFlags()[row].test( RowFlag::kLhsInf ) )
          {
             assert( problem.getRowFlags()[row].test( RowFlag::kRhsInf ) );
-            if( num.isFeasGT( lhs[row], rowValue ) and
-                not num.isFeasZero( dualSolution[row] ) )
+            if( num.isFeasGT( lhs[row], rowValue ) &&
+                ! num.isFeasZero( dualSolution[row] ) )
                return true;
          }
-         else if( ( not problem.getRowFlags()[row].test( RowFlag::kLhsInf ) ) &&
+         else if( ( ! problem.getRowFlags()[row].test( RowFlag::kLhsInf ) ) &&
                   num.isFeasGT( rowValue, lhs[row] ) )
          {
             assert( problem.getRowFlags()[row].test( RowFlag::kRhsInf ) );
-            if( num.isFeasLT( rhs[row], rowValue ) and
-                not num.isFeasZero( dualSolution[row] ) )
+            if( num.isFeasLT( rhs[row], rowValue ) &&
+                ! num.isFeasZero( dualSolution[row] ) )
                return true;
          }
       }
@@ -253,26 +253,26 @@ class PrimalDualSolValidation
          REAL reducedCost = reducedCosts[col];
          REAL sol = primalSolution[col];
 
-         if( num.isFeasEq( upperBound, lowerBound ) and not isLbInf and
-             not isUbInf )
+         if( num.isFeasEq( upperBound, lowerBound ) && ! isLbInf &&
+             ! isUbInf )
             continue;
 
-         if( not isLbInf and not isUbInf )
+         if( ! isLbInf && ! isUbInf )
          {
-            if( num.isFeasGT( sol, lowerBound ) and num.isFeasLT( sol, upperBound ) and
-                not num.isFeasZero( reducedCost ) )
+            if( num.isFeasGT( sol, lowerBound ) && num.isFeasLT( sol, upperBound ) &&
+                ! num.isFeasZero( reducedCost ) )
                return true;
          }
-         else if( not isLbInf )
+         else if( ! isLbInf )
          {
             assert( isUbInf );
-            if( num.isFeasGT( sol, lowerBound ) and not num.isFeasZero( reducedCost ) )
+            if( num.isFeasGT( sol, lowerBound ) && ! num.isFeasZero( reducedCost ) )
                return true;
          }
-         else if( not isUbInf )
+         else if( ! isUbInf )
          {
             assert( isLbInf );
-            if( num.isFeasLT( sol, upperBound ) and not num.isFeasZero( reducedCost ) )
+            if( num.isFeasLT( sol, upperBound ) && ! num.isFeasZero( reducedCost ) )
                return true;
          }
       }
@@ -282,7 +282,7 @@ class PrimalDualSolValidation
    bool
    checkBasis( const Solution<REAL>& solution, const Problem<REAL>& problem )
    {
-      if(not solution.basisAvailabe)
+      if(! solution.basisAvailabe)
          return false;
       int number_basic_variable = 0;
       int number_rows = 0;
@@ -298,30 +298,30 @@ class PrimalDualSolValidation
          REAL ub = problem.getUpperBounds()[variable];
          REAL sol = solution.primal[variable];
 
-         assert( ub_infinity or lb_infinity or num.isFeasGE( ub, lb ) );
+         assert( ub_infinity || lb_infinity || num.isFeasGE( ub, lb ) );
          switch( solution.varBasisStatus[variable] )
          {
          case VarBasisStatus::BASIC:
-            if( not num.isFeasZero( solution.reducedCosts[variable] ) )
+            if( ! num.isFeasZero( solution.reducedCosts[variable] ) )
                return true;
             number_basic_variable++;
             break;
          case VarBasisStatus::FIXED:
-            if( ub_infinity or lb_infinity or not num.isFeasEq( lb, ub ) or
-                not num.isFeasEq( sol, ub ) )
+            if( ub_infinity || lb_infinity || ! num.isFeasEq( lb, ub ) ||
+                ! num.isFeasEq( sol, ub ) )
                return true;
             break;
          case VarBasisStatus::ON_LOWER:
-            if( lb_infinity or not num.isFeasEq( sol, lb ) )
+            if( lb_infinity || ! num.isFeasEq( sol, lb ) )
                return true;
             break;
          case VarBasisStatus::ON_UPPER:
-            if( ub_infinity or not num.isFeasEq( sol, ub ) )
+            if( ub_infinity || ! num.isFeasEq( sol, ub ) )
                return true;
             break;
          case VarBasisStatus::ZERO:
-            if( not lb_infinity or not ub_infinity or
-                not num.isFeasZero( sol ) )
+            if( ! lb_infinity || ! ub_infinity ||
+                ! num.isFeasZero( sol ) )
                return true;
             break;
          case VarBasisStatus::UNDEFINED:
@@ -342,31 +342,31 @@ class PrimalDualSolValidation
          REAL rhs = problem.getConstraintMatrix().getRightHandSides()[row];
          REAL slack = solution.slack[row];
 
-         assert( lhs_infinity or rhs_infinity or num.isFeasGE( rhs, lhs ) );
+         assert( lhs_infinity || rhs_infinity || num.isFeasGE( rhs, lhs ) );
          switch( solution.rowBasisStatus[row] )
          {
          case VarBasisStatus::BASIC:
-            if( not num.isFeasZero( solution.dual[row] ) )
+            if( ! num.isFeasZero( solution.dual[row] ) )
                return true;
             number_basic_variable++;
             break;
          case VarBasisStatus::FIXED:
-            if( lhs_infinity or rhs_infinity or not num.isFeasEq( lhs, rhs ) or
-                not num.isFeasEq( slack, rhs ) )
+            if( lhs_infinity || rhs_infinity || ! num.isFeasEq( lhs, rhs ) ||
+                ! num.isFeasEq( slack, rhs ) )
                return true;
             assert( problem.getRowFlags()[row].test( RowFlag::kEquation ) );
             break;
          case VarBasisStatus::ON_LOWER:
-            if( lhs_infinity or not num.isFeasEq( slack, lhs ) )
+            if( lhs_infinity || ! num.isFeasEq( slack, lhs ) )
                return true;
             break;
          case VarBasisStatus::ON_UPPER:
-            if( rhs_infinity or not num.isFeasEq( slack, rhs ) )
+            if( rhs_infinity || ! num.isFeasEq( slack, rhs ) )
                return true;
             break;
          case VarBasisStatus::ZERO:
-            if( not rhs_infinity or not lhs_infinity or
-                not num.isFeasZero( slack ) )
+            if( ! rhs_infinity || ! lhs_infinity ||
+                ! num.isFeasZero( slack ) )
                return true;
             break;
          case VarBasisStatus::UNDEFINED:
@@ -385,7 +385,7 @@ class PrimalDualSolValidation
    {
       REAL duality_gap =
           getDualityGap( primalSolution, dualSolution, reducedCosts, problem );
-      return not num.isFeasZero( duality_gap )  ;
+      return ! num.isFeasZero( duality_gap )  ;
    }
 
    PostsolveStatus

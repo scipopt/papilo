@@ -1093,7 +1093,7 @@ ProblemUpdate<REAL>::removeFixedCols()
       if( !cflags[col].test( ColFlag::kFixed ) )
          continue;
 
-      if( cflags[col].test( ColFlag::kLbInf ) or cflags[col].test( ColFlag::kUbInf ) )
+      if( cflags[col].test( ColFlag::kLbInf ) || cflags[col].test( ColFlag::kUbInf ) )
          continue;
 
       assert(
@@ -2841,7 +2841,7 @@ ProblemUpdate<REAL>::print_detailed( const Reduction<REAL>* first,
       {
          const auto& reduction = *iter;
          msg.detailed( "row {} col {} val {}\n", reduction.row, reduction.col,
-                       reduction.newval );
+                       (double) reduction.newval );
       }
       msg.detailed( "tsx\n" );
    }

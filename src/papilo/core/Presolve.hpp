@@ -403,7 +403,7 @@ Presolve<REAL>::apply( Problem<REAL>& problem, bool store_dual_postsolve )
 
       if( store_dual_postsolve && problem.getNumIntegralCols() == 0 )
       {
-         if( presolveOptions.componentsmaxint == -1 and presolveOptions.detectlindep == 0 and
+         if( presolveOptions.componentsmaxint == -1 && presolveOptions.detectlindep == 0 &&
              !are_only_dual_postsolve_presolvers_enabled())
             result.postsolve.postsolveType = PostsolveType::kFull;
          else
@@ -684,7 +684,7 @@ Presolve<REAL>::apply( Problem<REAL>& problem, bool store_dual_postsolve )
             detectComponents = false;
 
          //TODO: remove empty rows before (but currently buggy)
-         if( detectComponents  and probUpdate.getNActiveCols() > 0 )
+         if( detectComponents  && probUpdate.getNActiveCols() > 0 )
          {
             assert( problem.getNCols() != 0 && problem.getNRows() != 0 );
             Components components;
@@ -1358,8 +1358,8 @@ Presolve<REAL>::logStatus( const Problem<REAL>& problem,
       const Problem<REAL>& origprob = postsolveStorage.getOriginalProblem();
       REAL origobj = origprob.computeSolObjective( solution.primal );
       msg.info(
-          "problem is solved [optimal solution found] [objective value: {}]\n",
-          origobj );
+          "problem is solved [optimal solution found] [objective value: {} (double precision)]\n",
+          (double) origobj );
    }
 }
 
