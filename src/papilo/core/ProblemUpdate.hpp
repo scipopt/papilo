@@ -1093,7 +1093,7 @@ ProblemUpdate<REAL>::removeFixedCols()
       if( !cflags[col].test( ColFlag::kFixed ) )
          continue;
 
-      if( cflags[col].test( ColFlag::kLbInf ) or cflags[col].test( ColFlag::kUbInf ) )
+      if( cflags[col].test( ColFlag::kLbInf ) || cflags[col].test( ColFlag::kUbInf ) )
          continue;
 
       assert(
