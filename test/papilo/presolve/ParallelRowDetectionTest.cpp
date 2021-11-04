@@ -36,6 +36,9 @@ Problem<double>
 setupParallelRowWithMultipleParallelRows();
 
 Problem<double>
+setupParallelRowWithMultipleParallelInequalities( double coeff );
+
+Problem<double>
 setupProblemParallelRowWithTwoInequalities( double rhs1, double rhs2,
                                             double lhs1, double lhs2,
                                             double factor1, double factor2 );
@@ -538,8 +541,7 @@ TEST_CASE( "parallel-row-two-inequalities-tighten-upper-bound-first-row-neg"
    REQUIRE( reductions.getReduction( 4 ).row == 2 );
 }
 
-
-TEST_CASE( "parallel-row-overwrite-inf-first-row-rhs-inf","[presolve]" )
+TEST_CASE( "parallel-row-overwrite-inf-first-row-rhs-inf", "[presolve]" )
 {
    Num<double> num{};
    Message msg{};
@@ -573,7 +575,8 @@ TEST_CASE( "parallel-row-overwrite-inf-first-row-rhs-inf","[presolve]" )
    REQUIRE( reductions.getReduction( 2 ).newval == 0 );
    REQUIRE( reductions.getReduction( 2 ).row == 2 );
 
-   REQUIRE( reductions.getReduction( 3 ).col == RowReduction::RHS_LESS_RESTRICTIVE );
+   REQUIRE( reductions.getReduction( 3 ).col ==
+            RowReduction::RHS_LESS_RESTRICTIVE );
    REQUIRE( reductions.getReduction( 3 ).newval == 2 );
    REQUIRE( reductions.getReduction( 3 ).row == 0 );
 
@@ -582,7 +585,7 @@ TEST_CASE( "parallel-row-overwrite-inf-first-row-rhs-inf","[presolve]" )
    REQUIRE( reductions.getReduction( 4 ).row == 2 );
 }
 
-TEST_CASE( "parallel-row-overwrite-inf-first-row-lhs-inf","[presolve]" )
+TEST_CASE( "parallel-row-overwrite-inf-first-row-lhs-inf", "[presolve]" )
 {
    Num<double> num{};
    Message msg{};
@@ -616,7 +619,8 @@ TEST_CASE( "parallel-row-overwrite-inf-first-row-lhs-inf","[presolve]" )
    REQUIRE( reductions.getReduction( 2 ).newval == 0 );
    REQUIRE( reductions.getReduction( 2 ).row == 2 );
 
-   REQUIRE( reductions.getReduction( 3 ).col == RowReduction::LHS_LESS_RESTRICTIVE );
+   REQUIRE( reductions.getReduction( 3 ).col ==
+            RowReduction::LHS_LESS_RESTRICTIVE );
    REQUIRE( reductions.getReduction( 3 ).newval == 2 );
    REQUIRE( reductions.getReduction( 3 ).row == 0 );
 
@@ -625,7 +629,8 @@ TEST_CASE( "parallel-row-overwrite-inf-first-row-lhs-inf","[presolve]" )
    REQUIRE( reductions.getReduction( 4 ).row == 2 );
 }
 
-TEST_CASE( "parallel-row-overwrite-inf-first-row-lhs-inf-neg-factor","[presolve]" )
+TEST_CASE( "parallel-row-overwrite-inf-first-row-lhs-inf-neg-factor",
+           "[presolve]" )
 {
    Num<double> num{};
    Message msg{};
@@ -659,7 +664,8 @@ TEST_CASE( "parallel-row-overwrite-inf-first-row-lhs-inf-neg-factor","[presolve]
    REQUIRE( reductions.getReduction( 2 ).newval == 0 );
    REQUIRE( reductions.getReduction( 2 ).row == 2 );
 
-   REQUIRE( reductions.getReduction( 3 ).col == RowReduction::RHS_LESS_RESTRICTIVE );
+   REQUIRE( reductions.getReduction( 3 ).col ==
+            RowReduction::RHS_LESS_RESTRICTIVE );
    REQUIRE( reductions.getReduction( 3 ).newval == 1 );
    REQUIRE( reductions.getReduction( 3 ).row == 0 );
 
@@ -668,7 +674,7 @@ TEST_CASE( "parallel-row-overwrite-inf-first-row-lhs-inf-neg-factor","[presolve]
    REQUIRE( reductions.getReduction( 4 ).row == 2 );
 }
 
-TEST_CASE( "parallel-row-mixed-infeasible-first-row-equation","[presolve]" )
+TEST_CASE( "parallel-row-mixed-infeasible-first-row-equation", "[presolve]" )
 {
    Num<double> num{};
    Message msg{};
@@ -690,7 +696,7 @@ TEST_CASE( "parallel-row-mixed-infeasible-first-row-equation","[presolve]" )
    REQUIRE( presolveStatus == PresolveStatus::kInfeasible );
 }
 
-TEST_CASE( "parallel-row-mixed-second-row-equation","[presolve]" )
+TEST_CASE( "parallel-row-mixed-second-row-equation", "[presolve]" )
 {
    Num<double> num{};
    Message msg{};
@@ -724,7 +730,7 @@ TEST_CASE( "parallel-row-mixed-second-row-equation","[presolve]" )
    REQUIRE( reductions.getReduction( 2 ).row == 0 );
 }
 
-TEST_CASE( "parallel-row-mixed-infeasible-second-row-equation","[presolve]" )
+TEST_CASE( "parallel-row-mixed-infeasible-second-row-equation", "[presolve]" )
 {
    Num<double> num{};
    Message msg{};
@@ -746,6 +752,97 @@ TEST_CASE( "parallel-row-mixed-infeasible-second-row-equation","[presolve]" )
    REQUIRE( presolveStatus == PresolveStatus::kInfeasible );
 }
 
+TEST_CASE( "parallel-row-best-bound-is-used-for-rhs", "[presolve]" )
+{
+   Num<double> num{};
+   Message msg{};
+   Problem<double> problem =
+       setupParallelRowWithMultipleParallelInequalities( 1.0 );
+   Statistics statistics{};
+   PresolveOptions presolveOptions{};
+   PostsolveStorage<double> postsolve =
+       PostsolveStorage<double>( problem, num, presolveOptions );
+   ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
+                                        presolveOptions, num, msg );
+   problemUpdate.checkChangedActivities();
+   ParallelRowDetection<double> presolvingMethod{};
+   Reductions<double> reductions{};
+
+   PresolveStatus presolveStatus =
+       presolvingMethod.execute( problem, problemUpdate, num, reductions );
+
+   REQUIRE( presolveStatus == PresolveStatus::kReduced );
+   REQUIRE( reductions.size() == 7 );
+   int locked_rows[] = { 0, 1, 2 };
+   for( int i = 0; i < 3; i++ )
+   {
+      REQUIRE( reductions.getReduction( i ).col == RowReduction::LOCKED );
+      REQUIRE( reductions.getReduction( i ).row == locked_rows[i] );
+      REQUIRE( reductions.getReduction( i ).newval == 0 );
+   }
+
+   REQUIRE( reductions.getReduction( 3 ).col ==
+            RowReduction::REASON_FOR_LESS_RESTRICTIVE_BOUND_CHANGE );
+
+   REQUIRE( reductions.getReduction( 4 ).col ==
+            RowReduction::LHS_LESS_RESTRICTIVE );
+   REQUIRE( reductions.getReduction( 4 ).row == 0 );
+   REQUIRE( reductions.getReduction( 4 ).newval == -1 );
+
+   for( int i = 0; i < 2; i++ )
+   {
+      REQUIRE( reductions.getReduction( 5 + i ).col ==
+               RowReduction::REDUNDANT );
+      REQUIRE( reductions.getReduction( 5 + i ).row == locked_rows[i + 1] );
+      REQUIRE( reductions.getReduction( 5 + i ).newval == 0 );
+   }
+}
+
+TEST_CASE( "parallel-row-best-bound-is-used-for-rhs-coeff-not-1", "[presolve]" )
+{
+   Num<double> num{};
+   Message msg{};
+   Problem<double> problem =
+       setupParallelRowWithMultipleParallelInequalities( 0.1 );
+   Statistics statistics{};
+   PresolveOptions presolveOptions{};
+   PostsolveStorage<double> postsolve =
+       PostsolveStorage<double>( problem, num, presolveOptions );
+   ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
+                                        presolveOptions, num, msg );
+   problemUpdate.checkChangedActivities();
+   ParallelRowDetection<double> presolvingMethod{};
+   Reductions<double> reductions{};
+
+   PresolveStatus presolveStatus =
+       presolvingMethod.execute( problem, problemUpdate, num, reductions );
+
+   REQUIRE( presolveStatus == PresolveStatus::kReduced );
+   REQUIRE( reductions.size() == 7 );
+   int locked_rows[] = { 0, 1, 2 };
+   for( int i = 0; i < 3; i++ )
+   {
+      REQUIRE( reductions.getReduction( i ).col == RowReduction::LOCKED );
+      REQUIRE( reductions.getReduction( i ).row == locked_rows[i] );
+      REQUIRE( reductions.getReduction( i ).newval == 0 );
+   }
+
+   REQUIRE( reductions.getReduction( 3 ).col ==
+            RowReduction::REASON_FOR_LESS_RESTRICTIVE_BOUND_CHANGE );
+
+   REQUIRE( reductions.getReduction( 4 ).col ==
+            RowReduction::LHS_LESS_RESTRICTIVE );
+   REQUIRE( reductions.getReduction( 4 ).row == 0 );
+   REQUIRE( reductions.getReduction( 4 ).newval == -1 );
+
+   for( int i = 0; i < 2; i++ )
+   {
+      REQUIRE( reductions.getReduction( 5 + i ).col ==
+               RowReduction::REDUNDANT );
+      REQUIRE( reductions.getReduction( 5 + i ).row == locked_rows[i + 1] );
+      REQUIRE( reductions.getReduction( 5 + i ).newval == 0 );
+   }
+}
 
 TEST_CASE( "parallel-row-multiple-parallel-rows", "[presolve]" )
 {
@@ -784,7 +881,6 @@ TEST_CASE( "parallel-row-multiple-parallel-rows", "[presolve]" )
    }
 }
 
-
 Problem<double>
 setupProblemWithNoParallelRows()
 {
@@ -810,9 +906,10 @@ setupProblemWithNoParallelRows()
    };
 
    ProblemBuilder<double> pb;
-   pb.reserve( entries.size(), rowNames.size(), columnNames.size() );
-   pb.setNumRows( rowNames.size() );
-   pb.setNumCols( columnNames.size() );
+   pb.reserve( (int)entries.size(), (int)rowNames.size(),
+               (int)columnNames.size() );
+   pb.setNumRows( (int)rowNames.size() );
+   pb.setNumCols( (int)columnNames.size() );
    pb.setColUbAll( upperBounds );
    pb.setColLbAll( lowerBounds );
    pb.setObjAll( coefficients );
@@ -854,9 +951,10 @@ setupParallelRowWithTwoParallelEquations( double rhs_first_row,
    };
 
    ProblemBuilder<double> pb;
-   pb.reserve( entries.size(), rowNames.size(), columnNames.size() );
-   pb.setNumRows( rowNames.size() );
-   pb.setNumCols( columnNames.size() );
+   pb.reserve( (int)entries.size(), (int)rowNames.size(),
+               (int)columnNames.size() );
+   pb.setNumRows( (int)rowNames.size() );
+   pb.setNumCols( (int)columnNames.size() );
    pb.setColUbAll( upperBounds );
    pb.setColLbAll( lowerBounds );
    pb.setObjAll( coefficients );
@@ -903,9 +1001,10 @@ setupParallelRowWithMultipleParallelRows()
    };
 
    ProblemBuilder<double> pb;
-   pb.reserve( entries.size(), rowNames.size(), columnNames.size() );
-   pb.setNumRows( rowNames.size() );
-   pb.setNumCols( columnNames.size() );
+   pb.reserve( (int)entries.size(), (int)rowNames.size(),
+               (int)columnNames.size() );
+   pb.setNumRows( (int)rowNames.size() );
+   pb.setNumCols( (int)columnNames.size() );
    pb.setColUbAll( upperBounds );
    pb.setColLbAll( lowerBounds );
    pb.setObjAll( coefficients );
@@ -918,6 +1017,50 @@ setupParallelRowWithMultipleParallelRows()
    Problem<double> problem = pb.build();
    problem.getConstraintMatrix().modifyLeftHandSide( 0, num, rhs[0] );
    problem.getConstraintMatrix().modifyLeftHandSide( 1, num, rhs[1] );
+   return problem;
+}
+
+Problem<double>
+setupParallelRowWithMultipleParallelInequalities( double coeff )
+{
+   Num<double> num{};
+   Vec<double> coefficients{ 1.0, 1.0 };
+   Vec<double> upperBounds{ 10.0, 10.0 };
+   Vec<double> lowerBounds{ 0.0, 0.0 };
+   Vec<uint8_t> isIntegral{ 0, 0 };
+
+   Vec<double> rhs{ 0, 1, 2 };
+   Vec<uint8_t> lhs_inf{ 1, 1, 1 };
+   Vec<std::string> rowNames{ "A1", "A2", "A3" };
+   Vec<std::string> columnNames{ "c1", "c2" };
+   Vec<std::tuple<int, int, double>> entries{
+       std::tuple<int, int, double>{ 0, 0, 1.0 },
+       std::tuple<int, int, double>{ 0, 1, -1.0 },
+
+       std::tuple<int, int, double>{ 1, 0, -1.0 },
+       std::tuple<int, int, double>{ 1, 1, 1.0 },
+
+       std::tuple<int, int, double>{ 2, 0, -coeff },
+       std::tuple<int, int, double>{ 2, 1, coeff },
+
+   };
+
+   ProblemBuilder<double> pb;
+   pb.reserve( (int)entries.size(), (int)rowNames.size(),
+               (int)columnNames.size() );
+   pb.setNumRows( (int)rowNames.size() );
+   pb.setNumCols( (int)columnNames.size() );
+   pb.setColUbAll( upperBounds );
+   pb.setColLbAll( lowerBounds );
+   pb.setObjAll( coefficients );
+   pb.setObjOffset( 0.0 );
+   pb.setColIntegralAll( isIntegral );
+   pb.setRowLhsInfAll( lhs_inf );
+   pb.setRowRhsAll( rhs );
+   pb.addEntryAll( entries );
+   pb.setColNameAll( columnNames );
+   pb.setProblemName( "parallel rows" );
+   Problem<double> problem = pb.build();
    return problem;
 }
 
@@ -949,9 +1092,10 @@ setupProblemParallelRowWithTwoInequalities( double rhs1, double rhs2,
    };
 
    ProblemBuilder<double> pb;
-   pb.reserve( entries.size(), rowNames.size(), columnNames.size() );
-   pb.setNumRows( rowNames.size() );
-   pb.setNumCols( columnNames.size() );
+   pb.reserve( (int)entries.size(), (int)rowNames.size(),
+               (int)columnNames.size() );
+   pb.setNumRows( (int)rowNames.size() );
+   pb.setNumCols( (int)columnNames.size() );
    pb.setColUbAll( upperBounds );
    pb.setColLbAll( lowerBounds );
    pb.setObjAll( coefficients );
@@ -979,10 +1123,10 @@ setupProblemParallelRowWithMixed( bool firstRowEquation, double lhsIneq,
    Vec<uint8_t> isIntegral{ 1, 1, 1 };
    double rhs1 = firstRowEquation ? factorEquation : rhsIneq;
    double lhs1 = firstRowEquation ? factorEquation : lhsIneq;
-   double rhs2 = (! firstRowEquation) ? factorEquation : rhsIneq;
-   double lhs2 = (! firstRowEquation) ? factorEquation : lhsIneq;
+   double rhs2 = ( !firstRowEquation ) ? factorEquation : rhsIneq;
+   double lhs2 = ( !firstRowEquation ) ? factorEquation : lhsIneq;
    double factor1 = firstRowEquation ? factorEquation : factorIneq;
-   double factor2 = (! firstRowEquation) ? factorEquation : factorIneq;
+   double factor2 = ( !firstRowEquation ) ? factorEquation : factorIneq;
    Vec<double> rhs{ rhs1, 2.0, rhs2 };
    Vec<double> lhs{ lhs1, 2.0, lhs2 };
    Vec<std::string> rowNames{ "A1", "A2", "A3" };
@@ -1001,9 +1145,10 @@ setupProblemParallelRowWithMixed( bool firstRowEquation, double lhsIneq,
    };
 
    ProblemBuilder<double> pb;
-   pb.reserve( entries.size(), rowNames.size(), columnNames.size() );
-   pb.setNumRows( rowNames.size() );
-   pb.setNumCols( columnNames.size() );
+   pb.reserve( (int)entries.size(), (int)rowNames.size(),
+               (int)columnNames.size() );
+   pb.setNumRows( (int)rowNames.size() );
+   pb.setNumCols( (int)columnNames.size() );
    pb.setColUbAll( upperBounds );
    pb.setColLbAll( lowerBounds );
    pb.setObjAll( coefficients );
@@ -1022,8 +1167,8 @@ setupProblemParallelRowWithMixed( bool firstRowEquation, double lhsIneq,
 
 Problem<double>
 setupProblemParallelRowWithInfinity( bool firstRowRhsInfinity, double lhs,
-                                  double rhs, double factorlhs,
-                                  double factorrhs )
+                                     double rhs, double factorlhs,
+                                     double factorrhs )
 {
    Num<double> num{};
    Vec<double> coefficients{ 1.0, 1.0, 1.0 };
@@ -1031,10 +1176,10 @@ setupProblemParallelRowWithInfinity( bool firstRowRhsInfinity, double lhs,
    Vec<double> lowerBounds{ 0.0, 0.0, 0.0 };
 
    Vec<uint8_t> isIntegral{ 1, 1, 1 };
-   Vec<uint8_t> lhs_infinity{ ! firstRowRhsInfinity, 1, firstRowRhsInfinity };
-   Vec<uint8_t> rhs_infinity{ firstRowRhsInfinity, 1, ! firstRowRhsInfinity };
+   Vec<uint8_t> lhs_infinity{ !firstRowRhsInfinity, 1, firstRowRhsInfinity };
+   Vec<uint8_t> rhs_infinity{ firstRowRhsInfinity, 1, !firstRowRhsInfinity };
    double factor1 = firstRowRhsInfinity ? factorlhs : factorrhs;
-   double factor2 = (! firstRowRhsInfinity) ? factorlhs : factorrhs;
+   double factor2 = ( !firstRowRhsInfinity ) ? factorlhs : factorrhs;
    Vec<double> rhs_all{ rhs, 2.0, rhs };
    Vec<double> lhs_all{ lhs, 2.0, lhs };
    Vec<std::string> rowNames{ "A1", "A2", "A3" };
@@ -1053,9 +1198,10 @@ setupProblemParallelRowWithInfinity( bool firstRowRhsInfinity, double lhs,
    };
 
    ProblemBuilder<double> pb;
-   pb.reserve( entries.size(), rowNames.size(), columnNames.size() );
-   pb.setNumRows( rowNames.size() );
-   pb.setNumCols( columnNames.size() );
+   pb.reserve( (int)entries.size(), (int)rowNames.size(),
+               (int)columnNames.size() );
+   pb.setNumRows( (int)rowNames.size() );
+   pb.setNumCols( (int)columnNames.size() );
    pb.setColUbAll( upperBounds );
    pb.setColLbAll( lowerBounds );
    pb.setObjAll( coefficients );

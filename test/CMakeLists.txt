@@ -133,6 +133,8 @@ set(unit_tests
         "parallel-row-overwrite-inf-first-row-lhs-inf"
         "parallel-row-overwrite-inf-first-row-lhs-inf-neg-factor"
         "parallel-row-mixed-infeasible-first-row-equation"
+        "parallel-row-best-bound-is-used-for-rhs-coeff-not-1"
+        "parallel-row-best-bound-is-used-for-rhs-coeff"
         "parallel-row-mixed-second-row-equation"
         "parallel-row-mixed-infeasible-second-row-equation"
         "parallel-row-multiple-parallel-rows"
