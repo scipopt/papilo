@@ -363,7 +363,7 @@ SingletonStuffing<REAL>::execute( const Problem<REAL>& problem,
             bool removevar = true;
 
             assert( !rflags[row].test( RowFlag::kLhsInf ) );
-            assert( rflags[row].test( RowFlag::kRhsInf ) || not num.isEq(rhs, lhs) );
+            assert( rflags[row].test( RowFlag::kRhsInf ) || ! num.isEq(rhs, lhs) );
 
             // check again if row implies more bounds with new right hand
             // side

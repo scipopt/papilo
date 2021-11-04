@@ -344,7 +344,7 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
              int lbfree = colinfo[i].lbfree;
              int ubfree = colinfo[i].ubfree;
 
-             assert( lbfree != 0 or ubfree != 0 );
+             assert( lbfree != 0 || ubfree != 0 );
 
              auto colvec = consMatrix.getColumnCoefficients( i );
              int collen = colvec.getLength();
