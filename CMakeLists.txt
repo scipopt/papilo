@@ -405,11 +405,20 @@ if(PAPILO_HAVE_FLOAT128)
       DESTINATION lib/cmake/papilo)
 endif()
 
-# install tbb dependencies
+# install dependencies
 install(FILES ${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/papilo-config.cmake
    DESTINATION lib/cmake/papilo)
 install(FILES ${PROJECT_SOURCE_DIR}/cmake/Modules/FindTBB.cmake
    DESTINATION lib/cmake/papilo)
+if(MSVC)
+   install(FILES ${TBB_DLL} DESTINATION lib/cmake/papilo)
+   if(EXISTS "${TBB_tbb_DLL}")
+      install(FILES "${TBB_tbb_DLL}" DESTINATION bin)
+   endif()
+   if(EXISTS "${TBB_tbbmalloc_DLL}")
+      install(FILES "${TBB_tbbmalloc_DLL}" DESTINATION bin)
+   endif()
+endif()
 
 # export targets for build-tree linking
 export(TARGETS papilo ${CLUSOL_TARGET} FILE "${CMAKE_BINARY_DIR}/papilo-targets.cmake")
