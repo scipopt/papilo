@@ -404,7 +404,7 @@ Presolve<REAL>::apply( Problem<REAL>& problem, bool store_dual_postsolve )
       if( store_dual_postsolve && problem.getNumIntegralCols() == 0 )
       {
          if( presolveOptions.componentsmaxint == -1 && presolveOptions.detectlindep == 0 &&
-             !are_only_dual_postsolve_presolvers_enabled())
+             are_only_dual_postsolve_presolvers_enabled())
             result.postsolve.postsolveType = PostsolveType::kFull;
          else
             msg.error(
@@ -1391,10 +1391,10 @@ Presolve<REAL>::are_only_dual_postsolve_presolvers_enabled()
    {
       if( presolvers[i]->isEnabled() )
       {
-         if( presolvers[i]->getName().compare( "substitution" ) ||
-             presolvers[i]->getName().compare( "sparsify" ) ||
-             presolvers[i]->getName().compare( "dualinfer" ) ||
-             presolvers[i]->getName().compare( "doubletoneq" ) )
+         if( presolvers[i]->getName().compare( "substitution" ) == 0 ||
+             presolvers[i]->getName().compare( "sparsify" ) == 0 ||
+             presolvers[i]->getName().compare( "dualinfer" ) == 0 ||
+             presolvers[i]->getName().compare( "doubletoneq" ) == 0 )
             return false;
       }
    }
