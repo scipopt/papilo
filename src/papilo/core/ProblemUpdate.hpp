@@ -1385,15 +1385,19 @@ ProblemUpdate<REAL>::trivialRowPresolve()
          status = PresolveStatus::kReduced;
          break;
       case 1:
-         status = removeSingletonRow( row );
-         if( status == PresolveStatus::kInfeasible )
+      {
+         PresolveStatus local_status = removeSingletonRow( row );
+         if( local_status == PresolveStatus::kInfeasible )
          {
             Message::debug(
                 this, "[{}:{}] removeSingletonRow detected infeasible row\n",
                 __FILE__, __LINE__ );
-            return status;
+            return local_status;
          }
+         else if( local_status == PresolveStatus::kReduced )
+            status = local_status;
          break;
+      }
       default:
       {
          RowStatus st = activities[row].checkStatus( num, rflags[row], lhs[row],
@@ -1477,14 +1481,16 @@ ProblemUpdate<REAL>::trivialPresolve()
 
    for( int row : singletonRows )
    {
-      status = removeSingletonRow( row );
-      if( status == PresolveStatus::kInfeasible )
+      PresolveStatus localstatus  = removeSingletonRow( row );
+      if( localstatus == PresolveStatus::kInfeasible )
       {
          Message::debug( this,
                          "[{}:{}] removeSingletonRow detected infeasible row\n",
                          __FILE__, __LINE__ );
          return status;
       }
+      else if( localstatus == PresolveStatus::kReduced )
+         status = PresolveStatus::kReduced;
    }
 
    if( !singletonColumns.empty() )
@@ -1503,10 +1509,12 @@ ProblemUpdate<REAL>::trivialPresolve()
                            numNewSingletonCols );
    }
 
-   status = checkChangedActivities();
-   if( status == PresolveStatus::kInfeasible ||
-       status == PresolveStatus::kUnbndOrInfeas )
+   PresolveStatus localstatus = checkChangedActivities();
+   if( localstatus == PresolveStatus::kInfeasible ||
+       localstatus == PresolveStatus::kUnbndOrInfeas )
       return status;
+   else if( localstatus == PresolveStatus::kReduced )
+      status = PresolveStatus::kReduced;
 
    changed_activities.clear();
 
