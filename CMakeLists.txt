@@ -107,28 +107,37 @@ target_include_directories(papilo INTERFACE
    ${GMP_INCLUDE_DIRS}
    ${Quadmath_INCLUDE_DIRS})
 
-# on windows we don't want to build tbb
-if(WIN32)
-    find_package(TBB 2018 COMPONENTS tbb tbbmalloc REQUIRED)
-else()
-    # Utilities to automatically download missing dependencies
-    include(cmake/Dependencies.cmake)
+option(TBB "should TBB be linked if found" ON)
 
-    find_or_download_package(
-        NAME TBB
-        VERSION 2018
+if (TBB)
+   set(PAPILO_TBB on)
+   # on windows we don't want to build tbb
+   if(WIN32)
+      find_package(TBB 2018 COMPONENTS tbb tbbmalloc REQUIRED)
+   else()
+      # Utilities to automatically download missing dependencies
+      include(cmake/Dependencies.cmake)
+
+      find_or_download_package(
+         NAME TBB
+         VERSION 2018
         URL https://github.com/oneapi-src/oneTBB/archive/refs/tags/v2021.4.0.tar.gz
-        COMPONENTS tbb tbbmalloc
-        URL_HASH SHA256=021796c7845e155e616f5ecda16daa606ebb4c6f90b996e5c08aebab7a8d3de3
-        CONFIGURE_ARGS -DTBB_TEST=OFF -DTBB_EXAMPLES=OFF -DTBB4PY_BUILD=OFF)
+         COMPONENTS tbb tbbmalloc
+         URL_HASH SHA256=021796c7845e155e616f5ecda16daa606ebb4c6f90b996e5c08aebab7a8d3de3
+         CONFIGURE_ARGS -DTBB_TEST=OFF -DTBB_EXAMPLES=OFF -DTBB4PY_BUILD=OFF)
+   endif()
+
+   find_package(Threads REQUIRED)
+
+
+
+   target_link_libraries(papilo
+      INTERFACE TBB::tbb Threads::Threads $<$<PLATFORM_ID:Linux>:rt>)
+   target_link_libraries(papilo
+      INTERFACE ${Quadmath_IMPORTED_TARGET} ${GMP_LIBRARIES})
+else()
+   set(PAPILO_TBB off)
 endif()
-
-find_package(Threads REQUIRED)
-
-target_link_libraries(papilo
-    INTERFACE TBB::tbb Threads::Threads $<$<PLATFORM_ID:Linux>:rt>)
-target_link_libraries(papilo
-    INTERFACE ${Quadmath_IMPORTED_TARGET} ${GMP_LIBRARIES})
 
 # on raspberry pi, we need to link libatomic, as libtbbmalloc_proxy depends on it
 if((CMAKE_HOST_SYSTEM_PROCESSOR STREQUAL "armv7l") AND (CMAKE_SYSTEM_NAME STREQUAL "Linux"))
