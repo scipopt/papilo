@@ -24,7 +24,9 @@
 #ifndef _PAPILO_MISC_TIMER_HPP_
 #define _PAPILO_MISC_TIMER_HPP_
 
+#ifdef PAPILO_TBB
 #include "papilo/misc/tbb.hpp"
+#endif
 
 namespace papilo
 {

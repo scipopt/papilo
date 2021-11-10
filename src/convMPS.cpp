@@ -34,7 +34,9 @@
 #include "papilo/misc/Hash.hpp"
 #include "papilo/misc/Vec.hpp"
 #include "papilo/misc/fmt.hpp"
+#ifdef PAPILO_TBB
 #include "papilo/misc/tbb.hpp"
+#endif
 #include "pdqsort/pdqsort.h"
 #include "tbb/concurrent_unordered_set.h"
 #include <algorithm>

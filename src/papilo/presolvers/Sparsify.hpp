@@ -29,7 +29,9 @@
 #include "papilo/core/ProblemUpdate.hpp"
 #include "papilo/core/SingleRow.hpp"
 #include "papilo/misc/Hash.hpp"
+#ifdef PAPILO_TBB
 #include "papilo/misc/tbb.hpp"
+#endif
 
 namespace papilo
 {

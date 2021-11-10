@@ -30,7 +30,9 @@
 #include "papilo/core/SingleRow.hpp"
 #include "papilo/misc/Hash.hpp"
 #include "papilo/misc/Signature.hpp"
+#ifdef PAPILO_TBB
 #include "papilo/misc/tbb.hpp"
+#endif
 
 namespace papilo
 {

@@ -33,7 +33,9 @@
 #include "papilo/misc/OptionsParser.hpp"
 #include "papilo/misc/VersionLogger.hpp"
 #include "papilo/misc/Wrappers.hpp"
+#ifdef PAPILO_TBB
 #include "papilo/misc/tbb.hpp"
+#endif
 
 #include <boost/program_options.hpp>
 #include <cassert>
