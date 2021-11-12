@@ -18,7 +18,7 @@ include(FindPackageHandleStandardArgs)
 set(TBB_SEARCH_DIR ${TBB_LIBRARY_DIR} ${TBB_ROOT_DIR} ${TBB_DIR} $ENV{TBB_INSTALL_DIR} $ENV{TBBROOT})
 
 # Firstly search for TBB in config mode (i.e. search for TBBConfig.cmake).
-find_package(TBB QUIET CONFIG)
+find_package(TBB CONFIG HINTS ${TBB_SEARCH_DIR})
 if (TBB_FOUND)
     find_package_handle_standard_args(TBB CONFIG_MODE)
     return()
@@ -62,7 +62,18 @@ find_path(_tbb_include_dir
     HINTS ${TBB_SEARCH_DIR}
     PATHS ${ADDITIONAL_INCLUDE_DIRS} ${TBB_DEFAULT_SEARCH_DIR})
 
-if (_tbb_include_dir)
+if(_tbb_include_dir)
+    foreach (_tbb_version_file "${_tbb_include_dir}/oneapi/tbb/version.h" "${_tbb_include_dir}/tbb/tbb_stddef.h")
+        if(EXISTS "${_tbb_version_file}")
+            file(READ "${_tbb_version_file}" _tbb_version_info)
+            break()
+        endif()
+    endforeach()
+    string(REGEX REPLACE ".*#define TBB_VERSION_MAJOR ([0-9]+).*" "\\1" TBB_VERSION_MAJOR "${_tbb_version_info}")
+    string(REGEX REPLACE ".*#define TBB_VERSION_MINOR ([0-9]+).*" "\\1" TBB_VERSION_MINOR "${_tbb_version_info}")
+    string(REGEX REPLACE ".*#define TBB_INTERFACE_VERSION ([0-9]+).*" "\\1" TBB_INTERFACE_VERSION "${_tbb_version_info}")
+    set(TBB_VERSION "${TBB_VERSION_MAJOR}.${TBB_VERSION_MINOR}")
+
     set(_TBB_BUILD_MODES RELEASE DEBUG)
     set(_TBB_DEBUG_SUFFIX _debug)
 
@@ -135,6 +146,6 @@ unset(_tbb_include_dir CACHE)
 list(REMOVE_DUPLICATES TBB_IMPORTED_TARGETS)
 
 find_package_handle_standard_args(TBB
-                                  REQUIRED_VARS
-                                  TBB_IMPORTED_TARGETS
-                                  HANDLE_COMPONENTS)
+    REQUIRED_VARS TBB_IMPORTED_TARGETS
+    VERSION_VAR TBB_VERSION
+    HANDLE_COMPONENTS)
