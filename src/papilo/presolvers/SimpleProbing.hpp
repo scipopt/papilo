@@ -190,7 +190,7 @@ SimpleProbing<REAL>::perform_simple_probing_step(
       assert( cflags[col].test( ColFlag::kIntegral ) );
 
       Message::debug( this,
-                      "probing on simple equation detected {} subsitutions\n",
+                      "probing on simple equation detected {} substitutions\n",
                       rowlen - 1 );
       calculateReductionsForSimpleProbing( num, reductions, domains, activities,
                                            rowvals, rowcols, rowlen, col,

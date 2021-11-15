@@ -99,6 +99,7 @@ Fixed bugs
 - recalculating the activities if the activity is huge to avoid numerical problems
 - fixing bug in stated solutions of solver as infeasible due to numerical issues
 - parsing instance files in rational mode with empty rows successfully
+- SingletonRows: handling values close to zero does not lead to infeasiblity anymore
 
 Miscellaneous
 -------------
