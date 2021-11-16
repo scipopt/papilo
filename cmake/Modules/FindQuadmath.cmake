@@ -47,7 +47,7 @@ if(NOT Quadmath_INCLUDE_DIR OR NOT Quadmath_LIBRARY)
     list(APPEND CMAKE_REQUIRED_LIBRARIES "quadmath")
     CHECK_CXX_SOURCE_COMPILES("
         #include <quadmath.h>
-        
+
         int main(void){
             __float128 foo = ::sqrtq(123.456);
             (void) foo;

@@ -72,9 +72,7 @@ function(find_or_download_package)
         find_package(${ARG_NAME} ${ARG_VERSION} )
     endif()
 
-    if(${ARG_NAME}_FOUND)
-        message(STATUS "Found ${ARG_NAME}")
-    else()
+    if(NOT ${ARG_NAME}_FOUND)
         FetchContent_Declare(
             ${ARG_NAME}
             URL ${ARG_URL}

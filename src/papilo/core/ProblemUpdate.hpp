@@ -1556,7 +1556,10 @@ ProblemUpdate<REAL>::removeSingletonRow( int row )
    if( rflags[row].test( RowFlag::kEquation ) )
    {
       postsolve.storeSavedRow( row, rowvec, lhs, rhs, rflags[row] );
-      status = fixCol( col, rhs / val );
+      REAL fixed_val = rhs / val;
+      if( num.isZero( rhs ) )
+         fixed_val = 0.0;
+      status = fixCol( col, fixed_val );
    }
    else
    {
@@ -1564,30 +1567,41 @@ ProblemUpdate<REAL>::removeSingletonRow( int row )
       {
          if( !isLhsInfinity )
          {
+            REAL fixed_val = lhs / val;
+            if( num.isZero( lhs ) )
+               fixed_val = 0.0;
             postsolve.storeSavedRow( row, rowvec, lhs, rhs, rflags[row] );
-            status = changeUB( col, lhs / val );
+            status = changeUB( col, fixed_val );
          }
 
          if( !isRhsInfinity && status != PresolveStatus::kInfeasible )
          {
+            REAL fixed_val = rhs / val;
+            if( num.isZero( rhs ) )
+               fixed_val = 0.0;
             postsolve.storeSavedRow( row, rowvec, lhs, rhs, rflags[row] );
-            status = changeLB( col, rhs / val );
+            status = changeLB( col, fixed_val );
          }
       }
       else
       {
          assert( val > 0 );
-
          if( !isLhsInfinity )
          {
+            REAL fixed_val = lhs / val;
+            if( num.isZero( lhs ) )
+               fixed_val = 0.0;
             postsolve.storeSavedRow( row, rowvec, lhs, rhs, rflags[row] );
-            status = changeLB( col, lhs / val );
+            status = changeLB( col, fixed_val );
          }
 
          if( !isRhsInfinity && status != PresolveStatus::kInfeasible )
          {
+            REAL fixed_val = rhs / val;
+            if( num.isZero( rhs ) )
+               fixed_val = 0.0;
             postsolve.storeSavedRow( row, rowvec, lhs, rhs, rflags[row] );
-            status = changeUB( col, rhs / val );
+            status = changeUB( col, fixed_val );
          }
       }
    }
