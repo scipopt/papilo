@@ -1,7 +1,7 @@
-@page RNNEXT Release notes for PAPILO NEXT
+@page RN20 Release notes for PAPILO 2.0
 
-@section RNNEXT PAPILO NEXT
-**************************************************
+@section RN200 PaPILO 2.0.0
+***************************
 
 Features
 --------
@@ -117,8 +117,7 @@ Known bugs
 - parsing MPS Files where in the Bound section the rows doesn't start with an identifier (for example: "R") fail
 - solution value for the instance etamarco differs slightly (-755.7152333749133350792583667773 vs -755.715233354415 )
 
-@section RN100 PaPILO 1.0.0
-**************************************************
+@page RN10 Release notes for PAPILO 1.0
 
 Features
 --------
