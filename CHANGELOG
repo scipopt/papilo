@@ -1,3 +1,40 @@
+@section RNNDEV PaPILO next release develop
+***************************
+
+Features
+--------
+
+### Parameters with default values
+
+Performance improvements
+------------------------
+
+Interface changes
+-----------------
+### Deleted and changed API methods
+### New API functions
+### Changed parameters
+### New parameters with default values
+### Data structures
+
+Unit tests
+----------
+
+Testing
+-------
+
+Build system
+------------
+
+Fixed bugs
+----------
+
+Miscellaneous
+-------------
+
+Known bugs
+----------
+
 @page RN20 Release notes for PAPILO 2.0
 
 @section RN200 PaPILO 2.0.0
