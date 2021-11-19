@@ -77,15 +77,11 @@ ImplIntDetection<REAL>::execute( const Problem<REAL>& problem,
    const auto& lower_bounds = domains.lower_bounds;
    const auto& upper_bounds = domains.upper_bounds;
    const auto& cflags = domains.flags;
-   const auto& domainFlags = domains.flags;
-
-   const auto& activities = problem.getRowActivities();
 
    const auto& consmatrix = problem.getConstraintMatrix();
    const auto& lhs_values = consmatrix.getLeftHandSides();
    const auto& rhs_values = consmatrix.getRightHandSides();
    const auto& rflags = consmatrix.getRowFlags();
-   const auto& nrows = consmatrix.getNRows();
    const auto& ncols = consmatrix.getNCols();
 
    PresolveStatus result = PresolveStatus::kUnchanged;

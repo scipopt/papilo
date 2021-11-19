@@ -36,7 +36,7 @@ struct ArrayDeleter
 {
    std::size_t size;
 
-   ArrayDeleter( std::size_t size ) : size( size ) {}
+   ArrayDeleter( std::size_t _size ) : size( _size ) {}
 
    void
    operator()( T* p )

@@ -24,6 +24,9 @@
 #ifndef _PAPILO_CORE_CONSTRAINT_MATRIX_HPP_
 #define _PAPILO_CORE_CONSTRAINT_MATRIX_HPP_
 
+#define UNUSED(expr) do { (void)(expr); } while (0)
+
+
 #include "papilo/core/MatrixBuffer.hpp"
 #include "papilo/core/Objective.hpp"
 #include "papilo/core/PresolveMethod.hpp"
@@ -1125,6 +1128,7 @@ ConstraintMatrix<REAL>::sparsify(
              },
              []( int, int, REAL, REAL ) {} );
 
+         UNUSED(newsize);
          assert( newsize == colsize[col] );
 
          ++j;
@@ -1282,7 +1286,7 @@ ConstraintMatrix<REAL>::aggregate(
       if( num.isZero( val ) )
          return REAL{ 0 };
 
-      return std::move( val );
+      return val;
    };
 
    const auto& freecol = getColumnCoefficients( substituted_col );
