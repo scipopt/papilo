@@ -293,6 +293,8 @@ DualFix<REAL>::perform_dual_fix_step(
          case 1:
             if( boundinf )
                break;
+            skip_variable = true;
+            return;
          default:
             // If one of the other variables with non-zero entry is
             // unbounded, dual bound strengthening is not possible for this
