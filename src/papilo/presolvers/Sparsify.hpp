@@ -208,10 +208,10 @@ Sparsify<REAL>::execute( const Problem<REAL>& problem,
                 if( nbin + nint == 0 )
                 {
                    auto it = std::remove_if( candrows.begin(), candrows.end(),
-                                             [&]( int r ) {
-                                                if( candrowhits[r] < ncont - 1 )
+                                             [&]( int _r ) {
+                                                if( candrowhits[_r] < ncont - 1 )
                                                 {
-                                                   candrowhits[r] = 0;
+                                                   candrowhits[_r] = 0;
                                                    return true;
                                                 }
                                                 return false;
@@ -224,14 +224,14 @@ Sparsify<REAL>::execute( const Problem<REAL>& problem,
                 else
                 {
                    auto it = std::remove_if(
-                       candrows.begin(), candrows.end(), [&]( int r ) {
-                          if( candrowhits[r] < nbin + ncont - 1 )
+                       candrows.begin(), candrows.end(), [&]( int _r ) {
+                          if( candrowhits[_r] < nbin + ncont - 1 )
                           {
-                             candrowhits[r] = 0;
+                             candrowhits[_r] = 0;
                              return true;
                           }
                           if( cancelint )
-                             candrowhits[r] = nbin + ncont;
+                             candrowhits[_r] = nbin + ncont;
                           return false;
                        } );
 
@@ -276,10 +276,10 @@ Sparsify<REAL>::execute( const Problem<REAL>& problem,
                 }
 
                 auto it = std::remove_if( candrows.begin(), candrows.end(),
-                                          [&]( int r ) {
-                                             if( candrowhits[r] < minhits )
+                                          [&]( int _r ) {
+                                             if( candrowhits[_r] < minhits )
                                              {
-                                                candrowhits[r] = 0;
+                                                candrowhits[_r] = 0;
                                                 return true;
                                              }
                                              return false;
