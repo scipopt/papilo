@@ -112,9 +112,9 @@ else()
     find_or_download_package(
         NAME TBB
         VERSION 2018
-        URL https://github.com/oneapi-src/oneTBB/archive/refs/tags/v2021.3.0.tar.gz
+        URL https://github.com/oneapi-src/oneTBB/archive/refs/tags/v2021.4.0.tar.gz
         COMPONENTS tbb tbbmalloc
-        URL_HASH SHA256=8f616561603695bbb83871875d2c6051ea28f8187dbe59299961369904d1d49e
+        URL_HASH SHA256=021796c7845e155e616f5ecda16daa606ebb4c6f90b996e5c08aebab7a8d3de3
         CONFIGURE_ARGS -DTBB_TEST=OFF -DTBB_EXAMPLES=OFF -DTBB4PY_BUILD=OFF)
 endif()
 
@@ -424,8 +424,8 @@ endif()
 # export targets for build-tree linking
 export(TARGETS papilo ${CLUSOL_TARGET} FILE "${CMAKE_BINARY_DIR}/papilo-targets.cmake")
 
-if(${TBB_DOWNLOADED})
-   install(DIRECTORY ${CMAKE_BINARY_DIR}/_deps DESTINATION .)
+if(EXISTS ${CMAKE_BINARY_DIR}/_deps)
+   install(DIRECTORY ${CMAKE_BINARY_DIR}/_deps DESTINATION lib/cmake/papilo/)
 endif()
 
 # install targets
