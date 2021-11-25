@@ -104,7 +104,7 @@ target_include_directories(papilo INTERFACE
 
 # on windows we don't want to build tbb
 if(WIN32)
-    find_package(TBB 2018 COMPONENTS tbb tbbmalloc REQUIRED HINTS ${TBB_DIR})
+    find_package(TBB 2018 COMPONENTS tbb tbbmalloc REQUIRED)
 else()
     # Utilities to automatically download missing dependencies
     include(cmake/Dependencies.cmake)
