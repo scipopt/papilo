@@ -100,6 +100,7 @@ Fixed bugs
 - fixing bug in stated solutions of solver as infeasible due to numerical issues
 - parsing instance files in rational mode with empty rows successfully
 - SingletonRows: handling values close to zero does not lead to infeasiblity anymore
+- setting the timelimit via the parameter file is not clashing with the command timelimit any more
 
 Miscellaneous
 -------------
