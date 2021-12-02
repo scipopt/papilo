@@ -198,7 +198,8 @@ presolve_and_solve(
       presolve.setLPSolverFactory( std::move( lpSolverFactory ) );
       presolve.setMIPSolverFactory( std::move( mipSolverFactory ) );
 
-      presolve.getPresolveOptions().tlim = opts.tlim;
+      presolve.getPresolveOptions().tlim =
+          std::min( opts.tlim, presolve.getPresolveOptions().tlim );
 
       auto result = presolve.apply( problem );
 
