@@ -421,10 +421,10 @@ ParallelRowDetection<REAL>::execute( const Problem<REAL>& problem,
                swap( scaled_lhs_inf, scaled_rhs_inf );
             if( ( !rflags[remaining_row].test( RowFlag::kRhsInf ) &&
                   !scaled_lhs_inf &&
-                  num.isFeasLT( rhs_value, scaled_lhs ) ) ||
+                  num.isLT( rhs_value, scaled_lhs ) ) ||
                 ( !rflags[remaining_row].test( RowFlag::kLhsInf ) &&
                   !scaled_rhs_inf &&
-                  num.isFeasLT( scaled_rhs, lhs_value ) ) )
+                  num.isLT( scaled_rhs, lhs_value ) ) )
             {
                result = PresolveStatus::kInfeasible;
                break;
