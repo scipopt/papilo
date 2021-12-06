@@ -360,7 +360,7 @@ class ConstraintMatrix
    compress( bool full = false );
 
    void
-   deleteRowsAndCols( Vec<int>& deletedRows, Vec<int>& deletedColumns,
+   deleteRowsAndCols( Vec<int>& deletedRows, Vec<int>& deletedCols,
                       Vec<RowActivity<REAL>>& activities,
                       Vec<int>& singletonRows, Vec<int>& singletonCols,
                       Vec<int>& emptyCols );
@@ -432,6 +432,8 @@ class ConstraintMatrix
                       break;
                    case 1:
                       singletonRows.push_back( row );
+                   default:
+                      break;
                    }
 
                    rowsize[row] = newsize;
@@ -765,7 +767,9 @@ ConstraintMatrix<REAL>::deleteRowsAndCols( Vec<int>& deletedRows,
                 break;
              case 1:
                 singletonCols.push_back( col );
-             default:
+             }
+
+             if( colsize[col] >= 1 )
              {
                 // now move contents of column to occupy free spaces
                 int j = 0;
@@ -788,7 +792,6 @@ ConstraintMatrix<REAL>::deleteRowsAndCols( Vec<int>& deletedRows,
                         colranges[col].end - j );
 
                 colranges[col].end = colranges[col].start + colsize[col];
-             }
              }
           }
        },
