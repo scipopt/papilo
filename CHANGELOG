@@ -130,13 +130,15 @@ Fixed bugs
 
 - DomCol: adding additional locks in DomCol to prevent applying false reductions
 - SingletonCol: reordering bound changes in presolvers to avoid infeasibility when applying the changes to the data structure
-- SingletonCol: using Numerics functions (including epsilson) for Less/greater-or-equal to avoid slightly false objective values
+- SingletonCol: using Numerics functions (including epsilon) for Less/greater-or-equal to avoid slightly false objective values
 - SingletonStuffing: reordering bound changes in presolvers to avoid infeasibility when applying the changes to the data structure
 - SimpleProbing: handling the case (coefficients <= 0) correctly
 - recalculating the activities if the activity is huge to avoid numerical problems
 - fixing bug in stated solutions of solver as infeasible due to numerical issues
 - parsing instance files in rational mode with empty rows successfully
-- SingletonRows: handling values close to zero does not lead to infeasiblity anymore
+- SingletonRows: handling values close to zero does not lead to infeasibility anymore
+- setting the time-limit via the parameter file is not clashing with the command time-limit any more
+- ParallelRowDetection: using epsilon tolerance to avoid that the lhs is greater than the rhs
 
 Miscellaneous
 -------------
