@@ -1024,7 +1024,6 @@ PresolveStatus
 Presolve<REAL>::apply_all_presolver_reductions(
     ProblemUpdate<REAL>& probUpdate )
 {
-   // TODO: why is this isn't set globally
    probUpdate.setPostponeSubstitutions( true );
 
    postponedReductionToPresolver.push_back( 0 );
