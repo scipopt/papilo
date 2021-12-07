@@ -726,7 +726,7 @@ ProbingView<REAL>::propagateDomains()
              probing_activities[candrow], lhs[candrow], rhs[candrow],
              rflags[candrow], probing_lower_bounds, probing_upper_bounds,
              probing_domain_flags,
-             [this, &nchgs]( BoundChange bndChg, int colid, REAL newbound , int row ) {
+             [this]( BoundChange bndChg, int colid, REAL newbound , int row ) {
                 if( num.isHugeVal( newbound ) )
                    return;
 
