@@ -238,7 +238,6 @@ ParallelColDetection<REAL>::findParallelCols(
    // only continuous columns
    if( !cflags[bucket[bucketSize - 1]].test( ColFlag::kIntegral ) )
    {
-
       int col1 = bucket[0];
       auto col1vec = constMatrix.getColumnCoefficients( col1 );
       const int length = col1vec.getLength();
@@ -263,9 +262,17 @@ ParallelColDetection<REAL>::findParallelCols(
    // only integer columns
    else if( cflags[bucket[0]].test( ColFlag::kIntegral ) )
    {
+      bool abort_after_first_loop = true;
+      int first_loop = -1;
       for( int i = 0; i < bucketSize; i++ )
       {
          int col1 = bucket[i];
+         if(cflags[col1].test( ColFlag::kLbInf, ColFlag::kUbInf ))
+            continue;
+         if( first_loop == -1 )
+            first_loop = i;
+         if( i == first_loop + 1 and abort_after_first_loop )
+            break;
          auto col1vec = constMatrix.getColumnCoefficients( col1 );
          const int length = col1vec.getLength();
          const REAL* coefs1 = col1vec.getValues();
@@ -278,10 +285,8 @@ ParallelColDetection<REAL>::findParallelCols(
             assert( cflags[col2].test( ColFlag::kIntegral ) );
             assert( num.isLE( abs( coefs1[0] ), abs( coefs2[0] ) ) );
 
-            // if scalefactor is not 1 then it is necessary to call
-            // checkholes and therefore this requirements needs to be checked
-            if( cflags[col1].test( ColFlag::kLbInf, ColFlag::kUbInf ) ||
-                cflags[col2].test( ColFlag::kLbInf, ColFlag::kUbInf ) )
+
+            if( cflags[col2].test( ColFlag::kLbInf, ColFlag::kUbInf ) )
                continue;
 
             bool parallel = check_parallelity( num, obj, col1, length, coefs1,
@@ -293,6 +298,9 @@ ParallelColDetection<REAL>::findParallelCols(
                reductions.lockCol( col2 );
                reductions.lockCol( col1 );
                reductions.mark_parallel_cols( col2, col1 );
+            }
+            else {
+               abort_after_first_loop = false;
             }
          }
       }
