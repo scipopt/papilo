@@ -121,18 +121,6 @@ endif()
 
 find_package(Threads REQUIRED)
 
-if(INSTALL_TBB AND CMAKE_SYSTEM_NAME STREQUAL "Windows")
-   file(TO_CMAKE_PATH "$ENV{TBBROOT}" TBB_ROOTDIR)
-   if(CMAKE_CL_64)
-      set(TBB_DLL "${TBB_ROOTDIR}/../redist/intel64/tbb/vc_mt/tbb.dll")
-   else()
-      set(TBB_DLL "${TBB_ROOTDIR}/../redist/ia32/tbb/vc_mt/tbb.dll")
-   endif()
-   if(EXISTS "${TBB_TBB_DLL}")
-      install(FILES "${TBB_DLL}" DESTINATION bin)
-   endif()
-endif()
-
 target_link_libraries(papilo
     INTERFACE TBB::tbb Threads::Threads $<$<PLATFORM_ID:Linux>:rt>)
 target_link_libraries(papilo
@@ -410,10 +398,10 @@ endif()
 # install dependencies
 install(FILES ${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/papilo-config.cmake
    DESTINATION lib/cmake/papilo)
+
 install(FILES ${PROJECT_SOURCE_DIR}/cmake/Modules/FindTBB.cmake
    DESTINATION lib/cmake/papilo)
-if(MSVC)
-   install(FILES ${TBB_DLL} DESTINATION lib/cmake/papilo)
+if(INSTALL_TBB AND CMAKE_SYSTEM_NAME STREQUAL "Windows")
    if(EXISTS "${TBB_tbb_DLL}")
       install(FILES "${TBB_tbb_DLL}" DESTINATION bin)
    endif()
