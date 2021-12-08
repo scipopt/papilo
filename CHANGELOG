@@ -9,6 +9,8 @@ Features
 Performance improvements
 ------------------------
 
+- ParallelCol: reducing the amount of redundant transactions in case of multiple parallel integer columns
+
 Interface changes
 -----------------
 ### Deleted and changed API methods
