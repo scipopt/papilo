@@ -262,12 +262,16 @@ ParallelColDetection<REAL>::findParallelCols(
    // only integer columns
    else if( cflags[bucket[0]].test( ColFlag::kIntegral ) )
    {
+      // to avoid adding redundant tsxs in case of multiple parallel cols
+      // all tsxs only refer to the first col in the bucket IF it is possible
+      // to construct a tsxs between the first and the remaining ones
       bool abort_after_first_loop = true;
       int first_loop = -1;
+
       for( int i = 0; i < bucketSize; i++ )
       {
          int col1 = bucket[i];
-         if(cflags[col1].test( ColFlag::kLbInf, ColFlag::kUbInf ))
+         if( cflags[col1].test( ColFlag::kLbInf, ColFlag::kUbInf ) )
             continue;
          if( first_loop == -1 )
             first_loop = i;
@@ -299,9 +303,8 @@ ParallelColDetection<REAL>::findParallelCols(
                reductions.lockCol( col1 );
                reductions.mark_parallel_cols( col2, col1 );
             }
-            else {
+            else
                abort_after_first_loop = false;
-            }
          }
       }
       return;
@@ -448,7 +451,6 @@ ParallelColDetection<REAL>::computeColHashes(
                 // where two coefficients that are equal
                 // within epsilon get different values are
                 // more unlikely by choose some irrational number
-                // TODO: define constant
                 REAL scale = REAL( 2.0 / ( 1.0 + sqrt( 5.0 ) ) ) / values[0];
 
                 // add scaled coefficients of other row
