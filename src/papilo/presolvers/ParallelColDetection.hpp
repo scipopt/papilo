@@ -275,7 +275,7 @@ ParallelColDetection<REAL>::findParallelCols(
             continue;
          if( first_loop == -1 )
             first_loop = i;
-         if( i == first_loop + 1 and abort_after_first_loop )
+         if( i == first_loop + 1 && abort_after_first_loop )
             break;
          auto col1vec = constMatrix.getColumnCoefficients( col1 );
          const int length = col1vec.getLength();
