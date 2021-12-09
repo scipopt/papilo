@@ -238,7 +238,6 @@ ParallelColDetection<REAL>::findParallelCols(
    // only continuous columns
    if( !cflags[bucket[bucketSize - 1]].test( ColFlag::kIntegral ) )
    {
-
       int col1 = bucket[0];
       auto col1vec = constMatrix.getColumnCoefficients( col1 );
       const int length = col1vec.getLength();
@@ -263,9 +262,21 @@ ParallelColDetection<REAL>::findParallelCols(
    // only integer columns
    else if( cflags[bucket[0]].test( ColFlag::kIntegral ) )
    {
+      // to avoid adding redundant tsxs in case of multiple parallel cols
+      // all tsxs only refer to the first col in the bucket IF it is possible
+      // to construct a tsxs between the first and the remaining ones
+      bool abort_after_first_loop = true;
+      int first_col_with_finite_bounds = -1;
+
       for( int i = 0; i < bucketSize; i++ )
       {
          int col1 = bucket[i];
+         if( cflags[col1].test( ColFlag::kLbInf, ColFlag::kUbInf ) )
+            continue;
+         if( first_col_with_finite_bounds == -1 )
+            first_col_with_finite_bounds = i;
+         if( i == first_col_with_finite_bounds + 1 && abort_after_first_loop )
+            break;
          auto col1vec = constMatrix.getColumnCoefficients( col1 );
          const int length = col1vec.getLength();
          const REAL* coefs1 = col1vec.getValues();
@@ -278,10 +289,8 @@ ParallelColDetection<REAL>::findParallelCols(
             assert( cflags[col2].test( ColFlag::kIntegral ) );
             assert( num.isLE( abs( coefs1[0] ), abs( coefs2[0] ) ) );
 
-            // if scalefactor is not 1 then it is necessary to call
-            // checkholes and therefore this requirements needs to be checked
-            if( cflags[col1].test( ColFlag::kLbInf, ColFlag::kUbInf ) ||
-                cflags[col2].test( ColFlag::kLbInf, ColFlag::kUbInf ) )
+
+            if( cflags[col2].test( ColFlag::kLbInf, ColFlag::kUbInf ) )
                continue;
 
             bool parallel = check_parallelity( num, obj, col1, length, coefs1,
@@ -294,6 +303,8 @@ ParallelColDetection<REAL>::findParallelCols(
                reductions.lockCol( col1 );
                reductions.mark_parallel_cols( col2, col1 );
             }
+            else
+               abort_after_first_loop = false;
          }
       }
       return;
@@ -440,7 +451,6 @@ ParallelColDetection<REAL>::computeColHashes(
                 // where two coefficients that are equal
                 // within epsilon get different values are
                 // more unlikely by choose some irrational number
-                // TODO: define constant
                 REAL scale = REAL( 2.0 / ( 1.0 + sqrt( 5.0 ) ) ) / values[0];
 
                 // add scaled coefficients of other row
