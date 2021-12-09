@@ -266,16 +266,16 @@ ParallelColDetection<REAL>::findParallelCols(
       // all tsxs only refer to the first col in the bucket IF it is possible
       // to construct a tsxs between the first and the remaining ones
       bool abort_after_first_loop = true;
-      int first_loop = -1;
+      int first_col_with_finite_bounds = -1;
 
       for( int i = 0; i < bucketSize; i++ )
       {
          int col1 = bucket[i];
          if( cflags[col1].test( ColFlag::kLbInf, ColFlag::kUbInf ) )
             continue;
-         if( first_loop == -1 )
-            first_loop = i;
-         if( i == first_loop + 1 && abort_after_first_loop )
+         if( first_col_with_finite_bounds == -1 )
+            first_col_with_finite_bounds = i;
+         if( i == first_col_with_finite_bounds + 1 && abort_after_first_loop )
             break;
          auto col1vec = constMatrix.getColumnCoefficients( col1 );
          const int length = col1vec.getLength();
