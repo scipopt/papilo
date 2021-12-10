@@ -26,11 +26,14 @@
 
 #ifdef PAPILO_TBB
 #include "papilo/misc/tbb.hpp"
+#else
+#include <chrono>
 #endif
 
 namespace papilo
 {
 
+#ifdef PAPILO_TBB
 class Timer
 {
  public:
@@ -48,6 +51,31 @@ class Timer
    tbb::tick_count start;
    double& time;
 };
+#else
+class Timer
+{
+ public:
+   Timer( double& time_ ) : time( time_ ) { start = std::chrono::steady_clock::now(); }
+
+   double
+   getTime() const
+   {
+      return std::chrono::duration_cast<std::chrono::milliseconds>(
+                 std::chrono::steady_clock::now() - start )
+                 .count() /1000.0;
+   }
+
+   ~Timer() {
+      time += std::chrono::duration_cast<std::chrono::milliseconds>(
+                  std::chrono::steady_clock::now() - start )
+                  .count() /1000.0;
+   }
+
+ private:
+   std::chrono::steady_clock::time_point start;
+   double& time;
+};
+#endif
 
 } // namespace papilo
 

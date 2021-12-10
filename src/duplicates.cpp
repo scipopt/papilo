@@ -210,10 +210,14 @@ compute_row_and_column_permutation( const Problem<double>& prob, bool verbose )
 
    while( nrows2 != 0 )
    {
+#ifdef PAPILO_TBB
       tbb::parallel_for(
           tbb::blocked_range<int>( 0, nrows2 ),
           [&]( const tbb::blocked_range<int>& r ) {
              for( int i = r.begin(); i != r.end(); ++i )
+#else
+                for( int i = 0; i < nrows2; ++i )
+#endif
              {
                 int row = rowperm[i];
                 int start = csrstarts[row];
@@ -229,7 +233,9 @@ compute_row_and_column_permutation( const Problem<double>& prob, bool verbose )
 
                 rowhashes[row] = hasher.getHash() >> 1;
              }
+#ifdef PAPILO_TBB
           } );
+#endif
       distinct_row_hashes.clear();
 
       for( size_t i = 0; i < nrows2; ++i )
@@ -270,10 +276,14 @@ compute_row_and_column_permutation( const Problem<double>& prob, bool verbose )
       if( ncols2 == 0 )
          break;
 
+#ifdef PAPILO_TBB
       tbb::parallel_for(
           tbb::blocked_range<int>( 0, ncols2 ),
           [&]( const tbb::blocked_range<int>& r ) {
              for( int i = r.begin(); i != r.end(); ++i )
+#else
+                for( int i = 0; i < ncols; ++i )
+#endif
              {
                 int col = colperm[i];
                 int start = cscstarts[col];
@@ -289,7 +299,9 @@ compute_row_and_column_permutation( const Problem<double>& prob, bool verbose )
 
                 colhashes[col] = hasher.getHash() >> 1;
              }
+#ifdef PAPILO_TBB
           } );
+#endif
       distinct_hashes.clear();
 
       for( size_t i = 0; i < ncols2; ++i )
@@ -806,10 +818,14 @@ compute_instancehash( const Problem<double>& prob )
    // Compute column and row hashes
    while( nrows2 != 0 && iters <= MAX_HASH_ITERS )
    {
+#ifdef PAPILO_TBB
       tbb::parallel_for(
           tbb::blocked_range<int>( 0, nrows2 ),
           [&]( const tbb::blocked_range<int>& r ) {
              for( int i = r.begin(); i != r.end(); ++i )
+#else
+                for( int i = 0; i < nrows2; ++i )
+#endif
              {
                 int row = rowperm[i];
                 int start = csrstarts[row];
@@ -825,7 +841,9 @@ compute_instancehash( const Problem<double>& prob )
 
                 rowhashes[row] = hasher.getHash() >> 1;
              }
+#ifdef PAPILO_TBB
           } );
+#endif
 
       distinct_row_hashes.clear();
 
@@ -867,10 +885,14 @@ compute_instancehash( const Problem<double>& prob )
       if( ncols2 == 0 )
          break;
 
+#ifdef PAPILO_TBB
       tbb::parallel_for(
           tbb::blocked_range<int>( 0, ncols2 ),
           [&]( const tbb::blocked_range<int>& r ) {
              for( int i = r.begin(); i != r.end(); ++i )
+#else
+       for( int i = 0; i < ncols; ++i )
+#endif
              {
                 int col = colperm[i];
                 int start = cscstarts[col];
@@ -886,8 +908,9 @@ compute_instancehash( const Problem<double>& prob )
 
                 colhashes[col] = hasher.getHash() >> 1;
              }
+#ifdef PAPILO_TBB
           } );
-
+#endif
       distinct_col_hashes.clear();
 
       for( size_t i = 0; i < ncols2; ++i )

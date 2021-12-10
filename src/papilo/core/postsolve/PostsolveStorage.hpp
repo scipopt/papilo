@@ -197,6 +197,7 @@ class PostsolveStorage
    compress( const Vec<int>& rowmapping, const Vec<int>& colmapping,
              bool full = false )
    {
+#ifdef PAPILO_TBB
       tbb::parallel_invoke(
           [this, &colmapping, full]() {
              compress_vector( colmapping, origcol_mapping );
@@ -209,6 +210,15 @@ class PostsolveStorage
              if( full )
                 origrow_mapping.shrink_to_fit();
           } );
+#else
+      compress_vector( colmapping, origcol_mapping );
+      compress_vector( rowmapping, origrow_mapping );
+      if( full )
+      {
+         origrow_mapping.shrink_to_fit();
+         origcol_mapping.shrink_to_fit();
+      }
+#endif
    }
 
    template <typename Archive>

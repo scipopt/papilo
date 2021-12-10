@@ -108,6 +108,10 @@ SimpleSubstitution<REAL>::execute( const Problem<REAL>& problem,
 
    PresolveStatus result = PresolveStatus::kUnchanged;
 
+#ifndef PAPILO_TBB
+   assert( problemUpdate.getPresolveOptions().runs_sequentiell() );
+#endif
+
    if( problemUpdate.getPresolveOptions().runs_sequentiell() ||
        !problemUpdate.getPresolveOptions().simple_substitution_parallel )
    {
@@ -123,6 +127,7 @@ SimpleSubstitution<REAL>::execute( const Problem<REAL>& problem,
             return PresolveStatus::kInfeasible;
       }
    }
+#ifdef PAPILO_TBB
    else
    {
       PresolveStatus infeasible = PresolveStatus::kUnchanged;
@@ -170,6 +175,7 @@ SimpleSubstitution<REAL>::execute( const Problem<REAL>& problem,
          }
       }
    }
+#endif
 
    return result;
 }

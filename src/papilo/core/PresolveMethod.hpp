@@ -34,8 +34,11 @@
 #include "papilo/misc/fmt.hpp"
 #ifdef PAPILO_TBB
 #include "papilo/misc/tbb.hpp"
+#else
+#include <chrono>
 #endif
 #include <bitset>
+
 
 namespace papilo
 {
@@ -151,12 +154,23 @@ class PresolveMethod
 
       ++ncalls;
 
+#ifdef PAPILO_TBB
       auto start = tbb::tick_count::now();
+#else
+      auto start = std::chrono::steady_clock::now();
+#endif
       PresolveStatus result =
           execute( problem, problemUpdate, num, reductions );
+#ifdef PAPILO_TBB
       auto end = tbb::tick_count::now();
       auto duration = end - start;
       execTime = execTime + duration.seconds();
+#else
+      auto end = std::chrono::steady_clock::now();
+      execTime = execTime + std::chrono::duration_cast<std::chrono::milliseconds>(
+                                end- start ).count()/1000;
+#endif
+
 
       switch( result )
       {
@@ -268,6 +282,25 @@ class PresolveMethod
       this->skip += nrounds;
    }
 
+   template <typename LOOP>
+   void
+   loop( int start, int end, LOOP&& loop_instruction )
+   {
+#ifdef PAPILO_TBB
+      tbb::parallel_for( tbb::blocked_range<int>( start, end ),
+                         [&]( const tbb::blocked_range<int>& r )
+                         {
+                            for( int i = r.begin(); i != r.end(); ++i )
+                               loop_instruction( i );
+                         } );
+#else
+      for( int i = 0; i < end; i++ )
+      {
+         loop_instruction( i );
+      }
+#endif
+   }
+
  private:
    std::string name;
    double execTime;
@@ -280,7 +313,7 @@ class PresolveMethod
    unsigned int nsuccessCall;
    unsigned int nconsecutiveUnsuccessCall;
    unsigned int skip;
-};
+   };
 
 } // namespace papilo
 

@@ -100,6 +100,7 @@ template <typename REAL>
 void
 VariableDomains<REAL>::compress( const Vec<int>& colmapping, bool full )
 {
+#ifdef PAPILO_TBB
    tbb::parallel_invoke(
        [this, &colmapping, full]() {
           compress_vector( colmapping, lower_bounds );
@@ -116,6 +117,18 @@ VariableDomains<REAL>::compress( const Vec<int>& colmapping, bool full )
           if( full )
              flags.shrink_to_fit();
        } );
+#else
+   compress_vector( colmapping, lower_bounds );
+   compress_vector( colmapping, upper_bounds );
+   compress_vector( colmapping, flags );
+   if( full )
+   {
+      flags.shrink_to_fit();
+      upper_bounds.shrink_to_fit();
+      lower_bounds.shrink_to_fit();
+   }
+
+#endif
 }
 } // namespace papilo
 

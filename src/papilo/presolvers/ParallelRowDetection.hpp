@@ -205,10 +205,14 @@ void
 ParallelRowDetection<REAL>::computeRowHashes(
     const ConstraintMatrix<REAL>& constMatrix, unsigned int* rowhashes )
 {
+#ifdef PAPILO_TBB
    tbb::parallel_for(
        tbb::blocked_range<int>( 0, constMatrix.getNRows() ),
        [&]( const tbb::blocked_range<int>& r ) {
           for( int i = r.begin(); i != r.end(); ++i )
+#else
+   for( int i = 0; i != constMatrix.getNRows(); ++i )
+#endif
           {
              // compute hash-value for coefficients
 
@@ -240,7 +244,9 @@ ParallelRowDetection<REAL>::computeRowHashes(
 
              rowhashes[i] = hasher.getHash();
           }
+#ifdef PAPILO_TBB
        } );
+#endif
 }
 
 template <typename REAL>
@@ -268,44 +274,6 @@ ParallelRowDetection<REAL>::computeSupportId(
       else // support already exists, use the previous support id
          supporthashes[i] = insResult.first->second;
    }
-}
-
-template <typename REAL>
-void
-ParallelRowDetection<REAL>::computeSupportIdParallel(
-    const ConstraintMatrix<REAL>& constMatrix, unsigned int* supportid )
-{
-   using SupportMap =
-       tbb::concurrent_hash_map<std::pair<int, const int*>, unsigned int,
-                                SupportHashCompare>;
-
-   SupportMap supportMap( constMatrix.getNRows() * 2 );
-
-   tbb::parallel_for(
-       tbb::blocked_range<int>( 0, constMatrix.getNRows() ),
-       [&]( const tbb::blocked_range<int>& r ) {
-          for( int i = r.begin(); i != r.end(); ++i )
-          {
-             unsigned int thissupportid;
-             auto row = constMatrix.getRowCoefficients( i );
-             int length = row.getLength();
-             const int* support = row.getIndices();
-
-             {
-                typename SupportMap::const_accessor a;
-                if( supportMap.insert(
-                        a, std::make_pair( std::make_pair( length, support ),
-                                           i ) ) )
-                {
-                   thissupportid = i;
-                }
-                else
-                   thissupportid = a->second;
-             }
-
-             supportid[i] = thissupportid;
-          }
-       } );
 }
 
 template <typename REAL>
@@ -527,6 +495,7 @@ ParallelRowDetection<REAL>::execute( const Problem<REAL>& problem,
    std::unique_ptr<unsigned int[]> coefhash{ new unsigned int[nRows] };
    std::unique_ptr<int[]> row{ new int[nRows] };
 
+#ifdef PAPILO_TBB
    tbb::parallel_invoke(
        [nRows, &row]() {
           for( int i = 0; i < nRows; ++i )
@@ -537,9 +506,13 @@ ParallelRowDetection<REAL>::execute( const Problem<REAL>& problem,
        },
        [&constMatrix, &supportid, this]() {
           computeSupportId( constMatrix, supportid.get() );
-          // TODO why deactivated?
-          // computeSupportIdParallel( constMatrix, supportid.get() );
        } );
+#else
+   for( int i = 0; i < nRows; ++i )
+      row[i] = i;
+   computeRowHashes( constMatrix, coefhash.get() );
+   computeSupportId( constMatrix, supportid.get() );
+#endif
 
    pdqsort( row.get(), row.get() + nRows, [&]( int a, int b ) {
       return supportid[a] < supportid[b] ||

@@ -433,10 +433,14 @@ ParallelColDetection<REAL>::computeColHashes(
     const ConstraintMatrix<REAL>& constMatrix, const Vec<REAL>& obj,
     unsigned int* columnHashes )
 {
+#ifdef PAPILO_TBB
    tbb::parallel_for(
        tbb::blocked_range<int>( 0, constMatrix.getNCols() ),
        [&]( const tbb::blocked_range<int>& r ) {
-          for( int i = r.begin(); i != r.end(); ++i )
+          for( int i = r.begin(); i < r.end(); ++i )
+#else
+   for( int i = 0; i< constMatrix.getNCols(); i++)
+#endif
           {
              // compute hash-value for coefficients
              auto columnCoefficients = constMatrix.getColumnCoefficients( i );
@@ -467,7 +471,9 @@ ParallelColDetection<REAL>::computeColHashes(
 
              columnHashes[i] = hasher.getHash();
           }
+#ifdef PAPILO_TBB
        } );
+#endif
 }
 
 template <typename REAL>
@@ -522,6 +528,7 @@ ParallelColDetection<REAL>::execute( const Problem<REAL>& problem,
    std::unique_ptr<unsigned int[]> coefhash{ new unsigned int[ncols] };
    std::unique_ptr<int[]> col{ new int[ncols] };
 
+#ifdef PAPILO_TBB
    tbb::parallel_invoke(
        [ncols, &col]() {
           for( int i = 0; i < ncols; ++i )
@@ -533,6 +540,12 @@ ParallelColDetection<REAL>::execute( const Problem<REAL>& problem,
        [&constMatrix, &supportid, this]() {
           computeSupportId( constMatrix, supportid.get() );
        } );
+#else
+   for( int i = 0; i < ncols; ++i )
+      col[i] = i;
+   computeColHashes( constMatrix, obj, coefhash.get() );
+   computeSupportId( constMatrix, supportid.get() );
+#endif
 
    pdqsort(
        col.get(), col.get() + ncols,

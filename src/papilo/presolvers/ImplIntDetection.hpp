@@ -86,6 +86,10 @@ ImplIntDetection<REAL>::execute( const Problem<REAL>& problem,
 
    PresolveStatus result = PresolveStatus::kUnchanged;
 
+#ifndef PAPILO_TBB
+   assert( problemUpdate.getPresolveOptions().runs_sequentiell() );
+#endif
+
    if( problemUpdate.getPresolveOptions().runs_sequentiell() ||
       !problemUpdate.getPresolveOptions().implied_integer_parallel )
    {
@@ -98,6 +102,7 @@ ImplIntDetection<REAL>::execute( const Problem<REAL>& problem,
             result = PresolveStatus::kReduced;
       }
    }
+#ifdef PAPILO_TBB
    else
    {
       Vec<Reductions<REAL>> stored_reductions( ncols );
@@ -131,7 +136,7 @@ ImplIntDetection<REAL>::execute( const Problem<REAL>& problem,
          }
       }
    }
-
+#endif
    return result;
 }
 

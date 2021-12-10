@@ -134,15 +134,15 @@ Sparsify<REAL>::execute( const Problem<REAL>& problem,
       equalities.emplace_back( i );
    }
 
+#ifdef PAPILO_TBB
    tbb::combinable<SparsifyData> sparsifyData(
        [nrows]() { return SparsifyData( nrows ); } );
 
    tbb::parallel_for(
        tbb::blocked_range<int>( 0, static_cast<int>( equalities.size() ) ),
        [&]( const tbb::blocked_range<int>& r ) {
-          std::size_t sparsifyStart;
-
           SparsifyData& localData = sparsifyData.local();
+          std::size_t sparsifyStart;
 
           auto& candrowhits = localData.candrowhits;
           auto& candrows = localData.candrows;
@@ -150,6 +150,15 @@ Sparsify<REAL>::execute( const Problem<REAL>& problem,
           auto& reductionBuffer = localData.reductionBuffer;
 
           for( int i = r.begin(); i < r.end(); ++i )
+#else
+   SparsifyData s = SparsifyData(nrows);
+   auto& candrowhits = s.candrowhits;
+   auto& candrows = s.candrows;
+   auto& sparsify = s.sparsify;
+   std::size_t sparsifyStart;
+   auto& reductionBuffer = s.reductionBuffer;
+   for( int i = 0; i < equalities.size(); ++i )
+#endif
           {
              int eqrow = equalities[i];
 
@@ -402,12 +411,17 @@ Sparsify<REAL>::execute( const Problem<REAL>& problem,
                                                  int( sparsify.size() ) );
              }
           }
+#ifdef PAPILO_TBB
        } );
-
+#endif
    int nreductions = 0;
+#ifdef PAPILO_TBB
    sparsifyData.combine_each( [&]( const SparsifyData& localData ) {
       nreductions += localData.reductionBuffer.size();
    } );
+#else
+   nreductions = s.reductionBuffer.size();
+#endif
 
    if( nreductions != 0 )
    {
@@ -417,6 +431,7 @@ Sparsify<REAL>::execute( const Problem<REAL>& problem,
 
       reductionData.reserve( nreductions );
 
+#ifdef PAPILO_TBB
       sparsifyData.combine_each( [&]( SparsifyData& localData ) {
          for( const std::tuple<int, int, int>& reductionTuple :
               localData.reductionBuffer )
@@ -428,6 +443,17 @@ Sparsify<REAL>::execute( const Problem<REAL>& problem,
                                         &localData.sparsify[start] );
          }
       } );
+#else
+      for( const std::tuple<int, int, int>& reductionTuple :
+           s.reductionBuffer )
+      {
+         int eqrow = std::get<0>( reductionTuple );
+         int start = std::get<1>( reductionTuple );
+         int end = std::get<2>( reductionTuple );
+         reductionData.emplace_back( eqrow, end - start,
+                                     &s.sparsify[start] );
+      }
+#endif
 
       const Vec<int>& rowperm = problemUpdate.getRandomRowPerm();
 

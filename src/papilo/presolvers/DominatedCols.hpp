@@ -134,15 +134,23 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
    this->skipRounds( this->getNCalls() );
 
    Vec<ColInfo> colinfo( ncols );
+#ifdef PAPILO_TBB
    tbb::concurrent_vector<int> unboundedcols;
+#else
+   Vec<int> unboundedcols;
+#endif
    unboundedcols.reserve( ncols );
 
    // compute signatures and implied bound information of all columns in
    // parallel
+#ifdef PAPILO_TBB
    tbb::parallel_for(
        tbb::blocked_range<int>( 0, ncols ),
        [&]( const tbb::blocked_range<int>& r ) {
           for( int col = r.begin(); col != r.end(); ++col )
+#else
+   for( int col = 0; col != ncols; ++col )
+#endif
           {
              auto colvec = consMatrix.getColumnCoefficients( col );
              int collen = colvec.getLength();
@@ -202,7 +210,9 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
              if( colinfo[col].lbfree != 0 || colinfo[col].ubfree != 0 )
                 unboundedcols.push_back( col );
           }
+#ifdef PAPILO_TBB
        } );
+#endif
 
    auto checkDominance = [&]( int col1, int col2, int scal1, int scal2 ) {
       assert( !cflags[col1].test( ColFlag::kIntegral ) ||
@@ -334,13 +344,21 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
       return true;
    };
 
+#ifdef PAPILO_TBB
    tbb::concurrent_vector<DomcolReduction> domcolreductions;
+#else
+   Vec<DomcolReduction> domcolreductions;
+#endif
 
+#ifdef PAPILO_TBB
    // scan unbounded columns if they dominate other columns
    tbb::parallel_for(
        tbb::blocked_range<int>( 0, (int) unboundedcols.size() ),
        [&]( const tbb::blocked_range<int>& r ) {
           for( int k = r.begin(); k != r.end(); ++k )
+#else
+   for( int k = 0; k < unboundedcols.size(); ++k )
+#endif
           {
              int i = unboundedcols[k];
              int lbfree = colinfo[i].lbfree;
@@ -467,7 +485,9 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
                 }
              }
           }
+#ifdef PAPILO_TBB
        } );
+#endif
 
    if( !domcolreductions.empty() )
    {

@@ -127,17 +127,18 @@ if (TBB)
          CONFIGURE_ARGS -DTBB_TEST=OFF -DTBB_EXAMPLES=OFF -DTBB4PY_BUILD=OFF)
    endif()
 
-   find_package(Threads REQUIRED)
-
-
-
    target_link_libraries(papilo
-      INTERFACE TBB::tbb Threads::Threads $<$<PLATFORM_ID:Linux>:rt>)
-   target_link_libraries(papilo
-      INTERFACE ${Quadmath_IMPORTED_TARGET} ${GMP_LIBRARIES})
+           INTERFACE TBB::tbb Threads::Threads $<$<PLATFORM_ID:Linux>:rt>)
 else()
    set(PAPILO_TBB off)
+   message(WARNING "Disabling TBB results in a dramatically degradation in the performance of PaPILO!!!")
 endif()
+
+find_package(Threads REQUIRED)
+
+
+target_link_libraries(papilo
+        INTERFACE ${Quadmath_IMPORTED_TARGET} ${GMP_LIBRARIES})
 
 # on raspberry pi, we need to link libatomic, as libtbbmalloc_proxy depends on it
 if((CMAKE_HOST_SYSTEM_PROCESSOR STREQUAL "armv7l") AND (CMAKE_SYSTEM_NAME STREQUAL "Linux"))

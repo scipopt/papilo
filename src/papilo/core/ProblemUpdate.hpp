@@ -804,6 +804,7 @@ ProblemUpdate<REAL>::compress( bool full )
    row_state.resize( problem.getNRows() );
    col_state.resize( problem.getNCols() );
 
+#ifdef PAPILO_TBB
    tbb::parallel_invoke(
        [this, &mappings, full]() {
           compress_index_vector( mappings.first, random_row_perm );
@@ -850,6 +851,33 @@ ProblemUpdate<REAL>::compress( bool full )
           for( PresolveMethod<REAL>* observer : compress_observers )
              observer->compress( mappings.first, mappings.second );
        } );
+#else
+   compress_index_vector( mappings.first, random_row_perm );
+   compress_index_vector( mappings.second, random_col_perm );
+   postsolve.compress( mappings.first, mappings.second, full );
+   compress_index_vector( mappings.first, changed_activities );
+   compress_index_vector( mappings.first, singletonRows );
+   compress_index_vector( mappings.second, emptyColumns );
+   int numNewSingletonCols =
+       static_cast<int>( singletonColumns.size() ) -
+       firstNewSingletonCol;
+   compress_index_vector( mappings.second, singletonColumns );
+   firstNewSingletonCol =
+       std::max( 0, static_cast<int>( singletonColumns.size() ) -
+                        numNewSingletonCols );
+   if( full )
+   {
+      random_row_perm.shrink_to_fit();
+      random_col_perm.shrink_to_fit();
+      changed_activities.shrink_to_fit();
+      singletonRows.shrink_to_fit();
+      emptyColumns.shrink_to_fit();
+      singletonColumns.shrink_to_fit();
+
+   }
+   for( PresolveMethod<REAL>* observer : compress_observers )
+      observer->compress( mappings.first, mappings.second );
+#endif
 
    lastcompress_ndelrows = stats.ndeletedrows;
    lastcompress_ndelcols = stats.ndeletedcols;
