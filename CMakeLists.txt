@@ -15,9 +15,10 @@ set(CXX_STANDARD_REQUIRED ON)
 # set(CMAKE_CXX_EXTENSIONS OFF) # use -std=c++... instead of -std=gnu++...
 # required for gcc if set(CMAKE_CXX_EXTENSIONS OFF) is used
 # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fext-numeric-literals")
-if(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
-   add_compile_options(-Wno-psabi)
-endif()
+
+# if(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
+#    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-psabi")
+# endif()
 if(MSVC)
    add_compile_options(/permissive)
 endif()
