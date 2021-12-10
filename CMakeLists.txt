@@ -404,7 +404,7 @@ install(FILES ${PROJECT_SOURCE_DIR}/cmake/Modules/FindTBB.cmake
 if(INSTALL_TBB AND CMAKE_SYSTEM_NAME STREQUAL "Windows")
    if(EXISTS "${TBB_tbb_DLL}")
       install(FILES "${TBB_tbb_DLL}" DESTINATION bin)
-      install(FILES "${TBB_tbb_DLL}" DESTINATION lib/cmake/)
+      install(FILES "${TBB_tbb_DLL}" DESTINATION lib/cmake/papilo)
    endif()
    if(EXISTS "${TBB_tbbmalloc_DLL}")
       install(FILES "${TBB_tbbmalloc_DLL}" DESTINATION bin)
