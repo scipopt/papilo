@@ -26,7 +26,6 @@
 #include "papilo/core/PresolveMethod.hpp"
 #include "papilo/core/Problem.hpp"
 #include "papilo/core/ProblemBuilder.hpp"
-#include "papilo/io/MpsParser.hpp"
 
 using namespace papilo;
 
@@ -55,6 +54,9 @@ TEST_CASE( "happy-path-simplify-inequalities", "[presolve]" )
    SimplifyInequalities<double> presolvingMethod{};
    Reductions<double> reductions{};
 
+#ifndef PAPILO_TBB
+   presolveOptions.threads = 1;
+#endif
 
    PresolveStatus presolveStatus =
        presolvingMethod.execute( problem, problemUpdate, num, reductions );
@@ -100,6 +102,10 @@ TEST_CASE( "simplify_inequ_doesnt_lock_more_rows", "[presolve]" )
    SimplifyInequalities<double> presolvingMethod{};
    Reductions<double> reductions{};
 
+#ifndef PAPILO_TBB
+   presolveOptions.threads = 1;
+#endif
+
    PresolveStatus presolveStatus =
        presolvingMethod.execute( problem, problemUpdate, num, reductions );
 
@@ -126,6 +132,11 @@ TEST_CASE( "simplify_inequ_doesnt_apply_lb_and_ub_on_one_row", "[presolve]" )
    PresolveStatus presolveStatus =
        presolvingMethod.execute( problem, problemUpdate, num, reductions );
 
+#ifndef PAPILO_TBB
+   presolveOptions.threads = 1;
+#endif
+
+
    REQUIRE( presolveStatus == PresolveStatus::kUnchanged );
 }
 
@@ -149,9 +160,9 @@ setupProblemForSimplifyingInequalities()
        std::tuple<int, int, double>{ 0, 4, 1.0 } };
 
    ProblemBuilder<double> pb;
-   pb.reserve( entries.size(), rowNames.size(), columnNames.size() );
-   pb.setNumRows( rowNames.size() );
-   pb.setNumCols( columnNames.size() );
+   pb.reserve( (int) entries.size(), (int) rowNames.size(), (int) columnNames.size() );
+   pb.setNumRows( (int) rowNames.size() );
+   pb.setNumCols( (int) columnNames.size() );
    pb.setColLbAll( lowerBounds );
    pb.setColUbAll( upperBounds );
    pb.setObjAll( coefficients );
@@ -190,9 +201,9 @@ setup_simplify_ineq_reduce_rhs()
        std::tuple<int, int, double>{ 1, 3, -400.0 } };
 
    ProblemBuilder<double> pb;
-   pb.reserve( entries.size(), rowNames.size(), columnNames.size() );
-   pb.setNumRows( rowNames.size() );
-   pb.setNumCols( columnNames.size() );
+   pb.reserve( (int) entries.size(), (int) rowNames.size(), (int) columnNames.size() );
+   pb.setNumRows( (int) rowNames.size() );
+   pb.setNumCols( (int) columnNames.size() );
    pb.setColLbAll( lowerBounds );
    pb.setColUbAll( upperBounds );
    pb.setObjAll( coefficients );
@@ -232,9 +243,9 @@ setup_simple_problem_for_simplify_inequalities_2()
        std::tuple<int, int, double>{ 1, 3, -400.0 } };
 
    ProblemBuilder<double> pb;
-   pb.reserve( entries.size(), rowNames.size(), columnNames.size() );
-   pb.setNumRows( rowNames.size() );
-   pb.setNumCols( columnNames.size() );
+   pb.reserve( (int) entries.size(), (int) rowNames.size(), (int) columnNames.size() );
+   pb.setNumRows( (int) rowNames.size() );
+   pb.setNumCols( (int) columnNames.size() );
    pb.setColLbAll( lowerBounds );
    pb.setColUbAll( upperBounds );
    pb.setObjAll( coefficients );

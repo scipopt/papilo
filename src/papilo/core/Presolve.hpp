@@ -47,7 +47,9 @@
 #include "papilo/misc/ParameterSet.hpp"
 #include "papilo/misc/Timer.hpp"
 #include "papilo/misc/Vec.hpp"
+#ifdef PAPILO_TBB
 #include "papilo/misc/tbb.hpp"
+#endif
 #include "papilo/presolvers/CoefficientStrengthening.hpp"
 #include "papilo/presolvers/ConstraintPropagation.hpp"
 #include "papilo/presolvers/DominatedCols.hpp"
@@ -342,7 +344,7 @@ class Presolve
    void
    run_presolvers( const Problem<REAL>& problem,
                    const std::pair<int, int>& presolver_2_run,
-                   ProblemUpdate<REAL>& probUpdate, bool& run_sequentiell );
+                   ProblemUpdate<REAL>& probUpdate, bool& run_sequential );
 
    bool
    is_status_infeasible_or_unbounded( const PresolveStatus& status ) const;
@@ -372,11 +374,16 @@ template <typename REAL>
 PresolveResult<REAL>
 Presolve<REAL>::apply( Problem<REAL>& problem, bool store_dual_postsolve )
 {
+#ifdef PAPILO_TBB
    tbb::task_arena arena( presolveOptions.threads == 0
                               ? tbb::task_arena::automatic
                               : presolveOptions.threads );
+#endif
 
+   //TODO: exclude arena
+#ifdef PAPILO_TBB
    return arena.execute( [this, &problem, store_dual_postsolve]() {
+#endif
       stats = Statistics();
       num.setFeasTol( REAL{ presolveOptions.feastol } );
       num.setEpsilon( REAL{ presolveOptions.epsilon } );
@@ -400,6 +407,13 @@ Presolve<REAL>::apply( Problem<REAL>& problem, bool store_dual_postsolve )
 
       result.postsolve =
           PostsolveStorage<REAL>( problem, num, presolveOptions );
+
+#ifndef PAPILO_TBB
+      if( presolveOptions.threads != 1 )
+         msg.warn( "PaPILO without TBB can only use one thread. Number of "
+                   "threads is set to 1\n" );
+      presolveOptions.threads = 1;
+#endif
 
       if( store_dual_postsolve && problem.getNumIntegralCols() == 0 )
       {
@@ -683,7 +697,6 @@ Presolve<REAL>::apply( Problem<REAL>& problem, bool store_dual_postsolve )
          if( problem.getNCols() == 0 )
             detectComponents = false;
 
-         //TODO: remove empty rows before (but currently buggy)
          if( detectComponents  && probUpdate.getNActiveCols() > 0 )
          {
             assert( problem.getNCols() != 0 && problem.getNRows() != 0 );
@@ -718,12 +731,17 @@ Presolve<REAL>::apply( Problem<REAL>& problem, bool store_dual_postsolve )
                   solution.varBasisStatus.resize( problem.getNCols() );
                }
 
+#ifdef PAPILO_TBB
                tbb::parallel_for(
                    tbb::blocked_range<int>( 0, ncomponents - 1 ),
                    [this, &components, &solution, &problem, &result, &compInfo,
                     &componentSolved,
                     &timer]( const tbb::blocked_range<int>& r ) {
                       for( int i = r.begin(); i != r.end(); ++i )
+#else
+               for( int i = 0; i < ncomponents - 1; ++i )
+
+#endif
                       {
                          if( compInfo[i].nintegral == 0 )
                          {
@@ -800,8 +818,10 @@ Presolve<REAL>::apply( Problem<REAL>& problem, bool store_dual_postsolve )
                             }
                          }
                       }
-                   },
-                   tbb::simple_partitioner() );
+#ifdef PAPILO_TBB
+                   }
+                   ,tbb::simple_partitioner() );
+#endif
 
                int nsolved = 0;
 
@@ -881,7 +901,9 @@ Presolve<REAL>::apply( Problem<REAL>& problem, bool store_dual_postsolve )
       // problem was not changed
       result.status = PresolveStatus::kUnchanged;
       return result;
+#ifdef PAPILO_TBB
    } );
+#endif
 }
 
 template <typename REAL>
@@ -889,8 +911,11 @@ void
 Presolve<REAL>::run_presolvers( const Problem<REAL>& problem,
                                 const std::pair<int, int>& presolver_2_run,
                                 ProblemUpdate<REAL>& probUpdate,
-                                bool& run_sequentiell )
+                                bool& run_sequential )
 {
+#ifndef PAPILO_TBB
+   assert(presolveOptions.runs_sequentiell() == true);
+#endif
    if( presolveOptions.runs_sequentiell() &&
        presolveOptions.apply_results_immediately_if_run_sequentially )
    {
@@ -899,7 +924,7 @@ Presolve<REAL>::run_presolvers( const Problem<REAL>& problem,
       {
          results[i] =
              presolvers[i]->run( problem, probUpdate, num, reductions[i] );
-         apply_result_sequentiell( i, probUpdate, run_sequentiell );
+         apply_result_sequentiell( i, probUpdate, run_sequential );
          if( results[i] == PresolveStatus::kInfeasible )
             return;
          PresolveStatus status = probUpdate.trivialPresolve();
@@ -912,6 +937,7 @@ Presolve<REAL>::run_presolvers( const Problem<REAL>& problem,
             return;
       }
    }
+#ifdef PAPILO_TBB
    else
    {
       tbb::parallel_for(
@@ -926,6 +952,7 @@ Presolve<REAL>::run_presolvers( const Problem<REAL>& problem,
           },
           tbb::simple_partitioner() );
    }
+#endif
 }
 
 template <typename REAL>

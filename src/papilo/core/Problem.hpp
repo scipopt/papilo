@@ -34,7 +34,9 @@
 #include "papilo/misc/String.hpp"
 #include "papilo/misc/Vec.hpp"
 #include "papilo/misc/fmt.hpp"
+#ifdef PAPILO_TBB
 #include "papilo/misc/tbb.hpp"
+#endif
 
 namespace papilo
 {
@@ -496,6 +498,7 @@ class Problem
           constraintMatrix.compress( full );
 
       // update information about columns that is stored by index
+#ifdef PAPILO_TBB
       tbb::parallel_invoke(
           [this, &mappings, full]() {
              compress_vector( mappings.second, objective.coefficients );
@@ -514,6 +517,17 @@ class Problem
              if( full )
                 rowActivities.shrink_to_fit();
           } );
+#else
+      compress_vector( mappings.second, objective.coefficients );
+      variableDomains.compress( mappings.second, full );
+      if( rowActivities.size() != 0 )
+         compress_vector( mappings.first, rowActivities );
+      if( full )
+      {
+         objective.coefficients.shrink_to_fit();
+         rowActivities.shrink_to_fit();
+      }
+#endif
 
       // compress row activities
       return mappings;
@@ -533,10 +547,14 @@ class Problem
 
       // loop through rows once, compute initial acitvities, detect trivial
       // redundancy
+#ifdef PAPILO_TBB
       tbb::parallel_for(
           tbb::blocked_range<int>( 0, getNRows() ),
           [this]( const tbb::blocked_range<int>& r ) {
-             for( int row = r.begin(); row != r.end(); ++row )
+             for( int row = r.begin(); row < r.end(); ++row )
+#else
+      for( int row = 0; row < getNRows(); ++row )
+#endif
              {
                 auto rowvec = constraintMatrix.getRowCoefficients( row );
                 rowActivities[row] = compute_row_activity(
@@ -544,7 +562,9 @@ class Problem
                     variableDomains.lower_bounds, variableDomains.upper_bounds,
                     variableDomains.flags );
              }
+#ifdef PAPILO_TBB
           } );
+#endif
    }
 
    void
@@ -552,12 +572,16 @@ class Problem
    {
       locks.resize( getNCols() );
 
-      // loop through rows once, compute initial acitvities, detect trivial
+      // loop through rows once, compute initial activities, detect trivial
       // redundancy
+#ifdef PAPILO_TBB
       tbb::parallel_for(
           tbb::blocked_range<int>( 0, getNCols() ),
           [this]( const tbb::blocked_range<int>& c ) {
              for( int col = c.begin(); col != c.end(); ++col )
+#else
+      for( int col = 0; col < getNCols(); ++col )
+#endif
              {
                 auto colvec = constraintMatrix.getColumnCoefficients( col );
 
@@ -570,7 +594,9 @@ class Problem
                    count_locks( vals[i], rflags[inds[i]], locks[col].down,
                                 locks[col].up );
              }
+#ifdef PAPILO_TBB
           } );
+#endif
    }
 
    std::pair<int, int>

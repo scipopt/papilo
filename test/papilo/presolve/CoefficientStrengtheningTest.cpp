@@ -46,6 +46,9 @@ TEST_CASE( "happy-path-coefficient-strengthening", "[presolve]" )
    CoefficientStrengthening<double> presolvingMethod{};
    Reductions<double> reductions{};
    problem.recomputeAllActivities();
+#ifndef PAPILO_TBB
+   presolveOptions.threads = 1;
+#endif
    problemUpdate.trivialPresolve();
    PresolveStatus presolveStatus =
        presolvingMethod.execute( problem, problemUpdate, num, reductions );
@@ -81,9 +84,9 @@ setupProblemForCoefficientStrengthening()
    };
 
    ProblemBuilder<double> pb;
-   pb.reserve( entries.size(), rowNames.size(), columnNames.size() );
-   pb.setNumRows( rowNames.size() );
-   pb.setNumCols( columnNames.size() );
+   pb.reserve( (int) entries.size(), (int) rowNames.size(), (int) columnNames.size() );
+   pb.setNumRows( (int) rowNames.size() );
+   pb.setNumCols( (int) columnNames.size() );
    pb.setColUbAll( upperBounds );
    pb.setColLbAll( lowerBounds );
    pb.setObjAll( coefficients );

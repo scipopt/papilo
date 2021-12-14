@@ -34,7 +34,9 @@
 #include "papilo/misc/Vec.hpp"
 #include "papilo/misc/compress_vector.hpp"
 #include "papilo/misc/fmt.hpp"
+#ifdef PAPILO_TBB
 #include "papilo/misc/tbb.hpp"
+#endif
 #include <fstream>
 
 #include <boost/archive/text_iarchive.hpp>
@@ -195,6 +197,7 @@ class PostsolveStorage
    compress( const Vec<int>& rowmapping, const Vec<int>& colmapping,
              bool full = false )
    {
+#ifdef PAPILO_TBB
       tbb::parallel_invoke(
           [this, &colmapping, full]() {
              compress_vector( colmapping, origcol_mapping );
@@ -207,6 +210,15 @@ class PostsolveStorage
              if( full )
                 origrow_mapping.shrink_to_fit();
           } );
+#else
+      compress_vector( colmapping, origcol_mapping );
+      compress_vector( rowmapping, origrow_mapping );
+      if( full )
+      {
+         origrow_mapping.shrink_to_fit();
+         origcol_mapping.shrink_to_fit();
+      }
+#endif
    }
 
    template <typename Archive>

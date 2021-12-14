@@ -84,6 +84,10 @@ CoefficientStrengthening<REAL>::execute(
 
    PresolveStatus result = PresolveStatus::kUnchanged;
 
+#ifndef PAPILO_TBB
+   assert( problemUpdate.getPresolveOptions().runs_sequentiell() );
+#endif
+
    if( problemUpdate.getPresolveOptions().runs_sequentiell() ||
       !problemUpdate.getPresolveOptions().coefficient_strengthening_parallel )
    {
@@ -97,6 +101,7 @@ CoefficientStrengthening<REAL>::execute(
             result = PresolveStatus::kReduced;
       }
    }
+#ifdef PAPILO_TBB
    else
    {
       Vec<Reductions<REAL>> stored_reductions( changedActivities.size() );
@@ -137,7 +142,7 @@ CoefficientStrengthening<REAL>::execute(
          }
       }
    }
-
+#endif
    return result;
 }
 

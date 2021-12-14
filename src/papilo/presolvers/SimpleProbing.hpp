@@ -92,6 +92,10 @@ SimpleProbing<REAL>::execute( const Problem<REAL>& problem,
 
    int nrows = problem.getNRows();
 
+#ifndef PAPILO_TBB
+   assert( problemUpdate.getPresolveOptions().runs_sequentiell() );
+#endif
+
    if( problemUpdate.getPresolveOptions().runs_sequentiell() ||
        !problemUpdate.getPresolveOptions().simple_probing_parallel )
    {
@@ -103,6 +107,7 @@ SimpleProbing<REAL>::execute( const Problem<REAL>& problem,
             status = PresolveStatus::kReduced;
       }
    }
+#ifdef PAPILO_TBB
    else
    {
       Vec<Reductions<REAL>> stored_reductions( nrows );
@@ -145,6 +150,7 @@ SimpleProbing<REAL>::execute( const Problem<REAL>& problem,
       }
    }
 
+#endif
    return status;
 }
 

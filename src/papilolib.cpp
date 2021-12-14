@@ -114,7 +114,9 @@ struct AllocatorTraits<T>
 #include "papilo/interfaces/ScipInterface.hpp"
 #include "papilo/interfaces/SoplexInterface.hpp"
 #include "papilo/misc/MultiPrecision.hpp"
+#ifdef PAPILO_TBB
 #include "papilo/misc/tbb.hpp"
+#endif
 #include "papilo/core/postsolve/Postsolve.hpp"
 #ifdef PAPILO_MPS_WRITER
 #include "papilo/io/MpsWriter.hpp"

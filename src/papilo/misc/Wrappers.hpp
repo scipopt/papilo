@@ -33,7 +33,11 @@
 #include "papilo/misc/NumericalStatistics.hpp"
 #include "papilo/misc/OptionsParser.hpp"
 #include "papilo/misc/Validation.hpp"
+#ifdef PAPILO_TBB
 #include "papilo/misc/tbb.hpp"
+#else
+#include <chrono>
+#endif
 
 #include <boost/archive/binary_iarchive.hpp>
 #include <boost/archive/binary_oarchive.hpp>
@@ -364,15 +368,26 @@ postsolve( PostsolveStorage<REAL>& postsolveStorage,
 {
    Solution<REAL> original_sol;
 
+#ifdef PAPILO_TBB
    auto t0 = tbb::tick_count::now();
+#else
+   auto t0 = std::chrono::steady_clock::now();
+#endif
    const Message msg{};
    Postsolve<REAL> postsolve{ msg, postsolveStorage.getNum() };
    PostsolveStatus status =
        postsolve.undo( reduced_sol, original_sol, postsolveStorage );
+#ifdef PAPILO_TBB
    auto t1 = tbb::tick_count::now();
-
+   double sec1 = ( t1 - t0 ).seconds();
+#else
+   auto t1 = std::chrono::steady_clock::now();
+   double sec1 =
+       std::chrono::duration_cast<std::chrono::milliseconds>( t1 - t0 )
+           .count() /1000;
+#endif
    fmt::print( "\npostsolve finished after {:.3f} seconds\n",
-               ( t1 - t0 ).seconds() );
+               sec1 );
 
    const Problem<REAL>& origprob = postsolveStorage.getOriginalProblem();
    REAL origobj = origprob.computeSolObjective( original_sol.primal );
@@ -394,62 +409,107 @@ postsolve( PostsolveStorage<REAL>& postsolveStorage,
 
    if( ! primal_solution_output.empty() )
    {
+#ifdef PAPILO_TBB
       auto t2 = tbb::tick_count::now();
+#else
+      auto t2 = std::chrono::steady_clock::now();
+#endif
       SolWriter<REAL>::writePrimalSol( primal_solution_output,
                                        original_sol.primal,
                                        origprob.getObjective().coefficients,
                                        origobj, origprob.getVariableNames() );
+#ifdef PAPILO_TBB
       auto t3 = tbb::tick_count::now();
+      double sec3 = ( t3 - t2 ).seconds();
+#else
+      auto t3 = std::chrono::steady_clock::now();
+      double sec3 =
+          std::chrono::duration_cast<std::chrono::milliseconds>( t3 - t2 )
+              .count() /1000;
+#endif
 
       fmt::print( "solution written to file {} in {:.3} seconds\n",
-                  primal_solution_output, ( t3 - t2 ).seconds() );
+                  primal_solution_output, sec3 );
    }
 
    if( ! dual_solution_output.empty() &&
        original_sol.type == SolutionType::kPrimalDual )
    {
-
+#ifdef PAPILO_TBB
       auto t2 = tbb::tick_count::now();
+#else
+   auto t2 = std::chrono::steady_clock::now();
+#endif
       const ConstraintMatrix<REAL>& constraintMatrix =
           origprob.getConstraintMatrix();
       SolWriter<REAL>::writeDualSol( dual_solution_output, original_sol.dual,
                                      constraintMatrix.getRightHandSides(),
                                      constraintMatrix.getLeftHandSides(),
                                      origobj, origprob.getConstraintNames() );
+#ifdef PAPILO_TBB
       auto t3 = tbb::tick_count::now();
+      double sec3 = ( t3 - t2 ).seconds();
+#else
+      auto t3 = std::chrono::steady_clock::now();
+      double sec3 =
+          std::chrono::duration_cast<std::chrono::milliseconds>( t3 - t2 )
+              .count() /1000;
+#endif
 
       fmt::print( "dual solution written to file {} in {:.3} seconds\n",
-                  dual_solution_output, ( t3 - t2 ).seconds() );
+                  dual_solution_output, sec3 );
    }
 
    if( ! reduced_solution_output.empty() &&
        original_sol.type == SolutionType::kPrimalDual )
    {
+#ifdef PAPILO_TBB
       auto t2 = tbb::tick_count::now();
-
+#else
+      auto t2 = std::chrono::steady_clock::now();
+#endif
       SolWriter<REAL>::writeReducedCostsSol(
           reduced_solution_output, original_sol.reducedCosts,
           origprob.getUpperBounds(), origprob.getLowerBounds(), origobj,
           origprob.getVariableNames() );
+#ifdef PAPILO_TBB
       auto t3 = tbb::tick_count::now();
+      double sec3 = ( t3 - t2 ).seconds();
+#else
+      auto t3 = std::chrono::steady_clock::now();
+      double sec3 =
+          std::chrono::duration_cast<std::chrono::milliseconds>( t3 - t2 )
+              .count() /1000;
+#endif
 
       fmt::print( "reduced solution written to file {} in {:.3} seconds\n",
-                  reduced_solution_output, ( t3 - t2 ).seconds() );
+                  reduced_solution_output, sec3 );
    }
 
    if( ! basis_output.empty() &&
        original_sol.type == SolutionType::kPrimalDual )
    {
+#ifdef PAPILO_TBB
       auto t2 = tbb::tick_count::now();
+#else
+      auto t2 = std::chrono::steady_clock::now();
+#endif
 
       SolWriter<REAL>::writeBasis(
           basis_output, original_sol.varBasisStatus,
           original_sol.rowBasisStatus,
           origprob.getVariableNames(), origprob.getConstraintNames() );
+#ifdef PAPILO_TBB
       auto t3 = tbb::tick_count::now();
-
+      double sec3 = ( t3 - t2 ).seconds();
+#else
+      auto t3 = std::chrono::steady_clock::now();
+      double sec3 =
+          std::chrono::duration_cast<std::chrono::milliseconds>( t3 - t2 )
+              .count() /1000;
+#endif
       fmt::print( "basis written to file {} in {:.3} seconds\n",
-                  basis_output, ( t3 - t2 ).seconds() );
+                  basis_output, sec3 );
    }
 
    if( !objective_reference.empty() )

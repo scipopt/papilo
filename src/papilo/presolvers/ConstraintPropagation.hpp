@@ -91,6 +91,10 @@ ConstraintPropagation<REAL>::execute( const Problem<REAL>& problem,
    const REAL bound_tightening_offset =
        REAL(problemUpdate.getPresolveOptions().get_variable_bound_tightening_offset());
 
+#ifndef PAPILO_TBB
+   assert( problemUpdate.getPresolveOptions().runs_sequentiell() );
+#endif
+
    if( problemUpdate.getPresolveOptions().runs_sequentiell() ||
        !problemUpdate.getPresolveOptions().constraint_propagation_parallel )
    {
@@ -237,6 +241,7 @@ ConstraintPropagation<REAL>::execute( const Problem<REAL>& problem,
             break;
       }
    }
+#ifdef PAPILO_TBB
    else
    {
       Vec<Reductions<REAL>> stored_reductions( changedactivities.size() );
@@ -427,6 +432,7 @@ ConstraintPropagation<REAL>::execute( const Problem<REAL>& problem,
          }
       }
    }
+#endif
 
    return result;
 }

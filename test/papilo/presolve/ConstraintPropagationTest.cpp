@@ -49,6 +49,10 @@ TEST_CASE( "constraint-propagation-happy-path", "[presolve]" )
    problem.recomputeAllActivities();
    problemUpdate.trivialPresolve();
 
+#ifndef PAPILO_TBB
+   presolveOptions.threads = 1;
+#endif
+
    PresolveStatus presolveStatus =
        presolvingMethod.execute( problem, problemUpdate, num, reductions );
 

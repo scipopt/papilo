@@ -34,7 +34,9 @@
 #include "papilo/misc/Vec.hpp"
 #include "papilo/misc/compress_vector.hpp"
 #include "papilo/misc/fmt.hpp"
+#ifdef PAPILO_TBB
 #include "papilo/misc/tbb.hpp"
+#endif
 #include <atomic>
 #include <boost/functional/hash.hpp>
 
@@ -167,11 +169,17 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
                            []( int n ) { return n == 0; } ) );
    }
 
+#ifdef PAPILO_TBB
    tbb::parallel_for(
        tbb::blocked_range<int>( 0, problem.getNRows() ),
-       [&]( const tbb::blocked_range<int>& r ) {
+       [&]( const tbb::blocked_range<int>& r )
+       {
           Vec<std::pair<REAL, int>> binary_variables_in_row;
           for( int row = r.begin(); row != r.end(); ++row )
+#else
+   Vec<std::pair<REAL, int>> binary_variables_in_row;
+   for( int row = 0; row != problem.getNRows(); ++row )
+#endif
           {
              if( consMatrix.isRowRedundant( row ) )
                 continue;
@@ -252,7 +260,10 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
 
              binary_variables_in_row.clear();
           }
-       } );
+
+#ifdef PAPILO_TBB
+       });
+#endif
 
    pdqsort( probing_cands.begin(), probing_cands.end(),
             [this, &probing_scores, &colsize, &colperm]( int col1, int col2 ) {
@@ -329,23 +340,32 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
 
    // use tbb combinable so that each thread will copy the activities and
    // bounds at most once
+#ifdef PAPILO_TBB
    tbb::combinable<ProbingView<REAL>> probing_views( [this, &problem, &num]() {
       ProbingView<REAL> probingView( problem, num );
       probingView.setMinContDomRed( mincontdomred );
       return probingView;
    } );
+#else
+   ProbingView<REAL> probingView( problem, num );
+   probingView.setMinContDomRed( mincontdomred );
+#endif
 
    do
    {
       Message::debug( this, "probing candidates {} to {}\n", currentbadgestart,
                       current_badge_end );
 
+#ifdef PAPILO_TBB
       tbb::parallel_for(
           tbb::blocked_range<int>( currentbadgestart, current_badge_end ),
           [&]( const tbb::blocked_range<int>& r ) {
              ProbingView<REAL>& probingView = probing_views.local();
 
              for( int i = r.begin(); i != r.end(); ++i )
+#else
+      for(int i= currentbadgestart; i< current_badge_end; i++)
+#endif
              {
                 const int col = probing_cands[i];
 
@@ -380,7 +400,9 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
                    break;
                 }
              }
+#ifdef PAPILO_TBB
           } );
+#endif
 
       if( infeasible.load( std::memory_order_relaxed ) )
          return PresolveStatus::kInfeasible;
@@ -390,7 +412,9 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
       int nboundchgs = 0;
       int nsubstitutions = -substitutions.size();
 
+#ifdef PAPILO_TBB
       probing_views.combine_each( [&]( ProbingView<REAL>& probingView ) {
+#endif
          const auto& probingBoundChgs = probingView.getProbingBoundChanges();
          const auto& probingSubstitutions =
              probingView.getProbingSubstitutions();
@@ -461,8 +485,9 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
          }
 
          probingView.clearResults();
+#ifdef PAPILO_TBB
       } );
-
+#endif
       nsubstitutions += substitutions.size();
       currentbadgestart = current_badge_end;
 
