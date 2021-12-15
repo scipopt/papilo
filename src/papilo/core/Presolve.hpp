@@ -380,7 +380,6 @@ Presolve<REAL>::apply( Problem<REAL>& problem, bool store_dual_postsolve )
                               : presolveOptions.threads );
 #endif
 
-   //TODO: exclude arena
 #ifdef PAPILO_TBB
    return arena.execute( [this, &problem, store_dual_postsolve]() {
 #endif
