@@ -35,6 +35,8 @@ setupProblemImplIntDetection();
 
 TEST_CASE( "happy-path-implied-integer-detection", "[presolve]" )
 {
+      double time = 0.0;
+   Timer t{time};
    Num<double> num{};
    Message msg{};
    Problem<double> problem = setupProblemImplIntDetection();
@@ -48,7 +50,7 @@ TEST_CASE( "happy-path-implied-integer-detection", "[presolve]" )
    Reductions<double> reductions{};
    problem.recomputeAllActivities();
    PresolveStatus presolveStatus =
-       presolvingMethod.execute( problem, problemUpdate, num, reductions );
+       presolvingMethod.execute( problem, problemUpdate, num, reductions, t);
    REQUIRE( presolveStatus == PresolveStatus::kReduced );
    REQUIRE( reductions.size() == 1 );
    REQUIRE( reductions.getReduction( 0 ).col == 0 );

@@ -56,7 +56,7 @@ class SimpleSubstitution : public PresolveMethod<REAL>
    PresolveStatus
    execute( const Problem<REAL>& problem,
             const ProblemUpdate<REAL>& problemUpdate, const Num<REAL>& num,
-            Reductions<REAL>& reductions ) override;
+            Reductions<REAL>& reductions, const Timer& timer ) override;
 
 
 
@@ -88,7 +88,7 @@ PresolveStatus
 SimpleSubstitution<REAL>::execute( const Problem<REAL>& problem,
                                    const ProblemUpdate<REAL>& problemUpdate,
                                    const Num<REAL>& num,
-                                   Reductions<REAL>& reductions )
+                                   Reductions<REAL>& reductions, const Timer& timer )
 {
    // go over the rows and get the equalities, extract the columns that
    // verify the conditions add them to a hash map, loop over the hash map

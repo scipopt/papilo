@@ -32,6 +32,7 @@
 #include "papilo/misc/Num.hpp"
 #include "papilo/misc/Vec.hpp"
 #include "papilo/misc/fmt.hpp"
+#include "papilo/misc/Timer.hpp"
 #ifdef PAPILO_TBB
 #include "papilo/misc/tbb.hpp"
 #else
@@ -131,7 +132,7 @@ class PresolveMethod
 
    PresolveStatus
    run( const Problem<REAL>& problem, const ProblemUpdate<REAL>& problemUpdate,
-        const Num<REAL>& num, Reductions<REAL>& reductions )
+        const Num<REAL>& num, Reductions<REAL>& reductions, const Timer& timer )
    {
       if( !enabled || delayed )
          return PresolveStatus::kUnchanged;
@@ -160,7 +161,7 @@ class PresolveMethod
       auto start = std::chrono::steady_clock::now();
 #endif
       PresolveStatus result =
-          execute( problem, problemUpdate, num, reductions );
+          execute( problem, problemUpdate, num, reductions, timer );
 #ifdef PAPILO_TBB
       auto end = tbb::tick_count::now();
       auto duration = end - start;
@@ -256,7 +257,7 @@ class PresolveMethod
    virtual PresolveStatus
    execute( const Problem<REAL>& problem,
             const ProblemUpdate<REAL>& problemUpdate, const Num<REAL>& num,
-            Reductions<REAL>& reductions ) = 0;
+            Reductions<REAL>& reductions, const Timer& timer ) = 0;
 
    void
    setName( const std::string& value )
@@ -274,6 +275,13 @@ class PresolveMethod
    setType( PresolverType value )
    {
       this->type = value;
+   }
+
+   static bool
+   is_time_exceeded( const Timer& timer,  double tlim)
+   {
+      return tlim != std::numeric_limits<double>::max() &&
+             timer.getTime() >= tlim;
    }
 
    void

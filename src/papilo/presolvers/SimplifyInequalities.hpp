@@ -61,7 +61,7 @@ class SimplifyInequalities : public PresolveMethod<REAL>
    PresolveStatus
    execute( const Problem<REAL>& problem,
             const ProblemUpdate<REAL>& problemUpdate, const Num<REAL>& num,
-            Reductions<REAL>& reductions ) override;
+            Reductions<REAL>& reductions, const Timer& timer ) override;
 
  private:
    REAL
@@ -279,7 +279,7 @@ PresolveStatus
 SimplifyInequalities<REAL>::execute( const Problem<REAL>& problem,
                                      const ProblemUpdate<REAL>& problemUpdate,
                                      const Num<REAL>& num,
-                                     Reductions<REAL>& reductions )
+                                     Reductions<REAL>& reductions, const Timer& timer )
 {
    const auto& consMatrix = problem.getConstraintMatrix();
    const Vec<RowActivity<REAL>>& activities = problem.getRowActivities();

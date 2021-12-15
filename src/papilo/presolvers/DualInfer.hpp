@@ -55,7 +55,7 @@ class DualInfer : public PresolveMethod<REAL>
    virtual PresolveStatus
    execute( const Problem<REAL>& problem,
             const ProblemUpdate<REAL>& problemUpdate, const Num<REAL>& num,
-            Reductions<REAL>& reductions ) override;
+            Reductions<REAL>& reductions, const Timer& timer ) override;
 };
 
 #ifdef PAPILO_USE_EXTERN_TEMPLATES
@@ -68,7 +68,7 @@ template <typename REAL>
 PresolveStatus
 DualInfer<REAL>::execute( const Problem<REAL>& problem,
                           const ProblemUpdate<REAL>& problemUpdate,
-                          const Num<REAL>& num, Reductions<REAL>& reductions )
+                          const Num<REAL>& num, Reductions<REAL>& reductions, const Timer& timer )
 {
    assert( problem.getNumContinuousCols() != 0 );
 

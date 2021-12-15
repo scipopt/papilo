@@ -103,14 +103,15 @@ class Probing : public PresolveMethod<REAL>
           mincontdomred, 0.0, 1.0 );
    }
 
-   virtual PresolveStatus
+   PresolveStatus
    execute( const Problem<REAL>& problem,
             const ProblemUpdate<REAL>& problemUpdate, const Num<REAL>& num,
-            Reductions<REAL>& reductions ) override;
+            Reductions<REAL>& reductions, const Timer& timer ) override;
 
    bool
    isBinaryVariable( REAL upper_bound, REAL lower_bound, int column_size,
                      const Flags<ColFlag>& colFlag ) const;
+
 };
 
 #ifdef PAPILO_USE_EXTERN_TEMPLATES
@@ -123,7 +124,8 @@ template <typename REAL>
 PresolveStatus
 Probing<REAL>::execute( const Problem<REAL>& problem,
                         const ProblemUpdate<REAL>& problemUpdate,
-                        const Num<REAL>& num, Reductions<REAL>& reductions )
+                        const Num<REAL>& num, Reductions<REAL>& reductions,
+                        const Timer& timer)
 {
    if( problem.getNumIntegralCols() == 0 )
       return PresolveStatus::kUnchanged;
@@ -291,7 +293,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
 
    const Vec<int>& rowsize = consMatrix.getRowSizes();
 
-   int currentbadgestart = 0;
+   int current_badge_start = 0;
 
    int64_t working_limit = consMatrix.getNnz() * 2;
    int initial_badge_limit = 0.1 * working_limit;
@@ -325,7 +327,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
 
    badge_size = std::max( std::min( nprobingcands, minbadgesize ), badge_size );
 
-   int current_badge_end = currentbadgestart + badge_size;
+   int current_badge_end = current_badge_start + badge_size;
    int n_useless = 0;
    bool abort = false;
 
@@ -353,56 +355,69 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
 
    do
    {
-      Message::debug( this, "probing candidates {} to {}\n", currentbadgestart,
+      Message::debug( this, "probing candidates {} to {}\n",
+                      current_badge_start,
                       current_badge_end );
 
+      auto propagate_variables = [&]( int start, int end) {
 #ifdef PAPILO_TBB
-      tbb::parallel_for(
-          tbb::blocked_range<int>( currentbadgestart, current_badge_end ),
-          [&]( const tbb::blocked_range<int>& r ) {
-             ProbingView<REAL>& probingView = probing_views.local();
-
-             for( int i = r.begin(); i != r.end(); ++i )
-#else
-      for(int i= currentbadgestart; i< current_badge_end; i++)
-#endif
+         tbb::parallel_for(
+             tbb::blocked_range<int>( start, end ),
+             [&]( const tbb::blocked_range<int>& r )
              {
-                const int col = probing_cands[i];
+                ProbingView<REAL>& probingView = probing_views.local();
 
-                assert( cflags[col].test( ColFlag::kIntegral ) &&
-                            lower_bounds[col] == 0 ||
-                        upper_bounds[col] == 1 );
-
-                if( infeasible.load( std::memory_order_relaxed ) )
-                   break;
-
-                assert( !probingView.isInfeasible() );
-                probingView.setProbingColumn( col, true );
-                probingView.propagateDomains();
-                probingView.storeImplications();
-                probingView.reset();
-
-                if( infeasible.load( std::memory_order_relaxed ) )
-                   break;
-
-                assert( !probingView.isInfeasible() );
-                probingView.setProbingColumn( col, false );
-                probingView.propagateDomains();
-
-                bool globalInfeasible = probingView.analyzeImplications();
-                probingView.reset();
-
-                ++nprobed[col];
-
-                if( globalInfeasible )
-                {
-                   infeasible.store( true, std::memory_order_relaxed );
-                   break;
-                }
-             }
-#ifdef PAPILO_TBB
-          } );
+                for( int i = r.begin(); i != r.end(); ++i )
+#else
+         for( int i = start; i < end; i++ )
 #endif
+                {
+                   if( PresolveMethod<REAL>::is_time_exceeded(
+                           timer, problemUpdate.getPresolveOptions().tlim ) )
+                      break;
+                   const int col = probing_cands[i];
+
+                   assert( cflags[col].test( ColFlag::kIntegral ) &&
+                               lower_bounds[col] == 0 ||
+                           upper_bounds[col] == 1 );
+
+                   if( infeasible.load( std::memory_order_relaxed ) )
+                      break;
+
+                   assert( !probingView.isInfeasible() );
+                   probingView.setProbingColumn( col, true );
+                   probingView.propagateDomains();
+                   probingView.storeImplications();
+                   probingView.reset();
+
+                   if( infeasible.load( std::memory_order_relaxed ) )
+                      break;
+
+                   assert( !probingView.isInfeasible() );
+                   probingView.setProbingColumn( col, false );
+                   probingView.propagateDomains();
+
+                   bool globalInfeasible = probingView.analyzeImplications();
+                   probingView.reset();
+
+                   ++nprobed[col];
+
+                   if( globalInfeasible )
+                   {
+                      infeasible.store( true, std::memory_order_relaxed );
+                      break;
+                   }
+                }
+#ifdef PAPILO_TBB
+             } );
+#endif
+      };
+
+      propagate_variables( current_badge_start, current_badge_end );
+
+      if( PresolveMethod<REAL>::is_time_exceeded(
+              timer, problemUpdate.getPresolveOptions().tlim ) )
+         return PresolveStatus::kUnchanged;
 
       if( infeasible.load( std::memory_order_relaxed ) )
          return PresolveStatus::kInfeasible;
@@ -489,7 +504,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
       } );
 #endif
       nsubstitutions += substitutions.size();
-      currentbadgestart = current_badge_end;
+      current_badge_start = current_badge_end;
 
       if( nfixings == 0 && nboundchgs == 0 && nsubstitutions == 0 )
          n_useless += amountofwork;
@@ -510,13 +525,13 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
 
       badge_size = static_cast<int>(
           ceil( badge_size * static_cast<double>( working_limit + extrawork ) /
-                amountofwork ) );
-      badge_size = std::max( badge_size, minbadgesize );
-      badge_size = std::min( nprobingcands - currentbadgestart, badge_size );
-      current_badge_end = currentbadgestart + badge_size;
+                (double) amountofwork ) );
+      badge_size = std::min( nprobingcands - current_badge_start, badge_size );
+      current_badge_end = current_badge_start + badge_size;
 
       abort = n_useless >= consMatrix.getNnz() * 2 || working_limit < 0 ||
-              currentbadgestart == current_badge_end;
+              current_badge_start == current_badge_end ||
+              PresolveMethod<REAL>::is_time_exceeded(timer, problemUpdate.getPresolveOptions().tlim );
    } while( !abort );
 
    PresolveStatus result = PresolveStatus::kUnchanged;
@@ -578,6 +593,7 @@ Probing<REAL>::isBinaryVariable( REAL upper_bound, REAL lower_bound,
           colFlag.test( ColFlag::kIntegral ) && column_size > 0 &&
           lower_bound == 0 && upper_bound == 1;
 }
+
 
 } // namespace papilo
 

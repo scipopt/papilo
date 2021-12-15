@@ -45,6 +45,8 @@ setupProblemWithSimpleSubstitutionFeasibleGcd();
 TEST_CASE( "happy-path-simple-substitution-for-2-int", "[presolve]" )
 {
    Num<double> num{};
+   double time = 0.0;
+   Timer t{ time };
    Message msg{};
    Problem<double> problem = setupProblemWithSimpleSubstitution( 1, 1, 1.0 );
    Statistics statistics{};
@@ -59,7 +61,7 @@ TEST_CASE( "happy-path-simple-substitution-for-2-int", "[presolve]" )
    problem.recomputeAllActivities();
 
    PresolveStatus presolveStatus =
-       presolvingMethod.execute( problem, problemUpdate, num, reductions );
+       presolvingMethod.execute( problem, problemUpdate, num, reductions, t );
 
    // Reduction => x = 2 - y/2 -> 0.5 (1 for int) <= x <= 2
    REQUIRE( presolveStatus == PresolveStatus::kReduced );
@@ -93,6 +95,8 @@ TEST_CASE( "happy-path-simple-substitution-for-int-continuous-coeff",
            "[presolve]" )
 {
    Message msg {};
+   double time = 0.0;
+   Timer t{ time };
    Num<double> num{};
    Problem<double> problem = setupProblemWithSimpleSubstitution( 1, 1, 2.2 );
    Statistics statistics{};
@@ -107,13 +111,15 @@ TEST_CASE( "happy-path-simple-substitution-for-int-continuous-coeff",
    problem.recomputeAllActivities();
 
    PresolveStatus presolveStatus =
-       presolvingMethod.execute( problem, problemUpdate, num, reductions );
+       presolvingMethod.execute( problem, problemUpdate, num, reductions, t );
    REQUIRE( presolveStatus == PresolveStatus::kUnchanged );
 }
 
 TEST_CASE( "happy-path-simple-substitution-for-2-continuous", "[presolve]" )
 {
    Num<double> num{};
+   double time = 0.0;
+   Timer t{ time };
    Message msg{};
    Problem<double> problem = setupProblemWithSimpleSubstitution( 0, 0, 1.0 );
    Statistics statistics{};
@@ -128,7 +134,7 @@ TEST_CASE( "happy-path-simple-substitution-for-2-continuous", "[presolve]" )
    problem.recomputeAllActivities();
 
    PresolveStatus presolveStatus =
-       presolvingMethod.execute( problem, problemUpdate, num, reductions );
+       presolvingMethod.execute( problem, problemUpdate, num, reductions, t );
 
    // Reduction => x = 4 - 2y -> 0 <= x <= 4 (no further bound relaxation)
    REQUIRE( presolveStatus == PresolveStatus::kReduced );
@@ -152,6 +158,8 @@ TEST_CASE( "happy-path-simple-substitution-for-continuous-and-integer",
            "[presolve]" )
 {
    Num<double> num{};
+   double time = 0.0;
+   Timer t{ time };
    Message msg{};
    Problem<double> problem = setupProblemWithSimpleSubstitution( 0, 1, 1.0 );
    Statistics statistics{};
@@ -166,7 +174,7 @@ TEST_CASE( "happy-path-simple-substitution-for-continuous-and-integer",
    problem.recomputeAllActivities();
 
    PresolveStatus presolveStatus =
-       presolvingMethod.execute( problem, problemUpdate, num, reductions );
+       presolvingMethod.execute( problem, problemUpdate, num, reductions, t );
 
    // Reduction => x = 4 - 2y -> 0 <= x <= 4 (no further bound relaxation)
    REQUIRE( presolveStatus == PresolveStatus::kReduced );
@@ -189,6 +197,8 @@ TEST_CASE( "happy-path-simple-substitution-for-continuous-and-integer",
 TEST_CASE( "failed-path-simple-substitution-for-2-int", "[presolve]" )
 {
    Num<double> num{};
+   double time = 0.0;
+   Timer t{ time };
    Message msg{};
    Problem<double> problem = setupProblemWithSimpleSubstitution( 1, 1, 3.0 );
    Statistics statistics{};
@@ -203,7 +213,7 @@ TEST_CASE( "failed-path-simple-substitution-for-2-int", "[presolve]" )
    problem.recomputeAllActivities();
 
    PresolveStatus presolveStatus =
-       presolvingMethod.execute( problem, problemUpdate, num, reductions );
+       presolvingMethod.execute( problem, problemUpdate, num, reductions, t );
 
    REQUIRE( presolveStatus == PresolveStatus::kUnchanged );
 }
@@ -211,6 +221,8 @@ TEST_CASE( "failed-path-simple-substitution-for-2-int", "[presolve]" )
 TEST_CASE( "example_10_1_in_constraint_integer_programming", "[presolve]" )
 {
    Message msg {};
+   double time = 0.0;
+   Timer t{ time };
    Num<double> num{};
    Problem<double> problem = setupProblemWithInfeasibleBounds( 8.0, 3.0, 37.0 );
    Statistics statistics{};
@@ -225,7 +237,7 @@ TEST_CASE( "example_10_1_in_constraint_integer_programming", "[presolve]" )
    problem.recomputeAllActivities();
 
    PresolveStatus presolveStatus =
-       presolvingMethod.execute( problem, problemUpdate, num, reductions );
+       presolvingMethod.execute( problem, problemUpdate, num, reductions, t );
    REQUIRE( presolveStatus == PresolveStatus::kInfeasible );
 }
 
@@ -233,6 +245,8 @@ TEST_CASE( "example_10_1_in_constraint_integer_programming", "[presolve]" )
 TEST_CASE( "should_return_feasible_if_gcd_of_coeff_is_in_rhs", "[presolve]" )
 {
    Message msg {};
+   double time = 0.0;
+   Timer t{ time };
    Num<double> num{};
    Problem<double> problem = setupProblemWithSimpleSubstitutionFeasibleGcd();
    Statistics statistics{};
@@ -247,7 +261,7 @@ TEST_CASE( "should_return_feasible_if_gcd_of_coeff_is_in_rhs", "[presolve]" )
    problem.recomputeAllActivities();
 
    PresolveStatus presolveStatus =
-       presolvingMethod.execute( problem, problemUpdate, num, reductions );
+       presolvingMethod.execute( problem, problemUpdate, num, reductions, t );
 
    REQUIRE( presolveStatus == PresolveStatus::kUnchanged );
 }
@@ -255,6 +269,8 @@ TEST_CASE( "should_return_feasible_if_gcd_of_coeff_is_in_rhs", "[presolve]" )
 TEST_CASE( "should_return_infeasible_if_gcd_of_coeff_is_in_rhs", "[presolve]" )
 {
    Message msg {};
+   double time = 0.0;
+   Timer t{ time };
    Num<double> num{};
    Problem<double> problem = setupProblemWithSimpleSubstitutionInfeasibleGcd();
    Statistics statistics{};
@@ -269,7 +285,7 @@ TEST_CASE( "should_return_infeasible_if_gcd_of_coeff_is_in_rhs", "[presolve]" )
    problem.recomputeAllActivities();
 
    PresolveStatus presolveStatus =
-       presolvingMethod.execute( problem, problemUpdate, num, reductions );
+       presolvingMethod.execute( problem, problemUpdate, num, reductions, t );
 
    REQUIRE( presolveStatus == PresolveStatus::kInfeasible );
 }

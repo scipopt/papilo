@@ -41,6 +41,8 @@ setupProblemWithSimpleProbingMaxActEqualMinAct( bool positive_coefficient,
 TEST_CASE( "happy-path-simple-probing", "[presolve]" )
 {
    Num<double> num{};
+   double time = 0.0;
+   Timer t{ time };
    Message msg{};
    Problem<double> problem = setupProblemWithSimpleProbing(true, true);
    Statistics statistics{};
@@ -54,7 +56,7 @@ TEST_CASE( "happy-path-simple-probing", "[presolve]" )
    problem.recomputeAllActivities();
 
    PresolveStatus presolveStatus =
-       presolvingMethod.execute( problem, problemUpdate, num, reductions );
+       presolvingMethod.execute( problem, problemUpdate, num, reductions, t );
 
    REQUIRE( presolveStatus == PresolveStatus::kReduced );
    REQUIRE( reductions.size() == 4 );
@@ -81,6 +83,8 @@ TEST_CASE( "happy-path-simple-probing", "[presolve]" )
 TEST_CASE( "happy-path-simple-probing-only-negative-coeff", "[presolve]" )
 {
    Message msg{};
+   double time = 0.0;
+   Timer t{ time };
    Num<double> num{};
    Problem<double> problem = setupProblemWithSimpleProbing(true, true);
    Statistics statistics{};
@@ -94,7 +98,7 @@ TEST_CASE( "happy-path-simple-probing-only-negative-coeff", "[presolve]" )
    problem.recomputeAllActivities();
 
    PresolveStatus presolveStatus =
-       presolvingMethod.execute( problem, problemUpdate, num, reductions );
+       presolvingMethod.execute( problem, problemUpdate, num, reductions, t );
 
    REQUIRE( presolveStatus == PresolveStatus::kReduced );
    REQUIRE( reductions.size() == 4 );
@@ -122,6 +126,8 @@ TEST_CASE( "happy-path-simple-probing-only-negative-coeff", "[presolve]" )
 TEST_CASE( "happy-path-simple-probing-only-binary-negative-coefficient",
            "[presolve]" )
 {
+   double time = 0.0;
+   Timer t{ time };
    Message msg{};
    Num<double> num{};
    Problem<double> problem =
@@ -137,7 +143,7 @@ TEST_CASE( "happy-path-simple-probing-only-binary-negative-coefficient",
    problem.recomputeAllActivities();
 
    PresolveStatus presolveStatus =
-       presolvingMethod.execute( problem, problemUpdate, num, reductions );
+       presolvingMethod.execute( problem, problemUpdate, num, reductions, t );
 
    REQUIRE( presolveStatus == PresolveStatus::kReduced );
    REQUIRE( reductions.size() == 8 );
@@ -159,6 +165,8 @@ TEST_CASE( "happy-path-simple-probing-only-binary-positive-coefficient",
            "[presolve]" )
 {
    Message msg{};
+   double time = 0.0;
+   Timer t{ time };
    Num<double> num{};
    Problem<double> problem =
        setupProblemWithSimpleProbingMaxActEqualMinAct( false, true );
@@ -173,7 +181,7 @@ TEST_CASE( "happy-path-simple-probing-only-binary-positive-coefficient",
    problem.recomputeAllActivities();
 
    PresolveStatus presolveStatus =
-       presolvingMethod.execute( problem, problemUpdate, num, reductions );
+       presolvingMethod.execute( problem, problemUpdate, num, reductions, t );
 
    REQUIRE( presolveStatus == PresolveStatus::kReduced );
    REQUIRE( reductions.size() == 8 );

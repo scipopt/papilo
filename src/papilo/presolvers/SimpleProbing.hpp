@@ -46,7 +46,7 @@ class SimpleProbing : public PresolveMethod<REAL>
    PresolveStatus
    execute( const Problem<REAL>& problem,
             const ProblemUpdate<REAL>& problemUpdate, const Num<REAL>& num,
-            Reductions<REAL>& reductions ) override;
+            Reductions<REAL>& reductions, const Timer& timer ) override;
 
    void
    calculateReductionsForSimpleProbing(
@@ -75,7 +75,7 @@ PresolveStatus
 SimpleProbing<REAL>::execute( const Problem<REAL>& problem,
                               const ProblemUpdate<REAL>& problemUpdate,
                               const Num<REAL>& num,
-                              Reductions<REAL>& reductions )
+                              Reductions<REAL>& reductions, const Timer& timer )
 {
    assert( problem.getNumIntegralCols() != 0 );
 

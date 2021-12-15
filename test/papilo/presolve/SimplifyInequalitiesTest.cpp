@@ -42,6 +42,8 @@ TEST_CASE( "happy-path-simplify-inequalities", "[presolve]" )
 {
    // 15x1 +15x2 +7x3 +3x4 +y1 <= 26
    Num<double> num{};
+   double time = 0.0;
+   Timer t{ time };
    Message msg{};
    Problem<double> problem = setupProblemForSimplifyingInequalities();
    problem.recomputeAllActivities();
@@ -59,7 +61,7 @@ TEST_CASE( "happy-path-simplify-inequalities", "[presolve]" )
 #endif
 
    PresolveStatus presolveStatus =
-       presolvingMethod.execute( problem, problemUpdate, num, reductions );
+       presolvingMethod.execute( problem, problemUpdate, num, reductions, t );
 
    REQUIRE( presolveStatus == PresolveStatus::kReduced );
 
@@ -90,6 +92,8 @@ TEST_CASE( "happy-path-simplify-inequalities", "[presolve]" )
 TEST_CASE( "simplify_inequ_doesnt_lock_more_rows", "[presolve]" )
 {
    Num<double> num{};
+   double time = 0.0;
+   Timer t{ time };
    Message msg{};
    Problem<double> problem = setup_simplify_ineq_reduce_rhs();
    Statistics statistics{};
@@ -107,7 +111,7 @@ TEST_CASE( "simplify_inequ_doesnt_lock_more_rows", "[presolve]" )
 #endif
 
    PresolveStatus presolveStatus =
-       presolvingMethod.execute( problem, problemUpdate, num, reductions );
+       presolvingMethod.execute( problem, problemUpdate, num, reductions, t );
 
    REQUIRE( presolveStatus == PresolveStatus::kReduced );
    REQUIRE( reductions.getReduction( 1 ).newval == -275 );
@@ -117,6 +121,8 @@ TEST_CASE( "simplify_inequ_doesnt_lock_more_rows", "[presolve]" )
 TEST_CASE( "simplify_inequ_doesnt_apply_lb_and_ub_on_one_row", "[presolve]" )
 {
    Num<double> num{};
+   double time = 0.0;
+   Timer t{ time };
    Message msg{};
    Problem<double> problem = setup_simple_problem_for_simplify_inequalities_2();
    Statistics statistics{};
@@ -130,7 +136,7 @@ TEST_CASE( "simplify_inequ_doesnt_apply_lb_and_ub_on_one_row", "[presolve]" )
    Reductions<double> reductions{};
 
    PresolveStatus presolveStatus =
-       presolvingMethod.execute( problem, problemUpdate, num, reductions );
+       presolvingMethod.execute( problem, problemUpdate, num, reductions, t );
 
 #ifndef PAPILO_TBB
    presolveOptions.threads = 1;

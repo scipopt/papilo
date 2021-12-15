@@ -125,7 +125,7 @@ class ParallelColDetection : public PresolveMethod<REAL>
    PresolveStatus
    execute( const Problem<REAL>& problem,
             const ProblemUpdate<REAL>& problemUpdate, const Num<REAL>& num,
-            Reductions<REAL>& reductions ) override;
+            Reductions<REAL>& reductions, const Timer& timer ) override;
 
  private:
    int
@@ -508,7 +508,7 @@ PresolveStatus
 ParallelColDetection<REAL>::execute( const Problem<REAL>& problem,
                                      const ProblemUpdate<REAL>& problemUpdate,
                                      const Num<REAL>& num,
-                                     Reductions<REAL>& reductions )
+                                     Reductions<REAL>& reductions, const Timer& timer )
 {
    const auto& constMatrix = problem.getConstraintMatrix();
    const auto& obj = problem.getObjective().coefficients;
