@@ -85,10 +85,10 @@ CoefficientStrengthening<REAL>::execute(
    PresolveStatus result = PresolveStatus::kUnchanged;
 
 #ifndef PAPILO_TBB
-   assert( problemUpdate.getPresolveOptions().runs_sequentiell() );
+   assert( problemUpdate.getPresolveOptions().runs_sequential() );
 #endif
 
-   if( problemUpdate.getPresolveOptions().runs_sequentiell() ||
+   if( problemUpdate.getPresolveOptions().runs_sequential() ||
       !problemUpdate.getPresolveOptions().coefficient_strengthening_parallel )
    {
       Vec<std::pair<REAL, int>> integerCoefficients;

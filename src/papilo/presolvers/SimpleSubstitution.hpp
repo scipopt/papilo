@@ -109,10 +109,10 @@ SimpleSubstitution<REAL>::execute( const Problem<REAL>& problem,
    PresolveStatus result = PresolveStatus::kUnchanged;
 
 #ifndef PAPILO_TBB
-   assert( problemUpdate.getPresolveOptions().runs_sequentiell() );
+   assert( problemUpdate.getPresolveOptions().runs_sequential() );
 #endif
 
-   if( problemUpdate.getPresolveOptions().runs_sequentiell() ||
+   if( problemUpdate.getPresolveOptions().runs_sequential() ||
        !problemUpdate.getPresolveOptions().simple_substitution_parallel )
    {
       for( int k = 0; k < nrows; ++k )

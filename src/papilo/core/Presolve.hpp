@@ -330,16 +330,16 @@ class Presolve
    evaluate_and_apply( const Timer& timer, Problem<REAL>& problem,
                        PresolveResult<REAL>& result,
                        ProblemUpdate<REAL>& probUpdate,
-                       const Statistics& oldstats, bool run_sequentiell );
+                       const Statistics& oldstats, bool run_sequential );
 
    void
    apply_reduction_of_solver( ProblemUpdate<REAL>& probUpdate,
                               size_t index_presolver );
 
    void
-   apply_result_sequentiell( int index_presolver,
+   apply_result_sequential( int index_presolver,
                              ProblemUpdate<REAL>& probUpdate,
-                             bool& run_sequentiell );
+                             bool& run_sequential );
 
    void
    run_presolvers( const Problem<REAL>& problem,
@@ -504,7 +504,7 @@ Presolve<REAL>::apply( Problem<REAL>& problem, bool store_dual_postsolve )
       Statistics last_rounds_stats = stats;
       do
       {
-         bool run_sequentiell = false;
+         bool was_executed_sequential = false;
          // if problem is trivial abort here
          if( probUpdate.getNActiveCols() == 0 ||
              probUpdate.getNActiveRows() == 0 )
@@ -514,15 +514,15 @@ Presolve<REAL>::apply( Problem<REAL>& problem, bool store_dual_postsolve )
          {
          case Delegator::kFast:
             run_presolvers( problem, fastPresolvers, probUpdate,
-                            run_sequentiell );
+                            was_executed_sequential );
             break;
          case Delegator::kMedium:
             run_presolvers( problem, mediumPresolvers, probUpdate,
-                            run_sequentiell );
+                            was_executed_sequential );
             break;
          case Delegator::kExhaustive:
             run_presolvers( problem, exhaustivePresolvers, probUpdate,
-                            run_sequentiell );
+                            was_executed_sequential );
             break;
          default:
             assert( false );
@@ -530,7 +530,7 @@ Presolve<REAL>::apply( Problem<REAL>& problem, bool store_dual_postsolve )
 
          result.status =
              evaluate_and_apply( timer, problem, result, probUpdate,
-                                 last_rounds_stats, run_sequentiell );
+                                 last_rounds_stats, was_executed_sequential );
          if( is_status_infeasible_or_unbounded( result.status ) )
             return result;
          last_rounds_stats = stats;
@@ -913,9 +913,9 @@ Presolve<REAL>::run_presolvers( const Problem<REAL>& problem,
                                 bool& run_sequential )
 {
 #ifndef PAPILO_TBB
-   assert(presolveOptions.runs_sequentiell() == true);
+   assert(presolveOptions.runs_sequential() == true);
 #endif
-   if( presolveOptions.runs_sequentiell() &&
+   if( presolveOptions.runs_sequential() &&
        presolveOptions.apply_results_immediately_if_run_sequentially )
    {
       probUpdate.setPostponeSubstitutions( false );
@@ -923,18 +923,19 @@ Presolve<REAL>::run_presolvers( const Problem<REAL>& problem,
       {
          results[i] =
              presolvers[i]->run( problem, probUpdate, num, reductions[i] );
-         apply_result_sequentiell( i, probUpdate, run_sequential );
+         apply_result_sequential( i, probUpdate, run_sequential );
          if( results[i] == PresolveStatus::kInfeasible )
             return;
-         PresolveStatus status = probUpdate.trivialPresolve();
-         if( is_status_infeasible_or_unbounded( status ) )
-         {
-            results[i] = status;
-            return;
-         }
          if( problem.getNRows() == 0 || problem.getNCols() == 0 )
             return;
       }
+      PresolveStatus status = probUpdate.trivialPresolve();
+      if( is_status_infeasible_or_unbounded( status ) )
+      {
+         results[presolver_2_run.first] = status;
+         return;
+      }
+      probUpdate.check_and_compress();
    }
 #ifdef PAPILO_TBB
    else
@@ -956,11 +957,11 @@ Presolve<REAL>::run_presolvers( const Problem<REAL>& problem,
 
 template <typename REAL>
 void
-Presolve<REAL>::apply_result_sequentiell( int index_presolver,
+Presolve<REAL>::apply_result_sequential( int index_presolver,
                                           ProblemUpdate<REAL>& probUpdate,
-                                          bool& run_sequentiell )
+                                          bool& run_sequential )
 {
-   run_sequentiell = true;
+   run_sequential = true;
    apply_reduction_of_solver( probUpdate, index_presolver );
    probUpdate.flushChangedCoeffs();
    if( probUpdate.flush( false ) == PresolveStatus::kInfeasible )
@@ -969,7 +970,6 @@ Presolve<REAL>::apply_result_sequentiell( int index_presolver,
       return;
    }
    probUpdate.clearStates();
-   probUpdate.check_and_compress();
 }
 
 template <typename REAL>
@@ -998,7 +998,7 @@ Presolve<REAL>::evaluate_and_apply( const Timer& timer, Problem<REAL>& problem,
                                     PresolveResult<REAL>& result,
                                     ProblemUpdate<REAL>& probUpdate,
                                     const Statistics& oldstats,
-                                    bool run_sequentiell )
+                                    bool run_sequential )
 {
    if( round_to_evaluate == Delegator::kFast )
    {
@@ -1021,7 +1021,7 @@ Presolve<REAL>::evaluate_and_apply( const Timer& timer, Problem<REAL>& problem,
    case PresolveStatus::kReduced:
       // problem reductions where found by at least one presolver
       PresolveStatus status;
-      if( !run_sequentiell )
+      if( !run_sequential )
          status = apply_all_presolver_reductions( probUpdate );
       else
          status = PresolveStatus::kReduced;

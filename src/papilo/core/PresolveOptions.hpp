@@ -220,7 +220,7 @@ struct PresolveOptions
    }
 
    bool
-   runs_sequentiell() const
+   runs_sequential() const
    {
       return threads == 1;
    }

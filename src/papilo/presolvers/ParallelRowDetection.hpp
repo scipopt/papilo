@@ -106,10 +106,6 @@ class ParallelRowDetection : public PresolveMethod<REAL>
    computeSupportId( const ConstraintMatrix<REAL>& constMatrix,
                      unsigned int* supporthashes );
 
-   void
-   computeSupportIdParallel( const ConstraintMatrix<REAL>& constMatrix,
-                             unsigned int* supportid );
-
    int
    determineBucketSize( int nRows, std::unique_ptr<unsigned int[]>& supportid,
                         std::unique_ptr<unsigned int[]>& coefhash,
