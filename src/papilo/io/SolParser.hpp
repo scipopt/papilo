@@ -77,9 +77,6 @@ struct SolParser
 
       skip_header( colnames, in, strline );
 
-      REAL colval;
-      String colname;
-
       do
       {
          auto tokens = split( strline.c_str() );
