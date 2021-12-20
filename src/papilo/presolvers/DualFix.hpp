@@ -437,7 +437,7 @@ DualFix<REAL>::perform_dual_fix_step(
          // if possible, but increase the bound slightly
          if( skip_variable_tightening  && ! cflags[i].test( ColFlag::kLbInf ) )
             return PresolveStatus::kUnchanged;
-         bool skip = false;
+         bool skip_ = false;
          bool new_lb_init = false;
          REAL new_lb;
          int best_row = -1;
@@ -459,7 +459,7 @@ DualFix<REAL>::perform_dual_fix_step(
                {
                   check_row( activities[row].ninfmax, activities[row].max,
                              rhs[row], values[j], ubs[i],
-                             cflags[i].test( ColFlag::kUbInf ), skip,
+                             cflags[i].test( ColFlag::kUbInf ), skip_,
                              cand_bound );
                }
                else
@@ -472,7 +472,7 @@ DualFix<REAL>::perform_dual_fix_step(
                {
                   check_row( activities[row].ninfmin, activities[row].min,
                              lhs[row], values[j], ubs[i],
-                             cflags[i].test( ColFlag::kUbInf ), skip,
+                             cflags[i].test( ColFlag::kUbInf ), skip_,
                              cand_bound );
                }
                else
@@ -480,7 +480,7 @@ DualFix<REAL>::perform_dual_fix_step(
                   continue;
             }
 
-            if( skip )
+            if( skip_ )
                break;
 
             // Only if variable is less than or equal to new_LB, all rows in
@@ -500,14 +500,14 @@ DualFix<REAL>::perform_dual_fix_step(
                      num.isLE( new_lb, lbs[i] ) ) ||
                    new_lb <= -num.getHugeVal() )
                {
-                  skip = true;
+                  skip_ = true;
                   break;
                }
             }
          }
 
          // set new lower bound
-         if( !skip && new_lb_init && !num.isHugeVal( new_lb ) )
+         if( !skip_ && new_lb_init && !num.isHugeVal( new_lb ) )
          {
             assert( cflags[i].test( ColFlag::kLbInf ) || new_lb > lbs[i] );
 

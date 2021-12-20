@@ -47,7 +47,6 @@ TEST_CASE( "happy-path-test-free-variable-detection", "[presolve]" )
    PostsolveStorage<double> postsolve =
        PostsolveStorage<double>( problem, num, presolveOptions );
    problem.recomputeAllActivities();
-   auto& activities = problem.getRowActivities();
 
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                                 presolveOptions, num, msg );
