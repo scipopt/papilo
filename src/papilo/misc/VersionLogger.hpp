@@ -112,6 +112,10 @@ print_header()
                BOOST_VERSION_NUMBER_PATCH( BOOST_VERSION ) / 100,
                BOOST_VERSION_NUMBER_MAJOR( BOOST_VERSION ) );
 #endif
+#ifdef PAPILO_TBB
+   // TODO: TBB is missing not able to retrieve version
+   fmt::print( "  TBB            \t Thread building block https://github.com/oneapi-src/oneTBB developed by Intel\n");
+#endif
 #ifdef PAPILO_HAVE_GMP
    fmt::print( "  GMP      {}  \t GNU Multiple Precision Arithmetic Library "
                "developed by T. Granlund (gmplib.org)\n",
@@ -139,7 +143,6 @@ print_header()
        soplex::getGitHash() );
 #endif
 
-   // TODO: TBB is missing not able to retrieve version
 
    fmt::print( "\n" );
 }
