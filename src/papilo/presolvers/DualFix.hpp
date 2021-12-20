@@ -110,10 +110,10 @@ DualFix<REAL>::execute( const Problem<REAL>& problem,
        REAL(problemUpdate.getPresolveOptions().get_variable_bound_tightening_offset());
 
 #ifndef PAPILO_TBB
-   assert( problemUpdate.getPresolveOptions().runs_sequentiell() );
+   assert( problemUpdate.getPresolveOptions().runs_sequential() );
 #endif
 
-   if( problemUpdate.getPresolveOptions().runs_sequentiell() ||
+   if( problemUpdate.getPresolveOptions().runs_sequential() ||
        !problemUpdate.getPresolveOptions().dual_fix_parallel )
    {
       for( int col = 0; col < ncols; ++col )

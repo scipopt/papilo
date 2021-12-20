@@ -87,10 +87,10 @@ ImplIntDetection<REAL>::execute( const Problem<REAL>& problem,
    PresolveStatus result = PresolveStatus::kUnchanged;
 
 #ifndef PAPILO_TBB
-   assert( problemUpdate.getPresolveOptions().runs_sequentiell() );
+   assert( problemUpdate.getPresolveOptions().runs_sequential() );
 #endif
 
-   if( problemUpdate.getPresolveOptions().runs_sequentiell() ||
+   if( problemUpdate.getPresolveOptions().runs_sequential() ||
       !problemUpdate.getPresolveOptions().implied_integer_parallel )
    {
       for( int col = 0; col < ncols; ++col )

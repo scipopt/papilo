@@ -92,10 +92,10 @@ ConstraintPropagation<REAL>::execute( const Problem<REAL>& problem,
        REAL(problemUpdate.getPresolveOptions().get_variable_bound_tightening_offset());
 
 #ifndef PAPILO_TBB
-   assert( problemUpdate.getPresolveOptions().runs_sequentiell() );
+   assert( problemUpdate.getPresolveOptions().runs_sequential() );
 #endif
 
-   if( problemUpdate.getPresolveOptions().runs_sequentiell() ||
+   if( problemUpdate.getPresolveOptions().runs_sequential() ||
        !problemUpdate.getPresolveOptions().constraint_propagation_parallel )
    {
       auto add_boundchange = [&]( BoundChange boundChange, int col, REAL val, int row ) {
@@ -213,7 +213,9 @@ ConstraintPropagation<REAL>::execute( const Problem<REAL>& problem,
       {
          auto rowvec = consMatrix.getRowCoefficients( row );
 
-         assert( !consMatrix.isRowRedundant( row ) );
+         // in sequential mode no trivialPresolve is performed
+         if( consMatrix.isRowRedundant( row ) )
+            continue;
 
          switch( rowvec.getLength() )
          {
