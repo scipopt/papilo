@@ -32,7 +32,6 @@
 #include "papilo/core/postsolve/PostsolveStorage.hpp"
 #include "papilo/core/postsolve/PostsolveType.hpp"
 #include "papilo/core/postsolve/ReductionType.hpp"
-#include "papilo/io/MpsWriter.hpp"
 #include "papilo/misc/MultiPrecision.hpp"
 #include "papilo/misc/Num.hpp"
 #include "papilo/misc/PrimalDualSolValidation.hpp"
