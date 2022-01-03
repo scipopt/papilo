@@ -935,6 +935,7 @@ Presolve<REAL>::run_presolvers( const Problem<REAL>& problem,
          results[presolver_2_run.first] = status;
          return;
       }
+      probUpdate.clearStates();
       probUpdate.check_and_compress();
    }
 #ifdef PAPILO_TBB
