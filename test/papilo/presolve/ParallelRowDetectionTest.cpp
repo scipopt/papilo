@@ -61,6 +61,8 @@ setupProblemParallelRowWithInfinity( bool firstRowRhsInfinity, double lhs,
 TEST_CASE( "parallel-row-unchanged", "[presolve]" )
 {
    Num<double> num{};
+   double time = 0.0;
+   Timer t{ time };
    Message msg{};
    Problem<double> problem = setupProblemWithNoParallelRows();
    Statistics statistics{};
@@ -74,7 +76,7 @@ TEST_CASE( "parallel-row-unchanged", "[presolve]" )
    Reductions<double> reductions{};
 
    PresolveStatus presolveStatus =
-       presolvingMethod.execute( problem, problemUpdate, num, reductions );
+       presolvingMethod.execute( problem, problemUpdate, num, reductions, t );
 
    REQUIRE( presolveStatus == PresolveStatus::kUnchanged );
 }
@@ -83,6 +85,8 @@ TEST_CASE( "parallel-row-two-equations-infeasible-second-row-dominant",
            "[presolve]" )
 {
    Num<double> num{};
+   double time = 0.0;
+   Timer t{ time };
    Message msg{};
    Problem<double> problem =
        setupParallelRowWithTwoParallelEquations( 2.0, 3.0, 1, 3 );
@@ -97,7 +101,7 @@ TEST_CASE( "parallel-row-two-equations-infeasible-second-row-dominant",
    Reductions<double> reductions{};
 
    PresolveStatus presolveStatus =
-       presolvingMethod.execute( problem, problemUpdate, num, reductions );
+       presolvingMethod.execute( problem, problemUpdate, num, reductions, t );
 
    REQUIRE( presolveStatus == PresolveStatus::kInfeasible );
 }
@@ -106,6 +110,8 @@ TEST_CASE( "parallel-row-two-equations-infeasible-first-row-dominant",
            "[presolve]" )
 {
    Num<double> num{};
+   double time = 0.0;
+   Timer t{ time };
    Message msg{};
    Problem<double> problem =
        setupParallelRowWithTwoParallelEquations( 2.0, 3.0, 3, 1 );
@@ -120,7 +126,7 @@ TEST_CASE( "parallel-row-two-equations-infeasible-first-row-dominant",
    Reductions<double> reductions{};
 
    PresolveStatus presolveStatus =
-       presolvingMethod.execute( problem, problemUpdate, num, reductions );
+       presolvingMethod.execute( problem, problemUpdate, num, reductions, t );
 
    REQUIRE( presolveStatus == PresolveStatus::kInfeasible );
 }
@@ -129,6 +135,8 @@ TEST_CASE( "parallel-row-two-equations-feasible-second-row-dominant",
            "[presolve]" )
 {
    Num<double> num{};
+   double time = 0.0;
+   Timer t{ time };
    Message msg{};
    Problem<double> problem =
        setupParallelRowWithTwoParallelEquations( 1.0, 3.0, 1, 3 );
@@ -143,7 +151,7 @@ TEST_CASE( "parallel-row-two-equations-feasible-second-row-dominant",
    Reductions<double> reductions{};
 
    PresolveStatus presolveStatus =
-       presolvingMethod.execute( problem, problemUpdate, num, reductions );
+       presolvingMethod.execute( problem, problemUpdate, num, reductions, t );
 
    REQUIRE( presolveStatus == PresolveStatus::kReduced );
    REQUIRE( reductions.size() == 3 );
@@ -164,6 +172,8 @@ TEST_CASE( "parallel-row-two-equations-feasible-first-row-dominant",
            "[presolve]" )
 {
    Num<double> num{};
+   double time = 0.0;
+   Timer t{ time };
    Message msg{};
    Problem<double> problem =
        setupParallelRowWithTwoParallelEquations( 3.0, 1.0, 3, 1 );
@@ -178,7 +188,7 @@ TEST_CASE( "parallel-row-two-equations-feasible-first-row-dominant",
    Reductions<double> reductions{};
 
    PresolveStatus presolveStatus =
-       presolvingMethod.execute( problem, problemUpdate, num, reductions );
+       presolvingMethod.execute( problem, problemUpdate, num, reductions, t );
 
    REQUIRE( presolveStatus == PresolveStatus::kReduced );
    REQUIRE( reductions.size() == 3 );
@@ -199,6 +209,8 @@ TEST_CASE( "parallel-row-two-inequalities-redundant-row-second-row-dominant",
            "[presolve]" )
 {
    Num<double> num{};
+   double time = 0.0;
+   Timer t{ time };
    Message msg{};
    Problem<double> problem =
        setupProblemParallelRowWithTwoInequalities( 1.0, 3.0, -1.0, -3.0, 1, 3 );
@@ -213,7 +225,7 @@ TEST_CASE( "parallel-row-two-inequalities-redundant-row-second-row-dominant",
    Reductions<double> reductions{};
 
    PresolveStatus presolveStatus =
-       presolvingMethod.execute( problem, problemUpdate, num, reductions );
+       presolvingMethod.execute( problem, problemUpdate, num, reductions, t );
 
    REQUIRE( presolveStatus == PresolveStatus::kReduced );
    REQUIRE( reductions.size() == 3 );
@@ -234,6 +246,8 @@ TEST_CASE( "parallel-row-two-inequalities-redundant-row-first-row-dominant",
            "[presolve]" )
 {
    Num<double> num{};
+   double time = 0.0;
+   Timer t{ time };
    Message msg{};
    Problem<double> problem =
        setupProblemParallelRowWithTwoInequalities( 1.0, 3.0, -1.0, -3.0, 3, 1 );
@@ -248,7 +262,7 @@ TEST_CASE( "parallel-row-two-inequalities-redundant-row-first-row-dominant",
    Reductions<double> reductions{};
 
    PresolveStatus presolveStatus =
-       presolvingMethod.execute( problem, problemUpdate, num, reductions );
+       presolvingMethod.execute( problem, problemUpdate, num, reductions, t );
 
    REQUIRE( presolveStatus == PresolveStatus::kReduced );
    REQUIRE( reductions.size() == 3 );
@@ -270,6 +284,8 @@ TEST_CASE(
     "[presolve]" )
 {
    Num<double> num{};
+   double time = 0.0;
+   Timer t{ time };
    Message msg{};
    Problem<double> problem =
        setupProblemParallelRowWithTwoInequalities( 1.0, 3.0, 0.0, -3.0, 1, 3 );
@@ -284,7 +300,7 @@ TEST_CASE(
    Reductions<double> reductions{};
 
    PresolveStatus presolveStatus =
-       presolvingMethod.execute( problem, problemUpdate, num, reductions );
+       presolvingMethod.execute( problem, problemUpdate, num, reductions, t );
 
    REQUIRE( presolveStatus == PresolveStatus::kReduced );
    REQUIRE( reductions.size() == 5 );
@@ -316,6 +332,8 @@ TEST_CASE(
     "[presolve]" )
 {
    Num<double> num{};
+   double time = 0.0;
+   Timer t{ time };
    Message msg{};
    Problem<double> problem =
        setupProblemParallelRowWithTwoInequalities( 1.0, 3.0, -6.0, -1.0, 3, 1 );
@@ -330,7 +348,7 @@ TEST_CASE(
    Reductions<double> reductions{};
 
    PresolveStatus presolveStatus =
-       presolvingMethod.execute( problem, problemUpdate, num, reductions );
+       presolvingMethod.execute( problem, problemUpdate, num, reductions, t );
 
    REQUIRE( presolveStatus == PresolveStatus::kReduced );
    REQUIRE( reductions.size() == 5 );
@@ -362,6 +380,8 @@ TEST_CASE(
     "[presolve]" )
 {
    Num<double> num{};
+   double time = 0.0;
+   Timer t{ time };
    Message msg{};
    Problem<double> problem =
        setupProblemParallelRowWithTwoInequalities( 1.0, 5.0, 0.0, 0.0, 1, 3 );
@@ -376,7 +396,7 @@ TEST_CASE(
    Reductions<double> reductions{};
 
    PresolveStatus presolveStatus =
-       presolvingMethod.execute( problem, problemUpdate, num, reductions );
+       presolvingMethod.execute( problem, problemUpdate, num, reductions, t );
 
    REQUIRE( presolveStatus == PresolveStatus::kReduced );
    REQUIRE( reductions.size() == 5 );
@@ -408,6 +428,8 @@ TEST_CASE(
     "[presolve]" )
 {
    Num<double> num{};
+   double time = 0.0;
+   Timer t{ time };
    Message msg{};
    Problem<double> problem =
        setupProblemParallelRowWithTwoInequalities( 5.0, 1.0, 0.0, 0.0, 3, 1 );
@@ -422,7 +444,7 @@ TEST_CASE(
    Reductions<double> reductions{};
 
    PresolveStatus presolveStatus =
-       presolvingMethod.execute( problem, problemUpdate, num, reductions );
+       presolvingMethod.execute( problem, problemUpdate, num, reductions, t );
 
    REQUIRE( presolveStatus == PresolveStatus::kReduced );
    REQUIRE( reductions.size() == 5 );
@@ -453,6 +475,8 @@ TEST_CASE( "parallel-row-two-inequalities-infeasible-first-row-dominant",
            "[presolve]" )
 {
    Num<double> num{};
+   double time = 0.0;
+   Timer t{ time };
    Message msg{};
    Problem<double> problem =
        setupProblemParallelRowWithTwoInequalities( 10.0, 2.0, 5.0, 0.0, 2, 1 );
@@ -467,7 +491,7 @@ TEST_CASE( "parallel-row-two-inequalities-infeasible-first-row-dominant",
    Reductions<double> reductions{};
 
    PresolveStatus presolveStatus =
-       presolvingMethod.execute( problem, problemUpdate, num, reductions );
+       presolvingMethod.execute( problem, problemUpdate, num, reductions, t );
 
    REQUIRE( presolveStatus == PresolveStatus::kInfeasible );
 }
@@ -476,6 +500,8 @@ TEST_CASE( "parallel-row-two-inequalities-infeasible-second-row-dominant",
            "[presolve]" )
 {
    Num<double> num{};
+   double time = 0.0;
+   Timer t{ time };
    Message msg{};
    Problem<double> problem =
        setupProblemParallelRowWithTwoInequalities( 7.0, 2.0, 5.0, 0.0, 1, 2 );
@@ -490,7 +516,7 @@ TEST_CASE( "parallel-row-two-inequalities-infeasible-second-row-dominant",
    Reductions<double> reductions{};
 
    PresolveStatus presolveStatus =
-       presolvingMethod.execute( problem, problemUpdate, num, reductions );
+       presolvingMethod.execute( problem, problemUpdate, num, reductions, t );
 
    REQUIRE( presolveStatus == PresolveStatus::kInfeasible );
 }
@@ -500,6 +526,8 @@ TEST_CASE( "parallel-row-two-inequalities-tighten-upper-bound-first-row-neg"
            "[presolve]" )
 {
    Num<double> num{};
+   double time = 0.0;
+   Timer t{ time };
    Message msg{};
    Problem<double> problem =
        setupProblemParallelRowWithTwoInequalities( 5.0, 0.0, 0.0, -1.0, 3, -1 );
@@ -514,7 +542,7 @@ TEST_CASE( "parallel-row-two-inequalities-tighten-upper-bound-first-row-neg"
    Reductions<double> reductions{};
 
    PresolveStatus presolveStatus =
-       presolvingMethod.execute( problem, problemUpdate, num, reductions );
+       presolvingMethod.execute( problem, problemUpdate, num, reductions, t );
 
    REQUIRE( presolveStatus == PresolveStatus::kReduced );
    REQUIRE( reductions.size() == 5 );
@@ -544,6 +572,8 @@ TEST_CASE( "parallel-row-two-inequalities-tighten-upper-bound-first-row-neg"
 TEST_CASE( "parallel-row-overwrite-inf-first-row-rhs-inf", "[presolve]" )
 {
    Num<double> num{};
+   double time = 0.0;
+   Timer t{ time };
    Message msg{};
    Problem<double> problem =
        setupProblemParallelRowWithInfinity( true, 2, 2, 1, 1 );
@@ -558,7 +588,7 @@ TEST_CASE( "parallel-row-overwrite-inf-first-row-rhs-inf", "[presolve]" )
    Reductions<double> reductions{};
 
    PresolveStatus presolveStatus =
-       presolvingMethod.execute( problem, problemUpdate, num, reductions );
+       presolvingMethod.execute( problem, problemUpdate, num, reductions, t );
 
    REQUIRE( presolveStatus == PresolveStatus::kReduced );
    REQUIRE( reductions.size() == 5 );
@@ -588,6 +618,8 @@ TEST_CASE( "parallel-row-overwrite-inf-first-row-rhs-inf", "[presolve]" )
 TEST_CASE( "parallel-row-overwrite-inf-first-row-lhs-inf", "[presolve]" )
 {
    Num<double> num{};
+   double time = 0.0;
+   Timer t{ time };
    Message msg{};
    Problem<double> problem =
        setupProblemParallelRowWithInfinity( false, 2, 2, 1, 1 );
@@ -602,7 +634,7 @@ TEST_CASE( "parallel-row-overwrite-inf-first-row-lhs-inf", "[presolve]" )
    Reductions<double> reductions{};
 
    PresolveStatus presolveStatus =
-       presolvingMethod.execute( problem, problemUpdate, num, reductions );
+       presolvingMethod.execute( problem, problemUpdate, num, reductions, t );
 
    REQUIRE( presolveStatus == PresolveStatus::kReduced );
    REQUIRE( reductions.size() == 5 );
@@ -633,6 +665,8 @@ TEST_CASE( "parallel-row-overwrite-inf-first-row-lhs-inf-neg-factor",
            "[presolve]" )
 {
    Num<double> num{};
+   double time = 0.0;
+   Timer t{ time };
    Message msg{};
    Problem<double> problem =
        setupProblemParallelRowWithInfinity( false, -1, 2, -1, 1 );
@@ -647,7 +681,7 @@ TEST_CASE( "parallel-row-overwrite-inf-first-row-lhs-inf-neg-factor",
    Reductions<double> reductions{};
 
    PresolveStatus presolveStatus =
-       presolvingMethod.execute( problem, problemUpdate, num, reductions );
+       presolvingMethod.execute( problem, problemUpdate, num, reductions, t );
 
    REQUIRE( presolveStatus == PresolveStatus::kReduced );
    REQUIRE( reductions.size() == 5 );
@@ -677,6 +711,8 @@ TEST_CASE( "parallel-row-overwrite-inf-first-row-lhs-inf-neg-factor",
 TEST_CASE( "parallel-row-mixed-infeasible-first-row-equation", "[presolve]" )
 {
    Num<double> num{};
+   double time = 0.0;
+   Timer t{ time };
    Message msg{};
    Problem<double> problem =
        setupProblemParallelRowWithMixed( true, 2.2, 5.0, 2, 1 );
@@ -691,7 +727,7 @@ TEST_CASE( "parallel-row-mixed-infeasible-first-row-equation", "[presolve]" )
    Reductions<double> reductions{};
 
    PresolveStatus presolveStatus =
-       presolvingMethod.execute( problem, problemUpdate, num, reductions );
+       presolvingMethod.execute( problem, problemUpdate, num, reductions, t );
 
    REQUIRE( presolveStatus == PresolveStatus::kInfeasible );
 }
@@ -699,6 +735,8 @@ TEST_CASE( "parallel-row-mixed-infeasible-first-row-equation", "[presolve]" )
 TEST_CASE( "parallel-row-mixed-second-row-equation", "[presolve]" )
 {
    Num<double> num{};
+   double time = 0.0;
+   Timer t{ time };
    Message msg{};
    Problem<double> problem =
        setupProblemParallelRowWithMixed( false, 0.0, 5.0, 2, 1 );
@@ -713,7 +751,7 @@ TEST_CASE( "parallel-row-mixed-second-row-equation", "[presolve]" )
    Reductions<double> reductions{};
 
    PresolveStatus presolveStatus =
-       presolvingMethod.execute( problem, problemUpdate, num, reductions );
+       presolvingMethod.execute( problem, problemUpdate, num, reductions, t );
 
    REQUIRE( presolveStatus == PresolveStatus::kReduced );
    REQUIRE( reductions.size() == 3 );
@@ -733,6 +771,8 @@ TEST_CASE( "parallel-row-mixed-second-row-equation", "[presolve]" )
 TEST_CASE( "parallel-row-mixed-infeasible-second-row-equation", "[presolve]" )
 {
    Num<double> num{};
+   double time = 0.0;
+   Timer t{ time };
    Message msg{};
    Problem<double> problem =
        setupProblemParallelRowWithMixed( false, 2.2, 5.0, 2, 1 );
@@ -747,7 +787,7 @@ TEST_CASE( "parallel-row-mixed-infeasible-second-row-equation", "[presolve]" )
    Reductions<double> reductions{};
 
    PresolveStatus presolveStatus =
-       presolvingMethod.execute( problem, problemUpdate, num, reductions );
+       presolvingMethod.execute( problem, problemUpdate, num, reductions, t );
 
    REQUIRE( presolveStatus == PresolveStatus::kInfeasible );
 }
@@ -755,6 +795,8 @@ TEST_CASE( "parallel-row-mixed-infeasible-second-row-equation", "[presolve]" )
 TEST_CASE( "parallel-row-best-bound-is-used-for-rhs", "[presolve]" )
 {
    Num<double> num{};
+   double time = 0.0;
+   Timer t{ time };
    Message msg{};
    Problem<double> problem =
        setupParallelRowWithMultipleParallelInequalities( 1.0 );
@@ -769,7 +811,7 @@ TEST_CASE( "parallel-row-best-bound-is-used-for-rhs", "[presolve]" )
    Reductions<double> reductions{};
 
    PresolveStatus presolveStatus =
-       presolvingMethod.execute( problem, problemUpdate, num, reductions );
+       presolvingMethod.execute( problem, problemUpdate, num, reductions, t );
 
    REQUIRE( presolveStatus == PresolveStatus::kReduced );
    REQUIRE( reductions.size() == 7 );
@@ -801,6 +843,8 @@ TEST_CASE( "parallel-row-best-bound-is-used-for-rhs", "[presolve]" )
 TEST_CASE( "parallel-row-best-bound-is-used-for-rhs-coeff-not-1", "[presolve]" )
 {
    Num<double> num{};
+   double time = 0.0;
+   Timer t{ time };
    Message msg{};
    Problem<double> problem =
        setupParallelRowWithMultipleParallelInequalities( 0.1 );
@@ -815,7 +859,7 @@ TEST_CASE( "parallel-row-best-bound-is-used-for-rhs-coeff-not-1", "[presolve]" )
    Reductions<double> reductions{};
 
    PresolveStatus presolveStatus =
-       presolvingMethod.execute( problem, problemUpdate, num, reductions );
+       presolvingMethod.execute( problem, problemUpdate, num, reductions, t );
 
    REQUIRE( presolveStatus == PresolveStatus::kReduced );
    REQUIRE( reductions.size() == 7 );
@@ -847,6 +891,8 @@ TEST_CASE( "parallel-row-best-bound-is-used-for-rhs-coeff-not-1", "[presolve]" )
 TEST_CASE( "parallel-row-multiple-parallel-rows", "[presolve]" )
 {
    Num<double> num{};
+   double time = 0.0;
+   Timer t{ time };
    Message msg{};
    Problem<double> problem = setupParallelRowWithMultipleParallelRows();
    Statistics statistics{};
@@ -860,7 +906,7 @@ TEST_CASE( "parallel-row-multiple-parallel-rows", "[presolve]" )
    Reductions<double> reductions{};
 
    PresolveStatus presolveStatus =
-       presolvingMethod.execute( problem, problemUpdate, num, reductions );
+       presolvingMethod.execute( problem, problemUpdate, num, reductions, t );
 
    REQUIRE( presolveStatus == PresolveStatus::kReduced );
    REQUIRE( reductions.size() == 7 );
@@ -929,6 +975,8 @@ setupParallelRowWithTwoParallelEquations( double rhs_first_row,
                                           double factor3 )
 {
    Num<double> num{};
+   double time = 0.0;
+   Timer t{ time };
    Vec<double> coefficients{ 1.0, 1.0, 1.0 };
    Vec<double> upperBounds{ 10.0, 10.0, 10.0 };
    Vec<double> lowerBounds{ 0.0, 0.0, 0.0 };
@@ -974,6 +1022,8 @@ Problem<double>
 setupParallelRowWithMultipleParallelRows()
 {
    Num<double> num{};
+   double time = 0.0;
+   Timer t{ time };
    Vec<double> coefficients{ 1.0, 1.0, 1.0 };
    Vec<double> upperBounds{ 10.0, 10.0, 10.0 };
    Vec<double> lowerBounds{ 0.0, 0.0, 0.0 };
@@ -1024,6 +1074,8 @@ Problem<double>
 setupParallelRowWithMultipleParallelInequalities( double coeff )
 {
    Num<double> num{};
+   double time = 0.0;
+   Timer t{ time };
    Vec<double> coefficients{ 1.0, 1.0 };
    Vec<double> upperBounds{ 10.0, 10.0 };
    Vec<double> lowerBounds{ 0.0, 0.0 };
@@ -1116,6 +1168,8 @@ setupProblemParallelRowWithMixed( bool firstRowEquation, double lhsIneq,
                                   double factorEquation )
 {
    Num<double> num{};
+   double time = 0.0;
+   Timer t{ time };
    Vec<double> coefficients{ 1.0, 1.0, 1.0 };
    Vec<double> upperBounds{ 10.0, 10.0, 10.0 };
    Vec<double> lowerBounds{ 0.0, 0.0, 0.0 };
@@ -1171,6 +1225,8 @@ setupProblemParallelRowWithInfinity( bool firstRowRhsInfinity, double lhs,
                                      double factorrhs )
 {
    Num<double> num{};
+   double time = 0.0;
+   Timer t{ time };
    Vec<double> coefficients{ 1.0, 1.0, 1.0 };
    Vec<double> upperBounds{ 10.0, 10.0, 10.0 };
    Vec<double> lowerBounds{ 0.0, 0.0, 0.0 };

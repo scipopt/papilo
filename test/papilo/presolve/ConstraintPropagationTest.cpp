@@ -34,6 +34,8 @@ setupProblemWithConstraintPropagation( bool integer_values );
 
 TEST_CASE( "constraint-propagation-happy-path", "[presolve]" )
 {
+      double time = 0.0;
+   Timer t{time};
    Num<double> num{};
    Message msg{};
    Problem<double> problem = setupProblemWithConstraintPropagation( true );
@@ -54,7 +56,7 @@ TEST_CASE( "constraint-propagation-happy-path", "[presolve]" )
 #endif
 
    PresolveStatus presolveStatus =
-       presolvingMethod.execute( problem, problemUpdate, num, reductions );
+       presolvingMethod.execute( problem, problemUpdate, num, reductions, t );
 
    REQUIRE( presolveStatus == PresolveStatus::kReduced );
    REQUIRE( reductions.size() == 8 );
@@ -90,6 +92,8 @@ TEST_CASE( "constraint-propagation-happy-path", "[presolve]" )
 
 TEST_CASE( "constraint-propagation-no-tightening-for-lp", "[presolve]" )
 {
+   double time = 0.0;
+   Timer t{ time };
    Num<double> num{};
    Message msg{};
    Problem<double> problem = setupProblemWithConstraintPropagation( false );
@@ -106,7 +110,7 @@ TEST_CASE( "constraint-propagation-no-tightening-for-lp", "[presolve]" )
    problemUpdate.trivialPresolve();
 
    PresolveStatus presolveStatus =
-       presolvingMethod.execute( problem, problemUpdate, num, reductions );
+       presolvingMethod.execute( problem, problemUpdate, num, reductions, t);
 
    REQUIRE( presolveStatus == PresolveStatus::kUnchanged );
 }

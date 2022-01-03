@@ -69,6 +69,8 @@ TEST_CASE( "dual-fix-trivial-column-presolve-finds-reduction", "[presolve]" )
 
 TEST_CASE( "dual-fix-happy-path", "[presolve]" )
 {
+   double time = 0.0;
+   Timer t{time};
    Num<double> num{};
    Message msg{};
    Problem<double> problem =
@@ -85,7 +87,7 @@ TEST_CASE( "dual-fix-happy-path", "[presolve]" )
    Reductions<double> reductions{};
 
    PresolveStatus presolveStatus =
-       presolvingMethod.execute( problem, problemUpdate, num, reductions );
+       presolvingMethod.execute( problem, problemUpdate, num, reductions, t);
 
    REQUIRE( presolveStatus == PresolveStatus::kReduced );
    REQUIRE( reductions.getReduction( 0 ).col == 0 );
@@ -98,6 +100,8 @@ TEST_CASE( "dual-fix-happy-path", "[presolve]" )
 
 TEST_CASE( "dual-fix-no-dual-substitution-for-lp", "[presolve]" )
 {
+      double time = 0.0;
+   Timer t{time};
    Num<double> num{};
    Message msg{};
    Problem<double> problem = setupMatrixForDualSubstitution( false );
@@ -113,13 +117,15 @@ TEST_CASE( "dual-fix-no-dual-substitution-for-lp", "[presolve]" )
    Reductions<double> reductions{};
 
    PresolveStatus presolveStatus =
-       presolvingMethod.execute( problem, problemUpdate, num, reductions );
+       presolvingMethod.execute( problem, problemUpdate, num, reductions, t);
 
    REQUIRE( presolveStatus == PresolveStatus::kUnchanged );
 }
 
 TEST_CASE( "dual-fix-dual-substitution", "[presolve]" )
 {
+      double time = 0.0;
+   Timer t{time};
    Num<double> num{};
    Message msg{};
    Problem<double> problem = setupMatrixForDualSubstitution( true );
@@ -135,7 +141,7 @@ TEST_CASE( "dual-fix-dual-substitution", "[presolve]" )
    Reductions<double> reductions{};
 
    PresolveStatus presolveStatus =
-       presolvingMethod.execute( problem, problemUpdate, num, reductions );
+       presolvingMethod.execute( problem, problemUpdate, num, reductions, t);
 
    REQUIRE( presolveStatus == PresolveStatus::kReduced );
 
@@ -159,6 +165,8 @@ TEST_CASE( "dual-fix-dual-substitution", "[presolve]" )
 
 TEST_CASE( "dual-fix-dual-substitution-rounding", "[presolve]" )
 {
+      double time = 0.0;
+   Timer t{time};
    Num<double> num{};
    Message msg{};
    Problem<double> problem = setupMatrixForDualSubstitutionIntegerRounding();
@@ -174,7 +182,7 @@ TEST_CASE( "dual-fix-dual-substitution-rounding", "[presolve]" )
    Reductions<double> reductions{};
 
    PresolveStatus presolveStatus =
-       presolvingMethod.execute( problem, problemUpdate, num, reductions );
+       presolvingMethod.execute( problem, problemUpdate, num, reductions, t );
 
    REQUIRE( presolveStatus == PresolveStatus::kReduced );
    REQUIRE( reductions.size() == 8 );
@@ -215,6 +223,8 @@ TEST_CASE( "dual-fix-dual-substitution-rounding", "[presolve]" )
 
 TEST_CASE( "dual-fix-dual-substitution-unbounded-variables", "[presolve]" )
 {
+      double time = 0.0;
+   Timer t{time};
    Num<double> num{};
    Message msg{};
    Problem<double> problem = setupMatrixForDualSubstitutionWithUnboundedVar();
@@ -230,13 +240,15 @@ TEST_CASE( "dual-fix-dual-substitution-unbounded-variables", "[presolve]" )
    Reductions<double> reductions{};
 
    PresolveStatus presolveStatus =
-       presolvingMethod.execute( problem, problemUpdate, num, reductions );
+       presolvingMethod.execute( problem, problemUpdate, num, reductions, t );
 
    REQUIRE( presolveStatus == PresolveStatus::kUnchanged );
 }
 
 TEST_CASE( "dual-fix-dual-substitution-equation", "[presolve]" )
 {
+      double time = 0.0;
+   Timer t{time};
    Num<double> num{};
    Message msg{};
    Problem<double> problem = setupMatrixForDualSubstitutionEquation();
@@ -252,7 +264,7 @@ TEST_CASE( "dual-fix-dual-substitution-equation", "[presolve]" )
    Reductions<double> reductions{};
 
    PresolveStatus presolveStatus =
-       presolvingMethod.execute( problem, problemUpdate, num, reductions );
+       presolvingMethod.execute( problem, problemUpdate, num, reductions, t );
 
    REQUIRE( presolveStatus == PresolveStatus::kReduced );
    REQUIRE( reductions.size() == 4 );
@@ -277,6 +289,8 @@ TEST_CASE( "dual-fix-dual-substitution-equation", "[presolve]" )
 
 TEST_CASE( "dual-fix-infinity", "[presolve]" )
 {
+      double time = 0.0;
+   Timer t{time};
    Num<double> num{};
    Message msg{};
    Problem<double> problem = setupMatrixForDualFixInfinity();
@@ -292,7 +306,7 @@ TEST_CASE( "dual-fix-infinity", "[presolve]" )
    Reductions<double> reductions{};
 
    PresolveStatus presolveStatus =
-       presolvingMethod.execute( problem, problemUpdate, num, reductions );
+       presolvingMethod.execute( problem, problemUpdate, num, reductions, t );
 
    REQUIRE( presolveStatus == PresolveStatus::kReduced );
    REQUIRE( reductions.size() >= 5 );

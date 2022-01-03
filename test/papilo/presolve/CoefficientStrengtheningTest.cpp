@@ -34,6 +34,8 @@ setupProblemForCoefficientStrengthening();
 
 TEST_CASE( "happy-path-coefficient-strengthening", "[presolve]" )
 {
+      double time = 0.0;
+   Timer t{time};
    Num<double> num{};
    Message msg{};
    Problem<double> problem = setupProblemForCoefficientStrengthening();
@@ -51,7 +53,7 @@ TEST_CASE( "happy-path-coefficient-strengthening", "[presolve]" )
 #endif
    problemUpdate.trivialPresolve();
    PresolveStatus presolveStatus =
-       presolvingMethod.execute( problem, problemUpdate, num, reductions );
+       presolvingMethod.execute( problem, problemUpdate, num, reductions, t);
    // the Constraint x +2y <=2 (x,y in {0,1}) is dominated by x+ y <=1
    REQUIRE( presolveStatus == PresolveStatus::kReduced );
    REQUIRE( reductions.size() == 3 );

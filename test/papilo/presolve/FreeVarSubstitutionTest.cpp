@@ -40,6 +40,8 @@ TEST_CASE( "happy-path-test-free-variable-detection", "[presolve]" )
 {
    Problem<double> problem = setupProblemForFreeVariableSubstitution();
 
+   double time = 0.0;
+   Timer t{time};
    Num<double> num{};
    Message msg{};
    Statistics statistics{};
@@ -57,7 +59,7 @@ TEST_CASE( "happy-path-test-free-variable-detection", "[presolve]" )
    presolvingMethod.initialize( problem, presolveOptions );
 
    PresolveStatus presolveStatus =
-       presolvingMethod.execute( problem, problemUpdate, num, reductions );
+       presolvingMethod.execute( problem, problemUpdate, num, reductions, t);
 
    REQUIRE( presolveStatus == PresolveStatus::kReduced );
 

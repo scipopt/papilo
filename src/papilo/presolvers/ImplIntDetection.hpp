@@ -47,7 +47,7 @@ class ImplIntDetection : public PresolveMethod<REAL>
    PresolveStatus
    execute( const Problem<REAL>& problem,
             const ProblemUpdate<REAL>& problemUpdate, const Num<REAL>& num,
-            Reductions<REAL>& reductions ) override;
+            Reductions<REAL>& reductions, const Timer& timer) override;
 
  private:
    PresolveStatus
@@ -71,7 +71,7 @@ PresolveStatus
 ImplIntDetection<REAL>::execute( const Problem<REAL>& problem,
                                  const ProblemUpdate<REAL>& problemUpdate,
                                  const Num<REAL>& num,
-                                 Reductions<REAL>& reductions )
+                                 Reductions<REAL>& reductions, const Timer& timer )
 {
    const auto& domains = problem.getVariableDomains();
    const auto& lower_bounds = domains.lower_bounds;

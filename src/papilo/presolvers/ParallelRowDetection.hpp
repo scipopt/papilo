@@ -121,7 +121,7 @@ class ParallelRowDetection : public PresolveMethod<REAL>
    PresolveStatus
    execute( const Problem<REAL>& problem,
             const ProblemUpdate<REAL>& problemUpdate, const Num<REAL>& num,
-            Reductions<REAL>& reductions ) override;
+            Reductions<REAL>& reductions, const Timer& timer) override;
 };
 
 #ifdef PAPILO_USE_EXTERN_TEMPLATES
@@ -277,7 +277,7 @@ PresolveStatus
 ParallelRowDetection<REAL>::execute( const Problem<REAL>& problem,
                                      const ProblemUpdate<REAL>& problemUpdate,
                                      const Num<REAL>& num,
-                                     Reductions<REAL>& reductions )
+                                     Reductions<REAL>& reductions, const Timer& timer )
 {
    const auto& constMatrix = problem.getConstraintMatrix();
    const auto& lhs_values = constMatrix.getLeftHandSides();

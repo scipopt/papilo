@@ -45,7 +45,7 @@ class CoefficientStrengthening : public PresolveMethod<REAL>
    PresolveStatus
    execute( const Problem<REAL>& problem,
             const ProblemUpdate<REAL>& problemUpdate, const Num<REAL>& num,
-            Reductions<REAL>& reductions ) override;
+            Reductions<REAL>& reductions, const Timer& timer ) override;
 
  private:
    PresolveStatus
@@ -68,7 +68,7 @@ template <typename REAL>
 PresolveStatus
 CoefficientStrengthening<REAL>::execute(
     const Problem<REAL>& problem, const ProblemUpdate<REAL>& problemUpdate,
-    const Num<REAL>& num, Reductions<REAL>& reductions )
+    const Num<REAL>& num, Reductions<REAL>& reductions, const Timer& timer )
 {
    assert( problem.getNumIntegralCols() != 0 );
 

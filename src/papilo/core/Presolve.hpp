@@ -344,7 +344,7 @@ class Presolve
    void
    run_presolvers( const Problem<REAL>& problem,
                    const std::pair<int, int>& presolver_2_run,
-                   ProblemUpdate<REAL>& probUpdate, bool& run_sequential );
+                   ProblemUpdate<REAL>& probUpdate, bool& run_sequential, const Timer& timer );
 
    bool
    is_status_infeasible_or_unbounded( const PresolveStatus& status ) const;
@@ -514,15 +514,15 @@ Presolve<REAL>::apply( Problem<REAL>& problem, bool store_dual_postsolve )
          {
          case Delegator::kFast:
             run_presolvers( problem, fastPresolvers, probUpdate,
-                            was_executed_sequential );
+                            was_executed_sequential, timer );
             break;
          case Delegator::kMedium:
             run_presolvers( problem, mediumPresolvers, probUpdate,
-                            was_executed_sequential );
+                            was_executed_sequential, timer );
             break;
          case Delegator::kExhaustive:
             run_presolvers( problem, exhaustivePresolvers, probUpdate,
-                            was_executed_sequential );
+                            was_executed_sequential, timer );
             break;
          default:
             assert( false );
@@ -910,7 +910,7 @@ void
 Presolve<REAL>::run_presolvers( const Problem<REAL>& problem,
                                 const std::pair<int, int>& presolver_2_run,
                                 ProblemUpdate<REAL>& probUpdate,
-                                bool& run_sequential )
+                                bool& run_sequential, const Timer& timer )
 {
 #ifndef PAPILO_TBB
    assert(presolveOptions.runs_sequential() == true);
@@ -922,7 +922,7 @@ Presolve<REAL>::run_presolvers( const Problem<REAL>& problem,
       for( int i = presolver_2_run.first; i != presolver_2_run.second; ++i )
       {
          results[i] =
-             presolvers[i]->run( problem, probUpdate, num, reductions[i] );
+             presolvers[i]->run( problem, probUpdate, num, reductions[i], timer );
          apply_result_sequential( i, probUpdate, run_sequential );
          if( results[i] == PresolveStatus::kInfeasible )
             return;
@@ -947,7 +947,7 @@ Presolve<REAL>::run_presolvers( const Problem<REAL>& problem,
              for( int i = r.begin(); i != r.end(); ++i )
              {
                 results[i] = presolvers[i]->run( problem, probUpdate, num,
-                                                 reductions[i] );
+                                                 reductions[i], timer );
              }
           },
           tbb::simple_partitioner() );
