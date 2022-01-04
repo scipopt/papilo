@@ -309,7 +309,6 @@ parseOptions( int argc, char* argv[] )
 {
    OptionsInfo optionsInfo;
    using namespace boost::program_options;
-   using boost::none;
    using boost::optional;
    std::string usage =
        fmt::format( "usage:\n {} [COMMAND] [ARGUMENTS]\n", argv[0] );
