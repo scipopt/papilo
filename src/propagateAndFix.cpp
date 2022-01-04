@@ -127,9 +127,9 @@ fix_and_propagate( const Problem<double>& _problem, const Num<double>& _num,
       probing_view.reset();
       if( !fixings.empty() )
       {
-         for( int i = 0; i < fixings.size(); i++ )
-            probing_view.setProbingColumn( fixings[i].get_column_index(),
-                                           fixings[i].get_value() );
+         for(auto & fixing : fixings)
+            probing_view.setProbingColumn( fixing.get_column_index(),
+                                           fixing.get_value() );
       }
 
       propagate_to_leaf_or_infeasibility( _problem, _num, probing_view );
@@ -138,7 +138,7 @@ fix_and_propagate( const Problem<double>& _problem, const Num<double>& _num,
       {
          // TODO: store fixings since they code the conflict
          fixings = probing_view.get_fixings();
-         assert( fixings.size() > 0 );
+         assert( !fixings.empty() );
          Fixing<double> infeasible_fixing = fixings[fixings.size() - 1];
          fixings[fixings.size() - 1] =
              ( Fixing<double> ){ infeasible_fixing.get_column_index(),
