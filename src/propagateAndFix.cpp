@@ -21,7 +21,6 @@
 /*                                                                           */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-
 #include "papilo/core/Objective.hpp"
 #include "papilo/core/Presolve.hpp"
 #include "papilo/misc/MultiPrecision.hpp"
@@ -35,30 +34,37 @@
 using namespace papilo;
 
 void
-let_go(const papilo::OptionsInfo& opts);
+let_go( const OptionsInfo& opts );
 
 void
-fix_and_propagate( const papilo::Problem<double> _problem,
-                   const papilo::Num<double>& _num );
+fix_and_propagate( const Problem<double>& _problem, const Num<double>& _num,
+                   ProbingView<double>& probing_view );
 
-std::pair<int, double>
-select_diving_variable( const papilo::Problem<double>& _problem,
-                        const papilo::ProbingView<double>& _fixed_variables );
+Fixing<double>
+select_diving_variable( const Problem<double>& _problem,
+                        const ProbingView<double>& _probing_view );
 
-papilo::ProbingView<double>
-propagate_to_leaf_or_infeasibility( const papilo::Problem<double>& _problem, const papilo::Num<double>& _num );
+void
+propagate_to_leaf_or_infeasibility( const Problem<double>& _problem,
+                                    const Num<double>& _num,
+                                    ProbingView<double>& view );
 
-papilo::Solution<double>
-create_solution( const papilo::ProbingView<double>& _view );
+Solution<double>
+create_solution( const ProbingView<double>& _view );
+
+double
+modify_value_due_to_backtrack( double value );
+
+// TODO: Probing does only work with boolean values
 int
 main( int argc, char* argv[] )
 {
 
    // get the options passed by the user
-   papilo::OptionsInfo optionsInfo;
+   OptionsInfo optionsInfo;
    try
    {
-      optionsInfo = papilo::parseOptions( argc, argv );
+      optionsInfo = parseOptions( argc, argv );
    }
    catch( const boost::program_options::error& ex )
    {
@@ -76,117 +82,138 @@ main( int argc, char* argv[] )
 }
 
 void
-let_go(const papilo::OptionsInfo& opts)
+let_go( const OptionsInfo& opts )
 {
-      double readtime = 0;
-      papilo::Problem<double> problem;
-      boost::optional< papilo::Problem<double>> prob;
+   double readtime = 0;
+   Problem<double> problem;
+   boost::optional<Problem<double>> prob;
 
-      {
-         papilo::Timer t( readtime );
-         prob =  papilo::MpsParser<double>::loadProblem( opts.instance_file );
-      }
+   {
+      Timer t( readtime );
+      prob = MpsParser<double>::loadProblem( opts.instance_file );
+   }
 
-      // Check whether reading was successful or not
-      if( !prob )
-      {
-         fmt::print( "error loading problem {}\n", opts.instance_file );
-         return;
-      }
-      problem = *prob;
+   // Check whether reading was successful or not
+   if( !prob )
+   {
+      fmt::print( "error loading problem {}\n", opts.instance_file );
+      return;
+   }
+   problem = *prob;
 
-      fmt::print( "reading took {:.3} seconds\n", readtime );
+   fmt::print( "reading took {:.3} seconds\n", readtime );
 
-      //do trivial presolve so that the activities
-      papilo::Num<double> num{};
-      papilo::Statistics stats{};
-      papilo::Message msg{};
-      papilo::PresolveOptions presolve_options{};
-      papilo::PostsolveStorage<double> postsolve_storage;
-      papilo::ProblemUpdate<double> probUpdate( problem, postsolve_storage, stats,
-                                                presolve_options, num, msg );
-      probUpdate.trivialPresolve();
-      fix_and_propagate( probUpdate.getProblem(), num );
+   // set up ProblemUpdate to trivialPresolve so that activities exist
+   Num<double> num{};
+   Statistics stats{};
+   Message msg{};
+   PresolveOptions presolve_options{};
+   PostsolveStorage<double> postsolve_storage;
+   ProblemUpdate<double> probUpdate( problem, postsolve_storage, stats,
+                                     presolve_options, num, msg );
+   probUpdate.trivialPresolve();
 
+   ProbingView<double> probing_view{ problem, num };
+   fix_and_propagate( probUpdate.getProblem(), num, probing_view );
 }
 
 void
-fix_and_propagate( const papilo::Problem<double> _problem, const papilo::Num<double>& _num )
+fix_and_propagate( const Problem<double>& _problem, const Num<double>& _num,
+                   ProbingView<double>& probing_view )
 {
-   while(true)
+   papilo::Vec<Fixing<double>> fixings{};
+   while( true )
    {
-      papilo::ProbingView<double> probing_view =
-          propagate_to_leaf_or_infeasibility( _problem, _num );
-      if( probing_view.isInfeasible())
+      probing_view.reset();
+      if( !fixings.empty() )
       {
-         //TODO: backtrack
-         //TODO: pass conflict
+         for( int i = 0; i < fixings.size(); i++ )
+            probing_view.setProbingColumn( fixings[i].get_column_index(),
+                                           fixings[i].get_value() );
+      }
+
+      propagate_to_leaf_or_infeasibility( _problem, _num, probing_view );
+
+      if( probing_view.isInfeasible() )
+      {
+         // TODO: store fixings since they code the conflict
+         fixings = probing_view.get_fixings();
+         assert( fixings.size() > 0 );
+         Fixing<double> infeasible_fixing = fixings[fixings.size() - 1];
+         fixings[fixings.size() - 1] =
+             ( Fixing<double> ){ infeasible_fixing.get_column_index(),
+             modify_value_due_to_backtrack( infeasible_fixing.get_value() ) };
       }
       else
       {
-         //TODO: store objective value and solution
-         papilo::Solution<double> solution = create_solution(probing_view);
-         fmt::print("found solution {}", _problem.computeSolObjective(solution.primal));
+         // TODO: store objective value and solution
+         Solution<double> solution = create_solution( probing_view );
+         fmt::print( "found solution {}",
+                     _problem.computeSolObjective( solution.primal ) );
+         break;
       }
-
-      break;
    }
 }
 
-papilo::Solution<double>
-create_solution( const papilo::ProbingView<double>& _view )
+double
+modify_value_due_to_backtrack( double value )
 {
-   papilo::Vec<double> values{};
-   for(int i=0; i < _view.getProbingUpperBounds().size(); i++)
+   return value == 1 ? 0 : 1;
+}
+
+Solution<double>
+create_solution( const ProbingView<double>& _view )
+{
+   Vec<double> values{};
+   for( int i = 0; i < _view.getProbingUpperBounds().size(); i++ )
    {
       assert( _view.getProbingUpperBounds()[i] ==
-              _view.getProbingLowerBounds()[i]);
+              _view.getProbingLowerBounds()[i] );
       values.push_back( _view.getProbingUpperBounds()[i] );
    }
-   papilo::Solution<double> solution {papilo::SolutionType::kPrimal, values};
+   Solution<double> solution{ SolutionType::kPrimal, values };
    return solution;
 }
 
-papilo::ProbingView<double>
-propagate_to_leaf_or_infeasibility( const papilo::Problem<double>& _problem, const papilo::Num<double>& _num )
+void
+propagate_to_leaf_or_infeasibility( const Problem<double>& _problem,
+                                    const Num<double>& _num,
+                                    ProbingView<double>& probing_view )
 {
-   papilo::Vec<int> fixed_variables;
-   papilo::Vec<double> fixed_values;
-   papilo::ProbingView<double> probing_view{_problem, _num };
-   //TODO: don't know if order in which the variables are applied can be extracted
-   while(true)
+   while( true )
    {
-      std::pair<int, double> value =
-          select_diving_variable( _problem, probing_view );
-      if(value.first == -1)
-         return probing_view;
-      fixed_variables.push_back(value.first);
-      fixed_values.push_back(value.second);
-      fmt::print("{} {}\n", value.first, value.second);
+      Fixing<double> fixing = select_diving_variable( _problem, probing_view );
+      if( fixing.is_invalid() )
+         return;
 
-      //TODO: does only work with binary currently
-      probing_view.setProbingColumn(value.first, value.second == 1);
+      fmt::print( "{} {}\n", fixing.get_column_index(), fixing.get_value() );
+
+      probing_view.setProbingColumn( fixing.get_column_index(),
+                                     fixing.get_value() == 1 );
       probing_view.propagateDomains();
       probing_view.storeImplications();
       if( probing_view.isInfeasible() )
       {
-         fmt::print("infeasible\n");
-         return probing_view;
+         fmt::print( "infeasible\n" );
+         return;
       }
    }
 }
 
-std::pair<int, double>
-select_diving_variable( const papilo::Problem<double>& _problem,
-                        const papilo::ProbingView<double>& _probing_view )
+Fixing<double>
+select_diving_variable( const Problem<double>& _problem,
+                        const ProbingView<double>& _probing_view )
 {
 
+   // TODO: currently a draft
    for( int i = 0; i < _problem.getNCols(); i++ )
    {
       _probing_view.getProbingUpperBounds();
-      if( _probing_view.getProbingUpperBounds()[i]!=
+      if( _probing_view.getProbingUpperBounds()[i] !=
           _probing_view.getProbingLowerBounds()[i] )
-         return { i, 1 };
+      {
+         return { i, 0 };
+      }
    }
-   return {-1, -1};
+   return { -1, -1 };
 }

@@ -270,6 +270,7 @@ install(FILES
 install(FILES
      ${PROJECT_SOURCE_DIR}/src/papilo/core/Components.hpp
      ${PROJECT_SOURCE_DIR}/src/papilo/core/ConstraintMatrix.hpp
+     ${PROJECT_SOURCE_DIR}/src/papilo/core/Fixing.hpp
      ${PROJECT_SOURCE_DIR}/src/papilo/core/MatrixBuffer.hpp
      ${PROJECT_SOURCE_DIR}/src/papilo/core/Objective.hpp
      ${PROJECT_SOURCE_DIR}/src/papilo/core/Presolve.hpp

@@ -1,0 +1,66 @@
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+/*                                                                           */
+/*               This file is part of the program and library                */
+/*    PaPILO --- Parallel Presolve for Integer and Linear Optimization       */
+/*                                                                           */
+/* Copyright (C) 2020-2021 Konrad-Zuse-Zentrum                               */
+/*                     fuer Informationstechnik Berlin                       */
+/*                                                                           */
+/* This program is free software: you can redistribute it and/or modify      */
+/* it under the terms of the GNU Lesser General Public License as published  */
+/* by the Free Software Foundation, either version 3 of the License, or      */
+/* (at your option) any later version.                                       */
+/*                                                                           */
+/* This program is distributed in the hope that it will be useful,           */
+/* but WITHOUT ANY WARRANTY; without even the implied warranty of            */
+/* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the             */
+/* GNU Lesser General Public License for more details.                       */
+/*                                                                           */
+/* You should have received a copy of the GNU Lesser General Public License  */
+/* along with this program.  If not, see <https://www.gnu.org/licenses/>.    */
+/*                                                                           */
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+
+#ifndef _PAPILO_CORE_FIXING_HPP_
+#define _PAPILO_CORE_FIXING_HPP_
+
+#include "papilo/core/Problem.hpp"
+#include "papilo/misc/Num.hpp"
+
+namespace papilo
+{
+
+template <typename REAL>
+class Fixing
+{
+ private:
+   int column_index;
+   REAL value;
+
+ public:
+   Fixing( int _column_index, REAL _value ):
+         column_index( _column_index ), value( _value )
+   {
+   }
+
+   int
+   get_column_index() const
+   {
+      return column_index;
+   }
+
+   int
+   get_value() const
+   {
+      return value;
+   }
+   bool
+   is_invalid()
+   {
+      return column_index<0;
+   }
+};
+
+} // namespace papilo
+
+#endif

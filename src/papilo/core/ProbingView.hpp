@@ -29,6 +29,7 @@
 #include "papilo/io/Message.hpp"
 #include "papilo/misc/MultiPrecision.hpp"
 #include "papilo/misc/Vec.hpp"
+#include "papilo/core/Fixing.hpp"
 
 namespace papilo
 {
@@ -90,12 +91,18 @@ class ProbingView
       // remember probing column and probed value
       probingCol = col;
       probingValue = value;
+      fixings.push_back( ( Fixing<REAL> ){ col, value } );
 
       // fix upper/lower bound of probed column
       if( value )
          changeLb( col, 1.0 );
       else
          changeUb( col, 0.0 );
+   }
+
+   Vec<Fixing<REAL>>
+   get_fixings(){
+      return fixings;
    }
 
    void
@@ -207,6 +214,7 @@ class ProbingView
    int round;
    int probingCol;
    bool probingValue;
+   Vec<Fixing<REAL>> fixings;
 
    // datastructures for storing result of probing on one value
    Vec<ProbingBoundChg<REAL>> otherValueImplications;
@@ -313,6 +321,7 @@ ProbingView<REAL>::reset()
    next_prop_activities.clear();
    infeasible = false;
    probingCol = -1;
+   fixings.clear();
 }
 
 template <typename REAL>
