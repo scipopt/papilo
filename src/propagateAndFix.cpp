@@ -125,6 +125,7 @@ fix_and_propagate( const Problem<double>& _problem, const Num<double>& _num,
    while( true )
    {
       probing_view.reset();
+      //TODO: this means recalculating all propagations. Makes that sense or is reverting the propagation better?
       if( !fixings.empty() )
       {
          for(auto & fixing : fixings)
