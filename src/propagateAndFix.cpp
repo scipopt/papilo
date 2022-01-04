@@ -27,22 +27,29 @@
 #include "papilo/misc/MultiPrecision.hpp"
 #include "papilo/misc/OptionsParser.hpp"
 #include "papilo/misc/VersionLogger.hpp"
-#include "papilo/misc/tbb.hpp"
 
 #include <boost/program_options.hpp>
 #include <cassert>
 #include <fstream>
 
-void
-let_go(papilo::OptionsInfo& opts);
+using namespace papilo;
 
 void
-fix_and_propagate( papilo::Problem<double> _problem,
-                   papilo::Num<double>& _num );
+let_go(const papilo::OptionsInfo& opts);
+
+void
+fix_and_propagate( const papilo::Problem<double> _problem,
+                   const papilo::Num<double>& _num );
 
 std::pair<int, double>
-select_diving_variable( papilo::Problem<double> _problem,
-                        papilo::Vec<int> _fixed_variables );
+select_diving_variable( const papilo::Problem<double>& _problem,
+                        const papilo::ProbingView<double>& _fixed_variables );
+
+papilo::ProbingView<double>
+propagate_to_leaf_or_infeasibility( const papilo::Problem<double>& _problem, const papilo::Num<double>& _num );
+
+papilo::Solution<double>
+create_solution( const papilo::ProbingView<double>& _view );
 int
 main( int argc, char* argv[] )
 {
@@ -69,7 +76,7 @@ main( int argc, char* argv[] )
 }
 
 void
-let_go(papilo::OptionsInfo& opts)
+let_go(const papilo::OptionsInfo& opts)
 {
       double readtime = 0;
       papilo::Problem<double> problem;
@@ -104,15 +111,55 @@ let_go(papilo::OptionsInfo& opts)
 }
 
 void
-fix_and_propagate( papilo::Problem<double> _problem, papilo::Num<double>& _num )
+fix_and_propagate( const papilo::Problem<double> _problem, const papilo::Num<double>& _num )
+{
+   while(true)
+   {
+      papilo::ProbingView<double> probing_view =
+          propagate_to_leaf_or_infeasibility( _problem, _num );
+      if( probing_view.isInfeasible())
+      {
+         //TODO: backtrack
+         //TODO: pass conflict
+      }
+      else
+      {
+         //TODO: store objective value and solution
+         papilo::Solution<double> solution = create_solution(probing_view);
+         fmt::print("found solution {}", _problem.computeSolObjective(solution.primal));
+      }
+
+      break;
+   }
+}
+
+papilo::Solution<double>
+create_solution( const papilo::ProbingView<double>& _view )
+{
+   papilo::Vec<double> values{};
+   for(int i=0; i < _view.getProbingUpperBounds().size(); i++)
+   {
+      assert( _view.getProbingUpperBounds()[i] ==
+              _view.getProbingLowerBounds()[i]);
+      values.push_back( _view.getProbingUpperBounds()[i] );
+   }
+   papilo::Solution<double> solution {papilo::SolutionType::kPrimal, values};
+   return solution;
+}
+
+papilo::ProbingView<double>
+propagate_to_leaf_or_infeasibility( const papilo::Problem<double>& _problem, const papilo::Num<double>& _num )
 {
    papilo::Vec<int> fixed_variables;
    papilo::Vec<double> fixed_values;
    papilo::ProbingView<double> probing_view{_problem, _num };
-   while(fixed_variables.size() != _problem.getNCols())
+   //TODO: don't know if order in which the variables are applied can be extracted
+   while(true)
    {
       std::pair<int, double> value =
-          select_diving_variable( _problem, fixed_variables );
+          select_diving_variable( _problem, probing_view );
+      if(value.first == -1)
+         return probing_view;
       fixed_variables.push_back(value.first);
       fixed_values.push_back(value.second);
       fmt::print("{} {}\n", value.first, value.second);
@@ -124,20 +171,22 @@ fix_and_propagate( papilo::Problem<double> _problem, papilo::Num<double>& _num )
       if( probing_view.isInfeasible() )
       {
          fmt::print("infeasible\n");
-         // TODO: implement reverting
+         return probing_view;
       }
    }
 }
 
-
 std::pair<int, double>
-select_diving_variable( papilo::Problem<double> _problem,
-                        papilo::Vec<int> _fixed_variables )
+select_diving_variable( const papilo::Problem<double>& _problem,
+                        const papilo::ProbingView<double>& _probing_view )
 {
 
-   for(int i=0; i< _problem.getNCols(); i++)
-      if(std::find(_fixed_variables.begin(), _fixed_variables.end(), i) == _fixed_variables.end())
-         return {i, 0};
-
-   assert(false);
+   for( int i = 0; i < _problem.getNCols(); i++ )
+   {
+      _probing_view.getProbingUpperBounds();
+      if( _probing_view.getProbingUpperBounds()[i]!=
+          _probing_view.getProbingLowerBounds()[i] )
+         return { i, 1 };
+   }
+   return {-1, -1};
 }
