@@ -51,7 +51,7 @@ if(Boost_IOSTREAMS_FOUND AND Boost_SERIALIZATION_FOUND AND Boost_PROGRAM_OPTIONS
    target_link_libraries(duplicates papilo-core ${Boost_LIBRARIES})
    target_compile_definitions(duplicates PRIVATE PAPILO_USE_EXTERN_TEMPLATES PAPILO_MPS_WRITER)
 
-   add_executable(propagateAndFix ${CMAKE_CURRENT_LIST_DIR}/../src/propagateAndFix.cpp)
+   add_executable(propagateAndFix ${CMAKE_CURRENT_LIST_DIR}/../src/StartFixAndPropagate.cpp)
    set_target_properties(propagateAndFix PROPERTIES OUTPUT_NAME propagateAndFix RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin" )
    target_link_libraries(propagateAndFix papilo-core ${Boost_LIBRARIES})
    target_compile_definitions(propagateAndFix PRIVATE PAPILO_USE_EXTERN_TEMPLATES PAPILO_MPS_WRITER)

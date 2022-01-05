@@ -391,6 +391,10 @@ install(FILES
    ${PROJECT_SOURCE_DIR}/external/lusol/clusol.h
    DESTINATION include/papilo-external/lusol)
 
+install(FILES
+        ${PROJECT_SOURCE_DIR}/src/fix/FixAndPropagate.hpp
+        DESTINATION include/fix)
+
 # configure the config file for the build tree
 set(QUADMATH_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/Modules)
 set(TBB_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/Modules)
