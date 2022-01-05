@@ -43,12 +43,15 @@
 namespace papilo
 {
 
+const static int DEFAULT_MAX_BADGE_SIZE = -1;
+
 template <typename REAL>
 class Probing : public PresolveMethod<REAL>
 {
    Vec<int> nprobed;
    int maxinitialbadgesize = 1000;
    int minbadgesize = 10;
+   int max_badge_size = DEFAULT_MAX_BADGE_SIZE;
    double mincontdomred = 0.3;
 
  public:
@@ -95,6 +98,11 @@ class Probing : public PresolveMethod<REAL>
                              "minimum number of probing candidates probed in "
                              "a single badge of candidates",
                              minbadgesize, 1 );
+
+      paramSet.addParameter( "probing.maxbadgesize",
+                             "maximal number of probing candidates probed in "
+                             "a single badge of candidates",
+                             max_badge_size, DEFAULT_MAX_BADGE_SIZE );
 
       paramSet.addParameter(
           "probing.mincontdomred",
@@ -527,6 +535,8 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
           ceil( badge_size * static_cast<double>( working_limit + extrawork ) /
                 (double) amountofwork ) );
       badge_size = std::min( nprobingcands - current_badge_start, badge_size );
+      if( max_badge_size > 0 )
+         badge_size = std::min( max_badge_size, badge_size );
       current_badge_end = current_badge_start + badge_size;
 
       abort = n_useless >= consMatrix.getNnz() * 2 || working_limit < 0 ||
