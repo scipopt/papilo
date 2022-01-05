@@ -130,6 +130,18 @@ class ProbingView
    }
 
    int
+   get_row_causing_infeasibility() const
+   {
+      return row_causing_infeasibility;
+   }
+
+   int
+   get_col_causing_infeasibility() const
+   {
+      return col_causing_infeasibility;
+   }
+
+   int
    getNumSubstitutions() const
    {
       return static_cast<int>( substitutions.size() );
@@ -211,6 +223,8 @@ class ProbingView
    Vec<int> next_prop_activities;
 
    bool infeasible;
+   int row_causing_infeasibility =-1;
+   int col_causing_infeasibility =-1;
    int round;
    int probingCol;
    bool probingValue;
@@ -320,6 +334,8 @@ ProbingView<REAL>::reset()
    prop_activities.clear();
    next_prop_activities.clear();
    infeasible = false;
+   row_causing_infeasibility = -1;
+   col_causing_infeasibility = -1;
    probingCol = -1;
    fixings.clear();
 }
@@ -385,6 +401,8 @@ ProbingView<REAL>::activityChanged( ActivityChange actchange, int rowid,
                       __FILE__, __LINE__, probingCol, probingValue,
                       double( activity.min ), double( rhs[rowid] ),
                       double( problem.getRowActivities()[rowid].min ) );
+      row_causing_infeasibility = rowid;
+      col_causing_infeasibility = probingCol;
       infeasible = true;
    }
 
@@ -400,6 +418,8 @@ ProbingView<REAL>::activityChanged( ActivityChange actchange, int rowid,
                       __FILE__, __LINE__, probingCol, probingValue,
                       double( activity.max ), double( lhs[rowid] ),
                       double( problem.getRowActivities()[rowid].max ) );
+      row_causing_infeasibility = rowid;
+      col_causing_infeasibility = probingCol;
       infeasible = true;
    }
 }
@@ -758,6 +778,8 @@ ProbingView<REAL>::propagateDomains()
                                          "val {} is infeasible\n",
                                          __FILE__, __LINE__, probingCol,
                                          probingValue );
+                         row_causing_infeasibility = row;
+                         col_causing_infeasibility = colid;
                          infeasible = true;
                          return;
                       }
@@ -797,6 +819,8 @@ ProbingView<REAL>::propagateDomains()
                                          __FILE__, __LINE__, probingCol,
                                          probingValue );
                          infeasible = true;
+                         row_causing_infeasibility = row;
+                         col_causing_infeasibility = colid;
                          return;
                       }
 

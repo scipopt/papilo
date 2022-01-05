@@ -7,7 +7,7 @@ COLUMNS
     YTWO      MYEQN                1  COST                 1
     ZTHREE    MYEQN                1  COST                 1
 RHS
-    RHS1      MYEQN                2
+    RHS1      MYEQN                3
 BOUNDS
  LI BND1      XONE                 0
  UI BND1      XONE                 1

@@ -37,22 +37,22 @@ template <typename REAL>
 class FixAndPropagate
 {
  public:
-
    void
    fix_and_propagate( const Problem<REAL>& _problem, const Num<REAL>& _num,
                       ProbingView<REAL>& probing_view )
    {
-      papilo::Vec<Fixing<REAL>> fixings{};
+      Vec<Fixing<REAL>> fixings{};
       while( true )
       {
          probing_view.reset();
-         // TODO: this means recalculating all propagations. Makes that sense or is reverting the propagation better?
+         // TODO: this means recalculating all propagations. Makes that sense or
+         // is reverting the propagation better?
          if( !fixings.empty() )
          {
             for( auto& fixing : fixings )
                probing_view.setProbingColumn( fixing.get_column_index(),
                                               fixing.get_value() );
-            //TODO: is it necessary to
+            // TODO: is it necessary to
          }
 
          propagate_to_leaf_or_infeasibility( _problem, _num, probing_view );
@@ -60,6 +60,8 @@ class FixAndPropagate
          if( probing_view.isInfeasible() )
          {
             // TODO: store fixings since they code the conflict
+            // conflict analysis needs reason aka row and the variable causing
+            // it
             fixings = probing_view.get_fixings();
             assert( !fixings.empty() );
             Fixing<REAL> infeasible_fixing = fixings[fixings.size() - 1];
@@ -116,11 +118,21 @@ class FixAndPropagate
 
          probing_view.setProbingColumn( fixing.get_column_index(),
                                         fixing.get_value() == 1 );
+         if( probing_view.isInfeasible() )
+         {
+            fmt::print(
+                "changing bound of variable is infeasible row: {} col {} \n",
+                probing_view.get_row_causing_infeasibility(),
+                probing_view.get_col_causing_infeasibility() );
+            return;
+         }
          probing_view.propagateDomains();
          probing_view.storeImplications();
          if( probing_view.isInfeasible() )
          {
-            fmt::print( "infeasible\n" );
+            fmt::print( "propagation is infeasible row: {} col {} \n",
+                        probing_view.get_row_causing_infeasibility(),
+                        probing_view.get_col_causing_infeasibility() );
             return;
          }
       }
@@ -138,7 +150,7 @@ class FixAndPropagate
          if( _probing_view.getProbingUpperBounds()[i] !=
              _probing_view.getProbingLowerBounds()[i] )
          {
-            return { i, 1 };
+            return { i, 0 };
          }
       }
       return { -1, -1 };
