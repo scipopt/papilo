@@ -48,7 +48,6 @@ main( int argc, char* argv[] )
    if( !optionsInfo.is_complete )
       return 0;
 
-   FixAndPropagate<double> fixAndPropagate{};
 
    double readtime = 0;
    Problem<double> problem;
@@ -80,6 +79,7 @@ main( int argc, char* argv[] )
    probUpdate.trivialPresolve();
 
    ProbingView<double> probing_view{ problem, num };
+   FixAndPropagate<double> fixAndPropagate{msg};
    fixAndPropagate.fix_and_propagate( probUpdate.getProblem(), num,
                                       probing_view );
 

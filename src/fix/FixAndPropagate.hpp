@@ -36,7 +36,12 @@ using namespace papilo;
 template <typename REAL>
 class FixAndPropagate
 {
+   Message msg;
+
  public:
+
+   FixAndPropagate(Message _msg):msg(_msg){}
+
    void
    fix_and_propagate( const Problem<REAL>& _problem, const Num<REAL>& _num,
                       ProbingView<REAL>& probing_view )
@@ -52,7 +57,7 @@ class FixAndPropagate
             for( auto& fixing : fixings )
                probing_view.setProbingColumn( fixing.get_column_index(),
                                               fixing.get_value() );
-            // TODO: is it necessary to
+            // TODO: it may be better necessary to update the activities immediately
          }
 
          propagate_to_leaf_or_infeasibility( _problem, _num, probing_view );
@@ -60,8 +65,6 @@ class FixAndPropagate
          if( probing_view.isInfeasible() )
          {
             // TODO: store fixings since they code the conflict
-            // conflict analysis needs reason aka row and the variable causing
-            // it
             fixings = probing_view.get_fixings();
             assert( !fixings.empty() );
             Fixing<REAL> infeasible_fixing = fixings[fixings.size() - 1];
@@ -74,7 +77,7 @@ class FixAndPropagate
          {
             // TODO: store objective value and solution
             Solution<REAL> solution = create_solution( probing_view );
-            fmt::print( "found solution {}",
+            msg.info( "found solution {}",
                         _problem.computeSolObjective( solution.primal ) );
             break;
          }
@@ -114,13 +117,13 @@ class FixAndPropagate
          if( fixing.is_invalid() )
             return;
 
-         fmt::print( "{} {}\n", fixing.get_column_index(), fixing.get_value() );
+         msg.info( "Fix var {} to {}\n", fixing.get_column_index(), fixing.get_value() );
 
          probing_view.setProbingColumn( fixing.get_column_index(),
                                         fixing.get_value() == 1 );
          if( probing_view.isInfeasible() )
          {
-            fmt::print(
+            msg.info(
                 "changing bound of variable is infeasible row: {} col {} \n",
                 probing_view.get_row_causing_infeasibility(),
                 probing_view.get_col_causing_infeasibility() );
@@ -130,7 +133,7 @@ class FixAndPropagate
          probing_view.storeImplications();
          if( probing_view.isInfeasible() )
          {
-            fmt::print( "propagation is infeasible row: {} col {} \n",
+            msg.info( "propagation is infeasible row: {} col {} \n",
                         probing_view.get_row_causing_infeasibility(),
                         probing_view.get_col_causing_infeasibility() );
             return;
