@@ -23,11 +23,9 @@
 
 #include "papilo/core/Objective.hpp"
 #include "papilo/core/Presolve.hpp"
-#include "papilo/misc/MultiPrecision.hpp"
 #include "papilo/misc/OptionsParser.hpp"
 #include "papilo/misc/VersionLogger.hpp"
 
-#include <boost/program_options.hpp>
 #include <cassert>
 #include <fstream>
 
@@ -54,6 +52,7 @@ class FixAndPropagate
             for( auto& fixing : fixings )
                probing_view.setProbingColumn( fixing.get_column_index(),
                                               fixing.get_value() );
+            //TODO: is it necessary to
          }
 
          propagate_to_leaf_or_infeasibility( _problem, _num, probing_view );
@@ -139,7 +138,7 @@ class FixAndPropagate
          if( _probing_view.getProbingUpperBounds()[i] !=
              _probing_view.getProbingLowerBounds()[i] )
          {
-            return { i, 0 };
+            return { i, 1 };
          }
       }
       return { -1, -1 };

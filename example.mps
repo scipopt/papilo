@@ -3,11 +3,14 @@ ROWS
  N  COST
  E  MYEQN
 COLUMNS
-    YTWO      MYEQN                1
-    ZTHREE    MYEQN                1
+    XONE      MYEQN                1  COST                 1
+    YTWO      MYEQN                1  COST                 1
+    ZTHREE    MYEQN                1  COST                 1
 RHS
     RHS1      MYEQN                2
 BOUNDS
+ LI BND1      XONE                 0
+ UI BND1      XONE                 1
  LI BND1      YTWO                 0
  UI BND1      YTWO                 1
  LI BND1      ZTHREE               0

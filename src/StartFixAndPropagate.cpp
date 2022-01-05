@@ -22,14 +22,8 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 #include "fix/FixAndPropagate.hpp"
-#include "papilo/core/Objective.hpp"
-#include "papilo/core/Presolve.hpp"
-#include "papilo/misc/MultiPrecision.hpp"
 #include "papilo/misc/OptionsParser.hpp"
-#include "papilo/misc/VersionLogger.hpp"
-
 #include <boost/program_options.hpp>
-#include <cassert>
 #include <fstream>
 
 using namespace papilo;
