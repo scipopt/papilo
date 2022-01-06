@@ -120,6 +120,9 @@ class Probing : public PresolveMethod<REAL>
    isBinaryVariable( REAL upper_bound, REAL lower_bound, int column_size,
                      const Flags<ColFlag>& colFlag ) const;
 
+   void
+   set_max_badge_size( int val);
+
 };
 
 #ifdef PAPILO_USE_EXTERN_TEMPLATES
@@ -602,6 +605,13 @@ Probing<REAL>::isBinaryVariable( REAL upper_bound, REAL lower_bound,
    return !colFlag.test( ColFlag::kUnbounded ) &&
           colFlag.test( ColFlag::kIntegral ) && column_size > 0 &&
           lower_bound == 0 && upper_bound == 1;
+}
+
+template <typename REAL>
+void
+Probing<REAL>::set_max_badge_size( int val)
+{
+   max_badge_size = val;
 }
 
 
