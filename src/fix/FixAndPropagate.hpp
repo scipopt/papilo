@@ -37,14 +37,15 @@ template <typename REAL>
 class FixAndPropagate
 {
    Message msg;
+   Num<REAL> num;
 
  public:
-
-   FixAndPropagate(Message _msg):msg(_msg){}
+   FixAndPropagate( Message _msg, Num<REAL> _num ) : msg( _msg ), num( _num ) {}
 
    void
-   fix_and_propagate( const Problem<REAL>& _problem, const Num<REAL>& _num,
-                      ProbingView<REAL>& probing_view )
+   fix_and_propagate( const Problem<REAL>& _problem,
+                      ProbingView<REAL>& probing_view,
+                      Solution<REAL> cont_solution )
    {
       Vec<Fixing<REAL>> fixings{};
       while( true )
@@ -57,10 +58,12 @@ class FixAndPropagate
             for( auto& fixing : fixings )
                probing_view.setProbingColumn( fixing.get_column_index(),
                                               fixing.get_value() );
-            // TODO: it may be better necessary to update the activities immediately
+            // TODO: it may be better necessary to update the activities
+            // immediately
          }
 
-         propagate_to_leaf_or_infeasibility( _problem, _num, probing_view );
+         propagate_to_leaf_or_infeasibility( _problem, probing_view,
+                                             cont_solution );
 
          if( probing_view.isInfeasible() )
          {
@@ -78,7 +81,7 @@ class FixAndPropagate
             // TODO: store objective value and solution
             Solution<REAL> solution = create_solution( probing_view );
             msg.info( "found solution {}",
-                        _problem.computeSolObjective( solution.primal ) );
+                      _problem.computeSolObjective( solution.primal ) );
             break;
          }
       }
@@ -107,17 +110,19 @@ class FixAndPropagate
 
    void
    propagate_to_leaf_or_infeasibility( const Problem<REAL>& _problem,
-                                       const Num<REAL>& _num,
-                                       ProbingView<REAL>& probing_view )
+                                       ProbingView<REAL>& probing_view,
+                                       Solution<REAL> cont_solution )
    {
       while( true )
       {
-         Fixing<REAL> fixing = select_diving_variable( _problem, probing_view );
+         Fixing<REAL> fixing =
+             select_diving_variable( _problem, probing_view, cont_solution );
          // dive until all vars are fixed (and returned fixing is invalid)
          if( fixing.is_invalid() )
             return;
 
-         msg.info( "Fix var {} to {}\n", fixing.get_column_index(), fixing.get_value() );
+         msg.info( "Fix var {} to {}\n", fixing.get_column_index(),
+                   fixing.get_value() );
 
          probing_view.setProbingColumn( fixing.get_column_index(),
                                         fixing.get_value() == 1 );
@@ -134,8 +139,8 @@ class FixAndPropagate
          if( probing_view.isInfeasible() )
          {
             msg.info( "propagation is infeasible row: {} col {} \n",
-                        probing_view.get_row_causing_infeasibility(),
-                        probing_view.get_col_causing_infeasibility() );
+                      probing_view.get_row_causing_infeasibility(),
+                      probing_view.get_col_causing_infeasibility() );
             return;
          }
       }
@@ -143,19 +148,40 @@ class FixAndPropagate
 
    Fixing<REAL>
    select_diving_variable( const Problem<REAL>& _problem,
-                           const ProbingView<REAL>& _probing_view )
+                           const ProbingView<REAL>& _probing_view,
+                           Solution<REAL> cont_solution )
    {
 
-      // TODO: currently a draft
-      for( int i = 0; i < _problem.getNCols(); i++ )
+      // this is currently fractional diving
+      REAL value = -1;
+      int variable = -1;
+      REAL score = -1;
+
+      for( int i = 0; i < cont_solution.primal.size(); i++ )
       {
-         _probing_view.getProbingUpperBounds();
-         if( _probing_view.getProbingUpperBounds()[i] !=
-             _probing_view.getProbingLowerBounds()[i] )
+         REAL frac = cont_solution.primal[i] - floor( cont_solution.primal[i] );
+         if( frac == 0 or num.isEq( _probing_view.getProbingUpperBounds()[i],
+                                    _probing_view.getProbingLowerBounds()[i] ) )
+            continue;
+         else if( frac > 0.5 )
          {
-            return { i, 0 };
+            if( variable == -1 or 1 - frac > score )
+            {
+               score = 1 - frac;
+               variable = i;
+               value = ceil( cont_solution.primal[i] );
+            }
+         }
+         else
+         {
+            if( variable == -1 or frac > score )
+            {
+               score = frac;
+               variable = i;
+               value = floor( cont_solution.primal[i] );
+            }
          }
       }
-      return { -1, -1 };
+      return { variable, value };
    }
 };
