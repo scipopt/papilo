@@ -40,6 +40,7 @@ option(HIGHS "should HiGHS LP solver be linked if found" ON)
 option(SOPLEX "should SoPlex LP solver be linked if found" ON)
 option(SCIP "should SCIP solver be linked if found" ON)
 option(INSTALL_TBB "should the TBB library be installed" OFF)
+option(GUROBI "should gurobi solver be linked" OFF)
 
 # make 'Release' the default build type
 if(NOT CMAKE_BUILD_TYPE)
@@ -70,6 +71,10 @@ else()
    set(PAPILO_HAVE_FLOAT128 0)
    set(Quadmath_INCLUDE_DIRS "")
    set(Quadmath_IMPORTED_TARGET "")
+endif()
+
+if(GUROBI)
+   find_package(GUROBI REQUIRED)
 endif()
 
 find_program(GIT git)
@@ -302,6 +307,7 @@ install(FILES
 install(FILES
    ${PROJECT_SOURCE_DIR}/src/papilo/interfaces/HighsInterface.hpp
    ${PROJECT_SOURCE_DIR}/src/papilo/interfaces/ScipInterface.hpp
+   ${PROJECT_SOURCE_DIR}/src/papilo/interfaces/GurobiInterface.hpp
    ${PROJECT_SOURCE_DIR}/src/papilo/interfaces/SolverInterface.hpp
    ${PROJECT_SOURCE_DIR}/src/papilo/interfaces/SoplexInterface.hpp
    DESTINATION include/papilo/interfaces)

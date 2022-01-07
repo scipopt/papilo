@@ -85,6 +85,9 @@ print_header()
 #ifdef PAPILO_HAVE_SCIP
    list_of_solvers.push_back( "SCIP" );
 #endif
+#ifdef PAPILO_HAVE_GUROBI
+   list_of_solvers.push_back( "Gurobi" );
+#endif
 #ifdef PAPILO_HAVE_SOPLEX
    list_of_solvers.push_back( "SoPlex" );
 #endif
@@ -134,6 +137,9 @@ print_header()
                "Institute Berlin (scip.zib.de) [GitHash: {}]\n",
                SCIP_VERSION_MAJOR, SCIP_VERSION_MINOR, SCIP_VERSION_PATCH,
                SCIPgetGitHash() );
+#endif
+#ifdef PAPILO_HAVE_GUROBI
+   fmt::print( "  Gurobi            \t Gurobi Optimizer \n" );
 #endif
 #ifdef PAPILO_HAVE_SOPLEX
    fmt::print(

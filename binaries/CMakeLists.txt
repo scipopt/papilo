@@ -9,6 +9,19 @@ else()
    set(PAPILO_HAVE_SCIP 0)
 endif()
 
+if(GUROBI)
+   find_package(GUROBI REQUIRED)
+endif()
+
+if(GUROBI_FOUND)
+   message(STATUS "Finding GUROBI - found")
+   set(PAPILO_HAVE_GUROBI 1)
+   include_directories(${GUROBI_INCLUDE_DIRS})
+else()
+   set(PAPILO_HAVE_GUROBI 0)
+endif()
+
+
 if(SOPLEX)
    find_package(SOPLEX QUIET)
 endif()
@@ -57,6 +70,11 @@ if(Boost_IOSTREAMS_FOUND AND Boost_SERIALIZATION_FOUND AND Boost_PROGRAM_OPTIONS
       set(PAPILO_HAVE_SCIP 1 PARENT_SCOPE)
       target_compile_definitions(papilo-executable PRIVATE PAPILO_HAVE_SCIP)
    endif()
+   if(PAPILO_HAVE_GUROBI)
+      list(APPEND linked_solvers "GUROBI")
+      set(PAPILO_HAVE_GUROBI 1 PARENT_SCOPE)
+      target_compile_definitions(papilo-executable PRIVATE PAPILO_HAVE_GUROBI)
+   endif()
    if(PAPILO_HAVE_SOPLEX)
       list(APPEND linked_solvers "SoPlex")
       set(PAPILO_HAVE_SOPLEX 1 PARENT_SCOPE)
@@ -74,7 +92,7 @@ if(Boost_IOSTREAMS_FOUND AND Boost_SERIALIZATION_FOUND AND Boost_PROGRAM_OPTIONS
       message(STATUS "No solvers linked")
    endif()
    set_target_properties(papilo-executable PROPERTIES OUTPUT_NAME papilo RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin" )
-   target_link_libraries(papilo-executable papilo-core ${SOPLEX_LIBRARIES} ${SCIP_LIBRARIES} ${HIGHS_LIBRARIES} ${Boost_LIBRARIES})
+   target_link_libraries(papilo-executable papilo-core ${SOPLEX_LIBRARIES} ${SCIP_LIBRARIES} ${HIGHS_LIBRARIES} ${Boost_LIBRARIES} ${GUROBI_LIBRARIES})
    target_compile_definitions(papilo-executable PRIVATE PAPILO_USE_EXTERN_TEMPLATES PAPILO_MPS_WRITER)
 
    add_executable(convMPS EXCLUDE_FROM_ALL ${CMAKE_CURRENT_LIST_DIR}/../src/convMPS.cpp)
@@ -84,6 +102,7 @@ if(Boost_IOSTREAMS_FOUND AND Boost_SERIALIZATION_FOUND AND Boost_PROGRAM_OPTIONS
 
 endif()
 
+#TODO: consider case Gurobi and SCIP are build
 if(PAPILO_HAVE_SCIP AND PAPILO_HAVE_SOPLEX)
    add_library(papilolib SHARED ${CMAKE_CURRENT_LIST_DIR}/../src/papilolib.cpp)
    set_target_properties(papilolib PROPERTIES OUTPUT_NAME papilo LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
