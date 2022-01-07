@@ -45,10 +45,14 @@ class VectorMultiplication
       assert( matrix.getNRows() == substract.size() );
       assert( matrix.getNCols() == scalar.size() );
       Vec<REAL> result( substract );
+#ifdef PAPILO_TBB
       tbb::parallel_for( tbb::blocked_range<int>( 0, matrix.getNRows() ),
                          [&]( const tbb::blocked_range<int>& r )
                          {
-                            for( int i = r.begin(); i != r.end(); ++i )
+                            for( int i = r.begin(); i < r.end(); ++i )
+#else
+      for( int i = 0; i < matrix.getNRows(); ++i )
+#endif
                             {
                                auto coeff = matrix.getRowCoefficients( i );
                                StableSum<REAL> aux( -substract[i] );
@@ -57,7 +61,9 @@ class VectorMultiplication
                                            scalar[coeff.getIndices()[j]] );
                                result[i] = aux.get();
                             }
+#ifdef PAPILO_TBB
                          } );
+#endif
       return result;
    }
 };
