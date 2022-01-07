@@ -57,6 +57,7 @@ add_executable(unit_test TestMain.cpp
         papilo/presolve/SparsifyTest.cpp
 
         fix/VectorMultiplicationTest.cpp
+        fix/FixAndPropagateTest.cpp
 
         ${BOOST_REQUIRED_TEST_FILES}
         ${PAPILOLIB_TEST_FILE})
@@ -194,6 +195,7 @@ set(unit_tests
         "failed-path-sparsify"
 
         "vector-multiplication"
+        "fix-and-propagate"
 
         "integration-test-for-flugpl"
         ${PAPILOLIB_TESTS}

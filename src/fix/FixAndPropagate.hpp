@@ -23,8 +23,6 @@
 
 #include "papilo/core/Objective.hpp"
 #include "papilo/core/Presolve.hpp"
-#include "papilo/misc/OptionsParser.hpp"
-#include "papilo/misc/VersionLogger.hpp"
 
 #include <cassert>
 #include <fstream>
@@ -42,7 +40,7 @@ class FixAndPropagate
  public:
    FixAndPropagate( Message _msg, Num<REAL> _num ) : msg( _msg ), num( _num ) {}
 
-   void
+   Solution<REAL>
    fix_and_propagate( const Problem<REAL>& _problem,
                       ProbingView<REAL>& probing_view,
                       Solution<REAL> cont_solution )
@@ -82,7 +80,7 @@ class FixAndPropagate
             Solution<REAL> solution = create_solution( probing_view );
             msg.info( "found solution {}",
                       _problem.computeSolObjective( solution.primal ) );
-            break;
+            return solution;
          }
       }
    }

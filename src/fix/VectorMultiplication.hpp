@@ -44,25 +44,20 @@ class VectorMultiplication
    {
       assert( matrix.getNRows() == substract.size() );
       assert( matrix.getNCols() == scalar.size() );
-      //TODO write solution immediately in Vector
-      REAL result [matrix.getNRows()] = {};
+      Vec<REAL> result( substract );
       tbb::parallel_for( tbb::blocked_range<int>( 0, matrix.getNRows() ),
                          [&]( const tbb::blocked_range<int>& r )
                          {
                             for( int i = r.begin(); i != r.end(); ++i )
                             {
                                auto coeff = matrix.getRowCoefficients( i );
-                               REAL aux = -substract[i];
+                               StableSum<REAL> aux( -substract[i] );
                                for( int j = 0; j < coeff.getLength(); j++ )
-                                  aux += coeff.getValues()[j] *
-                                         scalar[coeff.getIndices()[j]];
-                               result[i] = aux;
+                                  aux.add( coeff.getValues()[j] *
+                                           scalar[coeff.getIndices()[j]] );
+                               result[i] = aux.get();
                             }
                          } );
-      Vec<REAL> v {};
-      for(REAL r : result)
-         v.push_back(r);
-      return v;
-
+      return result;
    }
 };
