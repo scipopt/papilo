@@ -40,11 +40,11 @@ class VectorMultiplication
 
    Vec<REAL>
    multiplication( const ConstraintMatrix<REAL>& matrix,
-                   const Vec<REAL>& scalar, const Vec<REAL>& substract )
+                   const Vec<REAL>& vector, const Vec<REAL>& minus )
    {
-      assert( matrix.getNRows() == substract.size() );
-      assert( matrix.getNCols() == scalar.size() );
-      Vec<REAL> result( substract );
+      assert( matrix.getNRows() == minus.size() );
+      assert( matrix.getNCols() == vector.size() );
+      Vec<REAL> result( minus );
 #ifdef PAPILO_TBB
       tbb::parallel_for( tbb::blocked_range<int>( 0, matrix.getNRows() ),
                          [&]( const tbb::blocked_range<int>& r )
@@ -55,10 +55,10 @@ class VectorMultiplication
 #endif
                             {
                                auto coeff = matrix.getRowCoefficients( i );
-                               StableSum<REAL> aux( -substract[i] );
+                               StableSum<REAL> aux( -minus[i] );
                                for( int j = 0; j < coeff.getLength(); j++ )
                                   aux.add( coeff.getValues()[j] *
-                                           scalar[coeff.getIndices()[j]] );
+                                           vector[coeff.getIndices()[j]] );
                                result[i] = aux.get();
                             }
 #ifdef PAPILO_TBB
