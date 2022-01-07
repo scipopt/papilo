@@ -56,6 +56,8 @@ add_executable(unit_test TestMain.cpp
         papilo/presolve/SimplifyInequalitiesTest.cpp
         papilo/presolve/SparsifyTest.cpp
 
+        fix/VectorMultiplicationTest.cpp
+
         ${BOOST_REQUIRED_TEST_FILES}
         ${PAPILOLIB_TEST_FILE})
 
@@ -190,6 +192,8 @@ set(unit_tests
         "happy-path-sparsify"
         "happy-path-sparsify-two-equalities"
         "failed-path-sparsify"
+
+        "vector-multiplication"
 
         "integration-test-for-flugpl"
         ${PAPILOLIB_TESTS}

@@ -22,6 +22,7 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 #include "fix/FixAndPropagate.hpp"
+#include "fix/VectorMultiplication.hpp"
 #include "papilo/misc/OptionsParser.hpp"
 #include <boost/program_options.hpp>
 #include <fstream>
@@ -31,6 +32,8 @@ using namespace papilo;
 Solution<double>
 generate_random_solution( const Problem<double>& problem );
 
+void
+check_multiplication( Problem<double>& problem );
 int
 main( int argc, char* argv[] )
 {
@@ -87,7 +90,28 @@ main( int argc, char* argv[] )
    fixAndPropagate.fix_and_propagate( probUpdate.getProblem(),
                                       probing_view, random_solution );
 
+   check_multiplication( problem );
+
    return 0;
+}
+void
+check_multiplication( Problem<double>& problem )
+{
+   VectorMultiplication<double> multi{};
+
+   Vec<double> scalar{};
+   scalar.push_back(2);
+   scalar.push_back(3);
+   scalar.push_back(3);
+
+   Vec<double> subtract{};
+   subtract.push_back(1);
+
+
+   Vec<double> res = multi.multiplication(problem.getConstraintMatrix() , scalar, subtract );
+   for(double & re : res){
+      fmt::print("{}\n", re);
+   }
 }
 
 Solution<double>
