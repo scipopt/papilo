@@ -433,5 +433,5 @@ if(EXISTS ${CMAKE_BINARY_DIR}/_deps)
 endif()
 
 # install targets
-install(TARGETS papilo ${CLUSOL_TARGET} EXPORT papilo-targets ARCHIVE DESTINATION lib LIBRARY DESTINATION lib)
+install(TARGETS papilo papilo-core ${CLUSOL_TARGET} EXPORT papilo-targets ARCHIVE DESTINATION lib LIBRARY DESTINATION lib)
 install(EXPORT papilo-targets DESTINATION lib/cmake/papilo)
