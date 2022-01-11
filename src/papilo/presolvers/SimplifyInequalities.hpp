@@ -49,7 +49,6 @@ template <typename REAL>
 class SimplifyInequalities : public PresolveMethod<REAL>
 {
 
-
  public:
    SimplifyInequalities() : PresolveMethod<REAL>()
    {
@@ -126,7 +125,8 @@ REAL
 SimplifyInequalities<REAL>::computeGreatestCommonDivisor( REAL val1, REAL val2,
                                                           const Num<REAL>& num )
 {
-   auto isIntegral = [&num]( REAL val ) {
+   auto isIntegral = [&num]( REAL val )
+   {
       if( val > std::numeric_limits<int64_t>::max() ||
           val < std::numeric_limits<int64_t>::min() )
          return false;
@@ -141,8 +141,13 @@ SimplifyInequalities<REAL>::computeGreatestCommonDivisor( REAL val1, REAL val2,
    // gcd for integer values
    if( isIntegral( val1 ) && isIntegral( val2 ) )
    {
+#if BOOST_VERSION_NUMBER_PATCH( BOOST_VERSION ) / 100 < 78
       return boost::gcd( static_cast<int64_t>( val1 ),
                          static_cast<int64_t>( val2 ) );
+#else
+      return boost::integer::gcd( static_cast<int64_t>( val1 ),
+                                  static_cast<int64_t>( val2 ) );
+#endif
    }
 
    // heuristic for fractional values
@@ -161,9 +166,15 @@ SimplifyInequalities<REAL>::computeGreatestCommonDivisor( REAL val1, REAL val2,
 
    double multiplier = 600;
    if( isIntegral( multiplier * val1 ) && isIntegral( multiplier * val2 ) )
+#if BOOST_VERSION_NUMBER_PATCH( BOOST_VERSION ) / 100 < 78
       return boost::gcd( static_cast<int64_t>( val1 * multiplier ),
                          static_cast<int64_t>( val2 * multiplier ) ) /
              REAL{ multiplier };
+#else
+      return boost::integer::gcd( static_cast<int64_t>( val1 * multiplier ),
+                                  static_cast<int64_t>( val2 * multiplier ) ) /
+             REAL{ multiplier };
+#endif
 
    // applied heuristics didn't find an greatest common divisor
    return 0;
@@ -187,14 +198,13 @@ SimplifyInequalities<REAL>::simplify(
    for( int i = 0; i < rowLength; ++i )
       colOrder.push_back( i );
    Vec<int>::iterator start_cont;
-   start_cont = partition(
-       colOrder.begin(), colOrder.end(), [&colinds, &cflags]( int const& a ) {
-          return cflags[colinds[a]].test( ColFlag::kIntegral );
-       } );
+   start_cont =
+       partition( colOrder.begin(), colOrder.end(),
+                  [&colinds, &cflags]( int const& a )
+                  { return cflags[colinds[a]].test( ColFlag::kIntegral ); } );
    pdqsort( colOrder.begin(), start_cont,
-            [&values]( int const& a, int const& b ) {
-               return abs( values[a] ) > abs( values[b] );
-            } );
+            [&values]( int const& a, int const& b )
+            { return abs( values[a] ) > abs( values[b] ); } );
 
    // check if continuous variables or variables with small absolut value
    // always fit into the constraint
@@ -294,9 +304,9 @@ SimplifyInequalities<REAL>::execute( const Problem<REAL>& problem,
    PresolveStatus result = PresolveStatus::kUnchanged;
 
    if( problemUpdate.getPresolveOptions().runs_sequentiell() ||
-       !problemUpdate.getPresolveOptions().simplify_inequalities_parallel)
+       !problemUpdate.getPresolveOptions().simplify_inequalities_parallel )
    {
-      //allocate only once
+      // allocate only once
       Vec<int> colOrder;
       Vec<int> coefficientsThatCanBeDeleted;
       for( int row = 0; row < nrows; row++ )
@@ -314,9 +324,10 @@ SimplifyInequalities<REAL>::execute( const Problem<REAL>& problem,
       // iterate over all constraints and try to simplify them
       tbb::parallel_for(
           tbb::blocked_range<int>( 0, nrows ),
-          [&]( const tbb::blocked_range<int>& r ) {
-            //allocate only once per thread
-            Vec<int> colOrder;
+          [&]( const tbb::blocked_range<int>& r )
+          {
+             // allocate only once per thread
+             Vec<int> colOrder;
              Vec<int> coefficientsThatCanBeDeleted;
              for( int row = r.begin(); row < r.end(); ++row )
              {
@@ -334,7 +345,7 @@ SimplifyInequalities<REAL>::execute( const Problem<REAL>& problem,
       if( result == PresolveStatus::kUnchanged )
          return PresolveStatus::kUnchanged;
 
-      for( int i = 0; i < (int) stored_reductions.size(); ++i )
+      for( int i = 0; i < (int)stored_reductions.size(); ++i )
       {
          Reductions<REAL> reds = stored_reductions[i];
          if( reds.size() > 0 )

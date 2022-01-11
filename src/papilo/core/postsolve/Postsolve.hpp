@@ -408,7 +408,8 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
 
    PostsolveStatus status =
        validation.verifySolutionAndUpdateSlack( originalSolution, problem );
-   assert( !( postsolveStorage.types.size() - 1 >= 0 &&
+
+   assert( !( !postsolveStorage.types.empty() &&
               types[postsolveStorage.types.size() - 1] ==
                   ReductionType::kReducedBoundsCost ) ||
            stored_bounds.check_bounds( problem ) );
