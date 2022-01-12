@@ -146,7 +146,10 @@ ConstraintPropagation<REAL>::execute( const Problem<REAL>& problem,
                {
                   // in case of skip_variable_tightening set bounds to an
                   // infinite value if possible
-                  reductions.changeColLB( col, val - bound_tightening_offset, row );
+                  REAL offset =
+                      std::max( bound_tightening_offset,
+                                bound_tightening_offset * abs( val ) );
+                  reductions.changeColLB( col, val - offset, row );
                   result = PresolveStatus::kReduced;
                }
             }
@@ -199,7 +202,10 @@ ConstraintPropagation<REAL>::execute( const Problem<REAL>& problem,
                {
                   // in case of skip_variable_tightening set bounds to an
                   // infinite value if possible
-                  reductions.changeColUB( col, val + bound_tightening_offset, row );
+                  REAL offset =
+                      std::max( bound_tightening_offset,
+                                bound_tightening_offset * abs( val ) );
+                  reductions.changeColUB( col, val + offset, row );
                   result = PresolveStatus::kReduced;
                }
             }
@@ -307,7 +313,10 @@ ConstraintPropagation<REAL>::execute( const Problem<REAL>& problem,
                          {
                             // in case of skip_variable_tightening set bounds to an
                             // infinite value if possible
-                            stored_reductions[j].changeColLB( col, val - bound_tightening_offset, row );
+                            REAL offset =
+                                std::max( bound_tightening_offset,
+                                          bound_tightening_offset * abs( val ) );
+                            stored_reductions[j].changeColLB( col, val - offset, row );
                             result = PresolveStatus::kReduced;
                          }
                       }
@@ -364,7 +373,10 @@ ConstraintPropagation<REAL>::execute( const Problem<REAL>& problem,
                          {
                             // in case of skip_variable_tightening set bounds to an
                             // infinite value if possible
-                            stored_reductions[j].changeColUB( col, val + bound_tightening_offset, row );
+                            REAL offset =
+                                std::max( bound_tightening_offset,
+                                          bound_tightening_offset * abs( val ) );
+                            stored_reductions[j].changeColUB( col, val + offset, row );
                             result = PresolveStatus::kReduced;
                          }
                       }
