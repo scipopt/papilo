@@ -233,10 +233,10 @@ Substitution<REAL>::execute( const Problem<REAL>& problem,
 
          // check the numerics conditions
          if( ( abs( rowvalues[i] ) <
-                   problemUpdate.getPresolveOptions().markowitz_tolerance *
+                   REAL(problemUpdate.getPresolveOptions().markowitz_tolerance) *
                        maxabsvalue &&
                abs( rowvalues[i] ) <
-                   problemUpdate.getPresolveOptions().markowitz_tolerance *
+                   REAL(problemUpdate.getPresolveOptions().markowitz_tolerance) *
                        colvec.getMaxAbsValue() ) )
             continue;
 
