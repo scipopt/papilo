@@ -190,7 +190,7 @@ class Num
    static constexpr REAL
    round( const R& x )
    {
-      return floor( REAL( x + 0.5 ) );
+      return floor( REAL( x + REAL( 0.5 ) ) );
    }
 
    template <typename R1, typename R2>
