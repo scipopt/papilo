@@ -3,7 +3,7 @@
 /*               This file is part of the program and library                */
 /*    PaPILO --- Parallel Presolve for Integer and Linear Optimization       */
 /*                                                                           */
-/* Copyright (C) 2020-2021 Konrad-Zuse-Zentrum                               */
+/* Copyright (C) 2020-2022 Konrad-Zuse-Zentrum                               */
 /*                     fuer Informationstechnik Berlin                       */
 /*                                                                           */
 /* This program is free software: you can redistribute it and/or modify      */
@@ -150,7 +150,10 @@ ConstraintPropagation<REAL>::execute( const Problem<REAL>& problem,
                {
                   // in case of skip_variable_tightening set bounds to an
                   // infinite value if possible
-                  reductions.changeColLB( col, val - bound_tightening_offset, row );
+                  REAL offset =  bound_tightening_offset * abs( val );
+                  if( offset < bound_tightening_offset )
+                     offset = bound_tightening_offset;
+                  reductions.changeColLB( col, val - offset, row );
                   result = PresolveStatus::kReduced;
                }
             }
@@ -203,7 +206,10 @@ ConstraintPropagation<REAL>::execute( const Problem<REAL>& problem,
                {
                   // in case of skip_variable_tightening set bounds to an
                   // infinite value if possible
-                  reductions.changeColUB( col, val + bound_tightening_offset, row );
+                  REAL offset =  bound_tightening_offset * abs( val );
+                  if( offset < bound_tightening_offset )
+                     offset = bound_tightening_offset;
+                  reductions.changeColUB( col, val + offset, row );
                   result = PresolveStatus::kReduced;
                }
             }
@@ -314,7 +320,10 @@ ConstraintPropagation<REAL>::execute( const Problem<REAL>& problem,
                          {
                             // in case of skip_variable_tightening set bounds to an
                             // infinite value if possible
-                            stored_reductions[j].changeColLB( col, val - bound_tightening_offset, row );
+                            REAL offset =  bound_tightening_offset * abs( val );
+                            if( offset < bound_tightening_offset )
+                               offset = bound_tightening_offset;
+                            stored_reductions[j].changeColLB( col, val - offset, row );
                             result = PresolveStatus::kReduced;
                          }
                       }
@@ -371,7 +380,10 @@ ConstraintPropagation<REAL>::execute( const Problem<REAL>& problem,
                          {
                             // in case of skip_variable_tightening set bounds to an
                             // infinite value if possible
-                            stored_reductions[j].changeColUB( col, val + bound_tightening_offset, row );
+                            REAL offset =  bound_tightening_offset * abs( val );
+                            if( offset < bound_tightening_offset )
+                               offset = bound_tightening_offset;
+                            stored_reductions[j].changeColUB( col, val + offset, row );
                             result = PresolveStatus::kReduced;
                          }
                       }
