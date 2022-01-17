@@ -69,10 +69,10 @@ class FixAndPropagate
             fixings = probing_view.get_fixings();
             assert( !fixings.empty() );
             Fixing<REAL> infeasible_fixing = fixings[fixings.size() - 1];
-            fixings[fixings.size() - 1] =
-                ( Fixing<REAL> ){ infeasible_fixing.get_column_index(),
+            const Fixing<REAL>& fixing { infeasible_fixing.get_column_index(),
                                   modify_value_due_to_backtrack(
                                       infeasible_fixing.get_value() ) };
+            fixings[fixings.size() - 1] = fixing;
          }
          else
          {
