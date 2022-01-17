@@ -31,7 +31,7 @@ using namespace papilo;
 Problem<double>
 setupProblemForVolumeAlgorithm();
 
-TEST_CASE( "small_test", "[volume]" )
+TEST_CASE( "small-volume-algorithm-test", "[volume]" )
 {
    VolumeAlgorithm<double> algorithm{ {}, {}, 0.5, 1 };
    Vec<double> c( 2 );
