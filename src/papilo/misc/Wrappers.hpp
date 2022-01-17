@@ -3,7 +3,7 @@
 /*               This file is part of the program and library                */
 /*    PaPILO --- Parallel Presolve for Integer and Linear Optimization       */
 /*                                                                           */
-/* Copyright (C) 2020-2021 Konrad-Zuse-Zentrum                               */
+/* Copyright (C) 2020-2022 Konrad-Zuse-Zentrum                               */
 /*                     fuer Informationstechnik Berlin                       */
 /*                                                                           */
 /* This program is free software: you can redistribute it and/or modify      */
@@ -515,8 +515,7 @@ postsolve( PostsolveStorage<REAL>& postsolveStorage,
    if( !objective_reference.empty() )
    {
       if( origfeas && status == PostsolveStatus::kOk &&
-          postsolveStorage.num.isFeasEq(
-              boost::lexical_cast<double>( objective_reference ), origobj ) )
+          postsolveStorage.num.isFeasEq( boost::lexical_cast<double>( objective_reference ), double(origobj) ) )
          fmt::print( "validation: SUCCESS\n" );
       else
          fmt::print( "validation: FAILURE\n" );

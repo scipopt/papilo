@@ -3,7 +3,7 @@
 /*               This file is part of the program and library                */
 /*    PaPILO --- Parallel Presolve for Integer and Linear Optimization       */
 /*                                                                           */
-/* Copyright (C) 2020-2021 Konrad-Zuse-Zentrum                               */
+/* Copyright (C) 2020-2022 Konrad-Zuse-Zentrum                               */
 /*                     fuer Informationstechnik Berlin                       */
 /*                                                                           */
 /* This program is free software: you can redistribute it and/or modify      */
@@ -43,12 +43,15 @@
 namespace papilo
 {
 
+const static int DEFAULT_MAX_BADGE_SIZE = -1;
+
 template <typename REAL>
 class Probing : public PresolveMethod<REAL>
 {
    Vec<int> nprobed;
    int maxinitialbadgesize = 1000;
    int minbadgesize = 10;
+   int max_badge_size = DEFAULT_MAX_BADGE_SIZE;
    double mincontdomred = 0.3;
 
  public:
@@ -96,6 +99,11 @@ class Probing : public PresolveMethod<REAL>
                              "a single badge of candidates",
                              minbadgesize, 1 );
 
+      paramSet.addParameter( "probing.maxbadgesize",
+                             "maximal number of probing candidates probed in "
+                             "a single badge of candidates",
+                             max_badge_size, DEFAULT_MAX_BADGE_SIZE );
+
       paramSet.addParameter(
           "probing.mincontdomred",
           "minimum fraction of domain that needs to be reduced for continuous "
@@ -111,6 +119,9 @@ class Probing : public PresolveMethod<REAL>
    bool
    isBinaryVariable( REAL upper_bound, REAL lower_bound, int column_size,
                      const Flags<ColFlag>& colFlag ) const;
+
+   void
+   set_max_badge_size( int val);
 
 };
 
@@ -527,6 +538,8 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
           ceil( badge_size * static_cast<double>( working_limit + extrawork ) /
                 (double) amountofwork ) );
       badge_size = std::min( nprobingcands - current_badge_start, badge_size );
+      if( max_badge_size > 0 )
+         badge_size = std::min( max_badge_size, badge_size );
       current_badge_end = current_badge_start + badge_size;
 
       abort = n_useless >= consMatrix.getNnz() * 2 || working_limit < 0 ||
@@ -592,6 +605,13 @@ Probing<REAL>::isBinaryVariable( REAL upper_bound, REAL lower_bound,
    return !colFlag.test( ColFlag::kUnbounded ) &&
           colFlag.test( ColFlag::kIntegral ) && column_size > 0 &&
           lower_bound == 0 && upper_bound == 1;
+}
+
+template <typename REAL>
+void
+Probing<REAL>::set_max_badge_size( int val)
+{
+   max_badge_size = val;
 }
 
 

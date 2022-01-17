@@ -11,6 +11,7 @@ Performance improvements
 
 - ParallelCol: reducing the amount of redundant transactions in case of multiple parallel integer columns
 - Probing: checks the time limit condition before propagating a variable
+- Probing: introduce new parameter to cap the bagdesize
 - SequentialMode: execute functions like trivialPresolve only once per round and not after every presolver
 
 Interface changes
@@ -18,7 +19,11 @@ Interface changes
 ### Deleted and changed API methods
 ### New API functions
 ### Changed parameters
+
 ### New parameters with default values
+
+- probing.maxbadgesize = -1 : maximal number of probing candidates probed in a single badge of candidates (-1 deactivated)
+
 ### Data structures
 
 Unit tests
@@ -154,6 +159,7 @@ Miscellaneous
 - printing the objective value if the problem can be solved during presolving
 - printing the header containing the version of the configured backend solver
 - boost minimum is 1.72 on mac, 1.65 otherwise
+- supporting boost version 1.78
 
 Known bugs
 ----------

@@ -3,7 +3,7 @@
 /*               This file is part of the program and library                */
 /*    PaPILO --- Parallel Presolve for Integer and Linear Optimization       */
 /*                                                                           */
-/* Copyright (C) 2020-2021 Konrad-Zuse-Zentrum                               */
+/* Copyright (C) 2020-2022 Konrad-Zuse-Zentrum                               */
 /*                     fuer Informationstechnik Berlin                       */
 /*                                                                           */
 /* This program is free software: you can redistribute it and/or modify      */
@@ -410,7 +410,8 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
 
    PostsolveStatus status =
        validation.verifySolutionAndUpdateSlack( originalSolution, problem );
-   assert( !( postsolveStorage.types.size() - 1 >= 0 &&
+
+   assert( !( !postsolveStorage.types.empty() &&
               types[postsolveStorage.types.size() - 1] ==
                   ReductionType::kReducedBoundsCost ) ||
            stored_bounds.check_bounds( problem ) );

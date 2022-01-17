@@ -3,7 +3,7 @@
 /*               This file is part of the program and library                */
 /*    PaPILO --- Parallel Presolve for Integer and Linear Optimization       */
 /*                                                                           */
-/* Copyright (C) 2020-2021 Konrad-Zuse-Zentrum                               */
+/* Copyright (C) 2020-2022 Konrad-Zuse-Zentrum                               */
 /*                     fuer Informationstechnik Berlin                       */
 /*                                                                           */
 /* This program is free software: you can redistribute it and/or modify      */
@@ -547,12 +547,12 @@ MpsParser<REAL>::parseRanges( boost::iostreams::filtering_istream& file )
          if( row_type[rowidx] == boundtype::kGE )
          {
             row_flags[rowidx].unset( RowFlag::kRhsInf );
-            rowrhs[rowidx] = rowlhs[rowidx] + abs( val );
+            rowrhs[rowidx] = rowlhs[rowidx] + REAL(abs( val ));
          }
          else if( row_type[rowidx] == boundtype::kLE )
          {
             row_flags[rowidx].unset( RowFlag::kLhsInf );
-            rowlhs[rowidx] = rowrhs[rowidx] - abs( val );
+            rowlhs[rowidx] = rowrhs[rowidx] - REAL(abs( val ));
          }
          else
          {
@@ -560,9 +560,9 @@ MpsParser<REAL>::parseRanges( boost::iostreams::filtering_istream& file )
             assert( rowrhs[rowidx] == rowlhs[rowidx] );
 
             if( val > REAL{ 0.0 } )
-               rowrhs[rowidx] = rowrhs[rowidx] + val;
+               rowrhs[rowidx] = rowrhs[rowidx] + REAL(val);
             else if( val < REAL{ 0.0 } )
-               rowlhs[rowidx] = rowlhs[rowidx] + val;
+               rowlhs[rowidx] = rowlhs[rowidx] + REAL(val);
          }
       };
 
