@@ -24,12 +24,12 @@
 #ifndef _PAPILO_CORE_PROBING_VIEW_HPP_
 #define _PAPILO_CORE_PROBING_VIEW_HPP_
 
+#include "papilo/core/Fixing.hpp"
 #include "papilo/core/Problem.hpp"
 #include "papilo/core/SingleRow.hpp"
 #include "papilo/io/Message.hpp"
 #include "papilo/misc/MultiPrecision.hpp"
 #include "papilo/misc/Vec.hpp"
-#include "papilo/core/Fixing.hpp"
 
 namespace papilo
 {
@@ -91,7 +91,7 @@ class ProbingView
       // remember probing column and probed value
       probingCol = col;
       probingValue = value;
-      fixings.push_back( ( Fixing<REAL> ){ col, value } );
+      fixings.push_back( ( Fixing<REAL> ){ col, value ? 1.0 : 0.0 } );
 
       // fix upper/lower bound of probed column
       if( value )
@@ -101,7 +101,8 @@ class ProbingView
    }
 
    Vec<Fixing<REAL>>
-   get_fixings(){
+   get_fixings()
+   {
       return fixings;
    }
 
@@ -223,8 +224,8 @@ class ProbingView
    Vec<int> next_prop_activities;
 
    bool infeasible;
-   int row_causing_infeasibility =-1;
-   int col_causing_infeasibility =-1;
+   int row_causing_infeasibility = -1;
+   int col_causing_infeasibility = -1;
    int round;
    int probingCol;
    bool probingValue;
@@ -321,14 +322,15 @@ ProbingView<REAL>::reset()
                        probing_lower_bounds.begin() ) );
    assert( std::equal( orig_ubs.begin(), orig_ubs.end(),
                        probing_upper_bounds.begin() ) );
-   assert( std::equal(
-       orig_activities.begin(), orig_activities.end(),
-       probing_activities.begin(),
-       []( const RowActivity<REAL>& a, const RowActivity<REAL>& b ) {
-          return a.ninfmax == b.ninfmax && a.ninfmin == b.ninfmin &&
-                 a.min == b.min && a.max == b.max &&
-                 a.lastchange == b.lastchange;
-       } ) );
+   assert(
+       std::equal( orig_activities.begin(), orig_activities.end(),
+                   probing_activities.begin(),
+                   []( const RowActivity<REAL>& a, const RowActivity<REAL>& b )
+                   {
+                      return a.ninfmax == b.ninfmax && a.ninfmin == b.ninfmin &&
+                             a.min == b.min && a.max == b.max &&
+                             a.lastchange == b.lastchange;
+                   } ) );
 
    round = -2;
    prop_activities.clear();
@@ -460,9 +462,8 @@ ProbingView<REAL>::changeLb( int col, REAL newlb )
        colvec.getValues(), colvec.getIndices(), colvec.getLength(),
        BoundChange::kLower, oldlb, newlb, lbinf, probing_activities,
        [this]( ActivityChange actChange, int rowid,
-               RowActivity<REAL>& activity ) {
-          activityChanged( actChange, rowid, activity );
-       },
+               RowActivity<REAL>& activity )
+       { activityChanged( actChange, rowid, activity ); },
        true );
 }
 
@@ -502,9 +503,8 @@ ProbingView<REAL>::changeUb( int col, REAL newub )
        colvec.getValues(), colvec.getIndices(), colvec.getLength(),
        BoundChange::kUpper, oldub, newub, ubinf, probing_activities,
        [this]( ActivityChange actChange, int rowid,
-               RowActivity<REAL>& activity ) {
-          activityChanged( actChange, rowid, activity );
-       },
+               RowActivity<REAL>& activity )
+       { activityChanged( actChange, rowid, activity ); },
        true );
 }
 
@@ -750,12 +750,13 @@ ProbingView<REAL>::propagateDomains()
 
          auto rowvec = consMatrix.getRowCoefficients( candrow );
 
-         propagate_row(candrow,
-             rowvec.getValues(), rowvec.getIndices(), rowvec.getLength(),
-             probing_activities[candrow], lhs[candrow], rhs[candrow],
-             rflags[candrow], probing_lower_bounds, probing_upper_bounds,
-             probing_domain_flags,
-             [this]( BoundChange bndChg, int colid, REAL newbound , int row ) {
+         propagate_row(
+             candrow, rowvec.getValues(), rowvec.getIndices(),
+             rowvec.getLength(), probing_activities[candrow], lhs[candrow],
+             rhs[candrow], rflags[candrow], probing_lower_bounds,
+             probing_upper_bounds, probing_domain_flags,
+             [this]( BoundChange bndChg, int colid, REAL newbound, int row )
+             {
                 if( num.isHugeVal( newbound ) )
                    return;
 

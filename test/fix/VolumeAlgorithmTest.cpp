@@ -21,63 +21,53 @@
 /*                                                                           */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
+#include "fix/VolumeAlgorithm.hpp"
 #include "catch/catch.hpp"
-#include "fix/VectorMultiplication.hpp"
 #include "papilo/core/Problem.hpp"
 #include "papilo/core/ProblemBuilder.hpp"
 
 using namespace papilo;
 
 Problem<double>
-setupProblemForVectorMultiplication();
+setupProblemForVolumeAlgorithm();
 
-TEST_CASE( "vector-calc_b_minus_Ax", "[fix]" )
+TEST_CASE( "small_test", "[volume]" )
 {
-   VectorMultiplication<double> multiplication{};
-   Problem<double> problem = setupProblemForVectorMultiplication();
-
-   Vec<double> scalar{};
-   scalar.push_back(2);
-   scalar.push_back(3);
-   scalar.push_back(3);
-
-   Vec<double> subtract{};
-   subtract.push_back(1);
-   subtract.push_back(2);
-
-
-   Vec<double> res = multiplication.calc_b_minus_Ax(
-       problem.getConstraintMatrix(), scalar, subtract );
-
-   REQUIRE( res.size() == problem.getNRows() );
-   REQUIRE( res[0] == -7 );
-   REQUIRE( res[1] == -19 );
-
+   VolumeAlgorithm<double> algorithm{ {}, {}, 0.5, 1 };
+   Vec<double> c( 2 );
+   c = { 1, 2 };
+   Vec<double> b( 2 );
+   b = { 1, 2 };
+   Problem<double> problem = setupProblemForVolumeAlgorithm();
+   ConstraintMatrix<double> matrix = problem.getConstraintMatrix();
+   Vec<double> pi( 2 );
+   pi = { 1, 2 };
+   Vec<double> sol = algorithm.volume_algorithm( c, matrix, b, problem, pi );
+   // TODO: add assertions and check input
 }
 
 Problem<double>
-setupProblemForVectorMultiplication()
+setupProblemForVolumeAlgorithm()
 {
-//   1x + 2y <= 2
-   Vec<double> coefficients{ 1.0, 1.0, 1.0 };
-   Vec<double> upperBounds{ 1.0, 1.0, 1.0 };
-   Vec<double> lowerBounds{ 0.0, 0.0, 0.0 };
-   Vec<uint8_t> isIntegral{ 1, 1, 1 };
+   Vec<double> coefficients{ 1.0, 1.0 };
+   Vec<double> upperBounds{ 1.0, 1.0 };
+   Vec<double> lowerBounds{ 0.0, 0.0 };
+   Vec<uint8_t> isIntegral{ 1, 1 };
 
-   Vec<double> rhs{ 2.0, 3.0};
+   Vec<double> rhs{ 2.0, 3.0 };
    Vec<std::string> rowNames{ "A1", "A2" };
-   Vec<std::string> columnNames{ "c1", "c2", "c3" };
+   Vec<std::string> columnNames{ "c1", "c2" };
    Vec<std::tuple<int, int, double>> entries{
        std::tuple<int, int, double>{ 0, 0, 1.0 },
        std::tuple<int, int, double>{ 0, 1, 2.0 },
        std::tuple<int, int, double>{ 1, 1, 3.0 },
-       std::tuple<int, int, double>{ 1, 2, 4.0 },
    };
 
    ProblemBuilder<double> pb;
-   pb.reserve( (int) entries.size(), (int) rowNames.size(), (int) columnNames.size() );
-   pb.setNumRows( (int) rowNames.size() );
-   pb.setNumCols( (int) columnNames.size() );
+   pb.reserve( (int)entries.size(), (int)rowNames.size(),
+               (int)columnNames.size() );
+   pb.setNumRows( (int)rowNames.size() );
+   pb.setNumCols( (int)columnNames.size() );
    pb.setColUbAll( upperBounds );
    pb.setColLbAll( lowerBounds );
    pb.setObjAll( coefficients );

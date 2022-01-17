@@ -57,6 +57,7 @@ add_executable(unit_test TestMain.cpp
         papilo/presolve/SparsifyTest.cpp
 
         fix/VectorMultiplicationTest.cpp
+        fix/VolumeAlgorithmTest.cpp
         fix/FixAndPropagateTest.cpp
 
         ${BOOST_REQUIRED_TEST_FILES}

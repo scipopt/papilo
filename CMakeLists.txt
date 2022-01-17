@@ -394,7 +394,7 @@ install(FILES
 install(FILES
         ${PROJECT_SOURCE_DIR}/src/fix/FixAndPropagate.hpp
         ${PROJECT_SOURCE_DIR}/src/fix/VectorMultiplication.hpp.hpp
-        ${PROJECT_SOURCE_DIR}/src/StartFixAndPropagate.cpp
+        ${PROJECT_SOURCE_DIR}/src/StartMipComp.cpp
         DESTINATION include/fix)
 
 # configure the config file for the build tree
