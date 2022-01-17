@@ -508,7 +508,9 @@ DualInfer<REAL>::execute( const Problem<REAL>& problem,
           num.isFeasLT( dualActivities[i].max, obj[i] ) &&
           num.isSafeLT( dualActivities[i].max, obj[i] ) )
       {
-         assert( !cflags[i].test( ColFlag::kLbInf ) );
+         if( cflags[i].test( ColFlag::kLbInf ) )
+            return PresolveStatus::kUnbndOrInfeas;
+
          TransactionGuard<REAL> tg{ reductions };
          reductions.lockColBounds( i );
          reductions.fixCol( i, lbValues[i] );
@@ -522,10 +524,11 @@ DualInfer<REAL>::execute( const Problem<REAL>& problem,
                num.isFeasGT( dualActivities[i].min, obj[i] ) &&
                num.isSafeGT( dualActivities[i].min, obj[i] ) )
       {
-         assert( !cflags[i].test( ColFlag::kUbInf ) );
-         TransactionGuard<REAL> tg{ reductions };
-         reductions.lockColBounds( i );
-         reductions.fixCol( i, ubValues[i] );
+         if( cflags[i].test(ColFlag::kUbInf))
+            return PresolveStatus::kUnbndOrInfeas;
+         TransactionGuard<REAL> tg{reductions};
+         reductions.lockColBounds(i);
+         reductions.fixCol(i, ubValues[i]);
 
          if( cflags[i].test( ColFlag::kIntegral ) )
             ++fixedints;

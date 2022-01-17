@@ -102,6 +102,7 @@ Fixed bugs
 - SingletonRows: handling values close to zero does not lead to infeasibility anymore
 - setting the time-limit via the parameter file is not clashing with the command time-limit any more
 - ParallelRowDetection: using epsilon tolerance to avoid that the lhs is greater than the rhs
+- DualInfer: consider case if reduced costs indicate an unbounded variable
 
 Miscellaneous
 -------------
