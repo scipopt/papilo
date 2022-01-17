@@ -50,7 +50,7 @@ class VectorMultiplication
                          {
                             for( int i = r.begin(); i < r.end(); ++i )
 #else
-      for( int i = 0; i < matrix.getNRows(); ++i )
+      for( int i = 0; i < A.getNRows(); ++i )
 #endif
                             {
                                auto coeff = A.getRowCoefficients( i );
