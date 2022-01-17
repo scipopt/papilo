@@ -197,7 +197,7 @@ set(unit_tests
 
         "vector-multiplication"
         "fix-and-propagate"
-        "small-volume-algorithm-test"
+#        "small-volume-algorithm-test"
 
         "integration-test-for-flugpl"
         ${PAPILOLIB_TESTS}
