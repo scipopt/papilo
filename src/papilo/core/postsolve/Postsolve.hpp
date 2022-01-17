@@ -1305,9 +1305,9 @@ Postsolve<REAL>::remove_row_from_basis( Solution<REAL>& originalSolution,
    SavedRow<REAL> saved_row{
        num, i, types, start, indices, values, originalSolution.primal };
 
-   assert( originalSolution.rowBasisStatus[saved_row.getRow()] ==
+   assert( (originalSolution.rowBasisStatus[saved_row.getRow()] ==
                VarBasisStatus::BASIC &&
-           ( saved_row.is_on_rhs() || saved_row.is_on_lhs() ) || !is_optimal );
+           ( saved_row.is_on_rhs() || saved_row.is_on_lhs() )) || !is_optimal );
    originalSolution.rowBasisStatus[saved_row.getRow()] = saved_row.getVBS();
    assert( originalSolution.rowBasisStatus[saved_row.getRow()] !=
            VarBasisStatus::BASIC || !is_optimal);
