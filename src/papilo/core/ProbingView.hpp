@@ -91,7 +91,8 @@ class ProbingView
       // remember probing column and probed value
       probingCol = col;
       probingValue = value;
-      fixings.push_back( ( Fixing<REAL> ){ col, value } );
+      const Fixing<REAL>& fixing = { col, value ? 1.0 : 0.0 };
+      fixings.push_back( fixing );
 
       // fix upper/lower bound of probed column
       if( value )
