@@ -1379,6 +1379,8 @@ Presolve<REAL>::logStatus( const Problem<REAL>& problem,
       Solution<REAL> solution{};
       Solution<REAL> empty_sol{};
       empty_sol.type = SolutionType::kPrimal;
+      if(postsolveStorage.postsolveType == PostsolveType::kFull)
+         empty_sol.type = SolutionType::kPrimalDual;
       Postsolve<REAL> postsolve{ msg, num };
       postsolve.undo( empty_sol, solution, postsolveStorage );
       const Problem<REAL>& origprob = postsolveStorage.getOriginalProblem();
