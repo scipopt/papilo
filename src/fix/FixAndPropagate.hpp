@@ -158,12 +158,12 @@ class FixAndPropagate
       for( int i = 0; i < cont_solution.primal.size(); i++ )
       {
          REAL frac = cont_solution.primal[i] - floor( cont_solution.primal[i] );
-         if( frac == 0 or num.isEq( _probing_view.getProbingUpperBounds()[i],
+         if( frac == 0 || num.isEq( _probing_view.getProbingUpperBounds()[i],
                                     _probing_view.getProbingLowerBounds()[i] ) )
             continue;
          else if( frac > 0.5 )
          {
-            if( variable == -1 or 1 - frac > score )
+            if( variable == -1 || 1 - frac > score )
             {
                score = 1 - frac;
                variable = i;
@@ -172,7 +172,7 @@ class FixAndPropagate
          }
          else
          {
-            if( variable == -1 or frac > score )
+            if( variable == -1 || frac > score )
             {
                score = frac;
                variable = i;
