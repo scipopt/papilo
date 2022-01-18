@@ -110,7 +110,7 @@ class VolumeAlgorithm
  private:
    bool
    stopping_criteria( const Vec<REAL>& v, const REAL n_rows_A,
-         const Vec<REAL>& c, const Vec<REAL>& x_bar, const Vec<REAL>& z_bar )
+         const Vec<REAL>& c, const Vec<REAL>& x_bar, const REAL z_bar )
    {
       if( num.isLT(op.l1_norm(v), n_rows_A * con_threshold) &&
           num.isLT((op.multi(c, x_bar) - z_bar), z_bar * obj_threshold) )
