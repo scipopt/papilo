@@ -45,6 +45,8 @@ class VolumeAlgorithm
 
    REAL alpha = 0.5;
    REAL f = 1;
+   REAL con_threshold = 0.01;
+   REAL obj_threshold = 0.02;
 
  public:
    VolumeAlgorithm( Message _msg, Num<REAL> _num, REAL _alpha, REAL _f )
@@ -79,9 +81,9 @@ class VolumeAlgorithm
       REAL z_bar = sol.second;
       int t = 1;
       Vec<REAL> v_t( b );
-      REAL m = A.getNRows();
+      REAL n_rows_A = A.getNRows();
 
-      while( stopping_criteria(v_t, m, c, x_bar, z_bar) )
+      while( stopping_criteria(v_t, n_rows_A, c, x_bar, z_bar) )
       {
          // STEP 1:
          v_t = op.calc_b_minus_Ax( A, sol.first, b );
@@ -107,16 +109,12 @@ class VolumeAlgorithm
 
  private:
    bool
-   stopping_criteria(Vec<REAL> v, REAL m, Vec<REAL> c, Vec<REAL> x_bar,
-         Vec<REAL> z_bar)
+   stopping_criteria( const Vec<REAL>& v, const REAL n_rows_A,
+         const Vec<REAL>& c, const Vec<REAL>& x_bar, const Vec<REAL>& z_bar )
    {
-      //TODO: set these threshold values globally?
-      REAL obj_threshold = 0.02;
-      REAL con_threshold = 0.01;
-
-      if( num.isLT(op.l1_norm(v), m * con_threshold) )
-         if( num.isLT((op.multi(c, x_bar) - z_bar), z_bar * obj_threshold) )
-            return false;
+      if( num.isLT(op.l1_norm(v), n_rows_A * con_threshold) &&
+          num.isLT((op.multi(c, x_bar) - z_bar), z_bar * obj_threshold) )
+         return false;
 
       return true;
    }
