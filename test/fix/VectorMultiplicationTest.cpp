@@ -127,7 +127,9 @@ TEST_CASE( "vector-addition-2", "[fix]" )
    x.push_back( 2 );
    x.push_back( 3 );
 
-   Vec<double> res = multiplication.calc_qb_plus_sx( 3, b, 2, x );
+   Vec<double> res( x );
+
+   multiplication.calc_qb_plus_sx( 3, b, 2, x , res);
 
    REQUIRE( res.size() == problem.getNCols() );
    REQUIRE( res[0] == 8 );
