@@ -118,6 +118,30 @@ class VectorMultiplication
       return sqrt( squared_norm.get() );
    }
 
+   REAL
+   l1_norm( const Vec<REAL>& vec )
+   {
+      StableSum<REAL> result;
+
+      for( int i = 0; i < vec.size(); i++ )
+#ifdef PAPILO_TBB
+         tbb::parallel_for( tbb::blocked_range<int>( 0, vec.size() ),
+                            [&]( const tbb::blocked_range<int>& r )
+                            {
+                               for( int i = r.begin(); i < r.end(); ++i )
+#else
+         for( int i = 0; i < vec.size(); ++i )
+#endif
+                               {
+                                  result.add( abs(vec[i]) );
+                               }
+
+#ifdef PAPILO_TBB
+                            } );
+#endif
+      return result.get();
+   }
+
    Vec<REAL>
    calc_qb_plus_sx( const REAL q, const Vec<REAL>& b, const REAL s, const Vec<REAL>& x )
    {

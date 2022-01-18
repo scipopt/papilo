@@ -76,12 +76,15 @@ class VolumeAlgorithm
           create_problem_6_and_solve_it( c, A, b, problem, pi );
       Vec<REAL> pi_bar { pi };
       Vec<REAL> x_bar { sol.first };
+      REAL z_bar = sol.second;
       int t = 1;
+      Vec<REAL> v_t( b );
+      REAL m = A.getNRows();
 
-      while( stopping_criteria() )
+      while( stopping_criteria(v_t, m, c, x_bar, z_bar) )
       {
          // STEP 1:
-         Vec<REAL> v_t = op.calc_b_minus_Ax( A, sol.first, b );
+         v_t = op.calc_b_minus_Ax( A, sol.first, b );
          REAL step_size =
              f * ( best_bound_on_obj - sol.second ) / op.l2_norm( v_t );
          Vec<REAL> pi_t = op.calc_b_plus_sx( pi_bar, step_size, v_t );
@@ -91,9 +94,12 @@ class VolumeAlgorithm
          x_bar = op.calc_qb_plus_sx( alpha, sol_t.first, 1 - alpha, x_bar );
 
          // Step 2:
-         if( num.isGT( sol_t.second, sol.second ) )
+         if( num.isGT( sol_t.second, z_bar ) )
+         {
             //TODO: make quick check if the value gets overwritten
             sol = sol_t;
+            z_bar = sol_t.second;
+         }
          t = t + 1;
       }
       return x_bar;
@@ -101,9 +107,17 @@ class VolumeAlgorithm
 
  private:
    bool
-   stopping_criteria()
+   stopping_criteria(Vec<REAL> v, REAL m, Vec<REAL> c, Vec<REAL> x_bar,
+         Vec<REAL> z_bar)
    {
-      //TODO: Suresh
+      //TODO: set these threshold values globally?
+      REAL obj_threshold = 0.02;
+      REAL con_threshold = 0.01;
+
+      if( num.isLT(op.l1_norm(v), m * con_threshold) )
+         if( num.isLT((op.multi(c, x_bar) - z_bar), z_bar * obj_threshold) )
+            return false;
+
       return true;
    }
 
