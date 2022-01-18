@@ -49,10 +49,12 @@ class VolumeAlgorithm
    REAL obj_threshold = 0.02;
 
  public:
-   VolumeAlgorithm( Message _msg, Num<REAL> _num, REAL _alpha, REAL _f )
-       : msg( _msg ), num( _num ), alpha( _alpha ), f( _f )
+   VolumeAlgorithm( Message _msg, Num<REAL> _num, REAL _alpha, REAL _f,
+                    REAL _obj_threshold, REAL _con_threshold )
+       : msg( _msg ), num( _num ), alpha( _alpha ), f( _f ),
+         obj_threshold( _obj_threshold ), con_threshold( _con_threshold ),
+         op( {} )
    {
-      op = {};
    }
 
    // TODO: define data structure
@@ -92,7 +94,8 @@ class VolumeAlgorithm
       while( stopping_criteria( v_t, n_rows_A, c, sol.first, best_objective ) )
       {
          // STEP 1:
-         // Compute v_t = b − A x_bar and π_t = pi_bar + sv_t for a step size s given by (7).
+         // Compute v_t = b − A x_bar and π_t = pi_bar + sv_t for a step size s
+         // given by (7).
          op.calc_b_minus_Ax( A, sol.first, b, v_t );
          REAL step_size = f * ( best_bound_on_obj - best_objective ) /
                           pow( op.l2_norm( v_t ), 2.0 );
@@ -137,13 +140,14 @@ class VolumeAlgorithm
                       const REAL z_bar )
    {
       return num.isGE( op.l1_norm( v ), n_rows_A * con_threshold ) ||
-          num.isGE( ( op.multi( c, x_bar ) - z_bar ), z_bar * obj_threshold );
+             num.isGE( ( op.multi( c, x_bar ) - z_bar ),
+                       z_bar * obj_threshold );
    }
 
    std::pair<Vec<REAL>, REAL>
    create_problem_6_and_solve_it( const Vec<REAL>& c,
                                   const ConstraintMatrix<REAL>& A,
-                                  const Vec<REAL>& b, Problem<REAL>& problem,
+                                  const Vec<REAL>& b, Problem<REAL> problem,
                                   Vec<REAL> pi )
    {
       // TODO: z = (c − π̄ A)x + π̄b. π̄ is a transposed vector?
@@ -153,10 +157,35 @@ class VolumeAlgorithm
       op.calc_b_minus_xA( A, pi, c, vector );
       problem.getObjective().coefficients = vector;
       problem.getObjective().offset = op.multi( b, pi );
-      // TODO: the problem has now a new objective function and could be
-      // presolved
-      // TODO: missing
-      return { pi, 0 };
+      // TODO: extract it
+      Presolve<REAL> presolve{};
+      PresolveResult<REAL> res = presolve.apply( problem, false );
+
+      Solution<REAL> empty_solution{ SolutionType::kPrimal };
+      Solution<REAL> solution{ SolutionType::kPrimal };
+
+      switch( res.status )
+      {
+      case PresolveStatus::kUnbndOrInfeas:
+      case PresolveStatus::kInfeasible:
+      case PresolveStatus::kUnchanged:
+      case PresolveStatus::kUnbounded:
+         assert( false );
+      case PresolveStatus::kReduced:
+         // TODO: there could be more efficient solutions
+         assert( problem.getNCols() == 0 );
+         papilo::Postsolve<REAL> postsolve{ msg, num };
+
+         auto status =
+             postsolve.undo( empty_solution, solution, res.postsolve, true );
+         assert( status == PostsolveStatus::kOk );
+         StableSum<REAL> obj{};
+         for( int i = 0; i < solution.primal.size(); i++ )
+            obj.add( solution.primal[i] * vector[i] );
+         return { solution.primal, obj.get() };
+
+      }
+      return { solution.primal, -1 };
    }
 };
 

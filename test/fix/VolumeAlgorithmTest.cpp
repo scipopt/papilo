@@ -31,15 +31,19 @@ using namespace papilo;
 Problem<double>
 setupProblemForVolumeAlgorithm();
 
+Problem<double>
+setupProblemWithoutMatrix();
+
 TEST_CASE( "small-volume-algorithm-test", "[volume]" )
 {
-   VolumeAlgorithm<double> algorithm{ {}, {}, 0.5, 1 };
+   VolumeAlgorithm<double> algorithm{ {}, {}, 0.5, 1, 1, 1 };
    Vec<double> c( 2 );
    c = { 1, 2 };
    Vec<double> b( 2 );
    b = { 1, 2 };
-   Problem<double> problem = setupProblemForVolumeAlgorithm();
-   ConstraintMatrix<double> matrix = problem.getConstraintMatrix();
+   Problem<double> problem = setupProblemWithoutMatrix();
+   ConstraintMatrix<double> matrix =
+       setupProblemForVolumeAlgorithm().getConstraintMatrix();
    Vec<double> pi( 2 );
    pi = { 1, 2 };
    Vec<double> sol = algorithm.volume_algorithm( c, matrix, b, problem, pi );
@@ -77,6 +81,33 @@ setupProblemForVolumeAlgorithm()
    pb.addEntryAll( entries );
    pb.setColNameAll( columnNames );
    pb.setProblemName( "coefficient strengthening matrix" );
+   Problem<double> problem = pb.build();
+   return problem;
+}
+
+Problem<double>
+setupProblemWithoutMatrix()
+{
+   Vec<double> coefficients{ 1.0, 1.0 };
+   Vec<double> upperBounds{ 1.0, 1.0 };
+   Vec<double> lowerBounds{ 0.0, 0.0 };
+   Vec<uint8_t> isIntegral{ 1, 1 };
+
+   Vec<std::string> rowNames{};
+   Vec<std::string> columnNames{ "c1", "c2" };
+   Vec<std::tuple<int, int, double>> entries{};
+
+   ProblemBuilder<double> pb;
+   pb.reserve( 0, 0, (int)columnNames.size() );
+   pb.setNumRows( (int)rowNames.size() );
+   pb.setNumCols( (int)columnNames.size() );
+   pb.setColUbAll( upperBounds );
+   pb.setColLbAll( lowerBounds );
+   pb.setObjAll( coefficients );
+   pb.setObjOffset( 0.0 );
+   pb.setColIntegralAll( isIntegral );
+   pb.setColNameAll( columnNames );
+   pb.setProblemName( "empty matrix" );
    Problem<double> problem = pb.build();
    return problem;
 }
