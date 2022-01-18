@@ -73,62 +73,74 @@ class VolumeAlgorithm
 
       // TODO: define/determine UB
       REAL best_bound_on_obj = 0;
-      // Step 0
-      std::pair<Vec<REAL>, REAL> sol =
-          create_problem_6_and_solve_it( c, A, b, problem, pi );
-      Vec<REAL> pi_bar { pi };
-      Vec<REAL> x_bar { sol.first };
-      REAL z_bar = sol.second;
-      int t = 1;
-      Vec<REAL> v_t( b );
       REAL n_rows_A = A.getNRows();
 
-      while( stopping_criteria(v_t, n_rows_A, c, x_bar, z_bar) )
+      // Step 0
+      // We start with a vector π̄ and solve (6) to obtain x̄ and z̄.
+      std::pair<Vec<REAL>, REAL> sol =
+          create_problem_6_and_solve_it( c, A, b, problem, pi );
+
+      // Set x_0 = x_bar, z_0 = z_bar̄, t = 1
+      int counter = 1;
+      Vec<REAL> v_t( b );
+      Vec<REAL> pi_t( pi );
+      Vec<REAL> pi_bar{ pi };
+      REAL best_objective = sol.second;
+
+      while( stopping_criteria( v_t, n_rows_A, c, sol.first, best_objective ) )
       {
          // STEP 1:
-         v_t = op.calc_b_minus_Ax( A, sol.first, b );
+         // Compute v_t = b − A x_bar and π_t = pi_bar + sv_t for a step size s given by (7).
+         op.calc_b_minus_Ax( A, sol.first, b, v_t );
          REAL step_size =
              f * ( best_bound_on_obj - sol.second ) / op.l2_norm( v_t );
-         Vec<REAL> pi_t = op.calc_b_plus_sx( pi_bar, step_size, v_t );
-
+         op.calc_b_plus_sx( pi_bar, step_size, v_t, pi_t );
+         // Solve (6) with π_t , let x_t and z_t be the solutions obtained.
          std::pair<Vec<REAL>, REAL> sol_t =
              create_problem_6_and_solve_it( c, A, b, problem, pi_t );
-         x_bar = op.calc_qb_plus_sx( alpha, sol_t.first, 1 - alpha, x_bar );
+         // x_bar ← αx t + (1 − α)x_bar,
+         op.calc_qb_plus_sx( alpha, sol_t.first, 1 - alpha, sol.first,
+                             sol.first );
 
          // Step 2:
-         if( num.isGT( sol_t.second, z_bar ) )
+         //If z_t > z_bar update π_bar and z_bar̄ as
+         if( num.isGT( sol_t.second, best_objective ) )
          {
-            //TODO: make quick check if the value gets overwritten
+            //π̄ ← π t , z̄ ← z t .
             sol = sol_t;
-            z_bar = sol_t.second;
+            best_objective = sol_t.second;
+            pi_bar = pi_t;
          }
-         t = t + 1;
+         //Let t ← t + 1 and go to Step 1.
+         counter = counter + 1;
       }
-      return x_bar;
+      // TODO: return the list of x_t
+      return sol.first;
    }
 
  private:
    bool
    stopping_criteria( const Vec<REAL>& v, const REAL n_rows_A,
-         const Vec<REAL>& c, const Vec<REAL>& x_bar, const REAL z_bar )
+                      const Vec<REAL>& c, const Vec<REAL>& x_bar,
+                      const REAL z_bar )
    {
-      if( num.isLT(op.l1_norm(v), n_rows_A * con_threshold) &&
-          num.isLT((op.multi(c, x_bar) - z_bar), z_bar * obj_threshold) )
+      if( num.isLT( op.l1_norm( v ), n_rows_A * con_threshold ) &&
+          num.isLT( ( op.multi( c, x_bar ) - z_bar ), z_bar * obj_threshold ) )
          return false;
-
       return true;
    }
 
    std::pair<Vec<REAL>, REAL>
-   create_problem_6_and_solve_it( const Vec<REAL> c,
+   create_problem_6_and_solve_it( const Vec<REAL>& c,
                                   const ConstraintMatrix<REAL>& A,
-                                  const Vec<REAL>& b, Problem<REAL> problem,
+                                  const Vec<REAL>& b, Problem<REAL>& problem,
                                   Vec<REAL> pi )
    {
       // TODO: z = (c − π̄ A)x + π̄b. π̄ is a transposed vector?
       //      problem.getObjective().coefficients = op.calc_b_minus_Ax(c, A,
       //      pi);
-      const Vec<REAL>& vector = op.calc_b_minus_xA( A, pi, c );
+      Vec<REAL> vector( c );
+      op.calc_b_minus_xA( A, pi, c, vector );
       problem.getObjective().coefficients = vector;
       problem.getObjective().offset = op.multi( b, pi );
       // TODO: the problem has now a new objective function and could be

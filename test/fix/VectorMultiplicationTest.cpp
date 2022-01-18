@@ -21,8 +21,8 @@
 /*                                                                           */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#include "catch/catch.hpp"
 #include "fix/VectorMultiplication.hpp"
+#include "catch/catch.hpp"
 #include "papilo/core/Problem.hpp"
 #include "papilo/core/ProblemBuilder.hpp"
 
@@ -37,22 +37,21 @@ TEST_CASE( "vector-calc_b_minus_Ax", "[fix]" )
    Problem<double> problem = setupProblemForVectorMultiplication();
 
    Vec<double> scalar{};
-   scalar.push_back(2);
-   scalar.push_back(3);
-   scalar.push_back(3);
+   scalar.push_back( 2 );
+   scalar.push_back( 3 );
+   scalar.push_back( 3 );
 
    Vec<double> subtract{};
-   subtract.push_back(1);
-   subtract.push_back(2);
+   subtract.push_back( 1 );
+   subtract.push_back( 2 );
 
-
-   Vec<double> res = multiplication.calc_b_minus_Ax(
-       problem.getConstraintMatrix(), scalar, subtract );
+   Vec<double> res( subtract );
+   multiplication.calc_b_minus_Ax( problem.getConstraintMatrix(), scalar,
+                                   subtract, res );
 
    REQUIRE( res.size() == problem.getNRows() );
    REQUIRE( res[0] == -7 );
    REQUIRE( res[1] == -19 );
-
 }
 
 TEST_CASE( "vector-calc_b_minus_xA", "[fix]" )
@@ -61,17 +60,16 @@ TEST_CASE( "vector-calc_b_minus_xA", "[fix]" )
    Problem<double> problem = setupProblemForVectorMultiplication();
 
    Vec<double> scalar{};
-   scalar.push_back(2);
-   scalar.push_back(3);
+   scalar.push_back( 2 );
+   scalar.push_back( 3 );
 
    Vec<double> subtract{};
-   subtract.push_back(1);
-   subtract.push_back(2);
-   subtract.push_back(3);
-
-
-   Vec<double> res = multiplication.calc_b_minus_xA(
-       problem.getConstraintMatrix(), scalar, subtract );
+   subtract.push_back( 1 );
+   subtract.push_back( 2 );
+   subtract.push_back( 3 );
+   Vec<double> res( subtract );
+   multiplication.calc_b_minus_xA( problem.getConstraintMatrix(), scalar,
+                                   subtract, res );
 
    REQUIRE( res.size() == problem.getNCols() );
    REQUIRE( res[0] == -1 );
@@ -84,9 +82,9 @@ TEST_CASE( "vector-l2-norm", "[fix]" )
    VectorMultiplication<double> multiplication{};
 
    Vec<double> subtract{};
-   subtract.push_back(1);
-   subtract.push_back(2);
-   subtract.push_back(2);
+   subtract.push_back( 1 );
+   subtract.push_back( 2 );
+   subtract.push_back( 2 );
 
    REQUIRE( multiplication.l2_norm( subtract ) == 3 );
 }
@@ -97,18 +95,16 @@ TEST_CASE( "vector-addition", "[fix]" )
    Problem<double> problem = setupProblemForVectorMultiplication();
 
    Vec<double> b{};
-   b.push_back(2);
-   b.push_back(3);
-   b.push_back(4);
+   b.push_back( 2 );
+   b.push_back( 3 );
+   b.push_back( 4 );
 
    Vec<double> x{};
-   x.push_back(1);
-   x.push_back(2);
-   x.push_back(3);
-
-
-   Vec<double> res = multiplication.calc_b_plus_sx(
-       b, 2, x );
+   x.push_back( 1 );
+   x.push_back( 2 );
+   x.push_back( 3 );
+   Vec<double> res( x );
+   multiplication.calc_b_plus_sx( b, 2, x, res );
 
    REQUIRE( res.size() == problem.getNCols() );
    REQUIRE( res[0] == 4 );
@@ -122,18 +118,16 @@ TEST_CASE( "vector-addition-2", "[fix]" )
    Problem<double> problem = setupProblemForVectorMultiplication();
 
    Vec<double> b{};
-   b.push_back(2);
-   b.push_back(3);
-   b.push_back(4);
+   b.push_back( 2 );
+   b.push_back( 3 );
+   b.push_back( 4 );
 
    Vec<double> x{};
-   x.push_back(1);
-   x.push_back(2);
-   x.push_back(3);
+   x.push_back( 1 );
+   x.push_back( 2 );
+   x.push_back( 3 );
 
-
-   Vec<double> res = multiplication.calc_qb_plus_sx(3,
-       b, 2, x );
+   Vec<double> res = multiplication.calc_qb_plus_sx( 3, b, 2, x );
 
    REQUIRE( res.size() == problem.getNCols() );
    REQUIRE( res[0] == 8 );
@@ -144,13 +138,13 @@ TEST_CASE( "vector-addition-2", "[fix]" )
 Problem<double>
 setupProblemForVectorMultiplication()
 {
-//   1x + 2y <= 2
+   //   1x + 2y <= 2
    Vec<double> coefficients{ 1.0, 1.0, 1.0 };
    Vec<double> upperBounds{ 1.0, 1.0, 1.0 };
    Vec<double> lowerBounds{ 0.0, 0.0, 0.0 };
    Vec<uint8_t> isIntegral{ 1, 1, 1 };
 
-   Vec<double> rhs{ 2.0, 3.0};
+   Vec<double> rhs{ 2.0, 3.0 };
    Vec<std::string> rowNames{ "A1", "A2" };
    Vec<std::string> columnNames{ "c1", "c2", "c3" };
    Vec<std::tuple<int, int, double>> entries{
@@ -161,9 +155,10 @@ setupProblemForVectorMultiplication()
    };
 
    ProblemBuilder<double> pb;
-   pb.reserve( (int) entries.size(), (int) rowNames.size(), (int) columnNames.size() );
-   pb.setNumRows( (int) rowNames.size() );
-   pb.setNumCols( (int) columnNames.size() );
+   pb.reserve( (int)entries.size(), (int)rowNames.size(),
+               (int)columnNames.size() );
+   pb.setNumRows( (int)rowNames.size() );
+   pb.setNumCols( (int)columnNames.size() );
    pb.setColUbAll( upperBounds );
    pb.setColLbAll( lowerBounds );
    pb.setObjAll( coefficients );

@@ -36,14 +36,12 @@ class VectorMultiplication
  public:
    VectorMultiplication() = default;
 
-
-   Vec<REAL>
+   void
    calc_b_minus_Ax( const ConstraintMatrix<REAL>& A, const Vec<REAL>& x,
-                    const Vec<REAL>& b )
+                    const Vec<REAL>& b, Vec<REAL>& result )
    {
       assert( A.getNRows() == b.size() );
       assert( A.getNCols() == x.size() );
-      Vec<REAL> result( b );
 #ifdef PAPILO_TBB
       tbb::parallel_for( tbb::blocked_range<int>( 0, A.getNRows() ),
                          [&]( const tbb::blocked_range<int>& r )
@@ -63,16 +61,14 @@ class VectorMultiplication
 #ifdef PAPILO_TBB
                          } );
 #endif
-      return result;
    }
 
-   Vec<REAL>
+   void
    calc_b_minus_xA( const ConstraintMatrix<REAL>& A, const Vec<REAL>& x,
-                    const Vec<REAL>& b )
+                    const Vec<REAL>& b, Vec<REAL>& result )
    {
       assert( A.getNCols() == b.size() );
       assert( A.getNRows() == x.size() );
-      Vec<REAL> result( b );
 #ifdef PAPILO_TBB
       tbb::parallel_for( tbb::blocked_range<int>( 0, A.getNCols() ),
                          [&]( const tbb::blocked_range<int>& r )
@@ -92,60 +88,14 @@ class VectorMultiplication
 #ifdef PAPILO_TBB
                          } );
 #endif
-      return result;
    }
 
-   REAL
-   l2_norm( const Vec<REAL>& vec )
-   {
-      StableSum<REAL> squared_norm;
 
-//#ifdef PAPILO_TBB
-//         tbb::parallel_for( tbb::blocked_range<int>( 0, vec.size() ),
-//                            [&]( const tbb::blocked_range<int>& r )
-//                            {
-//                               for( int i = r.begin(); i < r.end(); ++i )
-//#else
-         for( int i = 0; i < vec.size(); ++i )
-//#endif
-                               {
-                                  squared_norm.add( vec[i] * vec[i] );
-                               }
-
-//#ifdef PAPILO_TBB
-//                            } );
-//#endif
-      return sqrt( squared_norm.get() );
-   }
-
-   REAL
-   l1_norm( const Vec<REAL>& vec )
-   {
-      StableSum<REAL> result;
-
-//#ifdef PAPILO_TBB
-//         tbb::parallel_for( tbb::blocked_range<int>( 0, vec.size() ),
-//                            [&]( const tbb::blocked_range<int>& r )
-//                            {
-//                               for( int i = r.begin(); i < r.end(); ++i )
-//#else
-         for( int i = 0; i < vec.size(); ++i )
-//#endif
-                               {
-                                  result.add( abs(vec[i]) );
-                               }
-
-//#ifdef PAPILO_TBB
-//                            } );
-//#endif
-      return result.get();
-   }
-
-   Vec<REAL>
-   calc_qb_plus_sx( const REAL q, const Vec<REAL>& b, const REAL s, const Vec<REAL>& x )
+   void
+   calc_qb_plus_sx( const REAL q, const Vec<REAL>& b, const REAL s,
+                    const Vec<REAL>& x, Vec<REAL>& result )
    {
       assert( b.size() == x.size() );
-      Vec<REAL> result( b );
 #ifdef PAPILO_TBB
       tbb::parallel_for( tbb::blocked_range<int>( 0, b.size() ),
                          [&]( const tbb::blocked_range<int>& r )
@@ -160,14 +110,13 @@ class VectorMultiplication
 #ifdef PAPILO_TBB
                          } );
 #endif
-      return result;
    }
 
-   Vec<REAL>
-   calc_b_plus_sx( const Vec<REAL>& b, const REAL s, const Vec<REAL>& x )
+   void
+   calc_b_plus_sx( const Vec<REAL>& b, const REAL s, const Vec<REAL>& x,
+                   Vec<REAL>& result )
    {
       assert( b.size() == x.size() );
-      Vec<REAL> result( b );
 #ifdef PAPILO_TBB
       tbb::parallel_for( tbb::blocked_range<int>( 0, b.size() ),
                          [&]( const tbb::blocked_range<int>& r )
@@ -182,7 +131,6 @@ class VectorMultiplication
 #ifdef PAPILO_TBB
                          } );
 #endif
-      return result;
    }
 
    REAL
@@ -190,24 +138,29 @@ class VectorMultiplication
    {
       assert( b.size() == x.size() );
       StableSum<REAL> result;
-//#ifdef PAPILO_TBB
-//      tbb::parallel_for( tbb::blocked_range<int>( 0, b.size() ),
-//                         [&]( const tbb::blocked_range<int>& r )
-//                         {
-//                            for( int i = r.begin(); i < r.end(); ++i )
-//#else
+
       for( int i = 0; i < b.size(); ++i )
-//#endif
-                            {
-                               result.add( b[i] * x[i] );
-                            }
-//#ifdef PAPILO_TBB
-//                         } );
-//#endif
+         result.add( b[i] * x[i] );
       return result.get();
    }
 
+   REAL
+   l2_norm( const Vec<REAL>& vec )
+   {
+      StableSum<REAL> squared_norm;
+      for( int i = 0; i < vec.size(); ++i )
+         squared_norm.add( vec[i] * vec[i] );
+      return sqrt( squared_norm.get() );
+   }
 
+   REAL
+   l1_norm( const Vec<REAL>& vec )
+   {
+      StableSum<REAL> result;
+      for( int i = 0; i < vec.size(); ++i )
+         result.add( abs( vec[i] ) );
+      return result.get();
+   }
 
 
 };
