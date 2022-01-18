@@ -43,10 +43,10 @@ class VolumeAlgorithm
    Num<REAL> num;
    VectorMultiplication<REAL> op;
 
-   REAL alpha = 0.5;
-   REAL f = 1;
-   REAL con_threshold = 0.01;
-   REAL obj_threshold = 0.02;
+   REAL alpha;
+   REAL f;
+   REAL con_threshold;
+   REAL obj_threshold;
 
  public:
    VolumeAlgorithm( Message _msg, Num<REAL> _num, REAL _alpha, REAL _f,
@@ -57,7 +57,6 @@ class VolumeAlgorithm
    {
    }
 
-   // TODO: define data structure
    /***
     * minimize cx s.t. Ax = b, Dx = e, x ≥ 0.
     * @param c
@@ -93,16 +92,21 @@ class VolumeAlgorithm
 
       while( stopping_criteria( v_t, n_rows_A, c, sol.first, best_objective ) )
       {
+         msg.info( "Round of volume algorithm: {}\n", counter );
          // STEP 1:
          // Compute v_t = b − A x_bar and π_t = pi_bar + sv_t for a step size s
          // given by (7).
          op.calc_b_minus_Ax( A, sol.first, b, v_t );
          REAL step_size = f * ( best_bound_on_obj - best_objective ) /
                           pow( op.l2_norm( v_t ), 2.0 );
+         msg.info( "\tStep size: {}\n", step_size );
+
          op.calc_b_plus_sx( pi_bar, step_size, v_t, pi_t );
          // Solve (6) with π_t , let x_t and z_t be the solutions obtained.
          std::pair<Vec<REAL>, REAL> sol_t =
              create_problem_6_and_solve_it( c, A, b, problem, pi_t );
+         msg.info( "\tobj: {}\n", sol_t.second );
+
          // x_bar ← αx_t + (1 − α)x_bar,
          op.calc_qb_plus_sx( alpha, sol_t.first, 1 - alpha, sol.first,
                              sol.first );
@@ -111,6 +115,7 @@ class VolumeAlgorithm
          // If z_t > z_bar update π_bar and z_bar̄ as
          if( num.isGT( sol_t.second, best_objective ) )
          {
+
             // π̄ ← π t , z̄ ← z t .
             best_objective = sol_t.second;
             pi_bar = pi_t;
@@ -119,13 +124,17 @@ class VolumeAlgorithm
             op.calc_b_minus_Ax( A, sol_t.first, b, residual_t );
             if( num.isGE( op.multi( v_t, residual_t ), 0.0 ) )
                f = 1.1 * f;
+            msg.info( "\t increase f: {}\n", f );
+
             // TODO: need to verify if f <= 2?
+            // assert(num.isLE(f, 2));
          }
-         else
+         else if( ++non_improvement_iter_counter >= 20 )
          {
-            if( ++non_improvement_iter_counter >= 20 )
-               f = 0.66 * f;
+            msg.info( "\t decrease f: {}\n", f );
+            f = 0.66 * f;
          }
+
          // Let t ← t + 1 and go to Step 1.
          counter = counter + 1;
       }
@@ -153,12 +162,13 @@ class VolumeAlgorithm
       // TODO: z = (c − π̄ A)x + π̄b. π̄ is a transposed vector?
       //      problem.getObjective().coefficients = op.calc_b_minus_Ax(c, A,
       //      pi);
-      Vec<REAL> vector( c );
-      op.calc_b_minus_xA( A, pi, c, vector );
-      problem.getObjective().coefficients = vector;
+      Vec<REAL> updated_objective( c );
+      op.calc_b_minus_xA( A, pi, c, updated_objective );
+      problem.getObjective().coefficients = updated_objective;
       problem.getObjective().offset = op.multi( b, pi );
       // TODO: extract it
       Presolve<REAL> presolve{};
+      presolve.setVerbosityLevel( VerbosityLevel::kQuiet );
       PresolveResult<REAL> res = presolve.apply( problem, false );
 
       Solution<REAL> empty_solution{ SolutionType::kPrimal };
@@ -181,9 +191,8 @@ class VolumeAlgorithm
          assert( status == PostsolveStatus::kOk );
          StableSum<REAL> obj{};
          for( int i = 0; i < solution.primal.size(); i++ )
-            obj.add( solution.primal[i] * vector[i] );
+            obj.add( solution.primal[i] * updated_objective[i] );
          return { solution.primal, obj.get() };
-
       }
       return { solution.primal, -1 };
    }
