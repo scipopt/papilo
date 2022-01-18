@@ -92,13 +92,13 @@ class VolumeAlgorithm
          // STEP 1:
          // Compute v_t = b − A x_bar and π_t = pi_bar + sv_t for a step size s given by (7).
          op.calc_b_minus_Ax( A, sol.first, b, v_t );
-         REAL step_size =
-             f * ( best_bound_on_obj - sol.second ) / op.l2_norm( v_t );
+         REAL step_size = f * ( best_bound_on_obj - best_objective ) /
+                          pow( op.l2_norm( v_t ), 2.0 );
          op.calc_b_plus_sx( pi_bar, step_size, v_t, pi_t );
          // Solve (6) with π_t , let x_t and z_t be the solutions obtained.
          std::pair<Vec<REAL>, REAL> sol_t =
              create_problem_6_and_solve_it( c, A, b, problem, pi_t );
-         // x_bar ← αx t + (1 − α)x_bar,
+         // x_bar ← αx_t + (1 − α)x_bar,
          op.calc_qb_plus_sx( alpha, sol_t.first, 1 - alpha, sol.first,
                              sol.first );
 
@@ -107,7 +107,6 @@ class VolumeAlgorithm
          if( num.isGT( sol_t.second, best_objective ) )
          {
             //π̄ ← π t , z̄ ← z t .
-            sol = sol_t;
             best_objective = sol_t.second;
             pi_bar = pi_t;
          }
