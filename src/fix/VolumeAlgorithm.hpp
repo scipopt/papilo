@@ -113,7 +113,7 @@ class VolumeAlgorithm
             pi_bar = pi_t;
 
             // If d (= v_t . (b - A x_t)) >= 0, then f = 1.1 * f
-            op.calc_b_minus_Ax( A, sol_t.first, b, residual_t )
+            op.calc_b_minus_Ax( A, sol_t.first, b, residual_t );
             if( num.isGE( op.multi( v_t, residual_t ), 0.0 ) )
                f = 1.1 * f;
             // TODO: need to verify if f <= 2?
