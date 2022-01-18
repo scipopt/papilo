@@ -82,9 +82,11 @@ class VolumeAlgorithm
 
       // Set x_0 = x_bar, z_0 = z_bar̄, t = 1
       int counter = 1;
+      int non_improvement_iter_counter = 0;
       Vec<REAL> v_t( b );
       Vec<REAL> pi_t( pi );
-      Vec<REAL> pi_bar{ pi };
+      Vec<REAL> pi_bar( pi );
+      Vec<REAL> residual_t( b );
       REAL best_objective = sol.second;
 
       while( stopping_criteria( v_t, n_rows_A, c, sol.first, best_objective ) )
@@ -103,14 +105,25 @@ class VolumeAlgorithm
                              sol.first );
 
          // Step 2:
-         //If z_t > z_bar update π_bar and z_bar̄ as
+         // If z_t > z_bar update π_bar and z_bar̄ as
          if( num.isGT( sol_t.second, best_objective ) )
          {
-            //π̄ ← π t , z̄ ← z t .
+            // π̄ ← π t , z̄ ← z t .
             best_objective = sol_t.second;
             pi_bar = pi_t;
+
+            // If d (= v_t . (b - A x_t)) >= 0, then f = 1.1 * f
+            op.calc_b_minus_Ax( A, sol_t.first, b, residual_t )
+            if( num.isGE( op.multi( v_t, residual_t ), 0.0 ) )
+               f = 1.1 * f;
+            // TODO: need to verify if f <= 2?
          }
-         //Let t ← t + 1 and go to Step 1.
+         else
+         {
+            if( ++non_improvement_iter_counter >= 20 )
+               f = 0.66 * f;
+         }
+         // Let t ← t + 1 and go to Step 1.
          counter = counter + 1;
       }
       // TODO: return the list of x_t
