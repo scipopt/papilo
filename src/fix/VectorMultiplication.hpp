@@ -190,20 +190,20 @@ class VectorMultiplication
    {
       assert( b.size() == x.size() );
       StableSum<REAL> result;
-#ifdef PAPILO_TBB
-      tbb::parallel_for( tbb::blocked_range<int>( 0, b.size() ),
-                         [&]( const tbb::blocked_range<int>& r )
-                         {
-                            for( int i = r.begin(); i < r.end(); ++i )
-#else
+//#ifdef PAPILO_TBB
+//      tbb::parallel_for( tbb::blocked_range<int>( 0, b.size() ),
+//                         [&]( const tbb::blocked_range<int>& r )
+//                         {
+//                            for( int i = r.begin(); i < r.end(); ++i )
+//#else
       for( int i = 0; i < b.size(); ++i )
-#endif
+//#endif
                             {
                                result.add( b[i] * x[i] );
                             }
-#ifdef PAPILO_TBB
-                         } );
-#endif
+//#ifdef PAPILO_TBB
+//                         } );
+//#endif
       return result.get();
    }
 
