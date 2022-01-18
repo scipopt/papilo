@@ -46,7 +46,7 @@ TEST_CASE( "small-volume-algorithm-test", "[volume]" )
        setupProblemForVolumeAlgorithm().getConstraintMatrix();
    Vec<double> pi( 2 );
    pi = { 1, 2 };
-   Vec<double> sol = algorithm.volume_algorithm( c, matrix, b, problem, pi );
+   algorithm.volume_algorithm( c, matrix, b, problem, pi );
    // TODO: add assertions and check input
 }
 

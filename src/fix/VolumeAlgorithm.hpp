@@ -66,7 +66,7 @@ class VolumeAlgorithm
     * @param pi
     * @return
     */
-   Vec<REAL>
+   Vec<std::pair<Vec<REAL>, REAL>>
    volume_algorithm( const Vec<REAL> c, const ConstraintMatrix<REAL>& A,
                      const Vec<REAL>& b, Problem<REAL> problem,
                      const Vec<REAL> pi )
@@ -75,63 +75,69 @@ class VolumeAlgorithm
       // TODO: define/determine UB
       REAL best_bound_on_obj = 0;
       REAL n_rows_A = A.getNRows();
+      // TODO: is it important to store the solution path?
+      Vec<std::pair<Vec<REAL>, REAL>> solutions{};
 
       // Step 0
       // We start with a vector π̄ and solve (6) to obtain x̄ and z̄.
       std::pair<Vec<REAL>, REAL> sol =
           create_problem_6_and_solve_it( c, A, b, problem, pi );
+      solutions.push_back( sol );
 
-      // Set x_0 = x_bar, z_0 = z_bar̄, t = 1
+      // Set x_0 = x_bar, z_0 = z_bar, t = 1
       int counter = 1;
       int non_improvement_iter_counter = 0;
       Vec<REAL> v_t( b );
+      Vec<REAL> x_bar( sol.first );
       Vec<REAL> pi_t( pi );
       Vec<REAL> pi_bar( pi );
       Vec<REAL> residual_t( b );
-      REAL best_objective = sol.second;
+      REAL z_bar = sol.second;
 
-      while( stopping_criteria( v_t, n_rows_A, c, sol.first, best_objective ) )
+      while( stopping_criteria( v_t, n_rows_A, c, x_bar, z_bar ) )
       {
          msg.info( "Round of volume algorithm: {}\n", counter );
          // STEP 1:
          // Compute v_t = b − A x_bar and π_t = pi_bar + sv_t for a step size s
          // given by (7).
-         op.calc_b_minus_Ax( A, sol.first, b, v_t );
-         REAL step_size = f * ( best_bound_on_obj - best_objective ) /
-                          pow( op.l2_norm( v_t ), 2.0 );
-         msg.info( "\tStep size: {}\n", step_size );
+         op.calc_b_minus_Ax( A, x_bar, b, v_t );
+         REAL step_size =
+             f * ( best_bound_on_obj - z_bar ) / pow( op.l2_norm( v_t ), 2.0 );
+         msg.info( "   Step size: {}\n", step_size );
 
          op.calc_b_plus_sx( pi_bar, step_size, v_t, pi_t );
          // Solve (6) with π_t , let x_t and z_t be the solutions obtained.
          std::pair<Vec<REAL>, REAL> sol_t =
              create_problem_6_and_solve_it( c, A, b, problem, pi_t );
-         msg.info( "\tobj: {}\n", sol_t.second );
+         solutions.push_back( sol_t );
+         msg.info( "   obj: {}\n", sol_t.second );
 
          // x_bar ← αx_t + (1 − α)x_bar,
-         op.calc_qb_plus_sx( alpha, sol_t.first, 1 - alpha, sol.first,
-                             sol.first );
+         op.calc_qb_plus_sx( alpha, sol_t.first, 1 - alpha, x_bar, x_bar );
 
          // Step 2:
          // If z_t > z_bar update π_bar and z_bar̄ as
-         if( num.isGT( sol_t.second, best_objective ) )
+         if( num.isGT( sol_t.second, z_bar ) )
          {
 
             // π̄ ← π t , z̄ ← z t .
-            best_objective = sol_t.second;
+            z_bar = sol_t.second;
             pi_bar = pi_t;
 
-            // If d (= v_t . (b - A x_t)) >= 0, then f = 1.1 * f
+            // TODO: Suresh please check if sol_t.first is correct here or x_bar
+            //  If d (= v_t . (b - A x_t)) >= 0, then f = 1.1 * f
             op.calc_b_minus_Ax( A, sol_t.first, b, residual_t );
-            if( num.isGE( op.multi( v_t, residual_t ), 0.0 ) )
+            //TODO: should we parameterize the multiplicationfactor 1.1?
+            if( num.isGE( op.multi( v_t, residual_t ), REAL{ 0.0 } ) )
                f = 1.1 * f;
-            msg.info( "\t increase f: {}\n", f );
+            msg.info( "   increase f: {}\n", f );
 
             // TODO: need to verify if f <= 2?
-            // assert(num.isLE(f, 2));
+            // assert(num.isLE(f, REAL{2.0}));
          }
          else if( ++non_improvement_iter_counter >= 20 )
          {
-            msg.info( "\t decrease f: {}\n", f );
+            msg.info( "   decrease f: {}\n", f );
             f = 0.66 * f;
          }
 
@@ -139,7 +145,7 @@ class VolumeAlgorithm
          counter = counter + 1;
       }
       // TODO: return the list of x_t
-      return sol.first;
+      return solutions;
    }
 
  private:
