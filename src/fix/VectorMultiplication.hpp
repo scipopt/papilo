@@ -100,22 +100,21 @@ class VectorMultiplication
    {
       StableSum<REAL> squared_norm;
 
-      for( int i = 0; i < vec.size(); i++ )
-#ifdef PAPILO_TBB
-         tbb::parallel_for( tbb::blocked_range<int>( 0, vec.size() ),
-                            [&]( const tbb::blocked_range<int>& r )
-                            {
-                               for( int i = r.begin(); i < r.end(); ++i )
-#else
+//#ifdef PAPILO_TBB
+//         tbb::parallel_for( tbb::blocked_range<int>( 0, vec.size() ),
+//                            [&]( const tbb::blocked_range<int>& r )
+//                            {
+//                               for( int i = r.begin(); i < r.end(); ++i )
+//#else
          for( int i = 0; i < vec.size(); ++i )
-#endif
+//#endif
                                {
                                   squared_norm.add( vec[i] * vec[i] );
                                }
 
-#ifdef PAPILO_TBB
-                            } );
-#endif
+//#ifdef PAPILO_TBB
+//                            } );
+//#endif
       return sqrt( squared_norm.get() );
    }
 

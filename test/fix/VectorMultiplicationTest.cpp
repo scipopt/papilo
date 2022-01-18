@@ -55,6 +55,92 @@ TEST_CASE( "vector-calc_b_minus_Ax", "[fix]" )
 
 }
 
+TEST_CASE( "vector-calc_b_minus_xA", "[fix]" )
+{
+   VectorMultiplication<double> multiplication{};
+   Problem<double> problem = setupProblemForVectorMultiplication();
+
+   Vec<double> scalar{};
+   scalar.push_back(2);
+   scalar.push_back(3);
+
+   Vec<double> subtract{};
+   subtract.push_back(1);
+   subtract.push_back(2);
+   subtract.push_back(3);
+
+
+   Vec<double> res = multiplication.calc_b_minus_xA(
+       problem.getConstraintMatrix(), scalar, subtract );
+
+   REQUIRE( res.size() == problem.getNCols() );
+   REQUIRE( res[0] == -1 );
+   REQUIRE( res[1] == -11 );
+   REQUIRE( res[2] == -9 );
+}
+
+TEST_CASE( "vector-l2-norm", "[fix]" )
+{
+   VectorMultiplication<double> multiplication{};
+
+   Vec<double> subtract{};
+   subtract.push_back(1);
+   subtract.push_back(2);
+   subtract.push_back(2);
+
+   REQUIRE( multiplication.l2_norm( subtract ) == 3 );
+}
+
+TEST_CASE( "vector-addition", "[fix]" )
+{
+   VectorMultiplication<double> multiplication{};
+   Problem<double> problem = setupProblemForVectorMultiplication();
+
+   Vec<double> b{};
+   b.push_back(2);
+   b.push_back(3);
+   b.push_back(4);
+
+   Vec<double> x{};
+   x.push_back(1);
+   x.push_back(2);
+   x.push_back(3);
+
+
+   Vec<double> res = multiplication.calc_b_plus_sx(
+       b, 2, x );
+
+   REQUIRE( res.size() == problem.getNCols() );
+   REQUIRE( res[0] == 4 );
+   REQUIRE( res[1] == 7 );
+   REQUIRE( res[2] == 10 );
+}
+
+TEST_CASE( "vector-addition-2", "[fix]" )
+{
+   VectorMultiplication<double> multiplication{};
+   Problem<double> problem = setupProblemForVectorMultiplication();
+
+   Vec<double> b{};
+   b.push_back(2);
+   b.push_back(3);
+   b.push_back(4);
+
+   Vec<double> x{};
+   x.push_back(1);
+   x.push_back(2);
+   x.push_back(3);
+
+
+   Vec<double> res = multiplication.calc_qb_plus_sx(3,
+       b, 2, x );
+
+   REQUIRE( res.size() == problem.getNCols() );
+   REQUIRE( res[0] == 8 );
+   REQUIRE( res[1] == 13 );
+   REQUIRE( res[2] == 18 );
+}
+
 Problem<double>
 setupProblemForVectorMultiplication()
 {

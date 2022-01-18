@@ -197,6 +197,10 @@ set(unit_tests
 
         "vector-multiplication"
         "fix-and-propagate"
+        "vector-calc_b_minus_xA"
+        "vector-l2-norm"
+        "vector-addition"
+        "vector-addition-2"
 #        "small-volume-algorithm-test"
 
         "integration-test-for-flugpl"
