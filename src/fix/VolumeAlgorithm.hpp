@@ -123,10 +123,8 @@ class VolumeAlgorithm
                       const Vec<REAL>& c, const Vec<REAL>& x_bar,
                       const REAL z_bar )
    {
-      if( num.isLT( op.l1_norm( v ), n_rows_A * con_threshold ) &&
-          num.isLT( ( op.multi( c, x_bar ) - z_bar ), z_bar * obj_threshold ) )
-         return false;
-      return true;
+      return num.isGE( op.l1_norm( v ), n_rows_A * con_threshold ) ||
+          num.isGE( ( op.multi( c, x_bar ) - z_bar ), z_bar * obj_threshold );
    }
 
    std::pair<Vec<REAL>, REAL>
