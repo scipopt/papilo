@@ -222,7 +222,7 @@ class VolumeAlgorithm
       REAL alpha_opt = ( bar_bar_prod - t_bar_prod ) /
                         ( t_t_prod + bar_bar_prod - 2.0 * t_bar_prod );
       return num.isLT( alpha_opt, REAL{ 0.0 } ) ? alpha_max / 10.0 :
-               min( alpha_opt, alpha_max );
+               num.min( alpha_opt, alpha_max );
    }
 };
 
