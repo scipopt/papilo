@@ -389,8 +389,8 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
                    const int col = probing_cands[i];
 
                    assert( cflags[col].test( ColFlag::kIntegral ) &&
-                               lower_bounds[col] == 0 ||
-                           upper_bounds[col] == 1 );
+                               (lower_bounds[col] == 0 ||
+                           upper_bounds[col] == 1 ));
 
                    if( infeasible.load( std::memory_order_relaxed ) )
                       break;
