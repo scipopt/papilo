@@ -75,14 +75,14 @@ class VolumeAlgorithm
     * @param pi
     * @return
     */
-   Vec<std::pair<Vec<REAL>, REAL>>
+   Vec<REAL>
    volume_algorithm( const Vec<REAL> c, const ConstraintMatrix<REAL>& A,
                      const Vec<REAL>& b, Problem<REAL> problem,
                      const Vec<REAL> pi )
    {
 
       // TODO: define/determine UB
-      REAL best_bound_on_obj = 0;
+      REAL best_bound_on_obj = 3;
       REAL n_rows_A = A.getNRows();
       // TODO: is it important to store the solution path?
 
@@ -207,17 +207,22 @@ class VolumeAlgorithm
       // alpha_opt = minimizer of || alpha * residual_t + ( 1 - alpha ) *
       //                               residual_bar ||
       REAL t_t_prod = op.multi( residual_t, residual_t );
+
       REAL t_bar_prod = op.multi( residual_t, residual_bar );
+
       REAL bar_bar_prod = op.multi( residual_bar, residual_bar );
+
       REAL alpha_opt = ( bar_bar_prod - t_bar_prod ) /
                         ( t_t_prod + bar_bar_prod - 2.0 * t_bar_prod );
       alpha = num.isLT( alpha_opt, REAL{ 0.0 } ) ? alpha_max / 10.0 :
                num.min( alpha_opt, alpha_max );
+      msg.info( "   alpha: {}\n", alpha );
+
    }
 
    void
    update_f( const bool improvement_indicator, const Vec<REAL>& v_t,
-             const Vec<REAL>& residual_t, int non_improvement_iter_counter )
+             const Vec<REAL>& residual_t, int& non_improvement_iter_counter )
    {
       if( improvement_indicator )
       {
@@ -229,8 +234,10 @@ class VolumeAlgorithm
             // TODO: need to verify if f <= 2?
             // assert(num.isLE(f, REAL{2.0}));
          }
+         return;
       }
-      else if( ++non_improvement_iter_counter >= non_improvement_iter_limit )
+      ++(non_improvement_iter_counter);
+      if( non_improvement_iter_counter >= non_improvement_iter_limit )
       {
          f = f_decr_factor * f;
          msg.info( "   decreased f: {}\n", f );

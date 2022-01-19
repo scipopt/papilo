@@ -56,7 +56,7 @@ setupProblemForVolumeAlgorithm()
 {
    Vec<double> coefficients{ 1.0, 1.0 };
    Vec<double> upperBounds{ 1.0, 1.0 };
-   Vec<double> lowerBounds{ 0.0, 0.0 };
+   Vec<double> lowerBounds{ -1.0, 0.0 };
    Vec<uint8_t> isIntegral{ 1, 1 };
 
    Vec<double> rhs{ 2.0, 3.0 };

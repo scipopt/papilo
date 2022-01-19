@@ -92,7 +92,6 @@ TEST_CASE( "vector-l2-norm", "[fix]" )
 TEST_CASE( "vector-addition", "[fix]" )
 {
    VectorMultiplication<double> multiplication{};
-   Problem<double> problem = setupProblemForVectorMultiplication();
 
    Vec<double> b{};
    b.push_back( 2 );
@@ -106,16 +105,32 @@ TEST_CASE( "vector-addition", "[fix]" )
    Vec<double> res( x );
    multiplication.calc_b_plus_sx( b, 2, x, res );
 
-   REQUIRE( res.size() == problem.getNCols() );
+   REQUIRE( res.size() == 3 );
    REQUIRE( res[0] == 4 );
    REQUIRE( res[1] == 7 );
    REQUIRE( res[2] == 10 );
 }
 
+TEST_CASE( "vector-multi", "[fix]" )
+{
+   VectorMultiplication<double> multiplication{};
+
+   Vec<double> b{};
+   b.push_back( 2 );
+   b.push_back( 3 );
+   b.push_back( 4 );
+
+   Vec<double> x{};
+   x.push_back( 1 );
+   x.push_back( 2 );
+   x.push_back( 3 );
+
+   REQUIRE( 20 == multiplication.multi( b, x ));
+}
+
 TEST_CASE( "vector-addition-2", "[fix]" )
 {
    VectorMultiplication<double> multiplication{};
-   Problem<double> problem = setupProblemForVectorMultiplication();
 
    Vec<double> b{};
    b.push_back( 2 );
@@ -131,7 +146,7 @@ TEST_CASE( "vector-addition-2", "[fix]" )
 
    multiplication.calc_qb_plus_sx( 3, b, 2, x , res);
 
-   REQUIRE( res.size() == problem.getNCols() );
+   REQUIRE( res.size() == 3 );
    REQUIRE( res[0] == 8 );
    REQUIRE( res[1] == 13 );
    REQUIRE( res[2] == 18 );
