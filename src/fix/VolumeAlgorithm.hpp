@@ -44,6 +44,7 @@ class VolumeAlgorithm
    VectorMultiplication<REAL> op;
 
    REAL alpha;
+   REAL alpha_max;
    REAL f;
    REAL f_incr_factor;
    REAL f_decr_factor;
@@ -51,10 +52,12 @@ class VolumeAlgorithm
    REAL con_threshold;
 
  public:
-   VolumeAlgorithm( Message _msg, Num<REAL> _num, REAL _alpha, REAL _f,
+   VolumeAlgorithm( Message _msg, Num<REAL> _num, REAL _alpha,
+                    REAL _alpha_max, REAL _f,
                     REAL _f_incr_factor, REAL _f_decr_factor,
                     REAL _obj_threshold, REAL _con_threshold )
-       : msg( _msg ), num( _num ), alpha( _alpha ), f( _f ),
+       : msg( _msg ), num( _num ), alpha( _alpha ),
+         alpha_max( _alpha_max ), f( _f ),
          f_incr_factor( _f_incr_factor ), f_decr_factor( _f_decr_factor ),
          obj_threshold( _obj_threshold ), con_threshold( _con_threshold ),
          op( {} )
@@ -116,6 +119,9 @@ class VolumeAlgorithm
          solutions.push_back( sol_t );
          msg.info( "   obj: {}\n", sol_t.second );
 
+         // Update alpha
+         op.calc_b_minus_Ax( A, sol_t.first, b, residual_t );
+         alpha = update_alpha( residual_t, v_t, alpha_max );
          // x_bar ← αx_t + (1 − α)x_bar,
          op.calc_qb_plus_sx( alpha, sol_t.first, 1 - alpha, x_bar, x_bar );
 
@@ -128,7 +134,6 @@ class VolumeAlgorithm
             pi_bar = pi_t;
 
             //  If d (= v_t . (b - A x_t)) >= 0, then f = 1.1 * f
-            op.calc_b_minus_Ax( A, sol_t.first, b, residual_t );
             if( num.isGE( op.multi( v_t, residual_t ), REAL{ 0.0 } ) )
             {
                f = f_incr_factor * f;
@@ -203,6 +208,21 @@ class VolumeAlgorithm
          return { solution.primal, obj.get() };
       }
       return { solution.primal, -1 };
+   }
+
+   REAL
+   update_alpha( const Vec<REAL>& residual_t, const Vec<REAL>& residual_bar,
+                 const REAL alpha_max )
+   {
+      // alpha_opt = minimizer of || alpha * residual_t + ( 1 - alpha ) *
+      //                               residual_bar ||
+      REAL t_t_prod = op.multi( residual_t, residual_t );
+      REAL t_bar_prod = op.multi( residual_t, residual_bar );
+      REAL bar_bar_prod = op.multi( residual_bar, residual_bar );
+      REAL alpha_opt = ( bar_bar_prod - t_bar_prod ) /
+                        ( t_t_prod + bar_bar_prod - 2.0 * t_bar_prod );
+      return num.isLT( alpha_opt, REAL{ 0.0 } ) ? alpha_max / 10.0 :
+               min( alpha_opt, alpha_max );
    }
 };
 
