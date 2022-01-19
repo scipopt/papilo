@@ -50,17 +50,19 @@ class VolumeAlgorithm
    REAL f_decr_factor;
    REAL obj_threshold;
    REAL con_threshold;
+   int non_improvement_iter_limit;
 
  public:
    VolumeAlgorithm( Message _msg, Num<REAL> _num, REAL _alpha,
                     REAL _alpha_max, REAL _f,
                     REAL _f_incr_factor, REAL _f_decr_factor,
-                    REAL _obj_threshold, REAL _con_threshold )
+                    REAL _obj_threshold, REAL _con_threshold,
+                    int _non_improvement_iter_limit )
        : msg( _msg ), num( _num ), alpha( _alpha ),
          alpha_max( _alpha_max ), f( _f ),
          f_incr_factor( _f_incr_factor ), f_decr_factor( _f_decr_factor ),
          obj_threshold( _obj_threshold ), con_threshold( _con_threshold ),
-         op( {} )
+         non_improvement_iter_limit( _non_improvement_iter_limit ), op( {} )
    {
    }
 
@@ -93,6 +95,7 @@ class VolumeAlgorithm
 
       // Set x_0 = x_bar, z_0 = z_bar, t = 1
       int counter = 1;
+      bool improvement_indicator = false;
       int non_improvement_iter_counter = 0;
       Vec<REAL> v_t( b );
       Vec<REAL> x_bar( sol.first );
@@ -121,7 +124,8 @@ class VolumeAlgorithm
 
          // Update alpha
          op.calc_b_minus_Ax( A, sol_t.first, b, residual_t );
-         alpha = update_alpha( residual_t, v_t, alpha_max );
+         update_alpha( residual_t, v_t );
+
          // x_bar ← αx_t + (1 − α)x_bar,
          op.calc_qb_plus_sx( alpha, sol_t.first, 1 - alpha, x_bar, x_bar );
 
@@ -129,24 +133,18 @@ class VolumeAlgorithm
          // If z_t > z_bar update π_bar and z_bar̄ as
          if( num.isGT( sol_t.second, z_bar ) )
          {
+            improvement_indicator = true;
+
             // π̄ ← π t , z̄ ← z t .
             z_bar = sol_t.second;
             pi_bar = pi_t;
+         }
+         else
+            improvement_indicator = false;
 
-            //  If d (= v_t . (b - A x_t)) >= 0, then f = 1.1 * f
-            if( num.isGE( op.multi( v_t, residual_t ), REAL{ 0.0 } ) )
-            {
-               f = f_incr_factor * f;
-               msg.info( "   increased f: {}\n", f );
-               // TODO: need to verify if f <= 2?
-               // assert(num.isLE(f, REAL{2.0}));
-            }
-         }
-         else if( ++non_improvement_iter_counter >= 20 )
-         {
-            f = f_decr_factor * f;
-            msg.info( "   decreased f: {}\n", f );
-         }
+         // Update f
+         update_f( improvement_indicator, v_t, residual_t,
+               non_improvement_iter_counter );
 
          // Let t ← t + 1 and go to Step 1.
          counter = counter + 1;
@@ -210,9 +208,8 @@ class VolumeAlgorithm
       return { solution.primal, -1 };
    }
 
-   REAL
-   update_alpha( const Vec<REAL>& residual_t, const Vec<REAL>& residual_bar,
-                 const REAL alpha_max )
+   void
+   update_alpha( const Vec<REAL>& residual_t, const Vec<REAL>& residual_bar )
    {
       // alpha_opt = minimizer of || alpha * residual_t + ( 1 - alpha ) *
       //                               residual_bar ||
@@ -221,8 +218,30 @@ class VolumeAlgorithm
       REAL bar_bar_prod = op.multi( residual_bar, residual_bar );
       REAL alpha_opt = ( bar_bar_prod - t_bar_prod ) /
                         ( t_t_prod + bar_bar_prod - 2.0 * t_bar_prod );
-      return num.isLT( alpha_opt, REAL{ 0.0 } ) ? alpha_max / 10.0 :
+      alpha = num.isLT( alpha_opt, REAL{ 0.0 } ) ? alpha_max / 10.0 :
                num.min( alpha_opt, alpha_max );
+   }
+
+   void
+   update_f( const bool improvement_indicator, const Vec<REAL>& v_t,
+             const Vec<REAL>& residual_t, int non_improvement_iter_counter )
+   {
+      if( improvement_indicator )
+      {
+         //  If d (= v_t . (b - A x_t)) >= 0, then f = 1.1 * f
+         if( num.isGE( op.multi( v_t, residual_t ), REAL{ 0.0 } ) )
+         {
+            f = f_incr_factor * f;
+            msg.info( "   increased f: {}\n", f );
+            // TODO: need to verify if f <= 2?
+            // assert(num.isLE(f, REAL{2.0}));
+         }
+      }
+      else if( ++non_improvement_iter_counter >= non_improvement_iter_limit )
+      {
+         f = f_decr_factor * f;
+         msg.info( "   decreased f: {}\n", f );
+      }
    }
 };
 
