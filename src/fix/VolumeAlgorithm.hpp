@@ -85,13 +85,11 @@ class VolumeAlgorithm
       REAL best_bound_on_obj = 0;
       REAL n_rows_A = A.getNRows();
       // TODO: is it important to store the solution path?
-      Vec<std::pair<Vec<REAL>, REAL>> solutions{};
 
       // Step 0
       // We start with a vector π̄ and solve (6) to obtain x̄ and z̄.
       std::pair<Vec<REAL>, REAL> sol =
           create_problem_6_and_solve_it( c, A, b, problem, pi );
-      solutions.push_back( sol );
 
       // Set x_0 = x_bar, z_0 = z_bar, t = 1
       int counter = 1;
@@ -119,7 +117,6 @@ class VolumeAlgorithm
          // Solve (6) with π_t , let x_t and z_t be the solutions obtained.
          std::pair<Vec<REAL>, REAL> sol_t =
              create_problem_6_and_solve_it( c, A, b, problem, pi_t );
-         solutions.push_back( sol_t );
          msg.info( "   obj: {}\n", sol_t.second );
 
          // Update alpha
@@ -149,8 +146,7 @@ class VolumeAlgorithm
          // Let t ← t + 1 and go to Step 1.
          counter = counter + 1;
       }
-      // TODO: return the list of x_t
-      return solutions;
+      return x_bar;
    }
 
  private:
@@ -170,9 +166,6 @@ class VolumeAlgorithm
                                   const Vec<REAL>& b, Problem<REAL> problem,
                                   Vec<REAL> pi )
    {
-      // TODO: z = (c − π̄ A)x + π̄b. π̄ is a transposed vector?
-      //      problem.getObjective().coefficients = op.calc_b_minus_Ax(c, A,
-      //      pi);
       Vec<REAL> updated_objective( c );
       op.calc_b_minus_xA( A, pi, c, updated_objective );
       problem.getObjective().coefficients = updated_objective;
