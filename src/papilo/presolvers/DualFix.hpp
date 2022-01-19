@@ -322,7 +322,7 @@ DualFix<REAL>::perform_dual_fix_step(
          // if possible, but increase the bound slightly
          if( skip_variable_tightening  && ! cflags[i].test( ColFlag::kUbInf ) )
             return PresolveStatus::kUnchanged;
-         bool skip = false;
+         bool skip_performing = false;
          bool new_ub_init = false;
          REAL new_ub;
          int best_row = -1;
@@ -344,7 +344,7 @@ DualFix<REAL>::perform_dual_fix_step(
                {
                   check_row( activities[row].ninfmax, activities[row].max,
                              rhs[row], values[j], lbs[i],
-                             cflags[i].test( ColFlag::kLbInf ), skip,
+                             cflags[i].test( ColFlag::kLbInf ), skip_performing,
                              cand_bound );
                }
                else
@@ -357,7 +357,7 @@ DualFix<REAL>::perform_dual_fix_step(
                {
                   check_row( activities[row].ninfmin, activities[row].min,
                              lhs[row], values[j], lbs[i],
-                             cflags[i].test( ColFlag::kLbInf ), skip,
+                             cflags[i].test( ColFlag::kLbInf ), skip_performing,
                              cand_bound );
                }
                else
@@ -365,7 +365,7 @@ DualFix<REAL>::perform_dual_fix_step(
                   continue;
             }
 
-            if( skip )
+            if( skip_performing )
                break;
 
             // Only if variable is greater than or equal to new_UB, all rows
@@ -386,14 +386,14 @@ DualFix<REAL>::perform_dual_fix_step(
                      num.isGE( new_ub, ubs[i] ) ) ||
                    new_ub >= num.getHugeVal() )
                {
-                  skip = true;
+                  skip_performing = true;
                   break;
                }
             }
          }
 
          // set new upper bound
-         if( !skip && new_ub_init && !num.isHugeVal( new_ub ) )
+         if( !skip_performing && new_ub_init && !num.isHugeVal( new_ub ) )
          {
             assert( cflags[i].test( ColFlag::kUbInf ) || new_ub < ubs[i] );
 
