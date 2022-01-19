@@ -45,13 +45,17 @@ class VolumeAlgorithm
 
    REAL alpha;
    REAL f;
-   REAL con_threshold;
+   REAL f_incr_factor;
+   REAL f_decr_factor;
    REAL obj_threshold;
+   REAL con_threshold;
 
  public:
    VolumeAlgorithm( Message _msg, Num<REAL> _num, REAL _alpha, REAL _f,
+                    REAL _f_incr_factor, REAL _f_decr_factor,
                     REAL _obj_threshold, REAL _con_threshold )
        : msg( _msg ), num( _num ), alpha( _alpha ), f( _f ),
+         f_incr_factor( _f_incr_factor ), f_decr_factor( _f_decr_factor ),
          obj_threshold( _obj_threshold ), con_threshold( _con_threshold ),
          op( {} )
    {
@@ -119,26 +123,24 @@ class VolumeAlgorithm
          // If z_t > z_bar update π_bar and z_bar̄ as
          if( num.isGT( sol_t.second, z_bar ) )
          {
-
             // π̄ ← π t , z̄ ← z t .
             z_bar = sol_t.second;
             pi_bar = pi_t;
 
-            // TODO: Suresh please check if sol_t.first is correct here or x_bar
             //  If d (= v_t . (b - A x_t)) >= 0, then f = 1.1 * f
             op.calc_b_minus_Ax( A, sol_t.first, b, residual_t );
-            //TODO: should we parameterize the multiplicationfactor 1.1?
             if( num.isGE( op.multi( v_t, residual_t ), REAL{ 0.0 } ) )
-               f = 1.1 * f;
-            msg.info( "   increase f: {}\n", f );
-
-            // TODO: need to verify if f <= 2?
-            // assert(num.isLE(f, REAL{2.0}));
+            {
+               f = f_incr_factor * f;
+               msg.info( "   increased f: {}\n", f );
+               // TODO: need to verify if f <= 2?
+               // assert(num.isLE(f, REAL{2.0}));
+            }
          }
          else if( ++non_improvement_iter_counter >= 20 )
          {
-            msg.info( "   decrease f: {}\n", f );
-            f = 0.66 * f;
+            f = f_decr_factor * f;
+            msg.info( "   decreased f: {}\n", f );
          }
 
          // Let t ← t + 1 and go to Step 1.
@@ -155,7 +157,7 @@ class VolumeAlgorithm
                       const REAL z_bar )
    {
       return num.isGE( op.l1_norm( v ), n_rows_A * con_threshold ) ||
-             num.isGE( ( op.multi( c, x_bar ) - z_bar ),
+             num.isGE( abs( op.multi( c, x_bar ) - z_bar ),
                        z_bar * obj_threshold );
    }
 
