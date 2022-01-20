@@ -24,6 +24,8 @@
 #ifndef _PAPILO_INTERFACES_SCIP_INTERFACE_HPP_
 #define _PAPILO_INTERFACES_SCIP_INTERFACE_HPP_
 
+#define UNUSED(expr) do { (void)(expr); } while (0)
+
 #include "papilo/misc/Vec.hpp"
 #include <cassert>
 #include <stdexcept>
@@ -477,6 +479,7 @@ class ScipInterface : public SolverInterface<REAL>
    printDetails() override
    {
       SCIP_RETCODE retcode = SCIPprintStatistics( scip, stdout );
+      UNUSED(retcode);
       assert( retcode == SCIP_OKAY );
    }
 
@@ -577,6 +580,7 @@ class ScipInterface : public SolverInterface<REAL>
       if( scip != nullptr )
       {
          SCIP_RETCODE retcode = SCIPfree( &scip );
+         UNUSED(retcode);
          assert( retcode == SCIP_OKAY );
       }
    }
