@@ -66,6 +66,18 @@ get_mip_solver_factory( papilo::OptionsInfo& optionsInfo )
 {
    return papilo::ScipFactory<REAL>::create( setupscip, &optionsInfo );
 }
+#elif defined PAPILO_HAVE_GUROBI
+
+#include "papilo/interfaces/GurobiInterface.hpp"
+
+
+template <typename REAL>
+static std::unique_ptr<papilo::SolverFactory<REAL>>
+get_mip_solver_factory( papilo::OptionsInfo& optionsInfo )
+{
+   return papilo::GurobiFactory<REAL>::create( );
+}
+
 #elif defined PAPILO_HAVE_HIGHS
 
 #include "papilo/interfaces/HighsInterface.hpp"
