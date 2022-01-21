@@ -173,20 +173,20 @@ class VolumeAlgorithm
       {
          if( num.isZero( updated_objective[i] ) )
          {
-            solution[i] = domains.getLowerBounds()[i];
+            solution[i] = domains.lower_bounds()[i];
             continue;
          }
          else if( num.isGT( updated_objective[i], 0 ) )
          {
-            if( domains.getColFlags()[i].test( ColFlag::kLbInf ) )
+            if( domains.flags[i].test( ColFlag::kLbInf ) )
                return std::numeric_limits<REAL>::min();
-            solution[i] = domains.getLowerBounds()[i];
+            solution[i] = domains.lower_bounds[i];
          }
          else
          {
-            if( domains.getColFlags()[i].test( ColFlag::kUbInf ) )
+            if( domains.flags[i].test( ColFlag::kUbInf ) )
                return std::numeric_limits<REAL>::min();
-            solution[i] = domains.getUpperBounds()[i];
+            solution[i] = domains.upper_bounds[i];
          }
          obj_value.add( updated_objective[i] * solution[i]);
       }
