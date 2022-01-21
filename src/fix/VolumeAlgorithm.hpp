@@ -173,7 +173,7 @@ class VolumeAlgorithm
       {
          if( num.isZero( updated_objective[i] ) )
          {
-            solution[i] = domains.lower_bounds()[i];
+            solution[i] = domains.lower_bounds[i];
             continue;
          }
          else if( num.isGT( updated_objective[i], 0 ) )
