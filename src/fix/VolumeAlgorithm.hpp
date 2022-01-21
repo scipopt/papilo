@@ -76,7 +76,7 @@ class VolumeAlgorithm
     */
    Vec<REAL>
    volume_algorithm( const Vec<REAL> c, const ConstraintMatrix<REAL>& A,
-                     const Vec<REAL>& b, Problem<REAL> problem,
+                     const Vec<REAL>& b, const VariableDomains<REAL>& domains,
                      const Vec<REAL> pi, const REAL best_bound_on_obj )
    {
 
@@ -96,7 +96,7 @@ class VolumeAlgorithm
       Vec<REAL> residual_t( b );
 
       // We start with a vector π̄ and solve (6) to obtain x̄ and z̄.
-      REAL z_bar = create_problem_6_and_solve_it( c, A, b, problem, pi, x_t );
+      REAL z_bar = create_problem_6_and_solve_it( c, A, b, domains, pi, x_t );
       Vec<REAL> x_bar( x_t );
 
       while( stopping_criteria( v_t, n_rows_A, c, x_bar, z_bar ) )
@@ -113,7 +113,7 @@ class VolumeAlgorithm
          op.calc_b_plus_sx( pi_bar, step_size, v_t, pi_t );
          // Solve (6) with π_t , let x_t and z_t be the solutions obtained.
          REAL z_t =
-             create_problem_6_and_solve_it( c, A, b, problem, pi_t, x_t );
+             create_problem_6_and_solve_it( c, A, b, domains, pi_t, x_t );
          msg.info( "   obj: {}\n", z_t );
 
          // Update alpha
@@ -161,7 +161,7 @@ class VolumeAlgorithm
    create_problem_6_and_solve_it( const Vec<REAL>& c,
                                   const ConstraintMatrix<REAL>& A,
                                   const Vec<REAL>& b,
-                                  const Problem<REAL>& problem,
+                                  const VariableDomains<REAL>& domains,
                                   const Vec<REAL>& pi, Vec<REAL>& solution )
    {
       Vec<REAL> updated_objective( c );
@@ -173,20 +173,20 @@ class VolumeAlgorithm
       {
          if( num.isZero( updated_objective[i] ) )
          {
-            solution[i] = problem.getLowerBounds()[i];
+            solution[i] = domains.getLowerBounds()[i];
             continue;
          }
          else if( num.isGT( updated_objective[i], 0 ) )
          {
-            if( problem.getColFlags()[i].test( ColFlag::kLbInf ) )
+            if( domains.getColFlags()[i].test( ColFlag::kLbInf ) )
                return std::numeric_limits<REAL>::min();
-            solution[i] = problem.getLowerBounds()[i];
+            solution[i] = domains.getLowerBounds()[i];
          }
          else
          {
-            if( problem.getColFlags()[i].test( ColFlag::kUbInf ) )
+            if( domains.getColFlags()[i].test( ColFlag::kUbInf ) )
                return std::numeric_limits<REAL>::min();
-            solution[i] = problem.getUpperBounds()[i];
+            solution[i] = domains.getUpperBounds()[i];
          }
          obj_value.add( updated_objective[i] * solution[i]);
       }

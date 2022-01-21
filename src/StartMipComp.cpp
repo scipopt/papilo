@@ -81,8 +81,8 @@ main( int argc, char* argv[] )
    VolumeAlgorithm<double> algorithm{ {}, {}, 0.5, 0.1, 1, 1.1, 0.66, 0.02,
                                       0.01, 20 };
 
-   //TODO: Suresh we need to discuss how we treat the inequalities
-   algorithm.volume_algorithm( problem.getObjective().coefficients, problem.getConstraintMatrix(), b, problem, pi, 3 );
+//   //TODO: Suresh we need to discuss how we treat the inequalities
+//   algorithm.volume_algorithm( problem.getObjective().coefficients, problem.getConstraintMatrix(), b, problem, pi, 3 );
 
 //   Solution<double> random_solution = generate_random_solution( problem );
 //
