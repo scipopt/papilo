@@ -22,7 +22,6 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 #include "fix/FixAndPropagate.hpp"
-#include "fix/VectorMultiplication.hpp"
 #include "papilo/misc/OptionsParser.hpp"
 #include "papilo/core/Problem.hpp"
 #include "papilo/io/MpsParser.hpp"
