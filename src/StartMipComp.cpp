@@ -26,6 +26,7 @@
 #include "papilo/misc/OptionsParser.hpp"
 #include "papilo/core/Problem.hpp"
 #include "papilo/io/MpsParser.hpp"
+#include "fix/VolumeAlgorithm.hpp"
 #include <boost/program_options.hpp>
 #include <fstream>
 
@@ -74,21 +75,21 @@ main( int argc, char* argv[] )
    fmt::print( "reading took {:.3} seconds\n", readtime );
 
    // set up ProblemUpdate to trivialPresolve so that activities exist
-   Num<double> num{};
-   Statistics stats{};
-   Message msg{};
-   PresolveOptions presolve_options{};
-   PostsolveStorage<double> postsolve_storage;
-   ProblemUpdate<double> probUpdate( problem, postsolve_storage, stats,
-                                     presolve_options, num, msg );
-   probUpdate.trivialPresolve();
+   Presolve<double> presolve {};
+   presolve.apply(problem, false);
 
-   Solution<double> random_solution = generate_random_solution( problem );
+   VolumeAlgorithm<double> algorithm{ {}, {}, 0.5, 0.1, 1, 1.1, 0.66, 0.02,
+                                      0.01, 20 };
 
-   ProbingView<double> probing_view{ problem, num };
-   FixAndPropagate<double> fixAndPropagate{ msg, num };
-   fixAndPropagate.fix_and_propagate( probUpdate.getProblem(),
-                                      probing_view, random_solution );
+   //TODO: Suresh we need to discuss how we treat the inequalities
+   algorithm.volume_algorithm( problem.getObjective().coefficients, problem.getConstraintMatrix(), b, problem, pi, 3 );
+
+//   Solution<double> random_solution = generate_random_solution( problem );
+//
+//   ProbingView<double> probing_view{ problem, num };
+//   FixAndPropagate<double> fixAndPropagate{ msg, num };
+//   fixAndPropagate.fix_and_propagate( probUpdate.getProblem(),
+//                                      probing_view, random_solution );
 
    return 0;
 }
