@@ -79,7 +79,6 @@ class VolumeAlgorithm
                      const Vec<REAL>& b, const VariableDomains<REAL>& domains,
                      const Vec<REAL> pi, const REAL best_bound_on_obj )
    {
-
       // TODO: define/determine UB
       REAL n_rows_A = A.getNRows();
       // TODO: is it important to store the solution path?
@@ -99,7 +98,7 @@ class VolumeAlgorithm
       REAL z_bar = create_problem_6_and_solve_it( c, A, b, domains, pi, x_t );
       Vec<REAL> x_bar( x_t );
 
-      while( stopping_criteria( v_t, n_rows_A, c, x_bar, z_bar ) )
+      do
       {
          msg.info( "Round of volume algorithm: {}\n", counter );
          // STEP 1:
@@ -114,7 +113,6 @@ class VolumeAlgorithm
          // Solve (6) with π_t , let x_t and z_t be the solutions obtained.
          REAL z_t =
              create_problem_6_and_solve_it( c, A, b, domains, pi_t, x_t );
-         msg.info( "   obj: {}\n", z_t );
 
          // Update alpha
          op.calc_b_minus_Ax( A, x_t, b, residual_t );
@@ -143,6 +141,8 @@ class VolumeAlgorithm
          // Let t ← t + 1 and go to Step 1.
          counter = counter + 1;
       }
+      while( stopping_criteria( v_t, n_rows_A, c, x_bar, z_bar ) );
+
       return x_bar;
    }
 
@@ -176,7 +176,7 @@ class VolumeAlgorithm
             solution[i] = domains.lower_bounds[i];
             continue;
          }
-         else if( num.isGT( updated_objective[i], 0 ) )
+         else if( num.isGT( updated_objective[i], REAL{ 0.0 } ) )
          {
             if( domains.flags[i].test( ColFlag::kLbInf ) )
                return std::numeric_limits<REAL>::min();
@@ -190,6 +190,8 @@ class VolumeAlgorithm
          }
          obj_value.add( updated_objective[i] * solution[i]);
       }
+
+      msg.info( "   opt_val: {}\n", obj_value.get() );
       return obj_value.get();
    }
 
@@ -231,6 +233,7 @@ class VolumeAlgorithm
       ++( non_improvement_iter_counter );
       if( non_improvement_iter_counter >= non_improvement_iter_limit )
       {
+         non_improvement_iter_counter = 0;
          f = f_decr_factor * f;
          msg.info( "   decreased f: {}\n", f );
       }
