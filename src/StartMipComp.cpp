@@ -24,15 +24,20 @@
 #include "fix/FixAndPropagate.hpp"
 #include "fix/VolumeAlgorithm.hpp"
 #include "papilo/core/Problem.hpp"
+#include "papilo/core/ProblemBuilder.hpp"
 #include "papilo/io/MpsParser.hpp"
 #include "papilo/misc/OptionsParser.hpp"
 #include <boost/program_options.hpp>
 #include <fstream>
+#include <scip/scip_numerics.h>
 
 using namespace papilo;
 
-Solution<double>
-generate_random_solution( const Problem<double>& problem );
+Problem<double>
+modify_problem( Problem<double>& problem );
+
+void
+invert( const double* pDouble, double* result, int length );
 
 int
 main( int argc, char* argv[] )
@@ -56,6 +61,8 @@ main( int argc, char* argv[] )
 
    double readtime = 0;
    Problem<double> problem;
+   Num<double> num{};
+   Message msg{};
    boost::optional<Problem<double>> prob;
 
    {
@@ -77,24 +84,33 @@ main( int argc, char* argv[] )
    Presolve<double> presolve{};
    auto result = presolve.apply( problem, false );
 
-   assert(result.status == );
+   switch( result.status )
+   {
+   case papilo::PresolveStatus::kUnbounded:
+   case papilo::PresolveStatus::kUnbndOrInfeas:
+   case papilo::PresolveStatus::kInfeasible:
+      fmt::print( "PaPILO detected infeasibility or unbounded-ness\n" );
+      return 0;
+   case papilo::PresolveStatus::kUnchanged:
+   case papilo::PresolveStatus::kReduced:
+      break;
+   }
 
-   VolumeAlgorithm<double> algorithm{ {}, {}, 0.5, 0.1, 1, 0.0005, 2, 1.1, 0.66,
-      0.02, 0.01, 2, 20 };
+   VolumeAlgorithm<double> algorithm{ {},  {},   0.5,  0.1,  1, 0.0005, 2,
+                                      1.1, 0.66, 0.02, 0.01, 2, 20 };
 
+   // TODO: add same small heuristic
 
-   //TODO: add same small heuristic
+   Problem<double> reformulated = modify_problem( problem );
 
    // generate pi
    Vec<double> pi{};
-   for( int i = 0; i < problem.getNRows(); i++ )
-   {
+   for( int i = 0; i < reformulated.getNRows(); i++ )
       pi.push_back( 0 );
-   }
 
    // generate UB
    StableSum<double> min_value{};
-   Num<double> num{};
+
    for( int i = 0; i < problem.getNCols(); i++ )
    {
       if( num.isZero( problem.getObjective().coefficients[i] ) )
@@ -124,27 +140,127 @@ main( int argc, char* argv[] )
                         problem.getUpperBounds()[i] );
       }
    }
-   // TODO: Suresh we need to discuss how we treat the inequalities
-   // currently all constraints are considered as equalities
+
    algorithm.volume_algorithm(
-       problem.getObjective().coefficients, problem.getConstraintMatrix(),
-       problem.getConstraintMatrix().getRightHandSides(),
-       problem.getVariableDomains(), pi, min_value.get() );
+       reformulated.getObjective().coefficients,
+       reformulated.getConstraintMatrix(),
+       reformulated.getConstraintMatrix().getLeftHandSides(),
+       reformulated.getVariableDomains(), pi, min_value.get() );
+
+   Postsolve<double> postsolve{ msg, num };
+   // TODO: add postsolving
+   //   postsolve.undo(red, orig, result.postsolve);
 
    return 0;
 }
 
-Solution<double>
-generate_random_solution( const Problem<double>& problem )
+Problem<double>
+modify_problem( Problem<double>& problem )
 {
-   //   std::random_device dev;
-   //   std::mt19937 rng( dev() );
+   ProblemBuilder<double> builder;
 
-   Vec<double> solution;
-   for( int i = 0; i < problem.getNCols(); i++ )
+   int nnz = 0;
+   int ncols = problem.getNCols();
+   int nrows = 0;
+   for( int i = 0; i < problem.getNRows(); i++ )
    {
-      double random_number = ( 1.0 + i ) / 10.0;
-      solution.push_back( random_number );
+      nrows++;
+      int rowsize = problem.getRowSizes()[i];
+      nnz = nnz + rowsize;
+      auto flags = problem.getConstraintMatrix().getRowFlags()[i];
+      if( flags.test( RowFlag::kEquation ) || flags.test( RowFlag::kLhsInf ) ||
+          flags.test( RowFlag::kRhsInf ) )
+      {
+         continue;
+      }
+      nrows++;
+      nnz = nnz + rowsize;
    }
-   return { SolutionType::kPrimal, solution };
+
+   builder.reserve( nnz, nrows, ncols );
+
+   /* set up columns */
+   builder.setNumCols( ncols );
+   for( int i = 0; i != ncols; ++i )
+   {
+      builder.setColLb( i, problem.getLowerBounds()[i] );
+      builder.setColUb( i, problem.getUpperBounds()[i] );
+      auto flags = problem.getColFlags()[i];
+      builder.setColLbInf( i, flags.test( ColFlag::kLbInf ) );
+      builder.setColUbInf( i, flags.test( ColFlag::kUbInf ) );
+
+      builder.setColIntegral( i, flags.test( ColFlag::kIntegral ) );
+      builder.setObj( i, problem.getObjective().coefficients[i] );
+   }
+
+   /* set up rows */
+   builder.setNumRows( nrows );
+   int counter = 0;
+   for( int i = 0; i != problem.getNRows(); ++i )
+   {
+      const int* rowcols =
+          problem.getConstraintMatrix().getRowCoefficients( 0 ).getIndices();
+      const double* rowvals =
+          problem.getConstraintMatrix().getRowCoefficients( 0 ).getValues();
+      int rowlen =
+          problem.getConstraintMatrix().getRowCoefficients( 0 ).getLength();
+      auto flags = problem.getRowFlags()[i];
+      double lhs = problem.getConstraintMatrix().getLeftHandSides()[i];
+      double rhs = problem.getConstraintMatrix().getRightHandSides()[i];
+
+      if( flags.test( RowFlag::kEquation ) || flags.test( RowFlag::kLhsInf ) )
+      {
+         builder.addRowEntries( counter, rowlen, rowcols, rowvals );
+         builder.setRowLhs( counter, lhs );
+         builder.setRowRhs( counter, rhs );
+         builder.setRowLhsInf( counter, false );
+         builder.setRowRhsInf( counter, false );
+      }
+      else if( !flags.test( RowFlag::kRhsInf ) )
+      {
+         double neg_rowvals[rowlen];
+         invert( rowvals, neg_rowvals, rowlen );
+         builder.addRowEntries( counter, rowlen, rowcols, neg_rowvals );
+         builder.setRowLhs( counter, -rhs );
+         builder.setRowRhs( counter, 0 );
+         builder.setRowLhsInf( counter, false );
+         builder.setRowRhsInf( counter, true );
+      }
+      else if( !flags.test( RowFlag::kLhsInf ) )
+      {
+         builder.addRowEntries( counter, rowlen, rowcols, rowvals );
+         builder.setRowLhs( counter, lhs );
+         builder.setRowRhs( counter, 0 );
+         builder.setRowLhsInf( counter, false );
+         builder.setRowRhsInf( counter, true );
+      }
+      else
+      {
+         assert( !flags.test( RowFlag::kLhsInf ) );
+         assert( !flags.test( RowFlag::kRhsInf ) );
+         double neg_rowvals[rowlen];
+         invert( rowvals, neg_rowvals, rowlen );
+
+         builder.addRowEntries( counter, rowlen, rowcols, neg_rowvals );
+         builder.setRowLhs( counter, -rhs );
+         builder.setRowRhs( counter, 0 );
+         builder.setRowLhsInf( counter, false );
+         builder.setRowRhsInf( counter, true );
+         counter++;
+         builder.addRowEntries( counter, rowlen, rowcols, rowvals );
+         builder.setRowLhs( counter, lhs );
+         builder.setRowRhs( counter, 0 );
+         builder.setRowLhsInf( counter, false );
+         builder.setRowRhsInf( counter, true );
+      }
+      counter++;
+   }
+   return builder.build();
+}
+
+void
+invert( const double* pDouble, double* result, int length )
+{
+   for( int i = 0; i < length; i++ )
+      result[i] = pDouble[i] * -1;
 }
