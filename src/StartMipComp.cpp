@@ -29,7 +29,6 @@
 #include "papilo/misc/OptionsParser.hpp"
 #include <boost/program_options.hpp>
 #include <fstream>
-#include <scip/scip_numerics.h>
 
 using namespace papilo;
 
