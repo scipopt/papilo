@@ -264,13 +264,10 @@ class VolumeAlgorithm
          f = num.min( f_incr_factor * f, f_max );
          msg.info( "   increased f: {}\n", f );
       }
-      else if ( change_f <= -1 )
+      else if ( change_f <= -1 && num.isGE( f_decr_factor * f, f_min ) )
       {
-         if( num.isGE( f_decr_factor * f, f_min ) )
-         {
-            f = f_decr_factor * f;
-            msg.info( "   decreased f: {}\n", f );
-         }
+         f = f_decr_factor * f;
+         msg.info( "   decreased f: {}\n", f );
       }
    }
 };
