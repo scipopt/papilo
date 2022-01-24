@@ -87,9 +87,7 @@ class VolumeAlgorithm
                      const Vec<REAL>& b, const VariableDomains<REAL>& domains,
                      const Vec<REAL> pi, const REAL best_bound_on_obj )
    {
-      // TODO: define/determine UB
       REAL n_rows_A = A.getNRows();
-      // TODO: is it important to store the solution path?
 
       // Step 0
       // Set x_0 = x_bar, z_0 = z_bar, t = 1
@@ -210,6 +208,7 @@ class VolumeAlgorithm
    void
    update_alpha( const Vec<REAL>& residual_t, const Vec<REAL>& residual_bar )
    {
+      //TODO: introduce some logic for varying alpha_max
       // alpha_opt = minimizer of || alpha * residual_t + ( 1 - alpha ) *
       //                               residual_bar ||
       REAL t_t_prod = op.multi( residual_t, residual_t );
