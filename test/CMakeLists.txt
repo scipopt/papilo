@@ -201,7 +201,7 @@ set(unit_tests
         "vector-l2-norm"
         "vector-addition"
         "vector-addition-2"
-#        "small-volume-algorithm-test"
+        "small-volume-algorithm-test"
 
         "integration-test-for-flugpl"
         ${PAPILOLIB_TESTS}

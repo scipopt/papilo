@@ -37,16 +37,16 @@ setupProblemWithoutMatrix();
 TEST_CASE( "small-volume-algorithm-test", "[volume]" )
 {
    VolumeAlgorithm<double> algorithm{ {}, {}, 0.5, 0.1, 1, 1.1, 0.66, 0.02,
-      0.01, 20 };
+      0.01, 2, 20 };
    Vec<double> c( 2 );
    c = { 1, 2 };
    Vec<double> b( 2 );
-   b = { 1, 2 };
+   b = { 3, 1 };
    Problem<double> problem = setupProblemWithoutMatrix();
    ConstraintMatrix<double> matrix =
        setupProblemForVolumeAlgorithm().getConstraintMatrix();
    Vec<double> pi( 2 );
-   pi = { 1, 2 };
+   pi = { 0, 0 };
    algorithm.volume_algorithm( c, matrix, b, problem.getVariableDomains(), pi, 3 );
    // TODO: add assertions and check input
 }
@@ -65,7 +65,7 @@ setupProblemForVolumeAlgorithm()
    Vec<std::tuple<int, int, double>> entries{
        std::tuple<int, int, double>{ 0, 0, 1.0 },
        std::tuple<int, int, double>{ 0, 1, 2.0 },
-       std::tuple<int, int, double>{ 1, 1, 3.0 },
+       std::tuple<int, int, double>{ 1, 1, 1.0 },
    };
 
    ProblemBuilder<double> pb;

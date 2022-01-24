@@ -77,8 +77,8 @@ main( int argc, char* argv[] )
    Presolve<double> presolve{};
    presolve.apply( problem, false );
 
-   VolumeAlgorithm<double> algorithm{ {},  {},   0.5,  0.1,  1,
-                                      1.1, 0.66, 0.02, 0.01, 20 };
+   VolumeAlgorithm<double> algorithm{ {}, {}, 0.5, 0.1, 1, 1.1, 0.66, 0.02,
+                                      0.01, 2, 20 };
 
    // generate pi
    Vec<double> pi{};

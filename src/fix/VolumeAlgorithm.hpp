@@ -50,17 +50,20 @@ class VolumeAlgorithm
    REAL f_decr_factor;
    REAL obj_threshold;
    REAL con_threshold;
+   int weak_improvement_iter_limit;
    int non_improvement_iter_limit;
 
  public:
    VolumeAlgorithm( Message _msg, Num<REAL> _num, REAL _alpha, REAL _alpha_max,
                     REAL _f, REAL _f_incr_factor, REAL _f_decr_factor,
                     REAL _obj_threshold, REAL _con_threshold,
+                    int _weak_improvement_iter_limit,
                     int _non_improvement_iter_limit )
        : msg( _msg ), num( _num ), alpha( _alpha ), alpha_max( _alpha_max ),
          f( _f ), f_incr_factor( _f_incr_factor ),
          f_decr_factor( _f_decr_factor ), obj_threshold( _obj_threshold ),
          con_threshold( _con_threshold ),
+         weak_improvement_iter_limit( _weak_improvement_iter_limit ),
          non_improvement_iter_limit( _non_improvement_iter_limit ), op( {} )
    {
    }
@@ -87,6 +90,7 @@ class VolumeAlgorithm
       // Set x_0 = x_bar, z_0 = z_bar, t = 1
       int counter = 1;
       bool improvement_indicator = false;
+      int weak_improvement_iter_counter = 0;
       int non_improvement_iter_counter = 0;
       Vec<REAL> v_t( b );
       Vec<REAL> x_t( c );
@@ -136,7 +140,8 @@ class VolumeAlgorithm
 
          // Update f
          update_f( improvement_indicator, v_t, residual_t,
-                   non_improvement_iter_counter );
+                   weak_improvement_iter_counter, non_improvement_iter_counter
+                   );
 
          // Let t ← t + 1 and go to Step 1.
          counter = counter + 1;
@@ -152,6 +157,8 @@ class VolumeAlgorithm
                       const Vec<REAL>& c, const Vec<REAL>& x_bar,
                       const REAL z_bar )
    {
+      msg.info( "   sc_1: {}\n", op.l1_norm( v ) / n_rows_A );
+      msg.info( "   sc_2: {}\n", abs( op.multi( c, x_bar ) - z_bar ) / z_bar );
       return num.isGE( op.l1_norm( v ), n_rows_A * con_threshold ) ||
              num.isGE( abs( op.multi( c, x_bar ) - z_bar ),
                        z_bar * obj_threshold );
@@ -216,24 +223,45 @@ class VolumeAlgorithm
 
    void
    update_f( const bool improvement_indicator, const Vec<REAL>& v_t,
-             const Vec<REAL>& residual_t, int& non_improvement_iter_counter )
+             const Vec<REAL>& residual_t, int& weak_improvement_iter_counter,
+             int& non_improvement_iter_counter )
    {
+      // +1 for increase in f, 0 for no change in f, -1 for decrease in f
+      int change_f = 0;
+
       if( improvement_indicator )
       {
-         //  If d (= v_t . (b - A x_t)) >= 0, then f = 1.1 * f
+         //  If d (= v_t . (b - A x_t)) >= 0, then increase f
          if( num.isGE( op.multi( v_t, residual_t ), REAL{ 0.0 } ) )
+            change_f = 1;
+         else
          {
-            f = f_incr_factor * f;
-            msg.info( "   increased f: {}\n", f );
-            // TODO: need to verify if f <= 2?
-            // assert(num.isLE(f, REAL{2.0}));
+            ++( weak_improvement_iter_counter );
+            if( weak_improvement_iter_counter >= weak_improvement_iter_limit )
+            {
+               weak_improvement_iter_counter = 0;
+               change_f = 1;
+            }
          }
-         return;
       }
-      ++( non_improvement_iter_counter );
-      if( non_improvement_iter_counter >= non_improvement_iter_limit )
+      else
       {
-         non_improvement_iter_counter = 0;
+         ++( non_improvement_iter_counter );
+         if( non_improvement_iter_counter >= non_improvement_iter_limit )
+         {
+            non_improvement_iter_counter = 0;
+            change_f = -1;
+         }
+      }
+
+      if ( change_f >= 1 )
+      {
+         // TODO: SureshToAlex: do we need to cast 2.0 to REAL?
+         f = num.min( f_incr_factor * f, 2.0 );
+         msg.info( "   increased f: {}\n", f );
+      }
+      else if ( change_f <= -1 )
+      {
          f = f_decr_factor * f;
          msg.info( "   decreased f: {}\n", f );
       }
