@@ -99,6 +99,7 @@ class VolumeAlgorithm
       Vec<REAL> x_t( c );
       Vec<REAL> pi_t( pi );
       Vec<REAL> pi_bar( pi );
+      modify_pi( n_rows_A, A, pi_bar );
       Vec<REAL> residual_t( b );
 
       // We start with a vector π̄ and solve (6) to obtain x̄ and z̄.
@@ -115,8 +116,9 @@ class VolumeAlgorithm
          REAL step_size =
              f * ( best_bound_on_obj - z_bar ) / pow( op.l2_norm( v_t ), 2.0 );
          msg.info( "   Step size: {}\n", step_size );
-
          op.calc_b_plus_sx( pi_bar, step_size, v_t, pi_t );
+         modify_pi( n_rows_A, A, pi_t );
+
          // Solve (6) with π_t , let x_t and z_t be the solutions obtained.
          REAL z_t =
              create_problem_6_and_solve_it( c, A, b, domains, pi_t, x_t );
@@ -125,11 +127,11 @@ class VolumeAlgorithm
          op.calc_b_minus_Ax( A, x_t, b, residual_t );
          update_alpha( residual_t, v_t );
 
-         // x_bar ← αx_t + (1 − α)x_bar,
+         // x_bar ← αx_t + (1 − α)x_bar
          op.calc_qb_plus_sx( alpha, x_t, 1 - alpha, x_bar, x_bar );
 
          // Step 2:
-         // If z_t > z_bar update π_bar and z_bar̄ as
+         // If z_t > z_bar update π_bar and z_bar
          if( num.isGT( z_t, z_bar ) )
          {
             improvement_indicator = true;
@@ -155,6 +157,23 @@ class VolumeAlgorithm
    }
 
  private:
+   // Assumptions:
+   // 1. Minimization objective sense
+   // 2. Variable lower bounds: x >= 0
+   // 3. A constraint has exactly one finite bound: either LHS or RHS
+   // TODO: SureshToAlex: are these assumptions OK in PaPILO?
+   void
+   modify_pi( const REAL n_rows_A, const ConstraintMatrix<REAL>& A, Vec<REAL>& pi )
+   {
+      for( int i = 0; i < n_rows_A; i++ )
+      {
+         if( !A.getRowFlags()[i].test(RowFlag::kLhsInf) )
+            pi[i] = num.max( pi[i], REAL{ 0.0 } );
+         else if( !A.getRowFlags()[i].test(RowFlag::kRhsInf) )
+            pi[i] = num.min( pi[i], REAL{ 0.0 } );
+      }
+   }
+
    bool
    stopping_criteria( const Vec<REAL>& v, const REAL n_rows_A,
                       const Vec<REAL>& c, const Vec<REAL>& x_bar,
@@ -258,12 +277,12 @@ class VolumeAlgorithm
          }
       }
 
-      if ( change_f >= 1 )
+      if( change_f >= 1 )
       {
          f = num.min( f_incr_factor * f, f_max );
          msg.info( "   increased f: {}\n", f );
       }
-      else if ( change_f <= -1 && num.isGE( f_decr_factor * f, f_min ) )
+      else if( change_f <= -1 && num.isGE( f_decr_factor * f, f_min ) )
       {
          f = f_decr_factor * f;
          msg.info( "   decreased f: {}\n", f );
