@@ -46,6 +46,8 @@ class VolumeAlgorithm
    REAL alpha;
    REAL alpha_max;
    REAL f;
+   REAL f_min;
+   REAL f_max;
    REAL f_incr_factor;
    REAL f_decr_factor;
    REAL obj_threshold;
@@ -54,15 +56,18 @@ class VolumeAlgorithm
    int non_improvement_iter_limit;
 
  public:
-   VolumeAlgorithm( Message _msg, Num<REAL> _num, REAL _alpha, REAL _alpha_max,
-                    REAL _f, REAL _f_incr_factor, REAL _f_decr_factor,
+   VolumeAlgorithm( Message _msg, Num<REAL> _num,
+                    REAL _alpha, REAL _alpha_max,
+                    REAL _f, REAL _f_min, REAL _f_max,
+                    REAL _f_incr_factor, REAL _f_decr_factor,
                     REAL _obj_threshold, REAL _con_threshold,
                     int _weak_improvement_iter_limit,
                     int _non_improvement_iter_limit )
-       : msg( _msg ), num( _num ), alpha( _alpha ), alpha_max( _alpha_max ),
-         f( _f ), f_incr_factor( _f_incr_factor ),
-         f_decr_factor( _f_decr_factor ), obj_threshold( _obj_threshold ),
-         con_threshold( _con_threshold ),
+       : msg( _msg ), num( _num ),
+         alpha( _alpha ), alpha_max( _alpha_max ),
+         f( _f ), f_min( _f_min ), f_max( _f_max ),
+         f_incr_factor( _f_incr_factor ), f_decr_factor( _f_decr_factor ),
+         obj_threshold( _obj_threshold ), con_threshold( _con_threshold ),
          weak_improvement_iter_limit( _weak_improvement_iter_limit ),
          non_improvement_iter_limit( _non_improvement_iter_limit ), op( {} )
    {
@@ -256,14 +261,16 @@ class VolumeAlgorithm
 
       if ( change_f >= 1 )
       {
-         // TODO: SureshToAlex: do we need to cast 2.0 to REAL?
-         f = num.min( f_incr_factor * f, 2.0 );
+         f = num.min( f_incr_factor * f, f_max );
          msg.info( "   increased f: {}\n", f );
       }
       else if ( change_f <= -1 )
       {
-         f = f_decr_factor * f;
-         msg.info( "   decreased f: {}\n", f );
+         if( num.isGE( f_decr_factor * f, f_min ) )
+         {
+            f = f_decr_factor * f;
+            msg.info( "   decreased f: {}\n", f );
+         }
       }
    }
 };
