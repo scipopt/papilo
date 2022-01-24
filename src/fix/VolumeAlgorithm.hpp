@@ -73,13 +73,14 @@ class VolumeAlgorithm
    {
    }
 
-   /***
-    * minimize cx s.t. Ax = b, Dx = e, x ≥ 0.
-    * @param c
-    * @param A
-    * @param b
-    * @param problem min 0 s.t. Dx = e, x ≥ 0.
-    * @param pi
+   /**
+    * minimize cx s.t. Ax = b, Dx = e (D = empty), x ≥ 0.
+    * @param c objective function
+    * @param A equation or at least one finte bound for every constraint
+    * @param b not needed
+    * @param domains variables domains (lb/ub/flags)
+    * @param pi initial dual multiplier
+    * @param best_bound_on_obj max bound of c^T x
     * @return
     */
    Vec<REAL>

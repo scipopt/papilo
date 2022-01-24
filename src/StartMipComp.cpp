@@ -75,10 +75,15 @@ main( int argc, char* argv[] )
 
    // set up ProblemUpdate to trivialPresolve so that activities exist
    Presolve<double> presolve{};
-   presolve.apply( problem, false );
+   auto result = presolve.apply( problem, false );
+
+   assert(result.status == );
 
    VolumeAlgorithm<double> algorithm{ {}, {}, 0.5, 0.1, 1, 0.0005, 2, 1.1, 0.66,
       0.02, 0.01, 2, 20 };
+
+
+   //TODO: add same small heuristic
 
    // generate pi
    Vec<double> pi{};
@@ -125,13 +130,6 @@ main( int argc, char* argv[] )
        problem.getObjective().coefficients, problem.getConstraintMatrix(),
        problem.getConstraintMatrix().getRightHandSides(),
        problem.getVariableDomains(), pi, min_value.get() );
-
-   //   Solution<double> random_solution = generate_random_solution( problem );
-   //
-   //   ProbingView<double> probing_view{ problem, num };
-   //   FixAndPropagate<double> fixAndPropagate{ msg, num };
-   //   fixAndPropagate.fix_and_propagate( probUpdate.getProblem(),
-   //                                      probing_view, random_solution );
 
    return 0;
 }
