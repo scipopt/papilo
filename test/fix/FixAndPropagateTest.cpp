@@ -25,20 +25,16 @@
 #include "catch/catch.hpp"
 #include "papilo/core/Problem.hpp"
 #include "papilo/core/ProblemBuilder.hpp"
+#include "papilo/core/ProbingView.hpp"
 
 Problem<double>
 setupProblemForFixAndPropagation();
 
 TEST_CASE( "fix-and-propagate", "[fix]" )
 {
-   FixAndPropagate<double> fix_and_propagate{ {}, {} };
    Problem<double> problem = setupProblemForFixAndPropagation();
 
-   Statistics stats{};
-   PostsolveStorage<double> postsolve_storage;
-   ProblemUpdate<double> probUpdate( problem, postsolve_storage, stats, {}, {},
-                                     {} );
-   probUpdate.trivialPresolve();
+   problem.recomputeAllActivities();
 
    Vec<double> primal_solution;
    for( int i = 0; i < problem.getNCols(); i++ )
@@ -46,17 +42,16 @@ TEST_CASE( "fix-and-propagate", "[fix]" )
       double random_number = ( 1.0 + i ) / 10.0;
       primal_solution.push_back( random_number );
    }
-   Solution<double> random_solution{ SolutionType::kPrimal, primal_solution };
+   Vec<double> res{ primal_solution };
 
-   ProbingView<double> probing_view{ problem, {} };
-   FixAndPropagate<double> fixAndPropagate{ {}, {} };
-   Solution<double> sol = fixAndPropagate.fix_and_propagate(
-       probUpdate.getProblem(), probing_view, random_solution );
+   ProbingView<double> view{ problem, {}};
+   FixAndPropagate<double> fixAndPropagate{ {}, {}, problem, view };
+   bool success = fixAndPropagate.fix_and_propagate( primal_solution, res );
 
-   assert( sol.type == SolutionType::kPrimal );
-   assert( sol.primal[0] == 1 );
-   assert( sol.primal[1] == 1 );
-   assert( sol.primal[2] == 0 );
+   assert( success );
+   assert( res[0] == 1 );
+   assert( res[1] == 1 );
+   assert( res[2] == 0 );
 }
 
 Problem<double>
