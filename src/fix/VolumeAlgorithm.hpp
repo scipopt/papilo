@@ -86,7 +86,7 @@ class VolumeAlgorithm
    Vec<REAL>
    volume_algorithm( const Vec<REAL> c, const ConstraintMatrix<REAL>& A,
                      const Vec<REAL>& b, const VariableDomains<REAL>& domains,
-                     const Vec<REAL> pi, const REAL best_bound_on_obj )
+                     const Vec<REAL> pi, REAL best_bound_on_obj )
    {
       int n_rows_A = A.getNRows();
 
@@ -114,6 +114,7 @@ class VolumeAlgorithm
          // Compute v_t = b − A x_bar and π_t = pi_bar + sv_t for a step size s
          // given by (7).
          op.calc_b_minus_Ax( A, x_bar, b, v_t );
+         update_best_bound_on_obj( z_bar, best_bound_on_obj );
          REAL step_size =
              f * ( best_bound_on_obj - z_bar ) / pow( op.l2_norm( v_t ), 2.0 );
          msg.info( "   Step size: {}\n", step_size );
@@ -161,18 +162,15 @@ class VolumeAlgorithm
    // Assumptions:
    // 1. Minimization objective sense
    // 2. Variable lower bounds: x >= 0
-   // 3. A constraint has exactly one finite bound: either LHS or RHS
-   // TODO: Simplify this function further upon finalzing assumptions (i.e.,
-   //       fixing a structure for cons.)
+   // 3. A constraint is either an = or >= type.
+   // TODO: Simplify this function further upon finalzing assumptions
    void
    modify_pi( const int n_rows_A, const ConstraintMatrix<REAL>& A, Vec<REAL>& pi )
    {
       for( int i = 0; i < n_rows_A; i++ )
       {
-         if( !A.getRowFlags()[i].test(RowFlag::kLhsInf) )
+         if( A.getRowFlags()[i].test( RowFlag::kRhsInf ) )
             pi[i] = num.max( pi[i], REAL{ 0.0 } );
-         else if( !A.getRowFlags()[i].test(RowFlag::kRhsInf) )
-            pi[i] = num.min( pi[i], REAL{ 0.0 } );
       }
    }
 
@@ -224,6 +222,16 @@ class VolumeAlgorithm
 
       msg.info( "   opt_val: {}\n", obj_value.get() );
       return obj_value.get();
+   }
+
+   void
+   update_best_bound_on_obj( const REAL z_bar, REAL& best_bound_on_obj )
+   {
+      if( num.isGE( z_bar, 0.95 * best_bound_on_obj ) )
+      {
+         best_bound_on_obj = 1.05 * z_bar;
+         msg.info( "   increased best bound: {}\n", best_bound_on_obj );
+      }
    }
 
    void

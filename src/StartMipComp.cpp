@@ -98,7 +98,6 @@ main( int argc, char* argv[] )
    VolumeAlgorithm<double> algorithm{ {},  {},   0.5,  0.1,  1, 0.0005, 2,
                                       1.1, 0.66, 0.02, 0.01, 2, 20 };
 
-   // TODO: SBtoAH: is this input `problem` presolved problem?
    Problem<double> reformulated = modify_problem( problem );
 
    // TODO: add same small heuristic
