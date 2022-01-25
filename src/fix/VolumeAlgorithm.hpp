@@ -170,7 +170,10 @@ class VolumeAlgorithm
       for( int i = 0; i < n_rows_A; i++ )
       {
          if( A.getRowFlags()[i].test( RowFlag::kRhsInf ) )
+         {
+            assert( !A.getRowFlags()[i].test( RowFlag::kLhsInf ) );
             pi[i] = num.max( pi[i], REAL{ 0.0 } );
+         }
       }
    }
 
