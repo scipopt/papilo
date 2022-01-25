@@ -98,10 +98,10 @@ main( int argc, char* argv[] )
    VolumeAlgorithm<double> algorithm{ {},  {},   0.5,  0.1,  1, 0.0005, 2,
                                       1.1, 0.66, 0.02, 0.01, 2, 20 };
 
-   // TODO: add same small heuristic
-
+   // TODO: SBtoAH: is this input `problem` presolved problem?
    Problem<double> reformulated = modify_problem( problem );
 
+   // TODO: add same small heuristic
    // generate pi
    Vec<double> pi{};
    for( int i = 0; i < reformulated.getNRows(); i++ )
@@ -198,16 +198,16 @@ modify_problem( Problem<double>& problem )
    for( int i = 0; i != problem.getNRows(); ++i )
    {
       const int* rowcols =
-          problem.getConstraintMatrix().getRowCoefficients( 0 ).getIndices();
+          problem.getConstraintMatrix().getRowCoefficients( i ).getIndices();
       const double* rowvals =
-          problem.getConstraintMatrix().getRowCoefficients( 0 ).getValues();
+          problem.getConstraintMatrix().getRowCoefficients( i ).getValues();
       int rowlen =
-          problem.getConstraintMatrix().getRowCoefficients( 0 ).getLength();
+          problem.getConstraintMatrix().getRowCoefficients( i ).getLength();
       auto flags = problem.getRowFlags()[i];
       double lhs = problem.getConstraintMatrix().getLeftHandSides()[i];
       double rhs = problem.getConstraintMatrix().getRightHandSides()[i];
 
-      if( flags.test( RowFlag::kEquation ) || flags.test( RowFlag::kLhsInf ) )
+      if( flags.test( RowFlag::kEquation ) )
       {
          builder.addRowEntries( counter, rowlen, rowcols, rowvals );
          builder.setRowLhs( counter, lhs );
@@ -215,20 +215,24 @@ modify_problem( Problem<double>& problem )
          builder.setRowLhsInf( counter, false );
          builder.setRowRhsInf( counter, false );
       }
-      else if( !flags.test( RowFlag::kRhsInf ) )
+      else if( flags.test( RowFlag::kLhsInf ) )
       {
+         assert( !flags.test( RowFlag::kRhsInf ) );
          double neg_rowvals[rowlen];
          invert( rowvals, neg_rowvals, rowlen );
          builder.addRowEntries( counter, rowlen, rowcols, neg_rowvals );
          builder.setRowLhs( counter, -rhs );
+         // TODO: SBtoAH: Should this RHS be infinity instead of zero?
          builder.setRowRhs( counter, 0 );
          builder.setRowLhsInf( counter, false );
          builder.setRowRhsInf( counter, true );
       }
-      else if( !flags.test( RowFlag::kLhsInf ) )
+      else if( flags.test( RowFlag::kRhsInf ) )
       {
+         assert( !flags.test( RowFlag::kLhsInf ) );
          builder.addRowEntries( counter, rowlen, rowcols, rowvals );
          builder.setRowLhs( counter, lhs );
+         // TODO: SBtoAH: Should this RHS be infinity instead of zero?
          builder.setRowRhs( counter, 0 );
          builder.setRowLhsInf( counter, false );
          builder.setRowRhsInf( counter, true );
@@ -242,12 +246,14 @@ modify_problem( Problem<double>& problem )
 
          builder.addRowEntries( counter, rowlen, rowcols, neg_rowvals );
          builder.setRowLhs( counter, -rhs );
+         // TODO: SBtoAH: Should this RHS be infinity instead of zero?
          builder.setRowRhs( counter, 0 );
          builder.setRowLhsInf( counter, false );
          builder.setRowRhsInf( counter, true );
          counter++;
          builder.addRowEntries( counter, rowlen, rowcols, rowvals );
          builder.setRowLhs( counter, lhs );
+         // TODO: SBtoAH: Should this RHS be infinity instead of zero?
          builder.setRowRhs( counter, 0 );
          builder.setRowLhsInf( counter, false );
          builder.setRowRhsInf( counter, true );

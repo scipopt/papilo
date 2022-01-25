@@ -88,7 +88,7 @@ class VolumeAlgorithm
                      const Vec<REAL>& b, const VariableDomains<REAL>& domains,
                      const Vec<REAL> pi, const REAL best_bound_on_obj )
    {
-      REAL n_rows_A = A.getNRows();
+      int n_rows_A = A.getNRows();
 
       // Step 0
       // Set x_0 = x_bar, z_0 = z_bar, t = 1
@@ -162,9 +162,10 @@ class VolumeAlgorithm
    // 1. Minimization objective sense
    // 2. Variable lower bounds: x >= 0
    // 3. A constraint has exactly one finite bound: either LHS or RHS
-   // TODO: SureshToAlex: are these assumptions OK in PaPILO?
+   // TODO: Simplify this function further upon finalzing assumptions (i.e.,
+   //       fixing a structure for cons.)
    void
-   modify_pi( const REAL n_rows_A, const ConstraintMatrix<REAL>& A, Vec<REAL>& pi )
+   modify_pi( const int n_rows_A, const ConstraintMatrix<REAL>& A, Vec<REAL>& pi )
    {
       for( int i = 0; i < n_rows_A; i++ )
       {
@@ -176,7 +177,7 @@ class VolumeAlgorithm
    }
 
    bool
-   stopping_criteria( const Vec<REAL>& v, const REAL n_rows_A,
+   stopping_criteria( const Vec<REAL>& v, const int n_rows_A,
                       const Vec<REAL>& c, const Vec<REAL>& x_bar,
                       const REAL z_bar )
    {
