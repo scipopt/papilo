@@ -145,13 +145,29 @@ main( int argc, char* argv[] )
                         reformulated.getConstraintMatrix(),
                         reformulated.getConstraintMatrix().getLeftHandSides(),
                         reformulated.getVariableDomains(), pi, min_value.get() );
-   std::cout << "Primal heuristic solution:\n";
+   msg.info("Primal heuristic solution:\n");
    for( int i = 0; i < problem.getNCols(); i++ )
-      std::cout << "   x[" << i << "] = " << primal_heur_sol[i] << "\n";
+      msg.info( "   x[{}] = {}\n", i, primal_heur_sol[i] );
 
+   // we continue with the presolved problem since the columns are the same
+   problem.recomputeAllActivities();
+
+   ProbingView<double> probing_view{ problem, num };
+   FixAndPropagate<double> fixAndPropagate{ msg, num };
+   Solution<double> sol = fixAndPropagate.fix_and_propagate(
+       problem, probing_view, primal_heur_sol );
+
+   Solution<double> original_solution{};
+   Solution<double> reduced_solution{ primal_heur_sol };
+   primal_heur_sol.reserve( problem.getNCols() );
    Postsolve<double> postsolve{ msg, num };
-   // TODO: add postsolving
-   //   postsolve.undo(red, orig, result.postsolve);
+   msg.info( "Solution\n" );
+
+   postsolve.undo( sol, original_solution, result.postsolve );
+
+   msg.info( "Solution\n" );
+   for( int i = 0; i < original_solution.primal.size(); i++ )
+      msg.info( "   x[{}] = {}\n", i, original_solution.primal[i] );
 
    return 0;
 }
