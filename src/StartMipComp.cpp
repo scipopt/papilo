@@ -95,57 +95,60 @@ main( int argc, char* argv[] )
       break;
    }
 
-   VolumeAlgorithm<double> algorithm{ {},  {},   0.5,  0.1,  1, 0.0005, 2,
-                                      1.1, 0.66, 0.02, 0.01, 2, 20 };
-
-   Problem<double> reformulated = modify_problem( problem );
-
-   // TODO: add same small heuristic
-   // generate pi
-   Vec<double> pi{};
-   for( int i = 0; i < reformulated.getNRows(); i++ )
-      pi.push_back( 0 );
-
-   // generate UB
-   StableSum<double> min_value{};
-
-   for( int i = 0; i < problem.getNCols(); i++ )
-   {
-      if( num.isZero( problem.getObjective().coefficients[i] ) )
-         continue;
-      else if( num.isLT( problem.getObjective().coefficients[i], 0 ) )
-      {
-         if( problem.getColFlags()[i].test( ColFlag::kLbInf ) )
-         {
-            fmt::print(
-                "Could not calculate objective bound: variable {} is unbounded",
-                i );
-            return 1;
-         }
-         min_value.add( problem.getObjective().coefficients[i] +
-                        problem.getLowerBounds()[i] );
-      }
-      else
-      {
-         if( problem.getColFlags()[i].test( ColFlag::kUbInf ) )
-         {
-            fmt::print(
-                "Could not calculate objective bound: variable {} is unbounded",
-                i );
-            return 1;
-         }
-         min_value.add( problem.getObjective().coefficients[i] +
-                        problem.getUpperBounds()[i] );
-      }
-   }
 
    Vec<double> primal_heur_sol{};
-   primal_heur_sol = algorithm.volume_algorithm(
-                        reformulated.getObjective().coefficients,
-                        reformulated.getConstraintMatrix(),
-                        reformulated.getConstraintMatrix().getLeftHandSides(),
-                        reformulated.getVariableDomains(), pi, min_value.get() );
-   msg.info("Primal heuristic solution:\n");
+   primal_heur_sol.reserve( problem.getNCols() );
+   {
+
+      VolumeAlgorithm<double> algorithm{ {},  {},   0.5,  0.1,  1, 0.0005, 2,
+                                         1.1, 0.66, 0.02, 0.01, 2, 20 };
+
+      Problem<double> reformulated = modify_problem( problem );
+
+      // TODO: add same small heuristic
+      // generate pi
+      Vec<double> pi{};
+      for( int i = 0; i < reformulated.getNRows(); i++ )
+         pi.push_back( 0 );
+
+      // generate UB
+      StableSum<double> min_value{};
+
+      for( int i = 0; i < problem.getNCols(); i++ )
+      {
+         if( num.isZero( problem.getObjective().coefficients[i] ) )
+            continue;
+         else if( num.isLT( problem.getObjective().coefficients[i], 0 ) )
+         {
+            if( problem.getColFlags()[i].test( ColFlag::kLbInf ) )
+            {
+               fmt::print( "Could not calculate objective bound: variable {} is unbounded",
+                           i );
+               return 1;
+            }
+            min_value.add( problem.getObjective().coefficients[i] +
+                           problem.getLowerBounds()[i] );
+         }
+         else
+         {
+            if( problem.getColFlags()[i].test( ColFlag::kUbInf ) )
+            {
+               fmt::print( "Could not calculate objective bound: variable {} is unbounded",
+                           i );
+               return 1;
+            }
+            min_value.add( problem.getObjective().coefficients[i] +
+                           problem.getUpperBounds()[i] );
+         }
+      }
+
+      primal_heur_sol = algorithm.volume_algorithm(
+          reformulated.getObjective().coefficients,
+          reformulated.getConstraintMatrix(),
+          reformulated.getConstraintMatrix().getLeftHandSides(),
+          reformulated.getVariableDomains(), pi, min_value.get() );
+   }
+   msg.info( "Primal heuristic solution:\n" );
    for( int i = 0; i < problem.getNCols(); i++ )
       msg.info( "   x[{}] = {}\n", i, primal_heur_sol[i] );
 
@@ -161,7 +164,7 @@ main( int argc, char* argv[] )
    Solution<double> reduced_solution{ primal_heur_sol };
    primal_heur_sol.reserve( problem.getNCols() );
    Postsolve<double> postsolve{ msg, num };
-   msg.info( "Solution\n" );
+   msg.info( "\n" );
 
    postsolve.undo( sol, original_solution, result.postsolve );
 
@@ -180,17 +183,23 @@ modify_problem( Problem<double>& problem )
    int nnz = 0;
    int ncols = problem.getNCols();
    int nrows = 0;
+   ConstraintMatrix<double>& matrix = problem.getConstraintMatrix();
+   Vec<ColFlags>& colFlags = problem.getColFlags();
+   Vec<RowFlags>& rowFlags = matrix.getRowFlags();
+   Vec<int>& rowSizes = problem.getRowSizes();
+   Vec<double>& coefficients = problem.getObjective().coefficients;
+   Vec<double>& leftHandSides = matrix.getLeftHandSides();
+   Vec<double>& rightHandSides = matrix.getRightHandSides();
+
    for( int i = 0; i < problem.getNRows(); i++ )
    {
       nrows++;
-      int rowsize = problem.getRowSizes()[i];
+      int rowsize = rowSizes[i];
       nnz = nnz + rowsize;
-      auto flags = problem.getConstraintMatrix().getRowFlags()[i];
+      auto flags = rowFlags[i];
       if( flags.test( RowFlag::kEquation ) || flags.test( RowFlag::kLhsInf ) ||
           flags.test( RowFlag::kRhsInf ) )
-      {
          continue;
-      }
       nrows++;
       nnz = nnz + rowsize;
    }
@@ -203,12 +212,12 @@ modify_problem( Problem<double>& problem )
    {
       builder.setColLb( i, problem.getLowerBounds()[i] );
       builder.setColUb( i, problem.getUpperBounds()[i] );
-      auto flags = problem.getColFlags()[i];
+      auto flags = colFlags[i];
       builder.setColLbInf( i, flags.test( ColFlag::kLbInf ) );
       builder.setColUbInf( i, flags.test( ColFlag::kUbInf ) );
 
       builder.setColIntegral( i, flags.test( ColFlag::kIntegral ) );
-      builder.setObj( i, problem.getObjective().coefficients[i] );
+      builder.setObj( i, coefficients[i] );
    }
 
    /* set up rows */
@@ -216,15 +225,13 @@ modify_problem( Problem<double>& problem )
    int counter = 0;
    for( int i = 0; i != problem.getNRows(); ++i )
    {
-      const int* rowcols =
-          problem.getConstraintMatrix().getRowCoefficients( i ).getIndices();
-      const double* rowvals =
-          problem.getConstraintMatrix().getRowCoefficients( i ).getValues();
-      int rowlen =
-          problem.getConstraintMatrix().getRowCoefficients( i ).getLength();
-      auto flags = problem.getRowFlags()[i];
-      double lhs = problem.getConstraintMatrix().getLeftHandSides()[i];
-      double rhs = problem.getConstraintMatrix().getRightHandSides()[i];
+      const SparseVectorView<double>& view = matrix.getRowCoefficients( i );
+      const int* rowcols = view.getIndices();
+      const double* rowvals = view.getValues();
+      int rowlen = view.getLength();
+      auto flags = rowFlags[i];
+      double lhs = leftHandSides[i];
+      double rhs = rightHandSides[i];
 
       if( flags.test( RowFlag::kEquation ) )
       {
