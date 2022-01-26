@@ -244,7 +244,7 @@ modify_problem( Problem<double>& problem )
       else if( flags.test( RowFlag::kLhsInf ) )
       {
          assert( !flags.test( RowFlag::kRhsInf ) );
-         double neg_rowvals[rowlen];
+         double* neg_rowvals = new double[rowlen];
          invert( rowvals, neg_rowvals, rowlen );
          builder.addRowEntries( counter, rowlen, rowcols, neg_rowvals );
          builder.setRowLhs( counter, -rhs );
@@ -265,7 +265,7 @@ modify_problem( Problem<double>& problem )
       {
          assert( !flags.test( RowFlag::kLhsInf ) );
          assert( !flags.test( RowFlag::kRhsInf ) );
-         double neg_rowvals[rowlen];
+         double* neg_rowvals = new double[rowlen];
          invert( rowvals, neg_rowvals, rowlen );
 
          builder.addRowEntries( counter, rowlen, rowcols, neg_rowvals );
