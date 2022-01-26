@@ -139,11 +139,15 @@ main( int argc, char* argv[] )
       }
    }
 
-   algorithm.volume_algorithm(
-       reformulated.getObjective().coefficients,
-       reformulated.getConstraintMatrix(),
-       reformulated.getConstraintMatrix().getLeftHandSides(),
-       reformulated.getVariableDomains(), pi, min_value.get() );
+   Vec<double> primal_heur_sol{};
+   primal_heur_sol = algorithm.volume_algorithm(
+                        reformulated.getObjective().coefficients,
+                        reformulated.getConstraintMatrix(),
+                        reformulated.getConstraintMatrix().getLeftHandSides(),
+                        reformulated.getVariableDomains(), pi, min_value.get() );
+   std::cout << "Primal heuristic solution:\n";
+   for( int i = 0; i < problem.getNCols(); i++ )
+      std::cout << "   x[" << i << "] = " << primal_heur_sol[i] << "\n";
 
    Postsolve<double> postsolve{ msg, num };
    // TODO: add postsolving
@@ -221,7 +225,6 @@ modify_problem( Problem<double>& problem )
          invert( rowvals, neg_rowvals, rowlen );
          builder.addRowEntries( counter, rowlen, rowcols, neg_rowvals );
          builder.setRowLhs( counter, -rhs );
-         // TODO: SBtoAH: Should this RHS be infinity instead of zero?
          builder.setRowRhs( counter, 0 );
          builder.setRowLhsInf( counter, false );
          builder.setRowRhsInf( counter, true );
@@ -231,7 +234,6 @@ modify_problem( Problem<double>& problem )
          assert( !flags.test( RowFlag::kLhsInf ) );
          builder.addRowEntries( counter, rowlen, rowcols, rowvals );
          builder.setRowLhs( counter, lhs );
-         // TODO: SBtoAH: Should this RHS be infinity instead of zero?
          builder.setRowRhs( counter, 0 );
          builder.setRowLhsInf( counter, false );
          builder.setRowRhsInf( counter, true );
@@ -245,14 +247,12 @@ modify_problem( Problem<double>& problem )
 
          builder.addRowEntries( counter, rowlen, rowcols, neg_rowvals );
          builder.setRowLhs( counter, -rhs );
-         // TODO: SBtoAH: Should this RHS be infinity instead of zero?
          builder.setRowRhs( counter, 0 );
          builder.setRowLhsInf( counter, false );
          builder.setRowRhsInf( counter, true );
          counter++;
          builder.addRowEntries( counter, rowlen, rowcols, rowvals );
          builder.setRowLhs( counter, lhs );
-         // TODO: SBtoAH: Should this RHS be infinity instead of zero?
          builder.setRowRhs( counter, 0 );
          builder.setRowLhsInf( counter, false );
          builder.setRowRhsInf( counter, true );

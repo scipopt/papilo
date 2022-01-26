@@ -117,7 +117,7 @@ class VolumeAlgorithm
          update_best_bound_on_obj( z_bar, best_bound_on_obj );
          REAL step_size =
              f * ( best_bound_on_obj - z_bar ) / pow( op.l2_norm( v_t ), 2.0 );
-         msg.info( "   Step size: {}\n", step_size );
+//         msg.info( "   Step size: {}\n", step_size );
          op.calc_b_plus_sx( pi_bar, step_size, v_t, pi_t );
          modify_pi( n_rows_A, A, pi_t );
 
@@ -223,24 +223,25 @@ class VolumeAlgorithm
          obj_value.add( updated_objective[i] * solution[i]);
       }
 
-      msg.info( "   opt_val: {}\n", obj_value.get() );
+//      msg.info( "   opt_val: {}\n", obj_value.get() );
       return obj_value.get();
    }
 
    void
    update_best_bound_on_obj( const REAL z_bar, REAL& best_bound_on_obj )
    {
+      // TODO: shall we make 0.95 and 1.05 global params similar to f_min?
       if( num.isGE( z_bar, 0.95 * best_bound_on_obj ) )
       {
          best_bound_on_obj = 1.05 * z_bar;
-         msg.info( "   increased best bound: {}\n", best_bound_on_obj );
+//         msg.info( "   increased best bound: {}\n", best_bound_on_obj );
       }
    }
 
    void
    update_alpha( const Vec<REAL>& residual_t, const Vec<REAL>& residual_bar )
    {
-      //TODO: introduce some logic for varying alpha_max
+      // TODO: introduce some logic for varying alpha_max
       // alpha_opt = minimizer of || alpha * residual_t + ( 1 - alpha ) *
       //                               residual_bar ||
       REAL t_t_prod = op.multi( residual_t, residual_t );
@@ -254,7 +255,7 @@ class VolumeAlgorithm
       alpha = num.isLT( alpha_opt, REAL{ 0.0 } )
                   ? alpha_max / 10.0
                   : num.min( alpha_opt, alpha_max );
-      msg.info( "   alpha: {}\n", alpha );
+      msg.info( "   alpha_opt: {},\t alpha: {}\n", alpha_opt, alpha );
    }
 
    void
@@ -293,12 +294,12 @@ class VolumeAlgorithm
       if( change_f >= 1 )
       {
          f = num.min( f_incr_factor * f, f_max );
-         msg.info( "   increased f: {}\n", f );
+//         msg.info( "   increased f: {}\n", f );
       }
       else if( change_f <= -1 && num.isGE( f_decr_factor * f, f_min ) )
       {
          f = f_decr_factor * f;
-         msg.info( "   decreased f: {}\n", f );
+//         msg.info( "   decreased f: {}\n", f );
       }
    }
 };
