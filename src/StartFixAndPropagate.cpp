@@ -72,21 +72,21 @@ main( int argc, char* argv[] )
    fmt::print( "reading took {:.3} seconds\n", readtime );
 
    // set up ProblemUpdate to trivialPresolve so that activities exist
-   Num<double> num{};
-   Statistics stats{};
-   Message msg{};
-   PresolveOptions presolve_options{};
-   PostsolveStorage<double> postsolve_storage;
-   ProblemUpdate<double> probUpdate( problem, postsolve_storage, stats,
-                                     presolve_options, num, msg );
-   probUpdate.trivialPresolve();
-
-   Solution<double> random_solution = generate_random_solution( problem );
-
-   ProbingView<double> probing_view{ problem, num };
-   FixAndPropagate<double> fixAndPropagate{ msg, num };
-   fixAndPropagate.fix_and_propagate( probUpdate.getProblem(),
-                                      probing_view, random_solution );
+//   Num<double> num{};
+//   Statistics stats{};
+//   Message msg{};
+//   PresolveOptions presolve_options{};
+//   PostsolveStorage<double> postsolve_storage;
+//   ProblemUpdate<double> probUpdate( problem, postsolve_storage, stats,
+//                                     presolve_options, num, msg );
+//   probUpdate.trivialPresolve();
+//
+//   Solution<double> random_solution = generate_random_solution( problem );
+//
+//   ProbingView<double> probing_view{ problem, num };
+//   FixAndPropagate<double> fixAndPropagate{ msg, num };
+//   fixAndPropagate.fix_and_propagate( probUpdate.getProblem(),
+//                                      probing_view, random_solution );
 
    return 0;
 }

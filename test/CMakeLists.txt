@@ -58,6 +58,7 @@ add_executable(unit_test TestMain.cpp
 
         fix/VectorMultiplicationTest.cpp
         fix/FixAndPropagateTest.cpp
+        fix/FixAndPropagateApiTest.cpp
 
         ${BOOST_REQUIRED_TEST_FILES}
         ${PAPILOLIB_TEST_FILE})
@@ -196,6 +197,7 @@ set(unit_tests
 
         "vector-multiplication"
         "fix-and-propagate"
+#        "fix-and-propagate-api"
 
         "integration-test-for-flugpl"
         ${PAPILOLIB_TESTS}
