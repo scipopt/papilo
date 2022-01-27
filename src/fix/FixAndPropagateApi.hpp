@@ -46,7 +46,7 @@ setup( const char* filename, int& result )
       return nullptr;
    }
    result = 0;
-   Problem<double>* problem = new Problem<double>( prob.get() );
+   auto problem = new Problem<double>( prob.get() );
    problem->recomputeAllActivities();
    return problem;
    //   problem.recomputeAllActivities();
