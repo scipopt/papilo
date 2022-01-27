@@ -351,6 +351,11 @@ if (TARGET papilo-executable)
     # comparing the objective value for MIP instances and check if primal postsolve works
     if(PAPILO_HAVE_SCIP)
         add_instancetests(instances_MIP numtypes "default.set")
+    elseif(PAPILO_HAVE_GUROBI)
+        set(d_numtypes
+                "d"
+                )
+        add_instancetests(instances_MIP d_numtypes "default.set")
     endif()
     # comparing the objective value for LP instances and check if dual postsolve works (with/out basis calculation)
     if(PAPILO_HAVE_SOPLEX OR PAPILO_HAVE_HIGHS)
