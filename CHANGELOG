@@ -41,6 +41,7 @@ Fixed bugs
 Miscellaneous
 -------------
 - Providing a way to build PaPILO without TBB (warning parallel design can not be used anymore)
+- Providing an interface to gurobi
 
 Known bugs
 ----------
