@@ -197,7 +197,7 @@ set(unit_tests
 
         "vector-multiplication"
         "fix-and-propagate"
-        "fix-and-propagate-api"
+#        "fix-and-propagate-api"
 
         "integration-test-for-flugpl"
         ${PAPILOLIB_TESTS}
