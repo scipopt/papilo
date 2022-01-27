@@ -23,9 +23,12 @@
 
 #include "papilo/core/Objective.hpp"
 #include "papilo/core/Presolve.hpp"
+#include "papilo/core/ProbingView.hpp"
 
+#include "papilo/io/MpsParser.hpp"
 #include <cassert>
 #include <fstream>
+#include <string>
 
 using namespace papilo;
 
@@ -36,16 +39,19 @@ class FixAndPropagate
 {
    Message msg;
    Num<REAL> num;
+   ProbingView<REAL> probing_view;
 
  public:
-   FixAndPropagate( Message _msg, Num<REAL> _num ) : msg( _msg ), num( _num ) {}
+   FixAndPropagate( Message msg_, Num<REAL> num_, Problem<REAL>& problem_, ProbingView<REAL> view_ )
+       : msg( msg_ ), num( num_ ), probing_view( view_ )
+   {
+   }
 
-   Solution<REAL>
-   fix_and_propagate( const Problem<REAL>& _problem,
-                      ProbingView<REAL>& probing_view,
-                      Solution<REAL> cont_solution )
+   bool
+   fix_and_propagate( const Vec<REAL>& cont_solution, Vec<REAL>& result )
    {
       Vec<Fixing<REAL>> fixings{};
+      int infeasible_var = -1;
       while( true )
       {
          probing_view.reset();
@@ -60,29 +66,32 @@ class FixAndPropagate
             // immediately
          }
 
-         propagate_to_leaf_or_infeasibility( _problem, probing_view,
-                                             cont_solution );
+         propagate_to_leaf_or_infeasibility( cont_solution );
 
          if( probing_view.isInfeasible() )
          {
             // TODO: store fixings since they code the conflict
+
             fixings = probing_view.get_fixings();
             assert( !fixings.empty() );
             Fixing<REAL> infeasible_fixing = fixings[fixings.size() - 1];
-            const Fixing<REAL>& fixing { infeasible_fixing.get_column_index(),
-                                  modify_value_due_to_backtrack(
-                                      infeasible_fixing.get_value() ) };
+            if( infeasible_var == infeasible_fixing.get_column_index() )
+               return false;
+            const Fixing<REAL>& fixing{ infeasible_fixing.get_column_index(),
+                                        modify_value_due_to_backtrack(
+                                            infeasible_fixing.get_value() ) };
+
+            infeasible_var = fixing.get_column_index();
             fixings[fixings.size() - 1] = fixing;
          }
          else
          {
             // TODO: store objective value and solution
-            Solution<REAL> solution = create_solution( probing_view );
-            msg.info( "found solution {}",
-                      _problem.computeSolObjective( solution.primal ) );
-            return solution;
+            create_solution( result );
+            return true;
          }
       }
+      return false;
    }
 
  private:
@@ -92,29 +101,23 @@ class FixAndPropagate
       return value == 1 ? 0 : 1;
    }
 
-   Solution<REAL>
-   create_solution( const ProbingView<REAL>& _view )
+   void
+   create_solution( Vec<REAL>& result )
    {
-      Vec<REAL> values{};
-      for( int i = 0; i < _view.getProbingUpperBounds().size(); i++ )
+      for( int i = 0; i < probing_view.getProbingUpperBounds().size(); i++ )
       {
-         assert( _view.getProbingUpperBounds()[i] ==
-                 _view.getProbingLowerBounds()[i] );
-         values.push_back( _view.getProbingUpperBounds()[i] );
+         assert( probing_view.getProbingUpperBounds()[i] ==
+                 probing_view.getProbingLowerBounds()[i] );
+         result[i] = probing_view.getProbingUpperBounds()[i];
       }
-      Solution<REAL> solution{ SolutionType::kPrimal, values };
-      return solution;
    }
 
    void
-   propagate_to_leaf_or_infeasibility( const Problem<REAL>& _problem,
-                                       ProbingView<REAL>& probing_view,
-                                       Solution<REAL> cont_solution )
+   propagate_to_leaf_or_infeasibility( Vec<REAL> cont_solution )
    {
       while( true )
       {
-         Fixing<REAL> fixing =
-             select_diving_variable( _problem, probing_view, cont_solution );
+         Fixing<REAL> fixing = select_diving_variable( cont_solution );
          // dive until all vars are fixed (and returned fixing is invalid)
          if( fixing.is_invalid() )
             return;
@@ -145,9 +148,7 @@ class FixAndPropagate
    }
 
    Fixing<REAL>
-   select_diving_variable( const Problem<REAL>& _problem,
-                           const ProbingView<REAL>& _probing_view,
-                           Solution<REAL> cont_solution )
+   select_diving_variable( Vec<REAL> cont_solution )
    {
 
       // this is currently fractional diving
@@ -155,11 +156,11 @@ class FixAndPropagate
       int variable = -1;
       REAL score = -1;
 
-      for( int i = 0; i < cont_solution.primal.size(); i++ )
+      for( int i = 0; i < cont_solution.size(); i++ )
       {
-         REAL frac = cont_solution.primal[i] - floor( cont_solution.primal[i] );
-         if( frac == 0 || num.isEq( _probing_view.getProbingUpperBounds()[i],
-                                    _probing_view.getProbingLowerBounds()[i] ) )
+         REAL frac = cont_solution[i] - floor( cont_solution[i] );
+         if( frac == 0 || num.isEq( probing_view.getProbingUpperBounds()[i],
+                                    probing_view.getProbingLowerBounds()[i] ) )
             continue;
          else if( frac > 0.5 )
          {
@@ -167,7 +168,7 @@ class FixAndPropagate
             {
                score = 1 - frac;
                variable = i;
-               value = ceil( cont_solution.primal[i] );
+               value = ceil( cont_solution[i] );
             }
          }
          else
@@ -176,7 +177,7 @@ class FixAndPropagate
             {
                score = frac;
                variable = i;
-               value = floor( cont_solution.primal[i] );
+               value = floor( cont_solution[i] );
             }
          }
       }

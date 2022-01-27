@@ -59,6 +59,7 @@ add_executable(unit_test TestMain.cpp
         fix/VectorMultiplicationTest.cpp
         fix/VolumeAlgorithmTest.cpp
         fix/FixAndPropagateTest.cpp
+        fix/FixAndPropagateApiTest.cpp
 
         ${BOOST_REQUIRED_TEST_FILES}
         ${PAPILOLIB_TEST_FILE})
@@ -202,6 +203,7 @@ set(unit_tests
         "vector-addition"
         "vector-addition-2"
         "small-volume-algorithm-test"
+#        "fix-and-propagate-api"
 
         "integration-test-for-flugpl"
         ${PAPILOLIB_TESTS}

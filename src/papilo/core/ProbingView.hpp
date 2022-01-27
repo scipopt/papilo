@@ -76,6 +76,12 @@ class ProbingView
       this->minintdomred = value;
    }
 
+   const Problem<REAL>&
+   getProblem()
+   {
+      return problem;
+   }
+
    void
    setMinContDomRed( const REAL& value )
    {
@@ -519,6 +525,7 @@ ProbingView<REAL>::storeImplications()
       return;
 
    otherValueImplications.clear();
+   assert( changed_lbs.size() + changed_ubs.size() - 1 >= 0 );
    otherValueImplications.reserve( changed_lbs.size() + changed_ubs.size() -
                                    1 );
 
