@@ -42,7 +42,7 @@ class FixAndPropagate
    ProbingView<REAL> probing_view;
 
  public:
-   FixAndPropagate( Message msg_, Num<REAL> num_, Problem<REAL>& problem_, ProbingView<REAL> view_ )
+   FixAndPropagate( Message msg_, Num<REAL> num_, ProbingView<REAL> view_ )
        : msg( msg_ ), num( num_ ), probing_view( view_ )
    {
    }

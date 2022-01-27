@@ -38,6 +38,8 @@ modify_problem( Problem<double>& problem );
 void
 invert( const double* pDouble, double* result, int length );
 
+void
+print_solution( const Message& msg, const Vec<double>& primal_heur_sol );
 int
 main( int argc, char* argv[] )
 {
@@ -96,6 +98,19 @@ main( int argc, char* argv[] )
       break;
    }
 
+   if( problem.getNCols() == 0){
+      msg.info("Problem vanished during presolving\n");
+      Solution<double> original_solution{};
+      Solution<double> reduced_solution{ };
+      Postsolve<double> postsolve{ msg, num };
+
+      postsolve.undo( reduced_solution, original_solution, result.postsolve );
+
+      print_solution(msg, original_solution.primal);
+
+      return 0;
+   }
+
 
    Vec<double> primal_heur_sol{};
    primal_heur_sol.reserve( problem.getNCols() );
@@ -149,31 +164,34 @@ main( int argc, char* argv[] )
           reformulated.getConstraintMatrix().getLeftHandSides(),
           reformulated.getVariableDomains(), pi, min_value.get() );
    }
-   msg.info( "Primal heuristic solution:\n" );
-   for( int i = 0; i < problem.getNCols(); i++ )
-      msg.info( "   x[{}] = {}\n", i, primal_heur_sol[i] );
+   print_solution( msg, primal_heur_sol );
 
    // we continue with the presolved problem since the columns are the same
    problem.recomputeAllActivities();
 
    ProbingView<double> probing_view{ problem, num };
-   FixAndPropagate<double> fixAndPropagate{ msg, num };
-   Solution<double> sol = fixAndPropagate.fix_and_propagate(
-       problem, probing_view, primal_heur_sol );
+   FixAndPropagate<double> fixAndPropagate{ msg, num, probing_view };
+   Vec<double> int_solution{primal_heur_sol};
+   fixAndPropagate.fix_and_propagate( primal_heur_sol, int_solution );
 
    Solution<double> original_solution{};
-   Solution<double> reduced_solution{ primal_heur_sol };
-   primal_heur_sol.reserve( problem.getNCols() );
+   Solution<double> reduced_solution{ int_solution };
    Postsolve<double> postsolve{ msg, num };
    msg.info( "\n" );
 
-   postsolve.undo( sol, original_solution, result.postsolve );
+   postsolve.undo( reduced_solution, original_solution, result.postsolve );
 
-   msg.info( "Solution\n" );
-   for( int i = 0; i < original_solution.primal.size(); i++ )
-      msg.info( "   x[{}] = {}\n", i, original_solution.primal[i] );
+   print_solution(msg, original_solution.primal);
 
    return 0;
+}
+
+void
+print_solution( const Message& msg, const Vec<double>& sol )
+{
+   msg.info( "Primal solution:\n" );
+   for( int i = 0; i < sol.size(); i++ )
+      msg.info( "   x[{}] = {}\n", i, sol[i] );
 }
 
 Problem<double>
