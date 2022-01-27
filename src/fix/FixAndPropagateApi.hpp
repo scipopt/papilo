@@ -65,7 +65,7 @@ setup( const char *filename , int& result )
 }
 
 void
-free( void* problem_ptr )
+delete_problem_instance( void* problem_ptr )
 {
    auto problem = (Problem<double>*)( problem_ptr );
 //   delete problem;
