@@ -28,7 +28,7 @@ TEST_CASE( "fix-and-propagate-api", "[fix]" )
 {
    int result = 1;
    auto problem_ptr =
-       setup( "/home/alexander/git_repositories/papilo/test/instances/test.mps",
+       setup( "../../../papilo/test/instances/test.mps",
               result );
    assert( result == 0 );
    int n_cols = 3;
