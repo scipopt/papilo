@@ -83,6 +83,7 @@ main( int argc, char* argv[] )
    Presolve<double> presolve{};
    auto result = presolve.apply( problem, false );
 
+   // TODO: add a check if presolve solved to optimality
    switch( result.status )
    {
    case papilo::PresolveStatus::kUnbounded:
@@ -100,7 +101,7 @@ main( int argc, char* argv[] )
    primal_heur_sol.reserve( problem.getNCols() );
    {
 
-      VolumeAlgorithm<double> algorithm{ {},  {},   0.5,  0.1,  1, 0.0005, 2,
+      VolumeAlgorithm<double> algorithm{ {}, {}, 0.05, 0.1, 0.2, 0.0005, 2,
                                          1.1, 0.66, 0.02, 0.01, 2, 20 };
 
       Problem<double> reformulated = modify_problem( problem );

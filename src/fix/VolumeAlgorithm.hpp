@@ -106,6 +106,7 @@ class VolumeAlgorithm
       // We start with a vector π̄ and solve (6) to obtain x̄ and z̄.
       REAL z_bar = create_problem_6_and_solve_it( c, A, b, domains, pi, x_t );
       Vec<REAL> x_bar( x_t );
+      REAL z_bar_old( z_bar );
 
       do
       {
@@ -149,6 +150,13 @@ class VolumeAlgorithm
          update_f( improvement_indicator, v_t, residual_t,
                    weak_improvement_iter_counter, non_improvement_iter_counter
                    );
+
+         // Update z_bar_old if needed
+         if( counter % 100 == 0 )
+         {
+            update_alpha_max( z_bar, z_bar_old );
+            z_bar_old = z_bar;
+         }
 
          // Let t ← t + 1 and go to Step 1.
          counter = counter + 1;
@@ -241,7 +249,6 @@ class VolumeAlgorithm
    void
    update_alpha( const Vec<REAL>& residual_t, const Vec<REAL>& residual_bar )
    {
-      // TODO: introduce some logic for varying alpha_max
       // alpha_opt = minimizer of || alpha * residual_t + ( 1 - alpha ) *
       //                               residual_bar ||
       REAL t_t_prod = op.multi( residual_t, residual_t );
@@ -301,6 +308,15 @@ class VolumeAlgorithm
          f = f_decr_factor * f;
 //         msg.info( "   decreased f: {}\n", f );
       }
+   }
+
+   void
+   update_alpha_max( const REAL z_bar, const REAL z_bar_old )
+   {
+      // TODO: change 1.01, 1e-5, and 2.0 as global params?
+      if( num.isLT( z_bar, 1.01 * z_bar_old ) &&
+            num.isGE( alpha_max, REAL{ 1e-5 } ) )
+         alpha_max = alpha_max / 2.0;
    }
 };
 
