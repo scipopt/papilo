@@ -1,12 +1,7 @@
-#include "papilo/core/Objective.hpp"
-#include "papilo/core/Presolve.hpp"
 #include "papilo/core/ProbingView.hpp"
 
-#include "papilo/io/MpsParser.hpp"
 #include <cassert>
-#include <fstream>
 #include <random>
-#include <string>
 
 using namespace papilo;
 
@@ -25,8 +20,7 @@ class RandomRoundingStrategy : public RoundingStrategy<REAL>
 
    const Num<REAL> num;
 
-   typedef std::mt19937
-       MyRNG; // the Mersenne Twister with a popular choice of parameters
+   typedef std::mt19937 MyRNG;
    uint32_t seed;
 
    MyRNG random_generator;
@@ -35,14 +29,14 @@ class RandomRoundingStrategy : public RoundingStrategy<REAL>
    RandomRoundingStrategy( uint32_t seed_, Num<REAL> num_ )
        : seed( seed_ ), num( num_ )
    {
+      random_generator.seed( seed );
    }
 
-   virtual Fixing<REAL>
+   Fixing<REAL>
    select_diving_variable( const Vec<REAL>& cont_solution,
                            const ProbingView<REAL>& view ) override
    {
       // TODO: this does not work since fixed variable could be obtained
-      random_generator.seed( seed );
 
       Vec<int> remaining_unfixed_cols{};
       for( int i = 0; i < cont_solution.size(); i++ )
@@ -78,7 +72,7 @@ class FractionalRoundingStrategy : public RoundingStrategy<REAL>
  public:
    FractionalRoundingStrategy( Num<REAL> num_ ) : num( num_ ) {}
 
-   virtual Fixing<REAL>
+   Fixing<REAL>
    select_diving_variable( const Vec<REAL>& cont_solution,
                            const ProbingView<REAL>& view ) override
    {

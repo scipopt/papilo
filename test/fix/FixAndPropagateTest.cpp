@@ -22,6 +22,8 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 #include "fix/FixAndPropagate.hpp"
+//#include "fix/strategy/RoundingStrategy.hpp"
+#include "fix/strategy/FarkasStrategy.hpp"
 #include "catch/catch.hpp"
 #include "papilo/core/ProbingView.hpp"
 #include "papilo/core/Problem.hpp"
@@ -82,6 +84,34 @@ TEST_CASE( "fix-and-propagate-random", "[fix]" )
    assert( res[0] == 0 );
    assert( res[1] == 1 );
    assert( res[2] == 1 );
+}
+
+
+TEST_CASE( "fix-and-propagate-random-farkas", "[fix]" )
+{
+   Problem<double> problem = setupProblemForFixAndPropagation();
+
+   problem.recomputeAllActivities();
+
+   Vec<double> primal_solution;
+   for( int i = 0; i < problem.getNCols(); i++ )
+   {
+      double random_number = ( 1.0 + i ) / 10.0;
+      primal_solution.push_back( random_number );
+   }
+   Vec<double> res{ primal_solution };
+
+   ProbingView<double> view{ problem, {} };
+   FixAndPropagate<double> fixAndPropagate{ {}, {}, problem, view };
+   FarkasStrategy<double> strategy{ 0, {} };
+
+   bool success =
+       fixAndPropagate.fix_and_propagate( primal_solution, res, strategy );
+
+   assert( success );
+   assert( res[0] == 1 );
+   assert( res[1] == 1 );
+   assert( res[2] == 0 );
 }
 
 Problem<double>

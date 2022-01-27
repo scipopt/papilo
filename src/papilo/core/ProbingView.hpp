@@ -76,10 +76,10 @@ class ProbingView
       this->minintdomred = value;
    }
 
-   const Problem<REAL>&
-   getProblem()
+   Vec<REAL>
+   get_obj() const
    {
-      return problem;
+      return problem.getObjective().coefficients;
    }
 
    void
