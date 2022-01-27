@@ -31,7 +31,7 @@
 using namespace papilo;
 
 void*
-setup( const char* filename, int& result )
+setup( const char* filename, int* result )
 {
 
    std::string filename_as_string( filename );
@@ -42,10 +42,10 @@ setup( const char* filename, int& result )
    if( !prob )
    {
       fmt::print( "error loading problem {}\n", filename );
-      result = -1;
+      *result = -1;
       return nullptr;
    }
-   result = 0;
+   *result = 0;
    auto problem = new Problem<double>( prob.get() );
    problem->recomputeAllActivities();
    return problem;

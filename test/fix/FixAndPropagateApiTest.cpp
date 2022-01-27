@@ -29,7 +29,7 @@ TEST_CASE( "fix-and-propagate-api", "[fix]" )
    int result = 1;
    auto problem_ptr =
        setup( "../../../papilo/test/instances/test.mps",
-              result );
+              &result );
    assert( result == 0 );
    int n_cols = 3;
    auto primal_solution = new double[n_cols];
