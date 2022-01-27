@@ -78,7 +78,7 @@ call_algorithm( void* problem_ptr, double* cont_solution, double* result,
    //   auto f = (FixAndPropagate<double>*)( fix_ );
    auto problem = (Problem<double>*)( problem_ptr );
    ProbingView<double> view{ *problem, {} };
-   FixAndPropagate<double> f{ {}, {}, *problem, view };
+   FixAndPropagate<double> f{ {}, {}, view };
    Vec<double> sol( cont_solution, cont_solution + n_cols );
    Vec<double> res( result, result + n_cols );
 

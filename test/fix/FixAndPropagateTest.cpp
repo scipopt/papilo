@@ -45,7 +45,7 @@ TEST_CASE( "fix-and-propagate", "[fix]" )
    Vec<double> res{ primal_solution };
 
    ProbingView<double> view{ problem, {}};
-   FixAndPropagate<double> fixAndPropagate{ {}, {}, problem, view };
+   FixAndPropagate<double> fixAndPropagate{ {}, {}, view };
    bool success = fixAndPropagate.fix_and_propagate( primal_solution, res );
 
    assert( success );
