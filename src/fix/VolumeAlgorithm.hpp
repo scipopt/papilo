@@ -238,10 +238,11 @@ class VolumeAlgorithm
    void
    update_best_bound_on_obj( const REAL z_bar, REAL& best_bound_on_obj )
    {
-      // TODO: shall we make 0.95 and 1.05 global params similar to f_min?
-      if( num.isGE( z_bar, 0.95 * best_bound_on_obj ) )
+      // TODO: shall we make 0.05 a global param similar to f_min?
+      if( num.isGE( z_bar, best_bound_on_obj - abs( best_bound_on_obj ) * 0.05 ) )
       {
-         best_bound_on_obj = 1.05 * z_bar;
+         best_bound_on_obj = num.max( best_bound_on_obj, z_bar + abs( z_bar ) *
+               0.05 );
 //         msg.info( "   increased best bound: {}\n", best_bound_on_obj );
       }
    }
