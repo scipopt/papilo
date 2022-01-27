@@ -46,33 +46,6 @@ class FixAndPropagate
        : msg( msg_ ), num( num_ ), probing_view( view_ )
    {
    }
-   //
-   //   void
-   //   set_probing_view(ProbingView<REAL> value)
-   //   {
-   //      probing_view = value;
-   //   }
-
-   //   bool
-   //   init( const std::string& filename )
-   //   {
-   //      boost::optional<Problem<double>> prob;
-   //      {
-   //         prob = MpsParser<double>::loadProblem( filename );
-   //      }
-   //      if( !prob )
-   //      {
-   //         fmt::print( "error loading problem {}\n", filename );
-   //         return false;
-   //      }
-   //      problem = prob.get();
-   //      problem.recomputeAllActivities();
-   //
-   //      set_probing_view({ problem, num });
-   //      // do a trivial presolving step to generate activities
-   //
-   //      return true;
-   //   }
 
    bool
    fix_and_propagate( const Vec<REAL>& cont_solution, Vec<REAL>& result )
