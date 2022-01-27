@@ -115,8 +115,6 @@ class FixAndPropagate
          {
             // TODO: store objective value and solution
             create_solution( result );
-            msg.info( "found solution {}",
-                      probing_view.getProblem().computeSolObjective( result ) );
             return true;
          }
       }
