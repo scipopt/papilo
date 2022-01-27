@@ -197,6 +197,7 @@ set(unit_tests
 
         "vector-multiplication"
         "fix-and-propagate"
+        "fix-and-propagate-random"
 #        "fix-and-propagate-api"
 
         "integration-test-for-flugpl"

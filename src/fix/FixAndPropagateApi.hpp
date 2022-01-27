@@ -82,7 +82,8 @@ call_algorithm( void* problem_ptr, double* cont_solution, double* result,
    Vec<double> sol( cont_solution, cont_solution + n_cols );
    Vec<double> res( result, result + n_cols );
 
-   bool is_infeasible = f.fix_and_propagate( sol, res );
+   FractionalRoundingStrategy<double> strategy{{}};
+   bool is_infeasible = f.fix_and_propagate( sol, res, strategy );
    result = &res[0];
    return is_infeasible;
 }

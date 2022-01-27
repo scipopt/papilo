@@ -399,7 +399,9 @@ install(FILES
 
 install(FILES
         ${PROJECT_SOURCE_DIR}/src/fix/FixAndPropagate.hpp
-        ${PROJECT_SOURCE_DIR}/src/fix/VectorMultiplication.hpp.hpp
+        ${PROJECT_SOURCE_DIR}/src/fix/VectorMultiplication.hpp
+        ${PROJECT_SOURCE_DIR}/src/fix/strategy/RoundingStrategy.hpp
+        ${PROJECT_SOURCE_DIR}/src/fix/FixAndPropagateApi.hpp
         ${PROJECT_SOURCE_DIR}/src/StartFixAndPropagate.cpp
         DESTINATION include/fix)
 

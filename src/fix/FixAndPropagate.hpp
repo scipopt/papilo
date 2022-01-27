@@ -25,6 +25,7 @@
 #include "papilo/core/Presolve.hpp"
 #include "papilo/core/ProbingView.hpp"
 
+#include "fix/strategy/RoundingStrategy.hpp"
 #include "papilo/io/MpsParser.hpp"
 #include <cassert>
 #include <fstream>
@@ -42,13 +43,15 @@ class FixAndPropagate
    ProbingView<REAL> probing_view;
 
  public:
-   FixAndPropagate( Message msg_, Num<REAL> num_, Problem<REAL>& problem_, ProbingView<REAL> view_ )
+   FixAndPropagate( Message msg_, Num<REAL> num_, Problem<REAL>& problem_,
+                    ProbingView<REAL> view_ )
        : msg( msg_ ), num( num_ ), probing_view( view_ )
    {
    }
 
    bool
-   fix_and_propagate( const Vec<REAL>& cont_solution, Vec<REAL>& result )
+   fix_and_propagate( const Vec<REAL>& cont_solution, Vec<REAL>& result,
+                      RoundingStrategy<REAL>& strategy )
    {
       Vec<Fixing<REAL>> fixings{};
       int infeasible_var = -1;
@@ -66,7 +69,7 @@ class FixAndPropagate
             // immediately
          }
 
-         propagate_to_leaf_or_infeasibility( cont_solution );
+         propagate_to_leaf_or_infeasibility( cont_solution, strategy );
 
          if( probing_view.isInfeasible() )
          {
@@ -113,11 +116,12 @@ class FixAndPropagate
    }
 
    void
-   propagate_to_leaf_or_infeasibility( Vec<REAL> cont_solution )
+   propagate_to_leaf_or_infeasibility( Vec<REAL> cont_solution,
+                                       RoundingStrategy<REAL>& strategy )
    {
       while( true )
       {
-         Fixing<REAL> fixing = select_diving_variable( cont_solution );
+         Fixing<REAL> fixing = strategy.select_diving_variable( cont_solution, probing_view );
          // dive until all vars are fixed (and returned fixing is invalid)
          if( fixing.is_invalid() )
             return;
@@ -145,42 +149,5 @@ class FixAndPropagate
             return;
          }
       }
-   }
-
-   Fixing<REAL>
-   select_diving_variable( Vec<REAL> cont_solution )
-   {
-
-      // this is currently fractional diving
-      REAL value = -1;
-      int variable = -1;
-      REAL score = -1;
-
-      for( int i = 0; i < cont_solution.size(); i++ )
-      {
-         REAL frac = cont_solution[i] - floor( cont_solution[i] );
-         if( frac == 0 || num.isEq( probing_view.getProbingUpperBounds()[i],
-                                    probing_view.getProbingLowerBounds()[i] ) )
-            continue;
-         else if( frac > 0.5 )
-         {
-            if( variable == -1 || 1 - frac > score )
-            {
-               score = 1 - frac;
-               variable = i;
-               value = ceil( cont_solution[i] );
-            }
-         }
-         else
-         {
-            if( variable == -1 || frac > score )
-            {
-               score = frac;
-               variable = i;
-               value = floor( cont_solution[i] );
-            }
-         }
-      }
-      return { variable, value };
    }
 };

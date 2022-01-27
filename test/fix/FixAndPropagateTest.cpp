@@ -23,9 +23,9 @@
 
 #include "fix/FixAndPropagate.hpp"
 #include "catch/catch.hpp"
+#include "papilo/core/ProbingView.hpp"
 #include "papilo/core/Problem.hpp"
 #include "papilo/core/ProblemBuilder.hpp"
-#include "papilo/core/ProbingView.hpp"
 
 Problem<double>
 setupProblemForFixAndPropagation();
@@ -44,14 +44,44 @@ TEST_CASE( "fix-and-propagate", "[fix]" )
    }
    Vec<double> res{ primal_solution };
 
-   ProbingView<double> view{ problem, {}};
+   ProbingView<double> view{ problem, {} };
    FixAndPropagate<double> fixAndPropagate{ {}, {}, problem, view };
-   bool success = fixAndPropagate.fix_and_propagate( primal_solution, res );
+   FractionalRoundingStrategy<double> strategy{ {} };
+
+   bool success =
+       fixAndPropagate.fix_and_propagate( primal_solution, res, strategy );
 
    assert( success );
    assert( res[0] == 1 );
    assert( res[1] == 1 );
    assert( res[2] == 0 );
+}
+
+TEST_CASE( "fix-and-propagate-random", "[fix]" )
+{
+   Problem<double> problem = setupProblemForFixAndPropagation();
+
+   problem.recomputeAllActivities();
+
+   Vec<double> primal_solution;
+   for( int i = 0; i < problem.getNCols(); i++ )
+   {
+      double random_number = ( 1.0 + i ) / 10.0;
+      primal_solution.push_back( random_number );
+   }
+   Vec<double> res{ primal_solution };
+
+   ProbingView<double> view{ problem, {} };
+   FixAndPropagate<double> fixAndPropagate{ {}, {}, problem, view };
+   RandomRoundingStrategy<double> strategy{ 0, {} };
+
+   bool success =
+       fixAndPropagate.fix_and_propagate( primal_solution, res, strategy );
+
+   assert( success );
+   assert( res[0] == 0 );
+   assert( res[1] == 1 );
+   assert( res[2] == 1 );
 }
 
 Problem<double>
