@@ -259,9 +259,17 @@ class VolumeAlgorithm
 
       REAL alpha_opt = ( bar_bar_prod - t_bar_prod ) /
                        ( t_t_prod + bar_bar_prod - 2.0 * t_bar_prod );
+      if( num.isLT( alpha_opt, alpha_max / 10.0 ) )
+         alpha = alpha_max / 10.0;
+      else if( num.isGT( alpha_opt, alpha_max ) )
+         alpha = alpha_max;
+      else
+         alpha = alpha_opt;
+      /*
       alpha = num.isLT( alpha_opt, REAL{ 0.0 } )
                   ? alpha_max / 10.0
                   : num.min( alpha_opt, alpha_max );
+      */
       msg.info( "   alpha_opt: {},\t alpha: {}\n", alpha_opt, alpha );
    }
 
