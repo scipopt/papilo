@@ -31,10 +31,10 @@
 using namespace papilo;
 
 void*
-setup( const char *filename , int& result )
+setup( const char* filename, int& result )
 {
 
-   std::string filename_as_string (filename);
+   std::string filename_as_string( filename );
    boost::optional<Problem<double>> prob;
    {
       prob = MpsParser<double>::loadProblem( filename_as_string );
@@ -46,7 +46,7 @@ setup( const char *filename , int& result )
       return nullptr;
    }
    result = 0;
-   Problem<double>* problem = new Problem<double>(prob.get());
+   Problem<double>* problem = new Problem<double>( prob.get() );
    problem->recomputeAllActivities();
    return problem;
    //   problem.recomputeAllActivities();
@@ -68,7 +68,7 @@ void
 delete_problem_instance( void* problem_ptr )
 {
    auto problem = (Problem<double>*)( problem_ptr );
-//   delete problem;
+   delete problem;
 }
 
 bool
