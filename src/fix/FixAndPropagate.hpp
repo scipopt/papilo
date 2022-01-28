@@ -21,6 +21,9 @@
 /*                                                                           */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
+#ifndef FIX_FIX_AND_PROPAGATE_HPP
+#define FIX_FIX_AND_PROPAGATE_HPP
+
 #include "papilo/core/Objective.hpp"
 #include "papilo/core/Presolve.hpp"
 #include "papilo/core/ProbingView.hpp"
@@ -151,3 +154,5 @@ class FixAndPropagate
       }
    }
 };
+
+#endif

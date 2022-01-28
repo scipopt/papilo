@@ -196,8 +196,9 @@ set(unit_tests
         "failed-path-sparsify"
 
         "vector-multiplication"
-        "fix-and-propagate"
+        "fix-and-propagate-farkas"
         "fix-and-propagate-random"
+        "fix-and-propagate-frac"
 #        "fix-and-propagate-api"
 
         "integration-test-for-flugpl"

@@ -21,7 +21,9 @@
 /*                                                                           */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
+
 #include "fix/FixAndPropagate.hpp"
+#include "fix/strategy/FractionalRoundingStrategy.hpp"
 
 #include "papilo/io/MpsParser.hpp"
 #include <cassert>

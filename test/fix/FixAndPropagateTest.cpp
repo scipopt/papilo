@@ -28,11 +28,12 @@
 #include "papilo/core/ProbingView.hpp"
 #include "papilo/core/Problem.hpp"
 #include "papilo/core/ProblemBuilder.hpp"
+#include "fix/strategy/FractionalRoundingStrategy.hpp"
 
 Problem<double>
 setupProblemForFixAndPropagation();
 
-TEST_CASE( "fix-and-propagate", "[fix]" )
+TEST_CASE( "fix-and-propagate-frac", "[fix]" )
 {
    Problem<double> problem = setupProblemForFixAndPropagation();
 
@@ -87,7 +88,7 @@ TEST_CASE( "fix-and-propagate-random", "[fix]" )
 }
 
 
-TEST_CASE( "fix-and-propagate-random-farkas", "[fix]" )
+TEST_CASE( "fix-and-propagate-farkas", "[fix]" )
 {
    Problem<double> problem = setupProblemForFixAndPropagation();
 
