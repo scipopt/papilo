@@ -196,6 +196,7 @@ set(unit_tests
         "failed-path-sparsify"
 
         "vector-multiplication"
+        "fix-and-propagate-int"
         "fix-and-propagate-farkas"
         "fix-and-propagate-random"
         "fix-and-propagate-frac"
