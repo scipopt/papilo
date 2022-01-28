@@ -109,7 +109,7 @@ class FixAndPropagate
                    fixing.get_value() );
 
          probing_view.setProbingColumn( fixing.get_column_index(),
-                                        fixing.get_value() == 1 );
+                                        fixing.get_value() );
          bool infeasibility_detected = perform_probing_step();
          if( infeasibility_detected )
             return;
@@ -127,7 +127,7 @@ class FixAndPropagate
          return true;
       }
       probing_view.propagateDomains();
-      probing_view.storeImplications();
+//      probing_view.storeImplications();
       if( probing_view.isInfeasible() )
       {
          msg.info( "propagation is infeasible row: {} col {} \n",

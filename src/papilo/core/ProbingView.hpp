@@ -92,19 +92,19 @@ class ProbingView
    reset();
 
    void
-   setProbingColumn( int col, bool value )
+   setProbingColumn( int col, REAL value )
    {
       // remember probing column and probed value
       probingCol = col;
       probingValue = value;
-      const Fixing<REAL>& fixing = { col, value ? 1.0 : 0.0 };
+      const Fixing<REAL>& fixing = { col, value };
       fixings.push_back( fixing );
 
       // fix upper/lower bound of probed column
-      if( value )
-         changeLb( col, 1.0 );
-      else
-         changeUb( col, 0.0 );
+      if( !num.isEq(probing_lower_bounds[col], value)  )
+         changeLb( col, value );
+      if( !num.isEq(probing_upper_bounds[col], value))
+         changeUb( col, value );
    }
 
    Vec<Fixing<REAL>>

@@ -88,6 +88,38 @@ TEST_CASE( "fix-and-propagate-int", "[fix]" )
    assert( res[3] == 1 );
 }
 
+TEST_CASE( "fix-and-propagate-no-cont-solution", "[fix]" )
+{
+   Problem<double> problem = setupProblemForFixAndPropagation();
+
+   problem.getUpperBounds()[0] = 3;
+   problem.getConstraintMatrix().getRightHandSides()[0] = 4;
+   problem.getConstraintMatrix().getLeftHandSides()[0] = 4;
+
+   problem.recomputeAllActivities();
+
+   Vec<double> primal_solution;
+   for( int i = 0; i < problem.getNCols(); i++ )
+   {
+      double random_number = ( 1.0 + i ) / 10.0;
+      primal_solution.push_back( random_number );
+   }
+   primal_solution[0] = 2.6;
+   Vec<double> res{ primal_solution };
+
+   FixAndPropagate<double> fixAndPropagate{ {}, {}, problem, {problem, {}}  };
+   FractionalRoundingStrategy<double> strategy{ {} };
+
+   bool success =
+       fixAndPropagate.fix_and_propagate( primal_solution, res, strategy );
+
+   assert( success );
+   assert( res[0] == 3 );
+   assert( res[1] == 1 );
+   assert( res[2] == 0 );
+   assert( res[3] == 0 );
+}
+
 TEST_CASE( "fix-and-propagate-random", "[fix]" )
 {
    Problem<double> problem = setupProblemForFixAndPropagation();
