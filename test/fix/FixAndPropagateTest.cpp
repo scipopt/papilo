@@ -23,12 +23,13 @@
 
 #include "fix/FixAndPropagate.hpp"
 //#include "fix/strategy/RoundingStrategy.hpp"
-#include "fix/strategy/FarkasStrategy.hpp"
+#include "fix/strategy/FarkasRoundingStrategy.hpp"
 #include "catch/catch.hpp"
 #include "papilo/core/ProbingView.hpp"
 #include "papilo/core/Problem.hpp"
 #include "papilo/core/ProblemBuilder.hpp"
 #include "fix/strategy/FractionalRoundingStrategy.hpp"
+#include "fix/strategy/RandomRoundingStrategy.hpp"
 
 Problem<double>
 setupProblemForFixAndPropagation();
@@ -104,7 +105,7 @@ TEST_CASE( "fix-and-propagate-farkas", "[fix]" )
 
    ProbingView<double> view{ problem, {} };
    FixAndPropagate<double> fixAndPropagate{ {}, {}, problem, view };
-   FarkasStrategy<double> strategy{ 0, {} };
+   FarkasRoundingStrategy<double> strategy{ 0, {} };
 
    bool success =
        fixAndPropagate.fix_and_propagate( primal_solution, res, strategy );
