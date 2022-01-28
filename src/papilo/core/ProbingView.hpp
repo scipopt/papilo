@@ -235,7 +235,7 @@ class ProbingView
    int col_causing_infeasibility = -1;
    int round;
    int probingCol;
-   bool probingValue;
+   REAL probingValue;
    Vec<Fixing<REAL>> fixings;
 
    // datastructures for storing result of probing on one value
@@ -268,7 +268,7 @@ ProbingView<REAL>::ProbingView( const Problem<REAL>& problem_,
    infeasible = false;
    amountofwork = 0;
    probingCol = -1;
-   probingValue = false;
+   probingValue = 0;
    otherValueInfeasible = false;
    minintdomred = num.getFeasTol() * 1000;
    mincontdomred = 0.3;
