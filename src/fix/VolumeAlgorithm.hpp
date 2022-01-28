@@ -261,8 +261,11 @@ class VolumeAlgorithm
 
       REAL bar_bar_prod = op.multi( residual_bar, residual_bar );
 
-      REAL alpha_opt = ( bar_bar_prod - t_bar_prod ) /
-                       ( t_t_prod + bar_bar_prod - 2.0 * t_bar_prod );
+      REAL alpha_opt = alpha_max;
+      if( num.isGT( t_t_prod + bar_bar_prod - 2.0 * t_bar_prod, REAL{ 0.0 } ) )
+         alpha_opt = ( bar_bar_prod - t_bar_prod ) /
+            ( t_t_prod + bar_bar_prod - 2.0 * t_bar_prod );
+
       if( num.isLT( alpha_opt, alpha_max / 10.0 ) )
          alpha = alpha_max / 10.0;
       else if( num.isGT( alpha_opt, alpha_max ) )
