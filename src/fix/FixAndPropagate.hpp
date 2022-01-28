@@ -75,7 +75,9 @@ class FixAndPropagate
                                               fixings[i].get_value() );
             probing_view.setProbingColumn(
                 last_fix.get_column_index(),
-                modify_value_due_to_backtrack( last_fix.get_value() ) );
+                modify_value_due_to_backtrack(
+                    last_fix.get_value(),
+                    cont_solution[last_fix.get_column_index()] ) );
             bool infeasible = perform_probing_step();
             if( infeasible )
                return false;
@@ -127,7 +129,7 @@ class FixAndPropagate
          return true;
       }
       probing_view.propagateDomains();
-//      probing_view.storeImplications();
+      //      probing_view.storeImplications();
       if( probing_view.isInfeasible() )
       {
          msg.info( "propagation is infeasible row: {} col {} \n",
@@ -138,11 +140,20 @@ class FixAndPropagate
       return false;
    }
 
-   double
-   modify_value_due_to_backtrack( double value )
+   // TODO fix this
+   REAL
+   modify_value_due_to_backtrack( REAL value, REAL solution_value )
    {
-      assert( value >= 0 || value <= 1 );
-      return value == 1 ? 0 : 1;
+      if( num.isGE( value, solution_value ) )
+      {
+         assert( num.feasFloor( solution_value ) == value - 1 );
+         return value - 1;
+      }
+      else
+      {
+         assert( num.feasCeil( solution_value ) == value + 1 );
+         return value + 1;
+      }
    }
 
    bool
