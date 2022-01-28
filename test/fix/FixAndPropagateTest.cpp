@@ -22,7 +22,7 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 #include "fix/FixAndPropagate.hpp"
-//#include "fix/strategy/RoundingStrategy.hpp"
+
 #include "fix/strategy/FarkasRoundingStrategy.hpp"
 #include "catch/catch.hpp"
 #include "papilo/core/ProbingView.hpp"
@@ -59,6 +59,35 @@ TEST_CASE( "fix-and-propagate-frac", "[fix]" )
    assert( res[0] == 1 );
    assert( res[1] == 1 );
    assert( res[2] == 0 );
+   assert( res[3] == 0 );
+}
+
+TEST_CASE( "fix-and-propagate-int", "[fix]" )
+{
+   Problem<double> problem = setupProblemForFixAndPropagation();
+
+   problem.recomputeAllActivities();
+
+   Vec<double> primal_solution;
+   for( int i = 0; i < problem.getNCols(); i++ )
+   {
+      double random_number = ( 2.0 + i ) / 10.0;
+      primal_solution.push_back( random_number );
+   }
+   primal_solution[3] = 1;
+   Vec<double> res{ primal_solution };
+
+   FixAndPropagate<double> fixAndPropagate{ {}, {}, problem, {problem, {}}  };
+   FractionalRoundingStrategy<double> strategy{ {} };
+
+   bool success =
+       fixAndPropagate.fix_and_propagate( primal_solution, res, strategy );
+
+   assert( success );
+   assert( res[0] == 1 );
+   assert( res[1] == 0 );
+   assert( res[2] == 0 );
+   assert( res[3] == 1 );
 }
 
 TEST_CASE( "fix-and-propagate-random", "[fix]" )
@@ -84,8 +113,9 @@ TEST_CASE( "fix-and-propagate-random", "[fix]" )
 
    assert( success );
    assert( res[0] == 0 );
-   assert( res[1] == 1 );
+   assert( res[1] == 0 );
    assert( res[2] == 1 );
+   assert( res[3] == 1 );
 }
 
 
@@ -114,23 +144,25 @@ TEST_CASE( "fix-and-propagate-farkas", "[fix]" )
    assert( res[0] == 1 );
    assert( res[1] == 1 );
    assert( res[2] == 0 );
+   assert( res[3] == 0 );
 }
 
 Problem<double>
 setupProblemForFixAndPropagation()
 {
-   Vec<double> coefficients{ 1.0, 1.0, 1.0 };
-   Vec<double> upperBounds{ 1.0, 1.0, 1.0 };
-   Vec<double> lowerBounds{ 0.0, 0.0, 0.0 };
-   Vec<uint8_t> isIntegral{ 1, 1, 1 };
+   Vec<double> coefficients{ 1.0, 2.0, 3.0, 4.0 };
+   Vec<double> upperBounds{ 1.0, 1.0, 1.0, 1.0 };
+   Vec<double> lowerBounds{ 0.0, 0.0, 0.0, 0.0 };
+   Vec<uint8_t> isIntegral{ 1, 1, 1, 1 };
 
    Vec<double> rhs{ 2.0 };
    Vec<std::string> rowNames{ "A1" };
-   Vec<std::string> columnNames{ "c1", "c2", "c3" };
+   Vec<std::string> columnNames{ "c1", "c2", "c3", "c4" };
    Vec<std::tuple<int, int, double>> entries{
        std::tuple<int, int, double>{ 0, 0, 1.0 },
        std::tuple<int, int, double>{ 0, 1, 1.0 },
        std::tuple<int, int, double>{ 0, 2, 1.0 },
+       std::tuple<int, int, double>{ 0, 3, 1.0 },
    };
 
    ProblemBuilder<double> pb;
