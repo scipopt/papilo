@@ -106,7 +106,7 @@ class VolumeAlgorithm
       // We start with a vector π̄ and solve (6) to obtain x̄ and z̄.
       REAL z_bar = create_problem_6_and_solve_it( c, A, b, domains, pi, x_t );
       Vec<REAL> x_bar( x_t );
-      REAL z_bar_old( z_bar );
+      REAL z_bar_old = z_bar;
 
       do
       {
@@ -171,6 +171,8 @@ class VolumeAlgorithm
    // 1. Minimization objective sense
    // 2. Variable lower bounds: x >= 0
    // 3. A constraint is either an = or >= type.
+   // 4. All non-free dual variables pi are >= 0 (i.e., no general bounds
+   //    such as lb_i <= pi_i <= ub_i).
    // TODO: Simplify this function further upon finalzing assumptions
    void
    modify_pi( const int n_rows_A, const ConstraintMatrix<REAL>& A, Vec<REAL>& pi )
@@ -180,6 +182,7 @@ class VolumeAlgorithm
          if( A.getRowFlags()[i].test( RowFlag::kRhsInf ) )
          {
             assert( !A.getRowFlags()[i].test( RowFlag::kLhsInf ) );
+            // TODO: Change following max if assumption 4 is invalid.
             pi[i] = num.max( pi[i], REAL{ 0.0 } );
          }
       }
@@ -307,6 +310,7 @@ class VolumeAlgorithm
          }
       }
 
+      // TODO: increase more for green iters over yellow iters?
       if( change_f >= 1 )
       {
          f = num.min( f_incr_factor * f, f_max );
@@ -322,8 +326,8 @@ class VolumeAlgorithm
    void
    update_alpha_max( const REAL z_bar, const REAL z_bar_old )
    {
-      // TODO: change 1.01, 1e-5, and 2.0 as global params?
-      if( num.isLT( z_bar, 1.01 * z_bar_old ) &&
+      // TODO: change 0.01, 1e-5, and 2.0 as global params?
+      if( num.isLT( z_bar, z_bar_old + 0.01 * abs( z_bar_old ) ) &&
             num.isGE( alpha_max, REAL{ 1e-5 } ) )
          alpha_max = alpha_max / 2.0;
    }
