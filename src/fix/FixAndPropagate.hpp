@@ -56,7 +56,6 @@ class FixAndPropagate
    fix_and_propagate( const Vec<REAL>& cont_solution, Vec<REAL>& result,
                       RoundingStrategy<REAL>& strategy )
    {
-
       while( true )
       {
          propagate_to_leaf_or_infeasibility( cont_solution, strategy );
@@ -68,18 +67,15 @@ class FixAndPropagate
             Vec<Fixing<REAL>> fixings = probing_view.get_fixings();
             assert( !fixings.empty() );
             Fixing<REAL> last_fix = fixings[fixings.size() - 1];
-            fixings[fixings.size() - 1] = {
-                last_fix.get_column_index(),
-                modify_value_due_to_backtrack( last_fix.get_value() ) };
 
             probing_view.reset();
             // TODO: maybe there is an more efficient implementation
-            if( !fixings.empty() )
-            {
-               for( auto& f : fixings )
-                  probing_view.setProbingColumn( f.get_column_index(),
-                                                 f.get_value() );
-            }
+            for( int i = 0; i < fixings.size() - 1; i++ )
+               probing_view.setProbingColumn( fixings[i].get_column_index(),
+                                              fixings[i].get_value() );
+            probing_view.setProbingColumn(
+                last_fix.get_column_index(),
+                modify_value_due_to_backtrack( last_fix.get_value() ) );
             bool infeasible = perform_probing_step();
             if( infeasible )
                return false;
@@ -163,7 +159,7 @@ class FixAndPropagate
             assert(
                 num.isEq( cont_solution[i], num.round( cont_solution[i] ) ) );
 
-            REAL value = 0;
+            REAL value;
             bool ge_lb = num.isGE( cont_solution[i], lowerBounds[i] );
             bool le_ub = num.isLE( cont_solution[i], upperBounds[i] );
             if( ge_lb && le_ub )
@@ -175,11 +171,8 @@ class FixAndPropagate
                assert( le_ub );
                value = lowerBounds[i];
             }
-            Fixing<REAL> fixing = { i, value };
             probing_view.setProbingColumn( i, value );
-            msg.info( "Fix integer var {} to {}\n", fixing.get_column_index(),
-                      fixing.get_value() );
-            probing_view.get_fixings().push_back( fixing );
+            msg.info( "Fix integer var {} to {}\n", i, value );
 
             bool infeasibility_detected = perform_probing_step();
             if( infeasibility_detected )
