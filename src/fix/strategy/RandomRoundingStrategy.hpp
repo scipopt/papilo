@@ -45,7 +45,7 @@ class RandomRoundingStrategy : public RoundingStrategy<REAL>
    }
 
    Fixing<REAL>
-   select_diving_variable( const Vec<REAL>& cont_solution,
+   select_rounding_variable( const Vec<REAL>& cont_solution,
                            const ProbingView<REAL>& view ) override
    {
       // TODO: this does not work since fixed variable could be obtained

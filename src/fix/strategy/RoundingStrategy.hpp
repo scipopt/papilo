@@ -36,7 +36,7 @@ class RoundingStrategy
 {
  public:
    virtual Fixing<REAL>
-   select_diving_variable( const Vec<REAL>& cont_solution,
+   select_rounding_variable( const Vec<REAL>& cont_solution,
                            const ProbingView<REAL>& view ) = 0;
 };
 

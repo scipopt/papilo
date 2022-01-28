@@ -21,12 +21,10 @@
 /*                                                                           */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-
 #ifndef FIX_FRACTIONAL_ROUNDING_STRATEGY_HPP
 #define FIX_FRACTIONAL_ROUNDING_STRATEGY_HPP
 
 #include "fix/strategy/RoundingStrategy.hpp"
-
 
 template <typename REAL>
 class FractionalRoundingStrategy : public RoundingStrategy<REAL>
@@ -38,14 +36,13 @@ class FractionalRoundingStrategy : public RoundingStrategy<REAL>
    FractionalRoundingStrategy( Num<REAL> num_ ) : num( num_ ) {}
 
    Fixing<REAL>
-   select_diving_variable( const Vec<REAL>& cont_solution,
+   select_rounding_variable( const Vec<REAL>& cont_solution,
                            const ProbingView<REAL>& view ) override
    {
-
-      // this is currently fractional diving
       REAL value = -1;
       int variable = -1;
       REAL score = -1;
+      auto obj = view.get_obj();
 
       for( int i = 0; i < cont_solution.size(); i++ )
       {
@@ -55,18 +52,20 @@ class FractionalRoundingStrategy : public RoundingStrategy<REAL>
             continue;
          else if( frac > 0.5 )
          {
-            if( variable == -1 || 1 - frac > score )
+            REAL current_score = (1 - frac) * obj[i];
+            if( variable == -1 || current_score > score )
             {
-               score = 1 - frac;
+               score = current_score;
                variable = i;
                value = ceil( cont_solution[i] );
             }
          }
          else
          {
-            if( variable == -1 || frac > score )
+            REAL current_score = frac * obj[i];
+            if( variable == -1 || current_score > score )
             {
-               score = frac;
+               score = current_score;
                variable = i;
                value = floor( cont_solution[i] );
             }

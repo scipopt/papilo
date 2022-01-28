@@ -50,7 +50,7 @@ class FarkasRoundingStrategy : public RoundingStrategy<REAL>
    }
 
    Fixing<REAL>
-   select_diving_variable( const Vec<REAL>& cont_solution,
+   select_rounding_variable( const Vec<REAL>& cont_solution,
                            const ProbingView<REAL>& view ) override
    {
       // this is currently fractional diving
@@ -58,7 +58,7 @@ class FarkasRoundingStrategy : public RoundingStrategy<REAL>
       int variable = -1;
       REAL score = -1;
       std::uniform_int_distribution<int> dist_rounding( 0, 1e5 );
-      const Vec<REAL>& obj = view.get_obj();
+      auto obj = view.get_obj();
 
       for( int i = 0; i < cont_solution.size(); i++ )
       {

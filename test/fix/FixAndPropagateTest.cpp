@@ -71,10 +71,8 @@ TEST_CASE( "fix-and-propagate-int", "[fix]" )
    Vec<double> primal_solution;
    for( int i = 0; i < problem.getNCols(); i++ )
    {
-      double random_number = ( 2.0 + i ) / 10.0;
-      primal_solution.push_back( random_number );
+      primal_solution.push_back( 0 );
    }
-   primal_solution[3] = 1;
    Vec<double> res{ primal_solution };
 
    FixAndPropagate<double> fixAndPropagate{ {}, {}, problem, {problem, {}}  };
@@ -84,9 +82,9 @@ TEST_CASE( "fix-and-propagate-int", "[fix]" )
        fixAndPropagate.fix_and_propagate( primal_solution, res, strategy );
 
    assert( success );
-   assert( res[0] == 1 );
+   assert( res[0] == 0 );
    assert( res[1] == 0 );
-   assert( res[2] == 0 );
+   assert( res[2] == 1 );
    assert( res[3] == 1 );
 }
 

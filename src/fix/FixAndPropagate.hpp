@@ -56,81 +56,68 @@ class FixAndPropagate
    fix_and_propagate( const Vec<REAL>& cont_solution, Vec<REAL>& result,
                       RoundingStrategy<REAL>& strategy )
    {
-      Vec<Fixing<REAL>> fixings{};
-      fixings.reserve( cont_solution.size() );
-      int infeasible_var = -1;
-
-      // fix first variables with integer value in the solution
-      for( int i = 0; i < cont_solution.size(); i++ )
-      {
-         if( num.isEq( cont_solution[i], num.round( cont_solution[i] ) ) )
-         {
-            Fixing<REAL> fixing = { i, cont_solution[i] };
-            probing_view.setProbingColumn( fixing.get_column_index(),
-                                           fixing.get_value() == 1 );
-            msg.info( "Fix integer var {} to {}\n", fixing.get_column_index(),
-                      fixing.get_value() );
-            bool infeasibility_detected = perform_probing_step();
-            if( infeasibility_detected )
-            {
-               probing_view.reset();
-               for( auto& f : fixings )
-                  probing_view.setProbingColumn( f.get_column_index(),
-                                                 f.get_value() );
-               fixing = { i, determine_value_for_failed_integer_solution(
-                                 cont_solution[i] ) };
-               msg.info( "Fix integer var {} to complementary {}\n", fixing.get_column_index(),
-                         fixing.get_value() );
-               probing_view.setProbingColumn( i, fixing.get_value() );
-               bool infeasibility_detected_again = perform_probing_step();
-               if( infeasibility_detected_again )
-                  return true;
-               fixings.push_back( fixing );
-            }
-            else
-            {
-               fixings.push_back( fixing );
-            }
-         }
-      }
 
       while( true )
       {
-         probing_view.reset();
-         // TODO: maybe there is an more efficient implementation
-         if( !fixings.empty() )
-         {
-            for( auto& fixing : fixings )
-               probing_view.setProbingColumn( fixing.get_column_index(),
-                                              fixing.get_value() );
-         }
-
          propagate_to_leaf_or_infeasibility( cont_solution, strategy );
 
          if( probing_view.isInfeasible() )
          {
             // TODO: store fixings since they code the conflict
 
-            fixings = probing_view.get_fixings();
+            Vec<Fixing<REAL>> fixings = probing_view.get_fixings();
             assert( !fixings.empty() );
-            Fixing<REAL> infeasible_fixing = fixings[fixings.size() - 1];
-            if( infeasible_var == infeasible_fixing.get_column_index() )
-               return false;
-            const Fixing<REAL>& fixing{ infeasible_fixing.get_column_index(),
-                                        modify_value_due_to_backtrack(
-                                            infeasible_fixing.get_value() ) };
+            Fixing<REAL> last_fix = fixings[fixings.size() - 1];
+            fixings[fixings.size() - 1] = {
+                last_fix.get_column_index(),
+                modify_value_due_to_backtrack( last_fix.get_value() ) };
 
-            infeasible_var = fixing.get_column_index();
-            fixings[fixings.size() - 1] = fixing;
+            probing_view.reset();
+            // TODO: maybe there is an more efficient implementation
+            if( !fixings.empty() )
+            {
+               for( auto& f : fixings )
+                  probing_view.setProbingColumn( f.get_column_index(),
+                                                 f.get_value() );
+            }
+            bool infeasible = perform_probing_step();
+            if( infeasible )
+               return false;
          }
          else
          {
+            if( !fix_remaining_integer_solutions( cont_solution ) )
+               return false;
             // TODO: store objective value and solution
             create_solution( result );
             return true;
          }
       }
       return false;
+   }
+
+ private:
+   void
+   propagate_to_leaf_or_infeasibility( Vec<REAL> cont_solution,
+                                       RoundingStrategy<REAL>& strategy )
+   {
+      while( true )
+      {
+         Fixing<REAL> fixing =
+             strategy.select_rounding_variable( cont_solution, probing_view );
+         // dive until all vars are fixed (and returned fixing is invalid)
+         if( fixing.is_invalid() )
+            return;
+
+         msg.info( "Fix var {} to {}\n", fixing.get_column_index(),
+                   fixing.get_value() );
+
+         probing_view.setProbingColumn( fixing.get_column_index(),
+                                        fixing.get_value() == 1 );
+         bool infeasibility_detected = perform_probing_step();
+         if( infeasibility_detected )
+            return;
+      }
    }
 
    bool
@@ -155,19 +142,51 @@ class FixAndPropagate
       return false;
    }
 
-   REAL
-   determine_value_for_failed_integer_solution( REAL value )
-   {
-      if( num.isZero( value ) )
-         return REAL{ 1 };
-      return REAL{ 0 };
-   }
-
- private:
    double
    modify_value_due_to_backtrack( double value )
    {
+      assert( value >= 0 || value <= 1 );
       return value == 1 ? 0 : 1;
+   }
+
+   bool
+   fix_remaining_integer_solutions( const Vec<REAL>& cont_solution )
+   {
+      for( int i = 0; i < cont_solution.size(); i++ )
+      {
+         auto lowerBounds = probing_view.getProbingLowerBounds();
+         auto upperBounds = probing_view.getProbingUpperBounds();
+         if( !num.isEq( upperBounds[i], lowerBounds[i] ) )
+         {
+            // only variable with integer value in the solution should be
+            // non fixed
+            assert(
+                num.isEq( cont_solution[i], num.round( cont_solution[i] ) ) );
+
+            REAL value = 0;
+            bool ge_lb = num.isGE( cont_solution[i], lowerBounds[i] );
+            bool le_ub = num.isLE( cont_solution[i], upperBounds[i] );
+            if( ge_lb && le_ub )
+               value = cont_solution[i];
+            else if( ge_lb )
+               value = upperBounds[i];
+            else
+            {
+               assert( le_ub );
+               value = lowerBounds[i];
+            }
+            Fixing<REAL> fixing = { i, value };
+            probing_view.setProbingColumn( i, value );
+            msg.info( "Fix integer var {} to {}\n", fixing.get_column_index(),
+                      fixing.get_value() );
+            probing_view.get_fixings().push_back( fixing );
+
+            bool infeasibility_detected = perform_probing_step();
+            if( infeasibility_detected )
+               return false;
+         }
+      }
+      return true;
    }
 
    void
@@ -178,29 +197,6 @@ class FixAndPropagate
          assert( probing_view.getProbingUpperBounds()[i] ==
                  probing_view.getProbingLowerBounds()[i] );
          result[i] = probing_view.getProbingUpperBounds()[i];
-      }
-   }
-
-   void
-   propagate_to_leaf_or_infeasibility( Vec<REAL> cont_solution,
-                                       RoundingStrategy<REAL>& strategy )
-   {
-      while( true )
-      {
-         Fixing<REAL> fixing =
-             strategy.select_diving_variable( cont_solution, probing_view );
-         // dive until all vars are fixed (and returned fixing is invalid)
-         if( fixing.is_invalid() )
-            return;
-
-         msg.info( "Fix var {} to {}\n", fixing.get_column_index(),
-                   fixing.get_value() );
-
-         probing_view.setProbingColumn( fixing.get_column_index(),
-                                        fixing.get_value() == 1 );
-         bool infeasibility_detected = perform_probing_step();
-         if( infeasibility_detected )
-            return;
       }
    }
 };
