@@ -110,11 +110,13 @@ class FixAndPropagate
          msg.info( "Fix var {} to {}\n", fixing.get_column_index(),
                    fixing.get_value() );
 
+         //TODO: check if rounded variable is valid
+
          probing_view.setProbingColumn( fixing.get_column_index(),
                                         fixing.get_value() );
          bool infeasibility_detected = perform_probing_step();
-         if( infeasibility_detected )
-            return;
+//         if( infeasibility_detected )
+//            return;
       }
    }
 
@@ -126,7 +128,7 @@ class FixAndPropagate
          msg.info( "changing bound of variable is infeasible row: {} col {} \n",
                    probing_view.get_row_causing_infeasibility(),
                    probing_view.get_col_causing_infeasibility() );
-         return true;
+//         return true;
       }
       probing_view.propagateDomains();
       //      probing_view.storeImplications();
