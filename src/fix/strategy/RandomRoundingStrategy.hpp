@@ -21,7 +21,7 @@
 /*                                                                           */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef FIX_RANDOMROUNDING_STRATEGY_HPP
+#ifndef FIX_RANDOM_ROUNDING_STRATEGY_HPP
 #define FIX_RANDOM_ROUNDING_STRATEGY_HPP
 
 #include "fix/strategy/RoundingStrategy.hpp"
@@ -75,4 +75,4 @@ class RandomRoundingStrategy : public RoundingStrategy<REAL>
    }
 };
 #include "RoundingStrategy.hpp"
-#endif
+#endif // define FIX_RANDOM_ROUNDING_STRATEGY_HPP
