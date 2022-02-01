@@ -103,10 +103,11 @@ class VolumeAlgorithm
       int weak_improvement_iter_counter = 0;
       int non_improvement_iter_counter = 0;
       Vec<REAL> v_t( b );
+      Vec<REAL> viol_t( b );
       Vec<REAL> x_t( c );
       Vec<REAL> pi_t( pi );
       Vec<REAL> pi_bar( pi );
-      udpate_pi( n_rows_A, A, pi_bar );
+      update_pi( n_rows_A, A, pi_bar );
       Vec<REAL> residual_t( b );
 
       // We start with a vector π̄ and solve (6) to obtain x̄ and z̄.
@@ -121,11 +122,12 @@ class VolumeAlgorithm
          // Compute v_t = b − A x_bar and π_t = pi_bar + sv_t for a step size s
          // given by (7).
          op.calc_b_minus_Ax( A, x_bar, b, v_t );
+         calc_violations( n_rows_A, A, pi_t, v_t, viol_t );
          update_best_bound_on_obj( z_bar, best_bound_on_obj );
-         REAL step_size =
-             f * ( best_bound_on_obj - z_bar ) / pow( op.l2_norm( v_t ), 2.0 );
+         REAL step_size = f * ( best_bound_on_obj - z_bar ) /
+                              pow( op.l2_norm( viol_t ), 2.0 );
 //         msg.info( "   Step size: {}\n", step_size );
-         op.calc_b_plus_sx( pi_bar, step_size, v_t, pi_t );
+         op.calc_b_plus_sx( pi_bar, step_size, viol_t, pi_t );
          update_pi( n_rows_A, A, pi_t );
 
          // Solve (6) with π_t , let x_t and z_t be the solutions obtained.
@@ -167,7 +169,7 @@ class VolumeAlgorithm
          // Let t ← t + 1 and go to Step 1.
          counter = counter + 1;
       }
-      while( stopping_criteria( v_t, n_rows_A, c, x_bar, z_bar ) );
+      while( stopping_criteria( viol_t, n_rows_A, c, x_bar, z_bar ) );
 
       return x_bar;
    }
@@ -184,7 +186,7 @@ class VolumeAlgorithm
          if( A.getRowFlags()[i].test( RowFlag::kRhsInf ) )
          {
             assert( !A.getRowFlags()[i].test( RowFlag::kLhsInf ) );
-            // TODO: add another assert for LB if assumption 1 is invalid.
+            // Note: add another assert for LB if assumption 1 is invalid.
          }
       }
    }
@@ -195,7 +197,7 @@ class VolumeAlgorithm
    // 3. A constraint is either an = or >= type.
    // 4. All non-free dual variables pi are >= 0 (i.e., no general bounds
    //    such as lb_i <= pi_i <= ub_i).
-   // TODO: Simplify this function further upon finalzing assumptions
+   // TODO: simplify this function further upon finalzing assumptions
    void
    update_pi( const int n_rows_A, const ConstraintMatrix<REAL>& A, Vec<REAL>& pi )
    {
@@ -203,7 +205,7 @@ class VolumeAlgorithm
       {
          if( A.getRowFlags()[i].test( RowFlag::kRhsInf ) )
          {
-            // TODO: Change following max if assumption 4 is invalid.
+            // Note: change following max if assumption 4 is invalid.
             pi[i] = num.max( pi[i], REAL{ 0.0 } );
          }
       }
@@ -257,6 +259,21 @@ class VolumeAlgorithm
 
 //      msg.info( "   opt_val: {}\n", obj_value.get() );
       return obj_value.get();
+   }
+
+   void
+   calc_violations( const int n_rows_A, const ConstraintMatrix<REAL>& A,
+                    const Vec<REAL>& pi, const Vec<REAL>& residual,
+                    Vec<REAL>& viol_residual )
+   {
+      viol_residual = residual;
+      for( int i = 0; i < n_rows_A; i++ )
+      {
+         // Note: isZero check would be different in case of non-zero LB on pi
+         if( A.getRowFlags()[i].test( RowFlag::kRhsInf ) &&
+             ( num.isLT( residual[i], REAL{ 0.0 } ) && num.isZero( pi[i] ) ) )
+            viol_residual[i] = 0;
+      }
    }
 
    void
@@ -314,7 +331,8 @@ class VolumeAlgorithm
 
       if( improvement_indicator )
       {
-         //  If d (= v_t . (b - A x_t)) >= 0, then increase f
+         // If d (= v_t . (b - A x_t)) >= 0, then increase f
+         // TODO: should this be different for ineq cons?
          if( num.isGE( op.multi( v_t, residual_t ), REAL{ 0.0 } ) )
             change_f = 2;
          else
@@ -337,7 +355,6 @@ class VolumeAlgorithm
          }
       }
 
-      // TODO: increase more for green iters over yellow iters?
       if( change_f == 2 )
       {
          f = num.min( f_strong_incr_factor * f, f_max );
