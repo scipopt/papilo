@@ -94,6 +94,8 @@ class VolumeAlgorithm
    {
       int n_rows_A = A.getNRows();
 
+      assert_pi( n_rows_A, A, pi );
+
       // Step 0
       // Set x_0 = x_bar, z_0 = z_bar, t = 1
       int counter = 1;
@@ -172,6 +174,22 @@ class VolumeAlgorithm
 
  private:
    // Assumptions:
+   // 1. Each pi_i is either free or >= 0.
+   void
+   assert_pi( const int n_rows_A, const ConstraintMatrix<REAL>& A,
+              const Vec<REAL>& pi )
+   {
+      for( int i = 0; i < n_rows_A; i++ )
+      {
+         if( A.getRowFlags()[i].test( RowFlag::kRhsInf ) )
+         {
+            assert( !A.getRowFlags()[i].test( RowFlag::kLhsInf ) );
+            // TODO: add another assert for LB if assumption 1 is invalid.
+         }
+      }
+   }
+
+   // Assumptions:
    // 1. Minimization objective sense
    // 2. Variable lower bounds: x >= 0
    // 3. A constraint is either an = or >= type.
@@ -185,7 +203,6 @@ class VolumeAlgorithm
       {
          if( A.getRowFlags()[i].test( RowFlag::kRhsInf ) )
          {
-            assert( !A.getRowFlags()[i].test( RowFlag::kLhsInf ) );
             // TODO: Change following max if assumption 4 is invalid.
             pi[i] = num.max( pi[i], REAL{ 0.0 } );
          }
