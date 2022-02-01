@@ -52,11 +52,38 @@ class FractionalRoundingStrategy : public RoundingStrategy<REAL>
              !view.is_integer_variable( i ) )
             continue;
 
-         //TODO: implement it more efficient
-         std::pair<bool, bool> has_locks =
-             view.has_locks(i);
-
+         // TODO: implement it more efficient
+         std::pair<bool, bool> has_locks = view.has_locks( i );
+         // may round down if now down locks
+         bool may_round_down = has_locks.second;
+         bool may_round_up = has_locks.first;
          REAL frac = cont_solution[i] - num.epsFloor( cont_solution[i] );
+
+         REAL new_val;
+         REAL gain;
+         //TODO prefer binaries
+         if( may_round_down && !may_round_up )
+         {
+            new_val = num.epsCeil(cont_solution[i]);
+            gain = obj * ( 1 - frac );
+         }
+         else if( !may_round_down && may_round_up )
+         {
+            new_val = num.epsFloor(cont_solution[i]);
+            gain = - obj * frac ;
+         }
+         else if( frac > 0.5)
+         {
+            assert( may_round_up == may_round_down );
+            new_val = num.epsCeil(cont_solution[i]);
+            gain = obj * ( 1 - frac );
+         }
+         else{
+            assert( may_round_up == may_round_down );
+            new_val = num.epsFloor(cont_solution[i]);
+            gain = - obj * frac ;
+         }
+
          assert( !num.isZero( frac ) );
          if( frac > 0.5 )
          {
