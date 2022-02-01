@@ -141,7 +141,10 @@ SimplifyInequalities<REAL>::computeGreatestCommonDivisor( REAL val1, REAL val2,
    // gcd for integer values
    if( isIntegral( val1 ) && isIntegral( val2 ) )
    {
-#if BOOST_VERSION_NUMBER_PATCH( BOOST_VERSION ) / 100 < 78
+#ifndef BOOST_VERSION_NUMBER_PATCH
+      return boost::gcd( static_cast<int64_t>( val1 ),
+                         static_cast<int64_t>( val2 ) );
+#elif BOOST_VERSION_NUMBER_PATCH( BOOST_VERSION ) / 100 < 78
       return boost::gcd( static_cast<int64_t>( val1 ),
                          static_cast<int64_t>( val2 ) );
 #else
@@ -166,7 +169,11 @@ SimplifyInequalities<REAL>::computeGreatestCommonDivisor( REAL val1, REAL val2,
 
    double multiplier = 600;
    if( isIntegral( multiplier * val1 ) && isIntegral( multiplier * val2 ) )
-#if BOOST_VERSION_NUMBER_PATCH( BOOST_VERSION ) / 100 < 78
+#ifndef BOOST_VERSION_NUMBER_PATCH
+      return boost::gcd( static_cast<int64_t>( val1 * multiplier ),
+                         static_cast<int64_t>( val2 * multiplier ) ) /
+             REAL{ multiplier };
+#elif BOOST_VERSION_NUMBER_PATCH( BOOST_VERSION ) / 100 < 78
       return boost::gcd( static_cast<int64_t>( val1 * multiplier ),
                          static_cast<int64_t>( val2 * multiplier ) ) /
              REAL{ multiplier };
