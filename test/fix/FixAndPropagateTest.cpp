@@ -34,61 +34,9 @@
 Problem<double>
 setupProblemForFixAndPropagation();
 
-TEST_CASE( "fix-and-propagate-frac", "[fix]" )
-{
-   Problem<double> problem = setupProblemForFixAndPropagation();
 
-   problem.recomputeAllActivities();
 
-   Vec<double> primal_solution;
-   for( int i = 0; i < problem.getNCols(); i++ )
-   {
-      double random_number = ( 1.0 + i ) / 10.0;
-      primal_solution.push_back( random_number );
-   }
-   Vec<double> res{ primal_solution };
-
-   ProbingView<double> view{ problem, {} };
-   FixAndPropagate<double> fixAndPropagate{ {}, {}, problem, view };
-   FractionalRoundingStrategy<double> strategy{ {} };
-
-   bool success =
-       fixAndPropagate.fix_and_propagate( primal_solution, res, strategy );
-
-   assert( success );
-   assert( res[0] == 1 );
-   assert( res[1] == 1 );
-   assert( res[2] == 0 );
-   assert( res[3] == 0 );
-}
-
-TEST_CASE( "fix-and-propagate-int", "[fix]" )
-{
-   Problem<double> problem = setupProblemForFixAndPropagation();
-
-   problem.recomputeAllActivities();
-
-   Vec<double> primal_solution;
-   for( int i = 0; i < problem.getNCols(); i++ )
-   {
-      primal_solution.push_back( 0 );
-   }
-   Vec<double> res{ primal_solution };
-
-   FixAndPropagate<double> fixAndPropagate{ {}, {}, problem, {problem, {}}  };
-   FractionalRoundingStrategy<double> strategy{ {} };
-
-   bool success =
-       fixAndPropagate.fix_and_propagate( primal_solution, res, strategy );
-
-   assert( success );
-   assert( res[0] == 0 );
-   assert( res[1] == 0 );
-   assert( res[2] == 1 );
-   assert( res[3] == 1 );
-}
-
-TEST_CASE( "fix-and-propagate-no-cont-solution", "[fix]" )
+TEST_CASE( "fix-and-propagate-integer-variable", "[fix]" )
 {
    Problem<double> problem = setupProblemForFixAndPropagation();
 
@@ -107,17 +55,100 @@ TEST_CASE( "fix-and-propagate-no-cont-solution", "[fix]" )
    primal_solution[0] = 2.6;
    Vec<double> res{ primal_solution };
 
-   FixAndPropagate<double> fixAndPropagate{ {}, {}, problem, {problem, {}}  };
+   FixAndPropagate<double> fixAndPropagate{ {}, {}, problem, {problem, {}}, true  };
    FractionalRoundingStrategy<double> strategy{ {} };
 
-   bool success =
+   bool infeasible =
        fixAndPropagate.fix_and_propagate( primal_solution, res, strategy );
 
-   assert( success );
+   assert( !infeasible );
    assert( res[0] == 3 );
    assert( res[1] == 1 );
    assert( res[2] == 0 );
    assert( res[3] == 0 );
+}
+
+
+TEST_CASE( "fix-and-propagate-all-integer-solutions", "[fix]" )
+{
+   Problem<double> problem = setupProblemForFixAndPropagation();
+
+   problem.recomputeAllActivities();
+
+   Vec<double> primal_solution;
+   for( int i = 0; i < problem.getNCols(); i++ )
+   {
+      primal_solution.push_back( 0 );
+   }
+   Vec<double> res{ primal_solution };
+
+   FixAndPropagate<double> fixAndPropagate{ {}, {}, problem, {problem, {}}, true  };
+   FractionalRoundingStrategy<double> strategy{ {} };
+
+   bool infeasible =
+       fixAndPropagate.fix_and_propagate( primal_solution, res, strategy );
+
+   assert( !infeasible );
+   assert( res[0] == 0 );
+   assert( res[1] == 0 );
+   assert( res[2] == 1 );
+   assert( res[3] == 1 );
+}
+
+TEST_CASE( "fix-and-propagate-frac-backtrack", "[fix]" )
+{
+   Problem<double> problem = setupProblemForFixAndPropagation();
+
+   problem.recomputeAllActivities();
+
+   Vec<double> primal_solution;
+   for( int i = 0; i < problem.getNCols(); i++ )
+   {
+      double random_number = ( 1.0 + i ) / 10.0;
+      primal_solution.push_back( random_number );
+   }
+   Vec<double> res{ primal_solution };
+
+   ProbingView<double> view{ problem, {} };
+   FixAndPropagate<double> fixAndPropagate{ {}, {}, problem, view, true };
+   FractionalRoundingStrategy<double> strategy{ {} };
+
+   bool infeasible =
+       fixAndPropagate.fix_and_propagate( primal_solution, res, strategy );
+
+   assert( !infeasible );
+   assert( res[0] == 1 );
+   assert( res[1] == 1 );
+   assert( res[2] == 0 );
+   assert( res[3] == 0 );
+}
+
+TEST_CASE( "fix-and-propagate-random-backtrack", "[fix]" )
+{
+   Problem<double> problem = setupProblemForFixAndPropagation();
+
+   problem.recomputeAllActivities();
+
+   Vec<double> primal_solution;
+   for( int i = 0; i < problem.getNCols(); i++ )
+   {
+      double random_number = ( 1.0 + i ) / 10.0;
+      primal_solution.push_back( random_number );
+   }
+   Vec<double> res{ primal_solution };
+
+   ProbingView<double> view{ problem, {} };
+   FixAndPropagate<double> fixAndPropagate{ {}, {}, problem, view, true };
+   RandomRoundingStrategy<double> strategy{ 0, {} };
+
+   bool infeasible =
+       fixAndPropagate.fix_and_propagate( primal_solution, res, strategy );
+
+   assert( !infeasible );
+   assert( res[0] == 0 );
+   assert( res[1] == 0 );
+   assert( res[2] == 1 );
+   assert( res[3] == 1 );
 }
 
 TEST_CASE( "fix-and-propagate-random", "[fix]" )
@@ -135,21 +166,21 @@ TEST_CASE( "fix-and-propagate-random", "[fix]" )
    Vec<double> res{ primal_solution };
 
    ProbingView<double> view{ problem, {} };
-   FixAndPropagate<double> fixAndPropagate{ {}, {}, problem, view };
+   FixAndPropagate<double> fixAndPropagate{ {}, {}, problem, view, false };
    RandomRoundingStrategy<double> strategy{ 0, {} };
 
-   bool success =
+   bool infeasible =
        fixAndPropagate.fix_and_propagate( primal_solution, res, strategy );
 
-   assert( success );
-   assert( res[0] == 0 );
-   assert( res[1] == 0 );
+   assert( infeasible );
+   assert( res[0] == 1 );
+   assert( res[1] == 1 );
    assert( res[2] == 1 );
    assert( res[3] == 1 );
 }
 
 
-TEST_CASE( "fix-and-propagate-farkas", "[fix]" )
+TEST_CASE( "fix-and-propagate-farkas-backtrack", "[fix]" )
 {
    Problem<double> problem = setupProblemForFixAndPropagation();
 
@@ -164,13 +195,13 @@ TEST_CASE( "fix-and-propagate-farkas", "[fix]" )
    Vec<double> res{ primal_solution };
 
    ProbingView<double> view{ problem, {} };
-   FixAndPropagate<double> fixAndPropagate{ {}, {}, problem, view };
+   FixAndPropagate<double> fixAndPropagate{ {}, {}, problem, view, true };
    FarkasRoundingStrategy<double> strategy{ 0, {} };
 
-   bool success =
+   bool infeasible =
        fixAndPropagate.fix_and_propagate( primal_solution, res, strategy );
 
-   assert( success );
+   assert( !infeasible );
    assert( res[0] == 1 );
    assert( res[1] == 1 );
    assert( res[2] == 0 );

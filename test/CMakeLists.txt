@@ -196,10 +196,12 @@ set(unit_tests
         "failed-path-sparsify"
 
         "vector-multiplication"
-        "fix-and-propagate-int"
-        "fix-and-propagate-farkas"
+        "fix-and-propagate-integer-variable"
+        "fix-and-propagate-all-integer-solutions"
+        "fix-and-propagate-frac-backtrack"
+        "fix-and-propagate-random-backtrack"
         "fix-and-propagate-random"
-        "fix-and-propagate-frac"
+        "fix-and-propagate-farkas-backtrack"
 #        "fix-and-propagate-api"
 
         "integration-test-for-flugpl"

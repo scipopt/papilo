@@ -754,6 +754,28 @@ ProbingView<REAL>::propagateDomains()
          if( !propagate )
             continue;
 
+         if( probing_activities[candrow].ninfmin == 0 &&
+             !rflags[candrow].test( RowFlag::kRhsInf ) &&
+             num.isFeasLT( rhs[candrow], probing_activities[candrow].min ) &&
+             num.isSafeLT( rhs[candrow], probing_activities[candrow].min ) )
+         {
+            Message::debug(
+                this, "[{}:{}]  Row {} is already violated. Not propagated!\n",
+                __FILE__, __LINE__, candrow );
+            continue;
+         }
+
+         if( probing_activities[candrow].ninfmax == 0 &&
+             !rflags[candrow].test( RowFlag::kLhsInf ) &&
+             num.isFeasGT( lhs[candrow], probing_activities[candrow].max ) &&
+             num.isSafeGT( lhs[candrow], probing_activities[candrow].max ) )
+         {
+            Message::debug(
+                this, "[{}:{}]  Row {} is already violated. Not propagated!\n",
+                __FILE__, __LINE__, candrow );
+            continue;
+         }
+
          auto rowvec = consMatrix.getRowCoefficients( candrow );
 
          propagate_row(
