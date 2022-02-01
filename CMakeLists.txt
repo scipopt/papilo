@@ -327,6 +327,14 @@ install(FILES
      ${PROJECT_SOURCE_DIR}/src/papilo/misc/Wrappers.hpp
   DESTINATION include/papilo/misc)
 
+
+if((DEFINED BOOST_VERSION) AND (BOOST_VERSION VERSION_LESS 107000))
+   install(FILES
+           ${PROJECT_SOURCE_DIR}/src/papilo/misc/extended_euclidean.hpp
+           DESTINATION include/papilo/misc)
+endif()
+
+
 install(FILES
      ${PROJECT_SOURCE_DIR}/src/papilo/presolvers/CoefficientStrengthening.hpp
      ${PROJECT_SOURCE_DIR}/src/papilo/presolvers/ConstraintPropagation.hpp
