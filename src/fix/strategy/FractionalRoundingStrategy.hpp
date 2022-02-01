@@ -47,10 +47,10 @@ class FractionalRoundingStrategy : public RoundingStrategy<REAL>
       for( int i = 0; i < cont_solution.size(); i++ )
       {
          REAL frac = cont_solution[i] - floor( cont_solution[i] );
-         if( frac == 0 ||
+         if( num.isIntegral(cont_solution[i])||
              num.isEq( view.getProbingUpperBounds()[i],
                        view.getProbingLowerBounds()[i] ) ||
-             !view.is_integer( i ) )
+             !view.is_integer_variable( i ) )
             continue;
          else if( frac > 0.5 )
          {

@@ -207,7 +207,7 @@ class FixAndPropagate
          if( !num.isEq( upperBounds[i], lowerBounds[i] ) )
          {
             REAL value;
-            if( !probing_view.is_integer( i ) ) {
+            if( !probing_view.is_integer_variable( i ) ) {
                if( ge_lb && le_ub )
                   value = cont_solution[i];
                else if( ge_lb )

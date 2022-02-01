@@ -62,8 +62,10 @@ class FarkasRoundingStrategy : public RoundingStrategy<REAL>
 
       for( int i = 0; i < cont_solution.size(); i++ )
       {
-         if( num.isEq( view.getProbingUpperBounds()[i],
-                       view.getProbingLowerBounds()[i] ) || !view.is_integer(i) )
+         if( num.isIntegral(cont_solution[i])||
+             num.isEq( view.getProbingUpperBounds()[i],
+                       view.getProbingLowerBounds()[i] ) ||
+             !view.is_integer_variable( i ) )
             continue;
 
 

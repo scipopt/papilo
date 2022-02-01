@@ -83,7 +83,7 @@ class ProbingView
    }
 
    bool
-   is_integer( int col ) const
+   is_integer_variable( int col ) const
    {
       return problem.getColFlags()[col].test( ColFlag::kIntegral );
    }
