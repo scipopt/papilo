@@ -39,7 +39,8 @@ using namespace papilo;
 /***
  * This class performs a fix-and-propagate algorithm:
  *
- * V = all integer variables with non integer solution and proposed value is within bounds
+ * V = all integer variables with non integer solution and proposed value is
+ within bounds
  * propagate domains does not propagate violated rows
  *
  * while V is not empty
@@ -47,7 +48,8 @@ using namespace papilo;
  *  fix var_max to value val_max
  *  propagate domains
  *  if perform_backtrack:
- *      [if propagation or fixing is infeasible to backtrack by fixing var_max to val_max +/-1]
+ *      [if propagation or fixing is infeasible to backtrack by fixing var_max
+ to val_max +/-1]
  *      [if this is still infeasible then perform no more backtracks]
  *
  * for all non fixed variables v
@@ -145,7 +147,8 @@ class FixAndPropagate
          // dive until all vars are fixed (and returned fixing is invalid)
          if( fixing.is_invalid() )
             return;
-
+         assert( probing_view.is_within_bounds( fixing.get_column_index(),
+                                                fixing.get_value() ) );
          msg.info( "Fix var {} to {}\n", fixing.get_column_index(),
                    fixing.get_value() );
 
@@ -207,7 +210,8 @@ class FixAndPropagate
          if( !num.isEq( upperBounds[i], lowerBounds[i] ) )
          {
             REAL value;
-            if( !probing_view.is_integer_variable( i ) ) {
+            if( !probing_view.is_integer_variable( i ) )
+            {
                if( ge_lb && le_ub )
                   value = cont_solution[i];
                else if( ge_lb )
@@ -222,11 +226,14 @@ class FixAndPropagate
             {
                // only variable with integer value in the solution should be
                // non fixed
-               //TODO: this assertion is not correct
-               assert( num.isEq( cont_solution[i],
-                                 num.round( cont_solution[i] ) ) );
+               // TODO: this assertion is not correct
+
                if( ge_lb && le_ub )
+               {
+                  assert( num.isEq( cont_solution[i],
+                                    num.round( cont_solution[i] ) ) );
                   value = cont_solution[i];
+               }
                else if( ge_lb )
                   value = upperBounds[i];
                else
@@ -240,21 +247,20 @@ class FixAndPropagate
 
             perform_probing_step();
          }
+      }
+      return probing_view.isInfeasible();
    }
-   return probing_view.isInfeasible();
-}
 
-void
-create_solution( Vec<REAL>& result )
-{
-   for( int i = 0; i < probing_view.getProbingUpperBounds().size(); i++ )
+   void
+   create_solution( Vec<REAL>& result )
    {
-      assert( probing_view.getProbingUpperBounds()[i] ==
-              probing_view.getProbingLowerBounds()[i] );
-      result[i] = probing_view.getProbingUpperBounds()[i];
+      for( int i = 0; i < probing_view.getProbingUpperBounds().size(); i++ )
+      {
+         assert( probing_view.getProbingUpperBounds()[i] ==
+                 probing_view.getProbingLowerBounds()[i] );
+         result[i] = probing_view.getProbingUpperBounds()[i];
+      }
    }
-}
-}
-;
+};
 
 #endif

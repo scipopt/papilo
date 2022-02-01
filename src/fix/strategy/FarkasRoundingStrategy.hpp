@@ -24,7 +24,6 @@
 #ifndef FIX_FARKAS_ROUNDING_STRATEGY_HPP
 #define FIX_FARKAS_ROUNDING_STRATEGY_HPP
 
-
 #include "papilo/core/ProbingView.hpp"
 
 #include <cassert>
@@ -44,14 +43,15 @@ class FarkasRoundingStrategy : public RoundingStrategy<REAL>
    MyRNG random_generator;
 
  public:
-   FarkasRoundingStrategy( uint32_t seed_, Num<REAL> num_ ) : seed( seed_ ), num( num_ )
+   FarkasRoundingStrategy( uint32_t seed_, Num<REAL> num_ )
+       : seed( seed_ ), num( num_ )
    {
       random_generator.seed( seed );
    }
 
    Fixing<REAL>
    select_rounding_variable( const Vec<REAL>& cont_solution,
-                           const ProbingView<REAL>& view ) override
+                             const ProbingView<REAL>& view ) override
    {
       // this is currently fractional diving
       REAL value = -1;
@@ -62,12 +62,11 @@ class FarkasRoundingStrategy : public RoundingStrategy<REAL>
 
       for( int i = 0; i < cont_solution.size(); i++ )
       {
-         if( num.isIntegral(cont_solution[i])||
+         if( num.isIntegral( cont_solution[i] ) ||
              num.isEq( view.getProbingUpperBounds()[i],
                        view.getProbingLowerBounds()[i] ) ||
              !view.is_integer_variable( i ) )
             continue;
-
 
          REAL current_score = abs( obj[i] ) + dist_rounding( random_generator );
 
@@ -75,22 +74,35 @@ class FarkasRoundingStrategy : public RoundingStrategy<REAL>
          {
             if( num.isLT( obj[i], 0 ) )
             {
-               variable = i;
-               value = ceil( cont_solution[i] );
+               REAL proposed_value = num.epsCeil( cont_solution[i] );
+               if( view.is_within_bounds( i, proposed_value ) )
+               {
+                  variable = i;
+                  value = proposed_value;
+               }
             }
             else if( num.isGT( obj[i], 0 ) )
             {
-               variable = i;
-               value = floor( cont_solution[i] );
+               REAL proposed_value = num.epsFloor( cont_solution[i] );
+               if( view.is_within_bounds( i, proposed_value ) )
+               {
+                  variable = i;
+                  value = proposed_value;
+               }
             }
             else
             {
-               REAL frac = cont_solution[i] - floor( cont_solution[i] );
-               variable = i;
+               REAL frac = cont_solution[i] - num.epsFloor( cont_solution[i] );
+               REAL proposed_value;
                if( frac > 0.5 )
-                  value = ceil( cont_solution[i] );
+                  proposed_value = num.epsCeil( cont_solution[i] );
                else
-                  value = floor( cont_solution[i] );
+                  proposed_value = num.epsFloor( cont_solution[i] );
+               if( view.is_within_bounds( i, proposed_value ) )
+               {
+                  variable = i;
+                  value = proposed_value;
+               }
             }
          }
       }

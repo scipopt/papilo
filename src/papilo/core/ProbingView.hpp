@@ -88,6 +88,14 @@ class ProbingView
       return problem.getColFlags()[col].test( ColFlag::kIntegral );
    }
 
+   bool
+   is_within_bounds( int col, const REAL& value ) const
+   {
+      return (probing_domain_flags[col].test(ColFlag::kLbInf) || num.isGE(value, probing_lower_bounds[col])) &&
+             (probing_domain_flags[col].test(ColFlag::kUbInf) || num.isLE(value, probing_upper_bounds[col]));
+   }
+
+
    void
    setMinContDomRed( const REAL& value )
    {

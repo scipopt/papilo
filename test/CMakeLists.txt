@@ -200,9 +200,12 @@ set(unit_tests
         "fix-and-propagate-cont-variable-stays-cont"
         "fix-and-propagate-all-integer-solutions"
         "fix-and-propagate-frac-backtrack"
+        "fix-and-propagate-frac-check-within-bounds"
         "fix-and-propagate-random-backtrack"
         "fix-and-propagate-random"
+        "fix-and-propagate-random-check-within-bounds"
         "fix-and-propagate-farkas-backtrack"
+        "fix-and-propagate-farkas-check-within-bounds"
 #        "fix-and-propagate-api"
 
         "integration-test-for-flugpl"

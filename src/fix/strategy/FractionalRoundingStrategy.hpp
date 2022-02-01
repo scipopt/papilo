@@ -46,8 +46,8 @@ class FractionalRoundingStrategy : public RoundingStrategy<REAL>
 
       for( int i = 0; i < cont_solution.size(); i++ )
       {
-         REAL frac = cont_solution[i] - floor( cont_solution[i] );
-         if( num.isIntegral(cont_solution[i])||
+         REAL frac = cont_solution[i] - num.epsFloor( cont_solution[i] );
+         if( num.isIntegral( cont_solution[i] ) ||
              num.isEq( view.getProbingUpperBounds()[i],
                        view.getProbingLowerBounds()[i] ) ||
              !view.is_integer_variable( i ) )
@@ -55,21 +55,25 @@ class FractionalRoundingStrategy : public RoundingStrategy<REAL>
          else if( frac > 0.5 )
          {
             REAL current_score = ( 1 - frac ) * obj[i];
-            if( variable == -1 || current_score > score )
+            REAL prosposed_value = num.epsCeil( cont_solution[i] );
+            if( ( variable == -1 || current_score > score ) &&
+                view.is_within_bounds( i, prosposed_value ) )
             {
                score = current_score;
                variable = i;
-               value = ceil( cont_solution[i] );
+               value = prosposed_value;
             }
          }
          else
          {
             REAL current_score = frac * obj[i];
-            if( variable == -1 || current_score > score )
+            REAL prosposed_value = num.epsFloor( cont_solution[i] );
+            if( ( variable == -1 || current_score > score ) &&
+                view.is_within_bounds( i, prosposed_value ) )
             {
                score = current_score;
                variable = i;
-               value = floor( cont_solution[i] );
+               value = prosposed_value;
             }
          }
       }
@@ -77,4 +81,4 @@ class FractionalRoundingStrategy : public RoundingStrategy<REAL>
    }
 };
 
-#endif // PAPILO_FRACTIONALROUNDINGSTRATEGY_HPP
+#endif

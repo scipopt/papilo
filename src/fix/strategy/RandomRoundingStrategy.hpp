@@ -53,10 +53,11 @@ class RandomRoundingStrategy : public RoundingStrategy<REAL>
       Vec<int> remaining_unfixed_cols{};
       for( int i = 0; i < cont_solution.size(); i++ )
       {
-         if( num.isIntegral(cont_solution[i])||
+         if( num.isIntegral( cont_solution[i] ) ||
              num.isEq( view.getProbingUpperBounds()[i],
                        view.getProbingLowerBounds()[i] ) ||
-             !view.is_integer_variable( i ) )
+             !view.is_integer_variable( i ) ||
+             !view.is_within_bounds( i, cont_solution[i] ) )
             continue;
          remaining_unfixed_cols.push_back( i );
       }
@@ -69,12 +70,12 @@ class RandomRoundingStrategy : public RoundingStrategy<REAL>
       int variable = remaining_unfixed_cols[dist_variable( random_generator )];
       REAL value = -1;
       if( dist_rounding( random_generator ) )
-         value = round( cont_solution[variable] + 0.5 );
+         value = num.epsCeil( cont_solution[variable] );
       else
-         value = round( cont_solution[variable] - 0.5 );
+         value = num.epsFloor( cont_solution[variable] );
 
       return { variable, value };
    }
 };
-#include "RoundingStrategy.hpp"
-#endif // define FIX_RANDOM_ROUNDING_STRATEGY_HPP
+
+#endif
