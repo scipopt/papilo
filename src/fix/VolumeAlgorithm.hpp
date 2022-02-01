@@ -48,7 +48,8 @@ class VolumeAlgorithm
    REAL f;
    REAL f_min;
    REAL f_max;
-   REAL f_incr_factor;
+   REAL f_strong_incr_factor;
+   REAL f_weak_incr_factor;
    REAL f_decr_factor;
    REAL obj_threshold;
    REAL con_threshold;
@@ -59,14 +60,17 @@ class VolumeAlgorithm
    VolumeAlgorithm( Message _msg, Num<REAL> _num,
                     REAL _alpha, REAL _alpha_max,
                     REAL _f, REAL _f_min, REAL _f_max,
-                    REAL _f_incr_factor, REAL _f_decr_factor,
+                    REAL _f_strong_incr_factor, REAL _f_weak_incr_factor,
+                    REAL _f_decr_factor,
                     REAL _obj_threshold, REAL _con_threshold,
                     int _weak_improvement_iter_limit,
                     int _non_improvement_iter_limit )
        : msg( _msg ), num( _num ),
          alpha( _alpha ), alpha_max( _alpha_max ),
          f( _f ), f_min( _f_min ), f_max( _f_max ),
-         f_incr_factor( _f_incr_factor ), f_decr_factor( _f_decr_factor ),
+         f_strong_incr_factor( _f_strong_incr_factor ),
+         f_weak_incr_factor( _f_weak_incr_factor ),
+         f_decr_factor( _f_decr_factor ),
          obj_threshold( _obj_threshold ), con_threshold( _con_threshold ),
          weak_improvement_iter_limit( _weak_improvement_iter_limit ),
          non_improvement_iter_limit( _non_improvement_iter_limit ), op( {} )
@@ -285,14 +289,17 @@ class VolumeAlgorithm
              const Vec<REAL>& residual_t, int& weak_improvement_iter_counter,
              int& non_improvement_iter_counter )
    {
-      // +1 for increase in f, 0 for no change in f, -1 for decrease in f
+      // +2 for strong increase in f
+      // +1 for weak increase in f
+      // 0 for no change in f
+      // -1 for decrease in f
       int change_f = 0;
 
       if( improvement_indicator )
       {
          //  If d (= v_t . (b - A x_t)) >= 0, then increase f
          if( num.isGE( op.multi( v_t, residual_t ), REAL{ 0.0 } ) )
-            change_f = 1;
+            change_f = 2;
          else
          {
             ++( weak_improvement_iter_counter );
@@ -314,10 +321,15 @@ class VolumeAlgorithm
       }
 
       // TODO: increase more for green iters over yellow iters?
-      if( change_f >= 1 )
+      if( change_f == 2 )
       {
-         f = num.min( f_incr_factor * f, f_max );
+         f = num.min( f_strong_incr_factor * f, f_max );
 //         msg.info( "   increased f: {}\n", f );
+      }
+      else if( change_f == 1 )
+      {
+         f = num.min( f_weak_incr_factor * f, f_max );
+         //         msg.info( "   increased f: {}\n", f );
       }
       else if( change_f <= -1 && num.isGE( f_decr_factor * f, f_min ) )
       {
