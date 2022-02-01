@@ -46,13 +46,19 @@ class FractionalRoundingStrategy : public RoundingStrategy<REAL>
 
       for( int i = 0; i < cont_solution.size(); i++ )
       {
-         REAL frac = cont_solution[i] - num.epsFloor( cont_solution[i] );
          if( num.isIntegral( cont_solution[i] ) ||
              num.isEq( view.getProbingUpperBounds()[i],
                        view.getProbingLowerBounds()[i] ) ||
              !view.is_integer_variable( i ) )
             continue;
-         else if( frac > 0.5 )
+
+         //TODO: implement it more efficient
+         std::pair<bool, bool> has_locks =
+             view.has_locks(i);
+
+         REAL frac = cont_solution[i] - num.epsFloor( cont_solution[i] );
+         assert( !num.isZero( frac ) );
+         if( frac > 0.5 )
          {
             REAL current_score = ( 1 - frac ) * obj[i];
             REAL prosposed_value = num.epsCeil( cont_solution[i] );

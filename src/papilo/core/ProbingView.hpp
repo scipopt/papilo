@@ -91,10 +91,38 @@ class ProbingView
    bool
    is_within_bounds( int col, const REAL& value ) const
    {
-      return (probing_domain_flags[col].test(ColFlag::kLbInf) || num.isGE(value, probing_lower_bounds[col])) &&
-             (probing_domain_flags[col].test(ColFlag::kUbInf) || num.isLE(value, probing_upper_bounds[col]));
+      return ( probing_domain_flags[col].test( ColFlag::kLbInf ) ||
+               num.isGE( value, probing_lower_bounds[col] ) ) &&
+             ( probing_domain_flags[col].test( ColFlag::kUbInf ) ||
+               num.isLE( value, probing_upper_bounds[col] ) );
    }
 
+   std::pair<bool, bool>
+   has_locks( int col ) const
+   {
+      int nuplocks = 0;
+      int ndownlocks = 0;
+
+      REAL obj = problem.getObjective().coefficients[col];
+      auto rflags = problem.getRowFlags();
+      auto colvec = problem.getConstraintMatrix().getColumnCoefficients( col );
+      int collen = colvec.getLength();
+      const REAL* values = colvec.getValues();
+      const int* rowinds = colvec.getIndices();
+      if( num.isGE( obj, 0 ) )
+         ++ndownlocks;
+      else if( num.isLE( obj, 0 ) )
+         ++nuplocks;
+
+      for( int j = 0; j != collen; ++j )
+      {
+         count_locks( values[j], rflags[rowinds[j]], ndownlocks, nuplocks );
+
+         if( nuplocks != 0 && ndownlocks != 0 )
+            return { false, false };
+      }
+      return { nuplocks == 0, ndownlocks == 0 };
+   }
 
    void
    setMinContDomRed( const REAL& value )
