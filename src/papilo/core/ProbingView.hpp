@@ -85,7 +85,7 @@ class ProbingView
    bool
    is_integer( int col ) const
    {
-      return problem.getColFlags()[col].template test( ColFlag::kIntegral );
+      return problem.getColFlags()[col].test( ColFlag::kIntegral );
    }
 
    void
