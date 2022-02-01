@@ -63,8 +63,9 @@ class FarkasRoundingStrategy : public RoundingStrategy<REAL>
       for( int i = 0; i < cont_solution.size(); i++ )
       {
          if( num.isEq( view.getProbingUpperBounds()[i],
-                       view.getProbingLowerBounds()[i] ) )
+                       view.getProbingLowerBounds()[i] ) || !view.is_integer(i) )
             continue;
+
 
          REAL current_score = abs( obj[i] ) + dist_rounding( random_generator );
 

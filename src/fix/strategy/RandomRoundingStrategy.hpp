@@ -46,7 +46,7 @@ class RandomRoundingStrategy : public RoundingStrategy<REAL>
 
    Fixing<REAL>
    select_rounding_variable( const Vec<REAL>& cont_solution,
-                           const ProbingView<REAL>& view ) override
+                             const ProbingView<REAL>& view ) override
    {
       // TODO: this does not work since fixed variable could be obtained
 
@@ -54,7 +54,8 @@ class RandomRoundingStrategy : public RoundingStrategy<REAL>
       for( int i = 0; i < cont_solution.size(); i++ )
       {
          if( num.isEq( view.getProbingUpperBounds()[i],
-                       view.getProbingLowerBounds()[i] ) )
+                       view.getProbingLowerBounds()[i] ) ||
+             !view.is_integer( i ) )
             continue;
          remaining_unfixed_cols.push_back( i );
       }

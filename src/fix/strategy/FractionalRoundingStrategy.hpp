@@ -37,7 +37,7 @@ class FractionalRoundingStrategy : public RoundingStrategy<REAL>
 
    Fixing<REAL>
    select_rounding_variable( const Vec<REAL>& cont_solution,
-                           const ProbingView<REAL>& view ) override
+                             const ProbingView<REAL>& view ) override
    {
       REAL value = -1;
       int variable = -1;
@@ -47,12 +47,14 @@ class FractionalRoundingStrategy : public RoundingStrategy<REAL>
       for( int i = 0; i < cont_solution.size(); i++ )
       {
          REAL frac = cont_solution[i] - floor( cont_solution[i] );
-         if( frac == 0 || num.isEq( view.getProbingUpperBounds()[i],
-                                    view.getProbingLowerBounds()[i] ) )
+         if( frac == 0 ||
+             num.isEq( view.getProbingUpperBounds()[i],
+                       view.getProbingLowerBounds()[i] ) ||
+             !view.is_integer( i ) )
             continue;
          else if( frac > 0.5 )
          {
-            REAL current_score = (1 - frac) * obj[i];
+            REAL current_score = ( 1 - frac ) * obj[i];
             if( variable == -1 || current_score > score )
             {
                score = current_score;

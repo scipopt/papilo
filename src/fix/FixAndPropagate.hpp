@@ -36,8 +36,13 @@
 
 using namespace papilo;
 
-// TODO: Probing does only work with boolean values
-
+/***
+ * This class performs a fix-and-propagate algorithm:
+ *
+ * A variable is fixed and the a domain propagation is performed
+ *
+ * @tparam REAL the arithmetic parameter
+ */
 template <typename REAL>
 class FixAndPropagate
 {
@@ -91,10 +96,12 @@ class FixAndPropagate
                bool infeasible = perform_probing_step();
                if( infeasible )
                {
-                  propagate_to_leaf_or_infeasibility( cont_solution, strategy, false );
-                  fix_remaining_integer_solutions( cont_solution);
+                  propagate_to_leaf_or_infeasibility( cont_solution, strategy,
+                                                      false );
+                  fix_remaining_integer_solutions( cont_solution );
                   create_solution( result );
-                  return probing_view.isInfeasible();               }
+                  return probing_view.isInfeasible();
+               }
             }
          }
          else
@@ -122,8 +129,6 @@ class FixAndPropagate
 
          msg.info( "Fix var {} to {}\n", fixing.get_column_index(),
                    fixing.get_value() );
-
-         // TODO: check if rounded variable is valid
 
          probing_view.setProbingColumn( fixing.get_column_index(),
                                         fixing.get_value() );
@@ -155,7 +160,6 @@ class FixAndPropagate
       return false;
    }
 
-   // TODO fix this
    REAL
    modify_value_due_to_backtrack( REAL value, REAL solution_value )
    {
@@ -176,46 +180,62 @@ class FixAndPropagate
    {
       for( int i = 0; i < cont_solution.size(); i++ )
       {
+
          auto lowerBounds = probing_view.getProbingLowerBounds();
          auto upperBounds = probing_view.getProbingUpperBounds();
+         bool ge_lb = num.isGE( cont_solution[i], lowerBounds[i] );
+         bool le_ub = num.isLE( cont_solution[i], upperBounds[i] );
          if( !num.isEq( upperBounds[i], lowerBounds[i] ) )
          {
-            // only variable with integer value in the solution should be
-            // non fixed
-            assert(
-                num.isEq( cont_solution[i], num.round( cont_solution[i] ) ) );
-
             REAL value;
-            bool ge_lb = num.isGE( cont_solution[i], lowerBounds[i] );
-            bool le_ub = num.isLE( cont_solution[i], upperBounds[i] );
-            if( ge_lb && le_ub )
-               value = cont_solution[i];
-            else if( ge_lb )
-               value = upperBounds[i];
+            if( !probing_view.is_integer( i ) ) {
+               if( ge_lb && le_ub )
+                  value = cont_solution[i];
+               else if( ge_lb )
+                  value = upperBounds[i];
+               else
+               {
+                  assert( le_ub );
+                  value = lowerBounds[i];
+               }
+            }
             else
             {
-               assert( le_ub );
-               value = lowerBounds[i];
+               // only variable with integer value in the solution should be
+               // non fixed
+               //TODO: this assertion is not correct
+               assert( num.isEq( cont_solution[i],
+                                 num.round( cont_solution[i] ) ) );
+               if( ge_lb && le_ub )
+                  value = cont_solution[i];
+               else if( ge_lb )
+                  value = upperBounds[i];
+               else
+               {
+                  assert( le_ub );
+                  value = lowerBounds[i];
+               }
             }
             probing_view.setProbingColumn( i, value );
             msg.info( "Fix integer var {} to {}\n", i, value );
 
             perform_probing_step();
          }
-      }
-      return probing_view.isInfeasible();
    }
+   return probing_view.isInfeasible();
+}
 
-   void
-   create_solution( Vec<REAL>& result )
+void
+create_solution( Vec<REAL>& result )
+{
+   for( int i = 0; i < probing_view.getProbingUpperBounds().size(); i++ )
    {
-      for( int i = 0; i < probing_view.getProbingUpperBounds().size(); i++ )
-      {
-         assert( probing_view.getProbingUpperBounds()[i] ==
-                 probing_view.getProbingLowerBounds()[i] );
-         result[i] = probing_view.getProbingUpperBounds()[i];
-      }
+      assert( probing_view.getProbingUpperBounds()[i] ==
+              probing_view.getProbingLowerBounds()[i] );
+      result[i] = probing_view.getProbingUpperBounds()[i];
    }
-};
+}
+}
+;
 
 #endif

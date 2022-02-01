@@ -197,6 +197,7 @@ set(unit_tests
 
         "vector-multiplication"
         "fix-and-propagate-integer-variable"
+        "fix-and-propagate-cont-variable-stays-cont"
         "fix-and-propagate-all-integer-solutions"
         "fix-and-propagate-frac-backtrack"
         "fix-and-propagate-random-backtrack"

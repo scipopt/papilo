@@ -82,6 +82,12 @@ class ProbingView
       return problem.getObjective().coefficients;
    }
 
+   bool
+   is_integer( int col ) const
+   {
+      return problem.getColFlags()[col].template test( ColFlag::kIntegral );
+   }
+
    void
    setMinContDomRed( const REAL& value )
    {
@@ -101,9 +107,9 @@ class ProbingView
       fixings.push_back( fixing );
 
       // fix upper/lower bound of probed column
-      if( !num.isEq(probing_lower_bounds[col], value)  )
+      if( !num.isEq( probing_lower_bounds[col], value ) )
          changeLb( col, value );
-      if( !num.isEq(probing_upper_bounds[col], value))
+      if( !num.isEq( probing_upper_bounds[col], value ) )
          changeUb( col, value );
    }
 

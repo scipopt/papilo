@@ -68,8 +68,63 @@ TEST_CASE( "fix-and-propagate-integer-variable", "[fix]" )
    assert( res[3] == 0 );
 }
 
+TEST_CASE( "fix-and-propagate-cont-variable-stays-cont", "[fix]" )
+{
+   Problem<double> problem = setupProblemForFixAndPropagation();
+
+   problem.getColFlags()[0].unset(ColFlag::kIntegral);
+   problem.getColFlags()[1].unset(ColFlag::kIntegral);
+   problem.getColFlags()[2].unset(ColFlag::kIntegral);
+   problem.recomputeAllActivities();
+
+   Vec<double> primal_solution;
+   for( int i = 0; i < problem.getNCols(); i++ )
+   {
+      double random_number = ( 1.0 + i ) / 10.0;
+      primal_solution.push_back( random_number );
+   }
+   Vec<double> res{ primal_solution };
+
+   FixAndPropagate<double> fixAndPropagate{ {}, {}, problem, {problem, {}}, true  };
+   FractionalRoundingStrategy<double> strategy{ {} };
+
+   bool infeasible =
+       fixAndPropagate.fix_and_propagate( primal_solution, res, strategy );
+
+   assert( !infeasible );
+   assert( res[0] == 0.1 );
+   assert( res[1] == 0.8999999999999999 );
+   assert( res[2] == 1 );
+   assert( res[3] == 0 );
+}
 
 TEST_CASE( "fix-and-propagate-all-integer-solutions", "[fix]" )
+{
+   Problem<double> problem = setupProblemForFixAndPropagation();
+
+   problem.recomputeAllActivities();
+
+   Vec<double> primal_solution;
+   for( int i = 0; i < problem.getNCols(); i++ )
+   {
+      primal_solution.push_back( 0 );
+   }
+   Vec<double> res{ primal_solution };
+
+   FixAndPropagate<double> fixAndPropagate{ {}, {}, problem, {problem, {}}, true  };
+   FractionalRoundingStrategy<double> strategy{ {} };
+
+   bool infeasible =
+       fixAndPropagate.fix_and_propagate( primal_solution, res, strategy );
+
+   assert( !infeasible );
+   assert( res[0] == 0 );
+   assert( res[1] == 0 );
+   assert( res[2] == 1 );
+   assert( res[3] == 1 );
+}
+
+TEST_CASE( "fix-and-propagate-integer-can-not-be-fixed", "[fix]" )
 {
    Problem<double> problem = setupProblemForFixAndPropagation();
 
