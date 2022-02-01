@@ -97,7 +97,7 @@ TEST_CASE( "fix-and-propagate-all-integer-solutions", "[fix]" )
 
    problem.recomputeAllActivities();
 
-   Vec<double> primal_solution = { 0.1, 0.2, 0.3, 0.4 };
+   Vec<double> primal_solution = { 0, 0, 0, 0 };
 
    Vec<double> res{ primal_solution };
 
@@ -312,10 +312,10 @@ TEST_CASE( "fix-and-propagate-farkas-check-within-bounds", "[fix]" )
        fixAndPropagate.fix_and_propagate( primal_solution, res, strategy );
 
    assert( !infeasible );
-   assert( res[0] == 1 );
+   assert( res[0] == 0 );
    assert( res[1] == 0 );
-   assert( res[2] == 3 );
-   assert( res[3] == 0 );
+   assert( res[2] == 2 );
+   assert( res[3] == 2 );
 }
 
 Problem<double>
