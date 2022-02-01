@@ -248,7 +248,9 @@ add_library(papilo-core STATIC
    src/papilo/presolvers/SimplifyInequalities.cpp
   )
 
-add_library(fixshared SHARED src/fix/FixAndPropagateApi.cpp ${sources})
+add_library(fixshared SHARED src/fix/FixAndPropagateApi.cpp
+        src/fix/FixAndPropagate.hpp
+        ${sources})
 
 
 target_link_libraries(papilo-core papilo)
