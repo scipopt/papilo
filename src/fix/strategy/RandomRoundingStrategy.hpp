@@ -48,8 +48,6 @@ class RandomRoundingStrategy : public RoundingStrategy<REAL>
    select_rounding_variable( const Vec<REAL>& cont_solution,
                              const ProbingView<REAL>& view ) override
    {
-      // TODO: this does not work since fixed variable could be obtained
-
       Vec<int> remaining_unfixed_cols{};
       for( int i = 0; i < cont_solution.size(); i++ )
       {

@@ -65,30 +65,27 @@ class FarkasRoundingStrategy : public RoundingStrategy<REAL>
          if( num.isIntegral( cont_solution[i] ) ||
              num.isEq( view.getProbingUpperBounds()[i],
                        view.getProbingLowerBounds()[i] ) ||
+             !view.is_within_bounds( i, cont_solution[i] ) ||
              !view.is_integer_variable( i ) )
             continue;
 
          REAL current_score = abs( obj[i] ) + dist_rounding( random_generator );
 
-         if( current_score > score )
+         /* prefer decisions on binary variables */
+         if( view.getProbingUpperBounds()[i] != 1 )
+            current_score = -1 / current_score;
+
+         if( current_score > score || variable == -1 )
          {
             if( num.isLT( obj[i], 0 ) )
             {
-               REAL proposed_value = num.epsCeil( cont_solution[i] );
-               if( view.is_within_bounds( i, proposed_value ) )
-               {
-                  variable = i;
-                  value = proposed_value;
-               }
+               variable = i;
+               value = num.epsCeil( cont_solution[i] );
             }
             else if( num.isGT( obj[i], 0 ) )
             {
-               REAL proposed_value = num.epsFloor( cont_solution[i] );
-               if( view.is_within_bounds( i, proposed_value ) )
-               {
-                  variable = i;
-                  value = proposed_value;
-               }
+               variable = i;
+               value = num.epsFloor( cont_solution[i] );
             }
             else
             {
@@ -98,11 +95,8 @@ class FarkasRoundingStrategy : public RoundingStrategy<REAL>
                   proposed_value = num.epsCeil( cont_solution[i] );
                else
                   proposed_value = num.epsFloor( cont_solution[i] );
-               if( view.is_within_bounds( i, proposed_value ) )
-               {
-                  variable = i;
-                  value = proposed_value;
-               }
+               variable = i;
+               value = proposed_value;
             }
          }
       }
