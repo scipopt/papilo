@@ -39,8 +39,27 @@ using namespace papilo;
 /***
  * This class performs a fix-and-propagate algorithm:
  *
- * A variable is fixed and the a domain propagation is performed
+ * V = all integer variables with non integer solution and proposed value is within bounds
+ * propagate domains does not propagate violated rows
  *
+ * while V is not empty
+ *  max, var_max, val_max = max_{ v in V} score  (defined by strategy)
+ *  fix var_max to value val_max
+ *  propagate domains
+ *  if perform_backtrack:
+ *      [if propagation or fixing is infeasible to backtrack by fixing var_max to val_max +/-1]
+ *      [if this is still infeasible then perform no more backtracks]
+ *
+ * for all non fixed variables v
+ *  if lb_v < sol(v) < ub_v
+ *      fix v to sol(v)
+ *  else lb_v > sol(v)
+ *      fix v to lb_v
+ *  else
+ *      fix v to ub_v
+ *  propagate domains*
+ *
+
  * @tparam REAL the arithmetic parameter
  */
 template <typename REAL>
