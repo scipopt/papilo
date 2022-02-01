@@ -106,7 +106,7 @@ class VolumeAlgorithm
       Vec<REAL> x_t( c );
       Vec<REAL> pi_t( pi );
       Vec<REAL> pi_bar( pi );
-      modify_pi( n_rows_A, A, pi_bar );
+      udpate_pi( n_rows_A, A, pi_bar );
       Vec<REAL> residual_t( b );
 
       // We start with a vector π̄ and solve (6) to obtain x̄ and z̄.
@@ -126,7 +126,7 @@ class VolumeAlgorithm
              f * ( best_bound_on_obj - z_bar ) / pow( op.l2_norm( v_t ), 2.0 );
 //         msg.info( "   Step size: {}\n", step_size );
          op.calc_b_plus_sx( pi_bar, step_size, v_t, pi_t );
-         modify_pi( n_rows_A, A, pi_t );
+         update_pi( n_rows_A, A, pi_t );
 
          // Solve (6) with π_t , let x_t and z_t be the solutions obtained.
          REAL z_t =
@@ -134,7 +134,7 @@ class VolumeAlgorithm
 
          // Update alpha
          op.calc_b_minus_Ax( A, x_t, b, residual_t );
-         update_alpha( residual_t, v_t );
+         calc_alpha( residual_t, v_t );
 
          // x_bar ← αx_t + (1 − α)x_bar
          op.calc_qb_plus_sx( alpha, x_t, 1 - alpha, x_bar, x_bar );
@@ -197,7 +197,7 @@ class VolumeAlgorithm
    //    such as lb_i <= pi_i <= ub_i).
    // TODO: Simplify this function further upon finalzing assumptions
    void
-   modify_pi( const int n_rows_A, const ConstraintMatrix<REAL>& A, Vec<REAL>& pi )
+   update_pi( const int n_rows_A, const ConstraintMatrix<REAL>& A, Vec<REAL>& pi )
    {
       for( int i = 0; i < n_rows_A; i++ )
       {
@@ -265,14 +265,14 @@ class VolumeAlgorithm
       // TODO: shall we make 0.05 a global param similar to f_min?
       if( num.isGE( z_bar, best_bound_on_obj - abs( best_bound_on_obj ) * 0.05 ) )
       {
-         best_bound_on_obj = num.max( best_bound_on_obj, z_bar + abs( z_bar ) *
-               0.05 );
+         best_bound_on_obj = num.max( best_bound_on_obj,
+                                      z_bar + abs( z_bar ) * 0.05 );
 //         msg.info( "   increased best bound: {}\n", best_bound_on_obj );
       }
    }
 
    void
-   update_alpha( const Vec<REAL>& residual_t, const Vec<REAL>& residual_bar )
+   calc_alpha( const Vec<REAL>& residual_t, const Vec<REAL>& residual_bar )
    {
       // alpha_opt = minimizer of || alpha * residual_t + ( 1 - alpha ) *
       //                               residual_bar ||
