@@ -72,7 +72,7 @@ TEST_CASE( "fix-and-propagate-it-modified-solution-is-feasible", "[fix]" )
        {}, {}, problem, { problem, {} }, true };
    FarkasRoundingStrategy<double> strategy{ 0, {} };
    Vec<double> modified_primal{ solution.primal };
-   modified_primal[1] = 0.3;
+   modified_primal[1] = 0.6;
 
    Vec<double> res{ modified_primal };
    bool infeasible =
