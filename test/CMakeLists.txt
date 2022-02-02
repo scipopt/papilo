@@ -17,6 +17,8 @@ if (Boost_IOSTREAMS_FOUND AND Boost_SERIALIZATION_FOUND AND Boost_PROGRAM_OPTION
 #    configure_file(resources/dual_fix_neg_inf.postsolve resources/dual_fix_neg_inf.postsolve COPYONLY)
 #    configure_file(resources/dual_fix_pos_inf.postsolve resources/dual_fix_pos_inf.postsolve COPYONLY)
     configure_file(instances/dual_fix_neg_inf.mps resources/dual_fix_neg_inf.mps COPYONLY)
+    configure_file(instances/rococoC11-010100.mps.gz resources/rococoC11-010100.mps.gz COPYONLY)
+    configure_file(instances/rococoC11-010100.sol.gz resources/rococoC11-010100.sol.gz COPYONLY)
     set(BOOST_REQUIRED_TESTS
 #            "finding-the-right-value-in-postsolve-for-a-column-fixed-pos-inf"
 #            "finding-the-right-value-in-postsolve-for-a-column-fixed-neg-inf"
@@ -208,6 +210,8 @@ set(unit_tests
         "fix-and-propagate-farkas-backtrack"
         "fix-and-propagate-farkas-check-within-bounds"
 #        "fix-and-propagate-api"
+        "fix-and-propagate-it-modified-solution-is-feasible"
+        "fix-and-propagate-it-solution-is-feasible"
 
         "integration-test-for-flugpl"
         ${PAPILOLIB_TESTS}

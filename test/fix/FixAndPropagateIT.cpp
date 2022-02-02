@@ -39,10 +39,8 @@ parse_solution( const std::string& path_to_sol, const Problem<double>& problem )
 
 TEST_CASE( "fix-and-propagate-it-solution-is-feasible", "[fix]" )
 {
-   std::string path_to_mps = "/home/alexander/git_repositories/mipcomp22/MIP "
-                             "2022 Open Instances/rococoC10-001000.mps.gz";
-   std::string path_to_sol = "/home/alexander/Downloads/solutions/"
-                             "rococoC10-001000/1/rococoC10-001000.sol.gz";
+   std::string path_to_mps = "./resources/rococoC10-001000.mps.gz";
+   std::string path_to_sol = "./resources/rococoC10-001000.sol.gz";
    auto problem = read_prob( path_to_mps );
    problem.recomputeAllActivities();
    Solution<double> solution = parse_solution( path_to_sol, problem );
@@ -61,10 +59,8 @@ TEST_CASE( "fix-and-propagate-it-solution-is-feasible", "[fix]" )
 
 TEST_CASE( "fix-and-propagate-it-modified-solution-is-feasible", "[fix]" )
 {
-   std::string path_to_mps = "/home/alexander/git_repositories/mipcomp22/MIP "
-                             "2022 Open Instances/rococoC10-001000.mps.gz";
-   std::string path_to_sol = "/home/alexander/Downloads/solutions/"
-                             "rococoC10-001000/1/rococoC10-001000.sol.gz";
+   std::string path_to_mps = "./resources/rococoC10-001000.mps.gz";
+   std::string path_to_sol = "./resources/rococoC10-001000.sol.gz";
    auto problem = read_prob( path_to_mps );
    problem.recomputeAllActivities();
    Solution<double> solution = parse_solution( path_to_sol, problem );
