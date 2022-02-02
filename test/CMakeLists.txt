@@ -17,8 +17,8 @@ if (Boost_IOSTREAMS_FOUND AND Boost_SERIALIZATION_FOUND AND Boost_PROGRAM_OPTION
 #    configure_file(resources/dual_fix_neg_inf.postsolve resources/dual_fix_neg_inf.postsolve COPYONLY)
 #    configure_file(resources/dual_fix_pos_inf.postsolve resources/dual_fix_pos_inf.postsolve COPYONLY)
     configure_file(instances/dual_fix_neg_inf.mps resources/dual_fix_neg_inf.mps COPYONLY)
-    configure_file(instances/rococoC11-010100.mps.gz resources/rococoC11-010100.mps.gz COPYONLY)
-    configure_file(instances/rococoC11-010100.sol.gz resources/rococoC11-010100.sol.gz COPYONLY)
+    configure_file(instances/rococoC10-001000.sol.gz resources/rococoC10-001000.sol.gz COPYONLY)
+    configure_file(instances/rococoC10-001000.mps.gz resources/rococoC10-001000.mps.gz COPYONLY)
     set(BOOST_REQUIRED_TESTS
 #            "finding-the-right-value-in-postsolve-for-a-column-fixed-pos-inf"
 #            "finding-the-right-value-in-postsolve-for-a-column-fixed-neg-inf"
