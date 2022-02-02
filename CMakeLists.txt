@@ -47,7 +47,7 @@ if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Release)
 endif()
 
-find_package(Boost ${BOOST_MIN_VERSION} REQUIRED)
+find_package(Boost ${BOOST_MIN_VERSION} COMPONENTS program_options REQUIRED)
 
 if(GMP)
     find_package(GMP)
@@ -220,7 +220,7 @@ else()
    set(PAPILO_USE_STANDARD_HASHMAP 1)
 endif()
 
-add_library(papilo-core SHARED
+add_library(papilo-core STATIC
    src/papilo/core/VariableDomains.cpp
    src/papilo/core/SparseStorage.cpp
    src/papilo/core/ConstraintMatrix.cpp
@@ -248,9 +248,11 @@ add_library(papilo-core SHARED
    src/papilo/presolvers/SimplifyInequalities.cpp
   )
 
-#add_library(fix-shared SHARED src/fix/FixAndPropagateApi.hpp
-#        src/fix/FixAndPropagate.hpp
-#        ${sources})
+add_library(fix-shared SHARED
+    src/fix/FixAndPropagateApi.hpp
+    src/fix/FixAndPropagate.hpp
+    )
+target_link_libraries(fix-shared papilo-core)
 
 
 target_link_libraries(papilo-core papilo)
