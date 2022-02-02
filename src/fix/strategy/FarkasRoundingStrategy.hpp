@@ -57,7 +57,7 @@ class FarkasRoundingStrategy : public RoundingStrategy<REAL>
       REAL value = -1;
       int variable = -1;
       REAL score = -1;
-      bool stored_var_binary = false;
+      bool stored_var_binary_with_nnz_obj = false;
       std::uniform_real_distribution<double> small_number_generator( 0.0000001,
                                                                      0.000001 );
       auto obj = view.get_obj();
@@ -72,10 +72,11 @@ class FarkasRoundingStrategy : public RoundingStrategy<REAL>
             continue;
 
          /* prefer decisions on binary variables */
-         bool current_var_binary = view.getProbingUpperBounds()[i] == 1 &&
-                                   view.getProbingLowerBounds()[i] == 0 &&
-                                   !num.isZero( obj[i] );
-         if( !current_var_binary && stored_var_binary )
+         bool current_var_binary_with_nnz_obj =
+             view.getProbingUpperBounds()[i] == 1 &&
+             view.getProbingLowerBounds()[i] == 0 && !num.isZero( obj[i] );
+         if( !current_var_binary_with_nnz_obj &&
+             stored_var_binary_with_nnz_obj )
             continue;
 
          REAL current_score =
@@ -91,14 +92,17 @@ class FarkasRoundingStrategy : public RoundingStrategy<REAL>
             else
                current_score = current_score * frac;
          }
-         if( ( current_var_binary && !stored_var_binary ) || variable == -1 ||
-             current_score > score )
+         if( ( current_var_binary_with_nnz_obj &&
+               !stored_var_binary_with_nnz_obj ) ||
+             variable == -1 || current_score > score )
          {
-            assert( ( current_var_binary && !stored_var_binary ) ||
-                    current_var_binary == stored_var_binary );
+            assert( ( current_var_binary_with_nnz_obj &&
+                      !stored_var_binary_with_nnz_obj ) ||
+                    current_var_binary_with_nnz_obj ==
+                        stored_var_binary_with_nnz_obj );
             score = current_score;
             variable = i;
-            stored_var_binary = current_var_binary;
+            stored_var_binary_with_nnz_obj = current_var_binary_with_nnz_obj;
             if( round_up )
                value = num.epsCeil( cont_solution[i] );
             else
