@@ -51,19 +51,6 @@ setup( const char* filename, int* result )
    auto problem = new Problem<double>( prob.get() );
    problem->recomputeAllActivities();
    return problem;
-   //   problem.recomputeAllActivities();
-   //   Num<double> num{};
-   //   Message msg{};
-   //   auto fixAndPropagate = new FixAndPropagate<double>{ msg, num, problem };
-
-   //   if( !fixAndPropagate->init( filename ) )
-   //   {
-   //      result = -1;
-   //      return nullptr;
-   //   }
-
-   //   result = 0;
-   //   return fixAndPropagate;
 }
 
 void
@@ -77,7 +64,6 @@ bool
 call_algorithm( void* problem_ptr, double* cont_solution, double* result,
                 int n_cols )
 {
-   //   auto f = (FixAndPropagate<double>*)( fix_ );
    auto problem = (Problem<double>*)( problem_ptr );
    ProbingView<double> view{ *problem, {} };
    FixAndPropagate<double> f{ {}, {}, *problem, view, false };
