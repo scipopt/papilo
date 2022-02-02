@@ -187,7 +187,7 @@ class FixAndPropagate
          assert( num.feasFloor( solution_value ) == value - 1 );
          return value - 1;
       }
-      assert(num.isLE( value, solution_value ));
+      assert( num.isLE( value, solution_value ) );
       assert( num.feasCeil( solution_value ) == value + 1 );
       return value + 1;
    }
@@ -245,11 +245,11 @@ class FixAndPropagate
    void
    create_solution( Vec<REAL>& result )
    {
-      for( int i = 0; i < probing_view.getProbingUpperBounds().size(); i++ )
+      Vec<REAL>& upper_bounds = probing_view.getProbingUpperBounds();
+      for( int i = 0; i < upper_bounds.size(); i++ )
       {
-         assert( probing_view.getProbingUpperBounds()[i] ==
-                 probing_view.getProbingLowerBounds()[i] );
-         result[i] = probing_view.getProbingUpperBounds()[i];
+         assert( upper_bounds[i] == probing_view.getProbingLowerBounds()[i] );
+         result[i] = upper_bounds[i];
       }
    }
 };
