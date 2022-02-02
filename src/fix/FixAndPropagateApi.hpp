@@ -71,11 +71,10 @@ delete_problem_instance( void* problem_ptr )
    delete problem;
 }
 
-bool
+int
 call_algorithm( void* problem_ptr, double* cont_solution, double* result,
                 int n_cols )
 {
-   //   auto f = (FixAndPropagate<double>*)( fix_ );
    auto problem = (Problem<double>*)( problem_ptr );
    ProbingView<double> view{ *problem, {} };
    FixAndPropagate<double> f{ {}, {}, *problem, view };
