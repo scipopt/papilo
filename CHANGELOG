@@ -70,6 +70,10 @@ Build system
 ------------
 Fixed bugs
 ----------
+
+- copy extended_euclidean.hpp during installation
+- fix bug in FindTBB module
+
 Miscellaneous
 -------------
 Known bugs
