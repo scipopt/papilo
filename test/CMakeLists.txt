@@ -58,6 +58,7 @@ add_executable(unit_test TestMain.cpp
 
         fix/VectorMultiplicationTest.cpp
         fix/FixAndPropagateTest.cpp
+        fix/FixAndPropagateIT.cpp
         fix/FixAndPropagateApiTest.cpp
 
         ${BOOST_REQUIRED_TEST_FILES}
