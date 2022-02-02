@@ -185,8 +185,8 @@ TEST_CASE( "fix-and-propagate-frac-check-within-bounds", "[fix]" )
    assert( !infeasible );
    assert( res[0] == 1 );
    assert( res[1] == 0 );
-   assert( res[2] == 0 );
-   assert( res[3] == 3 );
+   assert( res[2] == 3 );
+   assert( res[3] == 0 );
 }
 
 TEST_CASE( "fix-and-propagate-random-backtrack", "[fix]" )
@@ -312,9 +312,9 @@ TEST_CASE( "fix-and-propagate-farkas-check-within-bounds", "[fix]" )
        fixAndPropagate.fix_and_propagate( primal_solution, res, strategy );
 
    assert( !infeasible );
-   assert( res[0] == 0 );
-   assert( res[1] == 0 );
-   assert( res[2] == 2 );
+   assert( res[0] == 1 );
+   assert( res[1] == 1 );
+   assert( res[2] == 0 );
    assert( res[3] == 2 );
 }
 
