@@ -220,7 +220,7 @@ else()
    set(PAPILO_USE_STANDARD_HASHMAP 1)
 endif()
 
-add_library(papilo-core STATIC
+add_library(papilo-core SHARED
    src/papilo/core/VariableDomains.cpp
    src/papilo/core/SparseStorage.cpp
    src/papilo/core/ConstraintMatrix.cpp
@@ -248,9 +248,9 @@ add_library(papilo-core STATIC
    src/papilo/presolvers/SimplifyInequalities.cpp
   )
 
-add_library(fix-shared SHARED src/fix/FixAndPropagateApi.hpp
-        src/fix/FixAndPropagate.hpp
-        ${sources})
+#add_library(fix-shared SHARED src/fix/FixAndPropagateApi.hpp
+#        src/fix/FixAndPropagate.hpp
+#        ${sources})
 
 
 target_link_libraries(papilo-core papilo)
