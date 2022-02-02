@@ -278,7 +278,7 @@ TEST_CASE( "fix-and-propagate-farkas-backtrack", "[fix]" )
 
    ProbingView<double> view{ problem, {} };
    FixAndPropagate<double> fixAndPropagate{ {}, {}, problem, view, true };
-   FarkasRoundingStrategy<double> strategy{ 0, {} };
+   FarkasRoundingStrategy<double> strategy{ 0, {}, false };
 
    bool infeasible =
        fixAndPropagate.fix_and_propagate( primal_solution, res, strategy );
@@ -293,7 +293,7 @@ TEST_CASE( "fix-and-propagate-farkas-backtrack", "[fix]" )
 TEST_CASE( "fix-and-propagate-farkas-check-within-bounds", "[fix]" )
 {
    Problem<double> problem = setupProblemForFixAndPropagation();
-   problem.getUpperBounds()[0] = 3;
+   problem.getUpperBounds()[0] = 1;
    problem.getUpperBounds()[1] = 3;
    problem.getUpperBounds()[2] = 3;
    problem.getUpperBounds()[3] = 3;
@@ -301,20 +301,20 @@ TEST_CASE( "fix-and-propagate-farkas-check-within-bounds", "[fix]" )
    problem.getConstraintMatrix().getLeftHandSides()[0] = 4;
    problem.recomputeAllActivities();
 
-   Vec<double> primal_solution = { 1.8, 1.8, 2.8, 2.8 };
+   Vec<double> primal_solution = { 0.8, 1.8, 2.3, 2.3 };
 
    Vec<double> res{ primal_solution };
 
    FixAndPropagate<double> fixAndPropagate{ {}, {}, problem, {problem, {}}, true  };
-   FarkasRoundingStrategy<double> strategy{ 0, {} };
+   FarkasRoundingStrategy<double> strategy{ 0, {}, true };
 
    bool infeasible =
        fixAndPropagate.fix_and_propagate( primal_solution, res, strategy );
 
    assert( !infeasible );
-   assert( res[0] == 1 );
+   assert( res[0] == 0 );
    assert( res[1] == 1 );
-   assert( res[2] == 0 );
+   assert( res[2] == 1 );
    assert( res[3] == 2 );
 }
 

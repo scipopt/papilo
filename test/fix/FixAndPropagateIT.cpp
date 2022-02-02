@@ -48,7 +48,7 @@ TEST_CASE( "fix-and-propagate-it-solution-is-feasible", "[fix]" )
    Solution<double> solution = parse_solution( path_to_sol, problem );
    FixAndPropagate<double> fixAndPropagate{
        {}, {}, problem, { problem, {} }, true };
-   FarkasRoundingStrategy<double> strategy{ 0, {} };
+   FarkasRoundingStrategy<double> strategy{ 0, {}, false };
    Vec<double> res{ solution.primal };
 
    bool infeasible =
@@ -70,7 +70,7 @@ TEST_CASE( "fix-and-propagate-it-modified-solution-is-feasible", "[fix]" )
    Solution<double> solution = parse_solution( path_to_sol, problem );
    FixAndPropagate<double> fixAndPropagate{
        {}, {}, problem, { problem, {} }, true };
-   FarkasRoundingStrategy<double> strategy{ 0, {} };
+   FarkasRoundingStrategy<double> strategy{ 0, {}, false };
    Vec<double> modified_primal{ solution.primal };
    modified_primal[1] = 0.6;
 

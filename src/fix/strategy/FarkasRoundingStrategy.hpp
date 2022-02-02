@@ -36,6 +36,7 @@ class FarkasRoundingStrategy : public RoundingStrategy<REAL>
 {
 
    const Num<REAL> num;
+   bool scale_score;
 
    typedef std::mt19937 MyRNG;
    uint32_t seed;
@@ -43,8 +44,8 @@ class FarkasRoundingStrategy : public RoundingStrategy<REAL>
    MyRNG random_generator;
 
  public:
-   FarkasRoundingStrategy( uint32_t seed_, Num<REAL> num_ )
-       : seed( seed_ ), num( num_ )
+   FarkasRoundingStrategy( uint32_t seed_, Num<REAL> num_, bool scale_score_ )
+       : seed( seed_ ), num( num_ ), scale_score( scale_score_ )
    {
       random_generator.seed( seed );
    }
@@ -53,11 +54,12 @@ class FarkasRoundingStrategy : public RoundingStrategy<REAL>
    select_rounding_variable( const Vec<REAL>& cont_solution,
                              const ProbingView<REAL>& view ) override
    {
-      // this is currently fractional diving
       REAL value = -1;
       int variable = -1;
       REAL score = -1;
-      std::uniform_int_distribution<int> dist_rounding( 0, 1e5 );
+      bool stored_var_binary = false;
+      std::uniform_real_distribution<double> small_number_generator( 0.0000001,
+                                                                     0.000001 );
       auto obj = view.get_obj();
 
       for( int i = 0; i < cont_solution.size(); i++ )
@@ -69,35 +71,38 @@ class FarkasRoundingStrategy : public RoundingStrategy<REAL>
              !view.is_integer_variable( i ) )
             continue;
 
-         REAL current_score = abs( obj[i] ) + dist_rounding( random_generator );
-
          /* prefer decisions on binary variables */
-         if( view.getProbingUpperBounds()[i] != 1 )
-            current_score = -1 / current_score;
+         bool current_var_binary = view.getProbingUpperBounds()[i] == 1 &&
+                                   view.getProbingLowerBounds()[i] == 0 &&
+                                   !num.isZero( obj[i] );
+         if( !current_var_binary && stored_var_binary )
+            continue;
 
-         if( current_score > score || variable == -1 )
+         REAL current_score =
+             abs( obj[i] ) + small_number_generator( random_generator );
+
+         REAL frac = cont_solution[i] - num.epsFloor( cont_solution[i] );
+         bool round_up =
+             num.isLT( obj[i], 0 ) || ( num.isZero( obj[i] ) && frac > 0.5 );
+         if( scale_score )
          {
-            if( num.isLT( obj[i], 0 ) )
-            {
-               variable = i;
-               value = num.epsCeil( cont_solution[i] );
-            }
-            else if( num.isGT( obj[i], 0 ) )
-            {
-               variable = i;
-               value = num.epsFloor( cont_solution[i] );
-            }
+            if( round_up )
+               current_score = current_score * ( 1 - frac );
             else
-            {
-               REAL frac = cont_solution[i] - num.epsFloor( cont_solution[i] );
-               REAL proposed_value;
-               if( frac > 0.5 )
-                  proposed_value = num.epsCeil( cont_solution[i] );
-               else
-                  proposed_value = num.epsFloor( cont_solution[i] );
-               variable = i;
-               value = proposed_value;
-            }
+               current_score = current_score * frac;
+         }
+         if( ( current_var_binary && !stored_var_binary ) || variable == -1 ||
+             current_score > score )
+         {
+            assert( ( current_var_binary && !stored_var_binary ) ||
+                    current_var_binary == stored_var_binary );
+            score = current_score;
+            variable = i;
+            stored_var_binary = current_var_binary;
+            if( round_up )
+               value = num.epsCeil( cont_solution[i] );
+            else
+               value = num.epsFloor( cont_solution[i] );
          }
       }
       return { variable, value };
