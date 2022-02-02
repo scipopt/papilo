@@ -21,7 +21,7 @@
 /*                                                                           */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#include "fix/FixAndPropagateApi.hpp"
+#include "fix/FixAndPropagateApi.cpp"
 #include "catch/catch.hpp"
 
 TEST_CASE( "fix-and-propagate-api", "[fix]" )
