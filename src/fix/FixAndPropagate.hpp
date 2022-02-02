@@ -59,9 +59,8 @@ using namespace papilo;
  *      fix v to lb_v
  *  else
  *      fix v to ub_v
- *  propagate domains*
+ *  propagate domains
  *
-
  * @tparam REAL the arithmetic parameter
  */
 template <typename REAL>
@@ -168,10 +167,8 @@ class FixAndPropagate
          msg.info( "changing bound of variable is infeasible row: {} col {} \n",
                    probing_view.get_row_causing_infeasibility(),
                    probing_view.get_col_causing_infeasibility() );
-         //         return true;
       }
       probing_view.propagateDomains();
-      //      probing_view.storeImplications();
       if( probing_view.isInfeasible() )
       {
          msg.info( "propagation is infeasible row: {} col {} \n",
@@ -190,11 +187,9 @@ class FixAndPropagate
          assert( num.feasFloor( solution_value ) == value - 1 );
          return value - 1;
       }
-      else
-      {
-         assert( num.feasCeil( solution_value ) == value + 1 );
-         return value + 1;
-      }
+      assert(num.isLE( value, solution_value ));
+      assert( num.feasCeil( solution_value ) == value + 1 );
+      return value + 1;
    }
 
    bool
@@ -224,10 +219,6 @@ class FixAndPropagate
             }
             else
             {
-               // only variable with integer value in the solution should be
-               // non fixed
-               // TODO: this assertion is not correct
-
                if( ge_lb && le_ub )
                {
                   assert( num.isEq( cont_solution[i],
