@@ -245,7 +245,7 @@ class FixAndPropagate
    void
    create_solution( Vec<REAL>& result )
    {
-      Vec<REAL>& upper_bounds = probing_view.getProbingUpperBounds();
+      auto upper_bounds = probing_view.getProbingUpperBounds();
       for( int i = 0; i < upper_bounds.size(); i++ )
       {
          assert( upper_bounds[i] == probing_view.getProbingLowerBounds()[i] );
