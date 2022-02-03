@@ -51,8 +51,9 @@ class VolumeAlgorithm
    REAL f_strong_incr_factor;
    REAL f_weak_incr_factor;
    REAL f_decr_factor;
-   REAL obj_threshold;
-   REAL con_threshold;
+   REAL obj_reltol;
+   REAL obj_abstol;
+   REAL con_abstol;
    int weak_improvement_iter_limit;
    int non_improvement_iter_limit;
 
@@ -62,7 +63,7 @@ class VolumeAlgorithm
                     REAL _f, REAL _f_min, REAL _f_max,
                     REAL _f_strong_incr_factor, REAL _f_weak_incr_factor,
                     REAL _f_decr_factor,
-                    REAL _obj_threshold, REAL _con_threshold,
+                    REAL _obj_reltol, REAL _obj_abstol, REAL _con_abstol,
                     int _weak_improvement_iter_limit,
                     int _non_improvement_iter_limit )
        : msg( _msg ), num( _num ),
@@ -70,8 +71,8 @@ class VolumeAlgorithm
          f( _f ), f_min( _f_min ), f_max( _f_max ),
          f_strong_incr_factor( _f_strong_incr_factor ),
          f_weak_incr_factor( _f_weak_incr_factor ),
-         f_decr_factor( _f_decr_factor ),
-         obj_threshold( _obj_threshold ), con_threshold( _con_threshold ),
+         f_decr_factor( _f_decr_factor ), obj_reltol( _obj_reltol ),
+         obj_abstol( _obj_abstol ), con_abstol( _con_abstol ),
          weak_improvement_iter_limit( _weak_improvement_iter_limit ),
          non_improvement_iter_limit( _non_improvement_iter_limit ), op( {} )
    {
@@ -217,10 +218,14 @@ class VolumeAlgorithm
                       const REAL z_bar )
    {
       msg.info( "   sc_1: {}\n", op.l1_norm( v ) / n_rows_A );
-      msg.info( "   sc_2: {}\n", abs( op.multi( c, x_bar ) - z_bar ) / z_bar );
-      return num.isGE( op.l1_norm( v ), n_rows_A * con_threshold ) ||
-             num.isGE( abs( op.multi( c, x_bar ) - z_bar ),
-                       z_bar * obj_threshold );
+      msg.info( "   sc_2: {}\n", num.isZero( z_bar ) ?
+                                 abs( op.multi( c, x_bar ) ) :
+                                 abs( op.multi( c, x_bar ) - z_bar ) / z_bar );
+      return num.isGE( op.l1_norm( v ), n_rows_A * con_abstol ) ||
+             ( num.isZero( z_bar ) ?
+               num.isGE( abs( op.multi( c, x_bar ) ), obj_abstol ) :
+               num.isGE( abs( op.multi( c, x_bar ) - z_bar ),
+                         z_bar * obj_reltol ) );
    }
 
    REAL

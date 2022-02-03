@@ -36,8 +36,8 @@ setupProblemWithoutMatrix();
 
 TEST_CASE( "small-volume-algorithm-test", "[volume]" )
 {
-   VolumeAlgorithm<double> algorithm{ {}, {}, 0.5, 0.1, 1, 0.0005, 2, 2, 1.1,
-      0.66, 0.02, 0.01, 2, 20 };
+   VolumeAlgorithm<double> algorithm{ {}, {}, 0.05, 0.1, 0.2, 0.0005, 2, 2,
+                                      1.1, 0.66, 0.01, 0.001, 0.02, 2, 20 };
    Vec<double> c( 2 );
    c = { 1, 2 };
    Vec<double> b( 2 );
