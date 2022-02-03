@@ -1,4 +1,3 @@
-
 project(c_interface_testing LANGUAGES C)
 
 add_executable(c_interface_testing "main.c")

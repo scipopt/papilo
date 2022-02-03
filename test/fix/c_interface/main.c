@@ -21,7 +21,9 @@
 /*                                                                           */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#include <FixAndPropagateApi.h>
+//#include <FixAndPropagateApi.h>
+#include "fix/FixAndPropagateApi.h"
+//#include "fix/FixAndPropagateApi.cpp"
 #include <assert.h>
 
 int

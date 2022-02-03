@@ -21,11 +21,10 @@
 /*                                                                           */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
+#include "fix/FixAndPropagateApi.h"
 #include "fix/FixAndPropagate.hpp"
 
 #include "papilo/io/MpsParser.hpp"
-#include <cassert>
-#include <fstream>
 #include <string>
 
 using namespace papilo;
