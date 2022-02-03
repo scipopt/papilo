@@ -271,6 +271,7 @@ configure_file("${PROJECT_SOURCE_DIR}/src/papilo/CMakeConfig.hpp.in"
 # add tests
 enable_testing()
 add_subdirectory(${PROJECT_SOURCE_DIR}/test)
+add_subdirectory(${PROJECT_SOURCE_DIR}/test/fix/c_interface)
 
 # install the header files of papilo
 install(FILES
