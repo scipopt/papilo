@@ -253,7 +253,7 @@ add_library(fix-shared SHARED
         src/fix/FixAndPropagateApi.h
     src/fix/FixAndPropagate.hpp
     )
-target_link_libraries(fix-shared papilo-core)
+target_link_libraries(fix-shared papilo)
 
 
 target_link_libraries(papilo-core papilo)
