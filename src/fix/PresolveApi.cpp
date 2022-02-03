@@ -23,6 +23,9 @@
 
 #include "papilo/io/MpsParser.hpp"
 #include "papilo/io/MpsWriter.hpp"
+#include "papilo/core/Presolve.hpp"
+#include "papilo/core/postsolve/Postsolve.hpp"
+#include "papilo/core/postsolve/PostsolveStorage.hpp"
 #include <cassert>
 #include <string>
 
