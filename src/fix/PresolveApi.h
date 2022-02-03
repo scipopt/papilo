@@ -22,8 +22,8 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 void*
-presolve( const char* filename, const char* reduced_filename, int& status,
-       int& result );
+presolve( const char* filename, const char* reduced_filename, int* status,
+       int* result );
 
 void
 delete_postsolve_storage( void* postsolve_storage_ptr );

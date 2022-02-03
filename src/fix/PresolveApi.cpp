@@ -32,8 +32,8 @@
 using namespace papilo;
 
 void*
-presolve( const char* filename, const char* reduced_filename, int& status,
-       int& result )
+presolve( const char* filename, const char* reduced_filename, int* status,
+          int* result )
 {
 
    std::string filename_as_string( filename );
@@ -44,10 +44,10 @@ presolve( const char* filename, const char* reduced_filename, int& status,
    if( !prob )
    {
       fmt::print( "error loading problem {}\n", filename );
-      result = 1;
+      *result = 1;
       return nullptr;
    }
-   result = 0;
+   *result = 0;
    auto problem = new Problem<double>( prob.get() );
    Presolve<double> presolve{};
    auto presolve_result = presolve.apply( *problem, false );
@@ -55,19 +55,19 @@ presolve( const char* filename, const char* reduced_filename, int& status,
    {
 
    case PresolveStatus::kUnchanged:
-      status = 1;
+      *status = 1;
       return nullptr;
    case PresolveStatus::kReduced:
-      status = 0;
+      *status = 0;
       break;
    case PresolveStatus::kUnbndOrInfeas:
-      status = 2;
+      *status = 2;
       return nullptr;
    case PresolveStatus::kUnbounded:
-      status = 3;
+      *status = 3;
       return nullptr;
    case PresolveStatus::kInfeasible:
-      status = 4;
+      *status = 4;
       return nullptr;
    }
    std::string reduced_filename_as_string( reduced_filename );
