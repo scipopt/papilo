@@ -21,57 +21,23 @@
 /*                                                                           */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
+#ifndef _FIX_ROUNDING_STRATEGY_HPP_
+#define _FIX_ROUNDING_STRATEGY_HPP_
 
-#include "fix/FixAndPropagate.hpp"
-#include "fix/strategy/FractionalRoundingStrategy.hpp"
+#include "papilo/core/ProbingView.hpp"
 
-#include "papilo/io/MpsParser.hpp"
 #include <cassert>
-#include <fstream>
-#include <string>
+#include <random>
 
 using namespace papilo;
 
-void*
-setup( const char* filename, int* result )
+template <typename REAL>
+class RoundingStrategy
 {
+ public:
+   virtual Fixing<REAL>
+   select_rounding_variable( const Vec<REAL>& cont_solution,
+                           const ProbingView<REAL>& view ) = 0;
+};
 
-   std::string filename_as_string( filename );
-   boost::optional<Problem<double>> prob;
-   {
-      prob = MpsParser<double>::loadProblem( filename_as_string );
-   }
-   if( !prob )
-   {
-      fmt::print( "error loading problem {}\n", filename );
-      *result = -1;
-      return nullptr;
-   }
-   *result = 0;
-   auto problem = new Problem<double>( prob.get() );
-   problem->recomputeAllActivities();
-   return problem;
-}
-
-void
-delete_problem_instance( void* problem_ptr )
-{
-   auto problem = (Problem<double>*)( problem_ptr );
-   delete problem;
-}
-
-bool
-call_algorithm( void* problem_ptr, double* cont_solution, double* result,
-                int n_cols )
-{
-   auto problem = (Problem<double>*)( problem_ptr );
-   ProbingView<double> view{ *problem, {} };
-   FixAndPropagate<double> f{ {}, {}, *problem, view, false };
-   Vec<double> sol( cont_solution, cont_solution + n_cols );
-   Vec<double> res( result, result + n_cols );
-
-   FractionalRoundingStrategy<double> strategy{{}};
-   bool is_infeasible = f.fix_and_propagate( sol, res, strategy );
-   result = &res[0];
-   return is_infeasible;
-}
+#endif

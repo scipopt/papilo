@@ -21,57 +21,59 @@
 /*                                                                           */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
+#ifndef FIX_RANDOM_ROUNDING_STRATEGY_HPP
+#define FIX_RANDOM_ROUNDING_STRATEGY_HPP
 
-#include "fix/FixAndPropagate.hpp"
-#include "fix/strategy/FractionalRoundingStrategy.hpp"
+#include "fix/strategy/RoundingStrategy.hpp"
 
-#include "papilo/io/MpsParser.hpp"
-#include <cassert>
-#include <fstream>
-#include <string>
-
-using namespace papilo;
-
-void*
-setup( const char* filename, int* result )
+template <typename REAL>
+class RandomRoundingStrategy : public RoundingStrategy<REAL>
 {
 
-   std::string filename_as_string( filename );
-   boost::optional<Problem<double>> prob;
+   const Num<REAL> num;
+
+   typedef std::mt19937 MyRNG;
+   uint32_t seed;
+
+   MyRNG random_generator;
+
+ public:
+   RandomRoundingStrategy( uint32_t seed_, Num<REAL> num_ )
+       : seed( seed_ ), num( num_ )
    {
-      prob = MpsParser<double>::loadProblem( filename_as_string );
+      random_generator.seed( seed );
    }
-   if( !prob )
+
+   Fixing<REAL>
+   select_rounding_variable( const Vec<REAL>& cont_solution,
+                             const ProbingView<REAL>& view ) override
    {
-      fmt::print( "error loading problem {}\n", filename );
-      *result = -1;
-      return nullptr;
+      Vec<int> remaining_unfixed_cols{};
+      for( int i = 0; i < cont_solution.size(); i++ )
+      {
+         if( num.isIntegral( cont_solution[i] ) ||
+             num.isEq( view.getProbingUpperBounds()[i],
+                       view.getProbingLowerBounds()[i] ) ||
+             !view.is_integer_variable( i ) ||
+             !view.is_within_bounds( i, cont_solution[i] ) )
+            continue;
+         remaining_unfixed_cols.push_back( i );
+      }
+      if( remaining_unfixed_cols.empty() )
+         return { -1, -1 };
+
+      std::uniform_int_distribution<uint32_t> dist_variable(
+          0, remaining_unfixed_cols.size() - 1 );
+      std::uniform_int_distribution<uint32_t> dist_rounding( 0, 1 );
+      int variable = remaining_unfixed_cols[dist_variable( random_generator )];
+      REAL value = -1;
+      if( dist_rounding( random_generator ) )
+         value = num.epsCeil( cont_solution[variable] );
+      else
+         value = num.epsFloor( cont_solution[variable] );
+
+      return { variable, value };
    }
-   *result = 0;
-   auto problem = new Problem<double>( prob.get() );
-   problem->recomputeAllActivities();
-   return problem;
-}
+};
 
-void
-delete_problem_instance( void* problem_ptr )
-{
-   auto problem = (Problem<double>*)( problem_ptr );
-   delete problem;
-}
-
-bool
-call_algorithm( void* problem_ptr, double* cont_solution, double* result,
-                int n_cols )
-{
-   auto problem = (Problem<double>*)( problem_ptr );
-   ProbingView<double> view{ *problem, {} };
-   FixAndPropagate<double> f{ {}, {}, *problem, view, false };
-   Vec<double> sol( cont_solution, cont_solution + n_cols );
-   Vec<double> res( result, result + n_cols );
-
-   FractionalRoundingStrategy<double> strategy{{}};
-   bool is_infeasible = f.fix_and_propagate( sol, res, strategy );
-   result = &res[0];
-   return is_infeasible;
-}
+#endif

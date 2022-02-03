@@ -17,6 +17,8 @@ if (Boost_IOSTREAMS_FOUND AND Boost_SERIALIZATION_FOUND AND Boost_PROGRAM_OPTION
 #    configure_file(resources/dual_fix_neg_inf.postsolve resources/dual_fix_neg_inf.postsolve COPYONLY)
 #    configure_file(resources/dual_fix_pos_inf.postsolve resources/dual_fix_pos_inf.postsolve COPYONLY)
     configure_file(instances/dual_fix_neg_inf.mps resources/dual_fix_neg_inf.mps COPYONLY)
+    configure_file(instances/rococoC10-001000.sol.gz resources/rococoC10-001000.sol.gz COPYONLY)
+    configure_file(instances/rococoC10-001000.mps.gz resources/rococoC10-001000.mps.gz COPYONLY)
     set(BOOST_REQUIRED_TESTS
 #            "finding-the-right-value-in-postsolve-for-a-column-fixed-pos-inf"
 #            "finding-the-right-value-in-postsolve-for-a-column-fixed-neg-inf"
@@ -58,6 +60,7 @@ add_executable(unit_test TestMain.cpp
 
         fix/VectorMultiplicationTest.cpp
         fix/FixAndPropagateTest.cpp
+        fix/FixAndPropagateIT.cpp
         fix/FixAndPropagateApiTest.cpp
 
         ${BOOST_REQUIRED_TEST_FILES}
@@ -196,8 +199,19 @@ set(unit_tests
         "failed-path-sparsify"
 
         "vector-multiplication"
-        "fix-and-propagate"
+        "fix-and-propagate-integer-variable"
+        "fix-and-propagate-cont-variable-stays-cont"
+        "fix-and-propagate-all-integer-solutions"
+        "fix-and-propagate-frac-backtrack"
+        "fix-and-propagate-frac-check-within-bounds"
+        "fix-and-propagate-random-backtrack"
+        "fix-and-propagate-random"
+        "fix-and-propagate-random-check-within-bounds"
+        "fix-and-propagate-farkas-backtrack"
+        "fix-and-propagate-farkas-check-within-bounds"
 #        "fix-and-propagate-api"
+        "fix-and-propagate-it-modified-solution-is-feasible"
+        "fix-and-propagate-it-solution-is-feasible"
 
         "integration-test-for-flugpl"
         ${PAPILOLIB_TESTS}
