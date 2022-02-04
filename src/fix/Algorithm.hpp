@@ -125,17 +125,17 @@ class Algorithm
          msg.info( "Starting fixing and propagating\n" );
 
          ProbingView<REAL> probing_view{ problem, num };
-         FixAndPropagate<REAL> fixAndPropagate{ msg, num, probing_view, false };
+         FixAndPropagate<REAL> fixAndPropagate{ msg, num, probing_view, true };
          FarkasRoundingStrategy<REAL> strategy{ 0, {}, false };
-         bool feasible =
+         bool infeasible =
              fixAndPropagate.fix_and_propagate( primal_heur_sol, int_solution, strategy );
-         if( feasible )
+         if( !infeasible )
             break;
 
          msg.info( "Starting conflict analysis\n" );
          bool abort = conflict_analysis.perform_conflict_analysis();
          if( abort )
-            break;
+            return;
          //TODO: add constraint to builder and generate new problem
       }
 
