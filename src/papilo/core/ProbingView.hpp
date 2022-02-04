@@ -76,10 +76,52 @@ class ProbingView
       this->minintdomred = value;
    }
 
-   const Problem<REAL>&
-   getProblem()
+   Vec<REAL>
+   get_obj() const
    {
-      return problem;
+      return problem.getObjective().coefficients;
+   }
+
+   bool
+   is_integer_variable( int col ) const
+   {
+      return problem.getColFlags()[col].test( ColFlag::kIntegral );
+   }
+
+   bool
+   is_within_bounds( int col, const REAL& value ) const
+   {
+      return ( probing_domain_flags[col].test( ColFlag::kLbInf ) ||
+               num.isGE( value, probing_lower_bounds[col] ) ) &&
+             ( probing_domain_flags[col].test( ColFlag::kUbInf ) ||
+               num.isLE( value, probing_upper_bounds[col] ) );
+   }
+
+   std::pair<bool, bool>
+   has_locks( int col ) const
+   {
+      int nuplocks = 0;
+      int ndownlocks = 0;
+
+      REAL obj = problem.getObjective().coefficients[col];
+      auto rflags = problem.getRowFlags();
+      auto colvec = problem.getConstraintMatrix().getColumnCoefficients( col );
+      int collen = colvec.getLength();
+      const REAL* values = colvec.getValues();
+      const int* rowinds = colvec.getIndices();
+      if( num.isGE( obj, 0 ) )
+         ++ndownlocks;
+      else if( num.isLE( obj, 0 ) )
+         ++nuplocks;
+
+      for( int j = 0; j != collen; ++j )
+      {
+         count_locks( values[j], rflags[rowinds[j]], ndownlocks, nuplocks );
+
+         if( nuplocks != 0 && ndownlocks != 0 )
+            return { false, false };
+      }
+      return { nuplocks == 0, ndownlocks == 0 };
    }
 
    void
@@ -92,19 +134,19 @@ class ProbingView
    reset();
 
    void
-   setProbingColumn( int col, bool value )
+   setProbingColumn( int col, REAL value )
    {
       // remember probing column and probed value
       probingCol = col;
       probingValue = value;
-      const Fixing<REAL>& fixing = { col, value ? 1.0 : 0.0 };
+      const Fixing<REAL>& fixing = { col, value };
       fixings.push_back( fixing );
 
       // fix upper/lower bound of probed column
-      if( value )
-         changeLb( col, 1.0 );
-      else
-         changeUb( col, 0.0 );
+      if( !num.isEq( probing_lower_bounds[col], value ) )
+         changeLb( col, value );
+      if( !num.isEq( probing_upper_bounds[col], value ) )
+         changeUb( col, value );
    }
 
    Vec<Fixing<REAL>>
@@ -235,7 +277,7 @@ class ProbingView
    int col_causing_infeasibility = -1;
    int round;
    int probingCol;
-   bool probingValue;
+   REAL probingValue;
    Vec<Fixing<REAL>> fixings;
 
    // datastructures for storing result of probing on one value
@@ -268,7 +310,7 @@ ProbingView<REAL>::ProbingView( const Problem<REAL>& problem_,
    infeasible = false;
    amountofwork = 0;
    probingCol = -1;
-   probingValue = false;
+   probingValue = 0;
    otherValueInfeasible = false;
    minintdomred = num.getFeasTol() * 1000;
    mincontdomred = 0.3;
@@ -753,6 +795,28 @@ ProbingView<REAL>::propagateDomains()
 
          if( !propagate )
             continue;
+
+         if( probing_activities[candrow].ninfmin == 0 &&
+             !rflags[candrow].test( RowFlag::kRhsInf ) &&
+             num.isFeasLT( rhs[candrow], probing_activities[candrow].min ) &&
+             num.isSafeLT( rhs[candrow], probing_activities[candrow].min ) )
+         {
+            Message::debug(
+                this, "[{}:{}]  Row {} is already violated. Not propagated!\n",
+                __FILE__, __LINE__, candrow );
+            continue;
+         }
+
+         if( probing_activities[candrow].ninfmax == 0 &&
+             !rflags[candrow].test( RowFlag::kLhsInf ) &&
+             num.isFeasGT( lhs[candrow], probing_activities[candrow].max ) &&
+             num.isSafeGT( lhs[candrow], probing_activities[candrow].max ) )
+         {
+            Message::debug(
+                this, "[{}:{}]  Row {} is already violated. Not propagated!\n",
+                __FILE__, __LINE__, candrow );
+            continue;
+         }
 
          auto rowvec = consMatrix.getRowCoefficients( candrow );
 
