@@ -239,9 +239,9 @@ TEST_CASE( "fix-and-propagate-random", "[fix]" )
    bool infeasible =
        fixAndPropagate.fix_and_propagate( primal_solution, res, strategy, view  );
 
-   assert( infeasible );
-   assert( res[0] == 1 );
-   assert( res[1] == 1 );
+   assert( !infeasible );
+   assert( res[0] == 0 );
+   assert( res[1] == 0 );
    assert( res[2] == 1 );
    assert( res[3] == 1 );
 }

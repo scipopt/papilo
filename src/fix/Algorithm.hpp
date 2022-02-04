@@ -295,7 +295,7 @@ class Algorithm
       }
       StableSum<REAL> sum{};
       for( int j = 0; j < primal_heur_sol.size(); j++ )
-         sum.add( int_solutions[0][j] * views.get_obj()[j] );
+         sum.add( int_solutions[0][j] * views[0].get_obj()[j] );
       obj_value[0] = sum.get();
       msg.info( "Diving {} found obj value {}!\n", 0, obj_value[0] );
 #endif
