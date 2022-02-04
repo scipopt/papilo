@@ -21,58 +21,50 @@
 /*                                                                           */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#include "fix/Algorithm.hpp"
+#include "fix/FixAndPropagate.hpp"
+#include "fix/VolumeAlgorithm.hpp"
+#include "papilo/core/Presolve.hpp"
 #include "papilo/core/Problem.hpp"
-#include "papilo/io/MpsParser.hpp"
-#include "papilo/misc/OptionsParser.hpp"
-#include <boost/program_options.hpp>
+#include "papilo/core/ProblemBuilder.hpp"
+#include "papilo/io/Message.hpp"
+#include "papilo/misc/Num.hpp"
+#include <cassert>
+#include <cmath>
 #include <fstream>
 
-using namespace papilo;
+#include <cassert>
+#include <fstream>
 
-
-int
-main( int argc, char* argv[] )
+namespace papilo
 {
 
-   // get the options passed by the user
-   OptionsInfo optionsInfo;
-   try
+template <typename REAL>
+class ConflictAnalysis
+{
+   Message msg;
+   Num<REAL> num;
+
+ public:
+   ConflictAnalysis( Message _msg, Num<REAL> _num ) : msg( _msg ), num( _num )
    {
-      optionsInfo = parseOptions( argc, argv );
-   }
-   catch( const boost::program_options::error& ex )
-   {
-      std::cerr << "Error while parsing the options.\n" << '\n';
-      std::cerr << ex.what() << '\n';
-      return 1;
    }
 
-   if( !optionsInfo.is_complete )
-      return 0;
-
-   double readtime = 0;
-   Problem<double> problem;
-   Num<double> num{};
-   Message msg{};
-   boost::optional<Problem<double>> prob;
-
+   bool
+   perform_conflict_analysis( Vec<int> length, Vec<int*> indices,
+                              Vec<REAL*> values, Vec<RowFlags> flags,
+                              Vec<REAL> lhs, Vec<REAL> rhs )
    {
-      Timer t( readtime );
-      prob = MpsParser<double>::loadProblem( optionsInfo.instance_file );
+      // TODO: to be implemented
+      //  should return a list of constraint to be added to the builder
+      return true;
    }
 
-   // Check whether reading was successful or not
-   if( !prob )
+   bool
+   perform_conflict_analysis( )
    {
-      fmt::print( "error loading problem {}\n", optionsInfo.instance_file );
-      return 0;
+      msg.info("function call is dummy and waited to be implemented above");
+      return true;
    }
-   problem = *prob;
+};
 
-   fmt::print( "reading took {:.3} seconds\n", readtime );
-
-   Algorithm<double> alg{ {}, {} };
-   alg.solve_problem( problem );
-   return 0;
-}
+} // namespace papilo
