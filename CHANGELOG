@@ -48,6 +48,37 @@ Known bugs
 
 @page RN20 Release notes for PAPILO 2.0
 
+@section RN201 PaPILO 2.0.1
+***************************
+
+Features
+--------
+Performance improvements
+------------------------
+Interface changes
+-----------------
+### Deleted and changed API methods
+### New API functions
+### Changed parameters
+### New parameters with default values
+### Data structures
+Unit tests
+----------
+Testing
+-------
+Build system
+------------
+Fixed bugs
+----------
+
+- copy extended_euclidean.hpp during installation
+- fix bug in FindTBB module
+
+Miscellaneous
+-------------
+Known bugs
+----------
+
 @section RN200 PaPILO 2.0.0
 ***************************
 
