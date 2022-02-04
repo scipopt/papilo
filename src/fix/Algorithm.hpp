@@ -214,24 +214,29 @@ class Algorithm
       Vec<REAL>& leftHandSides = matrix.getLeftHandSides();
       Vec<REAL>& rightHandSides = matrix.getRightHandSides();
 
+      int equations = 0;
+
       for( int i = 0; i < problem.getNRows(); i++ )
       {
          nrows++;
          int rowsize = rowSizes[i];
          nnz = nnz + rowsize;
          auto flags = rowFlags[i];
+         if( flags.test( RowFlag::kEquation ) )
+            equations++;
          if( flags.test( RowFlag::kEquation ) ||
              flags.test( RowFlag::kLhsInf ) || flags.test( RowFlag::kRhsInf ) )
             continue;
          nrows++;
          nnz = nnz + rowsize;
       }
+      int slack_vars = nrows - equations;
 
-      builder.reserve( nnz, nrows, ncols );
+      builder.reserve( nnz, nrows, ncols + slack_vars );
 
       /* set up columns */
-      builder.setNumCols( ncols );
-      for( int i = 0; i != ncols; ++i )
+      builder.setNumCols( ncols + slack_vars );
+      for( int i = 0; i < ncols; ++i )
       {
          builder.setColLb( i, problem.getLowerBounds()[i] );
          builder.setColUb( i, problem.getUpperBounds()[i] );
@@ -243,9 +248,19 @@ class Algorithm
          builder.setObj( i, coefficients[i] );
       }
 
+      for( int i = ncols; i < ncols + slack_vars; ++i )
+      {
+         builder.setColLb( i, 0 );
+         builder.setColLbInf( i, false );
+         builder.setColUbInf( i, true );
+         builder.setColIntegral( i, false );
+         builder.setObj( i, 0 );
+      }
+
       /* set up rows */
       builder.setNumRows( nrows );
       int counter = 0;
+      int slack_var_counter = 0;
       for( int i = 0; i != problem.getNRows(); ++i )
       {
          const SparseVectorView<REAL>& view = matrix.getRowCoefficients( i );
@@ -267,44 +282,77 @@ class Algorithm
          else if( flags.test( RowFlag::kLhsInf ) )
          {
             assert( !flags.test( RowFlag::kRhsInf ) );
-            REAL* neg_rowvals = new REAL[rowlen];
-            invert( rowvals, neg_rowvals, rowlen );
-            builder.addRowEntries( counter, rowlen, rowcols, neg_rowvals );
-            builder.setRowLhs( counter, -rhs );
-            builder.setRowRhs( counter, 0 );
+
+            auto new_vals= new double [rowlen + 1];
+            memcpy( new_vals, rowvals, rowlen * sizeof( double ) );
+            new_vals[rowlen] = 1;
+            auto new_indices= new int [rowlen + 1];
+            memcpy( new_indices, rowcols, rowlen * sizeof( int ) );
+            new_indices[rowlen] = ncols + slack_var_counter;
+
+            builder.addRowEntries( counter, rowlen + 1, new_indices, new_vals );
+            builder.setRowLhs( counter, rhs );
+            builder.setRowRhs( counter, rhs );
             builder.setRowLhsInf( counter, false );
-            builder.setRowRhsInf( counter, true );
+            builder.setRowRhsInf( counter, false );
+            slack_var_counter++;
          }
          else if( flags.test( RowFlag::kRhsInf ) )
          {
             assert( !flags.test( RowFlag::kLhsInf ) );
-            builder.addRowEntries( counter, rowlen, rowcols, rowvals );
+
+            auto new_vals = new double[rowlen + 1];
+            memcpy( new_vals, rowvals, rowlen * sizeof( double ) );
+            new_vals[rowlen] = -1;
+            auto new_indices = new int [rowlen + 1];
+            memcpy( new_indices, rowcols, rowlen * sizeof( int ) );
+            new_indices[rowlen] = ncols + slack_var_counter;
+
+            builder.addRowEntries( counter, rowlen + 1, new_indices, new_vals );
             builder.setRowLhs( counter, lhs );
-            builder.setRowRhs( counter, 0 );
+            builder.setRowRhs( counter, lhs );
             builder.setRowLhsInf( counter, false );
-            builder.setRowRhsInf( counter, true );
+            builder.setRowRhsInf( counter, false );
+            slack_var_counter++;
          }
          else
          {
             assert( !flags.test( RowFlag::kLhsInf ) );
             assert( !flags.test( RowFlag::kRhsInf ) );
-            REAL* neg_rowvals = new REAL[rowlen];
-            invert( rowvals, neg_rowvals, rowlen );
 
-            builder.addRowEntries( counter, rowlen, rowcols, neg_rowvals );
-            builder.setRowLhs( counter, -rhs );
-            builder.setRowRhs( counter, 0 );
+            auto new_vals = new double[rowlen + 1];
+            memcpy( new_vals, rowvals, rowlen * sizeof( double ) );
+            new_vals[rowlen] = 1;
+            auto new_indices = new int[rowlen + 1];
+            memcpy( new_indices, rowcols, rowlen * sizeof( int ) );
+            new_indices[rowlen] = ncols + slack_var_counter;
+
+            builder.addRowEntries( counter, rowlen + 1, new_indices, new_vals );
+            builder.setRowLhs( counter, rhs );
+            builder.setRowRhs( counter, rhs );
             builder.setRowLhsInf( counter, false );
-            builder.setRowRhsInf( counter, true );
+            builder.setRowRhsInf( counter, false );
             counter++;
-            builder.addRowEntries( counter, rowlen, rowcols, rowvals );
+            slack_var_counter++;
+
+            auto new_vals_2 = new double[rowlen + 1];
+            memcpy( new_vals_2, rowvals, rowlen * sizeof( double ) );
+            new_vals_2[rowlen] = -1;
+            auto new_indices_2 = new int[rowlen + 1];
+            memcpy( new_indices_2, rowcols, rowlen * sizeof( int ) );
+            new_indices_2[rowlen] = ncols + slack_var_counter;
+
+            builder.addRowEntries( counter, rowlen + 1, new_indices_2,
+                  new_vals_2 );
             builder.setRowLhs( counter, lhs );
-            builder.setRowRhs( counter, 0 );
+            builder.setRowRhs( counter, lhs );
             builder.setRowLhsInf( counter, false );
-            builder.setRowRhsInf( counter, true );
+            builder.setRowRhsInf( counter, false );
+            slack_var_counter++;
          }
          counter++;
       }
+      assert( slack_var_counter == slack_vars );
       return builder;
    }
 
