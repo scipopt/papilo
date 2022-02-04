@@ -91,7 +91,7 @@ class VolumeAlgorithm
    Vec<REAL>
    volume_algorithm( const Vec<REAL> c, const ConstraintMatrix<REAL>& A,
                      const Vec<REAL>& b, const VariableDomains<REAL>& domains,
-                     const Vec<REAL> pi, REAL best_bound_on_obj )
+                     const Vec<REAL>& pi, REAL best_bound_on_obj )
    {
       int n_rows_A = A.getNRows();
 
@@ -171,7 +171,7 @@ class VolumeAlgorithm
          counter = counter + 1;
       }
       while( stopping_criteria( viol_t, n_rows_A, c, x_bar, z_bar ) );
-
+      //TODO: ahoen@suresh -> overwrite pi with current pi to be able to warm restart the algorithm?
       return x_bar;
    }
 
