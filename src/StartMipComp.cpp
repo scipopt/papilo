@@ -169,19 +169,20 @@ main( int argc, char* argv[] )
    // we continue with the presolved problem since the columns are the same
    problem.recomputeAllActivities();
 
-   ProbingView<double> probing_view{ problem, num };
-   FixAndPropagate<double> fixAndPropagate{ msg, num, probing_view };
-   Vec<double> int_solution{primal_heur_sol};
-   fixAndPropagate.fix_and_propagate( primal_heur_sol, int_solution );
-
-   Solution<double> original_solution{};
-   Solution<double> reduced_solution{ int_solution };
-   Postsolve<double> postsolve{ msg, num };
-   msg.info( "\n" );
-
-   postsolve.undo( reduced_solution, original_solution, result.postsolve );
-
-   print_solution(msg, original_solution.primal);
+//   ProbingView<double> probing_view{ problem, num };
+//   FixAndPropagate<double> fixAndPropagate{ msg, num, probing_view, false };
+//   Vec<double> int_solution{primal_heur_sol};
+//   Ra
+//   fixAndPropagate.fix_and_propagate( primal_heur_sol, int_solution );
+//
+//   Solution<double> original_solution{};
+//   Solution<double> reduced_solution{ int_solution };
+//   Postsolve<double> postsolve{ msg, num };
+//   msg.info( "\n" );
+//
+//   postsolve.undo( reduced_solution, original_solution, result.postsolve );
+//
+//   print_solution(msg, original_solution.primal);
 
    return 0;
 }
