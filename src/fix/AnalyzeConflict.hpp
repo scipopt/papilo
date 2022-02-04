@@ -21,50 +21,47 @@
 /*                                                                           */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef _PAPILO_CORE_FIXING_HPP_
-#define _PAPILO_CORE_FIXING_HPP_
+#ifndef SRC_FIX_ANALYZECONFLICT_HPP
+#define SRC_FIX_ANALYZECONFLICT_HPP
 
-#include "papilo/core/Problem.hpp"
-#include "papilo/misc/Num.hpp"
+#include "papilo/core/ProbingView.hpp"
 
-namespace papilo
-{
+#include <cassert>
+#include <fstream>
+#include <string>
+
+using namespace papilo;
 
 template <typename REAL>
-class Fixing
+class AnalyzeConflict
 {
- private:
-   int column_index;
-   REAL value;
-   // int bound_change_type // lower or upper bound
-   // REAL old_value; // value before fixing (may be needed)
-   // int decision_depth; // each rounding increases the decision depth.
-   // int reason_row_index; // -1 if the fixing was due to rounding 
-
+   Message msg;
+   ProbingView<REAL> probing_view;
+   
  public:
-   Fixing( int _column_index, REAL _value ):
-         column_index( _column_index ), value( _value )
+   // Constructor
+   AnalyzeConflict(Message msg_, ProbingView<REAL> view_)
+   : msg( msg_ ), probing_view( view_ )
    {
    }
 
-   int
-   get_column_index() const
+   void
+   analyze_conflict()
    {
-      return column_index;
+        msg.info( "Start conflict analysis \n");
    }
 
-   int
-   get_value() const
+   void
+   resolve_bound_change()
    {
-      return value;
+
    }
-   bool
-   is_invalid()
+
+   void
+   add_conflict_constraint()
    {
-      return column_index<0;
+
    }
 };
 
-} // namespace papilo
-
-#endif
+#endif /* SRC_FIX_ANALYZECONFLICT_HPP */

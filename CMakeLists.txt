@@ -406,6 +406,7 @@ install(FILES
         ${PROJECT_SOURCE_DIR}/src/fix/strategy/FarkasRoundingStrategy.hpp
         ${PROJECT_SOURCE_DIR}/src/fix/FixAndPropagateApi.hpp
         ${PROJECT_SOURCE_DIR}/src/StartFixAndPropagate.cpp
+        ${PROJECT_SOURCE_DIR}/src/fix/AnalyzeConflict.cpp
         DESTINATION include/fix)
 
 # configure the config file for the build tree
