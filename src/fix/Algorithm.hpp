@@ -22,9 +22,9 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 #include "fix/ConflictAnalysis.hpp"
-#include "fix/strategy/FarkasRoundingStrategy.hpp"
 #include "fix/FixAndPropagate.hpp"
 #include "fix/VolumeAlgorithm.hpp"
+#include "fix/strategy/FarkasRoundingStrategy.hpp"
 #include "papilo/core/Presolve.hpp"
 #include "papilo/core/Problem.hpp"
 #include "papilo/core/ProblemBuilder.hpp"
@@ -40,7 +40,7 @@
 namespace papilo
 {
 
-//TODO: find a funny name for it
+// TODO: find a funny name for it
 template <typename REAL>
 class Algorithm
 {
@@ -51,7 +51,7 @@ class Algorithm
    Algorithm( Message _msg, Num<REAL> _num ) : msg( _msg ), num( _num ) {}
 
    void
-   solve_problem( Problem<REAL>& problem )
+   solve_problem( Problem<REAL>& problem, VolumeAlgorithmParameter<REAL>& parameter )
    {
       // set up ProblemUpdate to trivialPresolve so that activities exist
       Presolve<REAL> presolve{};
@@ -91,7 +91,6 @@ class Algorithm
       Vec<REAL> int_solution{};
       int_solution.resize( problem.getNCols() );
 
-
       ProblemBuilder<REAL> builder = modify_problem( problem );
       Problem<REAL> reformulated = builder.build();
 
@@ -100,14 +99,13 @@ class Algorithm
       pi.reserve( reformulated.getNRows() );
       generate_initial_dual_solution( reformulated, pi );
 
-      double min_val = calc_upper_bound_for_objective( problem );
+      REAL min_val = calc_upper_bound_for_objective( problem );
       if( min_val == std::numeric_limits<double>::min() )
          return;
 
       // TODO: extract parameters
-      VolumeAlgorithm<double> algorithm{ {},     {},    0.05, 0.1, 0.2,
-                                         0.0005, 2,     2,    1.1, 0.66,
-                                         0.01,   0.001, 0.02, 2,   20 };
+
+      VolumeAlgorithm<REAL> algorithm{ {}, {}, parameter };
       ConflictAnalysis<REAL> conflict_analysis{ msg, num };
 
       problem.recomputeAllActivities();
@@ -127,8 +125,8 @@ class Algorithm
          ProbingView<REAL> probing_view{ problem, num };
          FixAndPropagate<REAL> fixAndPropagate{ msg, num, probing_view, true };
          FarkasRoundingStrategy<REAL> strategy{ 0, {}, false };
-         bool infeasible =
-             fixAndPropagate.fix_and_propagate( primal_heur_sol, int_solution, strategy );
+         bool infeasible = fixAndPropagate.fix_and_propagate(
+             primal_heur_sol, int_solution, strategy );
          if( !infeasible )
             break;
 
@@ -136,7 +134,7 @@ class Algorithm
          bool abort = conflict_analysis.perform_conflict_analysis();
          if( abort )
             return;
-         //TODO: add constraint to builder and generate new problem
+         // TODO: add constraint to builder and generate new problem
       }
 
       Solution<REAL> original_solution{};
@@ -185,7 +183,7 @@ class Algorithm
    }
 
    void
-   print_solution( const Vec<double>& sol )
+   print_solution( const Vec<REAL>& sol )
    {
       msg.debug( "Primal solution:\n" );
       for( int i = 0; i < sol.size(); i++ )
@@ -193,28 +191,28 @@ class Algorithm
    }
 
    void
-   generate_initial_dual_solution( const Problem<double>& problem,
-                                   Vec<double>& dual_solution )
+   generate_initial_dual_solution( const Problem<REAL>& problem,
+                                   Vec<REAL>& dual_solution )
    {
       for( int i = 0; i < problem.getNRows(); i++ )
          dual_solution.push_back( 0 );
    }
 
-   ProblemBuilder<double>
-   modify_problem( Problem<double>& problem )
+   ProblemBuilder<REAL>
+   modify_problem( Problem<REAL>& problem )
    {
-      ProblemBuilder<double> builder;
+      ProblemBuilder<REAL> builder;
 
       int nnz = 0;
       int ncols = problem.getNCols();
       int nrows = 0;
-      ConstraintMatrix<double>& matrix = problem.getConstraintMatrix();
+      ConstraintMatrix<REAL>& matrix = problem.getConstraintMatrix();
       Vec<ColFlags>& colFlags = problem.getColFlags();
       Vec<RowFlags>& rowFlags = matrix.getRowFlags();
       Vec<int>& rowSizes = problem.getRowSizes();
-      Vec<double>& coefficients = problem.getObjective().coefficients;
-      Vec<double>& leftHandSides = matrix.getLeftHandSides();
-      Vec<double>& rightHandSides = matrix.getRightHandSides();
+      Vec<REAL>& coefficients = problem.getObjective().coefficients;
+      Vec<REAL>& leftHandSides = matrix.getLeftHandSides();
+      Vec<REAL>& rightHandSides = matrix.getRightHandSides();
 
       for( int i = 0; i < problem.getNRows(); i++ )
       {
@@ -250,13 +248,13 @@ class Algorithm
       int counter = 0;
       for( int i = 0; i != problem.getNRows(); ++i )
       {
-         const SparseVectorView<double>& view = matrix.getRowCoefficients( i );
+         const SparseVectorView<REAL>& view = matrix.getRowCoefficients( i );
          const int* rowcols = view.getIndices();
-         const double* rowvals = view.getValues();
+         const REAL* rowvals = view.getValues();
          int rowlen = view.getLength();
          auto flags = rowFlags[i];
-         double lhs = leftHandSides[i];
-         double rhs = rightHandSides[i];
+         REAL lhs = leftHandSides[i];
+         REAL rhs = rightHandSides[i];
 
          if( flags.test( RowFlag::kEquation ) )
          {
@@ -269,7 +267,7 @@ class Algorithm
          else if( flags.test( RowFlag::kLhsInf ) )
          {
             assert( !flags.test( RowFlag::kRhsInf ) );
-            double* neg_rowvals = new double[rowlen];
+            REAL* neg_rowvals = new REAL[rowlen];
             invert( rowvals, neg_rowvals, rowlen );
             builder.addRowEntries( counter, rowlen, rowcols, neg_rowvals );
             builder.setRowLhs( counter, -rhs );
@@ -290,7 +288,7 @@ class Algorithm
          {
             assert( !flags.test( RowFlag::kLhsInf ) );
             assert( !flags.test( RowFlag::kRhsInf ) );
-            double* neg_rowvals = new double[rowlen];
+            REAL* neg_rowvals = new REAL[rowlen];
             invert( rowvals, neg_rowvals, rowlen );
 
             builder.addRowEntries( counter, rowlen, rowcols, neg_rowvals );
@@ -311,7 +309,7 @@ class Algorithm
    }
 
    void
-   invert( const double* pDouble, double* result, int length )
+   invert( const REAL* pDouble, REAL* result, int length )
    {
       for( int i = 0; i < length; i++ )
          result[i] = pDouble[i] * -1;

@@ -21,61 +21,45 @@
 /*                                                                           */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#include "fix/Algorithm.hpp"
-#include "papilo/core/Problem.hpp"
-#include "papilo/io/MpsParser.hpp"
-#include "papilo/misc/OptionsParser.hpp"
-#include <boost/program_options.hpp>
-#include <fstream>
+#include "papilo/io/Message.hpp"
+#include "papilo/misc/Num.hpp"
 
-using namespace papilo;
-
-
-int
-main( int argc, char* argv[] )
+namespace papilo
 {
 
-   // get the options passed by the user
-   OptionsInfo optionsInfo;
-   try
+template <typename REAL>
+struct VolumeAlgorithmParameter
+{
+
+   REAL alpha;
+   REAL alpha_max;
+   REAL f;
+   REAL f_min;
+   REAL f_max;
+   REAL f_strong_incr_factor;
+   REAL f_weak_incr_factor;
+   REAL f_decr_factor;
+   REAL obj_reltol;
+   REAL obj_abstol;
+   REAL con_abstol;
+   int weak_improvement_iter_limit;
+   int non_improvement_iter_limit;
+
+   VolumeAlgorithmParameter( REAL _alpha, REAL _alpha_max, REAL _f, REAL _f_min,
+                             REAL _f_max, REAL _f_strong_incr_factor,
+                             REAL _f_weak_incr_factor, REAL _f_decr_factor,
+                             REAL _obj_reltol, REAL _obj_abstol,
+                             REAL _con_abstol, int _weak_improvement_iter_limit,
+                             int _non_improvement_iter_limit )
+       : alpha( _alpha ), alpha_max( _alpha_max ), f( _f ), f_min( _f_min ),
+         f_max( _f_max ), f_strong_incr_factor( _f_strong_incr_factor ),
+         f_weak_incr_factor( _f_weak_incr_factor ),
+         f_decr_factor( _f_decr_factor ), obj_reltol( _obj_reltol ),
+         obj_abstol( _obj_abstol ), con_abstol( _con_abstol ),
+         weak_improvement_iter_limit( _weak_improvement_iter_limit ),
+         non_improvement_iter_limit( _non_improvement_iter_limit )
    {
-      optionsInfo = parseOptions( argc, argv );
    }
-   catch( const boost::program_options::error& ex )
-   {
-      std::cerr << "Error while parsing the options.\n" << '\n';
-      std::cerr << ex.what() << '\n';
-      return 1;
-   }
+};
 
-   if( !optionsInfo.is_complete )
-      return 0;
-
-   double readtime = 0;
-   Problem<double> problem;
-   Num<double> num{};
-   Message msg{};
-   boost::optional<Problem<double>> prob;
-
-   {
-      Timer t( readtime );
-      prob = MpsParser<double>::loadProblem( optionsInfo.instance_file );
-   }
-
-   // Check whether reading was successful or not
-   if( !prob )
-   {
-      fmt::print( "error loading problem {}\n", optionsInfo.instance_file );
-      return 0;
-   }
-   problem = *prob;
-
-   fmt::print( "reading took {:.3} seconds\n", readtime );
-
-   VolumeAlgorithmParameter<double> para{ 0.05, 0.1,  0.2,   0.0005, 2, 2, 1.1,
-                                        0.66, 0.01, 0.001, 0.02,   2, 20 };
-
-   Algorithm<double> alg{ {}, {} };
-   alg.solve_problem( problem, para );
-   return 0;
-}
+} // namespace papilo
