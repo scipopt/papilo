@@ -22,6 +22,7 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 #include "fix/ConflictAnalysis.hpp"
+#include "fix/strategy/FarkasRoundingStrategy.hpp"
 #include "fix/FixAndPropagate.hpp"
 #include "fix/VolumeAlgorithm.hpp"
 #include "papilo/core/Presolve.hpp"
@@ -79,22 +80,24 @@ class Algorithm
          postsolve.undo( reduced_solution, original_solution,
                          result.postsolve );
 
-         print_solution( msg, original_solution.primal );
+         print_solution( original_solution.primal );
 
          return;
       }
 
       Vec<REAL> primal_heur_sol{};
-      Vec<REAL> int_solution{ primal_heur_sol };
-
       primal_heur_sol.reserve( problem.getNCols() );
+
+      Vec<REAL> int_solution{};
+      int_solution.resize( problem.getNCols() );
+
 
       ProblemBuilder<REAL> builder = modify_problem( problem );
       Problem<REAL> reformulated = builder.build();
 
       // TODO: add same small heuristic
-      Vec<REAL> pi{};
-      pi.resize( reformulated.getNRows() );
+      Vec<REAL> pi;
+      pi.reserve( reformulated.getNRows() );
       generate_initial_dual_solution( reformulated, pi );
 
       double min_val = calc_upper_bound_for_objective( problem );
@@ -123,8 +126,9 @@ class Algorithm
 
          ProbingView<REAL> probing_view{ problem, num };
          FixAndPropagate<REAL> fixAndPropagate{ msg, num, probing_view, false };
+         FarkasRoundingStrategy<REAL> strategy{ 0, {}, false };
          bool feasible =
-             fixAndPropagate.fix_and_propagate( primal_heur_sol, int_solution );
+             fixAndPropagate.fix_and_propagate( primal_heur_sol, int_solution, strategy );
          if( feasible )
             break;
 
@@ -132,10 +136,11 @@ class Algorithm
          bool abort = conflict_analysis.perform_conflict_analysis();
          if( abort )
             break;
+         //TODO: add constraint to builder and generate new problem
       }
 
       Solution<REAL> original_solution{};
-      Solution<REAL> reduced_solution{ primal_heur_sol };
+      Solution<REAL> reduced_solution{ int_solution };
       Postsolve<REAL> postsolve{ msg, num };
 
       postsolve.undo( reduced_solution, original_solution, result.postsolve );

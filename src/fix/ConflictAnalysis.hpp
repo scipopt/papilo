@@ -21,13 +21,9 @@
 /*                                                                           */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#include "fix/FixAndPropagate.hpp"
-#include "fix/VolumeAlgorithm.hpp"
-#include "papilo/core/Presolve.hpp"
-#include "papilo/core/Problem.hpp"
-#include "papilo/core/ProblemBuilder.hpp"
 #include "papilo/io/Message.hpp"
 #include "papilo/misc/Num.hpp"
+#include "papilo/core/RowFlags.hpp"
 #include <cassert>
 #include <cmath>
 #include <fstream>
