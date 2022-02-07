@@ -46,12 +46,18 @@ class Algorithm
 {
    Message msg;
    Num<REAL> num;
+   Timer timer;
+   double time_limit = 10 * 60;
 
  public:
-   Algorithm( Message _msg, Num<REAL> _num ) : msg( _msg ), num( _num ) {}
+   Algorithm( Message _msg, Num<REAL> _num, Timer t )
+       : msg( _msg ), num( _num ), timer( t )
+   {
+   }
 
    void
-   solve_problem( Problem<REAL>& problem, VolumeAlgorithmParameter<REAL>& parameter )
+   solve_problem( Problem<REAL>& problem,
+                  VolumeAlgorithmParameter<REAL>& parameter )
    {
       // set up ProblemUpdate to trivialPresolve so that activities exist
       Presolve<REAL> presolve{};
@@ -105,13 +111,15 @@ class Algorithm
 
       // TODO: extract parameters
 
-      VolumeAlgorithm<REAL> algorithm{ {}, {}, parameter };
-      ConflictAnalysis<REAL> conflict_analysis{ msg, num };
+      VolumeAlgorithm<REAL> algorithm{ msg, num, timer, parameter };
+      ConflictAnalysis<REAL> conflict_analysis{ msg, num, timer };
 
       problem.recomputeAllActivities();
 
       while( true )
       {
+         if(timer.getTime() >= parameter.time_limit )
+            break;
          msg.info( "Starting volume algorithm\n" );
          primal_heur_sol = algorithm.volume_algorithm(
              reformulated.getObjective().coefficients,
@@ -122,12 +130,18 @@ class Algorithm
 
          msg.info( "Starting fixing and propagating\n" );
 
+         if(timer.getTime() >= parameter.time_limit )
+            break;
+
          ProbingView<REAL> probing_view{ problem, num };
          FixAndPropagate<REAL> fixAndPropagate{ msg, num, probing_view, true };
          FarkasRoundingStrategy<REAL> strategy{ 0, {}, false };
          bool infeasible = fixAndPropagate.fix_and_propagate(
              primal_heur_sol, int_solution, strategy );
          if( !infeasible )
+            break;
+
+         if(timer.getTime() >= parameter.time_limit )
             break;
 
          msg.info( "Starting conflict analysis\n" );
