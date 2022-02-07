@@ -158,6 +158,7 @@ class Algorithm
       postsolve.undo( reduced_solution, original_solution, result.postsolve );
 
       print_solution( original_solution.primal );
+      msg.info("Solving took {} seconds.\n", timer.getTime());
    }
 
    REAL
