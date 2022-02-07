@@ -61,141 +61,175 @@ class Algorithm
    solve_problem( Problem<REAL>& problem,
                   VolumeAlgorithmParameter<REAL>& parameter )
    {
-      // set up ProblemUpdate to trivialPresolve so that activities exist
-      Presolve<REAL> presolve{};
-      auto result = presolve.apply( problem, false );
-
-      // TODO: add a check if presolve solved to optimality
-      switch( result.status )
-      {
-      case papilo::PresolveStatus::kUnbounded:
-      case papilo::PresolveStatus::kUnbndOrInfeas:
-      case papilo::PresolveStatus::kInfeasible:
-         fmt::print( "PaPILO detected infeasibility or unbounded-ness\n" );
-         return;
-      case papilo::PresolveStatus::kUnchanged:
-      case papilo::PresolveStatus::kReduced:
-         break;
-      }
-
-      if( problem.getNCols() == 0 )
-      {
-         msg.info( "Problem vanished during presolving\n" );
-         Solution<REAL> original_solution{};
-         Solution<REAL> reduced_solution{};
-         Postsolve<REAL> postsolve{ msg, num };
-
-         postsolve.undo( reduced_solution, original_solution,
-                         result.postsolve );
-
-         print_solution( original_solution.primal );
-
-         return;
-      }
-
-      Vec<REAL> primal_heur_sol{};
-      primal_heur_sol.reserve( problem.getNCols() );
-
-      REAL best_obj_value{};
-      bool initialized = false;
-      Vec<REAL> best_solution{};
-      best_solution.reserve( problem.getNCols() );
-
-      ProblemBuilder<REAL> builder = modify_problem( problem );
-      Problem<REAL> reformulated = builder.build();
-
-      // TODO: add same small heuristic
-      Vec<REAL> pi;
-      pi.reserve( reformulated.getNRows() );
-      generate_initial_dual_solution( reformulated, pi );
-
-      REAL min_val = calc_upper_bound_for_objective( problem );
-      if( min_val == std::numeric_limits<double>::min() )
-         return;
-
-      VolumeAlgorithm<REAL> algorithm{ msg, num, timer, parameter };
-      ConflictAnalysis<REAL> conflict_analysis{ msg, num, timer };
-
-      problem.recomputeAllActivities();
-
-      Vec<RoundingStrategy<REAL>*> strategies{};
-      Vec<Vec<REAL>> int_solutions{};
-      Vec<ProbingView<REAL>> views{};
-      Vec<REAL> obj_value;
-      Vec<bool> infeasible_arr;
-      setup( problem, strategies, int_solutions, views, obj_value,
-             infeasible_arr );
-      while( true )
-      {
-         if(timer.getTime() >= parameter.time_limit )
-            break;
-         msg.info( "Starting volume algorithm\n" );
-         primal_heur_sol = algorithm.volume_algorithm(
-             reformulated.getObjective().coefficients,
-             reformulated.getConstraintMatrix(),
-             reformulated.getConstraintMatrix().getLeftHandSides(),
-             reformulated.getVariableDomains(), pi, min_val );
-         print_solution( primal_heur_sol );
-
-         msg.info( "Starting fixing and propagating\n" );
-
-         if(timer.getTime() >= parameter.time_limit )
-            break;
-
-         perform_fix_and_propagate( primal_heur_sol, strategies, int_solutions,
-                                    views, obj_value, infeasible_arr );
-
-         // TODO: consider non TBB version
-         bool feasible = !infeasible_arr[0]
 #ifdef PAPILO_TBB
-                           || !infeasible_arr[1] || !infeasible_arr[2] ||
-                           !infeasible_arr[3];
+      //#TODO:set to 0
+      tbb::task_arena arena( 1 );
+#endif
+
+#ifdef PAPILO_TBB
+      return arena.execute(
+          [this, &problem, &parameter]()
+          {
+#endif
+             // set up ProblemUpdate to trivialPresolve so that activities exist
+             Presolve<REAL> presolve{};
+             auto result = presolve.apply( problem, false );
+
+             // TODO: add a check if presolve solved to optimality
+             switch( result.status )
+             {
+             case papilo::PresolveStatus::kUnbounded:
+             case papilo::PresolveStatus::kUnbndOrInfeas:
+             case papilo::PresolveStatus::kInfeasible:
+                fmt::print(
+                    "PaPILO detected infeasibility or unbounded-ness\n" );
+                return;
+             case papilo::PresolveStatus::kUnchanged:
+             case papilo::PresolveStatus::kReduced:
+                break;
+             }
+
+             if( problem.getNCols() == 0 )
+             {
+                msg.info( "Problem vanished during presolving\n" );
+                Solution<REAL> original_solution{};
+                Solution<REAL> reduced_solution{};
+                Postsolve<REAL> postsolve{ msg, num };
+
+                postsolve.undo( reduced_solution, original_solution,
+                                result.postsolve );
+
+                print_solution( original_solution.primal );
+
+                return;
+             }
+
+             Vec<REAL> primal_heur_sol{};
+             primal_heur_sol.reserve( problem.getNCols() );
+
+             REAL best_obj_value{};
+             bool initialized = false;
+             Vec<REAL> best_solution{};
+             best_solution.reserve( problem.getNCols() );
+
+             ProblemBuilder<REAL> builder = modify_problem( problem );
+             Problem<REAL> reformulated = builder.build();
+
+             // TODO: add same small heuristic
+             Vec<REAL> pi;
+             pi.reserve( reformulated.getNRows() );
+             generate_initial_dual_solution( reformulated, pi );
+
+             REAL min_val = calc_upper_bound_for_objective( problem );
+             if( min_val == std::numeric_limits<double>::min() )
+                return;
+
+             VolumeAlgorithm<REAL> algorithm{ msg, num, timer, parameter };
+             ConflictAnalysis<REAL> conflict_analysis{ msg, num, timer };
+
+             problem.recomputeAllActivities();
+
+             Vec<RoundingStrategy<REAL>*> strategies{};
+             Vec<Vec<REAL>> int_solutions{};
+             Vec<ProbingView<REAL>> views{};
+             Vec<REAL> obj_value;
+             Vec<bool> infeasible_arr;
+             setup( problem, strategies, int_solutions, views, obj_value,
+                    infeasible_arr );
+             Vec<int> cols_sorted_by_obj{};
+             sort( problem.getObjective().coefficients, cols_sorted_by_obj );
+             while( true )
+             {
+                if( timer.getTime() >= parameter.time_limit )
+                   break;
+                msg.info( "Starting volume algorithm\n" );
+                primal_heur_sol = algorithm.volume_algorithm(
+                    reformulated.getObjective().coefficients,
+                    reformulated.getConstraintMatrix(),
+                    reformulated.getConstraintMatrix().getLeftHandSides(),
+                    reformulated.getVariableDomains(), pi, min_val );
+                print_solution( primal_heur_sol );
+
+                msg.info( "Starting fixing and propagating\n" );
+
+                if( timer.getTime() >= parameter.time_limit )
+                   break;
+
+                perform_fix_and_propagate( primal_heur_sol, strategies,
+                                           int_solutions, views, obj_value,
+                                           infeasible_arr );
+
+                // TODO: consider non TBB version
+                bool feasible = !infeasible_arr[0]
+#ifdef PAPILO_TBB
+                                || !infeasible_arr[1] || !infeasible_arr[2] ||
+                                !infeasible_arr[3];
 #else
              ;
 #endif
 
-         // TODO: copy the best solution;
-         if( feasible )
-         {
-            int best_index = -1;
+                // TODO: copy the best solution;
+                if( feasible )
+                {
+                   perform_one_opt( problem, int_solutions, views,
+                                    infeasible_arr, cols_sorted_by_obj, obj_value );
+                   int best_index = -1;
 #ifdef PAPILO_TBB
-            for( int i = 0; i < 4; i++ )
+                   for( int i = 0; i < 4; i++ )
 #else
             for( int i = 0; i < 1; i++ )
 #endif
-            {
-               if( !infeasible_arr[i] &&
-                   ( num.isLT( obj_value[i], best_obj_value ) ||
-                     !initialized ) )
+                   {
+                      if( !infeasible_arr[i] &&
+                          ( num.isLT( obj_value[i], best_obj_value ) ||
+                            !initialized ) )
+                      {
+                         initialized = true;
+                         best_index = i;
+                         best_obj_value = obj_value[i];
+                      }
+                   }
+                   assert( best_index != -1 );
+                   best_solution = int_solutions[best_index];
+                   break;
+                }
+
+                if( timer.getTime() >= parameter.time_limit )
+                   break;
+
+                msg.info( "Starting conflict analysis\n" );
+                bool abort = conflict_analysis.perform_conflict_analysis();
+                if( abort )
+                   return;
+                // TODO: add constraint to builder and generate new problem
+             }
+
+             Solution<REAL> original_solution{};
+             Solution<REAL> reduced_solution{ best_solution };
+             Postsolve<REAL> postsolve{ msg, num };
+
+             postsolve.undo( reduced_solution, original_solution,
+                             result.postsolve );
+
+             print_solution( original_solution.primal );
+             msg.info( "Solving took {} seconds.\n", timer.getTime() );
+#ifdef PAPILO_TBB
+          } );
+#endif
+   }
+
+   void
+   sort( const Vec<REAL>& objective, Vec<int>& cols_sorted_by_obj ) const
+   {
+      cols_sorted_by_obj.reserve( objective.size() );
+      for( int i = 0; i < objective.size(); i++ )
+         cols_sorted_by_obj.push_back( i );
+      pdqsort( cols_sorted_by_obj.begin(), cols_sorted_by_obj.end(),
+               [&]( const int a, const int b )
                {
-                  initialized = true;
-                  best_index = i;
-                  best_obj_value = obj_value[i];
-               }
-            }
-            assert( best_index != -1 );
-            best_solution = int_solutions[best_index];
-            break;
-         }
-
-         if(timer.getTime() >= parameter.time_limit )
-            break;
-
-         msg.info( "Starting conflict analysis\n" );
-         bool abort = conflict_analysis.perform_conflict_analysis();
-         if( abort )
-            return;
-         // TODO: add constraint to builder and generate new problem
-      }
-
-      Solution<REAL> original_solution{};
-      Solution<REAL> reduced_solution{ best_solution };
-      Postsolve<REAL> postsolve{ msg, num };
-
-      postsolve.undo( reduced_solution, original_solution, result.postsolve );
-
-      print_solution( original_solution.primal );
-      msg.info("Solving took {} seconds.\n", timer.getTime());
+                  return objective[a] > objective[b] ||
+                         ( objective[a] == objective[b] && a > b );
+               } );
    }
 
    void
@@ -266,6 +300,7 @@ class Algorithm
           {
              for( int i = r.begin(); i != r.end(); ++i )
              {
+                // TODO: extract
                 FixAndPropagate<REAL> fixAndPropagate{ msg, num, true };
                 infeasible_arr[i] = fixAndPropagate.fix_and_propagate(
                     primal_heur_sol, int_solutions[i], *( strategies[i] ),
@@ -275,10 +310,8 @@ class Algorithm
                    obj_value[i] = 0;
                    break;
                 }
-                StableSum<REAL> sum{};
-                for( int j = 0; j < primal_heur_sol.size(); j++ )
-                   sum.add( int_solutions[i][j] * views[i].get_obj()[j] );
-                obj_value[i] = sum.get();
+                obj_value[i] =
+                    calculate_obj_value( int_solutions[i], views[i] );
                 msg.info( "Diving {} found obj value {}!\n", i, obj_value[i] );
              }
           } );
@@ -298,6 +331,85 @@ class Algorithm
          sum.add( int_solutions[0][j] * views[0].get_obj()[j] );
       obj_value[0] = sum.get();
       msg.info( "Diving {} found obj value {}!\n", 0, obj_value[0] );
+#endif
+   }
+   REAL
+   calculate_obj_value( const Vec<REAL>& int_solution,
+                        const ProbingView<REAL>& view ) const
+   {
+      StableSum<REAL> sum{};
+      for( int j = 0; j < int_solution.size(); j++ )
+         sum.add( int_solution[j] * view.get_obj()[j] );
+      return sum.get();
+   }
+
+   void
+   perform_one_opt( const Problem<REAL>& problem, Vec<Vec<REAL>>& int_solutions,
+                    Vec<ProbingView<REAL>>& views, Vec<bool>& infeasible_arr,
+                    Vec<int>& cols_sorted_by_obj, Vec<REAL>& obj_value ) const
+   {
+      FixAndPropagate<REAL> fixAndPropagate{ msg, num, false };
+
+      // TODO: check on infeasiblity
+#ifdef PAPILO_TBB
+      for( auto view : views )
+         view.reset();
+      Vec<REAL> coefficients = problem.getObjective().coefficients;
+      tbb::parallel_for(
+          tbb::blocked_range<int>( 0, 4 ),
+          [&]( const tbb::blocked_range<int>& r )
+          {
+             for( int i = r.begin(); i != r.end(); ++i )
+             {
+                Vec<REAL> result = { int_solutions[i] };
+                for( int j = 0; j < cols_sorted_by_obj.size(); j++ )
+                {
+                   views[i].reset();
+                   if( num.isZero( coefficients[j] ) )
+                      break;
+                   if( !problem.getColFlags()[j].test( ColFlag::kIntegral ) ||
+                       problem.getLowerBounds()[j] != 0 ||
+                       problem.getUpperBounds()[j] != 1 )
+                      continue;
+                   REAL solution_value = int_solutions[i][j];
+                   if( num.isGT( coefficients[j], 0 ) )
+                   {
+                      if( num.isZero( solution_value ) )
+                         continue;
+                      // TODO: extract
+                      bool infeasible = fixAndPropagate.one_opt(
+                          int_solutions[i], j, 0, views[i], result );
+                      REAL value = calculate_obj_value( result, views[i] );
+                      if( infeasible )
+                      {
+                         msg.info( "OneOpt is infeasible: flipping variable {}\n",
+                                   i, value );
+                         continue;
+                      }
+                      if( num.isGE( value, obj_value[i] ) )
+                         msg.info( "OneOpt: flipping variable {} resulted in a "
+                                   "worse or equal objective {}\n",
+                                   i, value );
+                      else if( num.isGT( value, obj_value[i] ) )
+                      {
+                         msg.info( "OneOpt successfil: flipping variable {} "
+                                   "resulted in a better objective {}\n",
+                                   i, value );
+                         int_solutions[i] = result;
+                         obj_value[i] = value;
+                      }
+                   }
+                   else
+                   {
+                      assert( num.isLT( coefficients[j], 0 ) );
+                      if( num.isZero( solution_value ) )
+                         continue;
+                      break;
+                   }
+                }
+             }
+          } );
+
 #endif
    }
 
