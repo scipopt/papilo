@@ -25,6 +25,8 @@
 #include "fix/FixAndPropagate.hpp"
 #include "fix/VolumeAlgorithm.hpp"
 #include "fix/strategy/FarkasRoundingStrategy.hpp"
+#include "fix/strategy/FractionalRoundingStrategy.hpp"
+#include "fix/strategy/RandomRoundingStrategy.hpp"
 #include "papilo/core/Presolve.hpp"
 #include "papilo/core/Problem.hpp"
 #include "papilo/core/ProblemBuilder.hpp"
@@ -94,8 +96,10 @@ class Algorithm
       Vec<REAL> primal_heur_sol{};
       primal_heur_sol.reserve( problem.getNCols() );
 
-      Vec<REAL> int_solution{};
-      int_solution.resize( problem.getNCols() );
+      REAL best_obj_value{};
+      bool initialized = false;
+      Vec<REAL> best_solution{};
+      best_solution.reserve( problem.getNCols() );
 
       ProblemBuilder<REAL> builder = modify_problem( problem );
       Problem<REAL> reformulated = builder.build();
@@ -109,13 +113,18 @@ class Algorithm
       if( min_val == std::numeric_limits<double>::min() )
          return;
 
-      // TODO: extract parameters
-
       VolumeAlgorithm<REAL> algorithm{ msg, num, timer, parameter };
       ConflictAnalysis<REAL> conflict_analysis{ msg, num, timer };
 
       problem.recomputeAllActivities();
 
+      Vec<RoundingStrategy<REAL>*> strategies{};
+      Vec<Vec<REAL>> int_solutions{};
+      Vec<ProbingView<REAL>> views{};
+      Vec<REAL> obj_value;
+      Vec<bool> infeasible_arr;
+      setup( problem, strategies, int_solutions, views, obj_value,
+             infeasible_arr );
       while( true )
       {
          if(timer.getTime() >= parameter.time_limit )
@@ -133,13 +142,41 @@ class Algorithm
          if(timer.getTime() >= parameter.time_limit )
             break;
 
-         ProbingView<REAL> probing_view{ problem, num };
-         FixAndPropagate<REAL> fixAndPropagate{ msg, num, probing_view, true };
-         FarkasRoundingStrategy<REAL> strategy{ 0, {}, false };
-         bool infeasible = fixAndPropagate.fix_and_propagate(
-             primal_heur_sol, int_solution, strategy );
-         if( !infeasible )
+         perform_fix_and_propagate( primal_heur_sol, strategies, int_solutions,
+                                    views, obj_value, infeasible_arr );
+
+         // TODO: consider non TBB version
+         bool feasible = !infeasible_arr[0]
+#ifdef PAPILO_TBB
+                           || !infeasible_arr[1] || !infeasible_arr[2] ||
+                           !infeasible_arr[3];
+#else
+             ;
+#endif
+
+         // TODO: copy the best solution;
+         if( feasible )
+         {
+            int best_index = -1;
+#ifdef PAPILO_TBB
+            for( int i = 0; i < 4; i++ )
+#else
+            for( int i = 0; i < 1; i++ )
+#endif
+            {
+               if( !infeasible_arr[i] &&
+                   ( num.isLT( obj_value[i], best_obj_value ) ||
+                     !initialized ) )
+               {
+                  initialized = true;
+                  best_index = i;
+                  best_obj_value = obj_value[i];
+               }
+            }
+            assert( best_index != -1 );
+            best_solution = int_solutions[best_index];
             break;
+         }
 
          if(timer.getTime() >= parameter.time_limit )
             break;
@@ -152,13 +189,116 @@ class Algorithm
       }
 
       Solution<REAL> original_solution{};
-      Solution<REAL> reduced_solution{ int_solution };
+      Solution<REAL> reduced_solution{ best_solution };
       Postsolve<REAL> postsolve{ msg, num };
 
       postsolve.undo( reduced_solution, original_solution, result.postsolve );
 
       print_solution( original_solution.primal );
       msg.info("Solving took {} seconds.\n", timer.getTime());
+   }
+
+   void
+   setup( const Problem<REAL>& problem,
+          Vec<RoundingStrategy<REAL>*>& strategies,
+          Vec<Vec<REAL>>& int_solutions, Vec<ProbingView<REAL>>& views,
+          Vec<REAL>& obj_value, Vec<bool>& infeasible_arr )
+   {
+#ifdef PAPILO_TBB
+      auto s1 = new FarkasRoundingStrategy<REAL>{ 0, num, false };
+      auto s2 = new FarkasRoundingStrategy<REAL>{ 0, num, true };
+      auto s3 = new FractionalRoundingStrategy<REAL>{ num };
+      auto s4 = new RandomRoundingStrategy<REAL>{ 0, num };
+      strategies.push_back( s1 );
+      strategies.push_back( s2 );
+      strategies.push_back( s3 );
+      strategies.push_back( s4 );
+
+      Vec<REAL> int_solution{};
+      int_solution.resize( problem.getNCols() );
+
+      int_solutions.push_back( { int_solution } );
+      int_solutions.push_back( { int_solution } );
+      int_solutions.push_back( { int_solution } );
+      int_solutions.push_back( { int_solution } );
+
+      views.push_back( { problem, num } );
+      views.push_back( { problem, num } );
+      views.push_back( { problem, num } );
+      views.push_back( { problem, num } );
+
+      infeasible_arr.push_back( true );
+      infeasible_arr.push_back( true );
+      infeasible_arr.push_back( true );
+      infeasible_arr.push_back( true );
+
+      obj_value.push_back( 0 );
+      obj_value.push_back( 0 );
+      obj_value.push_back( 0 );
+      obj_value.push_back( 0 );
+#else
+      Vec<REAL> int_solution{};
+      int_solution.resize( problem.getNCols() );
+      auto s1 = new FarkasRoundingStrategy<REAL>{ 0, num, false };
+      strategies.push_back( s1 );
+      int_solutions.push_back( { int_solution } );
+      views.push_back( { problem, num } );
+      infeasible_arr.push_back( true );
+      obj_value.push_back( 0 );
+#endif
+   }
+
+   void
+   perform_fix_and_propagate( const Vec<REAL>& primal_heur_sol,
+                              Vec<RoundingStrategy<REAL>*>& strategies,
+                              Vec<Vec<REAL>>& int_solutions,
+                              Vec<ProbingView<REAL>>& views,
+                              Vec<REAL>& obj_value,
+                              Vec<bool>& infeasible_arr ) const
+   {
+
+#ifdef PAPILO_TBB
+      for( auto view : views )
+         view.reset();
+      tbb::parallel_for(
+          tbb::blocked_range<int>( 0, 4 ),
+          [&]( const tbb::blocked_range<int>& r )
+          {
+             for( int i = r.begin(); i != r.end(); ++i )
+             {
+                FixAndPropagate<REAL> fixAndPropagate{ msg, num, true };
+                infeasible_arr[i] = fixAndPropagate.fix_and_propagate(
+                    primal_heur_sol, int_solutions[i], *( strategies[i] ),
+                    views[i] );
+                if( infeasible_arr[i] )
+                {
+                   obj_value[i] = 0;
+                   break;
+                }
+                StableSum<REAL> sum{};
+                for( int j = 0; j < primal_heur_sol.size(); j++ )
+                   sum.add( int_solutions[i][j] * views[i].get_obj()[j] );
+                obj_value[i] = sum.get();
+                msg.info( "Diving {} found obj value {}!\n", i, obj_value[i] );
+             }
+          } );
+#else
+      for( auto view : views )
+         view.reset();
+      FixAndPropagate<REAL> fixAndPropagate{ msg, num, true };
+      infeasible_arr[0] = fixAndPropagate.fix_and_propagate(
+          primal_heur_sol, int_solutions[0], *( strategies[0] ), views[0] );
+      if( infeasible_arr[0] )
+      {
+         obj_value[0] = 0;
+         return;
+      }
+      StableSum<REAL> sum{};
+      for( int j = 0; j < primal_heur_sol.size(); j++ )
+         sum.add( int_solutions[0][j] * views[0].get_obj()[j] );
+      obj_value[0] = sum.get();
+      msg.info( "Diving {} found obj value {}!\n", 0, obj_value[0] );
+#endif
    }
 
    REAL

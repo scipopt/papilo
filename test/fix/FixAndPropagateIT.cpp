@@ -45,12 +45,13 @@ TEST_CASE( "fix-and-propagate-it-solution-is-feasible", "[fix]" )
    problem.recomputeAllActivities();
    Solution<double> solution = parse_solution( path_to_sol, problem );
    FixAndPropagate<double> fixAndPropagate{
-       {}, {}, { problem, {} }, true };
+       {}, {},  true };
    FarkasRoundingStrategy<double> strategy{ 0, {}, false };
    Vec<double> res{ solution.primal };
 
+   ProbingView<double> view {problem, {}};
    bool infeasible =
-       fixAndPropagate.fix_and_propagate( solution.primal, res, strategy );
+       fixAndPropagate.fix_and_propagate( solution.primal, res, strategy, view );
 
    assert( !infeasible );
    for( int i = 0; i < problem.getNCols(); i++ )
@@ -65,14 +66,15 @@ TEST_CASE( "fix-and-propagate-it-modified-solution-is-feasible", "[fix]" )
    problem.recomputeAllActivities();
    Solution<double> solution = parse_solution( path_to_sol, problem );
    FixAndPropagate<double> fixAndPropagate{
-       {}, {}, { problem, {} }, true };
+       {}, {}, true };
    FarkasRoundingStrategy<double> strategy{ 0, {}, false };
    Vec<double> modified_primal{ solution.primal };
    modified_primal[1] = 0.6;
 
    Vec<double> res{ modified_primal };
+   ProbingView<double> view {problem, {}};
    bool infeasible =
-       fixAndPropagate.fix_and_propagate( modified_primal, res, strategy );
+       fixAndPropagate.fix_and_propagate( solution.primal, res, strategy, view );
 
    assert( !infeasible );
    for( int i = 0; i < problem.getNCols(); i++ )
