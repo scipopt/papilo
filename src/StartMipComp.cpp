@@ -52,13 +52,14 @@ main( int argc, char* argv[] )
       return 0;
 
    double readtime = 0;
+   Timer t( readtime );
+
    Problem<double> problem;
    Num<double> num{};
    Message msg{};
    boost::optional<Problem<double>> prob;
 
    {
-      Timer t( readtime );
       prob = MpsParser<double>::loadProblem( optionsInfo.instance_file );
    }
 
@@ -70,12 +71,12 @@ main( int argc, char* argv[] )
    }
    problem = *prob;
 
-   fmt::print( "reading took {:.3} seconds\n", readtime );
+   fmt::print( "reading took {:.3} seconds\n", t.getTime() );
 
    VolumeAlgorithmParameter<double> para{ 0.05, 0.1,  0.2,   0.0005, 2, 2, 1.1,
-                                        0.66, 0.01, 0.001, 0.02,   2, 20 };
+                                        0.66, 0.01, 0.001, 0.02,   2, 20, 10 *60 };
 
-   Algorithm<double> alg{ {}, {} };
+   Algorithm<double> alg{ msg, num, t };
    alg.solve_problem( problem, para );
    return 0;
 }
