@@ -215,6 +215,8 @@ set(unit_tests
         "vector-addition"
         "vector-addition-2"
         "small-volume-algorithm-test"
+        "conflict-analysis-data-structures"
+        "conflict-analysis-binary-depth-two"
 #        "fix-and-propagate-api"
         "fix-and-propagate-it-modified-solution-is-feasible"
         "fix-and-propagate-it-solution-is-feasible"
