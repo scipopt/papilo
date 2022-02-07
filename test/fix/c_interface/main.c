@@ -23,6 +23,7 @@
 
 #include "fix/FixAndPropagateApi.h"
 #include <assert.h>
+#include <stdlib.h>
 
 int
 main( void )
@@ -31,8 +32,8 @@ main( void )
    void* problem_ptr = setup( "./../../resources/api_test.mps", &result );
    assert( result == 0 );
    int n_cols = 3;
-   double primal_solution[n_cols];
-   double sol[n_cols];
+   double* primal_solution = malloc(n_cols* sizeof (int));
+   double* sol = malloc(n_cols* sizeof (double));
    for( int i = 0; i < n_cols; i++ )
       primal_solution[i] = ( 1.0 + i ) / 10.0;
    int success = call_algorithm( problem_ptr, primal_solution, sol, n_cols );
