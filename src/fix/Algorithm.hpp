@@ -350,7 +350,6 @@ class Algorithm
    {
       FixAndPropagate<REAL> fixAndPropagate{ msg, num, false };
 
-      // TODO: check on infeasiblity
 #ifdef PAPILO_TBB
       for( auto view : views )
          view.reset();
@@ -376,25 +375,21 @@ class Algorithm
                    {
                       if( num.isZero( solution_value ) )
                          continue;
-                      // TODO: extract
+                      // TODO: ignore the conflicts at this place?
                       bool infeasible = fixAndPropagate.one_opt(
                           int_solutions[i], j, 0, views[i], result );
                       REAL value = calculate_obj_value( result, views[i] );
+                      msg.info( "OneOpt flipping variable {}: ", i);
                       if( infeasible )
                       {
-                         msg.info( "OneOpt is infeasible: flipping variable {}\n",
-                                   i, value );
+                         msg.info( "infeasible: \n" );
                          continue;
                       }
                       if( num.isGE( value, obj_value[i] ) )
-                         msg.info( "OneOpt: flipping variable {} resulted in a "
-                                   "worse or equal objective {}\n",
-                                   i, value );
+                         msg.info( "unsuccessful -> worse obj {}: \n", value );
                       else if( num.isGT( value, obj_value[i] ) )
                       {
-                         msg.info( "OneOpt successfil: flipping variable {} "
-                                   "resulted in a better objective {}\n",
-                                   i, value );
+                         msg.info( "successful -> better obj {}: \n", value );
                          int_solutions[i] = result;
                          obj_value[i] = value;
                       }
@@ -402,8 +397,25 @@ class Algorithm
                    else
                    {
                       assert( num.isLT( coefficients[j], 0 ) );
-                      if( num.isZero( solution_value ) )
+                      if( !num.isZero( solution_value ) )
                          continue;
+                      bool infeasible = fixAndPropagate.one_opt(
+                          int_solutions[i], j, 1, views[i], result );
+                      REAL value = calculate_obj_value( result, views[i] );
+                      msg.info( "OneOpt flipping variable {}: ", i);
+                      if( infeasible )
+                      {
+                         msg.info( "infeasible!\n" );
+                         continue;
+                      }
+                      if( num.isGE( value, obj_value[i] ) )
+                         msg.info( "unsuccessful -> worse obj {}!\n", value );
+                      else if( num.isGT( value, obj_value[i] ) )
+                      {
+                         msg.info( "successful -> better obj {}!\n", value );
+                         int_solutions[i] = result;
+                         obj_value[i] = value;
+                      }
                       break;
                    }
                 }
