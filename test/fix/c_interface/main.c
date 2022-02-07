@@ -21,17 +21,14 @@
 /*                                                                           */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-//#include <FixAndPropagateApi.h>
 #include "fix/FixAndPropagateApi.h"
-#include "fix/FixAndPropagateApi.h"
-//#include "fix/FixAndPropagateApi.cpp"
 #include <assert.h>
 
 int
 main( void )
 {
    int result = 1;
-   void* problem_ptr = setup( "./resources/api_test.mps", &result );
+   void* problem_ptr = setup( "./../../resources/api_test.mps", &result );
    assert( result == 0 );
    int n_cols = 3;
    double primal_solution[n_cols];
