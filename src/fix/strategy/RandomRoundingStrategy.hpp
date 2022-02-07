@@ -21,23 +21,59 @@
 /*                                                                           */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef _PAPILO_CONFIG_HPP_
-#define _PAPILO_CONFIG_HPP_
+#ifndef FIX_RANDOM_ROUNDING_STRATEGY_HPP
+#define FIX_RANDOM_ROUNDING_STRATEGY_HPP
 
-#ifndef PAPILO_NO_CMAKE_CONFIG
+#include "fix/strategy/RoundingStrategy.hpp"
 
-#include "papilo/CMakeConfig.hpp"
+template <typename REAL>
+class RandomRoundingStrategy : public RoundingStrategy<REAL>
+{
 
-#else
+   const Num<REAL> num;
 
-#define PAPILO_VERSION_MAJOR 2
-#define PAPILO_VERSION_MINOR 1
-#define PAPILO_VERSION_PATCH 0
-#define PAPILO_VERSION_TWEAK 1
+   typedef std::mt19937 MyRNG;
+   uint32_t seed;
 
-#undef PAPILO_GITHASH_AVAILABLE
-#undef PAPILO_GITHASH
+   MyRNG random_generator;
 
-#endif
+ public:
+   RandomRoundingStrategy( uint32_t seed_, Num<REAL> num_ )
+       : seed( seed_ ), num( num_ )
+   {
+      random_generator.seed( seed );
+   }
+
+   Fixing<REAL>
+   select_rounding_variable( const Vec<REAL>& cont_solution,
+                             const ProbingView<REAL>& view ) override
+   {
+      Vec<int> remaining_unfixed_cols{};
+      for( int i = 0; i < cont_solution.size(); i++ )
+      {
+         if( num.isIntegral( cont_solution[i] ) ||
+             num.isEq( view.getProbingUpperBounds()[i],
+                       view.getProbingLowerBounds()[i] ) ||
+             !view.is_integer_variable( i ) ||
+             !view.is_within_bounds( i, cont_solution[i] ) )
+            continue;
+         remaining_unfixed_cols.push_back( i );
+      }
+      if( remaining_unfixed_cols.empty() )
+         return { -1, -1 };
+
+      std::uniform_int_distribution<uint32_t> dist_variable(
+          0, remaining_unfixed_cols.size() - 1 );
+      std::uniform_int_distribution<uint32_t> dist_rounding( 0, 1 );
+      int variable = remaining_unfixed_cols[dist_variable( random_generator )];
+      REAL value = -1;
+      if( dist_rounding( random_generator ) )
+         value = num.epsCeil( cont_solution[variable] );
+      else
+         value = num.epsFloor( cont_solution[variable] );
+
+      return { variable, value };
+   }
+};
 
 #endif

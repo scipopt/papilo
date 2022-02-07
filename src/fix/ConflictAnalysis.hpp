@@ -21,23 +21,48 @@
 /*                                                                           */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef _PAPILO_CONFIG_HPP_
-#define _PAPILO_CONFIG_HPP_
+#include "papilo/io/Message.hpp"
+#include "papilo/misc/Num.hpp"
+#include "papilo/core/RowFlags.hpp"
+#include "papilo/misc/Timer.hpp"
+#include <cassert>
+#include <cmath>
+#include <fstream>
 
-#ifndef PAPILO_NO_CMAKE_CONFIG
+#include <cassert>
+#include <fstream>
 
-#include "papilo/CMakeConfig.hpp"
+namespace papilo
+{
 
-#else
+template <typename REAL>
+class ConflictAnalysis
+{
+   Message msg;
+   Num<REAL> num;
+   Timer timer;
 
-#define PAPILO_VERSION_MAJOR 2
-#define PAPILO_VERSION_MINOR 1
-#define PAPILO_VERSION_PATCH 0
-#define PAPILO_VERSION_TWEAK 1
+ public:
+   ConflictAnalysis( Message _msg, Num<REAL> _num, Timer timer_ ) : msg( _msg ), num( _num ), timer(timer_)
+   {
+   }
 
-#undef PAPILO_GITHASH_AVAILABLE
-#undef PAPILO_GITHASH
+   bool
+   perform_conflict_analysis( Vec<int> length, Vec<int*> indices,
+                              Vec<REAL*> values, Vec<RowFlags> flags,
+                              Vec<REAL> lhs, Vec<REAL> rhs )
+   {
+      // TODO: to be implemented
+      //  should return a list of constraint to be added to the builder
+      return true;
+   }
 
-#endif
+   bool
+   perform_conflict_analysis( )
+   {
+      msg.info("function call is dummy and waited to be implemented above");
+      return true;
+   }
+};
 
-#endif
+} // namespace papilo

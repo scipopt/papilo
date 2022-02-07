@@ -21,23 +21,23 @@
 /*                                                                           */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef _PAPILO_CONFIG_HPP_
-#define _PAPILO_CONFIG_HPP_
+#ifndef _FIX_ROUNDING_STRATEGY_HPP_
+#define _FIX_ROUNDING_STRATEGY_HPP_
 
-#ifndef PAPILO_NO_CMAKE_CONFIG
+#include "papilo/core/ProbingView.hpp"
 
-#include "papilo/CMakeConfig.hpp"
+#include <cassert>
+#include <random>
 
-#else
+using namespace papilo;
 
-#define PAPILO_VERSION_MAJOR 2
-#define PAPILO_VERSION_MINOR 1
-#define PAPILO_VERSION_PATCH 0
-#define PAPILO_VERSION_TWEAK 1
-
-#undef PAPILO_GITHASH_AVAILABLE
-#undef PAPILO_GITHASH
-
-#endif
+template <typename REAL>
+class RoundingStrategy
+{
+ public:
+   virtual Fixing<REAL>
+   select_rounding_variable( const Vec<REAL>& cont_solution,
+                           const ProbingView<REAL>& view ) = 0;
+};
 
 #endif

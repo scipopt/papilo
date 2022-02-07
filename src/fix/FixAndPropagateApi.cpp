@@ -23,6 +23,7 @@
 
 #include "fix/FixAndPropagateApi.h"
 #include "fix/FixAndPropagate.hpp"
+#include "fix/strategy/FractionalRoundingStrategy.hpp"
 
 #include "papilo/io/MpsParser.hpp"
 #include <string>
@@ -48,19 +49,6 @@ setup( const char* filename, int* result )
    auto problem = new Problem<double>( prob.get() );
    problem->recomputeAllActivities();
    return problem;
-   //   problem.recomputeAllActivities();
-   //   Num<double> num{};
-   //   Message msg{};
-   //   auto fixAndPropagate = new FixAndPropagate<double>{ msg, num, problem };
-
-   //   if( !fixAndPropagate->init( filename ) )
-   //   {
-   //      result = -1;
-   //      return nullptr;
-   //   }
-
-   //   result = 0;
-   //   return fixAndPropagate;
 }
 
 void
@@ -76,11 +64,12 @@ call_algorithm( void* problem_ptr, double* cont_solution, double* result,
 {
    auto problem = (Problem<double>*)( problem_ptr );
    ProbingView<double> view{ *problem, {} };
-   FixAndPropagate<double> f{ {}, {}, *problem, view };
+   FixAndPropagate<double> f{ {}, {}, false };
    Vec<double> sol( cont_solution, cont_solution + n_cols );
    Vec<double> res( result, result + n_cols );
 
-   bool is_infeasible = f.fix_and_propagate( sol, res );
+   FractionalRoundingStrategy<double> strategy{{}};
+   bool is_infeasible = f.fix_and_propagate( sol, res, strategy, view );
    result = &res[0];
    return is_infeasible;
 }
