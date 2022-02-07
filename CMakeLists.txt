@@ -220,7 +220,7 @@ else()
    set(PAPILO_USE_STANDARD_HASHMAP 1)
 endif()
 
-add_library(papilo-core STATIC
+set(sources
    src/papilo/core/VariableDomains.cpp
    src/papilo/core/SparseStorage.cpp
    src/papilo/core/ConstraintMatrix.cpp
@@ -248,18 +248,31 @@ add_library(papilo-core STATIC
    src/papilo/presolvers/SimplifyInequalities.cpp
   )
 
-add_library(fix-shared SHARED
-  src/fix/FixAndPropagateApi.cpp
-  src/fix/FixAndPropagateApi.h
-  src/fix/PresolveApi.cpp
-  src/fix/PresolveApi.h
-  src/fix/FixAndPropagate.hpp
-  )
-target_link_libraries(fix-shared papilo)
-
+add_library(papilo-core STATIC
+    ${sources}
+    )
 
 target_link_libraries(papilo-core papilo)
 target_compile_definitions(papilo-core PRIVATE PAPILO_USE_EXTERN_TEMPLATES)
+
+add_library(fix-shared STATIC
+  src/fix/FixAndPropagateApi.cpp
+  src/fix/PresolveApi.cpp
+  ${sources}
+  )
+set_target_properties(fix-shared PROPERTIES
+    VERSION ${PAPILO_VERSION_MAJOR}.${PAPILO_VERSION_MINOR}.${PAPILO_VERSION_PATCH}.${PAPILO_VERSION_SUB}
+    SOVERSION ${PAPILO_VERSION_MAJOR}.${PAPILO_VERSION_MINOR})
+add_dependencies(fix-shared papilo papilo-core ${CLUSOL_TARGET})
+if(MSVC)
+    target_compile_options(fix-shared PUBLIC "/Zc:__cplusplus")
+endif()
+target_include_directories(fix-shared PUBLIC
+    $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+    $<INSTALL_INTERFACE:include>)
+target_link_libraries(fix-shared papilo papilo-core ${CLUSOL_TARGET})
+set_target_properties(fix-shared PROPERTIES CXX_VISIBILITY_PRESET default)
 
 if(NOT PAPILO_NO_BINARIES)
    add_subdirectory(binaries)
@@ -450,12 +463,19 @@ if(INSTALL_TBB AND CMAKE_SYSTEM_NAME STREQUAL "Windows")
 endif()
 
 # export targets for build-tree linking
-export(TARGETS papilo ${CLUSOL_TARGET} FILE "${CMAKE_BINARY_DIR}/papilo-targets.cmake")
+export(TARGETS papilo papilo-core fix-shared ${CLUSOL_TARGET}
+    FILE "${CMAKE_BINARY_DIR}/papilo-targets.cmake")
 
 if(EXISTS ${CMAKE_BINARY_DIR}/_deps)
    install(DIRECTORY ${CMAKE_BINARY_DIR}/_deps DESTINATION lib/cmake/papilo/)
 endif()
 
 # install targets
-install(TARGETS papilo papilo-core ${CLUSOL_TARGET} EXPORT papilo-targets ARCHIVE DESTINATION lib LIBRARY DESTINATION lib)
+install(TARGETS papilo papilo-core fix-shared ${CLUSOL_TARGET}
+    EXPORT papilo-targets
+    ARCHIVE DESTINATION lib
+    LIBRARY DESTINATION lib
+    RUNTIME DESTINATION bin
+    INCLUDES DESTINATION include)
 install(EXPORT papilo-targets DESTINATION lib/cmake/papilo)
+

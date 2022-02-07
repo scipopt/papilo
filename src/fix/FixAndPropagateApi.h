@@ -21,6 +21,9 @@
 /*                                                                           */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 void*
 setup( const char* filename, int* result );
@@ -31,3 +34,7 @@ delete_problem_instance( void* problem_ptr );
 int
 call_algorithm( void* problem_ptr, double* cont_solution, double* result,
                 int n_cols );
+
+#ifdef __cplusplus
+}
+#endif
