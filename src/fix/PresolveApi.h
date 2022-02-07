@@ -3,7 +3,7 @@
 /*               This file is part of the program and library                */
 /*    PaPILO --- Parallel Presolve for Integer and Linear Optimization       */
 /*                                                                           */
-/* Copyright (C) 2020-22  Konrad-Zuse-Zentrum */
+/* Copyright (C) 2020-2022 Konrad-Zuse-Zentrum                               */
 /*                     fuer Informationstechnik Berlin                       */
 /*                                                                           */
 /* This program is free software: you can redistribute it and/or modify      */
@@ -21,20 +21,13 @@
 /*                                                                           */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#include "fix/FixAndPropagateApi.cpp"
-#include "catch/catch.hpp"
+void*
+presolve( const char* filename, const char* reduced_filename, int* status,
+       int* result );
 
-TEST_CASE( "fix-and-propagate-api", "[fix]" )
-{
-   int result = 1;
-   auto problem_ptr = setup( "./resources/api_test.mps", &result );
-   assert( result == 0 );
-   int n_cols = 3;
-   auto primal_solution = new double[n_cols];
-   auto sol = new double[n_cols];
-   for( int i = 0; i < n_cols; i++ )
-      primal_solution[i] = ( 1.0 + i ) / 10.0;
-   bool success = call_algorithm( problem_ptr, primal_solution, sol, n_cols );
-   delete_problem_instance( problem_ptr );
-   assert( success );
-}
+void
+delete_postsolve_storage( void* postsolve_storage_ptr );
+
+void
+postsolve( void* postsolve_storage_ptr, double* red_solution, int red_cols,
+           double* org_solution, int org_cols );

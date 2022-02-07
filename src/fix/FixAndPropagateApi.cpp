@@ -3,7 +3,7 @@
 /*               This file is part of the program and library                */
 /*    PaPILO --- Parallel Presolve for Integer and Linear Optimization       */
 /*                                                                           */
-/* Copyright (C) 2020-22  Konrad-Zuse-Zentrum */
+/* Copyright (C) 2020-2022 Konrad-Zuse-Zentrum                               */
 /*                     fuer Informationstechnik Berlin                       */
 /*                                                                           */
 /* This program is free software: you can redistribute it and/or modify      */
@@ -21,20 +21,55 @@
 /*                                                                           */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#include "fix/FixAndPropagateApi.cpp"
-#include "catch/catch.hpp"
+#include "fix/FixAndPropagateApi.h"
+#include "fix/FixAndPropagate.hpp"
+#include "fix/strategy/FractionalRoundingStrategy.hpp"
 
-TEST_CASE( "fix-and-propagate-api", "[fix]" )
+#include "papilo/io/MpsParser.hpp"
+#include <string>
+
+using namespace papilo;
+
+void*
+setup( const char* filename, int* result )
 {
-   int result = 1;
-   auto problem_ptr = setup( "./resources/api_test.mps", &result );
-   assert( result == 0 );
-   int n_cols = 3;
-   auto primal_solution = new double[n_cols];
-   auto sol = new double[n_cols];
-   for( int i = 0; i < n_cols; i++ )
-      primal_solution[i] = ( 1.0 + i ) / 10.0;
-   bool success = call_algorithm( problem_ptr, primal_solution, sol, n_cols );
-   delete_problem_instance( problem_ptr );
-   assert( success );
+
+   std::string filename_as_string( filename );
+   boost::optional<Problem<double>> prob;
+   {
+      prob = MpsParser<double>::loadProblem( filename_as_string );
+   }
+   if( !prob )
+   {
+      fmt::print( "error loading problem {}\n", filename );
+      *result = -1;
+      return nullptr;
+   }
+   *result = 0;
+   auto problem = new Problem<double>( prob.get() );
+   problem->recomputeAllActivities();
+   return problem;
+}
+
+void
+delete_problem_instance( void* problem_ptr )
+{
+   auto problem = (Problem<double>*)( problem_ptr );
+   delete problem;
+}
+
+int
+call_algorithm( void* problem_ptr, double* cont_solution, double* result,
+                int n_cols )
+{
+   auto problem = (Problem<double>*)( problem_ptr );
+   ProbingView<double> view{ *problem, {} };
+   FixAndPropagate<double> f{ {}, {}, false };
+   Vec<double> sol( cont_solution, cont_solution + n_cols );
+   Vec<double> res( result, result + n_cols );
+
+   FractionalRoundingStrategy<double> strategy{{}};
+   bool is_infeasible = f.fix_and_propagate( sol, res, strategy, view );
+   result = &res[0];
+   return is_infeasible;
 }
