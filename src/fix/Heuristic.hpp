@@ -152,7 +152,6 @@ class Heuristic
           } );
       perform_one_opt();
 #else
-      FixAndPropagate<REAL> fixAndPropagate{ msg, num, true };
       infeasible_arr[0] = fixAndPropagate.fix_and_propagate(
           primal_heur_sol, int_solutions[0], *( strategies[0] ), views[0] );
       if( infeasible_arr[0] )
