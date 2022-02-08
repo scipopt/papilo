@@ -21,19 +21,19 @@
 /*                                                                           */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-
-#include "fix/FixAndPropagate.hpp"
-#include "fix/strategy/FractionalRoundingStrategy.hpp"
-
 #include "papilo/io/MpsParser.hpp"
+#include "papilo/io/MpsWriter.hpp"
+#include "papilo/core/Presolve.hpp"
+#include "papilo/core/postsolve/Postsolve.hpp"
+#include "papilo/core/postsolve/PostsolveStorage.hpp"
 #include <cassert>
-#include <fstream>
 #include <string>
 
 using namespace papilo;
 
 void*
-setup( const char* filename, int* result )
+presolve( const char* filename, const char* reduced_filename, int* status,
+          int* result )
 {
 
    std::string filename_as_string( filename );
@@ -44,34 +44,62 @@ setup( const char* filename, int* result )
    if( !prob )
    {
       fmt::print( "error loading problem {}\n", filename );
-      *result = -1;
+      *result = 1;
       return nullptr;
    }
    *result = 0;
    auto problem = new Problem<double>( prob.get() );
-   problem->recomputeAllActivities();
-   return problem;
+   Presolve<double> presolve{};
+   auto presolve_result = presolve.apply( *problem, false );
+   switch( presolve_result.status )
+   {
+
+   case PresolveStatus::kUnchanged:
+      *status = 1;
+      return nullptr;
+   case PresolveStatus::kReduced:
+      *status = 0;
+      break;
+   case PresolveStatus::kUnbndOrInfeas:
+      *status = 2;
+      return nullptr;
+   case PresolveStatus::kUnbounded:
+      *status = 3;
+      return nullptr;
+   case PresolveStatus::kInfeasible:
+      *status = 4;
+      return nullptr;
+   }
+   std::string reduced_filename_as_string( reduced_filename );
+   MpsWriter<double>::writeProb( reduced_filename_as_string, *problem,
+                                 presolve_result.postsolve.origrow_mapping,
+                                 presolve_result.postsolve.origcol_mapping );
+   return new PostsolveStorage<double>( presolve_result.postsolve );
 }
 
 void
-delete_problem_instance( void* problem_ptr )
+delete_postsolve_storage( void* postsolve_storage_ptr )
 {
-   auto problem = (Problem<double>*)( problem_ptr );
-   delete problem;
+   auto postsolve_storage =
+       (PostsolveStorage<double>*)( postsolve_storage_ptr );
+   delete postsolve_storage;
 }
 
-bool
-call_algorithm( void* problem_ptr, double* cont_solution, double* result,
-                int n_cols )
+void
+postsolve( void* postsolve_storage_ptr, double* red_solution, int red_cols, double* org_solution,
+           int org_cols )
 {
-   auto problem = (Problem<double>*)( problem_ptr );
-   ProbingView<double> view{ *problem, {} };
-   FixAndPropagate<double> f{ {}, {}, view, false };
-   Vec<double> sol( cont_solution, cont_solution + n_cols );
-   Vec<double> res( result, result + n_cols );
+   auto postsolve_storage =
+       (PostsolveStorage<double>*)( postsolve_storage_ptr );
+   assert( postsolve_storage->origcol_mapping.size() == red_cols );
+   assert( postsolve_storage->getOriginalProblem().getNCols() == org_cols );
+   Vec<double> sol_vec( red_solution, red_solution + red_cols );
+   Vec<double> res_vec( org_solution, org_solution + org_cols );
+   Solution<double> sol( sol_vec );
+   Solution<double> res( res_vec );
 
-   FractionalRoundingStrategy<double> strategy{{}};
-   bool is_infeasible = f.fix_and_propagate( sol, res, strategy );
-   result = &res[0];
-   return is_infeasible;
+   Postsolve<double> postsolve{ {}, postsolve_storage->num };
+   PostsolveStatus status = postsolve.undo( sol, res, *postsolve_storage );
+   assert( status == PostsolveStatus::kOk );
+   org_solution = &res.primal[0];
 }

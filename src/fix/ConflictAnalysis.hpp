@@ -24,6 +24,7 @@
 #include "papilo/io/Message.hpp"
 #include "papilo/misc/Num.hpp"
 #include "papilo/core/RowFlags.hpp"
+#include "papilo/misc/Timer.hpp"
 #include <cassert>
 #include <cmath>
 #include <fstream>
@@ -39,9 +40,10 @@ class ConflictAnalysis
 {
    Message msg;
    Num<REAL> num;
+   Timer timer;
 
  public:
-   ConflictAnalysis( Message _msg, Num<REAL> _num ) : msg( _msg ), num( _num )
+   ConflictAnalysis( Message _msg, Num<REAL> _num, Timer timer_ ) : msg( _msg ), num( _num ), timer(timer_)
    {
    }
 

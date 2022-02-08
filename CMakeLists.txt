@@ -220,7 +220,7 @@ else()
    set(PAPILO_USE_STANDARD_HASHMAP 1)
 endif()
 
-add_library(papilo-core STATIC
+set(sources
    src/papilo/core/VariableDomains.cpp
    src/papilo/core/SparseStorage.cpp
    src/papilo/core/ConstraintMatrix.cpp
@@ -248,8 +248,31 @@ add_library(papilo-core STATIC
    src/papilo/presolvers/SimplifyInequalities.cpp
   )
 
+add_library(papilo-core STATIC
+    ${sources}
+    )
+
 target_link_libraries(papilo-core papilo)
 target_compile_definitions(papilo-core PRIVATE PAPILO_USE_EXTERN_TEMPLATES)
+
+add_library(fix-shared STATIC
+  src/fix/FixAndPropagateApi.cpp
+  src/fix/PresolveApi.cpp
+  ${sources}
+  )
+set_target_properties(fix-shared PROPERTIES
+    VERSION ${PAPILO_VERSION_MAJOR}.${PAPILO_VERSION_MINOR}.${PAPILO_VERSION_PATCH}.${PAPILO_VERSION_SUB}
+    SOVERSION ${PAPILO_VERSION_MAJOR}.${PAPILO_VERSION_MINOR})
+add_dependencies(fix-shared papilo papilo-core ${CLUSOL_TARGET})
+if(MSVC)
+    target_compile_options(fix-shared PUBLIC "/Zc:__cplusplus")
+endif()
+target_include_directories(fix-shared PUBLIC
+    $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+    $<INSTALL_INTERFACE:include>)
+target_link_libraries(fix-shared papilo papilo-core ${CLUSOL_TARGET})
+set_target_properties(fix-shared PROPERTIES CXX_VISIBILITY_PRESET default)
 
 if(NOT PAPILO_NO_BINARIES)
    add_subdirectory(binaries)
@@ -261,6 +284,7 @@ configure_file("${PROJECT_SOURCE_DIR}/src/papilo/CMakeConfig.hpp.in"
 # add tests
 enable_testing()
 add_subdirectory(${PROJECT_SOURCE_DIR}/test)
+add_subdirectory(${PROJECT_SOURCE_DIR}/test/fix/c_interface)
 
 # install the header files of papilo
 install(FILES
@@ -407,15 +431,25 @@ install(FILES
   DESTINATION include/papilo-external/lusol)
 
 install(FILES
+        ${PROJECT_SOURCE_DIR}/src/fix/Algorithm.hpp
+        ${PROJECT_SOURCE_DIR}/src/fix/ConflictAnalysis.hpp
         ${PROJECT_SOURCE_DIR}/src/fix/FixAndPropagate.hpp
+        ${PROJECT_SOURCE_DIR}/src/fix/FixAndPropagateApi.h
+        ${PROJECT_SOURCE_DIR}/src/fix/FixAndPropagateApi.cpp
+        ${PROJECT_SOURCE_DIR}/src/fix/Heuristic.hpp
+        ${PROJECT_SOURCE_DIR}/src/fix/PresolveApi.cpp
+        ${PROJECT_SOURCE_DIR}/src/fix/PresolveApi.h
         ${PROJECT_SOURCE_DIR}/src/fix/VectorMultiplication.hpp
-        ${PROJECT_SOURCE_DIR}/src/fix/strategy/RoundingStrategy.hpp
+        ${PROJECT_SOURCE_DIR}/src/fix/VolumeAlgorithm.hpp
+        ${PROJECT_SOURCE_DIR}/src/fix/VolumeAlgorithmParameter.hpp
+        DESTINATION include/fix)
+
+install(FILES
+        ${PROJECT_SOURCE_DIR}/src/fix/strategy/FarkasRoundingStrategy.hpp
         ${PROJECT_SOURCE_DIR}/src/fix/strategy/FractionalRoundingStrategy.hpp
         ${PROJECT_SOURCE_DIR}/src/fix/strategy/RandomRoundingStrategy.hpp
-        ${PROJECT_SOURCE_DIR}/src/fix/strategy/FarkasRoundingStrategy.hpp
-        ${PROJECT_SOURCE_DIR}/src/fix/FixAndPropagateApi.hpp
-        ${PROJECT_SOURCE_DIR}/src/StartMipComp.cpp
-        DESTINATION include/fix)
+        ${PROJECT_SOURCE_DIR}/src/fix/strategy/RoundingStrategy.hpp
+        DESTINATION include/fix/strategy)
 
 # configure the config file for the build tree
 set(QUADMATH_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/Modules)
@@ -453,12 +487,19 @@ if(INSTALL_TBB AND CMAKE_SYSTEM_NAME STREQUAL "Windows")
 endif()
 
 # export targets for build-tree linking
-export(TARGETS papilo ${CLUSOL_TARGET} FILE "${CMAKE_BINARY_DIR}/papilo-targets.cmake")
+export(TARGETS papilo papilo-core fix-shared ${CLUSOL_TARGET}
+    FILE "${CMAKE_BINARY_DIR}/papilo-targets.cmake")
 
 if(EXISTS ${CMAKE_BINARY_DIR}/_deps)
    install(DIRECTORY ${CMAKE_BINARY_DIR}/_deps DESTINATION lib/cmake/papilo/)
 endif()
 
 # install targets
-install(TARGETS papilo papilo-core ${CLUSOL_TARGET} EXPORT papilo-targets ARCHIVE DESTINATION lib LIBRARY DESTINATION lib)
+install(TARGETS papilo papilo-core fix-shared ${CLUSOL_TARGET}
+    EXPORT papilo-targets
+    ARCHIVE DESTINATION lib
+    LIBRARY DESTINATION lib
+    RUNTIME DESTINATION bin
+    INCLUDES DESTINATION include)
 install(EXPORT papilo-targets DESTINATION lib/cmake/papilo)
+

@@ -23,8 +23,9 @@
 
 #include "fix/ConflictAnalysis.hpp"
 #include "fix/FixAndPropagate.hpp"
+#include "fix/Heuristic.hpp"
 #include "fix/VolumeAlgorithm.hpp"
-#include "fix/strategy/FarkasRoundingStrategy.hpp"
+
 #include "papilo/core/Presolve.hpp"
 #include "papilo/core/Problem.hpp"
 #include "papilo/core/ProblemBuilder.hpp"
@@ -46,12 +47,18 @@ class Algorithm
 {
    Message msg;
    Num<REAL> num;
+   Timer timer;
+   double time_limit = 10 * 60;
 
  public:
-   Algorithm( Message _msg, Num<REAL> _num ) : msg( _msg ), num( _num ) {}
+   Algorithm( Message _msg, Num<REAL> _num, Timer t )
+       : msg( _msg ), num( _num ), timer( t )
+   {
+   }
 
    void
-   solve_problem( Problem<REAL>& problem, VolumeAlgorithmParameter<REAL>& parameter )
+   solve_problem( Problem<REAL>& problem,
+                  VolumeAlgorithmParameter<REAL>& parameter )
    {
       // set up ProblemUpdate to trivialPresolve so that activities exist
       Presolve<REAL> presolve{};
@@ -84,34 +91,33 @@ class Algorithm
 
          return;
       }
+      problem.recomputeAllActivities();
 
+      Heuristic<REAL> service{msg, num, timer};
+      VolumeAlgorithm<REAL> algorithm{ msg, num, timer, parameter };
+      ConflictAnalysis<REAL> conflict_analysis{ msg, num, timer };
+
+      service.setup( problem );
+      REAL best_obj_value{};
+      Vec<REAL> best_solution{};
+      best_solution.reserve( problem.getNCols() );
+
+      // setup data for the volume algorithm
       Vec<REAL> primal_heur_sol{};
       primal_heur_sol.reserve( problem.getNCols() );
-
-      Vec<REAL> int_solution{};
-      int_solution.resize( problem.getNCols() );
-
       ProblemBuilder<REAL> builder = modify_problem( problem );
       Problem<REAL> reformulated = builder.build();
-
-      // TODO: add same small heuristic
       Vec<REAL> pi;
       pi.reserve( reformulated.getNRows() );
       generate_initial_dual_solution( reformulated, pi );
-
       REAL min_val = calc_upper_bound_for_objective( problem );
       if( min_val == std::numeric_limits<double>::min() )
          return;
 
-      // TODO: extract parameters
-
-      VolumeAlgorithm<REAL> algorithm{ {}, {}, parameter };
-      ConflictAnalysis<REAL> conflict_analysis{ msg, num };
-
-      problem.recomputeAllActivities();
-
       while( true )
       {
+         if(timer.getTime() >= parameter.time_limit )
+            break;
          msg.info( "Starting volume algorithm\n" );
          primal_heur_sol = algorithm.volume_algorithm(
              reformulated.getObjective().coefficients,
@@ -120,14 +126,13 @@ class Algorithm
              reformulated.getVariableDomains(), pi, min_val );
          print_solution( primal_heur_sol );
 
+         if(timer.getTime() >= parameter.time_limit )
+            break;
          msg.info( "Starting fixing and propagating\n" );
 
-         ProbingView<REAL> probing_view{ problem, num };
-         FixAndPropagate<REAL> fixAndPropagate{ msg, num, probing_view, true };
-         FarkasRoundingStrategy<REAL> strategy{ 0, {}, false };
-         bool infeasible = fixAndPropagate.fix_and_propagate(
-             primal_heur_sol, int_solution, strategy );
-         if( !infeasible )
+         service.perform_fix_and_propagate( primal_heur_sol, best_obj_value, best_solution );
+
+         if(timer.getTime() >= parameter.time_limit )
             break;
 
          msg.info( "Starting conflict analysis\n" );
@@ -138,13 +143,18 @@ class Algorithm
       }
 
       Solution<REAL> original_solution{};
-      Solution<REAL> reduced_solution{ int_solution };
+      Solution<REAL> reduced_solution{ best_solution };
       Postsolve<REAL> postsolve{ msg, num };
 
       postsolve.undo( reduced_solution, original_solution, result.postsolve );
 
       print_solution( original_solution.primal );
+      msg.info("Solving took {} seconds.\n", timer.getTime());
    }
+
+
+
+
 
    REAL
    calc_upper_bound_for_objective( const Problem<REAL>& problem ) const

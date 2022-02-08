@@ -66,34 +66,32 @@ using namespace papilo;
 template <typename REAL>
 class FixAndPropagate
 {
-   bool perform_backtracking = true;
+   bool perform_backtracking;
    Message msg;
    Num<REAL> num;
-   ProbingView<REAL> probing_view;
 
  public:
-   FixAndPropagate( Message msg_, Num<REAL> num_, ProbingView<REAL> view_, bool perform_backtracking_ )
-       : msg( msg_ ), num( num_ ), probing_view( view_ ),
-         perform_backtracking( perform_backtracking_ )
+   FixAndPropagate( Message msg_, Num<REAL> num_, bool perform_backtracking_ )
+       : msg( msg_ ), num( num_ ), perform_backtracking( perform_backtracking_ )
    {
    }
 
    bool
    fix_and_propagate( const Vec<REAL>& cont_solution, Vec<REAL>& result,
-                      RoundingStrategy<REAL>& strategy )
+                      RoundingStrategy<REAL>& strategy, ProbingView<REAL>& probing_view)
    {
       // if no backtrack just "dive" to the node whether it is infeasible or not
       if( !perform_backtracking )
       {
-         propagate_to_leaf_or_infeasibility( cont_solution, strategy, false );
-         fix_remaining_integer_solutions( cont_solution );
-         create_solution( result );
+         propagate_to_leaf_or_infeasibility( cont_solution, strategy, false, probing_view );
+         fix_remaining_integer_solutions( cont_solution, probing_view );
+         create_solution( result, probing_view );
          return probing_view.isInfeasible();
       }
 
       while( true )
       {
-         propagate_to_leaf_or_infeasibility( cont_solution, strategy, true );
+         propagate_to_leaf_or_infeasibility( cont_solution, strategy, true, probing_view );
 
          if( probing_view.isInfeasible() )
          {
@@ -112,21 +110,21 @@ class FixAndPropagate
                    modify_value_due_to_backtrack(
                        last_fix.get_value(),
                        cont_solution[last_fix.get_column_index()] ) );
-               bool infeasible = perform_probing_step();
+               bool infeasible = perform_probing_step(probing_view);
                if( infeasible )
                {
                   propagate_to_leaf_or_infeasibility( cont_solution, strategy,
-                                                      false );
-                  fix_remaining_integer_solutions( cont_solution );
-                  create_solution( result );
+                                                      false, probing_view );
+                  fix_remaining_integer_solutions( cont_solution, probing_view );
+                  create_solution( result, probing_view );
                   return probing_view.isInfeasible();
                }
             }
          }
          else
          {
-            fix_remaining_integer_solutions( cont_solution );
-            create_solution( result );
+            fix_remaining_integer_solutions( cont_solution, probing_view );
+            create_solution( result, probing_view );
             return probing_view.isInfeasible();
          }
       }
@@ -136,7 +134,7 @@ class FixAndPropagate
    void
    propagate_to_leaf_or_infeasibility( Vec<REAL> cont_solution,
                                        RoundingStrategy<REAL>& strategy,
-                                       bool stop_at_infeasibility )
+                                       bool stop_at_infeasibility, ProbingView<REAL>& probing_view )
    {
       while( true )
       {
@@ -152,14 +150,14 @@ class FixAndPropagate
 
          probing_view.setProbingColumn( fixing.get_column_index(),
                                         fixing.get_value() );
-         bool infeasibility_detected = perform_probing_step();
+         bool infeasibility_detected = perform_probing_step(probing_view);
          if( stop_at_infeasibility && infeasibility_detected )
             return;
       }
    }
 
    bool
-   perform_probing_step()
+   perform_probing_step(ProbingView<REAL>& probing_view)
    {
       if( probing_view.isInfeasible() )
       {
@@ -192,7 +190,7 @@ class FixAndPropagate
    }
 
    bool
-   fix_remaining_integer_solutions( const Vec<REAL>& cont_solution )
+   fix_remaining_integer_solutions( const Vec<REAL>& cont_solution, ProbingView<REAL>& probing_view )
    {
       for( int i = 0; i < cont_solution.size(); i++ )
       {
@@ -235,14 +233,14 @@ class FixAndPropagate
             probing_view.setProbingColumn( i, value );
             msg.info( "Fix integer var {} to {}\n", i, value );
 
-            perform_probing_step();
+            perform_probing_step(probing_view);
          }
       }
       return probing_view.isInfeasible();
    }
 
    void
-   create_solution( Vec<REAL>& result )
+   create_solution( Vec<REAL>& result, ProbingView<REAL>& probing_view )
    {
       auto upper_bounds = probing_view.getProbingUpperBounds();
       for( int i = 0; i < upper_bounds.size(); i++ )
