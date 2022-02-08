@@ -43,18 +43,20 @@
 namespace papilo
 {
 
-// TODO: find a funny name for it
+//TODO: statistics + evaluation
+
+
 template <typename REAL>
 class Algorithm
 {
    Message msg;
    Num<REAL> num;
    Timer timer;
-   double time_limit = 10 * 60;
+   double time_limit;
 
  public:
-   Algorithm( Message _msg, Num<REAL> _num, Timer t )
-       : msg( _msg ), num( _num ), timer( t )
+   Algorithm( Message _msg, Num<REAL> _num, Timer t, double time_limit_ )
+       : msg( _msg ), num( _num ), timer( t ), time_limit(time_limit_)
    {
    }
 
@@ -63,8 +65,7 @@ class Algorithm
                   VolumeAlgorithmParameter<REAL>& parameter )
    {
 #ifdef PAPILO_TBB
-      //#TODO:set to 0
-      tbb::task_arena arena( 1 );
+      tbb::task_arena arena( 8 );
 #endif
 
 #ifdef PAPILO_TBB
@@ -76,7 +77,6 @@ class Algorithm
              Presolve<REAL> presolve{};
              auto result = presolve.apply( problem, false );
 
-             // TODO: add a check if presolve solved to optimality
              switch( result.status )
              {
              case papilo::PresolveStatus::kUnbounded:
@@ -104,22 +104,23 @@ class Algorithm
 
                 return;
              }
-      problem.recomputeAllActivities();
+             problem.recomputeAllActivities();
 
-             Heuristic<REAL> service{msg, num, timer};
-      VolumeAlgorithm<REAL> algorithm{ msg, num, timer, parameter};
+             Heuristic<REAL> service{ msg, num, timer, problem };
+             VolumeAlgorithm<REAL> algorithm{ msg, num, timer, parameter };
              ConflictAnalysis<REAL> conflict_analysis{ msg, num, timer };
 
-             service.setup( problem );REAL best_obj_value{};
+             service.setup( );
+             REAL best_obj_value{};
 
              Vec<REAL> best_solution{};
              best_solution.reserve( problem.getNCols() );
 
              // setup data for the volume algorithm
-      Vec<REAL> primal_heur_sol{};
-      primal_heur_sol.reserve( problem.getNCols() );ProblemBuilder<REAL> builder = modify_problem( problem );
+             Vec<REAL> primal_heur_sol{};
+             primal_heur_sol.reserve( problem.getNCols() );
+             ProblemBuilder<REAL> builder = modify_problem( problem );
              Problem<REAL> reformulated = builder.build();
-
 
              Vec<REAL> pi;
              pi.reserve( reformulated.getNRows() );
@@ -129,28 +130,30 @@ class Algorithm
              if( min_val == std::numeric_limits<double>::min() )
                 return;
 
-      while( true )
-      {
-         if(timer.getTime() >= parameter.time_limit )
-            break;
-         msg.info( "Starting volume algorithm\n" );
-         primal_heur_sol = algorithm.volume_algorithm(
-             reformulated.getObjective().coefficients,
-             reformulated.getConstraintMatrix(),
-             reformulated.getConstraintMatrix().getLeftHandSides(),
-             reformulated.getVariableDomains(), pi, min_val );
-         print_solution( primal_heur_sol );
+             while( true )
+             {
+                if( timer.getTime() >= parameter.time_limit )
+                   break;
+                msg.info( "Starting volume algorithm\n" );
+                primal_heur_sol = algorithm.volume_algorithm(
+                    reformulated.getObjective().coefficients,
+                    reformulated.getConstraintMatrix(),
+                    reformulated.getConstraintMatrix().getLeftHandSides(),
+                    reformulated.getVariableDomains(), pi, min_val );
+                print_solution( primal_heur_sol );
 
-         if(timer.getTime() >= parameter.time_limit )
-            break;
-         msg.info( "Starting fixing and propagating\n" );
+                if( timer.getTime() >= parameter.time_limit )
+                   break;
+                msg.info( "Starting fixing and propagating\n" );
 
-         service.perform_fix_and_propagate( primal_heur_sol, best_obj_value, best_solution );
+                service.perform_fix_and_propagate(
+                    primal_heur_sol, best_obj_value, best_solution );
 
                 if( timer.getTime() >= parameter.time_limit )
                    break;
 
                 msg.info( "Starting conflict analysis\n" );
+                //TODO: this is a dummy function
                 bool abort = conflict_analysis.perform_conflict_analysis();
                 if( abort )
                    return;
@@ -170,24 +173,6 @@ class Algorithm
           } );
 #endif
    }
-
-   void
-   sort( const Vec<REAL>& objective, Vec<int>& cols_sorted_by_obj ) const
-   {
-      cols_sorted_by_obj.reserve( objective.size() );
-      for( int i = 0; i < objective.size(); i++ )
-         cols_sorted_by_obj.push_back( i );
-      pdqsort( cols_sorted_by_obj.begin(), cols_sorted_by_obj.end(),
-               [&]( const int a, const int b )
-               {
-                  return objective[a] > objective[b] ||
-                         ( objective[a] == objective[b] && a > b );
-               } );
-   }
-
-
-
-
 
    REAL
    calc_upper_bound_for_objective( const Problem<REAL>& problem ) const

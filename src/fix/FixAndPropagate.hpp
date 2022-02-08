@@ -164,7 +164,7 @@ class FixAndPropagate
             return;
          assert( probing_view.is_within_bounds( fixing.get_column_index(),
                                                 fixing.get_value() ) );
-         msg.info( "Fix var {} to {}\n", fixing.get_column_index(),
+         msg.debug( "Fix var {} to {}\n", fixing.get_column_index(),
                    fixing.get_value() );
 
          probing_view.setProbingColumn( fixing.get_column_index(),
@@ -180,14 +180,14 @@ class FixAndPropagate
    {
       if( probing_view.isInfeasible() )
       {
-         msg.info( "changing bound of variable is infeasible row: {} col {} \n",
+         msg.debug( "changing bound of variable is infeasible row: {} col {} \n",
                    probing_view.get_row_causing_infeasibility(),
                    probing_view.get_col_causing_infeasibility() );
       }
       probing_view.propagateDomains();
       if( probing_view.isInfeasible() )
       {
-         msg.info( "propagation is infeasible row: {} col {} \n",
+         msg.debug( "propagation is infeasible row: {} col {} \n",
                    probing_view.get_row_causing_infeasibility(),
                    probing_view.get_col_causing_infeasibility() );
          return true;
@@ -251,7 +251,7 @@ class FixAndPropagate
                }
             }
             probing_view.setProbingColumn( i, value );
-            msg.info( "Fix integer var {} to {}\n", i, value );
+            msg.debug( "Fix integer var {} to {}\n", i, value );
 
             perform_probing_step( probing_view );
          }
