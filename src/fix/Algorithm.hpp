@@ -159,6 +159,7 @@ class Algorithm
    REAL
    calc_upper_bound_for_objective( const Problem<REAL>& problem ) const
    {
+      /*
       StableSum<REAL> min_value{};
       for( int i = 0; i < problem.getNCols(); i++ )
       {
@@ -190,6 +191,13 @@ class Algorithm
          }
       }
       return min_value.get();
+      */
+
+      Vec<REAL> coefficients = problem.getObjective().coefficients;
+
+      // TODO: not always a valid logic; change this!
+      return *std::min_element( coefficients.begin(), coefficients.end() ) +
+               problem.getObjective().offset;
    }
 
    void
@@ -272,7 +280,7 @@ class Algorithm
          {
             assert( !flags.test( RowFlag::kRhsInf ) );
 
-            auto new_vals= new double [rowlen + 1];
+            auto new_vals= new double[rowlen + 1];
             memcpy( new_vals, rowvals, rowlen * sizeof( double ) );
             new_vals[rowlen] = 1;
             auto new_indices= new int [rowlen + 1];
