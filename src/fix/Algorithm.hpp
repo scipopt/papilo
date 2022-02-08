@@ -196,6 +196,7 @@ class Algorithm
       Vec<REAL> coefficients = problem.getObjective().coefficients;
 
       // TODO: not always a valid logic; change this!
+      // TODO: set this with any primal feasible solution value
       return *std::min_element( coefficients.begin(), coefficients.end() ) +
                problem.getObjective().offset;
    }
@@ -267,6 +268,10 @@ class Algorithm
          auto flags = rowFlags[i];
          REAL lhs = leftHandSides[i];
          REAL rhs = rightHandSides[i];
+         // TODO: what if activities[i].ninfmin != 0?
+         REAL min_activity = activities[i].min;
+         // TODO: what if activities[i].ninfmax != 0?
+         REAL max_activity = activities[i].max;
 
          if( flags.test( RowFlag::kEquation ) )
          {
@@ -293,8 +298,7 @@ class Algorithm
             builder.setRowLhsInf( counter, false );
             builder.setRowRhsInf( counter, false );
 
-            // TODO: what if activities[i].ninfmin != 0?
-            slack_var_upper_bounds[slack_var_counter] = rhs - activities[i].min;
+            slack_var_upper_bounds[slack_var_counter] = rhs - min_activity;
 
             slack_var_counter++;
          }
@@ -315,8 +319,7 @@ class Algorithm
             builder.setRowLhsInf( counter, false );
             builder.setRowRhsInf( counter, false );
 
-            // TODO: what if activities[i].ninfmax != 0?
-            slack_var_upper_bounds[slack_var_counter] = activities[i].max - lhs;
+            slack_var_upper_bounds[slack_var_counter] = max_activity - lhs;
 
             slack_var_counter++;
          }
@@ -339,8 +342,7 @@ class Algorithm
             builder.setRowRhsInf( counter, false );
             counter++;
 
-            // TODO: what if activities[i].ninfmin != 0?
-            slack_var_upper_bounds[slack_var_counter] = rhs - activities[i].min;
+            slack_var_upper_bounds[slack_var_counter] = rhs - min_activity;
 
             slack_var_counter++;
 
@@ -358,8 +360,7 @@ class Algorithm
             builder.setRowLhsInf( counter, false );
             builder.setRowRhsInf( counter, false );
 
-            // TODO: what if activities[i].ninfmax != 0?
-            slack_var_upper_bounds[slack_var_counter] = activities[i].max - lhs;
+            slack_var_upper_bounds[slack_var_counter] = max_activity - lhs;
 
             slack_var_counter++;
          }
@@ -386,7 +387,7 @@ class Algorithm
       for( int i = ncols; i < ncols + slack_vars; ++i )
       {
          builder.setColLb( i, 0 );
-         builder.setColUb( i, slack_var_upper_bounds[i] );
+         builder.setColUb( i, 8 * slack_var_upper_bounds[i - ncols] );
          builder.setColLbInf( i, false );
          builder.setColUbInf( i, false );
          builder.setColIntegral( i, false );
