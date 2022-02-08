@@ -34,6 +34,9 @@
 Problem<double>
 setupProblemForFixAndPropagation();
 
+Problem<double>
+setupProblemForConflictAnalysis_2();
+
 TEST_CASE( "fix-and-propagate-integer-variable", "[fix]" )
 {
    Problem<double> problem = setupProblemForFixAndPropagation();
@@ -327,6 +330,71 @@ TEST_CASE( "fix-and-propagate-farkas-check-within-bounds", "[fix]" )
    assert( res[3] == 2 );
 }
 
+TEST_CASE( "fix-and-propagate-check-conflict-analysis-data", "[fix]" )
+{
+   Problem<double> problem = setupProblemForConflictAnalysis_2();
+   problem.recomputeAllActivities();
+   // Binary problem with constraints
+   // A1: x1 + x3 = 1
+   // A2: x1 + x2 + x3 = 2
+   // A3: x2 + x3 + x4 + x5 = 3
+   // A4: x4 + x5 = 2
+
+   Vec<double> primal_solution = { 0.9, 0.9, 0.6, 0.3, 0.2 };
+
+   Vec<double> res{ primal_solution };
+
+   Message msg{};
+   msg.setVerbosityLevel(papilo::VerbosityLevel::kDetailed);
+   FixAndPropagate<double> fixAndPropagate{ msg, {}, true  };
+   FractionalRoundingStrategy<double> strategy{ {} };
+
+   ProbingView<double> view {problem, {}};
+   bool infeasible =
+       fixAndPropagate.fix_and_propagate( primal_solution, res, strategy, view  );
+
+   auto changes = view.get_changes();
+   assert( infeasible );
+   assert( changes.size() == 5);
+
+   assert( changes[0].get_col() == 2);
+   assert( changes[0].get_new_bound_value() == 1);
+   assert( changes[0].get_reason_row() == -1);
+   assert( changes[0].is_lower_bound() );
+   assert( changes[0].is_manually_triggered() );
+   assert( changes[0].get_depth_level() == -2 );
+
+   assert( changes[1].get_col() == 0);
+   assert( changes[1].get_new_bound_value() == 0);
+   assert( changes[1].get_reason_row() == 0);
+   assert( !changes[1].is_lower_bound() );
+   assert( !changes[1].is_manually_triggered() );
+   assert( changes[1].get_depth_level() == -3 );
+
+   assert( changes[2].get_col() == 1);
+   assert( changes[2].get_new_bound_value() == 1);
+   assert( changes[2].get_reason_row() == 1);
+   assert( changes[2].is_lower_bound() );
+   assert( !changes[2].is_manually_triggered() );
+   assert( changes[2].get_depth_level() == -3 );
+
+   assert( changes[3].get_col() == 3);
+   assert( changes[3].get_new_bound_value() == 1);
+   assert( changes[3].get_reason_row() == -1);
+   assert( changes[3].is_lower_bound() );
+   assert( changes[3].is_manually_triggered() );
+   assert( changes[3].get_depth_level() == -4 );
+
+   assert( changes[4].get_col() == 4);
+   assert( changes[4].get_new_bound_value() == 0);
+   assert( changes[4].get_reason_row() == 2);
+   assert( !changes[4].is_lower_bound() );
+   assert( !changes[4].is_manually_triggered() );
+   assert( changes[4].get_depth_level() == -5 );
+
+}
+
+
 Problem<double>
 setupProblemForFixAndPropagation()
 {
@@ -361,5 +429,52 @@ setupProblemForFixAndPropagation()
    pb.setProblemName( "coefficient strengthening matrix" );
    Problem<double> problem = pb.build();
    problem.getConstraintMatrix().modifyLeftHandSide( 0, {}, rhs[0] );
+   return problem;
+}
+
+Problem<double>
+setupProblemForConflictAnalysis_2()
+{
+   Vec<double> coefficients{ 1.0, 1.0, 1.0, 1.0, 1.0 };
+   Vec<double> upperBounds{ 1.0, 1.0, 1.0, 1.0, 1.0 };
+   Vec<double> lowerBounds{ 0.0, 0.0, 0.0, 0.0, 0.0 };
+   Vec<uint8_t> isIntegral{ 1, 1, 1, 1, 1 };
+
+   Vec<double> rhs{ 1.0, 2.0, 3.0, 2.0 };
+   Vec<std::string> rowNames{ "A1", "A2", "A3", "A4" };
+   Vec<std::string> columnNames{ "c1", "c2", "c3", "c4", "c5" };
+   Vec<std::tuple<int, int, double>> entries{
+       std::tuple<int, int, double>{ 0, 0, 1.0 },
+       std::tuple<int, int, double>{ 0, 2, 1.0 },
+       std::tuple<int, int, double>{ 1, 0, 1.0 },
+       std::tuple<int, int, double>{ 1, 1, 1.0 },
+       std::tuple<int, int, double>{ 1, 2, 1.0 },
+       std::tuple<int, int, double>{ 2, 1, 1.0 },
+       std::tuple<int, int, double>{ 2, 2, 1.0 },
+       std::tuple<int, int, double>{ 2, 3, 1.0 },
+       std::tuple<int, int, double>{ 2, 4, 1.0 },
+       std::tuple<int, int, double>{ 3, 3, 1.0 },
+       std::tuple<int, int, double>{ 3, 4, 1.0 },
+   };
+
+   ProblemBuilder<double> pb;
+   pb.reserve( (int)entries.size(), (int)rowNames.size(),
+               (int)columnNames.size() );
+   pb.setNumRows( (int)rowNames.size() );
+   pb.setNumCols( (int)columnNames.size() );
+   pb.setColUbAll( upperBounds );
+   pb.setColLbAll( lowerBounds );
+   pb.setObjAll( coefficients );
+   pb.setObjOffset( 0.0 );
+   pb.setColIntegralAll( isIntegral );
+   pb.setRowRhsAll( rhs );
+   pb.addEntryAll( entries );
+   pb.setColNameAll( columnNames );
+   pb.setProblemName( "example for conflict analysis" );
+   Problem<double> problem = pb.build();
+   problem.getConstraintMatrix().modifyLeftHandSide( 0, {}, rhs[0] );
+   problem.getConstraintMatrix().modifyLeftHandSide( 1, {}, rhs[1] );
+   problem.getConstraintMatrix().modifyLeftHandSide( 2, {}, rhs[2] );
+   problem.getConstraintMatrix().modifyLeftHandSide( 3, {}, rhs[3] );
    return problem;
 }

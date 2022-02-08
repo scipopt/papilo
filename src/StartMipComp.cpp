@@ -30,6 +30,32 @@
 
 using namespace papilo;
 
+/***
+ * Missing parts:
+ * Overall:
+ * - Statistics
+ *  - first solution found, optimal solution found
+ *  - optimal value of solution/ optimum
+ *  (- profiling)
+ *
+ * Volume algorithm:
+ * - primal feasible solution
+ * - hard constraints are excluded (introducing RowFlag::kHardContraints)
+ * - restarting possibility (use vector pi should work already)
+ * - add constraints of conflict analysis
+ * - fractional of integer variables
+ *
+ * Conflict Analysis:
+ * - TBD
+ *
+ * Fix and Propagate:
+ * - optimize parallel scheme of OneOpt
+ * - fix bugs
+ * - generate data for conflict analysis
+ *
+ */
+
+
 int
 main( int argc, char* argv[] )
 {

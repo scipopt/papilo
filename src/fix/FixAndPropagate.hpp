@@ -100,6 +100,7 @@ class FixAndPropagate
          {
             if( perform_backtracking )
             {
+               msg.detailed("backtracking\n");
                Vec<Fixing<REAL>> fixings = probing_view.get_fixings();
                assert( !fixings.empty() );
                Fixing<REAL> last_fix = fixings[fixings.size() - 1];
@@ -108,6 +109,7 @@ class FixAndPropagate
                for( int i = 0; i < fixings.size() - 1; i++ )
                   probing_view.setProbingColumn( fixings[i].get_column_index(),
                                                  fixings[i].get_value() );
+               perform_probing_step( probing_view );
                probing_view.setProbingColumn(
                    last_fix.get_column_index(),
                    modify_value_due_to_backtrack(
@@ -164,7 +166,7 @@ class FixAndPropagate
             return;
          assert( probing_view.is_within_bounds( fixing.get_column_index(),
                                                 fixing.get_value() ) );
-         msg.debug( "Fix var {} to {}\n", fixing.get_column_index(),
+         msg.detailed( "Fix var {} to {}\n", fixing.get_column_index(),
                    fixing.get_value() );
 
          probing_view.setProbingColumn( fixing.get_column_index(),
@@ -179,20 +181,9 @@ class FixAndPropagate
    perform_probing_step( ProbingView<REAL>& probing_view )
    {
       if( probing_view.isInfeasible() )
-      {
-         msg.debug( "changing bound of variable is infeasible row: {} col {} \n",
-                   probing_view.get_row_causing_infeasibility(),
-                   probing_view.get_col_causing_infeasibility() );
-      }
-      probing_view.propagateDomains();
-      if( probing_view.isInfeasible() )
-      {
-         msg.debug( "propagation is infeasible row: {} col {} \n",
-                   probing_view.get_row_causing_infeasibility(),
-                   probing_view.get_col_causing_infeasibility() );
          return true;
-      }
-      return false;
+      probing_view.propagateDomains();
+      return probing_view.isInfeasible();
    }
 
    REAL
@@ -251,7 +242,7 @@ class FixAndPropagate
                }
             }
             probing_view.setProbingColumn( i, value );
-            msg.debug( "Fix integer var {} to {}\n", i, value );
+            msg.detailed( "Fix integer var {} to {}\n", i, value );
 
             perform_probing_step( probing_view );
          }
