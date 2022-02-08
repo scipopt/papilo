@@ -281,7 +281,8 @@ class VolumeAlgorithm
                     best_bound_on_obj - abs( best_bound_on_obj ) * 0.05 ) )
       {
          best_bound_on_obj =
-             num.max( best_bound_on_obj, z_bar + abs( z_bar ) * 0.05 );
+             num.max( best_bound_on_obj + abs( best_bound_on_obj ) * 0.03,
+                      z_bar + abs( z_bar ) * 0.06 );
          //         msg.info( "   increased best bound: {}\n", best_bound_on_obj
          //         );
       }
