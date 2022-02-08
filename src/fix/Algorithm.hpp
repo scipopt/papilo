@@ -25,7 +25,9 @@
 #include "fix/FixAndPropagate.hpp"
 #include "fix/Heuristic.hpp"
 #include "fix/VolumeAlgorithm.hpp"
-
+#include "fix/strategy/FarkasRoundingStrategy.hpp"
+#include "fix/strategy/FractionalRoundingStrategy.hpp"
+#include "fix/strategy/RandomRoundingStrategy.hpp"
 #include "papilo/core/Presolve.hpp"
 #include "papilo/core/Problem.hpp"
 #include "papilo/core/ProblemBuilder.hpp"
@@ -41,18 +43,20 @@
 namespace papilo
 {
 
-// TODO: find a funny name for it
+//TODO: statistics + evaluation
+
+
 template <typename REAL>
 class Algorithm
 {
    Message msg;
    Num<REAL> num;
    Timer timer;
-   double time_limit = 10 * 60;
+   double time_limit;
 
  public:
-   Algorithm( Message _msg, Num<REAL> _num, Timer t )
-       : msg( _msg ), num( _num ), timer( t )
+   Algorithm( Message _msg, Num<REAL> _num, Timer t, double time_limit_ )
+       : msg( _msg ), num( _num ), timer( t ), time_limit(time_limit_)
    {
    }
 
@@ -60,101 +64,115 @@ class Algorithm
    solve_problem( Problem<REAL>& problem,
                   VolumeAlgorithmParameter<REAL>& parameter )
    {
-      // set up ProblemUpdate to trivialPresolve so that activities exist
-      Presolve<REAL> presolve{};
-      auto result = presolve.apply( problem, false );
+#ifdef PAPILO_TBB
+      tbb::task_arena arena( 8 );
+#endif
 
-      // TODO: add a check if presolve solved to optimality
-      switch( result.status )
-      {
-      case papilo::PresolveStatus::kUnbounded:
-      case papilo::PresolveStatus::kUnbndOrInfeas:
-      case papilo::PresolveStatus::kInfeasible:
-         fmt::print( "PaPILO detected infeasibility or unbounded-ness\n" );
-         return;
-      case papilo::PresolveStatus::kUnchanged:
-      case papilo::PresolveStatus::kReduced:
-         break;
-      }
+#ifdef PAPILO_TBB
+      return arena.execute(
+          [this, &problem, &parameter]()
+          {
+#endif
+             // set up ProblemUpdate to trivialPresolve so that activities exist
+             Presolve<REAL> presolve{};
+             auto result = presolve.apply( problem, false );
 
-      if( problem.getNCols() == 0 )
-      {
-         msg.info( "Problem vanished during presolving\n" );
-         Solution<REAL> original_solution{};
-         Solution<REAL> reduced_solution{};
-         Postsolve<REAL> postsolve{ msg, num };
+             switch( result.status )
+             {
+             case papilo::PresolveStatus::kUnbounded:
+             case papilo::PresolveStatus::kUnbndOrInfeas:
+             case papilo::PresolveStatus::kInfeasible:
+                fmt::print(
+                    "PaPILO detected infeasibility or unbounded-ness\n" );
+                return;
+             case papilo::PresolveStatus::kUnchanged:
+             case papilo::PresolveStatus::kReduced:
+                break;
+             }
 
-         postsolve.undo( reduced_solution, original_solution,
-                         result.postsolve );
+             if( problem.getNCols() == 0 )
+             {
+                msg.info( "Problem vanished during presolving\n" );
+                Solution<REAL> original_solution{};
+                Solution<REAL> reduced_solution{};
+                Postsolve<REAL> postsolve{ msg, num };
 
-         print_solution( original_solution.primal );
+                postsolve.undo( reduced_solution, original_solution,
+                                result.postsolve );
 
-         return;
-      }
-      problem.recomputeAllActivities();
+                print_solution( original_solution.primal );
 
-      Heuristic<REAL> service{msg, num, timer};
-      VolumeAlgorithm<REAL> algorithm{ msg, num, timer, parameter };
-      ConflictAnalysis<REAL> conflict_analysis{ msg, num, timer };
+                return;
+             }
+             problem.recomputeAllActivities();
 
-      service.setup( problem );
-      REAL best_obj_value{};
-      Vec<REAL> best_solution{};
-      best_solution.reserve( problem.getNCols() );
+             Heuristic<REAL> service{ msg, num, timer, problem };
+             VolumeAlgorithm<REAL> algorithm{ msg, num, timer, parameter };
+             ConflictAnalysis<REAL> conflict_analysis{ msg, num, timer };
 
-      // setup data for the volume algorithm
-      Vec<REAL> primal_heur_sol{};
-      primal_heur_sol.reserve( problem.getNCols() );
-      ProblemBuilder<REAL> builder = modify_problem( problem );
-      Problem<REAL> reformulated = builder.build();
-      Vec<REAL> pi;
-      pi.reserve( reformulated.getNRows() );
-      generate_initial_dual_solution( reformulated, pi );
-      REAL min_val = calc_upper_bound_for_objective( problem );
-      if( min_val == std::numeric_limits<double>::min() )
-         return;
+             service.setup( );
+             REAL best_obj_value{};
 
-      while( true )
-      {
-         if(timer.getTime() >= parameter.time_limit )
-            break;
-         msg.info( "Starting volume algorithm\n" );
-         primal_heur_sol = algorithm.volume_algorithm(
-             reformulated.getObjective().coefficients,
-             reformulated.getConstraintMatrix(),
-             reformulated.getConstraintMatrix().getLeftHandSides(),
-             reformulated.getVariableDomains(), pi, min_val );
-         print_solution( primal_heur_sol );
+             Vec<REAL> best_solution{};
+             best_solution.reserve( problem.getNCols() );
 
-         if(timer.getTime() >= parameter.time_limit )
-            break;
-         msg.info( "Starting fixing and propagating\n" );
+             // setup data for the volume algorithm
+             Vec<REAL> primal_heur_sol{};
+             primal_heur_sol.reserve( problem.getNCols() );
+             ProblemBuilder<REAL> builder = modify_problem( problem );
+             Problem<REAL> reformulated = builder.build();
 
-         service.perform_fix_and_propagate( primal_heur_sol, best_obj_value, best_solution );
+             Vec<REAL> pi;
+             pi.reserve( reformulated.getNRows() );
+             generate_initial_dual_solution( reformulated, pi );
 
-         if(timer.getTime() >= parameter.time_limit )
-            break;
+             REAL min_val = calc_upper_bound_for_objective( problem );
+             if( min_val == std::numeric_limits<double>::min() )
+                return;
 
-         msg.info( "Starting conflict analysis\n" );
-         bool abort = conflict_analysis.perform_conflict_analysis();
-         if( abort )
-            return;
-         // TODO: add constraint to builder and generate new problem
-      }
+             while( true )
+             {
+                if( timer.getTime() >= parameter.time_limit )
+                   break;
+                msg.info( "Starting volume algorithm\n" );
+                primal_heur_sol = algorithm.volume_algorithm(
+                    reformulated.getObjective().coefficients,
+                    reformulated.getConstraintMatrix(),
+                    reformulated.getConstraintMatrix().getLeftHandSides(),
+                    reformulated.getVariableDomains(), pi, min_val );
+                print_solution( primal_heur_sol );
 
-      Solution<REAL> original_solution{};
-      Solution<REAL> reduced_solution{ best_solution };
-      Postsolve<REAL> postsolve{ msg, num };
+                if( timer.getTime() >= parameter.time_limit )
+                   break;
+                msg.info( "Starting fixing and propagating\n" );
 
-      postsolve.undo( reduced_solution, original_solution, result.postsolve );
+                service.perform_fix_and_propagate(
+                    primal_heur_sol, best_obj_value, best_solution );
 
-      print_solution( original_solution.primal );
-      msg.info("Solving took {} seconds.\n", timer.getTime());
+                if( timer.getTime() >= parameter.time_limit )
+                   break;
+
+                msg.info( "Starting conflict analysis\n" );
+                //TODO: this is a dummy function
+                bool abort = conflict_analysis.perform_conflict_analysis();
+                if( abort )
+                   return;
+                // TODO: add constraint to builder and generate new problem
+             }
+
+             Solution<REAL> original_solution{};
+             Solution<REAL> reduced_solution{ best_solution };
+             Postsolve<REAL> postsolve{ msg, num };
+
+             postsolve.undo( reduced_solution, original_solution,
+                             result.postsolve );
+
+             print_solution( original_solution.primal );
+             msg.info( "Solving took {} seconds.\n", timer.getTime() );
+#ifdef PAPILO_TBB
+          } );
+#endif
    }
-
-
-
-
 
    REAL
    calc_upper_bound_for_objective( const Problem<REAL>& problem ) const

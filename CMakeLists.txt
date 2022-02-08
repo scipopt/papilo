@@ -502,4 +502,3 @@ install(TARGETS papilo papilo-core fix-shared ${CLUSOL_TARGET}
     RUNTIME DESTINATION bin
     INCLUDES DESTINATION include)
 install(EXPORT papilo-targets DESTINATION lib/cmake/papilo)
-
