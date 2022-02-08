@@ -265,7 +265,7 @@ class FixAndPropagate
       auto upper_bounds = probing_view.getProbingUpperBounds();
       for( int i = 0; i < upper_bounds.size(); i++ )
       {
-         assert( upper_bounds[i] == probing_view.getProbingLowerBounds()[i] );
+         assert( num.isEq(upper_bounds[i], probing_view.getProbingLowerBounds()[i]) );
          result[i] = upper_bounds[i];
       }
    }
