@@ -21,19 +21,37 @@
 /*                                                                           */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
+#include "papilo/core/RowFlags.hpp"
 #include "papilo/io/Message.hpp"
 #include "papilo/misc/Num.hpp"
-#include "papilo/core/RowFlags.hpp"
 #include "papilo/misc/Timer.hpp"
 #include <cassert>
 #include <cmath>
 #include <fstream>
 
-#include <cassert>
-#include <fstream>
-
 namespace papilo
 {
+
+template <typename REAL>
+class SingleBoundChange
+{
+   int col;
+   REAL new_bound_value;
+   int reason_row; // row index or -1 if fixing
+   bool is_fixing;
+   bool is_lower_bound; // if is_fixing && is_lower_bound are false 
+                        // then it is an upper bound
+   int depth_level;
+
+ public:
+   SingleBoundChange( int _col, REAL _new_bound_value, int _reason_row,
+               bool _is_fixing, bool _is_lower_bound, int _depth_level)
+              : col( _col ), new_bound_value( _new_bound_value ), 
+              reason_row( _reason_row ), is_fixing( _is_fixing ),
+              is_lower_bound( _is_lower_bound ), depth_level( _depth_level )
+   {
+   }
+};
 
 template <typename REAL>
 class ConflictAnalysis
@@ -48,19 +66,42 @@ class ConflictAnalysis
    }
 
    bool
-   perform_conflict_analysis( Vec<int> length, Vec<int*> indices,
-                              Vec<REAL*> values, Vec<RowFlags> flags,
-                              Vec<REAL> lhs, Vec<REAL> rhs )
+   perform_conflict_analysis( Vec<SingleBoundChange<REAL>> bound_changes,
+                              Vec<int>& length, Vec<int*>& indices,
+                              Vec<REAL*>& values, Vec<RowFlags>& flags,
+                              Vec<REAL>& lhs, Vec<REAL>& rhs )
    {
       // TODO: to be implemented
-      //  should return a list of constraint to be added to the builder
+
+      // create an empty conflict set CS
+      // if only fixings -> no-good-cut / or fix a variable to the other bound?
+      // else BC = bound_changes.pop()
+      // if FUIP -> CS.add(BC)
+      // else -> resolve_bound_change(BC) (in our case maybe just delete?)
+
+      // Maybe use generalized resolution and apply cardinality reduction?
+
+      // should return a list of constraint to be added to the builder
       return true;
    }
 
    bool
-   perform_conflict_analysis( )
+   perform_conflict_analysis()
    {
-      msg.info("function call is dummy and waited to be implemented above");
+      msg.info( "function call is dummy and waited to be implemented above" );
+      return true;
+   }
+
+ private:
+   bool
+   resolve_bound_change()
+   {
+      return true;
+   }
+
+   bool
+   get_conflict_set()
+   {
       return true;
    }
 };

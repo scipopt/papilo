@@ -34,7 +34,6 @@
 Problem<double>
 setupProblemForFixAndPropagation();
 
-
 TEST_CASE( "fix-and-propagate-integer-variable", "[fix]" )
 {
    Problem<double> problem = setupProblemForFixAndPropagation();
