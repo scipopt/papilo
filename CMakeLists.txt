@@ -405,8 +405,12 @@ install(FILES
         ${PROJECT_SOURCE_DIR}/src/fix/strategy/RandomRoundingStrategy.hpp
         ${PROJECT_SOURCE_DIR}/src/fix/strategy/FarkasRoundingStrategy.hpp
         ${PROJECT_SOURCE_DIR}/src/fix/FixAndPropagateApi.hpp
+<<<<<<< HEAD
         ${PROJECT_SOURCE_DIR}/src/StartFixAndPropagate.cpp
         ${PROJECT_SOURCE_DIR}/src/fix/AnalyzeConflict.cpp
+=======
+        ${PROJECT_SOURCE_DIR}/src/StartMipComp.cpp
+>>>>>>> da71b56e0de74172390b8ad04370cf1d0dd8f996
         DESTINATION include/fix)
 
 # configure the config file for the build tree

@@ -21,16 +21,15 @@
 /*                                                                           */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#include "fix/FixAndPropagate.hpp"
-#include "fix/VectorMultiplication.hpp"
+#include "fix/Algorithm.hpp"
+#include "papilo/core/Problem.hpp"
+#include "papilo/io/MpsParser.hpp"
 #include "papilo/misc/OptionsParser.hpp"
 #include <boost/program_options.hpp>
 #include <fstream>
 
 using namespace papilo;
 
-Solution<double>
-generate_random_solution( const Problem<double>& problem );
 
 int
 main( int argc, char* argv[] )
@@ -54,6 +53,8 @@ main( int argc, char* argv[] )
 
    double readtime = 0;
    Problem<double> problem;
+   Num<double> num{};
+   Message msg{};
    boost::optional<Problem<double>> prob;
 
    {
@@ -71,37 +72,7 @@ main( int argc, char* argv[] )
 
    fmt::print( "reading took {:.3} seconds\n", readtime );
 
-   // set up ProblemUpdate to trivialPresolve so that activities exist
-//   Num<double> num{};
-//   Statistics stats{};
-//   Message msg{};
-//   PresolveOptions presolve_options{};
-//   PostsolveStorage<double> postsolve_storage;
-//   ProblemUpdate<double> probUpdate( problem, postsolve_storage, stats,
-//                                     presolve_options, num, msg );
-//   probUpdate.trivialPresolve();
-//
-//   Solution<double> random_solution = generate_random_solution( problem );
-//
-//   ProbingView<double> probing_view{ problem, num };
-//   FixAndPropagate<double> fixAndPropagate{ msg, num };
-//   fixAndPropagate.fix_and_propagate( probUpdate.getProblem(),
-//                                      probing_view, random_solution );
-
+   Algorithm<double> alg{ {}, {} };
+   alg.solve_problem( problem );
    return 0;
-}
-
-Solution<double>
-generate_random_solution( const Problem<double>& problem )
-{
-//   std::random_device dev;
-//   std::mt19937 rng( dev() );
-
-   Vec<double> solution;
-   for( int i = 0; i < problem.getNCols(); i++ )
-   {
-      double random_number = (1.0 + i) /10.0;
-      solution.push_back( random_number );
-   }
-   return { SolutionType::kPrimal, solution };
 }

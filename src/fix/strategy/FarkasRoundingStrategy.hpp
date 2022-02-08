@@ -25,6 +25,7 @@
 #define FIX_FARKAS_ROUNDING_STRATEGY_HPP
 
 #include "papilo/core/ProbingView.hpp"
+#include "fix/strategy/RoundingStrategy.hpp"
 
 #include <cassert>
 #include <random>

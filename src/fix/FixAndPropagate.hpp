@@ -72,8 +72,7 @@ class FixAndPropagate
    ProbingView<REAL> probing_view;
 
  public:
-   FixAndPropagate( Message msg_, Num<REAL> num_, Problem<REAL>& problem_,
-                    ProbingView<REAL> view_, bool perform_backtracking_ )
+   FixAndPropagate( Message msg_, Num<REAL> num_, ProbingView<REAL> view_, bool perform_backtracking_ )
        : msg( msg_ ), num( num_ ), probing_view( view_ ),
          perform_backtracking( perform_backtracking_ )
    {

@@ -59,6 +59,7 @@ add_executable(unit_test TestMain.cpp
         papilo/presolve/SparsifyTest.cpp
 
         fix/VectorMultiplicationTest.cpp
+        fix/VolumeAlgorithmTest.cpp
         fix/FixAndPropagateTest.cpp
         fix/FixAndPropagateIT.cpp
         fix/FixAndPropagateApiTest.cpp
@@ -209,6 +210,13 @@ set(unit_tests
         "fix-and-propagate-random-check-within-bounds"
         "fix-and-propagate-farkas-backtrack"
         "fix-and-propagate-farkas-check-within-bounds"
+        "vector-calc_b_minus_xA"
+        "vector-l2-norm"
+        "vector-addition"
+        "vector-addition-2"
+        "small-volume-algorithm-test"
+        "conflict-analysis-data-structures"
+        "conflict-analysis-binary-depth-two"
 #        "fix-and-propagate-api"
         "fix-and-propagate-it-modified-solution-is-feasible"
         "fix-and-propagate-it-solution-is-feasible"
