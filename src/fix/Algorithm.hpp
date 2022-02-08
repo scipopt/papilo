@@ -223,6 +223,7 @@ class Algorithm
       Vec<REAL>& coefficients = problem.getObjective().coefficients;
       Vec<REAL>& leftHandSides = matrix.getLeftHandSides();
       Vec<REAL>& rightHandSides = matrix.getRightHandSides();
+      const Vec<RowActivity<REAL>>& activities = problem.getRowActivities();
 
       int equations = 0;
 
@@ -241,31 +242,9 @@ class Algorithm
          nnz = nnz + rowsize;
       }
       int slack_vars = nrows - equations;
+      auto slack_var_upper_bounds = new double[slack_vars];
 
       builder.reserve( nnz, nrows, ncols + slack_vars );
-
-      /* set up columns */
-      builder.setNumCols( ncols + slack_vars );
-      for( int i = 0; i < ncols; ++i )
-      {
-         builder.setColLb( i, problem.getLowerBounds()[i] );
-         builder.setColUb( i, problem.getUpperBounds()[i] );
-         auto flags = colFlags[i];
-         builder.setColLbInf( i, flags.test( ColFlag::kLbInf ) );
-         builder.setColUbInf( i, flags.test( ColFlag::kUbInf ) );
-
-         builder.setColIntegral( i, flags.test( ColFlag::kIntegral ) );
-         builder.setObj( i, coefficients[i] );
-      }
-
-      for( int i = ncols; i < ncols + slack_vars; ++i )
-      {
-         builder.setColLb( i, 0 );
-         builder.setColLbInf( i, false );
-         builder.setColUbInf( i, true );
-         builder.setColIntegral( i, false );
-         builder.setObj( i, 0 );
-      }
 
       /* set up rows */
       builder.setNumRows( nrows );
@@ -305,6 +284,10 @@ class Algorithm
             builder.setRowRhs( counter, rhs );
             builder.setRowLhsInf( counter, false );
             builder.setRowRhsInf( counter, false );
+
+            // TODO: what if activities[i].ninfmin != 0?
+            slack_var_upper_bounds[slack_var_counter] = rhs - activities[i].min;
+
             slack_var_counter++;
          }
          else if( flags.test( RowFlag::kRhsInf ) )
@@ -323,6 +306,10 @@ class Algorithm
             builder.setRowRhs( counter, lhs );
             builder.setRowLhsInf( counter, false );
             builder.setRowRhsInf( counter, false );
+
+            // TODO: what if activities[i].ninfmax != 0?
+            slack_var_upper_bounds[slack_var_counter] = activities[i].max - lhs;
+
             slack_var_counter++;
          }
          else
@@ -343,6 +330,10 @@ class Algorithm
             builder.setRowLhsInf( counter, false );
             builder.setRowRhsInf( counter, false );
             counter++;
+
+            // TODO: what if activities[i].ninfmin != 0?
+            slack_var_upper_bounds[slack_var_counter] = rhs - activities[i].min;
+
             slack_var_counter++;
 
             auto new_vals_2 = new double[rowlen + 1];
@@ -358,11 +349,42 @@ class Algorithm
             builder.setRowRhs( counter, lhs );
             builder.setRowLhsInf( counter, false );
             builder.setRowRhsInf( counter, false );
+
+            // TODO: what if activities[i].ninfmax != 0?
+            slack_var_upper_bounds[slack_var_counter] = activities[i].max - lhs;
+
             slack_var_counter++;
          }
          counter++;
       }
       assert( slack_var_counter == slack_vars );
+
+      /* set up columns */
+      builder.setNumCols( ncols + slack_vars );
+      for( int i = 0; i < ncols; ++i )
+      {
+         builder.setColLb( i, problem.getLowerBounds()[i] );
+         builder.setColUb( i, problem.getUpperBounds()[i] );
+         auto flags = colFlags[i];
+         builder.setColLbInf( i, flags.test( ColFlag::kLbInf ) );
+         builder.setColUbInf( i, flags.test( ColFlag::kUbInf ) );
+
+         builder.setColIntegral( i, flags.test( ColFlag::kIntegral ) );
+         builder.setObj( i, coefficients[i] );
+      }
+
+      // TODO: safe to assume slack_var ordering is consistent here and above
+      //       while creating slack_var_upper_bounds?
+      for( int i = ncols; i < ncols + slack_vars; ++i )
+      {
+         builder.setColLb( i, 0 );
+         builder.setColUb( i, slack_var_upper_bounds[i] );
+         builder.setColLbInf( i, false );
+         builder.setColUbInf( i, false );
+         builder.setColIntegral( i, false );
+         builder.setObj( i, 0 );
+      }
+
       return builder;
    }
 
