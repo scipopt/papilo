@@ -172,6 +172,7 @@ class Heuristic
    void
    perform_one_opt()
    {
+#ifdef PAPILO_TBB
       //TODO: return conflicts maybe?
       //TODO: parallelize more efficiently
       FixAndPropagate<REAL> fixAndPropagate{ msg, num, false };
@@ -254,6 +255,7 @@ class Heuristic
                 }
              }
           } );
+#endif
    }
 
  private:

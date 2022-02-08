@@ -77,6 +77,10 @@ main( int argc, char* argv[] )
                                           2,    1.1, 0.66, 0.01,   0.001,
                                           0.02, 2,   20,   time_limit };
 
+#ifndef PAPILO_TBB
+   msg.error("Please build with TBB to use the parallel feature!!!")
+#endif
+
    Algorithm<double> alg{ msg, num, t, time_limit};
    alg.solve_problem( problem, para );
    return 0;
