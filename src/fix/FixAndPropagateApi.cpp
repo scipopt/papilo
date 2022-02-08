@@ -21,23 +21,55 @@
 /*                                                                           */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef _PAPILO_CONFIG_HPP_
-#define _PAPILO_CONFIG_HPP_
+#include "fix/FixAndPropagateApi.h"
+#include "fix/FixAndPropagate.hpp"
+#include "fix/strategy/FractionalRoundingStrategy.hpp"
 
-#ifndef PAPILO_NO_CMAKE_CONFIG
+#include "papilo/io/MpsParser.hpp"
+#include <string>
 
-#include "papilo/CMakeConfig.hpp"
+using namespace papilo;
 
-#else
+void*
+setup( const char* filename, int* result )
+{
 
-#define PAPILO_VERSION_MAJOR 2
-#define PAPILO_VERSION_MINOR 1
-#define PAPILO_VERSION_PATCH 0
-#define PAPILO_VERSION_TWEAK 1
+   std::string filename_as_string( filename );
+   boost::optional<Problem<double>> prob;
+   {
+      prob = MpsParser<double>::loadProblem( filename_as_string );
+   }
+   if( !prob )
+   {
+      fmt::print( "error loading problem {}\n", filename );
+      *result = -1;
+      return nullptr;
+   }
+   *result = 0;
+   auto problem = new Problem<double>( prob.get() );
+   problem->recomputeAllActivities();
+   return problem;
+}
 
-#undef PAPILO_GITHASH_AVAILABLE
-#undef PAPILO_GITHASH
+void
+delete_problem_instance( void* problem_ptr )
+{
+   auto problem = (Problem<double>*)( problem_ptr );
+   delete problem;
+}
 
-#endif
+int
+call_algorithm( void* problem_ptr, double* cont_solution, double* result,
+                int n_cols )
+{
+   auto problem = (Problem<double>*)( problem_ptr );
+   ProbingView<double> view{ *problem, {} };
+   FixAndPropagate<double> f{ {}, {}, false };
+   Vec<double> sol( cont_solution, cont_solution + n_cols );
+   Vec<double> res( result, result + n_cols );
 
-#endif
+   FractionalRoundingStrategy<double> strategy{{}};
+   bool is_infeasible = f.fix_and_propagate( sol, res, strategy, view );
+   result = &res[0];
+   return is_infeasible;
+}

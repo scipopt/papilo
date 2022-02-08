@@ -36,8 +36,11 @@ setupProblemWithoutMatrix();
 
 TEST_CASE( "small-volume-algorithm-test", "[volume]" )
 {
-   VolumeAlgorithm<double> algorithm{ {}, {}, 0.05, 0.1, 0.2, 0.0005, 2, 2,
-                                      1.1, 0.66, 0.01, 0.001, 0.02, 2, 20 };
+   VolumeAlgorithmParameter<double> para{ 0.05, 0.1,  0.2,   0.0005, 2, 2, 1.1,
+                                          0.66, 0.01, 0.001, 0.02,   2, 20, 600.0 };
+   double d =0;
+   Timer timer {d};
+   VolumeAlgorithm<double> algorithm{ {}, {}, timer, para};
    Vec<double> c( 2 );
    c = { 1, 2 };
    Vec<double> b( 2 );
@@ -48,7 +51,7 @@ TEST_CASE( "small-volume-algorithm-test", "[volume]" )
    Vec<double> pi( 2 );
    pi = { 0, 0 };
    algorithm.volume_algorithm( c, matrix, b, problem.getVariableDomains(), pi, 3 );
-   // TODO: add assertions and check input
+   // TODO: @Suresh add assertions and check input
 }
 
 Problem<double>

@@ -3,7 +3,7 @@
 /*               This file is part of the program and library                */
 /*    PaPILO --- Parallel Presolve for Integer and Linear Optimization       */
 /*                                                                           */
-/* Copyright (C) 2020-2022 Konrad-Zuse-Zentrum                               */
+/* Copyright (C) 2020-22  Konrad-Zuse-Zentrum */
 /*                     fuer Informationstechnik Berlin                       */
 /*                                                                           */
 /* This program is free software: you can redistribute it and/or modify      */
@@ -21,23 +21,22 @@
 /*                                                                           */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef _PAPILO_CONFIG_HPP_
-#define _PAPILO_CONFIG_HPP_
+#include "fix/FixAndPropagateApi.h"
+#include <assert.h>
+#include <stdlib.h>
 
-#ifndef PAPILO_NO_CMAKE_CONFIG
-
-#include "papilo/CMakeConfig.hpp"
-
-#else
-
-#define PAPILO_VERSION_MAJOR 2
-#define PAPILO_VERSION_MINOR 1
-#define PAPILO_VERSION_PATCH 0
-#define PAPILO_VERSION_TWEAK 1
-
-#undef PAPILO_GITHASH_AVAILABLE
-#undef PAPILO_GITHASH
-
-#endif
-
-#endif
+int
+main( void )
+{
+   int result = 1;
+   void* problem_ptr = setup( "./../../resources/api_test.mps", &result );
+   assert( result == 0 );
+   int n_cols = 3;
+   double* primal_solution = malloc(n_cols* sizeof (int));
+   double* sol = malloc(n_cols* sizeof (double));
+   for( int i = 0; i < n_cols; i++ )
+      primal_solution[i] = ( 1.0 + i ) / 10.0;
+   int success = call_algorithm( problem_ptr, primal_solution, sol, n_cols );
+   delete_problem_instance( problem_ptr );
+   assert( success );
+}

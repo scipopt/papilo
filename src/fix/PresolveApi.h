@@ -21,23 +21,13 @@
 /*                                                                           */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef _PAPILO_CONFIG_HPP_
-#define _PAPILO_CONFIG_HPP_
+void*
+presolve( const char* filename, const char* reduced_filename, int* status,
+       int* result );
 
-#ifndef PAPILO_NO_CMAKE_CONFIG
+void
+delete_postsolve_storage( void* postsolve_storage_ptr );
 
-#include "papilo/CMakeConfig.hpp"
-
-#else
-
-#define PAPILO_VERSION_MAJOR 2
-#define PAPILO_VERSION_MINOR 1
-#define PAPILO_VERSION_PATCH 0
-#define PAPILO_VERSION_TWEAK 1
-
-#undef PAPILO_GITHASH_AVAILABLE
-#undef PAPILO_GITHASH
-
-#endif
-
-#endif
+void
+postsolve( void* postsolve_storage_ptr, double* red_solution, int red_cols,
+           double* org_solution, int org_cols );

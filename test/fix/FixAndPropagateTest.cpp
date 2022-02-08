@@ -53,11 +53,12 @@ TEST_CASE( "fix-and-propagate-integer-variable", "[fix]" )
    primal_solution[0] = 2.6;
    Vec<double> res{ primal_solution };
 
-   FixAndPropagate<double> fixAndPropagate{ {}, {}, {problem, {}}, true  };
+   FixAndPropagate<double> fixAndPropagate{ {}, {}, true  };
    FractionalRoundingStrategy<double> strategy{ {} };
 
+   ProbingView<double> view {problem, {}};
    bool infeasible =
-       fixAndPropagate.fix_and_propagate( primal_solution, res, strategy );
+       fixAndPropagate.fix_and_propagate( primal_solution, res, strategy, view  );
 
    assert( !infeasible );
    assert( res[0] == 3 );
@@ -79,11 +80,12 @@ TEST_CASE( "fix-and-propagate-cont-variable-stays-cont", "[fix]" )
 
    Vec<double> res{ primal_solution };
 
-   FixAndPropagate<double> fixAndPropagate{ {}, {}, {problem, {}}, true  };
+   FixAndPropagate<double> fixAndPropagate{ {}, {}, true  };
    FractionalRoundingStrategy<double> strategy{ {} };
 
+   ProbingView<double> view {problem, {}};
    bool infeasible =
-       fixAndPropagate.fix_and_propagate( primal_solution, res, strategy );
+       fixAndPropagate.fix_and_propagate( primal_solution, res, strategy, view  );
 
    assert( !infeasible );
    assert( res[0] == 0.1 );
@@ -104,11 +106,13 @@ TEST_CASE( "fix-and-propagate-all-integer-solutions", "[fix]" )
 
    Vec<double> res{ primal_solution };
 
-   FixAndPropagate<double> fixAndPropagate{ {}, {}, {problem, {}}, true  };
+   FixAndPropagate<double> fixAndPropagate{ {}, {},  true  };
    FractionalRoundingStrategy<double> strategy{ {} };
 
+   ProbingView<double> view {problem, {}};
    bool infeasible =
-       fixAndPropagate.fix_and_propagate( primal_solution, res, strategy );
+       fixAndPropagate.fix_and_propagate( primal_solution, res, strategy, view  );
+
 
    assert( !infeasible );
    assert( res[0] == 0 );
@@ -127,11 +131,13 @@ TEST_CASE( "fix-and-propagate-integer-can-not-be-fixed", "[fix]" )
 
    Vec<double> res{ primal_solution };
 
-   FixAndPropagate<double> fixAndPropagate{ {}, {}, {problem, {}}, true  };
+   FixAndPropagate<double> fixAndPropagate{ {}, {}, true  };
    FractionalRoundingStrategy<double> strategy{ {} };
 
+   ProbingView<double> view {problem, {}};
    bool infeasible =
-       fixAndPropagate.fix_and_propagate( primal_solution, res, strategy );
+       fixAndPropagate.fix_and_propagate( primal_solution, res, strategy, view  );
+
 
    assert( !infeasible );
    assert( res[0] == 0 );
@@ -150,12 +156,13 @@ TEST_CASE( "fix-and-propagate-frac-backtrack", "[fix]" )
 
    Vec<double> res{ primal_solution };
 
-   ProbingView<double> view{ problem, {} };
-   FixAndPropagate<double> fixAndPropagate{ {}, {}, view, true };
+   FixAndPropagate<double> fixAndPropagate{ {}, {}, true };
    FractionalRoundingStrategy<double> strategy{ {} };
 
+   ProbingView<double> view {problem, {}};
    bool infeasible =
-       fixAndPropagate.fix_and_propagate( primal_solution, res, strategy );
+       fixAndPropagate.fix_and_propagate( primal_solution, res, strategy, view  );
+
 
    assert( !infeasible );
    assert( res[0] == 1 );
@@ -179,11 +186,12 @@ TEST_CASE( "fix-and-propagate-frac-check-within-bounds", "[fix]" )
 
    Vec<double> res{ primal_solution };
 
-   FixAndPropagate<double> fixAndPropagate{ {}, {}, {problem, {}}, true  };
+   FixAndPropagate<double> fixAndPropagate{ {}, {}, true  };
    FractionalRoundingStrategy<double> strategy{ {} };
 
+   ProbingView<double> view {problem, {}};
    bool infeasible =
-       fixAndPropagate.fix_and_propagate( primal_solution, res, strategy );
+       fixAndPropagate.fix_and_propagate( primal_solution, res, strategy, view  );
 
    assert( !infeasible );
    assert( res[0] == 1 );
@@ -202,12 +210,12 @@ TEST_CASE( "fix-and-propagate-random-backtrack", "[fix]" )
 
    Vec<double> res{ primal_solution };
 
-   ProbingView<double> view{ problem, {} };
-   FixAndPropagate<double> fixAndPropagate{ {}, {}, view, true };
+   FixAndPropagate<double> fixAndPropagate{ {}, {},  true };
    RandomRoundingStrategy<double> strategy{ 0, {} };
 
+   ProbingView<double> view {problem, {}};
    bool infeasible =
-       fixAndPropagate.fix_and_propagate( primal_solution, res, strategy );
+       fixAndPropagate.fix_and_propagate( primal_solution, res, strategy, view  );
 
    assert( !infeasible );
    assert( res[0] == 0 );
@@ -227,16 +235,16 @@ TEST_CASE( "fix-and-propagate-random", "[fix]" )
 
    Vec<double> res{ primal_solution };
 
-   ProbingView<double> view{ problem, {} };
-   FixAndPropagate<double> fixAndPropagate{ {}, {}, view, false };
+   FixAndPropagate<double> fixAndPropagate{ {}, {}, false };
    RandomRoundingStrategy<double> strategy{ 0, {} };
 
+   ProbingView<double> view {problem, {}};
    bool infeasible =
-       fixAndPropagate.fix_and_propagate( primal_solution, res, strategy );
+       fixAndPropagate.fix_and_propagate( primal_solution, res, strategy, view  );
 
-   assert( infeasible );
-   assert( res[0] == 1 );
-   assert( res[1] == 1 );
+   assert( !infeasible );
+   assert( res[0] == 0 );
+   assert( res[1] == 0 );
    assert( res[2] == 1 );
    assert( res[3] == 1 );
 }
@@ -256,11 +264,12 @@ TEST_CASE( "fix-and-propagate-random-check-within-bounds", "[fix]" )
 
    Vec<double> res{ primal_solution };
 
-   FixAndPropagate<double> fixAndPropagate{ {}, {}, {problem, {}}, true  };
+   FixAndPropagate<double> fixAndPropagate{ {}, {}, true  };
    RandomRoundingStrategy<double> strategy{ 0, {} };
 
+   ProbingView<double> view {problem, {}};
    bool infeasible =
-       fixAndPropagate.fix_and_propagate( primal_solution, res, strategy );
+       fixAndPropagate.fix_and_propagate( primal_solution, res, strategy, view  );
 
    assert( !infeasible );
    assert( res[0] == 1 );
@@ -279,12 +288,12 @@ TEST_CASE( "fix-and-propagate-farkas-backtrack", "[fix]" )
 
    Vec<double> res{ primal_solution };
 
-   ProbingView<double> view{ problem, {} };
-   FixAndPropagate<double> fixAndPropagate{ {}, {}, view, true };
+   FixAndPropagate<double> fixAndPropagate{ {}, {}, true };
    FarkasRoundingStrategy<double> strategy{ 0, {}, false };
 
+   ProbingView<double> view {problem, {}};
    bool infeasible =
-       fixAndPropagate.fix_and_propagate( primal_solution, res, strategy );
+       fixAndPropagate.fix_and_propagate( primal_solution, res, strategy, view  );
 
    assert( !infeasible );
    assert( res[0] == 1 );
@@ -308,11 +317,12 @@ TEST_CASE( "fix-and-propagate-farkas-check-within-bounds", "[fix]" )
 
    Vec<double> res{ primal_solution };
 
-   FixAndPropagate<double> fixAndPropagate{ {}, {}, {problem, {}}, true  };
+   FixAndPropagate<double> fixAndPropagate{ {}, {}, true  };
    FarkasRoundingStrategy<double> strategy{ 0, {}, true };
 
+   ProbingView<double> view {problem, {}};
    bool infeasible =
-       fixAndPropagate.fix_and_propagate( primal_solution, res, strategy );
+       fixAndPropagate.fix_and_propagate( primal_solution, res, strategy, view  );
 
    assert( !infeasible );
    assert( res[0] == 0 );

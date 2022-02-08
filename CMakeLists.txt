@@ -47,7 +47,7 @@ if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Release)
 endif()
 
-find_package(Boost ${BOOST_MIN_VERSION} REQUIRED)
+find_package(Boost ${BOOST_MIN_VERSION} COMPONENTS program_options REQUIRED)
 
 if(GMP)
     find_package(GMP)
@@ -220,7 +220,7 @@ else()
    set(PAPILO_USE_STANDARD_HASHMAP 1)
 endif()
 
-add_library(papilo-core STATIC
+set(sources
    src/papilo/core/VariableDomains.cpp
    src/papilo/core/SparseStorage.cpp
    src/papilo/core/ConstraintMatrix.cpp
@@ -248,8 +248,31 @@ add_library(papilo-core STATIC
    src/papilo/presolvers/SimplifyInequalities.cpp
   )
 
+add_library(papilo-core STATIC
+    ${sources}
+    )
+
 target_link_libraries(papilo-core papilo)
 target_compile_definitions(papilo-core PRIVATE PAPILO_USE_EXTERN_TEMPLATES)
+
+add_library(fix-shared STATIC
+  src/fix/FixAndPropagateApi.cpp
+  src/fix/PresolveApi.cpp
+  ${sources}
+  )
+set_target_properties(fix-shared PROPERTIES
+    VERSION ${PAPILO_VERSION_MAJOR}.${PAPILO_VERSION_MINOR}.${PAPILO_VERSION_PATCH}.${PAPILO_VERSION_SUB}
+    SOVERSION ${PAPILO_VERSION_MAJOR}.${PAPILO_VERSION_MINOR})
+add_dependencies(fix-shared papilo papilo-core ${CLUSOL_TARGET})
+if(MSVC)
+    target_compile_options(fix-shared PUBLIC "/Zc:__cplusplus")
+endif()
+target_include_directories(fix-shared PUBLIC
+    $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+    $<INSTALL_INTERFACE:include>)
+target_link_libraries(fix-shared papilo papilo-core ${CLUSOL_TARGET})
+set_target_properties(fix-shared PROPERTIES CXX_VISIBILITY_PRESET default)
 
 if(NOT PAPILO_NO_BINARIES)
    add_subdirectory(binaries)
@@ -261,16 +284,17 @@ configure_file("${PROJECT_SOURCE_DIR}/src/papilo/CMakeConfig.hpp.in"
 # add tests
 enable_testing()
 add_subdirectory(${PROJECT_SOURCE_DIR}/test)
+add_subdirectory(${PROJECT_SOURCE_DIR}/test/fix/c_interface)
 
 # install the header files of papilo
 install(FILES
-   ${PROJECT_BINARY_DIR}/papilo/CMakeConfig.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/Config.hpp
-   DESTINATION include/papilo)
+     ${PROJECT_BINARY_DIR}/papilo/CMakeConfig.hpp
+     ${PROJECT_SOURCE_DIR}/src/papilo/Config.hpp
+  DESTINATION include/papilo)
 
 install(FILES
-    ${CMAKE_BINARY_DIR}/papilo-config-version.cmake
-     DESTINATION lib/cmake/papilo)
+     ${CMAKE_BINARY_DIR}/papilo-config-version.cmake
+  DESTINATION lib/cmake/papilo)
 
 install(FILES
      ${PROJECT_SOURCE_DIR}/src/papilo/core/Components.hpp
@@ -296,106 +320,115 @@ install(FILES
 
 
 install(FILES
-        ${PROJECT_SOURCE_DIR}/src/papilo/core/postsolve/BoundStorage.hpp
-        ${PROJECT_SOURCE_DIR}/src/papilo/core/postsolve/PostsolveStorage.hpp
-        ${PROJECT_SOURCE_DIR}/src/papilo/core/postsolve/Postsolve.hpp
-        ${PROJECT_SOURCE_DIR}/src/papilo/core/postsolve/PostsolveStatus.hpp
-        ${PROJECT_SOURCE_DIR}/src/papilo/core/postsolve/PostsolveType.hpp
-        ${PROJECT_SOURCE_DIR}/src/papilo/core/postsolve/ReductionType.hpp
-        ${PROJECT_SOURCE_DIR}/src/papilo/core/postsolve/SavedRow.hpp
-     DESTINATION include/papilo/core/postsolve)
+     ${PROJECT_SOURCE_DIR}/src/papilo/core/postsolve/BoundStorage.hpp
+     ${PROJECT_SOURCE_DIR}/src/papilo/core/postsolve/PostsolveStorage.hpp
+     ${PROJECT_SOURCE_DIR}/src/papilo/core/postsolve/Postsolve.hpp
+     ${PROJECT_SOURCE_DIR}/src/papilo/core/postsolve/PostsolveStatus.hpp
+     ${PROJECT_SOURCE_DIR}/src/papilo/core/postsolve/PostsolveType.hpp
+     ${PROJECT_SOURCE_DIR}/src/papilo/core/postsolve/ReductionType.hpp
+     ${PROJECT_SOURCE_DIR}/src/papilo/core/postsolve/SavedRow.hpp
+  DESTINATION include/papilo/core/postsolve)
 
 install(FILES
-   ${PROJECT_SOURCE_DIR}/src/papilo/interfaces/HighsInterface.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/interfaces/ScipInterface.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/interfaces/GurobiInterface.hpp
+     ${PROJECT_SOURCE_DIR}/src/papilo/interfaces/HighsInterface.hpp
+     ${PROJECT_SOURCE_DIR}/src/papilo/interfaces/ScipInterface.hpp
+     ${PROJECT_SOURCE_DIR}/src/papilo/interfaces/GurobiInterface.hpp
    ${PROJECT_SOURCE_DIR}/src/papilo/interfaces/SolverInterface.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/interfaces/SoplexInterface.hpp
-   DESTINATION include/papilo/interfaces)
+     ${PROJECT_SOURCE_DIR}/src/papilo/interfaces/SoplexInterface.hpp
+  DESTINATION include/papilo/interfaces)
 
 install(FILES
-   ${PROJECT_SOURCE_DIR}/src/papilo/io/Message.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/io/MpsParser.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/io/MpsWriter.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/io/SolParser.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/io/SolWriter.hpp
-   DESTINATION include/papilo/io)
+     ${PROJECT_SOURCE_DIR}/src/papilo/io/Message.hpp
+     ${PROJECT_SOURCE_DIR}/src/papilo/io/MpsParser.hpp
+     ${PROJECT_SOURCE_DIR}/src/papilo/io/MpsWriter.hpp
+     ${PROJECT_SOURCE_DIR}/src/papilo/io/SolParser.hpp
+     ${PROJECT_SOURCE_DIR}/src/papilo/io/SolWriter.hpp
+  DESTINATION include/papilo/io)
 
 install(FILES
-        ${PROJECT_SOURCE_DIR}/src/papilo/misc/Alloc.hpp
-        ${PROJECT_SOURCE_DIR}/src/papilo/misc/Array.hpp
-        ${PROJECT_SOURCE_DIR}/src/papilo/misc/compress_vector.hpp
-        ${PROJECT_SOURCE_DIR}/src/papilo/misc/DependentRows.hpp
-        ${PROJECT_SOURCE_DIR}/src/papilo/misc/Flags.hpp
-        ${PROJECT_SOURCE_DIR}/src/papilo/misc/tbb.hpp
-        ${PROJECT_SOURCE_DIR}/src/papilo/misc/fmt.hpp
-        ${PROJECT_SOURCE_DIR}/src/papilo/misc/Hash.hpp
-        ${PROJECT_SOURCE_DIR}/src/papilo/misc/MultiPrecision.hpp
-        ${PROJECT_SOURCE_DIR}/src/papilo/misc/Num.hpp
-        ${PROJECT_SOURCE_DIR}/src/papilo/misc/NumericalStatistics.hpp
-        ${PROJECT_SOURCE_DIR}/src/papilo/misc/PrimalDualSolValidation.hpp
-        ${PROJECT_SOURCE_DIR}/src/papilo/misc/OptionsParser.hpp
-        ${PROJECT_SOURCE_DIR}/src/papilo/misc/VersionLogger.hpp
-        ${PROJECT_SOURCE_DIR}/src/papilo/misc/ParameterSet.hpp
-        ${PROJECT_SOURCE_DIR}/src/papilo/misc/Signature.hpp
-        ${PROJECT_SOURCE_DIR}/src/papilo/misc/StableSum.hpp
-        ${PROJECT_SOURCE_DIR}/src/papilo/misc/String.hpp
-        ${PROJECT_SOURCE_DIR}/src/papilo/misc/Timer.hpp
-        ${PROJECT_SOURCE_DIR}/src/papilo/misc/Validation.hpp
-        ${PROJECT_SOURCE_DIR}/src/papilo/misc/Vec.hpp
-        ${PROJECT_SOURCE_DIR}/src/papilo/misc/VectorUtils.hpp
-        ${PROJECT_SOURCE_DIR}/src/papilo/misc/Wrappers.hpp
-   DESTINATION include/papilo/misc)
+     ${PROJECT_SOURCE_DIR}/src/papilo/misc/Alloc.hpp
+     ${PROJECT_SOURCE_DIR}/src/papilo/misc/Array.hpp
+     ${PROJECT_SOURCE_DIR}/src/papilo/misc/compress_vector.hpp
+     ${PROJECT_SOURCE_DIR}/src/papilo/misc/DependentRows.hpp
+     ${PROJECT_SOURCE_DIR}/src/papilo/misc/extended_euclidean.hpp
+     ${PROJECT_SOURCE_DIR}/src/papilo/misc/Flags.hpp
+     ${PROJECT_SOURCE_DIR}/src/papilo/misc/fmt.hpp
+     ${PROJECT_SOURCE_DIR}/src/papilo/misc/Hash.hpp
+     ${PROJECT_SOURCE_DIR}/src/papilo/misc/MultiPrecision.hpp
+     ${PROJECT_SOURCE_DIR}/src/papilo/misc/Num.hpp
+     ${PROJECT_SOURCE_DIR}/src/papilo/misc/NumericalStatistics.hpp
+     ${PROJECT_SOURCE_DIR}/src/papilo/misc/PrimalDualSolValidation.hpp
+     ${PROJECT_SOURCE_DIR}/src/papilo/misc/OptionsParser.hpp
+     ${PROJECT_SOURCE_DIR}/src/papilo/misc/VersionLogger.hpp
+     ${PROJECT_SOURCE_DIR}/src/papilo/misc/ParameterSet.hpp
+     ${PROJECT_SOURCE_DIR}/src/papilo/misc/Signature.hpp
+     ${PROJECT_SOURCE_DIR}/src/papilo/misc/StableSum.hpp
+     ${PROJECT_SOURCE_DIR}/src/papilo/misc/String.hpp
+     ${PROJECT_SOURCE_DIR}/src/papilo/misc/tbb.hpp
+     ${PROJECT_SOURCE_DIR}/src/papilo/misc/Timer.hpp
+     ${PROJECT_SOURCE_DIR}/src/papilo/misc/Validation.hpp
+     ${PROJECT_SOURCE_DIR}/src/papilo/misc/Vec.hpp
+     ${PROJECT_SOURCE_DIR}/src/papilo/misc/VectorUtils.hpp
+     ${PROJECT_SOURCE_DIR}/src/papilo/misc/Wrappers.hpp
+  DESTINATION include/papilo/misc)
+
+
+if((DEFINED BOOST_VERSION) AND (BOOST_VERSION VERSION_LESS 107000))
+   install(FILES
+           ${PROJECT_SOURCE_DIR}/src/papilo/misc/extended_euclidean.hpp
+           DESTINATION include/papilo/misc)
+endif()
+
 
 install(FILES
-   ${PROJECT_SOURCE_DIR}/src/papilo/presolvers/CoefficientStrengthening.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/presolvers/ConstraintPropagation.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/presolvers/DominatedCols.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/presolvers/DualFix.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/presolvers/DualInfer.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/presolvers/FixContinuous.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/presolvers/FreeVarSubstitution.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/presolvers/ImplIntDetection.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/presolvers/ParallelColDetection.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/presolvers/ParallelRowDetection.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/presolvers/Probing.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/presolvers/SimpleProbing.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/presolvers/SimpleSubstitution.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/presolvers/SimplifyInequalities.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/presolvers/SingletonCols.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/presolvers/SingletonStuffing.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/presolvers/Sparsify.hpp
-   DESTINATION include/papilo/presolvers)
+     ${PROJECT_SOURCE_DIR}/src/papilo/presolvers/CoefficientStrengthening.hpp
+     ${PROJECT_SOURCE_DIR}/src/papilo/presolvers/ConstraintPropagation.hpp
+     ${PROJECT_SOURCE_DIR}/src/papilo/presolvers/DominatedCols.hpp
+     ${PROJECT_SOURCE_DIR}/src/papilo/presolvers/DualFix.hpp
+     ${PROJECT_SOURCE_DIR}/src/papilo/presolvers/DualInfer.hpp
+     ${PROJECT_SOURCE_DIR}/src/papilo/presolvers/FixContinuous.hpp
+     ${PROJECT_SOURCE_DIR}/src/papilo/presolvers/FreeVarSubstitution.hpp
+     ${PROJECT_SOURCE_DIR}/src/papilo/presolvers/ImplIntDetection.hpp
+     ${PROJECT_SOURCE_DIR}/src/papilo/presolvers/ParallelColDetection.hpp
+     ${PROJECT_SOURCE_DIR}/src/papilo/presolvers/ParallelRowDetection.hpp
+     ${PROJECT_SOURCE_DIR}/src/papilo/presolvers/Probing.hpp
+     ${PROJECT_SOURCE_DIR}/src/papilo/presolvers/SimpleProbing.hpp
+     ${PROJECT_SOURCE_DIR}/src/papilo/presolvers/SimpleSubstitution.hpp
+     ${PROJECT_SOURCE_DIR}/src/papilo/presolvers/SimplifyInequalities.hpp
+     ${PROJECT_SOURCE_DIR}/src/papilo/presolvers/SingletonCols.hpp
+     ${PROJECT_SOURCE_DIR}/src/papilo/presolvers/SingletonStuffing.hpp
+     ${PROJECT_SOURCE_DIR}/src/papilo/presolvers/Sparsify.hpp
+  DESTINATION include/papilo/presolvers)
 
 install(FILES
-   ${PROJECT_SOURCE_DIR}/external/fmt/chrono.h
-   ${PROJECT_SOURCE_DIR}/external/fmt/color.h
-   ${PROJECT_SOURCE_DIR}/external/fmt/compile.h
-   ${PROJECT_SOURCE_DIR}/external/fmt/core.h
-   ${PROJECT_SOURCE_DIR}/external/fmt/format.h
-   ${PROJECT_SOURCE_DIR}/external/fmt/format-inl.h
-   ${PROJECT_SOURCE_DIR}/external/fmt/locale.h
-   ${PROJECT_SOURCE_DIR}/external/fmt/ostream.h
-   ${PROJECT_SOURCE_DIR}/external/fmt/posix.h
-   ${PROJECT_SOURCE_DIR}/external/fmt/printf.h
-   ${PROJECT_SOURCE_DIR}/external/fmt/ranges.h
-   ${PROJECT_SOURCE_DIR}/external/fmt/format.cc
-   ${PROJECT_SOURCE_DIR}/external/fmt/posix.cc
-   DESTINATION include/papilo-external/fmt)
+     ${PROJECT_SOURCE_DIR}/external/fmt/chrono.h
+     ${PROJECT_SOURCE_DIR}/external/fmt/color.h
+     ${PROJECT_SOURCE_DIR}/external/fmt/compile.h
+     ${PROJECT_SOURCE_DIR}/external/fmt/core.h
+     ${PROJECT_SOURCE_DIR}/external/fmt/format.h
+     ${PROJECT_SOURCE_DIR}/external/fmt/format-inl.h
+     ${PROJECT_SOURCE_DIR}/external/fmt/locale.h
+     ${PROJECT_SOURCE_DIR}/external/fmt/ostream.h
+     ${PROJECT_SOURCE_DIR}/external/fmt/posix.h
+     ${PROJECT_SOURCE_DIR}/external/fmt/printf.h
+     ${PROJECT_SOURCE_DIR}/external/fmt/ranges.h
+     ${PROJECT_SOURCE_DIR}/external/fmt/format.cc
+     ${PROJECT_SOURCE_DIR}/external/fmt/posix.cc
+ DESTINATION include/papilo-external/fmt)
 
 install(FILES
-   ${PROJECT_SOURCE_DIR}/external/pdqsort/pdqsort.h
-   DESTINATION include/papilo-external/pdqsort)
+     ${PROJECT_SOURCE_DIR}/external/pdqsort/pdqsort.h
+  DESTINATION include/papilo-external/pdqsort)
 
 install(FILES
-   ${PROJECT_SOURCE_DIR}/external/ska/bytell_hash_map.hpp
-   ${PROJECT_SOURCE_DIR}/external/ska/flat_hash_map.hpp
-   ${PROJECT_SOURCE_DIR}/external/ska/unordered_map.hpp
-   DESTINATION include/papilo-external/ska)
+     ${PROJECT_SOURCE_DIR}/external/ska/bytell_hash_map.hpp
+     ${PROJECT_SOURCE_DIR}/external/ska/flat_hash_map.hpp
+     ${PROJECT_SOURCE_DIR}/external/ska/unordered_map.hpp
+  DESTINATION include/papilo-external/ska)
 
 install(FILES
-   ${PROJECT_SOURCE_DIR}/external/lusol/clusol.h
-   DESTINATION include/papilo-external/lusol)
+     ${PROJECT_SOURCE_DIR}/external/lusol/clusol.h
+  DESTINATION include/papilo-external/lusol)
 
 install(FILES
         ${PROJECT_SOURCE_DIR}/src/fix/FixAndPropagate.hpp
@@ -449,12 +482,19 @@ if(INSTALL_TBB AND CMAKE_SYSTEM_NAME STREQUAL "Windows")
 endif()
 
 # export targets for build-tree linking
-export(TARGETS papilo ${CLUSOL_TARGET} FILE "${CMAKE_BINARY_DIR}/papilo-targets.cmake")
+export(TARGETS papilo papilo-core fix-shared ${CLUSOL_TARGET}
+    FILE "${CMAKE_BINARY_DIR}/papilo-targets.cmake")
 
 if(EXISTS ${CMAKE_BINARY_DIR}/_deps)
    install(DIRECTORY ${CMAKE_BINARY_DIR}/_deps DESTINATION lib/cmake/papilo/)
 endif()
 
 # install targets
-install(TARGETS papilo papilo-core ${CLUSOL_TARGET} EXPORT papilo-targets ARCHIVE DESTINATION lib LIBRARY DESTINATION lib)
+install(TARGETS papilo papilo-core fix-shared ${CLUSOL_TARGET}
+    EXPORT papilo-targets
+    ARCHIVE DESTINATION lib
+    LIBRARY DESTINATION lib
+    RUNTIME DESTINATION bin
+    INCLUDES DESTINATION include)
 install(EXPORT papilo-targets DESTINATION lib/cmake/papilo)
+

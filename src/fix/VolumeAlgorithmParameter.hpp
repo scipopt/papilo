@@ -21,23 +21,47 @@
 /*                                                                           */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef _PAPILO_CONFIG_HPP_
-#define _PAPILO_CONFIG_HPP_
+#include "papilo/io/Message.hpp"
+#include "papilo/misc/Num.hpp"
 
-#ifndef PAPILO_NO_CMAKE_CONFIG
+namespace papilo
+{
 
-#include "papilo/CMakeConfig.hpp"
+template <typename REAL>
+struct VolumeAlgorithmParameter
+{
 
-#else
+   REAL alpha;
+   REAL alpha_max;
+   REAL f;
+   REAL f_min;
+   REAL f_max;
+   REAL f_strong_incr_factor;
+   REAL f_weak_incr_factor;
+   REAL f_decr_factor;
+   REAL obj_reltol;
+   REAL obj_abstol;
+   REAL con_abstol;
+   int weak_improvement_iter_limit;
+   int non_improvement_iter_limit;
+   double time_limit;
 
-#define PAPILO_VERSION_MAJOR 2
-#define PAPILO_VERSION_MINOR 1
-#define PAPILO_VERSION_PATCH 0
-#define PAPILO_VERSION_TWEAK 1
+   VolumeAlgorithmParameter( REAL _alpha, REAL _alpha_max, REAL _f, REAL _f_min,
+                             REAL _f_max, REAL _f_strong_incr_factor,
+                             REAL _f_weak_incr_factor, REAL _f_decr_factor,
+                             REAL _obj_reltol, REAL _obj_abstol,
+                             REAL _con_abstol, int _weak_improvement_iter_limit,
+                             int _non_improvement_iter_limit, double time_limit_ )
+       : alpha( _alpha ), alpha_max( _alpha_max ), f( _f ), f_min( _f_min ),
+         f_max( _f_max ), f_strong_incr_factor( _f_strong_incr_factor ),
+         f_weak_incr_factor( _f_weak_incr_factor ),
+         f_decr_factor( _f_decr_factor ), obj_reltol( _obj_reltol ),
+         obj_abstol( _obj_abstol ), con_abstol( _con_abstol ),
+         weak_improvement_iter_limit( _weak_improvement_iter_limit ),
+         non_improvement_iter_limit( _non_improvement_iter_limit ),
+         time_limit(time_limit_)
+   {
+   }
+};
 
-#undef PAPILO_GITHASH_AVAILABLE
-#undef PAPILO_GITHASH
-
-#endif
-
-#endif
+} // namespace papilo

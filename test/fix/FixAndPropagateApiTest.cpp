@@ -3,7 +3,7 @@
 /*               This file is part of the program and library                */
 /*    PaPILO --- Parallel Presolve for Integer and Linear Optimization       */
 /*                                                                           */
-/* Copyright (C) 2020-22  Konrad-Zuse-Zentrum                                   */
+/* Copyright (C) 2020-22  Konrad-Zuse-Zentrum */
 /*                     fuer Informationstechnik Berlin                       */
 /*                                                                           */
 /* This program is free software: you can redistribute it and/or modify      */
@@ -21,15 +21,13 @@
 /*                                                                           */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#include "fix/FixAndPropagateApi.hpp"
+#include "fix/FixAndPropagateApi.cpp"
 #include "catch/catch.hpp"
 
 TEST_CASE( "fix-and-propagate-api", "[fix]" )
 {
    int result = 1;
-   auto problem_ptr =
-       setup( "../../../papilo/test/instances/test.mps",
-              &result );
+   auto problem_ptr = setup( "./resources/api_test.mps", &result );
    assert( result == 0 );
    int n_cols = 3;
    auto primal_solution = new double[n_cols];
