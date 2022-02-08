@@ -109,6 +109,7 @@ class FixAndPropagate
                for( int i = 0; i < fixings.size() - 1; i++ )
                   probing_view.setProbingColumn( fixings[i].get_column_index(),
                                                  fixings[i].get_value() );
+               //TODO: this is not necessary
                perform_probing_step( probing_view );
                probing_view.setProbingColumn(
                    last_fix.get_column_index(),
