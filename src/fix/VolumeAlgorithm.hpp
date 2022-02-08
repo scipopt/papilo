@@ -47,12 +47,18 @@ class VolumeAlgorithm
    VectorMultiplication<REAL> op;
    Timer timer;
    VolumeAlgorithmParameter<REAL>& parameter;
+   REAL alpha;
+   REAL alpha_max;
+   REAL f;
 
  public:
    VolumeAlgorithm( Message _msg, Num<REAL> _num, Timer t,
                     VolumeAlgorithmParameter<REAL>& parameter_ )
        : msg( _msg ), num( _num ), timer( t ), parameter( parameter_ ), op( {} )
    {
+      alpha = parameter.alpha;
+      alpha_max = parameter.alpha_max;
+      f = parameter.f;
    }
 
    /**
@@ -105,7 +111,7 @@ class VolumeAlgorithm
          op.calc_b_minus_Ax( A, x_bar, b, v_t );
          calc_violations( n_rows_A, A, pi_t, v_t, viol_t );
          update_best_bound_on_obj( z_bar, best_bound_on_obj );
-         REAL step_size = parameter.f * ( best_bound_on_obj - z_bar ) /
+         REAL step_size = f * ( best_bound_on_obj - z_bar ) /
                           pow( op.l2_norm( viol_t ), 2.0 );
          //         msg.info( "   Step size: {}\n", step_size );
          op.calc_b_plus_sx( pi_bar, step_size, viol_t, pi_t );
@@ -120,7 +126,7 @@ class VolumeAlgorithm
          calc_alpha( residual_t, v_t );
 
          // x_bar ← αx_t + (1 − α)x_bar
-         op.calc_qb_plus_sx( parameter.alpha, x_t, 1 - parameter.alpha, x_bar,
+         op.calc_qb_plus_sx( alpha, x_t, 1 - alpha, x_bar,
                              x_bar );
 
          // Step 2:
@@ -292,24 +298,23 @@ class VolumeAlgorithm
 
       REAL bar_bar_prod = op.multi( residual_bar, residual_bar );
 
-      REAL alpha_opt = parameter.alpha_max;
+      REAL alpha_opt = alpha_max;
       if( num.isGT( t_t_prod + bar_bar_prod - 2.0 * t_bar_prod, REAL{ 0.0 } ) )
          alpha_opt = ( bar_bar_prod - t_bar_prod ) /
                      ( t_t_prod + bar_bar_prod - 2.0 * t_bar_prod );
 
-      // TODO ahoen@Suresh we should not override the values of parameter.alpha
-      if( num.isLT( alpha_opt, parameter.alpha_max / 10.0 ) )
-         parameter.alpha = parameter.alpha_max / 10.0;
-      else if( num.isGT( alpha_opt, parameter.alpha_max ) )
-         parameter.alpha = parameter.alpha_max;
+      if( num.isLT( alpha_opt, alpha_max / 10.0 ) )
+         alpha = alpha_max / 10.0;
+      else if( num.isGT( alpha_opt, alpha_max ) )
+         alpha = alpha_max;
       else
-         parameter.alpha = alpha_opt;
+         alpha = alpha_opt;
       /*
       alpha = num.isLT( alpha_opt, REAL{ 0.0 } )
                   ? alpha_max / 10.0
                   : num.min( alpha_opt, alpha_max );
       */
-      msg.info( "   alpha_opt: {},\t alpha: {}\n", alpha_opt, parameter.alpha );
+      msg.info( "   alpha_opt: {},\t alpha: {}\n", alpha_opt, alpha );
    }
 
    void
@@ -353,27 +358,21 @@ class VolumeAlgorithm
 
       if( change_f == 2 )
       {
-         // TODO ahoen@Suresh we should not override the values of
-         // parameter.alpha
-         parameter.f = num.min( parameter.f_strong_incr_factor * parameter.f,
+         f = num.min( parameter.f_strong_incr_factor * f,
                                 parameter.f_max );
          //         msg.info( "   increased f: {}\n", f );
       }
       else if( change_f == 1 )
       {
-         // TODO ahoen@Suresh we should not override the values of
-         // parameter.alpha
-         parameter.f = num.min( parameter.f_weak_incr_factor * parameter.f,
+         f = num.min( parameter.f_weak_incr_factor * f,
                                 parameter.f_max );
          //         msg.info( "   increased f: {}\n", f );
       }
       else if( change_f <= -1 &&
-               num.isGE( parameter.f_decr_factor * parameter.f,
+               num.isGE( parameter.f_decr_factor * f,
                          parameter.f_min ) )
       {
-         // TODO ahoen@Suresh we should not override the values of
-         // parameter.alpha
-         parameter.f = parameter.f_decr_factor * parameter.f;
+         f = parameter.f_decr_factor * f;
          //         msg.info( "   decreased f: {}\n", f );
       }
    }
@@ -383,10 +382,8 @@ class VolumeAlgorithm
    {
       // TODO: change 0.01, 1e-5, and 2.0 as global params?
       if( num.isLT( z_bar, z_bar_old + 0.01 * abs( z_bar_old ) ) &&
-          num.isGE( parameter.alpha_max, REAL{ 1e-5 } ) )
-         // TODO ahoen@Suresh we should not override the values of
-         // parameter.alpha
-         parameter.alpha_max = parameter.alpha_max / 2.0;
+          num.isGE( alpha_max, REAL{ 1e-5 } ) )
+         alpha_max = alpha_max / 2.0;
    }
 };
 
