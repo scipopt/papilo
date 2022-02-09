@@ -121,9 +121,12 @@ class Heuristic
    void
    perform_fix_and_propagate( const Vec<REAL>& primal_heur_sol,
                               REAL& best_obj_val,
-                              Vec<REAL>& current_best_solution )
+                              Vec<REAL>& current_best_solution,
+                              bool perform_backtracking = true,
+                              bool perform_one_opt = true,
+                              bool stop_at_infeasible = false)
    {
-      FixAndPropagate<REAL> fixAndPropagate{ msg, num, true };
+      FixAndPropagate<REAL> fixAndPropagate{ msg, num };
       for( auto view : views )
          view.reset();
 #ifdef PAPILO_TBB
@@ -136,7 +139,7 @@ class Heuristic
              {
                 infeasible_arr[i] = fixAndPropagate.fix_and_propagate(
                     primal_heur_sol, int_solutions[i], *( strategies[i] ),
-                    views[i] );
+                    views[i], perform_backtracking, stop_at_infeasible );
                 if( infeasible_arr[i] )
                 {
                    obj_value[i] = 0;
@@ -150,10 +153,11 @@ class Heuristic
                           obj_value[i] );
              }
           } );
-      perform_one_opt();
+      if(perform_one_opt)
+         one_opt();
 #else
       infeasible_arr[0] = fixAndPropagate.fix_and_propagate(
-          primal_heur_sol, int_solutions[0], *( strategies[0] ), views[0] );
+          primal_heur_sol, int_solutions[0], *( strategies[0] ), views[0], perform_backtracking, stop_at_infeasible );
       if( infeasible_arr[0] )
       {
          obj_value[0] = 0;
@@ -169,12 +173,12 @@ class Heuristic
    }
 
    void
-   perform_one_opt()
+   one_opt()
    {
 #ifdef PAPILO_TBB
       //TODO: return conflicts maybe?
       //TODO: parallelize more efficiently
-      FixAndPropagate<REAL> fixAndPropagate{ msg, num, false };
+      FixAndPropagate<REAL> fixAndPropagate{ msg, num };
 
       Vec<REAL> coefficients = problem.getObjective().coefficients;
       tbb::parallel_for(
