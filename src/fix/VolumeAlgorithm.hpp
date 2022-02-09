@@ -102,18 +102,19 @@ class VolumeAlgorithm
       Vec<REAL> x_bar( x_t );
       REAL z_bar_old = z_bar;
 
-      do
+      op.calc_b_minus_Ax( A, x_bar, b, v_t );
+      calc_violations( n_rows_A, A, pi_t, v_t, viol_t );
+
+      while( stopping_criteria( viol_t, n_rows_A, c, x_bar, z_bar ) )
       {
          msg.info( "Round of volume algorithm: {}\n", counter );
          // STEP 1:
          // Compute v_t = b − A x_bar and π_t = pi_bar + sv_t for a step size s
          // given by (7).
-         op.calc_b_minus_Ax( A, x_bar, b, v_t );
-         calc_violations( n_rows_A, A, pi_t, v_t, viol_t );
          update_best_bound_on_obj( z_bar, best_bound_on_obj );
          REAL step_size = f * ( best_bound_on_obj - z_bar ) /
                           pow( op.l2_norm( viol_t ), 2.0 );
-         //         msg.info( "   Step size: {}\n", step_size );
+         msg.debug( "   Step size: {}\n", step_size );
          op.calc_b_plus_sx( pi_bar, step_size, viol_t, pi_t );
 //         update_pi( n_rows_A, A, pi_t );
 
@@ -128,6 +129,10 @@ class VolumeAlgorithm
          // x_bar ← αx_t + (1 − α)x_bar
          op.calc_qb_plus_sx( alpha, x_t, 1 - alpha, x_bar,
                              x_bar );
+         for ( int i = 0; i < x_bar.size(); i++ )
+         {
+            msg.debug( "   x[{}] = {}\n", i, x_bar[i] );
+         }
 
          // Step 2:
          // If z_t > z_bar update π_bar and z_bar
@@ -154,9 +159,12 @@ class VolumeAlgorithm
             z_bar_old = z_bar;
          }
 
+         op.calc_b_minus_Ax( A, x_bar, b, v_t );
+         calc_violations( n_rows_A, A, pi_t, v_t, viol_t );
+
          // Let t ← t + 1 and go to Step 1.
          counter = counter + 1;
-      } while( stopping_criteria( viol_t, n_rows_A, c, x_bar, z_bar ) );
+      };
       // TODO: ahoen@suresh -> overwrite pi with current pi to be able to warm
       // restart the algorithm?
       return x_bar;
@@ -205,8 +213,8 @@ class VolumeAlgorithm
                       const Vec<REAL>& c, const Vec<REAL>& x_bar,
                       const REAL z_bar )
    {
-      msg.info( "   sc_1: {}\n", op.l1_norm( v ) / n_rows_A );
-      msg.info( "   sc_2: {}\n",
+      msg.detailed( "   sc_1: {}\n", op.l1_norm( v ) / n_rows_A );
+      msg.detailed( "   sc_2: {}\n",
                 num.isZero( z_bar )
                     ? abs( op.multi( c, x_bar ) )
                     : abs( op.multi( c, x_bar ) - z_bar ) / z_bar );
@@ -252,7 +260,7 @@ class VolumeAlgorithm
          obj_value.add( updated_objective[i] * solution[i] );
       }
 
-      //      msg.info( "   opt_val: {}\n", obj_value.get() );
+      msg.debug( "   opt_val: {}\n", obj_value.get() );
       return obj_value.get();
    }
 
@@ -283,8 +291,7 @@ class VolumeAlgorithm
          best_bound_on_obj =
              num.max( best_bound_on_obj + abs( best_bound_on_obj ) * 0.03,
                       z_bar + abs( z_bar ) * 0.06 );
-         //         msg.info( "   increased best bound: {}\n", best_bound_on_obj
-         //         );
+         msg.debug( "   increased best bound: {}\n", best_bound_on_obj );
       }
    }
 
@@ -315,7 +322,8 @@ class VolumeAlgorithm
                   ? alpha_max / 10.0
                   : num.min( alpha_opt, alpha_max );
       */
-      msg.info( "   alpha_opt: {},\t alpha: {}\n", alpha_opt, alpha );
+      msg.detailed( "   alpha_opt: {},\t alpha_max: {},\t alpha: {}\n",
+                    alpha_opt, alpha_max, alpha );
    }
 
    void
@@ -361,20 +369,20 @@ class VolumeAlgorithm
       {
          f = num.min( parameter.f_strong_incr_factor * f,
                                 parameter.f_max );
-         //         msg.info( "   increased f: {}\n", f );
+         msg.debug( "   increased f: {}\n", f );
       }
       else if( change_f == 1 )
       {
          f = num.min( parameter.f_weak_incr_factor * f,
                                 parameter.f_max );
-         //         msg.info( "   increased f: {}\n", f );
+         msg.debug( "   increased f: {}\n", f );
       }
       else if( change_f <= -1 &&
                num.isGE( parameter.f_decr_factor * f,
                          parameter.f_min ) )
       {
          f = parameter.f_decr_factor * f;
-         //         msg.info( "   decreased f: {}\n", f );
+         msg.debug( "   decreased f: {}\n", f );
       }
    }
 

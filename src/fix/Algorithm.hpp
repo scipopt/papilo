@@ -73,6 +73,8 @@ class Algorithm
           [this, &problem, &parameter]()
           {
 #endif
+             msg.setVerbosityLevel( papilo::VerbosityLevel::kDetailed );
+
              // set up ProblemUpdate to trivialPresolve so that activities exist
              Presolve<REAL> presolve{};
              auto result = presolve.apply( problem, false );
@@ -222,9 +224,9 @@ class Algorithm
    void
    print_solution( const Vec<REAL>& sol )
    {
-      msg.debug( "Primal solution:\n" );
+      msg.detailed( "Primal solution:\n" );
       for( int i = 0; i < sol.size(); i++ )
-         msg.debug( "   x[{}] = {}\n", i, sol[i] );
+         msg.detailed( "   x[{}] = {}\n", i, sol[i] );
    }
 
    void
