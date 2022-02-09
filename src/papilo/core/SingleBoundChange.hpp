@@ -35,7 +35,6 @@ class SingleBoundChange
 {
 
  public:
-
    int
    get_col() const
    {
@@ -71,22 +70,34 @@ class SingleBoundChange
       return depth_level;
    }
 
+   bool
+   is_causing_infeasibility() const
+   {
+      return causing_infeasibility;
+   }
+
+   bool
+   set_causing_infeasibility( bool value )
+   {
+      causing_infeasibility = value;
+   }
+
  private:
    int col;
    REAL new_bound_value;
-   int reason_row; // row index or -1 if fixing
+   int reason_row;
    bool manually_triggered;
-   bool lower_bound; // if is_fixing && is_lower_bound are false
-                        // then it is an upper bound
+   bool lower_bound;
    int depth_level;
+   bool causing_infeasibility;
 
  public:
    SingleBoundChange( int col_, int row_, REAL new_bound_value_,
                       bool manually_triggered_, bool lower_bound_,
                       int depth_level_ )
-       : col( col_ ), reason_row(row_), new_bound_value( new_bound_value_ ),
-         manually_triggered( manually_triggered_ ),
-         lower_bound( lower_bound_ ), depth_level( depth_level_ )
+       : col( col_ ), reason_row( row_ ), new_bound_value( new_bound_value_ ),
+         manually_triggered( manually_triggered_ ), lower_bound( lower_bound_ ),
+         depth_level( depth_level_ ), causing_infeasibility( false )
    {
    }
 };

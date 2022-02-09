@@ -161,6 +161,12 @@ class ProbingView
       return changes;
    }
 
+   Vec<SingleBoundChange<REAL>>
+   get_changes()
+   {
+      return changes;
+   }
+
    void
    activityChanged( ActivityChange actchange, int rowid,
                     RowActivity<REAL>& activity );
@@ -272,6 +278,7 @@ class ProbingView
    REAL probingValue;
    Vec<Fixing<REAL>> fixings;
    Vec<SingleBoundChange<REAL>> changes;
+   Vec<std::pair<int,int>> infeasible_rows;
 
    // datastructures for storing result of probing on one value
    Vec<ProbingBoundChg<REAL>> otherValueImplications;
@@ -445,6 +452,8 @@ ProbingView<REAL>::activityChanged( ActivityChange actchange, int rowid,
                       double( activity.min ), double( rhs[rowid] ),
                       double( problem.getRowActivities()[rowid].min ) );
       infeasible = true;
+      assert( !changes.empty() );
+      changes.back().set_causing_infeasibility( true );
    }
 
    if( actchange == ActivityChange::kMax && activity.ninfmax == 0 &&
@@ -460,6 +469,8 @@ ProbingView<REAL>::activityChanged( ActivityChange actchange, int rowid,
                       double( activity.max ), double( lhs[rowid] ),
                       double( problem.getRowActivities()[rowid].max ) );
       infeasible = true;
+      assert( !changes.empty() );
+      changes.back().set_causing_infeasibility( true );
    }
 }
 

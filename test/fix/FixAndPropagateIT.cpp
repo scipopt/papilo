@@ -52,9 +52,9 @@ TEST_CASE( "fix-and-propagate-it-solution-is-feasible", "[fix]" )
    bool infeasible =
        fixAndPropagate.fix_and_propagate( solution.primal, res, strategy, view, true, false );
 
-   assert( !infeasible );
+   REQUIRE( !infeasible );
    for( int i = 0; i < problem.getNCols(); i++ )
-      assert( solution.primal[i] == res[i] );
+      REQUIRE( solution.primal[i] == res[i] );
 }
 
 TEST_CASE( "fix-and-propagate-it-modified-solution-is-feasible", "[fix]" )
@@ -74,9 +74,9 @@ TEST_CASE( "fix-and-propagate-it-modified-solution-is-feasible", "[fix]" )
    bool infeasible =
        fixAndPropagate.fix_and_propagate( solution.primal, res, strategy, view, true, false );
 
-   assert( !infeasible );
+   REQUIRE( !infeasible );
    for( int i = 0; i < problem.getNCols(); i++ )
-      assert( solution.primal[i] == res[i] );
+      REQUIRE( solution.primal[i] == res[i] );
 }
 
 Solution<double>
