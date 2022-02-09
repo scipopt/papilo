@@ -21,69 +21,34 @@
 /*                                                                           */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#include "papilo/core/RowFlags.hpp"
-#include "papilo/core/SingleBoundChange.hpp"
-#include "papilo/io/Message.hpp"
+#ifndef _PAPILO_CORE_CONSTRAINT_HPP_
+#define _PAPILO_CORE_CONSTRAINT_HPP_
+
+#include "papilo/core/Problem.hpp"
 #include "papilo/misc/Num.hpp"
-#include "papilo/misc/Timer.hpp"
-#include "fix/Constraint.hpp"
-#include <cassert>
-#include <cmath>
-#include <fstream>
 
 namespace papilo
 {
 
-
 template <typename REAL>
-class ConflictAnalysis
+class Constraint
 {
-   Message msg;
-   Num<REAL> num;
-   Timer timer;
 
  public:
-   ConflictAnalysis( Message _msg, Num<REAL> _num, Timer timer_ ) : msg( _msg ), num( _num ), timer(timer_)
-   {
-   }
-
-   bool
-   perform_conflict_analysis( Vec<SingleBoundChange<REAL>>& bound_changes,
-                              Vec<Constraint<REAL>>& constraints  )
-   {
-      // TODO: to be implemented
-
-      // create an empty conflict set CS
-      // if only fixings -> no-good-cut / or fix a variable to the other bound?
-      // else BC = bound_changes.pop()
-      // if FUIP -> CS.add(BC)
-      // else -> resolve_bound_change(BC) (in our case maybe just delete?)
-
-      // Maybe use generalized resolution and apply cardinality reduction?
-
-      // should return a list of constraint to be added to the builder
-      return true;
-   }
-
-   bool
-   perform_conflict_analysis()
-   {
-      msg.info( "function call is dummy and waited to be implemented above" );
-      return true;
-   }
-
  private:
-   bool
-   resolve_bound_change()
-   {
-      return true;
-   }
+   SparseVectorView<REAL> data;
+   RowFlags row_flag;
+   REAL lhs;
+   REAL rhs;
 
-   bool
-   get_conflict_set()
+ public:
+   Constraint( SparseVectorView<REAL> data_, RowFlags row_flag_, REAL lhs_,
+               REAL rhs_ )
+       : data( data_ ), row_flag( row_flag_ ), lhs( lhs_ ), rhs( rhs_ )
    {
-      return true;
+      assert( !row_flag.test( RowFlag::kEquation ) || lhs == rhs );
    }
 };
 
 } // namespace papilo
+#endif
