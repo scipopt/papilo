@@ -98,14 +98,6 @@ TEST_CASE( "conflict-analysis-binary-depth-two", "[conflict]" )
    // initialize conflict analysis
    ConflictAnalysis<double> conflictAnalysis( {}, {}, timer );
    // empty vectors for the new constraints
-   Vec<int> length;
-   Vec<int*> indices;
-   Vec<double*> values;
-   Vec<RowFlags> flags;
-   Vec<double> lhs;
-   Vec<double> rhs;
-   conflictAnalysis.perform_conflict_analysis( bound_changes, length,
-   indices, values, flags, lhs, rhs );
 
 }
 
