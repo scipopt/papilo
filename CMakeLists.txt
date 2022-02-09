@@ -431,15 +431,25 @@ install(FILES
   DESTINATION include/papilo-external/lusol)
 
 install(FILES
+        ${PROJECT_SOURCE_DIR}/src/fix/Algorithm.hpp
+        ${PROJECT_SOURCE_DIR}/src/fix/ConflictAnalysis.hpp
         ${PROJECT_SOURCE_DIR}/src/fix/FixAndPropagate.hpp
+        ${PROJECT_SOURCE_DIR}/src/fix/FixAndPropagateApi.h
+        ${PROJECT_SOURCE_DIR}/src/fix/FixAndPropagateApi.cpp
+        ${PROJECT_SOURCE_DIR}/src/fix/Heuristic.hpp
+        ${PROJECT_SOURCE_DIR}/src/fix/PresolveApi.cpp
+        ${PROJECT_SOURCE_DIR}/src/fix/PresolveApi.h
         ${PROJECT_SOURCE_DIR}/src/fix/VectorMultiplication.hpp
-        ${PROJECT_SOURCE_DIR}/src/fix/strategy/RoundingStrategy.hpp
+        ${PROJECT_SOURCE_DIR}/src/fix/VolumeAlgorithm.hpp
+        ${PROJECT_SOURCE_DIR}/src/fix/VolumeAlgorithmParameter.hpp
+        DESTINATION include/fix)
+
+install(FILES
+        ${PROJECT_SOURCE_DIR}/src/fix/strategy/FarkasRoundingStrategy.hpp
         ${PROJECT_SOURCE_DIR}/src/fix/strategy/FractionalRoundingStrategy.hpp
         ${PROJECT_SOURCE_DIR}/src/fix/strategy/RandomRoundingStrategy.hpp
-        ${PROJECT_SOURCE_DIR}/src/fix/strategy/FarkasRoundingStrategy.hpp
-        ${PROJECT_SOURCE_DIR}/src/fix/FixAndPropagateApi.hpp
-        ${PROJECT_SOURCE_DIR}/src/StartMipComp.cpp
-        DESTINATION include/fix)
+        ${PROJECT_SOURCE_DIR}/src/fix/strategy/RoundingStrategy.hpp
+        DESTINATION include/fix/strategy)
 
 # configure the config file for the build tree
 set(QUADMATH_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/Modules)
@@ -492,4 +502,3 @@ install(TARGETS papilo papilo-core fix-shared ${CLUSOL_TARGET}
     RUNTIME DESTINATION bin
     INCLUDES DESTINATION include)
 install(EXPORT papilo-targets DESTINATION lib/cmake/papilo)
-

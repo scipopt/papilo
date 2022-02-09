@@ -119,31 +119,6 @@ class FractionalRoundingStrategy : public RoundingStrategy<REAL>
             }
          }
 
-         //         assert( !num.isZero( frac ) );
-         //         if( frac > 0.5 )
-         //         {
-         //            REAL current_score = ( 1 - frac ) * obj[i];
-         //            REAL prosposed_value = num.epsCeil( cont_solution[i] );
-         //            if( ( variable == -1 || current_score > score ) &&
-         //                view.is_within_bounds( i, prosposed_value ) )
-         //            {
-         //               score = current_score;
-         //               variable = i;
-         //               value = prosposed_value;
-         //            }
-         //         }
-         //         else
-         //         {
-         //            REAL current_score = frac * obj[i];
-         //            REAL prosposed_value = num.epsFloor( cont_solution[i] );
-         //            if( ( variable == -1 || current_score > score ) &&
-         //                view.is_within_bounds( i, prosposed_value ) )
-         //            {
-         //               score = current_score;
-         //               variable = i;
-         //               value = prosposed_value;
-         //            }
-         //         }
       }
       return { variable, value };
    }

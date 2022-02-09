@@ -23,6 +23,7 @@
 
 #include "papilo/core/Problem.hpp"
 #include "papilo/core/RowFlags.hpp"
+#include "papilo/core/SingleBoundChange.hpp"
 #include "papilo/io/Message.hpp"
 #include "papilo/misc/Num.hpp"
 #include "papilo/misc/Timer.hpp"
@@ -33,25 +34,6 @@
 namespace papilo
 {
 
-template <typename REAL>
-class SingleBoundChange
-{
- public:
-   int col;
-   REAL new_bound_value;
-   int reason_row; // row index or -1 if fixing
-   bool is_fixing;
-   bool is_lower_bound; // if is_fixing && is_lower_bound are false
-                        // then it is an upper bound
-   int depth_level;
-   SingleBoundChange( int _col, REAL _new_bound_value, int _reason_row,
-                      bool _is_fixing, bool _is_lower_bound, int _depth_level )
-       : col( _col ), new_bound_value( _new_bound_value ),
-         reason_row( _reason_row ), is_fixing( _is_fixing ),
-         is_lower_bound( _is_lower_bound ), depth_level( _depth_level )
-   {
-   }
-};
 
 template <typename REAL>
 class ConflictAnalysis

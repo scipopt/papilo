@@ -30,6 +30,31 @@
 
 using namespace papilo;
 
+/***
+ * Missing parts:
+ * Overall:
+ * - Statistics
+ *  - first solution found, optimal solution found
+ *  - optimal value of solution/ optimum
+ *  (- profiling)
+ *
+ * Volume algorithm:
+ * - primal feasible solution
+ * - hard constraints are excluded (introducing RowFlag::kHardContraints)
+ * - restarting possibility (use vector pi should work already)
+ * - add constraints of conflict analysis
+ * - fractional of integer variables
+ *
+ * Conflict Analysis:
+ * - TBD
+ *
+ * Fix and Propagate:
+ * - optimize parallel scheme of OneOpt
+ * - fix bugs
+ * - generate data for conflict analysis
+ *
+ */
+
 
 int
 main( int argc, char* argv[] )
@@ -73,10 +98,16 @@ main( int argc, char* argv[] )
 
    fmt::print( "reading took {:.3} seconds\n", t.getTime() );
 
-   VolumeAlgorithmParameter<double> para{ 0.05, 0.1,  0.2,   0.0005, 2, 2, 1.1,
-                                        0.66, 0.01, 0.001, 0.02,   2, 20, 10 *60 };
+   double time_limit = 10 * 60;
+   VolumeAlgorithmParameter<double> para{ 0.05, 0.1, 0.2,  0.0005, 2,
+                                          2,    1.1, 0.66, 0.01,   0.001,
+                                          0.02, 2,   20,   time_limit };
 
-   Algorithm<double> alg{ msg, num, t };
+#ifndef PAPILO_TBB
+   msg.error("Please build with TBB to use the parallel feature!!!");
+#endif
+
+   Algorithm<double> alg{ msg, num, t, time_limit};
    alg.solve_problem( problem, para );
    return 0;
 }
