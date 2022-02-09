@@ -68,7 +68,7 @@ TEST_CASE( "conflict-analysis-binary-depth-two", "[conflict]" )
     // A1: x1 + x3 = 1
     // A2: x1 + x2 + x3 = 2
     // A3: x2 + x3 + x4 + x5 = 3
-    // A4: x4 + x5 = 1
+    // A4: x4 + x5 = 2
 
     // Assume that fix_and_propagate does the following:
     // Fix: x3 = 1 (decision level 1)
@@ -96,7 +96,7 @@ TEST_CASE( "conflict-analysis-binary-depth-two", "[conflict]" )
    Timer timer {t};
 
    // initialize conflict analysis
-   ConflictAnalysis<double> conflictAnalysis( {}, {}, timer );
+   ConflictAnalysis<double> conflictAnalysis( {}, {}, timer, problem );
    // empty vectors for the new constraints
    Vec<int> length;
    Vec<int*> indices;
@@ -104,7 +104,7 @@ TEST_CASE( "conflict-analysis-binary-depth-two", "[conflict]" )
    Vec<RowFlags> flags;
    Vec<double> lhs;
    Vec<double> rhs;
-   conflictAnalysis.perform_conflict_analysis( bound_changes, length,
+   conflictAnalysis.perform_conflict_analysis( bound_changes, true, length,
    indices, values, flags, lhs, rhs );
 
 }
@@ -150,7 +150,6 @@ setupProblemForConflictAnalysis()
    pb.setColNameAll( columnNames );
    pb.setProblemName( "example for conflict analysis" );
    Problem<double> problem = pb.build();
-   problem.getConstraintMatrix().modifyLeftHandSide( 0, {}, rhs[0] );
    return problem;
 }
 

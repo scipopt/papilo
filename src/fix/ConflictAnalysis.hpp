@@ -21,6 +21,7 @@
 /*                                                                           */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
+#include "papilo/core/Problem.hpp"
 #include "papilo/core/RowFlags.hpp"
 #include "papilo/io/Message.hpp"
 #include "papilo/misc/Num.hpp"
@@ -35,20 +36,19 @@ namespace papilo
 template <typename REAL>
 class SingleBoundChange
 {
+ public:
    int col;
    REAL new_bound_value;
    int reason_row; // row index or -1 if fixing
    bool is_fixing;
-   bool is_lower_bound; // if is_fixing && is_lower_bound are false 
+   bool is_lower_bound; // if is_fixing && is_lower_bound are false
                         // then it is an upper bound
    int depth_level;
-
- public:
    SingleBoundChange( int _col, REAL _new_bound_value, int _reason_row,
-               bool _is_fixing, bool _is_lower_bound, int _depth_level)
-              : col( _col ), new_bound_value( _new_bound_value ), 
-              reason_row( _reason_row ), is_fixing( _is_fixing ),
-              is_lower_bound( _is_lower_bound ), depth_level( _depth_level )
+                      bool _is_fixing, bool _is_lower_bound, int _depth_level )
+       : col( _col ), new_bound_value( _new_bound_value ),
+         reason_row( _reason_row ), is_fixing( _is_fixing ),
+         is_lower_bound( _is_lower_bound ), depth_level( _depth_level )
    {
    }
 };
@@ -59,27 +59,87 @@ class ConflictAnalysis
    Message msg;
    Num<REAL> num;
    Timer timer;
+   Problem<REAL> problem;
 
  public:
-   ConflictAnalysis( Message _msg, Num<REAL> _num, Timer timer_ ) : msg( _msg ), num( _num ), timer(timer_)
+   ConflictAnalysis( Message _msg, Num<REAL> _num, Timer _timer,
+                     Problem<REAL> _problem )
+       : msg( _msg ), num( _num ), timer( _timer ), problem( _problem )
    {
    }
+   bool
+   simple_cut_from_fixings( Vec<SingleBoundChange<REAL>> bound_changes,
+                            bool all_fixings_binary, Vec<int>& length,
+                            Vec<int*>& indices, Vec<REAL*>& values,
+                            Vec<RowFlags>& flags, Vec<REAL>& lhs,
+                            Vec<REAL>& rhs )
+   {
+      length.push_back( 0 );
+      lhs.push_back( 1 );
+      rhs.push_back( 0 );
+      RowFlags rf;
+      rf.set( RowFlag::kRhsInf );
+      flags.push_back( rf );
+      // simplest (but also worse) cut is created from the fixings
+      // e.g. Fixings x1 = x2 = x3 = 0 -> x1 + x2 + x3 >= 1
+      // e.g. Fixings x1 = x2 = 0, x3 = 1 -> x1 + x2 + (1 - x3) >= 1
+      // works only if all fixings are binary!
+      if( all_fixings_binary )
+      {
+         std::vector<int> row_indices;
+         std::vector<REAL> row_values;
 
+         for( int i = 0; i < bound_changes.size(); i++ )
+         {
+            if( bound_changes[i].is_fixing )
+            {
+               length[0]++;
+               row_indices.push_back( bound_changes[i].col );
+               double coef =
+                   bound_changes[i].new_bound_value > 0.5 ? -1.0 : 1.0;
+
+               if( bound_changes[i].new_bound_value > 0.5 )
+                  lhs[0]--;
+               row_values.push_back( coef );
+            }
+         }
+         indices.push_back( &row_indices[0] );
+         values.push_back( &row_values[0] );
+      }
+      else
+      {
+         return false;
+      }
+      return true;
+   }
    bool
    perform_conflict_analysis( Vec<SingleBoundChange<REAL>> bound_changes,
-                              Vec<int>& length, Vec<int*>& indices,
-                              Vec<REAL*>& values, Vec<RowFlags>& flags,
-                              Vec<REAL>& lhs, Vec<REAL>& rhs )
+                              bool all_fixings_binary, Vec<int>& length,
+                              Vec<int*>& indices, Vec<REAL*>& values,
+                              Vec<RowFlags>& flags, Vec<REAL>& lhs,
+                              Vec<REAL>& rhs )
    {
-      // TODO: to be implemented
 
-      // create an empty conflict set CS
-      // if only fixings -> no-good-cut / or fix a variable to the other bound?
-      // else BC = bound_changes.pop()
-      // if FUIP -> CS.add(BC)
-      // else -> resolve_bound_change(BC) (in our case maybe just delete?)
+      // conf_con = conflict constraint (top of bound_changes)
 
-      // Maybe use generalized resolution and apply cardinality reduction?
+      // Only fixings (works only for binaries)
+      if( bound_changes.back().depth_level == bound_changes.size() - 1 )
+      {
+         simple_cut_from_fixings( bound_changes, all_fixings_binary, length,
+                                  indices, values, flags, lhs, rhs );
+         return true;
+      }
+      else
+      {
+         while( true )
+         {
+            SingleBoundChange<REAL> last_bound_change = bound_changes.back();
+            bound_changes.pop_back();
+         }
+         // else BC = bound_changes.pop()
+         // if FUIP -> CS.add(BC)
+         // else -> resolve_bound_change(BC) (in our case maybe just delete?)
+      }
 
       // should return a list of constraint to be added to the builder
       return true;

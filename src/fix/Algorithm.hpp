@@ -114,7 +114,7 @@ class Algorithm
          return;
 
       VolumeAlgorithm<REAL> algorithm{ msg, num, timer, parameter };
-      ConflictAnalysis<REAL> conflict_analysis{ msg, num, timer };
+      ConflictAnalysis<REAL> conflict_analysis{ msg, num, timer, problem };
 
       problem.recomputeAllActivities();
 
