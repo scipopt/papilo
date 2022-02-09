@@ -36,7 +36,9 @@ main( void )
    double* sol = malloc(n_cols* sizeof (double));
    for( int i = 0; i < n_cols; i++ )
       primal_solution[i] = ( 1.0 + i ) / 10.0;
-   int success = call_algorithm( heuristic, primal_solution, sol, n_cols );
+   double current_solution = 50;
+   int success = call_algorithm( heuristic, primal_solution, sol, n_cols, &current_solution );
    delete_problem_instance( heuristic );
+   assert(current_solution == 9);
    assert( success );
 }

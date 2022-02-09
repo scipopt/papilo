@@ -65,15 +65,17 @@ delete_problem_instance( void* heuristic_void_ptr )
 
 int
 call_algorithm( void* heuristic_void_ptr, double* cont_solution, double* result,
-                int n_cols )
+                int n_cols, double* current_obj_value )
 {
    auto heuristic = (Heuristic<double>*)( heuristic_void_ptr );
    Vec<double> sol( cont_solution, cont_solution + n_cols );
    Vec<double> res{};
 
-   double best_obj_val = std::numeric_limits<double>::max();
-   heuristic->perform_fix_and_propagate( sol, best_obj_val, res, true, true, true );
+   double local_obj = *current_obj_value;
+   heuristic->perform_fix_and_propagate( sol, local_obj, res, true, true, true );
 
+   if(local_obj < *current_obj_value)
+      *current_obj_value = local_obj;
    result = &res[0];
    return !res.empty();
 }

@@ -37,11 +37,12 @@ delete_problem_instance( void* heuristic_void_ptr );
  * @param cont_solution not feasible integer solution
  * @param result array where the result is stored
  * @param n_cols number of variables
- * @return was a (better) integer feasible solution found
+ * @param current_obj_value -> gets overwritten in case a better solution is found
+ * @return whether a (better) integer feasible solution was found
  */
 int
 call_algorithm( void* heuristic_void_ptr, double* cont_solution, double* result,
-                int n_cols );
+                int n_cols, double* current_obj_value );
 
 #ifdef __cplusplus
 }
