@@ -452,6 +452,10 @@ ProbingView<REAL>::activityChanged( ActivityChange actchange, int rowid,
                       double( activity.min ), double( rhs[rowid] ),
                       double( problem.getRowActivities()[rowid].min ) );
       infeasible = true;
+      if( std::none_of( infeasible_rows.begin(), infeasible_rows.end(),
+                       [&]( std::pair<int, int> pair )
+                       { return pair.second == rowid; } ) )
+         infeasible_rows.push_back( { changes.size(), rowid } );
    }
 
    if( actchange == ActivityChange::kMax && activity.ninfmax == 0 &&
@@ -467,6 +471,10 @@ ProbingView<REAL>::activityChanged( ActivityChange actchange, int rowid,
                       double( activity.max ), double( lhs[rowid] ),
                       double( problem.getRowActivities()[rowid].max ) );
       infeasible = true;
+      if( std::none_of( infeasible_rows.begin(), infeasible_rows.end(),
+                       [&]( std::pair<int, int> pair )
+                       { return pair.second == rowid; } ) )
+         infeasible_rows.push_back( { changes.size(), rowid } );
    }
 }
 
@@ -853,6 +861,10 @@ ProbingView<REAL>::propagateDomains()
                                          __FILE__, __LINE__, probingCol,
                                          probingValue );
                          infeasible = true;
+                         if( std::none_of( infeasible_rows.begin(), infeasible_rows.end(),
+                                          [&]( std::pair<int, int> pair )
+                                          { return pair.second == row; } ) )
+                            infeasible_rows.push_back( { changes.size(), row } );
                          return;
                       }
 
@@ -891,6 +903,10 @@ ProbingView<REAL>::propagateDomains()
                                          __FILE__, __LINE__, probingCol,
                                          probingValue );
                          infeasible = true;
+                         if( std::none_of( infeasible_rows.begin(), infeasible_rows.end(),
+                                          [&]( std::pair<int, int> pair )
+                                          { return pair.second == row; } ) )
+                            infeasible_rows.push_back( { changes.size(), row } );
                          return;
                       }
 

@@ -385,10 +385,15 @@ TEST_CASE( "fix-and-propagate-check-conflict-analysis-data", "[fix]" )
        fixAndPropagate.fix_and_propagate( primal_solution, res, strategy, view, true, false  );
 
    auto changes = view.get_changes();
+   auto conflicts = view.get_infeasible_rows();
+
    REQUIRE( infeasible );
    REQUIRE( changes.size() == 5);
+   REQUIRE( conflicts.size() == 1);
 
-   REQUIRE( changes[0].get_col() == 2);
+   REQUIRE( conflicts[0].first == 4);
+   REQUIRE( conflicts[0].second == 3);
+
    REQUIRE( changes[0].get_new_bound_value() == 1);
    REQUIRE( changes[0].get_reason_row() == -1);
    REQUIRE( changes[0].is_lower_bound() );
