@@ -64,12 +64,12 @@ call_algorithm( void* problem_ptr, double* cont_solution, double* result,
 {
    auto problem = (Problem<double>*)( problem_ptr );
    ProbingView<double> view{ *problem, {} };
-   FixAndPropagate<double> f{ {}, {}, false };
+   FixAndPropagate<double> f{ {}, {} };
    Vec<double> sol( cont_solution, cont_solution + n_cols );
    Vec<double> res( result, result + n_cols );
 
    FractionalRoundingStrategy<double> strategy{{}};
-   bool is_infeasible = f.fix_and_propagate( sol, res, strategy, view );
+   bool is_infeasible = f.fix_and_propagate( sol, res, strategy, view, false, false );
    result = &res[0];
    return is_infeasible;
 }
