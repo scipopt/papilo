@@ -21,70 +21,75 @@
 /*                                                                           */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#include "papilo/core/RowFlags.hpp"
-#include "papilo/core/SingleBoundChange.hpp"
-#include "papilo/io/Message.hpp"
+#ifndef _PAPILO_CORE_SINGLE_BOUND_CHANGE_HPP_
+#define _PAPILO_CORE_SINGLE_BOUND_CHANGE_HPP_
+
+#include "papilo/core/Problem.hpp"
 #include "papilo/misc/Num.hpp"
-#include "papilo/misc/Timer.hpp"
-#include <cassert>
-#include <cmath>
-#include <fstream>
 
 namespace papilo
 {
 
-
 template <typename REAL>
-class ConflictAnalysis
+class SingleBoundChange
 {
-   Message msg;
-   Num<REAL> num;
-   Timer timer;
 
  public:
-   ConflictAnalysis( Message _msg, Num<REAL> _num, Timer timer_ ) : msg( _msg ), num( _num ), timer(timer_)
+
+   int
+   get_col() const
    {
+      return col;
+   }
+
+   REAL
+   get_new_bound_value() const
+   {
+      return new_bound_value;
+   }
+
+   int
+   get_reason_row() const
+   {
+      return reason_row;
    }
 
    bool
-   perform_conflict_analysis( Vec<SingleBoundChange<REAL>> bound_changes,
-                              Vec<int>& length, Vec<int*>& indices,
-                              Vec<REAL*>& values, Vec<RowFlags>& flags,
-                              Vec<REAL>& lhs, Vec<REAL>& rhs )
+   is_manually_triggered() const
    {
-      // TODO: to be implemented
-
-      // create an empty conflict set CS
-      // if only fixings -> no-good-cut / or fix a variable to the other bound?
-      // else BC = bound_changes.pop()
-      // if FUIP -> CS.add(BC)
-      // else -> resolve_bound_change(BC) (in our case maybe just delete?)
-
-      // Maybe use generalized resolution and apply cardinality reduction?
-
-      // should return a list of constraint to be added to the builder
-      return true;
+      return manually_triggered;
    }
 
    bool
-   perform_conflict_analysis()
+   is_lower_bound() const
    {
-      msg.info( "function call is dummy and waited to be implemented above" );
-      return true;
+      return lower_bound;
+   }
+   int
+   get_depth_level() const
+   {
+      return depth_level;
    }
 
  private:
-   bool
-   resolve_bound_change()
-   {
-      return true;
-   }
+   int col;
+   REAL new_bound_value;
+   int reason_row; // row index or -1 if fixing
+   bool manually_triggered;
+   bool lower_bound; // if is_fixing && is_lower_bound are false
+                        // then it is an upper bound
+   int depth_level;
 
-   bool
-   get_conflict_set()
+ public:
+   SingleBoundChange( int col_, int row_, REAL new_bound_value_,
+                      bool manually_triggered_, bool lower_bound_,
+                      int depth_level_ )
+       : col( col_ ), reason_row(row_), new_bound_value( new_bound_value_ ),
+         manually_triggered( manually_triggered_ ),
+         lower_bound( lower_bound_ ), depth_level( depth_level_ )
    {
-      return true;
    }
 };
 
 } // namespace papilo
+#endif

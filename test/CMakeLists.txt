@@ -62,6 +62,7 @@ add_executable(unit_test TestMain.cpp
         fix/VectorMultiplicationTest.cpp
         fix/VolumeAlgorithmTest.cpp
         fix/FixAndPropagateTest.cpp
+        fix/ConflictAnalysisTest.cpp
         fix/FixAndPropagateIT.cpp
         fix/FixAndPropagateApiTest.cpp
 
@@ -211,15 +212,23 @@ set(unit_tests
         "fix-and-propagate-random-check-within-bounds"
         "fix-and-propagate-farkas-backtrack"
         "fix-and-propagate-farkas-check-within-bounds"
+        "fix-and-propagate-api"
+        "fix-and-propagate-it-modified-solution-is-feasible"
+        "fix-and-propagate-it-solution-is-feasible"
+        "fix-and-propagate-check-conflict-analysis-data"
+
         "vector-calc_b_minus_xA"
         "vector-l2-norm"
         "vector-addition"
         "vector-addition-2"
-        "small-volume-algorithm-test"
-        "fix-and-propagate-api"
-        "fix-and-propagate-it-modified-solution-is-feasible"
-        "fix-and-propagate-it-solution-is-feasible"
 
+        "small-volume-algorithm-test"
+
+
+
+        "conflict-analysis-binary-depth-two"
+        "conflict-analysis-check-data"
+        
         "integration-test-for-flugpl"
         ${PAPILOLIB_TESTS}
         ${BOOST_REQUIRED_TESTS}

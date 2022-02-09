@@ -36,6 +36,10 @@ class Fixing
  private:
    int column_index;
    REAL value;
+   // int bound_change_type // lower or upper bound
+   // REAL old_value; // value before fixing (may be needed)
+   // int decision_depth; // each rounding increases the decision depth.
+   // int reason_row_index; // -1 if the fixing was due to rounding 
 
  public:
    Fixing( int _column_index, REAL _value ):

@@ -26,6 +26,7 @@
 
 #include "papilo/core/Fixing.hpp"
 #include "papilo/core/Problem.hpp"
+#include "papilo/core/SingleBoundChange.hpp"
 #include "papilo/core/SingleRow.hpp"
 #include "papilo/io/Message.hpp"
 #include "papilo/misc/MultiPrecision.hpp"
@@ -141,12 +142,11 @@ class ProbingView
       probingValue = value;
       const Fixing<REAL>& fixing = { col, value };
       fixings.push_back( fixing );
-
       // fix upper/lower bound of probed column
       if( !num.isEq( probing_lower_bounds[col], value ) )
-         changeLb( col, value );
+         changeLb( col, -1,value, true );
       if( !num.isEq( probing_upper_bounds[col], value ) )
-         changeUb( col, value );
+         changeUb( col, -1, value,true );
    }
 
    Vec<Fixing<REAL>>
@@ -155,14 +155,20 @@ class ProbingView
       return fixings;
    }
 
+   Vec<SingleBoundChange<REAL>>
+   get_changes()
+   {
+      return changes;
+   }
+
    void
    activityChanged( ActivityChange actchange, int rowid,
                     RowActivity<REAL>& activity );
    void
-   changeLb( int col, REAL newlb );
+   changeLb( int col, int row, REAL newlb, bool manually_triggered = false);
 
    void
-   changeUb( int col, REAL newub );
+   changeUb( int col, int row, REAL newub, bool manually_triggered = false );
 
    void
    storeImplications();
@@ -177,18 +183,6 @@ class ProbingView
    isInfeasible() const
    {
       return infeasible;
-   }
-
-   int
-   get_row_causing_infeasibility() const
-   {
-      return row_causing_infeasibility;
-   }
-
-   int
-   get_col_causing_infeasibility() const
-   {
-      return col_causing_infeasibility;
    }
 
    int
@@ -273,12 +267,11 @@ class ProbingView
    Vec<int> next_prop_activities;
 
    bool infeasible;
-   int row_causing_infeasibility = -1;
-   int col_causing_infeasibility = -1;
    int round;
    int probingCol;
    REAL probingValue;
    Vec<Fixing<REAL>> fixings;
+   Vec<SingleBoundChange<REAL>> changes;
 
    // datastructures for storing result of probing on one value
    Vec<ProbingBoundChg<REAL>> otherValueImplications;
@@ -385,10 +378,9 @@ ProbingView<REAL>::reset()
    prop_activities.clear();
    next_prop_activities.clear();
    infeasible = false;
-   row_causing_infeasibility = -1;
-   col_causing_infeasibility = -1;
    probingCol = -1;
    fixings.clear();
+   changes.clear();
 }
 
 template <typename REAL>
@@ -452,8 +444,6 @@ ProbingView<REAL>::activityChanged( ActivityChange actchange, int rowid,
                       __FILE__, __LINE__, probingCol, probingValue,
                       double( activity.min ), double( rhs[rowid] ),
                       double( problem.getRowActivities()[rowid].min ) );
-      row_causing_infeasibility = rowid;
-      col_causing_infeasibility = probingCol;
       infeasible = true;
    }
 
@@ -469,15 +459,13 @@ ProbingView<REAL>::activityChanged( ActivityChange actchange, int rowid,
                       __FILE__, __LINE__, probingCol, probingValue,
                       double( activity.max ), double( lhs[rowid] ),
                       double( problem.getRowActivities()[rowid].max ) );
-      row_causing_infeasibility = rowid;
-      col_causing_infeasibility = probingCol;
       infeasible = true;
    }
 }
 
 template <typename REAL>
 void
-ProbingView<REAL>::changeLb( int col, REAL newlb )
+ProbingView<REAL>::changeLb( int col, int row, REAL newlb, bool manually_triggered )
 {
    const auto& consMatrix = problem.getConstraintMatrix();
    auto colvec = consMatrix.getColumnCoefficients( col );
@@ -496,11 +484,15 @@ ProbingView<REAL>::changeLb( int col, REAL newlb )
       // indicate that the infinity flag was altered
       probing_domain_flags[col].unset( ColFlag::kLbUseless );
       changed_lbs.push_back( -col - 1 );
+      changes.push_back( { col, row, newlb, manually_triggered, true, round } );
    }
    else if( probing_lower_bounds[col] == orig_lbs[col] &&
             !problem.getColFlags()[col].test( ColFlag::kLbUseless ) )
+   {
       // if bound was not altered yet remember it in the index vector
       changed_lbs.push_back( col );
+      changes.push_back( { col, row, newlb, manually_triggered, true, round } );
+   }
 
    // change the bound in the domain vector
    REAL oldlb = probing_lower_bounds[col];
@@ -518,7 +510,7 @@ ProbingView<REAL>::changeLb( int col, REAL newlb )
 
 template <typename REAL>
 void
-ProbingView<REAL>::changeUb( int col, REAL newub )
+ProbingView<REAL>::changeUb( int col, int row, REAL newub, bool manually_triggered)
 {
    const auto& consMatrix = problem.getConstraintMatrix();
    auto colvec = consMatrix.getColumnCoefficients( col );
@@ -537,11 +529,15 @@ ProbingView<REAL>::changeUb( int col, REAL newub )
       // indicate that the infinity flag was altered
       probing_domain_flags[col].unset( ColFlag::kUbUseless );
       changed_ubs.push_back( -col - 1 );
+      changes.push_back( { col, row, newub, manually_triggered, false, round } );
    }
    else if( probing_upper_bounds[col] == orig_ubs[col] &&
             !problem.getColFlags()[col].test( ColFlag::kUbUseless ) )
+   {
       // if bound was not altered yet remember it in the index vector
       changed_ubs.push_back( col );
+      changes.push_back( { col, row, newub, manually_triggered, false, round } );
+   }
 
    // change the bound in the domain vector
    REAL oldub = probing_upper_bounds[col];
@@ -849,8 +845,6 @@ ProbingView<REAL>::propagateDomains()
                                          "val {} is infeasible\n",
                                          __FILE__, __LINE__, probingCol,
                                          probingValue );
-                         row_causing_infeasibility = row;
-                         col_causing_infeasibility = colid;
                          infeasible = true;
                          return;
                       }
@@ -870,7 +864,7 @@ ProbingView<REAL>::propagateDomains()
                          ( delta / ( probing_upper_bounds[colid] -
                                      probing_lower_bounds[colid] ) >=
                            mindomred ) ) )
-                      changeLb( colid, newbound );
+                      changeLb( colid, row, newbound );
                 }
                 else
                 {
@@ -890,8 +884,6 @@ ProbingView<REAL>::propagateDomains()
                                          __FILE__, __LINE__, probingCol,
                                          probingValue );
                          infeasible = true;
-                         row_causing_infeasibility = row;
-                         col_causing_infeasibility = colid;
                          return;
                       }
 
@@ -910,7 +902,7 @@ ProbingView<REAL>::propagateDomains()
                          ( delta / ( probing_upper_bounds[colid] -
                                      probing_lower_bounds[colid] ) >=
                            mindomred ) ) )
-                      changeUb( colid, newbound );
+                      changeUb( colid, row,newbound );
                 }
              } );
          if( infeasible )
