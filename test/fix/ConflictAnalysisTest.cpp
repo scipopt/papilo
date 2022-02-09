@@ -80,18 +80,21 @@ TEST_CASE( "conflict-analysis-binary-depth-two", "[conflict]" )
 
    Vec<SingleBoundChange<double>> bound_changes;
    // bound changes for x1, x2, x3 (decision level 1)
-//   SingleBoundChange<double> bound_change_1( 2, 1.0, -1, true, false, 1 );
-//   bound_changes.push_back( bound_change_1 );
-//   SingleBoundChange<double> bound_change_2( 0, 0.0, 0, false, false, 1 );
-//   bound_changes.push_back( bound_change_2 );
-//   SingleBoundChange<double> bound_change_3( 1, 1.0, 1, false, false, 1 );
-//   bound_changes.push_back( bound_change_3 );
-//   // bound changes for x4, x5 (decision level 2)
-//   SingleBoundChange<double> bound_change_4( 3, 1.0, -1, true, false, 2 );
-//   bound_changes.push_back( bound_change_4 );
-//   SingleBoundChange<double> bound_change_5( 4, 0.0, 2, false, false, 2 );
-//   bound_changes.push_back( bound_change_5 );
-//
+   SingleBoundChange<double> bound_change_1( 2, -1, 1.0, true, false, 1 );
+   bound_changes.push_back( bound_change_1 );
+   SingleBoundChange<double> bound_change_2( 0, 0, 0.0, false, false, 1 );
+   bound_changes.push_back( bound_change_2 );
+   SingleBoundChange<double> bound_change_3( 1, 1, 1.0, false, false, 1 );
+   bound_changes.push_back( bound_change_3 );
+   // bound changes for x4, x5 (decision level 2)
+   SingleBoundChange<double> bound_change_4( 3, -1, 1.0, true, false, 2 );
+   bound_changes.push_back( bound_change_4 );
+   SingleBoundChange<double> bound_change_5( 4, 2, 0.0, false, false, 2 );
+   bound_changes.push_back( bound_change_5 );
+   // add bound change for the conflict
+   SingleBoundChange<double> bound_change_6( -1, 3, -1.0, false, false, 2 );
+   bound_changes.push_back( bound_change_6 );
+
    double t = 0;
    Timer timer {t};
 
@@ -107,6 +110,7 @@ TEST_CASE( "conflict-analysis-binary-depth-two", "[conflict]" )
    conflictAnalysis.perform_conflict_analysis( bound_changes, true, length,
    indices, values, flags, lhs, rhs );
 
+   // ToDo add asserts for generated conflict
 }
 
 
