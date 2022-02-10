@@ -53,10 +53,11 @@ class Algorithm
    Num<REAL> num;
    Timer timer;
    double time_limit;
+   REAL threshold_hard_constraints;
 
  public:
-   Algorithm( Message _msg, Num<REAL> _num, Timer t, double time_limit_ )
-       : msg( _msg ), num( _num ), timer( t ), time_limit(time_limit_)
+   Algorithm( Message _msg, Num<REAL> _num, Timer t, double time_limit_, double threshold_hard_constraints_ )
+       : msg( _msg ), num( _num ), timer( t ), time_limit(time_limit_), threshold_hard_constraints(threshold_hard_constraints_)
    {
    }
 
@@ -231,6 +232,7 @@ class Algorithm
    {
       ProblemBuilder<REAL> builder;
 
+
       int nnz = 0;
       int ncols = problem.getNCols();
       int nrows = 0;
@@ -249,7 +251,7 @@ class Algorithm
 
          auto row_data = matrix.getRowCoefficients(i);
          REAL factor = get_max_min_factor( row_data );
-         if( num.isGT( factor, 0.5 ) )
+         if( num.isGT( factor, threshold_hard_constraints ) )
          {
             rowFlags[i].set(RowFlag::kRedundant);
             continue;
@@ -286,10 +288,10 @@ class Algorithm
          auto flags = rowFlags[i];
          if( flags.test( RowFlag::kRedundant ) )
          {
-            assert(num.isGT( get_max_min_factor( matrix.getRowCoefficients(i) ), 0.5 ));
+            assert(num.isGT( get_max_min_factor( matrix.getRowCoefficients(i) ), threshold_hard_constraints ));
             continue;
          }
-         assert(num.isLE( get_max_min_factor( matrix.getRowCoefficients(i) ), 0.5 ));
+         assert(num.isLE( get_max_min_factor( matrix.getRowCoefficients(i) ), threshold_hard_constraints ));
          const SparseVectorView<REAL>& view = matrix.getRowCoefficients( i );
          const int* rowcols = view.getIndices();
          const REAL* rowvals = view.getValues();
