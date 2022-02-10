@@ -44,10 +44,10 @@ class FractionalRoundingStrategy : public RoundingStrategy<REAL>
       norm = *max_element( std::begin( obj ), std::end( obj ) );
       auto rflags = problem_.getRowFlags();
       const ConstraintMatrix<REAL>& matrix = problem_.getConstraintMatrix();
-      int n_rows = problem_.getNRows();
-      no_up_locks.reserve( n_rows );
-      no_down_locks.reserve( n_rows );
-      for( int col = 0; col < n_rows; ++col )
+      int n_cols = problem_.getNCols();
+      no_up_locks.reserve( n_cols );
+      no_down_locks.reserve( n_cols );
+      for( int col = 0; col < n_cols; ++col )
       {
          int n_up_locks = 0;
          int n_down_locks = 0;
@@ -56,6 +56,7 @@ class FractionalRoundingStrategy : public RoundingStrategy<REAL>
          const REAL* values = colvec.getValues();
          const int* rowinds = colvec.getIndices();
 
+         bool skip = false;
          for( int j = 0; j < colvec.getLength(); ++j )
          {
             count_locks( values[j], rflags[rowinds[j]], n_down_locks,
@@ -64,15 +65,18 @@ class FractionalRoundingStrategy : public RoundingStrategy<REAL>
             {
                no_down_locks.push_back( false );
                no_up_locks.push_back( false );
-               continue;
+               skip = true;
+               break;
             }
          }
+         if(skip)
+            continue;
          assert( n_down_locks != 0 || n_up_locks != 0 );
          no_down_locks.push_back( n_down_locks == 0 );
          no_up_locks.push_back( n_up_locks == 0 );
       }
       assert( no_down_locks.size() == no_up_locks.size() );
-      assert( no_down_locks.size() == n_rows );
+      assert( no_down_locks.size() == problem_.getNCols() );
    }
 
    Fixing<REAL>
