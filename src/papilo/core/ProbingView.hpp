@@ -98,33 +98,6 @@ class ProbingView
                num.isLE( value, probing_upper_bounds[col] ) );
    }
 
-   std::pair<bool, bool>
-   has_locks( int col ) const
-   {
-      int nuplocks = 0;
-      int ndownlocks = 0;
-
-      REAL obj = problem.getObjective().coefficients[col];
-      auto rflags = problem.getRowFlags();
-      auto colvec = problem.getConstraintMatrix().getColumnCoefficients( col );
-      int collen = colvec.getLength();
-      const REAL* values = colvec.getValues();
-      const int* rowinds = colvec.getIndices();
-      if( num.isGE( obj, 0 ) )
-         ++ndownlocks;
-      else if( num.isLE( obj, 0 ) )
-         ++nuplocks;
-
-      for( int j = 0; j != collen; ++j )
-      {
-         count_locks( values[j], rflags[rowinds[j]], ndownlocks, nuplocks );
-
-         if( nuplocks != 0 && ndownlocks != 0 )
-            return { false, false };
-      }
-      return { nuplocks == 0, ndownlocks == 0 };
-   }
-
    void
    setMinContDomRed( const REAL& value )
    {
@@ -159,6 +132,12 @@ class ProbingView
    get_changes()
    {
       return changes;
+   }
+
+   Vec<std::pair<int,int>>
+   get_infeasible_rows()
+   {
+      return infeasible_rows;
    }
 
    void
@@ -272,6 +251,7 @@ class ProbingView
    REAL probingValue;
    Vec<Fixing<REAL>> fixings;
    Vec<SingleBoundChange<REAL>> changes;
+   Vec<std::pair<int,int>> infeasible_rows;
 
    // datastructures for storing result of probing on one value
    Vec<ProbingBoundChg<REAL>> otherValueImplications;
@@ -445,6 +425,10 @@ ProbingView<REAL>::activityChanged( ActivityChange actchange, int rowid,
                       double( activity.min ), double( rhs[rowid] ),
                       double( problem.getRowActivities()[rowid].min ) );
       infeasible = true;
+      if( std::none_of( infeasible_rows.begin(), infeasible_rows.end(),
+                       [&]( std::pair<int, int> pair )
+                       { return pair.second == rowid; } ) )
+         infeasible_rows.push_back( { changes.size(), rowid } );
    }
 
    if( actchange == ActivityChange::kMax && activity.ninfmax == 0 &&
@@ -460,6 +444,10 @@ ProbingView<REAL>::activityChanged( ActivityChange actchange, int rowid,
                       double( activity.max ), double( lhs[rowid] ),
                       double( problem.getRowActivities()[rowid].max ) );
       infeasible = true;
+      if( std::none_of( infeasible_rows.begin(), infeasible_rows.end(),
+                       [&]( std::pair<int, int> pair )
+                       { return pair.second == rowid; } ) )
+         infeasible_rows.push_back( { changes.size(), rowid } );
    }
 }
 
@@ -846,6 +834,10 @@ ProbingView<REAL>::propagateDomains()
                                          __FILE__, __LINE__, probingCol,
                                          probingValue );
                          infeasible = true;
+                         if( std::none_of( infeasible_rows.begin(), infeasible_rows.end(),
+                                          [&]( std::pair<int, int> pair )
+                                          { return pair.second == row; } ) )
+                            infeasible_rows.push_back( { changes.size(), row } );
                          return;
                       }
 
@@ -884,6 +876,10 @@ ProbingView<REAL>::propagateDomains()
                                          __FILE__, __LINE__, probingCol,
                                          probingValue );
                          infeasible = true;
+                         if( std::none_of( infeasible_rows.begin(), infeasible_rows.end(),
+                                          [&]( std::pair<int, int> pair )
+                                          { return pair.second == row; } ) )
+                            infeasible_rows.push_back( { changes.size(), row } );
                          return;
                       }
 

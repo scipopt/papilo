@@ -3,7 +3,7 @@
 /*               This file is part of the program and library                */
 /*    PaPILO --- Parallel Presolve for Integer and Linear Optimization       */
 /*                                                                           */
-/* Copyright (C) 2020-22  Konrad-Zuse-Zentrum */
+/* Copyright (C) 2020-2022 Konrad-Zuse-Zentrum                               */
 /*                     fuer Informationstechnik Berlin                       */
 /*                                                                           */
 /* This program is free software: you can redistribute it and/or modify      */
@@ -21,24 +21,33 @@
 /*                                                                           */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#include "fix/FixAndPropagateApi.h"
-#include <assert.h>
-#include <stdlib.h>
+#ifndef _PAPILO_CORE_CONSTRAINT_HPP_
+#define _PAPILO_CORE_CONSTRAINT_HPP_
 
-int
-main( void )
+#include "papilo/core/Problem.hpp"
+#include "papilo/misc/Num.hpp"
+
+namespace papilo
 {
-   int result = 1;
-   void* heuristic = setup( "./../../resources/api_test.mps", &result );
-   assert( result == 0 );
-   int n_cols = 3;
-   double* primal_solution = malloc(n_cols* sizeof (int));
-   double* sol = malloc(n_cols* sizeof (double));
-   for( int i = 0; i < n_cols; i++ )
-      primal_solution[i] = ( 1.0 + i ) / 10.0;
-   double current_solution = 50;
-   int success = call_algorithm( heuristic, primal_solution, sol, n_cols, &current_solution );
-   delete_problem_instance( heuristic );
-   assert(current_solution == 9);
-   assert( success );
-}
+
+template <typename REAL>
+class Constraint
+{
+
+ public:
+   SparseVectorView<REAL> data;
+   RowFlags row_flag;
+   REAL lhs;
+   REAL rhs;
+
+ public:
+   Constraint( SparseVectorView<REAL> data_, RowFlags row_flag_, REAL lhs_,
+               REAL rhs_ )
+       : data( data_ ), row_flag( row_flag_ ), lhs( lhs_ ), rhs( rhs_ )
+   {
+      assert( !row_flag.test( RowFlag::kEquation ) || lhs == rhs );
+   }
+};
+
+} // namespace papilo
+#endif

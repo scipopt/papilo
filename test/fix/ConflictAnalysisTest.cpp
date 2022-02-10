@@ -65,10 +65,10 @@ TEST_CASE( "conflict-analysis-binary-depth-two", "[conflict]" )
 {
     Problem<double> problem = setupProblemForConflictAnalysis();
     // Binary problem with constraints
-    // A1: x1 + x3 = 1
-    // A2: x1 + x2 + x3 = 2
-    // A3: x2 + x3 + x4 + x5 = 3
-    // A4: x4 + x5 = 2
+    // A1: x1 + x3 <= 1
+    // A2: x1 + x2 + x3 >= 2
+    // A3: x2 + x3 + x4 + x5 <= 3
+    // A4: x4 + x5 >= 2
 
     // Assume that fix_and_propagate does the following:
     // Fix: x3 = 1 (decision level 1)
@@ -91,25 +91,20 @@ TEST_CASE( "conflict-analysis-binary-depth-two", "[conflict]" )
    bound_changes.push_back( bound_change_4 );
    SingleBoundChange<double> bound_change_5( 4, 2, 0.0, false, false, 2 );
    bound_changes.push_back( bound_change_5 );
-   // add bound change for the conflict
-   SingleBoundChange<double> bound_change_6( -1, 3, -1.0, false, false, 2 );
-   bound_changes.push_back( bound_change_6 );
 
    double t = 0;
    Timer timer {t};
 
    // initialize conflict analysis
    ConflictAnalysis<double> conflictAnalysis( {}, {}, timer, problem );
-   // empty vectors for the new constraints
-   Vec<int> length;
-   Vec<int*> indices;
-   Vec<double*> values;
-   Vec<RowFlags> flags;
-   Vec<double> lhs;
-   Vec<double> rhs;
-   conflictAnalysis.perform_conflict_analysis( bound_changes, true, length,
-   indices, values, flags, lhs, rhs );
-
+   
+   papilo::Vec<std::pair<int, int>> infeasible_rows;
+   std::pair<int, int> infeas_pair;
+    infeas_pair.first = 5;
+    infeas_pair.second = 3;
+   infeasible_rows.push_back(infeas_pair);
+   Vec<Constraint<double>> conflict_constraints;
+   conflictAnalysis.perform_conflict_analysis(bound_changes, infeasible_rows, conflict_constraints);
    // ToDo add asserts for generated conflict
 }
 
@@ -122,7 +117,6 @@ setupProblemForConflictAnalysis()
    Vec<double> lowerBounds{ 0.0, 0.0, 0.0, 0.0, 0.0 };
    Vec<uint8_t> isIntegral{ 1, 1, 1, 1, 1 };
 
-   Vec<double> rhs{ 1.0, 2.0, 3.0, 2.0 };
    Vec<std::string> rowNames{ "A1", "A2", "A3", "A4" };
    Vec<std::string> columnNames{ "c1", "c2", "c3", "c4", "c5" };
    Vec<std::tuple<int, int, double>> entries{
@@ -149,7 +143,23 @@ setupProblemForConflictAnalysis()
    pb.setObjAll( coefficients );
    pb.setObjOffset( 0.0 );
    pb.setColIntegralAll( isIntegral );
-   pb.setRowRhsAll( rhs );
+   
+   pb.setRowLhsInf(0, true);
+   pb.setRowLhsInf(1, false);
+   pb.setRowLhsInf(2, true);
+   pb.setRowLhsInf(3, false);
+
+   pb.setRowRhsInf(0, false);
+   pb.setRowRhsInf(1, true);
+   pb.setRowRhsInf(2, false);
+   pb.setRowRhsInf(3, true);
+   
+   pb.setRowLhs(1, 2.0);
+   pb.setRowLhs(3, 2.0);
+
+   pb.setRowRhs(0, 1.0);
+   pb.setRowRhs(2, 3.0);
+   
    pb.addEntryAll( entries );
    pb.setColNameAll( columnNames );
    pb.setProblemName( "example for conflict analysis" );

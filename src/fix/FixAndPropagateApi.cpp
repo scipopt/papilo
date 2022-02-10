@@ -22,8 +22,7 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 #include "fix/FixAndPropagateApi.h"
-#include "fix/FixAndPropagate.hpp"
-#include "fix/strategy/FractionalRoundingStrategy.hpp"
+#include "fix/Heuristic.hpp"
 
 #include "papilo/io/MpsParser.hpp"
 #include <string>
@@ -45,31 +44,38 @@ setup( const char* filename, int* result )
       *result = -1;
       return nullptr;
    }
-   *result = 0;
+   double time = 0;
+   Timer t{ time };
    auto problem = new Problem<double>( prob.get() );
    problem->recomputeAllActivities();
-   return problem;
+   Message msg{};
+//   msg.setVerbosityLevel( papilo::VerbosityLevel::kWarning );
+   auto heuristic = new Heuristic<double>{ msg, {}, t, *problem };
+   heuristic->setup();
+   *result = 0;
+   return heuristic;
 }
 
 void
-delete_problem_instance( void* problem_ptr )
+delete_problem_instance( void* heuristic_void_ptr )
 {
-   auto problem = (Problem<double>*)( problem_ptr );
-   delete problem;
+   auto heuristic = (Heuristic<double>*)( heuristic_void_ptr );
+   delete heuristic;
 }
 
 int
-call_algorithm( void* problem_ptr, double* cont_solution, double* result,
-                int n_cols )
+call_algorithm( void* heuristic_void_ptr, double* cont_solution, double* result,
+                int n_cols, double* current_obj_value )
 {
-   auto problem = (Problem<double>*)( problem_ptr );
-   ProbingView<double> view{ *problem, {} };
-   FixAndPropagate<double> f{ {}, {}, false };
+   auto heuristic = (Heuristic<double>*)( heuristic_void_ptr );
    Vec<double> sol( cont_solution, cont_solution + n_cols );
-   Vec<double> res( result, result + n_cols );
+   Vec<double> res{};
 
-   FractionalRoundingStrategy<double> strategy{{}};
-   bool is_infeasible = f.fix_and_propagate( sol, res, strategy, view );
+   double local_obj = *current_obj_value;
+   heuristic->perform_fix_and_propagate( sol, local_obj, res, true, true, true );
+
+   if(local_obj < *current_obj_value)
+      *current_obj_value = local_obj;
    result = &res[0];
-   return is_infeasible;
+   return !res.empty();
 }

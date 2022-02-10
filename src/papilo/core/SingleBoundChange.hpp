@@ -35,7 +35,6 @@ class SingleBoundChange
 {
 
  public:
-
    int
    get_col() const
    {
@@ -84,9 +83,9 @@ class SingleBoundChange
    SingleBoundChange( int col_, int row_, REAL new_bound_value_,
                       bool manually_triggered_, bool lower_bound_,
                       int depth_level_ )
-       : col( col_ ), reason_row(row_), new_bound_value( new_bound_value_ ),
-         manually_triggered( manually_triggered_ ),
-         lower_bound( lower_bound_ ), depth_level( depth_level_ )
+       : col( col_ ), reason_row( row_ ), new_bound_value( new_bound_value_ ),
+         manually_triggered( manually_triggered_ ), lower_bound( lower_bound_ ),
+         depth_level( depth_level_ )
    {
    }
 };
