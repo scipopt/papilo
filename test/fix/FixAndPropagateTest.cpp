@@ -53,7 +53,7 @@ TEST_CASE( "fix-and-propagate-integer-variable", "[fix]" )
    Vec<double> res{ primal_solution };
 
    FixAndPropagate<double> fixAndPropagate{ {}, {}  };
-   FractionalRoundingStrategy<double> strategy{ {} };
+   FractionalRoundingStrategy<double> strategy{ {}, problem };
 
    ProbingView<double> view {problem, {}};
    bool infeasible =
@@ -80,7 +80,7 @@ TEST_CASE( "fix-and-propagate-cont-variable-stays-cont", "[fix]" )
    Vec<double> res{ primal_solution };
 
    FixAndPropagate<double> fixAndPropagate{ {}, {}  };
-   FractionalRoundingStrategy<double> strategy{ {} };
+   FractionalRoundingStrategy<double> strategy{ {}, problem };
 
    ProbingView<double> view {problem, {}};
    bool infeasible =
@@ -106,7 +106,7 @@ TEST_CASE( "fix-and-propagate-all-integer-solutions", "[fix]" )
    Vec<double> res{ primal_solution };
 
    FixAndPropagate<double> fixAndPropagate{ {}, {}  };
-   FractionalRoundingStrategy<double> strategy{ {} };
+   FractionalRoundingStrategy<double> strategy{ {}, problem };
 
    ProbingView<double> view {problem, {}};
    bool infeasible =
@@ -131,7 +131,7 @@ TEST_CASE( "fix-and-propagate-integer-can-not-be-fixed", "[fix]" )
    Vec<double> res{ primal_solution };
 
    FixAndPropagate<double> fixAndPropagate{ {}, {}  };
-   FractionalRoundingStrategy<double> strategy{ {} };
+   FractionalRoundingStrategy<double> strategy{ {}, problem };
 
    ProbingView<double> view {problem, {}};
    bool infeasible =
@@ -156,7 +156,7 @@ TEST_CASE( "fix-and-propagate-frac-backtrack", "[fix]" )
    Vec<double> res{ primal_solution };
 
    FixAndPropagate<double> fixAndPropagate{ {}, {} };
-   FractionalRoundingStrategy<double> strategy{ {} };
+   FractionalRoundingStrategy<double> strategy{ {}, problem };
 
    ProbingView<double> view {problem, {}};
    bool infeasible =
@@ -187,7 +187,7 @@ TEST_CASE( "fix-and-propagate-frac-check-within-bounds", "[fix]" )
    Vec<double> res{ primal_solution };
 
    FixAndPropagate<double> fixAndPropagate{ {}, {} };
-   FractionalRoundingStrategy<double> strategy{ {} };
+   FractionalRoundingStrategy<double> strategy{ {}, problem };
 
    ProbingView<double> view {problem, {}};
    bool infeasible =
@@ -348,7 +348,7 @@ TEST_CASE( "fix-and-propagate-stop-at-infeas-false", "[fix]" )
    Message msg{};
    msg.setVerbosityLevel(papilo::VerbosityLevel::kDetailed);
    FixAndPropagate<double> fixAndPropagate{ msg, {}  };
-   FractionalRoundingStrategy<double> strategy{ {} };
+   FractionalRoundingStrategy<double> strategy{ {}, problem };
 
    ProbingView<double> view {problem, {}};
    bool infeasible =
@@ -378,7 +378,7 @@ TEST_CASE( "fix-and-propagate-check-conflict-analysis-data", "[fix]" )
    Message msg{};
    msg.setVerbosityLevel(papilo::VerbosityLevel::kDetailed);
    FixAndPropagate<double> fixAndPropagate{ msg, {}  };
-   FractionalRoundingStrategy<double> strategy{ {} };
+   FractionalRoundingStrategy<double> strategy{ {}, problem };
 
    ProbingView<double> view {problem, {}};
    bool infeasible =
