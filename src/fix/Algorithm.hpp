@@ -56,7 +56,7 @@ class Algorithm
 
  public:
    Algorithm( Message _msg, Num<REAL> _num, Timer t, double time_limit_ )
-       : msg( _msg ), num( _num ), timer( t ), time_limit(time_limit_)
+       : msg( _msg ), num( _num ), timer( t ), time_limit( time_limit_ )
    {
    }
 
@@ -73,8 +73,6 @@ class Algorithm
           [this, &problem, &parameter]()
           {
 #endif
-             msg.setVerbosityLevel( papilo::VerbosityLevel::kDetailed );
-
              // set up ProblemUpdate to trivialPresolve so that activities exist
              Presolve<REAL> presolve{};
              auto result = presolve.apply( problem, false );
@@ -112,17 +110,20 @@ class Algorithm
              VolumeAlgorithm<REAL> algorithm{ msg, num, timer, parameter };
              ConflictAnalysis<REAL> conflict_analysis{ msg, num, timer };
 
-             service.setup( );
+             service.setup();
              REAL best_obj_value{};
 
              Vec<REAL> best_solution{};
              best_solution.reserve( problem.getNCols() );
 
              // setup data for the volume algorithm
-             Vec<REAL> primal_heur_sol{};
-             primal_heur_sol.reserve( problem.getNCols() );
-             ProblemBuilder<REAL> builder = modify_problem( problem );
+             int slack_vars = 0;
+             ProblemBuilder<REAL> builder = modify_problem( problem, slack_vars );
+             assert( slack_vars >= 0 );
              Problem<REAL> reformulated = builder.build();
+
+             Vec<REAL> primal_heur_sol{};
+             primal_heur_sol.reserve( reformulated.getNCols() );
 
              Vec<REAL> pi;
              pi.reserve( reformulated.getNRows() );
@@ -148,14 +149,20 @@ class Algorithm
                    break;
                 msg.info( "Starting fixing and propagating\n" );
 
-                service.perform_fix_and_propagate(
-                    primal_heur_sol, best_obj_value, best_solution );
+
+                //TODO: this is highly non efficient
+                Vec<REAL> sub( primal_heur_sol.begin(),
+                               primal_heur_sol.end() - slack_vars );
+
+                assert(sub.size() == problem.getNCols());
+                service.perform_fix_and_propagate( sub, best_obj_value,
+                                                   best_solution );
 
                 if( timer.getTime() >= parameter.time_limit )
                    break;
 
                 msg.info( "Starting conflict analysis\n" );
-                //TODO: this is a dummy function
+                // TODO: this is a dummy function
                 bool abort = conflict_analysis.perform_conflict_analysis();
                 if( abort )
                    return;
@@ -236,7 +243,7 @@ class Algorithm
    }
 
    ProblemBuilder<REAL>
-   modify_problem( Problem<REAL>& problem )
+   modify_problem( Problem<REAL>& problem, int& slack_vars )
    {
       ProblemBuilder<REAL> builder;
 
@@ -268,7 +275,7 @@ class Algorithm
          nrows++;
          nnz = nnz + rowsize;
       }
-      int slack_vars = nrows - equations;
+      slack_vars = nrows - equations;
       auto slack_var_upper_bounds = new double[slack_vars];
 
       builder.reserve( nnz, nrows, ncols + slack_vars );
@@ -303,10 +310,10 @@ class Algorithm
          {
             assert( !flags.test( RowFlag::kRhsInf ) );
 
-            auto new_vals= new double[rowlen + 1];
+            auto new_vals = new double[rowlen + 1];
             memcpy( new_vals, rowvals, rowlen * sizeof( double ) );
             new_vals[rowlen] = 1;
-            auto new_indices= new int [rowlen + 1];
+            auto new_indices = new int[rowlen + 1];
             memcpy( new_indices, rowcols, rowlen * sizeof( int ) );
             new_indices[rowlen] = ncols + slack_var_counter;
 
@@ -327,7 +334,7 @@ class Algorithm
             auto new_vals = new double[rowlen + 1];
             memcpy( new_vals, rowvals, rowlen * sizeof( double ) );
             new_vals[rowlen] = -1;
-            auto new_indices = new int [rowlen + 1];
+            auto new_indices = new int[rowlen + 1];
             memcpy( new_indices, rowcols, rowlen * sizeof( int ) );
             new_indices[rowlen] = ncols + slack_var_counter;
 
@@ -372,7 +379,7 @@ class Algorithm
             new_indices_2[rowlen] = ncols + slack_var_counter;
 
             builder.addRowEntries( counter, rowlen + 1, new_indices_2,
-                  new_vals_2 );
+                                   new_vals_2 );
             builder.setRowLhs( counter, lhs );
             builder.setRowRhs( counter, lhs );
             builder.setRowLhsInf( counter, false );

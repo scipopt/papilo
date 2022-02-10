@@ -94,7 +94,6 @@ class VolumeAlgorithm
       Vec<REAL> x_t( c );
       Vec<REAL> pi_t( pi );
       Vec<REAL> pi_bar( pi );
-//      update_pi( n_rows_A, A, pi_bar );
       Vec<REAL> residual_t( b );
 
       // We start with a vector π̄ and solve (6) to obtain x̄ and z̄.
@@ -134,10 +133,7 @@ class VolumeAlgorithm
          // x_bar ← αx_t + (1 − α)x_bar
          op.calc_qb_plus_sx( alpha, x_t, 1 - alpha, x_bar,
                              x_bar );
-         for ( int i = 0; i < x_bar.size(); i++ )
-         {
-            msg.debug( "   x[{}] = {}\n", i, x_bar[i] );
-         }
+
 
          // Step 2:
          // If z_t > z_bar update π_bar and z_bar
