@@ -66,26 +66,25 @@ using namespace papilo;
 template <typename REAL>
 class FixAndPropagate
 {
-   bool perform_backtracking;
    Message msg;
    Num<REAL> num;
 
  public:
-   FixAndPropagate( Message msg_, Num<REAL> num_, bool perform_backtracking_ )
-       : msg( msg_ ), num( num_ ), perform_backtracking( perform_backtracking_ )
-   {
-   }
+   FixAndPropagate( Message msg_, Num<REAL> num_ ) : msg( msg_ ), num( num_ ) {}
 
    bool
    fix_and_propagate( const Vec<REAL>& cont_solution, Vec<REAL>& result,
                       RoundingStrategy<REAL>& strategy,
-                      ProbingView<REAL>& probing_view )
+                      ProbingView<REAL>& probing_view,
+                      bool perform_backtracking, bool stop_at_infeasibility )
    {
       // if no backtrack just "dive" to the node whether it is infeasible or not
       if( !perform_backtracking )
       {
-         propagate_to_leaf_or_infeasibility( cont_solution, strategy, false,
-                                             probing_view );
+         propagate_to_leaf_or_infeasibility(
+             cont_solution, strategy, stop_at_infeasibility, probing_view );
+         if( stop_at_infeasibility && probing_view.isInfeasible() )
+            return true;
          fix_remaining_integer_solutions( cont_solution, probing_view );
          create_solution( result, probing_view );
          return probing_view.isInfeasible();
@@ -98,34 +97,33 @@ class FixAndPropagate
 
          if( probing_view.isInfeasible() )
          {
-            if( perform_backtracking )
-            {
-               msg.detailed("backtracking\n");
-               Vec<Fixing<REAL>> fixings = probing_view.get_fixings();
-               assert( !fixings.empty() );
-               Fixing<REAL> last_fix = fixings[fixings.size() - 1];
+            assert( perform_backtracking );
+            msg.detailed( "backtracking\n" );
+            Vec<Fixing<REAL>> fixings = probing_view.get_fixings();
+            assert( !fixings.empty() );
+            Fixing<REAL> last_fix = fixings[fixings.size() - 1];
 
-               probing_view.reset();
-               for( int i = 0; i < fixings.size() - 1; i++ )
-                  probing_view.setProbingColumn( fixings[i].get_column_index(),
-                                                 fixings[i].get_value() );
-               //TODO: this is not necessary
-               perform_probing_step( probing_view );
-               probing_view.setProbingColumn(
-                   last_fix.get_column_index(),
-                   modify_value_due_to_backtrack(
-                       last_fix.get_value(),
-                       cont_solution[last_fix.get_column_index()] ) );
-               bool infeasible = perform_probing_step( probing_view );
-               if( infeasible )
-               {
-                  propagate_to_leaf_or_infeasibility( cont_solution, strategy,
-                                                      false, probing_view );
-                  fix_remaining_integer_solutions( cont_solution,
-                                                   probing_view );
-                  create_solution( result, probing_view );
-                  return probing_view.isInfeasible();
-               }
+            probing_view.reset();
+            for( int i = 0; i < fixings.size() - 1; i++ )
+               probing_view.setProbingColumn( fixings[i].get_column_index(),
+                                              fixings[i].get_value() );
+            // TODO: this is not necessary
+            perform_probing_step( probing_view );
+            probing_view.setProbingColumn(
+                last_fix.get_column_index(),
+                modify_value_due_to_backtrack(
+                    last_fix.get_value(),
+                    cont_solution[last_fix.get_column_index()] ) );
+            bool infeasible = perform_probing_step( probing_view );
+            if( infeasible )
+            {
+               if( stop_at_infeasibility )
+                  return true;
+               propagate_to_leaf_or_infeasibility( cont_solution, strategy,
+                                                   false, probing_view );
+               fix_remaining_integer_solutions( cont_solution, probing_view );
+               create_solution( result, probing_view );
+               return probing_view.isInfeasible();
             }
          }
          else
@@ -168,7 +166,7 @@ class FixAndPropagate
          assert( probing_view.is_within_bounds( fixing.get_column_index(),
                                                 fixing.get_value() ) );
          msg.detailed( "Fix var {} to {}\n", fixing.get_column_index(),
-                   fixing.get_value() );
+                       fixing.get_value() );
 
          probing_view.setProbingColumn( fixing.get_column_index(),
                                         fixing.get_value() );
@@ -257,7 +255,8 @@ class FixAndPropagate
       auto upper_bounds = probing_view.getProbingUpperBounds();
       for( int i = 0; i < upper_bounds.size(); i++ )
       {
-         assert( num.isEq(upper_bounds[i], probing_view.getProbingLowerBounds()[i]) );
+         assert( num.isEq( upper_bounds[i],
+                           probing_view.getProbingLowerBounds()[i] ) );
          result[i] = upper_bounds[i];
       }
    }

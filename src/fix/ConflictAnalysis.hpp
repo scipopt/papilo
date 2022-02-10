@@ -26,6 +26,7 @@
 #include "papilo/io/Message.hpp"
 #include "papilo/misc/Num.hpp"
 #include "papilo/misc/Timer.hpp"
+#include "fix/Constraint.hpp"
 #include <cassert>
 #include <cmath>
 #include <fstream>
@@ -47,10 +48,8 @@ class ConflictAnalysis
    }
 
    bool
-   perform_conflict_analysis( Vec<SingleBoundChange<REAL>> bound_changes,
-                              Vec<int>& length, Vec<int*>& indices,
-                              Vec<REAL*>& values, Vec<RowFlags>& flags,
-                              Vec<REAL>& lhs, Vec<REAL>& rhs )
+   perform_conflict_analysis( Vec<SingleBoundChange<REAL>>& bound_changes, Vec<std::pair<int,int>> infeasible_rows,
+                              Vec<Constraint<REAL>>& constraints  )
    {
       // TODO: to be implemented
 

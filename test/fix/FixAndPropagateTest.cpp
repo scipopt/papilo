@@ -52,18 +52,18 @@ TEST_CASE( "fix-and-propagate-integer-variable", "[fix]" )
    primal_solution[0] = 2.6;
    Vec<double> res{ primal_solution };
 
-   FixAndPropagate<double> fixAndPropagate{ {}, {}, true  };
-   FractionalRoundingStrategy<double> strategy{ {} };
+   FixAndPropagate<double> fixAndPropagate{ {}, {}  };
+   FractionalRoundingStrategy<double> strategy{ {}, problem };
 
    ProbingView<double> view {problem, {}};
    bool infeasible =
-       fixAndPropagate.fix_and_propagate( primal_solution, res, strategy, view  );
+       fixAndPropagate.fix_and_propagate( primal_solution, res, strategy, view, true, false  );
 
-   assert( !infeasible );
-   assert( res[0] == 3 );
-   assert( res[1] == 1 );
-   assert( res[2] == 0 );
-   assert( res[3] == 0 );
+   REQUIRE( !infeasible );
+   REQUIRE( res[0] == 3 );
+   REQUIRE( res[1] == 1 );
+   REQUIRE( res[2] == 0 );
+   REQUIRE( res[3] == 0 );
 }
 
 TEST_CASE( "fix-and-propagate-cont-variable-stays-cont", "[fix]" )
@@ -79,18 +79,18 @@ TEST_CASE( "fix-and-propagate-cont-variable-stays-cont", "[fix]" )
 
    Vec<double> res{ primal_solution };
 
-   FixAndPropagate<double> fixAndPropagate{ {}, {}, true  };
-   FractionalRoundingStrategy<double> strategy{ {} };
+   FixAndPropagate<double> fixAndPropagate{ {}, {}  };
+   FractionalRoundingStrategy<double> strategy{ {}, problem };
 
    ProbingView<double> view {problem, {}};
    bool infeasible =
-       fixAndPropagate.fix_and_propagate( primal_solution, res, strategy, view  );
+       fixAndPropagate.fix_and_propagate( primal_solution, res, strategy, view, true, false  );
 
-   assert( !infeasible );
-   assert( res[0] == 0.1 );
-   assert( res[1] == 0.8999999999999999 );
-   assert( res[2] == 1 );
-   assert( res[3] == 0 );
+   REQUIRE( !infeasible );
+   REQUIRE( res[0] == 0.1 );
+   REQUIRE( res[1] == 0.8999999999999999 );
+   REQUIRE( res[2] == 1 );
+   REQUIRE( res[3] == 0 );
 }
 
 
@@ -105,19 +105,19 @@ TEST_CASE( "fix-and-propagate-all-integer-solutions", "[fix]" )
 
    Vec<double> res{ primal_solution };
 
-   FixAndPropagate<double> fixAndPropagate{ {}, {},  true  };
-   FractionalRoundingStrategy<double> strategy{ {} };
+   FixAndPropagate<double> fixAndPropagate{ {}, {}  };
+   FractionalRoundingStrategy<double> strategy{ {}, problem };
 
    ProbingView<double> view {problem, {}};
    bool infeasible =
-       fixAndPropagate.fix_and_propagate( primal_solution, res, strategy, view  );
+       fixAndPropagate.fix_and_propagate( primal_solution, res, strategy, view, true, false  );
 
 
-   assert( !infeasible );
-   assert( res[0] == 0 );
-   assert( res[1] == 0 );
-   assert( res[2] == 1 );
-   assert( res[3] == 1 );
+   REQUIRE( !infeasible );
+   REQUIRE( res[0] == 0 );
+   REQUIRE( res[1] == 0 );
+   REQUIRE( res[2] == 1 );
+   REQUIRE( res[3] == 1 );
 }
 
 TEST_CASE( "fix-and-propagate-integer-can-not-be-fixed", "[fix]" )
@@ -130,19 +130,19 @@ TEST_CASE( "fix-and-propagate-integer-can-not-be-fixed", "[fix]" )
 
    Vec<double> res{ primal_solution };
 
-   FixAndPropagate<double> fixAndPropagate{ {}, {}, true  };
-   FractionalRoundingStrategy<double> strategy{ {} };
+   FixAndPropagate<double> fixAndPropagate{ {}, {}  };
+   FractionalRoundingStrategy<double> strategy{ {}, problem };
 
    ProbingView<double> view {problem, {}};
    bool infeasible =
-       fixAndPropagate.fix_and_propagate( primal_solution, res, strategy, view  );
+       fixAndPropagate.fix_and_propagate( primal_solution, res, strategy, view, true, false  );
 
 
-   assert( !infeasible );
-   assert( res[0] == 0 );
-   assert( res[1] == 0 );
-   assert( res[2] == 1 );
-   assert( res[3] == 1 );
+   REQUIRE( !infeasible );
+   REQUIRE( res[0] == 0 );
+   REQUIRE( res[1] == 0 );
+   REQUIRE( res[2] == 1 );
+   REQUIRE( res[3] == 1 );
 }
 
 TEST_CASE( "fix-and-propagate-frac-backtrack", "[fix]" )
@@ -155,20 +155,21 @@ TEST_CASE( "fix-and-propagate-frac-backtrack", "[fix]" )
 
    Vec<double> res{ primal_solution };
 
-   FixAndPropagate<double> fixAndPropagate{ {}, {}, true };
-   FractionalRoundingStrategy<double> strategy{ {} };
+   FixAndPropagate<double> fixAndPropagate{ {}, {} };
+   FractionalRoundingStrategy<double> strategy{ {}, problem };
 
    ProbingView<double> view {problem, {}};
    bool infeasible =
-       fixAndPropagate.fix_and_propagate( primal_solution, res, strategy, view  );
+       fixAndPropagate.fix_and_propagate( primal_solution, res, strategy, view, true, false  );
 
 
-   assert( !infeasible );
-   assert( res[0] == 1 );
-   assert( res[1] == 1 );
-   assert( res[2] == 0 );
-   assert( res[3] == 0 );
+   REQUIRE( !infeasible );
+   REQUIRE( res[0] == 1 );
+   REQUIRE( res[1] == 1 );
+   REQUIRE( res[2] == 0 );
+   REQUIRE( res[3] == 0 );
 }
+
 
 TEST_CASE( "fix-and-propagate-frac-check-within-bounds", "[fix]" )
 {
@@ -185,18 +186,18 @@ TEST_CASE( "fix-and-propagate-frac-check-within-bounds", "[fix]" )
 
    Vec<double> res{ primal_solution };
 
-   FixAndPropagate<double> fixAndPropagate{ {}, {}, true  };
-   FractionalRoundingStrategy<double> strategy{ {} };
+   FixAndPropagate<double> fixAndPropagate{ {}, {} };
+   FractionalRoundingStrategy<double> strategy{ {}, problem };
 
    ProbingView<double> view {problem, {}};
    bool infeasible =
-       fixAndPropagate.fix_and_propagate( primal_solution, res, strategy, view  );
+       fixAndPropagate.fix_and_propagate( primal_solution, res, strategy, view, true, false  );
 
-   assert( !infeasible );
-   assert( res[0] == 1 );
-   assert( res[1] == 0 );
-   assert( res[2] == 3 );
-   assert( res[3] == 0 );
+   REQUIRE( !infeasible );
+   REQUIRE( res[0] == 1 );
+   REQUIRE( res[1] == 0 );
+   REQUIRE( res[2] == 3 );
+   REQUIRE( res[3] == 0 );
 }
 
 TEST_CASE( "fix-and-propagate-random-backtrack", "[fix]" )
@@ -209,18 +210,18 @@ TEST_CASE( "fix-and-propagate-random-backtrack", "[fix]" )
 
    Vec<double> res{ primal_solution };
 
-   FixAndPropagate<double> fixAndPropagate{ {}, {},  true };
+   FixAndPropagate<double> fixAndPropagate{ {}, {} };
    RandomRoundingStrategy<double> strategy{ 0, {} };
 
    ProbingView<double> view {problem, {}};
    bool infeasible =
-       fixAndPropagate.fix_and_propagate( primal_solution, res, strategy, view  );
+       fixAndPropagate.fix_and_propagate( primal_solution, res, strategy, view, true, false  );
 
-   assert( !infeasible );
-   assert( res[0] == 0 );
-   assert( res[1] == 0 );
-   assert( res[2] == 1 );
-   assert( res[3] == 1 );
+   REQUIRE( !infeasible );
+   REQUIRE( res[0] == 0 );
+   REQUIRE( res[1] == 0 );
+   REQUIRE( res[2] == 1 );
+   REQUIRE( res[3] == 1 );
 }
 
 
@@ -234,18 +235,18 @@ TEST_CASE( "fix-and-propagate-random", "[fix]" )
 
    Vec<double> res{ primal_solution };
 
-   FixAndPropagate<double> fixAndPropagate{ {}, {}, false };
+   FixAndPropagate<double> fixAndPropagate{ {}, {} };
    RandomRoundingStrategy<double> strategy{ 0, {} };
 
    ProbingView<double> view {problem, {}};
    bool infeasible =
-       fixAndPropagate.fix_and_propagate( primal_solution, res, strategy, view  );
+       fixAndPropagate.fix_and_propagate( primal_solution, res, strategy, view, false, false  );
 
-   assert( !infeasible );
-   assert( res[0] == 0 );
-   assert( res[1] == 0 );
-   assert( res[2] == 1 );
-   assert( res[3] == 1 );
+   REQUIRE( !infeasible );
+   REQUIRE( res[0] == 0 );
+   REQUIRE( res[1] == 0 );
+   REQUIRE( res[2] == 1 );
+   REQUIRE( res[3] == 1 );
 }
 
 TEST_CASE( "fix-and-propagate-random-check-within-bounds", "[fix]" )
@@ -263,18 +264,18 @@ TEST_CASE( "fix-and-propagate-random-check-within-bounds", "[fix]" )
 
    Vec<double> res{ primal_solution };
 
-   FixAndPropagate<double> fixAndPropagate{ {}, {}, true  };
+   FixAndPropagate<double> fixAndPropagate{ {}, {} };
    RandomRoundingStrategy<double> strategy{ 0, {} };
 
    ProbingView<double> view {problem, {}};
    bool infeasible =
-       fixAndPropagate.fix_and_propagate( primal_solution, res, strategy, view  );
+       fixAndPropagate.fix_and_propagate( primal_solution, res, strategy, view, true, false  );
 
-   assert( !infeasible );
-   assert( res[0] == 1 );
-   assert( res[1] == 0 );
-   assert( res[2] == 3 );
-   assert( res[3] == 0 );
+   REQUIRE( !infeasible );
+   REQUIRE( res[0] == 1 );
+   REQUIRE( res[1] == 0 );
+   REQUIRE( res[2] == 3 );
+   REQUIRE( res[3] == 0 );
 }
 
 TEST_CASE( "fix-and-propagate-farkas-backtrack", "[fix]" )
@@ -287,18 +288,18 @@ TEST_CASE( "fix-and-propagate-farkas-backtrack", "[fix]" )
 
    Vec<double> res{ primal_solution };
 
-   FixAndPropagate<double> fixAndPropagate{ {}, {}, true };
+   FixAndPropagate<double> fixAndPropagate{ {}, {} };
    FarkasRoundingStrategy<double> strategy{ 0, {}, false };
 
    ProbingView<double> view {problem, {}};
    bool infeasible =
-       fixAndPropagate.fix_and_propagate( primal_solution, res, strategy, view  );
+       fixAndPropagate.fix_and_propagate( primal_solution, res, strategy, view, true, false  );
 
-   assert( !infeasible );
-   assert( res[0] == 1 );
-   assert( res[1] == 1 );
-   assert( res[2] == 0 );
-   assert( res[3] == 0 );
+   REQUIRE( !infeasible );
+   REQUIRE( res[0] == 1 );
+   REQUIRE( res[1] == 1 );
+   REQUIRE( res[2] == 0 );
+   REQUIRE( res[3] == 0 );
 }
 
 TEST_CASE( "fix-and-propagate-farkas-check-within-bounds", "[fix]" )
@@ -316,19 +317,49 @@ TEST_CASE( "fix-and-propagate-farkas-check-within-bounds", "[fix]" )
 
    Vec<double> res{ primal_solution };
 
-   FixAndPropagate<double> fixAndPropagate{ {}, {}, true  };
+   FixAndPropagate<double> fixAndPropagate{ {}, {}  };
    FarkasRoundingStrategy<double> strategy{ 0, {}, true };
 
    ProbingView<double> view {problem, {}};
    bool infeasible =
-       fixAndPropagate.fix_and_propagate( primal_solution, res, strategy, view  );
+       fixAndPropagate.fix_and_propagate( primal_solution, res, strategy, view, true, false  );
 
-   assert( !infeasible );
-   assert( res[0] == 0 );
-   assert( res[1] == 1 );
-   assert( res[2] == 1 );
-   assert( res[3] == 2 );
+   REQUIRE( !infeasible );
+   REQUIRE( res[0] == 0 );
+   REQUIRE( res[1] == 1 );
+   REQUIRE( res[2] == 1 );
+   REQUIRE( res[3] == 2 );
 }
+
+TEST_CASE( "fix-and-propagate-stop-at-infeas-false", "[fix]" )
+{
+   Problem<double> problem = setupProblemForConflictAnalysis_2();
+   problem.recomputeAllActivities();
+   // Binary problem with constraints
+   // A1: x1 + x3 = 1
+   // A2: x1 + x2 + x3 = 2
+   // A3: x2 + x3 + x4 + x5 = 3
+   // A4: x4 + x5 = 2
+
+   Vec<double> primal_solution = { 0.9, 0.9, 0.6, 0.3, 0.2 };
+
+   Vec<double> res{ primal_solution };
+
+   Message msg{};
+   msg.setVerbosityLevel(papilo::VerbosityLevel::kDetailed);
+   FixAndPropagate<double> fixAndPropagate{ msg, {}  };
+   FractionalRoundingStrategy<double> strategy{ {}, problem };
+
+   ProbingView<double> view {problem, {}};
+   bool infeasible =
+       fixAndPropagate.fix_and_propagate( primal_solution, res, strategy, view, true, true  );
+
+   REQUIRE( infeasible );
+   // if stop at infeasible is true the res should not be modified if infeasible
+   for( int i = 0; i < primal_solution.size(); i++ )
+      REQUIRE( primal_solution[i] == res[i] );
+}
+
 
 TEST_CASE( "fix-and-propagate-check-conflict-analysis-data", "[fix]" )
 {
@@ -346,51 +377,56 @@ TEST_CASE( "fix-and-propagate-check-conflict-analysis-data", "[fix]" )
 
    Message msg{};
    msg.setVerbosityLevel(papilo::VerbosityLevel::kDetailed);
-   FixAndPropagate<double> fixAndPropagate{ msg, {}, true  };
-   FractionalRoundingStrategy<double> strategy{ {} };
+   FixAndPropagate<double> fixAndPropagate{ msg, {}  };
+   FractionalRoundingStrategy<double> strategy{ {}, problem };
 
    ProbingView<double> view {problem, {}};
    bool infeasible =
-       fixAndPropagate.fix_and_propagate( primal_solution, res, strategy, view  );
+       fixAndPropagate.fix_and_propagate( primal_solution, res, strategy, view, true, false  );
 
    auto changes = view.get_changes();
-   assert( infeasible );
-   assert( changes.size() == 5);
+   auto conflicts = view.get_infeasible_rows();
 
-   assert( changes[0].get_col() == 2);
-   assert( changes[0].get_new_bound_value() == 1);
-   assert( changes[0].get_reason_row() == -1);
-   assert( changes[0].is_lower_bound() );
-   assert( changes[0].is_manually_triggered() );
-   assert( changes[0].get_depth_level() == -2 );
+   REQUIRE( infeasible );
+   REQUIRE( changes.size() == 5);
+   REQUIRE( conflicts.size() == 1);
 
-   assert( changes[1].get_col() == 0);
-   assert( changes[1].get_new_bound_value() == 0);
-   assert( changes[1].get_reason_row() == 0);
-   assert( !changes[1].is_lower_bound() );
-   assert( !changes[1].is_manually_triggered() );
-   assert( changes[1].get_depth_level() == -3 );
+   REQUIRE( conflicts[0].first == 4);
+   REQUIRE( conflicts[0].second == 3);
 
-   assert( changes[2].get_col() == 1);
-   assert( changes[2].get_new_bound_value() == 1);
-   assert( changes[2].get_reason_row() == 1);
-   assert( changes[2].is_lower_bound() );
-   assert( !changes[2].is_manually_triggered() );
-   assert( changes[2].get_depth_level() == -3 );
+   REQUIRE( changes[0].get_new_bound_value() == 1);
+   REQUIRE( changes[0].get_reason_row() == -1);
+   REQUIRE( changes[0].is_lower_bound() );
+   REQUIRE( changes[0].is_manually_triggered() );
+   REQUIRE( changes[0].get_depth_level() == -2 );
 
-   assert( changes[3].get_col() == 3);
-   assert( changes[3].get_new_bound_value() == 1);
-   assert( changes[3].get_reason_row() == -1);
-   assert( changes[3].is_lower_bound() );
-   assert( changes[3].is_manually_triggered() );
-   assert( changes[3].get_depth_level() == -4 );
+   REQUIRE( changes[1].get_col() == 0);
+   REQUIRE( changes[1].get_new_bound_value() == 0);
+   REQUIRE( changes[1].get_reason_row() == 0);
+   REQUIRE( !changes[1].is_lower_bound() );
+   REQUIRE( !changes[1].is_manually_triggered() );
+   REQUIRE( changes[1].get_depth_level() == -3 );
 
-   assert( changes[4].get_col() == 4);
-   assert( changes[4].get_new_bound_value() == 0);
-   assert( changes[4].get_reason_row() == 2);
-   assert( !changes[4].is_lower_bound() );
-   assert( !changes[4].is_manually_triggered() );
-   assert( changes[4].get_depth_level() == -5 );
+   REQUIRE( changes[2].get_col() == 1);
+   REQUIRE( changes[2].get_new_bound_value() == 1);
+   REQUIRE( changes[2].get_reason_row() == 1);
+   REQUIRE( changes[2].is_lower_bound() );
+   REQUIRE( !changes[2].is_manually_triggered() );
+   REQUIRE( changes[2].get_depth_level() == -3 );
+
+   REQUIRE( changes[3].get_col() == 3);
+   REQUIRE( changes[3].get_new_bound_value() == 1);
+   REQUIRE( changes[3].get_reason_row() == -1);
+   REQUIRE( changes[3].is_lower_bound() );
+   REQUIRE( changes[3].is_manually_triggered() );
+   REQUIRE( changes[3].get_depth_level() == -4 );
+
+   REQUIRE( changes[4].get_col() == 4);
+   REQUIRE( changes[4].get_new_bound_value() == 0);
+   REQUIRE( changes[4].get_reason_row() == 2);
+   REQUIRE( !changes[4].is_lower_bound() );
+   REQUIRE( !changes[4].is_manually_triggered() );
+   REQUIRE( changes[4].get_depth_level() == -5 );
 
 }
 
