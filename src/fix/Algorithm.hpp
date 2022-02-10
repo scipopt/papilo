@@ -179,7 +179,6 @@ class Algorithm
    REAL
    calc_upper_bound_for_objective( const Problem<REAL>& problem ) const
    {
-      /*
       StableSum<REAL> min_value{};
       for( int i = 0; i < problem.getNCols(); i++ )
       {
@@ -189,10 +188,14 @@ class Algorithm
          {
             if( problem.getColFlags()[i].test( ColFlag::kLbInf ) )
             {
+               /*
                msg.error( "Could not calculate objective bound: variable {} "
                           "is unbounded",
                           i );
                return std::numeric_limits<double>::min();
+               */
+               // TODO: OK? - based on this UB's usage in volume algo code?
+               continue;
             }
             min_value.add( problem.getObjective().coefficients[i] +
                            problem.getLowerBounds()[i] );
@@ -201,24 +204,19 @@ class Algorithm
          {
             if( problem.getColFlags()[i].test( ColFlag::kUbInf ) )
             {
+               /*
                msg.error( "Could not calculate objective bound: variable {} "
                           "is unbounded",
                           i );
                return std::numeric_limits<double>::min();
+               */
+               continue;
             }
             min_value.add( problem.getObjective().coefficients[i] +
                            problem.getUpperBounds()[i] );
          }
       }
       return min_value.get();
-      */
-
-      Vec<REAL> coefficients = problem.getObjective().coefficients;
-
-      // TODO: not always a valid logic; change this!
-      // TODO: set this with any primal feasible solution value
-      return *std::min_element( coefficients.begin(), coefficients.end() ) +
-               problem.getObjective().offset;
    }
 
    void

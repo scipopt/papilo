@@ -68,13 +68,13 @@ class VolumeAlgorithm
     * @param b not needed
     * @param domains variables domains (lb/ub/flags)
     * @param pi initial dual multiplier
-    * @param best_bound_on_obj max bound of c^T x
+    * @param box_upper_bound max box bound of c^T x
     * @return
     */
    Vec<REAL>
    volume_algorithm( const Vec<REAL> c, const ConstraintMatrix<REAL>& A,
                      const Vec<REAL>& b, const VariableDomains<REAL>& domains,
-                     const Vec<REAL>& pi, REAL best_bound_on_obj )
+                     const Vec<REAL>& pi, REAL box_upper_bound )
    {
       std::all_of( A.getRowFlags().begin(), A.getRowFlags().end(),
                    []( RowFlags row_flag ) { return row_flag.test(RowFlag::kEquation); } );
@@ -101,6 +101,11 @@ class VolumeAlgorithm
       REAL z_bar = create_problem_6_and_solve_it( c, A, b, domains, pi, x_t );
       Vec<REAL> x_bar( x_t );
       REAL z_bar_old = z_bar;
+      // TODO: ok?
+      REAL upper_bound_reset_val = num.isGE( box_upper_bound, REAL{ 1.0 } ) ?
+                                   1.0 : box_upper_bound;
+      // TODO: how to set -inf (or a large negative value)?
+      REAL upper_bound = -1e30;
 
       op.calc_b_minus_Ax( A, x_bar, b, v_t );
       calc_violations( n_rows_A, A, pi_t, v_t, viol_t );
@@ -111,8 +116,8 @@ class VolumeAlgorithm
          // STEP 1:
          // Compute v_t = b − A x_bar and π_t = pi_bar + sv_t for a step size s
          // given by (7).
-         update_best_bound_on_obj( z_bar, best_bound_on_obj );
-         REAL step_size = f * ( best_bound_on_obj - z_bar ) /
+         update_upper_bound( z_bar, upper_bound_reset_val, upper_bound );
+         REAL step_size = f * ( upper_bound - z_bar ) /
                           pow( op.l2_norm( viol_t ), 2.0 );
          msg.debug( "   Step size: {}\n", step_size );
          op.calc_b_plus_sx( pi_bar, step_size, viol_t, pi_t );
@@ -282,16 +287,18 @@ class VolumeAlgorithm
    }
 
    void
-   update_best_bound_on_obj( const REAL z_bar, REAL& best_bound_on_obj )
+   update_upper_bound( const REAL z_bar, const REAL upper_bound_reset_val,
+                       REAL& upper_bound )
    {
-      // TODO: shall we make 0.05 a global param similar to f_min?
+      // TODO: shall we make 0.05, 0.03, 0.06, 1.0 global params same as f_min?
       if( num.isGE( z_bar,
-                    best_bound_on_obj - abs( best_bound_on_obj ) * 0.05 ) )
+                    upper_bound - abs( upper_bound ) * 0.05 ) )
       {
-         best_bound_on_obj =
-             num.max( best_bound_on_obj + abs( best_bound_on_obj ) * 0.03,
+         // TODO: replace 1.0 with some logical value
+         upper_bound = num.isZero( z_bar ) ? upper_bound_reset_val :
+             num.max( upper_bound + abs( upper_bound ) * 0.03,
                       z_bar + abs( z_bar ) * 0.06 );
-         msg.debug( "   increased best bound: {}\n", best_bound_on_obj );
+         msg.debug( "   increased best bound: {}\n", upper_bound );
       }
    }
 
