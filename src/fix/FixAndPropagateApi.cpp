@@ -49,7 +49,7 @@ setup( const char* filename, int* result )
    auto problem = new Problem<double>( prob.get() );
    problem->recomputeAllActivities();
    Message msg{};
-//   msg.setVerbosityLevel( papilo::VerbosityLevel::kWarning );
+   //   msg.setVerbosityLevel( papilo::VerbosityLevel::kWarning );
    auto heuristic = new Heuristic<double>{ msg, {}, t, *problem };
    heuristic->setup();
    *result = 0;
@@ -67,15 +67,28 @@ int
 call_algorithm( void* heuristic_void_ptr, double* cont_solution, double* result,
                 int n_cols, double* current_obj_value )
 {
-   auto heuristic = (Heuristic<double>*)( heuristic_void_ptr );
-   Vec<double> sol( cont_solution, cont_solution + n_cols );
-   Vec<double> res{};
+#ifdef PAPILO_TBB
+   tbb::task_arena arena( 8 );
+#endif
 
-   double local_obj = *current_obj_value;
-   heuristic->perform_fix_and_propagate( sol, local_obj, res, true, true, true );
+#ifdef PAPILO_TBB
+   return arena.execute(
+       [&]()
+       {
+#endif
+          auto heuristic = (Heuristic<double>*)( heuristic_void_ptr );
+          Vec<double> sol( cont_solution, cont_solution + n_cols );
+          Vec<double> res{};
 
-   if(local_obj < *current_obj_value)
-      *current_obj_value = local_obj;
-   result = &res[0];
-   return !res.empty();
+          double local_obj = *current_obj_value;
+          heuristic->perform_fix_and_propagate( sol, local_obj, res, true, true,
+                                                true );
+
+          if( local_obj < *current_obj_value )
+             *current_obj_value = local_obj;
+          result = &res[0];
+          return !res.empty();
+#ifdef PAPILO_TBB
+       } );
+#endif
 }
