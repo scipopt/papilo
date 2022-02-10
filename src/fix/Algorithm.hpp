@@ -229,9 +229,12 @@ class Algorithm
    void
    print_solution( const Vec<REAL>& sol )
    {
-      msg.detailed( "Primal solution:\n" );
-      for( int i = 0; i < sol.size(); i++ )
-         msg.detailed( "   x[{}] = {}\n", i, sol[i] );
+      if( msg.getVerbosityLevel() == VerbosityLevel::kDetailed )
+      {
+         msg.detailed( "Primal solution:\n" );
+         for( int i = 0; i < sol.size(); i++ )
+            msg.detailed( "   x[{}] = {}\n", i, sol[i] );
+      }
    }
 
    void
