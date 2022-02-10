@@ -107,7 +107,7 @@ main( int argc, char* argv[] )
    msg.error("Please build with TBB to use the parallel feature!!!");
 #endif
 
-   Algorithm<double> alg{ msg, num, t, time_limit};
+   Algorithm<double> alg{ msg, num, t, time_limit, 1};
    alg.solve_problem( problem, para );
    return 0;
 }

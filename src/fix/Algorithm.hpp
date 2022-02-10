@@ -53,10 +53,11 @@ class Algorithm
    Num<REAL> num;
    Timer timer;
    double time_limit;
+   REAL threshold_hard_constraints;
 
  public:
-   Algorithm( Message _msg, Num<REAL> _num, Timer t, double time_limit_ )
-       : msg( _msg ), num( _num ), timer( t ), time_limit( time_limit_ )
+   Algorithm( Message _msg, Num<REAL> _num, Timer t, double time_limit_, double threshold_hard_constraints_ )
+       : msg( _msg ), num( _num ), timer( t ), time_limit(time_limit_), threshold_hard_constraints(threshold_hard_constraints_)
    {
    }
 
@@ -250,6 +251,7 @@ class Algorithm
    {
       ProblemBuilder<REAL> builder;
 
+
       int nnz = 0;
       int ncols = problem.getNCols();
       int nrows = 0;
@@ -266,14 +268,19 @@ class Algorithm
 
       for( int i = 0; i < problem.getNRows(); i++ )
       {
-         nrows++;
          int rowsize = rowSizes[i];
+
+         if( !num.isEq( get_max_min_factor( matrix.getRowCoefficients( i ) ), threshold_hard_constraints ) )
+         {
+            rowFlags[i].set(RowFlag::kRedundant);
+            continue;
+         }
          nnz = nnz + rowsize;
-         auto flags = rowFlags[i];
-         if( flags.test( RowFlag::kEquation ) )
+         nrows++;
+         if( rowFlags[i].test( RowFlag::kEquation ) )
             equations++;
-         if( flags.test( RowFlag::kEquation ) ||
-             flags.test( RowFlag::kLhsInf ) || flags.test( RowFlag::kRhsInf ) )
+         if( rowFlags[i].test( RowFlag::kEquation ) ||
+             rowFlags[i].test( RowFlag::kLhsInf ) || rowFlags[i].test( RowFlag::kRhsInf ) )
             continue;
          nrows++;
          nnz = nnz + rowsize;
@@ -287,13 +294,19 @@ class Algorithm
       builder.setNumRows( nrows );
       int counter = 0;
       int slack_var_counter = 0;
-      for( int i = 0; i != problem.getNRows(); ++i )
+      for( int i = 0; i < problem.getNRows(); ++i )
       {
+         auto flags = rowFlags[i];
+         if( flags.test( RowFlag::kRedundant ) )
+         {
+            assert(!num.isEq( get_max_min_factor( matrix.getRowCoefficients( i ) ), threshold_hard_constraints ));
+            continue;
+         }
+         assert(num.isEq( get_max_min_factor( matrix.getRowCoefficients( i ) ), threshold_hard_constraints ));
          const SparseVectorView<REAL>& view = matrix.getRowCoefficients( i );
          const int* rowcols = view.getIndices();
          const REAL* rowvals = view.getValues();
          int rowlen = view.getLength();
-         auto flags = rowFlags[i];
          REAL lhs = leftHandSides[i];
          REAL rhs = rightHandSides[i];
          // TODO: what if activities[i].ninfmin != 0?
@@ -423,6 +436,14 @@ class Algorithm
       }
 
       return builder;
+   }
+
+   REAL
+   get_max_min_factor( const SparseVectorView<REAL>& row_data) const
+   {
+      assert( row_data.getLength() > 0 );
+      auto pair = row_data.getMinMaxAbsValue();
+      return pair.second / pair.first;
    }
 
    void
