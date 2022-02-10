@@ -47,12 +47,18 @@ class VolumeAlgorithm
    VectorMultiplication<REAL> op;
    Timer timer;
    VolumeAlgorithmParameter<REAL>& parameter;
+   REAL alpha;
+   REAL alpha_max;
+   REAL f;
 
  public:
    VolumeAlgorithm( Message _msg, Num<REAL> _num, Timer t,
                     VolumeAlgorithmParameter<REAL>& parameter_ )
        : msg( _msg ), num( _num ), timer( t ), parameter( parameter_ ), op( {} )
    {
+      alpha = parameter.alpha;
+      alpha_max = parameter.alpha_max;
+      f = parameter.f;
    }
 
    /**
@@ -62,17 +68,20 @@ class VolumeAlgorithm
     * @param b not needed
     * @param domains variables domains (lb/ub/flags)
     * @param pi initial dual multiplier
-    * @param best_bound_on_obj max bound of c^T x
+    * @param box_upper_bound max box bound of c^T x
     * @return
     */
    Vec<REAL>
    volume_algorithm( const Vec<REAL> c, const ConstraintMatrix<REAL>& A,
                      const Vec<REAL>& b, const VariableDomains<REAL>& domains,
-                     const Vec<REAL>& pi, REAL best_bound_on_obj )
+                     const Vec<REAL>& pi, REAL box_upper_bound )
    {
+      std::all_of( A.getRowFlags().begin(), A.getRowFlags().end(),
+                   []( RowFlags row_flag ) { return row_flag.test(RowFlag::kEquation); } );
+
       int n_rows_A = A.getNRows();
 
-      assert_pi( n_rows_A, A, pi );
+//      assert_pi( n_rows_A, A, pi );
 
       // Step 0
       // Set x_0 = x_bar, z_0 = z_bar, t = 1
@@ -85,28 +94,33 @@ class VolumeAlgorithm
       Vec<REAL> x_t( c );
       Vec<REAL> pi_t( pi );
       Vec<REAL> pi_bar( pi );
-      update_pi( n_rows_A, A, pi_bar );
       Vec<REAL> residual_t( b );
 
       // We start with a vector π̄ and solve (6) to obtain x̄ and z̄.
       REAL z_bar = create_problem_6_and_solve_it( c, A, b, domains, pi, x_t );
       Vec<REAL> x_bar( x_t );
       REAL z_bar_old = z_bar;
+      // TODO: ok?
+      REAL upper_bound_reset_val = num.isGE( box_upper_bound, REAL{ 1.0 } ) ?
+                                   1.0 : box_upper_bound;
+      // TODO: how to set -inf (or a large negative value)?
+      REAL upper_bound = -1e30;
 
-      do
+      op.calc_b_minus_Ax( A, x_bar, b, v_t );
+      calc_violations( n_rows_A, A, pi_t, v_t, viol_t );
+
+      while( stopping_criteria( viol_t, n_rows_A, c, x_bar, z_bar ) )
       {
          msg.info( "Round of volume algorithm: {}\n", counter );
          // STEP 1:
          // Compute v_t = b − A x_bar and π_t = pi_bar + sv_t for a step size s
          // given by (7).
-         op.calc_b_minus_Ax( A, x_bar, b, v_t );
-         calc_violations( n_rows_A, A, pi_t, v_t, viol_t );
-         update_best_bound_on_obj( z_bar, best_bound_on_obj );
-         REAL step_size = parameter.f * ( best_bound_on_obj - z_bar ) /
+         update_upper_bound( z_bar, upper_bound_reset_val, upper_bound );
+         REAL step_size = f * ( upper_bound - z_bar ) /
                           pow( op.l2_norm( viol_t ), 2.0 );
-         //         msg.info( "   Step size: {}\n", step_size );
+         msg.debug( "   Step size: {}\n", step_size );
          op.calc_b_plus_sx( pi_bar, step_size, viol_t, pi_t );
-         update_pi( n_rows_A, A, pi_t );
+//         update_pi( n_rows_A, A, pi_t );
 
          // Solve (6) with π_t , let x_t and z_t be the solutions obtained.
          REAL z_t =
@@ -117,8 +131,9 @@ class VolumeAlgorithm
          calc_alpha( residual_t, v_t );
 
          // x_bar ← αx_t + (1 − α)x_bar
-         op.calc_qb_plus_sx( parameter.alpha, x_t, 1 - parameter.alpha, x_bar,
+         op.calc_qb_plus_sx( alpha, x_t, 1 - alpha, x_bar,
                              x_bar );
+
 
          // Step 2:
          // If z_t > z_bar update π_bar and z_bar
@@ -145,9 +160,12 @@ class VolumeAlgorithm
             z_bar_old = z_bar;
          }
 
+         op.calc_b_minus_Ax( A, x_bar, b, v_t );
+         calc_violations( n_rows_A, A, pi_t, v_t, viol_t );
+
          // Let t ← t + 1 and go to Step 1.
          counter = counter + 1;
-      } while( stopping_criteria( viol_t, n_rows_A, c, x_bar, z_bar ) );
+      };
       // TODO: ahoen@suresh -> overwrite pi with current pi to be able to warm
       // restart the algorithm?
       return x_bar;
@@ -196,8 +214,8 @@ class VolumeAlgorithm
                       const Vec<REAL>& c, const Vec<REAL>& x_bar,
                       const REAL z_bar )
    {
-      msg.info( "   sc_1: {}\n", op.l1_norm( v ) / n_rows_A );
-      msg.info( "   sc_2: {}\n",
+      msg.detailed( "   sc_1: {}\n", op.l1_norm( v ) / n_rows_A );
+      msg.detailed( "   sc_2: {}\n",
                 num.isZero( z_bar )
                     ? abs( op.multi( c, x_bar ) )
                     : abs( op.multi( c, x_bar ) - z_bar ) / z_bar );
@@ -243,7 +261,7 @@ class VolumeAlgorithm
          obj_value.add( updated_objective[i] * solution[i] );
       }
 
-      //      msg.info( "   opt_val: {}\n", obj_value.get() );
+      msg.debug( "   opt_val: {}\n", obj_value.get() );
       return obj_value.get();
    }
 
@@ -253,6 +271,7 @@ class VolumeAlgorithm
                     Vec<REAL>& viol_residual )
    {
       viol_residual = residual;
+      /*
       for( int i = 0; i < n_rows_A; i++ )
       {
          // Note: isZero check would be different in case of non-zero LB on pi
@@ -260,19 +279,22 @@ class VolumeAlgorithm
              ( num.isLT( residual[i], REAL{ 0.0 } ) && num.isZero( pi[i] ) ) )
             viol_residual[i] = 0;
       }
+      */
    }
 
    void
-   update_best_bound_on_obj( const REAL z_bar, REAL& best_bound_on_obj )
+   update_upper_bound( const REAL z_bar, const REAL upper_bound_reset_val,
+                       REAL& upper_bound )
    {
-      // TODO: shall we make 0.05 a global param similar to f_min?
+      // TODO: shall we make 0.05, 0.03, 0.06, 1.0 global params same as f_min?
       if( num.isGE( z_bar,
-                    best_bound_on_obj - abs( best_bound_on_obj ) * 0.05 ) )
+                    upper_bound - abs( upper_bound ) * 0.05 ) )
       {
-         best_bound_on_obj =
-             num.max( best_bound_on_obj, z_bar + abs( z_bar ) * 0.05 );
-         //         msg.info( "   increased best bound: {}\n", best_bound_on_obj
-         //         );
+         // TODO: replace 1.0 with some logical value
+         upper_bound = num.isZero( z_bar ) ? upper_bound_reset_val :
+             num.max( upper_bound + abs( upper_bound ) * 0.03,
+                      z_bar + abs( z_bar ) * 0.06 );
+         msg.debug( "   increased best bound: {}\n", upper_bound );
       }
    }
 
@@ -287,24 +309,24 @@ class VolumeAlgorithm
 
       REAL bar_bar_prod = op.multi( residual_bar, residual_bar );
 
-      REAL alpha_opt = parameter.alpha_max;
+      REAL alpha_opt = alpha_max;
       if( num.isGT( t_t_prod + bar_bar_prod - 2.0 * t_bar_prod, REAL{ 0.0 } ) )
          alpha_opt = ( bar_bar_prod - t_bar_prod ) /
                      ( t_t_prod + bar_bar_prod - 2.0 * t_bar_prod );
 
-      // TODO ahoen@Suresh we should not override the values of parameter.alpha
-      if( num.isLT( alpha_opt, parameter.alpha_max / 10.0 ) )
-         parameter.alpha = parameter.alpha_max / 10.0;
-      else if( num.isGT( alpha_opt, parameter.alpha_max ) )
-         parameter.alpha = parameter.alpha_max;
+      if( num.isLT( alpha_opt, alpha_max / 10.0 ) )
+         alpha = alpha_max / 10.0;
+      else if( num.isGT( alpha_opt, alpha_max ) )
+         alpha = alpha_max;
       else
-         parameter.alpha = alpha_opt;
+         alpha = alpha_opt;
       /*
       alpha = num.isLT( alpha_opt, REAL{ 0.0 } )
                   ? alpha_max / 10.0
                   : num.min( alpha_opt, alpha_max );
       */
-      msg.info( "   alpha_opt: {},\t alpha: {}\n", alpha_opt, parameter.alpha );
+      msg.detailed( "   alpha_opt: {},\t alpha_max: {},\t alpha: {}\n",
+                    alpha_opt, alpha_max, alpha );
    }
 
    void
@@ -348,28 +370,22 @@ class VolumeAlgorithm
 
       if( change_f == 2 )
       {
-         // TODO ahoen@Suresh we should not override the values of
-         // parameter.alpha
-         parameter.f = num.min( parameter.f_strong_incr_factor * parameter.f,
+         f = num.min( parameter.f_strong_incr_factor * f,
                                 parameter.f_max );
-         //         msg.info( "   increased f: {}\n", f );
+         msg.debug( "   increased f: {}\n", f );
       }
       else if( change_f == 1 )
       {
-         // TODO ahoen@Suresh we should not override the values of
-         // parameter.alpha
-         parameter.f = num.min( parameter.f_weak_incr_factor * parameter.f,
+         f = num.min( parameter.f_weak_incr_factor * f,
                                 parameter.f_max );
-         //         msg.info( "   increased f: {}\n", f );
+         msg.debug( "   increased f: {}\n", f );
       }
       else if( change_f <= -1 &&
-               num.isGE( parameter.f_decr_factor * parameter.f,
+               num.isGE( parameter.f_decr_factor * f,
                          parameter.f_min ) )
       {
-         // TODO ahoen@Suresh we should not override the values of
-         // parameter.alpha
-         parameter.f = parameter.f_decr_factor * parameter.f;
-         //         msg.info( "   decreased f: {}\n", f );
+         f = parameter.f_decr_factor * f;
+         msg.debug( "   decreased f: {}\n", f );
       }
    }
 
@@ -378,10 +394,8 @@ class VolumeAlgorithm
    {
       // TODO: change 0.01, 1e-5, and 2.0 as global params?
       if( num.isLT( z_bar, z_bar_old + 0.01 * abs( z_bar_old ) ) &&
-          num.isGE( parameter.alpha_max, REAL{ 1e-5 } ) )
-         // TODO ahoen@Suresh we should not override the values of
-         // parameter.alpha
-         parameter.alpha_max = parameter.alpha_max / 2.0;
+          num.isGE( alpha_max, REAL{ 1e-5 } ) )
+         alpha_max = alpha_max / 2.0;
    }
 };
 
