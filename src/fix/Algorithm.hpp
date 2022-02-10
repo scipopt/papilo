@@ -246,10 +246,17 @@ class Algorithm
       {
          nrows++;
          int rowsize = rowSizes[i];
+
+         auto row_data = matrix.getRowCoefficients(i);
+         REAL factor = get_max_min_factor( row_data );
+         if( num.isGT( factor, 0.5 ) )
+         {
+            rowFlags[i].set(RowFlag::kRedundant);
+            continue;
+         }
          nnz = nnz + rowsize;
-         auto flags = rowFlags[i];
-         if( flags.test( RowFlag::kEquation ) ||
-             flags.test( RowFlag::kLhsInf ) || flags.test( RowFlag::kRhsInf ) )
+         if( rowFlags[i].test( RowFlag::kEquation ) ||
+             rowFlags[i].test( RowFlag::kLhsInf ) || rowFlags[i].test( RowFlag::kRhsInf ) )
             continue;
          nrows++;
          nnz = nnz + rowsize;
@@ -259,7 +266,7 @@ class Algorithm
 
       /* set up columns */
       builder.setNumCols( ncols );
-      for( int i = 0; i != ncols; ++i )
+      for( int i = 0; i < ncols; ++i )
       {
          builder.setColLb( i, problem.getLowerBounds()[i] );
          builder.setColUb( i, problem.getUpperBounds()[i] );
@@ -274,13 +281,19 @@ class Algorithm
       /* set up rows */
       builder.setNumRows( nrows );
       int counter = 0;
-      for( int i = 0; i != problem.getNRows(); ++i )
+      for( int i = 0; i < problem.getNRows(); ++i )
       {
+         auto flags = rowFlags[i];
+         if( flags.test( RowFlag::kRedundant ) )
+         {
+            assert(num.isGT( get_max_min_factor( matrix.getRowCoefficients(i) ), 0.5 ));
+            continue;
+         }
+         assert(num.isLE( get_max_min_factor( matrix.getRowCoefficients(i) ), 0.5 ));
          const SparseVectorView<REAL>& view = matrix.getRowCoefficients( i );
          const int* rowcols = view.getIndices();
          const REAL* rowvals = view.getValues();
          int rowlen = view.getLength();
-         auto flags = rowFlags[i];
          REAL lhs = leftHandSides[i];
          REAL rhs = rightHandSides[i];
 
@@ -334,6 +347,16 @@ class Algorithm
          counter++;
       }
       return builder;
+   }
+
+   REAL
+   get_max_min_factor( const SparseVectorView<REAL>& row_data) const
+   {
+      REAL max_coeff = *std::max_element(
+          row_data.getValues(), row_data.getValues() + row_data.getLength() );
+      REAL min_coeff = *std::min_element(
+          row_data.getValues(), row_data.getValues() + row_data.getLength() );
+      return max_coeff / min_coeff;
    }
 
    void
