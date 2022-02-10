@@ -101,19 +101,15 @@ class ConflictAnalysis
                               Vec<RowFlags>& flags, Vec<REAL>& lhs,
                               Vec<REAL>& rhs )
    {
-
       // bound change data as vectors for easier access
-      Vec<int> max_depths;
       max_depths.resize( problem.getNCols(), 0 );
-      Vec<bool> is_fixing;
       is_fixing.resize( problem.getNCols(), 0 );
-      Vec<bool> is_lower_bound;
       is_lower_bound.resize( problem.getNCols(), 0 );
-      Vec<int> reason_rows;
       reason_rows.resize( problem.getNCols(), 0 );
-      Vec<int> pos_in_bound_changes;
       pos_in_bound_changes.resize( problem.getNCols(), 0 );
 
+      // ToDo what about the integer case?
+      // define two more vectors lower_bounds, upper_bounds, multiple reasons?
       for( int i = 0; i < bound_changes.size() - 1; i++ )
       {
          if( bound_changes[i].get_depth_level() >
@@ -141,38 +137,31 @@ class ConflictAnalysis
       }
       else
       {
-         // pointer to constraint matrix
-         ConstraintMatrix<REAL> constraint_matrix =
-             problem.getConstraintMatrix();
+         constraint_matrix = problem.getConstraintMatrix();
+         row_flags = constraint_matrix.getRowFlags();
 
+         // compute activities
+         problem.recomputeAllActivities();
          // row that led to infeasibility
          int conflict_row_index = bound_changes.back().get_reason_row();
-         SparseVectorView<REAL> conflict_row =
-             constraint_matrix.getRowCoefficients( conflict_row_index );
-         int row_length = conflict_row.getLength();
-         const int* row_inds = conflict_row.getIndices();
-         const REAL* row_vals = conflict_row.getValues();
+
+         row_activities = problem.getRowActivities();
 
          // last depth level
          int last_depth_level = get_last_depth_level( bound_changes );
 
-         // initial conflict set (maybe just use indices for easy access?)
-         Vec<int> conflict_set_candidates;
-         for( int i = 0; i < row_length; i++ )
-         {
-            // ToDo add variables whose bound change affects the activities
-            conflict_set_candidates.push_back( row_inds[i] );
-         }
+         // adds column indices in conflict_set_candidates
+         explain_infeasibility(conflict_row_index);
 
          int num_vars_last_depth_level = get_number_variables_depth_level(
              max_depths, conflict_set_candidates, last_depth_level );
 
-         if (num_vars_last_depth_level == 1)
+         if( num_vars_last_depth_level == 1 )
          {
             // Already at First UIP -> return conflict constraint
             // ToDo add constraint
-            msg.info("Only one variable at last depth level!")
-            return true
+            msg.info( "Only one variable at last depth level!" );
+            return true;
          }
          // First-FUIP
          // Resolve as long as more than one bound changes at last depth level
@@ -183,7 +172,7 @@ class ConflictAnalysis
                 last_depth_level );
 
             int antecedent_row_index = reason_rows[col_index];
-            if (antecedent_row_index == -1) 
+            if( antecedent_row_index == -1 )
             {
                // should not happen
                // ToDo add assert
@@ -192,14 +181,13 @@ class ConflictAnalysis
             else
             {
                SparseVectorView<REAL> antecedent_row =
-                  constraint_matrix.getRowCoefficients( antecedent_row_index );
-                  // const int* antecedent_row_inds = conflict_row.getIndices();
-                  // const REAL* antecedent_row_vals = conflict_row.getValues();
+                   constraint_matrix.getRowCoefficients( antecedent_row_index );
+               // const int* antecedent_row_inds = conflict_row.getIndices();
+               // const REAL* antecedent_row_vals = conflict_row.getValues();
 
-                  // resolve
-                  resolve_bound_change( col_index, conflict_set_candidates,
+               // resolve
+               resolve_bound_change( col_index, conflict_set_candidates,
                                      antecedent_row );
-
             }
 
             num_vars_last_depth_level = get_number_variables_depth_level(
@@ -219,6 +207,38 @@ class ConflictAnalysis
    }
 
  private:
+   ConstraintMatrix<REAL> constraint_matrix;
+   Vec<papilo::RowFlags> row_flags;
+   Vec<papilo::RowActivity<REAL>> row_activities;
+
+   Vec<int> max_depths;
+   Vec<bool> is_fixing;
+   Vec<bool> is_lower_bound;
+   Vec<int> reason_rows;
+   Vec<int> pos_in_bound_changes;
+
+   // Make a set and not vec
+   Vec<int> conflict_set_candidates;
+
+   bool explain_infeasibility(int row_idx)
+   {
+      SparseVectorView<REAL> conflict_row =
+         constraint_matrix.getRowCoefficients( row_idx );
+
+      int row_length = conflict_row.getLength();
+      const int* row_inds = conflict_row.getIndices();
+      const REAL* row_vals = conflict_row.getValues();
+
+      // initial conflict set (maybe just use indices for easy access?)
+      
+      for( int i = 0; i < row_length; i++ )
+      {
+         // ToDo add variables whose bound change affects the activities
+         conflict_set_candidates.push_back( row_inds[i] );
+      }
+
+      // if GE: compute 
+   }
    bool
    resolve_bound_change( int col, Vec<int> row_inds,
                          SparseVectorView<REAL> antecedent_row )
@@ -279,8 +299,9 @@ class ConflictAnalysis
 
    // ToDo
    bool
-   get_conflict_set()
+   get_conflict_data( Vec<SingleBoundChange<REAL>> bound_changes )
    {
+
       return true;
    }
 };
