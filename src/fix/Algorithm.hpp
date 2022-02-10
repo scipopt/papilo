@@ -246,17 +246,15 @@ class Algorithm
 
       for( int i = 0; i < problem.getNRows(); i++ )
       {
-         nrows++;
          int rowsize = rowSizes[i];
 
-         auto row_data = matrix.getRowCoefficients(i);
-         REAL factor = get_max_min_factor( row_data );
-         if( num.isGT( factor, threshold_hard_constraints ) )
+         if( !num.isEq( get_max_min_factor( matrix.getRowCoefficients( i ) ), threshold_hard_constraints ) )
          {
             rowFlags[i].set(RowFlag::kRedundant);
             continue;
          }
          nnz = nnz + rowsize;
+         nrows++;
          if( rowFlags[i].test( RowFlag::kEquation ) ||
              rowFlags[i].test( RowFlag::kLhsInf ) || rowFlags[i].test( RowFlag::kRhsInf ) )
             continue;
@@ -288,10 +286,10 @@ class Algorithm
          auto flags = rowFlags[i];
          if( flags.test( RowFlag::kRedundant ) )
          {
-            assert(num.isGT( get_max_min_factor( matrix.getRowCoefficients(i) ), threshold_hard_constraints ));
+            assert(!num.isEq( get_max_min_factor( matrix.getRowCoefficients( i ) ), threshold_hard_constraints ));
             continue;
          }
-         assert(num.isLE( get_max_min_factor( matrix.getRowCoefficients(i) ), threshold_hard_constraints ));
+         assert(num.isEq( get_max_min_factor( matrix.getRowCoefficients( i ) ), threshold_hard_constraints ));
          const SparseVectorView<REAL>& view = matrix.getRowCoefficients( i );
          const int* rowcols = view.getIndices();
          const REAL* rowvals = view.getValues();
@@ -354,11 +352,9 @@ class Algorithm
    REAL
    get_max_min_factor( const SparseVectorView<REAL>& row_data) const
    {
-      REAL max_coeff = *std::max_element(
-          row_data.getValues(), row_data.getValues() + row_data.getLength() );
-      REAL min_coeff = *std::min_element(
-          row_data.getValues(), row_data.getValues() + row_data.getLength() );
-      return max_coeff / min_coeff;
+      assert( row_data.getLength() > 0 );
+      auto pair = row_data.getMinMaxAbsValue();
+      return pair.second / pair.first;
    }
 
    void
