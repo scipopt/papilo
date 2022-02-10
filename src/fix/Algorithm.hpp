@@ -111,17 +111,20 @@ class Algorithm
              VolumeAlgorithm<REAL> algorithm{ msg, num, timer, parameter };
              ConflictAnalysis<REAL> conflict_analysis{ msg, num, timer };
 
-             service.setup( );
+             service.setup();
              REAL best_obj_value{};
 
              Vec<REAL> best_solution{};
              best_solution.reserve( problem.getNCols() );
 
              // setup data for the volume algorithm
-             Vec<REAL> primal_heur_sol{};
-             primal_heur_sol.reserve( problem.getNCols() );
-             ProblemBuilder<REAL> builder = modify_problem( problem );
+             int slack_vars = 0;
+             ProblemBuilder<REAL> builder = modify_problem( problem, slack_vars );
+             assert( slack_vars >= 0 );
              Problem<REAL> reformulated = builder.build();
+
+             Vec<REAL> primal_heur_sol{};
+             primal_heur_sol.reserve( reformulated.getNCols() );
 
              Vec<REAL> pi;
              pi.reserve( reformulated.getNRows() );
@@ -147,14 +150,20 @@ class Algorithm
                    break;
                 msg.info( "Starting fixing and propagating\n" );
 
-                service.perform_fix_and_propagate(
-                    primal_heur_sol, best_obj_value, best_solution );
+
+                //TODO: this is highly non efficient
+                Vec<REAL> sub( primal_heur_sol.begin(),
+                               primal_heur_sol.end() - slack_vars );
+
+                assert(sub.size() == problem.getNCols());
+                service.perform_fix_and_propagate( sub, best_obj_value,
+                                                   best_solution );
 
                 if( timer.getTime() >= parameter.time_limit )
                    break;
 
                 msg.info( "Starting conflict analysis\n" );
-                //TODO: this is a dummy function
+                // TODO: this is a dummy function
                 bool abort = conflict_analysis.perform_conflict_analysis();
                 if( abort )
                    return;
@@ -187,10 +196,14 @@ class Algorithm
          {
             if( problem.getColFlags()[i].test( ColFlag::kLbInf ) )
             {
+               /*
                msg.error( "Could not calculate objective bound: variable {} "
                           "is unbounded",
                           i );
                return std::numeric_limits<double>::min();
+               */
+               // TODO: OK? - based on this UB's usage in volume algo code?
+               continue;
             }
             min_value.add( problem.getObjective().coefficients[i] +
                            problem.getLowerBounds()[i] );
@@ -199,10 +212,13 @@ class Algorithm
          {
             if( problem.getColFlags()[i].test( ColFlag::kUbInf ) )
             {
+               /*
                msg.error( "Could not calculate objective bound: variable {} "
                           "is unbounded",
                           i );
                return std::numeric_limits<double>::min();
+               */
+               continue;
             }
             min_value.add( problem.getObjective().coefficients[i] +
                            problem.getUpperBounds()[i] );
@@ -214,9 +230,12 @@ class Algorithm
    void
    print_solution( const Vec<REAL>& sol )
    {
-      msg.debug( "Primal solution:\n" );
-      for( int i = 0; i < sol.size(); i++ )
-         msg.debug( "   x[{}] = {}\n", i, sol[i] );
+      if( msg.getVerbosityLevel() == VerbosityLevel::kDetailed )
+      {
+         msg.detailed( "Primal solution:\n" );
+         for( int i = 0; i < sol.size(); i++ )
+            msg.detailed( "   x[{}] = {}\n", i, sol[i] );
+      }
    }
 
    void
@@ -228,7 +247,7 @@ class Algorithm
    }
 
    ProblemBuilder<REAL>
-   modify_problem( Problem<REAL>& problem )
+   modify_problem( Problem<REAL>& problem, int& slack_vars )
    {
       ProblemBuilder<REAL> builder;
 
@@ -243,6 +262,9 @@ class Algorithm
       Vec<REAL>& coefficients = problem.getObjective().coefficients;
       Vec<REAL>& leftHandSides = matrix.getLeftHandSides();
       Vec<REAL>& rightHandSides = matrix.getRightHandSides();
+      const Vec<RowActivity<REAL>>& activities = problem.getRowActivities();
+
+      int equations = 0;
 
       for( int i = 0; i < problem.getNRows(); i++ )
       {
@@ -255,32 +277,23 @@ class Algorithm
          }
          nnz = nnz + rowsize;
          nrows++;
+         if( rowFlags[i].test( RowFlag::kEquation ) )
+            equations++;
          if( rowFlags[i].test( RowFlag::kEquation ) ||
              rowFlags[i].test( RowFlag::kLhsInf ) || rowFlags[i].test( RowFlag::kRhsInf ) )
             continue;
          nrows++;
          nnz = nnz + rowsize;
       }
+      slack_vars = nrows - equations;
+      auto slack_var_upper_bounds = new double[slack_vars];
 
-      builder.reserve( nnz, nrows, ncols );
-
-      /* set up columns */
-      builder.setNumCols( ncols );
-      for( int i = 0; i < ncols; ++i )
-      {
-         builder.setColLb( i, problem.getLowerBounds()[i] );
-         builder.setColUb( i, problem.getUpperBounds()[i] );
-         auto flags = colFlags[i];
-         builder.setColLbInf( i, flags.test( ColFlag::kLbInf ) );
-         builder.setColUbInf( i, flags.test( ColFlag::kUbInf ) );
-
-         builder.setColIntegral( i, flags.test( ColFlag::kIntegral ) );
-         builder.setObj( i, coefficients[i] );
-      }
+      builder.reserve( nnz, nrows, ncols + slack_vars );
 
       /* set up rows */
       builder.setNumRows( nrows );
       int counter = 0;
+      int slack_var_counter = 0;
       for( int i = 0; i < problem.getNRows(); ++i )
       {
          auto flags = rowFlags[i];
@@ -296,6 +309,10 @@ class Algorithm
          int rowlen = view.getLength();
          REAL lhs = leftHandSides[i];
          REAL rhs = rightHandSides[i];
+         // TODO: what if activities[i].ninfmin != 0?
+         REAL min_activity = activities[i].min;
+         // TODO: what if activities[i].ninfmax != 0?
+         REAL max_activity = activities[i].max;
 
          if( flags.test( RowFlag::kEquation ) )
          {
@@ -308,44 +325,116 @@ class Algorithm
          else if( flags.test( RowFlag::kLhsInf ) )
          {
             assert( !flags.test( RowFlag::kRhsInf ) );
-            REAL* neg_rowvals = new REAL[rowlen];
-            invert( rowvals, neg_rowvals, rowlen );
-            builder.addRowEntries( counter, rowlen, rowcols, neg_rowvals );
-            builder.setRowLhs( counter, -rhs );
-            builder.setRowRhs( counter, 0 );
+
+            auto new_vals = new double[rowlen + 1];
+            memcpy( new_vals, rowvals, rowlen * sizeof( double ) );
+            new_vals[rowlen] = 1;
+            auto new_indices = new int[rowlen + 1];
+            memcpy( new_indices, rowcols, rowlen * sizeof( int ) );
+            new_indices[rowlen] = ncols + slack_var_counter;
+
+            builder.addRowEntries( counter, rowlen + 1, new_indices, new_vals );
+            builder.setRowLhs( counter, rhs );
+            builder.setRowRhs( counter, rhs );
             builder.setRowLhsInf( counter, false );
-            builder.setRowRhsInf( counter, true );
+            builder.setRowRhsInf( counter, false );
+
+            slack_var_upper_bounds[slack_var_counter] = rhs - min_activity;
+
+            slack_var_counter++;
          }
          else if( flags.test( RowFlag::kRhsInf ) )
          {
             assert( !flags.test( RowFlag::kLhsInf ) );
-            builder.addRowEntries( counter, rowlen, rowcols, rowvals );
+
+            auto new_vals = new double[rowlen + 1];
+            memcpy( new_vals, rowvals, rowlen * sizeof( double ) );
+            new_vals[rowlen] = -1;
+            auto new_indices = new int[rowlen + 1];
+            memcpy( new_indices, rowcols, rowlen * sizeof( int ) );
+            new_indices[rowlen] = ncols + slack_var_counter;
+
+            builder.addRowEntries( counter, rowlen + 1, new_indices, new_vals );
             builder.setRowLhs( counter, lhs );
-            builder.setRowRhs( counter, 0 );
+            builder.setRowRhs( counter, lhs );
             builder.setRowLhsInf( counter, false );
-            builder.setRowRhsInf( counter, true );
+            builder.setRowRhsInf( counter, false );
+
+            slack_var_upper_bounds[slack_var_counter] = max_activity - lhs;
+
+            slack_var_counter++;
          }
          else
          {
             assert( !flags.test( RowFlag::kLhsInf ) );
             assert( !flags.test( RowFlag::kRhsInf ) );
-            REAL* neg_rowvals = new REAL[rowlen];
-            invert( rowvals, neg_rowvals, rowlen );
 
-            builder.addRowEntries( counter, rowlen, rowcols, neg_rowvals );
-            builder.setRowLhs( counter, -rhs );
-            builder.setRowRhs( counter, 0 );
+            auto new_vals = new double[rowlen + 1];
+            memcpy( new_vals, rowvals, rowlen * sizeof( double ) );
+            new_vals[rowlen] = 1;
+            auto new_indices = new int[rowlen + 1];
+            memcpy( new_indices, rowcols, rowlen * sizeof( int ) );
+            new_indices[rowlen] = ncols + slack_var_counter;
+
+            builder.addRowEntries( counter, rowlen + 1, new_indices, new_vals );
+            builder.setRowLhs( counter, rhs );
+            builder.setRowRhs( counter, rhs );
             builder.setRowLhsInf( counter, false );
-            builder.setRowRhsInf( counter, true );
+            builder.setRowRhsInf( counter, false );
             counter++;
-            builder.addRowEntries( counter, rowlen, rowcols, rowvals );
+
+            slack_var_upper_bounds[slack_var_counter] = rhs - min_activity;
+
+            slack_var_counter++;
+
+            auto new_vals_2 = new double[rowlen + 1];
+            memcpy( new_vals_2, rowvals, rowlen * sizeof( double ) );
+            new_vals_2[rowlen] = -1;
+            auto new_indices_2 = new int[rowlen + 1];
+            memcpy( new_indices_2, rowcols, rowlen * sizeof( int ) );
+            new_indices_2[rowlen] = ncols + slack_var_counter;
+
+            builder.addRowEntries( counter, rowlen + 1, new_indices_2,
+                                   new_vals_2 );
             builder.setRowLhs( counter, lhs );
-            builder.setRowRhs( counter, 0 );
+            builder.setRowRhs( counter, lhs );
             builder.setRowLhsInf( counter, false );
-            builder.setRowRhsInf( counter, true );
+            builder.setRowRhsInf( counter, false );
+
+            slack_var_upper_bounds[slack_var_counter] = max_activity - lhs;
+
+            slack_var_counter++;
          }
          counter++;
       }
+      assert( slack_var_counter == slack_vars );
+
+      /* set up columns */
+      builder.setNumCols( ncols + slack_vars );
+      for( int i = 0; i < ncols; ++i )
+      {
+         builder.setColLb( i, problem.getLowerBounds()[i] );
+         builder.setColUb( i, problem.getUpperBounds()[i] );
+         auto flags = colFlags[i];
+         builder.setColLbInf( i, flags.test( ColFlag::kLbInf ) );
+         builder.setColUbInf( i, flags.test( ColFlag::kUbInf ) );
+
+         builder.setColIntegral( i, flags.test( ColFlag::kIntegral ) );
+         builder.setObj( i, coefficients[i] );
+      }
+
+      // TODO: safe to assume slack_var ordering is consistent here and above
+      //       while creating slack_var_upper_bounds?
+      for( int i = ncols; i < ncols + slack_vars; ++i )
+      {
+         builder.setColLb( i, 0 );
+         builder.setColUb( i, 8 * slack_var_upper_bounds[i - ncols] );
+         builder.setColLbInf( i, false );
+         builder.setColUbInf( i, false );
+         builder.setColIntegral( i, false );
+         builder.setObj( i, 0 );
+      }
+
       return builder;
    }
 
