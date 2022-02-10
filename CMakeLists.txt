@@ -255,7 +255,7 @@ add_library(papilo-core STATIC
 target_link_libraries(papilo-core papilo)
 target_compile_definitions(papilo-core PRIVATE PAPILO_USE_EXTERN_TEMPLATES)
 
-add_library(fix-shared STATIC
+add_library(fix-shared SHARED
   src/fix/FixAndPropagateApi.cpp
   src/fix/PresolveApi.cpp
   ${sources}
@@ -271,7 +271,9 @@ target_include_directories(fix-shared PUBLIC
     $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}>
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
     $<INSTALL_INTERFACE:include>)
-target_link_libraries(fix-shared papilo papilo-core ${CLUSOL_TARGET})
+
+find_package(Boost ${BOOST_MIN_VERSION} COMPONENTS program_options iostreams REQUIRED)
+target_link_libraries(fix-shared papilo papilo-core ${CLUSOL_TARGET} Boost::iostreams)
 set_target_properties(fix-shared PROPERTIES CXX_VISIBILITY_PRESET default)
 
 if(NOT PAPILO_NO_BINARIES)
