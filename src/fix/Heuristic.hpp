@@ -66,7 +66,7 @@ class Heuristic
 #ifdef PAPILO_TBB
       auto s1 = new FarkasRoundingStrategy<REAL>{ 0, num, false };
       auto s2 = new FarkasRoundingStrategy<REAL>{ 0, num, true };
-      auto s3 = new FractionalRoundingStrategy<REAL>{ num };
+      auto s3 = new FractionalRoundingStrategy<REAL>{ num, problem };
       auto s4 = new RandomRoundingStrategy<REAL>{ 0, num };
       strategies.push_back( s1 );
       strategies.push_back( s2 );

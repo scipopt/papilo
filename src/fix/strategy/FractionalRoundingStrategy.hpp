@@ -31,9 +31,49 @@ class FractionalRoundingStrategy : public RoundingStrategy<REAL>
 {
 
    const Num<REAL> num;
+   Vec<bool> no_down_locks;
+   Vec<bool> no_up_locks;
+   REAL norm;
+
 
  public:
-   FractionalRoundingStrategy( Num<REAL> num_ ) : num( num_ ) {}
+   FractionalRoundingStrategy( Num<REAL> num_, Problem<REAL> problem_ )
+       : num( num_ ), no_down_locks( {} ), no_up_locks()
+   {
+      auto obj = problem_.getObjective().coefficients;
+      norm = *max_element( std::begin( obj ), std::end( obj ) );
+      auto rflags = problem_.getRowFlags();
+      const ConstraintMatrix<REAL>& matrix = problem_.getConstraintMatrix();
+      int n_rows = problem_.getNRows();
+      no_up_locks.reserve( n_rows );
+      no_down_locks.reserve( n_rows );
+      for( int col = 0; col < n_rows; ++col )
+      {
+         int n_up_locks = 0;
+         int n_down_locks = 0;
+
+         auto colvec = matrix.getColumnCoefficients( col );
+         const REAL* values = colvec.getValues();
+         const int* rowinds = colvec.getIndices();
+
+         for( int j = 0; j < colvec.getLength(); ++j )
+         {
+            count_locks( values[j], rflags[rowinds[j]], n_down_locks,
+                         n_up_locks );
+            if( n_up_locks != 0 && n_down_locks != 0 )
+            {
+               no_down_locks.push_back( false );
+               no_up_locks.push_back( false );
+               continue;
+            }
+         }
+         assert( n_down_locks != 0 || n_up_locks != 0 );
+         no_down_locks.push_back( n_down_locks == 0 );
+         no_up_locks.push_back( n_up_locks == 0 );
+      }
+      assert( no_down_locks.size() == no_up_locks.size() );
+      assert( no_down_locks.size() == n_rows );
+   }
 
    Fixing<REAL>
    select_rounding_variable( const Vec<REAL>& cont_solution,
@@ -44,7 +84,6 @@ class FractionalRoundingStrategy : public RoundingStrategy<REAL>
       REAL score = -1;
       auto obj = view.get_obj();
 
-      REAL norm = *max_element( std::begin( obj ), std::end( obj ) );
 
       for( int i = 0; i < cont_solution.size(); i++ )
       {
@@ -55,37 +94,38 @@ class FractionalRoundingStrategy : public RoundingStrategy<REAL>
              !view.is_integer_variable( i ) )
             continue;
 
-         // TODO: implement it more efficient and the norm
-         std::pair<bool, bool> has_locks = view.has_locks( i );
          // may round down if now down locks
-         bool may_round_down = has_locks.second;
-         bool may_round_up = has_locks.first;
+         bool may_round_down = no_up_locks[i];
+         bool may_round_up = no_down_locks[i];
          REAL frac = cont_solution[i] - num.epsFloor( cont_solution[i] );
 
          /* divide by objective norm to normalize obj into [-1,1] */
          REAL new_val;
          REAL gain;
-         if( may_round_down && !may_round_up )
+         assert(!(may_round_up && may_round_down));
+         if( !may_round_down && may_round_up )
          {
             new_val = num.epsCeil( cont_solution[i] );
             gain = obj[i] / norm * ( 1 - frac );
             frac = 1 - frac;
          }
-         else if( !may_round_down && may_round_up )
+         else if( may_round_down && !may_round_up )
          {
             new_val = num.epsFloor( cont_solution[i] );
             gain = -obj[i] / norm * frac;
          }
          else if( frac > 0.5 )
          {
-            assert( may_round_up == may_round_down );
+            assert( !may_round_up );
+            assert( !may_round_down );
             new_val = num.epsCeil( cont_solution[i] );
             gain = obj[i] / norm * ( 1 - frac );
             frac = 1 - frac;
          }
          else
          {
-            assert( may_round_up == may_round_down );
+            assert( !may_round_up );
+            assert( !may_round_down );
             new_val = num.epsFloor( cont_solution[i] );
             gain = -obj[i] / norm * frac;
          }
@@ -94,8 +134,9 @@ class FractionalRoundingStrategy : public RoundingStrategy<REAL>
          if( frac < 0.01 )
             frac += 10.0;
 
+         assert(view.is_integer_variable(i));
          /* prefer decisions on binary variables */
-         if( view.getProbingUpperBounds()[i] != 1 )
+         if( view.getProbingUpperBounds()[i] != 1 || view.getProbingLowerBounds()[i] != 0 )
             frac = frac * 1000;
 
          /* prefer variables which cannot be rounded by scoring their
@@ -118,7 +159,6 @@ class FractionalRoundingStrategy : public RoundingStrategy<REAL>
                score = frac;
             }
          }
-
       }
       return { variable, value };
    }
