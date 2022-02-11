@@ -224,8 +224,8 @@ set(unit_tests
 
         "small-volume-algorithm-test"
 
-        "conflict-analysis-binary"
-        "conflict-analysis-binary-depth-two"
+        "analysis-binary-no-resolution"
+        "conflict-analysis-binary-with-resolution"
         "conflict-analysis-check-data"
         
         "integration-test-for-flugpl"

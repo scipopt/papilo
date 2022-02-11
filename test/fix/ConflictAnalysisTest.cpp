@@ -63,7 +63,7 @@ TEST_CASE( "conflict-analysis-check-data", "[conflict]" )
    //   bound_changes.push_back( bound_change_4 );
 }
 
-TEST_CASE( "conflict-analysis-binary-depth-two", "[conflict]" )
+TEST_CASE( "conflict-analysis-binary-no-resolution", "[conflict]" )
 {
    Problem<double> problem = setupProblemForConflictAnalysis();
    problem.recomputeAllActivities();
@@ -71,7 +71,7 @@ TEST_CASE( "conflict-analysis-binary-depth-two", "[conflict]" )
    // A1: x1 + x3 <= 1
    // A2: x1 + x2 + x3 >= 2
    // A3: x2 + x3 + x4 + x5 <= 3
-   // A4: x4 + x5 >= 2
+   // A4: x4 + x5 = 2
 
    // Assume that fix_and_propagate does the following:
    // Fix: x3 = 1 (decision level 1)
@@ -109,7 +109,7 @@ TEST_CASE( "conflict-analysis-binary-depth-two", "[conflict]" )
    Vec<Constraint<double>> conflict_constraints;
    conflictAnalysis.perform_conflict_analysis( bound_changes, infeasible_rows,
                                                conflict_constraints );
-                                               
+
    // conflict analysis returns the constraint x5 >= 1
    SparseVectorView<double> data = conflict_constraints[0].get_data();
    const double* vals = data.getValues();
@@ -122,7 +122,7 @@ TEST_CASE( "conflict-analysis-binary-depth-two", "[conflict]" )
    REQUIRE( inds[0] == 4 );
 }
 
-TEST_CASE( "conflict-analysis-binary", "[conflict]" )
+TEST_CASE( "conflict-analysis-binary-with-resolution", "[conflict]" )
 {
    Problem<double> problem = setupProblemForConflictAnalysisNr2();
    problem.recomputeAllActivities();
@@ -170,7 +170,7 @@ TEST_CASE( "conflict-analysis-binary", "[conflict]" )
    Vec<Constraint<double>> conflict_constraints;
    conflictAnalysis.perform_conflict_analysis( bound_changes, infeasible_rows,
                                                conflict_constraints );
-                                               
+
    // conflict analysis returns the constraint x2 + x3 + x5 >= 1
    SparseVectorView<double> data = conflict_constraints[0].get_data();
    const double* vals = data.getValues();
@@ -221,22 +221,14 @@ setupProblemForConflictAnalysis()
    pb.setObjAll( coefficients );
    pb.setObjOffset( 0.0 );
    pb.setColIntegralAll( isIntegral );
-
-   pb.setRowLhsInf( 0, true );
-   pb.setRowLhsInf( 1, false );
-   pb.setRowLhsInf( 2, true );
-   pb.setRowLhsInf( 3, false );
-
-   pb.setRowRhsInf( 0, false );
-   pb.setRowRhsInf( 1, true );
-   pb.setRowRhsInf( 2, false );
-   pb.setRowRhsInf( 3, true );
-
+   pb.setRowLhsInfAll( { 1, 0, 1, 0 } );
+   pb.setRowRhsInfAll( { 0, 1, 0, 0 } );
    pb.setRowLhs( 1, 2.0 );
    pb.setRowLhs( 3, 2.0 );
 
    pb.setRowRhs( 0, 1.0 );
    pb.setRowRhs( 2, 3.0 );
+   pb.setRowRhs( 3, 2.0 );
 
    pb.addEntryAll( entries );
    pb.setColNameAll( columnNames );
