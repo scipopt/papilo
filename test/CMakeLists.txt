@@ -224,8 +224,7 @@ set(unit_tests
 
         "small-volume-algorithm-test"
 
-
-
+        "conflict-analysis-binary"
         "conflict-analysis-binary-depth-two"
         "conflict-analysis-check-data"
         
