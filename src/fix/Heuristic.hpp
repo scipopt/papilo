@@ -118,7 +118,7 @@ class Heuristic
 #endif
    }
 
-   void
+   bool
    perform_fix_and_propagate( const Vec<REAL>& primal_heur_sol,
                               REAL& best_obj_val,
                               Vec<REAL>& current_best_solution,
@@ -149,7 +149,7 @@ class Heuristic
                 for( int j = 0; j < primal_heur_sol.size(); j++ )
                    sum.add( int_solutions[i][j] * views[i].get_obj()[j] );
                 obj_value[i] = sum.get();
-                msg.info( "Propagating {} found obj value {}!\n", i,
+                msg.info( "\t\tPropagating {} found obj value {}!\n", i,
                           obj_value[i] );
              }
           } );
@@ -167,9 +167,9 @@ class Heuristic
       for( int j = 0; j < primal_heur_sol.size(); j++ )
          sum.add( int_solutions[0][j] * views[0].get_obj()[j] );
       obj_value[0] = sum.get();
-      msg.info( "Diving {} found obj value {}!\n", 0, obj_value[0] );
+      msg.info( "\t\tDiving {} found obj value {}!\n", 0, obj_value[0] );
 #endif
-      evaluate( best_obj_val, current_best_solution );
+      return evaluate( best_obj_val, current_best_solution );
    }
 
    void
@@ -207,19 +207,19 @@ class Heuristic
                       if( infeasible )
                       {
                          msg.info(
-                             " {} - OneOpt flipping variable {}: infeasible\n",
+                             "\t\t{} - OneOpt flipping variable {}: infeasible\n",
                              i, j );
                          continue;
                       }
                       REAL value = calculate_obj_value( result );
                       if( num.isGE( value, obj_value[i] ) )
-                         msg.info( " {} - OneOpt flipping variable {}: "
+                         msg.info( "\t\t{} - OneOpt flipping variable {}: "
                                    "unsuccessful -> worse obj {}: \n",
                                    i, j, value );
                       else if( num.isLT( value, obj_value[i] ) )
                       {
-                         msg.info( " {} - OneOpt flipping variable {}: "
-                                   "successful -> better obj {}: \n",
+                         msg.info( "\t\t{} - OneOpt flipping variable {}: "
+                                   "successful -> better obj: {}\n",
                                    i, j, value );
                          int_solutions[i] = result;
                          obj_value[i] = value;
@@ -236,19 +236,19 @@ class Heuristic
                       if( infeasible )
                       {
                          msg.info(
-                             " {} - OneOpt flipping variable {}: infeasible\n",
+                             "\t\t{} - OneOpt flipping variable {}: infeasible\n",
                              i, j );
                          continue;
                       }
                       REAL value = calculate_obj_value( result );
                       if( num.isGE( value, obj_value[i] ) )
-                         msg.info( " {} - OneOpt flipping variable {}: "
+                         msg.info( "\t\t{} - OneOpt flipping variable {}: "
                                    "unsuccessful -> worse obj {}: \n",
                                    i, j, value );
                       else if( num.isLT( value, obj_value[i] ) )
                       {
-                         msg.info( " {} - OneOpt flipping variable {}: "
-                                   "successful -> better obj {}: \n",
+                         msg.info( "\t\t{} - OneOpt flipping variable {}: "
+                                   "successful -> better obj: {}\n",
                                    i, j, value );
                          int_solutions[i] = result;
                          obj_value[i] = value;
@@ -262,7 +262,7 @@ class Heuristic
    }
 
  private:
-   void
+   bool
    evaluate( REAL& best_obj_val, Vec<REAL>& current_best_solution )
    {
       bool feasible = std::any_of( infeasible_arr.begin(), infeasible_arr.end(),
@@ -271,8 +271,8 @@ class Heuristic
       // TODO: copy the best solution;
       if( !feasible )
       {
-         msg.info( "Fix and Propagate did not find a feasible solution!\n" );
-         return;
+         msg.info( "\t\tFix and Propagate did not find a feasible solution!\n" );
+         return false;
       }
 
       int best_index = -1;
@@ -289,19 +289,20 @@ class Heuristic
       if( best_index == -1 )
       {
          msg.info(
-             "Fix and Propagate did not improve the current solution!\n" );
-         return;
+             "\t\tFix and Propagate did not improve the current solution!\n" );
+         return false;
       }
 
       if( current_best_solution.empty() )
-         msg.info( "Fix and Propagate found an initial solution: {}!\n",
+         msg.info( "\t\tFix and Propagate found an initial solution: {}!\n",
                    best_obj_val );
       else
-         msg.info( "Fix and Propagate found a new solution: {}!\n",
+         msg.info( "\t\tFix and Propagate found a new solution: {}!\n",
                    best_obj_val );
 
       current_best_solution = int_solutions[best_index];
       assert( best_obj_val == obj_value[best_index] );
+      return true;
    }
 
    REAL
