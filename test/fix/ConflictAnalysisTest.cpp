@@ -195,6 +195,10 @@ setupProblemForConflictAnalysis()
    Vec<double> lowerBounds{ 0.0, 0.0, 0.0, 0.0, 0.0 };
    Vec<uint8_t> isIntegral{ 1, 1, 1, 1, 1 };
 
+   Vec<uint8_t> lhsInf{ 1, 0, 1, 0 };
+   Vec<uint8_t> rhsInf{ 0, 1, 0, 0 };
+   Vec<double> lhs{ 0.0, 2.0, 0.0, 2.0 };
+   Vec<double> rhs{ 1.0, 0.0, 3.0, 2.0 };
    Vec<std::string> rowNames{ "A1", "A2", "A3", "A4" };
    Vec<std::string> columnNames{ "c1", "c2", "c3", "c4", "c5" };
    Vec<std::tuple<int, int, double>> entries{
@@ -221,15 +225,10 @@ setupProblemForConflictAnalysis()
    pb.setObjAll( coefficients );
    pb.setObjOffset( 0.0 );
    pb.setColIntegralAll( isIntegral );
-   pb.setRowLhsInfAll( { 1, 0, 1, 0 } );
-   pb.setRowRhsInfAll( { 0, 1, 0, 0 } );
-   pb.setRowLhs( 1, 2.0 );
-   pb.setRowLhs( 3, 2.0 );
-
-   pb.setRowRhs( 0, 1.0 );
-   pb.setRowRhs( 2, 3.0 );
-   pb.setRowRhs( 3, 2.0 );
-
+   pb.setRowLhsInfAll( lhsInf );
+   pb.setRowRhsInfAll( rhsInf );
+   pb.setRowLhsAll( lhs );
+   pb.setRowRhsAll( rhs );
    pb.addEntryAll( entries );
    pb.setColNameAll( columnNames );
    pb.setProblemName( "example for conflict analysis" );
@@ -245,6 +244,10 @@ setupProblemForConflictAnalysisNr2()
    Vec<double> lowerBounds{ 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 };
    Vec<uint8_t> isIntegral{ 1, 1, 1, 1, 1, 1 };
 
+   Vec<uint8_t> lhsInf{ 1, 1, 0, 1 };
+   Vec<uint8_t> rhsInf{ 0, 0, 1, 0 };
+   Vec<double> lhs{ 0.0, 0.0, 1.0, 0.0 };
+   Vec<double> rhs{ 1.0, 2.0, 0.0, 0.0 };
    Vec<std::string> rowNames{ "A1", "A2", "A3", "A4" };
    Vec<std::string> columnNames{ "c1", "c2", "c3", "c4", "c5", "c6" };
    Vec<std::tuple<int, int, double>> entries{
@@ -276,18 +279,10 @@ setupProblemForConflictAnalysisNr2()
    pb.setObjAll( coefficients );
    pb.setObjOffset( 0.0 );
    pb.setColIntegralAll( isIntegral );
-   pb.setRowLhsInf( 0, true );
-   pb.setRowLhsInf( 1, true );
-   pb.setRowLhsInf( 2, false );
-   pb.setRowLhsInf( 3, true );
-   pb.setRowRhsInf( 0, false );
-   pb.setRowRhsInf( 1, false );
-   pb.setRowRhsInf( 2, true );
-   pb.setRowRhsInf( 3, false );
-   pb.setRowLhs( 2, 1.0 );
-   pb.setRowRhs( 0, 1.0 );
-   pb.setRowRhs( 1, 2.0 );
-   pb.setRowRhs( 3, 0.0 );
+   pb.setRowLhsInfAll( lhsInf );
+   pb.setRowRhsInfAll( rhsInf );
+   pb.setRowLhsAll( lhs );
+   pb.setRowRhsAll( rhs );
    pb.addEntryAll( entries );
    pb.setColNameAll( columnNames );
    pb.setProblemName( "example 2 for conflict analysis" );
