@@ -74,7 +74,7 @@ class Algorithm
           [this, &problem, &parameter]()
           {
 #endif
-             msg.template info("Starting Algorithm\n Starting presolving:\n");
+             msg.info("Starting Algorithm\n Starting presolving:\n");
              // set up ProblemUpdate to trivialPresolve so that activities exist
              Presolve<REAL> presolve{};
              auto result = presolve.apply( problem, false );
