@@ -250,12 +250,14 @@ class VolumeAlgorithm
          else if( num.isGT( updated_objective[i], REAL{ 0.0 } ) )
          {
             if( domains.flags[i].test( ColFlag::kLbInf ) )
+               // TODO: how to deal with this?
                return std::numeric_limits<REAL>::min();
             solution[i] = domains.lower_bounds[i];
          }
          else
          {
             if( domains.flags[i].test( ColFlag::kUbInf ) )
+               // TODO: how to deal with this?
                return std::numeric_limits<REAL>::min();
             solution[i] = domains.upper_bounds[i];
          }
