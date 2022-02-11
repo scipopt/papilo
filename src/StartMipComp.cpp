@@ -36,23 +36,19 @@ using namespace papilo;
  * - Statistics
  *  - first solution found, optimal solution found
  *  - optimal value of solution/ optimum
+ *  - test on MipComp instances
  *  (- profiling)
  *
  * Volume algorithm:
- * - primal feasible solution
- * - hard constraints are excluded (introducing RowFlag::kHardContraints)
  * - restarting possibility (use vector pi should work already)
- * - add constraints of conflict analysis
+ * - add constraints of conflict analysis (extend pi)
  * - fractional of integer variables
  *
  * Conflict Analysis:
  * - TBD
  *
  * Fix and Propagate:
- * - optimize parallel scheme of OneOpt
- * - fix bugs
- * - generate data for conflict analysis
- *
+ * - optimize parallel scheme of OneOp
  */
 
 
