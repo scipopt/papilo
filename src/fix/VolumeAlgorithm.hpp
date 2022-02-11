@@ -117,6 +117,7 @@ class VolumeAlgorithm
          // given by (7).
          update_upper_bound( z_bar, upper_bound_reset_val, upper_bound,
                              finite_upper_bound );
+         assert( num.isGT( upper_bound, z_bar ) );
          REAL step_size = f * ( upper_bound - z_bar ) /
                           pow( op.l2_norm( viol_t ), 2.0 );
          msg.debug( "   Step size: {}\n", step_size );
@@ -219,13 +220,13 @@ class VolumeAlgorithm
       msg.detailed( "   sc_2: {}\n",
                 num.isZero( z_bar )
                     ? abs( op.multi( c, x_bar ) )
-                    : abs( op.multi( c, x_bar ) - z_bar ) / z_bar );
+                    : abs( op.multi( c, x_bar ) - z_bar ) / abs( z_bar ) );
       return num.isGE( op.l1_norm( v ), n_rows_A * parameter.con_abstol ) ||
              ( num.isZero( z_bar )
                    ? num.isGE( abs( op.multi( c, x_bar ) ),
                                parameter.obj_abstol )
                    : num.isGE( abs( op.multi( c, x_bar ) - z_bar ),
-                               z_bar * parameter.obj_reltol ) );
+                               abs( z_bar ) * parameter.obj_reltol ) );
    }
 
    REAL
