@@ -124,7 +124,7 @@ class Heuristic
                               Vec<REAL>& current_best_solution,
                               bool perform_backtracking = true,
                               bool perform_one_opt = true,
-                              bool stop_at_infeasible = false)
+                              bool stop_at_infeasible = true)
    {
       FixAndPropagate<REAL> fixAndPropagate{ msg, num };
       for( auto view : views )

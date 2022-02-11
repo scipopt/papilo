@@ -26,7 +26,7 @@ extern "C" {
 #endif
 
 void*
-setup( const char* filename, int* result );
+setup( const char* filename, int* result, int verbosity_level );
 
 void
 delete_problem_instance( void* heuristic_void_ptr );
