@@ -103,8 +103,8 @@ class VolumeAlgorithm
       // TODO: ok?
       REAL upper_bound_reset_val = num.isGE( box_upper_bound, REAL{ 1.0 } ) ?
                                    1.0 : box_upper_bound;
-      // TODO: how to set -inf (or a large negative value)?
-      REAL upper_bound = -1e30;
+      REAL upper_bound;
+      bool finite_upper_bound = false;
 
       op.calc_b_minus_Ax( A, x_bar, b, v_t );
       calc_violations( n_rows_A, A, pi_t, v_t, viol_t );
@@ -115,7 +115,8 @@ class VolumeAlgorithm
          // STEP 1:
          // Compute v_t = b − A x_bar and π_t = pi_bar + sv_t for a step size s
          // given by (7).
-         update_upper_bound( z_bar, upper_bound_reset_val, upper_bound );
+         update_upper_bound( z_bar, upper_bound_reset_val, upper_bound,
+                             finite_upper_bound );
          REAL step_size = f * ( upper_bound - z_bar ) /
                           pow( op.l2_norm( viol_t ), 2.0 );
          msg.debug( "   Step size: {}\n", step_size );
@@ -284,18 +285,29 @@ class VolumeAlgorithm
 
    void
    update_upper_bound( const REAL z_bar, const REAL upper_bound_reset_val,
-                       REAL& upper_bound )
+                       REAL& upper_bound, bool& finite_upper_bound )
    {
-      // TODO: shall we make 0.05, 0.03, 0.06, 1.0 global params same as f_min?
-      if( num.isGE( z_bar,
-                    upper_bound - abs( upper_bound ) * 0.05 ) )
+      if( finite_upper_bound )
       {
-         // TODO: replace 1.0 with some logical value
-         upper_bound = num.isZero( z_bar ) ? upper_bound_reset_val :
-             num.max( upper_bound + abs( upper_bound ) * 0.03,
-                      z_bar + abs( z_bar ) * 0.06 );
-         msg.debug( "   increased best bound: {}\n", upper_bound );
+         // TODO: shall we make 0.05, 0.03, 0.06, 1.0 global params same as f_min?
+         if( num.isGE( z_bar,
+                  upper_bound - abs( upper_bound ) * 0.05 ) )
+         {
+            // TODO: replace 1.0 with some logical value
+            upper_bound = num.isZero( z_bar ) ? upper_bound_reset_val :
+                          num.max( upper_bound + abs( upper_bound ) * 0.03,
+                          z_bar + abs( z_bar ) * 0.06 );
+            msg.debug( "   updated best bound: {}\n", upper_bound );
+         }
       }
+      else
+      {
+         upper_bound = num.isZero( z_bar ) ? upper_bound_reset_val :
+                       z_bar + abs( z_bar ) * 0.06;
+         finite_upper_bound = true;
+         msg.debug( "   updated best bound: {}\n", upper_bound );
+      }
+      assert( finite_upper_bound );
    }
 
    void
