@@ -72,6 +72,56 @@ main( int argc, char* argv[] )
    if( !optionsInfo.is_complete )
       return 0;
 
+//   if( !optionsInfo.param_settings_file.empty() )
+//   {
+//      ParameterSet paramSet = presolve.getParameters();
+//
+//      if( !optionsInfo.param_settings_file.empty() && !opts.print_params )
+//      {
+//         std::ifstream input( opts.param_settings_file );
+//         if( input )
+//         {
+//            String theoptionstr;
+//            String thevaluestr;
+//            for( String line; getline( input, line ); )
+//            {
+//               std::size_t pos = line.find_first_of( '#' );
+//               if( pos != String::npos )
+//                  line = line.substr( 0, pos );
+//
+//               pos = line.find_first_of( '=' );
+//
+//               if( pos == String::npos )
+//                  continue;
+//
+//               theoptionstr = line.substr( 0, pos - 1 );
+//               thevaluestr = line.substr( pos + 1 );
+//
+//               boost::algorithm::trim( theoptionstr );
+//               boost::algorithm::trim( thevaluestr );
+//
+//               try
+//               {
+//                  paramSet.parseParameter( theoptionstr.c_str(),
+//                                           thevaluestr.c_str() );
+//                  fmt::print( "set {} = {}\n", theoptionstr, thevaluestr );
+//               }
+//               catch( const std::exception& e )
+//               {
+//                  fmt::print( "parameter '{}' could not be set: {}\n", line,
+//                              e.what() );
+//               }
+//            }
+//         }
+//         else
+//         {
+//            fmt::print( "could not read parameter file '{}'\n",
+//                        opts.param_settings_file );
+//         }
+//      }
+//   }
+
+
    double readtime = 0;
    Timer t( readtime );
 
