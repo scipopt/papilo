@@ -161,7 +161,7 @@ class Heuristic
       if( infeasible_arr[0] )
       {
          obj_value[0] = 0;
-         return;
+         return false;
       }
       StableSum<REAL> sum{};
       for( int j = 0; j < primal_heur_sol.size(); j++ )
