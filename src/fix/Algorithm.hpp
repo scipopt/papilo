@@ -74,6 +74,7 @@ class Algorithm
           [this, &problem, &parameter]()
           {
 #endif
+             msg.info("Starting Algorithm\n Starting presolving:\n");
              // set up ProblemUpdate to trivialPresolve so that activities exist
              Presolve<REAL> presolve{};
              auto result = presolve.apply( problem, false );
@@ -83,8 +84,8 @@ class Algorithm
              case papilo::PresolveStatus::kUnbounded:
              case papilo::PresolveStatus::kUnbndOrInfeas:
              case papilo::PresolveStatus::kInfeasible:
-                fmt::print(
-                    "PaPILO detected infeasibility or unbounded-ness\n" );
+                msg.info(
+                    "PaPILO detected infeasibility or unbounded-ness.\n Stopped after {}s\n", timer.getTime() );
                 return;
              case papilo::PresolveStatus::kUnchanged:
              case papilo::PresolveStatus::kReduced:
@@ -134,11 +135,15 @@ class Algorithm
              if( min_val == std::numeric_limits<double>::min() )
                 return;
 
+             int round_counter = 0;
+             int round_first_solution = -1;
+             int round_best_solution = -1;
              while( true )
              {
+                msg.info( "Starting round {} - {:.3}s\n", round_counter, timer.getTime() );
                 if( timer.getTime() >= parameter.time_limit )
                    break;
-                msg.info( "Starting volume algorithm\n" );
+                msg.info( "\tStarting volume algorithm - {:.3} s\n", timer.getTime() );
                 primal_heur_sol = algorithm.volume_algorithm(
                     reformulated.getObjective().coefficients,
                     reformulated.getConstraintMatrix(),
@@ -148,7 +153,7 @@ class Algorithm
 
                 if( timer.getTime() >= parameter.time_limit )
                    break;
-                msg.info( "Starting fixing and propagating\n" );
+                msg.info( "\tStarting fixing and propagating - {:.3} s\n", timer.getTime() );
 
 
                 //TODO: this is highly non efficient
@@ -156,17 +161,24 @@ class Algorithm
                                primal_heur_sol.end() - slack_vars );
 
                 assert(sub.size() == problem.getNCols());
-                service.perform_fix_and_propagate( sub, best_obj_value,
+                bool sol_updated = service.perform_fix_and_propagate( sub, best_obj_value,
                                                    best_solution );
+                if( sol_updated )
+                {
+                   if(round_first_solution == -1)
+                      round_first_solution = round_counter;
+                   round_best_solution = round_counter;
+                }
 
                 if( timer.getTime() >= parameter.time_limit )
                    break;
 
-                msg.info( "Starting conflict analysis\n" );
+                msg.info( "\tStarting conflict analysis - {:.3} s\n", timer.getTime() );
                 // TODO: this is a dummy function
                 bool abort = conflict_analysis.perform_conflict_analysis();
                 if( abort )
-                   return;
+                   break;
+                round_counter++;
                 // TODO: add constraint to builder and generate new problem
              }
 
@@ -178,7 +190,9 @@ class Algorithm
                              result.postsolve );
 
              print_solution( original_solution.primal );
-             msg.info( "Solving took {} seconds.\n", timer.getTime() );
+             msg.info( "Algorithm finished after {:.3} seconds.\n", timer.getTime() );
+             msg.info( "First solution found in round {}.\n", round_first_solution );
+             msg.info( "Best solution found in round {}.\n", round_best_solution );
 #ifdef PAPILO_TBB
           } );
 #endif
@@ -265,13 +279,14 @@ class Algorithm
       const Vec<RowActivity<REAL>>& activities = problem.getRowActivities();
 
       int equations = 0;
-
+      int redundant_constraints = 0;
       for( int i = 0; i < problem.getNRows(); i++ )
       {
          int rowsize = rowSizes[i];
 
          if( !num.isEq( get_max_min_factor( matrix.getRowCoefficients( i ) ), threshold_hard_constraints ) )
          {
+            redundant_constraints++;
             rowFlags[i].set(RowFlag::kRedundant);
             continue;
          }
@@ -285,6 +300,8 @@ class Algorithm
          nrows++;
          nnz = nnz + rowsize;
       }
+      msg.info( "\n{} of the {} rows were considered hard and were excluded.\n", redundant_constraints, problem.getNRows() );
+
       slack_vars = nrows - equations;
       auto slack_var_upper_bounds = new double[slack_vars];
 
