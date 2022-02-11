@@ -441,7 +441,7 @@ install(FILES
         ${PROJECT_SOURCE_DIR}/src/fix/PresolveApi.h
         ${PROJECT_SOURCE_DIR}/src/fix/VectorMultiplication.hpp
         ${PROJECT_SOURCE_DIR}/src/fix/VolumeAlgorithm.hpp
-        ${PROJECT_SOURCE_DIR}/src/fix/VolumeAlgorithmParameter.hpp
+        ${PROJECT_SOURCE_DIR}/src/fix/AlgorithmParameter.hpp
         DESTINATION include/fix)
 
 install(FILES

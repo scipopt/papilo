@@ -22,7 +22,7 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 #include "fix/VectorMultiplication.hpp"
-#include "fix/VolumeAlgorithmParameter.hpp"
+#include "fix/AlgorithmParameter.hpp"
 #include "papilo/core/Presolve.hpp"
 #include "papilo/core/Problem.hpp"
 #include "papilo/io/Message.hpp"
@@ -46,14 +46,14 @@ class VolumeAlgorithm
    Num<REAL> num;
    VectorMultiplication<REAL> op;
    Timer timer;
-   VolumeAlgorithmParameter<REAL>& parameter;
+   AlgorithmParameter& parameter;
    REAL alpha;
    REAL alpha_max;
    REAL f;
 
  public:
    VolumeAlgorithm( Message _msg, Num<REAL> _num, Timer t,
-                    VolumeAlgorithmParameter<REAL>& parameter_ )
+                    AlgorithmParameter& parameter_ )
        : msg( _msg ), num( _num ), timer( t ), parameter( parameter_ ), op( {} )
    {
       alpha = parameter.alpha;
