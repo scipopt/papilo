@@ -77,6 +77,7 @@ class Algorithm
              msg.info("Starting Algorithm\n Starting presolving:\n");
              // set up ProblemUpdate to trivialPresolve so that activities exist
              Presolve<REAL> presolve{};
+             presolve.addDefaultPresolvers();
              auto result = presolve.apply( problem, false );
 
              switch( result.status )
