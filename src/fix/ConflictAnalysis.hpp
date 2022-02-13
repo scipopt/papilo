@@ -158,7 +158,7 @@ class ConflictAnalysis
    bool
    perform_conflict_analysis()
    {
-      msg.info( "function call is dummy and waited to be implemented above" );
+      msg.info( "function call is dummy and waited to be implemented above\n" );
       return true;
    }
 
