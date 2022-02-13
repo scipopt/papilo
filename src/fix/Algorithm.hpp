@@ -251,7 +251,6 @@ class Algorithm
    {
       ProblemBuilder<REAL> builder;
 
-
       int nnz = 0;
       int ncols = problem.getNCols();
       int nrows = 0;
@@ -285,7 +284,7 @@ class Algorithm
          nrows++;
          nnz = nnz + rowsize;
       }
-      slack_vars = nrows - equations;
+      slack_vars = 0;
       auto slack_var_upper_bounds = new double[slack_vars];
 
       builder.reserve( nnz, nrows, ncols + slack_vars );
@@ -316,6 +315,8 @@ class Algorithm
 
          if( flags.test( RowFlag::kEquation ) )
          {
+            assert( num.isEq( lhs, rhs ) );
+
             builder.addRowEntries( counter, rowlen, rowcols, rowvals );
             builder.setRowLhs( counter, lhs );
             builder.setRowRhs( counter, rhs );
@@ -326,84 +327,45 @@ class Algorithm
          {
             assert( !flags.test( RowFlag::kRhsInf ) );
 
-            auto new_vals = new double[rowlen + 1];
-            memcpy( new_vals, rowvals, rowlen * sizeof( double ) );
-            new_vals[rowlen] = 1;
-            auto new_indices = new int[rowlen + 1];
-            memcpy( new_indices, rowcols, rowlen * sizeof( int ) );
-            new_indices[rowlen] = ncols + slack_var_counter;
+            auto neg_vals = new double[rowlen];
+            invert( rowvals, neg_vals, rowlen );
 
-            builder.addRowEntries( counter, rowlen + 1, new_indices, new_vals );
-            builder.setRowLhs( counter, rhs );
-            builder.setRowRhs( counter, rhs );
+            builder.addRowEntries( counter, rowlen, rowcols, neg_vals );
+            builder.setRowLhs( counter, -1.0 * rhs );
+            builder.setRowRhs( counter, 0 );
             builder.setRowLhsInf( counter, false );
-            builder.setRowRhsInf( counter, false );
-
-            slack_var_upper_bounds[slack_var_counter] = rhs - min_activity;
-
-            slack_var_counter++;
+            builder.setRowRhsInf( counter, true );
          }
          else if( flags.test( RowFlag::kRhsInf ) )
          {
             assert( !flags.test( RowFlag::kLhsInf ) );
 
-            auto new_vals = new double[rowlen + 1];
-            memcpy( new_vals, rowvals, rowlen * sizeof( double ) );
-            new_vals[rowlen] = -1;
-            auto new_indices = new int[rowlen + 1];
-            memcpy( new_indices, rowcols, rowlen * sizeof( int ) );
-            new_indices[rowlen] = ncols + slack_var_counter;
-
-            builder.addRowEntries( counter, rowlen + 1, new_indices, new_vals );
+            builder.addRowEntries( counter, rowlen, rowcols, rowvals );
             builder.setRowLhs( counter, lhs );
-            builder.setRowRhs( counter, lhs );
+            builder.setRowRhs( counter, 0 );
             builder.setRowLhsInf( counter, false );
-            builder.setRowRhsInf( counter, false );
-
-            slack_var_upper_bounds[slack_var_counter] = max_activity - lhs;
-
-            slack_var_counter++;
+            builder.setRowRhsInf( counter, true );
          }
          else
          {
             assert( !flags.test( RowFlag::kLhsInf ) );
             assert( !flags.test( RowFlag::kRhsInf ) );
 
-            auto new_vals = new double[rowlen + 1];
-            memcpy( new_vals, rowvals, rowlen * sizeof( double ) );
-            new_vals[rowlen] = 1;
-            auto new_indices = new int[rowlen + 1];
-            memcpy( new_indices, rowcols, rowlen * sizeof( int ) );
-            new_indices[rowlen] = ncols + slack_var_counter;
+            auto neg_vals = new double[rowlen];
+            invert( rowvals, neg_vals, rowlen );
 
-            builder.addRowEntries( counter, rowlen + 1, new_indices, new_vals );
-            builder.setRowLhs( counter, rhs );
-            builder.setRowRhs( counter, rhs );
+            builder.addRowEntries( counter, rowlen, rowcols, neg_vals );
+            builder.setRowLhs( counter, -1.0 * rhs );
+            builder.setRowRhs( counter, 0 );
             builder.setRowLhsInf( counter, false );
-            builder.setRowRhsInf( counter, false );
+            builder.setRowRhsInf( counter, true );
             counter++;
 
-            slack_var_upper_bounds[slack_var_counter] = rhs - min_activity;
-
-            slack_var_counter++;
-
-            auto new_vals_2 = new double[rowlen + 1];
-            memcpy( new_vals_2, rowvals, rowlen * sizeof( double ) );
-            new_vals_2[rowlen] = -1;
-            auto new_indices_2 = new int[rowlen + 1];
-            memcpy( new_indices_2, rowcols, rowlen * sizeof( int ) );
-            new_indices_2[rowlen] = ncols + slack_var_counter;
-
-            builder.addRowEntries( counter, rowlen + 1, new_indices_2,
-                                   new_vals_2 );
+            builder.addRowEntries( counter, rowlen, rowcols, rowvals );
             builder.setRowLhs( counter, lhs );
-            builder.setRowRhs( counter, lhs );
+            builder.setRowRhs( counter, 0 );
             builder.setRowLhsInf( counter, false );
-            builder.setRowRhsInf( counter, false );
-
-            slack_var_upper_bounds[slack_var_counter] = max_activity - lhs;
-
-            slack_var_counter++;
+            builder.setRowRhsInf( counter, true );
          }
          counter++;
       }

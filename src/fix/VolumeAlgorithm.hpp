@@ -76,12 +76,9 @@ class VolumeAlgorithm
                      const Vec<REAL>& b, const VariableDomains<REAL>& domains,
                      const Vec<REAL>& pi, REAL box_upper_bound )
    {
-      std::all_of( A.getRowFlags().begin(), A.getRowFlags().end(),
-                   []( RowFlags row_flag ) { return row_flag.test(RowFlag::kEquation); } );
-
       int n_rows_A = A.getNRows();
 
-//      assert_pi( n_rows_A, A, pi );
+      assert_pi( n_rows_A, A );
 
       // Step 0
       // Set x_0 = x_bar, z_0 = z_bar, t = 1
@@ -94,6 +91,7 @@ class VolumeAlgorithm
       Vec<REAL> x_t( c );
       Vec<REAL> pi_t( pi );
       Vec<REAL> pi_bar( pi );
+      update_pi( n_rows_A, A, pi_t );
       Vec<REAL> residual_t( b );
 
       // We start with a vector π̄ and solve (6) to obtain x̄ and z̄.
@@ -107,7 +105,7 @@ class VolumeAlgorithm
       bool finite_upper_bound = false;
 
       op.calc_b_minus_Ax( A, x_bar, b, v_t );
-      calc_violations( n_rows_A, A, pi_t, v_t, viol_t );
+      calc_violations( n_rows_A, A, pi_bar, v_t, viol_t );
 
       while( stopping_criteria( viol_t, n_rows_A, c, x_bar, z_bar ) )
       {
@@ -119,10 +117,10 @@ class VolumeAlgorithm
                              finite_upper_bound );
          assert( num.isGT( upper_bound, z_bar ) );
          REAL step_size = f * ( upper_bound - z_bar ) /
-                          pow( op.l2_norm( viol_t ), 2.0 );
+                          pow( op.l2_norm( v_t ), 2.0 );
          msg.debug( "   Step size: {}\n", step_size );
-         op.calc_b_plus_sx( pi_bar, step_size, viol_t, pi_t );
-//         update_pi( n_rows_A, A, pi_t );
+         op.calc_b_plus_sx( pi_bar, step_size, v_t, pi_t );
+         update_pi( n_rows_A, A, pi_t );
 
          // Solve (6) with π_t , let x_t and z_t be the solutions obtained.
          REAL z_t =
@@ -150,6 +148,9 @@ class VolumeAlgorithm
          else
             improvement_indicator = false;
 
+         op.calc_b_minus_Ax( A, x_bar, b, v_t );
+         calc_violations( n_rows_A, A, pi_bar, v_t, viol_t );
+
          // Update f
          update_f( improvement_indicator, v_t, residual_t,
                    weak_improvement_iter_counter,
@@ -161,9 +162,6 @@ class VolumeAlgorithm
             update_alpha_max( z_bar, z_bar_old );
             z_bar_old = z_bar;
          }
-
-         op.calc_b_minus_Ax( A, x_bar, b, v_t );
-         calc_violations( n_rows_A, A, pi_t, v_t, viol_t );
 
          // Let t ← t + 1 and go to Step 1.
          counter = counter + 1;
@@ -177,8 +175,7 @@ class VolumeAlgorithm
    // Assumptions:
    // 1. Each pi_i is either free or >= 0.
    void
-   assert_pi( const int n_rows_A, const ConstraintMatrix<REAL>& A,
-              const Vec<REAL>& pi )
+   assert_pi( const int n_rows_A, const ConstraintMatrix<REAL>& A )
    {
       for( int i = 0; i < n_rows_A; i++ )
       {
@@ -275,7 +272,6 @@ class VolumeAlgorithm
                     Vec<REAL>& viol_residual )
    {
       viol_residual = residual;
-      /*
       for( int i = 0; i < n_rows_A; i++ )
       {
          // Note: isZero check would be different in case of non-zero LB on pi
@@ -283,7 +279,6 @@ class VolumeAlgorithm
              ( num.isLT( residual[i], REAL{ 0.0 } ) && num.isZero( pi[i] ) ) )
             viol_residual[i] = 0;
       }
-      */
    }
 
    void
@@ -296,7 +291,6 @@ class VolumeAlgorithm
          if( num.isGE( z_bar,
                   upper_bound - abs( upper_bound ) * 0.05 ) )
          {
-            // TODO: replace 1.0 with some logical value
             upper_bound = num.isZero( z_bar ) ? upper_bound_reset_val :
                           num.max( upper_bound + abs( upper_bound ) * 0.03,
                           z_bar + abs( z_bar ) * 0.06 );
