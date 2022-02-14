@@ -52,14 +52,17 @@ class ConflictAnalysis
    }
    bool
    perform_conflict_analysis( Vec<SingleBoundChange<REAL>>& bound_changes,
-                              Vec<std::pair<int, int>> infeasible_rows,
+                              Vec<std::pair<int, int>>& infeasible_rows,
                               Vec<Constraint<REAL>>& constraints )
    {
+      Vec<int> max_depths;
+      Vec<int> pos_in_bound_changes;
+
+      Vec<int> conflict_set_candidates;
+      Vec<bool> in_candidates;
+
       // bound change data as vectors for easier access
       max_depths.resize( problem.getNCols(), 0 );
-      is_fixing.resize( problem.getNCols(), 0 );
-      is_lower_bound.resize( problem.getNCols(), 0 );
-      reason_rows.resize( problem.getNCols(), 0 );
       pos_in_bound_changes.resize( problem.getNCols(), -1 );
 
       in_candidates.resize( problem.getNCols(), 0 );
@@ -71,14 +74,8 @@ class ConflictAnalysis
          if( bound_changes[i].get_depth_level() >
              max_depths[bound_changes[i].get_col()] )
          {
-            is_fixing[bound_changes[i].get_col()] =
-                bound_changes[i].is_manually_triggered();
-            is_lower_bound[bound_changes[i].get_col()] =
-                bound_changes[i].is_lower_bound();
             max_depths[bound_changes[i].get_col()] =
                 bound_changes[i].get_depth_level();
-            reason_rows[bound_changes[i].get_col()] =
-                bound_changes[i].get_reason_row();
             pos_in_bound_changes[bound_changes[i].get_col()] = i;
          }
       }
@@ -86,7 +83,8 @@ class ConflictAnalysis
       // Only fixings (works only for binaries)
       if( number_fixings == bound_changes.size() )
       {
-         simple_cut_from_fixings( bound_changes, constraints );
+         simple_cut_from_fixings( bound_changes, conflict_set_candidates,
+                                  constraints );
          return true;
       }
       else
@@ -101,16 +99,19 @@ class ConflictAnalysis
 
          // Find subset of indices that explain the infeasibility
          // adds column indices in conflict_set_candidates
-         explain_infeasibility( bound_changes, conflict_row_index );
+         explain_infeasibility( bound_changes, pos_in_bound_changes,
+                                conflict_set_candidates, in_candidates,
+                                conflict_row_index );
 
-         int num_vars_last_depth_level =
-             get_number_variables_depth_level( max_depths, last_depth_level );
+         int num_vars_last_depth_level = get_number_variables_depth_level(
+             max_depths, conflict_set_candidates, last_depth_level );
 
          if( num_vars_last_depth_level == 1 )
          {
             // Already at First UIP -> return conflict constraint
             // ToDo add constraint
-            add_constraint( bound_changes, constraints );
+            add_constraint( bound_changes, pos_in_bound_changes,
+                            conflict_set_candidates, constraints );
             msg.info( "Only one variable at last depth level! \n" );
             return true;
          }
@@ -123,10 +124,11 @@ class ConflictAnalysis
             int position_in_conflict_set;
 
             get_latest_col_index_in_depth_level(
-                max_depths, pos_in_bound_changes, last_depth_level, col_index,
-                position_in_conflict_set );
+                max_depths, pos_in_bound_changes, conflict_set_candidates,
+                last_depth_level, col_index, position_in_conflict_set );
 
-            int antecedent_row_index = reason_rows[col_index];
+            int antecedent_row_index =
+                bound_changes[pos_in_bound_changes[col_index]].get_reason_row();
             if( antecedent_row_index == -1 )
             {
                // should not happen
@@ -142,15 +144,18 @@ class ConflictAnalysis
                                               position_in_conflict_set );
 
                // resolve
-               explain_infeasibility( bound_changes, antecedent_row_index );
+               explain_infeasibility( bound_changes, pos_in_bound_changes,
+                                      conflict_set_candidates, in_candidates,
+                                      antecedent_row_index );
             }
 
             num_vars_last_depth_level = get_number_variables_depth_level(
-                max_depths, last_depth_level );
+                max_depths, conflict_set_candidates, last_depth_level );
          }
       }
 
-      add_constraint( bound_changes, constraints );
+      add_constraint( bound_changes, pos_in_bound_changes,
+                      conflict_set_candidates, constraints );
       // should return a list of constraint to be added to the builder
       return true;
    }
@@ -163,20 +168,9 @@ class ConflictAnalysis
    }
 
  private:
-   Vec<int> max_depths;
-   Vec<bool> is_fixing;
-   Vec<bool> is_lower_bound;
-   Vec<int> reason_rows;
-   Vec<int> pos_in_bound_changes;
-
-   Vec<int> conflict_set_candidates;
-   Vec<bool> in_candidates;
-
-   Vec<REAL> added_con_vals;
-   Vec<int> added_con_inds;
-
    bool
-   is_rhs_reason( Vec<SingleBoundChange<REAL>>& bound_changes, int row_idx )
+   is_rhs_reason( Vec<SingleBoundChange<REAL>>& bound_changes,
+                  Vec<int>& pos_in_bound_changes, int row_idx )
    {
       // get conflict row
       SparseVectorView<REAL> conflict_row =
@@ -191,9 +185,8 @@ class ConflictAnalysis
 
       for( int i = 0; i < row_length; i++ )
       {
-         bool is_in_bound_changes = max_depths[row_inds[i]] > 0 ? 1 : 0;
          int pos = pos_in_bound_changes[row_inds[i]];
-         if( row_vals[i] > 0 && is_in_bound_changes )
+         if( row_vals[i] > 0 && pos > 0 )
          {
             if( bound_changes[pos].get_new_bound_value() >
                 problem.getLowerBounds()[row_vals[i]] )
@@ -220,7 +213,8 @@ class ConflictAnalysis
    }
 
    bool
-   is_lhs_reason( Vec<SingleBoundChange<REAL>>& bound_changes, int row_idx )
+   is_lhs_reason( Vec<SingleBoundChange<REAL>>& bound_changes,
+                  Vec<int>& pos_in_bound_changes, int row_idx )
    {
       // get conflict row
       SparseVectorView<REAL> conflict_row =
@@ -234,9 +228,8 @@ class ConflictAnalysis
       REAL max_activity = problem.getRowActivities()[row_idx].max;
       for( int i = 0; i < row_length; i++ )
       {
-         bool is_in_bound_changes = max_depths[row_inds[i]] > 0 ? 1 : 0;
          int pos = pos_in_bound_changes[row_inds[i]];
-         if( row_vals[i] > 0 && is_in_bound_changes )
+         if( row_vals[i] > 0 && pos > 0 )
          {
             if( bound_changes[pos].get_new_bound_value() <
                 problem.getUpperBounds()[row_vals[i]] )
@@ -264,7 +257,9 @@ class ConflictAnalysis
 
    bool
    explain_infeasibility( Vec<SingleBoundChange<REAL>>& bound_changes,
-                          int row_idx )
+                          Vec<int>& pos_in_bound_changes,
+                          Vec<int>& conflict_set_candidates,
+                          Vec<bool>& in_candidates, int row_idx )
    {
       // get conflict row
       SparseVectorView<REAL> conflict_row =
@@ -281,23 +276,32 @@ class ConflictAnalysis
       // For GE constraints
       if( row_flag.test( RowFlag::kRhsInf ) )
       {
-         explain_infeasibility_ge( bound_changes, row_idx );
+         explain_infeasibility_ge( bound_changes, pos_in_bound_changes,
+                                   conflict_set_candidates, in_candidates,
+                                   row_idx );
       }
       // For LE constraints
       else if( row_flag.test( RowFlag::kLhsInf ) )
       {
-         explain_infeasibility_le( bound_changes, row_idx );
+         explain_infeasibility_le( bound_changes, pos_in_bound_changes,
+                                   conflict_set_candidates, in_candidates,
+                                   row_idx );
       }
       // For equalities or ranged rows
       else
       {
-         if( is_lhs_reason( bound_changes, row_idx ) )
+         if( is_lhs_reason( bound_changes, pos_in_bound_changes, row_idx ) )
          {
-            explain_infeasibility_ge( bound_changes, row_idx );
+            explain_infeasibility_ge( bound_changes, pos_in_bound_changes,
+                                      conflict_set_candidates, in_candidates,
+                                      row_idx );
          }
-         else if( is_rhs_reason( bound_changes, row_idx ) )
+         else if( is_rhs_reason( bound_changes, pos_in_bound_changes,
+                                 row_idx ) )
          {
-            explain_infeasibility_le( bound_changes, row_idx );
+            explain_infeasibility_le( bound_changes, pos_in_bound_changes,
+                                      conflict_set_candidates, in_candidates,
+                                      row_idx );
          }
       }
 
@@ -305,7 +309,9 @@ class ConflictAnalysis
    }
    bool
    explain_infeasibility_ge( Vec<SingleBoundChange<REAL>>& bound_changes,
-                             int row_idx )
+                             Vec<int>& pos_in_bound_changes,
+                             Vec<int>& conflict_set_candidates,
+                             Vec<bool>& in_candidates, int row_idx )
    {
       // get conflict row
       SparseVectorView<REAL> conflict_row =
@@ -316,17 +322,16 @@ class ConflictAnalysis
 
       REAL lhs = problem.getConstraintMatrix().getLeftHandSides()[row_idx];
 
-      REAL activity = problem.getRowActivities()[row_idx].max;
+      REAL max_activity = problem.getRowActivities()[row_idx].max;
       for( int i = 0; i < row_length; i++ )
       {
-         bool is_in_bound_changes = max_depths[row_inds[i]] > 0 ? 1 : 0;
          int pos = pos_in_bound_changes[row_inds[i]];
-         if( row_vals[i] > 0 && is_in_bound_changes )
+         if( row_vals[i] > 0 && pos > 0 )
          {
             if( bound_changes[pos].get_new_bound_value() <
                 problem.getUpperBounds()[row_vals[i]] )
             {
-               activity -=
+               max_activity -=
                    row_vals[i] * ( problem.getUpperBounds()[row_vals[i]] -
                                    bound_changes[pos].get_new_bound_value() );
                if( !in_candidates[row_inds[i]] )
@@ -341,7 +346,7 @@ class ConflictAnalysis
             if( bound_changes[pos].get_new_bound_value() >
                 problem.getLowerBounds()[row_vals[i]] )
             {
-               activity +=
+               max_activity +=
                    row_vals[i] * ( bound_changes[pos].get_new_bound_value() -
                                    problem.getLowerBounds()[row_vals[i]] );
                if( !in_candidates[row_inds[i]] )
@@ -351,7 +356,7 @@ class ConflictAnalysis
                }
             }
          }
-         if( activity - lhs < 0 )
+         if( max_activity - lhs < 0 )
             break;
       }
       return true;
@@ -359,7 +364,9 @@ class ConflictAnalysis
 
    bool
    explain_infeasibility_le( Vec<SingleBoundChange<REAL>>& bound_changes,
-                             int row_idx )
+                             Vec<int>& pos_in_bound_changes,
+                             Vec<int>& conflict_set_candidates,
+                             Vec<bool>& in_candidates, int row_idx )
    {
       // get conflict row
       SparseVectorView<REAL> conflict_row =
@@ -370,17 +377,16 @@ class ConflictAnalysis
 
       REAL rhs = problem.getConstraintMatrix().getRightHandSides()[row_idx];
 
-      REAL activity = problem.getRowActivities()[row_idx].min;
+      REAL min_activity = problem.getRowActivities()[row_idx].min;
       for( int i = 0; i < row_length; i++ )
       {
-         bool is_in_bound_changes = max_depths[row_inds[i]] > 0 ? 1 : 0;
          int pos = pos_in_bound_changes[row_inds[i]];
-         if( row_vals[i] > 0 && is_in_bound_changes )
+         if( row_vals[i] > 0 && pos > 0 )
          {
             if( bound_changes[pos].get_new_bound_value() >
                 problem.getLowerBounds()[row_vals[i]] )
             {
-               activity +=
+               min_activity +=
                    row_vals[i] * ( bound_changes[pos].get_new_bound_value() -
                                    problem.getLowerBounds()[row_vals[i]] );
                if( !in_candidates[row_inds[i]] )
@@ -395,7 +401,7 @@ class ConflictAnalysis
             if( bound_changes[pos].get_new_bound_value() <
                 problem.getUpperBounds()[row_vals[i]] )
             {
-               activity -=
+               min_activity -=
                    row_vals[i] * ( problem.getLowerBounds()[row_vals[i]] -
                                    bound_changes[pos].get_new_bound_value() );
                if( !in_candidates[row_inds[i]] )
@@ -405,27 +411,22 @@ class ConflictAnalysis
                }
             }
          }
-         if( activity - rhs > 0 )
+         if( min_activity - rhs > 0 )
             break;
       }
       return true;
    }
 
-   bool
-   resolve_bound_change( int col, Vec<int> row_inds,
-                         SparseVectorView<REAL> antecedent_row )
-   {
-      // ToDo
-      return true;
-   }
    int
-   get_last_depth_level( Vec<SingleBoundChange<REAL>> bound_changes )
+   get_last_depth_level( Vec<SingleBoundChange<REAL>>& bound_changes )
    {
       return bound_changes.back().get_depth_level();
    }
 
    int
-   get_number_variables_depth_level( Vec<int> max_depths, int depth )
+   get_number_variables_depth_level( Vec<int>& max_depths,
+                                     Vec<int>& conflict_set_candidates,
+                                     int depth )
    {
       int number_variables_depth_level = 0;
       for( int i = 0; i < conflict_set_candidates.size(); i++ )
@@ -435,9 +436,10 @@ class ConflictAnalysis
       }
       return number_variables_depth_level;
    }
-   bool
-   get_latest_col_index_in_depth_level( Vec<int> max_depths,
-                                        Vec<int> pos_in_bound_changes,
+   void
+   get_latest_col_index_in_depth_level( Vec<int>& max_depths,
+                                        Vec<int>& pos_in_bound_changes,
+                                        Vec<int>& conflict_set_candidates,
                                         int depth, int& col,
                                         int& position_in_conflict_set )
    {
@@ -454,11 +456,11 @@ class ConflictAnalysis
             latest_position = pos_in_bound_changes[conflict_set_candidates[i]];
          }
       }
-      return true;
+      return;
    }
 
    int
-   get_number_fixings( Vec<SingleBoundChange<REAL>> bound_changes )
+   get_number_fixings( Vec<SingleBoundChange<REAL>>& bound_changes )
    {
       int number_fixings = 0;
       for( int i = 0; i < bound_changes.size(); i++ )
@@ -469,24 +471,17 @@ class ConflictAnalysis
       return number_fixings;
    }
 
-   // ToDo
-   bool
-   get_conflict_data( Vec<SingleBoundChange<REAL>> bound_changes )
-   {
-
-      return true;
-   }
-
-   bool
-   add_constraint( Vec<SingleBoundChange<REAL>> bound_changes,
+   void
+   add_constraint( Vec<SingleBoundChange<REAL>>& bound_changes,
+                   Vec<int>& pos_in_bound_changes,
+                   Vec<int>& conflict_set_candidates,
                    Vec<Constraint<REAL>>& constraints )
    {
       RowFlags row_flag;
       row_flag.set( RowFlag::kRhsInf );
 
-      added_con_vals.resize( conflict_set_candidates.size(), 0.0 );
-      added_con_inds.resize( conflict_set_candidates.size(), 0 );
-
+      REAL added_con_vals[conflict_set_candidates.size()];
+      int added_con_inds[conflict_set_candidates.size()];
       REAL lhs = 1.0;
       for( int i = 0; i < conflict_set_candidates.size(); i++ )
       {
@@ -500,17 +495,17 @@ class ConflictAnalysis
          added_con_vals[i] = coef;
       }
 
-      SparseVectorView<REAL> row_data( added_con_vals.data(),
-                                       added_con_inds.data(),
+      SparseVectorView<REAL> row_data( &added_con_vals[0], &added_con_inds[0],
                                        (int)conflict_set_candidates.size() );
 
       Constraint<REAL> conf_con( row_data, row_flag, lhs, 0.0 );
       constraints.push_back( conf_con );
 
-      return true;
+      return;
    }
-   bool
-   simple_cut_from_fixings( Vec<SingleBoundChange<REAL>> bound_changes,
+   void
+   simple_cut_from_fixings( Vec<SingleBoundChange<REAL>>& bound_changes,
+                            Vec<int>& conflict_set_candidates,
                             Vec<Constraint<REAL>>& constraints )
    {
 
@@ -520,9 +515,8 @@ class ConflictAnalysis
       RowFlags row_flag;
       row_flag.set( RowFlag::kRhsInf );
 
-      added_con_vals.resize( conflict_set_candidates.size(), 0.0 );
-      added_con_inds.resize( conflict_set_candidates.size(), 0 );
-      int len;
+      REAL added_con_vals[conflict_set_candidates.size()];
+      int added_con_inds[conflict_set_candidates.size()];
 
       REAL lhs = 1.0;
 
@@ -530,23 +524,22 @@ class ConflictAnalysis
       {
          if( bound_changes[i].is_manually_triggered() )
          {
-            len++;
             REAL coef =
                 bound_changes[i].get_new_bound_value() > 0.5 ? -1.0 : 1.0;
 
             if( coef < 0 )
                lhs--;
-            added_con_inds.push_back( bound_changes[i].get_col() );
-            added_con_vals.push_back( coef );
+            added_con_inds[i] = bound_changes[i].get_col();
+            added_con_vals[i] = coef;
          }
       }
-      SparseVectorView<REAL> row_data( added_con_vals.data(),
-                                       added_con_inds.data(), len );
+      SparseVectorView<REAL> row_data( &added_con_vals[0], &added_con_inds[0],
+                                       conflict_set_candidates.size() );
 
       Constraint<REAL> conf_con( row_data, row_flag, lhs, 0.0 );
       constraints.push_back( conf_con );
 
-      return true;
+      return;
    }
 };
 
