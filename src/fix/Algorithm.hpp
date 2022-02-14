@@ -138,7 +138,6 @@ class Algorithm
              Vec<Vec<SingleBoundChange<REAL>>> bound_changes;
              Vec<std::pair<int, int>> infeasible_rows;
 
-
              int round_counter = 0;
              int round_first_solution = -1;
              int round_best_solution = -1;
@@ -162,12 +161,14 @@ class Algorithm
                 msg.info( "\tStarting fixing and propagating - {:.3} s\n",
                           timer.getTime() );
 
-//                Vec<REAL> sub( primal_heur_sol.begin(),
-//                               primal_heur_sol.end() - slack_vars );
-//
-//                assert( sub.size() == problem.getNCols() );
-                assert(problem.getNCols() == primal_heur_sol.size());
-                bool sol_updated = service.perform_fix_and_propagate( primal_heur_sol, best_obj_value, best_solution );
+                //                Vec<REAL> sub( primal_heur_sol.begin(),
+                //                               primal_heur_sol.end() -
+                //                               slack_vars );
+                //
+                //                assert( sub.size() == problem.getNCols() );
+                assert( problem.getNCols() == primal_heur_sol.size() );
+                bool sol_updated = service.perform_fix_and_propagate(
+                    primal_heur_sol, best_obj_value, best_solution );
                 if( sol_updated )
                 {
                    if( round_first_solution == -1 )
@@ -196,9 +197,11 @@ class Algorithm
              postsolve.undo( reduced_solution, original_solution,
                              result.postsolve );
 
-
              print_solution( original_solution.primal );
-             msg.info( "Algorithm finished after {:.3} seconds.\n",
+             msg.info( "Algorithm with objective value {:<3} finished after "
+                       "{:.3} seconds.\n",
+                       result.postsolve.problem.computeSolObjective(
+                           original_solution.primal ),
                        timer.getTime() );
              msg.info( "First solution found in round {}.\n",
                        round_first_solution );
@@ -459,7 +462,6 @@ class Algorithm
       presolveOptions.addParameters( paramSet );
       return paramSet;
    }
-
 };
 
 } // namespace papilo
