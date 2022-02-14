@@ -135,6 +135,35 @@ class Heuristic
    }
 
    bool
+   find_initial_solution( REAL& current_objective, Vec<REAL>& current_best_solution )
+   {
+      FixAndPropagate<REAL> fixAndPropagate{ msg, num };
+      for( auto view : views )
+         view.reset();
+      tbb::parallel_for(
+          tbb::blocked_range<int>( 0, 4 ),
+          [&]( const tbb::blocked_range<int>& r )
+          {
+             for( int i = r.begin(); i != r.end(); ++i )
+             {
+                infeasible_arr[i] = fixAndPropagate.find_initial_solution(
+                    0, views[i], int_solutions[i] );
+                if( infeasible_arr[i] )
+                {
+                   obj_value[i] = 0;
+                   msg.info( "\t\tInitial sol {} is infeasible!\n", i,
+                             obj_value[i] );
+                   break;
+                }
+                obj_value[i] = calculate_obj_value(int_solutions[i]);
+                msg.info( "\t\tInitial sol {} found obj value {}!\n", i,
+                          obj_value[i] );
+             }
+          } );
+      return evaluate( current_objective, current_best_solution );
+   }
+
+   bool
    perform_fix_and_propagate( const Vec<REAL>& primal_heur_sol,
                               REAL& best_obj_val,
                               Vec<REAL>& current_best_solution,
@@ -183,10 +212,7 @@ class Heuristic
          obj_value[0] = 0;
          return false;
       }
-      StableSum<REAL> sum{};
-      for( int j = 0; j < primal_heur_sol.size(); j++ )
-         sum.add( int_solutions[0][j] * views[0].get_obj()[j] );
-      obj_value[0] = sum.get();
+      obj_value[i] = calculate_obj_value(int_solutions[0]);
       msg.info( "\t\tPropagating {} found obj value {}! (backtracks {})\n", 0,
                 obj_value[0], backtracks );
 #endif

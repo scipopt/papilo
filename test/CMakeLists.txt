@@ -216,6 +216,9 @@ set(unit_tests
         "fix-and-propagate-it-modified-solution-is-feasible"
         "fix-and-propagate-it-solution-is-feasible"
         "fix-and-propagate-check-conflict-analysis-data"
+        "fix-and-propagate-initial-solution-fix-to-upperbound"
+        "fix-and-propagate-initial-solution-fix-to-lowerbound"
+        "fix-and-propagate-initial-solution-fix-to-zero"
 
         "vector-calc_b_minus_xA"
         "vector-l2-norm"

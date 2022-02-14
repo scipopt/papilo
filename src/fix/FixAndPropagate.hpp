@@ -75,8 +75,9 @@ class FixAndPropagate
    bool
    fix_and_propagate( const Vec<REAL>& cont_solution, Vec<REAL>& result,
                       RoundingStrategy<REAL>& strategy,
-                      ProbingView<REAL>& probing_view,int& successful_backtracks,
-                      bool perform_backtracking, bool stop_at_infeasibility )
+                      ProbingView<REAL>& probing_view,
+                      int& successful_backtracks, bool perform_backtracking,
+                      bool stop_at_infeasibility )
    {
       // if no backtrack just "dive" to the node whether it is infeasible or not
       if( !perform_backtracking )
@@ -134,6 +135,87 @@ class FixAndPropagate
             return probing_view.isInfeasible();
          }
       }
+   }
+
+   /**
+    *
+    * @param mode 0 -> 0 1-> lowerbound 2 -> upperbound, 3-> random
+    * @param probing_view
+    * @return
+    */
+   bool
+   find_initial_solution( int mode, ProbingView<REAL>& probing_view,
+                          Vec<REAL>& result )
+   {
+
+      for( int i = 0; i < probing_view.getProbingLowerBounds().size(); i++ )
+      {
+         auto upper_bounds = probing_view.getProbingUpperBounds();
+         auto flags = probing_view.getProbingDomainFlags();
+         auto lower_bounds = probing_view.getProbingLowerBounds();
+         if( num.isEq( upper_bounds[i], lower_bounds[i] ) )
+            continue;
+         REAL value;
+         switch( mode )
+         {
+         case 0:
+            if( !flags[i].test( ColFlag::kUbInf ) &&
+                num.isLT( upper_bounds[i], 0 ) )
+               value = upper_bounds[i];
+            else if( !flags[i].test( ColFlag::kLbInf ) &&
+                     num.isGT( lower_bounds[i], 0 ) )
+               value = lower_bounds[i];
+            else
+               value = 0;
+         case 1:
+            if( !flags[i].test( ColFlag::kLbInf ) )
+               value = lower_bounds[i];
+            else if( !flags[i].test( ColFlag::kUbInf ) )
+               value = upper_bounds[i];
+            else
+            {
+               assert( flags[i].test( ColFlag::kLbInf ) &&
+                       flags[i].test( ColFlag::kUbInf ) );
+               value = 0;
+            }
+            break;
+         case 2:
+            if( !flags[i].test( ColFlag::kUbInf ) )
+               value = upper_bounds[i];
+            else if( !flags[i].test( ColFlag::kLbInf ) )
+               value = lower_bounds[i];
+            else
+            {
+               assert( flags[i].test( ColFlag::kLbInf ) &&
+                       flags[i].test( ColFlag::kUbInf ) );
+               value = 0;
+            }
+            break;
+         case 3:
+            if( !flags[i].test( ColFlag::kUbInf ) and
+                !flags[i].test( ColFlag::kLbInf ) )
+            {
+//               TODO:
+            }
+            else if( !flags[i].test( ColFlag::kLbInf ) )
+               value = lower_bounds[i];
+            else if( !flags[i].test( ColFlag::kUbInf ) )
+               value = upper_bounds[i];
+            if( !flags[i].test( ColFlag::kUbInf ) )
+               value = 0;
+            return false;
+         default:
+            assert( false );
+         }
+         msg.detailed( "Fix var {} to {}\n", i, value );
+
+         probing_view.setProbingColumn( i, value );
+         bool infeasibility_detected = perform_probing_step( probing_view );
+         if( infeasibility_detected )
+            return true;
+      }
+      create_solution( result, probing_view );
+      return false;
    }
 
    bool
