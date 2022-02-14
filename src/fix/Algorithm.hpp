@@ -184,10 +184,13 @@ class Algorithm
 
                 if( service.exists_conflict_constraints() )
                    break;
-                Vec<Vec<Constraint<REAL>>> constraints =
-                    service.get_constraints();
+                auto constraints = service.get_constraints();
                 round_counter++;
-                // TODO: add constraint to builder and generate new problem
+
+                for( const auto& c : constraints )
+                   add_constraints( c, builder, reformulated.getNRows() );
+                reformulated = builder.build();
+                //TODO: Suresh resize pi
              }
 
              Solution<REAL> original_solution{};
@@ -210,6 +213,23 @@ class Algorithm
 #ifdef PAPILO_TBB
           } );
 #endif
+   }
+
+   void
+   add_constraints( const Vec<Constraint<REAL>> constraints,
+                    ProblemBuilder<REAL> builder, int rows )
+   {
+      for( const auto& constraint : constraints )
+      {
+         builder.addRowEntries( rows, constraint.get_data().getLength(),
+                                constraint.get_data().getIndices(),
+                                constraint.get_data().getValues() );
+         builder.setRowLhs( rows, constraint.get_lhs() );
+         builder.setRowRhs( rows, constraint.get_rhs() );
+         builder.setRowLhsInf( rows, constraint.get_row_flag().test(RowFlag::kLhsInf) );
+         builder.setRowRhsInf( rows, constraint.get_row_flag().test(RowFlag::kRhsInf) );
+         rows++;
+      }
    }
 
    REAL
