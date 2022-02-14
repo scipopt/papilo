@@ -83,16 +83,16 @@ TEST_CASE( "conflict-analysis-binary-no-resolution", "[conflict]" )
 
    Vec<SingleBoundChange<double>> bound_changes;
    // bound changes for x1, x2, x3 (decision level 1)
-   SingleBoundChange<double> bound_change_1( 2, -1, 1.0, true, false, 1 );
+   SingleBoundChange<double> bound_change_1( 2, -1, 1.0, true, true, -2 );
    bound_changes.push_back( bound_change_1 );
-   SingleBoundChange<double> bound_change_2( 0, 0, 0.0, false, false, 1 );
+   SingleBoundChange<double> bound_change_2( 0, 0, 0.0, false, false, -3 );
    bound_changes.push_back( bound_change_2 );
-   SingleBoundChange<double> bound_change_3( 1, 1, 1.0, false, false, 1 );
+   SingleBoundChange<double> bound_change_3( 1, 1, 1.0, false, true, -3 );
    bound_changes.push_back( bound_change_3 );
    // bound changes for x4, x5 (decision level 2)
-   SingleBoundChange<double> bound_change_4( 3, -1, 1.0, true, false, 2 );
+   SingleBoundChange<double> bound_change_4( 3, -1, 1.0, true, true, -4 );
    bound_changes.push_back( bound_change_4 );
-   SingleBoundChange<double> bound_change_5( 4, 2, 0.0, false, false, 2 );
+   SingleBoundChange<double> bound_change_5( 4, 2, 0.0, false, false, -5 );
    bound_changes.push_back( bound_change_5 );
 
    double t = 0;
@@ -103,7 +103,7 @@ TEST_CASE( "conflict-analysis-binary-no-resolution", "[conflict]" )
 
    papilo::Vec<std::pair<int, int>> infeasible_rows;
    std::pair<int, int> infeas_pair;
-   infeas_pair.first = 5;
+   infeas_pair.first = 4;
    infeas_pair.second = 3;
    infeasible_rows.push_back( infeas_pair );
    Vec<Constraint<double>> conflict_constraints;
@@ -142,18 +142,18 @@ TEST_CASE( "conflict-analysis-binary-with-resolution", "[conflict]" )
 
    Vec<SingleBoundChange<double>> bound_changes;
    // bound changes for x1, x2, x3 (decision level 1)
-   SingleBoundChange<double> bound_change_1( 0, -1, 1.0, true, false, 1 );
+   SingleBoundChange<double> bound_change_1( 0, -1, 1.0, true, false, -2 );
    bound_changes.push_back( bound_change_1 );
-   SingleBoundChange<double> bound_change_2( 1, 0, 0.0, false, false, 1 );
+   SingleBoundChange<double> bound_change_2( 1, 0, 0.0, false, false, -3 );
    bound_changes.push_back( bound_change_2 );
-   SingleBoundChange<double> bound_change_3( 2, 0, 0.0, false, false, 1 );
+   SingleBoundChange<double> bound_change_3( 2, 0, 0.0, false, false, -3 );
    bound_changes.push_back( bound_change_3 );
    // bound changes for x4, x5, x6 (decision level 2)
-   SingleBoundChange<double> bound_change_4( 3, -1, 1.0, true, false, 2 );
+   SingleBoundChange<double> bound_change_4( 3, -1, 1.0, true, false, -4 );
    bound_changes.push_back( bound_change_4 );
-   SingleBoundChange<double> bound_change_5( 4, 1, 0.0, false, false, 2 );
+   SingleBoundChange<double> bound_change_5( 4, 1, 0.0, false, false, -5 );
    bound_changes.push_back( bound_change_5 );
-   SingleBoundChange<double> bound_change_6( 5, 2, 1.0, false, false, 2 );
+   SingleBoundChange<double> bound_change_6( 5, 2, 1.0, false, false, -5 );
    bound_changes.push_back( bound_change_6 );
 
    double t = 0;
@@ -164,7 +164,7 @@ TEST_CASE( "conflict-analysis-binary-with-resolution", "[conflict]" )
 
    papilo::Vec<std::pair<int, int>> infeasible_rows;
    std::pair<int, int> infeas_pair;
-   infeas_pair.first = 6;
+   infeas_pair.first = 5;
    infeas_pair.second = 3;
    infeasible_rows.push_back( infeas_pair );
    Vec<Constraint<double>> conflict_constraints;
