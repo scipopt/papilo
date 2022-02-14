@@ -23,6 +23,7 @@
 
 #include "fix/FixAndPropagateApi.cpp"
 #include "catch/catch.hpp"
+#include "papilo/io/SolParser.hpp"
 
 TEST_CASE( "fix-and-propagate-api", "[fix]" )
 {
@@ -35,8 +36,37 @@ TEST_CASE( "fix-and-propagate-api", "[fix]" )
    for( int i = 0; i < n_cols; i++ )
       primal_solution[i] = ( 1.0 + i ) / 10.0;
    double val = 50;
-   bool success = call_algorithm( problem_ptr, primal_solution, sol, n_cols, &val);
+   bool success =
+       call_algorithm( problem_ptr, primal_solution, sol, n_cols, &val );
    delete_problem_instance( problem_ptr );
    REQUIRE( success );
    REQUIRE( val == 9 );
 }
+
+//TEST_CASE( "fix-and-propagate-api-specify-test", "[fix]" )
+//{
+//   int result = 1;
+//   const char* path_to_file = "/home/alexander/git_repositories/mipcomp22/"
+//                              "presolved/academictimetablesmall.mps.gz";
+//   auto problem_ptr = setup( path_to_file,
+//                             &result, 3 );
+//   assert( result == 0 );
+//   auto heuristic = (Heuristic<double>*)( problem_ptr );
+//
+//   int n_cols = heuristic->problem.getNCols();
+//
+//   Vec<int> mapping{};
+//   for( int i = 0; i < n_cols; i++ )
+//      mapping.push_back( i );
+//   Solution<double> solution;
+//   auto sol = new double[n_cols];
+//   bool success = SolParser<double>::read(
+//       "/home/alexander/git_repositories/mipcomp22/presolved_frac/"
+//       "academictimetablesmall.sol",
+//       mapping, heuristic->problem.getVariableNames(), solution );
+//   double* a = &solution.primal[0];
+//
+//   double val = 50;
+//   success = call_algorithm( problem_ptr, a, sol, n_cols, &val );
+//   delete_problem_instance( problem_ptr );
+//}

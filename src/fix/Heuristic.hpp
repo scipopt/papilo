@@ -51,9 +51,12 @@ class Heuristic
    Vec<REAL> cols_sorted_by_obj;
    Vec<REAL> obj_value;
    Vec<bool> infeasible_arr;
-   Problem<REAL>& problem;
    ConflictAnalysis<REAL> conflict_analysis;
    Vec<Vec<Constraint<REAL>>> constraints{};
+
+ public:
+   Problem<REAL>& problem;
+
 
  public:
    Heuristic( Message msg_, Num<REAL> num_, Timer& timer_,
@@ -210,6 +213,8 @@ class Heuristic
 
                 if( infeas_copy[i] )
                 {
+                   if(!perform_conflict_analysis)
+                      continue;
                    assert( views[i].get_infeasible_rows().size() == 1 );
                    conflict_analysis.perform_conflict_analysis(
                        views[i].get_changes(),
