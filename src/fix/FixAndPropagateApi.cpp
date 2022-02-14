@@ -30,7 +30,7 @@
 using namespace papilo;
 
 void*
-setup( const char* filename, int* result )
+setup( const char* filename, int* result, int verbosity_level )
 {
 
    std::string filename_as_string( filename );
@@ -49,7 +49,28 @@ setup( const char* filename, int* result )
    auto problem = new Problem<double>( prob.get() );
    problem->recomputeAllActivities();
    Message msg{};
-   //   msg.setVerbosityLevel( papilo::VerbosityLevel::kWarning );
+   switch( verbosity_level )
+   {
+   case 0:
+      msg.setVerbosityLevel(papilo::VerbosityLevel::kQuiet);
+      break;
+   case 1:
+      msg.setVerbosityLevel(papilo::VerbosityLevel::kError);
+      break;
+   case 2:
+      msg.setVerbosityLevel(papilo::VerbosityLevel::kWarning);
+      break;
+   case 3:
+      msg.setVerbosityLevel(papilo::VerbosityLevel::kInfo);
+      break;
+   case 4:
+      msg.setVerbosityLevel(papilo::VerbosityLevel::kDetailed);
+      break;
+   default:
+      assert(false);
+
+   }
+   msg.setVerbosityLevel( papilo::VerbosityLevel::kWarning );
    auto heuristic = new Heuristic<double>{ msg, {}, t, *problem };
    heuristic->setup();
    *result = 0;
@@ -82,7 +103,7 @@ call_algorithm( void* heuristic_void_ptr, double* cont_solution, double* result,
 
           double local_obj = *current_obj_value;
           heuristic->perform_fix_and_propagate( sol, local_obj, res, true, true,
-                                                true );
+                                                false );
 
           if( local_obj < *current_obj_value )
              *current_obj_value = local_obj;

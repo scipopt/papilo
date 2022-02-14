@@ -109,7 +109,7 @@ class VolumeAlgorithm
 
       while( stopping_criteria( viol_t, n_rows_A, c, x_bar, z_bar ) )
       {
-         msg.info( "Round of volume algorithm: {}\n", counter );
+         msg.detailed( "Round of volume algorithm: {}\n", counter );
          // STEP 1:
          // Compute v_t = b − A x_bar and π_t = pi_bar + sv_t for a step size s
          // given by (7).
@@ -168,6 +168,8 @@ class VolumeAlgorithm
       };
       // TODO: ahoen@suresh -> overwrite pi with current pi to be able to warm
       // restart the algorithm?
+      //TODO: print some more useful data @Suresh
+      msg.info("\t\tVol alg performed {} rounds.\n", counter);
       return x_bar;
    }
 
