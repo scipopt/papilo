@@ -56,8 +56,9 @@ TEST_CASE( "fix-and-propagate-integer-variable", "[fix]" )
    FractionalRoundingStrategy<double> strategy{ {}, problem };
 
    ProbingView<double> view {problem, {}};
+   int backtracks = 0;
    bool infeasible =
-       fixAndPropagate.fix_and_propagate( primal_solution, res, strategy, view, true, false  );
+       fixAndPropagate.fix_and_propagate( primal_solution, res, strategy, view, backtracks, true, false  );
 
    REQUIRE( !infeasible );
    REQUIRE( res[0] == 3 );
@@ -83,8 +84,10 @@ TEST_CASE( "fix-and-propagate-cont-variable-stays-cont", "[fix]" )
    FractionalRoundingStrategy<double> strategy{ {}, problem };
 
    ProbingView<double> view {problem, {}};
+   int backtracks = 0;
+
    bool infeasible =
-       fixAndPropagate.fix_and_propagate( primal_solution, res, strategy, view, true, false  );
+       fixAndPropagate.fix_and_propagate( primal_solution, res, strategy, view, backtracks, true, false  );
 
    REQUIRE( !infeasible );
    REQUIRE( res[0] == 0.1 );
@@ -109,8 +112,9 @@ TEST_CASE( "fix-and-propagate-all-integer-solutions", "[fix]" )
    FractionalRoundingStrategy<double> strategy{ {}, problem };
 
    ProbingView<double> view {problem, {}};
+   int backtracks = 0;
    bool infeasible =
-       fixAndPropagate.fix_and_propagate( primal_solution, res, strategy, view, true, false  );
+       fixAndPropagate.fix_and_propagate( primal_solution, res, strategy, view, backtracks, true, false  );
 
 
    REQUIRE( !infeasible );
@@ -134,8 +138,9 @@ TEST_CASE( "fix-and-propagate-integer-can-not-be-fixed", "[fix]" )
    FractionalRoundingStrategy<double> strategy{ {}, problem };
 
    ProbingView<double> view {problem, {}};
+   int backtracks = 0;
    bool infeasible =
-       fixAndPropagate.fix_and_propagate( primal_solution, res, strategy, view, true, false  );
+       fixAndPropagate.fix_and_propagate( primal_solution, res, strategy, view, backtracks, true, false  );
 
 
    REQUIRE( !infeasible );
@@ -159,8 +164,9 @@ TEST_CASE( "fix-and-propagate-frac-backtrack", "[fix]" )
    FractionalRoundingStrategy<double> strategy{ {}, problem };
 
    ProbingView<double> view {problem, {}};
+   int backtracks = 0;
    bool infeasible =
-       fixAndPropagate.fix_and_propagate( primal_solution, res, strategy, view, true, false  );
+       fixAndPropagate.fix_and_propagate( primal_solution, res, strategy, view,backtracks, true, false  );
 
 
    REQUIRE( !infeasible );
@@ -190,8 +196,9 @@ TEST_CASE( "fix-and-propagate-frac-check-within-bounds", "[fix]" )
    FractionalRoundingStrategy<double> strategy{ {}, problem };
 
    ProbingView<double> view {problem, {}};
+   int backtracks = 0;
    bool infeasible =
-       fixAndPropagate.fix_and_propagate( primal_solution, res, strategy, view, true, false  );
+       fixAndPropagate.fix_and_propagate( primal_solution, res, strategy, view, backtracks,true, false  );
 
    REQUIRE( !infeasible );
    REQUIRE( res[0] == 1 );
@@ -214,8 +221,9 @@ TEST_CASE( "fix-and-propagate-random-backtrack", "[fix]" )
    RandomRoundingStrategy<double> strategy{ 0, {} };
 
    ProbingView<double> view {problem, {}};
+   int backtracks = 0;
    bool infeasible =
-       fixAndPropagate.fix_and_propagate( primal_solution, res, strategy, view, true, false  );
+       fixAndPropagate.fix_and_propagate( primal_solution, res, strategy, view,backtracks, true, false  );
 
    REQUIRE( !infeasible );
    REQUIRE( res[0] == 0 );
@@ -239,8 +247,9 @@ TEST_CASE( "fix-and-propagate-random", "[fix]" )
    RandomRoundingStrategy<double> strategy{ 0, {} };
 
    ProbingView<double> view {problem, {}};
+   int backtracks = 0;
    bool infeasible =
-       fixAndPropagate.fix_and_propagate( primal_solution, res, strategy, view, false, false  );
+       fixAndPropagate.fix_and_propagate( primal_solution, res, strategy, view,backtracks, false, false  );
 
    REQUIRE( !infeasible );
    REQUIRE( res[0] == 0 );
@@ -268,8 +277,9 @@ TEST_CASE( "fix-and-propagate-random-check-within-bounds", "[fix]" )
    RandomRoundingStrategy<double> strategy{ 0, {} };
 
    ProbingView<double> view {problem, {}};
+   int backtracks = 0;
    bool infeasible =
-       fixAndPropagate.fix_and_propagate( primal_solution, res, strategy, view, true, false  );
+       fixAndPropagate.fix_and_propagate( primal_solution, res, strategy, view,backtracks, true, false  );
 
    REQUIRE( !infeasible );
    REQUIRE( res[0] == 1 );
@@ -292,8 +302,9 @@ TEST_CASE( "fix-and-propagate-farkas-backtrack", "[fix]" )
    FarkasRoundingStrategy<double> strategy{ 0, {}, false };
 
    ProbingView<double> view {problem, {}};
+   int backtracks = 0;
    bool infeasible =
-       fixAndPropagate.fix_and_propagate( primal_solution, res, strategy, view, true, false  );
+       fixAndPropagate.fix_and_propagate( primal_solution, res, strategy, view, backtracks,true, false  );
 
    REQUIRE( !infeasible );
    REQUIRE( res[0] == 1 );
@@ -321,8 +332,9 @@ TEST_CASE( "fix-and-propagate-farkas-check-within-bounds", "[fix]" )
    FarkasRoundingStrategy<double> strategy{ 0, {}, true };
 
    ProbingView<double> view {problem, {}};
+   int backtracks = 0;
    bool infeasible =
-       fixAndPropagate.fix_and_propagate( primal_solution, res, strategy, view, true, false  );
+       fixAndPropagate.fix_and_propagate( primal_solution, res, strategy, view, backtracks, true, false  );
 
    REQUIRE( !infeasible );
    REQUIRE( res[0] == 0 );
@@ -351,8 +363,9 @@ TEST_CASE( "fix-and-propagate-stop-at-infeas-false", "[fix]" )
    FractionalRoundingStrategy<double> strategy{ {}, problem };
 
    ProbingView<double> view {problem, {}};
+   int backtracks = 0;
    bool infeasible =
-       fixAndPropagate.fix_and_propagate( primal_solution, res, strategy, view, true, true  );
+       fixAndPropagate.fix_and_propagate( primal_solution, res, strategy, view, backtracks, true, true  );
 
    REQUIRE( infeasible );
    // if stop at infeasible is true the res should not be modified if infeasible
@@ -381,8 +394,9 @@ TEST_CASE( "fix-and-propagate-check-conflict-analysis-data", "[fix]" )
    FractionalRoundingStrategy<double> strategy{ {}, problem };
 
    ProbingView<double> view {problem, {}};
+   int backtracks = 0;
    bool infeasible =
-       fixAndPropagate.fix_and_propagate( primal_solution, res, strategy, view, true, false  );
+       fixAndPropagate.fix_and_propagate( primal_solution, res, strategy, view, backtracks, true, false  );
 
    auto changes = view.get_changes();
    auto conflicts = view.get_infeasible_rows();

@@ -75,7 +75,7 @@ class FixAndPropagate
    bool
    fix_and_propagate( const Vec<REAL>& cont_solution, Vec<REAL>& result,
                       RoundingStrategy<REAL>& strategy,
-                      ProbingView<REAL>& probing_view,
+                      ProbingView<REAL>& probing_view,int& successful_backtracks,
                       bool perform_backtracking, bool stop_at_infeasibility )
    {
       // if no backtrack just "dive" to the node whether it is infeasible or not
@@ -89,7 +89,6 @@ class FixAndPropagate
          create_solution( result, probing_view );
          return probing_view.isInfeasible();
       }
-
       while( true )
       {
          propagate_to_leaf_or_infeasibility( cont_solution, strategy, true,
@@ -125,6 +124,7 @@ class FixAndPropagate
                create_solution( result, probing_view );
                return probing_view.isInfeasible();
             }
+            successful_backtracks++;
          }
          else
          {
