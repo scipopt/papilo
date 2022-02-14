@@ -57,27 +57,38 @@ struct AlgorithmParameter
    void
    addParameters( ParameterSet& paramSet )
    {
-      paramSet.addParameter( "vol.alpha", "@Suresh", alpha, 0, 2 );
-      paramSet.addParameter( "vol.alpha_max", "@Suresh", alpha_max, 0, 2 );
-      paramSet.addParameter( "vol.f", "@Suresh", f, 0.0, 2.0 );
-      paramSet.addParameter( "vol.f_min", "@Suresh", f_min, 0.0, 2.0 );
-      paramSet.addParameter( "vol.f_max", "@Suresh", f_max, 0.0, 2.0 );
-      paramSet.addParameter( "vol.f_strong_incr_factor", "@Suresh",
+      paramSet.addParameter( "vol.alpha", "multiplier for the convex "
+                             "combination of primal solutions", alpha, 0, 1.0 );
+      paramSet.addParameter( "vol.alpha_max", "upper bound for the parameter "
+                             "alpha", alpha_max, 0, 1.0 );
+      paramSet.addParameter( "vol.f", "multiplier for evaluating the step "
+                             "size", f, 0.0, 2.0 );
+      paramSet.addParameter( "vol.f_min", "lower bound for the parameter f",
+                             f_min, 0.0, 1.0 );
+      paramSet.addParameter( "vol.f_max", "upper bound for the parameter f",
+                             f_max, 0.0, 2.0 );
+      paramSet.addParameter( "vol.f_strong_incr_factor", "multiplier for "
+                             "varying the parameter f in green iterations",
                              f_strong_incr_factor, 0.0, 1.0 );
-      paramSet.addParameter( "vol.f_weak_incr_factor", "@Suresh",
+      paramSet.addParameter( "vol.f_weak_incr_factor", "multiplier for "
+                             "varying the parameter f in yellow iterations",
                              f_weak_incr_factor, 0.0, 1.0 );
-      paramSet.addParameter( "vol.f_decr_factor", "@Suresh", f_decr_factor, 0.0,
+      paramSet.addParameter( "vol.f_decr_factor", "multiplier for varying the "
+                             "parameter f in red iterations", f_decr_factor,
+                             0.0, 1.0 );
+      paramSet.addParameter( "vol.obj_reltol", "relative tolerance for "
+                             "duality gap", obj_reltol, 0.0, 1.0 );
+      paramSet.addParameter( "vol.obj_abstol", "absolute tolerance for "
+                             "duality gap", obj_abstol, 0.0, 1.0 );
+      paramSet.addParameter( "vol.con_abstol", "absolute tolerance for average "
+                             "primal feasibility", con_abstol, 0.0, 1.0 );
+      paramSet.addParameter( "vol.weak_improvement_iter_limit", "number of "
+                             "yellow iterations after which the parameter f "
+                             "is updated", weak_improvement_iter_limit, 0.0,
                              1.0 );
-      paramSet.addParameter( "vol.obj_reltol", "@Suresh", obj_reltol, 0.0,
-                             1.0 );
-      paramSet.addParameter( "vol.obj_abstol", "@Suresh", obj_abstol, 0.0,
-                             1.0 );
-      paramSet.addParameter( "vol.con_abstol", "@Suresh", con_abstol, 0.0,
-                             1.0 );
-      paramSet.addParameter( "vol.weak_improvement_iter_limit", "@Suresh",
-                             weak_improvement_iter_limit, 0.0, 1.0 );
-      paramSet.addParameter( "vol.non_improvement_iter_limit", "@Suresh",
-                             non_improvement_iter_limit, 0.0, 1.0 );
+      paramSet.addParameter( "vol.non_improvement_iter_limit", "number of "
+                             "red iterations after which the parameter f is "
+                             "updated", non_improvement_iter_limit, 0.0, 1.0 );
       paramSet.addParameter( "vol.threshold_hard_constraints",
                              "constraint for which "
                              "max(abs(coeff))/max(abs(coeff)) > x are excluded",
