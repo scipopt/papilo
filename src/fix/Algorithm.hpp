@@ -52,31 +52,32 @@ class Algorithm
    Message msg;
    Num<REAL> num;
    Timer timer;
-   double time_limit;
-   REAL threshold_hard_constraints;
+   AlgorithmParameter alg_parameter;
+   PresolveOptions presolveOptions;
 
  public:
-   Algorithm( Message _msg, Num<REAL> _num, Timer t, double time_limit_, double threshold_hard_constraints_ )
-       : msg( _msg ), num( _num ), timer( t ), time_limit(time_limit_), threshold_hard_constraints(threshold_hard_constraints_)
+   Algorithm( Message _msg, Num<REAL> _num, Timer t )
+       : msg( _msg ), num( _num ), timer( t )
    {
    }
 
    void
-   solve_problem( Problem<REAL>& problem,
-                  VolumeAlgorithmParameter<REAL>& parameter )
+   solve_problem( Problem<REAL>& problem )
    {
 #ifdef PAPILO_TBB
-      tbb::task_arena arena( 8 );
+      tbb::task_arena arena( alg_parameter.threads );
 #endif
 
 #ifdef PAPILO_TBB
       return arena.execute(
-          [this, &problem, &parameter]()
+          [this, &problem]()
           {
 #endif
              msg.info("Starting Algorithm\n Starting presolving:\n");
-             // set up ProblemUpdate to trivialPresolve so that activities exist
              Presolve<REAL> presolve{};
+             presolve.getPresolveOptions().threads = alg_parameter.threads;
+             presolve.getPresolveOptions().tlim = alg_parameter.time_limit;
+             // set up ProblemUpdate to trivialPresolve so that activities exist
              presolve.addDefaultPresolvers();
              auto result = presolve.apply( problem, false );
 
@@ -110,7 +111,7 @@ class Algorithm
              problem.recomputeAllActivities();
 
              Heuristic<REAL> service{ msg, num, timer, problem };
-             VolumeAlgorithm<REAL> algorithm{ msg, num, timer, parameter };
+             VolumeAlgorithm<REAL> algorithm{ msg, num, timer, alg_parameter };
              ConflictAnalysis<REAL> conflict_analysis{ msg, num, timer };
 
              service.setup();
@@ -142,7 +143,7 @@ class Algorithm
              while( true )
              {
                 msg.info( "Starting round {} - {:.3}s\n", round_counter, timer.getTime() );
-                if( timer.getTime() >= parameter.time_limit )
+                if( timer.getTime() >= alg_parameter.time_limit )
                    break;
                 msg.info( "\tStarting volume algorithm - {:.3} s\n", timer.getTime() );
                 primal_heur_sol = algorithm.volume_algorithm(
@@ -152,7 +153,7 @@ class Algorithm
                     reformulated.getVariableDomains(), pi, min_val );
                 print_solution( primal_heur_sol );
 
-                if( timer.getTime() >= parameter.time_limit )
+                if( timer.getTime() >= alg_parameter.time_limit )
                    break;
                 msg.info( "\tStarting fixing and propagating - {:.3} s\n", timer.getTime() );
 
@@ -171,7 +172,7 @@ class Algorithm
                    round_best_solution = round_counter;
                 }
 
-                if( timer.getTime() >= parameter.time_limit )
+                if( timer.getTime() >= alg_parameter.time_limit )
                    break;
 
                 msg.info( "\tStarting conflict analysis - {:.3} s\n", timer.getTime() );
@@ -284,7 +285,7 @@ class Algorithm
       {
          int rowsize = rowSizes[i];
 
-         if( !num.isEq( get_max_min_factor( matrix.getRowCoefficients( i ) ), threshold_hard_constraints ) )
+         if( !num.isEq( get_max_min_factor( matrix.getRowCoefficients( i ) ), alg_parameter.threshold_hard_constraints ) )
          {
             redundant_constraints++;
             rowFlags[i].set(RowFlag::kRedundant);
@@ -317,10 +318,10 @@ class Algorithm
          auto flags = rowFlags[i];
          if( flags.test( RowFlag::kRedundant ) )
          {
-            assert(!num.isEq( get_max_min_factor( matrix.getRowCoefficients( i ) ), threshold_hard_constraints ));
+            assert(!num.isEq( get_max_min_factor( matrix.getRowCoefficients( i ) ), alg_parameter.threshold_hard_constraints ));
             continue;
          }
-         assert(num.isEq( get_max_min_factor( matrix.getRowCoefficients( i ) ), threshold_hard_constraints ));
+         assert(num.isEq( get_max_min_factor( matrix.getRowCoefficients( i ) ), alg_parameter.threshold_hard_constraints ));
          const SparseVectorView<REAL>& view = matrix.getRowCoefficients( i );
          const int* rowcols = view.getIndices();
          const REAL* rowvals = view.getValues();
@@ -433,6 +434,17 @@ class Algorithm
       for( int i = 0; i < length; i++ )
          result[i] = pDouble[i] * -1;
    }
+
+   ParameterSet
+   getParameters()
+   {
+      ParameterSet paramSet;
+      msg.addParameters( paramSet );
+      alg_parameter.addParameters( paramSet );
+      presolveOptions.addParameters( paramSet );
+      return paramSet;
+   }
+
 };
 
 } // namespace papilo
