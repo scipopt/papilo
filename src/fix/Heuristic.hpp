@@ -24,6 +24,8 @@
 #ifndef FIX_FIX_AND_PROPAGATE_SERVICE_HPP
 #define FIX_FIX_AND_PROPAGATE_SERVICE_HPP
 
+#include "fix/ConflictAnalysis.hpp"
+#include "fix/Constraint.hpp"
 #include "fix/FixAndPropagate.hpp"
 #include "fix/strategy/FarkasRoundingStrategy.hpp"
 #include "fix/strategy/FractionalRoundingStrategy.hpp"
@@ -44,11 +46,15 @@ class Heuristic
    Num<REAL> num;
    Timer timer;
    Vec<RoundingStrategy<REAL>*> strategies{};
-   Vec<Vec<REAL>> int_solutions{};
-   Vec<ProbingView<REAL>> views{};
-   Vec<REAL> cols_sorted_by_obj{};
+   Vec<Vec<REAL>> int_solutions;
+   Vec<ProbingView<REAL>> views;
+   Vec<REAL> cols_sorted_by_obj;
    Vec<REAL> obj_value;
    Vec<bool> infeasible_arr;
+   ConflictAnalysis<REAL> conflict_analysis;
+   Vec<Vec<Constraint<REAL>>> constraints{};
+
+ public:
    Problem<REAL>& problem;
 
  public:
@@ -56,7 +62,8 @@ class Heuristic
               Problem<REAL>& problem_ )
        : msg( msg_ ), num( num_ ), timer( timer_ ), strategies( {} ),
          int_solutions( {} ), views( {} ), obj_value( {} ),
-         infeasible_arr( {} ), cols_sorted_by_obj( {} ), problem( problem_ )
+         infeasible_arr( {} ), cols_sorted_by_obj( {} ), problem( problem_ ),
+         conflict_analysis( { msg, num, timer, problem } )
    {
    }
 
@@ -96,6 +103,11 @@ class Heuristic
       obj_value.push_back( 0 );
       obj_value.push_back( 0 );
 
+      constraints.push_back( {} );
+      constraints.push_back( {} );
+      constraints.push_back( {} );
+      constraints.push_back( {} );
+
       Vec<REAL>& objective = problem.getObjective().coefficients;
       cols_sorted_by_obj.reserve( objective.size() );
       for( int i = 0; i < objective.size(); i++ )
@@ -124,7 +136,7 @@ class Heuristic
                               Vec<REAL>& current_best_solution,
                               bool perform_backtracking = true,
                               bool perform_one_opt = true,
-                              bool stop_at_infeasible = true)
+                              bool stop_at_infeasible = true )
    {
       FixAndPropagate<REAL> fixAndPropagate{ msg, num };
       for( auto view : views )
@@ -137,27 +149,33 @@ class Heuristic
           {
              for( int i = r.begin(); i != r.end(); ++i )
              {
+                int backtracks = 0;
                 infeasible_arr[i] = fixAndPropagate.fix_and_propagate(
                     primal_heur_sol, int_solutions[i], *( strategies[i] ),
-                    views[i], perform_backtracking, stop_at_infeasible );
+                    views[i], backtracks, perform_backtracking,
+                    stop_at_infeasible );
                 if( infeasible_arr[i] )
                 {
                    obj_value[i] = 0;
+                   msg.info(
+                       "\t\tPropagating {} is infeasible! (backtracks {})\n", i,
+                       obj_value[i], backtracks );
                    break;
                 }
                 StableSum<REAL> sum{};
                 for( int j = 0; j < primal_heur_sol.size(); j++ )
                    sum.add( int_solutions[i][j] * views[i].get_obj()[j] );
                 obj_value[i] = sum.get();
-                msg.info( "\t\tPropagating {} found obj value {}!\n", i,
-                          obj_value[i] );
+                msg.info(
+                    "\t\tPropagating {} found obj value {}! (backtracks {})\n",
+                    i, obj_value[i], backtracks );
              }
           } );
-      if(perform_one_opt)
-         one_opt();
 #else
+      int backtracks = 0;
       infeasible_arr[0] = fixAndPropagate.fix_and_propagate(
-          primal_heur_sol, int_solutions[0], *( strategies[0] ), views[0], perform_backtracking, stop_at_infeasible );
+          primal_heur_sol, int_solutions[0], *( strategies[0] ), views[0],
+          backtracks, perform_backtracking, stop_at_infeasible );
       if( infeasible_arr[0] )
       {
          obj_value[0] = 0;
@@ -167,98 +185,144 @@ class Heuristic
       for( int j = 0; j < primal_heur_sol.size(); j++ )
          sum.add( int_solutions[0][j] * views[0].get_obj()[j] );
       obj_value[0] = sum.get();
-      msg.info( "\t\tDiving {} found obj value {}!\n", 0, obj_value[0] );
+      msg.info( "\t\tPropagating {} found obj value {}! (backtracks {})\n", 0,
+                obj_value[0], backtracks );
 #endif
+      one_opt( perform_one_opt, stop_at_infeasible );
       return evaluate( best_obj_val, current_best_solution );
    }
 
    void
-   one_opt()
+   one_opt( bool perform_one_opt, bool perform_conflict_analysis )
    {
-#ifdef PAPILO_TBB
-      //TODO: return conflicts maybe?
-      //TODO: parallelize more efficiently
+      if( !perform_one_opt && !perform_conflict_analysis )
+         return;
+      for( int i = 0; i < constraints.size(); i++ )
+         constraints[i].clear();
       FixAndPropagate<REAL> fixAndPropagate{ msg, num };
 
+      Vec<bool> infeas_copy{ infeasible_arr };
       Vec<REAL> coefficients = problem.getObjective().coefficients;
+#ifdef PAPILO_TBB
       tbb::parallel_for(
-          tbb::blocked_range<int>( 0, 4 ),
+          tbb::blocked_range<int>( 0, views.size() ),
           [&]( const tbb::blocked_range<int>& r )
           {
              for( int i = r.begin(); i != r.end(); ++i )
+#else
+      for( int i = 0; i != views.size(); ++i )
+
+#endif
              {
-                Vec<REAL> result = { int_solutions[i] };
-                for( int j = 0; j < cols_sorted_by_obj.size(); j++ )
+
+                if( infeas_copy[i] )
                 {
-                   views[i].reset();
-                   if( num.isZero( coefficients[j] ) )
-                      break;
-                   if( !problem.getColFlags()[j].test( ColFlag::kIntegral ) ||
-                       problem.getLowerBounds()[j] != 0 ||
-                       problem.getUpperBounds()[j] != 1 )
+                   if( !perform_conflict_analysis )
                       continue;
-                   REAL solution_value = int_solutions[i][j];
-                   if( num.isGT( coefficients[j], 0 ) )
+                   assert( !views[i].get_infeasible_rows().empty() );
+                   auto changes = views[i].get_changes();
+                   auto infeasible_rows = views[i].get_infeasible_rows();
+                   conflict_analysis.perform_conflict_analysis(
+                       changes, infeasible_rows, constraints[i] );
+                   assert( std::all_of(
+                       constraints[i].begin(), constraints[i].end(),
+                       []( Constraint<REAL>& c )
+                       {
+                          return c.get_row_flag().test( RowFlag::kEquation ) ||
+                                 !c.get_row_flag().test( RowFlag::kLhsInf );
+                       } ) );
+                }
+                else if( perform_one_opt )
+                {
+                   assert( !infeasible_arr[i] );
+                   Vec<REAL> result = { int_solutions[i] };
+                   for( int j = 0; j < cols_sorted_by_obj.size(); j++ )
                    {
-                      if( num.isZero( solution_value ) )
+                      views[i].reset();
+                      if( num.isZero( coefficients[j] ) )
+                         break;
+                      if( !problem.getColFlags()[j].test(
+                              ColFlag::kIntegral ) ||
+                          problem.getLowerBounds()[j] != 0 ||
+                          problem.getUpperBounds()[j] != 1 )
                          continue;
-                      bool infeasible = fixAndPropagate.one_opt(
-                          int_solutions[i], j, 0, views[i], result );
-                      if( infeasible )
+                      REAL solution_value = int_solutions[i][j];
+                      if( num.isGT( coefficients[j], 0 ) )
                       {
-                         msg.info(
-                             "\t\t{} - OneOpt flipping variable {}: infeasible\n",
-                             i, j );
-                         continue;
-                      }
-                      REAL value = calculate_obj_value( result );
-                      if( num.isGE( value, obj_value[i] ) )
-                         msg.info( "\t\t{} - OneOpt flipping variable {}: "
-                                   "unsuccessful -> worse obj {}: \n",
-                                   i, j, value );
-                      else if( num.isLT( value, obj_value[i] ) )
-                      {
-                         msg.info( "\t\t{} - OneOpt flipping variable {}: "
-                                   "successful -> better obj: {}\n",
-                                   i, j, value );
-                         int_solutions[i] = result;
-                         obj_value[i] = value;
-                      }
-                   }
-                   else
-                   {
-                      assert( num.isLT( coefficients[j], 0 ) );
-                      if( num.isZero( solution_value ) )
-                         if( !num.isZero( solution_value ) )
+                         if( num.isZero( solution_value ) )
                             continue;
-                      bool infeasible = fixAndPropagate.one_opt(
-                          int_solutions[i], j, 1, views[i], result );
-                      if( infeasible )
-                      {
-                         msg.info(
-                             "\t\t{} - OneOpt flipping variable {}: infeasible\n",
-                             i, j );
-                         continue;
+                         bool infeasible = fixAndPropagate.one_opt(
+                             int_solutions[i], j, 0, views[i], result );
+                         if( infeasible )
+                         {
+                            msg.info( "\t\t{} - OneOpt flipping variable {}: "
+                                      "infeasible\n",
+                                      i, j );
+                            continue;
+                         }
+                         REAL value = calculate_obj_value( result );
+                         if( num.isGE( value, obj_value[i] ) )
+                            msg.info( "\t\t{} - OneOpt flipping variable {}: "
+                                      "unsuccessful -> worse obj {}: \n",
+                                      i, j, value );
+                         else if( num.isLT( value, obj_value[i] ) )
+                         {
+                            msg.info( "\t\t{} - OneOpt flipping variable {}: "
+                                      "successful -> better obj: {}\n",
+                                      i, j, value );
+                            int_solutions[i] = result;
+                            obj_value[i] = value;
+                         }
                       }
-                      REAL value = calculate_obj_value( result );
-                      if( num.isGE( value, obj_value[i] ) )
-                         msg.info( "\t\t{} - OneOpt flipping variable {}: "
-                                   "unsuccessful -> worse obj {}: \n",
-                                   i, j, value );
-                      else if( num.isLT( value, obj_value[i] ) )
+                      else
                       {
-                         msg.info( "\t\t{} - OneOpt flipping variable {}: "
-                                   "successful -> better obj: {}\n",
-                                   i, j, value );
-                         int_solutions[i] = result;
-                         obj_value[i] = value;
+                         assert( num.isLT( coefficients[j], 0 ) );
+                         if( num.isZero( solution_value ) )
+                            if( !num.isZero( solution_value ) )
+                               continue;
+                         bool infeasible = fixAndPropagate.one_opt(
+                             int_solutions[i], j, 1, views[i], result );
+                         if( infeasible )
+                         {
+                            msg.info( "\t\t{} - OneOpt flipping variable {}: "
+                                      "infeasible\n",
+                                      i, j );
+                            continue;
+                         }
+                         REAL value = calculate_obj_value( result );
+                         if( num.isGE( value, obj_value[i] ) )
+                            msg.info( "\t\t{} - OneOpt flipping variable {}: "
+                                      "unsuccessful -> worse obj {}: \n",
+                                      i, j, value );
+                         else if( num.isLT( value, obj_value[i] ) )
+                         {
+                            msg.info( "\t\t{} - OneOpt flipping variable {}: "
+                                      "successful -> better obj: {}\n",
+                                      i, j, value );
+                            int_solutions[i] = result;
+                            obj_value[i] = value;
+                         }
+                         break;
                       }
-                      break;
                    }
                 }
              }
+#ifdef PAPILO_TBB
           } );
 #endif
+   }
+
+   Vec<Vec<Constraint<REAL>>>&
+   get_constraints()
+   {
+      return constraints;
+   }
+
+   bool
+   exists_conflict_constraints()
+   {
+      return std::any_of( constraints.begin(), constraints.end(),
+                          []( Vec<Constraint<REAL>> c ) { return c.empty(); } );
    }
 
  private:
@@ -271,7 +335,8 @@ class Heuristic
       // TODO: copy the best solution;
       if( !feasible )
       {
-         msg.info( "\t\tFix and Propagate did not find a feasible solution!\n" );
+         msg.info(
+             "\t\tFix and Propagate did not find a feasible solution!\n" );
          return false;
       }
 

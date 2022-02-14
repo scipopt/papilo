@@ -54,7 +54,7 @@ class Constraint
   }
 
   RowFlags
-  get_row_flags()
+  get_row_flag()
   {
     return row_flag;
   }
