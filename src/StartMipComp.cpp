@@ -147,7 +147,7 @@ main( int argc, char* argv[] )
    double time_limit = 10 * 60;
    VolumeAlgorithmParameter<double> para{ 0.05, 0.1, 0.2,  0.0005, 2,
                                           2,    1.1, 0.66, 0.02,   0.001,
-                                          0.02, 2,   20,   time_limit };
+                                          0.02, 2,   20,   time_limit, 20 };
 
 #ifndef PAPILO_TBB
    msg.error("Please build with TBB to use the parallel feature!!!");

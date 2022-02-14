@@ -74,7 +74,8 @@ class VolumeAlgorithm
    Vec<REAL>
    volume_algorithm( const Vec<REAL> c, const ConstraintMatrix<REAL>& A,
                      const Vec<REAL>& b, const VariableDomains<REAL>& domains,
-                     const Vec<REAL>& pi, REAL box_upper_bound )
+                     const Vec<REAL>& pi, const int num_int_vars,
+                     REAL box_upper_bound )
    {
       int n_rows_A = A.getNRows();
 
@@ -103,6 +104,11 @@ class VolumeAlgorithm
                                    1.0 : box_upper_bound;
       REAL upper_bound;
       bool finite_upper_bound = false;
+
+      Vec<Vec<REAL>> primal_sols;
+      Vec<Vec<REAL>> dual_sols;
+      Vec<Vec<bool>> primal_sol_int_indicators;
+      int num_int_var_int_val;
 
       op.calc_b_minus_Ax( A, x_bar, b, v_t );
       calc_violations( n_rows_A, A, pi_bar, v_t, viol_t );
@@ -134,7 +140,6 @@ class VolumeAlgorithm
          op.calc_qb_plus_sx( alpha, x_t, 1 - alpha, x_bar,
                              x_bar );
 
-
          // Step 2:
          // If z_t > z_bar update π_bar and z_bar
          if( num.isGT( z_t, z_bar ) )
@@ -147,6 +152,11 @@ class VolumeAlgorithm
          }
          else
             improvement_indicator = false;
+
+         primal_sols.push_back( x_bar );
+         calc_frac_ints( x_bar, domains, num_int_var_int_val,
+                         primal_sol_int_indicators );
+         dual_sols.push_back( pi_bar );
 
          op.calc_b_minus_Ax( A, x_bar, b, v_t );
          calc_violations( n_rows_A, A, pi_bar, v_t, viol_t );
@@ -266,6 +276,26 @@ class VolumeAlgorithm
 
       msg.debug( "   opt_val: {}\n", obj_value.get() );
       return obj_value.get();
+   }
+
+   // TODO: create an array for int var indices only once in Algorithm.hpp and
+   //       pass it to the volume algo call?
+   void
+   calc_frac_ints( const Vec<REAL>& x_bar,
+                   const VariableDomains<REAL>& domains,
+                   int& num_int_var_int_val,
+                   Vec<Vec<bool>>& primal_sol_int_indicators )
+   {
+      num_int_var_int_val = 0;
+      int sol_size = x_bar.size();
+      Vec<bool> int_var_int_val_indicator( sol_size );
+      for( int i = 0; i < sol_size; i++ )
+      {
+         if( domains.flags[i].test( ColFlag::kIntegral ) && num.isIntegral( x_bar[i] ) )
+            int_var_int_val_indicator[i] = true;
+            num_int_var_int_val++;
+      }
+      primal_sol_int_indicators.push_back( int_var_int_val_indicator );
    }
 
    void
