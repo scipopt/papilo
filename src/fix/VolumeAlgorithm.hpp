@@ -105,15 +105,16 @@ class VolumeAlgorithm
       REAL upper_bound;
       bool finite_upper_bound = false;
 
-      Vec<Vec<REAL>> primal_sols;
-      Vec<Vec<REAL>> dual_sols;
-      Vec<Vec<bool>> primal_sol_int_indicators;
-      int num_int_var_int_val;
+      Vec<REAL> x_bar_last_iter( x_bar );
+      Vec<bool> overall_int_indicator( x_bar.size(), false );
+      int fixed_int_var_check_counter = 1;
 
       op.calc_b_minus_Ax( A, x_bar, b, v_t );
       calc_violations( n_rows_A, A, pi_bar, v_t, viol_t );
 
-      while( stopping_criteria( viol_t, n_rows_A, c, x_bar, z_bar ) )
+      while( stopping_criteria( viol_t, n_rows_A, c, x_bar, z_bar,
+                                num_int_vars, fixed_int_var_check_counter,
+                                overall_int_indicator ) )
       {
          msg.detailed( "Round of volume algorithm: {}\n", counter );
          // STEP 1:
@@ -136,6 +137,7 @@ class VolumeAlgorithm
          op.calc_b_minus_Ax( A, x_t, b, residual_t );
          calc_alpha( residual_t, v_t );
 
+         x_bar_last_iter( x_bar );
          // x_bar ← αx_t + (1 − α)x_bar
          op.calc_qb_plus_sx( alpha, x_t, 1 - alpha, x_bar,
                              x_bar );
@@ -154,8 +156,9 @@ class VolumeAlgorithm
             improvement_indicator = false;
 
          primal_sols.push_back( x_bar );
-         calc_frac_ints( x_bar, domains, num_int_var_int_val,
-                         primal_sol_int_indicators );
+         calc_frac_ints( x_bar, x_bar_last_iter, domains,
+                         fixed_int_var_check_counter,
+                         overall_int_indicator );
          dual_sols.push_back( pi_bar );
 
          op.calc_b_minus_Ax( A, x_bar, b, v_t );
@@ -223,19 +226,47 @@ class VolumeAlgorithm
    bool
    stopping_criteria( const Vec<REAL>& v, const int n_rows_A,
                       const Vec<REAL>& c, const Vec<REAL>& x_bar,
-                      const REAL z_bar )
+                      const REAL z_bar, const int num_int_vars,
+                      int& fixed_int_var_check_counter,
+                      Vec<bool>& overall_int_indicator )
    {
       msg.detailed( "   sc_1: {}\n", op.l1_norm( v ) / n_rows_A );
       msg.detailed( "   sc_2: {}\n",
                 num.isZero( z_bar )
                     ? abs( op.multi( c, x_bar ) )
                     : abs( op.multi( c, x_bar ) - z_bar ) / abs( z_bar ) );
-      return num.isGE( op.l1_norm( v ), n_rows_A * parameter.con_abstol ) ||
-             ( num.isZero( z_bar )
-                   ? num.isGE( abs( op.multi( c, x_bar ) ),
-                               parameter.obj_abstol )
-                   : num.isGE( abs( op.multi( c, x_bar ) - z_bar ),
-                               abs( z_bar ) * parameter.obj_reltol ) );
+
+      // primal feasibility check
+      bool primal_feas_term = num.isLT( op.l1_norm( v ), n_rows_A *
+                                        parameter.con_abstol );
+
+      // dualilty gap absolute check
+      bool duality_gap_abs_term = num.isLT( abs( op.multi( c, x_bar ) ),
+                                           parameter.obj_abstol );
+      // duality gap relative check
+      bool duality_gap_rel_term = num.isLT( abs( op.multi( c, x_bar ) - z_bar ),
+                                            abs( z_bar ) * parameter.obj_reltol
+                                          );
+      // duality gap check
+      bool duality_gap_term = num.isZero( z_bar ) ? duality_gap_abs_term :
+                                                    duality_gap_rel_term;
+
+      // fraction of integer variables with integer values
+      bool fixed_int_var_term = false;
+      if( fixed_int_var_check_counter >=
+            parameter.num_iters_fixed_int_vars_check )
+      {
+         if( num.isGE( std::count( overall_int_indicator.begin(),
+                                   overall_int_indicator.end(), true ),
+                       num_int_vars * parameter.fixed_int_var_threshold ) )
+            fixed_int_var_term = true;
+
+         // reset the counter and indicators
+         fixed_int_var_check_counter = 1;
+         overall_int_indicator.assign( x_bar_size, false );
+      }
+
+      return (primal_feas_term && duality_gap_term ) || fixed_int_var_term;
    }
 
    REAL
@@ -282,20 +313,23 @@ class VolumeAlgorithm
    //       pass it to the volume algo call?
    void
    calc_frac_ints( const Vec<REAL>& x_bar,
+                   const Vec<REAL> x_bar_last_iter,
                    const VariableDomains<REAL>& domains,
-                   int& num_int_var_int_val,
-                   Vec<Vec<bool>>& primal_sol_int_indicators )
+                   int& fixed_int_var_check_counter,
+                   Vec<bool>& overall_int_indicator )
    {
-      num_int_var_int_val = 0;
-      int sol_size = x_bar.size();
-      Vec<bool> int_var_int_val_indicator( sol_size );
-      for( int i = 0; i < sol_size; i++ )
+      int x_bar_size = x_bar.size();
+      fixed_int_var_check_counter++;
+
+      for( int i = 0; i < x_bar_size; i++ )
       {
-         if( domains.flags[i].test( ColFlag::kIntegral ) && num.isIntegral( x_bar[i] ) )
-            int_var_int_val_indicator[i] = true;
-            num_int_var_int_val++;
+         if( domains.flags[i].test( ColFlag::kIntegral ) &&
+               num.isIntegral( x_bar[i] ) &&
+               num.isEq( x_bar[i], x_bar_last_iter[i] ) )
+            overall_int_indicator[i] = true;
+         else
+            overall_int_indicator[i] = false;
       }
-      primal_sol_int_indicators.push_back( int_var_int_val_indicator );
    }
 
    void
