@@ -24,12 +24,12 @@
 #ifndef FIX_FIX_AND_PROPAGATE_SERVICE_HPP
 #define FIX_FIX_AND_PROPAGATE_SERVICE_HPP
 
+#include "fix/ConflictAnalysis.hpp"
+#include "fix/Constraint.hpp"
 #include "fix/FixAndPropagate.hpp"
 #include "fix/strategy/FarkasRoundingStrategy.hpp"
 #include "fix/strategy/FractionalRoundingStrategy.hpp"
 #include "fix/strategy/RandomRoundingStrategy.hpp"
-#include "fix/Constraint.hpp"
-#include "fix/ConflictAnalysis.hpp"
 #include "papilo/core/Objective.hpp"
 #include "papilo/core/Presolve.hpp"
 
@@ -56,7 +56,6 @@ class Heuristic
 
  public:
    Problem<REAL>& problem;
-
 
  public:
    Heuristic( Message msg_, Num<REAL> num_, Timer& timer_,
@@ -153,25 +152,30 @@ class Heuristic
                 int backtracks = 0;
                 infeasible_arr[i] = fixAndPropagate.fix_and_propagate(
                     primal_heur_sol, int_solutions[i], *( strategies[i] ),
-                    views[i], backtracks, perform_backtracking, stop_at_infeasible );
+                    views[i], backtracks, perform_backtracking,
+                    stop_at_infeasible );
                 if( infeasible_arr[i] )
                 {
                    obj_value[i] = 0;
+                   msg.info(
+                       "\t\tPropagating {} is infeasible! (backtracks {})\n", i,
+                       obj_value[i], backtracks );
                    break;
                 }
                 StableSum<REAL> sum{};
                 for( int j = 0; j < primal_heur_sol.size(); j++ )
                    sum.add( int_solutions[i][j] * views[i].get_obj()[j] );
                 obj_value[i] = sum.get();
-                msg.info( "\t\tPropagating {} found obj value {}! (backtracks {})\n", i,
-                          obj_value[i], backtracks );
+                msg.info(
+                    "\t\tPropagating {} found obj value {}! (backtracks {})\n",
+                    i, obj_value[i], backtracks );
              }
           } );
 #else
       int backtracks = 0;
       infeasible_arr[0] = fixAndPropagate.fix_and_propagate(
-          primal_heur_sol, int_solutions[0], *( strategies[0] ), views[0], backtracks,
-          perform_backtracking, stop_at_infeasible );
+          primal_heur_sol, int_solutions[0], *( strategies[0] ), views[0],
+          backtracks, perform_backtracking, stop_at_infeasible );
       if( infeasible_arr[0] )
       {
          obj_value[0] = 0;
@@ -197,7 +201,7 @@ class Heuristic
          constraints[i].clear();
       FixAndPropagate<REAL> fixAndPropagate{ msg, num };
 
-      Vec<bool> infeas_copy {infeasible_arr};
+      Vec<bool> infeas_copy{ infeasible_arr };
       Vec<REAL> coefficients = problem.getObjective().coefficients;
 #ifdef PAPILO_TBB
       tbb::parallel_for(
@@ -213,17 +217,17 @@ class Heuristic
 
                 if( infeas_copy[i] )
                 {
-                   if(!perform_conflict_analysis)
+                   if( !perform_conflict_analysis )
                       continue;
-                   assert( views[i].get_infeasible_rows().size() == 1 );
+                   assert( !views[i].get_infeasible_rows().empty() );
                    conflict_analysis.perform_conflict_analysis(
                        views[i].get_changes(),
-                       views[i].get_infeasible_rows()[0], constraints[i] );
+                       views[i].get_infeasible_rows(), constraints[i] );
                    assert( std::all_of(
                        constraints[i].begin(), constraints[i].end(),
                        []( Constraint<REAL>& c )
                        {
-                          return c.get_row_flag().test(RowFlag::kEquation ) ||
+                          return c.get_row_flag().test( RowFlag::kEquation ) ||
                                  !c.get_row_flag().test( RowFlag::kLhsInf );
                        } ) );
                 }
@@ -317,8 +321,7 @@ class Heuristic
    exists_conflict_constraints()
    {
       return std::any_of( constraints.begin(), constraints.end(),
-                          []( Vec<Constraint<REAL>> c )
-                          { return c.empty(); } );
+                          []( Vec<Constraint<REAL>> c ) { return c.empty(); } );
    }
 
  private:

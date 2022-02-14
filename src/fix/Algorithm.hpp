@@ -196,6 +196,7 @@ class Algorithm
              postsolve.undo( reduced_solution, original_solution,
                              result.postsolve );
 
+
              print_solution( original_solution.primal );
              msg.info( "Algorithm finished after {:.3} seconds.\n",
                        timer.getTime() );
