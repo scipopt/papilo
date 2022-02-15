@@ -70,7 +70,6 @@ setup( const char* filename, int* result, int verbosity_level )
       assert(false);
 
    }
-   msg.setVerbosityLevel( papilo::VerbosityLevel::kWarning );
    auto heuristic = new Heuristic<double>{ msg, {}, t, *problem };
    heuristic->setup();
    *result = 0;
@@ -107,7 +106,7 @@ call_algorithm( void* heuristic_void_ptr, double* cont_solution, double* result,
 
           if( local_obj < *current_obj_value )
              *current_obj_value = local_obj;
-          result = &res[0];
+          std::copy(res.begin(), res.end(), result);
           return !res.empty();
 #ifdef PAPILO_TBB
        } );

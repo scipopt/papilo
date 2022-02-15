@@ -231,6 +231,19 @@ class Heuristic
                           return c.get_row_flag().test( RowFlag::kEquation ) ||
                                  !c.get_row_flag().test( RowFlag::kLhsInf );
                        } ) );
+                   assert( std::all_of(
+                       constraints[i].begin(), constraints[i].end(),
+                       [this]( Constraint<REAL>& c )
+                       {
+                          for( int i = 0; i < c.get_data().getLength(); i++ )
+                          {
+                             if( c.get_data().getIndices()[i] < 0 ||
+                                 c.get_data().getIndices()[i] >
+                                     views[i].getProbingUpperBounds().size() )
+                                return false;
+                          }
+                          return true;
+                       } ) );
                 }
                 else if( perform_one_opt )
                 {

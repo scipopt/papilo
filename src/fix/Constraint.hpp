@@ -34,6 +34,28 @@ template <typename REAL>
 class Constraint
 {
 
+ public:
+   const SparseVectorView<REAL>&
+   get_data() const
+   {
+      return data;
+   }
+   const RowFlags&
+   get_row_flag() const
+   {
+      return row_flag;
+   }
+   REAL
+   get_lhs() const
+   {
+      return lhs;
+   }
+   REAL
+   get_rhs() const
+   {
+      return rhs;
+   }
+
  private:
    SparseVectorView<REAL> data;
    RowFlags row_flag;
@@ -47,27 +69,6 @@ class Constraint
    {
       assert( !row_flag.test( RowFlag::kEquation ) || lhs == rhs );
    }
-  SparseVectorView<REAL>
-  get_data()
-  {
-    return data;
-  }
-
-  RowFlags
-  get_row_flag()
-  {
-    return row_flag;
-  }
-  REAL
-  get_lhs()
-  {
-    return lhs;
-  }
-  REAL
-  get_rhs()
-  {
-    return rhs;
-  }
 };
 
 } // namespace papilo
