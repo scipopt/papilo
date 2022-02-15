@@ -70,7 +70,8 @@ setup( const char* filename, int* result, int verbosity_level )
       assert(false);
 
    }
-   auto heuristic = new Heuristic<double>{ msg, {}, t, *problem };
+   PostsolveStorage<double> storage{};
+   auto heuristic = new Heuristic<double>{ msg, {}, t, *problem, storage, false };
    heuristic->setup();
    *result = 0;
    return heuristic;
