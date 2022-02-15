@@ -96,7 +96,7 @@ struct AlgorithmParameter
       paramSet.addParameter( "time_limit", "", time_limit, 0.0 );
       paramSet.addParameter( "threads",
                              "maximal number of threads to use (0: automatic)",
-                             time_limit, 0.0 );
+                             threads, 0.0 );
    }
 };
 
