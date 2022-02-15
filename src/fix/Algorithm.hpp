@@ -153,7 +153,8 @@ class Algorithm
                     reformulated.getObjective().coefficients,
                     reformulated.getConstraintMatrix(),
                     reformulated.getConstraintMatrix().getLeftHandSides(),
-                    reformulated.getVariableDomains(), pi, min_val );
+                    reformulated.getVariableDomains(), pi,
+                    reformulated.getNumIntegralCols(), min_val );
                 print_solution( primal_heur_sol );
 
                 if( timer.getTime() >= alg_parameter.time_limit )
