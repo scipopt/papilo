@@ -29,39 +29,10 @@
 #include "papilo/core/ProblemBuilder.hpp"
 
 Problem<double>
-setupSimpleProblem();
-
-Problem<double>
 setupProblemForConflictAnalysis();
 
 Problem<double>
 setupProblemForConflictAnalysisNr2();
-
-TEST_CASE( "conflict-analysis-check-data", "[conflict]" )
-{
-   // Nothing happens in this test since we get a feasible solution
-
-   // Single Constraint A1: x1 + x2 + x3 + x4 = 2
-   // x1, x2, x3 binary, x4 in [0,3]
-   Problem<double> problem = setupSimpleProblem();
-   // x4 is general integer
-   problem.getUpperBounds()[3] = 3;
-   // Vector of bound changes
-   Vec<SingleBoundChange<double>> bound_changes;
-   // Assume fix_and_propagate fixes x1 to 1
-   //   SingleBoundChange<double> bound_change_1( 0, 1.0, -1, true, false, 1 );
-   //   bound_changes.push_back( bound_change_1 );
-   //   // Propagation of A1 changes the upper bound of x4 from 3 to 1
-   //   // is_lower_bound is false -> bound change was an upper bound
-   //   SingleBoundChange<double> bound_change_2( 3, 1.0, 0, false, false, 1 );
-   //   bound_changes.push_back( bound_change_2 );
-   //   // Propagation of A1 fixes x2 to 0
-   //   SingleBoundChange<double> bound_change_3( 1, 0.0, 0, false, false, 1 );
-   //   bound_changes.push_back( bound_change_3 );
-   //   // Propagation of A1 fixes x3 to 0
-   //   SingleBoundChange<double> bound_change_4( 2, 1.0, 0, false, false, 1 );
-   //   bound_changes.push_back( bound_change_4 );
-}
 
 TEST_CASE( "conflict-analysis-binary-no-resolution", "[conflict]" )
 {

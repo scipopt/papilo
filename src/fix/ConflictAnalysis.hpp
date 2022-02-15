@@ -50,7 +50,7 @@ class ConflictAnalysis
        : msg( _msg ), num( _num ), timer( _timer ), problem( _problem )
    {
    }
-   bool
+   void
    perform_conflict_analysis( Vec<SingleBoundChange<REAL>>& bound_changes,
                               Vec<std::pair<int, int>>& infeasible_rows,
                               Vec<Constraint<REAL>>& constraints )
@@ -64,29 +64,36 @@ class ConflictAnalysis
       decision_levels.resize( problem.getNCols(), 0 );
       pos_in_bound_changes.resize( problem.getNCols(), -1 );
       in_candidates.resize( problem.getNCols(), 0 );
-      
-      assert(infeasible_rows.size() > 0);
+
+      assert( infeasible_rows.size() > 0 );
       // row that led to infeasibility
       int conflict_row_index = infeasible_rows[0].second;
       // position in stack when infeasible
       int pos_at_infeasibility = infeasible_rows[0].first;
 
-      int fixings = 0;
-      // ToDo what about the integer case?
+      int last_col = -1;
+      int curr_level = 0;
+
+      // ToDo integer/continuous case:
+      Vec<ColFlags> col_flags = problem.getColFlags();
+      Vec<REAL> lbs = problem.getLowerBounds();
+      Vec<REAL> ubs = problem.getUpperBounds();
+      for( int i = 0; i < col_flags.size(); i++ )
+      {
+         if( !col_flags[i].test( ColFlag::kIntegral ) ||
+             num.isGT( lbs[i], 0 ) || num.isLT( ubs[i], 1 ) )
+            return;
+      }
       for( int i = 0; i <= pos_at_infeasibility; i++ )
       {
-         // consider only the latest bound change for each variable
-         // (for binaries there is only one bound change possible)
          int col = bound_changes[i].get_col();
-         // the decision level of the column as positive integers (compatible
-         // for conflict analysis)
-         int col_dec_level =
-             abs( bound_changes[i].get_depth_level() ) - 1 - fixings;
-         assert( col_dec_level > 0 );
+         if( last_col == col )
+            continue;
          if( bound_changes[i].is_manually_triggered() )
-            fixings++;
-         decision_levels[col] = col_dec_level;
+            curr_level++;
+         decision_levels[col] = curr_level;
          pos_in_bound_changes[col] = i;
+         last_col = col;
       }
       int number_fixings = get_number_fixings( bound_changes );
       // Only fixings (works only for binaries)
@@ -94,51 +101,48 @@ class ConflictAnalysis
       {
          simple_cut_from_fixings( bound_changes, conflict_set_candidates,
                                   constraints );
-         return true;
+         return;
       }
       else
       {
-
          // Find subset of indices that explain the infeasibility
          // adds column indices in conflict_set_candidates
          explain_infeasibility( bound_changes, pos_in_bound_changes,
                                 conflict_set_candidates, in_candidates,
                                 conflict_row_index );
-         // last depth level
-         int last_depth_level = get_last_depth_level(
+         // last decision level
+         int last_decision_level = get_last_decision_level(
              bound_changes, conflict_set_candidates, decision_levels );
 
-         int num_vars_last_depth_level = get_number_variables_depth_level(
-             decision_levels, conflict_set_candidates, last_depth_level );
+         int num_vars_last_decision_level = get_number_variables_decision_level(
+             decision_levels, conflict_set_candidates, last_decision_level );
 
-         if( num_vars_last_depth_level == 1 )
+         if( num_vars_last_decision_level == 1 )
          {
-            // Already at First UIP -> return conflict constraint
-            // ToDo add constraint
+            // return conflict constraint
             add_constraint( bound_changes, pos_in_bound_changes,
                             conflict_set_candidates, constraints );
-            msg.info( "Only one variable at last depth level! \n" );
-            return true;
+            msg.info( "Only one variable at last decision level! \n" );
+            return;
          }
          // First-FUIP
-         // Resolve as long as more than one bound changes at last depth level
-         while( num_vars_last_depth_level > 1 )
+         // Resolve as long as more than one bound changes at last decision
+         // level
+         while( num_vars_last_decision_level > 1 )
          {
-            //
             int col_index;
             int position_in_conflict_set;
 
-            get_latest_col_index_in_depth_level(
+            get_latest_col_index_in_decision_level(
                 decision_levels, pos_in_bound_changes, conflict_set_candidates,
-                last_depth_level, col_index, position_in_conflict_set );
+                last_decision_level, col_index, position_in_conflict_set );
 
             int antecedent_row_index =
                 bound_changes[pos_in_bound_changes[col_index]].get_reason_row();
             if( antecedent_row_index == -1 )
             {
-               // should not happen
-               // ToDo add assert
-               return false;
+               msg.info( "There should exist an antecedent row" );
+               return;
             }
             else
             {
@@ -154,22 +158,21 @@ class ConflictAnalysis
                                       antecedent_row_index );
             }
 
-            num_vars_last_depth_level = get_number_variables_depth_level(
-                decision_levels, conflict_set_candidates, last_depth_level );
+            num_vars_last_decision_level = get_number_variables_decision_level(
+                decision_levels, conflict_set_candidates, last_decision_level );
          }
       }
 
       add_constraint( bound_changes, pos_in_bound_changes,
                       conflict_set_candidates, constraints );
-      // should return a list of constraint to be added to the builder
-      return true;
+      return;
    }
 
-   bool
+   void
    perform_conflict_analysis()
    {
       msg.info( "function call is dummy and waited to be implemented above\n" );
-      return true;
+      return;
    }
 
  private:
@@ -190,24 +193,25 @@ class ConflictAnalysis
       min_activity.add( problem.getRowActivities()[row_idx].min );
       for( int i = 0; i < row_length; i++ )
       {
+         assert( !num.isZero( row_vals[i] ) );
          int pos = pos_in_bound_changes[row_inds[i]];
          if( num.isGT( row_vals[i], 0 ) && pos > 0 )
          {
-            if( bound_changes[pos].get_new_bound_value() >
-                problem.getLowerBounds()[row_vals[i]] )
+            if( num.isGT( bound_changes[pos].get_new_bound_value(),
+                          problem.getLowerBounds()[row_inds[i]] ) )
             {
                min_activity.add( row_vals[i] *
                                  ( bound_changes[pos].get_new_bound_value() -
-                                   problem.getLowerBounds()[row_vals[i]] ) );
+                                   problem.getLowerBounds()[row_inds[i]] ) );
             }
          }
          else if( num.isLT( row_vals[i], 0 ) && pos > 0 )
          {
-            if( bound_changes[pos].get_new_bound_value() <
-                problem.getUpperBounds()[row_vals[i]] )
+            if( num.isLT( bound_changes[pos].get_new_bound_value(),
+                          problem.getUpperBounds()[row_inds[i]] ) )
             {
                min_activity.add( -row_vals[i] *
-                                 ( problem.getLowerBounds()[row_vals[i]] -
+                                 ( problem.getLowerBounds()[row_inds[i]] -
                                    bound_changes[pos].get_new_bound_value() ) );
             }
          }
@@ -234,25 +238,26 @@ class ConflictAnalysis
       max_activity.add( problem.getRowActivities()[row_idx].max );
       for( int i = 0; i < row_length; i++ )
       {
+         assert( !num.isZero( row_vals[i] ) );
          int pos = pos_in_bound_changes[row_inds[i]];
          if( num.isGT( row_vals[i], 0 ) && pos > 0 )
          {
-            if( bound_changes[pos].get_new_bound_value() <
-                problem.getUpperBounds()[row_vals[i]] )
+            if( num.isLT( bound_changes[pos].get_new_bound_value(),
+                          problem.getUpperBounds()[row_inds[i]] ) )
             {
                max_activity.add( -row_vals[i] *
-                                 ( problem.getUpperBounds()[row_vals[i]] -
+                                 ( problem.getUpperBounds()[row_inds[i]] -
                                    bound_changes[pos].get_new_bound_value() ) );
             }
          }
          else if( num.isLT( row_vals[i], 0 ) && pos > 0 )
          {
-            if( bound_changes[pos].get_new_bound_value() >
-                problem.getLowerBounds()[row_vals[i]] )
+            if( num.isGT( bound_changes[pos].get_new_bound_value(),
+                          problem.getLowerBounds()[row_inds[i]] ) )
             {
                max_activity.add( row_vals[i] *
                                  ( bound_changes[pos].get_new_bound_value() -
-                                   problem.getLowerBounds()[row_vals[i]] ) );
+                                   problem.getLowerBounds()[row_inds[i]] ) );
             }
          }
          if( num.isLT( max_activity.get(), lhs ) )
@@ -261,7 +266,7 @@ class ConflictAnalysis
       return false;
    }
 
-   bool
+   void
    explain_infeasibility( Vec<SingleBoundChange<REAL>>& bound_changes,
                           Vec<int>& pos_in_bound_changes,
                           Vec<int>& conflict_set_candidates,
@@ -306,7 +311,7 @@ class ConflictAnalysis
          }
       }
 
-      return true;
+      return;
    }
    void
    explain_infeasibility_ge( Vec<SingleBoundChange<REAL>>& bound_changes,
@@ -327,15 +332,16 @@ class ConflictAnalysis
       max_activity.add( problem.getRowActivities()[row_idx].max );
       for( int i = 0; i < row_length; i++ )
       {
+         assert( !num.isZero( row_vals[i] ) );
          int pos = pos_in_bound_changes[row_inds[i]];
          assert( !num.isZero( row_vals[i] ) );
          if( num.isGT( row_vals[i], 0 ) && pos > 0 )
          {
-            if( bound_changes[pos].get_new_bound_value() <
-                problem.getUpperBounds()[row_vals[i]] )
+            if( num.isLT( bound_changes[pos].get_new_bound_value(),
+                          problem.getUpperBounds()[row_inds[i]] ) )
             {
                max_activity.add( -row_vals[i] *
-                                 ( problem.getUpperBounds()[row_vals[i]] -
+                                 ( problem.getUpperBounds()[row_inds[i]] -
                                    bound_changes[pos].get_new_bound_value() ) );
                if( !in_candidates[row_inds[i]] )
                {
@@ -346,12 +352,12 @@ class ConflictAnalysis
          }
          else if( num.isLT( row_vals[i], 0 ) && pos > 0 )
          {
-            if( bound_changes[pos].get_new_bound_value() >
-                problem.getLowerBounds()[row_vals[i]] )
+            if( num.isGT( bound_changes[pos].get_new_bound_value(),
+                          problem.getLowerBounds()[row_inds[i]] ) )
             {
                max_activity.add( row_vals[i] *
                                  ( bound_changes[pos].get_new_bound_value() -
-                                   problem.getLowerBounds()[row_vals[i]] ) );
+                                   problem.getLowerBounds()[row_inds[i]] ) );
                if( !in_candidates[row_inds[i]] )
                {
                   in_candidates[row_inds[i]] = 1;
@@ -384,15 +390,16 @@ class ConflictAnalysis
       min_activity.add( problem.getRowActivities()[row_idx].min );
       for( int i = 0; i < row_length; i++ )
       {
+         assert( !num.isZero( row_vals[i] ) );
          int pos = pos_in_bound_changes[row_inds[i]];
          if( num.isGT( row_vals[i], 0 ) && pos > 0 )
          {
-            if( bound_changes[pos].get_new_bound_value() >
-                problem.getLowerBounds()[row_vals[i]] )
+            if( num.isGT( bound_changes[pos].get_new_bound_value(),
+                          problem.getLowerBounds()[row_inds[i]] ) )
             {
                min_activity.add( row_vals[i] *
                                  ( bound_changes[pos].get_new_bound_value() -
-                                   problem.getLowerBounds()[row_vals[i]] ) );
+                                   problem.getLowerBounds()[row_inds[i]] ) );
                if( !in_candidates[row_inds[i]] )
                {
                   in_candidates[row_inds[i]] = 1;
@@ -402,11 +409,11 @@ class ConflictAnalysis
          }
          else if( num.isLT( row_vals[i], 0 ) && pos > 0 )
          {
-            if( bound_changes[pos].get_new_bound_value() <
-                problem.getUpperBounds()[row_vals[i]] )
+            if( num.isLT( bound_changes[pos].get_new_bound_value(),
+                          problem.getUpperBounds()[row_inds[i]] ) )
             {
                min_activity.add( -row_vals[i] *
-                                 ( problem.getLowerBounds()[row_vals[i]] -
+                                 ( problem.getLowerBounds()[row_inds[i]] -
                                    bound_changes[pos].get_new_bound_value() ) );
                if( !in_candidates[row_inds[i]] )
                {
@@ -423,9 +430,9 @@ class ConflictAnalysis
    }
 
    int
-   get_last_depth_level( Vec<SingleBoundChange<REAL>>& bound_changes,
-                         Vec<int>& conflict_set_candidates,
-                         Vec<int>& decision_levels )
+   get_last_decision_level( Vec<SingleBoundChange<REAL>>& bound_changes,
+                            Vec<int>& conflict_set_candidates,
+                            Vec<int>& decision_levels )
    {
       int level = 0;
       for( int i = 0; i < conflict_set_candidates.size(); i++ )
@@ -438,30 +445,31 @@ class ConflictAnalysis
    }
 
    int
-   get_number_variables_depth_level( Vec<int>& decision_levels,
-                                     Vec<int>& conflict_set_candidates,
-                                     int depth )
+   get_number_variables_decision_level( Vec<int>& decision_levels,
+                                        Vec<int>& conflict_set_candidates,
+                                        int decision_level )
    {
-      int number_variables_depth_level = 0;
+      int number_variables_decision_level = 0;
       for( int i = 0; i < conflict_set_candidates.size(); i++ )
       {
-         if( decision_levels[conflict_set_candidates[i]] == depth )
-            number_variables_depth_level++;
+         if( decision_levels[conflict_set_candidates[i]] == decision_level )
+            number_variables_decision_level++;
       }
-      return number_variables_depth_level;
+      return number_variables_decision_level;
    }
    void
-   get_latest_col_index_in_depth_level( Vec<int>& decision_levels,
-                                        Vec<int>& pos_in_bound_changes,
-                                        Vec<int>& conflict_set_candidates,
-                                        int depth, int& col,
-                                        int& position_in_conflict_set )
+   get_latest_col_index_in_decision_level( Vec<int>& decision_levels,
+                                           Vec<int>& pos_in_bound_changes,
+                                           Vec<int>& conflict_set_candidates,
+                                           int decision_level, int& col,
+                                           int& position_in_conflict_set )
    {
 
       int latest_position = -1;
       for( int i = 0; i < conflict_set_candidates.size(); i++ )
       {
-         if( ( decision_levels[conflict_set_candidates[i]] == depth ) &&
+         if( ( decision_levels[conflict_set_candidates[i]] ==
+               decision_level ) &&
              ( pos_in_bound_changes[conflict_set_candidates[i]] >
                latest_position ) )
          {
@@ -478,13 +486,13 @@ class ConflictAnalysis
    {
       int number_fixings = 0;
       // in papilo the first depth is -2
-      int curr_depth = 0;
+      int curr_decision_level = 0;
       for( int i = 0; i < bound_changes.size(); i++ )
       {
          if( bound_changes[i].is_manually_triggered() &&
-             ( curr_depth > bound_changes[i].get_depth_level() ) )
+             ( curr_decision_level > bound_changes[i].get_depth_level() ) )
             number_fixings++;
-         curr_depth = bound_changes[i].get_depth_level();
+         curr_decision_level = bound_changes[i].get_depth_level();
       }
       return number_fixings;
    }
