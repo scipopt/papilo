@@ -174,6 +174,9 @@ class VolumeAlgorithm
             z_bar_old = z_bar;
          }
 
+         // check integrality of x_bar
+         integrality_check( x_bar, domains );
+
          // Let t ← t + 1 and go to Step 1.
          counter = counter + 1;
       };
@@ -467,6 +470,23 @@ class VolumeAlgorithm
       {
          f = parameter.f_decr_factor * f;
          msg.debug( "   decreased f: {}\n", f );
+      }
+   }
+
+   void
+   integrality_check( const Vec<REAL>& x_bar,
+                      const VariableDomains<REAL>& domains )
+   {
+      if( msg.getVerbosityLevel() == VerbosityLevel::kDetailed )
+      {
+         int num_integral = 0;
+         for( int i = 0; i < x_bar.size(); i++ )
+         {
+            if( domains.flags[i].test( ColFlag::kIntegral ) &&
+                  num.isIntegral( x_bar[i] ) )
+               num_integral++;
+         }
+         msg.detailed( "   numIntXbar: {}\n", num_integral );
       }
    }
 
