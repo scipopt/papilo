@@ -115,7 +115,8 @@ class VolumeAlgorithm
       calc_violations( n_rows_A, A, pi_bar, v_t, viol_t );
 
       while( stopping_criteria( viol_t, n_rows_A, c, x_bar, z_bar,
-                                num_int_vars, fixed_int_vars_count ) )
+                                num_int_vars, fixed_int_vars_count,
+                                counter - 1 ) )
       {
          msg.detailed( "Round of volume algorithm: {}\n", counter );
          // STEP 1:
@@ -228,7 +229,8 @@ class VolumeAlgorithm
    stopping_criteria( const Vec<REAL>& v, const int n_rows_A,
                       const Vec<REAL>& c, const Vec<REAL>& x_bar,
                       const REAL z_bar, const int num_int_vars,
-                      const Vec<int>& fixed_int_vars_count )
+                      const Vec<int>& fixed_int_vars_count,
+                      const int num_iterations )
    {
       bool primal_feas_term = num.isLT( op.l1_norm( v ), n_rows_A *
                                         parameter.con_abstol );
@@ -263,7 +265,15 @@ class VolumeAlgorithm
                                        num_iters_check; } ),
                         num_int_vars * parameter.fixed_int_var_threshold );
 
-      return !( (primal_feas_term && duality_gap_term ) || fixed_int_var_term );
+      bool time_limit_term = ( num.isGE( timer.getTime(),
+                                         parameter.time_limit ) );
+
+      bool iter_limit_term = ( num_iterations >= parameter.max_iterations );
+
+      return !( (primal_feas_term && duality_gap_term ) ||
+                fixed_int_var_term ||
+                time_limit_term ||
+                iter_limit_term );
    }
 
    REAL
