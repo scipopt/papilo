@@ -21,7 +21,6 @@
 /*                                                                           */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#include "fix/ConflictAnalysis.hpp"
 #include "fix/FixAndPropagate.hpp"
 #include "fix/Heuristic.hpp"
 #include "fix/VolumeAlgorithm.hpp"
@@ -43,8 +42,7 @@
 namespace papilo
 {
 
-//TODO: statistics + evaluation
-
+// TODO: statistics + evaluation
 
 template <typename REAL>
 class Algorithm
@@ -52,31 +50,31 @@ class Algorithm
    Message msg;
    Num<REAL> num;
    Timer timer;
-   double time_limit;
-   REAL threshold_hard_constraints;
+   AlgorithmParameter alg_parameter;
+   PresolveOptions presolveOptions;
 
  public:
-   Algorithm( Message _msg, Num<REAL> _num, Timer t, double time_limit_, double threshold_hard_constraints_ )
-       : msg( _msg ), num( _num ), timer( t ), time_limit(time_limit_), threshold_hard_constraints(threshold_hard_constraints_)
+   Algorithm( Message _msg, Num<REAL> _num, Timer t )
+       : msg( _msg ), num( _num ), timer( t )
    {
    }
 
    void
-   solve_problem( Problem<REAL>& problem,
-                  VolumeAlgorithmParameter<REAL>& parameter )
+   solve_problem( Problem<REAL>& problem )
    {
 #ifdef PAPILO_TBB
-      tbb::task_arena arena( 8 );
+      tbb::task_arena arena( alg_parameter.threads );
 #endif
 
 #ifdef PAPILO_TBB
       return arena.execute(
-          [this, &problem, &parameter]()
+          [this, &problem]()
           {
 #endif
-             msg.info("Starting Algorithm\n Starting presolving:\n");
-             // set up ProblemUpdate to trivialPresolve so that activities exist
+             msg.info( "Starting Algorithm\n Starting presolving:\n" );
              Presolve<REAL> presolve{};
+             presolve.getPresolveOptions().threads = alg_parameter.threads;
+             presolve.getPresolveOptions().tlim = alg_parameter.time_limit;
              presolve.addDefaultPresolvers();
              auto result = presolve.apply( problem, false );
 
@@ -85,8 +83,9 @@ class Algorithm
              case papilo::PresolveStatus::kUnbounded:
              case papilo::PresolveStatus::kUnbndOrInfeas:
              case papilo::PresolveStatus::kInfeasible:
-                msg.info(
-                    "PaPILO detected infeasibility or unbounded-ness.\n Stopped after {}s\n", timer.getTime() );
+                msg.info( "PaPILO detected infeasibility or unbounded-ness.\n "
+                          "Stopped after {}s\n",
+                          timer.getTime() );
                 return;
              case papilo::PresolveStatus::kUnchanged:
              case papilo::PresolveStatus::kReduced:
@@ -109,9 +108,8 @@ class Algorithm
              }
              problem.recomputeAllActivities();
 
-             Heuristic<REAL> service{ msg, num, timer, problem };
-             VolumeAlgorithm<REAL> algorithm{ msg, num, timer, parameter };
-             ConflictAnalysis<REAL> conflict_analysis{ msg, num, timer };
+             Heuristic<REAL> service{ msg, num, timer, problem, result.postsolve };
+             VolumeAlgorithm<REAL> algorithm{ msg, num, timer, alg_parameter };
 
              service.setup();
              REAL best_obj_value{};
@@ -121,7 +119,8 @@ class Algorithm
 
              // setup data for the volume algorithm
              int slack_vars = 0;
-             ProblemBuilder<REAL> builder = modify_problem( problem, slack_vars );
+             ProblemBuilder<REAL> builder =
+                 modify_problem( problem, slack_vars );
              assert( slack_vars >= 0 );
              Problem<REAL> reformulated = builder.build();
 
@@ -136,15 +135,20 @@ class Algorithm
              if( min_val == std::numeric_limits<double>::min() )
                 return;
 
+             Vec<Vec<SingleBoundChange<REAL>>> bound_changes;
+             Vec<std::pair<int, int>> infeasible_rows;
+
              int round_counter = 0;
              int round_first_solution = -1;
              int round_best_solution = -1;
              while( true )
              {
-                msg.info( "Starting round {} - {:.3}s\n", round_counter, timer.getTime() );
-                if( timer.getTime() >= parameter.time_limit )
+                msg.info( "Starting round {} - {:.3}s\n", round_counter,
+                          timer.getTime() );
+                if( timer.getTime() >= alg_parameter.time_limit )
                    break;
-                msg.info( "\tStarting volume algorithm - {:.3} s\n", timer.getTime() );
+                msg.info( "\tStarting volume algorithm - {:.3} s\n",
+                          timer.getTime() );
                 primal_heur_sol = algorithm.volume_algorithm(
                     reformulated.getObjective().coefficients,
                     reformulated.getConstraintMatrix(),
@@ -153,51 +157,84 @@ class Algorithm
                     reformulated.getNumIntegralCols(), min_val );
                 print_solution( primal_heur_sol );
 
-                if( timer.getTime() >= parameter.time_limit )
+                if( timer.getTime() >= alg_parameter.time_limit )
                    break;
-                msg.info( "\tStarting fixing and propagating - {:.3} s\n", timer.getTime() );
+                msg.info( "\tStarting fixing and propagating - {:.3} s\n",
+                          timer.getTime() );
 
-
-                //TODO: this is highly non efficient
-                Vec<REAL> sub( primal_heur_sol.begin(),
-                               primal_heur_sol.end() - slack_vars );
-
-                assert(sub.size() == problem.getNCols());
-                bool sol_updated = service.perform_fix_and_propagate( sub, best_obj_value,
-                                                   best_solution );
+                //                Vec<REAL> sub( primal_heur_sol.begin(),
+                //                               primal_heur_sol.end() -
+                //                               slack_vars );
+                //
+                //                assert( sub.size() == problem.getNCols() );
+                assert( problem.getNCols() == primal_heur_sol.size() );
+                bool sol_updated = service.perform_fix_and_propagate(
+                    primal_heur_sol, best_obj_value, best_solution );
                 if( sol_updated )
                 {
-                   if(round_first_solution == -1)
+                   if( round_first_solution == -1 )
                       round_first_solution = round_counter;
                    round_best_solution = round_counter;
                 }
 
-                if( timer.getTime() >= parameter.time_limit )
+                if( timer.getTime() >= alg_parameter.time_limit )
                    break;
 
-                msg.info( "\tStarting conflict analysis - {:.3} s\n", timer.getTime() );
-                // TODO: this is a dummy function
-                bool abort = conflict_analysis.perform_conflict_analysis();
-                if( abort )
+                if( service.exists_conflict_constraints() )
                    break;
+                auto constraints = service.get_constraints();
                 round_counter++;
-                // TODO: add constraint to builder and generate new problem
+
+                int conflicts = 0;
+                for( const auto& c : constraints )
+                {
+                   add_constraints( c, builder, reformulated.getNRows() );
+                   conflicts += c.size();
+                }
+
+                msg.info( "\tAdding {} constraints - {:.3} s\n", conflicts,
+                          timer.getTime() );
+                reformulated = builder.build();
+                //TODO: Suresh resize pi
              }
 
              Solution<REAL> original_solution{};
              Solution<REAL> reduced_solution{ best_solution };
              Postsolve<REAL> postsolve{ msg, num };
 
-             postsolve.undo( reduced_solution, original_solution,
-                             result.postsolve );
+             auto status = postsolve.undo( reduced_solution, original_solution,
+                                           result.postsolve );
 
              print_solution( original_solution.primal );
-             msg.info( "Algorithm finished after {:.3} seconds.\n", timer.getTime() );
-             msg.info( "First solution found in round {}.\n", round_first_solution );
-             msg.info( "Best solution found in round {}.\n", round_best_solution );
+             msg.info( "Algorithm with objective value {:<3} finished after "
+                       "{:.3} seconds.\n",
+                       result.postsolve.problem.computeSolObjective(
+                           original_solution.primal ),
+                       timer.getTime() );
+             msg.info( "First solution found in round {}.\n",
+                       round_first_solution );
+             msg.info( "Best solution found in round {}.\n",
+                       round_best_solution );
 #ifdef PAPILO_TBB
           } );
 #endif
+   }
+
+   void
+   add_constraints( const Vec<Constraint<REAL>> constraints,
+                    ProblemBuilder<REAL> builder, int rows )
+   {
+      for( const auto& constraint : constraints )
+      {
+         builder.addRowEntries( rows, constraint.get_data().getLength(),
+                                constraint.get_data().getIndices(),
+                                constraint.get_data().getValues() );
+         builder.setRowLhs( rows, constraint.get_lhs() );
+         builder.setRowRhs( rows, constraint.get_rhs() );
+         builder.setRowLhsInf( rows, constraint.get_row_flag().test(RowFlag::kLhsInf) );
+         builder.setRowRhsInf( rows, constraint.get_row_flag().test(RowFlag::kRhsInf) );
+         rows++;
+      }
    }
 
    REAL
@@ -285,10 +322,11 @@ class Algorithm
       {
          int rowsize = rowSizes[i];
 
-         if( !num.isEq( get_max_min_factor( matrix.getRowCoefficients( i ) ), threshold_hard_constraints ) )
+         if( !num.isEq( get_max_min_factor( matrix.getRowCoefficients( i ) ),
+                        alg_parameter.threshold_hard_constraints ) )
          {
             redundant_constraints++;
-            rowFlags[i].set(RowFlag::kRedundant);
+            rowFlags[i].set( RowFlag::kRedundant );
             continue;
          }
          nnz = nnz + rowsize;
@@ -296,13 +334,15 @@ class Algorithm
          if( rowFlags[i].test( RowFlag::kEquation ) )
             equations++;
          if( rowFlags[i].test( RowFlag::kEquation ) ||
-             rowFlags[i].test( RowFlag::kLhsInf ) || rowFlags[i].test( RowFlag::kRhsInf ) )
+             rowFlags[i].test( RowFlag::kLhsInf ) ||
+             rowFlags[i].test( RowFlag::kRhsInf ) )
             continue;
          nrows++;
          nnz = nnz + rowsize;
       }
 
-      msg.info( "\n{} of the {} rows were considered hard and were excluded.\n", redundant_constraints, problem.getNRows() );
+      msg.info( "\n{} of the {} rows were considered hard and were excluded.\n",
+                redundant_constraints, problem.getNRows() );
 
       slack_vars = 0;
       auto slack_var_upper_bounds = new double[slack_vars];
@@ -318,10 +358,13 @@ class Algorithm
          auto flags = rowFlags[i];
          if( flags.test( RowFlag::kRedundant ) )
          {
-            assert(!num.isEq( get_max_min_factor( matrix.getRowCoefficients( i ) ), threshold_hard_constraints ));
+            assert(
+                !num.isEq( get_max_min_factor( matrix.getRowCoefficients( i ) ),
+                           alg_parameter.threshold_hard_constraints ) );
             continue;
          }
-         assert(num.isEq( get_max_min_factor( matrix.getRowCoefficients( i ) ), threshold_hard_constraints ));
+         assert( num.isEq( get_max_min_factor( matrix.getRowCoefficients( i ) ),
+                           alg_parameter.threshold_hard_constraints ) );
          const SparseVectorView<REAL>& view = matrix.getRowCoefficients( i );
          const int* rowcols = view.getIndices();
          const REAL* rowvals = view.getValues();
@@ -421,7 +464,7 @@ class Algorithm
    }
 
    REAL
-   get_max_min_factor( const SparseVectorView<REAL>& row_data) const
+   get_max_min_factor( const SparseVectorView<REAL>& row_data ) const
    {
       assert( row_data.getLength() > 0 );
       auto pair = row_data.getMinMaxAbsValue();
@@ -433,6 +476,16 @@ class Algorithm
    {
       for( int i = 0; i < length; i++ )
          result[i] = pDouble[i] * -1;
+   }
+
+   ParameterSet
+   getParameters()
+   {
+      ParameterSet paramSet;
+      msg.addParameters( paramSet );
+      alg_parameter.addParameters( paramSet );
+      presolveOptions.addParameters( paramSet );
+      return paramSet;
    }
 };
 

@@ -35,6 +35,27 @@ class Constraint
 {
 
  public:
+   const SparseVectorView<REAL>&
+   get_data() const
+   {
+      return data;
+   }
+   const RowFlags&
+   get_row_flag() const
+   {
+      return row_flag;
+   }
+   REAL
+   get_lhs() const
+   {
+      return lhs;
+   }
+   REAL
+   get_rhs() const
+   {
+      return rhs;
+   }
+
  private:
    SparseVectorView<REAL> data;
    RowFlags row_flag;

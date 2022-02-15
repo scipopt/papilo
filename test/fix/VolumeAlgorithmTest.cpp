@@ -36,12 +36,10 @@ setupProblemWithoutMatrix();
 
 TEST_CASE( "small-volume-algorithm-test", "[volume]" )
 {
-   VolumeAlgorithmParameter<double> para{ 0.05, 0.1,  0.2,   0.0005, 2, 2, 1.1,
-                                          0.66, 0.01, 0.001, 0.02,   2, 20,
-                                          600.0, 20, 0.7 };
+   AlgorithmParameter parameter {};
    double d =0;
    Timer timer {d};
-   VolumeAlgorithm<double> algorithm{ {}, {}, timer, para};
+   VolumeAlgorithm<double> algorithm{ {}, {}, timer, parameter};
    Vec<double> c( 2 );
    c = { 1, 2 };
    Vec<double> b( 2 );

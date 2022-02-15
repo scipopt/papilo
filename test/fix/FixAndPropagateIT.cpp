@@ -49,8 +49,9 @@ TEST_CASE( "fix-and-propagate-it-solution-is-feasible", "[fix]" )
    Vec<double> res{ solution.primal };
 
    ProbingView<double> view {problem, {}};
+   int backtracks = 0;
    bool infeasible =
-       fixAndPropagate.fix_and_propagate( solution.primal, res, strategy, view, true, false );
+       fixAndPropagate.fix_and_propagate( solution.primal, res, strategy, view, backtracks, true, false );
 
    REQUIRE( !infeasible );
    for( int i = 0; i < problem.getNCols(); i++ )
@@ -71,8 +72,9 @@ TEST_CASE( "fix-and-propagate-it-modified-solution-is-feasible", "[fix]" )
 
    Vec<double> res{ modified_primal };
    ProbingView<double> view {problem, {}};
+   int backtracks = 0;
    bool infeasible =
-       fixAndPropagate.fix_and_propagate( solution.primal, res, strategy, view, true, false );
+       fixAndPropagate.fix_and_propagate( solution.primal, res, strategy, view,backtracks, true, false );
 
    REQUIRE( !infeasible );
    for( int i = 0; i < problem.getNCols(); i++ )

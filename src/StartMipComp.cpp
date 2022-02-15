@@ -21,6 +21,7 @@
 /*                                                                           */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
+#include "boost/algorithm/string/trim.hpp"
 #include "fix/Algorithm.hpp"
 #include "papilo/core/Problem.hpp"
 #include "papilo/io/MpsParser.hpp"
@@ -51,11 +52,11 @@ using namespace papilo;
  * - optimize parallel scheme of OneOp
  */
 
-
 int
 main( int argc, char* argv[] )
 {
-
+   double readtime = 0;
+   Timer t( readtime );
    // get the options passed by the user
    OptionsInfo optionsInfo;
    try
@@ -72,62 +73,58 @@ main( int argc, char* argv[] )
    if( !optionsInfo.is_complete )
       return 0;
 
-//   if( !optionsInfo.param_settings_file.empty() )
-//   {
-//      ParameterSet paramSet = presolve.getParameters();
-//
-//      if( !optionsInfo.param_settings_file.empty() && !opts.print_params )
-//      {
-//         std::ifstream input( opts.param_settings_file );
-//         if( input )
-//         {
-//            String theoptionstr;
-//            String thevaluestr;
-//            for( String line; getline( input, line ); )
-//            {
-//               std::size_t pos = line.find_first_of( '#' );
-//               if( pos != String::npos )
-//                  line = line.substr( 0, pos );
-//
-//               pos = line.find_first_of( '=' );
-//
-//               if( pos == String::npos )
-//                  continue;
-//
-//               theoptionstr = line.substr( 0, pos - 1 );
-//               thevaluestr = line.substr( pos + 1 );
-//
-//               boost::algorithm::trim( theoptionstr );
-//               boost::algorithm::trim( thevaluestr );
-//
-//               try
-//               {
-//                  paramSet.parseParameter( theoptionstr.c_str(),
-//                                           thevaluestr.c_str() );
-//                  fmt::print( "set {} = {}\n", theoptionstr, thevaluestr );
-//               }
-//               catch( const std::exception& e )
-//               {
-//                  fmt::print( "parameter '{}' could not be set: {}\n", line,
-//                              e.what() );
-//               }
-//            }
-//         }
-//         else
-//         {
-//            fmt::print( "could not read parameter file '{}'\n",
-//                        opts.param_settings_file );
-//         }
-//      }
-//   }
-
-
-   double readtime = 0;
-   Timer t( readtime );
+   Message msg{};
 
    Problem<double> problem;
    Num<double> num{};
-   Message msg{};
+   Algorithm<double> alg{ msg, num, t };
+
+   if( !optionsInfo.param_settings_file.empty() &&
+       !optionsInfo.param_settings_file.empty() )
+   {
+      ParameterSet paramSet = alg.getParameters();
+      std::ifstream input( optionsInfo.param_settings_file );
+      if( input )
+      {
+         String theoptionstr;
+         String thevaluestr;
+         for( String line; getline( input, line ); )
+         {
+            std::size_t pos = line.find_first_of( '#' );
+            if( pos != String::npos )
+               line = line.substr( 0, pos );
+
+            pos = line.find_first_of( '=' );
+
+            if( pos == String::npos )
+               continue;
+
+            theoptionstr = line.substr( 0, pos - 1 );
+            thevaluestr = line.substr( pos + 1 );
+
+            boost::algorithm::trim( theoptionstr );
+            boost::algorithm::trim( thevaluestr );
+
+            try
+            {
+               paramSet.parseParameter( theoptionstr.c_str(),
+                                        thevaluestr.c_str() );
+               msg.info( "set {} = {}\n", theoptionstr, thevaluestr );
+            }
+            catch( const std::exception& e )
+            {
+               msg.error( "parameter '{}' could not be set: {}\n", line,
+                           e.what() );
+            }
+         }
+      }
+      else
+      {
+         msg.error( "could not read parameter file '{}'\n",
+                     optionsInfo.param_settings_file );
+      }
+   }
+
    boost::optional<Problem<double>> prob;
 
    {
@@ -144,16 +141,10 @@ main( int argc, char* argv[] )
 
    fmt::print( "reading took {:.3} seconds\n", t.getTime() );
 
-   double time_limit = 10 * 60;
-   VolumeAlgorithmParameter<double> para{ 0.05, 0.1, 0.2,  0.0005, 2,
-                                          2,    1.1, 0.66, 0.02,   0.001,
-                                          0.02, 2,   20,  time_limit, 20, 0.7 };
-
 #ifndef PAPILO_TBB
-   msg.error("Please build with TBB to use the parallel feature!!!");
+   msg.error( "Please build with TBB to use the parallel feature!!!" );
 #endif
 
-   Algorithm<double> alg{ msg, num, t, time_limit, 1};
-   alg.solve_problem( problem, para );
+   alg.solve_problem( problem );
    return 0;
 }

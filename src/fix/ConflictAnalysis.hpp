@@ -48,7 +48,7 @@ class ConflictAnalysis
    }
 
    bool
-   perform_conflict_analysis( Vec<SingleBoundChange<REAL>>& bound_changes, Vec<std::pair<int,int>> infeasible_rows,
+   perform_conflict_analysis( const Vec<SingleBoundChange<REAL>>& bound_changes, const Vec<std::pair<int,int>>& infeasible_rows,
                               Vec<Constraint<REAL>>& constraints  )
    {
       // TODO: to be implemented

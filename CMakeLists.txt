@@ -47,7 +47,7 @@ if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Release)
 endif()
 
-find_package(Boost ${BOOST_MIN_VERSION} COMPONENTS program_options REQUIRED)
+find_package(Boost ${BOOST_MIN_VERSION} COMPONENTS program_options iostreams REQUIRED)
 
 if(GMP)
     find_package(GMP)
@@ -255,23 +255,17 @@ add_library(papilo-core STATIC
 target_link_libraries(papilo-core papilo)
 target_compile_definitions(papilo-core PRIVATE PAPILO_USE_EXTERN_TEMPLATES)
 
-add_library(fix-shared STATIC
+add_library(fix-shared SHARED
   src/fix/FixAndPropagateApi.cpp
   src/fix/PresolveApi.cpp
-  ${sources}
   )
 set_target_properties(fix-shared PROPERTIES
     VERSION ${PAPILO_VERSION_MAJOR}.${PAPILO_VERSION_MINOR}.${PAPILO_VERSION_PATCH}.${PAPILO_VERSION_SUB}
     SOVERSION ${PAPILO_VERSION_MAJOR}.${PAPILO_VERSION_MINOR})
-add_dependencies(fix-shared papilo papilo-core ${CLUSOL_TARGET})
 if(MSVC)
     target_compile_options(fix-shared PUBLIC "/Zc:__cplusplus")
 endif()
-target_include_directories(fix-shared PUBLIC
-    $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}>
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
-    $<INSTALL_INTERFACE:include>)
-target_link_libraries(fix-shared papilo papilo-core ${CLUSOL_TARGET})
+target_link_libraries(fix-shared papilo papilo-core Boost::iostreams)
 set_target_properties(fix-shared PROPERTIES CXX_VISIBILITY_PRESET default)
 
 if(NOT PAPILO_NO_BINARIES)
@@ -441,7 +435,7 @@ install(FILES
         ${PROJECT_SOURCE_DIR}/src/fix/PresolveApi.h
         ${PROJECT_SOURCE_DIR}/src/fix/VectorMultiplication.hpp
         ${PROJECT_SOURCE_DIR}/src/fix/VolumeAlgorithm.hpp
-        ${PROJECT_SOURCE_DIR}/src/fix/VolumeAlgorithmParameter.hpp
+        ${PROJECT_SOURCE_DIR}/src/fix/AlgorithmParameter.hpp
         DESTINATION include/fix)
 
 install(FILES
