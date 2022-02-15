@@ -230,18 +230,14 @@ class VolumeAlgorithm
                       const REAL z_bar, const int num_int_vars,
                       const Vec<int>& fixed_int_vars_count )
    {
-      // primal feasibility check
       bool primal_feas_term = num.isLT( op.l1_norm( v ), n_rows_A *
                                         parameter.con_abstol );
 
-      // dualilty gap absolute check
       bool duality_gap_abs_term = num.isLT( abs( op.multi( c, x_bar ) ),
                                            parameter.obj_abstol );
-      // duality gap relative check
       bool duality_gap_rel_term = num.isLT( abs( op.multi( c, x_bar ) - z_bar ),
                                             abs( z_bar ) * parameter.obj_reltol
                                           );
-      // duality gap check
       bool duality_gap_term = num.isZero( z_bar ) ? duality_gap_abs_term :
                                                     duality_gap_rel_term;
 
