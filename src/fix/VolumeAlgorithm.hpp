@@ -107,17 +107,15 @@ class VolumeAlgorithm
 
       Vec<REAL> x_bar_last_iter( x_bar );
       Vec<bool> overall_int_indicator( x_bar.size() );
+      Vec<int> fixed_int_vars_count( x_bar.size() );
       int fixed_int_var_check_counter = 0;
-      calc_frac_ints( x_bar, x_bar_last_iter, domains,
-                      fixed_int_var_check_counter,
-                      overall_int_indicator );
+      init_fixed_int_count( x_bar, domains, fixed_int_vars_count );
 
       op.calc_b_minus_Ax( A, x_bar, b, v_t );
       calc_violations( n_rows_A, A, pi_bar, v_t, viol_t );
 
       while( stopping_criteria( viol_t, n_rows_A, c, x_bar, z_bar,
-                                num_int_vars, fixed_int_var_check_counter,
-                                overall_int_indicator ) )
+                                num_int_vars, fixed_int_vars_count ) )
       {
          msg.detailed( "Round of volume algorithm: {}\n", counter );
          // STEP 1:
@@ -158,9 +156,8 @@ class VolumeAlgorithm
          else
             improvement_indicator = false;
 
-         calc_frac_ints( x_bar, x_bar_last_iter, domains,
-                         fixed_int_var_check_counter,
-                         overall_int_indicator );
+         update_fixed_int_count( x_bar, x_bar_last_iter, domains,
+                                 fixed_int_vars_count );
 
          op.calc_b_minus_Ax( A, x_bar, b, v_t );
          calc_violations( n_rows_A, A, pi_bar, v_t, viol_t );
@@ -178,7 +175,7 @@ class VolumeAlgorithm
          }
 
          // check integrality of x_bar
-         integrality_check( x_bar, domains );
+         integrality_check( x_bar, x_bar_last_iter, domains );
 
          // Let t ← t + 1 and go to Step 1.
          counter = counter + 1;
@@ -231,19 +228,8 @@ class VolumeAlgorithm
    stopping_criteria( const Vec<REAL>& v, const int n_rows_A,
                       const Vec<REAL>& c, const Vec<REAL>& x_bar,
                       const REAL z_bar, const int num_int_vars,
-                      int& fixed_int_var_check_counter,
-                      Vec<bool>& overall_int_indicator )
+                      const Vec<int>& fixed_int_vars_count )
    {
-      msg.detailed( "   cons: {}\n", op.l1_norm( v ) / n_rows_A );
-      msg.detailed( "   zbar: {}\n", z_bar );
-      msg.detailed( "   objA: {}\n", abs( op.multi( c, x_bar ) ) );
-      msg.detailed( "   objR: {}\n", abs( op.multi( c, x_bar ) - z_bar ) /
-                                        abs( z_bar ) );
-      msg.detailed( "   fixed: {}\t threshold: {}\n",
-                        std::count( overall_int_indicator.begin(),
-                                    overall_int_indicator.end(), true ),
-                        num_int_vars * parameter.fixed_int_var_threshold );
-
       // primal feasibility check
       bool primal_feas_term = num.isLT( op.l1_norm( v ), n_rows_A *
                                         parameter.con_abstol );
@@ -260,19 +246,26 @@ class VolumeAlgorithm
                                                     duality_gap_rel_term;
 
       // fraction of integer variables with integer values
-      bool fixed_int_var_term = false;
-      if( fixed_int_var_check_counter >=
-            parameter.num_iters_fixed_int_vars_check )
-      {
-         if( num.isGE( std::count( overall_int_indicator.begin(),
-                                   overall_int_indicator.end(), true ),
-                       num_int_vars * parameter.fixed_int_var_threshold ) )
-            fixed_int_var_term = true;
+      int num_iters_check = parameter.num_iters_fixed_int_vars_check;
+      bool fixed_int_var_term = num.isGE( std::count_if(
+                                            fixed_int_vars_count.begin(),
+                                            fixed_int_vars_count.end(),
+                                            [num_iters_check]( int val )
+                                            { return val > num_iters_check; } ),
+                             num_int_vars * parameter.fixed_int_var_threshold );
 
-         // reset the counter and indicators
-         fixed_int_var_check_counter = 0;
-         overall_int_indicator.assign( overall_int_indicator.size(), false );
-      }
+      msg.detailed( "   cons: {}\n", op.l1_norm( v ) / n_rows_A );
+      msg.detailed( "   zbar: {}\n", z_bar );
+      msg.detailed( "   objA: {}\n", abs( op.multi( c, x_bar ) ) );
+      msg.detailed( "   objR: {}\n", abs( op.multi( c, x_bar ) - z_bar ) /
+                                        abs( z_bar ) );
+      msg.detailed( "   fixed: {}\t threshold: {}\n",
+                        std::count_if( fixed_int_vars_count.begin(),
+                                       fixed_int_vars_count.end(),
+                                       [num_iters_check]
+                                       ( int val ) { return val >
+                                       num_iters_check; } ),
+                        num_int_vars * parameter.fixed_int_var_threshold );
 
       return !( (primal_feas_term && duality_gap_term ) || fixed_int_var_term );
    }
@@ -317,42 +310,42 @@ class VolumeAlgorithm
       return obj_value.get();
    }
 
+   void
+   init_fixed_int_count( const Vec<REAL>& x_bar,
+                         const VariableDomains<REAL>& domains,
+                         Vec<int>& fixed_int_vars_count )
+   {
+      int x_bar_size = x_bar.size();
+      assert( fixed_int_vars_count.size() == x_bar_size );
+
+      for( int i = 0; i < x_bar_size; i++ )
+      {
+         if( domains.flags[i].test( ColFlag::kIntegral ) &&
+               num.isIntegral( x_bar[i] ) )
+            fixed_int_vars_count[i] = 1;
+      }
+   }
+
    // TODO: create an array for int var indices only once in Algorithm.hpp and
    //       pass it to the volume algo call?
    void
-   calc_frac_ints( const Vec<REAL>& x_bar,
-                   const Vec<REAL> x_bar_last_iter,
-                   const VariableDomains<REAL>& domains,
-                   int& fixed_int_var_check_counter,
-                   Vec<bool>& overall_int_indicator )
+   update_fixed_int_count( const Vec<REAL>& x_bar,
+                           const Vec<REAL> x_bar_last_iter,
+                           const VariableDomains<REAL>& domains,
+                           Vec<int>& fixed_int_vars_count )
    {
       int x_bar_size = x_bar.size();
-      assert( overall_int_indicator.size() == x_bar_size);
+      assert( fixed_int_vars_count.size() == x_bar_size);
 
-      if( fixed_int_var_check_counter )
+      for( int i = 0; i < x_bar_size; i++ )
       {
-         for( int i = 0; i < x_bar_size; i++ )
-         {
-            if( domains.flags[i].test( ColFlag::kIntegral ) &&
-                  num.isIntegral( x_bar[i] ) &&
-                  overall_int_indicator[i] &&
-                  num.isEq( x_bar[i], x_bar_last_iter[i] ) )
-               overall_int_indicator[i] = true;
-            else
-               overall_int_indicator[i] = false;
-         }
+         if( domains.flags[i].test( ColFlag::kIntegral ) &&
+               num.isIntegral( x_bar[i] ) &&
+               num.isEq( x_bar[i], x_bar_last_iter[i] ) )
+            fixed_int_vars_count[i]++;
+         else
+            fixed_int_vars_count[i] = 0;
       }
-      else
-      {
-         for( int i = 0; i < x_bar_size; i++ )
-         {
-            assert( !overall_int_indicator[i] );
-            if( domains.flags[i].test( ColFlag::kIntegral ) &&
-                 num.isIntegral( x_bar[i] ) )
-               overall_int_indicator[i] = true;
-         }
-      }
-      fixed_int_var_check_counter++;
    }
 
    void
@@ -489,18 +482,25 @@ class VolumeAlgorithm
 
    void
    integrality_check( const Vec<REAL>& x_bar,
+                      const Vec<REAL>& x_bar_last_iter,
                       const VariableDomains<REAL>& domains )
    {
       if( msg.getVerbosityLevel() == VerbosityLevel::kDetailed )
       {
          int num_integral = 0;
+         int num_fixed_int = 0;
          for( int i = 0; i < x_bar.size(); i++ )
          {
             if( domains.flags[i].test( ColFlag::kIntegral ) &&
                   num.isIntegral( x_bar[i] ) )
-               num_integral++;
+               {
+                  num_integral++;
+                  if( num.isEq( x_bar[i], x_bar_last_iter[i] ) )
+                     num_fixed_int++;
+               }
          }
-         msg.detailed( "   numIntXbar: {}\n", num_integral );
+         msg.detailed( "   numInt: {}\t numFixedInt: {}\n", num_integral,
+               num_fixed_int );
       }
    }
 
