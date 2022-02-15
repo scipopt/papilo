@@ -70,7 +70,6 @@ setup( const char* filename, int* result, int verbosity_level )
       assert(false);
 
    }
-   msg.setVerbosityLevel( papilo::VerbosityLevel::kWarning );
    auto heuristic = new Heuristic<double>{ msg, {}, t, *problem };
    heuristic->setup();
    *result = 0;
