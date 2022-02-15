@@ -51,6 +51,7 @@ struct AlgorithmParameter
    int num_iters_fixed_int_vars_check = 20;
    int weak_improvement_iter_limit = 2;
    int non_improvement_iter_limit = 20;
+   int max_iterations = 4444;
 
    // fix and propagate parameters
 
@@ -108,6 +109,9 @@ struct AlgorithmParameter
       paramSet.addParameter( "vol.non_improvement_iter_limit", "number of "
                              "red iterations after which the parameter f is "
                              "updated", non_improvement_iter_limit, 0.0, 1.0 );
+      paramSet.addParameter( "vol.max_iterations",
+                             "maximum number of volume algorithm iterations in"
+                             "one round", max_iterations, 0, 44444 );
    }
 };
 
