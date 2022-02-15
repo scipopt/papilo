@@ -391,11 +391,11 @@ class Heuristic
          Solution<REAL> original_solution{};
          Solution<REAL> reduced_solution{ reduced };
          Message quiet{};
-//         quiet.setVerbosityLevel( papilo::VerbosityLevel::kQuiet );
+         quiet.setVerbosityLevel( papilo::VerbosityLevel::kQuiet );
          Postsolve<REAL> postsolve{ quiet, num };
          auto status = postsolve.undo( reduced_solution, original_solution,
                                        postsolve_storage );
-//         assert( status == PostsolveStatus::kOk );
+         assert( status == PostsolveStatus::kOk );
          return postsolve_storage.getOriginalProblem().computeSolObjective(
              original_solution.primal );
       }
