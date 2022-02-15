@@ -32,13 +32,17 @@ main( void )
    void* heuristic = setup( "./../../resources/api_test.mps", &result, 4 );
    assert( result == 0 );
    int n_cols = 3;
-   double* primal_solution = malloc(n_cols* sizeof (int));
-   double* sol = malloc(n_cols* sizeof (double));
+   double* primal_solution = malloc( n_cols * sizeof( int ) );
+   double* sol = malloc( n_cols * sizeof( double ) );
    for( int i = 0; i < n_cols; i++ )
       primal_solution[i] = ( 1.0 + i ) / 10.0;
    double current_solution = 50;
-   int success = call_algorithm( heuristic, primal_solution, sol, n_cols, &current_solution );
+   int success = call_algorithm( heuristic, primal_solution, sol, n_cols,
+                                 &current_solution );
    delete_problem_instance( heuristic );
-   assert(current_solution == 9);
+   assert( sol[0] == 0 );
+   assert( sol[1] == 0 );
+   assert( sol[2] == 1 );
+   assert( current_solution == 9 );
    assert( success );
 }
