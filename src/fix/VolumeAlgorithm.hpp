@@ -417,11 +417,7 @@ class VolumeAlgorithm
          alpha = alpha_max;
       else
          alpha = alpha_opt;
-      /*
-      alpha = num.isLT( alpha_opt, REAL{ 0.0 } )
-                  ? alpha_max / 10.0
-                  : num.min( alpha_opt, alpha_max );
-      */
+
       msg.detailed( "   alpha_opt: {},\t alpha_max: {},\t alpha: {}\n",
                     alpha_opt, alpha_max, alpha );
    }
@@ -515,7 +511,7 @@ class VolumeAlgorithm
    {
       // TODO: change 0.01, 1e-5, and 2.0 as global params?
       if( num.isLT( z_bar, z_bar_old + 0.01 * abs( z_bar_old ) ) &&
-          num.isGE( alpha_max, REAL{ 1e-5 } ) )
+          num.isGE( alpha_max / 2.0, REAL{ 1e-4 } ) )
          alpha_max = alpha_max / 2.0;
    }
 };
