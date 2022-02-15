@@ -361,6 +361,7 @@ ProbingView<REAL>::reset()
    probingCol = -1;
    fixings.clear();
    changes.clear();
+   infeasible_rows.clear();
 }
 
 template <typename REAL>

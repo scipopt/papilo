@@ -405,7 +405,7 @@ TEST_CASE( "fix-and-propagate-check-conflict-analysis-data", "[fix]" )
    REQUIRE( changes.size() == 5);
    REQUIRE( conflicts.size() == 1);
 
-   REQUIRE( conflicts[0].first == 4);
+   REQUIRE( conflicts[0].first == 5);
    REQUIRE( conflicts[0].second == 3);
 
    REQUIRE( changes[0].get_new_bound_value() == 1);
