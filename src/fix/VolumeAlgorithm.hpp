@@ -106,7 +106,7 @@ class VolumeAlgorithm
       bool finite_upper_bound = false;
 
       Vec<REAL> x_bar_last_iter( x_bar );
-      Vec<bool> overall_int_indicator( x_bar.size(), false );
+      Vec<bool> overall_int_indicator( x_bar.size() );
       int fixed_int_var_check_counter = 1;
 
       op.calc_b_minus_Ax( A, x_bar, b, v_t );
@@ -316,18 +316,22 @@ class VolumeAlgorithm
                    int& fixed_int_var_check_counter,
                    Vec<bool>& overall_int_indicator )
    {
-      int x_bar_size = x_bar.size();
-      fixed_int_var_check_counter++;
-
-      for( int i = 0; i < x_bar_size; i++ )
+      if( fixed_int_var_check_counter )
       {
-         if( domains.flags[i].test( ColFlag::kIntegral ) &&
-               num.isIntegral( x_bar[i] ) &&
-               num.isEq( x_bar[i], x_bar_last_iter[i] ) )
-            overall_int_indicator[i] = true;
-         else
-            overall_int_indicator[i] = false;
+         int x_bar_size = x_bar.size();
+         assert( overall_int_indicator.size() == x_bar_size);
+
+         for( int i = 0; i < x_bar_size; i++ )
+         {
+            if( domains.flags[i].test( ColFlag::kIntegral ) &&
+                  num.isIntegral( x_bar[i] ) &&
+                  num.isEq( x_bar[i], x_bar_last_iter[i] ) )
+               overall_int_indicator[i] = true;
+            else
+               overall_int_indicator[i] = false;
+         }
       }
+      fixed_int_var_check_counter++;
    }
 
    void
