@@ -140,7 +140,8 @@ class Heuristic
                               Vec<REAL>& current_best_solution,
                               bool perform_backtracking = true,
                               bool perform_one_opt = true,
-                              bool stop_at_infeasible = true )
+                              bool stop_at_infeasible = true,
+                              bool copy_infeasible_sol = false)
    {
       FixAndPropagate<REAL> fixAndPropagate{ msg, num };
       for( auto view : views )
@@ -190,7 +191,7 @@ class Heuristic
                 obj_value[0], backtracks );
 #endif
       one_opt( perform_one_opt, stop_at_infeasible );
-      return evaluate( best_obj_val, current_best_solution );
+      return evaluate( best_obj_val, current_best_solution, copy_infeasible_sol );
    }
 
    void
@@ -340,7 +341,7 @@ class Heuristic
 
  private:
    bool
-   evaluate( REAL& best_obj_val, Vec<REAL>& current_best_solution )
+   evaluate( REAL& best_obj_val, Vec<REAL>& current_best_solution, bool copy_infeasible_sol )
    {
       bool feasible = std::any_of( infeasible_arr.begin(), infeasible_arr.end(),
                                    []( bool b ) { return !b; } );
@@ -348,6 +349,8 @@ class Heuristic
       // TODO: copy the best solution;
       if( !feasible )
       {
+         if(copy_infeasible_sol)
+            current_best_solution = int_solutions[0];
          msg.info(
              "\t\tFix and Propagate did not find a feasible solution!\n" );
          return false;
