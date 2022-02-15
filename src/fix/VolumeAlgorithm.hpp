@@ -228,11 +228,15 @@ class VolumeAlgorithm
                       int& fixed_int_var_check_counter,
                       Vec<bool>& overall_int_indicator )
    {
-      msg.detailed( "   sc_1: {}\n", op.l1_norm( v ) / n_rows_A );
-      msg.detailed( "   sc_2: {}\n",
-                num.isZero( z_bar )
-                    ? abs( op.multi( c, x_bar ) )
-                    : abs( op.multi( c, x_bar ) - z_bar ) / abs( z_bar ) );
+      msg.detailed( "   cons: {}\n", op.l1_norm( v ) / n_rows_A );
+      msg.detailed( "   zbar: {}\n", z_bar );
+      msg.detailed( "   objA: {}\n", abs( op.multi( c, x_bar ) ) );
+      msg.detailed( "   objR: {}\n", abs( op.multi( c, x_bar ) - z_bar ) /
+                                        abs( z_bar ) );
+      msg.detailed( "   fixed: {}\t threshold: {}\n",
+                        std::count( overall_int_indicator.begin(),
+                                    overall_int_indicator.end(), true ),
+                        num_int_vars * parameter.fixed_int_var_threshold );
 
       // primal feasibility check
       bool primal_feas_term = num.isLT( op.l1_norm( v ), n_rows_A *
@@ -260,8 +264,8 @@ class VolumeAlgorithm
             fixed_int_var_term = true;
 
          // reset the counter and indicators
-         fixed_int_var_check_counter = 1;
-         overall_int_indicator.assign( x_bar_size, false );
+         fixed_int_var_check_counter = 0;
+         overall_int_indicator.assign( overall_int_indicator.size(), false );
       }
 
       return !( (primal_feas_term && duality_gap_term ) || fixed_int_var_term );
