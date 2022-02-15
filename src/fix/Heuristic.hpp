@@ -53,17 +53,21 @@ class Heuristic
    Vec<bool> infeasible_arr;
    ConflictAnalysis<REAL> conflict_analysis;
    Vec<Vec<Constraint<REAL>>> constraints{};
+   PostsolveStorage<REAL>& postsolve_storage;
+   bool calculate_original = false;
 
  public:
    Problem<REAL>& problem;
 
  public:
    Heuristic( Message msg_, Num<REAL> num_, Timer& timer_,
-              Problem<REAL>& problem_ )
+              Problem<REAL>& problem_,
+              PostsolveStorage<REAL>& postsolve_storage_, bool calculate_original_ = true )
        : msg( msg_ ), num( num_ ), timer( timer_ ), strategies( {} ),
          int_solutions( {} ), views( {} ), obj_value( {} ),
          infeasible_arr( {} ), cols_sorted_by_obj( {} ), problem( problem_ ),
-         conflict_analysis( { msg, num, timer } )
+         conflict_analysis( { msg, num, timer } ),
+         postsolve_storage( postsolve_storage_ ), calculate_original( calculate_original_ )
    {
    }
 
@@ -162,10 +166,7 @@ class Heuristic
                        obj_value[i], backtracks );
                    break;
                 }
-                StableSum<REAL> sum{};
-                for( int j = 0; j < primal_heur_sol.size(); j++ )
-                   sum.add( int_solutions[i][j] * views[i].get_obj()[j] );
-                obj_value[i] = sum.get();
+                obj_value[i] = calculate_obj_value(int_solutions[i]);
                 msg.info(
                     "\t\tPropagating {} found obj value {}! (backtracks {})\n",
                     i, obj_value[i], backtracks );
@@ -383,13 +384,29 @@ class Heuristic
    }
 
    REAL
-   calculate_obj_value( const Vec<REAL>& int_solution ) const
+   calculate_obj_value( const Vec<REAL>& reduced ) const
    {
-      StableSum<REAL> sum{};
-      Vec<REAL>& coefficients = problem.getObjective().coefficients;
-      for( int j = 0; j < int_solution.size(); j++ )
-         sum.add( int_solution[j] * coefficients[j] );
-      return sum.get();
+      if( calculate_original )
+      {
+         Solution<REAL> original_solution{};
+         Solution<REAL> reduced_solution{ reduced };
+         Message quiet{};
+//         quiet.setVerbosityLevel( papilo::VerbosityLevel::kQuiet );
+         Postsolve<REAL> postsolve{ quiet, num };
+         auto status = postsolve.undo( reduced_solution, original_solution,
+                                       postsolve_storage );
+//         assert( status == PostsolveStatus::kOk );
+         return postsolve_storage.getOriginalProblem().computeSolObjective(
+             original_solution.primal );
+      }
+      else
+      {
+         StableSum<REAL> sum{};
+         Vec<REAL>& coefficients = problem.getObjective().coefficients;
+         for( int j = 0; j < reduced.size(); j++ )
+            sum.add( reduced[j] * coefficients[j] );
+         return sum.get();
+      }
    }
 };
 
