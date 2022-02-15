@@ -265,10 +265,14 @@ class VolumeAlgorithm
                                        num_iters_check; } ),
                         num_int_vars * parameter.fixed_int_var_threshold );
 
+      bool time_limit_term = ( num.isGE( timer.getTime(),
+                                         parameter.time_limit ) );
+
       bool iter_limit_term = ( num_iterations >= parameter.max_iterations );
 
       return !( (primal_feas_term && duality_gap_term ) ||
                 fixed_int_var_term ||
+                time_limit_term ||
                 iter_limit_term );
    }
 
