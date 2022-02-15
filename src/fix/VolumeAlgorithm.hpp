@@ -137,7 +137,7 @@ class VolumeAlgorithm
          op.calc_b_minus_Ax( A, x_t, b, residual_t );
          calc_alpha( residual_t, v_t );
 
-         x_bar_last_iter( x_bar );
+         x_bar_last_iter = x_bar;
          // x_bar ← αx_t + (1 − α)x_bar
          op.calc_qb_plus_sx( alpha, x_t, 1 - alpha, x_bar,
                              x_bar );
@@ -155,11 +155,9 @@ class VolumeAlgorithm
          else
             improvement_indicator = false;
 
-         primal_sols.push_back( x_bar );
          calc_frac_ints( x_bar, x_bar_last_iter, domains,
                          fixed_int_var_check_counter,
                          overall_int_indicator );
-         dual_sols.push_back( pi_bar );
 
          op.calc_b_minus_Ax( A, x_bar, b, v_t );
          calc_violations( n_rows_A, A, pi_bar, v_t, viol_t );
@@ -266,7 +264,7 @@ class VolumeAlgorithm
          overall_int_indicator.assign( x_bar_size, false );
       }
 
-      return (primal_feas_term && duality_gap_term ) || fixed_int_var_term;
+      return !( (primal_feas_term && duality_gap_term ) || fixed_int_var_term );
    }
 
    REAL

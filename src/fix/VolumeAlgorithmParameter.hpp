@@ -46,6 +46,7 @@ struct VolumeAlgorithmParameter
    int non_improvement_iter_limit;
    double time_limit;
    int num_iters_fixed_int_vars_check;
+   REAL fixed_int_var_threshold;
 
    VolumeAlgorithmParameter( REAL _alpha, REAL _alpha_max, REAL _f, REAL _f_min,
                              REAL _f_max, REAL _f_strong_incr_factor,
@@ -54,7 +55,8 @@ struct VolumeAlgorithmParameter
                              REAL _con_abstol, int _weak_improvement_iter_limit,
                              int _non_improvement_iter_limit,
                              double _time_limit,
-                             int _num_iters_fixed_int_vars_check )
+                             int _num_iters_fixed_int_vars_check,
+                             REAL _fixed_int_var_threshold )
        : alpha( _alpha ), alpha_max( _alpha_max ), f( _f ), f_min( _f_min ),
          f_max( _f_max ), f_strong_incr_factor( _f_strong_incr_factor ),
          f_weak_incr_factor( _f_weak_incr_factor ),
@@ -63,7 +65,8 @@ struct VolumeAlgorithmParameter
          weak_improvement_iter_limit( _weak_improvement_iter_limit ),
          non_improvement_iter_limit( _non_improvement_iter_limit ),
          time_limit( _time_limit ),
-         num_iters_fixed_int_vars_check( _num_iters_fixed_int_vars_check )
+         num_iters_fixed_int_vars_check( _num_iters_fixed_int_vars_check ),
+         fixed_int_var_threshold( _fixed_int_var_threshold )
    {
    }
 };
