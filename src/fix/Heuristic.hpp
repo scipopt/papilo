@@ -278,14 +278,15 @@ class Heuristic
                              } ) );
                          assert( std::all_of(
                              constraints[i].begin(), constraints[i].end(),
-                             [this]( Constraint<REAL>& c )
+                             [this, i]( Constraint<REAL>& c )
                              {
 
-                                for( int i = 0; i < c.get_data().getLength();
-                                     i++ )
+                                const int* indices = c.get_data().getIndices();
+                          for( int j = 0; j < c.get_data().getLength();
+                                     j++ )
                                 {
-                                   if( c.get_data().getIndices()[i] < 0 ||
-                                       c.get_data().getIndices()[i] >
+                                   if( indices[j] < 0 ||
+                                       indices[j] >
                                            views[i]
                                                .getProbingUpperBounds()
                                                .size() )

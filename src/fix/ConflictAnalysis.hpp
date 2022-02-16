@@ -569,8 +569,9 @@ class ConflictAnalysis
       RowFlags row_flag;
       row_flag.set( RowFlag::kRhsInf );
 
-      REAL vals[conflict_set_candidates.size()];
-      int inds[conflict_set_candidates.size()];
+      REAL vals [conflict_set_candidates.size()];
+      int inds [conflict_set_candidates.size()];
+
       REAL lhs = 1.0;
       for( int i = 0; i < conflict_set_candidates.size(); i++ )
       {
@@ -589,9 +590,8 @@ class ConflictAnalysis
 
       Constraint<REAL> conf_con( row_data, row_flag, lhs, 0.0 );
       constraints.push_back( conf_con );
-
-      return;
    }
+
    void
    simple_cut_from_fixings( Vec<SingleBoundChange<REAL>>& bound_changes,
                             Vec<int>& conflict_set_candidates,
