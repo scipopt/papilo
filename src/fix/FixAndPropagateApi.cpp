@@ -20,12 +20,17 @@
 /* along with this program.  If not, see <https://www.gnu.org/licenses/>.    */
 /*                                                                           */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+//#define FIX_DEBUG
 
 #include "fix/FixAndPropagateApi.h"
 #include "fix/Heuristic.hpp"
 
 #include "papilo/io/MpsParser.hpp"
 #include <string>
+
+#ifdef FIX_DEBUG
+#include "papilo/io/SolWriter.hpp"
+#endif
 
 using namespace papilo;
 
@@ -99,6 +104,12 @@ call_algorithm( void* heuristic_void_ptr, double* cont_solution, double* result,
           auto heuristic = (Heuristic<double>*)( heuristic_void_ptr );
           Vec<double> sol( cont_solution, cont_solution + n_cols );
           Vec<double> res{};
+
+#ifdef FIX_DEBUG
+          SolWriter<double>::writePrimalSol(
+              "test.mps", sol, heuristic->problem.getObjective().coefficients, 0.0,
+              heuristic->problem.getVariableNames() );
+#endif
 
           double local_obj = *current_obj_value;
           heuristic->perform_fix_and_propagate(

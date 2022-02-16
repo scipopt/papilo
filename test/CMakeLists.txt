@@ -227,6 +227,9 @@ set(unit_tests
         "vector-addition-2"
 
         "small-volume-algorithm-test"
+
+        "conflict-analysis-binary-no-resolution"
+        "conflict-analysis-binary-with-resolution"
         "fix-and-propagate-api-simple-heuristic"
 
         "heuristics-all-false-lowest-depth"

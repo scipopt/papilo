@@ -69,7 +69,7 @@ class Heuristic
        : msg( msg_ ), num( num_ ), timer( timer_ ), strategies( {} ),
          int_solutions( {} ), views( {} ), obj_value( {} ),
          infeasible_arr( {} ), cols_sorted_by_obj( {} ), problem( problem_ ),
-         conflict_analysis( { msg, num, timer } ),
+         conflict_analysis( { msg, num, timer, problem_ } ),
          postsolve_storage( postsolve_storage_ ),
          calculate_original( calculate_original_ )
    {
@@ -261,9 +261,12 @@ class Heuristic
                          if( !perform_conflict_analysis )
                             continue;
                          assert( !views[i].get_infeasible_rows().empty() );
-                         conflict_analysis.perform_conflict_analysis(
-                             views[i].get_changes(),
-                             views[i].get_infeasible_rows(), constraints[i] );
+                         auto changes =
+                             views[i].get_changes();
+                   auto infeasible_rows =
+                             views[i].get_infeasible_rows();
+                   conflict_analysis.perform_conflict_analysis(
+                       changes, infeasible_rows, constraints[i] );
                          assert( std::all_of(
                              constraints[i].begin(), constraints[i].end(),
                              []( Constraint<REAL>& c )
