@@ -140,7 +140,7 @@ class Algorithm
              msg.info( "\tStarting primal heuristics - {:.3} s\n",
                        timer.getTime() );
              Vec<std::pair<int, int>> infeasible_rows;
-             service.find_initial_solution(best_obj_value, best_solution);
+//             service.find_initial_solution(best_obj_value, best_solution);
 
              int round_counter = 0;
              int round_first_solution = -1;

@@ -62,12 +62,14 @@ class Heuristic
  public:
    Heuristic( Message msg_, Num<REAL> num_, Timer& timer_,
               Problem<REAL>& problem_,
-              PostsolveStorage<REAL>& postsolve_storage_, bool calculate_original_ = true )
+              PostsolveStorage<REAL>& postsolve_storage_,
+              bool calculate_original_ = true )
        : msg( msg_ ), num( num_ ), timer( timer_ ), strategies( {} ),
          int_solutions( {} ), views( {} ), obj_value( {} ),
          infeasible_arr( {} ), cols_sorted_by_obj( {} ), problem( problem_ ),
          conflict_analysis( { msg, num, timer } ),
-         postsolve_storage( postsolve_storage_ ), calculate_original( calculate_original_ )
+         postsolve_storage( postsolve_storage_ ),
+         calculate_original( calculate_original_ )
    {
    }
 
@@ -135,17 +137,22 @@ class Heuristic
    }
 
    bool
-   find_initial_solution( REAL& current_objective, Vec<REAL>& current_best_solution )
+   find_initial_solution( REAL& current_objective,
+                          Vec<REAL>& current_best_solution )
    {
       FixAndPropagate<REAL> fixAndPropagate{ msg, num };
       for( auto view : views )
          view.reset();
+#ifdef PAPILO_TBB
       tbb::parallel_for(
           tbb::blocked_range<int>( 0, 4 ),
           [&]( const tbb::blocked_range<int>& r )
           {
              for( int i = r.begin(); i != r.end(); ++i )
              {
+#else
+      int i = 0;
+#endif
                 infeasible_arr[i] = fixAndPropagate.find_initial_solution(
                     0, views[i], int_solutions[i] );
                 if( infeasible_arr[i] )
@@ -153,14 +160,24 @@ class Heuristic
                    obj_value[i] = 0;
                    msg.info( "\t\tInitial sol {} is infeasible!\n", i,
                              obj_value[i] );
+#ifdef PAPILO_TBB
                    break;
+#else
+         return false;
+#endif
                 }
-                obj_value[i] = calculate_obj_value(int_solutions[i]);
+                obj_value[i] = calculate_obj_value( int_solutions[i] );
                 msg.info( "\t\tInitial sol {} found obj value {}!\n", i,
                           obj_value[i] );
+#ifndef PAPILO_TBB
+                current_best_solution = int_solutions[i];
+                current_objective = obj_value[i];
+                return true;
+#else
              }
           } );
-      return evaluate( current_objective, current_best_solution );
+      return evaluate( current_objective, current_best_solution, false );
+#endif
    }
 
    bool
@@ -170,7 +187,7 @@ class Heuristic
                               bool perform_backtracking = true,
                               bool perform_one_opt = true,
                               bool stop_at_infeasible = true,
-                              bool copy_infeasible_sol = false)
+                              bool copy_infeasible_sol = false )
    {
       FixAndPropagate<REAL> fixAndPropagate{ msg, num };
       for( auto view : views )
@@ -196,7 +213,7 @@ class Heuristic
                        obj_value[i], backtracks );
                    break;
                 }
-                obj_value[i] = calculate_obj_value(int_solutions[i]);
+                obj_value[i] = calculate_obj_value( int_solutions[i] );
                 msg.info(
                     "\t\tPropagating {} found obj value {}! (backtracks {})\n",
                     i, obj_value[i], backtracks );
@@ -212,12 +229,13 @@ class Heuristic
          obj_value[0] = 0;
          return false;
       }
-      obj_value[i] = calculate_obj_value(int_solutions[0]);
+      obj_value[0] = calculate_obj_value( int_solutions[0] );
       msg.info( "\t\tPropagating {} found obj value {}! (backtracks {})\n", 0,
                 obj_value[0], backtracks );
 #endif
       one_opt( perform_one_opt, stop_at_infeasible );
-      return evaluate( best_obj_val, current_best_solution, copy_infeasible_sol );
+      return evaluate( best_obj_val, current_best_solution,
+                       copy_infeasible_sol );
    }
 
    void
@@ -367,7 +385,8 @@ class Heuristic
 
  private:
    bool
-   evaluate( REAL& best_obj_val, Vec<REAL>& current_best_solution, bool copy_infeasible_sol )
+   evaluate( REAL& best_obj_val, Vec<REAL>& current_best_solution,
+             bool copy_infeasible_sol )
    {
       bool feasible = std::any_of( infeasible_arr.begin(), infeasible_arr.end(),
                                    []( bool b ) { return !b; } );
@@ -375,7 +394,7 @@ class Heuristic
       // TODO: copy the best solution;
       if( !feasible )
       {
-         if(copy_infeasible_sol)
+         if( copy_infeasible_sol )
             current_best_solution = int_solutions[0];
          msg.info(
              "\t\tFix and Propagate did not find a feasible solution!\n" );
