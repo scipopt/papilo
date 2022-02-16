@@ -184,25 +184,26 @@ class VolumeAlgorithm
       };
       // TODO: ahoen@suresh -> overwrite pi with current pi to be able to warm
       // restart the algorithm?
-      msg.info( "\t\tVol. alg. iterations: {} ( {} )\n", counter,
-            parameter.max_iterations );
-      msg.info( "\t\tAvg. (easy) constraint violation: {} ( {} )\n", op.l1_norm(
-               viol_t ) / n_rows_A, parameter.con_abstol );
-      msg.info( "\t\tLagrangian function value: {}\n", z_bar );
-      msg.info( "\t\tPrimal objective value (abs): {} ( {} )\n", abs( op.multi( c,
-                  x_bar ) ), parameter.obj_abstol );
-      msg.info( "\t\tDuality gap: {} ( {} )\n", abs( op.multi( c, x_bar ) - z_bar ) /
-                                        abs( z_bar ), parameter.obj_reltol );
-      int num_iters_check = parameter.num_iters_fixed_int_vars_check;
-      msg.info( "\t\tNumber of fixed int vars: {} ( {} )\n",
-                        std::count_if( fixed_int_vars_count.begin(),
-                                       fixed_int_vars_count.end(),
-                                       [num_iters_check]
-                                       ( int val ) { return val >
-                                       num_iters_check; } ), num_int_vars *
-                        parameter.fixed_int_var_threshold );
-      msg.info( "\t\tTotal time: {} ( {} )\n", timer.getTime() - st,
-            parameter.time_limit );
+      if( msg.getVerbosityLevel() >= VerbosityLevel::kInfo )
+      {
+         msg.info( "\t\tVol. alg. iterations: {} ( {} )\n", counter,
+               parameter.max_iterations );
+         msg.info( "\t\tAvg. (easy) constraint violation: {} ( {} )\n",
+               op.l1_norm( viol_t ) / n_rows_A, parameter.con_abstol );
+         msg.info( "\t\tLagrangian function value: {}\n", z_bar );
+         msg.info( "\t\tPrimal objective value (abs): {} ( {} )\n",
+               abs( op.multi( c, x_bar ) ), parameter.obj_abstol );
+         msg.info( "\t\tDuality gap: {} ( {} )\n", abs( op.multi( c, x_bar ) -
+                  z_bar ) / abs( z_bar ), parameter.obj_reltol );
+         int num_iters_check = parameter.num_iters_fixed_int_vars_check;
+         msg.info( "\t\tNumber of fixed int vars: {} ( {} )\n",
+               std::count_if( fixed_int_vars_count.begin(),
+                  fixed_int_vars_count.end(),
+                  [num_iters_check] ( int val ) { return val > num_iters_check;
+                  } ), num_int_vars * parameter.fixed_int_var_threshold );
+         msg.info( "\t\tTotal time: {} ( {} )\n", timer.getTime() - st,
+               parameter.time_limit );
+      }
 
       return x_bar;
    }
