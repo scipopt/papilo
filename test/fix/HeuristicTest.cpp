@@ -21,24 +21,18 @@
 /*                                                                           */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#include "fix/FixAndPropagate.hpp"
 
 #include "fix/Heuristic.hpp"
 #include "catch/catch.hpp"
-#include "papilo/core/ProbingView.hpp"
 #include "papilo/core/Problem.hpp"
 #include "papilo/core/ProblemBuilder.hpp"
 
 Problem<double>
 setupProblemForConflictAnalysis_3();
 
-TEST_CASE( "heuristics-all-false-test", "[fix]" )
+TEST_CASE( "heuristics-all-false-best-objective", "[fix]" )
 {
    Problem<double> problem = setupProblemForConflictAnalysis_3();
-
-   problem.getUpperBounds()[0] = 3;
-   problem.getConstraintMatrix().getRightHandSides()[0] = 4;
-   problem.getConstraintMatrix().getLeftHandSides()[0] = 4;
 
    problem.recomputeAllActivities();
 
@@ -53,9 +47,105 @@ TEST_CASE( "heuristics-all-false-test", "[fix]" )
    Vec<double> sol = { 0.9, 0.9, 0.6, 0.3, 0.2 };
 
    double objVal = 50;
-   heuristic->perform_fix_and_propagate(
+   heuristic->setup();
+   bool infeasible =heuristic->perform_fix_and_propagate(
        sol, objVal, res, true, true, false,
        InfeasibleCopyStrategy::kBestObjective );
+   REQUIRE( !infeasible );
+   REQUIRE( res[0] == 0 );
+   REQUIRE( res[1] == 0 );
+   REQUIRE( res[2] == 1 );
+   REQUIRE( res[3] == 0 );
+   REQUIRE( res[4] == 0 );
+
+}
+
+TEST_CASE( "heuristics-all-false-worst-objective", "[fix]" )
+{
+   Problem<double> problem = setupProblemForConflictAnalysis_3();
+
+   problem.recomputeAllActivities();
+
+   Message msg {};
+   msg.setVerbosityLevel(papilo::VerbosityLevel::kDetailed);
+   double time = 5;
+   Timer t{time};
+   PostsolveStorage<double> storage{};
+   auto heuristic =
+       new Heuristic<double>{ msg, {}, t, problem, storage, false };
+   Vec<double> res{};
+   Vec<double> sol = { 0.9, 0.9, 0.6, 0.3, 0.2 };
+
+   double objVal = 50;
+   heuristic->setup();
+   bool infeasible =heuristic->perform_fix_and_propagate(
+       sol, objVal, res, true, true, false,
+       InfeasibleCopyStrategy::kWorstObjective);
+   REQUIRE( !infeasible );
+   REQUIRE( res[0] == 0 );
+   REQUIRE( res[1] == 1 );
+   REQUIRE( res[2] == 0 );
+   REQUIRE( res[3] == 1 );
+   REQUIRE( res[4] == 1 );
+
+}
+
+TEST_CASE( "heuristics-all-false-highest-depth", "[fix]" )
+{
+   Problem<double> problem = setupProblemForConflictAnalysis_3();
+
+   problem.recomputeAllActivities();
+
+   Message msg {};
+   msg.setVerbosityLevel(papilo::VerbosityLevel::kDetailed);
+   double time = 5;
+   Timer t{time};
+   PostsolveStorage<double> storage{};
+   auto heuristic =
+       new Heuristic<double>{ msg, {}, t, problem, storage, false };
+   Vec<double> res{};
+   Vec<double> sol = { 0.9, 0.9, 0.6, 0.3, 0.2 };
+
+   double objVal = 50;
+   heuristic->setup();
+   bool infeasible =heuristic->perform_fix_and_propagate(
+       sol, objVal, res, true, true, false,
+       InfeasibleCopyStrategy::kHighestDepthOfFirstConflict);
+   REQUIRE( !infeasible );
+   REQUIRE( res[0] == 0 );
+   REQUIRE( res[1] == 0 );
+   REQUIRE( res[2] == 1 );
+   REQUIRE( res[3] == 0 );
+   REQUIRE( res[4] == 0 );
+}
+
+TEST_CASE( "heuristics-all-false-lowest-depth", "[fix]" )
+{
+   Problem<double> problem = setupProblemForConflictAnalysis_3();
+
+   problem.recomputeAllActivities();
+
+   Message msg {};
+   msg.setVerbosityLevel(papilo::VerbosityLevel::kDetailed);
+   double time = 5;
+   Timer t{time};
+   PostsolveStorage<double> storage{};
+   auto heuristic =
+       new Heuristic<double>{ msg, {}, t, problem, storage, false };
+   Vec<double> res{};
+   Vec<double> sol = { 0.9, 0.9, 0.6, 0.3, 0.2 };
+
+   double objVal = 50;
+   heuristic->setup();
+   bool infeasible =heuristic->perform_fix_and_propagate(
+       sol, objVal, res, true, true, false,
+       InfeasibleCopyStrategy::kLowestDepthOfFirstConflict);
+   REQUIRE( !infeasible );
+   REQUIRE( res[0] == 0 );
+   REQUIRE( res[1] == 1 );
+   REQUIRE( res[2] == 0 );
+   REQUIRE( res[3] == 0 );
+   REQUIRE( res[4] == 0 );
 }
 
 Problem<double>
@@ -66,7 +156,7 @@ setupProblemForConflictAnalysis_3()
    Vec<double> lowerBounds{ 0.0, 0.0, 0.0, 0.0, 0.0 };
    Vec<uint8_t> isIntegral{ 1, 1, 1, 1, 1 };
 
-   Vec<double> rhs{ 1.0, 2.0, 3.0, 2.0 };
+   Vec<double> rhs{0.0, 2.0, 3.0, 2.0 };
    Vec<std::string> rowNames{ "A1", "A2", "A3", "A4" };
    Vec<std::string> columnNames{ "c1", "c2", "c3", "c4", "c5" };
    Vec<std::tuple<int, int, double>> entries{

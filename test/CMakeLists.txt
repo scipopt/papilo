@@ -229,6 +229,10 @@ set(unit_tests
         "small-volume-algorithm-test"
         "fix-and-propagate-api-simple-heuristic"
 
+        "heuristics-all-false-lowest-depth"
+        "heuristics-all-false-highest-depth"
+        "heuristics-all-false-worst-objective"
+        "heuristics-all-false-best-objective"
 
         "conflict-analysis-binary-depth-two"
         "conflict-analysis-check-data"
