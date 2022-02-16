@@ -112,7 +112,7 @@ class Algorithm
              VolumeAlgorithm<REAL> algorithm{ msg, num, timer, alg_parameter };
 
              service.setup();
-             REAL best_obj_value{};
+             REAL best_obj_value = std::numeric_limits<REAL>::max();
 
              Vec<REAL> best_solution{};
              best_solution.reserve( problem.getNCols() );
@@ -136,7 +136,11 @@ class Algorithm
                 return;
 
              Vec<Vec<SingleBoundChange<REAL>>> bound_changes;
+
+             msg.info( "\tStarting primal heuristics - {:.3} s\n",
+                       timer.getTime() );
              Vec<std::pair<int, int>> infeasible_rows;
+             service.find_initial_solution(best_obj_value, best_solution);
 
              int round_counter = 0;
              int round_first_solution = -1;

@@ -32,7 +32,7 @@ struct AlgorithmParameter
  public:
    // overall parameters
    double time_limit = 10 * 60;
-   int threads = 8;
+   int threads = 1;
 
    // vol algorithm parameters
    double threshold_hard_constraints = 1;

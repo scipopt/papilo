@@ -216,6 +216,9 @@ set(unit_tests
         "fix-and-propagate-it-modified-solution-is-feasible"
         "fix-and-propagate-it-solution-is-feasible"
         "fix-and-propagate-check-conflict-analysis-data"
+        "fix-and-propagate-initial-solution-fix-to-upperbound"
+        "fix-and-propagate-initial-solution-fix-to-lowerbound"
+        "fix-and-propagate-initial-solution-fix-to-zero"
 
         "vector-calc_b_minus_xA"
         "vector-l2-norm"
@@ -226,7 +229,7 @@ set(unit_tests
 
         "conflict-analysis-binary-no-resolution"
         "conflict-analysis-binary-with-resolution"
-        "conflict-analysis-check-data"
+        "fix-and-propagate-api-simple-heuristic"
         
         "integration-test-for-flugpl"
         ${PAPILOLIB_TESTS}

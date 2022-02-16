@@ -44,6 +44,9 @@ int
 call_algorithm( void* heuristic_void_ptr, double* cont_solution, double* result,
                 int n_cols, double* current_obj_value );
 
+int
+call_simple_heuristic( void* heuristic_void_ptr,  double* result, double* current_obj_value );
+
 #ifdef __cplusplus
 }
 #endif
