@@ -226,7 +226,7 @@ set(unit_tests
         "vector-addition-2"
 
         "small-volume-algorithm-test"
-
+        "fix-and-propagate-api-simple-heuristic"
 
 
         "conflict-analysis-binary-depth-two"

@@ -52,26 +52,26 @@ setup( const char* filename, int* result, int verbosity_level )
    switch( verbosity_level )
    {
    case 0:
-      msg.setVerbosityLevel(papilo::VerbosityLevel::kQuiet);
+      msg.setVerbosityLevel( papilo::VerbosityLevel::kQuiet );
       break;
    case 1:
-      msg.setVerbosityLevel(papilo::VerbosityLevel::kError);
+      msg.setVerbosityLevel( papilo::VerbosityLevel::kError );
       break;
    case 2:
-      msg.setVerbosityLevel(papilo::VerbosityLevel::kWarning);
+      msg.setVerbosityLevel( papilo::VerbosityLevel::kWarning );
       break;
    case 3:
-      msg.setVerbosityLevel(papilo::VerbosityLevel::kInfo);
+      msg.setVerbosityLevel( papilo::VerbosityLevel::kInfo );
       break;
    case 4:
-      msg.setVerbosityLevel(papilo::VerbosityLevel::kDetailed);
+      msg.setVerbosityLevel( papilo::VerbosityLevel::kDetailed );
       break;
    default:
-      assert(false);
-
+      assert( false );
    }
    PostsolveStorage<double> storage{};
-   auto heuristic = new Heuristic<double>{ msg, {}, t, *problem, storage, false };
+   auto heuristic =
+       new Heuristic<double>{ msg, {}, t, *problem, storage, false };
    heuristic->setup();
    *result = 0;
    return heuristic;
@@ -90,9 +90,7 @@ call_algorithm( void* heuristic_void_ptr, double* cont_solution, double* result,
 {
 #ifdef PAPILO_TBB
    tbb::task_arena arena( 8 );
-#endif
 
-#ifdef PAPILO_TBB
    return arena.execute(
        [&]()
        {
@@ -107,7 +105,27 @@ call_algorithm( void* heuristic_void_ptr, double* cont_solution, double* result,
 
           if( local_obj < *current_obj_value )
              *current_obj_value = local_obj;
-          std::copy(res.begin(), res.end(), result);
+          std::copy( res.begin(), res.end(), result );
+          return !res.empty();
+#ifdef PAPILO_TBB
+       } );
+#endif
+}
+
+int
+call_simple_heuristic( void* heuristic_void_ptr, double* result,
+                       double* current_obj_value )
+{
+#ifdef PAPILO_TBB
+   tbb::task_arena arena( 8 );
+   return arena.execute(
+       [&]()
+       {
+#endif
+          auto heuristic = (Heuristic<double>*)( heuristic_void_ptr );
+          Vec<double> res{};
+          heuristic->find_initial_solution( *current_obj_value, res );
+          std::copy( res.begin(), res.end(), result );
           return !res.empty();
 #ifdef PAPILO_TBB
        } );
