@@ -235,7 +235,7 @@ class ConflictAnalysis
                {
                   min_activity.add(
                       -row_vals[i] *
-                      ( problem.getLowerBounds()[row_inds[i]] -
+                      ( problem.getUpperBounds()[row_inds[i]] -
                         bound_changes[pos].get_new_bound_value() ) );
                }
             }
@@ -476,7 +476,7 @@ class ConflictAnalysis
                           problem.getUpperBounds()[row_inds[i]] ) )
             {
                min_activity.add( -row_vals[i] *
-                                 ( problem.getLowerBounds()[row_inds[i]] -
+                                 ( problem.getUpperBounds()[row_inds[i]] -
                                    bound_changes[pos].get_new_bound_value() ) );
                if( !was_in_candidates[row_inds[i]] )
                {
@@ -569,8 +569,8 @@ class ConflictAnalysis
       RowFlags row_flag;
       row_flag.set( RowFlag::kRhsInf );
 
-      REAL vals [conflict_set_candidates.size()];
-      int inds [conflict_set_candidates.size()];
+      REAL* vals = new REAL[conflict_set_candidates.size()];
+      int* inds = new int[conflict_set_candidates.size()];
 
       REAL lhs = 1.0;
       for( int i = 0; i < conflict_set_candidates.size(); i++ )
@@ -604,8 +604,8 @@ class ConflictAnalysis
       RowFlags row_flag;
       row_flag.set( RowFlag::kRhsInf );
 
-      REAL vals[conflict_set_candidates.size()];
-      int inds[conflict_set_candidates.size()];
+      REAL* vals = new REAL[conflict_set_candidates.size()];
+      int* inds = new int[conflict_set_candidates.size()];
 
       REAL lhs = 1.0;
 
