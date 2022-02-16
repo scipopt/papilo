@@ -189,7 +189,7 @@ class VolumeAlgorithm
       msg.info( "\t\tAvg. (easy) constraint violation: {} ( {} )\n", op.l1_norm(
                viol_t ) / n_rows_A, parameter.con_abstol );
       msg.info( "\t\tLagrangian function value: {}\n", z_bar );
-      msg.info( "\t\tPrimal objective value: {} ( {} )\n", abs( op.multi( c,
+      msg.info( "\t\tPrimal objective value (abs): {} ( {} )\n", abs( op.multi( c,
                   x_bar ) ), parameter.obj_abstol );
       msg.info( "\t\tDuality gap: {} ( {} )\n", abs( op.multi( c, x_bar ) - z_bar ) /
                                         abs( z_bar ), parameter.obj_reltol );
