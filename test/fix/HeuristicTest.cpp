@@ -32,6 +32,10 @@ setupProblemForConflictAnalysis_3();
 
 TEST_CASE( "heuristics-all-false-best-objective", "[fix]" )
 {
+#ifndef PAPILO_TBB
+    return;
+#endif
+
    Problem<double> problem = setupProblemForConflictAnalysis_3();
 
    problem.recomputeAllActivities();
@@ -62,6 +66,9 @@ TEST_CASE( "heuristics-all-false-best-objective", "[fix]" )
 
 TEST_CASE( "heuristics-all-false-worst-objective", "[fix]" )
 {
+#ifndef PAPILO_TBB
+   return;
+#endif
    Problem<double> problem = setupProblemForConflictAnalysis_3();
 
    problem.recomputeAllActivities();
@@ -92,6 +99,9 @@ TEST_CASE( "heuristics-all-false-worst-objective", "[fix]" )
 
 TEST_CASE( "heuristics-all-false-highest-depth", "[fix]" )
 {
+#ifndef PAPILO_TBB
+   return;
+#endif
    Problem<double> problem = setupProblemForConflictAnalysis_3();
 
    problem.recomputeAllActivities();
@@ -121,6 +131,9 @@ TEST_CASE( "heuristics-all-false-highest-depth", "[fix]" )
 
 TEST_CASE( "heuristics-all-false-lowest-depth", "[fix]" )
 {
+#ifndef PAPILO_TBB
+   return;
+#endif
    Problem<double> problem = setupProblemForConflictAnalysis_3();
 
    problem.recomputeAllActivities();
