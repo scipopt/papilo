@@ -62,6 +62,7 @@ add_executable(unit_test TestMain.cpp
         fix/VectorMultiplicationTest.cpp
         fix/VolumeAlgorithmTest.cpp
         fix/FixAndPropagateTest.cpp
+        fix/HeuristicTest.cpp
         fix/ConflictAnalysisTest.cpp
         fix/FixAndPropagateIT.cpp
         fix/FixAndPropagateApiTest.cpp

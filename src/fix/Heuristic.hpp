@@ -277,6 +277,7 @@ class Heuristic
                              constraints[i].begin(), constraints[i].end(),
                              [this]( Constraint<REAL>& c )
                              {
+
                                 for( int i = 0; i < c.get_data().getLength();
                                      i++ )
                                 {
