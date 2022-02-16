@@ -79,6 +79,7 @@ class FixAndPropagate
                       int& successful_backtracks, bool perform_backtracking,
                       bool stop_at_infeasibility )
    {
+      probing_view.reset();
       // if no backtrack just "dive" to the node whether it is infeasible or not
       if( !perform_backtracking )
       {
@@ -147,7 +148,7 @@ class FixAndPropagate
    find_initial_solution( int mode, ProbingView<REAL>& probing_view,
                           Vec<REAL>& result )
    {
-
+      probing_view.reset();
       for( int i = 0; i < probing_view.getProbingLowerBounds().size(); i++ )
       {
          auto upper_bounds = probing_view.getProbingUpperBounds();

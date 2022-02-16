@@ -141,8 +141,6 @@ class Heuristic
                           Vec<REAL>& current_best_solution )
    {
       FixAndPropagate<REAL> fixAndPropagate{ msg, num };
-      for( auto view : views )
-         view.reset();
 #ifdef PAPILO_TBB
       tbb::parallel_for(
           tbb::blocked_range<int>( 0, 4 ),
@@ -190,10 +188,8 @@ class Heuristic
                               bool copy_infeasible_sol = false )
    {
       FixAndPropagate<REAL> fixAndPropagate{ msg, num };
-      for( auto view : views )
-         view.reset();
-#ifdef PAPILO_TBB
 
+#ifdef PAPILO_TBB
       tbb::parallel_for(
           tbb::blocked_range<int>( 0, 4 ),
           [&]( const tbb::blocked_range<int>& r )
