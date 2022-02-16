@@ -51,12 +51,10 @@ class RandomRoundingStrategy : public RoundingStrategy<REAL>
       Vec<int> remaining_unfixed_cols{};
       for( int i = 0; i < cont_solution.size(); i++ )
       {
-         bool b = num.isIntegral( cont_solution[i] );
-         bool eq = num.isEq( view.getProbingUpperBounds()[i],
-                             view.getProbingLowerBounds()[i] );
-         bool b1 = !view.is_within_bounds( i, cont_solution[i] );
-         bool b2 = !view.is_integer_variable( i );
-         if( b || eq || b2 || b1 )
+         if( num.isIntegral( cont_solution[i] ) ||
+             num.isEq( view.getProbingUpperBounds()[i],
+                       view.getProbingLowerBounds()[i] ) ||
+             !view.is_integer_variable( i ) || !view.is_within_bounds( i, cont_solution[i] ) )
             continue;
          remaining_unfixed_cols.push_back( i );
       }

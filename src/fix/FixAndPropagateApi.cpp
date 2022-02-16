@@ -91,8 +91,9 @@ delete_problem_instance( void* heuristic_void_ptr )
 
 int
 call_algorithm( void* heuristic_void_ptr, double* cont_solution, double* result,
-                int n_cols, double* current_obj_value )
+                int n_cols, double* current_obj_value, int infeasible_copy_strategy )
 {
+   assert(infeasible_copy_strategy >=0 && infeasible_copy_strategy<= 6);
 #ifdef PAPILO_TBB
    tbb::task_arena arena( 8 );
 
@@ -111,8 +112,9 @@ call_algorithm( void* heuristic_void_ptr, double* cont_solution, double* result,
 #endif
 
           double local_obj = *current_obj_value;
-          heuristic->perform_fix_and_propagate( sol, local_obj, res, true, true,
-                                                false, true );
+          heuristic->perform_fix_and_propagate(
+              sol, local_obj, res, true, true, false,
+              (InfeasibleCopyStrategy)infeasible_copy_strategy );
 
           if( local_obj < *current_obj_value )
              *current_obj_value = local_obj;
