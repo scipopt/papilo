@@ -47,14 +47,17 @@ class VolumeAlgorithm
    VectorMultiplication<REAL> op;
    Timer timer;
    AlgorithmParameter& parameter;
+   PostsolveStorage<REAL>& postsolve_storage;
    REAL alpha;
    REAL alpha_max;
    REAL f;
 
  public:
    VolumeAlgorithm( Message _msg, Num<REAL> _num, Timer t,
-                    AlgorithmParameter& parameter_ )
-       : msg( _msg ), num( _num ), timer( t ), parameter( parameter_ ), op( {} )
+                    AlgorithmParameter& parameter_,
+                    PostsolveStorage<REAL>& postsolve_storage_ )
+       : msg( _msg ), num( _num ), timer( t ), parameter( parameter_ ),
+         postsolve_storage( postsolve_storage_ ), op( {} )
    {
       alpha = parameter.alpha;
       alpha_max = parameter.alpha_max;
@@ -190,9 +193,8 @@ class VolumeAlgorithm
                parameter.max_iterations );
          msg.info( "\t\tAvg. (easy) constraint violation: {} ( {} )\n",
                op.l1_norm( viol_t ) / n_rows_A, parameter.con_abstol );
-         msg.info( "\t\tLagrangian function value: {}\n", z_bar );
-         msg.info( "\t\tPrimal objective value (abs): {} ( {} )\n",
-               abs( op.multi( c, x_bar ) ), parameter.obj_abstol );
+         msg.info( "\t\tPrimal absolute objective value: {} ( {} )\n",
+               calculate_orig_obj_value( x_bar ), parameter.obj_abstol );
          msg.info( "\t\tDuality gap: {} ( {} )\n", abs( op.multi( c, x_bar ) -
                   z_bar ) / abs( z_bar ), parameter.obj_reltol );
          int num_iters_check = parameter.num_iters_fixed_int_vars_check;
@@ -533,6 +535,21 @@ class VolumeAlgorithm
       if( num.isLT( z_bar, z_bar_old + 0.01 * abs( z_bar_old ) ) &&
           num.isGE( alpha_max / 2.0, REAL{ 1e-4 } ) )
          alpha_max = alpha_max / 2.0;
+   }
+
+   REAL
+   calculate_orig_obj_value( const Vec<REAL>& reduced_sol ) const
+   {
+      Solution<REAL> original_solution{};
+      Solution<REAL> reduced_solution{ reduced_sol };
+      Message quiet{};
+      quiet.setVerbosityLevel( papilo::VerbosityLevel::kQuiet );
+      Postsolve<REAL> postsolve{ quiet, num };
+      auto status = postsolve.undo( reduced_solution, original_solution,
+            postsolve_storage );
+      assert( status == PostsolveStatus::kOk );
+      return postsolve_storage.getOriginalProblem().computeSolObjective(
+            original_solution.primal );
    }
 };
 
