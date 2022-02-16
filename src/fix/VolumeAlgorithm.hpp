@@ -47,14 +47,17 @@ class VolumeAlgorithm
    VectorMultiplication<REAL> op;
    Timer timer;
    AlgorithmParameter& parameter;
+   PostsolveStorage<REAL>& postsolve_storage;
    REAL alpha;
    REAL alpha_max;
    REAL f;
 
  public:
    VolumeAlgorithm( Message _msg, Num<REAL> _num, Timer t,
-                    AlgorithmParameter& parameter_ )
-       : msg( _msg ), num( _num ), timer( t ), parameter( parameter_ ), op( {} )
+                    AlgorithmParameter& parameter_,
+                    PostsolveStorage<REAL>& postsolve_storage_ )
+       : msg( _msg ), num( _num ), timer( t ), parameter( parameter_ ),
+         postsolve_storage( postsolve_storage_ ), op( {} )
    {
       alpha = parameter.alpha;
       alpha_max = parameter.alpha_max;
@@ -77,13 +80,14 @@ class VolumeAlgorithm
                      const Vec<REAL>& pi, const int num_int_vars,
                      REAL box_upper_bound )
    {
+      REAL st = timer.getTime();
       int n_rows_A = A.getNRows();
 
       assert_pi( n_rows_A, A );
 
       // Step 0
       // Set x_0 = x_bar, z_0 = z_bar, t = 1
-      int counter = 1;
+      int counter = 0;
       bool improvement_indicator = false;
       int weak_improvement_iter_counter = 0;
       int non_improvement_iter_counter = 0;
@@ -116,9 +120,9 @@ class VolumeAlgorithm
 
       while( stopping_criteria( viol_t, n_rows_A, c, x_bar, z_bar,
                                 num_int_vars, fixed_int_vars_count,
-                                counter - 1 ) )
+                                counter ) )
       {
-         msg.detailed( "Round of volume algorithm: {}\n", counter );
+         msg.detailed( "Round of volume algorithm: {}\n", counter + 1 );
          // STEP 1:
          // Compute v_t = b − A x_bar and π_t = pi_bar + sv_t for a step size s
          // given by (7).
@@ -183,8 +187,26 @@ class VolumeAlgorithm
       };
       // TODO: ahoen@suresh -> overwrite pi with current pi to be able to warm
       // restart the algorithm?
-      //TODO: print some more useful data @Suresh
-      msg.info("\t\tVol alg performed {} rounds.\n", counter);
+      if( msg.getVerbosityLevel() >= VerbosityLevel::kInfo )
+      {
+         msg.info( "\t\tVol. alg. iterations: {} ( {} )\n", counter,
+               parameter.max_iterations );
+         msg.info( "\t\tAvg. (easy) constraint violation: {} ( {} )\n",
+               op.l1_norm( viol_t ) / n_rows_A, parameter.con_abstol );
+         msg.info( "\t\tPrimal absolute objective value: {} ( {} )\n",
+               calculate_orig_obj_value( x_bar ), parameter.obj_abstol );
+         msg.info( "\t\tDuality gap: {} ( {} )\n", abs( op.multi( c, x_bar ) -
+                  z_bar ) / abs( z_bar ), parameter.obj_reltol );
+         int num_iters_check = parameter.num_iters_fixed_int_vars_check;
+         msg.info( "\t\tNumber of fixed int vars: {} ( {} )\n",
+               std::count_if( fixed_int_vars_count.begin(),
+                  fixed_int_vars_count.end(),
+                  [num_iters_check] ( int val ) { return val > num_iters_check;
+                  } ), num_int_vars * parameter.fixed_int_var_threshold );
+         msg.info( "\t\tTotal time: {} ( {} )\n", timer.getTime() - st,
+               parameter.time_limit );
+      }
+
       return x_bar;
    }
 
@@ -513,6 +535,20 @@ class VolumeAlgorithm
       if( num.isLT( z_bar, z_bar_old + 0.01 * abs( z_bar_old ) ) &&
           num.isGE( alpha_max / 2.0, REAL{ 1e-4 } ) )
          alpha_max = alpha_max / 2.0;
+   }
+
+   REAL
+   calculate_orig_obj_value( const Vec<REAL>& reduced_sol ) const
+   {
+      Solution<REAL> original_solution{};
+      Solution<REAL> reduced_solution{ reduced_sol };
+      Message quiet{};
+      quiet.setVerbosityLevel( papilo::VerbosityLevel::kQuiet );
+      Postsolve<REAL> postsolve{ quiet, num };
+      auto status = postsolve.undo( reduced_solution, original_solution,
+            postsolve_storage );
+      return postsolve_storage.getOriginalProblem().computeSolObjective(
+            original_solution.primal );
    }
 };
 

@@ -109,7 +109,8 @@ class Algorithm
              problem.recomputeAllActivities();
 
              Heuristic<REAL> service{ msg, num, timer, problem, result.postsolve };
-             VolumeAlgorithm<REAL> algorithm{ msg, num, timer, alg_parameter };
+             VolumeAlgorithm<REAL> algorithm{ msg, num, timer, alg_parameter,
+                result.postsolve };
 
              service.setup();
              REAL best_obj_value = std::numeric_limits<REAL>::max();
