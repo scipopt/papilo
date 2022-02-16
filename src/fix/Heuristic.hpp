@@ -66,8 +66,12 @@ class Heuristic
        : msg( msg_ ), num( num_ ), timer( timer_ ), strategies( {} ),
          int_solutions( {} ), views( {} ), obj_value( {} ),
          infeasible_arr( {} ), cols_sorted_by_obj( {} ), problem( problem_ ),
+<<<<<<< HEAD
          conflict_analysis( { msg, num, timer, problem } ),
          postsolve_storage( postsolve_storage_ ), calculate_original( calculate_original_ )
+=======
+         conflict_analysis( { msg, num, timer, problem } )
+>>>>>>> d8e1a802edc85a8cbd49024795197cb2c590ecbf
    {
    }
 
