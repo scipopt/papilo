@@ -100,8 +100,8 @@ class VolumeAlgorithm
       Vec<REAL> x_bar( x_t );
       REAL z_bar_old = z_bar;
       // TODO: ok?
-      REAL upper_bound_reset_val = num.isGE( box_upper_bound, REAL{ 1.0 } ) ?
-                                   1.0 : box_upper_bound;
+      REAL upper_bound_reset_val = num.isZero( box_upper_bound ) ? 0.1 :
+         num.isGE( box_upper_bound, REAL{ 1.0 } ) ? 1.0 : box_upper_bound;
       REAL upper_bound;
       bool finite_upper_bound = false;
 
