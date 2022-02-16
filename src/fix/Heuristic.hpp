@@ -24,9 +24,11 @@
 #ifndef FIX_FIX_AND_PROPAGATE_SERVICE_HPP
 #define FIX_FIX_AND_PROPAGATE_SERVICE_HPP
 
+#include "InfeasibleCopyStrategy.hpp"
 #include "fix/ConflictAnalysis.hpp"
 #include "fix/Constraint.hpp"
 #include "fix/FixAndPropagate.hpp"
+#include "fix/InfeasibleCopyStrategy.hpp"
 #include "fix/strategy/FarkasRoundingStrategy.hpp"
 #include "fix/strategy/FractionalRoundingStrategy.hpp"
 #include "fix/strategy/RandomRoundingStrategy.hpp"
@@ -146,312 +148,438 @@ class Heuristic
           tbb::blocked_range<int>( 0, 4 ),
           [&]( const tbb::blocked_range<int>& r )
           {
-             for( int i = r.begin(); i != r.end(); ++i )
-             {
+         for( int i = r.begin(); i != r.end(); ++i )
+         {
 #else
       int i = 0;
 #endif
-                infeasible_arr[i] = fixAndPropagate.find_initial_solution(
-                    0, views[i], int_solutions[i] );
-                if( infeasible_arr[i] )
-                {
-                   obj_value[i] = 0;
-                   msg.info( "\t\tInitial sol {} is infeasible!\n", i,
-                             obj_value[i] );
+            infeasible_arr[i] = fixAndPropagate.find_initial_solution(
+                0, views[i], int_solutions[i] );
+            if( infeasible_arr[i] )
+            {
+               obj_value[i] = 0;
+               msg.info( "\t\tInitial sol {} is infeasible!\n", i,
+                         obj_value[i] );
 #ifdef PAPILO_TBB
-                   break;
+               break;
 #else
          return false;
 #endif
-                }
-                obj_value[i] = calculate_obj_value( int_solutions[i] );
-                msg.info( "\t\tInitial sol {} found obj value {}!\n", i,
-                          obj_value[i] );
+            }
+            obj_value[i] = calculate_obj_value( int_solutions[i] );
+            msg.info( "\t\tInitial sol {} found obj value {}!\n", i,
+                      obj_value[i] );
 #ifndef PAPILO_TBB
-                current_best_solution = int_solutions[i];
-                current_objective = obj_value[i];
-                return true;
+            current_best_solution = int_solutions[i];
+            current_objective = obj_value[i];
+            return true;
 #else
-             }
-          } );
-      return evaluate( current_objective, current_best_solution, false );
-#endif
    }
+          } );
+          return evaluate( current_objective, current_best_solution, InfeasibleCopyStrategy::kNone );
+#endif
+         }
 
-   bool
-   perform_fix_and_propagate( const Vec<REAL>& primal_heur_sol,
-                              REAL& best_obj_val,
-                              Vec<REAL>& current_best_solution,
-                              bool perform_backtracking = true,
-                              bool perform_one_opt = true,
-                              bool stop_at_infeasible = true,
-                              bool copy_infeasible_sol = false )
-   {
-      FixAndPropagate<REAL> fixAndPropagate{ msg, num };
+         bool perform_fix_and_propagate(
+             const Vec<REAL>& primal_heur_sol, REAL& best_obj_val,
+             Vec<REAL>& current_best_solution, bool perform_backtracking = true,
+             bool perform_one_opt = true, bool stop_at_infeasible = true,
+             InfeasibleCopyStrategy copy = InfeasibleCopyStrategy::kNone )
+         {
+            FixAndPropagate<REAL> fixAndPropagate{ msg, num };
 
 #ifdef PAPILO_TBB
-      tbb::parallel_for(
-          tbb::blocked_range<int>( 0, 4 ),
-          [&]( const tbb::blocked_range<int>& r )
-          {
-             for( int i = r.begin(); i != r.end(); ++i )
-             {
-                int backtracks = 0;
-                infeasible_arr[i] = fixAndPropagate.fix_and_propagate(
-                    primal_heur_sol, int_solutions[i], *( strategies[i] ),
-                    views[i], backtracks, perform_backtracking,
-                    stop_at_infeasible );
-                if( infeasible_arr[i] )
+            tbb::parallel_for(
+                tbb::blocked_range<int>( 0, 4 ),
+                [&]( const tbb::blocked_range<int>& r )
                 {
-                   obj_value[i] = 0;
-                   msg.info(
-                       "\t\tPropagating {} is infeasible! (backtracks {})\n", i,
-                       obj_value[i], backtracks );
-                   break;
-                }
-                obj_value[i] = calculate_obj_value( int_solutions[i] );
-                msg.info(
-                    "\t\tPropagating {} found obj value {}! (backtracks {})\n",
-                    i, obj_value[i], backtracks );
-             }
-          } );
-#else
-      int backtracks = 0;
-      infeasible_arr[0] = fixAndPropagate.fix_and_propagate(
-          primal_heur_sol, int_solutions[0], *( strategies[0] ), views[0],
-          backtracks, perform_backtracking, stop_at_infeasible );
-      if( infeasible_arr[0] )
-      {
-         obj_value[0] = 0;
-         return false;
-      }
-      obj_value[0] = calculate_obj_value( int_solutions[0] );
-      msg.info( "\t\tPropagating {} found obj value {}! (backtracks {})\n", 0,
-                obj_value[0], backtracks );
-#endif
-      one_opt( perform_one_opt, stop_at_infeasible );
-      return evaluate( best_obj_val, current_best_solution,
-                       copy_infeasible_sol );
-   }
-
-   void
-   one_opt( bool perform_one_opt, bool perform_conflict_analysis )
-   {
-      if( !perform_one_opt && !perform_conflict_analysis )
-         return;
-      for( int i = 0; i < constraints.size(); i++ )
-         constraints[i].clear();
-      FixAndPropagate<REAL> fixAndPropagate{ msg, num };
-
-      Vec<bool> infeas_copy{ infeasible_arr };
-      Vec<REAL> coefficients = problem.getObjective().coefficients;
-#ifdef PAPILO_TBB
-      tbb::parallel_for(
-          tbb::blocked_range<int>( 0, views.size() ),
-          [&]( const tbb::blocked_range<int>& r )
-          {
-             for( int i = r.begin(); i != r.end(); ++i )
-#else
-      for( int i = 0; i != views.size(); ++i )
-
-#endif
-             {
-
-                if( infeas_copy[i] )
-                {
-                   if( !perform_conflict_analysis )
-                      continue;
-                   assert( !views[i].get_infeasible_rows().empty() );
-                   conflict_analysis.perform_conflict_analysis(
-                       views[i].get_changes(), views[i].get_infeasible_rows(),
-                       constraints[i] );
-                   assert( std::all_of(
-                       constraints[i].begin(), constraints[i].end(),
-                       []( Constraint<REAL>& c )
-                       {
-                          return c.get_row_flag().test( RowFlag::kEquation ) ||
-                                 !c.get_row_flag().test( RowFlag::kLhsInf );
-                       } ) );
-                   assert( std::all_of(
-                       constraints[i].begin(), constraints[i].end(),
-                       [this]( Constraint<REAL>& c )
-                       {
-                          for( int i = 0; i < c.get_data().getLength(); i++ )
-                          {
-                             if( c.get_data().getIndices()[i] < 0 ||
-                                 c.get_data().getIndices()[i] >
-                                     views[i].getProbingUpperBounds().size() )
-                                return false;
-                          }
-                          return true;
-                       } ) );
-                }
-                else if( perform_one_opt )
-                {
-                   assert( !infeasible_arr[i] );
-                   Vec<REAL> result = { int_solutions[i] };
-                   for( int j = 0; j < cols_sorted_by_obj.size(); j++ )
+                   for( int i = r.begin(); i != r.end(); ++i )
                    {
-                      views[i].reset();
-                      if( num.isZero( coefficients[j] ) )
-                         break;
-                      if( !problem.getColFlags()[j].test(
-                              ColFlag::kIntegral ) ||
-                          problem.getLowerBounds()[j] != 0 ||
-                          problem.getUpperBounds()[j] != 1 )
-                         continue;
-                      REAL solution_value = int_solutions[i][j];
-                      if( num.isGT( coefficients[j], 0 ) )
+                      int backtracks = 0;
+                      infeasible_arr[i] = fixAndPropagate.fix_and_propagate(
+                          primal_heur_sol, int_solutions[i], *( strategies[i] ),
+                          views[i], backtracks, perform_backtracking,
+                          stop_at_infeasible );
+                      if( infeasible_arr[i] )
                       {
-                         if( num.isZero( solution_value ) )
-                            continue;
-                         bool infeasible = fixAndPropagate.one_opt(
-                             int_solutions[i], j, 0, views[i], result );
-                         if( infeasible )
-                         {
-                            msg.info( "\t\t{} - OneOpt flipping variable {}: "
-                                      "infeasible\n",
-                                      i, j );
-                            continue;
-                         }
-                         REAL value = calculate_obj_value( result );
-                         if( num.isGE( value, obj_value[i] ) )
-                            msg.info( "\t\t{} - OneOpt flipping variable {}: "
-                                      "unsuccessful -> worse obj {}: \n",
-                                      i, j, value );
-                         else if( num.isLT( value, obj_value[i] ) )
-                         {
-                            msg.info( "\t\t{} - OneOpt flipping variable {}: "
-                                      "successful -> better obj: {}\n",
-                                      i, j, value );
-                            int_solutions[i] = result;
-                            obj_value[i] = value;
-                         }
+                         obj_value[i] = 0;
+                         msg.info( "\t\tPropagating {} is infeasible! "
+                                   "(backtracks {})\n",
+                                   i, obj_value[i], backtracks );
+                         break;
                       }
-                      else
+                      obj_value[i] = calculate_obj_value( int_solutions[i] );
+                      msg.info( "\t\tPropagating {} found obj value {}! "
+                                "(backtracks {})\n",
+                                i, obj_value[i], backtracks );
+                   }
+                } );
+#else
+             int backtracks = 0;
+             infeasible_arr[0] = fixAndPropagate.fix_and_propagate(
+                 primal_heur_sol, int_solutions[0], *( strategies[0] ),
+                 views[0], backtracks, perform_backtracking,
+                 stop_at_infeasible );
+             if( infeasible_arr[0] )
+             {
+                obj_value[0] = 0;
+                return false;
+             }
+             obj_value[0] = calculate_obj_value( int_solutions[0] );
+             msg.info(
+                 "\t\tPropagating {} found obj value {}! (backtracks {})\n", 0,
+                 obj_value[0], backtracks );
+#endif
+            one_opt( perform_one_opt, stop_at_infeasible );
+            return evaluate( best_obj_val, current_best_solution, copy );
+         }
+
+         void one_opt( bool perform_one_opt, bool perform_conflict_analysis )
+         {
+            if( !perform_one_opt && !perform_conflict_analysis )
+               return;
+            for( int i = 0; i < constraints.size(); i++ )
+               constraints[i].clear();
+            FixAndPropagate<REAL> fixAndPropagate{ msg, num };
+
+            Vec<bool> infeas_copy{ infeasible_arr };
+            Vec<REAL> coefficients = problem.getObjective().coefficients;
+#ifdef PAPILO_TBB
+            tbb::parallel_for(
+                tbb::blocked_range<int>( 0, views.size() ),
+                [&]( const tbb::blocked_range<int>& r )
+                {
+                   for( int i = r.begin(); i != r.end(); ++i )
+#else
+             for( int i = 0; i != views.size(); ++i )
+
+#endif
+                   {
+
+                      if( infeas_copy[i] )
                       {
-                         assert( num.isLT( coefficients[j], 0 ) );
-                         if( num.isZero( solution_value ) )
-                            if( !num.isZero( solution_value ) )
-                               continue;
-                         bool infeasible = fixAndPropagate.one_opt(
-                             int_solutions[i], j, 1, views[i], result );
-                         if( infeasible )
+                         if( !perform_conflict_analysis )
+                            continue;
+                         assert( !views[i].get_infeasible_rows().empty() );
+                         conflict_analysis.perform_conflict_analysis(
+                             views[i].get_changes(),
+                             views[i].get_infeasible_rows(), constraints[i] );
+                         assert( std::all_of(
+                             constraints[i].begin(), constraints[i].end(),
+                             []( Constraint<REAL>& c )
+                             {
+                                return c.get_row_flag().test(
+                                           RowFlag::kEquation ) ||
+                                       !c.get_row_flag().test(
+                                           RowFlag::kLhsInf );
+                             } ) );
+                         assert( std::all_of(
+                             constraints[i].begin(), constraints[i].end(),
+                             [this]( Constraint<REAL>& c )
+                             {
+                                for( int i = 0; i < c.get_data().getLength();
+                                     i++ )
+                                {
+                                   if( c.get_data().getIndices()[i] < 0 ||
+                                       c.get_data().getIndices()[i] >
+                                           views[i]
+                                               .getProbingUpperBounds()
+                                               .size() )
+                                      return false;
+                                }
+                                return true;
+                             } ) );
+                      }
+                      else if( perform_one_opt )
+                      {
+                         assert( !infeasible_arr[i] );
+                         Vec<REAL> result = { int_solutions[i] };
+                         for( int j = 0; j < cols_sorted_by_obj.size(); j++ )
                          {
-                            msg.info( "\t\t{} - OneOpt flipping variable {}: "
+                            views[i].reset();
+                            if( num.isZero( coefficients[j] ) )
+                               break;
+                            if( !problem.getColFlags()[j].test(
+                                    ColFlag::kIntegral ) ||
+                                problem.getLowerBounds()[j] != 0 ||
+                                problem.getUpperBounds()[j] != 1 )
+                               continue;
+                            REAL solution_value = int_solutions[i][j];
+                            if( num.isGT( coefficients[j], 0 ) )
+                            {
+                               if( num.isZero( solution_value ) )
+                                  continue;
+                               bool infeasible = fixAndPropagate.one_opt(
+                                   int_solutions[i], j, 0, views[i], result );
+                               if( infeasible )
+                               {
+                                  msg.info(
+                                      "\t\t{} - OneOpt flipping variable {}: "
                                       "infeasible\n",
                                       i, j );
-                            continue;
-                         }
-                         REAL value = calculate_obj_value( result );
-                         if( num.isGE( value, obj_value[i] ) )
-                            msg.info( "\t\t{} - OneOpt flipping variable {}: "
+                                  continue;
+                               }
+                               REAL value = calculate_obj_value( result );
+                               if( num.isGE( value, obj_value[i] ) )
+                                  msg.info(
+                                      "\t\t{} - OneOpt flipping variable {}: "
                                       "unsuccessful -> worse obj {}: \n",
                                       i, j, value );
-                         else if( num.isLT( value, obj_value[i] ) )
-                         {
-                            msg.info( "\t\t{} - OneOpt flipping variable {}: "
+                               else if( num.isLT( value, obj_value[i] ) )
+                               {
+                                  msg.info(
+                                      "\t\t{} - OneOpt flipping variable {}: "
                                       "successful -> better obj: {}\n",
                                       i, j, value );
-                            int_solutions[i] = result;
-                            obj_value[i] = value;
+                                  int_solutions[i] = result;
+                                  obj_value[i] = value;
+                               }
+                            }
+                            else
+                            {
+                               assert( num.isLT( coefficients[j], 0 ) );
+                               if( num.isZero( solution_value ) )
+                                  if( !num.isZero( solution_value ) )
+                                     continue;
+                               bool infeasible = fixAndPropagate.one_opt(
+                                   int_solutions[i], j, 1, views[i], result );
+                               if( infeasible )
+                               {
+                                  msg.info(
+                                      "\t\t{} - OneOpt flipping variable {}: "
+                                      "infeasible\n",
+                                      i, j );
+                                  continue;
+                               }
+                               REAL value = calculate_obj_value( result );
+                               if( num.isGE( value, obj_value[i] ) )
+                                  msg.info(
+                                      "\t\t{} - OneOpt flipping variable {}: "
+                                      "unsuccessful -> worse obj {}: \n",
+                                      i, j, value );
+                               else if( num.isLT( value, obj_value[i] ) )
+                               {
+                                  msg.info(
+                                      "\t\t{} - OneOpt flipping variable {}: "
+                                      "successful -> better obj: {}\n",
+                                      i, j, value );
+                                  int_solutions[i] = result;
+                                  obj_value[i] = value;
+                               }
+                               break;
+                            }
                          }
-                         break;
                       }
                    }
-                }
-             }
 #ifdef PAPILO_TBB
-          } );
+                } );
 #endif
-   }
-
-   Vec<Vec<Constraint<REAL>>>&
-   get_constraints()
-   {
-      return constraints;
-   }
-
-   bool
-   exists_conflict_constraints()
-   {
-      return std::any_of( constraints.begin(), constraints.end(),
-                          []( Vec<Constraint<REAL>> c ) { return c.empty(); } );
-   }
-
- private:
-   bool
-   evaluate( REAL& best_obj_val, Vec<REAL>& current_best_solution,
-             bool copy_infeasible_sol )
-   {
-      bool feasible = std::any_of( infeasible_arr.begin(), infeasible_arr.end(),
-                                   []( bool b ) { return !b; } );
-
-      // TODO: copy the best solution;
-      if( !feasible )
-      {
-         if( copy_infeasible_sol )
-            current_best_solution = int_solutions[0];
-         msg.info(
-             "\t\tFix and Propagate did not find a feasible solution!\n" );
-         return false;
-      }
-
-      int best_index = -1;
-      for( int i = 0; i < obj_value.size(); i++ )
-      {
-         if( !infeasible_arr[i] &&
-             ( num.isLT( obj_value[i], best_obj_val ) ||
-               ( current_best_solution.empty() && best_index == -1 ) ) )
-         {
-            best_index = i;
-            best_obj_val = obj_value[i];
          }
-      }
-      if( best_index == -1 )
-      {
-         msg.info(
-             "\t\tFix and Propagate did not improve the current solution!\n" );
-         return false;
-      }
 
-      if( current_best_solution.empty() )
-         msg.info( "\t\tFix and Propagate found an initial solution: {}!\n",
+         Vec<Vec<Constraint<REAL>>>& get_constraints() { return constraints; }
+
+         bool exists_conflict_constraints()
+         {
+            return std::any_of( constraints.begin(), constraints.end(),
+                                []( Vec<Constraint<REAL>> c )
+                                { return c.empty(); } );
+         }
+
+       private:
+         bool evaluate( REAL & best_obj_val, Vec<REAL> & current_best_solution,
+                        InfeasibleCopyStrategy copy_infeasible_sol )
+         {
+            bool feasible =
+                std::any_of( infeasible_arr.begin(), infeasible_arr.end(),
+                             []( bool b ) { return !b; } );
+
+            // TODO: copy the best solution;
+            if( !feasible )
+            {
+               store_solution( copy_infeasible_sol, current_best_solution );
+               msg.info( "\t\tFix and Propagate did not find a feasible "
+                         "solution!\n" );
+               return false;
+            }
+
+            int best_index = -1;
+            for( int i = 0; i < obj_value.size(); i++ )
+            {
+               if( !infeasible_arr[i] &&
+                   ( num.isLT( obj_value[i], best_obj_val ) ||
+                     ( current_best_solution.empty() && best_index == -1 ) ) )
+               {
+                  best_index = i;
+                  best_obj_val = obj_value[i];
+               }
+            }
+            if( best_index == -1 )
+            {
+               msg.info( "\t\tFix and Propagate did not improve the current "
+                         "solution!\n" );
+               return false;
+            }
+
+            if( current_best_solution.empty() )
+               msg.info(
+                   "\t\tFix and Propagate found an initial solution: {}!\n",
                    best_obj_val );
-      else
-         msg.info( "\t\tFix and Propagate found a new solution: {}!\n",
-                   best_obj_val );
+            else
+               msg.info( "\t\tFix and Propagate found a new solution: {}!\n",
+                         best_obj_val );
 
-      current_best_solution = int_solutions[best_index];
-      assert( best_obj_val == obj_value[best_index] );
-      return true;
-   }
+            current_best_solution = int_solutions[best_index];
+            assert( best_obj_val == obj_value[best_index] );
+            return true;
+         }
 
-   REAL
-   calculate_obj_value( const Vec<REAL>& reduced ) const
-   {
-      if( calculate_original )
-      {
-         Solution<REAL> original_solution{};
-         Solution<REAL> reduced_solution{ reduced };
-         Message quiet{};
-         quiet.setVerbosityLevel( papilo::VerbosityLevel::kQuiet );
-         Postsolve<REAL> postsolve{ quiet, num };
-         auto status = postsolve.undo( reduced_solution, original_solution,
-                                       postsolve_storage );
-         assert( status == PostsolveStatus::kOk );
-         return postsolve_storage.getOriginalProblem().computeSolObjective(
-             original_solution.primal );
-      }
-      else
-      {
-         StableSum<REAL> sum{};
-         Vec<REAL>& coefficients = problem.getObjective().coefficients;
-         for( int j = 0; j < reduced.size(); j++ )
-            sum.add( reduced[j] * coefficients[j] );
-         return sum.get();
-      }
-   }
+         void store_solution( const InfeasibleCopyStrategy& copy_infeasible_sol,
+                              Vec<REAL>& current_best_solution )
+         {
+            int best_index = -1;
+            REAL val{};
+            switch( copy_infeasible_sol )
+            {
+            case InfeasibleCopyStrategy::kNone:
+               return;
+            case InfeasibleCopyStrategy::kBestObjective:
+            {
+               best_index = 0;
+               val = calculate_obj_value( int_solutions[0], false );
+               for( int i = 1; i < int_solutions.size(); i++ )
+               {
+                  REAL v = calculate_obj_value( int_solutions[i], false );
+                  if( num.isLT( v, val ) )
+                  {
+                     val = v;
+                     best_index = i;
+                  }
+               }
+               break;
+            }
+            case InfeasibleCopyStrategy::kWorstObjective:
+            {
+               best_index = 0;
+               val = calculate_obj_value( int_solutions[0], false );
+               for( int i = 1; i < int_solutions.size(); i++ )
+               {
+                  REAL v = calculate_obj_value( int_solutions[i], false );
+                  if( num.isGT( v, val ) )
+                  {
+                     val = v;
+                     best_index = i;
+                  }
+               }
+               break;
+            }
+            case InfeasibleCopyStrategy::kHighestDepthOfFirstConflict:
+            {
+               best_index = 0;
+               assert( views[0].get_infeasible_rows().size() >= 1 );
+               int aux = views[0].get_infeasible_rows()[0].second;
+               assert( views[0].get_changes().size() >= aux );
+               val = views[0].get_changes()[aux].get_depth_level();
+               for( int i = 1; i < int_solutions.size(); i++ )
+               {
+                  assert( views[i].get_infeasible_rows().size() >= 1 );
+                  aux = views[i].get_infeasible_rows()[0].second;
+                  assert( views[i].get_changes().size() >= aux );
+                  REAL v = views[i].get_changes()[aux].get_depth_level();
+                  if( num.isGT( v, val ) )
+                  {
+                     val = v;
+                     best_index = i;
+                  }
+               }
+               break;
+            }
+            case InfeasibleCopyStrategy::kLowestDepthOfFirstConflict:
+            {
+               best_index = 0;
+               assert( views[0].get_infeasible_rows().size() >= 1 );
+               int aux = views[0].get_infeasible_rows()[0].second;
+               assert( views[0].get_changes().size() >= aux );
+               val = views[0].get_changes()[aux].get_depth_level();
+               for( int i = 1; i < int_solutions.size(); i++ )
+               {
+                  assert( views[i].get_infeasible_rows().size() >= 1 );
+                  aux = views[i].get_infeasible_rows()[0].second;
+                  assert( views[i].get_changes().size() >= aux );
+                  REAL v = views[i].get_changes()[aux].get_depth_level();
+                  if( num.isLT( v, val ) )
+                  {
+                     val = v;
+                     best_index = i;
+                  }
+               }
+               break;
+            }
+            case InfeasibleCopyStrategy::kLeastInfeasibleRows:
+            {
+               best_index = 0;
+               assert( views[0].get_infeasible_rows().size() >= 1 );
+               val = views[0].get_infeasible_rows().size();
+               for( int i = 1; i < int_solutions.size(); i++ )
+               {
+                  assert( views[i].get_changes().size() >= 1 );
+                  REAL v = views[0].get_infeasible_rows().size();
+                  if( num.isLT( v, val ) )
+                  {
+                     val = v;
+                     best_index = i;
+                  }
+               }
+               break;
+            }
+            case InfeasibleCopyStrategy::kMostInfeasibleRows:
+            {
+               best_index = 0;
+               assert( views[0].get_infeasible_rows().size() >= 1 );
+               val = views[0].get_infeasible_rows().size();
+               for( int i = 1; i < int_solutions.size(); i++ )
+               {
+                  assert( views[i].get_changes().size() >= 1 );
+                  REAL v = views[0].get_infeasible_rows().size();
+                  if( num.isGT( v, val ) )
+                  {
+                     val = v;
+                     best_index = i;
+                  }
+               }
+               break;
+            }
+            default:
+               assert( false);
+            }
+            assert( best_index != -1 );
+            current_best_solution = int_solutions[best_index];
+         }
+
+         REAL calculate_obj_value( const Vec<REAL>& reduced,
+                                   bool check_validation = true ) const
+         {
+            if( calculate_original )
+            {
+               Solution<REAL> original_solution{};
+               Solution<REAL> reduced_solution{ reduced };
+               Message quiet{};
+               quiet.setVerbosityLevel( papilo::VerbosityLevel::kQuiet );
+               Postsolve<REAL> postsolve{ quiet, num };
+               auto status = postsolve.undo(
+                   reduced_solution, original_solution, postsolve_storage );
+               assert( !check_validation || status == PostsolveStatus::kOk );
+               return postsolve_storage.getOriginalProblem()
+                   .computeSolObjective( original_solution.primal );
+            }
+            else
+            {
+               StableSum<REAL> sum{};
+               Vec<REAL>& coefficients = problem.getObjective().coefficients;
+               for( int j = 0; j < reduced.size(); j++ )
+                  sum.add( reduced[j] * coefficients[j] );
+               return sum.get();
+            }
+         }
 };
 
 #endif
