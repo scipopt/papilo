@@ -74,7 +74,8 @@ class VolumeAlgorithm
    Vec<REAL>
    volume_algorithm( const Vec<REAL> c, const ConstraintMatrix<REAL>& A,
                      const Vec<REAL>& b, const VariableDomains<REAL>& domains,
-                     const Vec<REAL>& pi, REAL box_upper_bound )
+                     const Vec<REAL>& pi, const int num_int_vars,
+                     REAL box_upper_bound )
    {
       int n_rows_A = A.getNRows();
 
@@ -104,10 +105,18 @@ class VolumeAlgorithm
       REAL upper_bound;
       bool finite_upper_bound = false;
 
+      Vec<REAL> x_bar_last_iter( x_bar );
+      Vec<bool> overall_int_indicator( x_bar.size() );
+      Vec<int> fixed_int_vars_count( x_bar.size() );
+      int fixed_int_var_check_counter = 0;
+      init_fixed_int_count( x_bar, domains, fixed_int_vars_count );
+
       op.calc_b_minus_Ax( A, x_bar, b, v_t );
       calc_violations( n_rows_A, A, pi_bar, v_t, viol_t );
 
-      while( stopping_criteria( viol_t, n_rows_A, c, x_bar, z_bar ) )
+      while( stopping_criteria( viol_t, n_rows_A, c, x_bar, z_bar,
+                                num_int_vars, fixed_int_vars_count,
+                                counter - 1 ) )
       {
          msg.detailed( "Round of volume algorithm: {}\n", counter );
          // STEP 1:
@@ -130,10 +139,10 @@ class VolumeAlgorithm
          op.calc_b_minus_Ax( A, x_t, b, residual_t );
          calc_alpha( residual_t, v_t );
 
+         x_bar_last_iter = x_bar;
          // x_bar ← αx_t + (1 − α)x_bar
          op.calc_qb_plus_sx( alpha, x_t, 1 - alpha, x_bar,
                              x_bar );
-
 
          // Step 2:
          // If z_t > z_bar update π_bar and z_bar
@@ -147,6 +156,9 @@ class VolumeAlgorithm
          }
          else
             improvement_indicator = false;
+
+         update_fixed_int_count( x_bar, x_bar_last_iter, domains,
+                                 fixed_int_vars_count );
 
          op.calc_b_minus_Ax( A, x_bar, b, v_t );
          calc_violations( n_rows_A, A, pi_bar, v_t, viol_t );
@@ -162,6 +174,9 @@ class VolumeAlgorithm
             update_alpha_max( z_bar, z_bar_old );
             z_bar_old = z_bar;
          }
+
+         // check integrality of x_bar
+         integrality_check( x_bar, x_bar_last_iter, domains );
 
          // Let t ← t + 1 and go to Step 1.
          counter = counter + 1;
@@ -213,19 +228,52 @@ class VolumeAlgorithm
    bool
    stopping_criteria( const Vec<REAL>& v, const int n_rows_A,
                       const Vec<REAL>& c, const Vec<REAL>& x_bar,
-                      const REAL z_bar )
+                      const REAL z_bar, const int num_int_vars,
+                      const Vec<int>& fixed_int_vars_count,
+                      const int num_iterations )
    {
-      msg.detailed( "   sc_1: {}\n", op.l1_norm( v ) / n_rows_A );
-      msg.detailed( "   sc_2: {}\n",
-                num.isZero( z_bar )
-                    ? abs( op.multi( c, x_bar ) )
-                    : abs( op.multi( c, x_bar ) - z_bar ) / abs( z_bar ) );
-      return num.isGE( op.l1_norm( v ), n_rows_A * parameter.con_abstol ) ||
-             ( num.isZero( z_bar )
-                   ? num.isGE( abs( op.multi( c, x_bar ) ),
-                               parameter.obj_abstol )
-                   : num.isGE( abs( op.multi( c, x_bar ) - z_bar ),
-                               abs( z_bar ) * parameter.obj_reltol ) );
+      bool primal_feas_term = num.isLT( op.l1_norm( v ), n_rows_A *
+                                        parameter.con_abstol );
+
+      bool duality_gap_abs_term = num.isLT( abs( op.multi( c, x_bar ) ),
+                                           parameter.obj_abstol );
+      bool duality_gap_rel_term = num.isLT( abs( op.multi( c, x_bar ) - z_bar ),
+                                            abs( z_bar ) * parameter.obj_reltol
+                                          );
+      bool duality_gap_term = num.isZero( z_bar ) ? duality_gap_abs_term :
+                                                    duality_gap_rel_term;
+
+      // fraction of integer variables with integer values
+      int num_iters_check = parameter.num_iters_fixed_int_vars_check;
+      bool fixed_int_var_term = num.isGE( std::count_if(
+                                            fixed_int_vars_count.begin(),
+                                            fixed_int_vars_count.end(),
+                                            [num_iters_check]( int val )
+                                            { return val > num_iters_check; } ),
+                             num_int_vars * parameter.fixed_int_var_threshold );
+
+      msg.detailed( "   cons: {}\n", op.l1_norm( v ) / n_rows_A );
+      msg.detailed( "   zbar: {}\n", z_bar );
+      msg.detailed( "   objA: {}\n", abs( op.multi( c, x_bar ) ) );
+      msg.detailed( "   objR: {}\n", abs( op.multi( c, x_bar ) - z_bar ) /
+                                        abs( z_bar ) );
+      msg.detailed( "   fixed: {}\t threshold: {}\n",
+                        std::count_if( fixed_int_vars_count.begin(),
+                                       fixed_int_vars_count.end(),
+                                       [num_iters_check]
+                                       ( int val ) { return val >
+                                       num_iters_check; } ),
+                        num_int_vars * parameter.fixed_int_var_threshold );
+
+      bool time_limit_term = ( num.isGE( timer.getTime(),
+                                         parameter.time_limit ) );
+
+      bool iter_limit_term = ( num_iterations >= parameter.max_iterations );
+
+      return !( (primal_feas_term && duality_gap_term ) ||
+                fixed_int_var_term ||
+                time_limit_term ||
+                iter_limit_term );
    }
 
    REAL
@@ -266,6 +314,44 @@ class VolumeAlgorithm
 
       msg.debug( "   opt_val: {}\n", obj_value.get() );
       return obj_value.get();
+   }
+
+   void
+   init_fixed_int_count( const Vec<REAL>& x_bar,
+                         const VariableDomains<REAL>& domains,
+                         Vec<int>& fixed_int_vars_count )
+   {
+      int x_bar_size = x_bar.size();
+      assert( fixed_int_vars_count.size() == x_bar_size );
+
+      for( int i = 0; i < x_bar_size; i++ )
+      {
+         if( domains.flags[i].test( ColFlag::kIntegral ) &&
+               num.isIntegral( x_bar[i] ) )
+            fixed_int_vars_count[i] = 1;
+      }
+   }
+
+   // TODO: create an array for int var indices only once in Algorithm.hpp and
+   //       pass it to the volume algo call?
+   void
+   update_fixed_int_count( const Vec<REAL>& x_bar,
+                           const Vec<REAL> x_bar_last_iter,
+                           const VariableDomains<REAL>& domains,
+                           Vec<int>& fixed_int_vars_count )
+   {
+      int x_bar_size = x_bar.size();
+      assert( fixed_int_vars_count.size() == x_bar_size);
+
+      for( int i = 0; i < x_bar_size; i++ )
+      {
+         if( domains.flags[i].test( ColFlag::kIntegral ) &&
+               num.isIntegral( x_bar[i] ) &&
+               num.isEq( x_bar[i], x_bar_last_iter[i] ) )
+            fixed_int_vars_count[i]++;
+         else
+            fixed_int_vars_count[i] = 0;
+      }
    }
 
    void
@@ -331,11 +417,7 @@ class VolumeAlgorithm
          alpha = alpha_max;
       else
          alpha = alpha_opt;
-      /*
-      alpha = num.isLT( alpha_opt, REAL{ 0.0 } )
-                  ? alpha_max / 10.0
-                  : num.min( alpha_opt, alpha_max );
-      */
+
       msg.detailed( "   alpha_opt: {},\t alpha_max: {},\t alpha: {}\n",
                     alpha_opt, alpha_max, alpha );
    }
@@ -401,11 +483,35 @@ class VolumeAlgorithm
    }
 
    void
+   integrality_check( const Vec<REAL>& x_bar,
+                      const Vec<REAL>& x_bar_last_iter,
+                      const VariableDomains<REAL>& domains )
+   {
+      if( msg.getVerbosityLevel() == VerbosityLevel::kDetailed )
+      {
+         int num_integral = 0;
+         int num_fixed_int = 0;
+         for( int i = 0; i < x_bar.size(); i++ )
+         {
+            if( domains.flags[i].test( ColFlag::kIntegral ) &&
+                  num.isIntegral( x_bar[i] ) )
+               {
+                  num_integral++;
+                  if( num.isEq( x_bar[i], x_bar_last_iter[i] ) )
+                     num_fixed_int++;
+               }
+         }
+         msg.detailed( "   numInt: {}\t numFixedInt: {}\n", num_integral,
+               num_fixed_int );
+      }
+   }
+
+   void
    update_alpha_max( const REAL z_bar, const REAL z_bar_old )
    {
       // TODO: change 0.01, 1e-5, and 2.0 as global params?
       if( num.isLT( z_bar, z_bar_old + 0.01 * abs( z_bar_old ) ) &&
-          num.isGE( alpha_max, REAL{ 1e-5 } ) )
+          num.isGE( alpha_max / 2.0, REAL{ 1e-4 } ) )
          alpha_max = alpha_max / 2.0;
    }
 };

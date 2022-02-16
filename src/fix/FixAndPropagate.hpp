@@ -104,10 +104,11 @@ class FixAndPropagate
 
             probing_view.reset();
             for( int i = 0; i < fixings.size() - 1; i++ )
-               probing_view.setProbingColumn( fixings[i].get_column_index(),
-                                              fixings[i].get_value() );
+            {
+               probing_view.setProbingColumn( fixings[i].get_column_index(),fixings[i].get_value() );
+               perform_probing_step( probing_view );
+            }
             // TODO: this is not necessary
-            perform_probing_step( probing_view );
             probing_view.setProbingColumn(
                 last_fix.get_column_index(),
                 modify_value_due_to_backtrack(

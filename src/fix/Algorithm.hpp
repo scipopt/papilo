@@ -108,7 +108,7 @@ class Algorithm
              }
              problem.recomputeAllActivities();
 
-             Heuristic<REAL> service{ msg, num, timer, problem };
+             Heuristic<REAL> service{ msg, num, timer, problem, result.postsolve };
              VolumeAlgorithm<REAL> algorithm{ msg, num, timer, alg_parameter };
 
              service.setup();
@@ -153,7 +153,8 @@ class Algorithm
                     reformulated.getObjective().coefficients,
                     reformulated.getConstraintMatrix(),
                     reformulated.getConstraintMatrix().getLeftHandSides(),
-                    reformulated.getVariableDomains(), pi, min_val );
+                    reformulated.getVariableDomains(), pi,
+                    reformulated.getNumIntegralCols(), min_val );
                 print_solution( primal_heur_sol );
 
                 if( timer.getTime() >= alg_parameter.time_limit )
@@ -179,16 +180,20 @@ class Algorithm
                 if( timer.getTime() >= alg_parameter.time_limit )
                    break;
 
-                msg.info( "\tStarting conflict analysis - {:.3} s\n",
-                          timer.getTime() );
-
                 if( service.exists_conflict_constraints() )
                    break;
                 auto constraints = service.get_constraints();
                 round_counter++;
 
+                int conflicts = 0;
                 for( const auto& c : constraints )
+                {
                    add_constraints( c, builder, reformulated.getNRows() );
+                   conflicts += c.size();
+                }
+
+                msg.info( "\tAdding {} constraints - {:.3} s\n", conflicts,
+                          timer.getTime() );
                 reformulated = builder.build();
                 //TODO: Suresh resize pi
              }
@@ -197,8 +202,8 @@ class Algorithm
              Solution<REAL> reduced_solution{ best_solution };
              Postsolve<REAL> postsolve{ msg, num };
 
-             postsolve.undo( reduced_solution, original_solution,
-                             result.postsolve );
+             auto status = postsolve.undo( reduced_solution, original_solution,
+                                           result.postsolve );
 
              print_solution( original_solution.primal );
              msg.info( "Algorithm with objective value {:<3} finished after "

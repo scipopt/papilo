@@ -74,7 +74,7 @@ TEST_CASE( "conflict-analysis-binary-no-resolution", "[conflict]" )
 
    papilo::Vec<std::pair<int, int>> infeasible_rows;
    std::pair<int, int> infeas_pair;
-   infeas_pair.first = 4;
+   infeas_pair.first = 5;
    infeas_pair.second = 3;
    infeasible_rows.push_back( infeas_pair );
    Vec<Constraint<double>> conflict_constraints;
@@ -135,7 +135,7 @@ TEST_CASE( "conflict-analysis-binary-with-resolution", "[conflict]" )
 
    papilo::Vec<std::pair<int, int>> infeasible_rows;
    std::pair<int, int> infeas_pair;
-   infeas_pair.first = 5;
+   infeas_pair.first = 6;
    infeas_pair.second = 3;
    infeasible_rows.push_back( infeas_pair );
    Vec<Constraint<double>> conflict_constraints;
