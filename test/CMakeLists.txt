@@ -226,11 +226,10 @@ set(unit_tests
         "vector-addition-2"
 
         "small-volume-algorithm-test"
+
+        "conflict-analysis-binary-no-resolution"
+        "conflict-analysis-binary-with-resolution"
         "fix-and-propagate-api-simple-heuristic"
-
-
-        "conflict-analysis-binary-depth-two"
-        "conflict-analysis-check-data"
         
         "integration-test-for-flugpl"
         ${PAPILOLIB_TESTS}

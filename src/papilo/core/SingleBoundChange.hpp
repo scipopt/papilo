@@ -72,10 +72,11 @@ class SingleBoundChange
 
  private:
    int col;
+   int reason_row; // row index or -1 if fixing
    REAL new_bound_value;
-   int reason_row;
    bool manually_triggered;
-   bool lower_bound;
+   bool lower_bound; // if manually_triggered && is_lower_bound are false
+                        // then it is an upper bound
    int depth_level;
 
  public:
