@@ -547,7 +547,6 @@ class VolumeAlgorithm
       Postsolve<REAL> postsolve{ quiet, num };
       auto status = postsolve.undo( reduced_solution, original_solution,
             postsolve_storage );
-      assert( status == PostsolveStatus::kOk );
       return postsolve_storage.getOriginalProblem().computeSolObjective(
             original_solution.primal );
    }
