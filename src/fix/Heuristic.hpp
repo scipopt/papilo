@@ -154,7 +154,7 @@ class Heuristic
       int i = 0;
 #endif
             infeasible_arr[i] = fixAndPropagate.find_initial_solution(
-                0, views[i], int_solutions[i] );
+                i, views[i], int_solutions[i] );
             if( infeasible_arr[i] )
             {
                obj_value[i] = 0;
