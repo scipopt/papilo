@@ -50,6 +50,7 @@ setup( const char* filename, int* result, int verbosity_level )
       return nullptr;
    }
    double time = 0;
+   RandomGenerator random( 0 );
    Timer t{ time };
    auto problem = new Problem<double>( prob.get() );
    problem->recomputeAllActivities();
@@ -76,8 +77,8 @@ setup( const char* filename, int* result, int verbosity_level )
    }
    PostsolveStorage<double> storage{};
    auto heuristic =
-       new Heuristic<double>{ msg, {}, t, *problem, storage, false };
-   heuristic->setup();
+       new Heuristic<double>{ msg, {}, random, t, *problem, storage, false };
+   heuristic->setup( random );
    *result = 0;
    return heuristic;
 }
@@ -91,9 +92,10 @@ delete_problem_instance( void* heuristic_void_ptr )
 
 int
 call_algorithm( void* heuristic_void_ptr, double* cont_solution, double* result,
-                int n_cols, double* current_obj_value, int infeasible_copy_strategy )
+                int n_cols, double* current_obj_value,
+                int infeasible_copy_strategy )
 {
-   assert(infeasible_copy_strategy >=0 && infeasible_copy_strategy<= 6);
+   assert( infeasible_copy_strategy >= 0 && infeasible_copy_strategy <= 6 );
 #ifdef PAPILO_TBB
    tbb::task_arena arena( 8 );
 
@@ -107,8 +109,8 @@ call_algorithm( void* heuristic_void_ptr, double* cont_solution, double* result,
 
 #ifdef FIX_DEBUG
           SolWriter<double>::writePrimalSol(
-              "test.mps", sol, heuristic->problem.getObjective().coefficients, 0.0,
-              heuristic->problem.getVariableNames() );
+              "test.mps", sol, heuristic->problem.getObjective().coefficients,
+              0.0, heuristic->problem.getVariableNames() );
 #endif
 
           double local_obj = *current_obj_value;
