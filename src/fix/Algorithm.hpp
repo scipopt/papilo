@@ -133,6 +133,7 @@ class Algorithm
              Vec<REAL> pi;
              pi.reserve( reformulated.getNRows() );
              generate_initial_dual_solution( reformulated, pi );
+             Vec<REAL> pi_conflicts;
 
              REAL min_val = calc_upper_bound_for_objective( problem );
              if( min_val == std::numeric_limits<double>::min() )
@@ -163,7 +164,7 @@ class Algorithm
                     reformulated.getConstraintMatrix().getLeftHandSides(),
                     reformulated.getVariableDomains(),
                     reformulated.getNumIntegralCols(),
-                    pi, min_val );
+                    pi, pi_conflicts, min_val );
                 print_solution( primal_heur_sol );
 
                 if( timer.getTime() >= alg_parameter.time_limit )
@@ -205,7 +206,7 @@ class Algorithm
                           timer.getTime() );
                 round_counter++;
 
-                pi.resize( pi.size() + conflicts, 0 );
+                pi_conflicts.resize( pi_conflicts.size() + conflicts, 0 );
              }
 
              Solution<REAL> original_solution{};

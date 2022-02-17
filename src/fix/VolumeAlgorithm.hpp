@@ -80,12 +80,15 @@ class VolumeAlgorithm
    volume_algorithm( const Vec<REAL> c, const ConstraintMatrix<REAL>& A,
                      const Vec<Constraint<REAL>>& derived_conflicts,
                      const Vec<REAL>& b, const VariableDomains<REAL>& domains,
-                     const int num_int_vars, const Vec<REAL>& pi,
+                     const int num_int_vars, Vec<REAL>& pi,
                      Vec<REAL>& pi_conflicts, REAL box_upper_bound )
    {
       REAL st = timer.getTime();
       int n_rows_A = A.getNRows();
       int n_conflicts = derived_conflicts.size();
+
+      assert( pi.size() == n_rows_A );
+      assert( pi_conflicts.size() == derived_conflicts.size() );
 
       assert_flags( n_rows_A, A, n_conflicts, derived_conflicts );
 
@@ -98,20 +101,23 @@ class VolumeAlgorithm
       Vec<REAL> v_t( b );
       Vec<REAL> viol_t( b );
       // cc
-      Vec<REAL> v_t_conflicts();
+      Vec<REAL> v_t_conflicts( b_conflicts );
       // cc
-      Vec<REAL> viol_t_conflicts();
+      Vec<REAL> viol_t_conflicts( b_conflicts );
       Vec<REAL> x_t( c );
       Vec<REAL> pi_t( pi );
       Vec<REAL> pi_bar( pi );
       Vec<REAL> pi_t_conflicts( pi_conflicts );
       Vec<REAL> pi_bar_conflicts( pi_conflicts );
       update_pi( n_rows_A, A, n_conflicts, derived_conflicts, pi_t,
-            pi_t_conflicts );
+                 pi_t_conflicts );
       Vec<REAL> residual_t( b );
+      // cc
+      Vec<REAL> residual_t_conflicts( b_conflicts );
 
       // We start with a vector π̄ and solve (6) to obtain x̄ and z̄.
-      REAL z_bar = create_problem_6_and_solve_it( c, A, b, domains, pi, x_t );
+      REAL z_bar = create_problem_6_and_solve_it( c, A, b, domains,
+            derived_conflicts, pi, pi_conflicts, x_t );
       Vec<REAL> x_bar( x_t );
       REAL z_bar_old = z_bar;
       // TODO: ok?
@@ -219,6 +225,7 @@ class VolumeAlgorithm
       }
 
       pi = pi_bar;
+      pi_conflicts = pi_bar_conflicts;
 
       return x_bar;
    }
@@ -337,12 +344,20 @@ class VolumeAlgorithm
                                   const ConstraintMatrix<REAL>& A,
                                   const Vec<REAL>& b,
                                   const VariableDomains<REAL>& domains,
-                                  const Vec<REAL>& pi, Vec<REAL>& solution )
+                                  const Vec<Constraint<REAL>>& derived_conflicts,
+                                  const Vec<REAL>& pi,
+                                  const Vec<REAL>& pi_conflicts,
+                                  Vec<REAL>& solution )
    {
       Vec<REAL> updated_objective( c );
       op.calc_b_minus_xA( A, pi, c, updated_objective );
+      //cc
+      op.calc_b_minus_xA( A_conflicts, pi_conflicts, updated_objective,
+                          updated_objective );
       StableSum<REAL> obj_value{};
       obj_value.add( op.multi( b, pi ) );
+      // cc
+      obj_value.add( op.multi( b_conflicts, pi_conflicts )  );
 
       for( int i = 0; i < updated_objective.size(); i++ )
       {
