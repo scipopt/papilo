@@ -38,14 +38,17 @@ delete_problem_instance( void* heuristic_void_ptr );
  * @param result array where the result is stored
  * @param n_cols number of variables
  * @param current_obj_value -> gets overwritten in case a better solution is found
+ * @param infeasible_copy_strategy -> see InfeasibleCopyStrategy
  * @return whether a (better) integer feasible solution was found
  */
 int
 call_algorithm( void* heuristic_void_ptr, double* cont_solution, double* result,
-                int n_cols, double* current_obj_value );
+                int n_cols, double* current_obj_value,
+                int infeasible_copy_strategy );
 
 int
-call_simple_heuristic( void* heuristic_void_ptr,  double* result, double* current_obj_value );
+call_simple_heuristic( void* heuristic_void_ptr, double* result,
+                       double* current_obj_value );
 
 #ifdef __cplusplus
 }

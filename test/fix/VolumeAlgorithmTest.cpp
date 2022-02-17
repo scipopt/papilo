@@ -36,22 +36,23 @@ setupProblemWithoutMatrix();
 
 TEST_CASE( "small-volume-algorithm-test", "[volume]" )
 {
-   AlgorithmParameter parameter {};
-   double d =0;
-   Timer timer {d};
-   VolumeAlgorithm<double> algorithm{ {}, {}, timer, parameter};
-   Vec<double> c( 2 );
-   c = { 1, 2 };
-   Vec<double> b( 2 );
-   b = { 3, 1 };
-   Problem<double> problem = setupProblemWithoutMatrix();
-   ConstraintMatrix<double> matrix =
-       setupProblemForVolumeAlgorithm().getConstraintMatrix();
-   Vec<double> pi( 2 );
-   pi = { 0, 0 };
-   algorithm.volume_algorithm( c, matrix, b, problem.getVariableDomains(), pi,
-                               problem.getNumIntegralCols(), 2 );
-   // TODO: @Suresh add assertions and check input
+//   AlgorithmParameter parameter {};
+//   double d =0;
+//   Timer timer {d};
+//   VolumeAlgorithm<double> algorithm{ {}, {}, timer, parameter};
+//   Vec<double> c( 2 );
+//   c = { 1, 2 };
+//   Vec<double> b( 2 );
+//   b = { 3, 1 };
+//   Problem<double> problem = setupProblemWithoutMatrix();
+//   ConstraintMatrix<double> matrix =
+//       setupProblemForVolumeAlgorithm().getConstraintMatrix();
+//   Vec<double> pi( 2 );
+//   pi = { 0, 0 };
+//
+//   algorithm.volume_algorithm( c, matrix, b, problem.getVariableDomains(), pi,
+//                               problem.getNumIntegralCols(), 2 );
+//   // TODO: @Suresh add assertions and check input
 }
 
 Problem<double>

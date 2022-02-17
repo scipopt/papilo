@@ -54,8 +54,8 @@ TEST_CASE( "fix-and-propagate-integer-variable", "[fix]" )
 
    Message msg{};
    msg.setVerbosityLevel(papilo::VerbosityLevel::kDetailed);
-   FixAndPropagate<double> fixAndPropagate{ msg, {}  };
-   FractionalRoundingStrategy<double> strategy{ {}, problem };
+   RandomGenerator random( 0 );
+   FixAndPropagate<double> fixAndPropagate{ msg, {}, random };   FractionalRoundingStrategy<double> strategy{ {}, problem };
 
    ProbingView<double> view {problem, {}};
    int backtracks = 0;
@@ -84,7 +84,8 @@ TEST_CASE( "fix-and-propagate-cont-variable-stays-cont", "[fix]" )
 
    Message msg{};
    msg.setVerbosityLevel(papilo::VerbosityLevel::kDetailed);
-   FixAndPropagate<double> fixAndPropagate{ msg, {}  };
+   RandomGenerator random( 0 );
+   FixAndPropagate<double> fixAndPropagate{ msg, {}, random };
    FractionalRoundingStrategy<double> strategy{ {}, problem };
 
    ProbingView<double> view {problem, {}};
@@ -114,8 +115,8 @@ TEST_CASE( "fix-and-propagate-all-integer-solutions", "[fix]" )
 
    Message msg{};
    msg.setVerbosityLevel(papilo::VerbosityLevel::kDetailed);
-   FixAndPropagate<double> fixAndPropagate{ msg, {}  };
-   FractionalRoundingStrategy<double> strategy{ {}, problem };
+   RandomGenerator random( 0 );
+   FixAndPropagate<double> fixAndPropagate{ msg, {}, random };   FractionalRoundingStrategy<double> strategy{ {}, problem };
 
    ProbingView<double> view {problem, {}};
    int backtracks = 0;
@@ -142,7 +143,8 @@ TEST_CASE( "fix-and-propagate-integer-can-not-be-fixed", "[fix]" )
 
    Message msg{};
    msg.setVerbosityLevel(papilo::VerbosityLevel::kDetailed);
-   FixAndPropagate<double> fixAndPropagate{ msg, {}  };
+   RandomGenerator random( 0 );
+   FixAndPropagate<double> fixAndPropagate{ msg, {}, random };
    FractionalRoundingStrategy<double> strategy{ {}, problem };
 
    ProbingView<double> view {problem, {}};
@@ -170,7 +172,8 @@ TEST_CASE( "fix-and-propagate-frac-backtrack", "[fix]" )
 
    Message msg{};
    msg.setVerbosityLevel(papilo::VerbosityLevel::kDetailed);
-   FixAndPropagate<double> fixAndPropagate{ msg, {}  };
+   RandomGenerator random( 0 );
+   FixAndPropagate<double> fixAndPropagate{ msg, {}, random };
    FractionalRoundingStrategy<double> strategy{ {}, problem };
 
    ProbingView<double> view {problem, {}};
@@ -204,7 +207,8 @@ TEST_CASE( "fix-and-propagate-frac-check-within-bounds", "[fix]" )
 
    Message msg{};
    msg.setVerbosityLevel(papilo::VerbosityLevel::kDetailed);
-   FixAndPropagate<double> fixAndPropagate{ msg, {}  };
+   RandomGenerator random( 0 );
+   FixAndPropagate<double> fixAndPropagate{ msg, {}, random };
    FractionalRoundingStrategy<double> strategy{ {}, problem };
 
    ProbingView<double> view {problem, {}};
@@ -231,7 +235,8 @@ TEST_CASE( "fix-and-propagate-random-backtrack", "[fix]" )
 
    Message msg{};
    msg.setVerbosityLevel(papilo::VerbosityLevel::kDetailed);
-   FixAndPropagate<double> fixAndPropagate{ msg, {}  };
+   RandomGenerator random( 0 );
+   FixAndPropagate<double> fixAndPropagate{ msg, {}, random };
    RandomRoundingStrategy<double> strategy{ 0, {} };
 
    ProbingView<double> view {problem, {}};
@@ -259,7 +264,8 @@ TEST_CASE( "fix-and-propagate-random", "[fix]" )
 
    Message msg{};
    msg.setVerbosityLevel(papilo::VerbosityLevel::kDetailed);
-   FixAndPropagate<double> fixAndPropagate{ msg, {}  };
+   RandomGenerator random( 0 );
+   FixAndPropagate<double> fixAndPropagate{ msg, {}, random };
    RandomRoundingStrategy<double> strategy{ 0, {} };
 
    ProbingView<double> view {problem, {}};
@@ -291,7 +297,8 @@ TEST_CASE( "fix-and-propagate-random-check-within-bounds", "[fix]" )
 
    Message msg{};
    msg.setVerbosityLevel(papilo::VerbosityLevel::kDetailed);
-   FixAndPropagate<double> fixAndPropagate{ msg, {}  };
+   RandomGenerator random( 0 );
+   FixAndPropagate<double> fixAndPropagate{ msg, {}, random };
    RandomRoundingStrategy<double> strategy{ 0, {} };
 
    ProbingView<double> view {problem, {}};
@@ -318,7 +325,8 @@ TEST_CASE( "fix-and-propagate-farkas-backtrack", "[fix]" )
 
    Message msg{};
    msg.setVerbosityLevel(papilo::VerbosityLevel::kDetailed);
-   FixAndPropagate<double> fixAndPropagate{ msg, {}  };
+   RandomGenerator random( 0 );
+   FixAndPropagate<double> fixAndPropagate{ msg, {}, random };
    FarkasRoundingStrategy<double> strategy{ 0, {}, false };
 
    ProbingView<double> view {problem, {}};
@@ -350,7 +358,8 @@ TEST_CASE( "fix-and-propagate-farkas-check-within-bounds", "[fix]" )
 
    Message msg{};
    msg.setVerbosityLevel(papilo::VerbosityLevel::kDetailed);
-   FixAndPropagate<double> fixAndPropagate{ msg, {}  };
+   RandomGenerator random( 0 );
+   FixAndPropagate<double> fixAndPropagate{ msg, {}, random };
    FarkasRoundingStrategy<double> strategy{ 0, {}, true };
 
    ProbingView<double> view {problem, {}};
@@ -381,7 +390,8 @@ TEST_CASE( "fix-and-propagate-stop-at-infeas-false", "[fix]" )
 
    Message msg{};
    msg.setVerbosityLevel(papilo::VerbosityLevel::kDetailed);
-   FixAndPropagate<double> fixAndPropagate{ msg, {}  };
+   RandomGenerator random( 0 );
+   FixAndPropagate<double> fixAndPropagate{ msg, {}, random };
    FractionalRoundingStrategy<double> strategy{ {}, problem };
 
    ProbingView<double> view {problem, {}};
@@ -403,7 +413,8 @@ TEST_CASE( "fix-and-propagate-initial-solution-fix-to-zero", "[fix]" )
 
    Message msg{};
    msg.setVerbosityLevel(papilo::VerbosityLevel::kDetailed);
-   FixAndPropagate<double> fixAndPropagate{ msg, {}  };
+   RandomGenerator random( 0 );
+   FixAndPropagate<double> fixAndPropagate{ msg, {}, random };
    FractionalRoundingStrategy<double> strategy{ {}, problem };
    Vec<double> res = { 0.9, 0.9, 0.6, 0.3, 0.2 };
 
@@ -426,7 +437,8 @@ TEST_CASE( "fix-and-propagate-initial-solution-fix-to-lowerbound", "[fix]" )
 
    Message msg{};
    msg.setVerbosityLevel(papilo::VerbosityLevel::kDetailed);
-   FixAndPropagate<double> fixAndPropagate{ msg, {}  };
+   RandomGenerator random( 0 );
+   FixAndPropagate<double> fixAndPropagate{ msg, {}, random };
    FractionalRoundingStrategy<double> strategy{ {}, problem };
    Vec<double> res = { 0.9, 0.9, 0.6, 0.3, 0.2 };
 
@@ -449,7 +461,8 @@ TEST_CASE( "fix-and-propagate-initial-solution-fix-to-upperbound", "[fix]" )
 
    Message msg{};
    msg.setVerbosityLevel(papilo::VerbosityLevel::kDetailed);
-   FixAndPropagate<double> fixAndPropagate{ msg, {}  };
+   RandomGenerator random( 0 );
+   FixAndPropagate<double> fixAndPropagate{ msg, {}, random };
    FractionalRoundingStrategy<double> strategy{ {}, problem };
    Vec<double> res = { 0.9, 0.9, 0.6, 0.3, 0.2 };
 
@@ -482,7 +495,8 @@ TEST_CASE( "fix-and-propagate-check-conflict-analysis-data", "[fix]" )
 
    Message msg{};
    msg.setVerbosityLevel(papilo::VerbosityLevel::kDetailed);
-   FixAndPropagate<double> fixAndPropagate{ msg, {}  };
+   RandomGenerator random( 0 );
+   FixAndPropagate<double> fixAndPropagate{ msg, {}, random };
    FractionalRoundingStrategy<double> strategy{ {}, problem };
 
    ProbingView<double> view {problem, {}};

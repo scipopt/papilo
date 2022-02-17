@@ -24,6 +24,7 @@
 #ifndef FIX_RANDOM_ROUNDING_STRATEGY_HPP
 #define FIX_RANDOM_ROUNDING_STRATEGY_HPP
 
+#include "fix/RandomGenerator.hpp"
 #include "fix/strategy/RoundingStrategy.hpp"
 
 template <typename REAL>
@@ -31,17 +32,12 @@ class RandomRoundingStrategy : public RoundingStrategy<REAL>
 {
 
    const Num<REAL> num;
-
-   typedef std::mt19937 MyRNG;
-   uint32_t seed;
-
-   MyRNG random_generator;
+   RandomGenerator random;
 
  public:
-   RandomRoundingStrategy( uint32_t seed_, Num<REAL> num_ )
-       : seed( seed_ ), num( num_ )
+   RandomRoundingStrategy( RandomGenerator random_, Num<REAL> num_ )
+       : random( random_ ), num( num_ )
    {
-      random_generator.seed( seed );
    }
 
    Fixing<REAL>
@@ -51,12 +47,11 @@ class RandomRoundingStrategy : public RoundingStrategy<REAL>
       Vec<int> remaining_unfixed_cols{};
       for( int i = 0; i < cont_solution.size(); i++ )
       {
-         bool b = num.isIntegral( cont_solution[i] );
-         bool eq = num.isEq( view.getProbingUpperBounds()[i],
-                             view.getProbingLowerBounds()[i] );
-         bool b1 = !view.is_within_bounds( i, cont_solution[i] );
-         bool b2 = !view.is_integer_variable( i );
-         if( b || eq || b2 || b1 )
+         if( num.isIntegral( cont_solution[i] ) ||
+             num.isEq( view.getProbingUpperBounds()[i],
+                       view.getProbingLowerBounds()[i] ) ||
+             !view.is_integer_variable( i ) ||
+             !view.is_within_bounds( i, cont_solution[i] ) )
             continue;
          remaining_unfixed_cols.push_back( i );
       }
@@ -66,9 +61,10 @@ class RandomRoundingStrategy : public RoundingStrategy<REAL>
       std::uniform_int_distribution<uint32_t> dist_variable(
           0, remaining_unfixed_cols.size() - 1 );
       std::uniform_int_distribution<uint32_t> dist_rounding( 0, 1 );
-      int variable = remaining_unfixed_cols[dist_variable( random_generator )];
+      int variable =
+          remaining_unfixed_cols[random.get_random_int( dist_variable )];
       REAL value = -1;
-      if( dist_rounding( random_generator ) )
+      if( random.get_random_int( dist_rounding ) )
          value = num.epsCeil( cont_solution[variable] );
       else
          value = num.epsFloor( cont_solution[variable] );

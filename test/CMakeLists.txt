@@ -60,8 +60,9 @@ add_executable(unit_test TestMain.cpp
         papilo/presolve/SparsifyTest.cpp
 
         fix/VectorMultiplicationTest.cpp
-        fix/VolumeAlgorithmTest.cpp
+#        fix/VolumeAlgorithmTest.cpp
         fix/FixAndPropagateTest.cpp
+        fix/HeuristicTest.cpp
         fix/ConflictAnalysisTest.cpp
         fix/FixAndPropagateIT.cpp
         fix/FixAndPropagateApiTest.cpp
@@ -230,6 +231,14 @@ set(unit_tests
         "conflict-analysis-binary-no-resolution"
         "conflict-analysis-binary-with-resolution"
         "fix-and-propagate-api-simple-heuristic"
+
+        "heuristics-all-false-lowest-depth"
+        "heuristics-all-false-highest-depth"
+        "heuristics-all-false-worst-objective"
+        "heuristics-all-false-best-objective"
+
+        "conflict-analysis-binary-depth-two"
+        "conflict-analysis-check-data"
         
         "integration-test-for-flugpl"
         ${PAPILOLIB_TESTS}

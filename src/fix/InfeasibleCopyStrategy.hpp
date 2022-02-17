@@ -3,7 +3,7 @@
 /*               This file is part of the program and library                */
 /*    PaPILO --- Parallel Presolve for Integer and Linear Optimization       */
 /*                                                                           */
-/* Copyright (C) 2020-22  Konrad-Zuse-Zentrum */
+/* Copyright (C) 2020-2022 Konrad-Zuse-Zentrum                               */
 /*                     fuer Informationstechnik Berlin                       */
 /*                                                                           */
 /* This program is free software: you can redistribute it and/or modify      */
@@ -21,28 +21,20 @@
 /*                                                                           */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#include "fix/FixAndPropagateApi.h"
-#include <assert.h>
-#include <stdlib.h>
+#ifndef _FIX_INFEASIBLE_COPY_STRATEGY_HPP_
+#define _FIX_INFEASIBLE_COPY_STRATEGY_HPP_
 
-int
-main( void )
+
+/// possible types of post solving
+enum class InfeasibleCopyStrategy : int
 {
-   int result = 1;
-   void* heuristic = setup( "./../../resources/api_test.mps", &result, 4 );
-   assert( result == 0 );
-   int n_cols = 3;
-   double* primal_solution = malloc( n_cols * sizeof( int ) );
-   double* sol = malloc( n_cols * sizeof( double ) );
-   for( int i = 0; i < n_cols; i++ )
-      primal_solution[i] = ( 1.0 + i ) / 10.0;
-   double current_solution = 50;
-   int success = call_algorithm( heuristic, primal_solution, sol, n_cols,
-                                 &current_solution, 0 );
-   delete_problem_instance( heuristic );
-   assert( sol[0] == 0 );
-   assert( sol[1] == 0 );
-   assert( sol[2] == 1 );
-   assert( current_solution == 9 );
-   assert( success );
-}
+   kNone = 0,
+   kBestObjective = 1,
+   kWorstObjective = 2,
+   kHighestDepthOfFirstConflict = 3,
+   kLowestDepthOfFirstConflict = 4,
+   kMostInfeasibleRows = 5,
+   kLeastInfeasibleRows = 6,
+};
+
+#endif

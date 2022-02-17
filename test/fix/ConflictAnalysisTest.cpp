@@ -113,18 +113,18 @@ TEST_CASE( "conflict-analysis-binary-with-resolution", "[conflict]" )
 
    Vec<SingleBoundChange<double>> bound_changes;
    // bound changes for x1, x2, x3 (decision level 1)
-   SingleBoundChange<double> bound_change_1( 0, -1, 1.0, true, false, -2 );
+   SingleBoundChange<double> bound_change_1( 0, -1, 1.0, true, true, -2 );
    bound_changes.push_back( bound_change_1 );
    SingleBoundChange<double> bound_change_2( 1, 0, 0.0, false, false, -3 );
    bound_changes.push_back( bound_change_2 );
    SingleBoundChange<double> bound_change_3( 2, 0, 0.0, false, false, -3 );
    bound_changes.push_back( bound_change_3 );
    // bound changes for x4, x5, x6 (decision level 2)
-   SingleBoundChange<double> bound_change_4( 3, -1, 1.0, true, false, -4 );
+   SingleBoundChange<double> bound_change_4( 3, -1, 1.0, true, true, -4 );
    bound_changes.push_back( bound_change_4 );
    SingleBoundChange<double> bound_change_5( 4, 1, 0.0, false, false, -5 );
    bound_changes.push_back( bound_change_5 );
-   SingleBoundChange<double> bound_change_6( 5, 2, 1.0, false, false, -5 );
+   SingleBoundChange<double> bound_change_6( 5, 2, 1.0, false, true, -5 );
    bound_changes.push_back( bound_change_6 );
 
    double t = 0;

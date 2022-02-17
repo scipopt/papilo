@@ -33,6 +33,7 @@ struct AlgorithmParameter
    // overall parameters
    double time_limit = 10 * 60;
    int threads = 8;
+   int seed = 0;
 
    // vol algorithm parameters
    double threshold_hard_constraints = 1;
@@ -61,6 +62,7 @@ struct AlgorithmParameter
    addParameters( ParameterSet& paramSet )
    {
       paramSet.addParameter( "time_limit", "", time_limit, 0.0 );
+      paramSet.addParameter( "seed", "", seed, 0.0 );
       paramSet.addParameter( "threads",
                              "maximal number of threads to use (0: automatic)",
                              threads, 0 );

@@ -3,7 +3,7 @@
 /*               This file is part of the program and library                */
 /*    PaPILO --- Parallel Presolve for Integer and Linear Optimization       */
 /*                                                                           */
-/* Copyright (C) 2020-22  Konrad-Zuse-Zentrum */
+/* Copyright (C) 2020-2022 Konrad-Zuse-Zentrum                               */
 /*                     fuer Informationstechnik Berlin                       */
 /*                                                                           */
 /* This program is free software: you can redistribute it and/or modify      */
@@ -21,28 +21,30 @@
 /*                                                                           */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#include "fix/FixAndPropagateApi.h"
-#include <assert.h>
-#include <stdlib.h>
+#ifndef FIX_RANDOM_GENERATOR_HPP
+#define FIX_RANDOM_GENERATOR_HPP
 
-int
-main( void )
+class RandomGenerator
 {
-   int result = 1;
-   void* heuristic = setup( "./../../resources/api_test.mps", &result, 4 );
-   assert( result == 0 );
-   int n_cols = 3;
-   double* primal_solution = malloc( n_cols * sizeof( int ) );
-   double* sol = malloc( n_cols * sizeof( double ) );
-   for( int i = 0; i < n_cols; i++ )
-      primal_solution[i] = ( 1.0 + i ) / 10.0;
-   double current_solution = 50;
-   int success = call_algorithm( heuristic, primal_solution, sol, n_cols,
-                                 &current_solution, 0 );
-   delete_problem_instance( heuristic );
-   assert( sol[0] == 0 );
-   assert( sol[1] == 0 );
-   assert( sol[2] == 1 );
-   assert( current_solution == 9 );
-   assert( success );
-}
+
+ private:
+   typedef std::mt19937 MyRNG;
+   uint32_t seed;
+
+   MyRNG random_generator;
+
+ public:
+
+   RandomGenerator( uint32_t seed_ ) : seed( seed_ )
+   {
+      random_generator.seed( seed );
+   }
+
+   int
+   get_random_int( std::uniform_int_distribution<uint32_t> distribution )
+   {
+      return distribution( random_generator );
+   }
+};
+
+#endif
