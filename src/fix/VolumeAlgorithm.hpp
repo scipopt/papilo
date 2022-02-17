@@ -85,8 +85,9 @@ class VolumeAlgorithm
    {
       REAL st = timer.getTime();
       int n_rows_A = A.getNRows();
+      int n_conflicts = derived_conflicts.size();
 
-      assert_pi( n_rows_A, A );
+      assert_flags( n_rows_A, A, n_conflicts, derived_conflicts );
 
       // Step 0
       // Set x_0 = x_bar, z_0 = z_bar, t = 1
@@ -217,16 +218,26 @@ class VolumeAlgorithm
 
  private:
    // Assumptions:
-   // 1. Each pi_i is either free or >= 0.
+   // 1. Each constraint is either an equality or >= constraint.
    void
-   assert_pi( const int n_rows_A, const ConstraintMatrix<REAL>& A )
+   assert_flags( const int n_rows_A, const ConstraintMatrix<REAL>& A,
+              const int n_conflicts,
+              const Vec<Constraint<REAL>>& derived_conflicts )
    {
       for( int i = 0; i < n_rows_A; i++ )
       {
          if( A.getRowFlags()[i].test( RowFlag::kRhsInf ) )
          {
             assert( !A.getRowFlags()[i].test( RowFlag::kLhsInf ) );
-            // Note: add another assert for LB if assumption 1 is invalid.
+         }
+      }
+
+      for( int i = 0; i < n_conflicts; i++ )
+      {
+         if( derived_conflicts[i].get_row_flag().test( RowFlag::kRhsInf ) )
+         {
+            assert( !derived_conflicts[i].get_row_flag().test( RowFlag::kLhsInf
+                                                             ) );
          }
       }
    }
