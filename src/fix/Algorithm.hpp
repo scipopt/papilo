@@ -144,6 +144,26 @@ class Algorithm
              Vec<REAL> pi;
              pi.reserve( n_rows_A_no_conflicts );
              generate_initial_dual_solution( reformulated, pi );
+
+             if( alg_parameter.use_cutoff_constraint )
+             {
+                problem = add_cutoff_objective( problem );
+                  problem.recomputeAllActivities();
+             }
+             REAL factor = 1;
+             if(alg_parameter.use_cutoff_constraint)
+                for( int i = 0; i < problem.getNCols(); i++ )
+                {
+                   if( ( num.isZero(
+                           problem.getObjective().coefficients[i] ) ) ||
+                       ( problem.getColFlags()[i].test( ColFlag::kIntegral ) &&
+                         num.isIntegral(
+                             problem.getObjective().coefficients[i] ) ) )
+                      continue;
+                   factor = 2 * num.getEpsilon();
+                   break;
+                }
+
              Vec<REAL> pi_conflicts;
              Vec<Vec<SingleBoundChange<REAL>>> bound_changes;
              Vec<std::pair<int, int>> infeasible_rows;
@@ -158,6 +178,17 @@ class Algorithm
              //             assert( !num.isEq( box_upper_bound_volume ==
              //                      std::numeric_limits<double>::min() ) )
 
+             if( alg_parameter.use_cutoff_constraint && !best_solution.empty() )
+             {
+                StableSum<REAL> obj{};
+                for( int i = 0; i < problem.getNCols(); i++ )
+                   obj.add( problem.getObjective().coefficients[i] *
+                            best_solution[i] );
+                assert( num.isGT( factor, 0 ) );
+                REAL real = obj.get();
+                problem.getConstraintMatrix().getRightHandSides()[0] =
+                    real - factor;
+             }
              int round_counter = 0;
              int round_first_solution = -1;
              int round_best_solution = -1;
@@ -363,6 +394,85 @@ class Algorithm
          for( int i = 0; i < sol.size(); i++ )
             msg.detailed( "   x[{}] = {}\n", i, sol[i] );
       }
+   }
+
+   Problem<REAL>
+   add_cutoff_objective( Problem<REAL>& problem )
+   {
+      ProblemBuilder<REAL> builder;
+
+      ConstraintMatrix<REAL>& matrix = problem.getConstraintMatrix();
+      Vec<ColFlags>& colFlags = problem.getColFlags();
+      Vec<RowFlags>& rowFlags = matrix.getRowFlags();
+      Vec<int>& rowSizes = problem.getRowSizes();
+      Vec<REAL>& coefficients = problem.getObjective().coefficients;
+      Vec<REAL>& leftHandSides = matrix.getLeftHandSides();
+      Vec<REAL>& rightHandSides = matrix.getRightHandSides();
+      const Vec<RowActivity<REAL>>& activities = problem.getRowActivities();
+
+      int nnz = matrix.getNnz();
+      int ncols = problem.getNCols();
+      int nrows = problem.getNRows();
+      int new_nnz = 0;
+      Vec<int> cut_off_indices{};
+      Vec<int> cut_off_values{};
+      for( int i = 0; i < ncols; i++ )
+      {
+         if( !num.isZero( coefficients[i] ) )
+         {
+            new_nnz++;
+            cut_off_indices.push_back( i );
+            cut_off_values.push_back( coefficients[i] );
+         }
+      }
+
+      builder.reserve( nnz + new_nnz, nrows + 1, ncols );
+
+      int rowcols_obj[new_nnz];
+      REAL rowvals_obj[new_nnz];
+      std::copy( cut_off_indices.begin(), cut_off_indices.end(), rowcols_obj );
+      std::copy( cut_off_values.begin(), cut_off_values.end(), rowvals_obj );
+
+      builder.addRowEntries( 0, new_nnz, rowcols_obj, rowvals_obj );
+      builder.setRowLhs( 0, 0 );
+      builder.setRowRhs( 0, 0 );
+      builder.setRowLhsInf( 0, true );
+      builder.setRowRhsInf( 0, true );
+
+      /* set up rows */
+      builder.setNumRows( nrows + 1 );
+      for( int i = 0; i < nrows; ++i )
+      {
+         const SparseVectorView<REAL>& view = matrix.getRowCoefficients( i );
+         const int* rowcols = view.getIndices();
+         const REAL* rowvals = view.getValues();
+         int rowlen = view.getLength();
+         REAL lhs = leftHandSides[i];
+         REAL rhs = rightHandSides[i];
+
+         builder.addRowEntries( i + 1, rowlen, rowcols, rowvals );
+         builder.setRowLhs( i + 1, lhs );
+         builder.setRowRhs( i + 1, rhs );
+         builder.setRowLhsInf( i + 1, rowFlags[i].test( RowFlag::kLhsInf ) );
+         builder.setRowRhsInf( i + 1, rowFlags[i].test( RowFlag::kRhsInf ) );
+      }
+
+      /* set up columns */
+      builder.setNumCols( ncols );
+      for( int i = 0; i < ncols; ++i )
+      {
+         builder.setColLb( i, problem.getLowerBounds()[i] );
+         builder.setColUb( i, problem.getUpperBounds()[i] );
+
+         auto flags = colFlags[i];
+         builder.setColLbInf( i, flags.test( ColFlag::kLbInf ) );
+         builder.setColUbInf( i, flags.test( ColFlag::kUbInf ) );
+         builder.setColIntegral( i, flags.test( ColFlag::kIntegral ) );
+
+         builder.setObj( i, coefficients[i] );
+      }
+      builder.setObjOffset( problem.getObjective().offset );
+      return builder.build();
    }
 
    void
