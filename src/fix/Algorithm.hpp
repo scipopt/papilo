@@ -194,12 +194,21 @@ class Algorithm
                 auto constraints = service.get_constraints();
 
                 int conflicts = 0;
+
                 for( auto& c : constraints )
                 {
                    derived_conflicts.insert( derived_conflicts.end(), c.begin(),
                                              c.end() );
                    conflicts += c.size();
                    c.clear();
+                }
+
+                if( alg_parameter.copy_conflicts_to_problem )
+                {
+                   problem =
+                       copy_conflicts_to_problem( problem, derived_conflicts );
+                   problem.recomputeAllActivities();
+                   derived_conflicts.clear();
                 }
 
                 msg.info( "\tFound {} conflicts - {:.3} s\n", conflicts,
@@ -231,22 +240,6 @@ class Algorithm
 #endif
    }
 
-   void
-   add_constraints( const Vec<Constraint<REAL>> constraints,
-                    ProblemBuilder<REAL> builder, int rows )
-   {
-      for(int i=0; i< constraints.size(); i++ )
-      {
-         builder.addRowEntries( rows+ i, constraints[i].get_data().getLength(),
-                                constraints[i].get_data().getIndices(),
-                                constraints[i].get_data().getValues() );
-         builder.setRowLhs( rows +i, constraints[i].get_lhs() );
-         builder.setRowRhs( rows + i, constraints[i].get_rhs() );
-         builder.setRowLhsInf( rows + i, constraints[i].get_row_flag().test(RowFlag::kLhsInf) );
-         builder.setRowRhsInf( rows + i, constraints[i].get_row_flag().test(RowFlag::kRhsInf) );
-         rows++;
-      }
-   }
 
    REAL
    calc_upper_bound_for_objective( const Problem<REAL>& problem ) const
@@ -260,12 +253,6 @@ class Algorithm
          {
             if( problem.getColFlags()[i].test( ColFlag::kLbInf ) )
             {
-               /*
-               msg.error( "Could not calculate objective bound: variable {} "
-                          "is unbounded",
-                          i );
-               return std::numeric_limits<double>::min();
-               */
                // TODO: OK? - based on this UB's usage in volume algo code?
                continue;
             }
@@ -276,12 +263,6 @@ class Algorithm
          {
             if( problem.getColFlags()[i].test( ColFlag::kUbInf ) )
             {
-               /*
-               msg.error( "Could not calculate objective bound: variable {} "
-                          "is unbounded",
-                          i );
-               return std::numeric_limits<double>::min();
-               */
                continue;
             }
             min_value.add( problem.getObjective().coefficients[i] +
@@ -472,6 +453,83 @@ class Algorithm
       }
 
       return builder;
+   }
+
+
+   Problem<REAL>
+   copy_conflicts_to_problem( Problem<REAL>& problem, Vec<Constraint<REAL>> constraints )
+   {
+      ProblemBuilder<REAL> builder;
+
+      ConstraintMatrix<REAL>& matrix = problem.getConstraintMatrix();
+      Vec<ColFlags>& colFlags = problem.getColFlags();
+      Vec<RowFlags>& rowFlags = matrix.getRowFlags();
+      Vec<int>& rowSizes = problem.getRowSizes();
+      Vec<REAL>& coefficients = problem.getObjective().coefficients;
+      Vec<REAL>& leftHandSides = matrix.getLeftHandSides();
+      Vec<REAL>& rightHandSides = matrix.getRightHandSides();
+      const Vec<RowActivity<REAL>>& activities = problem.getRowActivities();
+
+      int nnz = matrix.getNnz();
+      int ncols = problem.getNCols();
+      int nrows = problem.getNRows();
+      int new_nnz = 0;
+      int new_rows = constraints.size();
+      for (const auto &c : constraints)
+         new_nnz += c.get_data().getLength();
+
+      builder.reserve( nnz + new_nnz, nrows + new_rows, ncols );
+
+      /* set up rows */
+      builder.setNumRows( nrows + new_rows );
+      for( int i = 0; i < nrows; ++i )
+      {
+         const SparseVectorView<REAL>& view = matrix.getRowCoefficients( i );
+         const int* rowcols = view.getIndices();
+         const REAL* rowvals = view.getValues();
+         int rowlen = view.getLength();
+         REAL lhs = leftHandSides[i];
+         REAL rhs = rightHandSides[i];
+
+         builder.addRowEntries( i, rowlen, rowcols, rowvals );
+         builder.setRowLhs( i, lhs );
+         builder.setRowRhs( i, rhs );
+         builder.setRowLhsInf( i, rowFlags[i].test( RowFlag::kLhsInf ) );
+         builder.setRowRhsInf( i, rowFlags[i].test( RowFlag::kRhsInf ) );
+      }
+
+      for( int i = 0; i < constraints.size(); ++i )
+      {
+         const SparseVectorView<REAL>& view = constraints[i].get_data();
+         const int* rowcols = view.getIndices();
+         const REAL* rowvals = view.getValues();
+         int rowlen = view.getLength();
+         REAL lhs = constraints[i].get_lhs();
+         REAL rhs = constraints[i].get_rhs();
+
+         builder.addRowEntries( i + nrows, rowlen, rowcols, rowvals );
+         builder.setRowLhs( i + nrows, lhs );
+         builder.setRowRhs( i + nrows, rhs );
+         builder.setRowLhsInf( i + nrows, constraints[i].get_row_flag().test( RowFlag::kLhsInf ) );
+         builder.setRowRhsInf( i + nrows, constraints[i].get_row_flag().test( RowFlag::kRhsInf ) );
+      }
+
+      /* set up columns */
+      builder.setNumCols( ncols );
+      for( int i = 0; i < ncols; ++i )
+      {
+         builder.setColLb( i, problem.getLowerBounds()[i] );
+         builder.setColUb( i, problem.getUpperBounds()[i] );
+
+         auto flags = colFlags[i];
+         builder.setColLbInf( i, flags.test( ColFlag::kLbInf ) );
+         builder.setColUbInf( i, flags.test( ColFlag::kUbInf ) );
+         builder.setColIntegral( i, flags.test( ColFlag::kIntegral ) );
+
+         builder.setObj( i, coefficients[i] );
+      }
+      builder.setObjOffset( problem.getObjective().offset );
+      return builder.build();
    }
 
    REAL

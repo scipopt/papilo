@@ -332,12 +332,17 @@ ProbingView<REAL>::reset()
    changed_ubs.clear();
 
    const auto& orig_activities = problem.getRowActivities();
-   for( int i : changed_activities )
-   {
-      amountofwork += rowsize[i];
-      probing_activities[i] = orig_activities[i];
-   }
+   if(probing_activities.size()!= problem.getNRows())
+      probing_activities = problem.getRowActivities();
+   else
+      for( int i : changed_activities )
+      {
+         amountofwork += rowsize[i];
+         probing_activities[i] = orig_activities[i];
+      }
    changed_activities.clear();
+
+   int r = problem.getNRows();
 
    // reset should result in original domains and activities
    assert( std::equal( orig_lbs.begin(), orig_lbs.end(),
