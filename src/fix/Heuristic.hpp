@@ -57,13 +57,15 @@ class Heuristic
    Vec<Vec<Constraint<REAL>>> constraints{};
    PostsolveStorage<REAL>& postsolve_storage;
    bool calculate_original = false;
+   FixAndPropagate<REAL> fixAndPropagate;
+
 
  public:
    Problem<REAL>& problem;
 
  public:
-   Heuristic( Message msg_, Num<REAL> num_, Timer& timer_,
-              Problem<REAL>& problem_,
+   Heuristic( Message msg_, Num<REAL> num_, RandomGenerator random,
+              Timer& timer_, Problem<REAL>& problem_,
               PostsolveStorage<REAL>& postsolve_storage_,
               bool calculate_original_ = true )
        : msg( msg_ ), num( num_ ), timer( timer_ ), strategies( {} ),
@@ -71,18 +73,19 @@ class Heuristic
          infeasible_arr( {} ), cols_sorted_by_obj( {} ), problem( problem_ ),
          conflict_analysis( { msg, num, timer, problem_ } ),
          postsolve_storage( postsolve_storage_ ),
-         calculate_original( calculate_original_ )
+         calculate_original( calculate_original_ ),
+         fixAndPropagate( { msg, num, random } )
    {
    }
 
    void
-   setup()
+   setup( RandomGenerator random )
    {
 #ifdef PAPILO_TBB
       auto s1 = new FarkasRoundingStrategy<REAL>{ 0, num, false };
       auto s2 = new FarkasRoundingStrategy<REAL>{ 0, num, true };
       auto s3 = new FractionalRoundingStrategy<REAL>{ num, problem };
-      auto s4 = new RandomRoundingStrategy<REAL>{ 0, num };
+      auto s4 = new RandomRoundingStrategy<REAL>{ random, num };
       strategies.push_back( s1 );
       strategies.push_back( s2 );
       strategies.push_back( s3 );
@@ -142,7 +145,6 @@ class Heuristic
    find_initial_solution( REAL& current_objective,
                           Vec<REAL>& current_best_solution )
    {
-      FixAndPropagate<REAL> fixAndPropagate{ msg, num };
 #ifdef PAPILO_TBB
       tbb::parallel_for(
           tbb::blocked_range<int>( 0, 4 ),
@@ -186,8 +188,6 @@ class Heuristic
              bool perform_one_opt = true, bool stop_at_infeasible = true,
              InfeasibleCopyStrategy copy = InfeasibleCopyStrategy::kNone )
          {
-            FixAndPropagate<REAL> fixAndPropagate{ msg, num };
-
 #ifdef PAPILO_TBB
             tbb::parallel_for(
                 tbb::blocked_range<int>( 0, 4 ),
@@ -240,7 +240,6 @@ class Heuristic
                return;
             for( int i = 0; i < constraints.size(); i++ )
                constraints[i].clear();
-            FixAndPropagate<REAL> fixAndPropagate{ msg, num };
 
             Vec<bool> infeas_copy{ infeasible_arr };
             Vec<REAL> coefficients = problem.getObjective().coefficients;

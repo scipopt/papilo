@@ -108,12 +108,13 @@ class Algorithm
                 return;
              }
              problem.recomputeAllActivities();
+             RandomGenerator random(alg_parameter.seed);
 
-             Heuristic<REAL> service{ msg, num, timer, problem, result.postsolve };
+             Heuristic<REAL> service{ msg, num, random, timer, problem, result.postsolve };
              VolumeAlgorithm<REAL> algorithm{ msg, num, timer, alg_parameter,
                 result.postsolve };
 
-             service.setup();
+             service.setup(random);
              REAL best_obj_value = std::numeric_limits<REAL>::max();
 
              Vec<REAL> best_solution{};
@@ -356,7 +357,7 @@ class Algorithm
       slack_vars = 0;
       auto slack_var_upper_bounds = new double[slack_vars];
 
-      builder.reserve( nnz+10000, nrows +1000, ncols + slack_vars );
+      builder.reserve( nnz, nrows, ncols + slack_vars );
 
       /* set up rows */
       builder.setNumRows( nrows );
