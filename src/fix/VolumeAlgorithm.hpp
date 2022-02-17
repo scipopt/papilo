@@ -93,7 +93,7 @@ class VolumeAlgorithm
       assert_flags( n_rows_A, A, n_conflicts, derived_conflicts );
 
       Vec<REAL> b_conflicts( n_conflicts );
-      build_conflict_data( derived_conflicts, b_conflicts );
+      build_conflict_data( n_conflicts, derived_conflicts, b_conflicts );
 
       // Step 0
       // Set x_0 = x_bar, z_0 = z_bar, t = 1
@@ -222,7 +222,7 @@ class VolumeAlgorithm
          msg.info( "\t\tVol. alg. iterations: {} ( {} )\n", counter,
                parameter.max_iterations );
          msg.info( "\t\tAvg. (easy) constraint violation: {} ( {} )\n",
-               ( op.l1_norm( viol_t ) + op.l1_norm( viol_t_conflicts ) /
+               ( op.l1_norm( viol_t ) + op.l1_norm( viol_t_conflicts ) ) /
                  ( n_rows_A + n_conflicts ), parameter.con_abstol );
          msg.info( "\t\tPrimal absolute objective value: {} ( {} )\n",
                calculate_orig_obj_value( x_bar ), parameter.obj_abstol );
@@ -472,7 +472,7 @@ class VolumeAlgorithm
                     const Vec<Constraint<REAL>>& derived_conflicts,
                     const Vec<REAL>& pi_conflicts,
                     const Vec<REAL>& residual_conflicts,
-                    Vec<REAL>& viol_residual
+                    Vec<REAL>& viol_residual,
                     Vec<REAL>& viol_residual_conflicts )
    {
       viol_residual = residual;

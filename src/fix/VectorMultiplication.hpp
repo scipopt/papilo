@@ -24,6 +24,7 @@
 #ifndef _FIX_VECTOR_MULTIPLICATION_HPP_
 #define _FIX_VECTOR_MULTIPLICATION_HPP_
 
+#include "fix/Constraint.hpp"
 #include "papilo/core/Objective.hpp"
 #include "papilo/core/Presolve.hpp"
 
