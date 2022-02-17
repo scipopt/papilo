@@ -229,15 +229,15 @@ class Algorithm
    add_constraints( const Vec<Constraint<REAL>> constraints,
                     ProblemBuilder<REAL> builder, int rows )
    {
-      for( const auto& constraint : constraints )
+      for(int i=0; i< constraints.size(); i++ )
       {
-         builder.addRowEntries( rows, constraint.get_data().getLength(),
-                                constraint.get_data().getIndices(),
-                                constraint.get_data().getValues() );
-         builder.setRowLhs( rows, constraint.get_lhs() );
-         builder.setRowRhs( rows, constraint.get_rhs() );
-         builder.setRowLhsInf( rows, constraint.get_row_flag().test(RowFlag::kLhsInf) );
-         builder.setRowRhsInf( rows, constraint.get_row_flag().test(RowFlag::kRhsInf) );
+         builder.addRowEntries( rows+ i, constraints[i].get_data().getLength(),
+                                constraints[i].get_data().getIndices(),
+                                constraints[i].get_data().getValues() );
+         builder.setRowLhs( rows +i, constraints[i].get_lhs() );
+         builder.setRowRhs( rows + i, constraints[i].get_rhs() );
+         builder.setRowLhsInf( rows + i, constraints[i].get_row_flag().test(RowFlag::kLhsInf) );
+         builder.setRowRhsInf( rows + i, constraints[i].get_row_flag().test(RowFlag::kRhsInf) );
          rows++;
       }
    }
@@ -352,7 +352,7 @@ class Algorithm
       slack_vars = 0;
       auto slack_var_upper_bounds = new double[slack_vars];
 
-      builder.reserve( nnz, nrows, ncols + slack_vars );
+      builder.reserve( nnz+10000, nrows +1000, ncols + slack_vars );
 
       /* set up rows */
       builder.setNumRows( nrows );
