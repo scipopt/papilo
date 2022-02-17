@@ -133,7 +133,11 @@ class VolumeAlgorithm
       init_fixed_int_count( x_bar, domains, fixed_int_vars_count );
 
       op.calc_b_minus_Ax( A, x_bar, b, v_t );
-      calc_violations( n_rows_A, A, pi_bar, v_t, viol_t );
+      //cc: this and other vector multiplication functions
+      op.calc_b_minus_Ax( A_conflicts, x_bar, b_conflicts, v_t_conflicts );
+      calc_violations( n_rows_A, A, pi_bar, v_t, n_conflicts, A_conflicts,
+                       pi_bar_conflicts, v_t_conflicts, viol_t,
+                       viol_t_conflicts );
 
       while( stopping_criteria( viol_t, n_rows_A, c, x_bar, z_bar,
                                 num_int_vars, fixed_int_vars_count,
@@ -182,7 +186,9 @@ class VolumeAlgorithm
                                  fixed_int_vars_count );
 
          op.calc_b_minus_Ax( A, x_bar, b, v_t );
-         calc_violations( n_rows_A, A, pi_bar, v_t, viol_t );
+         calc_violations( n_rows_A, A, pi_bar, v_t, n_conflicts, A_conflicts,
+                          pi_bar_conflicts, v_t_conflicts, viol_t,
+                          viol_t_conflicts );
 
          // Update f
          update_f( improvement_indicator, v_t, residual_t,
@@ -428,7 +434,12 @@ class VolumeAlgorithm
    void
    calc_violations( const int n_rows_A, const ConstraintMatrix<REAL>& A,
                     const Vec<REAL>& pi, const Vec<REAL>& residual,
-                    Vec<REAL>& viol_residual )
+                    const int n_conflicts,
+                    const ConstraintMatrix<REAL>& A_conflicts,
+                    const Vec<REAL>& pi_conflicts,
+                    const Vec<REAL>& residual_conflicts,
+                    Vec<REAL>& viol_residual
+                    Vec<REAL>& viol_residual_conflicts )
    {
       viol_residual = residual;
       for( int i = 0; i < n_rows_A; i++ )
@@ -437,6 +448,16 @@ class VolumeAlgorithm
          if( A.getRowFlags()[i].test( RowFlag::kRhsInf ) &&
              ( num.isLT( residual[i], REAL{ 0.0 } ) && num.isZero( pi[i] ) ) )
             viol_residual[i] = 0;
+      }
+
+      viol_residual_conflicts = residual_conflicts;
+      for( int i = 0; i < n_conflicts; i++ )
+      {
+         // Note: isZero check would be different in case of non-zero LB on pi
+         if( derived_conflicts[i].get_row_flag().test( RowFlag::kRhsInf ) &&
+             ( num.isLT( residual_conflicts[i], REAL{ 0.0 } ) &&
+               num.isZero( pi_conflicts[i] ) ) )
+            viol_residual_conflicts[i] = 0;
       }
    }
 
