@@ -88,9 +88,12 @@ class VolumeAlgorithm
       int n_conflicts = derived_conflicts.size();
 
       assert( pi.size() == n_rows_A );
-      assert( pi_conflicts.size() == derived_conflicts.size() );
+      assert( pi_conflicts.size() == n_conflicts );
 
       assert_flags( n_rows_A, A, n_conflicts, derived_conflicts );
+
+      Vec<REAL> b_conflicts( n_conflicts );
+      build_conflict_data( derived_conflicts, b_conflicts );
 
       // Step 0
       // Set x_0 = x_bar, z_0 = z_bar, t = 1
@@ -100,10 +103,8 @@ class VolumeAlgorithm
       int non_improvement_iter_counter = 0;
       Vec<REAL> v_t( b );
       Vec<REAL> viol_t( b );
-      // cc
-      Vec<REAL> v_t_conflicts( b_conflicts );
-      // cc
-      Vec<REAL> viol_t_conflicts( b_conflicts );
+      Vec<REAL> v_t_conflicts( n_conflicts );
+      Vec<REAL> viol_t_conflicts( n_conflicts );
       Vec<REAL> x_t( c );
       Vec<REAL> pi_t( pi );
       Vec<REAL> pi_bar( pi );
@@ -112,12 +113,11 @@ class VolumeAlgorithm
       update_pi( n_rows_A, A, n_conflicts, derived_conflicts, pi_t,
                  pi_t_conflicts );
       Vec<REAL> residual_t( b );
-      // cc
-      Vec<REAL> residual_t_conflicts( b_conflicts );
+      Vec<REAL> residual_t_conflicts( n_conflicts );
 
       // We start with a vector π̄ and solve (6) to obtain x̄ and z̄.
       REAL z_bar = create_problem_6_and_solve_it( c, A, b, domains,
-            derived_conflicts, pi, pi_conflicts, x_t );
+            derived_conflicts, b_conflicts, pi, pi_conflicts, x_t );
       Vec<REAL> x_bar( x_t );
       REAL z_bar_old = z_bar;
       // TODO: ok?
@@ -133,11 +133,10 @@ class VolumeAlgorithm
       init_fixed_int_count( x_bar, domains, fixed_int_vars_count );
 
       op.calc_b_minus_Ax( A, x_bar, b, v_t );
-      //cc: this and other vector multiplication functions
-      op.calc_b_minus_Ax( A_conflicts, x_bar, b_conflicts, v_t_conflicts );
-      calc_violations( n_rows_A, A, pi_bar, v_t, n_conflicts, A_conflicts,
-                       pi_bar_conflicts, v_t_conflicts, viol_t,
-                       viol_t_conflicts );
+      op.calc_b_minus_Ax( derived_conflicts, x_bar, v_t_conflicts );
+      calc_violations( n_rows_A, A, pi_bar, v_t, n_conflicts,
+                       derived_conflicts, pi_bar_conflicts, v_t_conflicts,
+                       viol_t, viol_t_conflicts );
 
       while( stopping_criteria( viol_t, n_rows_A, viol_t_conflicts, n_conflicts,
                                 c, x_bar, z_bar, num_int_vars,
@@ -162,11 +161,12 @@ class VolumeAlgorithm
 
          // Solve (6) with π_t , let x_t and z_t be the solutions obtained.
          REAL z_t = create_problem_6_and_solve_it( c, A, b, domains,
-                                    derived_conflicts, pi, pi_conflicts, x_t );
+                                    derived_conflicts, b_conflicts, pi,
+                                    pi_conflicts, x_t );
 
          // Update alpha
          op.calc_b_minus_Ax( A, x_t, b, residual_t );
-         op.calc_b_minus_Ax( A_conflicts, x_t, b_conflicts, residual_t_conflicts );
+         op.calc_b_minus_Ax( derived_conflicts, x_t, residual_t_conflicts );
          calc_alpha( residual_t, v_t, residual_t_conflicts, v_t_conflicts );
 
          x_bar_last_iter = x_bar;
@@ -192,10 +192,10 @@ class VolumeAlgorithm
                                  fixed_int_vars_count );
 
          op.calc_b_minus_Ax( A, x_bar, b, v_t );
-         op.calc_b_minus_Ax( A_conflicts, x_bar, b_conflicts, v_t_conflicts );
-         calc_violations( n_rows_A, A, pi_bar, v_t, n_conflicts, A_conflicts,
-                          pi_bar_conflicts, v_t_conflicts, viol_t,
-                          viol_t_conflicts );
+         op.calc_b_minus_Ax( derived_conflicts, x_bar, v_t_conflicts );
+         calc_violations( n_rows_A, A, pi_bar, v_t, n_conflicts,
+                          derived_conflicts, pi_bar_conflicts, v_t_conflicts,
+                          viol_t, viol_t_conflicts );
 
          // Update f
          update_f( improvement_indicator, v_t, residual_t,
@@ -268,6 +268,29 @@ class VolumeAlgorithm
                                                              ) );
          }
       }
+   }
+
+   void
+   build_conflict_data( const int n_conflicts,
+                        const Vec<Constraint<REAL>>& derived_conflicts,
+                        Vec<REAL>& b_conflicts )
+   {
+      assert( b_conflicts.size() == n_conflicts );
+
+#ifdef PAPILO_TBB
+      tbb::parallel_for( tbb::blocked_range<int>( 0, derived_conflicts.size() ),
+                         [&]( const tbb::blocked_range<int>& r )
+                         {
+                            for( int i = r.begin(); i < r.end(); ++i )
+#else
+      for( int i = 0; i < derived_conflicts.size(); ++i )
+#endif
+                            {
+                               b_conflicts[i] = derived_conflicts[i].get_lhs();
+                            }
+#ifdef PAPILO_TBB
+                         } );
+#endif
    }
 
    // Assumptions:
@@ -363,18 +386,17 @@ class VolumeAlgorithm
                                   const Vec<REAL>& b,
                                   const VariableDomains<REAL>& domains,
                                   const Vec<Constraint<REAL>>& derived_conflicts,
+                                  const Vec<REAL>& b_conflicts,
                                   const Vec<REAL>& pi,
                                   const Vec<REAL>& pi_conflicts,
                                   Vec<REAL>& solution )
    {
       Vec<REAL> updated_objective( c );
       op.calc_b_minus_xA( A, pi, c, updated_objective );
-      //cc
-      op.calc_b_minus_xA( A_conflicts, pi_conflicts, updated_objective,
+      op.calc_b_minus_xA( derived_conflicts, pi_conflicts, updated_objective,
                           updated_objective );
       StableSum<REAL> obj_value{};
       obj_value.add( op.multi( b, pi ) );
-      // cc
       obj_value.add( op.multi( b_conflicts, pi_conflicts )  );
 
       for( int i = 0; i < updated_objective.size(); i++ )
@@ -447,7 +469,7 @@ class VolumeAlgorithm
    calc_violations( const int n_rows_A, const ConstraintMatrix<REAL>& A,
                     const Vec<REAL>& pi, const Vec<REAL>& residual,
                     const int n_conflicts,
-                    const ConstraintMatrix<REAL>& A_conflicts,
+                    const Vec<Constraint<REAL>>& derived_conflicts,
                     const Vec<REAL>& pi_conflicts,
                     const Vec<REAL>& residual_conflicts,
                     Vec<REAL>& viol_residual

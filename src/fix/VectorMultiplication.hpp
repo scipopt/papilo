@@ -67,6 +67,33 @@ class VectorMultiplication
    }
 
    void
+   calc_b_minus_Ax( const Vec<Constraint<REAL>>& constraints,
+                    const Vec<REAL>& x, Vec<REAL>& result )
+   {
+      // TODO: add another assertion for x.size() == n_cols_A
+      assert( constraints.size() == result.size() );
+#ifdef PAPILO_TBB
+      tbb::parallel_for( tbb::blocked_range<int>( 0, constraints.size() ),
+                         [&]( const tbb::blocked_range<int>& r )
+                         {
+                            for( int i = r.begin(); i < r.end(); ++i )
+#else
+      for( int i = 0; i < constraints.size(); ++i )
+#endif
+                            {
+                               auto coeff = constraints[i].get_data();
+                               StableSum<REAL> aux( constraints[i].get_lhs() );
+                               for( int j = 0; j < coeff.getLength(); j++ )
+                               aux.add( -coeff.getValues()[j] *
+                                        x[coeff.getIndices()[j]] );
+                               result[i] = aux.get();
+                            }
+#ifdef PAPILO_TBB
+                         } );
+#endif
+   }
+
+   void
    calc_b_minus_xA( const ConstraintMatrix<REAL>& A, const Vec<REAL>& x,
                     const Vec<REAL>& b, Vec<REAL>& result )
    {
@@ -93,6 +120,24 @@ class VectorMultiplication
 #endif
    }
 
+   void
+   calc_b_minus_xA( const Vec<Constraint<REAL>>& constraints,
+                    const Vec<REAL>& x, const Vec<REAL>& b, Vec<REAL>& result )
+   {
+      // TODO: add another assertion for result.size() == n_cols_A
+      assert( constraints.size() == x.size() );
+
+      for( int i = 0; i < constraints.size(); ++i )
+      {
+         // TODO: how to get col data?
+         auto coeff = constraints[i].get_data();
+         StableSum<REAL> aux( b[i] );
+         for( int j = 0; j < coeff.getLength(); j++ )
+            aux.add( -coeff.getValues()[j] *
+                     x[coeff.getIndices()[j]] );
+         result[i] = aux.get();
+      }
+   }
 
    void
    calc_qb_plus_sx( const REAL q, const Vec<REAL>& b, const REAL s,
