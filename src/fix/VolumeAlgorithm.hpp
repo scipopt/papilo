@@ -80,7 +80,7 @@ class VolumeAlgorithm
    volume_algorithm( const Vec<REAL> c, const ConstraintMatrix<REAL>& A,
                      const Vec<Constraint<REAL>>& derived_conflicts,
                      const Vec<REAL>& b, const VariableDomains<REAL>& domains,
-                     const Vec<REAL>& pi, const int num_int_vars,
+                     const int num_int_vars, Vec<REAL>& pi,
                      REAL box_upper_bound )
    {
       REAL st = timer.getTime();
@@ -209,6 +209,8 @@ class VolumeAlgorithm
          msg.info( "\t\tTotal time: {} ( {} )\n", timer.getTime() - st,
                parameter.time_limit );
       }
+
+      pi = pi_bar;
 
       return x_bar;
    }

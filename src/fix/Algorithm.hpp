@@ -161,8 +161,9 @@ class Algorithm
                     reformulated.getConstraintMatrix(),
                     derived_conflicts,
                     reformulated.getConstraintMatrix().getLeftHandSides(),
-                    reformulated.getVariableDomains(), pi,
-                    reformulated.getNumIntegralCols(), min_val );
+                    reformulated.getVariableDomains(),
+                    reformulated.getNumIntegralCols(),
+                    pi, min_val );
                 print_solution( primal_heur_sol );
 
                 if( timer.getTime() >= alg_parameter.time_limit )
@@ -204,7 +205,7 @@ class Algorithm
                           timer.getTime() );
                 round_counter++;
 
-                //TODO: Suresh resize pi
+                pi.resize( pi.size() + conflicts, 0 );
              }
 
              Solution<REAL> original_solution{};
