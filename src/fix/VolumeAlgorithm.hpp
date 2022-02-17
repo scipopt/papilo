@@ -80,8 +80,8 @@ class VolumeAlgorithm
    volume_algorithm( const Vec<REAL> c, const ConstraintMatrix<REAL>& A,
                      const Vec<Constraint<REAL>>& derived_conflicts,
                      const Vec<REAL>& b, const VariableDomains<REAL>& domains,
-                     const int num_int_vars, Vec<REAL>& pi,
-                     REAL box_upper_bound )
+                     const int num_int_vars, const Vec<REAL>& pi,
+                     Vec<REAL>& pi_conflicts, REAL box_upper_bound )
    {
       REAL st = timer.getTime();
       int n_rows_A = A.getNRows();
@@ -97,10 +97,17 @@ class VolumeAlgorithm
       int non_improvement_iter_counter = 0;
       Vec<REAL> v_t( b );
       Vec<REAL> viol_t( b );
+      // cc
+      Vec<REAL> v_t_conflicts();
+      // cc
+      Vec<REAL> viol_t_conflicts();
       Vec<REAL> x_t( c );
       Vec<REAL> pi_t( pi );
       Vec<REAL> pi_bar( pi );
-      update_pi( n_rows_A, A, pi_t );
+      Vec<REAL> pi_t_conflicts( pi_conflicts );
+      Vec<REAL> pi_bar_conflicts( pi_conflicts );
+      update_pi( n_rows_A, A, n_conflicts, derived_conflicts, pi_t,
+            pi_t_conflicts );
       Vec<REAL> residual_t( b );
 
       // We start with a vector π̄ and solve (6) to obtain x̄ and z̄.
@@ -251,7 +258,9 @@ class VolumeAlgorithm
    // TODO: simplify this function further upon finalzing assumptions
    void
    update_pi( const int n_rows_A, const ConstraintMatrix<REAL>& A,
-              Vec<REAL>& pi )
+              const int n_conflicts,
+              const Vec<Constraint<REAL>>& derived_conflicts,
+              Vec<REAL>& pi, Vec<REAL>& pi_conflicts )
    {
       for( int i = 0; i < n_rows_A; i++ )
       {
@@ -259,6 +268,15 @@ class VolumeAlgorithm
          {
             // Note: change following max if assumption 4 is invalid.
             pi[i] = num.max( pi[i], REAL{ 0.0 } );
+         }
+      }
+
+      for( int i = 0; i < n_conflicts; i++ )
+      {
+         if( derived_conflicts[i].get_row_flag().test( RowFlag::kRhsInf ) )
+         {
+            // Note: change following max if assumption 4 is invalid.
+            pi_conflicts[i] = num.max( pi_conflicts[i], REAL{ 0.0 } );
          }
       }
    }
