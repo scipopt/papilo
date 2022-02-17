@@ -139,9 +139,9 @@ class VolumeAlgorithm
                        pi_bar_conflicts, v_t_conflicts, viol_t,
                        viol_t_conflicts );
 
-      while( stopping_criteria( viol_t, n_rows_A, c, x_bar, z_bar,
-                                num_int_vars, fixed_int_vars_count,
-                                counter ) )
+      while( stopping_criteria( viol_t, n_rows_A, viol_t_conflicts, n_conflicts,
+                                c, x_bar, z_bar, num_int_vars,
+                                fixed_int_vars_count, counter ) )
       {
          msg.detailed( "Round of volume algorithm: {}\n", counter + 1 );
          // STEP 1:
@@ -296,12 +296,15 @@ class VolumeAlgorithm
 
    bool
    stopping_criteria( const Vec<REAL>& v, const int n_rows_A,
+                      const Vec<REAL>& v_conflicts, const int n_conflicts,
                       const Vec<REAL>& c, const Vec<REAL>& x_bar,
                       const REAL z_bar, const int num_int_vars,
                       const Vec<int>& fixed_int_vars_count,
                       const int num_iterations )
    {
-      bool primal_feas_term = num.isLT( op.l1_norm( v ), n_rows_A *
+      bool primal_feas_term = num.isLT( op.l1_norm( v ) +
+                                        op.l1_norm( v_conflicts ),
+                                        ( n_rows_A + n_conflicts ) *
                                         parameter.con_abstol );
 
       bool duality_gap_abs_term = num.isLT( abs( op.multi( c, x_bar ) ),
@@ -321,7 +324,8 @@ class VolumeAlgorithm
                                             { return val > num_iters_check; } ),
                              num_int_vars * parameter.fixed_int_var_threshold );
 
-      msg.detailed( "   cons: {}\n", op.l1_norm( v ) / n_rows_A );
+      msg.detailed( "   cons: {}\n", op.l1_norm( v ) + op.l1_norm( v_conflicts )
+                                     / ( n_rows_A + n_conflicts ) );
       msg.detailed( "   zbar: {}\n", z_bar );
       msg.detailed( "   objA: {}\n", abs( op.multi( c, x_bar ) ) );
       msg.detailed( "   objR: {}\n", abs( op.multi( c, x_bar ) - z_bar ) /
