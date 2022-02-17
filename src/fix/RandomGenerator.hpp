@@ -21,55 +21,29 @@
 /*                                                                           */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef FIX_RANDOM_ROUNDING_STRATEGY_HPP
-#define FIX_RANDOM_ROUNDING_STRATEGY_HPP
+#ifndef FIX_RANDOM_GENERATOR_HPP
+#define FIX_RANDOM_GENERATOR_HPP
 
-#include "fix/RandomGenerator.hpp"
-#include "fix/strategy/RoundingStrategy.hpp"
-
-template <typename REAL>
-class RandomRoundingStrategy : public RoundingStrategy<REAL>
+class RandomGenerator
 {
 
-   const Num<REAL> num;
-   RandomGenerator random;
+ private:
+   typedef std::mt19937 MyRNG;
+   uint32_t seed;
+
+   MyRNG random_generator;
 
  public:
-   RandomRoundingStrategy( RandomGenerator random_, Num<REAL> num_ )
-       : random( random_ ), num( num_ )
+
+   RandomGenerator( uint32_t seed_ ) : seed( seed_ )
    {
+      random_generator.seed( seed );
    }
 
-   Fixing<REAL>
-   select_rounding_variable( const Vec<REAL>& cont_solution,
-                             const ProbingView<REAL>& view ) override
+   int
+   get_random_int( std::uniform_int_distribution<uint32_t> distribution )
    {
-      Vec<int> remaining_unfixed_cols{};
-      for( int i = 0; i < cont_solution.size(); i++ )
-      {
-         if( num.isIntegral( cont_solution[i] ) ||
-             num.isEq( view.getProbingUpperBounds()[i],
-                       view.getProbingLowerBounds()[i] ) ||
-             !view.is_integer_variable( i ) ||
-             !view.is_within_bounds( i, cont_solution[i] ) )
-            continue;
-         remaining_unfixed_cols.push_back( i );
-      }
-      if( remaining_unfixed_cols.empty() )
-         return { -1, -1 };
-
-      std::uniform_int_distribution<uint32_t> dist_variable(
-          0, remaining_unfixed_cols.size() - 1 );
-      std::uniform_int_distribution<uint32_t> dist_rounding( 0, 1 );
-      int variable =
-          remaining_unfixed_cols[random.get_random_int( dist_variable )];
-      REAL value = -1;
-      if( random.get_random_int( dist_rounding ) )
-         value = num.epsCeil( cont_solution[variable] );
-      else
-         value = num.epsFloor( cont_solution[variable] );
-
-      return { variable, value };
+      return distribution( random_generator );
    }
 };
 

@@ -45,13 +45,14 @@ TEST_CASE( "heuristics-all-false-best-objective", "[fix]" )
    double time = 5;
    Timer t{time};
    PostsolveStorage<double> storage{};
+   RandomGenerator random( 0 );
    auto heuristic =
-       new Heuristic<double>{ msg, {}, t, problem, storage, false };
+       new Heuristic<double>{ msg, {}, random, t, problem, storage, false };
    Vec<double> res{};
    Vec<double> sol = { 0.9, 0.9, 0.6, 0.3, 0.2 };
 
    double objVal = 50;
-   heuristic->setup();
+   heuristic->setup(random);
    bool infeasible =heuristic->perform_fix_and_propagate(
        sol, objVal, res, true, true, false,
        InfeasibleCopyStrategy::kBestObjective );
@@ -78,13 +79,14 @@ TEST_CASE( "heuristics-all-false-worst-objective", "[fix]" )
    double time = 5;
    Timer t{time};
    PostsolveStorage<double> storage{};
+   RandomGenerator random( 0 );
    auto heuristic =
-       new Heuristic<double>{ msg, {}, t, problem, storage, false };
+       new Heuristic<double>{ msg, {}, random, t, problem, storage, false };
    Vec<double> res{};
    Vec<double> sol = { 0.9, 0.9, 0.6, 0.3, 0.2 };
 
    double objVal = 50;
-   heuristic->setup();
+   heuristic->setup(random);
    bool infeasible =heuristic->perform_fix_and_propagate(
        sol, objVal, res, true, true, false,
        InfeasibleCopyStrategy::kWorstObjective);
@@ -111,13 +113,14 @@ TEST_CASE( "heuristics-all-false-highest-depth", "[fix]" )
    double time = 5;
    Timer t{time};
    PostsolveStorage<double> storage{};
+   RandomGenerator random( 0 );
    auto heuristic =
-       new Heuristic<double>{ msg, {}, t, problem, storage, false };
+       new Heuristic<double>{ msg, {}, random, t, problem, storage, false };
    Vec<double> res{};
    Vec<double> sol = { 0.9, 0.9, 0.6, 0.3, 0.2 };
 
    double objVal = 50;
-   heuristic->setup();
+   heuristic->setup(random);
    bool infeasible =heuristic->perform_fix_and_propagate(
        sol, objVal, res, true, true, false,
        InfeasibleCopyStrategy::kHighestDepthOfFirstConflict);
@@ -143,13 +146,14 @@ TEST_CASE( "heuristics-all-false-lowest-depth", "[fix]" )
    double time = 5;
    Timer t{time};
    PostsolveStorage<double> storage{};
+   RandomGenerator random( 0 );
    auto heuristic =
-       new Heuristic<double>{ msg, {}, t, problem, storage, false };
+       new Heuristic<double>{ msg, {}, random, t, problem, storage, false };
    Vec<double> res{};
    Vec<double> sol = { 0.9, 0.9, 0.6, 0.3, 0.2 };
 
    double objVal = 50;
-   heuristic->setup();
+   heuristic->setup(random);
    bool infeasible =heuristic->perform_fix_and_propagate(
        sol, objVal, res, true, true, false,
        InfeasibleCopyStrategy::kLowestDepthOfFirstConflict);

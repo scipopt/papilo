@@ -27,6 +27,8 @@
 #include "papilo/core/Objective.hpp"
 #include "papilo/core/Presolve.hpp"
 #include "papilo/core/ProbingView.hpp"
+#include "fix/RandomGenerator.hpp"
+
 
 #include "fix/strategy/RoundingStrategy.hpp"
 #include "papilo/io/MpsParser.hpp"
@@ -68,9 +70,13 @@ class FixAndPropagate
 {
    Message msg;
    Num<REAL> num;
+   RandomGenerator random;
 
  public:
-   FixAndPropagate( Message msg_, Num<REAL> num_ ) : msg( msg_ ), num( num_ ) {}
+   FixAndPropagate( Message msg_, Num<REAL> num_, RandomGenerator random_ )
+       : msg( msg_ ), num( num_ ), random( random_ )
+   {
+   }
 
    bool
    fix_and_propagate( const Vec<REAL>& cont_solution, Vec<REAL>& result,
@@ -196,7 +202,8 @@ class FixAndPropagate
             if( !flags[i].test( ColFlag::kUbInf ) and
                 !flags[i].test( ColFlag::kLbInf ) )
             {
-//               TODO:
+               std::uniform_int_distribution<uint32_t> dist_rounding( lower_bounds[i], upper_bounds[i] );
+               value = random.get_random_int(dist_rounding);
             }
             else if( !flags[i].test( ColFlag::kLbInf ) )
                value = lower_bounds[i];
