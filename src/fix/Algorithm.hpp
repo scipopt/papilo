@@ -23,6 +23,7 @@
 
 #include "fix/FixAndPropagate.hpp"
 #include "fix/Heuristic.hpp"
+#include "fix/Constraint.hpp"
 #include "fix/VolumeAlgorithm.hpp"
 #include "fix/strategy/FarkasRoundingStrategy.hpp"
 #include "fix/strategy/FractionalRoundingStrategy.hpp"
@@ -116,6 +117,7 @@ class Algorithm
              REAL best_obj_value = std::numeric_limits<REAL>::max();
 
              Vec<REAL> best_solution{};
+             Vec<Constraint<REAL>> derived_conflicts{};
              best_solution.reserve( problem.getNCols() );
 
              // setup data for the volume algorithm
@@ -157,6 +159,7 @@ class Algorithm
                 primal_heur_sol = algorithm.volume_algorithm(
                     reformulated.getObjective().coefficients,
                     reformulated.getConstraintMatrix(),
+                    derived_conflicts,
                     reformulated.getConstraintMatrix().getLeftHandSides(),
                     reformulated.getVariableDomains(), pi,
                     reformulated.getNumIntegralCols(), min_val );
@@ -188,18 +191,19 @@ class Algorithm
                 if( !service.exists_conflict_constraints() )
                    break;
                 auto constraints = service.get_constraints();
-                round_counter++;
 
                 int conflicts = 0;
                 for( const auto& c : constraints )
                 {
-                   add_constraints( c, builder, reformulated.getNRows() );
+                   derived_conflicts.insert( derived_conflicts.end(), c.begin(),
+                                             c.end() );
                    conflicts += c.size();
                 }
 
                 msg.info( "\tAdding {} constraints - {:.3} s\n", conflicts,
                           timer.getTime() );
-                reformulated = builder.build();
+                round_counter++;
+
                 //TODO: Suresh resize pi
              }
 

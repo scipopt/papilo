@@ -22,6 +22,7 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 #include "fix/VectorMultiplication.hpp"
+#include "fix/Constraint.hpp"
 #include "fix/AlgorithmParameter.hpp"
 #include "papilo/core/Presolve.hpp"
 #include "papilo/core/Problem.hpp"
@@ -68,7 +69,8 @@ class VolumeAlgorithm
     * minimize cx s.t. Ax = b, Dx = e (D = empty), x ≥ 0.
     * @param c objective function
     * @param A equation or at least one finte bound for every constraint
-    * @param b not needed
+    * @param derived_conflicts
+    * @param b
     * @param domains variables domains (lb/ub/flags)
     * @param pi initial dual multiplier
     * @param box_upper_bound max box bound of c^T x
@@ -76,6 +78,7 @@ class VolumeAlgorithm
     */
    Vec<REAL>
    volume_algorithm( const Vec<REAL> c, const ConstraintMatrix<REAL>& A,
+                     const Vec<Constraint<REAL>>& derived_conflicts,
                      const Vec<REAL>& b, const VariableDomains<REAL>& domains,
                      const Vec<REAL>& pi, const int num_int_vars,
                      REAL box_upper_bound )
