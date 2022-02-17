@@ -55,10 +55,14 @@ class ConflictAnalysis
                               Vec<std::pair<int, int>>& infeasible_rows,
                               Vec<Constraint<REAL>>& constraints )
    {
+      msg.info( "Conflict analysis was started \n" );
       Vec<int> decision_levels;
       Vec<int> pos_in_bound_changes;
       Vec<int> conflict_set_candidates;
       Vec<bool> was_in_candidates;
+      // in case the conflict set contains general integers, we stop and return
+      // nothing
+      bool general_integers_in_conflict_set = false;
 
       // bound change data as vectors for easier access
       decision_levels.resize( problem.getNCols(), 0 );
@@ -78,11 +82,19 @@ class ConflictAnalysis
       Vec<ColFlags> col_flags = problem.getColFlags();
       Vec<REAL> lbs = problem.getLowerBounds();
       Vec<REAL> ubs = problem.getUpperBounds();
-      for( int i = 0; i < col_flags.size(); i++ )
+
+      // if bound changes contains general integers of continuous variables we
+      // will possibly generate no conflicts.
+      for( int i = 0; i < bound_changes.size(); i++ )
       {
-         if( !col_flags[i].test( ColFlag::kIntegral ) ||
-             num.isGT( lbs[i], 0 ) || num.isLT( ubs[i], 1 ) )
-            return;
+         int col = bound_changes[i].get_col();
+         if( !( col_flags[col].test( ColFlag::kIntegral ) &&
+                num.isEq( lbs[col], 0 ) && num.isEq( ubs[col], 1 ) ) )
+         {
+            msg.info( "Non-binary bound changes; possibly no conflicts "
+                      "generated!\n" );
+            break;
+         }
       }
       for( int i = 0; i < pos_at_infeasibility; i++ )
       {
@@ -99,17 +111,24 @@ class ConflictAnalysis
       // Only fixings (works only for binaries)
       if( number_fixings == bound_changes.size() )
       {
-         simple_cut_from_fixings( bound_changes, conflict_set_candidates,
-                                  constraints );
+         msg.info( "Only fixings should never happen \n" );
+         simple_cut_from_fixings( bound_changes, constraints );
          return;
       }
       else
       {
          // Find subset of indices that explain the infeasibility
          // adds column indices in conflict_set_candidates
+         // col_index is -1 since we do not resolve
          explain_infeasibility( bound_changes, pos_in_bound_changes,
                                 conflict_set_candidates, was_in_candidates,
-                                conflict_row_index );
+                                conflict_row_index, -1,
+                                general_integers_in_conflict_set );
+         if( general_integers_in_conflict_set )
+         {
+            msg.info( "Conflict analysis returns 0 conflict constraints \n" );
+            return;
+         }
          // last decision level
          int last_decision_level = get_last_decision_level(
              bound_changes, conflict_set_candidates, decision_levels );
@@ -155,7 +174,14 @@ class ConflictAnalysis
                // resolve
                explain_infeasibility(
                    bound_changes, pos_in_bound_changes, conflict_set_candidates,
-                   was_in_candidates, antecedent_row_index, col_index );
+                   was_in_candidates, antecedent_row_index, col_index,
+                   general_integers_in_conflict_set );
+               if( general_integers_in_conflict_set )
+               {
+                  msg.info(
+                      "Conflict analysis returns 0 conflict constraints \n" );
+                  return;
+               }
             }
 
             num_vars_last_decision_level = get_number_variables_decision_level(
@@ -165,6 +191,14 @@ class ConflictAnalysis
 
       add_constraint( bound_changes, pos_in_bound_changes,
                       conflict_set_candidates, constraints );
+      msg.info( "Conflict analysis returns {} cons of length: ",
+                constraints.size() );
+      for( int i = 0; i < constraints.size(); i++ )
+      {
+         msg.info( "{} ", constraints[i].get_data().getLength() );
+      }
+      msg.info( "\n" );
+
       return;
    }
 
@@ -178,7 +212,8 @@ class ConflictAnalysis
  private:
    bool
    is_rhs_reason( Vec<SingleBoundChange<REAL>>& bound_changes,
-                  Vec<int>& pos_in_bound_changes, int row_idx, int col_idx )
+                  Vec<int>& pos_in_bound_changes, int row_idx, int col_idx,
+                  bool& general_integers_in_conflict_set )
    {
       // get conflict row
       SparseVectorView<REAL> conflict_row =
@@ -220,9 +255,15 @@ class ConflictAnalysis
             pos = pos_in_bound_changes[row_inds[i]];
             if( num.isGT( row_vals[i], 0 ) && pos > 0 )
             {
-               if( num.isGT( bound_changes[pos].get_new_bound_value(),
-                             problem.getLowerBounds()[row_inds[i]] ) )
+               if( bound_changes[pos].is_lower_bound() )
                {
+                  if( !is_binary( row_inds[i] ) )
+                  {
+                     general_integers_in_conflict_set = true;
+                     return false;
+                  }
+                  assert( num.isGT( bound_changes[pos].get_new_bound_value(),
+                                    problem.getLowerBounds()[row_inds[i]] ) );
                   min_activity.add( row_vals[i] *
                                     ( bound_changes[pos].get_new_bound_value() -
                                       problem.getLowerBounds()[row_inds[i]] ) );
@@ -230,9 +271,16 @@ class ConflictAnalysis
             }
             else if( num.isLT( row_vals[i], 0 ) && pos > 0 )
             {
-               if( num.isLT( bound_changes[pos].get_new_bound_value(),
-                             problem.getUpperBounds()[row_inds[i]] ) )
+               if( !bound_changes[pos].is_lower_bound() )
                {
+                  if( !is_binary( row_inds[i] ) )
+                  {
+                     general_integers_in_conflict_set = true;
+                     return false;
+                  }
+                  assert( num.isLT( bound_changes[pos].get_new_bound_value(),
+                                    problem.getUpperBounds()[row_inds[i]] ) );
+
                   min_activity.add(
                       -row_vals[i] *
                       ( problem.getUpperBounds()[row_inds[i]] -
@@ -248,7 +296,8 @@ class ConflictAnalysis
 
    bool
    is_lhs_reason( Vec<SingleBoundChange<REAL>>& bound_changes,
-                  Vec<int>& pos_in_bound_changes, int row_idx, int col_idx )
+                  Vec<int>& pos_in_bound_changes, int row_idx, int col_idx,
+                  bool& general_integers_in_conflict_set )
    {
       // get conflict row
       SparseVectorView<REAL> conflict_row =
@@ -268,7 +317,6 @@ class ConflictAnalysis
          {
             if( row_inds[i] == col_idx )
             {
-
                pos = pos_in_bound_changes[row_inds[i]];
                assert( !num.isZero( row_vals[i] ) );
                assert( !( pos == -1 ) );
@@ -290,9 +338,15 @@ class ConflictAnalysis
             pos = pos_in_bound_changes[row_inds[i]];
             if( num.isGT( row_vals[i], 0 ) && pos > 0 )
             {
-               if( num.isLT( bound_changes[pos].get_new_bound_value(),
-                             problem.getUpperBounds()[row_inds[i]] ) )
+               if( !bound_changes[pos].is_lower_bound() )
                {
+                  if( !is_binary( row_inds[i] ) )
+                  {
+                     general_integers_in_conflict_set = true;
+                     return false;
+                  }
+                  assert( num.isLT( bound_changes[pos].get_new_bound_value(),
+                                    problem.getUpperBounds()[row_inds[i]] ) );
                   max_activity.add(
                       -row_vals[i] *
                       ( problem.getUpperBounds()[row_inds[i]] -
@@ -301,9 +355,15 @@ class ConflictAnalysis
             }
             else if( num.isLT( row_vals[i], 0 ) && pos > 0 )
             {
-               if( num.isGT( bound_changes[pos].get_new_bound_value(),
-                             problem.getLowerBounds()[row_inds[i]] ) )
+               if( bound_changes[pos].is_lower_bound() )
                {
+                  if( !is_binary( row_inds[i] ) )
+                  {
+                     general_integers_in_conflict_set = true;
+                     return false;
+                  }
+                  assert( num.isGT( bound_changes[pos].get_new_bound_value(),
+                                    problem.getLowerBounds()[row_inds[i]] ) );
                   max_activity.add( row_vals[i] *
                                     ( bound_changes[pos].get_new_bound_value() -
                                       problem.getLowerBounds()[row_inds[i]] ) );
@@ -321,7 +381,7 @@ class ConflictAnalysis
                           Vec<int>& pos_in_bound_changes,
                           Vec<int>& conflict_set_candidates,
                           Vec<bool>& was_in_candidates, int row_idx,
-                          int col_idx = -1 )
+                          int col_idx, bool& general_integers_in_conflict_set )
    {
       RowFlags row_flag = problem.getConstraintMatrix().getRowFlags()[row_idx];
 
@@ -330,14 +390,16 @@ class ConflictAnalysis
       {
          explain_infeasibility_ge( bound_changes, pos_in_bound_changes,
                                    conflict_set_candidates, was_in_candidates,
-                                   row_idx, col_idx );
+                                   row_idx, col_idx,
+                                   general_integers_in_conflict_set );
       }
       // For LE constraints
       else if( row_flag.test( RowFlag::kLhsInf ) )
       {
          explain_infeasibility_le( bound_changes, pos_in_bound_changes,
                                    conflict_set_candidates, was_in_candidates,
-                                   row_idx, col_idx );
+                                   row_idx, col_idx,
+                                   general_integers_in_conflict_set );
       }
       // For equalities or ranged rows
       else
@@ -347,18 +409,20 @@ class ConflictAnalysis
          // lhs is reason and coeff is positive, or rhs is reason and coeff is
          // negative -> upper bound
          if( is_lhs_reason( bound_changes, pos_in_bound_changes, row_idx,
-                            col_idx ) )
+                            col_idx, general_integers_in_conflict_set ) )
          {
             explain_infeasibility_ge( bound_changes, pos_in_bound_changes,
                                       conflict_set_candidates,
-                                      was_in_candidates, row_idx, col_idx );
+                                      was_in_candidates, row_idx, col_idx,
+                                      general_integers_in_conflict_set );
          }
          else if( is_rhs_reason( bound_changes, pos_in_bound_changes, row_idx,
-                                 col_idx ) )
+                                 col_idx, general_integers_in_conflict_set ) )
          {
             explain_infeasibility_le( bound_changes, pos_in_bound_changes,
                                       conflict_set_candidates,
-                                      was_in_candidates, row_idx, col_idx );
+                                      was_in_candidates, row_idx, col_idx,
+                                      general_integers_in_conflict_set );
          }
          else
          {
@@ -374,7 +438,8 @@ class ConflictAnalysis
                              Vec<int>& pos_in_bound_changes,
                              Vec<int>& conflict_set_candidates,
                              Vec<bool>& was_in_candidates, int row_idx,
-                             int col_idx )
+                             int col_idx,
+                             bool& general_integers_in_conflict_set )
    {
       // get conflict row
       SparseVectorView<REAL> conflict_row =
@@ -397,9 +462,15 @@ class ConflictAnalysis
          assert( !num.isZero( row_vals[i] ) );
          if( num.isGT( row_vals[i], 0 ) && pos > 0 )
          {
-            if( num.isLT( bound_changes[pos].get_new_bound_value(),
-                          problem.getUpperBounds()[row_inds[i]] ) )
+            if( !bound_changes[pos].is_lower_bound() )
             {
+               if( !is_binary( row_inds[i] ) )
+               {
+                  general_integers_in_conflict_set = true;
+                  return;
+               }
+               assert( num.isLT( bound_changes[pos].get_new_bound_value(),
+                                 problem.getUpperBounds()[row_inds[i]] ) );
                max_activity.add( -row_vals[i] *
                                  ( problem.getUpperBounds()[row_inds[i]] -
                                    bound_changes[pos].get_new_bound_value() ) );
@@ -412,9 +483,15 @@ class ConflictAnalysis
          }
          else if( num.isLT( row_vals[i], 0 ) && pos > 0 )
          {
-            if( num.isGT( bound_changes[pos].get_new_bound_value(),
-                          problem.getLowerBounds()[row_inds[i]] ) )
+            if( bound_changes[pos].is_lower_bound() )
             {
+               if( !is_binary( row_inds[i] ) )
+               {
+                  general_integers_in_conflict_set = true;
+                  return;
+               }
+               assert( num.isGT( bound_changes[pos].get_new_bound_value(),
+                                 problem.getLowerBounds()[row_inds[i]] ) );
                max_activity.add( row_vals[i] *
                                  ( bound_changes[pos].get_new_bound_value() -
                                    problem.getLowerBounds()[row_inds[i]] ) );
@@ -436,7 +513,8 @@ class ConflictAnalysis
                              Vec<int>& pos_in_bound_changes,
                              Vec<int>& conflict_set_candidates,
                              Vec<bool>& was_in_candidates, int row_idx,
-                             int col_idx )
+                             int col_idx,
+                             bool& general_integers_in_conflict_set )
    {
       // get conflict row
       SparseVectorView<REAL> conflict_row =
@@ -457,9 +535,16 @@ class ConflictAnalysis
          int pos = pos_in_bound_changes[row_inds[i]];
          if( num.isGT( row_vals[i], 0 ) && pos > 0 )
          {
-            if( num.isGT( bound_changes[pos].get_new_bound_value(),
-                          problem.getLowerBounds()[row_inds[i]] ) )
+            if( bound_changes[pos].is_lower_bound() )
             {
+               if( !is_binary( row_inds[i] ) )
+               {
+                  general_integers_in_conflict_set = true;
+                  return;
+               }
+               assert( num.isGT( bound_changes[pos].get_new_bound_value(),
+                                 problem.getLowerBounds()[row_inds[i]] ) );
+
                min_activity.add( row_vals[i] *
                                  ( bound_changes[pos].get_new_bound_value() -
                                    problem.getLowerBounds()[row_inds[i]] ) );
@@ -472,9 +557,15 @@ class ConflictAnalysis
          }
          else if( num.isLT( row_vals[i], 0 ) && pos > 0 )
          {
-            if( num.isLT( bound_changes[pos].get_new_bound_value(),
-                          problem.getUpperBounds()[row_inds[i]] ) )
+            if( !bound_changes[pos].is_lower_bound() )
             {
+               if( !is_binary( row_inds[i] ) )
+               {
+                  general_integers_in_conflict_set = true;
+                  return;
+               }
+               assert( num.isLT( bound_changes[pos].get_new_bound_value(),
+                                 problem.getUpperBounds()[row_inds[i]] ) );
                min_activity.add( -row_vals[i] *
                                  ( problem.getUpperBounds()[row_inds[i]] -
                                    bound_changes[pos].get_new_bound_value() ) );
@@ -560,6 +651,14 @@ class ConflictAnalysis
       return number_fixings;
    }
 
+   bool
+   is_binary( int col )
+   {
+      return ( problem.getColFlags()[col].test( ColFlag::kIntegral ) &&
+               num.isEq( problem.getLowerBounds()[col], 0 ) &&
+               num.isEq( problem.getUpperBounds()[col], 1 ) );
+   }
+
    void
    add_constraint( Vec<SingleBoundChange<REAL>>& bound_changes,
                    Vec<int>& pos_in_bound_changes,
@@ -594,7 +693,6 @@ class ConflictAnalysis
 
    void
    simple_cut_from_fixings( Vec<SingleBoundChange<REAL>>& bound_changes,
-                            Vec<int>& conflict_set_candidates,
                             Vec<Constraint<REAL>>& constraints )
    {
 
@@ -604,8 +702,8 @@ class ConflictAnalysis
       RowFlags row_flag;
       row_flag.set( RowFlag::kRhsInf );
 
-      REAL* vals = new REAL[conflict_set_candidates.size()];
-      int* inds = new int[conflict_set_candidates.size()];
+      REAL* vals = new REAL[bound_changes.size()];
+      int* inds = new int[bound_changes.size()];
 
       REAL lhs = 1.0;
 
@@ -619,7 +717,7 @@ class ConflictAnalysis
          vals[i] = coef;
       }
       SparseVectorView<REAL> row_data( &vals[0], &inds[0],
-                                       conflict_set_candidates.size() );
+                                       bound_changes.size() );
 
       Constraint<REAL> conf_con( row_data, row_flag, lhs, 0.0 );
       constraints.push_back( conf_con );
