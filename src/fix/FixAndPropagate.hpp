@@ -204,7 +204,7 @@ class FixAndPropagate
                value = upper_bounds[i];
             if( !flags[i].test( ColFlag::kUbInf ) )
                value = 0;
-            return false;
+            return true;
          default:
             assert( false );
          }

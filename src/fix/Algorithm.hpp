@@ -23,6 +23,7 @@
 
 #include "fix/FixAndPropagate.hpp"
 #include "fix/Heuristic.hpp"
+#include "fix/Constraint.hpp"
 #include "fix/VolumeAlgorithm.hpp"
 #include "fix/strategy/FarkasRoundingStrategy.hpp"
 #include "fix/strategy/FractionalRoundingStrategy.hpp"
@@ -116,6 +117,7 @@ class Algorithm
              REAL best_obj_value = std::numeric_limits<REAL>::max();
 
              Vec<REAL> best_solution{};
+             Vec<Constraint<REAL>> derived_conflicts{};
              best_solution.reserve( problem.getNCols() );
 
              // setup data for the volume algorithm
@@ -157,6 +159,7 @@ class Algorithm
                 primal_heur_sol = algorithm.volume_algorithm(
                     reformulated.getObjective().coefficients,
                     reformulated.getConstraintMatrix(),
+                    derived_conflicts,
                     reformulated.getConstraintMatrix().getLeftHandSides(),
                     reformulated.getVariableDomains(), pi,
                     reformulated.getNumIntegralCols(), min_val );
@@ -185,21 +188,23 @@ class Algorithm
                 if( timer.getTime() >= alg_parameter.time_limit )
                    break;
 
-                if( service.exists_conflict_constraints() )
+                if( !service.exists_conflict_constraints() )
                    break;
                 auto constraints = service.get_constraints();
-                round_counter++;
 
                 int conflicts = 0;
-                for( const auto& c : constraints )
+                for( auto& c : constraints )
                 {
-                   add_constraints( c, builder, reformulated.getNRows() );
+                   derived_conflicts.insert( derived_conflicts.end(), c.begin(),
+                                             c.end() );
                    conflicts += c.size();
+                   c.clear();
                 }
 
-                msg.info( "\tAdding {} constraints - {:.3} s\n", conflicts,
+                msg.info( "\tFound {} conflicts - {:.3} s\n", conflicts,
                           timer.getTime() );
-                reformulated = builder.build();
+                round_counter++;
+
                 //TODO: Suresh resize pi
              }
 
@@ -229,15 +234,15 @@ class Algorithm
    add_constraints( const Vec<Constraint<REAL>> constraints,
                     ProblemBuilder<REAL> builder, int rows )
    {
-      for( const auto& constraint : constraints )
+      for(int i=0; i< constraints.size(); i++ )
       {
-         builder.addRowEntries( rows, constraint.get_data().getLength(),
-                                constraint.get_data().getIndices(),
-                                constraint.get_data().getValues() );
-         builder.setRowLhs( rows, constraint.get_lhs() );
-         builder.setRowRhs( rows, constraint.get_rhs() );
-         builder.setRowLhsInf( rows, constraint.get_row_flag().test(RowFlag::kLhsInf) );
-         builder.setRowRhsInf( rows, constraint.get_row_flag().test(RowFlag::kRhsInf) );
+         builder.addRowEntries( rows+ i, constraints[i].get_data().getLength(),
+                                constraints[i].get_data().getIndices(),
+                                constraints[i].get_data().getValues() );
+         builder.setRowLhs( rows +i, constraints[i].get_lhs() );
+         builder.setRowRhs( rows + i, constraints[i].get_rhs() );
+         builder.setRowLhsInf( rows + i, constraints[i].get_row_flag().test(RowFlag::kLhsInf) );
+         builder.setRowRhsInf( rows + i, constraints[i].get_row_flag().test(RowFlag::kRhsInf) );
          rows++;
       }
    }
@@ -352,7 +357,7 @@ class Algorithm
       slack_vars = 0;
       auto slack_var_upper_bounds = new double[slack_vars];
 
-      builder.reserve( nnz, nrows, ncols + slack_vars );
+      builder.reserve( nnz+10000, nrows +1000, ncols + slack_vars );
 
       /* set up rows */
       builder.setNumRows( nrows );
