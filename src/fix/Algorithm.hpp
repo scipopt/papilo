@@ -193,14 +193,15 @@ class Algorithm
                 auto constraints = service.get_constraints();
 
                 int conflicts = 0;
-                for( const auto& c : constraints )
+                for( auto& c : constraints )
                 {
                    derived_conflicts.insert( derived_conflicts.end(), c.begin(),
                                              c.end() );
                    conflicts += c.size();
+                   c.clear();
                 }
 
-                msg.info( "\tAdding {} constraints - {:.3} s\n", conflicts,
+                msg.info( "\tFound {} conflicts - {:.3} s\n", conflicts,
                           timer.getTime() );
                 round_counter++;
 
