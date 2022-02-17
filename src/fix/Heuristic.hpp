@@ -385,7 +385,7 @@ class Heuristic
 
          bool exists_conflict_constraints()
          {
-            return std::any_of( constraints.begin(), constraints.end(),
+            return !std::all_of( constraints.begin(), constraints.end(),
                                 []( Vec<Constraint<REAL>> c )
                                 { return c.empty(); } );
          }

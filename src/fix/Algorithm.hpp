@@ -185,7 +185,7 @@ class Algorithm
                 if( timer.getTime() >= alg_parameter.time_limit )
                    break;
 
-                if( service.exists_conflict_constraints() )
+                if( !service.exists_conflict_constraints() )
                    break;
                 auto constraints = service.get_constraints();
                 round_counter++;
