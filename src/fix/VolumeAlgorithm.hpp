@@ -151,18 +151,23 @@ class VolumeAlgorithm
                              finite_upper_bound );
          assert( num.isGT( upper_bound, z_bar ) );
          REAL step_size = f * ( upper_bound - z_bar ) /
-                          pow( op.l2_norm( v_t ), 2.0 );
+                          ( pow( op.l2_norm( v_t ), 2.0 ) +
+                            pow( op.l2_norm( v_t_conflicts ), 2.0 ) );
          msg.debug( "   Step size: {}\n", step_size );
          op.calc_b_plus_sx( pi_bar, step_size, v_t, pi_t );
-         update_pi( n_rows_A, A, pi_t );
+         op.calc_b_plus_sx( pi_bar_conflicts, step_size, v_t_conflicts,
+                            pi_t_conflicts );
+         update_pi( n_rows_A, A, n_conflicts, derived_conflicts, pi_t,
+                    pi_t_conflicts );
 
          // Solve (6) with π_t , let x_t and z_t be the solutions obtained.
-         REAL z_t =
-             create_problem_6_and_solve_it( c, A, b, domains, pi_t, x_t );
+         REAL z_t = create_problem_6_and_solve_it( c, A, b, domains,
+                                    derived_conflicts, pi, pi_conflicts, x_t );
 
          // Update alpha
          op.calc_b_minus_Ax( A, x_t, b, residual_t );
-         calc_alpha( residual_t, v_t );
+         op.calc_b_minus_Ax( A_conflicts, x_t, b_conflicts, residual_t_conflicts );
+         calc_alpha( residual_t, v_t, residual_t_conflicts, v_t_conflicts );
 
          x_bar_last_iter = x_bar;
          // x_bar ← αx_t + (1 − α)x_bar
@@ -178,6 +183,7 @@ class VolumeAlgorithm
             // π̄ ← π t , z̄ ← z t .
             z_bar = z_t;
             pi_bar = pi_t;
+            pi_bar_conflicts = pi_t_conflicts;
          }
          else
             improvement_indicator = false;
@@ -186,12 +192,14 @@ class VolumeAlgorithm
                                  fixed_int_vars_count );
 
          op.calc_b_minus_Ax( A, x_bar, b, v_t );
+         op.calc_b_minus_Ax( A_conflicts, x_bar, b_conflicts, v_t_conflicts );
          calc_violations( n_rows_A, A, pi_bar, v_t, n_conflicts, A_conflicts,
                           pi_bar_conflicts, v_t_conflicts, viol_t,
                           viol_t_conflicts );
 
          // Update f
          update_f( improvement_indicator, v_t, residual_t,
+                   v_t_conflicts, residual_t_conflicts,
                    weak_improvement_iter_counter,
                    non_improvement_iter_counter );
 
@@ -208,14 +216,14 @@ class VolumeAlgorithm
          // Let t ← t + 1 and go to Step 1.
          counter = counter + 1;
       };
-      // TODO: ahoen@suresh -> overwrite pi with current pi to be able to warm
-      // restart the algorithm?
+
       if( msg.getVerbosityLevel() >= VerbosityLevel::kInfo )
       {
          msg.info( "\t\tVol. alg. iterations: {} ( {} )\n", counter,
                parameter.max_iterations );
          msg.info( "\t\tAvg. (easy) constraint violation: {} ( {} )\n",
-               op.l1_norm( viol_t ) / n_rows_A, parameter.con_abstol );
+               ( op.l1_norm( viol_t ) + op.l1_norm( viol_t_conflicts ) /
+                 ( n_rows_A + n_conflicts ), parameter.con_abstol );
          msg.info( "\t\tPrimal absolute objective value: {} ( {} )\n",
                calculate_orig_obj_value( x_bar ), parameter.obj_abstol );
          msg.info( "\t\tDuality gap: {} ( {} )\n", abs( op.multi( c, x_bar ) -
@@ -492,15 +500,20 @@ class VolumeAlgorithm
    }
 
    void
-   calc_alpha( const Vec<REAL>& residual_t, const Vec<REAL>& residual_bar )
+   calc_alpha( const Vec<REAL>& residual_t, const Vec<REAL>& residual_bar,
+               const Vec<REAL>& residual_t_conflicts,
+               const Vec<REAL>& residual_bar_conflicts )
    {
       // alpha_opt = minimizer of || alpha * residual_t + ( 1 - alpha ) *
       //                               residual_bar ||
-      REAL t_t_prod = op.multi( residual_t, residual_t );
+      REAL t_t_prod = op.multi( residual_t, residual_t ) +
+                      op.multi( residual_t_conflicts, residual_t_conflicts );
 
-      REAL t_bar_prod = op.multi( residual_t, residual_bar );
+      REAL t_bar_prod = op.multi( residual_t, residual_bar ) +
+                        op.multi( residual_t_conflicts, residual_bar_conflicts );
 
-      REAL bar_bar_prod = op.multi( residual_bar, residual_bar );
+      REAL bar_bar_prod = op.multi( residual_bar, residual_bar ) +
+                          op.multi( residual_bar_conflicts, residual_bar_conflicts );
 
       REAL alpha_opt = alpha_max;
       if( num.isGT( t_t_prod + bar_bar_prod - 2.0 * t_bar_prod, REAL{ 0.0 } ) )
@@ -520,7 +533,9 @@ class VolumeAlgorithm
 
    void
    update_f( const bool improvement_indicator, const Vec<REAL>& v_t,
-             const Vec<REAL>& residual_t, int& weak_improvement_iter_counter,
+             const Vec<REAL>& residual_t, const Vec<REAL>& v_t_conflicts,
+             const Vec<REAL>& residual_t_conflicts,
+             int& weak_improvement_iter_counter,
              int& non_improvement_iter_counter )
    {
       // +2 for strong increase in f
@@ -533,7 +548,9 @@ class VolumeAlgorithm
       {
          // If d (= v_t . (b - A x_t)) >= 0, then increase f
          // TODO: should this be different for ineq cons?
-         if( num.isGE( op.multi( v_t, residual_t ), REAL{ 0.0 } ) )
+         if( num.isGE( op.multi( v_t, residual_t ) +
+                       op.multi( v_t_conflicts, residual_t_conflicts ),
+                       REAL{ 0.0 } ) )
             change_f = 2;
          else
          {
