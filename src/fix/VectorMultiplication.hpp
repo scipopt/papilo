@@ -71,7 +71,7 @@ class VectorMultiplication
    calc_b_minus_Ax( const Vec<Constraint<REAL>>& constraints,
                     const Vec<REAL>& x, Vec<REAL>& result )
    {
-      // TODO: add another assertion for x.size() == n_cols_A
+      // TODO: add another assertion for x.size()=n_cols_A
       assert( constraints.size() == result.size() );
 #ifdef PAPILO_TBB
       tbb::parallel_for( tbb::blocked_range<int>( 0, constraints.size() ),
@@ -125,18 +125,16 @@ class VectorMultiplication
    calc_b_minus_xA( const Vec<Constraint<REAL>>& constraints,
                     const Vec<REAL>& x, const Vec<REAL>& b, Vec<REAL>& result )
    {
-      // TODO: add another assertion for result.size() == n_cols_A
+      // TODO: add another assertion for result.size()=n_cols_A=b.size()
+      // TODO: how to get col data?
       assert( constraints.size() == x.size() );
 
+      result = b;
       for( int i = 0; i < constraints.size(); ++i )
       {
-         // TODO: how to get col data?
          auto coeff = constraints[i].get_data();
-         StableSum<REAL> aux( b[i] );
          for( int j = 0; j < coeff.getLength(); j++ )
-            aux.add( -coeff.getValues()[j] *
-                     x[coeff.getIndices()[j]] );
-         result[i] = aux.get();
+            result[coeff.getIndices()[j]] -= coeff.getValues()[j] * x[i];
       }
    }
 
