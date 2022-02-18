@@ -143,8 +143,11 @@ class Algorithm
              msg.info( "\tStarting primal heuristics - {:.3} s\n",
                        timer.getTime() );
              Vec<std::pair<int, int>> infeasible_rows;
-             service.find_initial_solution(best_obj_value, best_solution);
+             bool solution_found = service.find_initial_solution(best_obj_value,
+                                                                 best_solution);
 
+             if( solution_found )
+                box_upper_bound_volume = best_obj_value;
              if( box_upper_bound_volume == std::numeric_limits<double>::min() )
                 return;
 
@@ -165,7 +168,8 @@ class Algorithm
                     derived_conflicts,
                     reformulated.getConstraintMatrix().getLeftHandSides(),
                     reformulated.getVariableDomains(), pi,
-                    reformulated.getNumIntegralCols(), box_upper_bound_volume );
+                    reformulated.getNumIntegralCols(), box_upper_bound_volume,
+                    solution_found );
                 print_solution( primal_heur_sol );
 
                 if( timer.getTime() >= alg_parameter.time_limit )
