@@ -178,7 +178,7 @@ class VolumeAlgorithm
                    non_improvement_iter_counter );
 
          // Update z_bar_old if needed
-         if( counter % 100 == 0 )
+         if( counter && ( counter % 100 == 0 ) )
          {
             update_alpha_max( z_bar, z_bar_old );
             z_bar_old = z_bar;
@@ -538,7 +538,8 @@ class VolumeAlgorithm
    update_alpha_max( const REAL z_bar, const REAL z_bar_old )
    {
       // TODO: change 0.01, 1e-5, and 2.0 as global params?
-      if( num.isLT( z_bar, z_bar_old + 0.01 * abs( z_bar_old ) ) &&
+      if( ( ( num.isZero( z_bar ) && num.isZero( z_bar_old ) ) ||
+              num.isLT( z_bar, z_bar_old + 0.01 * abs( z_bar_old ) ) ) &&
           num.isGE( alpha_max / 2.0, REAL{ 1e-4 } ) )
          alpha_max = alpha_max / 2.0;
    }
