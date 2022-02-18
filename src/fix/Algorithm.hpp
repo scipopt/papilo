@@ -198,8 +198,11 @@ class Algorithm
 
                 auto conflicts = (int) service.get_derived_conflicts().size();
                 if( conflicts == 0 )
+                {
+                   msg.info(
+                       "\tNo conflict could be generated - {:.3} s\n", timer.getTime() );
                    break;
-
+                }
                 if( alg_parameter.copy_conflicts_to_problem &&
                     conflicts >
                         alg_parameter.size_of_conflicts_to_be_copied )
