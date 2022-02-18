@@ -93,9 +93,11 @@ delete_problem_instance( void* heuristic_void_ptr )
 int
 call_algorithm( void* heuristic_void_ptr, double* cont_solution, double* result,
                 int n_cols, double* current_obj_value,
-                int infeasible_copy_strategy )
+                int infeasible_copy_strategy, int apply_conflicts, int size_of_constraints )
 {
    assert( infeasible_copy_strategy >= 0 && infeasible_copy_strategy <= 6 );
+   assert( apply_conflicts >= 0 && apply_conflicts <= 1 );
+   assert( size_of_constraints >= 0 );
 #ifdef PAPILO_TBB
    tbb::task_arena arena( 8 );
 
@@ -104,6 +106,18 @@ call_algorithm( void* heuristic_void_ptr, double* cont_solution, double* result,
        {
 #endif
           auto heuristic = (Heuristic<double>*)( heuristic_void_ptr );
+          if( apply_conflicts == 0 &&
+              size_of_constraints >= heuristic->get_derived_conflicts().size() )
+          {
+             heuristic->problem = heuristic->copy_conflicts_to_problem(
+                 heuristic->problem, heuristic->get_derived_conflicts() );
+             heuristic->get_message().detailed(
+                 "added {} conflicts to the problem (rows: {})",
+                 heuristic->get_derived_conflicts().size(),
+                 heuristic->problem.getNRows() );
+             heuristic->problem.recomputeAllActivities();
+             heuristic->get_derived_conflicts().clear();
+          }
           Vec<double> sol( cont_solution, cont_solution + n_cols );
           Vec<double> res{};
 

@@ -118,7 +118,6 @@ class Algorithm
              REAL best_obj_value = std::numeric_limits<REAL>::max();
 
              Vec<REAL> best_solution{};
-             Vec<Constraint<REAL>> derived_conflicts{};
              best_solution.reserve( problem.getNCols() );
 
              // setup data for the volume algorithm
@@ -160,7 +159,7 @@ class Algorithm
                 primal_heur_sol = algorithm.volume_algorithm(
                     reformulated.getObjective().coefficients,
                     reformulated.getConstraintMatrix(),
-                    derived_conflicts,
+                    service.get_derived_conflicts(),
                     reformulated.getConstraintMatrix().getLeftHandSides(),
                     reformulated.getVariableDomains(), pi,
                     reformulated.getNumIntegralCols(), min_val );
@@ -189,21 +188,27 @@ class Algorithm
                 if( timer.getTime() >= alg_parameter.time_limit )
                    break;
 
-                if( !service.exists_conflict_constraints() )
+                auto conflicts = (int) service.get_derived_conflicts().size();
+                if( conflicts == 0 )
                    break;
-                auto constraints = service.get_constraints();
 
-                int conflicts = 0;
-                for( auto& c : constraints )
+                if( alg_parameter.copy_conflicts_to_problem &&
+                    conflicts >
+                        alg_parameter.size_of_conflicts_to_be_copied )
                 {
-                   derived_conflicts.insert( derived_conflicts.end(), c.begin(),
-                                             c.end() );
-                   conflicts += c.size();
-                   c.clear();
-                }
 
-                msg.info( "\tFound {} conflicts - {:.3} s\n", conflicts,
-                          timer.getTime() );
+                   problem =
+                       service.copy_conflicts_to_problem( problem, service.get_derived_conflicts() );
+                   msg.info(
+                       "\tCopied {} conflicts to the (f&p) problem (constraints {}) - {:.3} s\n",
+                       conflicts, problem.getNRows(), timer.getTime() );
+                   problem.recomputeAllActivities();
+                   service.get_derived_conflicts().clear();
+                }
+                else
+                   msg.info( "\tFound {} conflicts (treated separately) - {:.3} s\n",
+                             conflicts, timer.getTime() );
+
                 round_counter++;
 
                 //TODO: Suresh resize pi
@@ -231,22 +236,6 @@ class Algorithm
 #endif
    }
 
-   void
-   add_constraints( const Vec<Constraint<REAL>> constraints,
-                    ProblemBuilder<REAL> builder, int rows )
-   {
-      for(int i=0; i< constraints.size(); i++ )
-      {
-         builder.addRowEntries( rows+ i, constraints[i].get_data().getLength(),
-                                constraints[i].get_data().getIndices(),
-                                constraints[i].get_data().getValues() );
-         builder.setRowLhs( rows +i, constraints[i].get_lhs() );
-         builder.setRowRhs( rows + i, constraints[i].get_rhs() );
-         builder.setRowLhsInf( rows + i, constraints[i].get_row_flag().test(RowFlag::kLhsInf) );
-         builder.setRowRhsInf( rows + i, constraints[i].get_row_flag().test(RowFlag::kRhsInf) );
-         rows++;
-      }
-   }
 
    REAL
    calc_upper_bound_for_objective( const Problem<REAL>& problem ) const
@@ -260,12 +249,6 @@ class Algorithm
          {
             if( problem.getColFlags()[i].test( ColFlag::kLbInf ) )
             {
-               /*
-               msg.error( "Could not calculate objective bound: variable {} "
-                          "is unbounded",
-                          i );
-               return std::numeric_limits<double>::min();
-               */
                // TODO: OK? - based on this UB's usage in volume algo code?
                continue;
             }
@@ -276,12 +259,6 @@ class Algorithm
          {
             if( problem.getColFlags()[i].test( ColFlag::kUbInf ) )
             {
-               /*
-               msg.error( "Could not calculate objective bound: variable {} "
-                          "is unbounded",
-                          i );
-               return std::numeric_limits<double>::min();
-               */
                continue;
             }
             min_value.add( problem.getObjective().coefficients[i] +

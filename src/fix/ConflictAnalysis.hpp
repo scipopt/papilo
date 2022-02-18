@@ -55,7 +55,7 @@ class ConflictAnalysis
                               Vec<std::pair<int, int>>& infeasible_rows,
                               Vec<Constraint<REAL>>& constraints )
    {
-      msg.info( "Conflict analysis was started \n" );
+      msg.detailed( "\tConflict analysis was started \n" );
       Vec<int> decision_levels;
       Vec<int> pos_in_bound_changes;
       Vec<int> conflict_set_candidates;
@@ -91,8 +91,8 @@ class ConflictAnalysis
          if( !( col_flags[col].test( ColFlag::kIntegral ) &&
                 num.isEq( lbs[col], 0 ) && num.isEq( ubs[col], 1 ) ) )
          {
-            msg.info( "Non-binary bound changes; possibly no conflicts "
-                      "generated!\n" );
+            msg.detailed( "\t\tNon-binary bound changes; possibly no conflicts "
+                          "generated!\n" );
             break;
          }
       }
@@ -111,7 +111,7 @@ class ConflictAnalysis
       // Only fixings (works only for binaries)
       if( number_fixings == bound_changes.size() )
       {
-         msg.info( "Only fixings should never happen \n" );
+         msg.detailed( "\t\tOnly fixings should never happen \n" );
          simple_cut_from_fixings( bound_changes, constraints );
          return;
       }
@@ -126,7 +126,8 @@ class ConflictAnalysis
                                 general_integers_in_conflict_set );
          if( general_integers_in_conflict_set )
          {
-            msg.info( "Conflict analysis returns 0 conflict constraints \n" );
+            msg.detailed(
+                "\t\tConflict analysis returns 0 conflict constraints \n" );
             return;
          }
          // last decision level
@@ -141,7 +142,7 @@ class ConflictAnalysis
             // return conflict constraint
             add_constraint( bound_changes, pos_in_bound_changes,
                             conflict_set_candidates, constraints );
-            msg.info( "Only one variable at last decision level! \n" );
+            msg.detailed( "\t\tOnly one variable at last decision level! \n" );
             return;
          }
          // First-FUIP
@@ -160,7 +161,7 @@ class ConflictAnalysis
                 bound_changes[pos_in_bound_changes[col_index]].get_reason_row();
             if( antecedent_row_index == -1 )
             {
-               msg.info( "There should exist an antecedent row" );
+               msg.detailed( "\t\tThere should exist an antecedent row" );
                return;
             }
             else
@@ -178,8 +179,8 @@ class ConflictAnalysis
                    general_integers_in_conflict_set );
                if( general_integers_in_conflict_set )
                {
-                  msg.info(
-                      "Conflict analysis returns 0 conflict constraints \n" );
+                  msg.detailed( "\t\tConflict analysis returns 0 conflict "
+                                "constraints \n" );
                   return;
                }
             }
@@ -191,21 +192,14 @@ class ConflictAnalysis
 
       add_constraint( bound_changes, pos_in_bound_changes,
                       conflict_set_candidates, constraints );
-      msg.info( "Conflict analysis returns {} cons of length: ",
-                constraints.size() );
+      msg.detailed( "\t\tConflict analysis returns {} cons of length: ",
+                    constraints.size() );
       for( int i = 0; i < constraints.size(); i++ )
       {
-         msg.info( "{} ", constraints[i].get_data().getLength() );
+         msg.detailed( "{} ", constraints[i].get_data().getLength() );
       }
-      msg.info( "\n" );
+      msg.detailed( "\n" );
 
-      return;
-   }
-
-   void
-   perform_conflict_analysis()
-   {
-      msg.info( "function call is dummy and waited to be implemented above\n" );
       return;
    }
 
@@ -243,7 +237,7 @@ class ConflictAnalysis
                           bound_changes[pos].is_lower_bound() ) );
             }
          }
-         msg.error( " is_rhs_reason should have terminated! \n" );
+         msg.error( "\t\tis_rhs_reason should have terminated! \n" );
       }
       else
       {
@@ -326,7 +320,7 @@ class ConflictAnalysis
                           !bound_changes[pos].is_lower_bound() ) );
             }
          }
-         msg.error( " is_lhs_reason should have terminated! \n" );
+         msg.error( "\t\tis_lhs_reason should have terminated! \n" );
       }
       else
       {
@@ -426,7 +420,7 @@ class ConflictAnalysis
          }
          else
          {
-            msg.error( "Problem explaining infeasibility of row {} \n",
+            msg.error( "\t\tProblem explaining infeasibility of row {} \n",
                        row_idx );
          }
       }
