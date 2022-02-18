@@ -136,6 +136,7 @@ class Algorithm
              Vec<REAL> pi;
              pi.reserve( reformulated.getNRows() );
              generate_initial_dual_solution( reformulated, pi );
+             Vec<REAL> pi_conflicts;
 
              Vec<Vec<SingleBoundChange<REAL>>> bound_changes;
 
@@ -166,9 +167,10 @@ class Algorithm
                     reformulated.getConstraintMatrix(),
                     service.get_derived_conflicts(),
                     reformulated.getConstraintMatrix().getLeftHandSides(),
-                    reformulated.getVariableDomains(), pi,
-                    reformulated.getNumIntegralCols(), box_upper_bound_volume,
-                    solution_found );
+                    reformulated.getVariableDomains(),
+                    reformulated.getNumIntegralCols(),
+                    box_upper_bound_volume, solution_found,
+                    pi, pi_conflicts );
                 print_solution( primal_heur_sol );
 
                 if( timer.getTime() >= alg_parameter.time_limit )
@@ -217,7 +219,7 @@ class Algorithm
 
                 round_counter++;
 
-                //TODO: Suresh resize pi
+                pi_conflicts.resize( pi_conflicts.size() + conflicts, 0 );
              }
 
              Solution<REAL> original_solution{};

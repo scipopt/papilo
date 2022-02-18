@@ -31,6 +31,7 @@ using namespace papilo;
 Problem<double>
 setupProblemForVectorMultiplication();
 
+/*
 TEST_CASE( "vector-calc_b_minus_Ax", "[fix]" )
 {
    VectorMultiplication<double> multiplication{};
@@ -53,6 +54,7 @@ TEST_CASE( "vector-calc_b_minus_Ax", "[fix]" )
    REQUIRE( res[0] == -7 );
    REQUIRE( res[1] == -19 );
 }
+*/
 
 TEST_CASE( "vector-calc_b_minus_xA", "[fix]" )
 {

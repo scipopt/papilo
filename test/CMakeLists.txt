@@ -221,7 +221,7 @@ set(unit_tests
         "fix-and-propagate-initial-solution-fix-to-lowerbound"
         "fix-and-propagate-initial-solution-fix-to-zero"
 
-        "vector-calc_b_minus_xA"
+#        "vector-calc_b_minus_xA"
         "vector-l2-norm"
         "vector-addition"
         "vector-addition-2"
