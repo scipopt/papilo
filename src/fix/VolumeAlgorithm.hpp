@@ -132,8 +132,7 @@ class VolumeAlgorithm
       int fixed_int_var_check_counter = 0;
       init_fixed_int_count( x_bar, domains, fixed_int_vars_count );
 
-      op.calc_b_minus_Ax( A, x_bar, b, v_t );
-      op.calc_b_minus_Ax( derived_conflicts, x_bar, v_t_conflicts );
+      op.calc_b_minus_Ax( A, x_bar, b, derived_conflicts, v_t, v_t_conflicts );
       calc_violations( n_rows_A, A, pi_bar, v_t, n_conflicts,
                        derived_conflicts, pi_bar_conflicts, v_t_conflicts,
                        viol_t, viol_t_conflicts );
@@ -165,8 +164,8 @@ class VolumeAlgorithm
                                     pi_conflicts, x_t );
 
          // Update alpha
-         op.calc_b_minus_Ax( A, x_t, b, residual_t );
-         op.calc_b_minus_Ax( derived_conflicts, x_t, residual_t_conflicts );
+         op.calc_b_minus_Ax( A, x_t, b, derived_conflicts, residual_t,
+                             residual_t_conflicts );
          calc_alpha( residual_t, v_t, residual_t_conflicts, v_t_conflicts );
 
          x_bar_last_iter = x_bar;
@@ -191,8 +190,7 @@ class VolumeAlgorithm
          update_fixed_int_count( x_bar, x_bar_last_iter, domains,
                                  fixed_int_vars_count );
 
-         op.calc_b_minus_Ax( A, x_bar, b, v_t );
-         op.calc_b_minus_Ax( derived_conflicts, x_bar, v_t_conflicts );
+         op.calc_b_minus_Ax( A, x_bar, b, derived_conflicts, v_t, v_t_conflicts );
          calc_violations( n_rows_A, A, pi_bar, v_t, n_conflicts,
                           derived_conflicts, pi_bar_conflicts, v_t_conflicts,
                           viol_t, viol_t_conflicts );

@@ -42,52 +42,42 @@ class VectorMultiplication
 
    void
    calc_b_minus_Ax( const ConstraintMatrix<REAL>& A, const Vec<REAL>& x,
-                    const Vec<REAL>& b, Vec<REAL>& result )
+                    const Vec<REAL>& b,
+                    const Vec<Constraint<REAL>>& constraints,
+                    Vec<REAL>& result1, Vec<REAL>& result2 )
    {
-      assert( A.getNRows() == b.size() );
+      int n_rows_A = A.getNRows();
+      assert( n_rows_A == b.size() );
       assert( A.getNCols() == x.size() );
+      assert( constraints.size() == result2.size() );
+      // TODO: add another assertion for x.size()=n_cols_constraints
 #ifdef PAPILO_TBB
-      tbb::parallel_for( tbb::blocked_range<int>( 0, A.getNRows() ),
+      tbb::parallel_for( tbb::blocked_range<int>( 0, n_rows_A +
+                                                     constraints.size() ),
                          [&]( const tbb::blocked_range<int>& r )
                          {
                             for( int i = r.begin(); i < r.end(); ++i )
 #else
-      for( int i = 0; i < A.getNRows(); ++i )
+      for( int i = 0; i < n_rows_A + constraints.size(); ++i )
 #endif
+                            if( i < n_rows_A )
                             {
                                auto coeff = A.getRowCoefficients( i );
                                StableSum<REAL> aux( b[i] );
                                for( int j = 0; j < coeff.getLength(); j++ )
                                   aux.add( -coeff.getValues()[j] *
                                            x[coeff.getIndices()[j]] );
-                               result[i] = aux.get();
+                               result1[i] = aux.get();
                             }
-#ifdef PAPILO_TBB
-                         } );
-#endif
-   }
-
-   void
-   calc_b_minus_Ax( const Vec<Constraint<REAL>>& constraints,
-                    const Vec<REAL>& x, Vec<REAL>& result )
-   {
-      // TODO: add another assertion for x.size()=n_cols_A
-      assert( constraints.size() == result.size() );
-#ifdef PAPILO_TBB
-      tbb::parallel_for( tbb::blocked_range<int>( 0, constraints.size() ),
-                         [&]( const tbb::blocked_range<int>& r )
-                         {
-                            for( int i = r.begin(); i < r.end(); ++i )
-#else
-      for( int i = 0; i < constraints.size(); ++i )
-#endif
+                            else
                             {
-                               auto coeff = constraints[i].get_data();
-                               StableSum<REAL> aux( constraints[i].get_lhs() );
+                               auto coeff = constraints[i - n_rows_A].get_data();
+                               StableSum<REAL> aux( constraints[i - n_rows_A].
+                                                    get_lhs() );
                                for( int j = 0; j < coeff.getLength(); j++ )
-                               aux.add( -coeff.getValues()[j] *
-                                        x[coeff.getIndices()[j]] );
-                               result[i] = aux.get();
+                                  aux.add( -coeff.getValues()[j] *
+                                           x[coeff.getIndices()[j]] );
+                               result2[i - n_rows_A] = aux.get();
                             }
 #ifdef PAPILO_TBB
                          } );
