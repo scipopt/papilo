@@ -90,7 +90,7 @@ class VolumeAlgorithm
       assert( pi.size() == n_rows_A );
       assert( pi_conflicts.size() == n_conflicts );
 
-      assert_flags( n_rows_A, A, n_conflicts, derived_conflicts );
+      assert( constraints_E_or_GE( n_rows_A, A, n_conflicts, derived_conflicts ) );
 
       Vec<REAL> b_conflicts( n_conflicts );
       build_conflict_data( n_conflicts, derived_conflicts, b_conflicts );
@@ -243,29 +243,24 @@ class VolumeAlgorithm
    }
 
  private:
-   // Assumptions:
-   // 1. Each constraint is either an equality or >= constraint.
-   void
-   assert_flags( const int n_rows_A, const ConstraintMatrix<REAL>& A,
+   bool
+   constraints_E_or_GE( const int n_rows_A, const ConstraintMatrix<REAL>& A,
               const int n_conflicts,
               const Vec<Constraint<REAL>>& derived_conflicts )
    {
       for( int i = 0; i < n_rows_A; i++ )
       {
-         if( A.getRowFlags()[i].test( RowFlag::kRhsInf ) )
-         {
-            assert( !A.getRowFlags()[i].test( RowFlag::kLhsInf ) );
-         }
+         if( A.getRowFlags()[i].test( RowFlag::kLhsInf ) )
+            return false;
       }
 
       for( int i = 0; i < n_conflicts; i++ )
       {
-         if( derived_conflicts[i].get_row_flag().test( RowFlag::kRhsInf ) )
-         {
-            assert( !derived_conflicts[i].get_row_flag().test( RowFlag::kLhsInf
-                                                             ) );
-         }
+         if( derived_conflicts[i].get_row_flag().test( RowFlag::kLhsInf ) )
+            return false;
       }
+
+      return true;
    }
 
    void
