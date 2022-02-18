@@ -44,7 +44,8 @@ TEST_CASE( "fix-and-propagate-it-solution-is-feasible", "[fix]" )
    auto problem = read_prob( path_to_mps );
    problem.recomputeAllActivities();
    Solution<double> solution = parse_solution( path_to_sol, problem );
-   FixAndPropagate<double> fixAndPropagate{ {}, {} };
+   RandomGenerator random(0);
+   FixAndPropagate<double> fixAndPropagate{ {}, {}, random };
    FarkasRoundingStrategy<double> strategy{ 0, {}, false };
    Vec<double> res{ solution.primal };
 
@@ -65,7 +66,8 @@ TEST_CASE( "fix-and-propagate-it-modified-solution-is-feasible", "[fix]" )
    auto problem = read_prob( path_to_mps );
    problem.recomputeAllActivities();
    Solution<double> solution = parse_solution( path_to_sol, problem );
-   FixAndPropagate<double> fixAndPropagate{ {}, {} };
+   RandomGenerator random(0);
+   FixAndPropagate<double> fixAndPropagate{ {}, {}, random };
    FarkasRoundingStrategy<double> strategy{ 0, {}, false };
    Vec<double> modified_primal{ solution.primal };
    modified_primal[1] = 0.6;
