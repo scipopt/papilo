@@ -311,8 +311,7 @@ class Algorithm
       Vec<REAL>& rightHandSides = matrix.getRightHandSides();
       const Vec<RowActivity<REAL>>& activities = problem.getRowActivities();
 
-      int equations = 0;
-      int redundant_constraints = 0;
+      int hard_constraints = 0;
       for( int i = 0; i < problem.getNRows(); i++ )
       {
          int rowsize = rowSizes[i];
@@ -320,13 +319,11 @@ class Algorithm
          if( !num.isEq( get_max_min_factor( matrix.getRowCoefficients( i ) ),
                         alg_parameter.threshold_hard_constraints ) )
          {
-            redundant_constraints++;
+            hard_constraints++;
             rowFlags[i].set( RowFlag::kHardConstraint );
          }
          nnz = nnz + rowsize;
          nrows++;
-         if( rowFlags[i].test( RowFlag::kEquation ) )
-            equations++;
          if( rowFlags[i].test( RowFlag::kEquation ) ||
              rowFlags[i].test( RowFlag::kLhsInf ) ||
              rowFlags[i].test( RowFlag::kRhsInf ) )
@@ -336,7 +333,7 @@ class Algorithm
       }
 
       msg.info( "\n{} of the {} rows were considered hard and were excluded.\n",
-                redundant_constraints, problem.getNRows() );
+                hard_constraints, problem.getNRows() );
 
       slack_vars = 0;
       auto slack_var_upper_bounds = new double[slack_vars];
