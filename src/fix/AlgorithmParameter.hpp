@@ -34,7 +34,8 @@ struct AlgorithmParameter
    double time_limit = 10 * 60;
    int threads = 8;
    int seed = 0;
-   int copy_conflicts_to_problem = false;
+   bool copy_conflicts_to_problem = false;
+   int size_of_conflicts_to_be_copied = 0;
 
    // vol algorithm parameters
    double threshold_hard_constraints = 1;
@@ -141,6 +142,10 @@ struct AlgorithmParameter
           "copy_conflicts_to_problem",
           "should the conflicts be copied to the problem of fix & propagate",
           copy_conflicts_to_problem );
+      paramSet.addParameter(
+          "size_of_conflicts_to_be_copied",
+          "if the conflict have a size of x should they copied to the current problem?",
+          size_of_conflicts_to_be_copied );
    }
 };
 

@@ -193,26 +193,31 @@ class Algorithm
                    break;
                 auto constraints = service.get_constraints();
 
-                int conflicts = 0;
 
                 for( auto& c : constraints )
                 {
                    derived_conflicts.insert( derived_conflicts.end(), c.begin(),
                                              c.end() );
-                   conflicts += c.size();
                    c.clear();
                 }
 
-                if( alg_parameter.copy_conflicts_to_problem )
+                if( alg_parameter.copy_conflicts_to_problem &&
+                    derived_conflicts.size() >
+                        alg_parameter.size_of_conflicts_to_be_copied )
                 {
+                   msg.info(
+                       "\tCopied {} conflicts to the (f&p) problem - {:.3} s\n",
+                       derived_conflicts.size(), timer.getTime() );
                    problem =
                        copy_conflicts_to_problem( problem, derived_conflicts );
+
                    problem.recomputeAllActivities();
                    derived_conflicts.clear();
                 }
+                else
+                   msg.info( "\tFound {} conflicts (treated separately) - {:.3} s\n",
+                             derived_conflicts.size(), timer.getTime() );
 
-                msg.info( "\tFound {} conflicts - {:.3} s\n", conflicts,
-                          timer.getTime() );
                 round_counter++;
 
                 //TODO: Suresh resize pi
