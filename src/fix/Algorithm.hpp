@@ -123,6 +123,7 @@ class Algorithm
              service.setup(random);
              reformulated.recomputeAllActivities();
 
+             assert( problem.getNCols() == reformulated.getNCols() );
 
              REAL best_obj_value = std::numeric_limits<REAL>::max();
              Vec<REAL> best_solution{};
@@ -135,7 +136,6 @@ class Algorithm
              Vec<REAL> pi_conflicts;
              Vec<Vec<SingleBoundChange<REAL>>> bound_changes;
              Vec<std::pair<int, int>> infeasible_rows;
-
 
              msg.info( "\tStarting primal heuristics - {:.3} s\n",
                        timer.getTime() );
@@ -150,6 +150,7 @@ class Algorithm
              int round_counter = 0;
              int round_first_solution = -1;
              int round_best_solution = -1;
+
              while( true )
              {
                 msg.info( "Starting round {} - {:.3}s\n", round_counter,
