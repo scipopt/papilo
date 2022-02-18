@@ -52,10 +52,10 @@ struct AlgorithmParameter
    double con_abstol = 0.02;
    double fixed_int_var_threshold = 0.05;
    int num_iters_fixed_int_vars = 20;
-   int num_iters_fixed_int_vars_percent = 15;
+   int num_iters_fixed_int_vars_percent = 10001;
    int weak_improvement_iter_limit = 2;
    int non_improvement_iter_limit = 20;
-   int max_iterations = 4444;
+   int max_iterations = 10000;
 
    // fix and propagate parameters
 
