@@ -39,12 +39,14 @@ delete_problem_instance( void* heuristic_void_ptr );
  * @param n_cols number of variables
  * @param current_obj_value -> gets overwritten in case a better solution is found
  * @param infeasible_copy_strategy -> see InfeasibleCopyStrategy
+ * @param apply_conflicts -> should conflicts be applied
+ * @param size_of_constraints -> if conflicts are applied collect them and add them when there are more than this parameter
  * @return whether a (better) integer feasible solution was found
  */
 int
 call_algorithm( void* heuristic_void_ptr, double* cont_solution, double* result,
                 int n_cols, double* current_obj_value,
-                int infeasible_copy_strategy );
+                int infeasible_copy_strategy, int apply_conflicts, int size_of_constraints );
 
 int
 call_simple_heuristic( void* heuristic_void_ptr, double* result,
