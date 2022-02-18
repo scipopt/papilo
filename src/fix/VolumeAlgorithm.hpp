@@ -91,7 +91,7 @@ class VolumeAlgorithm
       {
          msg.error( "\t\tZero easy constraints detected! Volume algorithm "
                    "cannot handle this case currently.\n" );
-         exit( 1 );
+         assert( false );
       }
 
       assert_pi( n_rows_A, A );
