@@ -188,25 +188,26 @@ class Algorithm
                 if( timer.getTime() >= alg_parameter.time_limit )
                    break;
 
-                if( !service.exists_conflict_constraints() )
+                auto conflicts = (int) service.get_derived_conflicts().size();
+                if( conflicts == 0 )
                    break;
 
                 if( alg_parameter.copy_conflicts_to_problem &&
-                    service.get_derived_conflicts().size() >
+                    conflicts >
                         alg_parameter.size_of_conflicts_to_be_copied )
                 {
-                   msg.info(
-                       "\tCopied {} conflicts to the (f&p) problem - {:.3} s\n",
-                       service.get_derived_conflicts().size(), timer.getTime() );
-                   problem =
-                       copy_conflicts_to_problem( problem, service.get_derived_conflicts() );
 
+                   problem =
+                       service.copy_conflicts_to_problem( problem, service.get_derived_conflicts() );
+                   msg.info(
+                       "\tCopied {} conflicts to the (f&p) problem (constraints {}) - {:.3} s\n",
+                       conflicts, problem.getNRows(), timer.getTime() );
                    problem.recomputeAllActivities();
                    service.get_derived_conflicts().clear();
                 }
                 else
                    msg.info( "\tFound {} conflicts (treated separately) - {:.3} s\n",
-                             service.get_derived_conflicts().size(), timer.getTime() );
+                             conflicts, timer.getTime() );
 
                 round_counter++;
 
@@ -448,84 +449,6 @@ class Algorithm
       }
 
       return builder;
-   }
-
-
-   Problem<REAL>
-   copy_conflicts_to_problem( Problem<REAL>& problem, Vec<Constraint<REAL>> constraints )
-   {
-      ProblemBuilder<REAL> builder;
-
-      ConstraintMatrix<REAL>& matrix = problem.getConstraintMatrix();
-      Vec<ColFlags>& colFlags = problem.getColFlags();
-      Vec<RowFlags>& rowFlags = matrix.getRowFlags();
-      Vec<int>& rowSizes = problem.getRowSizes();
-      Vec<REAL>& coefficients = problem.getObjective().coefficients;
-      Vec<REAL>& leftHandSides = matrix.getLeftHandSides();
-      Vec<REAL>& rightHandSides = matrix.getRightHandSides();
-      const Vec<RowActivity<REAL>>& activities = problem.getRowActivities();
-
-      int nnz = matrix.getNnz();
-      int ncols = problem.getNCols();
-      int nrows = problem.getNRows();
-      int new_nnz = 0;
-      int new_rows = constraints.size();
-      for (const auto &c : constraints)
-         new_nnz += c.get_data().getLength();
-
-      builder.reserve( nnz + new_nnz, nrows + new_rows, ncols );
-
-      /* set up rows */
-      builder.setNumRows( nrows + new_rows );
-      for( int i = 0; i < nrows; ++i )
-      {
-         const SparseVectorView<REAL>& view = matrix.getRowCoefficients( i );
-         const int* rowcols = view.getIndices();
-         const REAL* rowvals = view.getValues();
-         int rowlen = view.getLength();
-         REAL lhs = leftHandSides[i];
-         REAL rhs = rightHandSides[i];
-
-         builder.addRowEntries( i, rowlen, rowcols, rowvals );
-         builder.setRowLhs( i, lhs );
-         builder.setRowRhs( i, rhs );
-         builder.setRowLhsInf( i, rowFlags[i].test( RowFlag::kLhsInf ) );
-         builder.setRowRhsInf( i, rowFlags[i].test( RowFlag::kRhsInf ) );
-      }
-
-      for( int i = 0; i < new_rows; ++i )
-      {
-         const SparseVectorView<REAL>& view = constraints[i].get_data();
-         const int* rowcols = view.getIndices();
-         const REAL* rowvals = view.getValues();
-         int rowlen = view.getLength();
-         REAL lhs = constraints[i].get_lhs();
-         REAL rhs = constraints[i].get_rhs();
-
-         builder.addRowEntries( i + nrows, rowlen, rowcols, rowvals );
-         builder.setRowLhs( i + nrows, lhs );
-         builder.setRowRhs( i + nrows, rhs );
-         builder.setRowLhsInf( i + nrows, constraints[i].get_row_flag().test( RowFlag::kLhsInf ) );
-         assert(!constraints[i].get_row_flag().test( RowFlag::kRhsInf ));
-         builder.setRowRhsInf( i + nrows, constraints[i].get_row_flag().test( RowFlag::kRhsInf ) );
-      }
-
-      /* set up columns */
-      builder.setNumCols( ncols );
-      for( int i = 0; i < ncols; ++i )
-      {
-         builder.setColLb( i, problem.getLowerBounds()[i] );
-         builder.setColUb( i, problem.getUpperBounds()[i] );
-
-         auto flags = colFlags[i];
-         builder.setColLbInf( i, flags.test( ColFlag::kLbInf ) );
-         builder.setColUbInf( i, flags.test( ColFlag::kUbInf ) );
-         builder.setColIntegral( i, flags.test( ColFlag::kIntegral ) );
-
-         builder.setObj( i, coefficients[i] );
-      }
-      builder.setObjOffset( problem.getObjective().offset );
-      return builder.build();
    }
 
    REAL
