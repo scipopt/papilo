@@ -347,25 +347,18 @@ class Algorithm
       for( int i = 0; i < problem.getNRows(); ++i )
       {
          auto flags = rowFlags[i];
-         if( flags.test( RowFlag::kRedundant ) )
+         if( flags.test( RowFlag::kHardConstraint ) )
          {
             assert(
                 !num.isEq( get_max_min_factor( matrix.getRowCoefficients( i ) ),
                            alg_parameter.threshold_hard_constraints ) );
-            continue;
          }
-         assert( num.isEq( get_max_min_factor( matrix.getRowCoefficients( i ) ),
-                           alg_parameter.threshold_hard_constraints ) );
          const SparseVectorView<REAL>& view = matrix.getRowCoefficients( i );
          const int* rowcols = view.getIndices();
          const REAL* rowvals = view.getValues();
          int rowlen = view.getLength();
          REAL lhs = leftHandSides[i];
          REAL rhs = rightHandSides[i];
-         // TODO: what if activities[i].ninfmin != 0?
-         REAL min_activity = activities[i].min;
-         // TODO: what if activities[i].ninfmax != 0?
-         REAL max_activity = activities[i].max;
 
          if( flags.test( RowFlag::kEquation ) )
          {
@@ -376,8 +369,7 @@ class Algorithm
             builder.setRowRhs( counter, rhs );
             builder.setRowLhsInf( counter, false );
             builder.setRowRhsInf( counter, false );
-            builder.setHardConstraint( counter, flags.test(RowFlag::kHardConstraint) );
-
+            builder.setHardConstraint( counter, flags.test( RowFlag::kHardConstraint ) );
          }
          else if( flags.test( RowFlag::kLhsInf ) )
          {
@@ -391,8 +383,7 @@ class Algorithm
             builder.setRowRhs( counter, 0 );
             builder.setRowLhsInf( counter, false );
             builder.setRowRhsInf( counter, true );
-            builder.setHardConstraint( counter, flags.test(RowFlag::kHardConstraint) );
-
+            builder.setHardConstraint( counter, flags.test( RowFlag::kHardConstraint ) );
          }
          else if( flags.test( RowFlag::kRhsInf ) )
          {
@@ -403,8 +394,7 @@ class Algorithm
             builder.setRowRhs( counter, 0 );
             builder.setRowLhsInf( counter, false );
             builder.setRowRhsInf( counter, true );
-            builder.setHardConstraint( counter, flags.test(RowFlag::kHardConstraint) );
-
+            builder.setHardConstraint( counter, flags.test( RowFlag::kHardConstraint ) );
          }
          else
          {
@@ -419,7 +409,7 @@ class Algorithm
             builder.setRowRhs( counter, 0 );
             builder.setRowLhsInf( counter, false );
             builder.setRowRhsInf( counter, true );
-            builder.setHardConstraint( counter, flags.test(RowFlag::kHardConstraint) );
+            builder.setHardConstraint( counter, flags.test( RowFlag::kHardConstraint ) );
             counter++;
 
             builder.addRowEntries( counter, rowlen, rowcols, rowvals );
@@ -427,7 +417,7 @@ class Algorithm
             builder.setRowRhs( counter, 0 );
             builder.setRowLhsInf( counter, false );
             builder.setRowRhsInf( counter, true );
-            builder.setHardConstraint( counter, flags.test(RowFlag::kHardConstraint) );
+            builder.setHardConstraint( counter, flags.test( RowFlag::kHardConstraint ) );
          }
          counter++;
       }
@@ -447,8 +437,6 @@ class Algorithm
          builder.setObj( i, coefficients[i] );
       }
 
-      // TODO: safe to assume slack_var ordering is consistent here and above
-      //       while creating slack_var_upper_bounds?
       for( int i = ncols; i < ncols + slack_vars; ++i )
       {
          builder.setColLb( i, 0 );
