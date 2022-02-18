@@ -113,8 +113,8 @@ class VolumeAlgorithm
       bool finite_upper_bound = false;
 
       Vec<REAL> x_bar_last_iter( x_bar );
-      Vec<bool> overall_int_indicator( x_bar.size() );
       Vec<int> fixed_int_vars_count( x_bar.size() );
+      Vec<int> num_fixed_int_vars( parameter.max_iterations );
       int fixed_int_var_check_counter = 0;
       init_fixed_int_count( x_bar, domains, fixed_int_vars_count );
 
@@ -122,7 +122,7 @@ class VolumeAlgorithm
       calc_violations( n_rows_A, A, pi_bar, v_t, viol_t );
 
       while( stopping_criteria( viol_t, n_rows_A, c, x_bar, z_bar,
-                                num_int_vars, fixed_int_vars_count,
+                                num_int_vars, num_fixed_int_vars,
                                 counter ) )
       {
          msg.detailed( "Round of volume algorithm: {}\n", counter + 1 );
@@ -165,7 +165,9 @@ class VolumeAlgorithm
             improvement_indicator = false;
 
          update_fixed_int_count( x_bar, x_bar_last_iter, domains,
-                                 fixed_int_vars_count );
+                                 counter,
+                                 fixed_int_vars_count,
+                                 num_fixed_int_vars );
 
          op.calc_b_minus_Ax( A, x_bar, b, v_t );
          calc_violations( n_rows_A, A, pi_bar, v_t, viol_t );
@@ -200,12 +202,14 @@ class VolumeAlgorithm
                calculate_orig_obj_value( x_bar ), parameter.obj_abstol );
          msg.info( "\t\tDuality gap: {} ( {} )\n", abs( op.multi( c, x_bar ) -
                   z_bar ) / abs( z_bar ), parameter.obj_reltol );
-         int num_iters_check = parameter.num_iters_fixed_int_vars_check;
+         int num_iters_check = parameter.num_iters_fixed_int_vars;
+         /*
          msg.info( "\t\tNumber of fixed int vars: {} ( {} )\n",
                std::count_if( fixed_int_vars_count.begin(),
                   fixed_int_vars_count.end(),
                   [num_iters_check] ( int val ) { return val > num_iters_check;
                   } ), num_int_vars * parameter.fixed_int_var_threshold );
+         */
          msg.info( "\t\tTotal time: {} ( {} )\n", timer.getTime() - st,
                parameter.time_limit );
       }
@@ -254,8 +258,8 @@ class VolumeAlgorithm
    stopping_criteria( const Vec<REAL>& v, const int n_rows_A,
                       const Vec<REAL>& c, const Vec<REAL>& x_bar,
                       const REAL z_bar, const int num_int_vars,
-                      const Vec<int>& fixed_int_vars_count,
-                      const int num_iterations )
+                      const Vec<int>& num_fixed_int_vars,
+                      const int iter_counter )
    {
       bool primal_feas_term = num.isLT( op.l1_norm( v ), n_rows_A *
                                         parameter.con_abstol );
@@ -268,32 +272,42 @@ class VolumeAlgorithm
       bool duality_gap_term = num.isZero( z_bar ) ? duality_gap_abs_term :
                                                     duality_gap_rel_term;
 
-      // fraction of integer variables with integer values
-      int num_iters_check = parameter.num_iters_fixed_int_vars_check;
-      bool fixed_int_var_term = num.isGE( std::count_if(
-                                            fixed_int_vars_count.begin(),
-                                            fixed_int_vars_count.end(),
-                                            [num_iters_check]( int val )
-                                            { return val > num_iters_check; } ),
-                             num_int_vars * parameter.fixed_int_var_threshold );
+      // fixed integer variables with integer values
+      int num_iters_fixed = parameter.num_iters_fixed_int_vars;
+      int num_iters_percent = parameter.num_iters_fixed_int_vars_percent;
+      bool fixed_int_var_term = false;
+      int max_fixed = -1;
+      int min_fixed = -1;
+      if( iter_counter >= std::max( num_iters_fixed, num_iters_percent ) )
+      {
+         max_fixed = *std::max_element(
+               std::next( num_fixed_int_vars.begin(), iter_counter -
+                  num_iters_percent + 1 ),
+               std::next( num_fixed_int_vars.begin(), iter_counter + 1 ) );
+         min_fixed = *std::min_element(
+               std::next( num_fixed_int_vars.begin(), iter_counter -
+                  num_iters_percent + 1 ),
+               std::next( num_fixed_int_vars.begin(), iter_counter + 1 ) );
+
+         // TODO: OK even if max_fixed = 0 = min_fixed?
+         fixed_int_var_term = ( (max_fixed - min_fixed ) <= num_int_vars *
+                                         parameter.fixed_int_var_threshold );
+      }
+
 
       msg.detailed( "   cons: {}\n", op.l1_norm( v ) / n_rows_A );
       msg.detailed( "   zbar: {}\n", z_bar );
       msg.detailed( "   objA: {}\n", abs( op.multi( c, x_bar ) ) );
       msg.detailed( "   objR: {}\n", abs( op.multi( c, x_bar ) - z_bar ) /
                                         abs( z_bar ) );
-      msg.detailed( "   fixed: {}\t threshold: {}\n",
-                        std::count_if( fixed_int_vars_count.begin(),
-                                       fixed_int_vars_count.end(),
-                                       [num_iters_check]
-                                       ( int val ) { return val >
-                                       num_iters_check; } ),
+      msg.detailed( "   max_fixed: {}\t min_fixed: {}\t threshold: {}\n",
+                        max_fixed, min_fixed,
                         num_int_vars * parameter.fixed_int_var_threshold );
 
       bool time_limit_term = ( num.isGE( timer.getTime(),
                                          parameter.time_limit ) );
 
-      bool iter_limit_term = ( num_iterations >= parameter.max_iterations );
+      bool iter_limit_term = ( iter_counter >= parameter.max_iterations );
 
       return !( (primal_feas_term && duality_gap_term ) ||
                 fixed_int_var_term ||
@@ -363,7 +377,9 @@ class VolumeAlgorithm
    update_fixed_int_count( const Vec<REAL>& x_bar,
                            const Vec<REAL> x_bar_last_iter,
                            const VariableDomains<REAL>& domains,
-                           Vec<int>& fixed_int_vars_count )
+                           const int iter_counter,
+                           Vec<int>& fixed_int_vars_count,
+                           Vec<int>& num_fixed_int_vars )
    {
       int x_bar_size = x_bar.size();
       assert( fixed_int_vars_count.size() == x_bar_size);
@@ -377,6 +393,15 @@ class VolumeAlgorithm
          else
             fixed_int_vars_count[i] = 0;
       }
+
+      // number of integer variables with fixed integer values
+      int num_iters_fixed_check = parameter.num_iters_fixed_int_vars;
+      int n_fixed_int_vars = std::count_if( fixed_int_vars_count.begin(),
+                                          fixed_int_vars_count.end(),
+                                          [num_iters_fixed_check]( int val )
+                                          { return val >= num_iters_fixed_check;
+                                          } );
+      num_fixed_int_vars[iter_counter] = n_fixed_int_vars;
    }
 
    void
