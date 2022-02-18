@@ -393,26 +393,26 @@ class Heuristic
          }
 
          Problem<REAL> copy_conflicts_to_problem(
-             Problem<REAL> & problem, Vec<Constraint<REAL>> constraints )
+             Problem<REAL>& old_problem, Vec<Constraint<REAL>> new_conflicts )
          {
             ProblemBuilder<REAL> builder;
 
-            ConstraintMatrix<REAL>& matrix = problem.getConstraintMatrix();
-            Vec<ColFlags>& colFlags = problem.getColFlags();
+            ConstraintMatrix<REAL>& matrix = old_problem.getConstraintMatrix();
+            Vec<ColFlags>& colFlags = old_problem.getColFlags();
             Vec<RowFlags>& rowFlags = matrix.getRowFlags();
-            Vec<int>& rowSizes = problem.getRowSizes();
-            Vec<REAL>& coefficients = problem.getObjective().coefficients;
+            Vec<int>& rowSizes = old_problem.getRowSizes();
+            Vec<REAL>& coefficients = old_problem.getObjective().coefficients;
             Vec<REAL>& leftHandSides = matrix.getLeftHandSides();
             Vec<REAL>& rightHandSides = matrix.getRightHandSides();
             const Vec<RowActivity<REAL>>& activities =
-                problem.getRowActivities();
+                old_problem.getRowActivities();
 
             int nnz = matrix.getNnz();
-            int ncols = problem.getNCols();
-            int nrows = problem.getNRows();
+            int ncols = old_problem.getNCols();
+            int nrows = old_problem.getNRows();
             int new_nnz = 0;
-            int new_rows = constraints.size();
-            for( const auto& c : constraints )
+            int new_rows = new_conflicts.size();
+            for( const auto& c : new_conflicts )
                new_nnz += c.get_data().getLength();
 
             builder.reserve( nnz + new_nnz, nrows + new_rows, ncols );
@@ -434,36 +434,37 @@ class Heuristic
                builder.setRowRhs( i, rhs );
                builder.setRowLhsInf( i, rowFlags[i].test( RowFlag::kLhsInf ) );
                builder.setRowRhsInf( i, rowFlags[i].test( RowFlag::kRhsInf ) );
+               builder.setHardConstraint( i, rowFlags[i].test(RowFlag::kHardConstraint) );
             }
 
             for( int i = 0; i < new_rows; ++i )
             {
-               const SparseVectorView<REAL>& view = constraints[i].get_data();
+               const SparseVectorView<REAL>& view = new_conflicts[i].get_data();
                const int* rowcols = view.getIndices();
                const REAL* rowvals = view.getValues();
                int rowlen = view.getLength();
-               REAL lhs = constraints[i].get_lhs();
-               REAL rhs = constraints[i].get_rhs();
+               REAL lhs = new_conflicts[i].get_lhs();
+               REAL rhs = new_conflicts[i].get_rhs();
 
                builder.addRowEntries( i + nrows, rowlen, rowcols, rowvals );
                builder.setRowLhs( i + nrows, lhs );
                builder.setRowRhs( i + nrows, rhs );
                builder.setRowLhsInf(
                    i + nrows,
-                   constraints[i].get_row_flag().test( RowFlag::kLhsInf ) );
+                   new_conflicts[i].get_row_flag().test( RowFlag::kLhsInf ) );
                assert(
-                   !constraints[i].get_row_flag().test( RowFlag::kLhsInf ) );
+                   !new_conflicts[i].get_row_flag().test( RowFlag::kLhsInf ) );
                builder.setRowRhsInf(
                    i + nrows,
-                   constraints[i].get_row_flag().test( RowFlag::kRhsInf ) );
+                   new_conflicts[i].get_row_flag().test( RowFlag::kRhsInf ) );
             }
 
             /* set up columns */
             builder.setNumCols( ncols );
             for( int i = 0; i < ncols; ++i )
             {
-               builder.setColLb( i, problem.getLowerBounds()[i] );
-               builder.setColUb( i, problem.getUpperBounds()[i] );
+               builder.setColLb( i, old_problem.getLowerBounds()[i] );
+               builder.setColUb( i, old_problem.getUpperBounds()[i] );
 
                auto flags = colFlags[i];
                builder.setColLbInf( i, flags.test( ColFlag::kLbInf ) );
@@ -472,7 +473,7 @@ class Heuristic
 
                builder.setObj( i, coefficients[i] );
             }
-            builder.setObjOffset( problem.getObjective().offset );
+            builder.setObjOffset( old_problem.getObjective().offset );
             return builder.build();
          }
 

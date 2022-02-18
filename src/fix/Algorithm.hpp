@@ -208,6 +208,7 @@ class Algorithm
                    msg.info(
                        "\tCopied {} conflicts to the (f&p) problem (constraints {}) - {:.3} s\n",
                        conflicts, reformulated.getNRows(), timer.getTime() );
+                   pi_conflicts.clear();
                    reformulated.recomputeAllActivities();
                    service.get_derived_conflicts().clear();
                 }
