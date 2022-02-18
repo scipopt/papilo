@@ -116,9 +116,7 @@ class Algorithm
                                               result.postsolve };
 
              // setup data for the volume algorithm
-             int slack_vars = 0;
-             ProblemBuilder<REAL> builder =
-                 modify_problem( problem, slack_vars );
+             ProblemBuilder<REAL> builder = modify_problem( problem );
              Problem<REAL> reformulated = builder.build();
 
              Heuristic<REAL> service{ msg, num, random, timer, reformulated, result.postsolve };
@@ -177,8 +175,7 @@ class Algorithm
                           timer.getTime() );
 
                 //                Vec<REAL> sub( primal_heur_sol.begin(),
-                //                               primal_heur_sol.end() -
-                //                               slack_vars );
+                //                               primal_heur_sol.end() );
                 //
                 //                assert( sub.size() == problem.getNCols() );
                 assert( problem.getNCols() == primal_heur_sol.size() );
@@ -295,7 +292,7 @@ class Algorithm
    }
 
    ProblemBuilder<REAL>
-   modify_problem( Problem<REAL>& problem, int& slack_vars )
+   modify_problem( Problem<REAL>& problem )
    {
       ProblemBuilder<REAL> builder;
 
@@ -335,15 +332,11 @@ class Algorithm
       msg.info( "\n{} of the {} rows were considered hard and were excluded.\n",
                 hard_constraints, problem.getNRows() );
 
-      slack_vars = 0;
-      auto slack_var_upper_bounds = new double[slack_vars];
-
-      builder.reserve( nnz, nrows, ncols + slack_vars );
+      builder.reserve( nnz, nrows, ncols );
 
       /* set up rows */
       builder.setNumRows( nrows );
       int counter = 0;
-      int slack_var_counter = 0;
       for( int i = 0; i < problem.getNRows(); ++i )
       {
          auto flags = rowFlags[i];
@@ -421,10 +414,9 @@ class Algorithm
          }
          counter++;
       }
-      assert( slack_var_counter == slack_vars );
 
       /* set up columns */
-      builder.setNumCols( ncols + slack_vars );
+      builder.setNumCols( ncols );
       for( int i = 0; i < ncols; ++i )
       {
          builder.setColLb( i, problem.getLowerBounds()[i] );
@@ -435,16 +427,6 @@ class Algorithm
 
          builder.setColIntegral( i, flags.test( ColFlag::kIntegral ) );
          builder.setObj( i, coefficients[i] );
-      }
-
-      for( int i = ncols; i < ncols + slack_vars; ++i )
-      {
-         builder.setColLb( i, 0 );
-         builder.setColUb( i, 8 * slack_var_upper_bounds[i - ncols] );
-         builder.setColLbInf( i, false );
-         builder.setColUbInf( i, false );
-         builder.setColIntegral( i, false );
-         builder.setObj( i, 0 );
       }
 
       return builder;
