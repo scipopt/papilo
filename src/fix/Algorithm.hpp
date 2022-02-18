@@ -118,7 +118,6 @@ class Algorithm
              REAL best_obj_value = std::numeric_limits<REAL>::max();
 
              Vec<REAL> best_solution{};
-             Vec<Constraint<REAL>> derived_conflicts{};
              best_solution.reserve( problem.getNCols() );
 
              // setup data for the volume algorithm
@@ -160,7 +159,7 @@ class Algorithm
                 primal_heur_sol = algorithm.volume_algorithm(
                     reformulated.getObjective().coefficients,
                     reformulated.getConstraintMatrix(),
-                    derived_conflicts,
+                    service.get_derived_conflicts(),
                     reformulated.getConstraintMatrix().getLeftHandSides(),
                     reformulated.getVariableDomains(), pi,
                     reformulated.getNumIntegralCols(), min_val );
@@ -191,32 +190,23 @@ class Algorithm
 
                 if( !service.exists_conflict_constraints() )
                    break;
-                auto constraints = service.get_constraints();
-
-
-                for( auto& c : constraints )
-                {
-                   derived_conflicts.insert( derived_conflicts.end(), c.begin(),
-                                             c.end() );
-                   c.clear();
-                }
 
                 if( alg_parameter.copy_conflicts_to_problem &&
-                    derived_conflicts.size() >
+                    service.get_derived_conflicts().size() >
                         alg_parameter.size_of_conflicts_to_be_copied )
                 {
                    msg.info(
                        "\tCopied {} conflicts to the (f&p) problem - {:.3} s\n",
-                       derived_conflicts.size(), timer.getTime() );
+                       service.get_derived_conflicts().size(), timer.getTime() );
                    problem =
-                       copy_conflicts_to_problem( problem, derived_conflicts );
+                       copy_conflicts_to_problem( problem, service.get_derived_conflicts() );
 
                    problem.recomputeAllActivities();
-                   derived_conflicts.clear();
+                   service.get_derived_conflicts().clear();
                 }
                 else
                    msg.info( "\tFound {} conflicts (treated separately) - {:.3} s\n",
-                             derived_conflicts.size(), timer.getTime() );
+                             service.get_derived_conflicts().size(), timer.getTime() );
 
                 round_counter++;
 
@@ -503,7 +493,7 @@ class Algorithm
          builder.setRowRhsInf( i, rowFlags[i].test( RowFlag::kRhsInf ) );
       }
 
-      for( int i = 0; i < constraints.size(); ++i )
+      for( int i = 0; i < new_rows; ++i )
       {
          const SparseVectorView<REAL>& view = constraints[i].get_data();
          const int* rowcols = view.getIndices();
@@ -516,6 +506,7 @@ class Algorithm
          builder.setRowLhs( i + nrows, lhs );
          builder.setRowRhs( i + nrows, rhs );
          builder.setRowLhsInf( i + nrows, constraints[i].get_row_flag().test( RowFlag::kLhsInf ) );
+         assert(!constraints[i].get_row_flag().test( RowFlag::kRhsInf ));
          builder.setRowRhsInf( i + nrows, constraints[i].get_row_flag().test( RowFlag::kRhsInf ) );
       }
 

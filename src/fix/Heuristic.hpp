@@ -55,10 +55,10 @@ class Heuristic
    Vec<bool> infeasible_arr;
    ConflictAnalysis<REAL> conflict_analysis;
    Vec<Vec<Constraint<REAL>>> constraints{};
+   Vec<Constraint<REAL>> derived_conflicts{};
    PostsolveStorage<REAL>& postsolve_storage;
    bool calculate_original = false;
    FixAndPropagate<REAL> fixAndPropagate;
-
 
  public:
    Problem<REAL>& problem;
@@ -178,7 +178,8 @@ class Heuristic
 #else
    }
           } );
-          return evaluate( current_objective, current_best_solution, InfeasibleCopyStrategy::kNone );
+          return evaluate( current_objective, current_best_solution,
+                           InfeasibleCopyStrategy::kNone );
 #endif
          }
 
@@ -231,6 +232,12 @@ class Heuristic
                  obj_value[0], backtracks );
 #endif
             one_opt( perform_one_opt, stop_at_infeasible );
+            for( auto& c : constraints )
+            {
+               derived_conflicts.insert( derived_conflicts.end(), c.begin(),
+                                         c.end() );
+               c.clear();
+            }
             return evaluate( best_obj_val, current_best_solution, copy );
          }
 
@@ -260,12 +267,10 @@ class Heuristic
                          if( !perform_conflict_analysis )
                             continue;
                          assert( !views[i].get_infeasible_rows().empty() );
-                         auto changes =
-                             views[i].get_changes();
-                   auto infeasible_rows =
-                             views[i].get_infeasible_rows();
-                   conflict_analysis.perform_conflict_analysis(
-                       changes, infeasible_rows, constraints[i] );
+                         auto changes = views[i].get_changes();
+                         auto infeasible_rows = views[i].get_infeasible_rows();
+                         conflict_analysis.perform_conflict_analysis(
+                             changes, infeasible_rows, constraints[i] );
                          assert( std::all_of(
                              constraints[i].begin(), constraints[i].end(),
                              []( Constraint<REAL>& c )
@@ -279,16 +284,14 @@ class Heuristic
                              constraints[i].begin(), constraints[i].end(),
                              [this, i]( Constraint<REAL>& c )
                              {
-
                                 const int* indices = c.get_data().getIndices();
-                          for( int j = 0; j < c.get_data().getLength();
+                                for( int j = 0; j < c.get_data().getLength();
                                      j++ )
                                 {
                                    if( indices[j] < 0 ||
-                                       indices[j] >
-                                           views[i]
-                                               .getProbingUpperBounds()
-                                               .size() )
+                                       indices[j] > views[i]
+                                                        .getProbingUpperBounds()
+                                                        .size() )
                                       return false;
                                 }
                                 return true;
@@ -380,13 +383,16 @@ class Heuristic
 #endif
          }
 
-         Vec<Vec<Constraint<REAL>>>& get_constraints() { return constraints; }
+         Vec<Constraint<REAL>>& get_derived_conflicts()
+         {
+            return derived_conflicts;
+         }
 
          bool exists_conflict_constraints()
          {
             return !std::all_of( constraints.begin(), constraints.end(),
-                                []( Vec<Constraint<REAL>> c )
-                                { return c.empty(); } );
+                                 []( Vec<Constraint<REAL>> c )
+                                 { return c.empty(); } );
          }
 
        private:
@@ -553,7 +559,7 @@ class Heuristic
                break;
             }
             default:
-               assert( false);
+               assert( false );
             }
             assert( best_index != -1 );
             current_best_solution = int_solutions[best_index];
