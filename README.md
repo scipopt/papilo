@@ -17,7 +17,7 @@ available at [github.com/scipopt/papilo](https://github.com/scipopt/papilo).
 
 # Dependencies
 
-External dependencies that need to be installed by the user are the Intel TBB >= 2020 runtime library and boost >= 1.65 headers.
+External dependencies that need to be installed by the user are the Intel TBB >= 2020, or TBB from oneAPI runtime library and boost >= 1.65 headers.
 The executable additionally requires some of the boost runtime libraries that are not required when PaPILO is used as
 a library.
 Under the folder external/ there are additional packages that are directly included within PaPILO and have a
