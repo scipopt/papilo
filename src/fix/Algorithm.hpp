@@ -184,6 +184,8 @@ class Algorithm
                 //
                 //                assert( sub.size() == problem.getNCols() );
                 assert( problem.getNCols() == primal_heur_sol.size() );
+                auto old_conflicts = (int) service.get_derived_conflicts().size();
+
                 bool sol_updated = service.perform_fix_and_propagate(
                     primal_heur_sol, best_obj_value, best_solution );
                 if( sol_updated )
@@ -196,15 +198,15 @@ class Algorithm
                 if( timer.getTime() >= alg_parameter.time_limit )
                    break;
 
-                auto conflicts = (int) service.get_derived_conflicts().size();
-                if( conflicts == 0 )
+                auto new_conflicts = (int) service.get_derived_conflicts().size() - old_conflicts;
+                if( new_conflicts == 0 )
                 {
                    msg.info(
                        "\tNo conflict could be generated - {:.3} s\n", timer.getTime() );
                    break;
                 }
                 if( alg_parameter.copy_conflicts_to_problem &&
-                    conflicts >
+                    new_conflicts >
                         alg_parameter.size_of_conflicts_to_be_copied )
                 {
 
@@ -212,17 +214,17 @@ class Algorithm
                        service.copy_conflicts_to_problem( problem, service.get_derived_conflicts() );
                    msg.info(
                        "\tCopied {} conflicts to the (f&p) problem (constraints {}) - {:.3} s\n",
-                       conflicts, problem.getNRows(), timer.getTime() );
+                       new_conflicts, problem.getNRows(), timer.getTime() );
                    problem.recomputeAllActivities();
                    service.get_derived_conflicts().clear();
                 }
                 else
                    msg.info( "\tFound {} conflicts (treated separately) - {:.3} s\n",
-                             conflicts, timer.getTime() );
+                             new_conflicts, timer.getTime() );
 
                 round_counter++;
 
-                pi_conflicts.resize( pi_conflicts.size() + conflicts, 0 );
+                pi_conflicts.resize( pi_conflicts.size() + new_conflicts, 0 );
              }
 
              Solution<REAL> original_solution{};
