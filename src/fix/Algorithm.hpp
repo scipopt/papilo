@@ -77,6 +77,9 @@ class Algorithm
              presolve.getPresolveOptions().threads = alg_parameter.threads;
              presolve.getPresolveOptions().tlim = alg_parameter.time_limit;
              presolve.addDefaultPresolvers();
+
+             REAL box_upper_bound_volume = calc_box_upper_bound( problem );
+
              auto result = presolve.apply( problem, false );
 
              switch( result.status )
@@ -134,16 +137,18 @@ class Algorithm
              pi.reserve( reformulated.getNRows() );
              generate_initial_dual_solution( reformulated, pi );
 
-             REAL min_val = calc_upper_bound_for_objective( problem );
-             if( min_val == std::numeric_limits<double>::min() )
-                return;
-
              Vec<Vec<SingleBoundChange<REAL>>> bound_changes;
 
              msg.info( "\tStarting primal heuristics - {:.3} s\n",
                        timer.getTime() );
              Vec<std::pair<int, int>> infeasible_rows;
-             service.find_initial_solution(best_obj_value, best_solution);
+             bool solution_found = service.find_initial_solution(best_obj_value,
+                                                                 best_solution);
+
+             if( solution_found )
+                box_upper_bound_volume = best_obj_value;
+             if( box_upper_bound_volume == std::numeric_limits<double>::min() )
+                return;
 
              int round_counter = 0;
              int round_first_solution = -1;
@@ -162,7 +167,8 @@ class Algorithm
                     service.get_derived_conflicts(),
                     reformulated.getConstraintMatrix().getLeftHandSides(),
                     reformulated.getVariableDomains(), pi,
-                    reformulated.getNumIntegralCols(), min_val );
+                    reformulated.getNumIntegralCols(), box_upper_bound_volume,
+                    solution_found );
                 print_solution( primal_heur_sol );
 
                 if( timer.getTime() >= alg_parameter.time_limit )
@@ -238,7 +244,7 @@ class Algorithm
 
 
    REAL
-   calc_upper_bound_for_objective( const Problem<REAL>& problem ) const
+   calc_box_upper_bound( const Problem<REAL>& problem ) const
    {
       StableSum<REAL> min_value{};
       for( int i = 0; i < problem.getNCols(); i++ )

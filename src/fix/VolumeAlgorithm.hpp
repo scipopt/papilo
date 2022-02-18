@@ -70,10 +70,11 @@ class VolumeAlgorithm
     * @param c objective function
     * @param A equation or at least one finte bound for every constraint
     * @param derived_conflicts
-    * @param b
+    * @param b rhs of constraints
     * @param domains variables domains (lb/ub/flags)
     * @param pi initial dual multiplier
-    * @param box_upper_bound max box bound of c^T x
+    * @param init_upper_bound value >= optimal objective value (c^T x)
+    * @param init_primal_sol whether an initial primal solution was found
     * @return
     */
    Vec<REAL>
@@ -81,10 +82,17 @@ class VolumeAlgorithm
                      const Vec<Constraint<REAL>>& derived_conflicts,
                      const Vec<REAL>& b, const VariableDomains<REAL>& domains,
                      const Vec<REAL>& pi, const int num_int_vars,
-                     REAL box_upper_bound )
+                     const REAL init_upper_bound, const bool init_primal_sol )
    {
       REAL st = timer.getTime();
       int n_rows_A = A.getNRows();
+
+      if( !n_rows_A )
+      {
+         msg.error( "\t\tZero easy constraints detected! Volume algorithm "
+                   "cannot handle this case currently.\n" );
+         assert( false );
+      }
 
       assert_pi( n_rows_A, A );
 
@@ -106,9 +114,10 @@ class VolumeAlgorithm
       REAL z_bar = create_problem_6_and_solve_it( c, A, b, domains, pi, x_t );
       Vec<REAL> x_bar( x_t );
       REAL z_bar_old = z_bar;
-      // TODO: ok?
-      REAL upper_bound_reset_val = num.isGE( box_upper_bound, REAL{ 1.0 } ) ?
-                                   1.0 : box_upper_bound;
+      // TODO: move away from box bound if possible
+      REAL upper_bound_reset_val = num.isZero( init_upper_bound ) ? 0.1 :
+         ( init_primal_sol || num.isLT( init_upper_bound, REAL{ 1.0 } ) ) ?
+         init_upper_bound : 1.0;
       REAL upper_bound;
       bool finite_upper_bound = false;
 
@@ -129,9 +138,10 @@ class VolumeAlgorithm
          // STEP 1:
          // Compute v_t = b − A x_bar and π_t = pi_bar + sv_t for a step size s
          // given by (7).
-         update_upper_bound( z_bar, upper_bound_reset_val, upper_bound,
-                             finite_upper_bound );
+         update_upper_bound( z_bar, upper_bound_reset_val, init_primal_sol,
+                             upper_bound, finite_upper_bound );
          assert( num.isGT( upper_bound, z_bar ) );
+         // TODO: what is norm( v_t ) = 0?
          REAL step_size = f * ( upper_bound - z_bar ) /
                           pow( op.l2_norm( v_t ), 2.0 );
          msg.debug( "   Step size: {}\n", step_size );
@@ -176,7 +186,7 @@ class VolumeAlgorithm
                    non_improvement_iter_counter );
 
          // Update z_bar_old if needed
-         if( counter % 100 == 0 )
+         if( counter && ( counter % 100 == 0 ) )
          {
             update_alpha_max( z_bar, z_bar_old );
             z_bar_old = z_bar;
@@ -396,6 +406,7 @@ class VolumeAlgorithm
 
    void
    update_upper_bound( const REAL z_bar, const REAL upper_bound_reset_val,
+                       const bool init_primal_sol,
                        REAL& upper_bound, bool& finite_upper_bound )
    {
       if( finite_upper_bound )
@@ -412,8 +423,8 @@ class VolumeAlgorithm
       }
       else
       {
-         upper_bound = num.isZero( z_bar ) ? upper_bound_reset_val :
-                       z_bar + abs( z_bar ) * 0.06;
+         upper_bound = ( init_primal_sol || num.isZero( z_bar ) ) ?
+                       upper_bound_reset_val : z_bar + abs( z_bar ) * 0.06;
          finite_upper_bound = true;
          msg.debug( "   updated best bound: {}\n", upper_bound );
       }
@@ -535,7 +546,8 @@ class VolumeAlgorithm
    update_alpha_max( const REAL z_bar, const REAL z_bar_old )
    {
       // TODO: change 0.01, 1e-5, and 2.0 as global params?
-      if( num.isLT( z_bar, z_bar_old + 0.01 * abs( z_bar_old ) ) &&
+      if( ( ( num.isZero( z_bar ) && num.isZero( z_bar_old ) ) ||
+              num.isLT( z_bar, z_bar_old + 0.01 * abs( z_bar_old ) ) ) &&
           num.isGE( alpha_max / 2.0, REAL{ 1e-4 } ) )
          alpha_max = alpha_max / 2.0;
    }
