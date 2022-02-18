@@ -50,11 +50,12 @@ struct AlgorithmParameter
    double obj_reltol = 0.01;
    double obj_abstol = 0.01;
    double con_abstol = 0.02;
-   double fixed_int_var_threshold = 0.7;
-   int num_iters_fixed_int_vars_check = 20;
+   double fixed_int_var_threshold = 0.05;
+   int num_iters_fixed_int_vars = 20;
+   int num_iters_fixed_int_vars_percent = 10001;
    int weak_improvement_iter_limit = 2;
    int non_improvement_iter_limit = 20;
-   int max_iterations = 4444;
+   int max_iterations = 10000;
 
    // fix and propagate parameters
 
@@ -98,34 +99,29 @@ struct AlgorithmParameter
                              "multiplier for "
                              "varying the parameter f in yellow iterations",
                              f_weak_incr_factor, 1.0, 2.0 );
-      paramSet.addParameter( "vol.f_decr_factor",
-                             "multiplier for varying the "
-                             "parameter f in red iterations",
-                             f_decr_factor, 0.0, 1.0 );
-      paramSet.addParameter( "vol.obj_reltol",
-                             "relative tolerance for "
-                             "duality gap",
-                             obj_reltol, 0.0, 1.0 );
-      paramSet.addParameter( "vol.obj_abstol",
-                             "absolute tolerance for "
-                             "duality gap",
-                             obj_abstol, 0.0, 1.0 );
-      paramSet.addParameter( "vol.con_abstol",
-                             "absolute tolerance for average "
-                             "primal feasibility",
-                             con_abstol, 0.0, 1.0 );
-      paramSet.addParameter( "vol.fixed_int_var_threshold",
-                             "fraction of"
-                             "integer variables with integer values needed"
-                             "for termination",
-                             fixed_int_var_threshold, 0.0, 1.0 );
-      paramSet.addParameter( "vol.num_iters_fixed_int_vars_check",
-                             "number of"
+      paramSet.addParameter( "vol.f_decr_factor", "multiplier for varying the "
+                             "parameter f in red iterations", f_decr_factor,
+                             0.0, 1.0 );
+      paramSet.addParameter( "vol.obj_reltol", "relative tolerance for "
+                             "duality gap", obj_reltol, 0.0, 1.0 );
+      paramSet.addParameter( "vol.obj_abstol", "absolute tolerance for "
+                             "duality gap", obj_abstol, 0.0, 1.0 );
+      paramSet.addParameter( "vol.con_abstol", "absolute tolerance for average "
+                             "primal feasibility", con_abstol, 0.0, 1.0 );
+      paramSet.addParameter( "vol.fixed_int_var_threshold", "threshold for "
+                             "change in percentage of integer variables with "
+                             "fixed integer values", fixed_int_var_threshold,
+                             0.0, 1.0 );
+      paramSet.addParameter( "vol.num_iters_fixed_int_vars", "number of"
                              "iterations the integer variable values need to"
-                             "be fixed for termination",
-                             num_iters_fixed_int_vars_check, 1, 22222 );
-      paramSet.addParameter( "vol.weak_improvement_iter_limit",
-                             "number of "
+                             "be fixed",
+                             num_iters_fixed_int_vars, 1, 22222 );
+      paramSet.addParameter( "vol.num_iters_fixed_int_vars_percent", "number of"
+                             "iterations over which the change in percentage "
+                             "of integer variables with fixed integer values "
+                             "should be less than fixed_int_var_threshold",
+                             num_iters_fixed_int_vars_percent, 1, 22222 );
+      paramSet.addParameter( "vol.weak_improvement_iter_limit", "number of "
                              "yellow iterations after which the parameter f "
                              "is updated",
                              weak_improvement_iter_limit, 1, 22 );
