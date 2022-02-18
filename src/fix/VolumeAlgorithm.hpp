@@ -87,6 +87,13 @@ class VolumeAlgorithm
       REAL st = timer.getTime();
       int n_rows_A = A.getNRows();
 
+      if( !n_rows_A )
+      {
+         msg.error( "\t\tZero easy constraints detected! Volume algorithm "
+                   "cannot handle this case currently.\n" );
+         exit( 1 );
+      }
+
       assert_pi( n_rows_A, A );
 
       // Step 0
@@ -134,6 +141,7 @@ class VolumeAlgorithm
          update_upper_bound( z_bar, upper_bound_reset_val, init_primal_sol,
                              upper_bound, finite_upper_bound );
          assert( num.isGT( upper_bound, z_bar ) );
+         // TODO: what is norm( v_t ) = 0?
          REAL step_size = f * ( upper_bound - z_bar ) /
                           pow( op.l2_norm( v_t ), 2.0 );
          msg.debug( "   Step size: {}\n", step_size );
