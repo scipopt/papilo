@@ -32,7 +32,7 @@ struct AlgorithmParameter
  public:
    // overall parameters
    double time_limit = 10 * 60;
-   int threads = 8;
+   int threads = 1;
    int seed = 0;
    bool copy_conflicts_to_problem = false;
    int size_of_conflicts_to_be_copied = 0;
@@ -68,7 +68,7 @@ struct AlgorithmParameter
       paramSet.addParameter( "seed", "", seed, 0.0 );
       paramSet.addParameter( "threads",
                              "maximal number of threads to use (0: automatic)",
-                             threads, 0 );
+                             threads, 1 );
 
       paramSet.addParameter(
           "vol.threshold_hard_constraints",

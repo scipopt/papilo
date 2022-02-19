@@ -213,7 +213,7 @@ class ConflictAnalysis
                pos_lower = pos_in_bound_changes[col_idx].first;
                pos_upper = pos_in_bound_changes[col_idx].second;
                assert( !num.isZero( row_vals[i] ) );
-               assert( !( pos_lower == -1 || pos_upper == -1 ) );
+               assert( !( pos_lower == -1 && pos_upper == -1 ) );
                return (
                    ( num.isGT( row_vals[i], 0 ) && !( pos_upper = -1 ) ) ||
                    ( num.isLT( row_vals[i], 0 ) && !( pos_lower == -1 ) ) );
@@ -300,7 +300,7 @@ class ConflictAnalysis
                pos_lower = pos_in_bound_changes[col_idx].first;
                pos_upper = pos_in_bound_changes[col_idx].second;
                assert( !num.isZero( row_vals[i] ) );
-               assert( !( pos_lower == -1 || pos_upper == -1 ) );
+               assert( !( pos_lower == -1 && pos_upper == -1 ) );
                return (
                    ( num.isGT( row_vals[i], 0 ) && !( pos_lower == -1 ) ) ||
                    ( num.isLT( row_vals[i], 0 ) && !( pos_lower == -1 ) ) );
