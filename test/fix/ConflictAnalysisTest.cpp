@@ -154,8 +154,8 @@ TEST_CASE( "conflict-analysis-binary-with-resolution", "[conflict]" )
    REQUIRE( vals[1] == 1.0 );
    REQUIRE( vals[2] == 1.0 );
    REQUIRE( inds[0] == 1 );
-   REQUIRE( inds[1] == 4 );
-   REQUIRE( inds[2] == 2 );
+   REQUIRE( inds[1] == 2 );
+   REQUIRE( inds[2] == 4 );
 }
 
 Problem<double>
