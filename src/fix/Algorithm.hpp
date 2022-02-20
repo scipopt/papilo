@@ -319,7 +319,7 @@ class Algorithm
       {
          int rowsize = rowSizes[i];
 
-         if( !num.isEq( get_max_min_factor( matrix.getRowCoefficients( i ) ),
+         if( num.isGT( get_max_min_factor( matrix.getRowCoefficients( i ) ),
                         alg_parameter.threshold_hard_constraints ) )
          {
             hard_constraints++;
@@ -346,12 +346,9 @@ class Algorithm
       for( int i = 0; i < problem.getNRows(); ++i )
       {
          auto flags = rowFlags[i];
-         if( flags.test( RowFlag::kHardConstraint ) )
-         {
-            assert(
-                !num.isEq( get_max_min_factor( matrix.getRowCoefficients( i ) ),
+         assert( !flags.test( RowFlag::kHardConstraint ) ||
+                 num.isGT( get_max_min_factor( matrix.getRowCoefficients( i ) ),
                            alg_parameter.threshold_hard_constraints ) );
-         }
          const SparseVectorView<REAL>& view = matrix.getRowCoefficients( i );
          const int* rowcols = view.getIndices();
          const REAL* rowvals = view.getValues();
