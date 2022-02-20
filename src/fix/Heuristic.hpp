@@ -457,6 +457,7 @@ class Heuristic
                builder.setRowRhsInf(
                    i + nrows,
                    new_conflicts[i].get_row_flag().test( RowFlag::kRhsInf ) );
+               assert( !rowFlags[i].test(RowFlag::kHardConstraint) );
             }
 
             /* set up columns */

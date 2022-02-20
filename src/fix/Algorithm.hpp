@@ -144,8 +144,8 @@ class Algorithm
 
              if( solution_found )
                 box_upper_bound_volume = best_obj_value;
-             if( box_upper_bound_volume == std::numeric_limits<double>::min() )
-                return;
+//             assert( !num.isEq( box_upper_bound_volume ==
+//                      std::numeric_limits<double>::min() ) )
 
              int round_counter = 0;
              int round_first_solution = -1;
@@ -205,7 +205,6 @@ class Algorithm
                     new_conflicts >
                         alg_parameter.size_of_conflicts_to_be_copied )
                 {
-
                    reformulated =
                        service.copy_conflicts_to_problem( reformulated, service.get_derived_conflicts() );
                    msg.info(
@@ -216,12 +215,13 @@ class Algorithm
                    service.get_derived_conflicts().clear();
                 }
                 else
+                {
                    msg.info( "\tFound {} conflicts (treated separately) - {:.3} s\n",
                              new_conflicts, timer.getTime() );
+                   pi_conflicts.resize( pi_conflicts.size() + new_conflicts, 0 );
+                }
 
                 round_counter++;
-
-                pi_conflicts.resize( pi_conflicts.size() + new_conflicts, 0 );
              }
 
              Solution<REAL> original_solution{};
