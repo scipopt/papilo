@@ -78,16 +78,26 @@ class VolumeAlgorithm
     * @return
     */
    Vec<REAL>
-   volume_algorithm( const Vec<REAL> c, const ConstraintMatrix<REAL>& A,
+   volume_algorithm( const Vec<REAL> c, ConstraintMatrix<REAL>& A,
                      const Vec<Constraint<REAL>>& derived_conflicts,
                      const Vec<REAL>& b, const VariableDomains<REAL>& domains,
                      const int num_int_vars, const REAL init_upper_bound,
-                     const bool init_primal_sol, const int n_hard_constraints,
+                     const bool init_primal_sol,
+                     const REAL threshold_hard_constraints,
+                     bool detect_hard_constraints,
+                     int& n_hard_constraints,
                      Vec<REAL>& pi, Vec<REAL>& pi_conflicts )
    {
       REAL st = timer.getTime();
       int n_rows_A = A.getNRows();
       int n_conflicts = derived_conflicts.size();
+      if( detect_hard_constraints )
+      {
+         detect_hard_constraints = false;
+         n_hard_constraints = 0;
+         identify_hard_constraints( n_rows_A, A, threshold_hard_constraints,
+                                  n_hard_constraints );
+      }
 
       if( !n_rows_A )
       {
@@ -260,6 +270,41 @@ class VolumeAlgorithm
    }
 
  private:
+   void
+   identify_hard_constraints( const int n_rows_A, ConstraintMatrix<REAL>& A,
+                            const REAL threshold_hard_constraints,
+                            int& n_hard_constraints )
+   {
+      Vec<RowFlags>& rowFlags = A.getRowFlags();
+
+      for( int i = 0; i < n_rows_A; i++ )
+      {
+         if( num.isGT( get_max_min_factor( A.getRowCoefficients( i ) ),
+                       threshold_hard_constraints ) )
+         {
+            n_hard_constraints++;
+            rowFlags[i].set( RowFlag::kHardConstraint );
+         }
+      }
+
+      msg.info( "\n{} of the {} rows were considered hard and were excluded.\n",
+                n_hard_constraints, n_rows_A );
+
+      /*
+      assert( !flags.test( RowFlag::kHardConstraint ) ||
+              num.isGT( get_max_min_factor( matrix.getRowCoefficients( i ) ),
+                        alg_parameter.threshold_hard_constraints ) );
+                        */
+   }
+
+   REAL
+   get_max_min_factor( const SparseVectorView<REAL>& row_data ) const
+   {
+      assert( row_data.getLength() > 0 );
+      auto pair = row_data.getMinMaxAbsValue();
+      return pair.second / pair.first;
+   }
+
    bool
    constraints_E_or_GE( const int n_rows_A, const ConstraintMatrix<REAL>& A,
               const int n_conflicts,

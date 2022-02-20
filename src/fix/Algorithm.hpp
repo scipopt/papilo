@@ -116,11 +116,12 @@ class Algorithm
                                               result.postsolve };
 
              // setup data for the volume algorithm
-             int n_hard_constraints = 0;
-             ProblemBuilder<REAL> builder = modify_problem( problem,
-                                                            n_hard_constraints
-                                                          );
+             ProblemBuilder<REAL> builder = modify_problem( problem );
              Problem<REAL> reformulated = builder.build();
+             int n_hard_constraints = 0;
+             bool detect_hard_constraints = true;
+             REAL threshold_hard_constraints =
+                alg_parameter.threshold_hard_constraints;
 
              Heuristic<REAL> service{ msg, num, random, timer, reformulated, result.postsolve };
              service.setup(random);
@@ -170,8 +171,8 @@ class Algorithm
                     reformulated.getVariableDomains(),
                     reformulated.getNumIntegralCols(),
                     box_upper_bound_volume, solution_found,
-                    n_hard_constraints,
-                    pi, pi_conflicts );
+                    threshold_hard_constraints, detect_hard_constraints,
+                    n_hard_constraints, pi, pi_conflicts );
                 print_solution( primal_heur_sol );
 
                 if( timer.getTime() >= alg_parameter.time_limit )
@@ -306,7 +307,7 @@ class Algorithm
    }
 
    ProblemBuilder<REAL>
-   modify_problem( Problem<REAL>& problem, int& n_hard_constraints )
+   modify_problem( Problem<REAL>& problem )
    {
       ProblemBuilder<REAL> builder;
 
@@ -322,17 +323,10 @@ class Algorithm
       Vec<REAL>& rightHandSides = matrix.getRightHandSides();
       const Vec<RowActivity<REAL>>& activities = problem.getRowActivities();
 
-      n_hard_constraints = 0;
       for( int i = 0; i < problem.getNRows(); i++ )
       {
          int rowsize = rowSizes[i];
 
-         if( num.isGT( get_max_min_factor( matrix.getRowCoefficients( i ) ),
-                        alg_parameter.threshold_hard_constraints ) )
-         {
-            n_hard_constraints++;
-            rowFlags[i].set( RowFlag::kHardConstraint );
-         }
          nnz = nnz + rowsize;
          nrows++;
          if( rowFlags[i].test( RowFlag::kEquation ) ||
@@ -343,9 +337,6 @@ class Algorithm
          nnz = nnz + rowsize;
       }
 
-      msg.info( "\n{} of the {} rows were considered hard and were excluded.\n",
-                n_hard_constraints, problem.getNRows() );
-
       builder.reserve( nnz, nrows, ncols );
 
       /* set up rows */
@@ -354,9 +345,6 @@ class Algorithm
       for( int i = 0; i < problem.getNRows(); ++i )
       {
          auto flags = rowFlags[i];
-         assert( !flags.test( RowFlag::kHardConstraint ) ||
-                 num.isGT( get_max_min_factor( matrix.getRowCoefficients( i ) ),
-                           alg_parameter.threshold_hard_constraints ) );
          const SparseVectorView<REAL>& view = matrix.getRowCoefficients( i );
          const int* rowcols = view.getIndices();
          const REAL* rowvals = view.getValues();
@@ -373,7 +361,6 @@ class Algorithm
             builder.setRowRhs( counter, rhs );
             builder.setRowLhsInf( counter, false );
             builder.setRowRhsInf( counter, false );
-            builder.setHardConstraint( counter, flags.test( RowFlag::kHardConstraint ) );
          }
          else if( flags.test( RowFlag::kLhsInf ) )
          {
@@ -387,7 +374,6 @@ class Algorithm
             builder.setRowRhs( counter, 0 );
             builder.setRowLhsInf( counter, false );
             builder.setRowRhsInf( counter, true );
-            builder.setHardConstraint( counter, flags.test( RowFlag::kHardConstraint ) );
          }
          else if( flags.test( RowFlag::kRhsInf ) )
          {
@@ -398,7 +384,6 @@ class Algorithm
             builder.setRowRhs( counter, 0 );
             builder.setRowLhsInf( counter, false );
             builder.setRowRhsInf( counter, true );
-            builder.setHardConstraint( counter, flags.test( RowFlag::kHardConstraint ) );
          }
          else
          {
@@ -413,7 +398,6 @@ class Algorithm
             builder.setRowRhs( counter, 0 );
             builder.setRowLhsInf( counter, false );
             builder.setRowRhsInf( counter, true );
-            builder.setHardConstraint( counter, flags.test( RowFlag::kHardConstraint ) );
             counter++;
 
             builder.addRowEntries( counter, rowlen, rowcols, rowvals );
@@ -421,7 +405,6 @@ class Algorithm
             builder.setRowRhs( counter, 0 );
             builder.setRowLhsInf( counter, false );
             builder.setRowRhsInf( counter, true );
-            builder.setHardConstraint( counter, flags.test( RowFlag::kHardConstraint ) );
          }
          counter++;
       }
@@ -441,14 +424,6 @@ class Algorithm
       }
 
       return builder;
-   }
-
-   REAL
-   get_max_min_factor( const SparseVectorView<REAL>& row_data ) const
-   {
-      assert( row_data.getLength() > 0 );
-      auto pair = row_data.getMinMaxAbsValue();
-      return pair.second / pair.first;
    }
 
    void
