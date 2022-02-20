@@ -116,17 +116,17 @@ class VolumeAlgorithm
       Vec<REAL> viol_t_conflicts( n_conflicts );
       Vec<REAL> x_t( c );
       Vec<REAL> pi_t( pi );
-      Vec<REAL> pi_bar( pi );
       Vec<REAL> pi_t_conflicts( pi_conflicts );
       Vec<REAL> pi_bar_conflicts( pi_conflicts );
       update_pi( n_rows_A, A, n_conflicts, derived_conflicts, pi_t,
                  pi_t_conflicts );
+      Vec<REAL> pi_bar( pi_t );
       Vec<REAL> residual_t( b );
       Vec<REAL> residual_t_conflicts( n_conflicts );
 
       // We start with a vector π̄ and solve (6) to obtain x̄ and z̄.
       REAL z_bar = create_problem_6_and_solve_it( c, A, b, domains,
-            derived_conflicts, b_conflicts, pi, pi_conflicts, x_t );
+            derived_conflicts, b_conflicts, pi_t, pi_conflicts, x_t );
       Vec<REAL> x_bar( x_t );
       REAL z_bar_old = z_bar;
       // TODO: move away from box bound if possible
