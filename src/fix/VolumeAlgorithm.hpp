@@ -172,7 +172,7 @@ class VolumeAlgorithm
 
          // Solve (6) with π_t , let x_t and z_t be the solutions obtained.
          REAL z_t = create_problem_6_and_solve_it( c, A, b, domains,
-                                    derived_conflicts, b_conflicts, pi,
+                                    derived_conflicts, b_conflicts, pi_t,
                                     pi_conflicts, x_t );
 
          // Update alpha
