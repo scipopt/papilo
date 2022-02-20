@@ -91,7 +91,7 @@ class VolumeAlgorithm
 
       if( !n_rows_A )
       {
-         msg.error( "\t\tZero easy constraints detected! Volume algorithm "
+         msg.error( "\t\tZero constraints detected! Volume algorithm "
                    "cannot handle this case currently.\n" );
          assert( false );
       }

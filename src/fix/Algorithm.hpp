@@ -213,9 +213,10 @@ class Algorithm
                          (constraints {}) - {:.3} s\n", new_conflicts +
                          old_conflicts, reformulated.getNRows(), timer.getTime()
                          );
-                   pi_conflicts.clear();
                    reformulated.recomputeAllActivities();
                    service.get_derived_conflicts().clear();
+                   pi_conflicts.clear();
+                   pi.resize( pi.size() + new_conflicts + old_conflicts, 0 );
                 }
                 else
                 {
