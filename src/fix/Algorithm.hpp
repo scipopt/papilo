@@ -213,8 +213,8 @@ class Algorithm
                    reformulated =
                        service.copy_conflicts_to_problem( reformulated,
                              service.get_derived_conflicts() );
-                   msg.info( "\tCopied {} conflicts to the (f&p) problem
-                         (constraints {}) - {:.3} s\n", new_conflicts +
+                   msg.info( "\tCopied {} conflicts to the (f&p) problem "
+                         "(constraints {}) - {:.3} s\n", new_conflicts +
                          old_conflicts, reformulated.getNRows(), timer.getTime()
                          );
                    reformulated.recomputeAllActivities();
