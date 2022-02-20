@@ -434,7 +434,8 @@ class Heuristic
                builder.setRowRhs( i, rhs );
                builder.setRowLhsInf( i, rowFlags[i].test( RowFlag::kLhsInf ) );
                builder.setRowRhsInf( i, rowFlags[i].test( RowFlag::kRhsInf ) );
-               builder.setHardConstraint( i, rowFlags[i].test(RowFlag::kHardConstraint) );
+               builder.setHardConstraint( i, rowFlags[i].
+                                             test( RowFlag::kHardConstraint ) );
             }
 
             for( int i = 0; i < new_rows; ++i )
@@ -457,7 +458,8 @@ class Heuristic
                builder.setRowRhsInf(
                    i + nrows,
                    new_conflicts[i].get_row_flag().test( RowFlag::kRhsInf ) );
-               assert( !rowFlags[i].test(RowFlag::kHardConstraint) );
+               assert( !new_conflicts[i].get_row_flag().
+                        test( RowFlag::kHardConstraint ) );
             }
 
             /* set up columns */
