@@ -82,8 +82,8 @@ class VolumeAlgorithm
                      const Vec<Constraint<REAL>>& derived_conflicts,
                      const Vec<REAL>& b, const VariableDomains<REAL>& domains,
                      const int num_int_vars, const REAL init_upper_bound,
-                     const bool init_primal_sol, Vec<REAL>& pi,
-                     Vec<REAL>& pi_conflicts )
+                     const bool init_primal_sol, const int n_hard_constraints,
+                     Vec<REAL>& pi, Vec<REAL>& pi_conflicts )
    {
       REAL st = timer.getTime();
       int n_rows_A = A.getNRows();
@@ -147,7 +147,8 @@ class VolumeAlgorithm
                        derived_conflicts, pi_bar_conflicts, v_t_conflicts,
                        viol_t, viol_t_conflicts );
 
-      while( stopping_criteria( viol_t, n_rows_A, viol_t_conflicts, n_conflicts,
+      while( stopping_criteria( viol_t, n_rows_A, n_hard_constraints,
+                                viol_t_conflicts, n_conflicts,
                                 c, x_bar, z_bar, num_int_vars,
                                 num_fixed_int_vars, counter ) )
       {
@@ -339,6 +340,7 @@ class VolumeAlgorithm
 
    bool
    stopping_criteria( const Vec<REAL>& v, const int n_rows_A,
+                      const int n_hard_constraints,
                       const Vec<REAL>& v_conflicts, const int n_conflicts,
                       const Vec<REAL>& c, const Vec<REAL>& x_bar,
                       const REAL z_bar, const int num_int_vars,
@@ -347,7 +349,8 @@ class VolumeAlgorithm
    {
       bool primal_feas_term = num.isLT( op.l1_norm( v ) +
                                         op.l1_norm( v_conflicts ),
-                                        ( n_rows_A + n_conflicts ) *
+                                        ( n_rows_A - n_hard_constraints +
+                                          n_conflicts ) *
                                         parameter.con_abstol );
 
       bool duality_gap_abs_term = num.isLT( abs( op.multi( c, x_bar ) ),
@@ -380,9 +383,9 @@ class VolumeAlgorithm
                                          parameter.fixed_int_var_threshold );
       }
 
-
       msg.detailed( "   cons: {}\n", op.l1_norm( v ) + op.l1_norm( v_conflicts )
-                                     / ( n_rows_A + n_conflicts ) );
+                                     / ( n_rows_A - n_hard_constraints +
+                                         n_conflicts ) );
       msg.detailed( "   zbar: {}\n", z_bar );
       msg.detailed( "   objA: {}\n", abs( op.multi( c, x_bar ) ) );
       msg.detailed( "   objR: {}\n", abs( op.multi( c, x_bar ) - z_bar ) /
@@ -512,8 +515,10 @@ class VolumeAlgorithm
       for( int i = 0; i < n_rows_A; i++ )
       {
          // Note: isZero check would be different in case of non-zero LB on pi
-         if( A.getRowFlags()[i].test( RowFlag::kRhsInf ) &&
-             ( num.isLT( residual[i], REAL{ 0.0 } ) && num.isZero( pi[i] ) ) )
+         if( A.getRowFlags()[i].test( RowFlag::kHardConstraint ) ||
+             ( A.getRowFlags()[i].test( RowFlag::kRhsInf ) &&
+               ( num.isLT( residual[i], REAL{ 0.0 } ) && num.isZero( pi[i] ) )
+             ) )
             viol_residual[i] = 0;
       }
 

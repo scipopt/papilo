@@ -116,7 +116,10 @@ class Algorithm
                                               result.postsolve };
 
              // setup data for the volume algorithm
-             ProblemBuilder<REAL> builder = modify_problem( problem );
+             int n_hard_constraints = 0;
+             ProblemBuilder<REAL> builder = modify_problem( problem,
+                                                            n_hard_constraints
+                                                          );
              Problem<REAL> reformulated = builder.build();
 
              Heuristic<REAL> service{ msg, num, random, timer, reformulated, result.postsolve };
@@ -167,6 +170,7 @@ class Algorithm
                     reformulated.getVariableDomains(),
                     reformulated.getNumIntegralCols(),
                     box_upper_bound_volume, solution_found,
+                    n_hard_constraints,
                     pi, pi_conflicts );
                 print_solution( primal_heur_sol );
 
@@ -302,7 +306,7 @@ class Algorithm
    }
 
    ProblemBuilder<REAL>
-   modify_problem( Problem<REAL>& problem )
+   modify_problem( Problem<REAL>& problem, int& n_hard_constraints )
    {
       ProblemBuilder<REAL> builder;
 
@@ -318,7 +322,7 @@ class Algorithm
       Vec<REAL>& rightHandSides = matrix.getRightHandSides();
       const Vec<RowActivity<REAL>>& activities = problem.getRowActivities();
 
-      int hard_constraints = 0;
+      n_hard_constraints = 0;
       for( int i = 0; i < problem.getNRows(); i++ )
       {
          int rowsize = rowSizes[i];
@@ -326,7 +330,7 @@ class Algorithm
          if( num.isGT( get_max_min_factor( matrix.getRowCoefficients( i ) ),
                         alg_parameter.threshold_hard_constraints ) )
          {
-            hard_constraints++;
+            n_hard_constraints++;
             rowFlags[i].set( RowFlag::kHardConstraint );
          }
          nnz = nnz + rowsize;
@@ -340,7 +344,7 @@ class Algorithm
       }
 
       msg.info( "\n{} of the {} rows were considered hard and were excluded.\n",
-                hard_constraints, problem.getNRows() );
+                n_hard_constraints, problem.getNRows() );
 
       builder.reserve( nnz, nrows, ncols );
 
