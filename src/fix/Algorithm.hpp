@@ -220,8 +220,9 @@ class Algorithm
                          );
                    reformulated.recomputeAllActivities();
                    service.get_derived_conflicts().clear();
+                   pi.insert( pi.end(), pi_conflicts.begin(), pi_conflicts.end() );
+                   pi.resize( pi.size() + new_conflicts, 0 );
                    pi_conflicts.clear();
-                   pi.resize( pi.size() + new_conflicts + old_conflicts, 0 );
                 }
                 else
                 {
