@@ -235,7 +235,8 @@ class VolumeAlgorithm
                parameter.max_iterations );
          msg.info( "\t\tAvg. (easy) constraint violation: {} ( {} )\n",
                ( op.l1_norm( viol_t ) + op.l1_norm( viol_t_conflicts ) ) /
-                 ( n_rows_A + n_conflicts ), parameter.con_abstol );
+                 ( n_rows_A - n_hard_constraints + n_conflicts ),
+                 parameter.con_abstol );
          msg.info( "\t\tPrimal absolute objective value: {} ( {} )\n",
                calculate_orig_obj_value( x_bar ), parameter.obj_abstol );
          msg.info( "\t\tDuality gap: {} ( {} )\n", abs( op.multi( c, x_bar ) -
