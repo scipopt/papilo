@@ -51,6 +51,8 @@ class VectorMultiplication
       assert( A.getNCols() == x.size() );
       assert( constraints.size() == result2.size() );
       // TODO: add another assertion for x.size()=n_cols_constraints
+
+      const Vec<RowFlags>& rowFlags = A.getRowFlags();
 #ifdef PAPILO_TBB
       tbb::parallel_for( tbb::blocked_range<int>( 0, n_rows_A +
                                                      constraints.size() ),
@@ -62,12 +64,17 @@ class VectorMultiplication
 #endif
                             if( i < n_rows_A )
                             {
-                               auto coeff = A.getRowCoefficients( i );
-                               StableSum<REAL> aux( b[i] );
-                               for( int j = 0; j < coeff.getLength(); j++ )
-                                  aux.add( -coeff.getValues()[j] *
-                                           x[coeff.getIndices()[j]] );
-                               result1[i] = aux.get();
+                               if( !rowFlags[i].test( RowFlag::kHardConstraint ) )
+                               {
+                                  auto coeff = A.getRowCoefficients( i );
+                                  StableSum<REAL> aux( b[i] );
+                                  for( int j = 0; j < coeff.getLength(); j++ )
+                                     aux.add( -coeff.getValues()[j] *
+                                              x[coeff.getIndices()[j]] );
+                                  result1[i] = aux.get();
+                               }
+                               else
+                                  result1[i] = 0;
                             }
                             else
                             {
@@ -90,6 +97,8 @@ class VectorMultiplication
    {
       assert( A.getNCols() == b.size() );
       assert( A.getNRows() == x.size() );
+
+      const Vec<RowFlags>& rowFlags = A.getRowFlags();
 #ifdef PAPILO_TBB
       tbb::parallel_for( tbb::blocked_range<int>( 0, A.getNCols() ),
                          [&]( const tbb::blocked_range<int>& r )
@@ -102,8 +111,12 @@ class VectorMultiplication
                                auto coeff = A.getColumnCoefficients( i );
                                StableSum<REAL> aux( b[i] );
                                for( int j = 0; j < coeff.getLength(); j++ )
-                                  aux.add( -coeff.getValues()[j] *
-                                           x[coeff.getIndices()[j]] );
+                               {
+                                  if( !rowFlags[coeff.getIndices()[j]].
+                                       test( RowFlag::kHardConstraint ) )
+                                     aux.add( -coeff.getValues()[j] *
+                                              x[coeff.getIndices()[j]] );
+                               }
                                result[i] = aux.get();
                             }
 #ifdef PAPILO_TBB
@@ -116,7 +129,6 @@ class VectorMultiplication
                     const Vec<REAL>& x, const Vec<REAL>& b, Vec<REAL>& result )
    {
       // TODO: add another assertion for result.size()=n_cols_A=b.size()
-      // TODO: how to get col data?
       assert( constraints.size() == x.size() );
 
       result = b;

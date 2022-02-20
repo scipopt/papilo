@@ -110,50 +110,50 @@ class Algorithm
 
                 return;
              }
-             problem.recomputeAllActivities();
+
              RandomGenerator random(alg_parameter.seed);
-
-             Heuristic<REAL> service{ msg, num, random, timer, problem, result.postsolve };
              VolumeAlgorithm<REAL> algorithm{ msg, num, timer, alg_parameter,
-                result.postsolve };
-
-             service.setup(random);
-             REAL best_obj_value = std::numeric_limits<REAL>::max();
-
-             Vec<REAL> best_solution{};
-             best_solution.reserve( problem.getNCols() );
+                                              result.postsolve };
 
              // setup data for the volume algorithm
-             int slack_vars = 0;
-             ProblemBuilder<REAL> builder =
-                 modify_problem( problem, slack_vars );
-             assert( slack_vars >= 0 );
+             int n_hard_constraints = 0;
+             ProblemBuilder<REAL> builder = modify_problem( problem,
+                                                            n_hard_constraints
+                                                          );
              Problem<REAL> reformulated = builder.build();
 
+             Heuristic<REAL> service{ msg, num, random, timer, reformulated, result.postsolve };
+             service.setup(random);
+             reformulated.recomputeAllActivities();
+
+             assert( problem.getNCols() == reformulated.getNCols() );
+
+             REAL best_obj_value = std::numeric_limits<REAL>::max();
+             Vec<REAL> best_solution{};
+             best_solution.reserve( problem.getNCols() );
              Vec<REAL> primal_heur_sol{};
              primal_heur_sol.reserve( reformulated.getNCols() );
-
              Vec<REAL> pi;
              pi.reserve( reformulated.getNRows() );
              generate_initial_dual_solution( reformulated, pi );
              Vec<REAL> pi_conflicts;
-
              Vec<Vec<SingleBoundChange<REAL>>> bound_changes;
+             Vec<std::pair<int, int>> infeasible_rows;
 
              msg.info( "\tStarting primal heuristics - {:.3} s\n",
                        timer.getTime() );
-             Vec<std::pair<int, int>> infeasible_rows;
              bool solution_found = service.find_initial_solution(best_obj_value,
                                                                  best_solution);
 
              if( solution_found )
                 box_upper_bound_volume = best_obj_value;
-             if( box_upper_bound_volume == std::numeric_limits<double>::min() )
-                return;
+//             assert( !num.isEq( box_upper_bound_volume ==
+//                      std::numeric_limits<double>::min() ) )
 
              int round_counter = 0;
              int round_first_solution = -1;
              int round_best_solution = -1;
+
              while( true )
              {
                 msg.info( "Starting round {} - {:.3}s\n", round_counter,
@@ -170,6 +170,7 @@ class Algorithm
                     reformulated.getVariableDomains(),
                     reformulated.getNumIntegralCols(),
                     box_upper_bound_volume, solution_found,
+                    n_hard_constraints,
                     pi, pi_conflicts );
                 print_solution( primal_heur_sol );
 
@@ -179,8 +180,7 @@ class Algorithm
                           timer.getTime() );
 
                 //                Vec<REAL> sub( primal_heur_sol.begin(),
-                //                               primal_heur_sol.end() -
-                //                               slack_vars );
+                //                               primal_heur_sol.end() );
                 //
                 //                assert( sub.size() == problem.getNCols() );
                 assert( problem.getNCols() == primal_heur_sol.size() );
@@ -198,7 +198,8 @@ class Algorithm
                 if( timer.getTime() >= alg_parameter.time_limit )
                    break;
 
-                auto new_conflicts = (int) service.get_derived_conflicts().size() - old_conflicts;
+                auto new_conflicts =
+                   (int) service.get_derived_conflicts().size() - old_conflicts;
                 if( new_conflicts == 0 )
                 {
                    msg.info(
@@ -206,25 +207,29 @@ class Algorithm
                    break;
                 }
                 if( alg_parameter.copy_conflicts_to_problem &&
-                    new_conflicts >
+                    ( new_conflicts + old_conflicts ) >
                         alg_parameter.size_of_conflicts_to_be_copied )
                 {
-
-                   problem =
-                       service.copy_conflicts_to_problem( problem, service.get_derived_conflicts() );
-                   msg.info(
-                       "\tCopied {} conflicts to the (f&p) problem (constraints {}) - {:.3} s\n",
-                       new_conflicts, problem.getNRows(), timer.getTime() );
-                   problem.recomputeAllActivities();
+                   reformulated =
+                       service.copy_conflicts_to_problem( reformulated,
+                             service.get_derived_conflicts() );
+                   msg.info( "\tCopied {} conflicts to the (f&p) problem "
+                         "(constraints {}) - {:.3} s\n", new_conflicts +
+                         old_conflicts, reformulated.getNRows(), timer.getTime()
+                         );
+                   reformulated.recomputeAllActivities();
                    service.get_derived_conflicts().clear();
+                   pi_conflicts.clear();
+                   pi.resize( pi.size() + new_conflicts + old_conflicts, 0 );
                 }
                 else
+                {
                    msg.info( "\tFound {} conflicts (treated separately) - {:.3} s\n",
                              new_conflicts, timer.getTime() );
+                   pi_conflicts.resize( pi_conflicts.size() + new_conflicts, 0 );
+                }
 
                 round_counter++;
-
-                pi_conflicts.resize( pi_conflicts.size() + new_conflicts, 0 );
              }
 
              Solution<REAL> original_solution{};
@@ -301,7 +306,7 @@ class Algorithm
    }
 
    ProblemBuilder<REAL>
-   modify_problem( Problem<REAL>& problem, int& slack_vars )
+   modify_problem( Problem<REAL>& problem, int& n_hard_constraints )
    {
       ProblemBuilder<REAL> builder;
 
@@ -317,23 +322,19 @@ class Algorithm
       Vec<REAL>& rightHandSides = matrix.getRightHandSides();
       const Vec<RowActivity<REAL>>& activities = problem.getRowActivities();
 
-      int equations = 0;
-      int redundant_constraints = 0;
+      n_hard_constraints = 0;
       for( int i = 0; i < problem.getNRows(); i++ )
       {
          int rowsize = rowSizes[i];
 
-         if( !num.isEq( get_max_min_factor( matrix.getRowCoefficients( i ) ),
+         if( num.isGT( get_max_min_factor( matrix.getRowCoefficients( i ) ),
                         alg_parameter.threshold_hard_constraints ) )
          {
-            redundant_constraints++;
-            rowFlags[i].set( RowFlag::kRedundant );
-            continue;
+            n_hard_constraints++;
+            rowFlags[i].set( RowFlag::kHardConstraint );
          }
          nnz = nnz + rowsize;
          nrows++;
-         if( rowFlags[i].test( RowFlag::kEquation ) )
-            equations++;
          if( rowFlags[i].test( RowFlag::kEquation ) ||
              rowFlags[i].test( RowFlag::kLhsInf ) ||
              rowFlags[i].test( RowFlag::kRhsInf ) )
@@ -343,28 +344,18 @@ class Algorithm
       }
 
       msg.info( "\n{} of the {} rows were considered hard and were excluded.\n",
-                redundant_constraints, problem.getNRows() );
+                n_hard_constraints, problem.getNRows() );
 
-      slack_vars = 0;
-      auto slack_var_upper_bounds = new double[slack_vars];
-
-      builder.reserve( nnz, nrows, ncols + slack_vars );
+      builder.reserve( nnz, nrows, ncols );
 
       /* set up rows */
       builder.setNumRows( nrows );
       int counter = 0;
-      int slack_var_counter = 0;
       for( int i = 0; i < problem.getNRows(); ++i )
       {
          auto flags = rowFlags[i];
-         if( flags.test( RowFlag::kRedundant ) )
-         {
-            assert(
-                !num.isEq( get_max_min_factor( matrix.getRowCoefficients( i ) ),
-                           alg_parameter.threshold_hard_constraints ) );
-            continue;
-         }
-         assert( num.isEq( get_max_min_factor( matrix.getRowCoefficients( i ) ),
+         assert( !flags.test( RowFlag::kHardConstraint ) ||
+                 num.isGT( get_max_min_factor( matrix.getRowCoefficients( i ) ),
                            alg_parameter.threshold_hard_constraints ) );
          const SparseVectorView<REAL>& view = matrix.getRowCoefficients( i );
          const int* rowcols = view.getIndices();
@@ -372,10 +363,6 @@ class Algorithm
          int rowlen = view.getLength();
          REAL lhs = leftHandSides[i];
          REAL rhs = rightHandSides[i];
-         // TODO: what if activities[i].ninfmin != 0?
-         REAL min_activity = activities[i].min;
-         // TODO: what if activities[i].ninfmax != 0?
-         REAL max_activity = activities[i].max;
 
          if( flags.test( RowFlag::kEquation ) )
          {
@@ -386,6 +373,7 @@ class Algorithm
             builder.setRowRhs( counter, rhs );
             builder.setRowLhsInf( counter, false );
             builder.setRowRhsInf( counter, false );
+            builder.setHardConstraint( counter, flags.test( RowFlag::kHardConstraint ) );
          }
          else if( flags.test( RowFlag::kLhsInf ) )
          {
@@ -399,6 +387,7 @@ class Algorithm
             builder.setRowRhs( counter, 0 );
             builder.setRowLhsInf( counter, false );
             builder.setRowRhsInf( counter, true );
+            builder.setHardConstraint( counter, flags.test( RowFlag::kHardConstraint ) );
          }
          else if( flags.test( RowFlag::kRhsInf ) )
          {
@@ -409,6 +398,7 @@ class Algorithm
             builder.setRowRhs( counter, 0 );
             builder.setRowLhsInf( counter, false );
             builder.setRowRhsInf( counter, true );
+            builder.setHardConstraint( counter, flags.test( RowFlag::kHardConstraint ) );
          }
          else
          {
@@ -423,6 +413,7 @@ class Algorithm
             builder.setRowRhs( counter, 0 );
             builder.setRowLhsInf( counter, false );
             builder.setRowRhsInf( counter, true );
+            builder.setHardConstraint( counter, flags.test( RowFlag::kHardConstraint ) );
             counter++;
 
             builder.addRowEntries( counter, rowlen, rowcols, rowvals );
@@ -430,13 +421,13 @@ class Algorithm
             builder.setRowRhs( counter, 0 );
             builder.setRowLhsInf( counter, false );
             builder.setRowRhsInf( counter, true );
+            builder.setHardConstraint( counter, flags.test( RowFlag::kHardConstraint ) );
          }
          counter++;
       }
-      assert( slack_var_counter == slack_vars );
 
       /* set up columns */
-      builder.setNumCols( ncols + slack_vars );
+      builder.setNumCols( ncols );
       for( int i = 0; i < ncols; ++i )
       {
          builder.setColLb( i, problem.getLowerBounds()[i] );
@@ -447,18 +438,6 @@ class Algorithm
 
          builder.setColIntegral( i, flags.test( ColFlag::kIntegral ) );
          builder.setObj( i, coefficients[i] );
-      }
-
-      // TODO: safe to assume slack_var ordering is consistent here and above
-      //       while creating slack_var_upper_bounds?
-      for( int i = ncols; i < ncols + slack_vars; ++i )
-      {
-         builder.setColLb( i, 0 );
-         builder.setColUb( i, 8 * slack_var_upper_bounds[i - ncols] );
-         builder.setColLbInf( i, false );
-         builder.setColUbInf( i, false );
-         builder.setColIntegral( i, false );
-         builder.setObj( i, 0 );
       }
 
       return builder;
