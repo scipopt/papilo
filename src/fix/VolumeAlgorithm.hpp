@@ -316,7 +316,11 @@ class VolumeAlgorithm
    {
       for( int i = 0; i < n_rows_A; i++ )
       {
-         if( A.getRowFlags()[i].test( RowFlag::kRhsInf ) )
+         if( A.getRowFlags()[i].test( RowFlag::kHardConstraint ) )
+         {
+            pi[i] = 0;
+         }
+         else if( A.getRowFlags()[i].test( RowFlag::kRhsInf ) )
          {
             // Note: change following max if assumption 4 is invalid.
             pi[i] = num.max( pi[i], REAL{ 0.0 } );
