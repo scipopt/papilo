@@ -21,9 +21,9 @@
 /*                                                                           */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
+#include "fix/Constraint.hpp"
 #include "fix/FixAndPropagate.hpp"
 #include "fix/Heuristic.hpp"
-#include "fix/Constraint.hpp"
 #include "fix/VolumeAlgorithm.hpp"
 #include "fix/strategy/FarkasRoundingStrategy.hpp"
 #include "fix/strategy/FractionalRoundingStrategy.hpp"
@@ -111,19 +111,19 @@ class Algorithm
                 return;
              }
 
-             RandomGenerator random(alg_parameter.seed);
+             RandomGenerator random( alg_parameter.seed );
              VolumeAlgorithm<REAL> algorithm{ msg, num, timer, alg_parameter,
                                               result.postsolve };
 
              // setup data for the volume algorithm
              int n_hard_constraints = 0;
-             ProblemBuilder<REAL> builder = modify_problem( problem,
-                                                            n_hard_constraints
-                                                          );
+             ProblemBuilder<REAL> builder =
+                 modify_problem( problem, n_hard_constraints );
              Problem<REAL> reformulated = builder.build();
 
-             Heuristic<REAL> service{ msg, num, random, timer, reformulated, result.postsolve };
-             service.setup(random);
+             Heuristic<REAL> service{ msg,   num,          random,
+                                      timer, reformulated, result.postsolve };
+             service.setup( random );
              reformulated.recomputeAllActivities();
 
              assert( problem.getNCols() == reformulated.getNCols() );
@@ -142,13 +142,13 @@ class Algorithm
 
              msg.info( "\tStarting primal heuristics - {:.3} s\n",
                        timer.getTime() );
-             bool solution_found = service.find_initial_solution(best_obj_value,
-                                                                 best_solution);
+             bool solution_found =
+                 service.find_initial_solution( best_obj_value, best_solution );
 
              if( solution_found )
                 box_upper_bound_volume = best_obj_value;
-//             assert( !num.isEq( box_upper_bound_volume ==
-//                      std::numeric_limits<double>::min() ) )
+             //             assert( !num.isEq( box_upper_bound_volume ==
+             //                      std::numeric_limits<double>::min() ) )
 
              int round_counter = 0;
              int round_first_solution = -1;
@@ -168,10 +168,8 @@ class Algorithm
                     service.get_derived_conflicts(),
                     reformulated.getConstraintMatrix().getLeftHandSides(),
                     reformulated.getVariableDomains(),
-                    reformulated.getNumIntegralCols(),
-                    box_upper_bound_volume, solution_found,
-                    n_hard_constraints,
-                    pi, pi_conflicts );
+                    reformulated.getNumIntegralCols(), box_upper_bound_volume,
+                    solution_found, n_hard_constraints, pi, pi_conflicts );
                 print_solution( primal_heur_sol );
 
                 if( timer.getTime() >= alg_parameter.time_limit )
@@ -184,7 +182,8 @@ class Algorithm
                 //
                 //                assert( sub.size() == problem.getNCols() );
                 assert( problem.getNCols() == primal_heur_sol.size() );
-                auto old_conflicts = (int) service.get_derived_conflicts().size();
+                auto old_conflicts =
+                    (int)service.get_derived_conflicts().size();
 
                 bool sol_updated = service.perform_fix_and_propagate(
                     primal_heur_sol, best_obj_value, best_solution );
@@ -199,24 +198,50 @@ class Algorithm
                    break;
 
                 auto new_conflicts =
-                   (int) service.get_derived_conflicts().size() - old_conflicts;
+                    (int)service.get_derived_conflicts().size() - old_conflicts;
                 if( new_conflicts == 0 )
                 {
-                   msg.info(
-                       "\tNo conflict could be generated - {:.3} s\n", timer.getTime() );
+                   msg.info( "\tNo conflict could be generated - {:.3} s\n",
+                             timer.getTime() );
                    break;
                 }
+
+                int cont_solution_not_feasible_for_conflicts = 0;
+                for( const Constraint<REAL> item :
+                     service.get_derived_conflicts() )
+                {
+                   auto data = item.get_data();
+                   StableSum<REAL> sum{};
+                   for( int i = 0; i < data.getLength(); i++ )
+                      sum.add( data.getValues()[i] *
+                               primal_heur_sol[data.getIndices()[i]] );
+                   REAL value = sum.get();
+                   if( !item.get_row_flag().test( RowFlag::kRhsInf ) )
+                   {
+                      if( num.isLE( value, item.get_rhs() ) )
+                         continue;
+                   }
+                   if( !item.get_row_flag().test( RowFlag::kLhsInf ) )
+                   {
+                      if( num.isGE( value, item.get_rhs() ) )
+                         continue;
+                   }
+                   cont_solution_not_feasible_for_conflicts++;
+                }
+
                 if( alg_parameter.copy_conflicts_to_problem &&
                     ( new_conflicts + old_conflicts ) >
                         alg_parameter.size_of_conflicts_to_be_copied )
                 {
-                   reformulated =
-                       service.copy_conflicts_to_problem( reformulated,
-                             service.get_derived_conflicts() );
-                   msg.info( "\tCopied {} conflicts to the (f&p) problem "
-                         "(constraints {}) - {:.3} s\n", new_conflicts +
-                         old_conflicts, reformulated.getNRows(), timer.getTime()
-                         );
+
+                   reformulated = service.copy_conflicts_to_problem(
+                       reformulated, service.get_derived_conflicts() );
+                   msg.info( "\tCopied {} conflicts ({} not feasible for current "
+                             "solution)  to the (f&p) problem "
+                             "(constraints {}) - {:.3} s\n",
+                             new_conflicts + old_conflicts,
+                             cont_solution_not_feasible_for_conflicts,
+                             reformulated.getNRows(), timer.getTime() );
                    reformulated.recomputeAllActivities();
                    service.get_derived_conflicts().clear();
                    pi_conflicts.clear();
@@ -224,9 +249,13 @@ class Algorithm
                 }
                 else
                 {
-                   msg.info( "\tFound {} conflicts (treated separately) - {:.3} s\n",
-                             new_conflicts, timer.getTime() );
-                   pi_conflicts.resize( pi_conflicts.size() + new_conflicts, 0 );
+                   msg.info( "\tFound {} conflicts ({} not feasible for current "
+                             "solution) (treated separately) - {:.3} s\n",
+                             new_conflicts,
+                             cont_solution_not_feasible_for_conflicts,
+                             timer.getTime() );
+                   pi_conflicts.resize( pi_conflicts.size() + new_conflicts,
+                                        0 );
                 }
 
                 round_counter++;
@@ -253,7 +282,6 @@ class Algorithm
           } );
 #endif
    }
-
 
    REAL
    calc_box_upper_bound( const Problem<REAL>& problem ) const
@@ -328,7 +356,7 @@ class Algorithm
          int rowsize = rowSizes[i];
 
          if( num.isGT( get_max_min_factor( matrix.getRowCoefficients( i ) ),
-                        alg_parameter.threshold_hard_constraints ) )
+                       alg_parameter.threshold_hard_constraints ) )
          {
             n_hard_constraints++;
             rowFlags[i].set( RowFlag::kHardConstraint );
@@ -373,7 +401,8 @@ class Algorithm
             builder.setRowRhs( counter, rhs );
             builder.setRowLhsInf( counter, false );
             builder.setRowRhsInf( counter, false );
-            builder.setHardConstraint( counter, flags.test( RowFlag::kHardConstraint ) );
+            builder.setHardConstraint( counter,
+                                       flags.test( RowFlag::kHardConstraint ) );
          }
          else if( flags.test( RowFlag::kLhsInf ) )
          {
@@ -387,7 +416,8 @@ class Algorithm
             builder.setRowRhs( counter, 0 );
             builder.setRowLhsInf( counter, false );
             builder.setRowRhsInf( counter, true );
-            builder.setHardConstraint( counter, flags.test( RowFlag::kHardConstraint ) );
+            builder.setHardConstraint( counter,
+                                       flags.test( RowFlag::kHardConstraint ) );
          }
          else if( flags.test( RowFlag::kRhsInf ) )
          {
@@ -398,7 +428,8 @@ class Algorithm
             builder.setRowRhs( counter, 0 );
             builder.setRowLhsInf( counter, false );
             builder.setRowRhsInf( counter, true );
-            builder.setHardConstraint( counter, flags.test( RowFlag::kHardConstraint ) );
+            builder.setHardConstraint( counter,
+                                       flags.test( RowFlag::kHardConstraint ) );
          }
          else
          {
@@ -413,7 +444,8 @@ class Algorithm
             builder.setRowRhs( counter, 0 );
             builder.setRowLhsInf( counter, false );
             builder.setRowRhsInf( counter, true );
-            builder.setHardConstraint( counter, flags.test( RowFlag::kHardConstraint ) );
+            builder.setHardConstraint( counter,
+                                       flags.test( RowFlag::kHardConstraint ) );
             counter++;
 
             builder.addRowEntries( counter, rowlen, rowcols, rowvals );
@@ -421,7 +453,8 @@ class Algorithm
             builder.setRowRhs( counter, 0 );
             builder.setRowLhsInf( counter, false );
             builder.setRowRhsInf( counter, true );
-            builder.setHardConstraint( counter, flags.test( RowFlag::kHardConstraint ) );
+            builder.setHardConstraint( counter,
+                                       flags.test( RowFlag::kHardConstraint ) );
          }
          counter++;
       }
