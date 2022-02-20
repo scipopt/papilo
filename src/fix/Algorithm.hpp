@@ -216,14 +216,11 @@ class Algorithm
                       sum.add( data.getValues()[i] *
                                primal_heur_sol[data.getIndices()[i]] );
                    REAL value = sum.get();
-                   if( !item.get_row_flag().test( RowFlag::kRhsInf ) )
-                   {
-                      if( num.isLE( value, item.get_rhs() ) )
+                   if( !item.get_row_flag().test( RowFlag::kRhsInf ) && num.isLE( value, item.get_rhs() ) )
                          continue;
-                   }
                    if( !item.get_row_flag().test( RowFlag::kLhsInf ) )
                    {
-                      if( num.isGE( value, item.get_rhs() ) )
+                      if( num.isGE( value, item.get_lhs() ) )
                          continue;
                    }
                    cont_solution_not_feasible_for_conflicts++;
