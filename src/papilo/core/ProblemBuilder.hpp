@@ -229,6 +229,15 @@ class ProblemBuilder
    }
 
    void
+   setHardConstraint( int row, bool isHardConstraint )
+   {
+      if( isHardConstraint )
+         rflags[row].set( RowFlag::kHardConstraint );
+      else
+         rflags[row].unset( RowFlag::kHardConstraint );
+   }
+
+   void
    setRowRhsInfAll( Vec<uint8_t> isInfinite )
    {
       assert( isInfinite.size() == rflags.size() );

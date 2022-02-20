@@ -50,8 +50,8 @@ TEST_CASE( "small-volume-algorithm-test", "[volume]" )
 //   Vec<double> pi( 2 );
 //   pi = { 0, 0 };
 //
-//   algorithm.volume_algorithm( c, matrix, b, problem.getVariableDomains(), pi,
-//                               problem.getNumIntegralCols(), 2 );
+//   algorithm.volume_algorithm( c, matrix, b, problem.getVariableDomains(),
+//                               problem.getNumIntegralCols(), pi, 2 );
 //   // TODO: @Suresh add assertions and check input
 }
 
