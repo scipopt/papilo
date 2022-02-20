@@ -52,7 +52,7 @@ class VectorMultiplication
       assert( constraints.size() == result2.size() );
       // TODO: add another assertion for x.size()=n_cols_constraints
 
-      Vec<RowFlags>& rowFlags = A.getRowFlags();
+      const Vec<RowFlags>& rowFlags = A.getRowFlags();
 #ifdef PAPILO_TBB
       tbb::parallel_for( tbb::blocked_range<int>( 0, n_rows_A +
                                                      constraints.size() ),
@@ -98,7 +98,7 @@ class VectorMultiplication
       assert( A.getNCols() == b.size() );
       assert( A.getNRows() == x.size() );
 
-      Vec<RowFlags>& rowFlags = A.getRowFlags();
+      const Vec<RowFlags>& rowFlags = A.getRowFlags();
 #ifdef PAPILO_TBB
       tbb::parallel_for( tbb::blocked_range<int>( 0, A.getNCols() ),
                          [&]( const tbb::blocked_range<int>& r )
