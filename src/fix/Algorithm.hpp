@@ -194,7 +194,8 @@ class Algorithm
                 if( timer.getTime() >= alg_parameter.time_limit )
                    break;
 
-                auto new_conflicts = (int) service.get_derived_conflicts().size() - old_conflicts;
+                auto new_conflicts =
+                   (int) service.get_derived_conflicts().size() - old_conflicts;
                 if( new_conflicts == 0 )
                 {
                    msg.info(
@@ -202,14 +203,16 @@ class Algorithm
                    break;
                 }
                 if( alg_parameter.copy_conflicts_to_problem &&
-                    new_conflicts >
+                    ( new_conflicts + old_conflicts ) >
                         alg_parameter.size_of_conflicts_to_be_copied )
                 {
                    reformulated =
-                       service.copy_conflicts_to_problem( reformulated, service.get_derived_conflicts() );
-                   msg.info(
-                       "\tCopied {} conflicts to the (f&p) problem (constraints {}) - {:.3} s\n",
-                       new_conflicts, reformulated.getNRows(), timer.getTime() );
+                       service.copy_conflicts_to_problem( reformulated,
+                             service.get_derived_conflicts() );
+                   msg.info( "\tCopied {} conflicts to the (f&p) problem
+                         (constraints {}) - {:.3} s\n", new_conflicts +
+                         old_conflicts, reformulated.getNRows(), timer.getTime()
+                         );
                    pi_conflicts.clear();
                    reformulated.recomputeAllActivities();
                    service.get_derived_conflicts().clear();
