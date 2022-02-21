@@ -26,6 +26,7 @@
 #include "papilo/core/Problem.hpp"
 #include "papilo/io/MpsParser.hpp"
 #include "papilo/misc/OptionsParser.hpp"
+#include "papilo/misc/VersionLogger.hpp"
 #include <boost/program_options.hpp>
 #include <fstream>
 
@@ -55,6 +56,8 @@ using namespace papilo;
 int
 main( int argc, char* argv[] )
 {
+   print_header("Scully");
+
    double readtime = 0;
    Timer t( readtime );
    // get the options passed by the user

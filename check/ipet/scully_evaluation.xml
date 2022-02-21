@@ -1,0 +1,9 @@
+<?xml version="1.0" ?>
+<Evaluation comparecolformat="%.3f" index="ProblemName LogFileName" indexsplit="-1">
+  <Column active="True" alternative="1e+30" name="value" origcolname="value" reduction="meanOrConcat"/>
+  <Column active="True" alternative="-1" name="first" origcolname="first" reduction="meanOrConcat"/>
+  <Column active="True" alternative="-1" name="best" origcolname="best" reduction="meanOrConcat"/>
+	<Column active="True" alternative="-1" name="runtime" origcolname="runtime" reduction="meanOrConcat">
+		<Aggregation aggregation="shmean" name="shmean" shiftby="1.0"/>
+	</Column>
+</Evaluation>
