@@ -34,7 +34,7 @@ struct AlgorithmParameter
    double time_limit = 10 * 60;
    int threads = 8;
    int seed = 0;
-   bool copy_conflicts_to_problem = false;
+   bool copy_conflicts_to_problem = true;
    int size_of_conflicts_to_be_copied = 0;
 
    // vol algorithm parameters
