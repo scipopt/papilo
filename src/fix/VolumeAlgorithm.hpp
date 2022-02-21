@@ -81,6 +81,7 @@ class VolumeAlgorithm
                      const int num_int_vars, const REAL init_upper_bound,
                      const bool init_primal_sol,
                      const REAL threshold_hard_constraints,
+                     const int n_rows_A_no_conflicts,
                      bool detect_hard_constraints,
                      int& n_hard_constraints,
                      Vec<REAL>& pi, Vec<REAL>& pi_conflicts )
@@ -95,7 +96,8 @@ class VolumeAlgorithm
       if( detect_hard_constraints )
       {
          detect_hard_constraints = false;
-         update_hard_constraints( n_rows_A, A, threshold_hard_constraints,
+         update_hard_constraints( n_rows_A_no_conflicts, A,
+                                  threshold_hard_constraints,
                                   n_hard_constraints );
       }
 
@@ -271,14 +273,15 @@ class VolumeAlgorithm
 
  private:
    void
-   update_hard_constraints( const int n_rows_A, ConstraintMatrix<REAL>& A,
+   update_hard_constraints( const int n_rows_A_no_conflicts,
+                            ConstraintMatrix<REAL>& A,
                             const REAL threshold_hard_constraints,
                             int& n_hard_constraints )
    {
       n_hard_constraints = 0;
       Vec<RowFlags>& rowFlags = A.getRowFlags();
 
-      for( int i = 0; i < n_rows_A; i++ )
+      for( int i = 0; i < n_rows_A_no_conflicts; i++ )
       {
          if( num.isGT( get_max_min_factor( A.getRowCoefficients( i ) ),
                        threshold_hard_constraints ) )

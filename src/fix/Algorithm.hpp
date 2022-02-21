@@ -118,6 +118,7 @@ class Algorithm
              // setup data for the volume algorithm
              ProblemBuilder<REAL> builder = modify_problem( problem );
              Problem<REAL> reformulated = builder.build();
+             int n_rows_A_no_conflicts = reformulated.getNRows();
              int n_hard_constraints = 0;
              bool detect_hard_constraints = true;
              REAL threshold_hard_constraints =
@@ -140,7 +141,7 @@ class Algorithm
              Vec<REAL> primal_heur_sol{};
              primal_heur_sol.reserve( reformulated.getNCols() );
              Vec<REAL> pi;
-             pi.reserve( reformulated.getNRows() );
+             pi.reserve( n_rows_A_no_conflicts );
              generate_initial_dual_solution( reformulated, pi );
              Vec<REAL> pi_conflicts;
              Vec<Vec<SingleBoundChange<REAL>>> bound_changes;
@@ -176,8 +177,8 @@ class Algorithm
                     reformulated.getVariableDomains(),
                     reformulated.getNumIntegralCols(), box_upper_bound_volume,
                     solution_found, threshold_hard_constraints,
-                    detect_hard_constraints, n_hard_constraints, pi,
-                    pi_conflicts );
+                    n_rows_A_no_conflicts, detect_hard_constraints,
+                    n_hard_constraints, pi, pi_conflicts );
                 print_solution( primal_heur_sol );
 
                 if( timer.getTime() >= alg_parameter.time_limit )
