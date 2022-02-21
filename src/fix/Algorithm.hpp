@@ -246,7 +246,7 @@ class Algorithm
                    reformulated.recomputeAllActivities();
                    service.get_derived_conflicts().clear();
                    pi.insert( pi.end(), pi_conflicts.begin(), pi_conflicts.end() );
-                   pi.resize( pi.size() + new_conflicts, 1e8 );
+                   pi.resize( pi.size() + new_conflicts, 0 );
                    pi_conflicts.clear();
                 }
                 else
@@ -257,7 +257,7 @@ class Algorithm
                              cont_solution_not_feasible_for_conflicts,
                              timer.getTime() );
                    pi_conflicts.resize( pi_conflicts.size() + new_conflicts,
-                                        1e8 );
+                                        0 );
                 }
 
                 round_counter++;
