@@ -95,8 +95,7 @@ class VolumeAlgorithm
       if( detect_hard_constraints )
       {
          detect_hard_constraints = false;
-         n_hard_constraints = 0;
-         identify_hard_constraints( n_rows_A, A, threshold_hard_constraints,
+         update_hard_constraints( n_rows_A, A, threshold_hard_constraints,
                                   n_hard_constraints );
       }
 
@@ -272,10 +271,11 @@ class VolumeAlgorithm
 
  private:
    void
-   identify_hard_constraints( const int n_rows_A, ConstraintMatrix<REAL>& A,
+   update_hard_constraints( const int n_rows_A, ConstraintMatrix<REAL>& A,
                             const REAL threshold_hard_constraints,
                             int& n_hard_constraints )
    {
+      n_hard_constraints = 0;
       Vec<RowFlags>& rowFlags = A.getRowFlags();
 
       for( int i = 0; i < n_rows_A; i++ )
@@ -285,6 +285,10 @@ class VolumeAlgorithm
          {
             n_hard_constraints++;
             rowFlags[i].set( RowFlag::kHardConstraint );
+         }
+         else
+         {
+            rowFlags[i].unset( RowFlag::kHardConstraint );
          }
       }
 
