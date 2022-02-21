@@ -221,14 +221,14 @@ class Algorithm
                    reformulated.recomputeAllActivities();
                    service.get_derived_conflicts().clear();
                    pi.insert( pi.end(), pi_conflicts.begin(), pi_conflicts.end() );
-                   pi.resize( pi.size() + new_conflicts, 0 );
+                   pi.resize( pi.size() + new_conflicts, 1e8 );
                    pi_conflicts.clear();
                 }
                 else
                 {
                    msg.info( "\tFound {} conflicts (treated separately) - {:.3} s\n",
                              new_conflicts, timer.getTime() );
-                   pi_conflicts.resize( pi_conflicts.size() + new_conflicts, 0 );
+                   pi_conflicts.resize( pi_conflicts.size() + new_conflicts, 1e8 );
                 }
 
                 round_counter++;
