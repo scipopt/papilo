@@ -60,9 +60,6 @@ class VolumeAlgorithm
        : msg( _msg ), num( _num ), timer( t ), parameter( parameter_ ),
          postsolve_storage( postsolve_storage_ ), op( {} )
    {
-      alpha = parameter.alpha;
-      alpha_max = parameter.alpha_max;
-      f = parameter.f;
    }
 
    /**
@@ -88,6 +85,10 @@ class VolumeAlgorithm
                      int& n_hard_constraints,
                      Vec<REAL>& pi, Vec<REAL>& pi_conflicts )
    {
+      alpha = parameter.alpha;
+      alpha_max = parameter.alpha_max;
+      f = parameter.f;
+
       REAL st = timer.getTime();
       int n_rows_A = A.getNRows();
       int n_conflicts = derived_conflicts.size();
