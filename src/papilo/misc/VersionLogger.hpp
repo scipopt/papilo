@@ -70,7 +70,7 @@ join( const Vec<std::string>& v, char c, std::string& s )
 }
 
 void
-print_header()
+print_header(std::string alg_name)
 {
    std::string mode = "optimized";
 #ifdef NDEBUG
@@ -96,7 +96,9 @@ print_header()
    else
       join( list_of_solvers, ',', solvers );
 #ifdef PAPILO_GITHASH_AVAILABLE
-   fmt::print( "PaPILO version {}.{}.{} [mode: {}][Solvers: {}][GitHash: {}]\n",
+   fmt::print(
+       "{} version {}.{}.{} [mode: {}][Solvers: {}][GitHash: {}]\n",
+               alg_name,
                PAPILO_VERSION_MAJOR, PAPILO_VERSION_MINOR, PAPILO_VERSION_PATCH,
                mode, solvers, PAPILO_GITHASH );
 #else
