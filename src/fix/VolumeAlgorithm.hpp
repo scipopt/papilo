@@ -148,7 +148,7 @@ class VolumeAlgorithm
       REAL upper_bound;
       bool finite_upper_bound = false;
 
-      Vec<REAL> x_bar_last_iter( x_bar );
+      Vec<REAL> x_last_iter( x_bar );
       Vec<int> fixed_int_vars_count( x_bar.size() );
       Vec<int> num_fixed_int_vars( parameter.max_iterations );
       int fixed_int_var_check_counter = 0;
@@ -192,7 +192,7 @@ class VolumeAlgorithm
                              residual_t_conflicts );
          calc_alpha( residual_t, v_t, residual_t_conflicts, v_t_conflicts );
 
-         x_bar_last_iter = x_bar;
+         x_last_iter = x_bar;
          // x_bar ← αx_t + (1 − α)x_bar
          op.calc_qb_plus_sx( alpha, x_t, 1 - alpha, x_bar,
                              x_bar );
@@ -211,7 +211,7 @@ class VolumeAlgorithm
          else
             improvement_indicator = false;
 
-         update_fixed_int_count( x_bar, x_bar_last_iter, domains,
+         update_fixed_int_count( x_bar, x_last_iter, domains,
                                  counter,
                                  fixed_int_vars_count,
                                  num_fixed_int_vars );
@@ -235,7 +235,7 @@ class VolumeAlgorithm
          }
 
          // check integrality of x_bar
-         integrality_check( x_bar, x_bar_last_iter, domains );
+         integrality_check( x_bar, x_last_iter, domains );
 
          // Let t ← t + 1 and go to Step 1.
          counter = counter + 1;
@@ -509,17 +509,17 @@ class VolumeAlgorithm
    }
 
    void
-   init_fixed_int_count( const Vec<REAL>& x_bar,
+   init_fixed_int_count( const Vec<REAL>& x_curr_iter,
                          const VariableDomains<REAL>& domains,
                          Vec<int>& fixed_int_vars_count )
    {
-      int x_bar_size = x_bar.size();
-      assert( fixed_int_vars_count.size() == x_bar_size );
+      int x_size = x_curr_iter.size();
+      assert( fixed_int_vars_count.size() == x_size );
 
-      for( int i = 0; i < x_bar_size; i++ )
+      for( int i = 0; i < x_size; i++ )
       {
          if( domains.flags[i].test( ColFlag::kIntegral ) &&
-               num.isIntegral( x_bar[i] ) )
+               num.isIntegral( x_curr_iter[i] ) )
             fixed_int_vars_count[i] = 1;
       }
    }
@@ -527,21 +527,21 @@ class VolumeAlgorithm
    // TODO: create an array for int var indices only once in Algorithm.hpp and
    //       pass it to the volume algo call?
    void
-   update_fixed_int_count( const Vec<REAL>& x_bar,
-                           const Vec<REAL> x_bar_last_iter,
+   update_fixed_int_count( const Vec<REAL>& x_curr_iter,
+                           const Vec<REAL> x_last_iter,
                            const VariableDomains<REAL>& domains,
                            const int iter_counter,
                            Vec<int>& fixed_int_vars_count,
                            Vec<int>& num_fixed_int_vars )
    {
-      int x_bar_size = x_bar.size();
-      assert( fixed_int_vars_count.size() == x_bar_size);
+      int x_size = x_curr_iter.size();
+      assert( fixed_int_vars_count.size() == x_size);
 
-      for( int i = 0; i < x_bar_size; i++ )
+      for( int i = 0; i < x_size; i++ )
       {
          if( domains.flags[i].test( ColFlag::kIntegral ) &&
-               num.isIntegral( x_bar[i] ) &&
-               num.isEq( x_bar[i], x_bar_last_iter[i] ) )
+               num.isIntegral( x_curr_iter[i] ) &&
+               num.isEq( x_curr_iter[i], x_last_iter[i] ) )
             fixed_int_vars_count[i]++;
          else
             fixed_int_vars_count[i] = 0;
@@ -714,21 +714,21 @@ class VolumeAlgorithm
    }
 
    void
-   integrality_check( const Vec<REAL>& x_bar,
-                      const Vec<REAL>& x_bar_last_iter,
+   integrality_check( const Vec<REAL>& x_curr_iter,
+                      const Vec<REAL>& x_last_iter,
                       const VariableDomains<REAL>& domains )
    {
       if( msg.getVerbosityLevel() == VerbosityLevel::kDetailed )
       {
          int num_integral = 0;
          int num_fixed_int = 0;
-         for( int i = 0; i < x_bar.size(); i++ )
+         for( int i = 0; i < x_curr_iter.size(); i++ )
          {
             if( domains.flags[i].test( ColFlag::kIntegral ) &&
-                  num.isIntegral( x_bar[i] ) )
+                  num.isIntegral( x_curr_iter[i] ) )
                {
                   num_integral++;
-                  if( num.isEq( x_bar[i], x_bar_last_iter[i] ) )
+                  if( num.isEq( x_curr_iter[i], x_last_iter[i] ) )
                      num_fixed_int++;
                }
          }
