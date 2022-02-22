@@ -153,8 +153,8 @@ class Algorithm
 
              if( alg_parameter.use_cutoff_constraint )
              {
-                problem = add_cutoff_objective( problem );
-                problem.recomputeAllActivities();
+                reformulated = add_cutoff_objective( reformulated );
+                reformulated.recomputeAllActivities();
              }
              if( alg_parameter.use_cutoff_constraint )
                 offset_for_cutoff = calculate_cutoff_offset( problem );
@@ -221,6 +221,7 @@ class Algorithm
                 assert( problem.getNCols() == primal_heur_sol.size() );
                 auto old_conflicts =
                     (int)service.get_derived_conflicts().size();
+                msg.info("{}\n", problem.getNRows());
 
                 bool sol_updated = service.perform_fix_and_propagate(
                     primal_heur_sol, best_obj_value, best_solution );
@@ -462,9 +463,11 @@ class Algorithm
 
       builder.addRowEntries( 0, new_nnz, rowcols_obj, rowvals_obj );
       builder.setRowLhs( 0, 0 );
-      builder.setRowRhs( 0, std::numeric_limits<REAL>::max() );
+      builder.setRowRhs( 0, 0 );
       builder.setRowLhsInf( 0, true );
-      builder.setRowRhsInf( 0, false );
+      builder.setRowRhsInf( 0, true );
+      builder.setHardConstraint( 0, true );
+
 
       /* set up rows */
       builder.setNumRows( nrows + 1 );
@@ -482,6 +485,7 @@ class Algorithm
          builder.setRowRhs( i + 1, rhs );
          builder.setRowLhsInf( i + 1, rowFlags[i].test( RowFlag::kLhsInf ) );
          builder.setRowRhsInf( i + 1, rowFlags[i].test( RowFlag::kRhsInf ) );
+         builder.setHardConstraint( i + 1, rowFlags[i].test( RowFlag::kHardConstraint ) );
       }
 
       /* set up columns */
