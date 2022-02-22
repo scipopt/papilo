@@ -421,19 +421,21 @@ class VolumeAlgorithm
       bool fixed_int_var_term = false;
       int max_fixed = -1;
       int min_fixed = -1;
+      int ref_fixed = -1;
       if( iter_counter >= std::max( num_iters_fixed, num_iters_percent ) )
       {
          max_fixed = *std::max_element(
                std::next( num_fixed_int_vars.begin(), iter_counter -
-                  num_iters_percent + 1 ),
-               std::next( num_fixed_int_vars.begin(), iter_counter + 1 ) );
+                  num_iters_percent ),
+               std::next( num_fixed_int_vars.begin(), iter_counter ) );
          min_fixed = *std::min_element(
                std::next( num_fixed_int_vars.begin(), iter_counter -
-                  num_iters_percent + 1 ),
-               std::next( num_fixed_int_vars.begin(), iter_counter + 1 ) );
+                  num_iters_percent ),
+               std::next( num_fixed_int_vars.begin(), iter_counter ) );
+         ref_fixed = num_fixed_int_vars[iter_counter - num_iters_percent];
 
          // TODO: OK even if max_fixed = 0 = min_fixed?
-         fixed_int_var_term = ( (max_fixed - min_fixed ) <= num_int_vars *
+         fixed_int_var_term = ( (max_fixed - min_fixed ) <= 2.0 * ref_fixed *
                                          parameter.fixed_int_var_threshold );
       }
 
@@ -444,9 +446,9 @@ class VolumeAlgorithm
       msg.detailed( "   objA: {}\n", abs( op.multi( c, x_bar ) ) );
       msg.detailed( "   objR: {}\n", abs( op.multi( c, x_bar ) - z_bar ) /
                                         abs( z_bar ) );
-      msg.detailed( "   max_fixed: {}\t min_fixed: {}\t threshold: {}\n",
-                        max_fixed, min_fixed,
-                        num_int_vars * parameter.fixed_int_var_threshold );
+      msg.detailed( "   max_fixed: {}\t min_fixed: {}\t ref_fixed: {}\t "
+                    "threshold: {}\n", max_fixed, min_fixed, ref_fixed,
+                    2.0 * ref_fixed * parameter.fixed_int_var_threshold );
 
       bool time_limit_term = ( num.isGE( timer.getTime(),
                                          parameter.time_limit ) );
@@ -553,6 +555,7 @@ class VolumeAlgorithm
                                           { return val >= num_iters_fixed_check;
                                           } );
       num_fixed_int_vars[iter_counter] = n_fixed_int_vars;
+      msg.detailed( "   n_fixed_int_vars: {}\n", n_fixed_int_vars );
    }
 
    void
