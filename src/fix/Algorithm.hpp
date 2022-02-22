@@ -175,8 +175,11 @@ class Algorithm
                                      problem, best_solution ) -
                                  offset_for_cutoff;
                    problem.getRowFlags()[0].unset( RowFlag::kRhsInf );
+                   problem.getRowFlags()[0].unset( RowFlag::kRedundant );
                    problem.getConstraintMatrix().getRightHandSides()[0] =
                        cutoff;
+                   problem.recomputeAllActivities();
+
                 }
              }
 
@@ -228,6 +231,7 @@ class Algorithm
                       problem.getRowFlags()[0].unset( RowFlag::kRhsInf );
                       problem.getConstraintMatrix().getRightHandSides()[0] =
                           cutoff;
+                      problem.recomputeAllActivities();
                    }
                 }
 
@@ -451,9 +455,9 @@ class Algorithm
 
       builder.addRowEntries( 0, new_nnz, rowcols_obj, rowvals_obj );
       builder.setRowLhs( 0, 0 );
-      builder.setRowRhs( 0, 0 );
+      builder.setRowRhs( 0, std::numeric_limits<REAL>::max() );
       builder.setRowLhsInf( 0, true );
-      builder.setRowRhsInf( 0, true );
+      builder.setRowRhsInf( 0, false );
 
       /* set up rows */
       builder.setNumRows( nrows + 1 );
