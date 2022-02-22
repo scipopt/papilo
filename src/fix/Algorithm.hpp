@@ -155,13 +155,9 @@ class Algorithm
              {
                 reformulated = add_cutoff_objective( reformulated );
                 reformulated.recomputeAllActivities();
-             }
-             msg.info("{}\n", reformulated.getRowFlags()[0].test(RowFlag::kEquation));
-             msg.info("{}\n", reformulated.getRowFlags()[0].test(RowFlag::kRhsInf));
-             msg.info("{}\n", reformulated.getRowFlags()[0].test(RowFlag::kLhsInf));
-             msg.info("{}\n", reformulated.getRowFlags()[0].test(RowFlag::kRedundant));
-             if( alg_parameter.use_cutoff_constraint )
                 offset_for_cutoff = calculate_cutoff_offset( reformulated );
+             }
+
              assert( num.isGT( offset_for_cutoff, 0 ) &&
                      num.isLE( offset_for_cutoff, 1 ) );
 
@@ -179,8 +175,6 @@ class Algorithm
                                      reformulated, best_solution ) -
                                  offset_for_cutoff;
                    reformulated.getRowFlags()[0].unset( RowFlag::kRhsInf );
-                   reformulated.getRowFlags()[0].unset( RowFlag::kRedundant );
-                   reformulated.getRowFlags()[0].unset( RowFlag::kRedundant );
                    reformulated.getConstraintMatrix().getRightHandSides()[0] =
                        cutoff;
                    reformulated.recomputeAllActivities();
@@ -220,7 +214,6 @@ class Algorithm
                 assert( problem.getNCols() == primal_heur_sol.size() );
                 auto old_conflicts =
                     (int)service.get_derived_conflicts().size();
-                msg.info("{}\n", problem.getNRows());
 
                 bool sol_updated = service.perform_fix_and_propagate(
                     primal_heur_sol, best_obj_value, best_solution );
