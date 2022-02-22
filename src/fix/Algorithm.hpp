@@ -124,8 +124,6 @@ class Algorithm
                 alg_parameter.detect_hard_constraints;
              REAL threshold_hard_constraints =
                 alg_parameter.threshold_hard_constraints;
-             bool threshold_hard_constraints_vary =
-                alg_parameter.threshold_hard_constraints_vary;
              REAL threshold_hard_constraints_incr_factor =
                 alg_parameter.threshold_hard_constraints_incr_factor;
 
@@ -139,34 +137,28 @@ class Algorithm
              REAL best_obj_value = std::numeric_limits<REAL>::max();
              Vec<REAL> best_solution{};
              best_solution.reserve( problem.getNCols() );
+
+             // volume algorithm
              Vec<REAL> primal_heur_sol{};
              primal_heur_sol.reserve( reformulated.getNCols() );
              Vec<REAL> pi;
+             Vec<REAL> pi_conflicts;
              pi.reserve( n_rows_A_no_conflicts );
              generate_initial_dual_solution( reformulated, pi );
+
+             //Fix and Propagate
+             REAL offset_for_cutoff = 1;
+             Vec<Vec<SingleBoundChange<REAL>>> bound_changes;
+             Vec<std::pair<int, int>> infeasible_rows;
 
              if( alg_parameter.use_cutoff_constraint )
              {
                 problem = add_cutoff_objective( problem );
                   problem.recomputeAllActivities();
              }
-             REAL factor = 1;
              if(alg_parameter.use_cutoff_constraint)
-                for( int i = 0; i < problem.getNCols(); i++ )
-                {
-                   if( ( num.isZero(
-                           problem.getObjective().coefficients[i] ) ) ||
-                       ( problem.getColFlags()[i].test( ColFlag::kIntegral ) &&
-                         num.isIntegral(
-                             problem.getObjective().coefficients[i] ) ) )
-                      continue;
-                   factor = 2 * num.getEpsilon();
-                   break;
-                }
-
-             Vec<REAL> pi_conflicts;
-             Vec<Vec<SingleBoundChange<REAL>>> bound_changes;
-             Vec<std::pair<int, int>> infeasible_rows;
+                offset_for_cutoff = calculate_cutoff_offset( problem );
+             assert( num.isGT( offset_for_cutoff, 0 ) && num.isLE( offset_for_cutoff, 1) );
 
              msg.info( "\tStarting primal heuristics - {:.3} s\n",
                        timer.getTime() );
@@ -175,20 +167,15 @@ class Algorithm
 
              if( solution_found )
                 box_upper_bound_volume = best_obj_value;
-             //             assert( !num.isEq( box_upper_bound_volume ==
-             //                      std::numeric_limits<double>::min() ) )
 
              if( alg_parameter.use_cutoff_constraint && !best_solution.empty() )
              {
-                StableSum<REAL> obj{};
-                for( int i = 0; i < problem.getNCols(); i++ )
-                   obj.add( problem.getObjective().coefficients[i] *
-                            best_solution[i] );
-                assert( num.isGT( factor, 0 ) );
-                REAL real = obj.get();
-                problem.getConstraintMatrix().getRightHandSides()[0] =
-                    real - factor;
+                REAL cutoff = calculate_objective_of_reduced_problem(
+                    problem, best_solution )-
+                              offset_for_cutoff;
+                problem.getConstraintMatrix().getRightHandSides()[0] = cutoff;
              }
+
              int round_counter = 0;
              int round_first_solution = -1;
              int round_best_solution = -1;
@@ -218,10 +205,6 @@ class Algorithm
                 msg.info( "\tStarting fixing and propagating - {:.3} s\n",
                           timer.getTime() );
 
-                //                Vec<REAL> sub( primal_heur_sol.begin(),
-                //                               primal_heur_sol.end() );
-                //
-                //                assert( sub.size() == problem.getNCols() );
                 assert( problem.getNCols() == primal_heur_sol.size() );
                 auto old_conflicts =
                     (int)service.get_derived_conflicts().size();
@@ -245,7 +228,7 @@ class Algorithm
                    msg.info( "\tNo conflict could be generated - {:.3} s\n",
                              timer.getTime() );
 
-                   if( threshold_hard_constraints_vary )
+                   if( alg_parameter.threshold_hard_constraints_vary )
                    {
                       if( n_hard_constraints == 0 )
                       {
@@ -352,6 +335,30 @@ class Algorithm
 #ifdef PAPILO_TBB
           } );
 #endif
+   }
+   REAL
+   calculate_objective_of_reduced_problem(
+       const Problem<REAL>& problem, const Vec<REAL>& best_solution ) const
+   {
+      StableSum<REAL> obj{};
+      for( int i = 0; i < problem.getNCols(); i++ )
+         obj.add( problem.getObjective().coefficients[i] *
+                  best_solution[i] );
+      REAL real = obj.get();
+      return real;
+   }
+
+   REAL
+   calculate_cutoff_offset( const Problem<REAL>& problem ) const
+   {
+      for( int i = 0; i < problem.getNCols(); i++ )
+      {
+         if( !num.isZero( problem.getObjective().coefficients[i] ) &&
+             !problem.getColFlags()[i].test( ColFlag::kIntegral ) &&
+             !num.isIntegral( problem.getObjective().coefficients[i] ) )
+            return 2 * num.getEpsilon();
+      }
+      return 1;
    }
 
    REAL
