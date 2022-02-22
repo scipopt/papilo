@@ -128,6 +128,7 @@ class ConflictAnalysis
       // Resolve as long as more than one bound changes at last decision level
       int col_index = -1;
       bool one_fuip_conflict = true;
+      bool resolved_bounds = true;
       while( last_decision_level > 0 )
       {
          while( num_vars_last_decision_level > 1 )
@@ -145,6 +146,7 @@ class ConflictAnalysis
                                    current_conflict_set, antecedent_row_index,
                                    col_index,
                                    general_integers_in_conflict_set );
+            resolved_bounds = true;
             if( general_integers_in_conflict_set )
             {
                msg.detailed( "\t\tConflict analysis returns 0 conflict "
@@ -154,21 +156,35 @@ class ConflictAnalysis
             num_vars_last_decision_level = get_number_variables_decision_level(
                 decision_levels, current_conflict_set, last_decision_level );
          }
-         // add 1-FUIP conflict!
+         // 1-FUIP conflict is always added!
          if( one_fuip_conflict )
          {
             // add constraint and continue
             add_constraint( bound_changes, pos_in_bound_changes,
                             current_conflict_set, all_fuips, constraints );
-            msg.info( "\t\tConflict analysis 1-FUIP {} cons of length: ",
-                      constraints.size() );
-            for( int i = 0; i < constraints.size(); i++ )
-            {
-               msg.info( "{} ", constraints[i].get_data().getLength() );
-            }
-            msg.info( "\n" );
+            resolved_bounds = false;
             one_fuip_conflict = false;
+            get_latest_col_index_in_decision_level(
+                decision_levels, pos_in_bound_changes, current_conflict_set,
+                last_decision_level, col_index );
+
+            int pos_lower = pos_in_bound_changes[col_index].first;
+            int pos_upper = pos_in_bound_changes[col_index].second;
+            assert( !( pos_lower == -1 && pos_upper == -1 ) );
+            if( pos_lower != -1 )
+            {
+               pos_in_bound_changes[col_index].first = -1;
+               all_fuips.insert( { col_index, { pos_lower, true } } );
+            }
+            else
+            {
+               pos_in_bound_changes[col_index].second = -1;
+               all_fuips.insert( { col_index, { pos_upper, false } } );
+            }
+            // remove fuip of last_decision_level from conflict set
+            current_conflict_set.erase( col_index );
          }
+         // All-FUIP
          else
          {
             get_latest_col_index_in_decision_level(
@@ -214,27 +230,29 @@ class ConflictAnalysis
                // remove fuip of last_decision_level from conflict set
                current_conflict_set.erase( col_index );
             }
-            // compute last decision level
-            last_decision_level = get_last_decision_level(
-                bound_changes, current_conflict_set, decision_levels );
-            if( last_decision_level == 0 )
-               break;
-            // if not zero compute the number of elements in the last
-            // decision level
-            num_vars_last_decision_level = get_number_variables_decision_level(
-                decision_levels, current_conflict_set, last_decision_level );
          }
+         if( resolved_bounds )
+            add_constraint( bound_changes, pos_in_bound_changes,
+                            current_conflict_set, all_fuips, constraints );
+
+         resolved_bounds = false;
+         // compute last decision level
+         last_decision_level = get_last_decision_level(
+             bound_changes, current_conflict_set, decision_levels );
+         if( last_decision_level == 0 )
+            break;
+         // if not zero compute the number of elements in the last
+         // decision level
+         num_vars_last_decision_level = get_number_variables_decision_level(
+             decision_levels, current_conflict_set, last_decision_level );
       }
-      // add constraint and continue
-      add_constraint( bound_changes, pos_in_bound_changes, current_conflict_set,
-                      all_fuips, constraints );
-      msg.info( "\t\tConflict analysis All-FUIP {} cons of length: ",
+      msg.detailed( "\t\tConflict analysis added {} cons (All-FUIP) of length: ",
                 constraints.size() );
       for( int i = 0; i < constraints.size(); i++ )
       {
-         msg.info( "{} ", constraints[i].get_data().getLength() );
+         msg.detailed( "{} ", constraints[i].get_data().getLength() );
       }
-      msg.info( "\n" );
+      msg.detailed( "\n" );
       return;
    }
 
@@ -283,9 +301,13 @@ class ConflictAnalysis
          for( int i = 0; i < row_length; i++ )
          {
             assert( !num.isZero( row_vals[i] ) );
+            // check if there exists a bound change for row_inds[i]
+            if( ( pos_in_bound_changes.find( row_inds[i] ) ==
+                  pos_in_bound_changes.end() ) )
+               continue;
             pos_lower = pos_in_bound_changes[row_inds[i]].first;
             pos_upper = pos_in_bound_changes[row_inds[i]].second;
-            if( num.isGT( row_vals[i], 0 ) && pos_lower > 0 )
+            if( num.isGT( row_vals[i], 0 ) && pos_lower >= 0 )
             {
                assert( bound_changes[pos_lower].is_lower_bound() );
                if( !is_binary( row_inds[i] ) )
@@ -300,7 +322,7 @@ class ConflictAnalysis
                    ( bound_changes[pos_lower].get_new_bound_value() -
                      problem.getLowerBounds()[row_inds[i]] ) );
             }
-            else if( num.isLT( row_vals[i], 0 ) && pos_upper > 0 )
+            else if( num.isLT( row_vals[i], 0 ) && pos_upper >= 0 )
             {
                assert( !bound_changes[pos_upper].is_lower_bound() );
 
@@ -368,9 +390,13 @@ class ConflictAnalysis
          for( int i = 0; i < row_length; i++ )
          {
             assert( !num.isZero( row_vals[i] ) );
+            // check if there exists a bound change for row_inds[i]
+            if( ( pos_in_bound_changes.find( row_inds[i] ) ==
+                  pos_in_bound_changes.end() ) )
+               continue;
             pos_lower = pos_in_bound_changes[row_inds[i]].first;
             pos_upper = pos_in_bound_changes[row_inds[i]].second;
-            if( num.isGT( row_vals[i], 0 ) && pos_upper > 0 )
+            if( num.isGT( row_vals[i], 0 ) && pos_upper >= 0 )
             {
                assert( !bound_changes[pos_upper].is_lower_bound() );
                if( !is_binary( row_inds[i] ) )
@@ -385,7 +411,7 @@ class ConflictAnalysis
                    ( problem.getUpperBounds()[row_inds[i]] -
                      bound_changes[pos_upper].get_new_bound_value() ) );
             }
-            else if( num.isLT( row_vals[i], 0 ) && pos_lower > 0 )
+            else if( num.isLT( row_vals[i], 0 ) && pos_lower >= 0 )
             {
                assert( bound_changes[pos_lower].is_lower_bound() );
                if( !is_binary( row_inds[i] ) )
@@ -559,10 +585,14 @@ class ConflictAnalysis
          if( col_idx == row_inds[i] )
             continue;
          assert( !num.isZero( row_vals[i] ) );
+         // check if there exists a bound change for row_inds[i]
+         if( ( pos_in_bound_changes.find( row_inds[i] ) ==
+               pos_in_bound_changes.end() ) )
+            continue;
          int pos_lower = pos_in_bound_changes[row_inds[i]].first;
          int pos_upper = pos_in_bound_changes[row_inds[i]].second;
          assert( !num.isZero( row_vals[i] ) );
-         if( num.isGT( row_vals[i], 0 ) && pos_upper > 0 &&
+         if( num.isGT( row_vals[i], 0 ) && pos_upper >= 0 &&
              pos_upper < pos_col )
          {
             assert( !bound_changes[pos_upper].is_lower_bound() );
@@ -581,7 +611,7 @@ class ConflictAnalysis
             current_conflict_set.insert(
                 { row_inds[i], { pos_upper, false } } );
          }
-         else if( num.isLT( row_vals[i], 0 ) && pos_lower > 0 &&
+         else if( num.isLT( row_vals[i], 0 ) && pos_lower >= 0 &&
                   pos_lower < pos_col )
          {
             assert( bound_changes[pos_lower].is_lower_bound() );
@@ -627,9 +657,13 @@ class ConflictAnalysis
          if( col_idx == row_inds[i] )
             continue;
          assert( !num.isZero( row_vals[i] ) );
+         // check if there exists a bound change for row_inds[i]
+         if( ( pos_in_bound_changes.find( row_inds[i] ) ==
+               pos_in_bound_changes.end() ) )
+            continue;
          int pos_lower = pos_in_bound_changes[row_inds[i]].first;
          int pos_upper = pos_in_bound_changes[row_inds[i]].second;
-         if( num.isGT( row_vals[i], 0 ) && pos_lower > 0 &&
+         if( num.isGT( row_vals[i], 0 ) && pos_lower >= 0 &&
              pos_lower < pos_col )
          {
             assert( bound_changes[pos_lower].is_lower_bound() );
@@ -646,7 +680,7 @@ class ConflictAnalysis
                                 problem.getLowerBounds()[row_inds[i]] ) );
             current_conflict_set.insert( { row_inds[i], { pos_lower, true } } );
          }
-         else if( num.isLT( row_vals[i], 0 ) && pos_upper > 0 &&
+         else if( num.isLT( row_vals[i], 0 ) && pos_upper >= 0 &&
                   pos_upper < pos_col )
          {
             assert( !bound_changes[pos_upper].is_lower_bound() );

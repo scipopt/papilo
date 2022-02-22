@@ -81,7 +81,7 @@ TEST_CASE( "conflict-analysis-binary-no-resolution", "[conflict]" )
    conflictAnalysis.perform_conflict_analysis( bound_changes, infeasible_rows,
                                                conflict_constraints );
 
-   REQUIRE( conflict_constraints.size() == 2 );
+   REQUIRE( conflict_constraints.size() == 1 );
 
    // conflict analysis returns the constraint x5 >= 1 (1-FUIP)
    SparseVectorView<double> data_c1 = conflict_constraints[0].get_data();
@@ -92,16 +92,6 @@ TEST_CASE( "conflict-analysis-binary-no-resolution", "[conflict]" )
    REQUIRE( len_c1 == 1 );
    REQUIRE( vals_c1[0] == 1.0 );
    REQUIRE( inds_c1[0] == 4 );
-
-   // conflict analysis returns the constraint x5 >= 1 (All-FUIP)
-   SparseVectorView<double> data_c2 = conflict_constraints[1].get_data();
-   const double* vals_c2 = data_c2.getValues();
-   const int* inds_c2 = data_c2.getIndices();
-   int len_c2 = data_c2.getLength();
-
-   REQUIRE( len_c2 == 1 );
-   REQUIRE( vals_c2[0] == 1.0 );
-   REQUIRE( inds_c2[0] == 4 );
 }
 
 TEST_CASE( "conflict-analysis-binary-with-resolution", "[conflict]" )
@@ -169,7 +159,17 @@ TEST_CASE( "conflict-analysis-binary-with-resolution", "[conflict]" )
    REQUIRE( inds_c1[1] == 2 );
    REQUIRE( inds_c1[2] == 4 );
 
-   // ToDo All-FUIP
+   // conflict analysis returns the constraint - x1 + x5 >= 1 (All-FUIP)
+   SparseVectorView<double> data_c2 = conflict_constraints[1].get_data();
+   const double* vals_c2 = data_c2.getValues();
+   const int* inds_c2 = data_c2.getIndices();
+   int len_c2 = data_c2.getLength();
+
+   REQUIRE( len_c2 == 2 );
+   REQUIRE( vals_c2[0] == -1.0 );
+   REQUIRE( vals_c2[1] == 1.0 );
+   REQUIRE( inds_c2[0] == 0 );
+   REQUIRE( inds_c2[1] == 4 );
 }
 
 Problem<double>

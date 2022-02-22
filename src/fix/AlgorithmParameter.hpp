@@ -32,7 +32,7 @@ struct AlgorithmParameter
  public:
    // overall parameters
    double time_limit = 10 * 60;
-   int threads = 1;
+   int threads = 8;
    int seed = 0;
    bool copy_conflicts_to_problem = true;
    int size_of_conflicts_to_be_copied = 0;
