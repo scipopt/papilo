@@ -172,19 +172,14 @@ class Algorithm
                 if( alg_parameter.use_cutoff_constraint )
                 {
                    REAL cutoff = calculate_objective_of_reduced_problem(
-                                     problem, best_solution ) -
+                                     reformulated, best_solution ) -
                                  offset_for_cutoff;
-                   problem.getRowFlags()[0].unset( RowFlag::kRhsInf );
-                   problem.getRowFlags()[0].unset( RowFlag::kRedundant );
-                   problem.getRowFlags()[0].unset( RowFlag::kRedundant );
-                   bool a = problem.getRowFlags()[0].test( RowFlag::kRedundant );
-                   bool a1 = problem.getRowFlags()[1].test( RowFlag::kRhsInf );
-                   bool a2 = problem.getRowFlags()[2].test( RowFlag::kLhsInf );
-                   bool a3 = problem.getRowFlags()[2].test( RowFlag::kEquation );
-                   bool a4 = problem.getRowFlags()[2].test( RowFlag::kHardConstraint );
-                   problem.getConstraintMatrix().getRightHandSides()[0] =
+                   reformulated.getRowFlags()[0].unset( RowFlag::kRhsInf );
+                   reformulated.getRowFlags()[0].unset( RowFlag::kRedundant );
+                   reformulated.getRowFlags()[0].unset( RowFlag::kRedundant );
+                   reformulated.getConstraintMatrix().getRightHandSides()[0] =
                        cutoff;
-                   problem.recomputeAllActivities();
+                   reformulated.recomputeAllActivities();
 
                 }
              }
