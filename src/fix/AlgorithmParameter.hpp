@@ -34,10 +34,13 @@ struct AlgorithmParameter
    double time_limit = 10 * 60;
    int threads = 1;
    int seed = 0;
-   bool copy_conflicts_to_problem = false;
+   bool copy_conflicts_to_problem = true;
    int size_of_conflicts_to_be_copied = 0;
 
    // vol algorithm parameters
+   bool use_convex_combo_for_term = true;
+   bool threshold_hard_constraints_vary = true;
+   double threshold_hard_constraints_incr_factor = 2;
    double threshold_hard_constraints = 1;
    double alpha = 0.5;
    double alpha_max = 0.1;
@@ -70,6 +73,18 @@ struct AlgorithmParameter
                              "maximal number of threads to use (0: automatic)",
                              threads, 1 );
 
+      paramSet.addParameter(
+          "vol.use_convex_combo_for_term",
+          "whether to convex combination for terminaton via fixed integer "
+          "criterion or not", use_convex_combo_for_term );
+      paramSet.addParameter(
+          "vol.threshold_hard_constraints_vary",
+          "whether to vary the threshold for hard constraints or not",
+          threshold_hard_constraints_vary );
+      paramSet.addParameter(
+          "vol.threshold_hard_constraints_incr_factor",
+          "multiplier for increasing the threshold for hard constraints",
+          threshold_hard_constraints_incr_factor, 1.0, 10.0 );
       paramSet.addParameter(
           "vol.threshold_hard_constraints",
           "constraint for which "

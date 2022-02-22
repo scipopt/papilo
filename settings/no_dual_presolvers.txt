@@ -1,0 +1,2 @@
+dualfix.enabled = 0
+dualinfer.enabled = 0

@@ -60,9 +60,6 @@ class VolumeAlgorithm
        : msg( _msg ), num( _num ), timer( t ), parameter( parameter_ ),
          postsolve_storage( postsolve_storage_ ), op( {} )
    {
-      alpha = parameter.alpha;
-      alpha_max = parameter.alpha_max;
-      f = parameter.f;
    }
 
    /**
@@ -78,16 +75,31 @@ class VolumeAlgorithm
     * @return
     */
    Vec<REAL>
-   volume_algorithm( const Vec<REAL> c, const ConstraintMatrix<REAL>& A,
+   volume_algorithm( const Vec<REAL> c, ConstraintMatrix<REAL>& A,
                      const Vec<Constraint<REAL>>& derived_conflicts,
                      const Vec<REAL>& b, const VariableDomains<REAL>& domains,
                      const int num_int_vars, const REAL init_upper_bound,
-                     const bool init_primal_sol, const int n_hard_constraints,
+                     const bool init_primal_sol,
+                     const REAL threshold_hard_constraints,
+                     const int n_rows_A_no_conflicts,
+                     bool detect_hard_constraints,
+                     int& n_hard_constraints,
                      Vec<REAL>& pi, Vec<REAL>& pi_conflicts )
    {
+      alpha = parameter.alpha;
+      alpha_max = parameter.alpha_max;
+      f = parameter.f;
+
       REAL st = timer.getTime();
       int n_rows_A = A.getNRows();
       int n_conflicts = derived_conflicts.size();
+      if( detect_hard_constraints )
+      {
+         detect_hard_constraints = false;
+         update_hard_constraints( n_rows_A_no_conflicts, A,
+                                  threshold_hard_constraints,
+                                  n_hard_constraints );
+      }
 
       if( !n_rows_A )
       {
@@ -136,7 +148,7 @@ class VolumeAlgorithm
       REAL upper_bound;
       bool finite_upper_bound = false;
 
-      Vec<REAL> x_bar_last_iter( x_bar );
+      Vec<REAL> x_last_iter( x_bar );
       Vec<int> fixed_int_vars_count( x_bar.size() );
       Vec<int> num_fixed_int_vars( parameter.max_iterations );
       int fixed_int_var_check_counter = 0;
@@ -170,6 +182,8 @@ class VolumeAlgorithm
          update_pi( n_rows_A, A, n_conflicts, derived_conflicts, pi_t,
                     pi_t_conflicts );
 
+         if( !parameter.use_convex_combo_for_term )
+            x_last_iter = x_t;
          // Solve (6) with π_t , let x_t and z_t be the solutions obtained.
          REAL z_t = create_problem_6_and_solve_it( c, A, b, domains,
                                     derived_conflicts, b_conflicts, pi_t,
@@ -180,7 +194,8 @@ class VolumeAlgorithm
                              residual_t_conflicts );
          calc_alpha( residual_t, v_t, residual_t_conflicts, v_t_conflicts );
 
-         x_bar_last_iter = x_bar;
+         if( parameter.use_convex_combo_for_term )
+            x_last_iter = x_bar;
          // x_bar ← αx_t + (1 − α)x_bar
          op.calc_qb_plus_sx( alpha, x_t, 1 - alpha, x_bar,
                              x_bar );
@@ -199,10 +214,16 @@ class VolumeAlgorithm
          else
             improvement_indicator = false;
 
-         update_fixed_int_count( x_bar, x_bar_last_iter, domains,
-                                 counter,
-                                 fixed_int_vars_count,
-                                 num_fixed_int_vars );
+         if( parameter.use_convex_combo_for_term )
+            update_fixed_int_count( x_bar, x_last_iter, domains,
+                                    counter,
+                                    fixed_int_vars_count,
+                                    num_fixed_int_vars );
+         else
+            update_fixed_int_count( x_t, x_last_iter, domains,
+                                    counter,
+                                    fixed_int_vars_count,
+                                    num_fixed_int_vars );
 
          op.calc_b_minus_Ax( A, x_bar, b, derived_conflicts, v_t, v_t_conflicts );
          calc_violations( n_rows_A, A, pi_bar, v_t, n_conflicts,
@@ -223,7 +244,7 @@ class VolumeAlgorithm
          }
 
          // check integrality of x_bar
-         integrality_check( x_bar, x_bar_last_iter, domains );
+//         integrality_check( x_bar, x_last_iter, domains );
 
          // Let t ← t + 1 and go to Step 1.
          counter = counter + 1;
@@ -260,6 +281,47 @@ class VolumeAlgorithm
    }
 
  private:
+   void
+   update_hard_constraints( const int n_rows_A_no_conflicts,
+                            ConstraintMatrix<REAL>& A,
+                            const REAL threshold_hard_constraints,
+                            int& n_hard_constraints )
+   {
+      n_hard_constraints = 0;
+      Vec<RowFlags>& rowFlags = A.getRowFlags();
+
+      for( int i = 0; i < n_rows_A_no_conflicts; i++ )
+      {
+         if( num.isGT( get_max_min_factor( A.getRowCoefficients( i ) ),
+                       threshold_hard_constraints ) )
+         {
+            n_hard_constraints++;
+            rowFlags[i].set( RowFlag::kHardConstraint );
+         }
+         else
+         {
+            rowFlags[i].unset( RowFlag::kHardConstraint );
+         }
+      }
+
+      msg.info( "\n{} of the {} rows were considered hard and were excluded.\n",
+                n_hard_constraints, n_rows_A_no_conflicts );
+
+      /*
+      assert( !flags.test( RowFlag::kHardConstraint ) ||
+              num.isGT( get_max_min_factor( matrix.getRowCoefficients( i ) ),
+                        alg_parameter.threshold_hard_constraints ) );
+                        */
+   }
+
+   REAL
+   get_max_min_factor( const SparseVectorView<REAL>& row_data ) const
+   {
+      assert( row_data.getLength() > 0 );
+      auto pair = row_data.getMinMaxAbsValue();
+      return pair.second / pair.first;
+   }
+
    bool
    constraints_E_or_GE( const int n_rows_A, const ConstraintMatrix<REAL>& A,
               const int n_conflicts,
@@ -368,19 +430,21 @@ class VolumeAlgorithm
       bool fixed_int_var_term = false;
       int max_fixed = -1;
       int min_fixed = -1;
+      int ref_fixed = -1;
       if( iter_counter >= std::max( num_iters_fixed, num_iters_percent ) )
       {
          max_fixed = *std::max_element(
                std::next( num_fixed_int_vars.begin(), iter_counter -
-                  num_iters_percent + 1 ),
-               std::next( num_fixed_int_vars.begin(), iter_counter + 1 ) );
+                  num_iters_percent ),
+               std::next( num_fixed_int_vars.begin(), iter_counter ) );
          min_fixed = *std::min_element(
                std::next( num_fixed_int_vars.begin(), iter_counter -
-                  num_iters_percent + 1 ),
-               std::next( num_fixed_int_vars.begin(), iter_counter + 1 ) );
+                  num_iters_percent ),
+               std::next( num_fixed_int_vars.begin(), iter_counter ) );
+         ref_fixed = num_fixed_int_vars[iter_counter - num_iters_percent];
 
          // TODO: OK even if max_fixed = 0 = min_fixed?
-         fixed_int_var_term = ( (max_fixed - min_fixed ) <= num_int_vars *
+         fixed_int_var_term = ( (max_fixed - min_fixed ) <= 2.0 * ref_fixed *
                                          parameter.fixed_int_var_threshold );
       }
 
@@ -391,9 +455,9 @@ class VolumeAlgorithm
       msg.detailed( "   objA: {}\n", abs( op.multi( c, x_bar ) ) );
       msg.detailed( "   objR: {}\n", abs( op.multi( c, x_bar ) - z_bar ) /
                                         abs( z_bar ) );
-      msg.detailed( "   max_fixed: {}\t min_fixed: {}\t threshold: {}\n",
-                        max_fixed, min_fixed,
-                        num_int_vars * parameter.fixed_int_var_threshold );
+      msg.detailed( "   max_fixed: {}\t min_fixed: {}\t ref_fixed: {}\t "
+                    "threshold: {}\n", max_fixed, min_fixed, ref_fixed,
+                    2.0 * ref_fixed * parameter.fixed_int_var_threshold );
 
       bool time_limit_term = ( num.isGE( timer.getTime(),
                                          parameter.time_limit ) );
@@ -454,17 +518,17 @@ class VolumeAlgorithm
    }
 
    void
-   init_fixed_int_count( const Vec<REAL>& x_bar,
+   init_fixed_int_count( const Vec<REAL>& x_curr_iter,
                          const VariableDomains<REAL>& domains,
                          Vec<int>& fixed_int_vars_count )
    {
-      int x_bar_size = x_bar.size();
-      assert( fixed_int_vars_count.size() == x_bar_size );
+      int x_size = x_curr_iter.size();
+      assert( fixed_int_vars_count.size() == x_size );
 
-      for( int i = 0; i < x_bar_size; i++ )
+      for( int i = 0; i < x_size; i++ )
       {
          if( domains.flags[i].test( ColFlag::kIntegral ) &&
-               num.isIntegral( x_bar[i] ) )
+               num.isIntegral( x_curr_iter[i] ) )
             fixed_int_vars_count[i] = 1;
       }
    }
@@ -472,21 +536,21 @@ class VolumeAlgorithm
    // TODO: create an array for int var indices only once in Algorithm.hpp and
    //       pass it to the volume algo call?
    void
-   update_fixed_int_count( const Vec<REAL>& x_bar,
-                           const Vec<REAL> x_bar_last_iter,
+   update_fixed_int_count( const Vec<REAL>& x_curr_iter,
+                           const Vec<REAL> x_last_iter,
                            const VariableDomains<REAL>& domains,
                            const int iter_counter,
                            Vec<int>& fixed_int_vars_count,
                            Vec<int>& num_fixed_int_vars )
    {
-      int x_bar_size = x_bar.size();
-      assert( fixed_int_vars_count.size() == x_bar_size);
+      int x_size = x_curr_iter.size();
+      assert( fixed_int_vars_count.size() == x_size);
 
-      for( int i = 0; i < x_bar_size; i++ )
+      for( int i = 0; i < x_size; i++ )
       {
          if( domains.flags[i].test( ColFlag::kIntegral ) &&
-               num.isIntegral( x_bar[i] ) &&
-               num.isEq( x_bar[i], x_bar_last_iter[i] ) )
+               num.isIntegral( x_curr_iter[i] ) &&
+               num.isEq( x_curr_iter[i], x_last_iter[i] ) )
             fixed_int_vars_count[i]++;
          else
             fixed_int_vars_count[i] = 0;
@@ -500,6 +564,7 @@ class VolumeAlgorithm
                                           { return val >= num_iters_fixed_check;
                                           } );
       num_fixed_int_vars[iter_counter] = n_fixed_int_vars;
+      msg.detailed( "   n_fixed_int_vars: {}\n", n_fixed_int_vars );
    }
 
    void
@@ -658,21 +723,21 @@ class VolumeAlgorithm
    }
 
    void
-   integrality_check( const Vec<REAL>& x_bar,
-                      const Vec<REAL>& x_bar_last_iter,
+   integrality_check( const Vec<REAL>& x_curr_iter,
+                      const Vec<REAL>& x_last_iter,
                       const VariableDomains<REAL>& domains )
    {
       if( msg.getVerbosityLevel() == VerbosityLevel::kDetailed )
       {
          int num_integral = 0;
          int num_fixed_int = 0;
-         for( int i = 0; i < x_bar.size(); i++ )
+         for( int i = 0; i < x_curr_iter.size(); i++ )
          {
             if( domains.flags[i].test( ColFlag::kIntegral ) &&
-                  num.isIntegral( x_bar[i] ) )
+                  num.isIntegral( x_curr_iter[i] ) )
                {
                   num_integral++;
-                  if( num.isEq( x_bar[i], x_bar_last_iter[i] ) )
+                  if( num.isEq( x_curr_iter[i], x_last_iter[i] ) )
                      num_fixed_int++;
                }
          }

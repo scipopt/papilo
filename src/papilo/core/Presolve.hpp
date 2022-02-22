@@ -1370,6 +1370,22 @@ Presolve<REAL>::logStatus( const Problem<REAL>& problem,
    msg.info( "  reduced rows:     {}\n", problem.getNRows() );
    msg.info( "  reduced columns:  {}\n", problem.getNCols() );
    msg.info( "  reduced int. columns:  {}\n", problem.getNumIntegralCols() );
+   int binaries=0;
+   for( int i = 0; i < problem.getNCols(); i++ )
+   {
+      if( problem.getColFlags()[i].test( ColFlag::kIntegral ) and
+          !problem.getColFlags()[i].test( ColFlag::kLbInf ) and
+          !problem.getColFlags()[i].test( ColFlag::kUbInf ) )
+      {
+         if( problem.getUpperBounds()[i] == 1 ||
+             problem.getLowerBounds()[i] == 0 )
+            binaries++;
+         if( problem.getUpperBounds()[i] == 0 ||
+             problem.getLowerBounds()[i] == -1 )
+            binaries++;
+      }
+   }
+   msg.info( "  reduced binary columns:  {}\n", binaries );
    msg.info( "  reduced cont. columns:  {}\n", problem.getNumContinuousCols() );
    msg.info( "  reduced nonzeros: {}\n",
              problem.getConstraintMatrix().getNnz() );

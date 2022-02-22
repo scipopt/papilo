@@ -146,7 +146,7 @@ main( int argc, char* argv[] )
 {
    using namespace papilo;
 
-   print_header();
+   print_header("PaPILO");
 
    // get the options passed by the user
    OptionsInfo optionsInfo;

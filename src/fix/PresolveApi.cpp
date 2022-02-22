@@ -26,17 +26,19 @@
 #include "papilo/core/Presolve.hpp"
 #include "papilo/core/postsolve/Postsolve.hpp"
 #include "papilo/core/postsolve/PostsolveStorage.hpp"
+#include "boost/algorithm/string/trim.hpp"
 #include <cassert>
 #include <string>
 
 using namespace papilo;
 
 void*
-presolve( const char* filename, const char* reduced_filename, int* status,
-          int* result )
+presolve( const char* filename, const char* reduced_filename,
+          const char* setting_filename, int* status, int* result )
 {
 
    std::string filename_as_string( filename );
+   std::string setting_as_string( setting_filename );
    boost::optional<Problem<double>> prob;
    {
       prob = MpsParser<double>::loadProblem( filename_as_string );
@@ -47,9 +49,57 @@ presolve( const char* filename, const char* reduced_filename, int* status,
       *result = 1;
       return nullptr;
    }
+
+   Presolve<double> presolve{};
+   presolve.addDefaultPresolvers();
+   ParameterSet paramSet = presolve.getParameters();
+
+   if( !setting_as_string.empty() )
+   {
+      std::ifstream input( setting_filename );
+      if( input )
+      {
+         String theoptionstr;
+         String thevaluestr;
+         for( String line; getline( input, line ); )
+         {
+            std::size_t pos = line.find_first_of( '#' );
+            if( pos != String::npos )
+               line = line.substr( 0, pos );
+
+            pos = line.find_first_of( '=' );
+
+            if( pos == String::npos )
+               continue;
+
+            theoptionstr = line.substr( 0, pos - 1 );
+            thevaluestr = line.substr( pos + 1 );
+
+            boost::algorithm::trim( theoptionstr );
+            boost::algorithm::trim( thevaluestr );
+
+            try
+            {
+               paramSet.parseParameter( theoptionstr.c_str(),
+                                        thevaluestr.c_str() );
+               fmt::print( "set {} = {}\n", theoptionstr, thevaluestr );
+            }
+            catch( const std::exception& e )
+            {
+               fmt::print( "parameter '{}' could not be set: {}\n", line,
+                           e.what() );
+            }
+         }
+      }
+      else
+      {
+         fmt::print( "could not read parameter file '{}'\n",
+                     setting_filename );
+      }
+   }
+
    *result = 0;
    auto problem = new Problem<double>( prob.get() );
-   Presolve<double> presolve{};
    auto presolve_result = presolve.apply( *problem, false );
    switch( presolve_result.status )
    {
