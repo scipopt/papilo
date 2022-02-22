@@ -252,6 +252,7 @@ class VolumeAlgorithm
 
       if( msg.getVerbosityLevel() >= VerbosityLevel::kInfo )
       {
+         // TODO: remove cutoff cons count from n_rows_A before printing
          msg.info( "\t\tVol. alg. iterations: {} ( {} )\n", counter,
                parameter.max_iterations );
          msg.info( "\t\tAvg. (easy) constraint violation: {} ( {} )\n",
@@ -287,6 +288,7 @@ class VolumeAlgorithm
                             const REAL threshold_hard_constraints,
                             int& n_hard_constraints )
    {
+      // TODO: skip cutoff cons
       n_hard_constraints = 0;
       Vec<RowFlags>& rowFlags = A.getRowFlags();
 
@@ -327,6 +329,7 @@ class VolumeAlgorithm
               const int n_conflicts,
               const Vec<Constraint<REAL>>& derived_conflicts )
    {
+      // TODO: skip cutoff cons here
       for( int i = 0; i < n_rows_A; i++ )
       {
          if( A.getRowFlags()[i].test( RowFlag::kLhsInf ) )
@@ -378,6 +381,7 @@ class VolumeAlgorithm
               const Vec<Constraint<REAL>>& derived_conflicts,
               Vec<REAL>& pi, Vec<REAL>& pi_conflicts )
    {
+      // TODO: account for cutoff cons here
       for( int i = 0; i < n_rows_A; i++ )
       {
          if( A.getRowFlags()[i].test( RowFlag::kHardConstraint ) )
@@ -410,6 +414,7 @@ class VolumeAlgorithm
                       const Vec<int>& num_fixed_int_vars,
                       const int iter_counter )
    {
+      // TODO: remove cutoff cons count from n_rows_A
       bool primal_feas_term = num.isLT( op.l1_norm( v ) +
                                         op.l1_norm( v_conflicts ),
                                         ( n_rows_A - n_hard_constraints +
@@ -577,6 +582,7 @@ class VolumeAlgorithm
                     Vec<REAL>& viol_residual,
                     Vec<REAL>& viol_residual_conflicts )
    {
+      // TODO: account for cutoff cons here
       viol_residual = residual;
       for( int i = 0; i < n_rows_A; i++ )
       {
