@@ -304,7 +304,7 @@ class VolumeAlgorithm
          }
       }
 
-      msg.info( "\n{} of the {} rows were considered hard and were excluded.\n",
+      msg.info( "\t\t{} of the {} rows were excluded due to max/min factor.\n",
                 n_hard_constraints, n_rows_A_no_conflicts );
 
       /*
