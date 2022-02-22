@@ -65,7 +65,7 @@ class VolumeAlgorithm
    /**
     * minimize cx s.t. Ax = b, Dx = e (D = empty), x ≥ 0.
     * @param c objective function
-    * @param A equation or at least one finte bound for every constraint
+    * @param A equation or at least one finite bound for every constraint
     * @param derived_conflicts
     * @param b rhs of constraints
     * @param domains variables domains (lb/ub/flags)
