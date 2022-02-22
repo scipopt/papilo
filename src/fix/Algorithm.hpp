@@ -118,6 +118,17 @@ class Algorithm
              // setup data for the volume algorithm
              ProblemBuilder<REAL> builder = modify_problem( problem );
              Problem<REAL> reformulated = builder.build();
+
+             REAL offset_for_cutoff = 1;
+             if( alg_parameter.use_cutoff_constraint )
+             {
+                reformulated = add_cutoff_objective( reformulated );
+                reformulated.recomputeAllActivities();
+                offset_for_cutoff = calculate_cutoff_offset( reformulated );
+             }
+             assert( num.isGT( offset_for_cutoff, 0 ) &&
+                     num.isLE( offset_for_cutoff, 1 ) );
+
              int n_rows_A_no_conflicts = reformulated.getNRows();
              int n_hard_constraints = 0;
              bool detect_hard_constraints =
@@ -147,19 +158,8 @@ class Algorithm
              generate_initial_dual_solution( reformulated, pi );
 
              // Fix and Propagate
-             REAL offset_for_cutoff = 1;
              Vec<Vec<SingleBoundChange<REAL>>> bound_changes;
              Vec<std::pair<int, int>> infeasible_rows;
-
-             if( alg_parameter.use_cutoff_constraint )
-             {
-                reformulated = add_cutoff_objective( reformulated );
-                reformulated.recomputeAllActivities();
-                offset_for_cutoff = calculate_cutoff_offset( reformulated );
-             }
-
-             assert( num.isGT( offset_for_cutoff, 0 ) &&
-                     num.isLE( offset_for_cutoff, 1 ) );
 
              msg.info( "\tStarting primal heuristics - {:.3} s\n",
                        timer.getTime() );
@@ -178,7 +178,6 @@ class Algorithm
                    reformulated.getConstraintMatrix().getRightHandSides()[0] =
                        cutoff;
                    reformulated.recomputeAllActivities();
-
                 }
              }
 
@@ -246,19 +245,20 @@ class Algorithm
 
                    // exit if no hard constraints can be added or the cutoff
                    // constraint was modified or cutoff was not updated
-                   if( (!alg_parameter.threshold_hard_constraints_vary ||
+                   if( ( !alg_parameter.threshold_hard_constraints_vary ||
                        ( alg_parameter.threshold_hard_constraints_vary &&
-                         n_hard_constraints == 0 )) &&
-                       (!alg_parameter.use_cutoff_constraint ||
-                       ( alg_parameter.use_cutoff_constraint && !sol_updated )) )
+                         n_hard_constraints == 0 ) ) &&
+                       ( !alg_parameter.use_cutoff_constraint ||
+                       ( alg_parameter.use_cutoff_constraint && !sol_updated ) )
+                     )
                    {
                       msg.info( "\tNo new constraints could be added. Terminating now...\n" );
                       break;
                    }
 
                    // add hard constraints only if cutoff constraint was not modified
-                   if(!alg_parameter.use_cutoff_constraint ||
-                       ( alg_parameter.use_cutoff_constraint && !sol_updated ))
+                   if( !alg_parameter.use_cutoff_constraint ||
+                       ( alg_parameter.use_cutoff_constraint && !sol_updated ) )
                       if( alg_parameter.threshold_hard_constraints_vary )
                       {
                          assert( n_hard_constraints > 0 );
