@@ -81,16 +81,17 @@ TEST_CASE( "conflict-analysis-binary-no-resolution", "[conflict]" )
    conflictAnalysis.perform_conflict_analysis( bound_changes, infeasible_rows,
                                                conflict_constraints );
 
-   // conflict analysis returns the constraint x5 >= 1
-   SparseVectorView<double> data = conflict_constraints[0].get_data();
-   const double* vals = data.getValues();
-   const int* inds = data.getIndices();
-   int len = data.getLength();
-
    REQUIRE( conflict_constraints.size() == 1 );
-   REQUIRE( len == 1 );
-   REQUIRE( vals[0] == 1.0 );
-   REQUIRE( inds[0] == 4 );
+
+   // conflict analysis returns the constraint x5 >= 1 (1-FUIP)
+   SparseVectorView<double> data_c1 = conflict_constraints[0].get_data();
+   const double* vals_c1 = data_c1.getValues();
+   const int* inds_c1 = data_c1.getIndices();
+   int len_c1 = data_c1.getLength();
+
+   REQUIRE( len_c1 == 1 );
+   REQUIRE( vals_c1[0] == 1.0 );
+   REQUIRE( inds_c1[0] == 4 );
 }
 
 TEST_CASE( "conflict-analysis-binary-with-resolution", "[conflict]" )
@@ -142,20 +143,33 @@ TEST_CASE( "conflict-analysis-binary-with-resolution", "[conflict]" )
    conflictAnalysis.perform_conflict_analysis( bound_changes, infeasible_rows,
                                                conflict_constraints );
 
-   // conflict analysis returns the constraint x2 + x3 + x5 >= 1
-   SparseVectorView<double> data = conflict_constraints[0].get_data();
-   const double* vals = data.getValues();
-   const int* inds = data.getIndices();
-   int len = data.getLength();
+   REQUIRE( conflict_constraints.size() == 2 );
 
-   REQUIRE( conflict_constraints.size() == 1 );
-   REQUIRE( len == 3 );
-   REQUIRE( vals[0] == 1.0 );
-   REQUIRE( vals[1] == 1.0 );
-   REQUIRE( vals[2] == 1.0 );
-   REQUIRE( inds[0] == 1 );
-   REQUIRE( inds[1] == 4 );
-   REQUIRE( inds[2] == 2 );
+   // conflict analysis returns the constraint x2 + x3 + x5 >= 1 (1-FUIP)
+   SparseVectorView<double> data_c1 = conflict_constraints[0].get_data();
+   const double* vals_c1 = data_c1.getValues();
+   const int* inds_c1 = data_c1.getIndices();
+   int len_c1 = data_c1.getLength();
+
+   REQUIRE( len_c1 == 3 );
+   REQUIRE( vals_c1[0] == 1.0 );
+   REQUIRE( vals_c1[1] == 1.0 );
+   REQUIRE( vals_c1[2] == 1.0 );
+   REQUIRE( inds_c1[0] == 1 );
+   REQUIRE( inds_c1[1] == 2 );
+   REQUIRE( inds_c1[2] == 4 );
+
+   // conflict analysis returns the constraint - x1 + x5 >= 1 (All-FUIP)
+   SparseVectorView<double> data_c2 = conflict_constraints[1].get_data();
+   const double* vals_c2 = data_c2.getValues();
+   const int* inds_c2 = data_c2.getIndices();
+   int len_c2 = data_c2.getLength();
+
+   REQUIRE( len_c2 == 2 );
+   REQUIRE( vals_c2[0] == -1.0 );
+   REQUIRE( vals_c2[1] == 1.0 );
+   REQUIRE( inds_c2[0] == 0 );
+   REQUIRE( inds_c2[1] == 4 );
 }
 
 Problem<double>

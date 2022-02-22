@@ -72,7 +72,7 @@ struct AlgorithmParameter
       paramSet.addParameter( "seed", "", seed, 0.0 );
       paramSet.addParameter( "threads",
                              "maximal number of threads to use (0: automatic)",
-                             threads, 0 );
+                             threads, 1 );
 
       paramSet.addParameter(
           "vol.use_convex_combo_for_term",
