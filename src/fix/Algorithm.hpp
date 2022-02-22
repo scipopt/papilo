@@ -156,8 +156,12 @@ class Algorithm
                 reformulated = add_cutoff_objective( reformulated );
                 reformulated.recomputeAllActivities();
              }
+             msg.info("{}\n", reformulated.getRowFlags()[0].test(RowFlag::kEquation));
+             msg.info("{}\n", reformulated.getRowFlags()[0].test(RowFlag::kRhsInf));
+             msg.info("{}\n", reformulated.getRowFlags()[0].test(RowFlag::kLhsInf));
+             msg.info("{}\n", reformulated.getRowFlags()[0].test(RowFlag::kRedundant));
              if( alg_parameter.use_cutoff_constraint )
-                offset_for_cutoff = calculate_cutoff_offset( problem );
+                offset_for_cutoff = calculate_cutoff_offset( reformulated );
              assert( num.isGT( offset_for_cutoff, 0 ) &&
                      num.isLE( offset_for_cutoff, 1 ) );
 
@@ -456,16 +460,18 @@ class Algorithm
       std::copy( cut_off_indices.begin(), cut_off_indices.end(), rowcols_obj );
       std::copy( cut_off_values.begin(), cut_off_values.end(), rowvals_obj );
 
-      builder.addRowEntries( 0, new_nnz, rowcols_obj, rowvals_obj );
-      builder.setRowLhs( 0, 0 );
-      builder.setRowRhs( 0, 0 );
-      builder.setRowLhsInf( 0, true );
-      builder.setRowRhsInf( 0, true );
-      builder.setHardConstraint( 0, true );
-
-
       /* set up rows */
       builder.setNumRows( nrows + 1 );
+
+      builder.addRowEntries( 0, new_nnz, rowcols_obj, rowvals_obj );
+      builder.setRowLhs( 0, -1 );
+      int rhsval = 2;
+      builder.setRowRhs( 0, rhsval );
+      bool infinite = true;
+      builder.setRowLhsInf( 0, infinite );
+      builder.setRowRhsInf( 0, infinite );
+      builder.setHardConstraint( 0, true );
+
       for( int i = 0; i < nrows; ++i )
       {
          const SparseVectorView<REAL>& view = matrix.getRowCoefficients( i );
