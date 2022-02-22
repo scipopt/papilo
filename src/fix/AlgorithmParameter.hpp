@@ -39,6 +39,7 @@ struct AlgorithmParameter
 
    // vol algorithm parameters
    bool use_convex_combo_for_term = true;
+   bool detect_hard_constraints = true;
    bool threshold_hard_constraints_vary = true;
    double threshold_hard_constraints_incr_factor = 2;
    double threshold_hard_constraints = 1;
@@ -77,6 +78,10 @@ struct AlgorithmParameter
           "vol.use_convex_combo_for_term",
           "whether to convex combination for terminaton via fixed integer "
           "criterion or not", use_convex_combo_for_term );
+      paramSet.addParameter(
+          "vol.detect_hard_constraints",
+          "whether to detect hard constraints or not",
+          detect_hard_constraints );
       paramSet.addParameter(
           "vol.threshold_hard_constraints_vary",
           "whether to vary the threshold for hard constraints or not",

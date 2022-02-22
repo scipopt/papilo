@@ -120,7 +120,8 @@ class Algorithm
              Problem<REAL> reformulated = builder.build();
              int n_rows_A_no_conflicts = reformulated.getNRows();
              int n_hard_constraints = 0;
-             bool detect_hard_constraints = true;
+             bool detect_hard_constraints =
+                alg_parameter.detect_hard_constraints;
              REAL threshold_hard_constraints =
                 alg_parameter.threshold_hard_constraints;
              bool threshold_hard_constraints_vary =
