@@ -182,6 +182,8 @@ class VolumeAlgorithm
          update_pi( n_rows_A, A, n_conflicts, derived_conflicts, pi_t,
                     pi_t_conflicts );
 
+         if( !parameter.use_convex_combo_for_term )
+            x_last_iter = x_t;
          // Solve (6) with π_t , let x_t and z_t be the solutions obtained.
          REAL z_t = create_problem_6_and_solve_it( c, A, b, domains,
                                     derived_conflicts, b_conflicts, pi_t,
@@ -192,7 +194,8 @@ class VolumeAlgorithm
                              residual_t_conflicts );
          calc_alpha( residual_t, v_t, residual_t_conflicts, v_t_conflicts );
 
-         x_last_iter = x_bar;
+         if( parameter.use_convex_combo_for_term )
+            x_last_iter = x_bar;
          // x_bar ← αx_t + (1 − α)x_bar
          op.calc_qb_plus_sx( alpha, x_t, 1 - alpha, x_bar,
                              x_bar );
@@ -211,10 +214,16 @@ class VolumeAlgorithm
          else
             improvement_indicator = false;
 
-         update_fixed_int_count( x_bar, x_last_iter, domains,
-                                 counter,
-                                 fixed_int_vars_count,
-                                 num_fixed_int_vars );
+         if( parameter.use_convex_combo_for_term )
+            update_fixed_int_count( x_bar, x_last_iter, domains,
+                                    counter,
+                                    fixed_int_vars_count,
+                                    num_fixed_int_vars );
+         else
+            update_fixed_int_count( x_t, x_last_iter, domains,
+                                    counter,
+                                    fixed_int_vars_count,
+                                    num_fixed_int_vars );
 
          op.calc_b_minus_Ax( A, x_bar, b, derived_conflicts, v_t, v_t_conflicts );
          calc_violations( n_rows_A, A, pi_bar, v_t, n_conflicts,
@@ -235,7 +244,7 @@ class VolumeAlgorithm
          }
 
          // check integrality of x_bar
-         integrality_check( x_bar, x_last_iter, domains );
+//         integrality_check( x_bar, x_last_iter, domains );
 
          // Let t ← t + 1 and go to Step 1.
          counter = counter + 1;

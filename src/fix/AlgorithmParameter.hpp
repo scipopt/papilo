@@ -38,6 +38,7 @@ struct AlgorithmParameter
    int size_of_conflicts_to_be_copied = 0;
 
    // vol algorithm parameters
+   bool use_convex_combo_for_term = true;
    bool threshold_hard_constraints_vary = true;
    double threshold_hard_constraints_incr_factor = 2;
    double threshold_hard_constraints = 1;
@@ -72,6 +73,10 @@ struct AlgorithmParameter
                              "maximal number of threads to use (0: automatic)",
                              threads, 0 );
 
+      paramSet.addParameter(
+          "vol.use_convex_combo_for_term",
+          "whether to convex combination for terminaton via fixed integer "
+          "criterion or not", use_convex_combo_for_term );
       paramSet.addParameter(
           "vol.threshold_hard_constraints_vary",
           "whether to vary the threshold for hard constraints or not",
