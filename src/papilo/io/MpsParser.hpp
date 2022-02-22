@@ -327,8 +327,8 @@ MpsParser<REAL>::parseRows( boost::iostreams::filtering_istream& file,
          row_flags.emplace_back( RowFlag::kLhsInf );
          rowtype.push_back( boundtype::kLE );
       }
-      else if( word_ref.front() ==
-               'N' ) // todo properly treat multiple free rows
+      // todo properly treat multiple free rows
+      else if( word_ref.front() == 'N' )
       {
          if( hasobj )
          {
@@ -558,11 +558,18 @@ MpsParser<REAL>::parseRanges( boost::iostreams::filtering_istream& file )
          {
             assert( row_type[rowidx] == boundtype::kEq );
             assert( rowrhs[rowidx] == rowlhs[rowidx] );
+            assert( row_flags[rowidx].test(RowFlag::kEquation) );
 
             if( val > REAL{ 0.0 } )
-               rowrhs[rowidx] = rowrhs[rowidx] + REAL(val);
+            {
+               row_flags[rowidx].unset( RowFlag::kEquation );
+               rowrhs[rowidx] = rowrhs[rowidx] + REAL( val );
+            }
             else if( val < REAL{ 0.0 } )
-               rowlhs[rowidx] = rowlhs[rowidx] + REAL(val);
+            {
+               rowlhs[rowidx] = rowlhs[rowidx] + REAL( val );
+               row_flags[rowidx].unset( RowFlag::kEquation );
+            }
          }
       };
 
