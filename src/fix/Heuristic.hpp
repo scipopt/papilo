@@ -214,9 +214,10 @@ class Heuristic
                          break;
                       }
                       obj_value[i] = calculate_obj_value( int_solutions[i] );
-                      msg.info( "\t\tPropagating {} found obj value {}! "
+                      REAL a  = calculate_objective_of_reduced_problem(views[i], int_solutions[i] );
+                      msg.info( "\t\tPropagating {} found obj value {} {}! "
                                 "(backtracks {})\n",
-                                i, obj_value[i], backtracks );
+                                i, obj_value[i],a, backtracks );
                    }
                 } );
 #else
@@ -648,6 +649,17 @@ class Heuristic
             }
             assert( best_index != -1 );
             current_best_solution = int_solutions[best_index];
+         }
+
+         REAL
+         calculate_objective_of_reduced_problem(
+             const ProbingView<REAL>& view, const Vec<REAL>& best_solution ) const
+         {
+            StableSum<REAL> obj{};
+            for( int i = 0; i < view.getProbingLowerBounds().size(); i++ )
+               obj.add( view.get_obj()[i] * best_solution[i] );
+            REAL real = obj.get();
+            return real;
          }
 
          REAL calculate_obj_value( const Vec<REAL>& reduced,
