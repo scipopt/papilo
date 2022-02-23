@@ -252,12 +252,13 @@ class VolumeAlgorithm
 
       if( msg.getVerbosityLevel() >= VerbosityLevel::kInfo )
       {
-         // TODO: remove cutoff cons count from n_rows_A before printing
+         int n_rows_A_no_cutoff = ( parameter.use_cutoff_constraint ) ?
+                                  n_rows_A - 1 : n_rows_A;
          msg.info( "\t\tVol. alg. iterations: {} ( {} )\n", counter,
                parameter.max_iterations );
          msg.info( "\t\tAvg. (easy) constraint violation: {} ( {} )\n",
                ( op.l1_norm( viol_t ) + op.l1_norm( viol_t_conflicts ) ) /
-                 ( n_rows_A - n_hard_constraints + n_conflicts ),
+                 ( n_rows_A_no_cutoff - n_hard_constraints + n_conflicts ),
                  parameter.con_abstol );
          msg.info( "\t\tPrimal absolute objective value: {} ( {} )\n",
                calculate_orig_obj_value( x_bar ), parameter.obj_abstol );
@@ -419,10 +420,12 @@ class VolumeAlgorithm
                       const Vec<int>& num_fixed_int_vars,
                       const int iter_counter )
    {
-      // TODO: remove cutoff cons count from n_rows_A
+      int n_rows_A_no_cutoff = ( parameter.use_cutoff_constraint ) ?
+                               n_rows_A - 1 : n_rows_A;
       bool primal_feas_term = num.isLT( op.l1_norm( v ) +
                                         op.l1_norm( v_conflicts ),
-                                        ( n_rows_A - n_hard_constraints +
+                                        ( n_rows_A_no_cutoff -
+                                          n_hard_constraints +
                                           n_conflicts ) *
                                         parameter.con_abstol );
 
@@ -459,7 +462,8 @@ class VolumeAlgorithm
       }
 
       msg.detailed( "   cons: {}\n", op.l1_norm( v ) + op.l1_norm( v_conflicts )
-                                     / ( n_rows_A - n_hard_constraints +
+                                     / ( n_rows_A_no_cutoff -
+                                         n_hard_constraints +
                                          n_conflicts ) );
       msg.detailed( "   zbar: {}\n", z_bar );
       msg.detailed( "   objA: {}\n", abs( op.multi( c, x_bar ) ) );
