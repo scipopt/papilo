@@ -38,7 +38,7 @@ struct AlgorithmParameter
    int size_of_conflicts_to_be_copied = 0;
 
    // vol algorithm parameters
-   bool use_convex_combo_for_term = true;
+   bool use_convex_combo_for_term = false;
    bool detect_hard_constraints = true;
    bool threshold_hard_constraints_vary = true;
    double threshold_hard_constraints_incr_factor = 2;
@@ -56,7 +56,7 @@ struct AlgorithmParameter
    double con_abstol = 0.02;
    double fixed_int_var_threshold = 0.05;
    int num_iters_fixed_int_vars = 20;
-   int num_iters_fixed_int_vars_percent = 10001;
+   int num_iters_fixed_int_vars_percent = 15;
    int weak_improvement_iter_limit = 2;
    int non_improvement_iter_limit = 20;
    int max_iterations = 10000;
