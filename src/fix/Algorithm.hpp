@@ -357,8 +357,7 @@ class Algorithm
       StableSum<REAL> obj{};
       for( int i = 0; i < problem.getNCols(); i++ )
          obj.add( problem.getObjective().coefficients[i] * best_solution[i] );
-      REAL real = obj.get();
-      return real;
+      return obj.get();
    }
 
    REAL

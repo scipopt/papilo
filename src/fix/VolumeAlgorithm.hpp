@@ -288,12 +288,16 @@ class VolumeAlgorithm
                             const REAL threshold_hard_constraints,
                             int& n_hard_constraints )
    {
-      // TODO: skip cutoff cons
       n_hard_constraints = 0;
       Vec<RowFlags>& rowFlags = A.getRowFlags();
 
       for( int i = 0; i < n_rows_A_no_conflicts; i++ )
       {
+         if( rowFlags[i].test( RowFlag::kCutoffConstraint ) )
+         {
+            assert( i == 0 );
+            continue;
+         }
          if( num.isGT( get_max_min_factor( A.getRowCoefficients( i ) ),
                        threshold_hard_constraints ) )
          {
@@ -329,20 +333,19 @@ class VolumeAlgorithm
               const int n_conflicts,
               const Vec<Constraint<REAL>>& derived_conflicts )
    {
-      // TODO: skip cutoff cons here
-      for( int i = 0; i < n_rows_A; i++ )
-      {
-         if( A.getRowFlags()[i].test( RowFlag::kLhsInf ) )
-            return false;
-      }
+      bool exists_no_le_constraint =
+          std::none_of( A.getRowFlags().begin(), A.getRowFlags().end(),
+                        []( RowFlags flag )
+                        {
+                           return flag.test( RowFlag::kLhsInf ) &&
+                                  !flag.test( RowFlag::kCutoffConstraint );
+                        } );
 
-      for( int i = 0; i < n_conflicts; i++ )
-      {
-         if( derived_conflicts[i].get_row_flag().test( RowFlag::kLhsInf ) )
-            return false;
-      }
-
-      return true;
+      bool exists_no_le_constraint_2 =
+          std::none_of( derived_conflicts.begin(), derived_conflicts.end(),
+                        []( Constraint<REAL> c )
+                        { return c.get_row_flag().test( RowFlag::kLhsInf ); } );
+      return exists_no_le_constraint && exists_no_le_constraint_2;
    }
 
    void
@@ -381,7 +384,6 @@ class VolumeAlgorithm
               const Vec<Constraint<REAL>>& derived_conflicts,
               Vec<REAL>& pi, Vec<REAL>& pi_conflicts )
    {
-      // TODO: account for cutoff cons here
       for( int i = 0; i < n_rows_A; i++ )
       {
          if( A.getRowFlags()[i].test( RowFlag::kHardConstraint) ||
@@ -585,7 +587,6 @@ class VolumeAlgorithm
                     Vec<REAL>& viol_residual,
                     Vec<REAL>& viol_residual_conflicts )
    {
-      // TODO: account for cutoff cons here
       viol_residual = residual;
       for( int i = 0; i < n_rows_A; i++ )
       {
