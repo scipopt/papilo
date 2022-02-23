@@ -57,7 +57,7 @@ class Constraint
       return rhs;
    }
 
-   int
+   unsigned int
    get_hash(){
 
       Hasher<unsigned int> hasher( data.getLength() );

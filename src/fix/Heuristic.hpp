@@ -236,13 +236,13 @@ class Heuristic
                  obj_value[0], backtracks );
 #endif
             one_opt( perform_one_opt, stop_at_infeasible );
-            Vec<int> hashes;
+            Vec<unsigned int> hashes;
             int redundant_conflicts = 0;
             for( auto& cs : constraints )
             {
                for( Constraint<REAL>& c : cs )
                {
-                  int hash = c.get_hash();
+                  unsigned int hash = c.get_hash();
                   if( !( std::find( hashes.begin(), hashes.end(), hash ) !=
                          hashes.end() ) )
                   {
