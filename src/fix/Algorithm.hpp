@@ -463,7 +463,7 @@ class Algorithm
       bool infinite = true;
       builder.setRowLhsInf( 0, infinite );
       builder.setRowRhsInf( 0, infinite );
-      builder.setHardConstraint( 0, true );
+      builder.setCutoffConstraint( 0, true );
 
       for( int i = 0; i < nrows; ++i )
       {

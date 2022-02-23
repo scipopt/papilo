@@ -437,6 +437,8 @@ class Heuristic
                builder.setRowRhsInf( i, rowFlags[i].test( RowFlag::kRhsInf ) );
                builder.setHardConstraint( i, rowFlags[i].
                                              test( RowFlag::kHardConstraint ) );
+               builder.setCutoffConstraint( i, rowFlags[i].
+                                             test( RowFlag::kCutoffConstraint ) );
             }
 
             for( int i = 0; i < new_rows; ++i )

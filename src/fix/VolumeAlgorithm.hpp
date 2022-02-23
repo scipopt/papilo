@@ -384,8 +384,11 @@ class VolumeAlgorithm
       // TODO: account for cutoff cons here
       for( int i = 0; i < n_rows_A; i++ )
       {
-         if( A.getRowFlags()[i].test( RowFlag::kHardConstraint ) )
+         if( A.getRowFlags()[i].test( RowFlag::kHardConstraint) ||
+             A.getRowFlags()[i].test( RowFlag::kCutoffConstraint ) )
          {
+            assert( i == 0 ||
+                    A.getRowFlags()[i].test( RowFlag::kHardConstraint ) );
             pi[i] = 0;
          }
          else if( A.getRowFlags()[i].test( RowFlag::kRhsInf ) )
@@ -588,6 +591,7 @@ class VolumeAlgorithm
       {
          // Note: isZero check would be different in case of non-zero LB on pi
          if( A.getRowFlags()[i].test( RowFlag::kHardConstraint ) ||
+             A.getRowFlags()[i].test( RowFlag::kCutoffConstraint ) ||
              ( A.getRowFlags()[i].test( RowFlag::kRhsInf ) &&
                ( num.isLT( residual[i], REAL{ 0.0 } ) && num.isZero( pi[i] ) )
              ) )
