@@ -64,7 +64,9 @@ class VectorMultiplication
 #endif
                             if( i < n_rows_A )
                             {
-                               if( !rowFlags[i].test( RowFlag::kHardConstraint ) )
+                               if( !rowFlags[i].test( RowFlag::kHardConstraint )
+                                   && !rowFlags[i].test(
+                                      RowFlag::kCutoffConstraint ) )
                                {
                                   auto coeff = A.getRowCoefficients( i );
                                   StableSum<REAL> aux( b[i] );
@@ -113,7 +115,9 @@ class VectorMultiplication
                                for( int j = 0; j < coeff.getLength(); j++ )
                                {
                                   if( !rowFlags[coeff.getIndices()[j]].
-                                       test( RowFlag::kHardConstraint ) )
+                                       test( RowFlag::kHardConstraint ) &&
+                                       !rowFlags[coeff.getIndices()[j]].test(
+                                          RowFlag::kCutoffConstraint ) )
                                      aux.add( -coeff.getValues()[j] *
                                               x[coeff.getIndices()[j]] );
                                }
