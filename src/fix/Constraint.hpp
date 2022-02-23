@@ -26,6 +26,7 @@
 
 #include "papilo/core/Problem.hpp"
 #include "papilo/misc/Num.hpp"
+#include "papilo/misc/Hash.hpp"
 
 namespace papilo
 {
@@ -54,6 +55,20 @@ class Constraint
    get_rhs() const
    {
       return rhs;
+   }
+
+   int
+   get_hash(){
+
+      Hasher<unsigned int> hasher( data.getLength() );
+      if( data.getLength() > 1 )
+      {
+         REAL scale = REAL( 2.0 / ( 1.0 + sqrt( 5.0 ) ) ) / data.getValues()[0];
+         for( int j = 1; j < data.getLength(); ++j )
+            hasher.addValue( Num<REAL>::hashCode( data.getValues()[j] * scale ) );
+      }
+
+      return hasher.getHash();
    }
 
  private:

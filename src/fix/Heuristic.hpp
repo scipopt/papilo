@@ -236,14 +236,29 @@ class Heuristic
                  obj_value[0], backtracks );
 #endif
             one_opt( perform_one_opt, stop_at_infeasible );
-            for( auto& c : constraints )
+            Vec<int> hashes;
+            int redundant_conflicts = 0;
+            for( auto& cs : constraints )
             {
-               derived_conflicts.insert( derived_conflicts.end(), c.begin(),
-                                         c.end() );
-               c.clear();
+               for( Constraint<REAL>& c : cs )
+               {
+                  int hash = c.get_hash();
+                  if( !( std::find( hashes.begin(), hashes.end(), hash ) !=
+                         hashes.end() ) )
+                  {
+                     hashes.push_back( hash );
+                     derived_conflicts.push_back(c);
+                  }
+                  else
+                     redundant_conflicts++;
+               }
+               cs.clear();
             }
+            msg.info( "\t\tRedundant conflicts {}/{}\n", redundant_conflicts, redundant_conflicts + derived_conflicts.size() );
             return evaluate( best_obj_val, current_best_solution, copy );
          }
+
+
 
          void one_opt( bool perform_one_opt, bool perform_conflict_analysis )
          {
