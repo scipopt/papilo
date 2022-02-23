@@ -238,6 +238,16 @@ class ProblemBuilder
    }
 
    void
+   setCutoffConstraint( int row, bool is_cutoff_constraint )
+   {
+      if( is_cutoff_constraint )
+         rflags[row].set( RowFlag::kCutoffConstraint );
+      else
+         rflags[row].unset( RowFlag::kCutoffConstraint );
+   }
+
+
+   void
    setRowRhsInfAll( Vec<uint8_t> isInfinite )
    {
       assert( isInfinite.size() == rflags.size() );

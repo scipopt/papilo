@@ -65,7 +65,7 @@ class VolumeAlgorithm
    /**
     * minimize cx s.t. Ax = b, Dx = e (D = empty), x ≥ 0.
     * @param c objective function
-    * @param A equation or at least one finte bound for every constraint
+    * @param A equation or at least one finite bound for every constraint
     * @param derived_conflicts
     * @param b rhs of constraints
     * @param domains variables domains (lb/ub/flags)
@@ -252,11 +252,13 @@ class VolumeAlgorithm
 
       if( msg.getVerbosityLevel() >= VerbosityLevel::kInfo )
       {
+         int n_rows_A_no_cutoff = ( parameter.use_cutoff_constraint ) ?
+                                  n_rows_A - 1 : n_rows_A;
          msg.info( "\t\tVol. alg. iterations: {} ( {} )\n", counter,
                parameter.max_iterations );
          msg.info( "\t\tAvg. (easy) constraint violation: {} ( {} )\n",
                ( op.l1_norm( viol_t ) + op.l1_norm( viol_t_conflicts ) ) /
-                 ( n_rows_A - n_hard_constraints + n_conflicts ),
+                 ( n_rows_A_no_cutoff - n_hard_constraints + n_conflicts ),
                  parameter.con_abstol );
          msg.info( "\t\tPrimal absolute objective value: {} ( {} )\n",
                calculate_orig_obj_value( x_bar ), parameter.obj_abstol );
@@ -292,6 +294,11 @@ class VolumeAlgorithm
 
       for( int i = 0; i < n_rows_A_no_conflicts; i++ )
       {
+         if( rowFlags[i].test( RowFlag::kCutoffConstraint ) )
+         {
+            assert( i == 0 );
+            continue;
+         }
          if( num.isGT( get_max_min_factor( A.getRowCoefficients( i ) ),
                        threshold_hard_constraints ) )
          {
@@ -327,19 +334,19 @@ class VolumeAlgorithm
               const int n_conflicts,
               const Vec<Constraint<REAL>>& derived_conflicts )
    {
-      for( int i = 0; i < n_rows_A; i++ )
-      {
-         if( A.getRowFlags()[i].test( RowFlag::kLhsInf ) )
-            return false;
-      }
+      bool exists_no_le_constraint =
+          std::none_of( A.getRowFlags().begin(), A.getRowFlags().end(),
+                        []( RowFlags flag )
+                        {
+                           return flag.test( RowFlag::kLhsInf ) &&
+                                  !flag.test( RowFlag::kCutoffConstraint );
+                        } );
 
-      for( int i = 0; i < n_conflicts; i++ )
-      {
-         if( derived_conflicts[i].get_row_flag().test( RowFlag::kLhsInf ) )
-            return false;
-      }
-
-      return true;
+      bool exists_no_le_constraint_2 =
+          std::none_of( derived_conflicts.begin(), derived_conflicts.end(),
+                        []( Constraint<REAL> c )
+                        { return c.get_row_flag().test( RowFlag::kLhsInf ); } );
+      return exists_no_le_constraint && exists_no_le_constraint_2;
    }
 
    void
@@ -380,8 +387,11 @@ class VolumeAlgorithm
    {
       for( int i = 0; i < n_rows_A; i++ )
       {
-         if( A.getRowFlags()[i].test( RowFlag::kHardConstraint ) )
+         if( A.getRowFlags()[i].test( RowFlag::kHardConstraint) ||
+             A.getRowFlags()[i].test( RowFlag::kCutoffConstraint ) )
          {
+            assert( i == 0 ||
+                    A.getRowFlags()[i].test( RowFlag::kHardConstraint ) );
             pi[i] = 0;
          }
          else if( A.getRowFlags()[i].test( RowFlag::kRhsInf ) )
@@ -410,9 +420,12 @@ class VolumeAlgorithm
                       const Vec<int>& num_fixed_int_vars,
                       const int iter_counter )
    {
+      int n_rows_A_no_cutoff = ( parameter.use_cutoff_constraint ) ?
+                               n_rows_A - 1 : n_rows_A;
       bool primal_feas_term = num.isLT( op.l1_norm( v ) +
                                         op.l1_norm( v_conflicts ),
-                                        ( n_rows_A - n_hard_constraints +
+                                        ( n_rows_A_no_cutoff -
+                                          n_hard_constraints +
                                           n_conflicts ) *
                                         parameter.con_abstol );
 
@@ -449,7 +462,8 @@ class VolumeAlgorithm
       }
 
       msg.detailed( "   cons: {}\n", op.l1_norm( v ) + op.l1_norm( v_conflicts )
-                                     / ( n_rows_A - n_hard_constraints +
+                                     / ( n_rows_A_no_cutoff -
+                                         n_hard_constraints +
                                          n_conflicts ) );
       msg.detailed( "   zbar: {}\n", z_bar );
       msg.detailed( "   objA: {}\n", abs( op.multi( c, x_bar ) ) );
@@ -582,6 +596,7 @@ class VolumeAlgorithm
       {
          // Note: isZero check would be different in case of non-zero LB on pi
          if( A.getRowFlags()[i].test( RowFlag::kHardConstraint ) ||
+             A.getRowFlags()[i].test( RowFlag::kCutoffConstraint ) ||
              ( A.getRowFlags()[i].test( RowFlag::kRhsInf ) &&
                ( num.isLT( residual[i], REAL{ 0.0 } ) && num.isZero( pi[i] ) )
              ) )
