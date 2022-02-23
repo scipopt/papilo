@@ -1,0 +1,3 @@
+vol.detect_hard_constraints = 0
+vol.con_abstol = 0.0001
+vol.num_iters_fixed_int_vars_percent = 10002
