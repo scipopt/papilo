@@ -64,7 +64,7 @@ Next we provide a small example of how the binary can be used to apply presolvin
 
 Assuming a problem instance is stored in the file `problem.mps` the following call will apply presolving with standard settings and write the reduced problem to `reduced.mps` and all information that is needed for postsolve to the binary archive `reduced.postsolve`.
 ```
-bin/papilo presolve -f problem.mps -r reduced.mps -v reduced.postsolve
+PATH_TO_BUILD_DIR/bin/papilo presolve -f problem.mps -r reduced.mps -v reduced.postsolve
 ```
 
 Now we can use the reduced problem `reduced.mps` to obtain a solution
@@ -78,14 +78,14 @@ Variable names that are not found in the reduced problem are ignored.
 
 The command for applying the postsolve step to the solution `reduced.sol` is then
 ```
-bin/papilo postsolve -v reduced.postsolve -u reduced.sol -l problem.sol
+PATH_TO_BUILD_DIR/bin/papilo postsolve -v reduced.postsolve -u reduced.sol -l problem.sol
 ```
 Giving the parameter `-l problem.sol` is optional and will store the solution transformed to the original space under `problem.sol`.
 The output of papilo contains some information about violations and objective value of the solution.
 
 If PaPILO was linked to a suitable solver, then the above can also be achieved by using the `solve` subcommand like this:
 ```
-bin/papilo solve -f problem.mps -l problem.sol
+PATH_TO_BUILD_DIR/bin/papilo solve -f problem.mps -l problem.sol
 ```
 This will presolve the problem, pass the reduced problem to a solver, and subsequently transform back the optimal solution returned by the solver and write it to problem.sol.
 
