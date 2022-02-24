@@ -106,8 +106,8 @@ call_algorithm( void* heuristic_void_ptr, double* cont_solution, double* result,
        {
 #endif
           auto heuristic = (Heuristic<double>*)( heuristic_void_ptr );
-          if( apply_conflicts == 0 &&
-              size_of_constraints >= heuristic->get_derived_conflicts().size() )
+          if( apply_conflicts == 1 &&
+              size_of_constraints <= heuristic->get_derived_conflicts().size() )
           {
              heuristic->problem = heuristic->copy_conflicts_to_problem(
                  heuristic->problem, heuristic->get_derived_conflicts() );
