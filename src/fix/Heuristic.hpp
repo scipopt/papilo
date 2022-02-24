@@ -235,7 +235,7 @@ class Heuristic
                  "\t\tPropagating {} found obj value {}! (backtracks {})\n", 0,
                  obj_value[0], backtracks );
 #endif
-            msg.info( "\t\tstarting OneOpt/ConflictAnalysis -{}\n", timer.getTime() );
+            msg.info( "\t\tstarting OneOpt/ConflictAnalysis - {} s\n", timer.getTime() );
             one_opt( perform_one_opt, stop_at_infeasible );
             Vec<unsigned int> hashes;
             int redundant_conflicts = 0;
