@@ -632,7 +632,7 @@ TEST_CASE( "fix-and-propagate-check-conflict-analysis-data", "[fix]" )
    REQUIRE( conflicts.size() == 1);
 
    REQUIRE( conflicts[0].first == 5);
-   REQUIRE( conflicts[0].second == 3);
+   REQUIRE( conflicts[0].second == 2);
 
    REQUIRE( changes[0].get_new_bound_value() == 1);
    REQUIRE( changes[0].get_reason_row() == -1);
@@ -652,21 +652,21 @@ TEST_CASE( "fix-and-propagate-check-conflict-analysis-data", "[fix]" )
    REQUIRE( changes[2].get_reason_row() == 1);
    REQUIRE( changes[2].is_lower_bound() );
    REQUIRE( !changes[2].is_manually_triggered() );
-   REQUIRE( changes[2].get_depth_level() == -3 );
+   REQUIRE( changes[2].get_depth_level() == -4 );
 
    REQUIRE( changes[3].get_col() == 3);
    REQUIRE( changes[3].get_new_bound_value() == 1);
    REQUIRE( changes[3].get_reason_row() == -1);
    REQUIRE( changes[3].is_lower_bound() );
    REQUIRE( changes[3].is_manually_triggered() );
-   REQUIRE( changes[3].get_depth_level() == -4 );
+   REQUIRE( changes[3].get_depth_level() == -5 );
 
    REQUIRE( changes[4].get_col() == 4);
-   REQUIRE( changes[4].get_new_bound_value() == 0);
-   REQUIRE( changes[4].get_reason_row() == 2);
-   REQUIRE( !changes[4].is_lower_bound() );
+   REQUIRE( changes[4].get_new_bound_value() == 1);
+   REQUIRE( changes[4].get_reason_row() == 3);
+   REQUIRE( changes[4].is_lower_bound() );
    REQUIRE( !changes[4].is_manually_triggered() );
-   REQUIRE( changes[4].get_depth_level() == -5 );
+   REQUIRE( changes[4].get_depth_level() == -6 );
 
 }
 

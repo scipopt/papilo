@@ -91,7 +91,7 @@ TEST_CASE( "heuristics-all-false-worst-objective", "[fix]" )
        sol, objVal, res, true, true, false,
        InfeasibleCopyStrategy::kWorstObjective);
    REQUIRE( !infeasible );
-   REQUIRE( res[0] == 0 );
+   REQUIRE( res[0] == 1 );
    REQUIRE( res[1] == 1 );
    REQUIRE( res[2] == 0 );
    REQUIRE( res[3] == 1 );
@@ -159,8 +159,8 @@ TEST_CASE( "heuristics-all-false-lowest-depth", "[fix]" )
        InfeasibleCopyStrategy::kLowestDepthOfFirstConflict);
    REQUIRE( !infeasible );
    REQUIRE( res[0] == 0 );
-   REQUIRE( res[1] == 1 );
-   REQUIRE( res[2] == 0 );
+   REQUIRE( res[1] == 0 );
+   REQUIRE( res[2] == 1 );
    REQUIRE( res[3] == 0 );
    REQUIRE( res[4] == 0 );
 }
@@ -179,13 +179,16 @@ setupProblemForConflictAnalysis_3()
    Vec<std::tuple<int, int, double>> entries{
        std::tuple<int, int, double>{ 0, 0, 1.0 },
        std::tuple<int, int, double>{ 0, 2, 1.0 },
+
        std::tuple<int, int, double>{ 1, 0, 1.0 },
        std::tuple<int, int, double>{ 1, 1, 1.0 },
        std::tuple<int, int, double>{ 1, 2, 1.0 },
+
        std::tuple<int, int, double>{ 2, 1, 1.0 },
        std::tuple<int, int, double>{ 2, 2, 1.0 },
        std::tuple<int, int, double>{ 2, 3, 1.0 },
        std::tuple<int, int, double>{ 2, 4, 1.0 },
+
        std::tuple<int, int, double>{ 3, 3, 1.0 },
        std::tuple<int, int, double>{ 3, 4, 1.0 },
    };

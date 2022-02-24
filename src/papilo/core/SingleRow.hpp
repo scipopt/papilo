@@ -416,7 +416,8 @@ update_activities_after_boundchange( const REAL* colvals, const int* colrows,
            ( type == BoundChange::kLower && newbound != oldbound ) ||
            ( type == BoundChange::kUpper && newbound != oldbound ) );
 
-   for( int i = 0; i < collen; ++i )
+   //for( int i = 0; i < collen; ++i )
+   for( int i = collen - 1; i >= 0; i-- )
    {
       RowActivity<REAL>& activity = activities[colrows[i]];
 
