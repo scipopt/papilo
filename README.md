@@ -37,6 +37,7 @@ cd build
 cmake ..
 make
 ```
+
 Building PaPILO with SCIP and SOPLEX works also with the standard cmake workflow:
 ```
 mkdir build
@@ -44,6 +45,11 @@ cd build
 cmake -DSCIP_DIR=PATH_TO_SCIP_BUILD_DIR ..
 make
 ```
+After this, your papilo binary should be found in the `bin` folder.
+To install into your system, run `sudo make install`.
+
+To install papilo into a folder, add `-DCMAKE_INSTALL_PREFIX=/path/to/install/dir/` to the cmake call and run `make install` after the build.
+
 If you use a relative path to SCIP, then the reference point is the location of the `CMakeLists.txt`.
 If you want to build PaPILO with a provided Boost version please add one of these option to the cmake command:
 ```
@@ -52,7 +58,7 @@ If you want to build PaPILO with a provided Boost version please add one of thes
 ```
 
 Solvers that are found in the system are automatically linked to the executable.
-Additionally one can specify the locations of solvers, e.g. with -DSCIP_DIR=<location of scip-config.cmake>, to allow
+Additionally one can specify the locations of solvers, e.g. with `-DSCIP_DIR=<location of scip-config.cmake>`, to allow
 PaPILO to find them in non-standard locations.
 
 # Usage of the binary
@@ -64,7 +70,7 @@ Next we provide a small example of how the binary can be used to apply presolvin
 
 Assuming a problem instance is stored in the file `problem.mps` the following call will apply presolving with standard settings and write the reduced problem to `reduced.mps` and all information that is needed for postsolve to the binary archive `reduced.postsolve`.
 ```
-PATH_TO_BUILD_DIR/bin/papilo presolve -f problem.mps -r reduced.mps -v reduced.postsolve
+papilo presolve -f problem.mps -r reduced.mps -v reduced.postsolve
 ```
 
 Now we can use the reduced problem `reduced.mps` to obtain a solution
@@ -78,14 +84,14 @@ Variable names that are not found in the reduced problem are ignored.
 
 The command for applying the postsolve step to the solution `reduced.sol` is then
 ```
-PATH_TO_BUILD_DIR/bin/papilo postsolve -v reduced.postsolve -u reduced.sol -l problem.sol
+papilo postsolve -v reduced.postsolve -u reduced.sol -l problem.sol
 ```
 Giving the parameter `-l problem.sol` is optional and will store the solution transformed to the original space under `problem.sol`.
 The output of papilo contains some information about violations and objective value of the solution.
 
 If PaPILO was linked to a suitable solver, then the above can also be achieved by using the `solve` subcommand like this:
 ```
-PATH_TO_BUILD_DIR/bin/papilo solve -f problem.mps -l problem.sol
+papilo solve -f problem.mps -l problem.sol
 ```
 This will presolve the problem, pass the reduced problem to a solver, and subsequently transform back the optimal solution returned by the solver and write it to problem.sol.
 
@@ -243,7 +249,7 @@ There are several parameters that can be adjusted to influence the behavior duri
 All the parameters and their default values are listed in the file `parameters.txt`.
 Adjusting a parameter via the command line when using the PaPILO exectuable works like this:
 ```
-bin/papilo solve -f problem.mps -l problem.sol --presolve.randomseed=42
+papilo solve -f problem.mps -l problem.sol --presolve.randomseed=42
 ```
 This call will use an adjusted random seed for the presolve routine.
 
