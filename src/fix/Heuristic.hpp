@@ -175,7 +175,7 @@ class Heuristic
    {
 #ifdef PAPILO_TBB
       tbb::parallel_for(
-          tbb::blocked_range<int>( 0, 7 ),
+          tbb::blocked_range<int>( 0, 4 ),
           [&]( const tbb::blocked_range<int>& r )
           {
          for( int i = r.begin(); i != r.end(); ++i )

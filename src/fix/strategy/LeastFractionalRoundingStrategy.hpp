@@ -33,7 +33,7 @@ class LeastFractionalRoundingStrategy : public RoundingStrategy<REAL>
    const Num<REAL> num;
 
  public:
-   MostFractionalRoundingStrategy( Num<REAL> num_ )
+   LeastFractionalRoundingStrategy( Num<REAL> num_ )
        : num( num_ )
    {
    }
