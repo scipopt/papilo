@@ -34,6 +34,8 @@ class ConflictDivingStrategy : public RoundingStrategy<REAL>
    Problem<REAL>& problem;
    int n_cols;
    int n_conflicts;
+   Vec<int> n_var_down_locks;
+   Vec<int> n_var_up_locks;
 
  public:
    ConflictDivingStrategy( RandomGenerator random_, Num<REAL> num_,
@@ -44,6 +46,32 @@ class ConflictDivingStrategy : public RoundingStrategy<REAL>
    {
       n_conflict_down_locks.resize( n_cols );
       n_conflict_up_locks.resize( n_cols );
+
+      for( int col = 0; col < n_cols; ++col )
+      {
+         int n_up_locks = 0;
+         int n_down_locks = 0;
+
+         auto colvec = problem.getConstraintMatrix().
+                                 getColumnCoefficients( col );
+
+         const REAL* vals = colvec.getValues();
+         const int* inds = colvec.getIndices();
+         int len = colvec.getLength();
+         auto rflags = problem.getRowFlags();
+
+         for( int i = 0; i < len; i++ )
+         {
+            assert( !rflags[inds[i]].test( RowFlag::kConflictConstraint ) );
+            count_locks( vals[i], rflags[inds[i]], n_down_locks,
+                         n_up_locks );
+         }
+
+         n_var_down_locks.push_back( n_down_locks );
+         n_var_up_locks.push_back( n_up_locks );
+      }
+      assert( n_var_down_locks.size() == n_cols );
+      assert( n_var_up_locks.size() == n_cols );
    }
 
    void
