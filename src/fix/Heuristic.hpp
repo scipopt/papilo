@@ -33,6 +33,8 @@
 #include "fix/strategy/FractionalRoundingStrategy.hpp"
 #include "fix/strategy/RandomRoundingStrategy.hpp"
 #include "fix/strategy/ConflictDivingStrategy.hpp"
+#include "fix/strategy/MostFractionalRoundingStrategy.hpp"
+#include "fix/strategy/LeastFractionalRoundingStrategy.hpp"
 #include "papilo/core/Objective.hpp"
 #include "papilo/core/Presolve.hpp"
 #include "papilo/core/ProblemBuilder.hpp"
@@ -89,11 +91,15 @@ class Heuristic
       auto s3 = new FractionalRoundingStrategy<REAL>{ num, problem };
       auto s4 = new RandomRoundingStrategy<REAL>{ random, num };
       auto s5 = new ConflictDivingStrategy<REAL>{ random, num, problem };
+      auto s6 = new MostFractionalRoundingStrategy<REAL>{ num };
+      auto s7 = new LeastFractionalRoundingStrategy<REAL>{ num };
       strategies.push_back( s1 );
       strategies.push_back( s2 );
       strategies.push_back( s3 );
       strategies.push_back( s4 );
       strategies.push_back( s5 );
+      strategies.push_back( s6 );
+      strategies.push_back( s7 );
 
       Vec<REAL> int_solution{};
       int_solution.resize( problem.getNCols() );
@@ -103,25 +109,35 @@ class Heuristic
       int_solutions.push_back( { int_solution } );
       int_solutions.push_back( { int_solution } );
       int_solutions.push_back( { int_solution } );
+      int_solutions.push_back( { int_solution } );
+      int_solutions.push_back( { int_solution } );
 
       views.push_back( { problem, num } );
       views.push_back( { problem, num } );
       views.push_back( { problem, num } );
       views.push_back( { problem, num } );
       views.push_back( { problem, num } );
+      views.push_back( { problem, num } );
+      views.push_back( { problem, num } );
 
       infeasible_arr.push_back( true );
       infeasible_arr.push_back( true );
       infeasible_arr.push_back( true );
       infeasible_arr.push_back( true );
       infeasible_arr.push_back( true );
+      infeasible_arr.push_back( true );
+      infeasible_arr.push_back( true );
 
       obj_value.push_back( 0 );
       obj_value.push_back( 0 );
       obj_value.push_back( 0 );
       obj_value.push_back( 0 );
       obj_value.push_back( 0 );
+      obj_value.push_back( 0 );
+      obj_value.push_back( 0 );
 
+      constraints.push_back( {} );
+      constraints.push_back( {} );
       constraints.push_back( {} );
       constraints.push_back( {} );
       constraints.push_back( {} );
@@ -159,7 +175,7 @@ class Heuristic
    {
 #ifdef PAPILO_TBB
       tbb::parallel_for(
-          tbb::blocked_range<int>( 0, 5 ),
+          tbb::blocked_range<int>( 0, 7 ),
           [&]( const tbb::blocked_range<int>& r )
           {
          for( int i = r.begin(); i != r.end(); ++i )
@@ -203,7 +219,7 @@ class Heuristic
          {
 #ifdef PAPILO_TBB
             tbb::parallel_for(
-                tbb::blocked_range<int>( 0, 5 ),
+                tbb::blocked_range<int>( 0, 7 ),
                 [&]( const tbb::blocked_range<int>& r )
                 {
                    for( int i = r.begin(); i != r.end(); ++i )
