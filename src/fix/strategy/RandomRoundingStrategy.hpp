@@ -40,6 +40,11 @@ class RandomRoundingStrategy : public RoundingStrategy<REAL>
    {
    }
 
+   void
+   recompute_locks()
+   {
+   }
+
    Fixing<REAL>
    select_rounding_variable( const Vec<REAL>& cont_solution,
                              const ProbingView<REAL>& view ) override

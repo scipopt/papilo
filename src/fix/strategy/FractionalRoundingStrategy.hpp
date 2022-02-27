@@ -79,6 +79,11 @@ class FractionalRoundingStrategy : public RoundingStrategy<REAL>
       assert( no_down_locks.size() == problem_.getNCols() );
    }
 
+   void
+   recompute_locks()
+   {
+   }
+
    Fixing<REAL>
    select_rounding_variable( const Vec<REAL>& cont_solution,
                              const ProbingView<REAL>& view ) override

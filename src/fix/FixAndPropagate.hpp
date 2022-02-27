@@ -247,6 +247,7 @@ class FixAndPropagate
                                        bool stop_at_infeasibility,
                                        ProbingView<REAL>& probing_view )
    {
+      strategy.recompute_locks();
       while( true )
       {
          Fixing<REAL> fixing =
