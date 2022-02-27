@@ -38,6 +38,7 @@ enum class RowFlag : uint8_t
    kRedundant = 1 << 4,
    kHardConstraint = 1 << 5,
    kCutoffConstraint = 1 << 6,
+   kConflictConstraint = 1 << 7,
 };
 
 using RowFlags = Flags<RowFlag>;

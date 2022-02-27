@@ -463,6 +463,7 @@ class Algorithm
       builder.setRowLhsInf( 0, infinite );
       builder.setRowRhsInf( 0, infinite );
       builder.setCutoffConstraint( 0, true );
+      builder.setConflictConstraint( 0, false );
 
       for( int i = 0; i < nrows; ++i )
       {
@@ -479,6 +480,8 @@ class Algorithm
          builder.setRowLhsInf( i + 1, rowFlags[i].test( RowFlag::kLhsInf ) );
          builder.setRowRhsInf( i + 1, rowFlags[i].test( RowFlag::kRhsInf ) );
          builder.setHardConstraint( i + 1, rowFlags[i].test( RowFlag::kHardConstraint ) );
+         builder.setConflictConstraint( i + 1, rowFlags[i].test(
+                                        RowFlag::kConflictConstraint ) );
       }
 
       /* set up columns */
@@ -562,6 +565,7 @@ class Algorithm
             builder.setRowRhs( counter, rhs );
             builder.setRowLhsInf( counter, false );
             builder.setRowRhsInf( counter, false );
+            builder.setConflictConstraint( counter, false );
          }
          else if( flags.test( RowFlag::kLhsInf ) )
          {
@@ -575,6 +579,7 @@ class Algorithm
             builder.setRowRhs( counter, 0 );
             builder.setRowLhsInf( counter, false );
             builder.setRowRhsInf( counter, true );
+            builder.setConflictConstraint( counter, false );
          }
          else if( flags.test( RowFlag::kRhsInf ) )
          {
@@ -585,6 +590,7 @@ class Algorithm
             builder.setRowRhs( counter, 0 );
             builder.setRowLhsInf( counter, false );
             builder.setRowRhsInf( counter, true );
+            builder.setConflictConstraint( counter, false );
          }
          else
          {
@@ -599,6 +605,7 @@ class Algorithm
             builder.setRowRhs( counter, 0 );
             builder.setRowLhsInf( counter, false );
             builder.setRowRhsInf( counter, true );
+            builder.setConflictConstraint( counter, false );
             counter++;
 
             builder.addRowEntries( counter, rowlen, rowcols, rowvals );
@@ -606,6 +613,7 @@ class Algorithm
             builder.setRowRhs( counter, 0 );
             builder.setRowLhsInf( counter, false );
             builder.setRowRhsInf( counter, true );
+            builder.setConflictConstraint( counter, false );
          }
          counter++;
       }
