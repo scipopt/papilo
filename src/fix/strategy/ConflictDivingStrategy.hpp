@@ -113,8 +113,8 @@ class ConflictDivingStrategy : public RoundingStrategy<REAL>
                                  ( n_up_locks > n_down_locks ) ||
                                  ( num.isGT( frac, REAL{ 0.5 } ) ) );
          */
-         bool may_round_up = ( n_down_locks == 0 );
-         bool may_round_down = ( n_up_locks == 0 );
+         bool may_round_down = ( n_down_locks == 0 );
+         bool may_round_up = ( n_up_locks == 0 );
 
          score = get_score( i, may_round_down, may_round_up, frac, view,
                             round_up );
@@ -198,7 +198,7 @@ private:
       if( ( n_down_locks + n_up_locks ) == 0 )
          score *= 0.01;
 
-      /* penalize too integral variables */
+      /* penalize too integral values */
       if( num.isLT( frac, REAL{ 0.01 } ) || num.isGT( frac, REAL{ 0.99 } ) )
          score *= 0.01;
 
