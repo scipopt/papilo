@@ -67,6 +67,7 @@ class ConflictDivingStrategy : public RoundingStrategy<REAL>
                          n_up_locks );
          }
 
+         assert( ( n_down_locks > 0 ) || ( n_up_locks > 0 ) );
          n_var_down_locks.push_back( n_down_locks );
          n_var_up_locks.push_back( n_up_locks );
       }
@@ -178,21 +179,29 @@ private:
               const REAL frac, const ProbingView<REAL>& view, bool& round_up )
    {
       REAL score = 0;
-      int n_down_locks = n_conflict_down_locks[col];
-      int n_up_locks = n_conflict_up_locks[col];
+      int num_conflict_down_locks = n_conflict_down_locks[col];
+      int num_conflict_up_locks = n_conflict_up_locks[col];
+      int num_var_down_locks = n_var_down_locks[col];
+      int num_var_up_locks = n_var_up_locks[col];
       std::uniform_int_distribution<uint32_t> dist_rounding( 0, 1 );
       std::uniform_real_distribution<> double_dist( 1e-6, 1e-5 );
       REAL threshold = 0.2;
+      REAL epsilon = 0.25;
       round_up = 0;
 
       if( may_round_down || may_round_up )
       {
          if( may_round_down && may_round_up )
          {
-            if( num.isEq( frac, REAL{ 0.5 } ) )
-               round_up = random.get_random_int( dist_rounding );
+            if( num_var_down_locks == num_var_up_locks )
+            {
+               if( num.isEq( frac, REAL{ 0.5 } ) )
+                  round_up = random.get_random_int( dist_rounding );
+               else
+                  round_up = num.isGT( frac, REAL{ 0.5 } );
+            }
             else
-               round_up = num.isGT( frac, REAL{ 0.5 } );
+               round_up = ( num_var_up_locks > num_var_down_locks );
          }
          else
             round_up = may_round_up;
@@ -201,10 +210,10 @@ private:
       {
          assert(!may_round_down);
 
-         if( !num.isEq( n_down_locks, n_up_locks ) )
+         if( !num.isEq( num_conflict_down_locks, num_conflict_up_locks ) )
          {
             // TODO: isLT at least gives solutions for mcsched
-            round_up = num.isGT( n_up_locks, n_down_locks );
+            round_up = num.isGT( num_conflict_up_locks, num_conflict_down_locks );
          }
          else if( num.isEq( frac, REAL{ 0.5 } ) )
             round_up = random.get_random_int( dist_rounding );
@@ -213,17 +222,23 @@ private:
       }
 
       if( round_up )
-         score = n_up_locks + random.get_random_double( double_dist );
+         score = num_conflict_up_locks +
+                 ( epsilon * num_var_up_locks /
+                   ( num_var_up_locks + num_var_down_locks ) ) +
+                 random.get_random_double( double_dist );
       else
-         score = n_down_locks + random.get_random_double( double_dist );
+         score = num_conflict_down_locks +
+                 ( epsilon * num_var_down_locks /
+                   ( num_var_up_locks + num_var_down_locks ) ) +
+                 random.get_random_double( double_dist );
 
       /* penalize too few conflict locks */
-      if( ( ( n_down_locks + n_up_locks ) > 0 ) &&
-          ( ( n_down_locks + n_up_locks ) < ( threshold * n_conflicts ) ) )
+      if( ( ( num_conflict_down_locks + num_conflict_up_locks ) > 0 ) &&
+          ( ( num_conflict_down_locks + num_conflict_up_locks ) < ( threshold * n_conflicts ) ) )
          score *= 0.1;
 
       /* penalize zero conflict locks */
-      if( ( n_down_locks + n_up_locks ) == 0 )
+      if( ( num_conflict_down_locks + num_conflict_up_locks ) == 0 )
          score *= 0.01;
 
       /* penalize too integral values */
