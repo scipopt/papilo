@@ -52,7 +52,7 @@ class FarkasRoundingStrategy : public RoundingStrategy<REAL>
    }
 
    void
-   recompute_locks()
+   recompute_locks() override
    {
    }
 

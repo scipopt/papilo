@@ -41,7 +41,7 @@ class RandomRoundingStrategy : public RoundingStrategy<REAL>
    }
 
    void
-   recompute_locks()
+   recompute_locks() override
    {
    }
 

@@ -76,7 +76,7 @@ class ConflictDivingStrategy : public RoundingStrategy<REAL>
    }
 
    void
-   recompute_locks()
+   recompute_locks() override
    {
       update_n_conflicts();
 
