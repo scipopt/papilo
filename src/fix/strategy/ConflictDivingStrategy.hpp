@@ -78,7 +78,9 @@ class ConflictDivingStrategy : public RoundingStrategy<REAL>
    void
    recompute_locks() override
    {
-      update_n_conflicts();
+      n_conflicts = std::count_if(
+            problem.getRowFlags().begin(), problem.getRowFlags().end(),
+            []( RowFlags r ) { return r.test( RowFlag::kConflictConstraint ); } );
 
       for( int col = 0; col < n_cols; ++col )
       {
@@ -163,17 +165,6 @@ class ConflictDivingStrategy : public RoundingStrategy<REAL>
    }
 
 private:
-   void
-   update_n_conflicts()
-   {
-      n_conflicts = 0;
-      auto rflags = problem.getRowFlags();
-
-      for( int i = 0; i < problem.getNRows(); i++ )
-         if( rflags[i].test( RowFlag::kConflictConstraint ) )
-            n_conflicts++;
-   }
-
    REAL
    get_score( const int col, const bool may_round_down, const bool may_round_up,
               const REAL frac, const ProbingView<REAL>& view, bool& round_up )
