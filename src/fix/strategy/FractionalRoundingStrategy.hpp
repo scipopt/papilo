@@ -80,7 +80,7 @@ class FractionalRoundingStrategy : public RoundingStrategy<REAL>
    }
 
    void
-   recompute_locks() override
+   update_data_structure_before_dive() override
    {
    }
 

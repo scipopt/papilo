@@ -40,7 +40,7 @@ class RoundingStrategy
                            const ProbingView<REAL>& view ) = 0;
 
    virtual void
-   recompute_locks() = 0;
+   update_data_structure_before_dive() = 0;
 };
 
 #endif

@@ -76,7 +76,7 @@ class ConflictDivingStrategy : public RoundingStrategy<REAL>
    }
 
    void
-   recompute_locks() override
+   update_data_structure_before_dive() override
    {
       n_conflicts = std::count_if(
             problem.getRowFlags().begin(), problem.getRowFlags().end(),
