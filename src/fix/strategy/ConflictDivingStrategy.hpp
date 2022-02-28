@@ -175,7 +175,7 @@ private:
       int num_var_down_locks = n_var_down_locks[col];
       int num_var_up_locks = n_var_up_locks[col];
       std::uniform_int_distribution<uint32_t> dist_rounding( 0, 1 );
-      std::uniform_real_distribution<> double_dist( 1e-6, 1e-5 );
+      std::uniform_real_distribution<double> double_dist( 1e-6, 1e-5 );
       REAL threshold = 0.2;
       REAL epsilon = 0.25;
       round_up = false;

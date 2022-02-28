@@ -47,7 +47,7 @@ class RandomGenerator
    }
 
    double
-   get_random_double( std::uniform_real_distribution<> distribution )
+   get_random_double( std::uniform_real_distribution<double> distribution )
    {
       return distribution( random_generator );
    }
