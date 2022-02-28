@@ -82,27 +82,37 @@ class ConflictDivingStrategy : public RoundingStrategy<REAL>
             problem.getRowFlags().begin(), problem.getRowFlags().end(),
             []( RowFlags r ) { return r.test( RowFlag::kConflictConstraint ); } );
 
+#ifdef PAPILO_TBB
+      tbb::parallel_for(
+          tbb::blocked_range<int>( 0, n_cols ),
+          [this]( const tbb::blocked_range<int>& c ) {
+             for( int col = c.begin(); col != c.end(); ++col )
+#else
       for( int col = 0; col < n_cols; ++col )
-      {
-         int n_up_locks = 0;
-         int n_down_locks = 0;
+#endif
+             {
+                int n_up_locks = 0;
+                int n_down_locks = 0;
 
-         auto colvec = problem.getConstraintMatrix().
-                                 getColumnCoefficients( col );
+                auto colvec = problem.getConstraintMatrix().
+                                      getColumnCoefficients( col );
 
-         const REAL* vals = colvec.getValues();
-         const int* inds = colvec.getIndices();
-         int len = colvec.getLength();
-         auto rflags = problem.getRowFlags();
+                const REAL* vals = colvec.getValues();
+                const int* inds = colvec.getIndices();
+                int len = colvec.getLength();
+                auto rflags = problem.getRowFlags();
 
-         for( int i = 0; i < len; i++ )
-            if( rflags[inds[i]].test( RowFlag::kConflictConstraint ) )
-               count_locks( vals[i], rflags[inds[i]], n_down_locks,
-                            n_up_locks );
+                for( int i = 0; i < len; i++ )
+                   if( rflags[inds[i]].test( RowFlag::kConflictConstraint ) )
+                      count_locks( vals[i], rflags[inds[i]], n_down_locks,
+                                   n_up_locks );
 
-         n_conflict_down_locks[col] = n_down_locks;
-         n_conflict_up_locks[col] = n_up_locks;
-      }
+                n_conflict_down_locks[col] = n_down_locks;
+                n_conflict_up_locks[col] = n_up_locks;
+             }
+#ifdef PAPILO_TBB
+          } );
+#endif
 
       assert( n_conflict_down_locks.size() == n_cols );
       assert( n_conflict_up_locks.size() == n_cols );
