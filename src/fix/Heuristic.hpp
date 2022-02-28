@@ -287,8 +287,6 @@ class Heuristic
 
          void one_opt( bool perform_one_opt, bool perform_conflict_analysis )
          {
-            if( !perform_one_opt && !perform_conflict_analysis )
-               return;
             for( int i = 0; i < constraints.size(); i++ )
                constraints[i].clear();
 
@@ -308,8 +306,6 @@ class Heuristic
 
                       if( infeas_copy[i] )
                       {
-                         if( !perform_conflict_analysis )
-                            continue;
                          assert( !views[i].get_infeasible_rows().empty() );
                          auto changes = views[i].get_changes();
                          auto infeasible_rows = views[i].get_infeasible_rows();

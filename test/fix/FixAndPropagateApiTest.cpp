@@ -38,9 +38,10 @@ TEST_CASE( "fix-and-propagate-api", "[fix]" )
    double val = 50;
    bool success =
        call_algorithm( problem_ptr, primal_solution, sol, n_cols, &val, 0, false, 0);
-   delete_problem_instance( problem_ptr );
    REQUIRE( success );
    REQUIRE( val == 9 );
+ delete_problem_instance( problem_ptr );
+
 }
 
 TEST_CASE( "fix-and-propagate-api-simple-heuristic", "[fix]" )
