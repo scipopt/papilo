@@ -37,6 +37,8 @@ setupProblemForFixAndPropagation();
 Problem<double>
 setupProblemForConflictAnalysis_2();
 
+// TODO: add tests for conflict diving, most fractional, and least fractional.
+
 TEST_CASE( "fix-and-propagate-integer-variable", "[fix]" )
 {
    Problem<double> problem = setupProblemForFixAndPropagation();
