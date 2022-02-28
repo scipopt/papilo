@@ -47,7 +47,7 @@ TEST_CASE( "fix-and-propagate-most-frac-backtrack", "[fix]" )
 
    problem.recomputeAllActivities();
 
-   Vec<double> primal_solution = { 0.1, 0.2, 0.3, 0.4 };
+   Vec<double> primal_solution = { 0.1, 0.2, 0.3, 0.6 };
 
    Vec<double> res{ primal_solution };
 
@@ -64,9 +64,9 @@ TEST_CASE( "fix-and-propagate-most-frac-backtrack", "[fix]" )
                                           backtracks, true, false );
 
    REQUIRE( !infeasible );
-   REQUIRE( res[0] == 0 );
+   REQUIRE( res[0] == 1 );
    REQUIRE( res[1] == 0 );
-   REQUIRE( res[2] == 1 );
+   REQUIRE( res[2] == 0 );
    REQUIRE( res[3] == 1 );
 }
 
@@ -76,7 +76,7 @@ TEST_CASE( "fix-and-propagate-least-frac-backtrack", "[fix]" )
 
    problem.recomputeAllActivities();
 
-   Vec<double> primal_solution = { 0.1, 0.2, 0.3, 0.4 };
+   Vec<double> primal_solution = { 0.1, 0.8, 0.3, 0.4 };
 
    Vec<double> res{ primal_solution };
 
@@ -93,10 +93,10 @@ TEST_CASE( "fix-and-propagate-least-frac-backtrack", "[fix]" )
                                           backtracks, true, false );
 
    REQUIRE( !infeasible );
-   REQUIRE( res[0] == 1 );
+   REQUIRE( res[0] == 0 );
    REQUIRE( res[1] == 1 );
    REQUIRE( res[2] == 0 );
-   REQUIRE( res[3] == 0 );
+   REQUIRE( res[3] == 1 );
 }
 
 TEST_CASE( "fix-and-propagate-integer-variable", "[fix]" )
