@@ -37,7 +37,65 @@ setupProblemForFixAndPropagation();
 Problem<double>
 setupProblemForConflictAnalysis_2();
 
-// TODO: add tests for conflict diving, most fractional, and least fractional.
+// TODO: add tests for conflict diving
+
+TEST_CASE( "fix-and-propagate-most-frac-backtrack", "[fix]" )
+{
+   Problem<double> problem = setupProblemForFixAndPropagation();
+
+   problem.recomputeAllActivities();
+
+   Vec<double> primal_solution = { 0.1, 0.2, 0.3, 0.4 };
+
+   Vec<double> res{ primal_solution };
+
+   Message msg{};
+   msg.setVerbosityLevel(papilo::VerbosityLevel::kDetailed);
+   RandomGenerator random( 0 );
+   FixAndPropagate<double> fixAndPropagate{ msg, {}, random };
+   MostFractionalRoundingStrategy<double> strategy{ {} };
+
+   ProbingView<double> view {problem, {}};
+   int backtracks = 0;
+   bool infeasible =
+       fixAndPropagate.fix_and_propagate( primal_solution, res, strategy, view,
+                                          backtracks, true, false );
+
+   REQUIRE( !infeasible );
+   REQUIRE( res[0] == 0 );
+   REQUIRE( res[1] == 0 );
+   REQUIRE( res[2] == 1 );
+   REQUIRE( res[3] == 1 );
+}
+
+TEST_CASE( "fix-and-propagate-least-frac-backtrack", "[fix]" )
+{
+   Problem<double> problem = setupProblemForFixAndPropagation();
+
+   problem.recomputeAllActivities();
+
+   Vec<double> primal_solution = { 0.1, 0.2, 0.3, 0.4 };
+
+   Vec<double> res{ primal_solution };
+
+   Message msg{};
+   msg.setVerbosityLevel(papilo::VerbosityLevel::kDetailed);
+   RandomGenerator random( 0 );
+   FixAndPropagate<double> fixAndPropagate{ msg, {}, random };
+   LeastFractionalRoundingStrategy<double> strategy{ {} };
+
+   ProbingView<double> view {problem, {}};
+   int backtracks = 0;
+   bool infeasible =
+       fixAndPropagate.fix_and_propagate( primal_solution, res, strategy, view,
+                                          backtracks, true, false );
+
+   REQUIRE( !infeasible );
+   REQUIRE( res[0] == 1 );
+   REQUIRE( res[1] == 1 );
+   REQUIRE( res[2] == 0 );
+   REQUIRE( res[3] == 0 );
+}
 
 TEST_CASE( "fix-and-propagate-integer-variable", "[fix]" )
 {
