@@ -122,6 +122,7 @@ class ConflictDivingStrategy : public RoundingStrategy<REAL>
       // 0 = round down, 1 = round up
       bool round_up;
       auto obj = view.get_obj();
+      bool stored_var_binary = false;
 
       for( int i = 0; i < cont_solution.size(); i++ )
       {
@@ -132,28 +133,31 @@ class ConflictDivingStrategy : public RoundingStrategy<REAL>
              !view.is_integer_variable( i ) )
             continue;
 
+         /* prefer binary variables */
+         bool current_var_binary = ( view.getProbingUpperBounds()[i] == 1 &&
+                                     view.getProbingLowerBounds()[i] == 0 );
+         if( !current_var_binary && stored_var_binary )
+            continue;
+
          REAL frac = cont_solution[i] - num.epsFloor( cont_solution[i] );
          int n_down_locks = n_conflict_down_locks[i];
          int n_up_locks = n_conflict_up_locks[i];
-         // TODO: verify the logic!
-         /*
-         bool may_round_up = ( ( n_down_locks == 0 ) ||
-                               ( n_down_locks > n_up_locks ) ||
-                               ( num.isLT( frac, REAL{ 0.5 } ) ) );
-         bool may_round_down = ( ( n_up_locks == 0 ) ||
-                                 ( n_up_locks > n_down_locks ) ||
-                                 ( num.isGT( frac, REAL{ 0.5 } ) ) );
-         */
+
          bool may_round_down = ( n_down_locks == 0 );
          bool may_round_up = ( n_up_locks == 0 );
 
          score = get_score( i, may_round_down, may_round_up, frac, view,
                             round_up );
 
-         if( num.isGT( score, max_score ) )
+         if( ( current_var_binary && !stored_var_binary ) ||
+             num.isGT( score, max_score ) )
          {
+            assert( ( current_var_binary && !stored_var_binary ) ||
+                    ( current_var_binary == stored_var_binary ) );
+
             max_score = score;
             variable = i;
+            stored_var_binary = current_var_binary;
 
             if( round_up )
                value = num.epsCeil( cont_solution[i] );
