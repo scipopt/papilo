@@ -178,7 +178,7 @@ private:
    get_score( const int col, const bool may_round_down, const bool may_round_up,
               const REAL frac, const ProbingView<REAL>& view, bool& round_up )
    {
-      REAL score = 0;
+      REAL score;
       int num_conflict_down_locks = n_conflict_down_locks[col];
       int num_conflict_up_locks = n_conflict_up_locks[col];
       int num_var_down_locks = n_var_down_locks[col];
@@ -187,7 +187,7 @@ private:
       std::uniform_real_distribution<> double_dist( 1e-6, 1e-5 );
       REAL threshold = 0.2;
       REAL epsilon = 0.25;
-      round_up = 0;
+      round_up = false;
 
       if( may_round_down || may_round_up )
       {

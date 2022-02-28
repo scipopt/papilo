@@ -60,9 +60,9 @@ class MostFractionalRoundingStrategy : public RoundingStrategy<REAL>
              !view.is_integer_variable( i ) )
             continue;
 
-         REAL frac = 0.5 - abs( cont_solution[i] -
-                                num.epsFloor( cont_solution[i] ) -
-                                0.5 );
+         REAL frac = REAL{ 0.5 } -
+                     abs( cont_solution[i] - num.epsFloor( cont_solution[i] ) -
+                          REAL{ 0.5 } );
          if( num.isGT( frac, max_frac ) )
          {
             max_frac = frac;
