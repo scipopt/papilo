@@ -30,6 +30,8 @@
 #include "papilo/core/ProblemBuilder.hpp"
 #include "fix/strategy/FractionalRoundingStrategy.hpp"
 #include "fix/strategy/RandomRoundingStrategy.hpp"
+#include "fix/strategy/MostFractionalRoundingStrategy.hpp"
+#include "fix/strategy/LeastFractionalRoundingStrategy.hpp"
 
 Problem<double>
 setupProblemForFixAndPropagation();
