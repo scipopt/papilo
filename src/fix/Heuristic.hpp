@@ -32,6 +32,9 @@
 #include "fix/strategy/FarkasRoundingStrategy.hpp"
 #include "fix/strategy/FractionalRoundingStrategy.hpp"
 #include "fix/strategy/RandomRoundingStrategy.hpp"
+#include "fix/strategy/ConflictDivingStrategy.hpp"
+#include "fix/strategy/MostFractionalRoundingStrategy.hpp"
+#include "fix/strategy/LeastFractionalRoundingStrategy.hpp"
 #include "papilo/core/Objective.hpp"
 #include "papilo/core/Presolve.hpp"
 #include "papilo/core/ProblemBuilder.hpp"
@@ -87,10 +90,16 @@ class Heuristic
       auto s2 = new FarkasRoundingStrategy<REAL>{ 0, num, true };
       auto s3 = new FractionalRoundingStrategy<REAL>{ num, problem };
       auto s4 = new RandomRoundingStrategy<REAL>{ random, num };
+      auto s5 = new ConflictDivingStrategy<REAL>{ random, num, problem };
+      auto s6 = new MostFractionalRoundingStrategy<REAL>{ num };
+      auto s7 = new LeastFractionalRoundingStrategy<REAL>{ num };
       strategies.push_back( s1 );
       strategies.push_back( s2 );
       strategies.push_back( s3 );
       strategies.push_back( s4 );
+      strategies.push_back( s5 );
+      strategies.push_back( s6 );
+      strategies.push_back( s7 );
 
       Vec<REAL> int_solution{};
       int_solution.resize( problem.getNCols() );
@@ -99,7 +108,13 @@ class Heuristic
       int_solutions.push_back( { int_solution } );
       int_solutions.push_back( { int_solution } );
       int_solutions.push_back( { int_solution } );
+      int_solutions.push_back( { int_solution } );
+      int_solutions.push_back( { int_solution } );
+      int_solutions.push_back( { int_solution } );
 
+      views.push_back( { problem, num } );
+      views.push_back( { problem, num } );
+      views.push_back( { problem, num } );
       views.push_back( { problem, num } );
       views.push_back( { problem, num } );
       views.push_back( { problem, num } );
@@ -109,12 +124,105 @@ class Heuristic
       infeasible_arr.push_back( true );
       infeasible_arr.push_back( true );
       infeasible_arr.push_back( true );
+      infeasible_arr.push_back( true );
+      infeasible_arr.push_back( true );
+      infeasible_arr.push_back( true );
 
       obj_value.push_back( 0 );
       obj_value.push_back( 0 );
       obj_value.push_back( 0 );
       obj_value.push_back( 0 );
+      obj_value.push_back( 0 );
+      obj_value.push_back( 0 );
+      obj_value.push_back( 0 );
 
+      constraints.push_back( {} );
+      constraints.push_back( {} );
+      constraints.push_back( {} );
+      constraints.push_back( {} );
+      constraints.push_back( {} );
+      constraints.push_back( {} );
+      constraints.push_back( {} );
+
+      Vec<REAL>& objective = problem.getObjective().coefficients;
+      cols_sorted_by_obj.reserve( objective.size() );
+      for( int i = 0; i < objective.size(); i++ )
+         cols_sorted_by_obj.push_back( i );
+      pdqsort( cols_sorted_by_obj.begin(), cols_sorted_by_obj.end(),
+               [&]( const int a, const int b )
+               {
+                  return objective[a] > objective[b] ||
+                         ( objective[a] == objective[b] && a > b );
+               } );
+#else
+      Vec<REAL> int_solution{};
+      int_solution.resize( problem.getNCols() );
+      auto s1 = new FarkasRoundingStrategy<REAL>{ 0, num, false };
+      strategies.push_back( s1 );
+      int_solutions.push_back( { int_solution } );
+      views.push_back( { problem, num } );
+      infeasible_arr.push_back( true );
+      obj_value.push_back( 0 );
+#endif
+   }
+
+   void
+   setup_api( RandomGenerator random )
+   {
+#ifdef PAPILO_TBB
+      auto s1 = new FarkasRoundingStrategy<REAL>{ 0, num, false };
+      auto s2 = new FarkasRoundingStrategy<REAL>{ 0, num, true };
+      auto s3 = new FractionalRoundingStrategy<REAL>{ num, problem };
+      auto s4 = new RandomRoundingStrategy<REAL>{ random, num };
+      auto s5 = new ConflictDivingStrategy<REAL>{ random, num, problem };
+      auto s6 = new MostFractionalRoundingStrategy<REAL>{ num };
+      auto s7 = new LeastFractionalRoundingStrategy<REAL>{ num };
+      strategies.push_back( s1 );
+      strategies.push_back( s2 );
+      strategies.push_back( s3 );
+      strategies.push_back( s4 );
+      strategies.push_back( s5 );
+      strategies.push_back( s6 );
+      strategies.push_back( s7 );
+
+      Vec<REAL> int_solution{};
+      int_solution.resize( problem.getNCols() );
+
+      int_solutions.push_back( { int_solution } );
+      int_solutions.push_back( { int_solution } );
+      int_solutions.push_back( { int_solution } );
+      int_solutions.push_back( { int_solution } );
+      int_solutions.push_back( { int_solution } );
+      int_solutions.push_back( { int_solution } );
+      int_solutions.push_back( { int_solution } );
+
+      views.push_back( { problem, num } );
+      views.push_back( { problem, num } );
+      views.push_back( { problem, num } );
+      views.push_back( { problem, num } );
+      views.push_back( { problem, num } );
+      views.push_back( { problem, num } );
+      views.push_back( { problem, num } );
+
+      infeasible_arr.push_back( true );
+      infeasible_arr.push_back( true );
+      infeasible_arr.push_back( true );
+      infeasible_arr.push_back( true );
+      infeasible_arr.push_back( true );
+      infeasible_arr.push_back( true );
+      infeasible_arr.push_back( true );
+
+      obj_value.push_back( 0 );
+      obj_value.push_back( 0 );
+      obj_value.push_back( 0 );
+      obj_value.push_back( 0 );
+      obj_value.push_back( 0 );
+      obj_value.push_back( 0 );
+      obj_value.push_back( 0 );
+
+      constraints.push_back( {} );
+      constraints.push_back( {} );
+      constraints.push_back( {} );
       constraints.push_back( {} );
       constraints.push_back( {} );
       constraints.push_back( {} );
@@ -195,7 +303,7 @@ class Heuristic
          {
 #ifdef PAPILO_TBB
             tbb::parallel_for(
-                tbb::blocked_range<int>( 0, 4 ),
+                tbb::blocked_range<int>( 0, 7 ),
                 [&]( const tbb::blocked_range<int>& r )
                 {
                    for( int i = r.begin(); i != r.end(); ++i )
@@ -450,6 +558,8 @@ class Heuristic
                                              test( RowFlag::kHardConstraint ) );
                builder.setCutoffConstraint( i, rowFlags[i].
                                              test( RowFlag::kCutoffConstraint ) );
+               builder.setConflictConstraint( i, rowFlags[i].
+                                              test( RowFlag::kConflictConstraint ) );
             }
 
             for( int i = 0; i < new_rows; ++i )
@@ -474,6 +584,7 @@ class Heuristic
                    new_conflicts[i].get_row_flag().test( RowFlag::kRhsInf ) );
                assert( !new_conflicts[i].get_row_flag().
                         test( RowFlag::kHardConstraint ) );
+               builder.setConflictConstraint( i + nrows, true );
             }
 
             /* set up columns */

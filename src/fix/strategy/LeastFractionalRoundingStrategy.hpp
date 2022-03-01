@@ -21,35 +21,60 @@
 /*                                                                           */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef FIX_RANDOM_GENERATOR_HPP
-#define FIX_RANDOM_GENERATOR_HPP
+#ifndef FIX_LEAST_FRACTIONAL_ROUNDING_STRATEGY_HPP
+#define FIX_LEAST_FRACTIONAL_ROUNDING_STRATEGY_HPP
 
-class RandomGenerator
+#include "fix/strategy/RoundingStrategy.hpp"
+
+template <typename REAL>
+class LeastFractionalRoundingStrategy : public RoundingStrategy<REAL>
 {
 
- private:
-   typedef std::mt19937 MyRNG;
-   uint32_t seed;
-
-   MyRNG random_generator;
+   const Num<REAL> num;
 
  public:
-
-   RandomGenerator( uint32_t seed_ ) : seed( seed_ )
+   LeastFractionalRoundingStrategy( Num<REAL> num_ )
+       : num( num_ )
    {
-      random_generator.seed( seed );
    }
 
-   int
-   get_random_int( std::uniform_int_distribution<uint32_t> distribution )
+   void
+   update_data_structure_before_dive() override
    {
-      return distribution( random_generator );
    }
 
-   double
-   get_random_double( std::uniform_real_distribution<double> distribution )
+   Fixing<REAL>
+   select_rounding_variable( const Vec<REAL>& cont_solution,
+                             const ProbingView<REAL>& view ) override
    {
-      return distribution( random_generator );
+      REAL value = -1;
+      int variable = -1;
+      REAL min_frac = 0.5;
+
+      for( int i = 0; i < cont_solution.size(); i++ )
+      {
+         if( num.isIntegral( cont_solution[i] ) ||
+             num.isEq( view.getProbingUpperBounds()[i],
+                       view.getProbingLowerBounds()[i] ) ||
+             !view.is_within_bounds( i, cont_solution[i] ) ||
+             !view.is_integer_variable( i ) )
+            continue;
+
+         REAL frac = REAL{ 0.5 } -
+                     abs( cont_solution[i] - num.epsFloor( cont_solution[i] ) -
+                          REAL{ 0.5 } );
+         if( num.isLT( frac, min_frac ) )
+         {
+            min_frac = frac;
+            variable = i;
+            if( num.isGT( cont_solution[i] - num.epsFloor( cont_solution[i] ),
+                          REAL{ 0.5 } ) )
+               value = num.epsCeil( cont_solution[i] );
+            else
+               value = num.epsFloor( cont_solution[i] );
+         }
+      }
+      return { variable, value };
    }
 };
 

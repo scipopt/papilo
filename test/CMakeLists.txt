@@ -213,6 +213,8 @@ set(unit_tests
         "fix-and-propagate-random-check-within-bounds"
         "fix-and-propagate-farkas-backtrack"
         "fix-and-propagate-farkas-check-within-bounds"
+        "fix-and-propagate-most-frac-backtrack"
+        "fix-and-propagate-least-frac-backtrack"
         "fix-and-propagate-api"
         "fix-and-propagate-it-modified-solution-is-feasible"
         "fix-and-propagate-it-solution-is-feasible"

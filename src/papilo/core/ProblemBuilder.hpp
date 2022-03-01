@@ -246,6 +246,14 @@ class ProblemBuilder
          rflags[row].unset( RowFlag::kCutoffConstraint );
    }
 
+   void
+   setConflictConstraint( int row, bool isConflictConstraint )
+   {
+      if( isConflictConstraint )
+         rflags[row].set( RowFlag::kConflictConstraint );
+      else
+         rflags[row].unset( RowFlag::kConflictConstraint );
+   }
 
    void
    setRowRhsInfAll( Vec<uint8_t> isInfinite )

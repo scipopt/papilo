@@ -247,6 +247,7 @@ class FixAndPropagate
                                        bool stop_at_infeasibility,
                                        ProbingView<REAL>& probing_view )
    {
+      strategy.update_data_structure_before_dive();
       while( true )
       {
          Fixing<REAL> fixing =

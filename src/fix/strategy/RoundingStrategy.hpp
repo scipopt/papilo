@@ -38,6 +38,9 @@ class RoundingStrategy
    virtual Fixing<REAL>
    select_rounding_variable( const Vec<REAL>& cont_solution,
                            const ProbingView<REAL>& view ) = 0;
+
+   virtual void
+   update_data_structure_before_dive() = 0;
 };
 
 #endif
