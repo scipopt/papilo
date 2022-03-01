@@ -123,7 +123,7 @@ call_algorithm( void* heuristic_void_ptr, double* cont_solution, double* result,
 
 #ifdef FIX_DEBUG
           SolWriter<double>::writePrimalSol(
-              "test.mps", sol, heuristic->problem.getObjective().coefficients,
+              "lp_feasible.sol", sol, heuristic->problem.getObjective().coefficients,
               0.0, heuristic->problem.getVariableNames() );
 #endif
 
