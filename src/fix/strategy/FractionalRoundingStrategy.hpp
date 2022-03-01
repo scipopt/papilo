@@ -108,8 +108,7 @@ class FractionalRoundingStrategy : public RoundingStrategy<REAL>
       for( int i = 0; i < cont_solution.size(); i++ )
       {
          if( num.isIntegral( cont_solution[i] ) ||
-             num.isEq( view.getProbingUpperBounds()[i],
-                       view.getProbingLowerBounds()[i] ) ||
+             view.is_fixed(i) ||
              !view.is_within_bounds( i, cont_solution[i] ) ||
              !view.is_integer_variable( i ) )
             continue;
@@ -156,7 +155,7 @@ class FractionalRoundingStrategy : public RoundingStrategy<REAL>
 
          assert(view.is_integer_variable(i));
          /* prefer decisions on binary variables */
-         if( view.getProbingUpperBounds()[i] != 1 || view.getProbingLowerBounds()[i] != 0 )
+         if( !view.is_binary(i) )
             frac = frac * 1000;
 
          /* prefer variables which cannot be rounded by scoring their

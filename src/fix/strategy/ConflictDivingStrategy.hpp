@@ -157,8 +157,7 @@ class ConflictDivingStrategy : public RoundingStrategy<REAL>
             continue;
 
          /* prefer binary variables */
-         bool current_var_binary = ( view.getProbingUpperBounds()[i] == 1 &&
-                                     view.getProbingLowerBounds()[i] == 0 );
+         bool current_var_binary = view.is_binary( i);
          if( !current_var_binary && stored_var_binary )
             continue;
 

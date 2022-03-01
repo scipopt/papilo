@@ -299,44 +299,51 @@ class FixAndPropagate
 
          auto lowerBounds = probing_view.getProbingLowerBounds();
          auto upperBounds = probing_view.getProbingUpperBounds();
-         bool ge_lb = num.isGE( cont_solution[i], lowerBounds[i] );
-         bool le_ub = num.isLE( cont_solution[i], upperBounds[i] );
-         if( !num.isEq( upperBounds[i], lowerBounds[i] ) )
+         auto flags = probing_view.getProbingDomainFlags();
+         bool lb_inf = flags[i].test(ColFlag::kLbInf);
+         bool ub_inf = flags[i].test(ColFlag::kUbInf);
+         bool ge_lb = lb_inf || num.isGE( cont_solution[i], lowerBounds[i] );
+         bool le_ub = ub_inf || num.isLE( cont_solution[i], upperBounds[i] );
+
+         if( num.isEq( upperBounds[i], lowerBounds[i] ) && !ub_inf && !lb_inf )
+            continue;
+         REAL value;
+         if( !probing_view.is_integer_variable( i ) )
          {
-            REAL value;
-            if( !probing_view.is_integer_variable( i ) )
+            if( ge_lb && le_ub )
+               value = cont_solution[i];
+            else if( ge_lb )
+               value = upperBounds[i];
+            else
             {
-               if( ge_lb && le_ub )
-                  value = cont_solution[i];
-               else if( ge_lb )
-                  value = upperBounds[i];
-               else
-               {
-                  assert( le_ub );
-                  value = lowerBounds[i];
-               }
+               assert( le_ub );
+               value = lowerBounds[i];
+            }
+         }
+         else
+         {
+            if( ge_lb && le_ub )
+            {
+               assert( num.isIntegral( cont_solution[i] ) );
+               value = cont_solution[i];
+            }
+            else if( ge_lb )
+            {
+               value = upperBounds[i];
+               assert( num.isIntegral( upperBounds[i] ) );
+
             }
             else
             {
-               if( ge_lb && le_ub )
-               {
-                  assert( num.isEq( cont_solution[i],
-                                    num.round( cont_solution[i] ) ) );
-                  value = cont_solution[i];
-               }
-               else if( ge_lb )
-                  value = upperBounds[i];
-               else
-               {
-                  assert( le_ub );
-                  value = lowerBounds[i];
-               }
+               assert( num.isIntegral( lowerBounds[i] ) );
+               assert( le_ub );
+               value = lowerBounds[i];
             }
-            probing_view.setProbingColumn( i, value );
-            msg.detailed( "Fix integer var {} to {}\n", i, value );
-
-            perform_probing_step( probing_view );
          }
+         probing_view.setProbingColumn( i, value );
+         msg.detailed( "Fix integer var {} to {}\n", i, value );
+
+         perform_probing_step( probing_view );
       }
       return probing_view.isInfeasible();
    }
