@@ -51,7 +51,7 @@ class FractionalRoundingStrategy : public RoundingStrategy<REAL>
 #ifdef PAPILO_TBB
       tbb::parallel_for(
           tbb::blocked_range<int>( 0, n_cols ),
-          [this]( const tbb::blocked_range<int>& c ) {
+          [this, matrix, rflags]( const tbb::blocked_range<int>& c ) {
              for( int col = c.begin(); col != c.end(); ++col )
 #else
       for( int col = 0; col < n_cols; ++col )
