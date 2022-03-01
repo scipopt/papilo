@@ -93,7 +93,7 @@ class FixAndPropagate
              cont_solution, strategy, stop_at_infeasibility, probing_view );
          if( stop_at_infeasibility && probing_view.isInfeasible() )
             return true;
-         fix_remaining_integer_solutions( cont_solution, probing_view );
+         fix_remaining_unfixed_variables( cont_solution, probing_view );
          create_solution( result, probing_view );
          return probing_view.isInfeasible();
       }
@@ -129,7 +129,7 @@ class FixAndPropagate
                   return true;
                propagate_to_leaf_or_infeasibility( cont_solution, strategy,
                                                    false, probing_view );
-               fix_remaining_integer_solutions( cont_solution, probing_view );
+               fix_remaining_unfixed_variables( cont_solution, probing_view );
                create_solution( result, probing_view );
                return probing_view.isInfeasible();
             }
@@ -137,7 +137,7 @@ class FixAndPropagate
          }
          else
          {
-            fix_remaining_integer_solutions( cont_solution, probing_view );
+            fix_remaining_unfixed_variables( cont_solution, probing_view );
             create_solution( result, probing_view );
             return probing_view.isInfeasible();
          }
@@ -235,7 +235,7 @@ class FixAndPropagate
       bool infeasibility_detected = perform_probing_step( probing_view );
       if( infeasibility_detected )
          return true;
-      fix_remaining_integer_solutions( feasible_solution, probing_view );
+      fix_remaining_unfixed_variables( feasible_solution, probing_view );
       create_solution( result, probing_view );
       return probing_view.isInfeasible();
    }
@@ -291,9 +291,23 @@ class FixAndPropagate
    }
 
    bool
-   fix_remaining_integer_solutions( const Vec<REAL>& cont_solution,
+   fix_remaining_unfixed_variables( const Vec<REAL>& cont_solution,
                                     ProbingView<REAL>& probing_view )
    {
+      bool exists_unfixed_cont = fix_remaining_variables_int_or_cont(
+          cont_solution, probing_view, true );
+      if( exists_unfixed_cont )
+         fix_remaining_variables_int_or_cont( cont_solution, probing_view,
+                                              false );
+      return probing_view.isInfeasible();
+   }
+
+   bool
+   fix_remaining_variables_int_or_cont( const Vec<REAL>& cont_solution,
+                                    ProbingView<REAL>& probing_view,
+                                    bool consider_int_or_cont)
+   {
+      bool unfixed_cont = false;
       for( int i = 0; i < cont_solution.size(); i++ )
       {
 
@@ -304,6 +318,15 @@ class FixAndPropagate
          bool ub_inf = flags[i].test(ColFlag::kUbInf);
          bool ge_lb = lb_inf || num.isGE( cont_solution[i], lowerBounds[i] );
          bool le_ub = ub_inf || num.isLE( cont_solution[i], upperBounds[i] );
+
+         bool is_integer = flags[i].test( ColFlag::kIntegral );
+
+         if( is_integer != consider_int_or_cont )
+         {
+            if(!is_integer and num.isEq( upperBounds[i], lowerBounds[i] ) && !ub_inf && !lb_inf )
+               unfixed_cont = true;
+            continue;
+         }
 
          if( num.isEq( upperBounds[i], lowerBounds[i] ) && !ub_inf && !lb_inf )
             continue;
@@ -345,7 +368,7 @@ class FixAndPropagate
 
          perform_probing_step( probing_view );
       }
-      return probing_view.isInfeasible();
+      return unfixed_cont;
    }
 
    void
