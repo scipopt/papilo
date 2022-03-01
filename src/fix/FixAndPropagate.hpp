@@ -323,7 +323,7 @@ class FixAndPropagate
 
          if( is_integer != consider_int_or_cont )
          {
-            if(!is_integer and num.isEq( upperBounds[i], lowerBounds[i] ) && !ub_inf && !lb_inf )
+            if(!is_integer || num.isEq( upperBounds[i], lowerBounds[i] ) || ub_inf || lb_inf )
                unfixed_cont = true;
             continue;
          }
