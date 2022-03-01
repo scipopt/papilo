@@ -45,36 +45,47 @@ class FractionalRoundingStrategy : public RoundingStrategy<REAL>
       auto rflags = problem_.getRowFlags();
       const ConstraintMatrix<REAL>& matrix = problem_.getConstraintMatrix();
       int n_cols = problem_.getNCols();
-      no_up_locks.reserve( n_cols );
-      no_down_locks.reserve( n_cols );
+      no_up_locks.resize( n_cols );
+      no_down_locks.resize( n_cols );
+
+#ifdef PAPILO_TBB
+      tbb::parallel_for(
+          tbb::blocked_range<int>( 0, n_cols ),
+          [this]( const tbb::blocked_range<int>& c ) {
+             for( int col = c.begin(); col != c.end(); ++col )
+#else
       for( int col = 0; col < n_cols; ++col )
-      {
-         int n_up_locks = 0;
-         int n_down_locks = 0;
+#endif
+             {
+                int n_up_locks = 0;
+                int n_down_locks = 0;
 
-         auto colvec = matrix.getColumnCoefficients( col );
-         const REAL* values = colvec.getValues();
-         const int* rowinds = colvec.getIndices();
+                auto colvec = matrix.getColumnCoefficients( col );
+                const REAL* values = colvec.getValues();
+                const int* rowinds = colvec.getIndices();
 
-         bool skip = false;
-         for( int j = 0; j < colvec.getLength(); ++j )
-         {
-            count_locks( values[j], rflags[rowinds[j]], n_down_locks,
-                         n_up_locks );
-            if( n_up_locks != 0 && n_down_locks != 0 )
-            {
-               no_down_locks.push_back( false );
-               no_up_locks.push_back( false );
-               skip = true;
-               break;
-            }
-         }
-         if(skip)
-            continue;
-         assert( n_down_locks != 0 || n_up_locks != 0 );
-         no_down_locks.push_back( n_down_locks == 0 );
-         no_up_locks.push_back( n_up_locks == 0 );
-      }
+                bool skip = false;
+                for( int j = 0; j < colvec.getLength(); ++j )
+                {
+                   count_locks( values[j], rflags[rowinds[j]], n_down_locks,
+                                n_up_locks );
+                   if( n_up_locks != 0 && n_down_locks != 0 )
+                   {
+                      no_down_locks[col] = false;
+                      no_up_locks[col] = false;
+                      skip = true;
+                      break;
+                   }
+                }
+                if(skip)
+                   continue;
+                assert( n_down_locks != 0 || n_up_locks != 0 );
+                no_down_locks[col] = ( n_down_locks == 0 );
+                no_up_locks[col] = ( n_up_locks == 0 );
+             }
+#ifdef PAPILO_TBB
+          } );
+#endif
       assert( no_down_locks.size() == no_up_locks.size() );
       assert( no_down_locks.size() == problem_.getNCols() );
    }
