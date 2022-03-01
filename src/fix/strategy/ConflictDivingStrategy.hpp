@@ -48,6 +48,7 @@ class ConflictDivingStrategy : public RoundingStrategy<REAL>
       n_conflict_up_locks.resize( n_cols );
       n_var_down_locks.resize( n_cols );
       n_var_up_locks.resize( n_cols );
+      auto rflags = problem.getRowFlags();
 
 #ifdef PAPILO_TBB
       tbb::parallel_for(
@@ -67,7 +68,6 @@ class ConflictDivingStrategy : public RoundingStrategy<REAL>
                 const REAL* vals = colvec.getValues();
                 const int* inds = colvec.getIndices();
                 int len = colvec.getLength();
-                auto rflags = problem.getRowFlags();
 
                 for( int i = 0; i < len; i++ )
                 {
@@ -94,6 +94,7 @@ class ConflictDivingStrategy : public RoundingStrategy<REAL>
       n_conflicts = std::count_if(
             problem.getRowFlags().begin(), problem.getRowFlags().end(),
             []( RowFlags r ) { return r.test( RowFlag::kConflictConstraint ); } );
+      auto rflags = problem.getRowFlags();
 
 #ifdef PAPILO_TBB
       tbb::parallel_for(
@@ -113,7 +114,6 @@ class ConflictDivingStrategy : public RoundingStrategy<REAL>
                 const REAL* vals = colvec.getValues();
                 const int* inds = colvec.getIndices();
                 int len = colvec.getLength();
-                auto rflags = problem.getRowFlags();
 
                 for( int i = 0; i < len; i++ )
                    if( rflags[inds[i]].test( RowFlag::kConflictConstraint ) )
