@@ -49,8 +49,7 @@ class LeastFractionalRoundingStrategy : public RoundingStrategy<REAL>
    {
       REAL value = -1;
       int variable = -1;
-      REAL min_frac = 0.5;
-
+      REAL min_frac = 1;
       for( int i = 0; i < cont_solution.size(); i++ )
       {
          if( num.isIntegral( cont_solution[i] ) ||
