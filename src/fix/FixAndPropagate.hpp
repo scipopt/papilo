@@ -282,11 +282,11 @@ class FixAndPropagate
    {
       if( num.isGE( value, solution_value ) )
       {
-         assert( num.isEq(num.feasFloor( solution_value ) , value - 1) );
+         assert( num.isEq(num.epsFloor( solution_value ) , value - 1) );
          return value - 1;
       }
       assert( num.isLE( value, solution_value ) );
-      assert( num.isEq(num.feasCeil( solution_value ), value + 1) );
+      assert( num.isEq(num.epsCeil( solution_value ), value + 1) );
       return value + 1;
    }
 
