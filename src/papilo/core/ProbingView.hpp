@@ -84,6 +84,23 @@ class ProbingView
    }
 
    bool
+   is_fixed( int col ) const
+   {
+      return !probing_domain_flags[col].test( ColFlag::kLbInf ) &&
+             !probing_domain_flags[col].test( ColFlag::kUbInf ) &&
+             num.isEq( probing_lower_bounds[col], probing_upper_bounds[col] );
+   }
+
+   bool
+   is_binary( int col ) const
+   {
+      return !probing_domain_flags[col].test( ColFlag::kLbInf ) &&
+             !probing_domain_flags[col].test( ColFlag::kUbInf ) &&
+             num.isEq(probing_upper_bounds[col], 1) &&
+             num.isEq(probing_lower_bounds[col], 0);
+   }
+
+   bool
    is_integer_variable( int col ) const
    {
       return problem.getColFlags()[col].test( ColFlag::kIntegral );

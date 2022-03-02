@@ -30,6 +30,7 @@
 
 #ifdef FIX_DEBUG
 #include "papilo/io/SolWriter.hpp"
+#include "papilo/io/MpsWriter.hpp"
 #endif
 
 using namespace papilo;
@@ -99,7 +100,7 @@ call_algorithm( void* heuristic_void_ptr, double* cont_solution, double* result,
    assert( apply_conflicts >= 0 && apply_conflicts <= 1 );
    assert( size_of_constraints >= 0 );
 #ifdef PAPILO_TBB
-   tbb::task_arena arena( 8 );
+   tbb::task_arena arena( 7 );
 
    return arena.execute(
        [&]()
@@ -123,8 +124,17 @@ call_algorithm( void* heuristic_void_ptr, double* cont_solution, double* result,
 
 #ifdef FIX_DEBUG
           SolWriter<double>::writePrimalSol(
-              "test.mps", sol, heuristic->problem.getObjective().coefficients,
-              0.0, heuristic->problem.getVariableNames() );
+              "lp_feasible.sol", sol,
+              heuristic->problem.getObjective().coefficients, 0.0,
+              heuristic->problem.getVariableNames() );
+          Vec<int> row_mapping{};
+          Vec<int> col_mapping{};
+          for( int i = 0; i < heuristic->problem.getNRows(); i++ )
+             row_mapping.push_back( i );
+          for( int i = 0; i < heuristic->problem.getNCols(); i++ )
+             col_mapping.push_back( i );
+          MpsWriter<double>::writeProb( "test.mps", heuristic->problem,
+                                        row_mapping, col_mapping );
 #endif
 
           double local_obj = *current_obj_value;
@@ -146,7 +156,7 @@ call_simple_heuristic( void* heuristic_void_ptr, double* result,
                        double* current_obj_value )
 {
 #ifdef PAPILO_TBB
-   tbb::task_arena arena( 8 );
+   tbb::task_arena arena( 7 );
    return arena.execute(
        [&]()
        {

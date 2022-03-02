@@ -71,16 +71,14 @@ class FarkasRoundingStrategy : public RoundingStrategy<REAL>
       for( int i = 0; i < cont_solution.size(); i++ )
       {
          if( num.isIntegral( cont_solution[i] ) ||
-             num.isEq( view.getProbingUpperBounds()[i],
-                       view.getProbingLowerBounds()[i] ) ||
+             view.is_fixed(i) ||
              !view.is_within_bounds( i, cont_solution[i] ) ||
              !view.is_integer_variable( i ) )
             continue;
 
          /* prefer decisions on binary variables */
          bool current_var_binary_with_nnz_obj =
-             view.getProbingUpperBounds()[i] == 1 &&
-             view.getProbingLowerBounds()[i] == 0 && !num.isZero( obj[i] );
+             view.is_binary(i) && !num.isZero( obj[i] );
          if( !current_var_binary_with_nnz_obj &&
              stored_var_binary_with_nnz_obj )
             continue;

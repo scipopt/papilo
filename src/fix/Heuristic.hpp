@@ -318,7 +318,7 @@ class Heuristic
                          obj_value[i] = 0;
                          msg.info( "\t\tPropagating {} is infeasible! "
                                    "(backtracks {})\n",
-                                   i, obj_value[i], backtracks );
+                                   i, backtracks);
                          break;
                       }
                       obj_value[i] = calculate_obj_value( int_solutions[i] );
@@ -429,11 +429,14 @@ class Heuristic
                          {
                             views[i].reset();
                             if( num.isZero( coefficients[j] ) )
-                               break;
+                               continue;
+                            bool is_binary = !problem.getColFlags()[j].test( ColFlag::kLbInf ) &&
+                                             !problem.getColFlags()[j].test( ColFlag::kUbInf ) &&
+                                             num.isEq(problem.getUpperBounds()[j], 1) &&
+                                             num.isEq(problem.getLowerBounds()[j], 0);
                             if( !problem.getColFlags()[j].test(
                                     ColFlag::kIntegral ) ||
-                                problem.getLowerBounds()[j] != 0 ||
-                                problem.getUpperBounds()[j] != 1 )
+                                !is_binary )
                                continue;
                             REAL solution_value = int_solutions[i][j];
                             if( num.isGT( coefficients[j], 0 ) )

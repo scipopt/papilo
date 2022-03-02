@@ -49,13 +49,11 @@ class LeastFractionalRoundingStrategy : public RoundingStrategy<REAL>
    {
       REAL value = -1;
       int variable = -1;
-      REAL min_frac = 0.5;
-
+      REAL min_frac = 1;
       for( int i = 0; i < cont_solution.size(); i++ )
       {
          if( num.isIntegral( cont_solution[i] ) ||
-             num.isEq( view.getProbingUpperBounds()[i],
-                       view.getProbingLowerBounds()[i] ) ||
+             view.is_fixed(i) ||
              !view.is_within_bounds( i, cont_solution[i] ) ||
              !view.is_integer_variable( i ) )
             continue;
@@ -74,6 +72,7 @@ class LeastFractionalRoundingStrategy : public RoundingStrategy<REAL>
                value = num.epsFloor( cont_solution[i] );
          }
       }
+      assert( num.isIntegral( value ) );
       return { variable, value };
    }
 };
