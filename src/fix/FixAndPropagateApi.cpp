@@ -99,7 +99,7 @@ call_algorithm( void* heuristic_void_ptr, double* cont_solution, double* result,
    assert( apply_conflicts >= 0 && apply_conflicts <= 1 );
    assert( size_of_constraints >= 0 );
 #ifdef PAPILO_TBB
-   tbb::task_arena arena( 8 );
+   tbb::task_arena arena( 1 );
 
    return arena.execute(
        [&]()

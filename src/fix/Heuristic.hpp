@@ -318,7 +318,7 @@ class Heuristic
                          obj_value[i] = 0;
                          msg.info( "\t\tPropagating {} is infeasible! "
                                    "(backtracks {})\n",
-                                   i, obj_value[i], backtracks );
+                                   i, backtracks);
                          break;
                       }
                       obj_value[i] = calculate_obj_value( int_solutions[i] );
