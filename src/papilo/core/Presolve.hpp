@@ -1377,10 +1377,10 @@ Presolve<REAL>::logStatus( const Problem<REAL>& problem,
           !problem.getColFlags()[i].test( ColFlag::kLbInf ) and
           !problem.getColFlags()[i].test( ColFlag::kUbInf ) )
       {
-         if( problem.getUpperBounds()[i] == 1 ||
+         if( problem.getUpperBounds()[i] == 1 &&
              problem.getLowerBounds()[i] == 0 )
             binaries++;
-         if( problem.getUpperBounds()[i] == 0 ||
+         if( problem.getUpperBounds()[i] == 0 &&
              problem.getLowerBounds()[i] == -1 )
             binaries++;
       }

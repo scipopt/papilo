@@ -68,8 +68,6 @@ class ConflictAnalysis
       bool general_integers_in_conflict_set = false;
 
       assert( infeasible_rows.size() > 0 );
-      // row that led to infeasibility
-      int conflict_row_index = infeasible_rows[0].second;
       // position in stack when infeasible
       int pos_at_infeasibility = infeasible_rows[0].first;
       int last_col = -1;
@@ -103,6 +101,48 @@ class ConflictAnalysis
          last_col = col;
       }
 
+      int index_infes = -1;
+      int size_smallest_conflict_set = -1;
+      // Find infeasible row with smallest initial conflict set
+      for( int i = 0; i < infeasible_rows.size(); i++ )
+      {
+         int size_conflict_set;
+         bool general_integers_found = false;
+         if( infeasible_rows[i].first == pos_at_infeasibility )
+         {
+            size_conflict_set = conflict_set_size_of_row(
+                bound_changes, pos_in_bound_changes, infeasible_rows[i].second,
+                -1, general_integers_found );
+            if( general_integers_found )
+               continue;
+            if( size_smallest_conflict_set == -1 )
+            {
+               size_smallest_conflict_set = size_conflict_set;
+               index_infes = i;
+            }
+            else if( size_smallest_conflict_set > size_conflict_set )
+            {
+               size_smallest_conflict_set = size_conflict_set;
+               index_infes = i;
+            }
+         }
+         else
+            break;
+      }
+      msg.detailed( "Index {}, Row {}, conflict set size {} \n",
+                index_infes,
+                infeasible_rows[index_infes].second,
+                size_smallest_conflict_set );
+      if( index_infes == -1 || size_smallest_conflict_set == -1 ||
+          size_smallest_conflict_set == 0 )
+      {
+         msg.detailed(
+             "\t\tConflict analysis returns 0 conflict constraints \n" );
+         return;
+      }
+      // row that led to infeasibility
+      int conflict_row_index = infeasible_rows[index_infes].second;
+      assert(infeasible_rows[index_infes].first == pos_at_infeasibility);
       // Find subset of indices that explain the infeasibility
       // adds column indices in conflict_set_candidates
       // col_index is -1 since initially we do not resolve
@@ -138,7 +178,7 @@ class ConflictAnalysis
                 last_decision_level, col_index );
 
             int antecedent_row_index =
-                bound_changes[current_conflict_set[col_index].first]
+                bound_changes[current_conflict_set.at( col_index ).first]
                     .get_reason_row();
             assert( antecedent_row_index != -1 );
             // resolve
@@ -168,17 +208,17 @@ class ConflictAnalysis
                 decision_levels, pos_in_bound_changes, current_conflict_set,
                 last_decision_level, col_index );
 
-            int pos_lower = pos_in_bound_changes[col_index].first;
-            int pos_upper = pos_in_bound_changes[col_index].second;
+            int pos_lower = pos_in_bound_changes.at( col_index ).first;
+            int pos_upper = pos_in_bound_changes.at( col_index ).second;
             assert( !( pos_lower == -1 && pos_upper == -1 ) );
             if( pos_lower != -1 )
             {
-               pos_in_bound_changes[col_index].first = -1;
+               pos_in_bound_changes.at( col_index ).first = -1;
                all_fuips.insert( { col_index, { pos_lower, true } } );
             }
             else
             {
-               pos_in_bound_changes[col_index].second = -1;
+               pos_in_bound_changes.at( col_index ).second = -1;
                all_fuips.insert( { col_index, { pos_upper, false } } );
             }
             // remove fuip of last_decision_level from conflict set
@@ -191,22 +231,22 @@ class ConflictAnalysis
                 decision_levels, pos_in_bound_changes, current_conflict_set,
                 last_decision_level, col_index );
             int antecedent_row_index =
-                bound_changes[current_conflict_set[col_index].first]
+                bound_changes[current_conflict_set.at( col_index ).first]
                     .get_reason_row();
             // In case FUIP is a fixing
             if( antecedent_row_index == -1 )
             {
-               int pos_lower = pos_in_bound_changes[col_index].first;
-               int pos_upper = pos_in_bound_changes[col_index].second;
+               int pos_lower = pos_in_bound_changes.at( col_index ).first;
+               int pos_upper = pos_in_bound_changes.at( col_index ).second;
                assert( !( pos_lower == -1 && pos_upper == -1 ) );
                if( pos_lower != -1 )
                {
-                  pos_in_bound_changes[col_index].first = -1;
+                  pos_in_bound_changes.at( col_index ).first = -1;
                   all_fuips.insert( { col_index, { pos_lower, true } } );
                }
                else
                {
-                  pos_in_bound_changes[col_index].second = -1;
+                  pos_in_bound_changes.at( col_index ).second = -1;
                   all_fuips.insert( { col_index, { pos_upper, false } } );
                }
                // remove fuip of last_decision_level from conflict set
@@ -214,17 +254,17 @@ class ConflictAnalysis
             }
             else
             {
-               int pos_lower = pos_in_bound_changes[col_index].first;
-               int pos_upper = pos_in_bound_changes[col_index].second;
+               int pos_lower = pos_in_bound_changes.at( col_index ).first;
+               int pos_upper = pos_in_bound_changes.at( col_index ).second;
                assert( !( pos_lower == -1 && pos_upper == -1 ) );
                if( pos_lower != -1 )
                {
-                  pos_in_bound_changes[col_index].first = -1;
+                  pos_in_bound_changes.at( col_index ).first = -1;
                   all_fuips.insert( { col_index, { pos_lower, true } } );
                }
                else
                {
-                  pos_in_bound_changes[col_index].second = -1;
+                  pos_in_bound_changes.at( col_index ).second = -1;
                   all_fuips.insert( { col_index, { pos_upper, false } } );
                }
                // remove fuip of last_decision_level from conflict set
@@ -246,8 +286,9 @@ class ConflictAnalysis
          num_vars_last_decision_level = get_number_variables_decision_level(
              decision_levels, current_conflict_set, last_decision_level );
       }
-      msg.detailed( "\t\tConflict analysis added {} cons (All-FUIP) of length: ",
-                constraints.size() );
+      msg.detailed(
+          "\t\tConflict analysis added {} cons (All-FUIP) of length: ",
+          constraints.size() );
       for( int i = 0; i < constraints.size(); i++ )
       {
          msg.detailed( "{} ", constraints[i].get_data().getLength() );
@@ -258,10 +299,10 @@ class ConflictAnalysis
 
  private:
    bool
-   is_rhs_reason( Vec<SingleBoundChange<REAL>>& bound_changes,
-                  std::map<int, std::pair<int, int>>& pos_in_bound_changes,
-                  int row_idx, int col_idx,
-                  bool& general_integers_in_conflict_set )
+   is_rhs_reason(
+       const Vec<SingleBoundChange<REAL>>& bound_changes,
+       const std::map<int, std::pair<int, int>>& pos_in_bound_changes,
+       int row_idx, int col_idx, bool& general_integers_in_conflict_set )
    {
       // get conflict row
       SparseVectorView<REAL> conflict_row =
@@ -284,8 +325,8 @@ class ConflictAnalysis
             {
                assert( !( pos_in_bound_changes.find( col_idx ) ==
                           pos_in_bound_changes.end() ) );
-               pos_lower = pos_in_bound_changes[col_idx].first;
-               pos_upper = pos_in_bound_changes[col_idx].second;
+               pos_lower = pos_in_bound_changes.at( col_idx ).first;
+               pos_upper = pos_in_bound_changes.at( col_idx ).second;
                assert( !num.isZero( row_vals[i] ) );
                assert( !( pos_lower == -1 && pos_upper == -1 ) );
                return ( ( num.isGT( row_vals[i], 0 ) && pos_upper != -1 ) ||
@@ -305,8 +346,8 @@ class ConflictAnalysis
             if( ( pos_in_bound_changes.find( row_inds[i] ) ==
                   pos_in_bound_changes.end() ) )
                continue;
-            pos_lower = pos_in_bound_changes[row_inds[i]].first;
-            pos_upper = pos_in_bound_changes[row_inds[i]].second;
+            pos_lower = pos_in_bound_changes.at( row_inds[i] ).first;
+            pos_upper = pos_in_bound_changes.at( row_inds[i] ).second;
             if( num.isGT( row_vals[i], 0 ) && pos_lower >= 0 )
             {
                assert( bound_changes[pos_lower].is_lower_bound() );
@@ -347,10 +388,10 @@ class ConflictAnalysis
    }
 
    bool
-   is_lhs_reason( Vec<SingleBoundChange<REAL>>& bound_changes,
-                  std::map<int, std::pair<int, int>>& pos_in_bound_changes,
-                  int row_idx, int col_idx,
-                  bool& general_integers_in_conflict_set )
+   is_lhs_reason(
+       const Vec<SingleBoundChange<REAL>>& bound_changes,
+       const std::map<int, std::pair<int, int>>& pos_in_bound_changes,
+       int row_idx, int col_idx, bool& general_integers_in_conflict_set )
    {
       // get conflict row
       SparseVectorView<REAL> conflict_row =
@@ -373,8 +414,8 @@ class ConflictAnalysis
             {
                assert( !( pos_in_bound_changes.find( col_idx ) ==
                           pos_in_bound_changes.end() ) );
-               pos_lower = pos_in_bound_changes[col_idx].first;
-               pos_upper = pos_in_bound_changes[col_idx].second;
+               pos_lower = pos_in_bound_changes.at( col_idx ).first;
+               pos_upper = pos_in_bound_changes.at( col_idx ).second;
                assert( !num.isZero( row_vals[i] ) );
                assert( !( pos_lower == -1 && pos_upper == -1 ) );
                return ( ( num.isGT( row_vals[i], 0 ) && ( pos_lower != -1 ) ) ||
@@ -394,8 +435,8 @@ class ConflictAnalysis
             if( ( pos_in_bound_changes.find( row_inds[i] ) ==
                   pos_in_bound_changes.end() ) )
                continue;
-            pos_lower = pos_in_bound_changes[row_inds[i]].first;
-            pos_upper = pos_in_bound_changes[row_inds[i]].second;
+            pos_lower = pos_in_bound_changes.at( row_inds[i] ).first;
+            pos_upper = pos_in_bound_changes.at( row_inds[i] ).second;
             if( num.isGT( row_vals[i], 0 ) && pos_upper >= 0 )
             {
                assert( !bound_changes[pos_upper].is_lower_bound() );
@@ -451,15 +492,15 @@ class ConflictAnalysis
             // resolved
             assert( current_conflict_set.find( col_idx ) !=
                     current_conflict_set.end() );
-            if( current_conflict_set[col_idx].second == true )
+            if( current_conflict_set.at( col_idx ).second == true )
             {
-               pos_col = pos_in_bound_changes[col_idx].first;
-               pos_in_bound_changes[col_idx].first = -1;
+               pos_col = pos_in_bound_changes.at( col_idx ).first;
+               pos_in_bound_changes.at( col_idx ).first = -1;
             }
             else
             {
-               pos_col = pos_in_bound_changes[col_idx].second;
-               pos_in_bound_changes[col_idx].second = -1;
+               pos_col = pos_in_bound_changes.at( col_idx ).second;
+               pos_in_bound_changes.at( col_idx ).second = -1;
             }
             current_conflict_set.erase( col_idx );
          }
@@ -476,15 +517,15 @@ class ConflictAnalysis
             // resolved
             assert( current_conflict_set.find( col_idx ) !=
                     current_conflict_set.end() );
-            if( current_conflict_set[col_idx].second == true )
+            if( current_conflict_set.at( col_idx ).second == true )
             {
-               pos_col = pos_in_bound_changes[col_idx].first;
-               pos_in_bound_changes[col_idx].first = -1;
+               pos_col = pos_in_bound_changes.at( col_idx ).first;
+               pos_in_bound_changes.at( col_idx ).first = -1;
             }
             else
             {
-               pos_col = pos_in_bound_changes[col_idx].second;
-               pos_in_bound_changes[col_idx].second = -1;
+               pos_col = pos_in_bound_changes.at( col_idx ).second;
+               pos_in_bound_changes.at( col_idx ).second = -1;
             }
 
             current_conflict_set.erase( col_idx );
@@ -509,15 +550,15 @@ class ConflictAnalysis
                // resolved
                assert( current_conflict_set.find( col_idx ) !=
                        current_conflict_set.end() );
-               if( current_conflict_set[col_idx].second == true )
+               if( current_conflict_set.at( col_idx ).second == true )
                {
-                  pos_col = pos_in_bound_changes[col_idx].first;
-                  pos_in_bound_changes[col_idx].first = -1;
+                  pos_col = pos_in_bound_changes.at( col_idx ).first;
+                  pos_in_bound_changes.at( col_idx ).first = -1;
                }
                else
                {
-                  pos_col = pos_in_bound_changes[col_idx].second;
-                  pos_in_bound_changes[col_idx].second = -1;
+                  pos_col = pos_in_bound_changes.at( col_idx ).second;
+                  pos_in_bound_changes.at( col_idx ).second = -1;
                }
 
                current_conflict_set.erase( col_idx );
@@ -535,15 +576,15 @@ class ConflictAnalysis
                // resolved
                assert( current_conflict_set.find( col_idx ) !=
                        current_conflict_set.end() );
-               if( current_conflict_set[col_idx].second == true )
+               if( current_conflict_set.at( col_idx ).second == true )
                {
-                  pos_col = pos_in_bound_changes[col_idx].first;
-                  pos_in_bound_changes[col_idx].first = -1;
+                  pos_col = pos_in_bound_changes.at( col_idx ).first;
+                  pos_in_bound_changes.at( col_idx ).first = -1;
                }
                else
                {
-                  pos_col = pos_in_bound_changes[col_idx].second;
-                  pos_in_bound_changes[col_idx].second = -1;
+                  pos_col = pos_in_bound_changes.at( col_idx ).second;
+                  pos_in_bound_changes.at( col_idx ).second = -1;
                }
                current_conflict_set.erase( col_idx );
             }
@@ -560,10 +601,64 @@ class ConflictAnalysis
 
       return;
    }
+   int
+   conflict_set_size_of_row(
+       const Vec<SingleBoundChange<REAL>>& bound_changes,
+       const std::map<int, std::pair<int, int>>& pos_in_bound_changes,
+       int row_idx, int col_idx, bool& general_integers_in_conflict_set )
+   {
+      std::map<int, std::pair<int, bool>> current_conflict_set;
+      RowFlags row_flag = problem.getConstraintMatrix().getRowFlags()[row_idx];
+      int pos_col = bound_changes.size();
+      // For GE constraints
+      if( row_flag.test( RowFlag::kRhsInf ) )
+      {
+         explain_infeasibility_ge( bound_changes, pos_in_bound_changes,
+                                   current_conflict_set, row_idx, col_idx,
+                                   general_integers_in_conflict_set, pos_col );
+      }
+      // For LE constraints
+      else if( row_flag.test( RowFlag::kLhsInf ) )
+      {
+         explain_infeasibility_le( bound_changes, pos_in_bound_changes,
+                                   current_conflict_set, row_idx, col_idx,
+                                   general_integers_in_conflict_set, pos_col );
+      }
+      // For equalities or ranged rows
+      else
+      {
+         // rhs is reason and coeff is positive, or lhs is reason and coeff is
+         // negative -> lower bound
+         // lhs is reason and coeff is positive, or rhs is reason and coeff is
+         // negative -> upper bound
+         if( is_lhs_reason( bound_changes, pos_in_bound_changes, row_idx,
+                            col_idx, general_integers_in_conflict_set ) )
+         {
+            explain_infeasibility_ge(
+                bound_changes, pos_in_bound_changes, current_conflict_set,
+                row_idx, col_idx, general_integers_in_conflict_set, pos_col );
+         }
+         else if( is_rhs_reason( bound_changes, pos_in_bound_changes, row_idx,
+                                 col_idx, general_integers_in_conflict_set ) )
+         {
+            explain_infeasibility_le(
+                bound_changes, pos_in_bound_changes, current_conflict_set,
+                row_idx, col_idx, general_integers_in_conflict_set, pos_col );
+         }
+         else
+         {
+            msg.error( "\t\tProblem explaining infeasibility of row {} \n",
+                       row_idx );
+         }
+      }
+
+      return current_conflict_set.size();
+   }
+
    void
    explain_infeasibility_ge(
-       Vec<SingleBoundChange<REAL>>& bound_changes,
-       std::map<int, std::pair<int, int>>& pos_in_bound_changes,
+       const Vec<SingleBoundChange<REAL>>& bound_changes,
+       const std::map<int, std::pair<int, int>>& pos_in_bound_changes,
        std::map<int, std::pair<int, bool>>& current_conflict_set, int row_idx,
        int col_idx, bool& general_integers_in_conflict_set, int pos_col )
    {
@@ -589,8 +684,8 @@ class ConflictAnalysis
          if( ( pos_in_bound_changes.find( row_inds[i] ) ==
                pos_in_bound_changes.end() ) )
             continue;
-         int pos_lower = pos_in_bound_changes[row_inds[i]].first;
-         int pos_upper = pos_in_bound_changes[row_inds[i]].second;
+         int pos_lower = pos_in_bound_changes.at( row_inds[i] ).first;
+         int pos_upper = pos_in_bound_changes.at( row_inds[i] ).second;
          assert( !num.isZero( row_vals[i] ) );
          if( num.isGT( row_vals[i], 0 ) && pos_upper >= 0 &&
              pos_upper < pos_col )
@@ -635,8 +730,8 @@ class ConflictAnalysis
 
    void
    explain_infeasibility_le(
-       Vec<SingleBoundChange<REAL>>& bound_changes,
-       std::map<int, std::pair<int, int>>& pos_in_bound_changes,
+       const Vec<SingleBoundChange<REAL>>& bound_changes,
+       const std::map<int, std::pair<int, int>>& pos_in_bound_changes,
        std::map<int, std::pair<int, bool>>& current_conflict_set, int row_idx,
        int col_idx, bool& general_integers_in_conflict_set, int pos_col )
    { // get conflict row
@@ -661,8 +756,8 @@ class ConflictAnalysis
          if( ( pos_in_bound_changes.find( row_inds[i] ) ==
                pos_in_bound_changes.end() ) )
             continue;
-         int pos_lower = pos_in_bound_changes[row_inds[i]].first;
-         int pos_upper = pos_in_bound_changes[row_inds[i]].second;
+         int pos_lower = pos_in_bound_changes.at( row_inds[i] ).first;
+         int pos_upper = pos_in_bound_changes.at( row_inds[i] ).second;
          if( num.isGT( row_vals[i], 0 ) && pos_lower >= 0 &&
              pos_lower < pos_col )
          {
@@ -725,8 +820,8 @@ class ConflictAnalysis
          pos = conflict.second.first;
          is_lower = conflict.second.second;
          assert( pos != -1 );
-         col_level = is_lower ? decision_levels[col].first
-                              : decision_levels[col].second;
+         col_level = is_lower ? decision_levels.at( col ).first
+                              : decision_levels.at( col ).second;
          level = col_level > level ? col_level : level;
       }
       return level;
@@ -747,10 +842,10 @@ class ConflictAnalysis
       {
          // ToDo for general case
          col = conflict.first;
-         assert( decision_levels[col].first != -1 ||
-                 decision_levels[col].second != -1 );
-         if( decision_levels[col].first == decision_level ||
-             decision_levels[col].second == decision_level )
+         assert( decision_levels.at( col ).first != -1 ||
+                 decision_levels.at( col ).second != -1 );
+         if( decision_levels.at( col ).first == decision_level ||
+             decision_levels.at( col ).second == decision_level )
             number_variables_decision_level++;
       }
       return number_variables_decision_level;
@@ -772,13 +867,13 @@ class ConflictAnalysis
          curr_col = conflict.first;
          pos = conflict.second.first;
          assert( pos != -1 );
-         if( ( decision_levels[curr_col].first == decision_level ) &&
+         if( ( decision_levels.at( curr_col ).first == decision_level ) &&
              ( pos > latest_position ) )
          {
             col = curr_col;
             latest_position = pos;
          }
-         if( ( decision_levels[curr_col].second == decision_level ) &&
+         if( ( decision_levels.at( curr_col ).second == decision_level ) &&
              ( pos > latest_position ) )
          {
             col = curr_col;
@@ -790,9 +885,19 @@ class ConflictAnalysis
    bool
    is_binary( int col )
    {
-      return ( problem.getColFlags()[col].test( ColFlag::kIntegral ) &&
-               num.isEq( problem.getLowerBounds()[col], 0 ) &&
-               num.isEq( problem.getUpperBounds()[col], 1 ) );
+      if( problem.getColFlags()[col].test( ColFlag::kIntegral ) &&
+          !problem.getColFlags()[col].test( ColFlag::kLbInf ) &&
+          !problem.getColFlags()[col].test( ColFlag::kUbInf ) )
+      {
+         if( problem.getUpperBounds()[col] == 1 &&
+             problem.getLowerBounds()[col] == 0 )
+            return true;
+         if( problem.getUpperBounds()[col] == 0 &&
+             problem.getLowerBounds()[col] == -1 )
+            return true;
+      }
+
+      return false;
    }
    // adds constraint based on current conflict set and fuips
    void
