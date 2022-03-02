@@ -65,7 +65,7 @@ TEST_CASE( "fix-and-propagate-api-simple-heuristic", "[fix]" )
     const char* path_to_file = "/home/alexander/git_repositories/mipcomp22/"
                                "presolved/academictimetablesmall.mps.gz";
     auto problem_ptr = setup( path_to_file,
-                              &result, 4 );
+                              &result, 3 );
     assert( result == 0 );
     auto heuristic = (Heuristic<double>*)( problem_ptr );
 

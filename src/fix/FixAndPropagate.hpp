@@ -266,7 +266,6 @@ class FixAndPropagate
          if( stop_at_infeasibility && infeasibility_detected )
             return;
       }
-      msg.detailed( "all variables fixed\n");
    }
 
    bool

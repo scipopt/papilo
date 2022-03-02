@@ -73,6 +73,7 @@ class LeastFractionalRoundingStrategy : public RoundingStrategy<REAL>
                value = num.epsFloor( cont_solution[i] );
          }
       }
+      assert( num.isIntegral( value ) );
       return { variable, value };
    }
 };
