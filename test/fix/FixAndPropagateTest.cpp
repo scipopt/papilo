@@ -95,7 +95,7 @@ TEST_CASE( "fix-and-propagate-most-frac-only-0.5-backtrack", "[fix]" )
    REQUIRE( !infeasible );
    REQUIRE( res[0] == 0 );
    REQUIRE( res[1] == 0 );
-   REQUIRE( res[2] == 0 );
+   REQUIRE( res[2] == 1 );
    REQUIRE( res[3] == 1 );
 }
 
