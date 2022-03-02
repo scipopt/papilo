@@ -364,7 +364,7 @@ class FixAndPropagate
             }
          }
          probing_view.setProbingColumn( i, value );
-         msg.detailed( "Fix integer var {} to {}\n", i, value );
+         msg.detailed( "Fix unfixed var {} to {}\n", i, value );
 
          perform_probing_step( probing_view );
       }
