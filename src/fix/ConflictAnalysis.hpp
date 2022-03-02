@@ -129,10 +129,9 @@ class ConflictAnalysis
          else
             break;
       }
-      msg.detailed( "Index {}, Row {}, conflict set size {} \n",
-                index_infes,
-                infeasible_rows[index_infes].second,
-                size_smallest_conflict_set );
+      msg.detailed( "Index {}, Row {}, conflict set size {} \n", index_infes,
+                    infeasible_rows[index_infes].second,
+                    size_smallest_conflict_set );
       if( index_infes == -1 || size_smallest_conflict_set == -1 ||
           size_smallest_conflict_set == 0 )
       {
@@ -142,7 +141,7 @@ class ConflictAnalysis
       }
       // row that led to infeasibility
       int conflict_row_index = infeasible_rows[index_infes].second;
-      assert(infeasible_rows[index_infes].first == pos_at_infeasibility);
+      assert( infeasible_rows[index_infes].first == pos_at_infeasibility );
       // Find subset of indices that explain the infeasibility
       // adds column indices in conflict_set_candidates
       // col_index is -1 since initially we do not resolve
@@ -169,6 +168,8 @@ class ConflictAnalysis
       int col_index = -1;
       bool one_fuip_conflict = true;
       bool resolved_bounds = true;
+      // maximal number of nonzeros in conflict constraint
+      int max_size_conflict = 0.15 * problem.getNumIntegralCols();
       while( last_decision_level > 0 )
       {
          while( num_vars_last_decision_level > 1 )
@@ -199,9 +200,14 @@ class ConflictAnalysis
          // 1-FUIP conflict is always added!
          if( one_fuip_conflict )
          {
-            // add constraint and continue
-            add_constraint( bound_changes, pos_in_bound_changes,
-                            current_conflict_set, all_fuips, constraints );
+            if( current_conflict_set.size() <= max_size_conflict )
+            {
+               // add constraint and continue
+               add_constraint( bound_changes, pos_in_bound_changes,
+                               current_conflict_set, all_fuips, constraints );
+               max_size_conflict = num.min( 2 * current_conflict_set.size(),
+                                            max_size_conflict );
+            }
             resolved_bounds = false;
             one_fuip_conflict = false;
             get_latest_col_index_in_decision_level(
@@ -271,10 +277,11 @@ class ConflictAnalysis
                current_conflict_set.erase( col_index );
             }
          }
-         if( resolved_bounds )
+         if( resolved_bounds &&
+             current_conflict_set.size() + all_fuips.size() <=
+                 max_size_conflict )
             add_constraint( bound_changes, pos_in_bound_changes,
                             current_conflict_set, all_fuips, constraints );
-
          resolved_bounds = false;
          // compute last decision level
          last_decision_level = get_last_decision_level(
