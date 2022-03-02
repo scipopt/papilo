@@ -79,7 +79,7 @@ TEST_CASE( "conflict-analysis-binary-no-resolution", "[conflict]" )
    infeasible_rows.push_back( infeas_pair );
    Vec<Constraint<double>> conflict_constraints;
    conflictAnalysis.perform_conflict_analysis( bound_changes, infeasible_rows,
-                                               conflict_constraints );
+                                               conflict_constraints, 1.0  );
 
    REQUIRE( conflict_constraints.size() == 1 );
 
@@ -141,7 +141,7 @@ TEST_CASE( "conflict-analysis-binary-with-resolution", "[conflict]" )
    infeasible_rows.push_back( infeas_pair );
    Vec<Constraint<double>> conflict_constraints;
    conflictAnalysis.perform_conflict_analysis( bound_changes, infeasible_rows,
-                                               conflict_constraints );
+                                               conflict_constraints, 1.0 );
 
    REQUIRE( conflict_constraints.size() == 2 );
 

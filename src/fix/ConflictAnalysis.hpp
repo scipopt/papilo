@@ -54,7 +54,8 @@ class ConflictAnalysis
    void
    perform_conflict_analysis( Vec<SingleBoundChange<REAL>>& bound_changes,
                               Vec<std::pair<int, int>>& infeasible_rows,
-                              Vec<Constraint<REAL>>& constraints )
+                              Vec<Constraint<REAL>>& constraints,
+                              REAL conflict_size_factor = 0.15 )
    {
       // col: (pos, is_lower)
       std::map<int, std::pair<int, bool>> current_conflict_set;
@@ -169,7 +170,7 @@ class ConflictAnalysis
       bool one_fuip_conflict = true;
       bool resolved_bounds = true;
       // maximal number of nonzeros in conflict constraint
-      int max_size_conflict = 0.15 * problem.getNumIntegralCols();
+      int max_size_conflict = conflict_size_factor * problem.getNumIntegralCols();
       while( last_decision_level > 0 )
       {
          while( num_vars_last_decision_level > 1 )
