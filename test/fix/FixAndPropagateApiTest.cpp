@@ -37,7 +37,7 @@ TEST_CASE( "fix-and-propagate-api", "[fix]" )
       primal_solution[i] = ( 1.0 + i ) / 10.0;
    double val = 50;
    bool success = call_algorithm( problem_ptr, primal_solution, sol, n_cols,
-                                  &val, 0, false, 0 );
+                                  &val, 0, false, 0 , true);
    REQUIRE( success );
    REQUIRE( val == 9 );
    delete_problem_instance( problem_ptr );
