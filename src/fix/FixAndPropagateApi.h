@@ -46,7 +46,7 @@ delete_problem_instance( void* heuristic_void_ptr );
 int
 call_algorithm( void* heuristic_void_ptr, double* cont_solution, double* result,
                 int n_cols, double* current_obj_value,
-                int infeasible_copy_strategy, int apply_conflicts, int size_of_constraints, bool perform_backtracking );
+                int infeasible_copy_strategy, int apply_conflicts, int size_of_constraints, int perform_backtracking );
 
 int
 call_simple_heuristic( void* heuristic_void_ptr, double* result,
