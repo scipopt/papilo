@@ -56,7 +56,7 @@ class Heuristic
    Vec<ProbingView<REAL>> views;
    Vec<REAL> cols_sorted_by_obj;
    Vec<REAL> obj_value;
-   Vec<bool> infeasible_arr;
+   Vec<int> infeasible_arr;
    ConflictAnalysis<REAL> conflict_analysis;
    Vec<Vec<Constraint<REAL>>> constraints{};
    Vec<Constraint<REAL>> derived_conflicts{};
@@ -120,13 +120,13 @@ class Heuristic
       views.push_back( { problem, num } );
       views.push_back( { problem, num } );
 
-      infeasible_arr.push_back( true );
-      infeasible_arr.push_back( true );
-      infeasible_arr.push_back( true );
-      infeasible_arr.push_back( true );
-      infeasible_arr.push_back( true );
-      infeasible_arr.push_back( true );
-      infeasible_arr.push_back( true );
+      infeasible_arr.push_back( 1 );
+      infeasible_arr.push_back( 1 );
+      infeasible_arr.push_back( 1 );
+      infeasible_arr.push_back( 1 );
+      infeasible_arr.push_back( 1 );
+      infeasible_arr.push_back( 1 );
+      infeasible_arr.push_back( 1 );
 
       obj_value.push_back( 0 );
       obj_value.push_back( 0 );
@@ -161,91 +161,7 @@ class Heuristic
       strategies.push_back( s1 );
       int_solutions.push_back( { int_solution } );
       views.push_back( { problem, num } );
-      infeasible_arr.push_back( true );
-      obj_value.push_back( 0 );
-#endif
-   }
-
-   void
-   setup_api( RandomGenerator random )
-   {
-#ifdef PAPILO_TBB
-      auto s1 = new FarkasRoundingStrategy<REAL>{ 0, num, false };
-      auto s2 = new FarkasRoundingStrategy<REAL>{ 0, num, true };
-      auto s3 = new FractionalRoundingStrategy<REAL>{ num, problem };
-      auto s4 = new RandomRoundingStrategy<REAL>{ random, num };
-      auto s5 = new ConflictDivingStrategy<REAL>{ random, num, problem };
-      auto s6 = new MostFractionalRoundingStrategy<REAL>{ num };
-      auto s7 = new LeastFractionalRoundingStrategy<REAL>{ num };
-      strategies.push_back( s1 );
-      strategies.push_back( s2 );
-      strategies.push_back( s3 );
-      strategies.push_back( s4 );
-      strategies.push_back( s5 );
-      strategies.push_back( s6 );
-      strategies.push_back( s7 );
-
-      Vec<REAL> int_solution{};
-      int_solution.resize( problem.getNCols() );
-
-      int_solutions.push_back( { int_solution } );
-      int_solutions.push_back( { int_solution } );
-      int_solutions.push_back( { int_solution } );
-      int_solutions.push_back( { int_solution } );
-      int_solutions.push_back( { int_solution } );
-      int_solutions.push_back( { int_solution } );
-      int_solutions.push_back( { int_solution } );
-
-      views.push_back( { problem, num } );
-      views.push_back( { problem, num } );
-      views.push_back( { problem, num } );
-      views.push_back( { problem, num } );
-      views.push_back( { problem, num } );
-      views.push_back( { problem, num } );
-      views.push_back( { problem, num } );
-
-      infeasible_arr.push_back( true );
-      infeasible_arr.push_back( true );
-      infeasible_arr.push_back( true );
-      infeasible_arr.push_back( true );
-      infeasible_arr.push_back( true );
-      infeasible_arr.push_back( true );
-      infeasible_arr.push_back( true );
-
-      obj_value.push_back( 0 );
-      obj_value.push_back( 0 );
-      obj_value.push_back( 0 );
-      obj_value.push_back( 0 );
-      obj_value.push_back( 0 );
-      obj_value.push_back( 0 );
-      obj_value.push_back( 0 );
-
-      constraints.push_back( {} );
-      constraints.push_back( {} );
-      constraints.push_back( {} );
-      constraints.push_back( {} );
-      constraints.push_back( {} );
-      constraints.push_back( {} );
-      constraints.push_back( {} );
-
-      Vec<REAL>& objective = problem.getObjective().coefficients;
-      cols_sorted_by_obj.reserve( objective.size() );
-      for( int i = 0; i < objective.size(); i++ )
-         cols_sorted_by_obj.push_back( i );
-      pdqsort( cols_sorted_by_obj.begin(), cols_sorted_by_obj.end(),
-               [&]( const int a, const int b )
-               {
-                  return objective[a] > objective[b] ||
-                         ( objective[a] == objective[b] && a > b );
-               } );
-#else
-      Vec<REAL> int_solution{};
-      int_solution.resize( problem.getNCols() );
-      auto s1 = new FarkasRoundingStrategy<REAL>{ 0, num, false };
-      strategies.push_back( s1 );
-      int_solutions.push_back( { int_solution } );
-      views.push_back( { problem, num } );
-      infeasible_arr.push_back( true );
+      infeasible_arr.push_back( 1 );
       obj_value.push_back( 0 );
 #endif
    }
@@ -269,7 +185,7 @@ class Heuristic
 #endif
             infeasible_arr[i] = fixAndPropagate.find_initial_solution(
                 i, views[i], int_solutions[i] );
-            if( infeasible_arr[i] )
+            if( infeasible_arr[i] == 1 )
             {
                obj_value[i] = 0;
                msg.info( "\t\tInitial sol {} is infeasible!\n", i,
@@ -303,45 +219,39 @@ class Heuristic
          {
 #ifdef PAPILO_TBB
             tbb::parallel_for(
-                tbb::blocked_range<int>( 0, 7 ),
-                [&]( const tbb::blocked_range<int>& r )
+                tbb::blocked_range<int>( 0, strategies.size() ),
+                [this, primal_heur_sol, perform_backtracking,
+                 stop_at_infeasible]( const tbb::blocked_range<int>& r )
                 {
-                   for( int i = r.begin(); i != r.end(); ++i )
+                   for( int i = r.begin(); i != r.end(); i++ )
+#else
+            for( int i = 0; i != strategies.size(); i++ )
+#endif
                    {
                       int backtracks = 0;
-                      infeasible_arr[i] = fixAndPropagate.fix_and_propagate(
+                      bool is_infeas = fixAndPropagate.fix_and_propagate(
                           primal_heur_sol, int_solutions[i], *( strategies[i] ),
                           views[i], backtracks, perform_backtracking,
                           stop_at_infeasible );
-                      if( infeasible_arr[i] )
+                      if( is_infeas )
                       {
                          obj_value[i] = 0;
                          msg.info( "\t\tPropagating {} is infeasible! "
                                    "(backtracks {})\n",
                                    i, backtracks);
-                         break;
+                         infeasible_arr[i] = 1;
+                         assert(is_infeas == infeasible_arr[i]);
+                         continue;
                       }
+                      infeasible_arr[i] = 0;
+                      assert( is_infeas == infeasible_arr[i] );
                       obj_value[i] = calculate_obj_value( int_solutions[i] );
                       msg.info( "\t\tPropagating {} found obj value {}! "
                                 "(backtracks {})\n",
                                 i, obj_value[i], backtracks );
                    }
+#ifdef PAPILO_TBB
                 } );
-#else
-             int backtracks = 0;
-             infeasible_arr[0] = fixAndPropagate.fix_and_propagate(
-                 primal_heur_sol, int_solutions[0], *( strategies[0] ),
-                 views[0], backtracks, perform_backtracking,
-                 stop_at_infeasible );
-             if( infeasible_arr[0] )
-             {
-                obj_value[0] = 0;
-                return false;
-             }
-             obj_value[0] = calculate_obj_value( int_solutions[0] );
-             msg.info(
-                 "\t\tPropagating {} found obj value {}! (backtracks {})\n", 0,
-                 obj_value[0], backtracks );
 #endif
             msg.info( "\t\tstarting OneOpt/ConflictAnalysis - {} s\n", timer.getTime() );
             one_opt( perform_one_opt, stop_at_infeasible );
@@ -374,7 +284,7 @@ class Heuristic
             for( int i = 0; i < constraints.size(); i++ )
                constraints[i].clear();
 
-            Vec<bool> infeas_copy{ infeasible_arr };
+            Vec<int> infeas_copy{ infeasible_arr };
             Vec<REAL> coefficients = problem.getObjective().coefficients;
 #ifdef PAPILO_TBB
             tbb::parallel_for(
@@ -388,7 +298,7 @@ class Heuristic
 #endif
                    {
 
-                      if( infeas_copy[i] )
+                      if( infeas_copy[i] == 1)
                       {
                          assert( !views[i].get_infeasible_rows().empty() );
                          auto changes = views[i].get_changes();
@@ -423,7 +333,7 @@ class Heuristic
                       }
                       else if( perform_one_opt )
                       {
-                         assert( !infeasible_arr[i] );
+                         assert( 0 == infeasible_arr[i] );
                          Vec<REAL> result = { int_solutions[i] };
                          for( int j = 0; j < cols_sorted_by_obj.size(); j++ )
                          {
@@ -614,7 +524,7 @@ class Heuristic
          {
             bool feasible =
                 std::any_of( infeasible_arr.begin(), infeasible_arr.end(),
-                             []( bool b ) { return !b; } );
+                             []( bool b ) { return b == 0; } );
 
             // TODO: copy the best solution;
             if( !feasible )
@@ -628,7 +538,7 @@ class Heuristic
             int best_index = -1;
             for( int i = 0; i < obj_value.size(); i++ )
             {
-               if( !infeasible_arr[i] &&
+               if( infeasible_arr[i] == 0 &&
                    ( num.isLT( obj_value[i], best_obj_val ) ||
                      ( current_best_solution.empty() && best_index == -1 ) ) )
                {

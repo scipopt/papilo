@@ -79,7 +79,7 @@ setup( const char* filename, int* result, int verbosity_level )
    PostsolveStorage<double> storage{};
    auto heuristic =
        new Heuristic<double>{ msg, {}, random, t, *problem, storage, false };
-   heuristic->setup_api( random );
+   heuristic->setup( random );
    *result = 0;
    return heuristic;
 }
