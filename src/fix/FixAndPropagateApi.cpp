@@ -94,11 +94,14 @@ delete_problem_instance( void* heuristic_void_ptr )
 int
 call_algorithm( void* heuristic_void_ptr, double* cont_solution, double* result,
                 int n_cols, double* current_obj_value,
-                int infeasible_copy_strategy, int apply_conflicts, int size_of_constraints, int perform_backtracking )
+                int infeasible_copy_strategy, int apply_conflicts,
+                int size_of_constraints, int max_backtracks,
+                int perform_one_opt )
 {
    assert( infeasible_copy_strategy >= 0 && infeasible_copy_strategy <= 6 );
    assert( apply_conflicts >= 0 && apply_conflicts <= 1 );
-   assert( perform_backtracking >= 0 && perform_backtracking <= 1 );
+   assert( max_backtracks >= 0 );
+   assert( perform_one_opt >= 0 && perform_one_opt <= 2 );
    assert( size_of_constraints >= 0 );
 #ifdef PAPILO_TBB
    tbb::task_arena arena( 7 );
@@ -140,7 +143,7 @@ call_algorithm( void* heuristic_void_ptr, double* cont_solution, double* result,
 
           double local_obj = *current_obj_value;
           heuristic->perform_fix_and_propagate(
-              sol, local_obj, res, perform_backtracking, true, false,
+              sol, local_obj, res, max_backtracks, perform_one_opt, false,
               (InfeasibleCopyStrategy)infeasible_copy_strategy );
 
           if( local_obj < *current_obj_value )

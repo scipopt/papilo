@@ -82,12 +82,12 @@ class FixAndPropagate
    fix_and_propagate( const Vec<REAL>& cont_solution, Vec<REAL>& result,
                       RoundingStrategy<REAL>& strategy,
                       ProbingView<REAL>& probing_view,
-                      int& successful_backtracks, bool perform_backtracking,
+                      int& successful_backtracks, int max_backtracks,
                       bool stop_at_infeasibility )
    {
       probing_view.reset();
       // if no backtrack just "dive" to the node whether it is infeasible or not
-      if( !perform_backtracking )
+      if( max_backtracks == 0 )
       {
          propagate_to_leaf_or_infeasibility(
              cont_solution, strategy, stop_at_infeasibility, probing_view );
@@ -104,7 +104,17 @@ class FixAndPropagate
 
          if( probing_view.isInfeasible() )
          {
-            assert( perform_backtracking );
+            assert( max_backtracks > 0 );
+            if( successful_backtracks > max_backtracks )
+            {
+               if( stop_at_infeasibility )
+                  return true;
+               propagate_to_leaf_or_infeasibility( cont_solution, strategy,
+                                                   false, probing_view );
+               fix_remaining_unfixed_variables( cont_solution, probing_view );
+               create_solution( result, probing_view );
+               return probing_view.isInfeasible();
+            }
             msg.detailed( "backtracking\n" );
             Vec<Fixing<REAL>> fixings = probing_view.get_fixings();
             assert( !fixings.empty() );
