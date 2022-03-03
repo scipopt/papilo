@@ -341,7 +341,7 @@ class ConflictAnalysis
                         ( num.isLT( row_vals[i], 0 ) && pos_lower != -1 ) );
             }
          }
-         msg.error( "\t\tis_rhs_reason should have terminated! \n" );
+         msg.detailed( "\t\tis_rhs_reason should have terminated! \n" );
       }
       else
       {
@@ -430,7 +430,7 @@ class ConflictAnalysis
                         ( num.isLT( row_vals[i], 0 ) && ( pos_upper != -1 ) ) );
             }
          }
-         msg.error( "\t\tis_lhs_reason should have terminated! \n" );
+         msg.detailed( "\t\tis_lhs_reason should have terminated! \n" );
       }
       else
       {
@@ -602,7 +602,7 @@ class ConflictAnalysis
          }
          else
          {
-            msg.error( "\t\tProblem explaining infeasibility of row {} \n",
+            msg.detailed( "\t\tProblem explaining infeasibility of row {} \n",
                        row_idx );
          }
       }
@@ -655,7 +655,7 @@ class ConflictAnalysis
          }
          else
          {
-            msg.error( "\t\tProblem explaining infeasibility of row {} \n",
+            msg.detailed( "\t\tProblem explaining infeasibility of row {} \n",
                        row_idx );
          }
       }
