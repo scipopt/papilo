@@ -477,7 +477,7 @@ class Heuristic
                else
                {
                   msg.info( "\t\t{} - OneOpt flipping variable {}: "
-                            "infeasible: \n",
+                            "infeasible\n",
                             i, opt_col );
                }
             }
@@ -488,38 +488,37 @@ class Heuristic
             auto col_indices =
                 problem.getConstraintMatrix().getColumnCoefficients(
                     opt_col );
-            bool infeasible;
             for( int k = 0; k < col_indices.getLength(); k++ )
             {
 
                StableSum<REAL> sum{};
+               int row = col_indices.getIndices()[k];
                auto row_indices =
-                   problem.getConstraintMatrix().getRowCoefficients( k );
+                   problem.getConstraintMatrix().getRowCoefficients( row );
                for( int l = 0; l < row_indices.getLength(); l++ )
                {
                   int index = row_indices.getIndices()[l];
                   REAL value = row_indices.getValues()[l];
                   if( index == opt_col )
+                  {
+                     assert(value == row_indices.getValues()[k]);
                      sum.add( new_solution_value * value );
+                  }
                   else
                      sum.add( int_solutions[i][index] * value );
                }
                REAL activity = sum.get();
-               auto flag = problem.getConstraintMatrix().getRowFlags()[k];
-               if( !flag.test( RowFlag::kLhsInf ) and
+               auto flag = problem.getConstraintMatrix().getRowFlags()[row];
+               if( !flag.test( RowFlag::kLhsInf ) &&
                    !num.isGE( activity,
                        problem.getConstraintMatrix()
-                                            .getLeftHandSides()[k] ) )
-               {
+                                            .getLeftHandSides()[row] ) )
                   return false;
-               }
-               if( !flag.test( RowFlag::kRhsInf ) and
+               if( !flag.test( RowFlag::kRhsInf ) &&
                    !num.isGE( activity,
                        problem.getConstraintMatrix()
-                                            .getRightHandSides()[k] ) )
-               {
+                                            .getRightHandSides()[row] ) )
                   return false;
-               }
             }
             return true;
          }
