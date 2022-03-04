@@ -38,7 +38,7 @@ main( void )
       primal_solution[i] = ( 1.0 + i ) / 10.0;
    double current_solution = 50;
    int success = call_algorithm( heuristic, primal_solution, sol, n_cols,
-                                 &current_solution, 0, 0, 0, 1 );
+                                 &current_solution, 0, 0, 0, 1, 1 );
    delete_problem_instance( heuristic );
    assert( sol[0] == 0 );
    assert( sol[1] == 0 );

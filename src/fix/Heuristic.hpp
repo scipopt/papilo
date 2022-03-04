@@ -29,12 +29,12 @@
 #include "fix/Constraint.hpp"
 #include "fix/FixAndPropagate.hpp"
 #include "fix/InfeasibleCopyStrategy.hpp"
+#include "fix/strategy/ConflictDivingStrategy.hpp"
 #include "fix/strategy/FarkasRoundingStrategy.hpp"
 #include "fix/strategy/FractionalRoundingStrategy.hpp"
-#include "fix/strategy/RandomRoundingStrategy.hpp"
-#include "fix/strategy/ConflictDivingStrategy.hpp"
-#include "fix/strategy/MostFractionalRoundingStrategy.hpp"
 #include "fix/strategy/LeastFractionalRoundingStrategy.hpp"
+#include "fix/strategy/MostFractionalRoundingStrategy.hpp"
+#include "fix/strategy/RandomRoundingStrategy.hpp"
 #include "papilo/core/Objective.hpp"
 #include "papilo/core/Presolve.hpp"
 #include "papilo/core/ProblemBuilder.hpp"
@@ -167,7 +167,10 @@ class Heuristic
    }
 
    Message
-   get_message(){ return msg; }
+   get_message()
+   {
+      return msg;
+   }
 
    bool
    find_initial_solution( REAL& current_objective,
@@ -213,34 +216,34 @@ class Heuristic
 
          bool perform_fix_and_propagate(
              const Vec<REAL>& primal_heur_sol, REAL& best_obj_val,
-             Vec<REAL>& current_best_solution, bool perform_backtracking = true,
-             bool perform_one_opt = true, bool stop_at_infeasible = true,
+             Vec<REAL>& current_best_solution, int max_backtracks = 1,
+             int perform_one_opt = 1, bool stop_at_infeasible = true,
              InfeasibleCopyStrategy copy = InfeasibleCopyStrategy::kNone )
          {
 #ifdef PAPILO_TBB
             tbb::parallel_for(
                 tbb::blocked_range<int>( 0, strategies.size() ),
-                [this, primal_heur_sol, perform_backtracking,
+                [this, primal_heur_sol, max_backtracks,
                  stop_at_infeasible]( const tbb::blocked_range<int>& r )
                 {
                    for( int i = r.begin(); i != r.end(); i++ )
 #else
-            for( int i = 0; i != strategies.size(); i++ )
+             for( int i = 0; i != strategies.size(); i++ )
 #endif
                    {
                       int backtracks = 0;
                       bool is_infeas = fixAndPropagate.fix_and_propagate(
                           primal_heur_sol, int_solutions[i], *( strategies[i] ),
-                          views[i], backtracks, perform_backtracking,
+                          views[i], backtracks, max_backtracks,
                           stop_at_infeasible );
                       if( is_infeas )
                       {
                          obj_value[i] = 0;
                          msg.info( "\t\tPropagating {} is infeasible! "
                                    "(backtracks {})\n",
-                                   i, backtracks);
+                                   i, backtracks );
                          infeasible_arr[i] = 1;
-                         assert(is_infeas == infeasible_arr[i]);
+                         assert( is_infeas == infeasible_arr[i] );
                          continue;
                       }
                       infeasible_arr[i] = 0;
@@ -253,8 +256,9 @@ class Heuristic
 #ifdef PAPILO_TBB
                 } );
 #endif
-            msg.info( "\t\tstarting OneOpt/ConflictAnalysis - {} s\n", timer.getTime() );
-            one_opt( perform_one_opt, stop_at_infeasible );
+            msg.info( "\t\tstarting OneOpt/ConflictAnalysis - {} s\n",
+                      timer.getTime() );
+            perform_one_opt_and_conflict_analysis( perform_one_opt );
             Vec<unsigned int> hashes;
             int redundant_conflicts = 0;
             for( auto& cs : constraints )
@@ -266,20 +270,19 @@ class Heuristic
                          hashes.end() ) )
                   {
                      hashes.push_back( hash );
-                     derived_conflicts.push_back(c);
+                     derived_conflicts.push_back( c );
                   }
                   else
                      redundant_conflicts++;
                }
                cs.clear();
             }
-            msg.info( "\t\tRedundant conflicts {}/{}\n", redundant_conflicts, redundant_conflicts + derived_conflicts.size() );
+            msg.info( "\t\tRedundant conflicts {}/{}\n", redundant_conflicts,
+                      redundant_conflicts + derived_conflicts.size() );
             return evaluate( best_obj_val, current_best_solution, copy );
          }
 
-
-
-         void one_opt( bool perform_one_opt, bool perform_conflict_analysis )
+         void perform_one_opt_and_conflict_analysis( int one_opt_mode )
          {
             for( int i = 0; i < constraints.size(); i++ )
                constraints[i].clear();
@@ -297,8 +300,7 @@ class Heuristic
 
 #endif
                    {
-
-                      if( infeas_copy[i] == 1)
+                      if( infeas_copy[i] == 1 )
                       {
                          assert( !views[i].get_infeasible_rows().empty() );
                          auto changes = views[i].get_changes();
@@ -331,36 +333,42 @@ class Heuristic
                                 return true;
                              } ) );
                       }
-                      else if( perform_one_opt )
+                      else if( one_opt_mode == 0){}
+                      else if( one_opt_mode == 2 )
                       {
                          assert( 0 == infeasible_arr[i] );
                          Vec<REAL> result = { int_solutions[i] };
-                         for( int j = 0; j < cols_sorted_by_obj.size(); j++ )
+                         for( int j = 0;
+                              j < cols_sorted_by_obj.size(); j++ )
                          {
                             views[i].reset();
-                            if( num.isZero( coefficients[j] ) )
+                            int opt_col = cols_sorted_by_obj[j];
+                            if( num.isZero( coefficients[opt_col] ) )
                                continue;
-                            bool is_binary = !problem.getColFlags()[j].test( ColFlag::kLbInf ) &&
-                                             !problem.getColFlags()[j].test( ColFlag::kUbInf ) &&
-                                             num.isEq(problem.getUpperBounds()[j], 1) &&
-                                             num.isEq(problem.getLowerBounds()[j], 0);
-                            if( !problem.getColFlags()[j].test(
+                            bool is_binary =
+                                !problem.getColFlags()[opt_col].test(
+                                    ColFlag::kLbInf ) &&
+                                !problem.getColFlags()[opt_col].test(
+                                    ColFlag::kUbInf ) &&
+                                num.isEq( problem.getUpperBounds()[opt_col], 1 ) &&
+                                num.isEq( problem.getLowerBounds()[opt_col], 0 );
+                            if( !problem.getColFlags()[opt_col].test(
                                     ColFlag::kIntegral ) ||
                                 !is_binary )
                                continue;
-                            REAL solution_value = int_solutions[i][j];
-                            if( num.isGT( coefficients[j], 0 ) )
+                            REAL solution_value = int_solutions[i][opt_col];
+                            if( num.isGT( coefficients[opt_col], 0 ) )
                             {
                                if( num.isZero( solution_value ) )
                                   continue;
                                bool infeasible = fixAndPropagate.one_opt(
-                                   int_solutions[i], j, 0, views[i], result );
+                                   int_solutions[i], opt_col, 0, views[i], result );
                                if( infeasible )
                                {
                                   msg.info(
                                       "\t\t{} - OneOpt flipping variable {}: "
                                       "infeasible\n",
-                                      i, j );
+                                      i, opt_col );
                                   continue;
                                }
                                REAL value = calculate_obj_value( result );
@@ -368,56 +376,151 @@ class Heuristic
                                   msg.info(
                                       "\t\t{} - OneOpt flipping variable {}: "
                                       "unsuccessful -> worse obj {}: \n",
-                                      i, j, value );
+                                      i, opt_col, value );
                                else if( num.isLT( value, obj_value[i] ) )
                                {
                                   msg.info(
                                       "\t\t{} - OneOpt flipping variable {}: "
                                       "successful -> better obj: {}\n",
-                                      i, j, value );
+                                      i, opt_col, value );
                                   int_solutions[i] = result;
                                   obj_value[i] = value;
                                }
                             }
                             else
                             {
-                               assert( num.isLT( coefficients[j], 0 ) );
-                               if( num.isZero( solution_value ) )
-                                  if( !num.isZero( solution_value ) )
-                                     continue;
+                               assert( num.isLT( coefficients[opt_col], 0 ) );
+                               if( !num.isZero( solution_value ) )
+                                  continue;
                                bool infeasible = fixAndPropagate.one_opt(
-                                   int_solutions[i], j, 1, views[i], result );
+                                   int_solutions[i], opt_col, 1, views[i], result );
                                if( infeasible )
                                {
                                   msg.info(
-                                      "\t\t{} - OneOpt flipping variable {}: "
+                                      "\t\t{} - OneOpt(F&P) flipping variable {}: "
                                       "infeasible\n",
-                                      i, j );
+                                      i, opt_col );
                                   continue;
                                }
                                REAL value = calculate_obj_value( result );
                                if( num.isGE( value, obj_value[i] ) )
                                   msg.info(
-                                      "\t\t{} - OneOpt flipping variable {}: "
+                                      "\t\t{} - OneOpt(F&P) flipping variable {}: "
                                       "unsuccessful -> worse obj {}: \n",
-                                      i, j, value );
+                                      i, opt_col, value );
                                else if( num.isLT( value, obj_value[i] ) )
                                {
                                   msg.info(
-                                      "\t\t{} - OneOpt flipping variable {}: "
+                                      "\t\t{} - OneOpt(F&P) flipping variable {}: "
                                       "successful -> better obj: {}\n",
-                                      i, j, value );
+                                      i, opt_col, value );
                                   int_solutions[i] = result;
                                   obj_value[i] = value;
                                }
-                               break;
                             }
                          }
+                      }
+                      else if( one_opt_mode == 1 )
+                      {
+                         assert( 0 == infeasible_arr[i] );
+                         perform_one_opt_no_f_and_p( i );
                       }
                    }
 #ifdef PAPILO_TBB
                 } );
 #endif
+         }
+
+         void perform_one_opt_no_f_and_p( int i )
+         {
+            Vec<REAL> coefficients = problem.getObjective().coefficients;
+
+            for( int j = 0; j < cols_sorted_by_obj.size();j++ )
+            {
+               int opt_col = cols_sorted_by_obj[j];
+               if( num.isZero( coefficients[opt_col] ) )
+                  continue;
+               bool is_binary =
+                   !problem.getColFlags()[opt_col].test( ColFlag::kLbInf ) &&
+                   !problem.getColFlags()[opt_col].test( ColFlag::kUbInf ) &&
+                   num.isEq( problem.getUpperBounds()[opt_col], 1 ) &&
+                   num.isEq( problem.getLowerBounds()[opt_col], 0 );
+               if( !problem.getColFlags()[opt_col].test( ColFlag::kIntegral ) ||
+                   !is_binary )
+                  continue;
+               REAL solution_value = int_solutions[i][opt_col];
+               REAL new_solution_value;
+               if( num.isGT( coefficients[opt_col], 0 ) )
+               {
+                  if( num.isZero( solution_value ) )
+                     continue;
+                  new_solution_value = 0;
+               }
+               else
+               {
+                  assert( num.isLT( coefficients[opt_col], 0 ) );
+                  if( !num.isZero( solution_value ) )
+                     continue;
+                  new_solution_value = 1;
+               }
+               bool feasible = is_new_val_feasible( i, opt_col, new_solution_value);
+               if( feasible )
+               {
+                  int_solutions[i][opt_col] = new_solution_value;
+                  REAL value = calculate_obj_value( int_solutions[i] );
+                  msg.info(
+                      "\t\t{} - OneOpt flipping variable {}: "
+                      "successful -> better obj: {}\n",
+                      i, opt_col, value );
+                  obj_value[i] = value;
+               }
+               else
+               {
+                  msg.info( "\t\t{} - OneOpt flipping variable {}: "
+                            "infeasible\n",
+                            i, opt_col );
+               }
+            }
+         }
+
+         bool is_new_val_feasible( int i, int opt_col, REAL new_solution_value)
+         {
+            auto col_indices =
+                problem.getConstraintMatrix().getColumnCoefficients(
+                    opt_col );
+            for( int k = 0; k < col_indices.getLength(); k++ )
+            {
+
+               StableSum<REAL> sum{};
+               int row = col_indices.getIndices()[k];
+               auto row_indices =
+                   problem.getConstraintMatrix().getRowCoefficients( row );
+               for( int l = 0; l < row_indices.getLength(); l++ )
+               {
+                  int index = row_indices.getIndices()[l];
+                  REAL value = row_indices.getValues()[l];
+                  if( index == opt_col )
+                  {
+                     assert(value == row_indices.getValues()[k]);
+                     sum.add( new_solution_value * value );
+                  }
+                  else
+                     sum.add( int_solutions[i][index] * value );
+               }
+               REAL activity = sum.get();
+               auto flag = problem.getConstraintMatrix().getRowFlags()[row];
+               if( !flag.test( RowFlag::kLhsInf ) &&
+                   !num.isGE( activity,
+                       problem.getConstraintMatrix()
+                                            .getLeftHandSides()[row] ) )
+                  return false;
+               if( !flag.test( RowFlag::kRhsInf ) &&
+                   !num.isGE( activity,
+                       problem.getConstraintMatrix()
+                                            .getRightHandSides()[row] ) )
+                  return false;
+            }
+            return true;
          }
 
          Vec<Constraint<REAL>>& get_derived_conflicts()
@@ -426,7 +529,7 @@ class Heuristic
          }
 
          Problem<REAL> copy_conflicts_to_problem(
-             Problem<REAL>& old_problem, Vec<Constraint<REAL>> new_conflicts )
+             Problem<REAL> & old_problem, Vec<Constraint<REAL>> new_conflicts )
          {
             ProblemBuilder<REAL> builder;
 
@@ -467,12 +570,12 @@ class Heuristic
                builder.setRowRhs( i, rhs );
                builder.setRowLhsInf( i, rowFlags[i].test( RowFlag::kLhsInf ) );
                builder.setRowRhsInf( i, rowFlags[i].test( RowFlag::kRhsInf ) );
-               builder.setHardConstraint( i, rowFlags[i].
-                                             test( RowFlag::kHardConstraint ) );
-               builder.setCutoffConstraint( i, rowFlags[i].
-                                             test( RowFlag::kCutoffConstraint ) );
-               builder.setConflictConstraint( i, rowFlags[i].
-                                              test( RowFlag::kConflictConstraint ) );
+               builder.setHardConstraint(
+                   i, rowFlags[i].test( RowFlag::kHardConstraint ) );
+               builder.setCutoffConstraint(
+                   i, rowFlags[i].test( RowFlag::kCutoffConstraint ) );
+               builder.setConflictConstraint(
+                   i, rowFlags[i].test( RowFlag::kConflictConstraint ) );
             }
 
             for( int i = 0; i < new_rows; ++i )
@@ -495,8 +598,8 @@ class Heuristic
                builder.setRowRhsInf(
                    i + nrows,
                    new_conflicts[i].get_row_flag().test( RowFlag::kRhsInf ) );
-               assert( !new_conflicts[i].get_row_flag().
-                        test( RowFlag::kHardConstraint ) );
+               assert( !new_conflicts[i].get_row_flag().test(
+                   RowFlag::kHardConstraint ) );
                builder.setConflictConstraint( i + nrows, true );
             }
 
