@@ -937,8 +937,6 @@ class ConflictAnalysis
          inds[i] = col;
          vals[i] = coef;
          i++;
-         msg.detailed( " old: {} ", bound_changes[pos].get_new_bound_value() );
-         msg.detailed( " {}*{} ", col, coef );
       }
       for( const std::pair<int, std::pair<int, bool>>& conflict : all_fuips )
       {
@@ -953,12 +951,8 @@ class ConflictAnalysis
          inds[i] = col;
          vals[i] = coef;
          i++;
-         msg.detailed( " old: {} ", bound_changes[pos].get_new_bound_value() );
-         msg.detailed( " {}*{} ", col, coef );
       }
 
-      msg.detailed( ">= {}", lhs );
-      msg.detailed( "\n" );
       int con_size = current_conflict_set.size() + all_fuips.size();
       SparseVectorView<REAL> row_data( &vals[0], &inds[0], con_size );
 
