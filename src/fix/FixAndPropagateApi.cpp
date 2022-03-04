@@ -117,7 +117,7 @@ call_algorithm( void* heuristic_void_ptr, double* cont_solution, double* result,
              heuristic->problem = heuristic->copy_conflicts_to_problem(
                  heuristic->problem, heuristic->get_derived_conflicts() );
              heuristic->get_message().info(
-                 "added {} conflicts to the problem (rows: {})",
+                 "added {} conflicts to the problem (rows: {})\n",
                  heuristic->get_derived_conflicts().size(),
                  heuristic->problem.getNRows() );
              heuristic->problem.recomputeAllActivities();
