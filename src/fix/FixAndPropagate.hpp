@@ -105,7 +105,7 @@ class FixAndPropagate
          if( probing_view.isInfeasible() )
          {
             assert( max_backtracks > 0 );
-            if( successful_backtracks > max_backtracks )
+            if( successful_backtracks >= max_backtracks )
             {
                if( stop_at_infeasibility )
                   return true;
