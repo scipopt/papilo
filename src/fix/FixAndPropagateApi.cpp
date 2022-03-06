@@ -176,3 +176,14 @@ call_simple_heuristic( void* heuristic_void_ptr, double* result,
        } );
 #endif
 }
+
+void
+perform_one_opt( void* heuristic_void_ptr, double* sol, int n_cols,
+                 int perform_opt_one, double* current_obj_value )
+{
+   auto heuristic = (Heuristic<double>*)( heuristic_void_ptr );
+   Vec<double> res{ sol, sol + n_cols };
+
+   ProbingView<double> view {heuristic-> problem, heuristic->get_num()};
+   heuristic->perform_one_opt( perform_opt_one, res, view, *current_obj_value, 0 );
+}
