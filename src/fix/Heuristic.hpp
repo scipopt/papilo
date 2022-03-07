@@ -220,6 +220,7 @@ class Heuristic
              int perform_one_opt = 1, bool stop_at_infeasible = true,
              InfeasibleCopyStrategy copy = InfeasibleCopyStrategy::kNone )
          {
+            double start = timer.getTime();
 #ifdef PAPILO_TBB
             tbb::parallel_for(
                 tbb::blocked_range<int>( 0, strategies.size() ),
@@ -279,6 +280,7 @@ class Heuristic
             }
             msg.info( "\t\tRedundant conflicts {}/{}\n", redundant_conflicts,
                       redundant_conflicts + derived_conflicts.size() );
+            msg.info( "\t\tTime in F&P {}\n", ( timer.getTime() - start ) );
             return evaluate( best_obj_val, current_best_solution, copy );
          }
 
