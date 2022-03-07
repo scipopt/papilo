@@ -186,4 +186,5 @@ perform_one_opt( void* heuristic_void_ptr, double* sol, int n_cols,
 
    ProbingView<double> view {heuristic-> problem, heuristic->get_num()};
    heuristic->perform_one_opt( perform_opt_one, res, view, *current_obj_value, 0 );
+   std::copy( res.begin(), res.end(), sol );
 }
