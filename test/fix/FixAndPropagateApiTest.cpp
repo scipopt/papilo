@@ -60,29 +60,29 @@ TEST_CASE( "fix-and-propagate-api-simple-heuristic", "[fix]" )
 
 // TEST_CASE( "fix-and-propagate-api-specify-test", "[fix]" )
 //{
-//    int result = 1;
-//    const char* path_to_file = "/home/alexander/git_repositories/mipcomp22/"
-//                               "presolved/neos-1354092.mps.gz";
-//    auto problem_ptr = setup( path_to_file,
-//                              &result, 3 );
-//    assert( result == 0 );
-//    auto heuristic = (Heuristic<double>*)( problem_ptr );
 //
-//    int n_cols = heuristic->problem.getNCols();
+//      int result = 1;
+//      const char* path_to_file = "/home/alexander/git_repositories/mipcomp22/presolved/neos-1354092.mps.gz";
+//      auto problem_ptr = setup( path_to_file, &result, 3 );
+//      assert( result == 0 );
+//      auto heuristic = (Heuristic<double>*)( problem_ptr );
 //
-//    Vec<int> mapping{};
-//    for( int i = 0; i < n_cols; i++ )
-//       mapping.push_back( i );
-//    Solution<double> solution;
-//    auto sol = new double[n_cols];
-//    bool success = SolParser<double>::read(
-//        "/home/alexander/Downloads/sol.txt",
-//        mapping, heuristic->problem.getVariableNames(), solution );
-//    double* a = &solution.primal[0];
+//      int n_cols = heuristic->problem.getNCols();
 //
-//    assert(success);
-//    double val = 50;
-//    success = call_algorithm( problem_ptr, a, sol, n_cols, &val,  0, 0, 0, 1, 0 );
-//    delete_problem_instance( problem_ptr );
-//    assert(success);
-// }
+//      Vec<int> mapping{};
+//      for( int i = 0; i < n_cols; i++ )
+//         mapping.push_back( i );
+//      Solution<double> solution;
+//      auto sol = new double[n_cols];
+//      bool success = SolParser<double>::read(
+//          "/home/alexander/git_repositories/mipcomp22/lp_experiments/FeasPump/lp_feasible.sol", mapping,
+//          heuristic->problem.getVariableNames(), solution );
+//      double* a = &solution.primal[0];
+//
+//      assert( success );
+//      double val = 50;
+//      success =
+//          call_algorithm( problem_ptr, a, sol, n_cols, &val, 0, 0, 0, 1, 1 );
+//
+//      delete_problem_instance( problem_ptr );
+//}

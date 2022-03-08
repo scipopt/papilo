@@ -142,7 +142,6 @@ class ConflictDivingStrategy : public RoundingStrategy<REAL>
       int variable = -1;
       REAL score = -1;
       REAL max_score = -1;
-      // 0 = round down, 1 = round up
       bool round_up;
       auto obj = view.get_obj();
       bool stored_var_binary = false;
@@ -170,12 +169,12 @@ class ConflictDivingStrategy : public RoundingStrategy<REAL>
 
          score = get_score( i, may_round_down, may_round_up, frac, view,
                             round_up );
+         assert( num.isGT( score, -1 ) );
 
          if( ( current_var_binary && !stored_var_binary ) ||
              num.isGT( score, max_score ) )
          {
-            assert( ( current_var_binary && !stored_var_binary ) ||
-                    ( current_var_binary == stored_var_binary ) );
+            assert( !(!current_var_binary && stored_var_binary) );
 
             max_score = score;
             variable = i;
@@ -264,10 +263,6 @@ private:
          score *= 0.01;
 
       assert( view.is_integer_variable( col ) );
-      /* penalize non-binary variables */
-      if( !num.isEq( view.getProbingUpperBounds()[col], REAL{ 1.0 } ) ||
-          !num.isEq( view.getProbingLowerBounds()[col], REAL{ 0.0 } ) )
-         score = -1.0 / score;
 
       return score;
    }
