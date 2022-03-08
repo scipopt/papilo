@@ -503,7 +503,7 @@ class Heuristic
                   REAL value = row_indices.getValues()[l];
                   if( index == opt_col )
                   {
-                     assert(value == row_indices.getValues()[k]);
+                     assert(num.isEq(value, col_indices.getValues()[k]));
                      sum.add( new_solution_value * value );
                   }
                   else
