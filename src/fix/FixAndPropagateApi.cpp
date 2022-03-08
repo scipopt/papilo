@@ -103,6 +103,8 @@ call_algorithm( void* heuristic_void_ptr, double* cont_solution, double* result,
    assert( max_backtracks >= 0 );
    assert( perform_one_opt >= 0 && perform_one_opt <= 2 );
    assert( size_of_constraints >= 0 );
+   assert( n_cols ==
+           ( (Heuristic<double>*)( heuristic_void_ptr ) )->problem.getNCols() );
 #ifdef PAPILO_TBB
    tbb::task_arena arena( 7 );
 
