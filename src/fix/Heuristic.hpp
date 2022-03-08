@@ -78,7 +78,7 @@ class Heuristic
          conflict_analysis( { msg, num, timer, problem_ } ),
          postsolve_storage( postsolve_storage_ ),
          calculate_original( calculate_original_ ),
-         fixAndPropagate( { msg, num, random } )
+         fixAndPropagate( { msg, num, random, timer } )
    {
    }
 
@@ -172,7 +172,13 @@ class Heuristic
       return msg;
    }
 
-   bool
+   int
+   get_current_time()
+   {
+      return (int)timer.getTime();
+   }
+
+       bool
    find_initial_solution( REAL& current_objective,
                           Vec<REAL>& current_best_solution )
    {
@@ -216,7 +222,7 @@ class Heuristic
 
          bool perform_fix_and_propagate(
              const Vec<REAL>& primal_heur_sol, REAL& best_obj_val,
-             Vec<REAL>& current_best_solution, int max_backtracks = 1,
+             Vec<REAL>& current_best_solution, int time_limit, int max_backtracks = 1,
              int perform_one_opt = 1, bool stop_at_infeasible = true,
              InfeasibleCopyStrategy copy = InfeasibleCopyStrategy::kNone )
          {
@@ -225,7 +231,7 @@ class Heuristic
             tbb::parallel_for(
                 tbb::blocked_range<int>( 0, strategies.size() ),
                 [this, primal_heur_sol, max_backtracks,
-                 stop_at_infeasible]( const tbb::blocked_range<int>& r )
+                 stop_at_infeasible, time_limit]( const tbb::blocked_range<int>& r )
                 {
                    for( int i = r.begin(); i != r.end(); i++ )
 #else
@@ -236,7 +242,7 @@ class Heuristic
                       bool is_infeas = fixAndPropagate.fix_and_propagate(
                           primal_heur_sol, int_solutions[i], *( strategies[i] ),
                           views[i], backtracks, max_backtracks,
-                          stop_at_infeasible );
+                          stop_at_infeasible, time_limit );
                       if( is_infeas )
                       {
                          obj_value[i] = 0;
@@ -343,6 +349,7 @@ class Heuristic
                          for( int j = 0;
                               j < cols_sorted_by_obj.size(); j++ )
                          {
+
                             views[i].reset();
                             int opt_col = cols_sorted_by_obj[j];
                             if( num.isZero( coefficients[opt_col] ) )

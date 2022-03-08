@@ -45,14 +45,16 @@ TEST_CASE( "fix-and-propagate-it-solution-is-feasible", "[fix]" )
    problem.recomputeAllActivities();
    Solution<double> solution = parse_solution( path_to_sol, problem );
    RandomGenerator random(0);
-   FixAndPropagate<double> fixAndPropagate{ {}, {}, random };
+   double t = 5;
+   Timer timer(t);
+   FixAndPropagate<double> fixAndPropagate{ {}, {}, random, timer };
    FarkasRoundingStrategy<double> strategy{ 0, {}, false };
    Vec<double> res{ solution.primal };
 
    ProbingView<double> view {problem, {}};
    int backtracks = 0;
    bool infeasible =
-       fixAndPropagate.fix_and_propagate( solution.primal, res, strategy, view, backtracks, true, false );
+       fixAndPropagate.fix_and_propagate( solution.primal, res, strategy, view, backtracks, true, false, 10000 );
 
    REQUIRE( !infeasible );
    for( int i = 0; i < problem.getNCols(); i++ )
@@ -67,7 +69,9 @@ TEST_CASE( "fix-and-propagate-it-modified-solution-is-feasible", "[fix]" )
    problem.recomputeAllActivities();
    Solution<double> solution = parse_solution( path_to_sol, problem );
    RandomGenerator random(0);
-   FixAndPropagate<double> fixAndPropagate{ {}, {}, random };
+   double t = 5;
+   Timer timer(t);
+   FixAndPropagate<double> fixAndPropagate{ {}, {}, random, timer };
    FarkasRoundingStrategy<double> strategy{ 0, {}, false };
    Vec<double> modified_primal{ solution.primal };
    modified_primal[1] = 0.6;
@@ -75,8 +79,8 @@ TEST_CASE( "fix-and-propagate-it-modified-solution-is-feasible", "[fix]" )
    Vec<double> res{ modified_primal };
    ProbingView<double> view {problem, {}};
    int backtracks = 0;
-   bool infeasible =
-       fixAndPropagate.fix_and_propagate( solution.primal, res, strategy, view,backtracks, true, false );
+   bool infeasible = fixAndPropagate.fix_and_propagate(
+       solution.primal, res, strategy, view, backtracks, true, false, 10000 );
 
    REQUIRE( !infeasible );
    for( int i = 0; i < problem.getNCols(); i++ )

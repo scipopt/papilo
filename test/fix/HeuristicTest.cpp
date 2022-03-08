@@ -54,7 +54,7 @@ TEST_CASE( "heuristics-all-false-best-objective", "[fix]" )
    double objVal = 50;
    heuristic->setup(random);
    bool infeasible =heuristic->perform_fix_and_propagate(
-       sol, objVal, res, true, true, false,
+       sol, objVal, res,10000, true, true, false,
        InfeasibleCopyStrategy::kBestObjective );
    REQUIRE( !infeasible );
    REQUIRE( res[0] == 0 );
@@ -88,7 +88,7 @@ TEST_CASE( "heuristics-all-false-worst-objective", "[fix]" )
    double objVal = 50;
    heuristic->setup(random);
    bool infeasible =heuristic->perform_fix_and_propagate(
-       sol, objVal, res, true, true, false,
+       sol, objVal, res, 10000, true, true, false,
        InfeasibleCopyStrategy::kWorstObjective);
    REQUIRE( !infeasible );
    REQUIRE( res[0] == 1 );
@@ -122,7 +122,7 @@ TEST_CASE( "heuristics-all-false-highest-depth", "[fix]" )
    double objVal = 50;
    heuristic->setup(random);
    bool infeasible =heuristic->perform_fix_and_propagate(
-       sol, objVal, res, true, true, false,
+       sol, objVal, res, 10000, true, true, false,
        InfeasibleCopyStrategy::kHighestDepthOfFirstConflict);
    REQUIRE( !infeasible );
    REQUIRE( res[0] == 0 );
@@ -155,7 +155,7 @@ TEST_CASE( "heuristics-all-false-lowest-depth", "[fix]" )
    double objVal = 50;
    heuristic->setup(random);
    bool infeasible =heuristic->perform_fix_and_propagate(
-       sol, objVal, res, true, true, false,
+       sol, objVal, res, 10000, true, true, false,
        InfeasibleCopyStrategy::kLowestDepthOfFirstConflict);
    REQUIRE( !infeasible );
    REQUIRE( res[0] == 0 );

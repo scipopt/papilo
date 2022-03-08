@@ -71,10 +71,11 @@ class FixAndPropagate
    Message msg;
    Num<REAL> num;
    RandomGenerator random;
+   Timer timer;
 
  public:
-   FixAndPropagate( Message msg_, Num<REAL> num_, RandomGenerator random_ )
-       : msg( msg_ ), num( num_ ), random( random_ )
+   FixAndPropagate( Message msg_, Num<REAL> num_, RandomGenerator random_, Timer timer_ )
+       : msg( msg_ ), num( num_ ), random( random_ ), timer(timer_)
    {
    }
 
@@ -83,7 +84,7 @@ class FixAndPropagate
                       RoundingStrategy<REAL>& strategy,
                       ProbingView<REAL>& probing_view,
                       int& successful_backtracks, int max_backtracks,
-                      bool stop_at_infeasibility )
+                      bool stop_at_infeasibility, int time_limit )
    {
       probing_view.reset();
       // if no backtrack just "dive" to the node whether it is infeasible or not
@@ -104,6 +105,8 @@ class FixAndPropagate
 
          if( probing_view.isInfeasible() )
          {
+            if( timer.getTime() >= time_limit )
+               return true;
             assert( max_backtracks > 0 );
             if( successful_backtracks >= max_backtracks )
             {

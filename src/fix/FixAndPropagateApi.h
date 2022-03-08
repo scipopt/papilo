@@ -44,12 +44,15 @@ delete_problem_instance( void* heuristic_void_ptr );
  * @param size_of_constraints -> if conflicts are applied collect them and add them when there are more than this parameter
  * @param max_backtracks -> number of backtracks per dive
  * @param perform_one_opt -> 0 = no; 1= only check feasibility; 2 = with Fix&Propagation
+ * @param remaining_time_in_sec remaining time in seconds
   @return whether a (better) integer feasible solution was found
  */
 int
 call_algorithm( void* heuristic_void_ptr, double* cont_solution, double* result,
                 int n_cols, double* current_obj_value,
-                int infeasible_copy_strategy, int apply_conflicts, int size_of_constraints, int max_backtracks, int perform_one_opt );
+                int infeasible_copy_strategy, int apply_conflicts,
+                int size_of_constraints, int max_backtracks,
+                int perform_one_opt, int remaining_time_in_sec );
 
 int
 call_simple_heuristic( void* heuristic_void_ptr, double* result,

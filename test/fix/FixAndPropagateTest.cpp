@@ -54,14 +54,16 @@ TEST_CASE( "fix-and-propagate-most-frac-backtrack", "[fix]" )
    Message msg{};
    msg.setVerbosityLevel(papilo::VerbosityLevel::kDetailed);
    RandomGenerator random( 0 );
-   FixAndPropagate<double> fixAndPropagate{ msg, {}, random };
+   double t = 5;
+   Timer timer(t);
+   FixAndPropagate<double> fixAndPropagate{ {}, {}, random, timer };
    MostFractionalRoundingStrategy<double> strategy{ {} };
 
    ProbingView<double> view {problem, {}};
    int backtracks = 0;
    bool infeasible =
        fixAndPropagate.fix_and_propagate( primal_solution, res, strategy, view,
-                                          backtracks, true, false );
+                                          backtracks, true, false, 10000 );
 
    REQUIRE( !infeasible );
    REQUIRE( res[0] == 1 );
@@ -83,14 +85,16 @@ TEST_CASE( "fix-and-propagate-most-frac-only-0.5-backtrack", "[fix]" )
    Message msg{};
    msg.setVerbosityLevel(papilo::VerbosityLevel::kDetailed);
    RandomGenerator random( 0 );
-   FixAndPropagate<double> fixAndPropagate{ msg, {}, random };
+   double t = 5;
+   Timer timer(t);
+   FixAndPropagate<double> fixAndPropagate{ {}, {}, random, timer };
    MostFractionalRoundingStrategy<double> strategy{ {} };
 
    ProbingView<double> view {problem, {}};
    int backtracks = 0;
    bool infeasible =
        fixAndPropagate.fix_and_propagate( primal_solution, res, strategy, view,
-                                          backtracks, true, false );
+                                          backtracks, true, false, 10000 );
 
    REQUIRE( !infeasible );
    REQUIRE( res[0] == 0 );
@@ -112,14 +116,16 @@ TEST_CASE( "fix-and-propagate-least-frac-backtrack", "[fix]" )
    Message msg{};
    msg.setVerbosityLevel(papilo::VerbosityLevel::kDetailed);
    RandomGenerator random( 0 );
-   FixAndPropagate<double> fixAndPropagate{ msg, {}, random };
+   double t = 5;
+   Timer timer(t);
+   FixAndPropagate<double> fixAndPropagate{ {}, {}, random, timer };
    LeastFractionalRoundingStrategy<double> strategy{ {} };
 
    ProbingView<double> view {problem, {}};
    int backtracks = 0;
    bool infeasible =
        fixAndPropagate.fix_and_propagate( primal_solution, res, strategy, view,
-                                          backtracks, true, false );
+                                          backtracks, true, false, 10000 );
 
    REQUIRE( !infeasible );
    REQUIRE( res[0] == 0 );
@@ -141,14 +147,16 @@ TEST_CASE( "fix-and-propagate-least-frac-only-0.5-backtrack", "[fix]" )
    Message msg{};
    msg.setVerbosityLevel(papilo::VerbosityLevel::kDetailed);
    RandomGenerator random( 0 );
-   FixAndPropagate<double> fixAndPropagate{ msg, {}, random };
+   double t = 5;
+   Timer timer(t);
+   FixAndPropagate<double> fixAndPropagate{ {}, {}, random, timer };
    LeastFractionalRoundingStrategy<double> strategy{ {} };
 
    ProbingView<double> view {problem, {}};
    int backtracks = 0;
    bool infeasible =
        fixAndPropagate.fix_and_propagate( primal_solution, res, strategy, view,
-                                          backtracks, true, false );
+                                          backtracks, true, false, 10000 );
 
    REQUIRE( !infeasible );
    REQUIRE( res[0] == 0 );
@@ -175,12 +183,15 @@ TEST_CASE( "fix-and-propagate-integer-variable", "[fix]" )
    Message msg{};
    msg.setVerbosityLevel(papilo::VerbosityLevel::kDetailed);
    RandomGenerator random( 0 );
-   FixAndPropagate<double> fixAndPropagate{ msg, {}, random };   FractionalRoundingStrategy<double> strategy{ {}, problem };
+   double t = 5;
+   Timer timer(t);
+   FixAndPropagate<double> fixAndPropagate{ {}, {}, random, timer };
+   FractionalRoundingStrategy<double> strategy{ {}, problem };
 
    ProbingView<double> view {problem, {}};
    int backtracks = 0;
    bool infeasible =
-       fixAndPropagate.fix_and_propagate( primal_solution, res, strategy, view, backtracks, true, false  );
+       fixAndPropagate.fix_and_propagate( primal_solution, res, strategy, view, backtracks, true, false , 10000 );
 
    REQUIRE( !infeasible );
    REQUIRE( res[0] == 3 );
@@ -205,14 +216,16 @@ TEST_CASE( "fix-and-propagate-cont-variable-stays-cont", "[fix]" )
    Message msg{};
    msg.setVerbosityLevel(papilo::VerbosityLevel::kDetailed);
    RandomGenerator random( 0 );
-   FixAndPropagate<double> fixAndPropagate{ msg, {}, random };
+   double t = 5;
+   Timer timer(t);
+   FixAndPropagate<double> fixAndPropagate{ {}, {}, random, timer };
    FractionalRoundingStrategy<double> strategy{ {}, problem };
 
    ProbingView<double> view {problem, {}};
    int backtracks = 0;
 
-   bool infeasible =
-       fixAndPropagate.fix_and_propagate( primal_solution, res, strategy, view, backtracks, true, false  );
+   bool infeasible = fixAndPropagate.fix_and_propagate(
+       primal_solution, res, strategy, view, backtracks, true, false, 10000 );
 
    REQUIRE( !infeasible );
    REQUIRE( res[0] == 0.1 );
@@ -236,12 +249,15 @@ TEST_CASE( "fix-and-propagate-all-integer-solutions", "[fix]" )
    Message msg{};
    msg.setVerbosityLevel(papilo::VerbosityLevel::kDetailed);
    RandomGenerator random( 0 );
-   FixAndPropagate<double> fixAndPropagate{ msg, {}, random };   FractionalRoundingStrategy<double> strategy{ {}, problem };
+   double t = 5;
+   Timer timer(t);
+   FixAndPropagate<double> fixAndPropagate{ {}, {}, random, timer };
+   FractionalRoundingStrategy<double> strategy{ {}, problem };
 
    ProbingView<double> view {problem, {}};
    int backtracks = 0;
    bool infeasible =
-       fixAndPropagate.fix_and_propagate( primal_solution, res, strategy, view, backtracks, true, false  );
+       fixAndPropagate.fix_and_propagate( primal_solution, res, strategy, view, backtracks, true, false , 10000 );
 
 
    REQUIRE( !infeasible );
@@ -264,13 +280,15 @@ TEST_CASE( "fix-and-propagate-integer-can-not-be-fixed", "[fix]" )
    Message msg{};
    msg.setVerbosityLevel(papilo::VerbosityLevel::kDetailed);
    RandomGenerator random( 0 );
-   FixAndPropagate<double> fixAndPropagate{ msg, {}, random };
+   double t = 5;
+   Timer timer(t);
+   FixAndPropagate<double> fixAndPropagate{ {}, {}, random, timer };
    FractionalRoundingStrategy<double> strategy{ {}, problem };
 
    ProbingView<double> view {problem, {}};
    int backtracks = 0;
    bool infeasible =
-       fixAndPropagate.fix_and_propagate( primal_solution, res, strategy, view, backtracks, true, false  );
+       fixAndPropagate.fix_and_propagate( primal_solution, res, strategy, view, backtracks, true, false , 10000 );
 
 
    REQUIRE( !infeasible );
@@ -293,13 +311,15 @@ TEST_CASE( "fix-and-propagate-frac-backtrack", "[fix]" )
    Message msg{};
    msg.setVerbosityLevel(papilo::VerbosityLevel::kDetailed);
    RandomGenerator random( 0 );
-   FixAndPropagate<double> fixAndPropagate{ msg, {}, random };
+   double t = 5;
+   Timer timer(t);
+   FixAndPropagate<double> fixAndPropagate{ {}, {}, random, timer };
    FractionalRoundingStrategy<double> strategy{ {}, problem };
 
    ProbingView<double> view {problem, {}};
    int backtracks = 0;
    bool infeasible =
-       fixAndPropagate.fix_and_propagate( primal_solution, res, strategy, view,backtracks, true, false  );
+       fixAndPropagate.fix_and_propagate( primal_solution, res, strategy, view,backtracks, true, false , 10000 );
 
 
    REQUIRE( !infeasible );
@@ -328,13 +348,15 @@ TEST_CASE( "fix-and-propagate-frac-check-within-bounds", "[fix]" )
    Message msg{};
    msg.setVerbosityLevel(papilo::VerbosityLevel::kDetailed);
    RandomGenerator random( 0 );
-   FixAndPropagate<double> fixAndPropagate{ msg, {}, random };
+   double t = 5;
+   Timer timer(t);
+   FixAndPropagate<double> fixAndPropagate{ {}, {}, random, timer };
    FractionalRoundingStrategy<double> strategy{ {}, problem };
 
    ProbingView<double> view {problem, {}};
    int backtracks = 0;
    bool infeasible =
-       fixAndPropagate.fix_and_propagate( primal_solution, res, strategy, view, backtracks,true, false  );
+       fixAndPropagate.fix_and_propagate( primal_solution, res, strategy, view, backtracks,true, false, 10000 );
 
    REQUIRE( !infeasible );
    REQUIRE( res[0] == 1 );
@@ -356,13 +378,15 @@ TEST_CASE( "fix-and-propagate-random-backtrack", "[fix]" )
    Message msg{};
    msg.setVerbosityLevel(papilo::VerbosityLevel::kDetailed);
    RandomGenerator random( 0 );
-   FixAndPropagate<double> fixAndPropagate{ msg, {}, random };
+   double t = 5;
+   Timer timer(t);
+   FixAndPropagate<double> fixAndPropagate{ {}, {}, random, timer };
    RandomRoundingStrategy<double> strategy{ 0, {} };
 
    ProbingView<double> view {problem, {}};
    int backtracks = 0;
    bool infeasible =
-       fixAndPropagate.fix_and_propagate( primal_solution, res, strategy, view,backtracks, true, false  );
+       fixAndPropagate.fix_and_propagate( primal_solution, res, strategy, view,backtracks, true, false , 10000 );
 
    REQUIRE( !infeasible );
    REQUIRE( res[0] == 0 );
@@ -385,13 +409,15 @@ TEST_CASE( "fix-and-propagate-random", "[fix]" )
    Message msg{};
    msg.setVerbosityLevel(papilo::VerbosityLevel::kDetailed);
    RandomGenerator random( 0 );
-   FixAndPropagate<double> fixAndPropagate{ msg, {}, random };
+   double t = 5;
+   Timer timer(t);
+   FixAndPropagate<double> fixAndPropagate{ {}, {}, random, timer };
    RandomRoundingStrategy<double> strategy{ 0, {} };
 
    ProbingView<double> view {problem, {}};
    int backtracks = 0;
    bool infeasible =
-       fixAndPropagate.fix_and_propagate( primal_solution, res, strategy, view,backtracks, false, false  );
+       fixAndPropagate.fix_and_propagate( primal_solution, res, strategy, view,backtracks, false, false, 10000 );
 
    REQUIRE( !infeasible );
    REQUIRE( res[0] == 0 );
@@ -418,13 +444,15 @@ TEST_CASE( "fix-and-propagate-random-check-within-bounds", "[fix]" )
    Message msg{};
    msg.setVerbosityLevel(papilo::VerbosityLevel::kDetailed);
    RandomGenerator random( 0 );
-   FixAndPropagate<double> fixAndPropagate{ msg, {}, random };
+   double t = 5;
+   Timer timer(t);
+   FixAndPropagate<double> fixAndPropagate{ {}, {}, random, timer };
    RandomRoundingStrategy<double> strategy{ 0, {} };
 
    ProbingView<double> view {problem, {}};
    int backtracks = 0;
    bool infeasible =
-       fixAndPropagate.fix_and_propagate( primal_solution, res, strategy, view,backtracks, true, false  );
+       fixAndPropagate.fix_and_propagate( primal_solution, res, strategy, view,backtracks, true, false, 10000 );
 
    REQUIRE( !infeasible );
    REQUIRE( res[0] == 1 );
@@ -446,13 +474,15 @@ TEST_CASE( "fix-and-propagate-farkas-backtrack", "[fix]" )
    Message msg{};
    msg.setVerbosityLevel(papilo::VerbosityLevel::kDetailed);
    RandomGenerator random( 0 );
-   FixAndPropagate<double> fixAndPropagate{ msg, {}, random };
+   double t = 5;
+   Timer timer(t);
+   FixAndPropagate<double> fixAndPropagate{ {}, {}, random, timer };
    FarkasRoundingStrategy<double> strategy{ 0, {}, false };
 
    ProbingView<double> view {problem, {}};
    int backtracks = 0;
    bool infeasible =
-       fixAndPropagate.fix_and_propagate( primal_solution, res, strategy, view, backtracks,true, false  );
+       fixAndPropagate.fix_and_propagate( primal_solution, res, strategy, view, backtracks,true, false , 10000 );
 
    REQUIRE( !infeasible );
    REQUIRE( res[0] == 1 );
@@ -479,13 +509,15 @@ TEST_CASE( "fix-and-propagate-farkas-check-within-bounds", "[fix]" )
    Message msg{};
    msg.setVerbosityLevel(papilo::VerbosityLevel::kDetailed);
    RandomGenerator random( 0 );
-   FixAndPropagate<double> fixAndPropagate{ msg, {}, random };
+   double t = 5;
+   Timer timer(t);
+   FixAndPropagate<double> fixAndPropagate{ {}, {}, random, timer };
    FarkasRoundingStrategy<double> strategy{ 0, {}, true };
 
    ProbingView<double> view {problem, {}};
    int backtracks = 0;
    bool infeasible =
-       fixAndPropagate.fix_and_propagate( primal_solution, res, strategy, view, backtracks, true, false  );
+       fixAndPropagate.fix_and_propagate( primal_solution, res, strategy, view, backtracks, true, false , 10000 );
 
    REQUIRE( !infeasible );
    REQUIRE( res[0] == 0 );
@@ -511,13 +543,15 @@ TEST_CASE( "fix-and-propagate-stop-at-infeas-false", "[fix]" )
    Message msg{};
    msg.setVerbosityLevel(papilo::VerbosityLevel::kDetailed);
    RandomGenerator random( 0 );
-   FixAndPropagate<double> fixAndPropagate{ msg, {}, random };
+   double t = 5;
+   Timer timer(t);
+   FixAndPropagate<double> fixAndPropagate{ {}, {}, random, timer };
    FractionalRoundingStrategy<double> strategy{ {}, problem };
 
    ProbingView<double> view {problem, {}};
    int backtracks = 0;
    bool infeasible =
-       fixAndPropagate.fix_and_propagate( primal_solution, res, strategy, view, backtracks, true, true  );
+       fixAndPropagate.fix_and_propagate( primal_solution, res, strategy, view, backtracks, true, true, 10000 );
 
    REQUIRE( infeasible );
    // if stop at infeasible is true the res should not be modified if infeasible
@@ -534,7 +568,9 @@ TEST_CASE( "fix-and-propagate-initial-solution-fix-to-zero", "[fix]" )
    Message msg{};
    msg.setVerbosityLevel(papilo::VerbosityLevel::kDetailed);
    RandomGenerator random( 0 );
-   FixAndPropagate<double> fixAndPropagate{ msg, {}, random };
+   double t = 5;
+   Timer timer(t);
+   FixAndPropagate<double> fixAndPropagate{ {}, {}, random, timer };
    FractionalRoundingStrategy<double> strategy{ {}, problem };
    Vec<double> res = { 0.9, 0.9, 0.6, 0.3, 0.2 };
 
@@ -558,7 +594,9 @@ TEST_CASE( "fix-and-propagate-initial-solution-fix-to-lowerbound", "[fix]" )
    Message msg{};
    msg.setVerbosityLevel(papilo::VerbosityLevel::kDetailed);
    RandomGenerator random( 0 );
-   FixAndPropagate<double> fixAndPropagate{ msg, {}, random };
+   double t = 5;
+   Timer timer(t);
+   FixAndPropagate<double> fixAndPropagate{ {}, {}, random, timer };
    FractionalRoundingStrategy<double> strategy{ {}, problem };
    Vec<double> res = { 0.9, 0.9, 0.6, 0.3, 0.2 };
 
@@ -582,7 +620,9 @@ TEST_CASE( "fix-and-propagate-initial-solution-fix-to-upperbound", "[fix]" )
    Message msg{};
    msg.setVerbosityLevel(papilo::VerbosityLevel::kDetailed);
    RandomGenerator random( 0 );
-   FixAndPropagate<double> fixAndPropagate{ msg, {}, random };
+   double t = 5;
+   Timer timer(t);
+   FixAndPropagate<double> fixAndPropagate{ {}, {}, random, timer };
    FractionalRoundingStrategy<double> strategy{ {}, problem };
    Vec<double> res = { 0.9, 0.9, 0.6, 0.3, 0.2 };
 
@@ -616,13 +656,15 @@ TEST_CASE( "fix-and-propagate-check-conflict-analysis-data", "[fix]" )
    Message msg{};
    msg.setVerbosityLevel(papilo::VerbosityLevel::kDetailed);
    RandomGenerator random( 0 );
-   FixAndPropagate<double> fixAndPropagate{ msg, {}, random };
+   double t = 5;
+   Timer timer(t);
+   FixAndPropagate<double> fixAndPropagate{ {}, {}, random, timer };
    FractionalRoundingStrategy<double> strategy{ {}, problem };
 
    ProbingView<double> view {problem, {}};
    int backtracks = 0;
    bool infeasible =
-       fixAndPropagate.fix_and_propagate( primal_solution, res, strategy, view, backtracks, true, false  );
+       fixAndPropagate.fix_and_propagate( primal_solution, res, strategy, view, backtracks, true, false, 10000 );
 
    auto changes = view.get_changes();
    auto conflicts = view.get_infeasible_rows();
