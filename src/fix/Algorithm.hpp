@@ -366,8 +366,8 @@ class Algorithm
       for( int i = 0; i < problem.getNCols(); i++ )
       {
          if( !num.isZero( problem.getObjective().coefficients[i] ) &&
-             !problem.getColFlags()[i].test( ColFlag::kIntegral ) &&
-             !num.isIntegral( problem.getObjective().coefficients[i] ) )
+             ( !problem.getColFlags()[i].test( ColFlag::kIntegral ) ||
+               !num.isIntegral( problem.getObjective().coefficients[i] ) ) )
             return 2 * num.getEpsilon();
       }
       return 1;
