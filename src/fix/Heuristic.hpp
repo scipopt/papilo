@@ -873,6 +873,7 @@ class Heuristic
                Vec<REAL>& coefficients = problem.getObjective().coefficients;
                for( int j = 0; j < reduced.size(); j++ )
                   sum.add( reduced[j] * coefficients[j] );
+               sum.add( problem.getObjective().offset );
                return sum.get();
             }
          }
