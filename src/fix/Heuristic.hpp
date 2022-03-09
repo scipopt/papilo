@@ -718,11 +718,11 @@ class Heuristic
 
             if( current_best_solution.empty() )
                msg.info(
-                   "\t\tFix and Propagate found an initial solution: {} ({:.3})!\n",
-                   best_obj_val, timer.getTime() );
+                   "\t\tFix and Propagate found an initial solution: {} at index {} ({:.3})!\n",
+                   best_obj_val, best_index, timer.getTime() );
             else
-               msg.info( "\t\tFix and Propagate found a new solution: {} ({:.3})!\n",
-                         best_obj_val, timer.getTime()  );
+               msg.info( "\t\tFix and Propagate found a new solution: {} at index {} ({:.3})!\n",
+                         best_obj_val, best_index, timer.getTime()  );
 
             current_best_solution = int_solutions[best_index];
             assert( best_obj_val == obj_value[best_index] );
