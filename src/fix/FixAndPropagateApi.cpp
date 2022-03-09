@@ -134,7 +134,7 @@ call_algorithm( void* heuristic_void_ptr, double* cont_solution, double* result,
           double time_limit = i + remaining_time_in_sec;
           double local_obj = *current_obj_value;
           heuristic->perform_fix_and_propagate(
-              sol, local_obj, res, max_backtracks, perform_one_opt, time_limit, false,
+              sol, local_obj, res, time_limit, max_backtracks, perform_one_opt, false,
               (InfeasibleCopyStrategy)infeasible_copy_strategy );
 
           if( local_obj < *current_obj_value )
@@ -168,12 +168,16 @@ call_simple_heuristic( void* heuristic_void_ptr, double* result,
 
 void
 perform_one_opt( void* heuristic_void_ptr, double* sol, int n_cols,
-                 int perform_opt_one, double* current_obj_value )
+                 int perform_opt_one, double* current_obj_value,
+                 double remaining_time_in_sec )
 {
    auto heuristic = (Heuristic<double>*)( heuristic_void_ptr );
    Vec<double> res{ sol, sol + n_cols };
 
+   double i = heuristic->get_current_time();
+   double time_limit = i + remaining_time_in_sec;
    ProbingView<double> view {heuristic-> problem, heuristic->get_num()};
-   heuristic->perform_one_opt( perform_opt_one, res, view, *current_obj_value, 0 );
+   heuristic->perform_one_opt( perform_opt_one, res, view, *current_obj_value,
+                               0, time_limit );
    std::copy( res.begin(), res.end(), sol );
 }
