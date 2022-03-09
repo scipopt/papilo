@@ -177,6 +177,6 @@ perform_one_opt( void* heuristic_void_ptr, double* sol, int n_cols,
    double time_limit = i + remaining_time_in_sec;
    ProbingView<double> view {heuristic-> problem, heuristic->get_num()};
    heuristic->perform_one_opt( perform_opt_one, res, view, *current_obj_value,
-                               0, time_limit );
+                               -1, time_limit );
    std::copy( res.begin(), res.end(), sol );
 }
