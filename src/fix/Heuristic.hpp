@@ -67,6 +67,12 @@ class Heuristic
  public:
    Problem<REAL>& problem;
 
+   Num<REAL>&
+   get_num()
+   {
+      return num;
+   }
+
  public:
    Heuristic( Message msg_, Num<REAL> num_, RandomGenerator random,
               Timer& timer_, Problem<REAL>& problem_,
@@ -284,6 +290,105 @@ class Heuristic
             return evaluate( best_obj_val, current_best_solution, copy );
          }
 
+         void perform_one_opt( int one_opt_mode, Vec<REAL>& feasible_sol,
+                               ProbingView<REAL>& view,
+                               REAL& curr_obj_value, int i )
+         {
+            if( one_opt_mode == 0){}
+            else if( one_opt_mode == 2 )
+            {
+               Vec<REAL> result = { feasible_sol };
+               for( int j = 0;
+                    j < cols_sorted_by_obj.size(); j++ )
+               {
+                  view.reset();
+                  int opt_col = cols_sorted_by_obj[j];
+                  if( num.isZero( problem.getObjective().coefficients[opt_col] ) )
+                     continue;
+                  bool is_binary =
+                      !problem.getColFlags()[opt_col].test(
+                          ColFlag::kLbInf ) &&
+                      !problem.getColFlags()[opt_col].test(
+                          ColFlag::kUbInf ) &&
+                      num.isEq( problem.getUpperBounds()[opt_col], 1 ) &&
+                      num.isEq( problem.getLowerBounds()[opt_col], 0 );
+                  if( !problem.getColFlags()[opt_col].test(
+                          ColFlag::kIntegral ) ||
+                      !is_binary )
+                     continue;
+                  REAL solution_value = feasible_sol[opt_col];
+                  if( num.isGT( problem.getObjective().coefficients[opt_col], 0 ) )
+                  {
+                     if( num.isZero( solution_value ) )
+                        continue;
+                     bool infeasible = fixAndPropagate.one_opt(
+                         feasible_sol, opt_col, 0, view, result );
+                     if( infeasible )
+                     {
+                        msg.info(
+                            "\t\t{} - OneOpt flipping variable {}: "
+                            "infeasible\n",
+                            i, opt_col );
+                        continue;
+                     }
+                     REAL value = calculate_obj_value( result );
+                     if( num.isGE( value, curr_obj_value ) )
+                        msg.info(
+                            "\t\t{} - OneOpt flipping variable {}: "
+                            "unsuccessful -> worse obj {}: \n",
+                            i, opt_col, value );
+                     else if( num.isLT( value, curr_obj_value ) )
+                     {
+                        msg.info(
+                            "\t\t{} - OneOpt flipping variable {}: "
+                            "successful -> better obj: {}\n",
+                            i, opt_col, value );
+                        feasible_sol = result;
+                        curr_obj_value = value;
+                     }
+                  }
+                  else
+                  {
+                     assert( num.isLT( problem.getObjective().coefficients[opt_col], 0 ) );
+                     if( !num.isZero( solution_value ) )
+                        continue;
+                     bool infeasible = fixAndPropagate.one_opt(
+                         feasible_sol, opt_col, 1, view, result );
+                     if( infeasible )
+                     {
+                        msg.info(
+                            "\t\t{} - OneOpt(F&P) flipping variable {}: "
+                            "infeasible\n",
+                            i, opt_col );
+                        continue;
+                     }
+                     REAL value = calculate_obj_value( result );
+                     if( num.isGE( value, curr_obj_value ) )
+                        msg.info(
+                            "\t\t{} - OneOpt(F&P) flipping variable {}: "
+                            "unsuccessful -> worse obj {}: \n",
+                            i, opt_col, value );
+                     else if( num.isLT( value, curr_obj_value ) )
+                     {
+                        msg.info(
+                            "\t\t{} - OneOpt(F&P) flipping variable {}: "
+                            "successful -> better obj: {}\n",
+                            i, opt_col, value );
+                        feasible_sol = result;
+                        curr_obj_value = value;
+                     }
+                  }
+               }
+            }
+            else if( one_opt_mode == 1 )
+            {
+               perform_one_opt_no_f_and_p( feasible_sol, view, curr_obj_value,
+                                           i );
+            }
+
+         }
+
+
          void perform_one_opt_and_conflict_analysis( int one_opt_mode )
          {
             for( int i = 0; i < constraints.size(); i++ )
@@ -335,97 +440,12 @@ class Heuristic
                                 return true;
                              } ) );
                       }
-                      else if( one_opt_mode == 0){}
-                      else if( one_opt_mode == 2 )
+                      else
                       {
                          assert( 0 == infeasible_arr[i] );
-                         Vec<REAL> result = { int_solutions[i] };
-                         for( int j = 0;
-                              j < cols_sorted_by_obj.size(); j++ )
-                         {
-                            views[i].reset();
-                            int opt_col = cols_sorted_by_obj[j];
-                            if( num.isZero( coefficients[opt_col] ) )
-                               continue;
-                            bool is_binary =
-                                !problem.getColFlags()[opt_col].test(
-                                    ColFlag::kLbInf ) &&
-                                !problem.getColFlags()[opt_col].test(
-                                    ColFlag::kUbInf ) &&
-                                num.isEq( problem.getUpperBounds()[opt_col], 1 ) &&
-                                num.isEq( problem.getLowerBounds()[opt_col], 0 );
-                            if( !problem.getColFlags()[opt_col].test(
-                                    ColFlag::kIntegral ) ||
-                                !is_binary )
-                               continue;
-                            REAL solution_value = int_solutions[i][opt_col];
-                            if( num.isGT( coefficients[opt_col], 0 ) )
-                            {
-                               if( num.isZero( solution_value ) )
-                                  continue;
-                               bool infeasible = fixAndPropagate.one_opt(
-                                   int_solutions[i], opt_col, 0, views[i], result );
-                               if( infeasible )
-                               {
-                                  msg.info(
-                                      "\t\t{} - OneOpt flipping variable {}: "
-                                      "infeasible\n",
-                                      i, opt_col );
-                                  continue;
-                               }
-                               REAL value = calculate_obj_value( result );
-                               if( num.isGE( value, obj_value[i] ) )
-                                  msg.info(
-                                      "\t\t{} - OneOpt flipping variable {}: "
-                                      "unsuccessful -> worse obj {}: \n",
-                                      i, opt_col, value );
-                               else if( num.isLT( value, obj_value[i] ) )
-                               {
-                                  msg.info(
-                                      "\t\t{} - OneOpt flipping variable {}: "
-                                      "successful -> better obj: {}\n",
-                                      i, opt_col, value );
-                                  int_solutions[i] = result;
-                                  obj_value[i] = value;
-                               }
-                            }
-                            else
-                            {
-                               assert( num.isLT( coefficients[opt_col], 0 ) );
-                               if( !num.isZero( solution_value ) )
-                                  continue;
-                               bool infeasible = fixAndPropagate.one_opt(
-                                   int_solutions[i], opt_col, 1, views[i], result );
-                               if( infeasible )
-                               {
-                                  msg.info(
-                                      "\t\t{} - OneOpt(F&P) flipping variable {}: "
-                                      "infeasible\n",
-                                      i, opt_col );
-                                  continue;
-                               }
-                               REAL value = calculate_obj_value( result );
-                               if( num.isGE( value, obj_value[i] ) )
-                                  msg.info(
-                                      "\t\t{} - OneOpt(F&P) flipping variable {}: "
-                                      "unsuccessful -> worse obj {}: \n",
-                                      i, opt_col, value );
-                               else if( num.isLT( value, obj_value[i] ) )
-                               {
-                                  msg.info(
-                                      "\t\t{} - OneOpt(F&P) flipping variable {}: "
-                                      "successful -> better obj: {}\n",
-                                      i, opt_col, value );
-                                  int_solutions[i] = result;
-                                  obj_value[i] = value;
-                               }
-                            }
-                         }
-                      }
-                      else if( one_opt_mode == 1 )
-                      {
-                         assert( 0 == infeasible_arr[i] );
-                         perform_one_opt_no_f_and_p( i );
+                         perform_one_opt( one_opt_mode, int_solutions[i],
+                                          views[i],
+                                          obj_value[i], i );
                       }
                    }
 #ifdef PAPILO_TBB
@@ -433,7 +453,9 @@ class Heuristic
 #endif
          }
 
-         void perform_one_opt_no_f_and_p( int i )
+         void perform_one_opt_no_f_and_p( Vec<REAL>& feasible_sol,
+                                          ProbingView<REAL>& view,
+                                          REAL& curr_obj_value, int i )
          {
             Vec<REAL> coefficients = problem.getObjective().coefficients;
 
@@ -450,7 +472,7 @@ class Heuristic
                if( !problem.getColFlags()[opt_col].test( ColFlag::kIntegral ) ||
                    !is_binary )
                   continue;
-               REAL solution_value = int_solutions[i][opt_col];
+               REAL solution_value = feasible_sol[opt_col];
                REAL new_solution_value;
                if( num.isGT( coefficients[opt_col], 0 ) )
                {
@@ -465,16 +487,16 @@ class Heuristic
                      continue;
                   new_solution_value = 1;
                }
-               bool feasible = is_new_val_feasible( i, opt_col, new_solution_value);
+               bool feasible = is_new_val_feasible( feasible_sol, opt_col, new_solution_value);
                if( feasible )
                {
-                  int_solutions[i][opt_col] = new_solution_value;
-                  REAL value = calculate_obj_value( int_solutions[i] );
+                  feasible_sol[opt_col] = new_solution_value;
+                  REAL value = calculate_obj_value( feasible_sol );
                   msg.info(
                       "\t\t{} - OneOpt flipping variable {}: "
                       "successful -> better obj: {}\n",
                       i, opt_col, value );
-                  obj_value[i] = value;
+                  curr_obj_value = value;
                }
                else
                {
@@ -485,7 +507,7 @@ class Heuristic
             }
          }
 
-         bool is_new_val_feasible( int i, int opt_col, REAL new_solution_value)
+         bool is_new_val_feasible( Vec<REAL>& feasible_sol, int opt_col, REAL new_solution_value)
          {
             auto col_indices =
                 problem.getConstraintMatrix().getColumnCoefficients(
@@ -507,7 +529,7 @@ class Heuristic
                      sum.add( new_solution_value * value );
                   }
                   else
-                     sum.add( int_solutions[i][index] * value );
+                     sum.add( feasible_sol[index] * value );
                }
                REAL activity = sum.get();
                auto flag = problem.getConstraintMatrix().getRowFlags()[row];
