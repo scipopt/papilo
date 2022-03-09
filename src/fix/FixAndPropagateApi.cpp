@@ -69,19 +69,10 @@ setup( const char* filename, int* result, int verbosity_level,
    num.setEpsilon( tolerance );
    num.setFeasTol( tolerance );
    Problem<double>* problem;
-   double offset_for_cutoff = -1;
    if( add_cutoff_constraint )
-   {
       problem = new Problem<double>(add_cutoff_objective(prob.get(), num));
-      offset_for_cutoff = calculate_cutoff_offset( *problem, num );
-      assert( num.isGT( offset_for_cutoff, 0 ) &&
-              num.isLE( offset_for_cutoff, 1 ) );
-   }
    else
       problem = new Problem<double>( prob.get() );
-
-
-
    problem->recomputeAllActivities();
 
    Message msg{};
@@ -92,7 +83,12 @@ setup( const char* filename, int* result, int verbosity_level,
    auto heuristic =
        new Heuristic<double>{ msg, num, random, t, *problem, storage, false };
    if( add_cutoff_constraint )
+   {
+      double offset_for_cutoff = calculate_cutoff_offset( *problem, num );
+      assert( num.isGT( offset_for_cutoff, 0 ) &&
+              num.isLE( offset_for_cutoff, 1 ) );
       heuristic->set_offset_for_cutoff( offset_for_cutoff );
+   }
    heuristic->setup( random );
    *result = 0;
    return heuristic;
@@ -342,7 +338,8 @@ calculate_cutoff_offset( const Problem<double>& problem, Num<double>& num )
    for( int i = 0; i < problem.getNCols(); i++ )
    {
       if( !num.isZero( problem.getObjective().coefficients[i] ) &&
-          !problem.getColFlags()[i].test( ColFlag::kIntegral ) )
+          !problem.getColFlags()[i].test( ColFlag::kIntegral ) &&
+          !num.isIntegral( problem.getObjective().coefficients[i] ) )
          return 2 * num.getEpsilon();
    }
    return 1;
