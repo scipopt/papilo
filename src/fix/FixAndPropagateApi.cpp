@@ -222,6 +222,12 @@ call_algorithm( void* heuristic_void_ptr, double* cont_solution, double* result,
                  heuristic->problem.getRowFlags()[0].test( RowFlag::kRhsInf ) );
              assert(
                  heuristic->problem.getRowFlags()[0].test( RowFlag::kLhsInf ) );
+             heuristic->get_message().info(
+                 "update Cutoff constraint from {} ({}) to {}.\n",
+                 heuristic->problem.getConstraintMatrix().getRightHandSides()[0],
+                 heuristic->problem.getRowFlags()[0].test( RowFlag::kRhsInf ),
+                 *current_obj_value
+                 );
              heuristic->problem.getConstraintMatrix().getRightHandSides()[0] =
                  *current_obj_value;
              heuristic->problem.getRowFlags()[0].unset( RowFlag::kRhsInf );
