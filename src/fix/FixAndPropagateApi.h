@@ -54,6 +54,10 @@ call_algorithm( void* heuristic_void_ptr, double* cont_solution, double* result,
                 int size_of_constraints, int max_backtracks,
                 int perform_one_opt, double remaining_time_in_sec );
 
+void
+perform_one_opt( void* heuristic_void_ptr, double* sol, int n_cols,
+                 int perform_opt_one, double* current_obj_value );
+
 int
 call_simple_heuristic( void* heuristic_void_ptr, double* result,
                        double* current_obj_value );
