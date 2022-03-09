@@ -52,7 +52,7 @@ call_algorithm( void* heuristic_void_ptr, double* cont_solution, double* result,
                 int n_cols, double* current_obj_value,
                 int infeasible_copy_strategy, int apply_conflicts,
                 int size_of_constraints, int max_backtracks,
-                int perform_one_opt, int remaining_time_in_sec );
+                int perform_one_opt, double remaining_time_in_sec );
 
 int
 call_simple_heuristic( void* heuristic_void_ptr, double* result,
