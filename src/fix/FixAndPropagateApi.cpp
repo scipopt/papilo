@@ -36,7 +36,7 @@
 using namespace papilo;
 
 void*
-setup( const char* filename, int* result, int verbosity_level )
+setup( const char* filename, int* result, int verbosity_level, double current_time_stamp )
 {
 
    std::string filename_as_string( filename );
@@ -50,10 +50,9 @@ setup( const char* filename, int* result, int verbosity_level )
       *result = -1;
       return nullptr;
    }
-   double time = 0;
    double tolerance = 1e-5;
    RandomGenerator random( 0 );
-   Timer t{ time };
+   Timer t{ current_time_stamp };
    auto problem = new Problem<double>( prob.get() );
    problem->recomputeAllActivities();
    Message msg{};

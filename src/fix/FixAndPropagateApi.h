@@ -25,12 +25,12 @@
 extern "C" {
 #endif
 
-void*
-setup( const char* filename, int* result, int verbosity_level );
+   void*
+   setup( const char* filename, int* result, int verbosity_level,
+          double current_time_stamp );
 
-void
-delete_problem_instance( void* heuristic_void_ptr );
-
+   void
+   delete_problem_instance( void* heuristic_void_ptr );
 
 /***
  * applies the fix and propagate algorithm including 1-opt
@@ -47,21 +47,21 @@ delete_problem_instance( void* heuristic_void_ptr );
  * @param remaining_time_in_sec remaining time in seconds
   @return whether a (better) integer feasible solution was found
  */
-int
-call_algorithm( void* heuristic_void_ptr, double* cont_solution, double* result,
-                int n_cols, double* current_obj_value,
-                int infeasible_copy_strategy, int apply_conflicts,
-                int size_of_constraints, int max_backtracks,
-                int perform_one_opt, double remaining_time_in_sec );
+   int
+   call_algorithm( void* heuristic_void_ptr, double* cont_solution,
+                   double* result, int n_cols, double* current_obj_value,
+                   int infeasible_copy_strategy, int apply_conflicts,
+                   int size_of_constraints, int max_backtracks,
+                   int perform_one_opt, double remaining_time_in_sec );
 
-void
-perform_one_opt( void* heuristic_void_ptr, double* sol, int n_cols,
-                 int perform_opt_one, double* current_obj_value,
-                 double remaining_time_in_sec );
+   void
+   perform_one_opt( void* heuristic_void_ptr, double* sol, int n_cols,
+                    int perform_opt_one, double* current_obj_value,
+                    double remaining_time_in_sec );
 
-int
-call_simple_heuristic( void* heuristic_void_ptr, double* result,
-                       double* current_obj_value );
+   int
+   call_simple_heuristic( void* heuristic_void_ptr, double* result,
+                          double* current_obj_value );
 
 #ifdef __cplusplus
 }

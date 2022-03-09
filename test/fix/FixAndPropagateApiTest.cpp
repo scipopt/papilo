@@ -28,7 +28,7 @@
 TEST_CASE( "fix-and-propagate-api", "[fix]" )
 {
    int result = 1;
-   auto problem_ptr = setup( "./resources/api_test.mps", &result, 3 );
+   auto problem_ptr = setup( "./resources/api_test.mps", &result, 3, 0 );
    assert( result == 0 );
    int n_cols = 3;
    auto primal_solution = new double[n_cols];
@@ -46,7 +46,7 @@ TEST_CASE( "fix-and-propagate-api", "[fix]" )
 TEST_CASE( "fix-and-propagate-api-simple-heuristic", "[fix]" )
 {
    int result = 1;
-   auto problem_ptr = setup( "./resources/api_test.mps", &result, 4 );
+   auto problem_ptr = setup( "./resources/api_test.mps", &result, 4, 0 );
    assert( result == 0 );
    int n_cols = 3;
    auto sol = new double[n_cols];
