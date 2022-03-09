@@ -28,6 +28,7 @@
 #include "papilo/io/MpsParser.hpp"
 #include <string>
 
+
 #ifdef FIX_DEBUG
 #include "papilo/io/SolWriter.hpp"
 #include "papilo/io/MpsWriter.hpp"
@@ -35,10 +36,15 @@
 
 using namespace papilo;
 
-void*
-setup( const char* filename, int* result, int verbosity_level, double current_time_stamp )
-{
+Problem<double>
+add_cutoff_objective( Problem<double>& problem, Num<double>& num );
 
+void*
+setup( const char* filename, int* result, int verbosity_level,
+       double current_time_stamp, int add_cutoff_constraint )
+{
+   assert( verbosity_level <= 5 && verbosity_level >= 0 );
+   assert( add_cutoff_constraint <= 1 && add_cutoff_constraint >= 0 );
    std::string filename_as_string( filename );
    boost::optional<Problem<double>> prob;
    {
@@ -53,20 +59,116 @@ setup( const char* filename, int* result, int verbosity_level, double current_ti
    double tolerance = 1e-5;
    RandomGenerator random( 0 );
    Timer t{ current_time_stamp };
-   auto problem = new Problem<double>( prob.get() );
-   problem->recomputeAllActivities();
-   Message msg{};
-   msg.setVerbosityLevel( static_cast<VerbosityLevel>(verbosity_level) );
-   PostsolveStorage<double> storage{};
    Num<double> num{};
    num.setEpsilon( tolerance );
    num.setFeasTol( tolerance );
+   Problem<double>* problem;
+   if( add_cutoff_constraint )
+   {
+      problem = new Problem<double>(add_cutoff_objective(prob.get(), num));
+   }
+   else
+      problem = new Problem<double>( prob.get() );
+
+   problem->recomputeAllActivities();
+
+   Message msg{};
+   msg.setVerbosityLevel( static_cast<VerbosityLevel>(verbosity_level) );
+   PostsolveStorage<double> storage{};
+
    assert( num.isEq( 80, 80 + tolerance / 10 ) );
    auto heuristic =
        new Heuristic<double>{ msg, num, random, t, *problem, storage, false };
    heuristic->setup( random );
    *result = 0;
    return heuristic;
+}
+
+Problem<double>
+add_cutoff_objective( Problem<double>& problem, Num<double>& num )
+{
+   ProblemBuilder<double> builder;
+
+   ConstraintMatrix<double>& matrix = problem.getConstraintMatrix();
+   Vec<ColFlags>& colFlags = problem.getColFlags();
+   Vec<RowFlags>& rowFlags = matrix.getRowFlags();
+   Vec<int>& rowSizes = problem.getRowSizes();
+   Vec<double>& coefficients = problem.getObjective().coefficients;
+   Vec<double>& leftHandSides = matrix.getLeftHandSides();
+   Vec<double>& rightHandSides = matrix.getRightHandSides();
+   const Vec<RowActivity<double>>& activities = problem.getRowActivities();
+
+   int nnz = matrix.getNnz();
+   int ncols = problem.getNCols();
+   int nrows = problem.getNRows();
+   int new_nnz = 0;
+   Vec<int> cut_off_indices{};
+   Vec<int> cut_off_values{};
+   for( int i = 0; i < ncols; i++ )
+   {
+      if( !num.isZero( coefficients[i] ) )
+      {
+         new_nnz++;
+         cut_off_indices.push_back( i );
+         cut_off_values.push_back( coefficients[i] );
+      }
+   }
+
+   builder.reserve( nnz + new_nnz, nrows + 1, ncols );
+
+   int rowcols_obj[new_nnz];
+   double rowvals_obj[new_nnz];
+   std::copy( cut_off_indices.begin(), cut_off_indices.end(), rowcols_obj );
+   std::copy( cut_off_values.begin(), cut_off_values.end(), rowvals_obj );
+
+   /* set up rows */
+   builder.setNumRows( nrows + 1 );
+
+   builder.addRowEntries( 0, new_nnz, rowcols_obj, rowvals_obj );
+   builder.setRowLhs( 0, -1 );
+   int rhsval = 2;
+   builder.setRowRhs( 0, rhsval );
+   bool infinite = true;
+   builder.setRowLhsInf( 0, infinite );
+   builder.setRowRhsInf( 0, infinite );
+   builder.setCutoffConstraint( 0, true );
+   builder.setConflictConstraint( 0, false );
+
+   for( int i = 0; i < nrows; ++i )
+   {
+      const SparseVectorView<double>& view = matrix.getRowCoefficients( i );
+      const int* rowcols = view.getIndices();
+      const double* rowvals = view.getValues();
+      int rowlen = view.getLength();
+      double lhs = leftHandSides[i];
+      double rhs = rightHandSides[i];
+
+      builder.addRowEntries( i + 1, rowlen, rowcols, rowvals );
+      builder.setRowLhs( i + 1, lhs );
+      builder.setRowRhs( i + 1, rhs );
+      builder.setRowLhsInf( i + 1, rowFlags[i].test( RowFlag::kLhsInf ) );
+      builder.setRowRhsInf( i + 1, rowFlags[i].test( RowFlag::kRhsInf ) );
+      builder.setHardConstraint( i + 1, rowFlags[i].test( RowFlag::kHardConstraint ) );
+      builder.setConflictConstraint( i + 1, rowFlags[i].test(
+                                                RowFlag::kConflictConstraint ) );
+   }
+
+   /* set up columns */
+   builder.setNumCols( ncols );
+   for( int i = 0; i < ncols; ++i )
+   {
+      builder.setColLb( i, problem.getLowerBounds()[i] );
+      builder.setColUb( i, problem.getUpperBounds()[i] );
+
+      auto flags = colFlags[i];
+      builder.setColLbInf( i, flags.test( ColFlag::kLbInf ) );
+      builder.setColUbInf( i, flags.test( ColFlag::kUbInf ) );
+      builder.setColIntegral( i, flags.test( ColFlag::kIntegral ) );
+
+      builder.setObj( i, coefficients[i] );
+   }
+   builder.setObjOffset( problem.getObjective().offset );
+   return (builder.build());
 }
 
 void
@@ -110,6 +212,19 @@ call_algorithm( void* heuristic_void_ptr, double* cont_solution, double* result,
                  heuristic->problem.getNRows() );
              heuristic->problem.recomputeAllActivities();
              heuristic->get_derived_conflicts().clear();
+          }
+          if( heuristic->problem.getRowFlags()[0].test(
+                  RowFlag::kCutoffConstraint ) )
+          {
+             assert(
+                 *current_obj_value <= heuristic->problem.getConstraintMatrix()
+                                           .getRightHandSides()[0] ||
+                 heuristic->problem.getRowFlags()[0].test( RowFlag::kRhsInf ) );
+             assert(
+                 heuristic->problem.getRowFlags()[0].test( RowFlag::kLhsInf ) );
+             heuristic->problem.getConstraintMatrix().getRightHandSides()[0] =
+                 *current_obj_value;
+             heuristic->problem.getRowFlags()[0].unset( RowFlag::kRhsInf );
           }
           Vec<double> sol( cont_solution, cont_solution + n_cols );
           Vec<double> res{};

@@ -27,7 +27,7 @@ extern "C" {
 
    void*
    setup( const char* filename, int* result, int verbosity_level,
-          double current_time_stamp );
+          double current_time_stamp, int add_cutoff_constraint );
 
    void
    delete_problem_instance( void* heuristic_void_ptr );

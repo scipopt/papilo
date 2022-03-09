@@ -29,7 +29,7 @@ int
 main( void )
 {
    int result = 1;
-   void* heuristic = setup( "./../../resources/api_test.mps", &result, 4, 0 );
+   void* heuristic = setup( "./../../resources/api_test.mps", &result, 4, 0, 0 );
    assert( result == 0 );
    int n_cols = 3;
    double* primal_solution = malloc( n_cols * sizeof( int ) );
