@@ -184,7 +184,7 @@ class Heuristic
       return (REAL)timer.getTime();
    }
 
-       bool
+   bool
    find_initial_solution( REAL& current_objective,
                           Vec<REAL>& current_best_solution )
    {
@@ -271,6 +271,8 @@ class Heuristic
 #endif
             msg.info( "\t\tstarting OneOpt/ConflictAnalysis - {} s\n",
                       timer.getTime() );
+            if( timer.getTime() >= time_limit )
+               return false;
             perform_one_opt_and_conflict_analysis( perform_one_opt, time_limit );
             Vec<unsigned int> hashes;
             int redundant_conflicts = 0;
