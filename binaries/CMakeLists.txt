@@ -98,8 +98,8 @@ if(Boost_IOSTREAMS_FOUND AND Boost_SERIALIZATION_FOUND AND Boost_PROGRAM_OPTIONS
    add_executable(convMPS EXCLUDE_FROM_ALL ${CMAKE_CURRENT_LIST_DIR}/../src/convMPS.cpp)
    set_target_properties(convMPS PROPERTIES OUTPUT_NAME convMPS RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
    target_link_libraries(convMPS papilo-core ${Boost_LIBRARIES})
-
-
+else()
+   message(WARNING "Executable of PaPILO is not built because Boost iostreams, serialization or program options is missing")
 endif()
 
 #TODO: consider case Gurobi and SCIP are build
