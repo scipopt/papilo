@@ -176,7 +176,6 @@ perform_one_opt( void* heuristic_void_ptr, double* sol, int n_cols,
 
    double i = heuristic->get_current_time();
    double time_limit = i + remaining_time_in_sec;
-   double local_obj = *current_obj_value;
    ProbingView<double> view {heuristic-> problem, heuristic->get_num()};
    heuristic->perform_one_opt( perform_opt_one, res, view, *current_obj_value,
                                0, time_limit );
