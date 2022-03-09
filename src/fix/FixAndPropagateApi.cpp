@@ -96,7 +96,7 @@ call_algorithm( void* heuristic_void_ptr, double* cont_solution, double* result,
                 int n_cols, double* current_obj_value,
                 int infeasible_copy_strategy, int apply_conflicts,
                 int size_of_constraints, int max_backtracks,
-                int perform_one_opt, int remaining_time_in_sec )
+                int perform_one_opt, double remaining_time_in_sec )
 {
    assert( infeasible_copy_strategy >= 0 && infeasible_copy_strategy <= 6 );
    assert( apply_conflicts >= 0 && apply_conflicts <= 1 );
