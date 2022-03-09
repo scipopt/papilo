@@ -271,7 +271,7 @@ class Heuristic
 #endif
             msg.info( "\t\tstarting OneOpt/ConflictAnalysis - {} s\n",
                       timer.getTime() );
-            perform_one_opt_and_conflict_analysis( perform_one_opt );
+            perform_one_opt_and_conflict_analysis( perform_one_opt, time_limit );
             Vec<unsigned int> hashes;
             int redundant_conflicts = 0;
             for( auto& cs : constraints )
@@ -298,7 +298,7 @@ class Heuristic
 
          void perform_one_opt( int one_opt_mode, Vec<REAL>& feasible_sol,
                                ProbingView<REAL>& view,
-                               REAL& curr_obj_value, int i )
+                               REAL& curr_obj_value, int i, REAL time_limit )
          {
             if( one_opt_mode == 0){}
             else if( one_opt_mode == 2 )
@@ -307,6 +307,8 @@ class Heuristic
                for( int j = 0;
                     j < cols_sorted_by_obj.size(); j++ )
                {
+                  if( timer.getTime() >= time_limit )
+                     return;
                   view.reset();
                   int opt_col = cols_sorted_by_obj[j];
                   if( num.isZero( problem.getObjective().coefficients[opt_col] ) )
@@ -389,13 +391,13 @@ class Heuristic
             else if( one_opt_mode == 1 )
             {
                perform_one_opt_no_f_and_p( feasible_sol, view, curr_obj_value,
-                                           i );
+                                           i, time_limit );
             }
 
          }
 
 
-         void perform_one_opt_and_conflict_analysis( int one_opt_mode )
+         void perform_one_opt_and_conflict_analysis( int one_opt_mode, REAL time_limit )
          {
             for( int i = 0; i < constraints.size(); i++ )
                constraints[i].clear();
@@ -451,7 +453,7 @@ class Heuristic
                          assert( 0 == infeasible_arr[i] );
                          perform_one_opt( one_opt_mode, int_solutions[i],
                                           views[i],
-                                          obj_value[i], i );
+                                          obj_value[i], i, time_limit );
                       }
                    }
 #ifdef PAPILO_TBB
@@ -461,12 +463,14 @@ class Heuristic
 
          void perform_one_opt_no_f_and_p( Vec<REAL>& feasible_sol,
                                           ProbingView<REAL>& view,
-                                          REAL& curr_obj_value, int i )
+                                          REAL& curr_obj_value, int i, REAL time_limit )
          {
             Vec<REAL> coefficients = problem.getObjective().coefficients;
 
             for( int j = 0; j < cols_sorted_by_obj.size();j++ )
             {
+               if( timer.getTime() >= time_limit )
+                  return;
                int opt_col = cols_sorted_by_obj[j];
                if( num.isZero( coefficients[opt_col] ) )
                   continue;
