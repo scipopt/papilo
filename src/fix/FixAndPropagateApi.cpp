@@ -51,34 +51,20 @@ setup( const char* filename, int* result, int verbosity_level )
       return nullptr;
    }
    double time = 0;
+   double tolerance = 1e-5;
    RandomGenerator random( 0 );
    Timer t{ time };
    auto problem = new Problem<double>( prob.get() );
    problem->recomputeAllActivities();
    Message msg{};
-   switch( verbosity_level )
-   {
-   case 0:
-      msg.setVerbosityLevel( papilo::VerbosityLevel::kQuiet );
-      break;
-   case 1:
-      msg.setVerbosityLevel( papilo::VerbosityLevel::kError );
-      break;
-   case 2:
-      msg.setVerbosityLevel( papilo::VerbosityLevel::kWarning );
-      break;
-   case 3:
-      msg.setVerbosityLevel( papilo::VerbosityLevel::kInfo );
-      break;
-   case 4:
-      msg.setVerbosityLevel( papilo::VerbosityLevel::kDetailed );
-      break;
-   default:
-      assert( false );
-   }
+   msg.setVerbosityLevel( static_cast<VerbosityLevel>(verbosity_level) );
    PostsolveStorage<double> storage{};
+   Num<double> num{};
+   num.setEpsilon( tolerance );
+   num.setFeasTol( tolerance );
+   assert( num.isEq( 80, 80 + tolerance / 10 ) );
    auto heuristic =
-       new Heuristic<double>{ msg, {}, random, t, *problem, storage, false };
+       new Heuristic<double>{ msg, num, random, t, *problem, storage, false };
    heuristic->setup( random );
    *result = 0;
    return heuristic;
@@ -105,6 +91,7 @@ call_algorithm( void* heuristic_void_ptr, double* cont_solution, double* result,
    assert( size_of_constraints >= 0 );
    assert( n_cols ==
            ( (Heuristic<double>*)( heuristic_void_ptr ) )->problem.getNCols() );
+
 #ifdef PAPILO_TBB
    tbb::task_arena arena( 7 );
 
