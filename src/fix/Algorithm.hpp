@@ -215,7 +215,7 @@ class Algorithm
                     (int)service.get_derived_conflicts().size();
 
                 bool sol_updated = service.perform_fix_and_propagate(
-                    primal_heur_sol, best_obj_value, best_solution );
+                    primal_heur_sol, best_obj_value, best_solution, alg_parameter.time_limit );
                 if( sol_updated )
                 {
                    if( round_first_solution == -1 )

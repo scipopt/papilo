@@ -37,7 +37,7 @@ TEST_CASE( "fix-and-propagate-api", "[fix]" )
       primal_solution[i] = ( 1.0 + i ) / 10.0;
    double val = 50;
    bool success = call_algorithm( problem_ptr, primal_solution, sol, n_cols,
-                                  &val, 0, 0 , 0, 1, 1);
+                                  &val, 0, 0 , 0, 1, 1, 0);
    REQUIRE( success );
    REQUIRE( val == 9 );
    delete_problem_instance( problem_ptr );
@@ -79,10 +79,9 @@ TEST_CASE( "fix-and-propagate-api-simple-heuristic", "[fix]" )
 //          heuristic->problem.getVariableNames(), solution );
 //      double* a = &solution.primal[0];
 //
-//      assert( success );
-//      double val = 50;
-//      success =
-//          call_algorithm( problem_ptr, a, sol, n_cols, &val, 0, 0, 0, 1, 1 );
-//
-//      delete_problem_instance( problem_ptr );
-//}
+//    assert(success);
+//    double val = 50;
+//    success = call_algorithm( problem_ptr, a, sol, n_cols, &val,  0, 0, 0, 1, 0, 10000 );
+//    delete_problem_instance( problem_ptr );
+//    assert(success);
+// }

@@ -96,7 +96,7 @@ call_algorithm( void* heuristic_void_ptr, double* cont_solution, double* result,
                 int n_cols, double* current_obj_value,
                 int infeasible_copy_strategy, int apply_conflicts,
                 int size_of_constraints, int max_backtracks,
-                int perform_one_opt )
+                int perform_one_opt, double remaining_time_in_sec )
 {
    assert( infeasible_copy_strategy >= 0 && infeasible_copy_strategy <= 6 );
    assert( apply_conflicts >= 0 && apply_conflicts <= 1 );
@@ -143,9 +143,11 @@ call_algorithm( void* heuristic_void_ptr, double* cont_solution, double* result,
                                         row_mapping, col_mapping );
 #endif
 
+          double i = heuristic->get_current_time();
+          double time_limit = i + remaining_time_in_sec;
           double local_obj = *current_obj_value;
           heuristic->perform_fix_and_propagate(
-              sol, local_obj, res, max_backtracks, perform_one_opt, false,
+              sol, local_obj, res, max_backtracks, perform_one_opt, time_limit, false,
               (InfeasibleCopyStrategy)infeasible_copy_strategy );
 
           if( local_obj < *current_obj_value )
