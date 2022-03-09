@@ -212,7 +212,7 @@ class Heuristic
 #endif
             }
             obj_value[i] = calculate_obj_value( int_solutions[i] );
-            msg.info( "\t\tInitial sol {} found obj value {} ({})!\n", i,
+            msg.info( "\t\tInitial sol {} found obj value {} ({:.3})!\n", i,
                       obj_value[i], timer.getTime() );
 #ifndef PAPILO_TBB
             current_best_solution = int_solutions[i];
@@ -269,7 +269,7 @@ class Heuristic
 #ifdef PAPILO_TBB
                 } );
 #endif
-            msg.info( "\t\tstarting 1-opt/ConflictAnalysis - {} s\n",
+            msg.info( "\t\tstarting 1-opt/ConflictAnalysis - {:.3} s\n",
                       timer.getTime() );
             if( timer.getTime() >= time_limit )
                return false;
@@ -294,7 +294,7 @@ class Heuristic
             }
             msg.info( "\t\tRedundant conflicts {}/{}\n", redundant_conflicts,
                       redundant_conflicts + derived_conflicts.size() );
-            msg.info( "\t\tTime in F&P {}\n", ( timer.getTime() - start ) );
+            msg.info( "\t\tTime in F&P {:.3}\n", ( timer.getTime() - start ) );
             return evaluate( best_obj_val, current_best_solution, copy );
          }
 
@@ -358,7 +358,7 @@ class Heuristic
                      {
                         msg.info(
                             "\t\t{} - 1-opt flipping variable {}: "
-                            "successful -> better obj: {} ({})\n",
+                            "successful -> better obj: {} ({:.3})\n",
                             i, opt_col, value, timer.getTime() );
                         successful_one_opts++;
                         feasible_sol = result;
@@ -394,7 +394,7 @@ class Heuristic
                      {
                         msg.info(
                             "\t\t{} - 1-opt(F&P) flipping variable {}: "
-                            "successful -> better obj: {} ({})\n",
+                            "successful -> better obj: {} ({:.3})\n",
                             i, opt_col, value, timer.getTime() );
                         successful_one_opts++;
                         feasible_sol = result;
@@ -525,7 +525,7 @@ class Heuristic
                   REAL value = calculate_obj_value( feasible_sol );
                   msg.info(
                       "\t\t{} - 1-opt flipping variable {}: "
-                      "successful -> better obj: {} ({})\n",
+                      "successful -> better obj: {} ({:.3})\n",
                       i, opt_col, value, timer.getTime() );
                   successful_one_opts++;
                   curr_obj_value = value;
@@ -718,10 +718,10 @@ class Heuristic
 
             if( current_best_solution.empty() )
                msg.info(
-                   "\t\tFix and Propagate found an initial solution: {} ({})!\n",
+                   "\t\tFix and Propagate found an initial solution: {} ({:.3})!\n",
                    best_obj_val, timer.getTime() );
             else
-               msg.info( "\t\tFix and Propagate found a new solution: {} ({})!\n",
+               msg.info( "\t\tFix and Propagate found a new solution: {} ({:.3})!\n",
                          best_obj_val, timer.getTime()  );
 
             current_best_solution = int_solutions[best_index];
