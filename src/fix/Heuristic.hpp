@@ -63,6 +63,7 @@ class Heuristic
    PostsolveStorage<REAL>& postsolve_storage;
    bool calculate_original = false;
    FixAndPropagate<REAL> fixAndPropagate;
+   double offset_for_cutoff = -1;
 
  public:
    Problem<REAL>& problem;
@@ -84,7 +85,7 @@ class Heuristic
          conflict_analysis( { msg, num, timer, problem_ } ),
          postsolve_storage( postsolve_storage_ ),
          calculate_original( calculate_original_ ),
-         fixAndPropagate( { msg, num, random, timer } )
+         fixAndPropagate( { msg, num, random, timer })
    {
    }
 
@@ -183,6 +184,20 @@ class Heuristic
    {
       return (REAL)timer.getTime();
    }
+
+   REAL
+   get_offset_for_cutoff()
+   {
+      return offset_for_cutoff;
+   }
+
+   REAL
+   set_offset_for_cutoff(REAL value)
+   {
+      offset_for_cutoff= value;
+   }
+
+
 
    bool
    find_initial_solution( REAL& current_objective,

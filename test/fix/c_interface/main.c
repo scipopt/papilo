@@ -39,7 +39,7 @@ main( void )
    double current_solution = 50;
 
    int success = call_algorithm( heuristic, primal_solution, sol, n_cols,
-                                 &current_solution, 0, 0, 0, 1, 1, 10000 );
+                                 &current_solution,0,  0, 0, 0, 1, 1, 10000 );
 
    // should find a better solution
    assert( success );
