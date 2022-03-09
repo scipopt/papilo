@@ -191,7 +191,7 @@ class Heuristic
       return offset_for_cutoff;
    }
 
-   REAL
+   void
    set_offset_for_cutoff(REAL value)
    {
       offset_for_cutoff= value;
