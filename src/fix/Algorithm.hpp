@@ -434,7 +434,7 @@ class Algorithm
       int nrows = problem.getNRows();
       int new_nnz = 0;
       Vec<int> cut_off_indices{};
-      Vec<int> cut_off_values{};
+      Vec<REAL> cut_off_values{};
       for( int i = 0; i < ncols; i++ )
       {
          if( !num.isZero( coefficients[i] ) )

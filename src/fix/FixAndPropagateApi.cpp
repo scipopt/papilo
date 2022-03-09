@@ -103,7 +103,7 @@ add_cutoff_objective( Problem<double>& problem, Num<double>& num )
    int nrows = problem.getNRows();
    int new_nnz = 0;
    Vec<int> cut_off_indices{};
-   Vec<int> cut_off_values{};
+   Vec<double> cut_off_values{};
    for( int i = 0; i < ncols; i++ )
    {
       if( !num.isZero( coefficients[i] ) )
@@ -148,7 +148,6 @@ add_cutoff_objective( Problem<double>& problem, Num<double>& num )
       builder.setRowRhs( i + 1, rhs );
       builder.setRowLhsInf( i + 1, rowFlags[i].test( RowFlag::kLhsInf ) );
       builder.setRowRhsInf( i + 1, rowFlags[i].test( RowFlag::kRhsInf ) );
-      builder.setHardConstraint( i + 1, rowFlags[i].test( RowFlag::kHardConstraint ) );
       builder.setConflictConstraint( i + 1, rowFlags[i].test(
                                                 RowFlag::kConflictConstraint ) );
    }
