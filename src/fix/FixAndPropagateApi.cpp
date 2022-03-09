@@ -143,8 +143,8 @@ call_algorithm( void* heuristic_void_ptr, double* cont_solution, double* result,
                                         row_mapping, col_mapping );
 #endif
 
-          int i = heuristic->get_current_time();
-          int time_limit = i + remaining_time_in_sec;
+          double i = heuristic->get_current_time();
+          double time_limit = i + remaining_time_in_sec;
           double local_obj = *current_obj_value;
           heuristic->perform_fix_and_propagate(
               sol, local_obj, res, max_backtracks, perform_one_opt, time_limit, false,

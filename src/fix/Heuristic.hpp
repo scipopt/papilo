@@ -172,10 +172,10 @@ class Heuristic
       return msg;
    }
 
-   int
+   REAL
    get_current_time()
    {
-      return (int)timer.getTime();
+      return (REAL)timer.getTime();
    }
 
        bool
@@ -222,7 +222,7 @@ class Heuristic
 
          bool perform_fix_and_propagate(
              const Vec<REAL>& primal_heur_sol, REAL& best_obj_val,
-             Vec<REAL>& current_best_solution, int time_limit, int max_backtracks = 1,
+             Vec<REAL>& current_best_solution, REAL time_limit, int max_backtracks = 1,
              int perform_one_opt = 1, bool stop_at_infeasible = true,
              InfeasibleCopyStrategy copy = InfeasibleCopyStrategy::kNone )
          {

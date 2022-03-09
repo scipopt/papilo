@@ -84,7 +84,7 @@ class FixAndPropagate
                       RoundingStrategy<REAL>& strategy,
                       ProbingView<REAL>& probing_view,
                       int& successful_backtracks, int max_backtracks,
-                      bool stop_at_infeasibility, int time_limit )
+                      bool stop_at_infeasibility, REAL time_limit )
    {
       probing_view.reset();
       // if no backtrack just "dive" to the node whether it is infeasible or not
