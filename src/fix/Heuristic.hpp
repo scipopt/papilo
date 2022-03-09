@@ -302,9 +302,13 @@ class Heuristic
                                ProbingView<REAL>& view,
                                REAL& curr_obj_value, int i, REAL time_limit )
          {
+
             if( one_opt_mode == 0){}
             else if( one_opt_mode == 2 )
             {
+               int infeasible_one_opts = 0;
+               int unsuccessful_one_opts = 0;
+               int successful_one_opts = 0;
                Vec<REAL> result = { feasible_sol };
                for( int j = 0;
                     j < cols_sorted_by_obj.size(); j++ )
@@ -335,24 +339,28 @@ class Heuristic
                          feasible_sol, opt_col, 0, view, result );
                      if( infeasible )
                      {
-                        msg.info(
+                        msg.detailed(
                             "\t\t{} - OneOpt flipping variable {}: "
                             "infeasible\n",
                             i, opt_col );
+                        infeasible_one_opts ++;
                         continue;
                      }
                      REAL value = calculate_obj_value( result );
                      if( num.isGE( value, curr_obj_value ) )
-                        msg.info(
-                            "\t\t{} - OneOpt flipping variable {}: "
-                            "unsuccessful -> worse obj {}: \n",
-                            i, opt_col, value );
+                     {
+                        msg.detailed( "\t\t{} - OneOpt flipping variable {}: "
+                                  "unsuccessful -> worse obj {}: \n",
+                                  i, opt_col, value );
+                        unsuccessful_one_opts++;
+                     }
                      else if( num.isLT( value, curr_obj_value ) )
                      {
                         msg.info(
                             "\t\t{} - OneOpt flipping variable {}: "
                             "successful -> better obj: {}\n",
                             i, opt_col, value );
+                        successful_one_opts++;
                         feasible_sol = result;
                         curr_obj_value = value;
                      }
@@ -366,29 +374,38 @@ class Heuristic
                          feasible_sol, opt_col, 1, view, result );
                      if( infeasible )
                      {
-                        msg.info(
+                        msg.detailed(
                             "\t\t{} - OneOpt(F&P) flipping variable {}: "
                             "infeasible\n",
                             i, opt_col );
+                        infeasible_one_opts ++;
                         continue;
                      }
                      REAL value = calculate_obj_value( result );
                      if( num.isGE( value, curr_obj_value ) )
-                        msg.info(
+                     {
+                        msg.detailed(
                             "\t\t{} - OneOpt(F&P) flipping variable {}: "
                             "unsuccessful -> worse obj {}: \n",
                             i, opt_col, value );
+                        unsuccessful_one_opts++;
+                     }
                      else if( num.isLT( value, curr_obj_value ) )
                      {
                         msg.info(
                             "\t\t{} - OneOpt(F&P) flipping variable {}: "
                             "successful -> better obj: {}\n",
                             i, opt_col, value );
+                        successful_one_opts++;
                         feasible_sol = result;
                         curr_obj_value = value;
                      }
                   }
                }
+               msg.info( "\t\t{} - OneOpt variable successful ({}) "
+                         "unsuccessful ({}) infeasible ({})\n",
+                         i, successful_one_opts, unsuccessful_one_opts,
+                         infeasible_one_opts );
             }
             else if( one_opt_mode == 1 )
             {
@@ -469,6 +486,8 @@ class Heuristic
          {
             Vec<REAL> coefficients = problem.getObjective().coefficients;
 
+            int infeasible_one_opts = 0;
+            int successful_one_opts = 0;
             for( int j = 0; j < cols_sorted_by_obj.size();j++ )
             {
                if( timer.getTime() >= time_limit )
@@ -508,15 +527,20 @@ class Heuristic
                       "\t\t{} - OneOpt flipping variable {}: "
                       "successful -> better obj: {}\n",
                       i, opt_col, value );
+                  successful_one_opts++;
                   curr_obj_value = value;
                }
                else
                {
-                  msg.info( "\t\t{} - OneOpt flipping variable {}: "
+                  infeasible_one_opts++;
+                  msg.detailed( "\t\t{} - OneOpt flipping variable {}: "
                             "infeasible\n",
                             i, opt_col );
                }
             }
+            msg.info(
+                "\t\t{} - OneOpt variable successful ({}) infeasible ({})\n",
+                i, successful_one_opts, infeasible_one_opts );
          }
 
          bool is_new_val_feasible( Vec<REAL>& feasible_sol, int opt_col, REAL new_solution_value)
