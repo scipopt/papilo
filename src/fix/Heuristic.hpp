@@ -228,7 +228,7 @@ class Heuristic
             }
             obj_value[i] = calculate_obj_value( int_solutions[i] );
             msg.info( "\t\tInitial sol {} found obj value {} ({:.3})!\n", i,
-                      obj_value[i], timer.getTime() );
+                      obj_value[i], timer.getTimeSinceStart() );
 #ifndef PAPILO_TBB
             current_best_solution = int_solutions[i];
             current_objective = obj_value[i];
@@ -287,7 +287,7 @@ class Heuristic
                 } );
 #endif
             msg.info( "\t\tstarting 1-opt/ConflictAnalysis - {:.3} s\n",
-                      timer.getTime() );
+                      timer.getTimeSinceStart() );
             if( timer.getTime() >= time_limit )
                return false;
             perform_one_opt_and_conflict_analysis( perform_one_opt, time_limit );
@@ -357,7 +357,7 @@ class Heuristic
                      if( infeasible )
                      {
                         msg.detailed(
-                            "\t\t{} - 1-opt flipping variable {}: "
+                            "\t\t{} - 1-opt (aggressive) flipping variable {}: "
                             "infeasible\n",
                             i, opt_col );
                         infeasible_one_opts ++;
@@ -366,7 +366,7 @@ class Heuristic
                      REAL value = calculate_obj_value( result );
                      if( num.isGE( value, curr_obj_value ) )
                      {
-                        msg.detailed( "\t\t{} - 1-opt flipping variable {}: "
+                        msg.detailed( "\t\t{} - 1-opt (aggressive) flipping variable {}: "
                                   "unsuccessful -> worse obj {}: \n",
                                   i, opt_col, value );
                         unsuccessful_one_opts++;
@@ -374,9 +374,9 @@ class Heuristic
                      else if( num.isLT( value, curr_obj_value ) )
                      {
                         msg.info(
-                            "\t\t{} - 1-opt flipping variable {}: "
+                            "\t\t{} - 1-opt (aggressive) flipping variable {}: "
                             "successful -> better obj: {} ({:.3})\n",
-                            i, opt_col, value, timer.getTime() );
+                            i, opt_col, value, timer.getTimeSinceStart() );
                         successful_one_opts++;
                         feasible_sol = result;
                         curr_obj_value = value;
@@ -392,7 +392,7 @@ class Heuristic
                      if( infeasible )
                      {
                         msg.detailed(
-                            "\t\t{} - 1-opt(F&P) flipping variable {}: "
+                            "\t\t{} - 1-opt (aggressive) flipping variable {}: "
                             "infeasible\n",
                             i, opt_col );
                         infeasible_one_opts ++;
@@ -402,7 +402,7 @@ class Heuristic
                      if( num.isGE( value, curr_obj_value ) )
                      {
                         msg.detailed(
-                            "\t\t{} - 1-opt(F&P) flipping variable {}: "
+                            "\t\t{} - 1-opt (aggressive) flipping variable {}: "
                             "unsuccessful -> worse obj {}: \n",
                             i, opt_col, value );
                         unsuccessful_one_opts++;
@@ -410,16 +410,16 @@ class Heuristic
                      else if( num.isLT( value, curr_obj_value ) )
                      {
                         msg.info(
-                            "\t\t{} - 1-opt(F&P) flipping variable {}: "
+                            "\t\t{} - 1-opt (aggressive) flipping variable {}: "
                             "successful -> better obj: {} ({:.3})\n",
-                            i, opt_col, value, timer.getTime() );
+                            i, opt_col, value, timer.getTimeSinceStart() );
                         successful_one_opts++;
                         feasible_sol = result;
                         curr_obj_value = value;
                      }
                   }
                }
-               msg.info( "\t\t{} - 1-opt variable successful ({}) "
+               msg.info( "\t\t{} - 1-opt (aggressive) variable successful ({}) "
                          "unsuccessful ({}) infeasible ({})\n",
                          i, successful_one_opts, unsuccessful_one_opts,
                          infeasible_one_opts );
@@ -543,7 +543,7 @@ class Heuristic
                   msg.info(
                       "\t\t{} - 1-opt flipping variable {}: "
                       "successful -> better obj: {} ({:.3})\n",
-                      i, opt_col, value, timer.getTime() );
+                      i, opt_col, value, timer.getTimeSinceStart() );
                   successful_one_opts++;
                   curr_obj_value = value;
                }
@@ -737,10 +737,10 @@ class Heuristic
             if( current_best_solution.empty() )
                msg.info(
                    "\t\tFix and Propagate found an initial solution: {} at index {} ({:.3})!\n",
-                   best_obj_val, best_index, timer.getTime() );
+                   best_obj_val, best_index, timer.getTimeSinceStart() );
             else
                msg.info( "\t\tFix and Propagate found a new solution: {} at index {} ({:.3})!\n",
-                         best_obj_val, best_index, timer.getTime()  );
+                         best_obj_val, best_index, timer.getTimeSinceStart()  );
 
             current_best_solution = int_solutions[best_index];
             assert( best_obj_val == obj_value[best_index] );

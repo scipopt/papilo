@@ -45,11 +45,17 @@ class Timer
       return ( tbb::tick_count::now() - start ).seconds();
    }
 
+   double
+   getTimeSinceStart() const
+   {
+      return time + ( tbb::tick_count::now() - start ).seconds();
+   }
+
    ~Timer() { time += ( tbb::tick_count::now() - start ).seconds(); }
 
  private:
    tbb::tick_count start;
-   double& time;
+   double time;
 };
 #else
 class Timer
@@ -61,6 +67,14 @@ class Timer
    getTime() const
    {
       return std::chrono::duration_cast<std::chrono::milliseconds>(
+                 std::chrono::steady_clock::now() - start )
+                 .count() /1000.0;
+   }
+
+   double
+   getTimeSinceStart() const
+   {
+      return time + std::chrono::duration_cast<std::chrono::milliseconds>(
                  std::chrono::steady_clock::now() - start )
                  .count() /1000.0;
    }

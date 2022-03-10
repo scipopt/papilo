@@ -220,6 +220,7 @@ perform_one_opt( void* heuristic_void_ptr, double* sol, int n_cols,
 {
    double time = 0;
    Timer t = Timer(time);
+
    auto heuristic = (Heuristic<double>*)( heuristic_void_ptr );
    Vec<double> res{ sol, sol + n_cols };
 
