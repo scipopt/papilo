@@ -171,6 +171,8 @@ perform_one_opt( void* heuristic_void_ptr, double* sol, int n_cols,
                  int perform_opt_one, double* current_obj_value,
                  double remaining_time_in_sec )
 {
+   double time = 0;
+   Timer t = Timer(time);
    auto heuristic = (Heuristic<double>*)( heuristic_void_ptr );
    Vec<double> res{ sol, sol + n_cols };
 
@@ -180,4 +182,5 @@ perform_one_opt( void* heuristic_void_ptr, double* sol, int n_cols,
    heuristic->perform_one_opt( perform_opt_one, res, view, *current_obj_value,
                                -1, time_limit );
    std::copy( res.begin(), res.end(), sol );
+   heuristic->get_message().info("Spent {<3} in 1-opt call\n", t.getTime());
 }
