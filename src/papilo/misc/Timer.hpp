@@ -71,6 +71,14 @@ class Timer
                  .count() /1000.0;
    }
 
+   double
+   getTimeSinceStart() const
+   {
+      return time + std::chrono::duration_cast<std::chrono::milliseconds>(
+                 std::chrono::steady_clock::now() - start )
+                 .count() /1000.0;
+   }
+
    ~Timer() {
       time += std::chrono::duration_cast<std::chrono::milliseconds>(
                   std::chrono::steady_clock::now() - start )
