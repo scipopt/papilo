@@ -319,7 +319,7 @@ class Heuristic
                                ProbingView<REAL>& view,
                                REAL& curr_obj_value, int i, REAL time_limit )
          {
-
+            assert( num.isEq(calculate_obj_value( feasible_sol ), curr_obj_value ));
             if( one_opt_mode == 0){}
             else if( one_opt_mode == 2 )
             {
