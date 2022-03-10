@@ -45,11 +45,17 @@ class Timer
       return ( tbb::tick_count::now() - start ).seconds();
    }
 
+   double
+   getTimeSinceStart() const
+   {
+      return time + ( tbb::tick_count::now() - start ).seconds();
+   }
+
    ~Timer() { time += ( tbb::tick_count::now() - start ).seconds(); }
 
  private:
    tbb::tick_count start;
-   double& time;
+   double time;
 };
 #else
 class Timer
