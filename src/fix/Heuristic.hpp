@@ -206,7 +206,7 @@ class Heuristic
                msg.info( "\t\tInitial sol {} is infeasible!\n", i,
                          obj_value[i] );
 #ifdef PAPILO_TBB
-               break;
+               continue;
 #else
          return false;
 #endif
