@@ -94,7 +94,25 @@ setup( const char* filename, int* result, int verbosity_level,
    return heuristic;
 }
 
-
+int
+call_simple_heuristic( void* heuristic_void_ptr, double* result,
+                       double* current_obj_value )
+{
+#ifdef PAPILO_TBB
+   tbb::task_arena arena( 7 );
+   return arena.execute(
+       [&]()
+       {
+#endif
+          auto heuristic = (Heuristic<double>*)( heuristic_void_ptr );
+          Vec<double> res{};
+          heuristic->find_initial_solution( *current_obj_value, res );
+          std::copy( res.begin(), res.end(), result );
+          return !res.empty();
+#ifdef PAPILO_TBB
+       } );
+#endif
+}
 
 void
 delete_problem_instance( void* heuristic_void_ptr )
@@ -161,7 +179,7 @@ call_algorithm( void* heuristic_void_ptr, double* cont_solution, double* result,
              heuristic->problem.getRowFlags()[0].unset( RowFlag::kRhsInf );
           }
           Vec<double> sol( cont_solution, cont_solution + n_cols );
-          Vec<double> res = getVector( cont_solution, n_cols, solution_exist );
+          Vec<double> res { };
 
 #ifdef FIX_DEBUG
           SolWriter<double>::writePrimalSol(
@@ -183,7 +201,7 @@ call_algorithm( void* heuristic_void_ptr, double* cont_solution, double* result,
           double local_obj = *current_obj_value;
           bool better_solution_found = heuristic->perform_fix_and_propagate(
               sol, local_obj, res, time_limit, max_backtracks, perform_one_opt,
-              false, (InfeasibleCopyStrategy)infeasible_copy_strategy );
+              false, (InfeasibleCopyStrategy)infeasible_copy_strategy, solution_exist );
           std::copy( res.begin(), res.end(), result );
           if( !better_solution_found )
              return false;
@@ -299,35 +317,6 @@ add_cutoff_objective( Problem<double>& problem, Num<double>& num )
    }
    builder.setObjOffset( problem.getObjective().offset );
    return (builder.build());
-}
-
-Vec<double>
-getVector( const double* cont_solution, int n_cols, bool solution_exist )
-{
-   if(solution_exist)
-      return { cont_solution, cont_solution + n_cols };
-   else
-      return {};
-}
-
-int
-call_simple_heuristic( void* heuristic_void_ptr, double* result,
-                       double* current_obj_value )
-{
-#ifdef PAPILO_TBB
-   tbb::task_arena arena( 7 );
-   return arena.execute(
-       [&]()
-       {
-#endif
-          auto heuristic = (Heuristic<double>*)( heuristic_void_ptr );
-          Vec<double> res{};
-          heuristic->find_initial_solution( *current_obj_value, res );
-          std::copy( res.begin(), res.end(), result );
-          return !res.empty();
-#ifdef PAPILO_TBB
-       } );
-#endif
 }
 
 

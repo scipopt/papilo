@@ -237,15 +237,17 @@ class Heuristic
    }
           } );
           return evaluate( current_objective, current_best_solution,
-                           InfeasibleCopyStrategy::kNone );
+                           InfeasibleCopyStrategy::kNone, false );
 #endif
          }
 
          bool perform_fix_and_propagate(
              const Vec<REAL>& primal_heur_sol, REAL& best_obj_val,
-             Vec<REAL>& current_best_solution, REAL time_limit, int max_backtracks = 1,
-             int perform_one_opt = 1, bool stop_at_infeasible = true,
-             InfeasibleCopyStrategy copy = InfeasibleCopyStrategy::kNone )
+             Vec<REAL>& current_best_solution, REAL time_limit,
+             int max_backtracks = 1, int perform_one_opt = 1,
+             bool stop_at_infeasible = true,
+             InfeasibleCopyStrategy copy = InfeasibleCopyStrategy::kNone,
+             bool solution_exists = true )
          {
             double start = timer.getTime();
 #ifdef PAPILO_TBB
@@ -310,7 +312,7 @@ class Heuristic
             msg.info( "\t\tRedundant conflicts {}/{}\n", redundant_conflicts,
                       redundant_conflicts + derived_conflicts.size() );
             msg.info( "\t\tTime in F&P {:.3}\n", ( timer.getTime() - start ) );
-            return evaluate( best_obj_val, current_best_solution, copy );
+            return evaluate( best_obj_val, current_best_solution, copy, solution_exists );
          }
 
          void perform_one_opt( int one_opt_mode, Vec<REAL>& feasible_sol,
@@ -698,7 +700,7 @@ class Heuristic
 
        private:
          bool evaluate( REAL & best_obj_val, Vec<REAL> & current_best_solution,
-                        InfeasibleCopyStrategy copy_infeasible_sol )
+                        InfeasibleCopyStrategy copy_infeasible_sol, bool solution_exists )
          {
             bool feasible =
                 std::any_of( infeasible_arr.begin(), infeasible_arr.end(),
@@ -717,7 +719,8 @@ class Heuristic
             for( int i = 0; i < obj_value.size(); i++ )
             {
                if( infeasible_arr[i] == 0 &&
-                   ( num.isLT( obj_value[i], best_obj_val ) ) )
+                   ( num.isLT( obj_value[i], best_obj_val )  ||
+                       !solution_exists && best_index == -1 ) )
                {
                   best_index = i;
                   best_obj_val = obj_value[i];
