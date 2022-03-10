@@ -575,7 +575,7 @@ class Heuristic
                                             .getLeftHandSides()[row] ) )
                   return false;
                if( !flag.test( RowFlag::kRhsInf ) &&
-                   !num.isGE( activity,
+                   !num.isLE( activity,
                        problem.getConstraintMatrix()
                                             .getRightHandSides()[row] ) )
                   return false;
