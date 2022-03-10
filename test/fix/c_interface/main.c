@@ -51,7 +51,7 @@ main( void )
    double* sol2 = malloc( n_cols * sizeof( double ) );
 
    success = call_algorithm( heuristic, primal_solution, sol2, n_cols,
-                                 &current_solution, 0, 0, 0, 1, 1, 10000 );
+                                 &current_solution, 1, 0, 0, 0, 1, 1, 10000 );
    assert( !success );
    assert( current_solution == 9 );
    assert( sol2[0] == 0 );
