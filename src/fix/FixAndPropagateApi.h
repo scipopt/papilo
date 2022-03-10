@@ -27,7 +27,7 @@ extern "C" {
 
    void*
    setup( const char* filename, int* result, int verbosity_level,
-          double current_time_stamp );
+          double current_time_stamp, int add_cutoff_constraint );
 
    void
    delete_problem_instance( void* heuristic_void_ptr );
@@ -39,6 +39,7 @@ extern "C" {
  * @param result array where the result is stored
  * @param n_cols number of variables
  * @param current_obj_value -> gets overwritten in case a better solution is found
+ * @param solution exits -> does a solution exist
  * @param infeasible_copy_strategy -> see InfeasibleCopyStrategy
  * @param apply_conflicts -> should conflicts be applied
  * @param size_of_constraints -> if conflicts are applied collect them and add them when there are more than this parameter
@@ -48,8 +49,8 @@ extern "C" {
   @return whether a (better) integer feasible solution was found
  */
    int
-   call_algorithm( void* heuristic_void_ptr, double* cont_solution,
-                   double* result, int n_cols, double* current_obj_value,
+   call_algorithm( void* heuristic_void_ptr, double* cont_solution, double* result,
+                   int n_cols, double* current_obj_value, int solution_exist,
                    int infeasible_copy_strategy, int apply_conflicts,
                    int size_of_constraints, int max_backtracks,
                    int perform_one_opt, double remaining_time_in_sec );

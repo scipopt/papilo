@@ -29,7 +29,7 @@ int
 main( void )
 {
    int result = 1;
-   void* heuristic = setup( "./../../resources/api_test.mps", &result, 4, 0 );
+   void* heuristic = setup( "./../../resources/api_test.mps", &result, 4, 0, 0 );
    assert( result == 0 );
    int n_cols = 3;
    double* primal_solution = malloc( n_cols * sizeof( int ) );
@@ -39,7 +39,7 @@ main( void )
    double current_solution = 50;
 
    int success = call_algorithm( heuristic, primal_solution, sol, n_cols,
-                                 &current_solution, 0, 0, 0, 1, 1, 10000 );
+                                 &current_solution,0,  0, 0, 0, 1, 1, 10000 );
 
    // should find a better solution
    assert( success );
@@ -51,9 +51,19 @@ main( void )
    double* sol2 = malloc( n_cols * sizeof( double ) );
 
    success = call_algorithm( heuristic, primal_solution, sol2, n_cols,
-                                 &current_solution, 0, 0, 0, 1, 1, 10000 );
+                                 &current_solution, 1, 0, 0, 0, 1, 1, 10000 );
    assert( !success );
    assert( current_solution == 9 );
+   assert( sol2[0] == 0 );
+   assert( sol2[1] == 0 );
+   assert( sol2[2] == 1 );
+
+   sol2[0] = 1;
+   current_solution = 10;
+   perform_one_opt(heuristic, sol2, n_cols,
+                    2, &current_solution, 1000 );
+
+   assert(current_solution == 9);
    assert( sol2[0] == 0 );
    assert( sol2[1] == 0 );
    assert( sol2[2] == 1 );

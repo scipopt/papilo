@@ -71,10 +71,10 @@ class FixAndPropagate
    Message msg;
    Num<REAL> num;
    RandomGenerator random;
-   Timer timer;
+   Timer& timer;
 
  public:
-   FixAndPropagate( Message msg_, Num<REAL> num_, RandomGenerator random_, Timer timer_ )
+   FixAndPropagate( Message msg_, Num<REAL> num_, RandomGenerator random_, Timer& timer_ )
        : msg( msg_ ), num( num_ ), random( random_ ), timer(timer_)
    {
    }

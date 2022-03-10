@@ -28,7 +28,7 @@
 TEST_CASE( "fix-and-propagate-api", "[fix]" )
 {
    int result = 1;
-   auto problem_ptr = setup( "./resources/api_test.mps", &result, 3, 0 );
+   auto problem_ptr = setup( "./resources/api_test.mps", &result, 3, 0, 0 );
    assert( result == 0 );
    int n_cols = 3;
    auto primal_solution = new double[n_cols];
@@ -37,7 +37,7 @@ TEST_CASE( "fix-and-propagate-api", "[fix]" )
       primal_solution[i] = ( 1.0 + i ) / 10.0;
    double val = 50;
    bool success = call_algorithm( problem_ptr, primal_solution, sol, n_cols,
-                                  &val, 1, 0 , 0, 1, 2, 1000);
+                                  &val,0, 1, 0 , 0, 1, 2, 1000);
    REQUIRE( success );
    REQUIRE( val == 9 );
    delete_problem_instance( problem_ptr );
@@ -46,7 +46,7 @@ TEST_CASE( "fix-and-propagate-api", "[fix]" )
 TEST_CASE( "fix-and-propagate-api-simple-heuristic", "[fix]" )
 {
    int result = 1;
-   auto problem_ptr = setup( "./resources/api_test.mps", &result, 4, 0 );
+   auto problem_ptr = setup( "./resources/api_test.mps", &result, 4, 0, 0 );
    assert( result == 0 );
    int n_cols = 3;
    auto sol = new double[n_cols];
@@ -81,7 +81,7 @@ TEST_CASE( "fix-and-propagate-api-simple-heuristic", "[fix]" )
 //
 //    assert(success);
 //    double val = 50;
-//    success = call_algorithm( problem_ptr, a, sol, n_cols, &val,  0, 0, 0, 1, 0, 10000 );
+//    success = call_algorithm( problem_ptr, a, sol, n_cols, &val, 0, 0, 0, 0, 1, 0, 10000 );
 //    delete_problem_instance( problem_ptr );
 //    assert(success);
 // }
