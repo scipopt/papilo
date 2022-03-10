@@ -702,8 +702,7 @@ class Heuristic
             for( int i = 0; i < obj_value.size(); i++ )
             {
                if( infeasible_arr[i] == 0 &&
-                   ( num.isLT( obj_value[i], best_obj_val ) ||
-                     ( current_best_solution.empty() && best_index == -1 ) ) )
+                   ( num.isLT( obj_value[i], best_obj_val ) ) )
                {
                   best_index = i;
                   best_obj_val = obj_value[i];
@@ -711,6 +710,7 @@ class Heuristic
             }
             if( best_index == -1 )
             {
+               store_solution( InfeasibleCopyStrategy::kBestObjective, current_best_solution );
                msg.info( "\t\tFix and Propagate did not improve the current "
                          "solution!\n" );
                return false;

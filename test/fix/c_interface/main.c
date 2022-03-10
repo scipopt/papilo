@@ -37,12 +37,27 @@ main( void )
    for( int i = 0; i < n_cols; i++ )
       primal_solution[i] = ( 1.0 + i ) / 10.0;
    double current_solution = 50;
+
    int success = call_algorithm( heuristic, primal_solution, sol, n_cols,
                                  &current_solution, 0, 0, 0, 1, 1, 10000 );
-   delete_problem_instance( heuristic );
+
+   // should find a better solution
+   assert( success );
    assert( sol[0] == 0 );
    assert( sol[1] == 0 );
    assert( sol[2] == 1 );
    assert( current_solution == 9 );
-   assert( success );
+
+   double* sol2 = malloc( n_cols * sizeof( double ) );
+
+   success = call_algorithm( heuristic, primal_solution, sol2, n_cols,
+                                 &current_solution, 0, 0, 0, 1, 1, 10000 );
+   assert( !success );
+   assert( current_solution == 9 );
+   assert( sol2[0] == 0 );
+   assert( sol2[1] == 0 );
+   assert( sol2[2] == 1 );
+
+   delete_problem_instance( heuristic );
+
 }
