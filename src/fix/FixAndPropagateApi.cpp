@@ -229,7 +229,7 @@ perform_one_opt( void* heuristic_void_ptr, double* sol, int n_cols,
    heuristic->perform_one_opt( perform_opt_one, res, view, *current_obj_value,
                                -1, time_limit );
    std::copy( res.begin(), res.end(), sol );
-   heuristic->get_message().info("Spent {<3} in 1-opt call\n", t.getTime());
+   heuristic->get_message().info("Spent {:<3} in 1-opt call\n", t.getTime());
 }
 
 

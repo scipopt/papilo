@@ -58,6 +58,16 @@ main( void )
    assert( sol2[1] == 0 );
    assert( sol2[2] == 1 );
 
+   sol2[0] = 1;
+   current_solution = 10;
+   perform_one_opt(heuristic, sol2, n_cols,
+                    2, &current_solution, 1000 );
+
+   assert(current_solution == 9);
+   assert( sol2[0] == 0 );
+   assert( sol2[1] == 0 );
+   assert( sol2[2] == 1 );
+
    delete_problem_instance( heuristic );
 
 }
