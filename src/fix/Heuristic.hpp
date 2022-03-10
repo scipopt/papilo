@@ -720,7 +720,7 @@ class Heuristic
             {
                if( infeasible_arr[i] == 0 &&
                    ( num.isLT( obj_value[i], best_obj_val )  ||
-                       !solution_exists && best_index == -1 ) )
+                       (!solution_exists && best_index == -1 )) )
                {
                   best_index = i;
                   best_obj_val = obj_value[i];
