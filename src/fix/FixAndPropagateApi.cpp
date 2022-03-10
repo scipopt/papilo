@@ -132,14 +132,15 @@ call_algorithm( void* heuristic_void_ptr, double* cont_solution, double* result,
           double i = heuristic->get_current_time();
           double time_limit = i + remaining_time_in_sec;
           double local_obj = *current_obj_value;
-          heuristic->perform_fix_and_propagate(
-              sol, local_obj, res, time_limit, max_backtracks, perform_one_opt, false,
-              (InfeasibleCopyStrategy)infeasible_copy_strategy );
-
-          if( local_obj < *current_obj_value )
-             *current_obj_value = local_obj;
+          bool better_solution_found = heuristic->perform_fix_and_propagate(
+              sol, local_obj, res, time_limit, max_backtracks, perform_one_opt,
+              false, (InfeasibleCopyStrategy)infeasible_copy_strategy );
           std::copy( res.begin(), res.end(), result );
-          return !res.empty();
+          if( !better_solution_found )
+             return false;
+          assert( local_obj < *current_obj_value );
+          *current_obj_value = local_obj;
+          return true;
 #ifdef PAPILO_TBB
        } );
 #endif
