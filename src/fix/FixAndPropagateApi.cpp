@@ -161,8 +161,10 @@ call_algorithm( void* heuristic_void_ptr, double* cont_solution, double* result,
                   RowFlag::kCutoffConstraint ) && solution_exist )
           {
              assert(
-                 *current_obj_value <= heuristic->problem.getConstraintMatrix()
-                                           .getRightHandSides()[0] ||
+                 heuristic->get_num().isLE(
+                     *current_obj_value,
+                     heuristic->problem.getConstraintMatrix()
+                         .getRightHandSides()[0] ) ||
                  heuristic->problem.getRowFlags()[0].test( RowFlag::kRhsInf ) );
              assert(
                  heuristic->problem.getRowFlags()[0].test( RowFlag::kLhsInf ) );
