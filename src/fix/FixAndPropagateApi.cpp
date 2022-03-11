@@ -130,6 +130,7 @@ get_conflicts( void* heuristic_void_ptr, int expected_number, int* length,
       auto data = heuristic->problem.getConstraintMatrix().getRowCoefficients(i);
       length[i] = data.getLength();
       rhs[i] = heuristic->problem.getConstraintMatrix().getRightHandSides()[i];
+      assert( !heuristic->problem.getRowFlags()[i].test( RowFlag::kLhsInf ) );
       equation[i] = heuristic->problem.getRowFlags()[i].test(RowFlag::kEquation);
       indices[i] = data.getIndices();
       values[i] = data.getValues();
