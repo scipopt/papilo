@@ -25,6 +25,8 @@
 extern "C" {
 #endif
 
+#define FIX_AND_PROPAGATE_API_VERSION       1
+
    void*
    setup( const char* filename, int* result, int verbosity_level,
           double current_time_stamp, int add_cutoff_constraint );
@@ -46,6 +48,7 @@ extern "C" {
  * @param max_backtracks -> number of backtracks per dive
  * @param perform_one_opt -> 0 = no; 1= only check feasibility; 2 = with Fix&Propagation
  * @param remaining_time_in_sec remaining time in seconds
+ * @param generated_conflicts how many conflicts were generated
   @return whether a (better) integer feasible solution was found
  */
    int
@@ -53,7 +56,7 @@ extern "C" {
                    int n_cols, double* current_obj_value, int solution_exist,
                    int infeasible_copy_strategy, int apply_conflicts,
                    int size_of_constraints, int max_backtracks,
-                   int perform_one_opt, double remaining_time_in_sec );
+                   int perform_one_opt, double remaining_time_in_sec, int* generated_conflicts );
 
    void
    perform_one_opt( void* heuristic_void_ptr, double* sol, int n_cols,
@@ -63,6 +66,10 @@ extern "C" {
    int
    call_simple_heuristic( void* heuristic_void_ptr, double* result,
                           double* current_obj_value );
+
+   void
+   get_conflicts( void* heuristic_void_ptr, int expected_number, int* length,
+                  int** indices, double** values, double* lhs, int* equation );
 
 #ifdef __cplusplus
 }

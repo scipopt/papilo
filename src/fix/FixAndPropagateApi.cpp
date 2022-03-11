@@ -39,9 +39,6 @@ using namespace papilo;
 Problem<double>
 add_cutoff_objective( Problem<double>& problem, Num<double>& num );
 
-Vec<double>
-getVector( const double* cont_solution, int n_cols, bool solution_exist );
-
 double
 calculate_cutoff_offset( const Problem<double>& problem, Num<double>& num );
 
@@ -121,12 +118,32 @@ delete_problem_instance( void* heuristic_void_ptr )
    delete heuristic;
 }
 
+void
+get_conflicts( void* heuristic_void_ptr, int expected_number, int* length,
+               const int** indices, const double** values, double* lhs, int* equation )
+{
+   auto heuristic = (Heuristic<double>*)( heuristic_void_ptr );
+   int n_rows = heuristic->problem.getNRows();
+   assert(n_rows> expected_number);
+
+   for(int i= n_rows -1; i>=n_rows- expected_number; i--){
+      assert(heuristic->problem.getRowFlags()[i].test(RowFlag::kConflictConstraint));
+      auto data = heuristic->problem.getConstraintMatrix().getRowCoefficients(i);
+      length[i] = data.getLength();
+      lhs[i] = heuristic->problem.getConstraintMatrix().getLeftHandSides()[i];
+      assert( !heuristic->problem.getRowFlags()[i].test( RowFlag::kLhsInf ) );
+      equation[i] = heuristic->problem.getRowFlags()[i].test(RowFlag::kEquation);
+      indices[i] = data.getIndices();
+      values[i] = data.getValues();
+   }
+}
+
 int
 call_algorithm( void* heuristic_void_ptr, double* cont_solution, double* result,
                 int n_cols, double* current_obj_value, int solution_exist,
                 int infeasible_copy_strategy, int apply_conflicts,
                 int size_of_constraints, int max_backtracks,
-                int perform_one_opt, double remaining_time_in_sec )
+                int perform_one_opt, double remaining_time_in_sec, int* generated_conflicts )
 {
    assert( infeasible_copy_strategy >= 0 && infeasible_copy_strategy <= 6 );
    assert( apply_conflicts >= 0 && apply_conflicts <= 1 );
@@ -154,6 +171,7 @@ call_algorithm( void* heuristic_void_ptr, double* cont_solution, double* result,
                  "added {} conflicts to the problem (rows: {})\n",
                  heuristic->get_derived_conflicts().size(),
                  heuristic->problem.getNRows() );
+             *generated_conflicts = heuristic->get_derived_conflicts().size();
              heuristic->get_derived_conflicts().clear();
           }
           if( heuristic->problem.getRowFlags()[0].test(
