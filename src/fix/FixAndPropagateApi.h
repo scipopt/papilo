@@ -25,6 +25,8 @@
 extern "C" {
 #endif
 
+#define FIX_AND_PROPAGATE_API_VERSION       1
+
    void*
    setup( const char* filename, int* result, int verbosity_level,
           double current_time_stamp, int add_cutoff_constraint );
