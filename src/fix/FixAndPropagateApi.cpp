@@ -120,21 +120,21 @@ delete_problem_instance( void* heuristic_void_ptr )
 
 void
 get_conflicts( void* heuristic_void_ptr, int expected_number, int* length,
-               const int** indices, const double** values, double* rhs, int* equation )
+               const int** indices, const double** values, double* lhs, int* equation )
 {
    auto heuristic = (Heuristic<double>*)( heuristic_void_ptr );
    int n_rows = heuristic->problem.getNRows();
    assert(n_rows> expected_number);
    assert( sizeof indices == expected_number);
    assert( sizeof values == expected_number);
-   assert( sizeof rhs == expected_number);
+   assert( sizeof lhs == expected_number);
    assert( sizeof equation == expected_number);
    assert( sizeof length == expected_number);
    for(int i= n_rows -1; i>=n_rows- expected_number; i--){
       assert(heuristic->problem.getRowFlags()[i].test(RowFlag::kConflictConstraint));
       auto data = heuristic->problem.getConstraintMatrix().getRowCoefficients(i);
       length[i] = data.getLength();
-      rhs[i] = heuristic->problem.getConstraintMatrix().getRightHandSides()[i];
+      lhs[i] = heuristic->problem.getConstraintMatrix().getLeftHandSides()[i];
       assert( !heuristic->problem.getRowFlags()[i].test( RowFlag::kLhsInf ) );
       equation[i] = heuristic->problem.getRowFlags()[i].test(RowFlag::kEquation);
       indices[i] = data.getIndices();
