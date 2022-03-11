@@ -36,9 +36,12 @@ TEST_CASE( "fix-and-propagate-api", "[fix]" )
    for( int i = 0; i < n_cols; i++ )
       primal_solution[i] = ( 1.0 + i ) / 10.0;
    double val = 50;
+   int generated_conflicts = 0;
+
    bool success = call_algorithm( problem_ptr, primal_solution, sol, n_cols,
-                                  &val,0, 1, 0 , 0, 1, 2, 1000);
+                                  &val,0, 1, 0 , 0, 1, 2, 1000, &generated_conflicts);
    REQUIRE( success );
+   REQUIRE( generated_conflicts == 0 );
    REQUIRE( val == 9 );
    delete_problem_instance( problem_ptr );
 }
