@@ -175,7 +175,7 @@ call_algorithm( void* heuristic_void_ptr, double* cont_solution, double* result,
                 heuristic->get_message().info( "(before: Infinity))\n" );
              else
                 heuristic->get_message().info(
-                    "(before: {}}).\n", heuristic->problem.getConstraintMatrix()
+                    "(before: {}).\n", heuristic->problem.getConstraintMatrix()
                                             .getRightHandSides()[0] );
              assert( heuristic->get_offset_for_cutoff() >= 0 &&
                      heuristic->get_offset_for_cutoff() <= 1 );
