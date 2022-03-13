@@ -154,7 +154,6 @@ call_algorithm( void* heuristic_void_ptr, double* cont_solution, double* result,
                  "added {} conflicts to the problem (rows: {})\n",
                  heuristic->get_derived_conflicts().size(),
                  heuristic->problem.getNRows() );
-             heuristic->problem.recomputeAllActivities();
              heuristic->get_derived_conflicts().clear();
           }
           if( heuristic->problem.getRowFlags()[0].test(
@@ -166,30 +165,28 @@ call_algorithm( void* heuristic_void_ptr, double* cont_solution, double* result,
                      heuristic->problem.getConstraintMatrix()
                          .getRightHandSides()[0] ) ||
                  heuristic->problem.getRowFlags()[0].test( RowFlag::kRhsInf ) );
+
              assert(
                  heuristic->problem.getRowFlags()[0].test( RowFlag::kLhsInf ) );
+             heuristic->get_message().info(
+                 "set rhs of cutoff constraint to value {}",
+                 *current_obj_value - heuristic->get_offset_for_cutoff());
              if( heuristic->problem.getRowFlags()[0].test( RowFlag::kRhsInf ) )
-                heuristic->get_message().info(
-                    "set rhs of cutoff constraint to value {} (before: "
-                    "Infinity).\n",
-                    *current_obj_value,
-                    heuristic->problem.getConstraintMatrix()
-                        .getRightHandSides()[0] );
+                heuristic->get_message().info( "(before: Infinity))\n" );
              else
                 heuristic->get_message().info(
-                    "set rhs of cutoff constraint to value {} (before: "
-                    "{}}).\n",
-                    *current_obj_value,
-                    heuristic->problem.getConstraintMatrix()
-                        .getRightHandSides()[0] );
+                    "(before: {}}).\n", heuristic->problem.getConstraintMatrix()
+                                            .getRightHandSides()[0] );
              assert( heuristic->get_offset_for_cutoff() >= 0 &&
                      heuristic->get_offset_for_cutoff() <= 1 );
              heuristic->problem.getConstraintMatrix().getRightHandSides()[0] =
-                 *current_obj_value - heuristic->get_offset_for_cutoff();
+                 *current_obj_value - heuristic->get_offset_for_cutoff() -
+                 heuristic->problem.getObjective().offset;
              heuristic->problem.getRowFlags()[0].unset( RowFlag::kRhsInf );
           }
           Vec<double> sol( cont_solution, cont_solution + n_cols );
           Vec<double> res { };
+          heuristic->problem.recomputeAllActivities();
 
 #ifdef FIX_DEBUG
           SolWriter<double>::writePrimalSol(
