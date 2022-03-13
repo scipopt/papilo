@@ -168,12 +168,20 @@ call_algorithm( void* heuristic_void_ptr, double* cont_solution, double* result,
                  heuristic->problem.getRowFlags()[0].test( RowFlag::kRhsInf ) );
              assert(
                  heuristic->problem.getRowFlags()[0].test( RowFlag::kLhsInf ) );
-             heuristic->get_message().info(
-                 "update Cutoff constraint from {} ({}) to {}.\n",
-                 heuristic->problem.getConstraintMatrix().getRightHandSides()[0],
-                 heuristic->problem.getRowFlags()[0].test( RowFlag::kRhsInf ),
-                 *current_obj_value
-                 );
+             if( heuristic->problem.getRowFlags()[0].test( RowFlag::kRhsInf ) )
+                heuristic->get_message().info(
+                    "set rhs of cutoff constraint to value {} (before: "
+                    "Infinity).\n",
+                    *current_obj_value,
+                    heuristic->problem.getConstraintMatrix()
+                        .getRightHandSides()[0] );
+             else
+                heuristic->get_message().info(
+                    "set rhs of cutoff constraint to value {} (before: "
+                    "{}}).\n",
+                    *current_obj_value,
+                    heuristic->problem.getConstraintMatrix()
+                        .getRightHandSides()[0] );
              assert( heuristic->get_offset_for_cutoff() >= 0 &&
                      heuristic->get_offset_for_cutoff() <= 1 );
              heuristic->problem.getConstraintMatrix().getRightHandSides()[0] =
@@ -277,9 +285,8 @@ add_cutoff_objective( Problem<double>& problem, Num<double>& num )
    builder.setNumRows( nrows + 1 );
 
    builder.addRowEntries( 0, new_nnz, rowcols_obj, rowvals_obj );
-   builder.setRowLhs( 0, -1 );
-   int rhsval = 2;
-   builder.setRowRhs( 0, rhsval );
+   builder.setRowLhs( 0, 0 );
+   builder.setRowRhs( 0, 0 );
    bool infinite = true;
    builder.setRowLhsInf( 0, infinite );
    builder.setRowRhsInf( 0, infinite );
