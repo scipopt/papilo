@@ -167,6 +167,7 @@ call_algorithm( void* heuristic_void_ptr, double* cont_solution, double* result,
                      *current_obj_value,
                      heuristic->problem.getConstraintMatrix()
                          .getRightHandSides()[0] ) +
+                     heuristic->get_offset_for_cutoff() +
                      heuristic->problem.getObjective().offset ||
                  heuristic->problem.getRowFlags()[0].test( RowFlag::kRhsInf ) );
              assert(
