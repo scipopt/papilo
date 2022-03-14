@@ -67,9 +67,10 @@ extern "C" {
    call_simple_heuristic( void* heuristic_void_ptr, double* result,
                           double* current_obj_value );
 
+
    void
    get_conflicts( void* heuristic_void_ptr, int expected_number, int* length,
-                  int** indices, double** values, double* lhs, int* equation );
+                  const int** indices, const double** values, double* lhs, int* equation );
 
 #ifdef __cplusplus
 }
