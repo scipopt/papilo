@@ -125,16 +125,17 @@ get_conflicts( void* heuristic_void_ptr, int expected_number, int* length,
    auto heuristic = (Heuristic<double>*)( heuristic_void_ptr );
    int n_rows = heuristic->problem.getNRows();
    assert(n_rows> expected_number);
-
+   int current_row = 0;
    for(int i= n_rows -1; i>=n_rows- expected_number; i--){
       assert(heuristic->problem.getRowFlags()[i].test(RowFlag::kConflictConstraint));
       auto data = heuristic->problem.getConstraintMatrix().getRowCoefficients(i);
-      length[i] = data.getLength();
-      lhs[i] = heuristic->problem.getConstraintMatrix().getLeftHandSides()[i];
+      length[current_row] = data.getLength();
+      lhs[current_row] = heuristic->problem.getConstraintMatrix().getLeftHandSides()[i];
       assert( !heuristic->problem.getRowFlags()[i].test( RowFlag::kLhsInf ) );
-      equation[i] = heuristic->problem.getRowFlags()[i].test(RowFlag::kEquation);
-      indices[i] = data.getIndices();
-      values[i] = data.getValues();
+      equation[current_row] = heuristic->problem.getRowFlags()[i].test(RowFlag::kEquation);
+      indices[current_row] = data.getIndices();
+      values[current_row] = data.getValues();
+      current_row += 1;
    }
 }
 
