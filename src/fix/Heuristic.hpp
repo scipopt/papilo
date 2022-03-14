@@ -707,7 +707,7 @@ class Heuristic
                return false;
             }
 
-            if( solution_exists )
+            if( !solution_exists )
                msg.info(
                    "\t\tFix and Propagate found an initial solution: {} at index {} ({:.3})!\n",
                    best_obj_val, best_index, timer.getTimeSinceStart() );
