@@ -244,17 +244,20 @@ class Heuristic
          bool perform_fix_and_propagate(
              const Vec<REAL>& primal_heur_sol, REAL& best_obj_val,
              Vec<REAL>& current_best_solution, REAL time_limit,
-             int max_backtracks = 1, int perform_one_opt = 1,
+             int max_backtracks = 1, int one_opt_mode = 1,
              bool stop_at_infeasible = true,
              InfeasibleCopyStrategy copy = InfeasibleCopyStrategy::kNone,
              bool solution_exists = true )
          {
             double start = timer.getTime();
+
+            for( int i = 0; i < constraints.size(); i++ )
+               constraints[i].clear();
 #ifdef PAPILO_TBB
             tbb::parallel_for(
                 tbb::blocked_range<int>( 0, strategies.size() ),
                 [this, primal_heur_sol, max_backtracks,
-                 stop_at_infeasible, time_limit]( const tbb::blocked_range<int>& r )
+                 stop_at_infeasible, time_limit, one_opt_mode]( const tbb::blocked_range<int>& r )
                 {
                    for( int i = r.begin(); i != r.end(); i++ )
 #else
@@ -274,23 +277,57 @@ class Heuristic
                                    i, backtracks );
                          infeasible_arr[i] = 1;
                          assert( is_infeas == infeasible_arr[i] );
-                         continue;
+                         assert( !views[i].get_infeasible_rows().empty() );
+                         auto changes = views[i].get_changes();
+                         auto infeasible_rows = views[i].get_infeasible_rows();
+                         conflict_analysis.perform_conflict_analysis(
+                             changes, infeasible_rows, constraints[i] );
+                         assert( std::all_of(
+                             constraints[i].begin(), constraints[i].end(),
+                             []( Constraint<REAL>& c )
+                             {
+                                return c.get_row_flag().test(
+                                           RowFlag::kEquation ) ||
+                                       !c.get_row_flag().test(
+                                           RowFlag::kLhsInf );
+                             } ) );
+                         assert( std::all_of(
+                             constraints[i].begin(), constraints[i].end(),
+                             [this, i]( Constraint<REAL>& c )
+                             {
+                                const int* indices = c.get_data().getIndices();
+                                for( int j = 0; j < c.get_data().getLength();
+                                     j++ )
+                                {
+                                   if( indices[j] < 0 ||
+                                       indices[j] > views[i]
+                                                        .getProbingUpperBounds()
+                                                        .size() )
+                                      return false;
+                                }
+                                return true;
+                             } ) );
                       }
-                      infeasible_arr[i] = 0;
-                      assert( is_infeas == infeasible_arr[i] );
-                      obj_value[i] = calculate_obj_value( int_solutions[i] );
-                      msg.info( "\t\tPropagating {} found obj value {}! "
-                                "(backtracks {})\n",
-                                i, obj_value[i], backtracks );
+                      else
+                      {
+                         infeasible_arr[i] = 0;
+                         assert( is_infeas == infeasible_arr[i] );
+                         obj_value[i] = calculate_obj_value( int_solutions[i] );
+                         msg.info( "\t\tPropagating {} found obj value {}! "
+                                   "(backtracks {})\n",
+                                   i, obj_value[i], backtracks );
+                         if( timer.getTime() >= time_limit )
+                            continue;
+                         perform_one_opt( one_opt_mode, int_solutions[i],
+                                          views[i],
+                                          obj_value[i], i, time_limit );
+                      }
                    }
 #ifdef PAPILO_TBB
                 } );
 #endif
-            msg.info( "\t\tstarting 1-opt/ConflictAnalysis - {:.3} s\n",
-                      timer.getTimeSinceStart() );
             if( timer.getTime() >= time_limit )
                return false;
-            perform_one_opt_and_conflict_analysis( perform_one_opt, time_limit );
             Vec<unsigned int> hashes;
             int redundant_conflicts = 0;
             for( auto& cs : constraints )
@@ -432,70 +469,6 @@ class Heuristic
 
          }
 
-
-         void perform_one_opt_and_conflict_analysis( int one_opt_mode, REAL time_limit )
-         {
-            for( int i = 0; i < constraints.size(); i++ )
-               constraints[i].clear();
-
-            Vec<int> infeas_copy{ infeasible_arr };
-            Vec<REAL> coefficients = problem.getObjective().coefficients;
-#ifdef PAPILO_TBB
-            tbb::parallel_for(
-                tbb::blocked_range<int>( 0, views.size() ),
-                [&]( const tbb::blocked_range<int>& r )
-                {
-                   for( int i = r.begin(); i != r.end(); ++i )
-#else
-             for( int i = 0; i != views.size(); ++i )
-
-#endif
-                   {
-                      if( infeas_copy[i] == 1 )
-                      {
-                         assert( !views[i].get_infeasible_rows().empty() );
-                         auto changes = views[i].get_changes();
-                         auto infeasible_rows = views[i].get_infeasible_rows();
-                         conflict_analysis.perform_conflict_analysis(
-                             changes, infeasible_rows, constraints[i] );
-                         assert( std::all_of(
-                             constraints[i].begin(), constraints[i].end(),
-                             []( Constraint<REAL>& c )
-                             {
-                                return c.get_row_flag().test(
-                                           RowFlag::kEquation ) ||
-                                       !c.get_row_flag().test(
-                                           RowFlag::kLhsInf );
-                             } ) );
-                         assert( std::all_of(
-                             constraints[i].begin(), constraints[i].end(),
-                             [this, i]( Constraint<REAL>& c )
-                             {
-                                const int* indices = c.get_data().getIndices();
-                                for( int j = 0; j < c.get_data().getLength();
-                                     j++ )
-                                {
-                                   if( indices[j] < 0 ||
-                                       indices[j] > views[i]
-                                                        .getProbingUpperBounds()
-                                                        .size() )
-                                      return false;
-                                }
-                                return true;
-                             } ) );
-                      }
-                      else
-                      {
-                         assert( 0 == infeasible_arr[i] );
-                         perform_one_opt( one_opt_mode, int_solutions[i],
-                                          views[i],
-                                          obj_value[i], i, time_limit );
-                      }
-                   }
-#ifdef PAPILO_TBB
-                } );
-#endif
-         }
 
          void perform_one_opt_no_f_and_p( Vec<REAL>& feasible_sol,
                                           ProbingView<REAL>& view,

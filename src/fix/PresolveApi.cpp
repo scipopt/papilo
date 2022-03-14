@@ -151,5 +151,6 @@ postsolve( void* postsolve_storage_ptr, double* red_solution, int red_cols, doub
    Postsolve<double> postsolve{ {}, postsolve_storage->num };
    PostsolveStatus status = postsolve.undo( sol, res, *postsolve_storage );
    assert( status == PostsolveStatus::kOk );
-   org_solution = &res.primal[0];
+   std::copy( res.primal.begin(), res.primal.end(), org_solution );
+
 }

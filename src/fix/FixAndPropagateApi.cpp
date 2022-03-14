@@ -182,7 +182,8 @@ call_algorithm( void* heuristic_void_ptr, double* cont_solution, double* result,
                  heuristic->get_num().isLE(
                      *current_obj_value,
                      heuristic->problem.getConstraintMatrix()
-                         .getRightHandSides()[0] ) ||
+                         .getRightHandSides()[0] ) +
+                     heuristic->problem.getObjective().offset ||
                  heuristic->problem.getRowFlags()[0].test( RowFlag::kRhsInf ) );
 
              assert(
@@ -194,8 +195,10 @@ call_algorithm( void* heuristic_void_ptr, double* cont_solution, double* result,
                 heuristic->get_message().info( "(before: Infinity))\n" );
              else
                 heuristic->get_message().info(
-                    "(before: {}}).\n", heuristic->problem.getConstraintMatrix()
-                                            .getRightHandSides()[0] );
+                    "(before: {}).\n",
+                    heuristic->problem.getConstraintMatrix()
+                            .getRightHandSides()[0] +
+                        heuristic->problem.getObjective().offset );
              assert( heuristic->get_offset_for_cutoff() >= 0 &&
                      heuristic->get_offset_for_cutoff() <= 1 );
              heuristic->problem.getConstraintMatrix().getRightHandSides()[0] =
