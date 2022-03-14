@@ -178,19 +178,20 @@ call_algorithm( void* heuristic_void_ptr, double* cont_solution, double* result,
           if( heuristic->problem.getRowFlags()[0].test(
                   RowFlag::kCutoffConstraint ) && solution_exist )
           {
+             heuristic->get_message().info(
+                 "set rhs of cutoff constraint to value {}",
+                 *current_obj_value - heuristic->get_offset_for_cutoff());
              assert(
                  heuristic->get_num().isLE(
                      *current_obj_value,
                      heuristic->problem.getConstraintMatrix()
                          .getRightHandSides()[0] ) +
+                     heuristic->get_offset_for_cutoff() +
                      heuristic->problem.getObjective().offset ||
                  heuristic->problem.getRowFlags()[0].test( RowFlag::kRhsInf ) );
-
              assert(
                  heuristic->problem.getRowFlags()[0].test( RowFlag::kLhsInf ) );
-             heuristic->get_message().info(
-                 "set rhs of cutoff constraint to value {}",
-                 *current_obj_value - heuristic->get_offset_for_cutoff());
+
              if( heuristic->problem.getRowFlags()[0].test( RowFlag::kRhsInf ) )
                 heuristic->get_message().info( "(before: Infinity))\n" );
              else
