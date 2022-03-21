@@ -5,21 +5,21 @@
 	<Column active="True" alternative="-1" name="Presolve_time" origcolname="presolve_time" reduction="meanOrConcat">
 		<Aggregation aggregation="shmean" name="shmean" shiftby="1.0"/>
 	</Column>
-	<Column active="True" alternative="-1" name="Rows" origcolname="rows" reduction="meanOrConcat">
-		<Aggregation aggregation="shmean" name="shmean" shiftby="1.0"/>
+
+	<Column active="True" alternative="-1" name="Presolv rounds" origcolname="presolv_rounds" reduction="meanOrConcat">
+		<Aggregation aggregation="mean" name="mean"/>
 	</Column>
-	<Column active="True" alternative="-1" name="Columns" origcolname="columns" reduction="meanOrConcat">
-		<Aggregation aggregation="shmean" name="shmean" shiftby="1.0"/>
+
+	<Column active="True" alternative="-1" name="Fast" origcolname="fast_rounds" reduction="meanOrConcat">
+		<Aggregation aggregation="mean" name="mean"/>
 	</Column>
-	<Column active="True" alternative="-1" name="int cols" origcolname="int_columns" reduction="meanOrConcat">
-		<Aggregation aggregation="shmean" name="shmean" shiftby="1.0"/>
+	<Column active="True" alternative="-1" name="Medium" origcolname="medium_rounds" reduction="meanOrConcat">
+		<Aggregation aggregation="mean" name="mean"/>
 	</Column>
-	<Column active="True" alternative="-1" name="cont cols" origcolname="cont_columns" reduction="meanOrConcat">
-		<Aggregation aggregation="shmean" name="shmean" shiftby="1.0"/>
+	<Column active="True" alternative="-1" name="Exhaustive" origcolname="exhaustive_rounds" reduction="meanOrConcat">
+		<Aggregation aggregation="mean" name="mean"/>
 	</Column>
-  <Column active="True" alternative="-1" name="Nonzeros" origcolname="nonzeros" reduction="meanOrConcat">
-		<Aggregation aggregation="shmean" name="shmean" shiftby="10.0"/>
-	</Column>
+
 
 	<Column active="True" alternative="-1" name="Red rows" origcolname="reduced_rows" reduction="meanOrConcat">
 		<Aggregation aggregation="shmean" name="shmean" shiftby="1.0"/>
@@ -37,9 +37,7 @@
 		<Aggregation aggregation="shmean" name="shmean" shiftby="1.0"/>
 	</Column>
 
-	<Column active="True" alternative="-1" name="Presolv rounds" origcolname="presolv_rounds" reduction="meanOrConcat">
-		<Aggregation aggregation="mean" name="mean"/>
-	</Column>
+
 	<Column active="True" alternative="-1" name="Cols deleted" origcolname="cols_del" reduction="meanOrConcat">
 		<Aggregation aggregation="shmean" name="shmean" shiftby="1.0"/>
 	</Column>
@@ -60,6 +58,22 @@
 	</Column>
 	<Column active="True" alternative="-1" name="Tsx conflicts" origcolname="tsx_conflicts" reduction="meanOrConcat">
 		<Aggregation aggregation="shmean" name="shmean" shiftby="1.0"/>
+	</Column>
+
+	<Column active="True" alternative="-1" name="Rows" origcolname="rows" reduction="meanOrConcat">
+		<Aggregation aggregation="shmean" name="shmean" shiftby="1.0"/>
+	</Column>
+	<Column active="True" alternative="-1" name="Columns" origcolname="columns" reduction="meanOrConcat">
+		<Aggregation aggregation="shmean" name="shmean" shiftby="1.0"/>
+	</Column>
+	<Column active="True" alternative="-1" name="int cols" origcolname="int_columns" reduction="meanOrConcat">
+		<Aggregation aggregation="shmean" name="shmean" shiftby="1.0"/>
+	</Column>
+	<Column active="True" alternative="-1" name="cont cols" origcolname="cont_columns" reduction="meanOrConcat">
+		<Aggregation aggregation="shmean" name="shmean" shiftby="1.0"/>
+	</Column>
+	<Column active="True" alternative="-1" name="Nonzeros" origcolname="nonzeros" reduction="meanOrConcat">
+		<Aggregation aggregation="shmean" name="shmean" shiftby="10.0"/>
 	</Column>
 
 	<FilterGroup active="True" filtertype="intersection" name="all"/>

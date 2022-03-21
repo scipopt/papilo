@@ -17,6 +17,11 @@ RED_CONT_COLUMNS_NAME = "reduced_cont_columns"
 RED_NON_ZEROS_NAME = "reduced_nonzeros"
 
 PRESOLVING_ROUNDS_NAME = "presolv_rounds"
+
+FAST_ROUNDS_NAME = "fast_rounds"
+MEDIUM_ROUNDS_NAME = "medium_rounds"
+EXHAUSTIVE_ROUNDS_NAME = "exhaustive_rounds"
+
 COLUMNS_DELETED_NAME = "cols_del"
 ROWS_DELETED_NAME = "rows_del"
 BOUND_CHANGES_NAME = "chg_bound"
@@ -98,6 +103,13 @@ class PapiloSolver(SCIPSolver):
     cont_columns_expr = re.compile("\s+cont. columns:\s+(\S+)")
     non_zeros_expr = re.compile("\s+nonzeros:\s+(\S+)")
 
+    fast_rounds_expr = re.compile("^(.*?)Fast\s+")
+    medium_rounds_expr = re.compile("^(.*?)Medium\s+")
+    exhaustive_rounds_expr = re.compile("^(.*?)Exhaustive")
+    final_rounds_expr = re.compile("^(.*?)Final\s+")
+    trivial_rounds_expr = re.compile("^(.*?)Trivial\s+")
+    unchanged_rounds_expr = re.compile("^(.*?)Unchanged\s+")
+
     red_rows_expr = re.compile("\s+reduced rows:\s+(\S+)")
     red_columns_expr = re.compile("\s+reduced columns:\s+(\S+)")
     red_int_columns_expr = re.compile("\s+reduced int. columns:\s+(\S+)")
@@ -115,6 +127,10 @@ class PapiloSolver(SCIPSolver):
         "presolved \d+ rounds:\s+\d+ del cols,\s+\d+ del rows,\s+\d+ chg bounds,\s+\d+ chg sides,\s+\d+ chg coeffs,\s+(\S+)")
     transactions_conflicts = re.compile(
         "presolved \d+ rounds:\s+\d+ del cols,\s+\d+ del rows,\s+\d+ chg bounds,\s+\d+ chg sides,\s+\d+ chg coeffs,\s+\d+ tsx applied,\s+(\S+)")
+
+    fast_rounds = 0
+    medium_rounds = 0
+    exhaustive_rounds = 0
 
     def __init__(self, **kw):
         super(PapiloSolver, self).__init__(**kw)
@@ -143,6 +159,9 @@ class PapiloSolver(SCIPSolver):
         self.addData(BOUND_CHANGES_NAME, DEFAULT_VALUE)
         self.addData(TSX_APPLIED_NAME, DEFAULT_VALUE)
         self.addData(TSX_CONFLICTS_NAME, DEFAULT_VALUE)
+        fast_rounds = 0
+        medium_rounds = 0
+        exhaustive_rounds = 0
 
     def extractPrimalboundHistory(self, line):
         pass
@@ -233,6 +252,22 @@ class PapiloSolver(SCIPSolver):
         self.extractByExpression(line, self.setup_tsx_rate_expr_for_solver(SOLVER_propagation), TSX_RATE_propagation)
         self.extractByExpression(line, self.setup_tsx_rate_expr_for_solver(SOLVER_simple_probing),
                                  TSX_RATE_simple_probing)
+        if self.trivial_rounds_expr.match(line) is not None:
+            self.fast_rounds = 0
+            self.medium_rounds = 0
+            self.exhaustive_rounds = 0
+        if self.fast_rounds_expr.match(line) is not None:
+            self.fast_rounds = self.fast_rounds + 1
+        if self.medium_rounds_expr.match(line) is not None:
+            self.medium_rounds = self.medium_rounds + 1
+        if self.exhaustive_rounds_expr.match(line) is not None:
+            if self.unchanged_rounds_expr.match(line) is None:
+                self.exhaustive_rounds = self.exhaustive_rounds + 1
+
+        if self.final_rounds_expr.match(line) is not None:
+            self.addData(FAST_ROUNDS_NAME, self.fast_rounds)
+            self.addData(MEDIUM_ROUNDS_NAME, self.medium_rounds)
+            self.addData(EXHAUSTIVE_ROUNDS_NAME, self.exhaustive_rounds)
 
     def setup_tsx_rate_expr_for_solver(self, name):
         return re.compile("\s+" + name + "\s+\d+\s+" + self.floating_point_expr + "\s+\d+\s+(\S+)")
