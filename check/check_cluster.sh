@@ -214,7 +214,7 @@ do
                 export EXECNAME
                 export SETFILESCIP
                 export SETFILEPAPILO
-                export SEED=s
+                export SEED=${s}
 
                 SETTING_PATH="${CHECKPATH}/${OUTPUTDIR}/check.${TSTNAME}.papilo.${QUEUE}.${SETNAME}.set"
                 cp "${CHECKPATH}/../settings/${SETNAME}.set" "${SETTING_PATH}"
