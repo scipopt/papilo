@@ -178,6 +178,7 @@ do
                 export SOLNAME="${SOLCHECKFILE}"
                 export SETFILESCIP
                 export SETFILEPAPILO
+                export s
 
                 echo "Solving instance ${INSTANCE} with settings ${SETNAME}, hard time ${HARDTIMELIMIT}, hard mem ${HARDMEMLIMIT}"
                 if [ "${MAXJOBS}" -eq 1 ]
