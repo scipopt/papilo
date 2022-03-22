@@ -71,6 +71,8 @@ Build system
 Fixed bugs
 ----------
 
+- ParallelRowDetection: lhs is updated correctly
+- fix fmt error: use correct amount of arguments for print statement
 - copy extended_euclidean.hpp during installation
 - fix bug in FindTBB module
 - ranged rows in MPS Files can now be parsed if they are specified as 'E'
@@ -183,6 +185,7 @@ Fixed bugs
 - setting the time-limit via the parameter file is not clashing with the command time-limit any more
 - ParallelRowDetection: using epsilon tolerance to avoid that the lhs is greater than the rhs
 - DualInfer: consider case if reduced costs indicate an unbounded variable
+
 
 Miscellaneous
 -------------

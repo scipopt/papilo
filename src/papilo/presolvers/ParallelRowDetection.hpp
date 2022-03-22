@@ -423,7 +423,7 @@ ParallelRowDetection<REAL>::execute( const Problem<REAL>& problem,
 
                }
                if( !lhs_infinity &&
-                   ( scaled_rhs_inf ||
+                   ( scaled_lhs_inf ||
                      num.isGT( new_adjusted_lhs, lhs_values[parallel_row] ) ) )
                {
                   lhs_value = new_adjusted_lhs;
