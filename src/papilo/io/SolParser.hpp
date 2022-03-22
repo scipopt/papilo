@@ -88,6 +88,7 @@ struct SolParser
             assert( tokens.size() > 1 );
             sol.primal[it->second] = std::stod( tokens[1] );
          }
+         else if(strline.empty()){}
          else
          {
             fmt::print( stderr,
