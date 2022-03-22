@@ -34,11 +34,10 @@ class PrimalDualSolValidation
 {
 
  public:
-   PrimalDualSolValidation( const Message msg, const Num<REAL> n )
+   PrimalDualSolValidation( const Message msg, const Num<REAL> num_ )
+       : num( num_ ), message( msg )
    {
-      message = msg;
-      num = n;
-   };
+   }
 
  private:
    Num<REAL> num;
@@ -179,9 +178,8 @@ class PrimalDualSolValidation
          {
             message.info(
                 "Dual row {:<3} violates dual row bounds ({:<3} != {:<3}).\n",
-                variable, (double) problem.getObjective().coefficients[variable],
-                (double) (colValue.get() + reducedCosts[variable]),
-                (double) problem.getObjective().coefficients[variable] );
+                variable, (double)( colValue.get() + reducedCosts[variable] ),
+                (double)problem.getObjective().coefficients[variable] );
             return true;
          }
       }
