@@ -1,7 +1,5 @@
 <?xml version="1.0" ?>
 <Evaluation comparecolformat="%.3f" index="ProblemName LogFileName" indexsplit="-1">
-  <Column active="True" alternative="1e+30" name="PrimalBound" origcolname="PrimalBound" reduction="meanOrConcat"/>
- <Column active="True" alternative="-1e+30" name="DualBound" origcolname="DualBound" reduction="meanOrConcat"/>
 	<Column active="True" alternative="-1" name="Presolve_time" origcolname="presolve_time" reduction="meanOrConcat">
 		<Aggregation aggregation="shmean" name="shmean" shiftby="1.0"/>
 	</Column>
@@ -10,13 +8,13 @@
 		<Aggregation aggregation="mean" name="mean"/>
 	</Column>
 
-	<Column active="True" alternative="-1" name="Fast" origcolname="fast_rounds" reduction="meanOrConcat">
+	<Column active="True" alternative="0" name="Fast" origcolname="fast_rounds" reduction="meanOrConcat">
 		<Aggregation aggregation="mean" name="mean"/>
 	</Column>
-	<Column active="True" alternative="-1" name="Medium" origcolname="medium_rounds" reduction="meanOrConcat">
+	<Column active="True" alternative="0" name="Medium" origcolname="medium_rounds" reduction="meanOrConcat">
 		<Aggregation aggregation="mean" name="mean"/>
 	</Column>
-	<Column active="True" alternative="-1" name="Exhaustive" origcolname="exhaustive_rounds" reduction="meanOrConcat">
+	<Column active="True" alternative="0" name="Exhaustive" origcolname="exhaustive_rounds" reduction="meanOrConcat">
 		<Aggregation aggregation="mean" name="mean"/>
 	</Column>
 
