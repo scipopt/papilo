@@ -74,14 +74,14 @@ class PrimalDualSolValidation
          if( ( ! problem.getColFlags()[col].test( ColFlag::kLbInf ) ) &&
              num.isFeasLT( primalSolution[col], lb[col] ) )
          {
-            message.info( "Column {:<3} violates lower column bound.\n", col );
+            message.info( "Column {:<3} violates lower column bound () ({} ! >= {}).\n", col, (double) primalSolution[col], (double) lb[col]  );
             failure = true;
          }
 
          if( ( ! problem.getColFlags()[col].test( ColFlag::kUbInf ) ) &&
              num.isFeasGT( primalSolution[col], ub[col] ) )
          {
-            message.info( "Column {:<3} violates upper column bound.\n", col );
+            message.info( "Column {:<3} violates upper column bound ({} ! <= {}).\n", col, (double) primalSolution[col], (double) ub[col]  );
             failure = true;
          }
       }

@@ -293,6 +293,7 @@ struct OptionsInfo
                 commandString );
             return;
          }
+         break;
       case Command::kNone:
          assert( false );
       }
