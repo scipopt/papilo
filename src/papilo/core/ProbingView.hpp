@@ -689,8 +689,6 @@ ProbingView<REAL>::propagateDomains()
    const auto& rhs = consMatrix.getRightHandSides();
    const auto& rflags = consMatrix.getRowFlags();
 
-   int nchgs = 0;
-
    using std::swap;
 
    swap( prop_activities, next_prop_activities );
