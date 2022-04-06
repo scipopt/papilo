@@ -910,7 +910,7 @@ TEST_CASE( "parallel-row-multiple-parallel-rows", "[presolve]" )
 
    REQUIRE( presolveStatus == PresolveStatus::kReduced );
    REQUIRE( reductions.size() == 7 );
-   int locked_rows[] = { 1, 0, 3, 2 };
+   int locked_rows[] = { 1, 2, 0, 3 };
    for( int i = 0; i < 4; i++ )
    {
       REQUIRE( reductions.getReduction( i ).col == RowReduction::LOCKED );
