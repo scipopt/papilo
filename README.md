@@ -8,7 +8,7 @@ SCIP Optimization Suite which is available under https://scipopt.org/.
 
 PaPILO can be used as a header-based library and also provides an executable.
 Using the executable it is possible to presolve and postsolve MILP instances based on files.
-Additionally PaPILO can be linked to SCIP, SoPlex, and HiGHS (https://github.com/ERGO-Code/HiGHS) solvers and act as a frontend. In this setting PaPILO passes the presolved problem to those solvers and applies the postsolve step to the optimal solution.
+Additionally, PaPILO can be linked to SCIP, SoPlex, and HiGHS (https://github.com/ERGO-Code/HiGHS) solvers and act as a frontend. In this setting PaPILO passes the presolved problem to those solvers and applies the postsolve step to the optimal solution.
 When PaPILO is compiled as part of the SCIP Optimization Suite linking of SoPlex and SCIP solvers is performed automatically.
 
 *Note:* The original instance of this repository is hosted at  [git.zib.de](https://git.zib.de) and a read-only mirror is
