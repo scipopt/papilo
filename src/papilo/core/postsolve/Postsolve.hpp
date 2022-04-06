@@ -236,12 +236,15 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
       {
          int redundant_rows = apply_fix_infinity_variable_in_original_solution(
              originalSolution, indices, values, first, problem, stored_bounds );
-         // skip redundant rows because basis for those is already set and
+         // skip redundant rows because basis for those are already set and
          // should not be overwritten
-         assert(
-             are_the_next_n_types_redundant_rows( types, i, redundant_rows ) );
-         i -= redundant_rows;
-         assert( i >= 0 );
+         if( originalSolution.type == SolutionType::kPrimalDual )
+         {
+            assert( are_the_next_n_types_redundant_rows( types, i,
+                                                         redundant_rows ) );
+            i -= redundant_rows;
+            assert( i >= 0 );
+         }
          break;
       }
       case ReductionType::kVarBoundChange:
@@ -615,12 +618,15 @@ Postsolve<REAL>::apply_fix_infinity_variable_in_original_solution(
              originalSolution.primal, false, col_coefficents[row_counter] );
          if( num.isGT( newValue, solution ) )
          {
-            if( num.isGT( col_coefficents[row_counter], 0 ) )
-               originalSolution.rowBasisStatus[row_indices[row_counter]] =
-                   VarBasisStatus::ON_LOWER;
-            else
-               originalSolution.rowBasisStatus[row_indices[row_counter]] =
-                   VarBasisStatus::ON_UPPER;
+            if( originalSolution.basisAvailabe )
+            {
+               if( num.isGT( col_coefficents[row_counter], 0 ) )
+                  originalSolution.rowBasisStatus[row_indices[row_counter]] =
+                      VarBasisStatus::ON_LOWER;
+               else
+                  originalSolution.rowBasisStatus[row_indices[row_counter]] =
+                      VarBasisStatus::ON_UPPER;
+            }
             solution = newValue;
          }
          else if( originalSolution.basisAvailabe )
