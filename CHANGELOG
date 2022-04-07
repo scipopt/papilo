@@ -16,6 +16,9 @@ Performance improvements
 
 Interface changes
 -----------------
+
+- Wrapper in Julia for PaPILO: https://github.com/scipopt/PaPILO.jl
+
 ### Deleted and changed API methods
 ### New API functions
 ### Changed parameters
