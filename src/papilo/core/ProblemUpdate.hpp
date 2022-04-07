@@ -37,6 +37,7 @@
 #include "papilo/misc/Num.hpp"
 #include <cstdint>
 #include <random>
+#include "boost/random.hpp"
 
 namespace papilo
 {
@@ -410,8 +411,8 @@ class ProblemUpdate
    print_detailed( const Reduction<REAL>* first,
                    const Reduction<REAL>* last ) const;
 
-
-
+   void
+   shuffle( std::ranlux24& random_generator, Vec<int>& array );
 };
 
 #ifdef PAPILO_USE_EXTERN_TEMPLATES
@@ -441,12 +442,39 @@ ProblemUpdate<REAL>::ProblemUpdate( Problem<REAL>& _problem,
    random_col_perm.resize( _problem.getNCols() );
    for( int i = 0; i < _problem.getNCols(); ++i )
       random_col_perm[i] = i;
-   std::shuffle( random_col_perm.begin(), random_col_perm.end(), randgen );
+   shuffle( randgen, random_col_perm );
 
    random_row_perm.resize( _problem.getNRows() );
    for( int i = 0; i < _problem.getNRows(); ++i )
       random_row_perm[i] = i;
-   std::shuffle( random_row_perm.begin(), random_row_perm.end(), randgen );
+   shuffle( randgen, random_row_perm );
+
+}
+
+template <typename REAL>
+void
+ProblemUpdate<REAL>::shuffle( std::ranlux24& random_generator, Vec<int>& array )
+{
+   int tmp;
+   int i;
+   int end = (int)array.size();
+
+   int begin = 0;
+   // loop backwards through all elements and always swap the current last
+   // element to a random position
+   while( end > begin + 1 )
+   {
+      end--;
+
+      // get a random position into which the last entry should be shuffled
+      boost::random::uniform_int_distribution<> distrib( begin, end );
+      i = distrib( random_generator );
+
+      // swap the last element and the random element
+      tmp = array[i];
+      array[i] = array[end];
+      array[end] = tmp;
+   }
 }
 
 template <typename REAL>

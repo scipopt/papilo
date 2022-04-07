@@ -554,6 +554,7 @@ ParallelRowDetection<REAL>::execute( const Problem<REAL>& problem,
 
    return result;
 }
+
 template <typename REAL>
 int
 ParallelRowDetection<REAL>::determineBucketSize(
