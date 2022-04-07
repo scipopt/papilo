@@ -77,6 +77,7 @@ Fixed bugs
 - fix bug in FindTBB module
 - ranged rows in MPS Files can now be parsed if they are specified as 'E'
 - postsolving FixInfinityCol works also in primal case
+- PaPILO shows some behavior on different OS
 
 Miscellaneous
 -------------
