@@ -360,13 +360,19 @@ For other licensing options we refer to https://scipopt.org/, where PaPILO can b
 
 # Contributors
 
-[Alexander Hoen](https://www.zib.de/members/hoen) &mdash; main developer
+[Ambros Gleixner](https://www.zib.de/members/gleixner) ([@ambros-gleixner](https://github.com/ambros-gleixner)) &mdash; project head
 
-[Ivet Galabova](https://sites.google.com/view/ivetgalabova) ([@galabovaa](https://github.com/galabovaa)) &mdash; groundwork for dual postsolve, KKT checker
+[Alexander Hoen](https://www.zib.de/members/hoen)  ([@alexhoen](https://github.com/alexhoen)) &mdash; main developer
+
+[Franziska Schlösser](https://www.zib.de/members/schloesser)  ([@fschloesser](https://github.com/fschloesser)) &mdash; build system
+
+#### Former Contributors
+
+Ivet Galabova ([@galabovaa](https://github.com/galabovaa)) &mdash; initial draft for dual postsolve
 
 [Leona Gottwald](https://www.zib.de/members/gottwald)  ([@lgottwald](https://github.com/lgottwald)) &mdash; creator and former main developer
 
-[Katrin Halbig](https://en.www.math.fau.de/edom/team/katrin-halbig/) &mdash; presolver for GCD based reductions on inequalities (simplifyineq)
+[Katrin Halbig](https://www.datascience.nat.fau.eu/research/groups/amio/members/katrin-halbig/) ([@khalbig](https://github.com/khalbig)) &mdash; presolver for GCD based reductions on inequalities (SimplifyIneq), strengthening in DualFix
 
 Gabriel Kressin ([@GabrielKP](https://github.com/GabrielKP)) &mdash; numerical statistics, testing
 
