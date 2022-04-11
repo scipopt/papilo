@@ -22,19 +22,16 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 #include "papilo/core/ConstraintMatrix.hpp"
-#include "papilo/core/Objective.hpp"
 #include "papilo/core/Problem.hpp"
 #include "papilo/core/VariableDomains.hpp"
 #include "papilo/io/MpsParser.hpp"
 #include "papilo/misc/Hash.hpp"
-#include "papilo/misc/NumericalStatistics.hpp"
 #include "papilo/misc/Vec.hpp"
 #include "papilo/misc/fmt.hpp"
 #ifdef PAPILO_TBB
 #include "papilo/misc/tbb.hpp"
 #endif
 #include "pdqsort/pdqsort.h"
-#include "tbb/concurrent_unordered_set.h"
 #include <algorithm>
 #include <sys/stat.h>
 
@@ -340,26 +337,6 @@ compute_row_and_column_permutation( const Problem<double>& prob, bool verbose )
    }
 
    return retval;
-}
-
-/// Tries to compute a permutation for columns
-static bool
-guess_permutation_col( const Problem<double>& prob1,
-                       const Problem<double>& prob2, Vec<int>& out_perm1,
-                       Vec<int>& out_perm2 )
-{
-   // for every col I want to find another matching one
-
-   return false;
-}
-
-/// Outputs array of length n representing no permutation
-static void
-fill_identity_permutation( Vec<int>& out_perm )
-{
-   int n = out_perm.size();
-   for( int i = 0; i < n; ++i )
-      out_perm[i] = i;
 }
 
 /// Returns True if variables in given permutation have same attributes
