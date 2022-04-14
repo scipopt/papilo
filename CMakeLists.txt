@@ -149,9 +149,6 @@ if((CMAKE_HOST_SYSTEM_PROCESSOR STREQUAL "armv7l") AND (CMAKE_SYSTEM_NAME STREQU
     target_link_libraries(papilo INTERFACE atomic)
 endif()
 
-target_compile_options(papilo
-    INTERFACE ${TBB_CXX_STD_FLAG} -Wno-shadow)
-
 include(CMakePackageConfigHelpers)
 
 write_basic_package_version_file(
@@ -163,6 +160,11 @@ write_basic_package_version_file(
 if(MSVC)
    target_compile_definitions(papilo INTERFACE BOOST_ALL_NO_LIB)
    target_compile_options(papilo INTERFACE /bigobj)
+   target_compile_options(papilo
+      INTERFACE ${TBB_CXX_STD_FLAG})
+else()
+   target_compile_options(papilo
+      INTERFACE ${TBB_CXX_STD_FLAG} -Wno-shadow)
 endif()
 
 if(LUSOL)
