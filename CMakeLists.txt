@@ -107,7 +107,6 @@ target_include_directories(papilo INTERFACE
    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src>
    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/external>
    $<INSTALL_INTERFACE:include>
-   $<INSTALL_INTERFACE:include/papilo-external>
    ${Boost_INCLUDE_DIRS}
    ${GMP_INCLUDE_DIRS}
    ${Quadmath_INCLUDE_DIRS})
@@ -389,21 +388,21 @@ install(FILES
      ${PROJECT_SOURCE_DIR}/external/fmt/ranges.h
      ${PROJECT_SOURCE_DIR}/external/fmt/format.cc
      ${PROJECT_SOURCE_DIR}/external/fmt/posix.cc
- DESTINATION include/papilo-external/fmt)
+ DESTINATION include/papilo/fmt)
 
 install(FILES
      ${PROJECT_SOURCE_DIR}/external/pdqsort/pdqsort.h
-  DESTINATION include/papilo-external/pdqsort)
+  DESTINATION include/papilo/pdqsort)
 
 install(FILES
      ${PROJECT_SOURCE_DIR}/external/ska/bytell_hash_map.hpp
      ${PROJECT_SOURCE_DIR}/external/ska/flat_hash_map.hpp
      ${PROJECT_SOURCE_DIR}/external/ska/unordered_map.hpp
-  DESTINATION include/papilo-external/ska)
+  DESTINATION include/papilo/ska)
 
 install(FILES
      ${PROJECT_SOURCE_DIR}/external/lusol/clusol.h
-  DESTINATION include/papilo-external/lusol)
+  DESTINATION include/papilo/lusol)
 
 # configure the config file for the build tree
 set(QUADMATH_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/Modules)
