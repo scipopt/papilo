@@ -356,8 +356,9 @@ TEST_CASE( "parallel_col_detection_multiple_parallel_columns", "[presolve]" )
    int remaining_integer_col = 1;
    Vec<int> locked_rows = { smallest_cont_column, 6, 2, 0,
                             remaining_integer_col };
-   for( int i = 0; i < locked_rows.size(); i++ )
+   for( int i = 0; i < (int) locked_rows.size(); i++ )
    {
+
       REQUIRE( reductions.getReduction( i ).row == ColReduction::LOCKED );
       REQUIRE( reductions.getReduction( i ).col == locked_rows[i] );
       REQUIRE( reductions.getReduction( i ).newval == 0 );
@@ -366,7 +367,7 @@ TEST_CASE( "parallel_col_detection_multiple_parallel_columns", "[presolve]" )
    REQUIRE( reductions.getReduction( 5 ).col == smallest_cont_column );
    REQUIRE( reductions.getReduction( 5 ).newval == 0 );
 
-   for( int i = 1; i < locked_rows.size() - 1; i++ )
+   for( int i = 1; i < (int) locked_rows.size() - 1; i++ )
    {
       REQUIRE( reductions.getReduction( 5 + i ).row == ColReduction::PARALLEL );
       REQUIRE( reductions.getReduction( 5 + i ).col == locked_rows[i] );

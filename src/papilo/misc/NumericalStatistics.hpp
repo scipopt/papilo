@@ -210,7 +210,7 @@ class NumericalStatistics
       stats.objMin = 0.0;
       bool objMinSet = false;
 
-      for( int i = 0; i < obj.coefficients.size(); ++i )
+      for( int i = 0; i < (int) obj.coefficients.size(); ++i )
       {
          if( obj.coefficients[i] != 0 )
          {

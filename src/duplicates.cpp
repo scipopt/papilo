@@ -785,11 +785,11 @@ compute_instancehash( const Problem<double>& prob )
    int iters = 0;
 
    int ncols2 = ncols;
-   size_t lastncols = -1;
+   int lastncols = -1;
    HashMap<uint64_t, size_t> distinct_col_hashes( ncols );
 
    int nrows2 = nrows;
-   size_t lastnrows = -1;
+   int lastnrows = -1;
    HashMap<uint64_t, size_t> distinct_row_hashes( nrows );
 
    // Compute column and row hashes
@@ -824,7 +824,7 @@ compute_instancehash( const Problem<double>& prob )
 
       distinct_row_hashes.clear();
 
-      for( size_t i = 0; i < nrows2; ++i )
+      for( int i = 0; i < nrows2; ++i )
          distinct_row_hashes[rowhashes[rowperm[i]]] += 1;
 
       pdqsort( rowperm.begin(), rowperm.begin() + nrows2, [&]( int a, int b ) {
@@ -890,7 +890,7 @@ compute_instancehash( const Problem<double>& prob )
 #endif
       distinct_col_hashes.clear();
 
-      for( size_t i = 0; i < ncols2; ++i )
+      for( int i = 0; i < ncols2; ++i )
          distinct_col_hashes[colhashes[colperm[i]]] += 1;
 
       pdqsort( colperm.begin(), colperm.begin() + ncols2, [&]( int a, int b ) {
