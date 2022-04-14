@@ -150,7 +150,7 @@ if((CMAKE_HOST_SYSTEM_PROCESSOR STREQUAL "armv7l") AND (CMAKE_SYSTEM_NAME STREQU
 endif()
 
 target_compile_options(papilo
-    INTERFACE ${TBB_CXX_STD_FLAG})
+    INTERFACE ${TBB_CXX_STD_FLAG} -Wno-shadow)
 
 include(CMakePackageConfigHelpers)
 
