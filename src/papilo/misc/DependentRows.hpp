@@ -29,7 +29,7 @@
 #ifdef PAPILO_HAVE_LUSOL
 extern "C"
 {
-#include "lusol/clusol.h"
+#include "external/lusol/clusol.h"
 }
 #endif
 

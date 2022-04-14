@@ -29,7 +29,7 @@
 #include "papilo/core/ProblemUpdate.hpp"
 #include "papilo/misc/Num.hpp"
 #include "papilo/misc/fmt.hpp"
-#include "pdqsort/pdqsort.h"
+#include "external/pdqsort/pdqsort.h"
 #include <boost/dynamic_bitset.hpp>
 
 namespace papilo

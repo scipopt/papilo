@@ -31,7 +31,7 @@
 #ifdef PAPILO_TBB
 #include "papilo/misc/tbb.hpp"
 #endif
-#include "pdqsort/pdqsort.h"
+#include "external/pdqsort/pdqsort.h"
 #include <algorithm>
 #include <sys/stat.h>
 

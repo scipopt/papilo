@@ -105,9 +105,8 @@ add_library(papilo INTERFACE)
 target_include_directories(papilo INTERFACE
    $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}>
    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src>
-   $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/external>
+   $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src/external>
    $<INSTALL_INTERFACE:include>
-   $<INSTALL_INTERFACE:include/papilo-external>
    ${Boost_INCLUDE_DIRS}
    ${GMP_INCLUDE_DIRS}
    ${Quadmath_INCLUDE_DIRS})
@@ -150,9 +149,6 @@ if((CMAKE_HOST_SYSTEM_PROCESSOR STREQUAL "armv7l") AND (CMAKE_SYSTEM_NAME STREQU
     target_link_libraries(papilo INTERFACE atomic)
 endif()
 
-target_compile_options(papilo
-    INTERFACE ${TBB_CXX_STD_FLAG})
-
 include(CMakePackageConfigHelpers)
 
 write_basic_package_version_file(
@@ -164,6 +160,11 @@ write_basic_package_version_file(
 if(MSVC)
    target_compile_definitions(papilo INTERFACE BOOST_ALL_NO_LIB)
    target_compile_options(papilo INTERFACE /bigobj)
+   target_compile_options(papilo
+      INTERFACE ${TBB_CXX_STD_FLAG})
+else()
+   target_compile_options(papilo
+      INTERFACE ${TBB_CXX_STD_FLAG} -Wno-shadow)
 endif()
 
 if(LUSOL)
@@ -175,15 +176,15 @@ if(CMAKE_Fortran_COMPILER AND BLAS_FOUND)
    enable_language(Fortran)
 
    add_library(clusol STATIC
-      external/lusol/src/lusol6b.f
-      external/lusol/src/lusol7b.f
-      external/lusol/src/lusol8b.f
-      external/lusol/src/lusol_util.f
-      external/lusol/src/lusol.f90
-      external/lusol/src/clusol.c
-      external/lusol/src/lusol_precision.f90)
+      src/external/lusol/src/lusol6b.f
+      src/external/lusol/src/lusol7b.f
+      src/external/lusol/src/lusol8b.f
+      src/external/lusol/src/lusol_util.f
+      src/external/lusol/src/lusol.f90
+      src/external/lusol/src/clusol.c
+      src/external/lusol/src/lusol_precision.f90)
    set_property(TARGET clusol PROPERTY POSITION_INDEPENDENT_CODE ON)
-   target_include_directories(clusol PRIVATE external/lusol)
+   target_include_directories(clusol PRIVATE src/external/lusol)
    target_link_libraries(clusol ${BLAS_LIBRARIES})
    target_link_libraries(papilo INTERFACE clusol)
    set(PAPILO_HAVE_LUSOL 1)
@@ -208,7 +209,7 @@ if(NOT MSVC)
       endif()
    endif()
 endif()
-set(CMAKE_REQUIRED_INCLUDES ${PROJECT_SOURCE_DIR}/external)
+set(CMAKE_REQUIRED_INCLUDES ${PROJECT_SOURCE_DIR}/src/external)
 check_cxx_source_compiles(
    "#include \"ska/bytell_hash_map.hpp\"
    int main() { ska::bytell_hash_map<int,int> hashmap; (void)hashmap; return 0; }"
@@ -373,37 +374,37 @@ install(FILES
      ${PROJECT_SOURCE_DIR}/src/papilo/presolvers/SingletonCols.hpp
      ${PROJECT_SOURCE_DIR}/src/papilo/presolvers/SingletonStuffing.hpp
      ${PROJECT_SOURCE_DIR}/src/papilo/presolvers/Sparsify.hpp
-  DESTINATION include/papilo/presolvers)
+  DESTINATION include/papilo/external/presolvers)
 
 install(FILES
-     ${PROJECT_SOURCE_DIR}/external/fmt/chrono.h
-     ${PROJECT_SOURCE_DIR}/external/fmt/color.h
-     ${PROJECT_SOURCE_DIR}/external/fmt/compile.h
-     ${PROJECT_SOURCE_DIR}/external/fmt/core.h
-     ${PROJECT_SOURCE_DIR}/external/fmt/format.h
-     ${PROJECT_SOURCE_DIR}/external/fmt/format-inl.h
-     ${PROJECT_SOURCE_DIR}/external/fmt/locale.h
-     ${PROJECT_SOURCE_DIR}/external/fmt/ostream.h
-     ${PROJECT_SOURCE_DIR}/external/fmt/posix.h
-     ${PROJECT_SOURCE_DIR}/external/fmt/printf.h
-     ${PROJECT_SOURCE_DIR}/external/fmt/ranges.h
-     ${PROJECT_SOURCE_DIR}/external/fmt/format.cc
-     ${PROJECT_SOURCE_DIR}/external/fmt/posix.cc
- DESTINATION include/papilo-external/fmt)
+     ${PROJECT_SOURCE_DIR}/src/external/fmt/chrono.h
+     ${PROJECT_SOURCE_DIR}/src/external/fmt/color.h
+     ${PROJECT_SOURCE_DIR}/src/external/fmt/compile.h
+     ${PROJECT_SOURCE_DIR}/src/external/fmt/core.h
+     ${PROJECT_SOURCE_DIR}/src/external/fmt/format.h
+     ${PROJECT_SOURCE_DIR}/src/external/fmt/format-inl.h
+     ${PROJECT_SOURCE_DIR}/src/external/fmt/locale.h
+     ${PROJECT_SOURCE_DIR}/src/external/fmt/ostream.h
+     ${PROJECT_SOURCE_DIR}/src/external/fmt/posix.h
+     ${PROJECT_SOURCE_DIR}/src/external/fmt/printf.h
+     ${PROJECT_SOURCE_DIR}/src/external/fmt/ranges.h
+     ${PROJECT_SOURCE_DIR}/src/external/fmt/format.cc
+     ${PROJECT_SOURCE_DIR}/src/external/fmt/posix.cc
+ DESTINATION include/papilo/external/fmt)
 
 install(FILES
-     ${PROJECT_SOURCE_DIR}/external/pdqsort/pdqsort.h
-  DESTINATION include/papilo-external/pdqsort)
+     ${PROJECT_SOURCE_DIR}/src/external/pdqsort/pdqsort.h
+  DESTINATION include/papilo/external/pdqsort)
 
 install(FILES
-     ${PROJECT_SOURCE_DIR}/external/ska/bytell_hash_map.hpp
-     ${PROJECT_SOURCE_DIR}/external/ska/flat_hash_map.hpp
-     ${PROJECT_SOURCE_DIR}/external/ska/unordered_map.hpp
-  DESTINATION include/papilo-external/ska)
+     ${PROJECT_SOURCE_DIR}/src/external/ska/bytell_hash_map.hpp
+     ${PROJECT_SOURCE_DIR}/src/external/ska/flat_hash_map.hpp
+     ${PROJECT_SOURCE_DIR}/src/external/ska/unordered_map.hpp
+  DESTINATION include/papilo/external/ska)
 
 install(FILES
-     ${PROJECT_SOURCE_DIR}/external/lusol/clusol.h
-  DESTINATION include/papilo-external/lusol)
+     ${PROJECT_SOURCE_DIR}/src/external/lusol/clusol.h
+  DESTINATION include/papilo/external/lusol)
 
 # configure the config file for the build tree
 set(QUADMATH_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/Modules)
