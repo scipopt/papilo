@@ -37,7 +37,7 @@
 #ifdef PAPILO_TBB
 #include "papilo/misc/tbb.hpp"
 #endif
-#include "external/pdqsort/pdqsort.h"
+#include "papilo/external/pdqsort/pdqsort.h"
 #include "tbb/concurrent_unordered_set.h"
 #include <algorithm>
 

@@ -22,7 +22,7 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 #include "papilolib.h"
-#include "catch/catch.hpp"
+#include "papilo/external/catch/catch.hpp"
 #include "papilo/misc/fmt.hpp"
 
 TEST_CASE( "papilolib", "[C-API]" )

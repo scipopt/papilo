@@ -22,7 +22,7 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 #include "papilo/core/SparseStorage.hpp"
-#include "catch/catch.hpp"
+#include "papilo/external/catch/catch.hpp"
 #include "papilo/misc/compress_vector.hpp"
 
 papilo::SparseStorage<double>

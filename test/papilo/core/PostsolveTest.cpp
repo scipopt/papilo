@@ -22,7 +22,7 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 #include "papilo/core/postsolve/Postsolve.hpp"
-#include "catch/catch.hpp"
+#include "papilo/external/catch/catch.hpp"
 #include "papilo/core/postsolve/PostsolveStatus.hpp"
 #include <boost/archive/binary_iarchive.hpp>
 

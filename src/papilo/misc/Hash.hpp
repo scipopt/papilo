@@ -27,7 +27,7 @@
 #include "papilo/Config.hpp"
 
 #ifndef PAPILO_USE_STANDARD_HASHMAP
-#include "external/ska/bytell_hash_map.hpp"
+#include "papilo/external/ska/bytell_hash_map.hpp"
 #else
 #include <unordered_map>
 #include <unordered_set>

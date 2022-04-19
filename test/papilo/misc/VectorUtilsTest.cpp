@@ -22,7 +22,7 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 #include "papilo/misc/VectorUtils.hpp"
-#include "catch/catch.hpp"
+#include "papilo/external/catch/catch.hpp"
 
 using namespace papilo;
 

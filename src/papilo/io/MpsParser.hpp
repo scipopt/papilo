@@ -32,7 +32,7 @@
 #include "papilo/misc/Flags.hpp"
 #include "papilo/misc/Hash.hpp"
 #include "papilo/misc/Num.hpp"
-#include "external/pdqsort/pdqsort.h"
+#include "papilo/external/pdqsort/pdqsort.h"
 #include <algorithm>
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/dynamic_bitset.hpp>
