@@ -27,7 +27,7 @@
 #include "papilo/core/PresolveMethod.hpp"
 #include "papilo/core/Problem.hpp"
 #include "papilo/core/ProblemUpdate.hpp"
-#include "external/pdqsort/pdqsort.h"
+#include "papilo/external/pdqsort/pdqsort.h"
 #include <boost/integer/common_factor.hpp>
 
 namespace papilo

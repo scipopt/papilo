@@ -22,7 +22,7 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 #include "papilo/core/MatrixBuffer.hpp"
-#include "catch/catch.hpp"
+#include "papilo/external/catch/catch.hpp"
 #include "papilo/misc/fmt.hpp"
 
 using namespace papilo;

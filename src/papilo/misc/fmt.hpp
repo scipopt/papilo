@@ -46,8 +46,8 @@
 #define PAPILO_DEFINED_NOGDI
 #endif
 
-#include "external/fmt/format.h"
-#include "external/fmt/ostream.h"
+#include "papilo/external/fmt/format.h"
+#include "papilo/external/fmt/ostream.h"
 
 #ifdef PAPILO_DEFINED_NOGDI
 #undef NOGDI

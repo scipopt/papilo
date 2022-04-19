@@ -23,4 +23,4 @@
 
 #define CATCH_CONFIG_MAIN
 
-#include "catch/catch.hpp"
+#include "papilo/external/catch/catch.hpp"

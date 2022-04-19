@@ -27,7 +27,7 @@
 #include "papilo/core/Problem.hpp"
 #include "papilo/misc/Hash.hpp"
 #include "papilo/misc/Vec.hpp"
-#include "external/pdqsort/pdqsort.h"
+#include "papilo/external/pdqsort/pdqsort.h"
 #include <boost/pending/disjoint_sets.hpp>
 
 namespace papilo

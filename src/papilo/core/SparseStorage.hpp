@@ -26,7 +26,7 @@
 
 #include "papilo/misc/MultiPrecision.hpp"
 #include "papilo/misc/Vec.hpp"
-#include "external/pdqsort/pdqsort.h"
+#include "papilo/external/pdqsort/pdqsort.h"
 #include <algorithm>
 #include <cassert>
 #include <cstdint>

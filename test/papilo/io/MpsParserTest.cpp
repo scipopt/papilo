@@ -22,7 +22,7 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 #include "papilo/io/MpsParser.hpp"
-#include "catch/catch.hpp"
+#include "papilo/external/catch/catch.hpp"
 #include "papilo/core/PresolveMethod.hpp"
 #include "papilo/core/Problem.hpp"
 

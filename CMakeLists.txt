@@ -105,7 +105,6 @@ add_library(papilo INTERFACE)
 target_include_directories(papilo INTERFACE
    $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}>
    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src>
-   $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src/external>
    $<INSTALL_INTERFACE:include>
    ${Boost_INCLUDE_DIRS}
    ${GMP_INCLUDE_DIRS}
@@ -176,15 +175,15 @@ if(CMAKE_Fortran_COMPILER AND BLAS_FOUND)
    enable_language(Fortran)
 
    add_library(clusol STATIC
-      src/external/lusol/src/lusol6b.f
-      src/external/lusol/src/lusol7b.f
-      src/external/lusol/src/lusol8b.f
-      src/external/lusol/src/lusol_util.f
-      src/external/lusol/src/lusol.f90
-      src/external/lusol/src/clusol.c
-      src/external/lusol/src/lusol_precision.f90)
+      src/papilo/external/lusol/src/lusol6b.f
+      src/papilo/external/lusol/src/lusol7b.f
+      src/papilo/external/lusol/src/lusol8b.f
+      src/papilo/external/lusol/src/lusol_util.f
+      src/papilo/external/lusol/src/lusol.f90
+      src/papilo/external/lusol/src/clusol.c
+      src/papilo/external/lusol/src/lusol_precision.f90)
    set_property(TARGET clusol PROPERTY POSITION_INDEPENDENT_CODE ON)
-   target_include_directories(clusol PRIVATE src/external/lusol)
+   target_include_directories(clusol PRIVATE src/papilo/external/lusol)
    target_link_libraries(clusol ${BLAS_LIBRARIES})
    target_link_libraries(papilo INTERFACE clusol)
    set(PAPILO_HAVE_LUSOL 1)
@@ -209,7 +208,7 @@ if(NOT MSVC)
       endif()
    endif()
 endif()
-set(CMAKE_REQUIRED_INCLUDES ${PROJECT_SOURCE_DIR}/src/external)
+set(CMAKE_REQUIRED_INCLUDES ${PROJECT_SOURCE_DIR}/src/papilo/external)
 check_cxx_source_compiles(
    "#include \"ska/bytell_hash_map.hpp\"
    int main() { ska::bytell_hash_map<int,int> hashmap; (void)hashmap; return 0; }"
@@ -374,36 +373,36 @@ install(FILES
      ${PROJECT_SOURCE_DIR}/src/papilo/presolvers/SingletonCols.hpp
      ${PROJECT_SOURCE_DIR}/src/papilo/presolvers/SingletonStuffing.hpp
      ${PROJECT_SOURCE_DIR}/src/papilo/presolvers/Sparsify.hpp
-  DESTINATION include/papilo/external/presolvers)
+  DESTINATION include/papilo/presolvers)
 
 install(FILES
-     ${PROJECT_SOURCE_DIR}/src/external/fmt/chrono.h
-     ${PROJECT_SOURCE_DIR}/src/external/fmt/color.h
-     ${PROJECT_SOURCE_DIR}/src/external/fmt/compile.h
-     ${PROJECT_SOURCE_DIR}/src/external/fmt/core.h
-     ${PROJECT_SOURCE_DIR}/src/external/fmt/format.h
-     ${PROJECT_SOURCE_DIR}/src/external/fmt/format-inl.h
-     ${PROJECT_SOURCE_DIR}/src/external/fmt/locale.h
-     ${PROJECT_SOURCE_DIR}/src/external/fmt/ostream.h
-     ${PROJECT_SOURCE_DIR}/src/external/fmt/posix.h
-     ${PROJECT_SOURCE_DIR}/src/external/fmt/printf.h
-     ${PROJECT_SOURCE_DIR}/src/external/fmt/ranges.h
-     ${PROJECT_SOURCE_DIR}/src/external/fmt/format.cc
-     ${PROJECT_SOURCE_DIR}/src/external/fmt/posix.cc
+     ${PROJECT_SOURCE_DIR}/src/papilo/external/fmt/chrono.h
+     ${PROJECT_SOURCE_DIR}/src/papilo/external/fmt/color.h
+     ${PROJECT_SOURCE_DIR}/src/papilo/external/fmt/compile.h
+     ${PROJECT_SOURCE_DIR}/src/papilo/external/fmt/core.h
+     ${PROJECT_SOURCE_DIR}/src/papilo/external/fmt/format.h
+     ${PROJECT_SOURCE_DIR}/src/papilo/external/fmt/format-inl.h
+     ${PROJECT_SOURCE_DIR}/src/papilo/external/fmt/locale.h
+     ${PROJECT_SOURCE_DIR}/src/papilo/external/fmt/ostream.h
+     ${PROJECT_SOURCE_DIR}/src/papilo/external/fmt/posix.h
+     ${PROJECT_SOURCE_DIR}/src/papilo/external/fmt/printf.h
+     ${PROJECT_SOURCE_DIR}/src/papilo/external/fmt/ranges.h
+     ${PROJECT_SOURCE_DIR}/src/papilo/external/fmt/format.cc
+     ${PROJECT_SOURCE_DIR}/src/papilo/external/fmt/posix.cc
  DESTINATION include/papilo/external/fmt)
 
 install(FILES
-     ${PROJECT_SOURCE_DIR}/src/external/pdqsort/pdqsort.h
+     ${PROJECT_SOURCE_DIR}/src/papilo/external/pdqsort/pdqsort.h
   DESTINATION include/papilo/external/pdqsort)
 
 install(FILES
-     ${PROJECT_SOURCE_DIR}/src/external/ska/bytell_hash_map.hpp
-     ${PROJECT_SOURCE_DIR}/src/external/ska/flat_hash_map.hpp
-     ${PROJECT_SOURCE_DIR}/src/external/ska/unordered_map.hpp
+     ${PROJECT_SOURCE_DIR}/src/papilo/external/ska/bytell_hash_map.hpp
+     ${PROJECT_SOURCE_DIR}/src/papilo/external/ska/flat_hash_map.hpp
+     ${PROJECT_SOURCE_DIR}/src/papilo/external/ska/unordered_map.hpp
   DESTINATION include/papilo/external/ska)
 
 install(FILES
-     ${PROJECT_SOURCE_DIR}/src/external/lusol/clusol.h
+     ${PROJECT_SOURCE_DIR}/src/papilo/external/lusol/clusol.h
   DESTINATION include/papilo/external/lusol)
 
 # configure the config file for the build tree
