@@ -95,6 +95,10 @@ presolve_and_solve(
           opts.print_params )
       {
          ParameterSet paramSet = presolve.getParameters();
+         if(lpSolverFactory != nullptr)
+            lpSolverFactory->add_parameters(paramSet);
+         if(mipSolverFactory != nullptr)
+            mipSolverFactory->add_parameters(paramSet);
 
          if( !opts.param_settings_file.empty() && !opts.print_params )
          {
@@ -205,7 +209,28 @@ presolve_and_solve(
       presolve.getPresolveOptions().tlim =
           std::min( opts.tlim, presolve.getPresolveOptions().tlim );
 
-      auto result = presolve.apply( problem );
+      bool store_dual_postsolve = false;
+      std::unique_ptr<SolverInterface<REAL>> solver;
+      if(opts.command == Command::kSolve)
+      {
+         if( problem.getNumIntegralCols() == 0 &&
+             presolve.getLPSolverFactory() )
+         {
+            solver = presolve.getLPSolverFactory()->newSolver(
+                presolve.getVerbosityLevel() );
+            store_dual_postsolve = solver->is_dual_solution_available();
+         }
+         else if( presolve.getMIPSolverFactory() )
+            solver = presolve.getMIPSolverFactory()->newSolver(
+                presolve.getVerbosityLevel() );
+         else
+         {
+            fmt::print( "no solver available for solving; aborting\n" );
+            return ResultStatus::kError;
+         }
+      }
+
+      auto result = presolve.apply( problem, store_dual_postsolve );
 
       if( !opts.optimal_solution_file.empty() )
       {
@@ -278,20 +303,6 @@ presolve_and_solve(
       double solvetime = 0;
       {
          Timer t( solvetime );
-         std::unique_ptr<SolverInterface<REAL>> solver;
-
-         if( result.postsolve.getOriginalProblem().getNumIntegralCols() == 0 &&
-             presolve.getLPSolverFactory() )
-            solver = presolve.getLPSolverFactory()->newSolver(
-                presolve.getVerbosityLevel() );
-         else if( presolve.getMIPSolverFactory() )
-            solver = presolve.getMIPSolverFactory()->newSolver(
-                presolve.getVerbosityLevel() );
-         else
-         {
-            fmt::print( "no solver available for solving\n" );
-            return ResultStatus::kError;
-         }
 
          solver->setUp( problem, result.postsolve.origrow_mapping,
                         result.postsolve.origcol_mapping );
@@ -318,7 +329,8 @@ presolve_and_solve(
          Solution<REAL> solution;
          solution.type = SolutionType::kPrimal;
 
-         if( result.postsolve.getOriginalProblem().getNumIntegralCols() == 0 )
+         if( result.postsolve.getOriginalProblem().getNumIntegralCols() == 0 &&
+             store_dual_postsolve )
             solution.type = SolutionType::kPrimalDual;
 
          if( ( status == SolverStatus::kOptimal ||
@@ -349,7 +361,7 @@ presolve_and_solve(
    }
    catch( std::bad_alloc& ex )
    {
-      fmt::print( "Memory out exception occured! Please assign more memory\n");
+      fmt::print( "Memory out exception occured! Please assign more memory\n" );
       return ResultStatus::kError;
    }
 
@@ -364,7 +376,7 @@ postsolve( PostsolveStorage<REAL>& postsolveStorage,
            const std::string& primal_solution_output = "",
            const std::string& dual_solution_output = "",
            const std::string& reduced_solution_output = "",
-           const std::string& basis_output= "" )
+           const std::string& basis_output = "" )
 {
    Solution<REAL> original_sol;
 
@@ -384,10 +396,10 @@ postsolve( PostsolveStorage<REAL>& postsolveStorage,
    auto t1 = std::chrono::steady_clock::now();
    double sec1 =
        std::chrono::duration_cast<std::chrono::milliseconds>( t1 - t0 )
-           .count() /1000;
+           .count() /
+       1000;
 #endif
-   fmt::print( "\npostsolve finished after {:.3f} seconds\n",
-               sec1 );
+   fmt::print( "\npostsolve finished after {:.3f} seconds\n", sec1 );
 
    const Problem<REAL>& origprob = postsolveStorage.getOriginalProblem();
    REAL origobj = origprob.computeSolObjective( original_sol.primal );
@@ -407,7 +419,7 @@ postsolve( PostsolveStorage<REAL>& postsolveStorage,
    fmt::print( "  constraints: {:.15}\n", double( rowviol ) );
    fmt::print( "  integrality: {:.15}\n\n", double( intviol ) );
 
-   if( ! primal_solution_output.empty() )
+   if( !primal_solution_output.empty() )
    {
 #ifdef PAPILO_TBB
       auto t2 = tbb::tick_count::now();
@@ -425,20 +437,21 @@ postsolve( PostsolveStorage<REAL>& postsolveStorage,
       auto t3 = std::chrono::steady_clock::now();
       double sec3 =
           std::chrono::duration_cast<std::chrono::milliseconds>( t3 - t2 )
-              .count() /1000;
+              .count() /
+          1000;
 #endif
 
       fmt::print( "solution written to file {} in {:.3} seconds\n",
                   primal_solution_output, sec3 );
    }
 
-   if( ! dual_solution_output.empty() &&
+   if( !dual_solution_output.empty() &&
        original_sol.type == SolutionType::kPrimalDual )
    {
 #ifdef PAPILO_TBB
       auto t2 = tbb::tick_count::now();
 #else
-   auto t2 = std::chrono::steady_clock::now();
+      auto t2 = std::chrono::steady_clock::now();
 #endif
       const ConstraintMatrix<REAL>& constraintMatrix =
           origprob.getConstraintMatrix();
@@ -453,14 +466,15 @@ postsolve( PostsolveStorage<REAL>& postsolveStorage,
       auto t3 = std::chrono::steady_clock::now();
       double sec3 =
           std::chrono::duration_cast<std::chrono::milliseconds>( t3 - t2 )
-              .count() /1000;
+              .count() /
+          1000;
 #endif
 
       fmt::print( "dual solution written to file {} in {:.3} seconds\n",
                   dual_solution_output, sec3 );
    }
 
-   if( ! reduced_solution_output.empty() &&
+   if( !reduced_solution_output.empty() &&
        original_sol.type == SolutionType::kPrimalDual )
    {
 #ifdef PAPILO_TBB
@@ -479,15 +493,15 @@ postsolve( PostsolveStorage<REAL>& postsolveStorage,
       auto t3 = std::chrono::steady_clock::now();
       double sec3 =
           std::chrono::duration_cast<std::chrono::milliseconds>( t3 - t2 )
-              .count() /1000;
+              .count() /
+          1000;
 #endif
 
       fmt::print( "reduced solution written to file {} in {:.3} seconds\n",
                   reduced_solution_output, sec3 );
    }
 
-   if( ! basis_output.empty() &&
-       original_sol.type == SolutionType::kPrimalDual )
+   if( !basis_output.empty() && original_sol.type == SolutionType::kPrimalDual )
    {
 #ifdef PAPILO_TBB
       auto t2 = tbb::tick_count::now();
@@ -495,10 +509,10 @@ postsolve( PostsolveStorage<REAL>& postsolveStorage,
       auto t2 = std::chrono::steady_clock::now();
 #endif
 
-      SolWriter<REAL>::writeBasis(
-          basis_output, original_sol.varBasisStatus,
-          original_sol.rowBasisStatus,
-          origprob.getVariableNames(), origprob.getConstraintNames() );
+      SolWriter<REAL>::writeBasis( basis_output, original_sol.varBasisStatus,
+                                   original_sol.rowBasisStatus,
+                                   origprob.getVariableNames(),
+                                   origprob.getConstraintNames() );
 #ifdef PAPILO_TBB
       auto t3 = tbb::tick_count::now();
       double sec3 = ( t3 - t2 ).seconds();
@@ -506,16 +520,19 @@ postsolve( PostsolveStorage<REAL>& postsolveStorage,
       auto t3 = std::chrono::steady_clock::now();
       double sec3 =
           std::chrono::duration_cast<std::chrono::milliseconds>( t3 - t2 )
-              .count() /1000;
+              .count() /
+          1000;
 #endif
-      fmt::print( "basis written to file {} in {:.3} seconds\n",
-                  basis_output, sec3 );
+      fmt::print( "basis written to file {} in {:.3} seconds\n", basis_output,
+                  sec3 );
    }
 
    if( !objective_reference.empty() )
    {
       if( origfeas && status == PostsolveStatus::kOk &&
-          postsolveStorage.num.isFeasEq( boost::lexical_cast<double>( objective_reference ), double(origobj) ) )
+          postsolveStorage.num.isFeasEq(
+              boost::lexical_cast<double>( objective_reference ),
+              double( origobj ) ) )
          fmt::print( "validation: SUCCESS\n" );
       else
          fmt::print( "validation: FAILURE\n" );
@@ -541,7 +558,7 @@ postsolve( const OptionsInfo& opts )
    if( success )
       postsolve( ps, reduced_solution, opts.objective_reference,
                  opts.orig_solution_file, opts.orig_dual_solution_file,
-                 opts.orig_reduced_costs_file, opts.orig_basis_file  );
+                 opts.orig_reduced_costs_file, opts.orig_basis_file );
 }
 
 } // namespace papilo

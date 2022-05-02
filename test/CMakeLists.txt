@@ -283,6 +283,9 @@ if (TARGET papilo-executable)
             "q"
             "r"
             )
+    set(double_numtypes
+            "d"
+            )
 
     # add a test to build the SCIP binary that all further tests depend on
     add_test(NAME papilo-build
@@ -299,6 +302,7 @@ if (TARGET papilo-executable)
     # - basename
     macro(split_instance instance)
         list(GET instance 0 path)
+        list(GET instance 1 optval)
         list(GET instance 1 optval)
         get_filename_component(basename ${path} NAME)
     endmacro(split_instance)
@@ -346,16 +350,16 @@ if (TARGET papilo-executable)
     if(PAPILO_HAVE_SCIP)
         add_instancetests(instances_MIP numtypes "default.set")
     elseif(PAPILO_HAVE_GUROBI)
-        set(d_numtypes
-                "d"
-                )
-        add_instancetests(instances_MIP d_numtypes "default.set")
+        add_instancetests(instances_MIP double_numtypes "default.set")
     endif()
     # comparing the objective value for LP instances and check if dual postsolve works (with/out basis calculation)
     if(PAPILO_HAVE_SOPLEX OR PAPILO_HAVE_HIGHS)
         add_instancetests(instances_LP numtypes "lp_presolvers_with_basis.set")
         add_instancetests(instances_LP numtypes "lp_presolvers_without_basis.set")
         add_infeasible_instancetests(infeas_LP numtypes "lp_presolvers_with_basis.set")
+    elseif(PAPILO_HAVE_GLOP)
+        add_instancetests(instances_LP double_numtypes "lp_presolvers_without_basis_glop.set")
+        add_infeasible_instancetests(infeas_LP double_numtypes "lp_presolvers_with_basis.set")
     endif()
 endif ()
 

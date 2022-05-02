@@ -126,6 +126,9 @@ class SolverInterface
    virtual REAL
    getDualBound() = 0;
 
+   virtual bool
+   is_dual_solution_available() = 0;
+
    virtual void
    addParameters( ParameterSet& paramSet )
    {
@@ -140,6 +143,9 @@ class SolverFactory
  public:
    virtual std::unique_ptr<SolverInterface<REAL>>
    newSolver( VerbosityLevel verbosity = VerbosityLevel::kQuiet ) const = 0;
+
+   virtual void
+   add_parameters( ParameterSet& parameter ) const = 0;
 
    virtual ~SolverFactory() {}
 };

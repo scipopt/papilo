@@ -390,10 +390,15 @@ class HighsInterface : public SolverInterface<REAL>
    {
    }
 
+   bool
+   is_dual_solution_available() override
+   {
+      return false;
+   }
+
    SolverType
    getType() override
    {
-      // todo, both types are correct now
       return SolverType::MIP;
    }
 
@@ -426,6 +431,10 @@ class HighsFactory : public SolverFactory<REAL>
       return std::move( highs );
    }
 
+   virtual void
+   add_parameters( ParameterSet& parameter ) const
+   {
+   }
    static std::unique_ptr<SolverFactory<REAL>>
    create()
    {
