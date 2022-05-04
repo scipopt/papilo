@@ -21,7 +21,6 @@ endif
 TIME     	      =       3600
 NODES           =       2100000000
 MEM             =       6144
-THREADS         =       1
 PERMUTE         =       0
 SEEDS           =       0
 GLBSEEDSHIFT    =       0

@@ -40,28 +40,27 @@ OUTPUTDIR="${5}"
 TIMELIMIT="${6}"
 NODELIMIT="${7}"
 MEMLIMIT="${8}"
-THREADS="${9}"
-FEASTOL="${10}"
-LPS="${11}"
-DISPFREQ="${12}"
-CONTINUE="${13}"
-QUEUETYPE="${14}"
-QUEUE="${15}"
-PPN="${16}"
-CLIENTTMPDIR="${17}"
-NOWAITCLUSTER="${18}"
-EXCLUSIVE="${19}"
-PERMUTE="${20}"
-SEEDS="${21}"
-GLBSEEDSHIFT="${22}"
-STARTPERM="${23}"
-DEBUGTOOL="${24}"
-REOPT="${25}"
-PAPILO_OPT_COMMAND="${26}"
-SETCUTOFF="${27}"
-VISUALIZE="${28}"
-CLUSTERNODES="${29}"
-SLURMACCOUNT="${30}"
+FEASTOL="${9}"
+LPS="${10}"
+DISPFREQ="${11}"
+CONTINUE="${12}"
+QUEUETYPE="${13}"
+QUEUE="${14}"
+PPN="${15}"
+CLIENTTMPDIR="${16}"
+NOWAITCLUSTER="${17}"
+EXCLUSIVE="${18}"
+PERMUTE="${19}"
+SEEDS="${20}"
+GLBSEEDSHIFT="${21}"
+STARTPERM="${22}"
+DEBUGTOOL="${23}"
+REOPT="${24}"
+PAPILO_OPT_COMMAND="${25}"
+SETCUTOFF="${26}"
+VISUALIZE="${27}"
+CLUSTERNODES="${28}"
+SLURMACCOUNT="${29}"
 
 # check if all variables defined (by checking the last one)
 if test -z "${SLURMACCOUNT}"
@@ -75,7 +74,6 @@ then
     echo "TIMELIMIT     = ${TIMELIMIT}"
     echo "NODELIMIT     = ${NODELIMIT}"
     echo "MEMLIMIT      = ${MEMLIMIT}"
-    echo "THREADS       = ${THREADS}"
     echo "FEASTOL       = ${FEASTOL}"
     echo "LPS           = ${LPS}"
     echo "DISPFREQ      = ${DISPFREQ}"
@@ -178,7 +176,7 @@ do
                 # defines the following environment variables: OUTFILE, ERRFILE, EVALFILE, OBJECTIVEVAL, SHORTPROBNAME,
                 #                                              FILENAME, SKIPINSTANCE, BASENAME, TMPFILE, SETFILE
                 . ./configuration_logfiles.sh "${INIT}" "${COUNT}" "${INSTANCE}" "${BINID}" "${PERMUTE}" "${SEEDS}" "${SETNAME}" \
-                    "${TSTNAME}" "${CONTINUE}" "${QUEUE}" "${p}" "${s}" "${THREADS}" "${GLBSEEDSHIFT}" "${STARTPERM}"
+                    "${TSTNAME}" "${CONTINUE}" "${QUEUE}" "${p}" "${s}" "${GLBSEEDSHIFT}" "${STARTPERM}"
 
                 # skip instance if log file is present and we want to continue a previously launched test run
                 if test "${SKIPINSTANCE}" = "true"
@@ -236,9 +234,9 @@ do
 
                     if test "${CLUSTERNODES}" = "all"
                     then
-                        sbatch --cpus-per-task="${THREADS}" --job-name="${JOBNAME}" --mem="${HARDMEMLIMIT}" -p "${CLUSTERQUEUE}" -A "${SLURMACCOUNT}" ${NICE} --time="${HARDTIMELIMIT}" --cpu-freq=highm1 ${EXCLUSIVE} --output=/dev/null run.sh
+                        sbatch --job-name="${JOBNAME}" --mem="${HARDMEMLIMIT}" -p "${CLUSTERQUEUE}" -A "${SLURMACCOUNT}" ${NICE} --time="${HARDTIMELIMIT}" --cpu-freq=highm1 ${EXCLUSIVE} --output=/dev/null run.sh
                     else
-                        sbatch --cpus-per-task="${THREADS}" --job-name="${JOBNAME}" --mem="${HARDMEMLIMIT}" -p "${CLUSTERQUEUE}" -A "${SLURMACCOUNT}" ${NICE} --time="${HARDTIMELIMIT}" --cpu-freq=highm1 ${EXCLUSIVE} -w "${CLUSTERNODES}" --output=/dev/null run.sh
+                        sbatch --job-name="${JOBNAME}" --mem="${HARDMEMLIMIT}" -p "${CLUSTERQUEUE}" -A "${SLURMACCOUNT}" ${NICE} --time="${HARDTIMELIMIT}" --cpu-freq=highm1 ${EXCLUSIVE} -w "${CLUSTERNODES}" --output=/dev/null run.sh
                     fi
                 else
                     # -V to copy all environment variables

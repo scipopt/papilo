@@ -121,7 +121,7 @@ EXECNAME="${SRUN}${EXECNAME/RRTRACEFOLDER_PLACEHOLDER/${ERRFILE}}"
 
 # FILENAME is exported in the calling script check_cluster.sh
 echo ">>> Executing: ${EXECNAME} ${PAPILO_OPT_COMMAND} -f ${FILENAME} -p ${SETFILEPAPILO} -s ${SETFILESCIP} --tlim ${TIMELIMIT} --presolve.randomseed=${SEED}"
-eval "${EXECNAME} ${PAPILO_OPT_COMMAND} -p ${SETFILEPAPILO} -s ${SETFILESCIP} -f ${FILENAME}" --tlim ${TIMELIMIT} --presolve.randomseed=${SEED} 2>> "${ERRFILE}" | tee -a "${OUTFILE}"
+eval "${EXECNAME} ${PAPILO_OPT_COMMAND} -p ${SETFILEPAPILO} -s ${SETFILESCIP} -f ${FILENAME} --tlim ${TIMELIMIT} --presolve.randomseed=${SEED}" 2>> "${ERRFILE}" | tee -a "${OUTFILE}"
 echo "----------------------------------------------------------"
 
 retcode=${PIPESTATUS[0]}
