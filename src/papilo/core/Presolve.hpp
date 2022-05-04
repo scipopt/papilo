@@ -420,9 +420,12 @@ Presolve<REAL>::apply( Problem<REAL>& problem, bool store_dual_postsolve )
              are_only_dual_postsolve_presolvers_enabled())
             result.postsolve.postsolveType = PostsolveType::kFull;
          else
+         {
             msg.error(
                 "Please turn off the presolvers substitution and sparsify and "
                 "componentsdetection to use dual postsolving\n" );
+            return result;
+         }
       }
       result.status = PresolveStatus::kUnchanged;
 

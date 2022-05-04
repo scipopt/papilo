@@ -578,12 +578,13 @@ void
                                              const Problem<REAL>& currentProblem )
 {
    types.push_back( ReductionType::kSubstitutedColWithDual );
-   push_back_row(row, currentProblem );
+   push_back_row( row, currentProblem );
    if( postsolveType == PostsolveType::kFull )
-      push_back_col(col, currentProblem );
-   else{
-      indices.push_back(origcol_mapping[col]);
-      values.push_back(0);
+      push_back_col( col, currentProblem );
+   else
+   {
+      indices.push_back( origcol_mapping[col] );
+      values.push_back( 0 );
    }
 
    finishStorage();
