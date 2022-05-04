@@ -68,18 +68,11 @@ CONTINUE="${9}"            # should test continue an existing run
 QUEUE="${10}"            # the queue name
 p="${11}"                # shift of the global permutation seed
 s="${12}"                # shift of the global random seed
-THREADS="${13}"          # the number of threads
-GLBSEEDSHIFT="${14}"     # the global seed shift
-STARTPERM="${15}"        # the starting permutation
+GLBSEEDSHIFT="${13}"     # the global seed shift
+STARTPERM="${14}"        # the starting permutation
 
 # common naming scheme for eval files
 EVALFILE="${CHECKPATH}/${OUTPUTDIR}/check.${TSTNAME}.${BINID}.${QUEUE}.${SETNAME}"
-
-# if number of threads is larger than 1, add postfix
-if test "${THREADS}" -gt 1
-then
-    EVALFILE="${EVALFILE}-t${THREADS}"
-fi
 
 # if seed is positive, add postfix
 SEED=$((s + GLBSEEDSHIFT))
@@ -114,7 +107,6 @@ then
         echo "@BinName ${BINNAME}"                        >> "${fname}"
         echo "@NodeLimit ${NODELIMIT}"                    >> "${fname}"
         echo "@MemLimit ${MEMLIMIT}"                      >> "${fname}"
-        echo "@Threads ${THREADS}"                        >> "${fname}"
         echo "@FeasTol ${FEASTOL}"                        >> "${fname}"
         echo "@Queue ${QUEUE}"                            >> "${fname}"
         echo "@Exclusive ${EXCLUSIVE}"                    >> "${fname}"
@@ -192,12 +184,6 @@ SHORTPROBNAME="${NEWSHORTPROBNAME}"
 
 #define file name for temporary log file
 FILENAME="${USER}.${TSTNAME}.${COUNT}_${SHORTPROBNAME}.${BINID}.${QUEUE}.${SETNAME}"
-
-# if number of threads is larger than 1, add postfix
-if test "${THREADS}" -gt 1
-then
-    FILENAME="${FILENAME}-t${THREADS}"
-fi
 
 # if seed is positive, add postfix
 if test "${SEED}" -gt 0
