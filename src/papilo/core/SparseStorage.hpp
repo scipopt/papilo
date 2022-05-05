@@ -579,8 +579,8 @@ template <typename REAL>
 SparseStorage<REAL>
 SparseStorage<REAL>::getTranspose() const
 {
-   if( nCols <= 0 )
-      return SparseStorage<REAL>{};
+//   if( nCols <= 0 )
+//      return SparseStorage<REAL>{};
 
    // compute nnz of each row of At (column of A)
 
