@@ -483,6 +483,12 @@ class ScipInterface : public SolverInterface<REAL>
       assert( retcode == SCIP_OKAY );
    }
 
+   bool
+   is_dual_solution_available() override
+   {
+      return false;
+   }
+
    void
    addParameters( ParameterSet& paramSet ) override
    {
@@ -612,6 +618,11 @@ class ScipFactory : public SolverFactory<REAL>
       scip->setVerbosity( verbosity );
 
       return std::move( scip );
+   }
+
+   virtual void
+   add_parameters( ParameterSet& parameter ) const
+   {
    }
 
    static std::unique_ptr<SolverFactory<REAL>>

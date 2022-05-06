@@ -7,3 +7,5 @@ substitution.enabled = 0
 sparsify.enabled = 0
 
 calculate_basis_for_dual = 0
+
+ortools.solver_id = GLOP

@@ -77,6 +77,11 @@ if(GUROBI)
    find_package(GUROBI REQUIRED)
 endif()
 
+if(GLOP)
+   find_package(GLOP REQUIRED)
+   set(CMAKE_CXX_STANDARD 17)
+endif()
+
 find_program(GIT git)
 
 if((GIT) AND (EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/.git))
@@ -141,7 +146,7 @@ find_package(Threads REQUIRED)
 
 
 target_link_libraries(papilo
-        INTERFACE ${Quadmath_IMPORTED_TARGET} ${GMP_LIBRARIES})
+        INTERFACE ${Quadmath_IMPORTED_TARGET} ${GMP_LIBRARIES} ${GLOP_LIBRARIES})
 
 # on raspberry pi, we need to link libatomic, as libtbbmalloc_proxy depends on it
 if((CMAKE_HOST_SYSTEM_PROCESSOR STREQUAL "armv7l") AND (CMAKE_SYSTEM_NAME STREQUAL "Linux"))
@@ -306,9 +311,10 @@ install(FILES
 
 install(FILES
      ${PROJECT_SOURCE_DIR}/src/papilo/interfaces/HighsInterface.hpp
-     ${PROJECT_SOURCE_DIR}/src/papilo/interfaces/ScipInterface.hpp
+     ${PROJECT_SOURCE_DIR}/src/papilo/interfaces/GlopInterface.hpp
      ${PROJECT_SOURCE_DIR}/src/papilo/interfaces/GurobiInterface.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/interfaces/SolverInterface.hpp
+     ${PROJECT_SOURCE_DIR}/src/papilo/interfaces/ScipInterface.hpp
+     ${PROJECT_SOURCE_DIR}/src/papilo/interfaces/SolverInterface.hpp
      ${PROJECT_SOURCE_DIR}/src/papilo/interfaces/SoplexInterface.hpp
   DESTINATION include/papilo/interfaces)
 

@@ -66,17 +66,6 @@ get_mip_solver_factory( papilo::OptionsInfo& optionsInfo )
 {
    return papilo::ScipFactory<REAL>::create( setupscip, &optionsInfo );
 }
-#elif defined PAPILO_HAVE_GUROBI
-
-#include "papilo/interfaces/GurobiInterface.hpp"
-
-
-template <typename REAL>
-static std::unique_ptr<papilo::SolverFactory<REAL>>
-get_mip_solver_factory( papilo::OptionsInfo& optionsInfo )
-{
-   return papilo::GurobiFactory<REAL>::create( );
-}
 
 #elif defined PAPILO_HAVE_HIGHS
 
@@ -89,6 +78,17 @@ get_mip_solver_factory( papilo::OptionsInfo& optionsInfo )
    return papilo::HighsFactory<REAL>::create();
 }
 
+#elif defined PAPILO_HAVE_GUROBI
+
+#include "papilo/interfaces/GurobiInterface.hpp"
+
+
+template <typename REAL>
+static std::unique_ptr<papilo::SolverFactory<REAL>>
+get_mip_solver_factory( papilo::OptionsInfo& optionsInfo )
+{
+   return papilo::GurobiFactory<REAL>::create( );
+}
 #else
 
 template <typename REAL>
@@ -100,18 +100,7 @@ get_mip_solver_factory( papilo::OptionsInfo& optionsInfo )
 
 #endif
 
-#ifdef PAPILO_HAVE_HIGHS
-
-#include "papilo/interfaces/HighsInterface.hpp"
-
-template <typename REAL>
-static std::unique_ptr<papilo::SolverFactory<REAL>>
-get_lp_solver_factory( papilo::OptionsInfo& optionsInfo )
-{
-   return papilo::HighsFactory<REAL>::create();
-}
-
-#elif defined( PAPILO_HAVE_SOPLEX )
+#if defined( PAPILO_HAVE_SOPLEX )
 #include "papilo/interfaces/SoplexInterface.hpp"
 
 static void
@@ -130,6 +119,18 @@ get_lp_solver_factory( papilo::OptionsInfo& optionsInfo )
 {
    return papilo::SoplexFactory<REAL>::create( setupsoplex, &optionsInfo );
 }
+#elif defined PAPILO_HAVE_GLOP
+
+#include "papilo/interfaces/GlopInterface.hpp"
+
+
+template <typename REAL>
+static std::unique_ptr<papilo::SolverFactory<REAL>>
+get_lp_solver_factory( papilo::OptionsInfo& optionsInfo )
+{
+   return papilo::GlopFactory<REAL>::create( );
+}
+
 #else
 
 template <typename REAL>
@@ -145,7 +146,9 @@ int
 main( int argc, char* argv[] )
 {
    using namespace papilo;
-
+//#ifdef PAPILO_HAVE_GLOP
+//   google::InitGoogleLogging(argv[0]);
+//#endif
    print_header();
 
    // get the options passed by the user

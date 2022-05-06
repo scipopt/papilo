@@ -45,6 +45,11 @@
 #include "scip/scipgithash.h"
 #endif
 
+
+#ifdef PAPILO_HAVE_GLOP
+#include "ortools/base/version.h"
+#endif
+
 #include <boost/archive/binary_iarchive.hpp>
 #include <boost/archive/binary_oarchive.hpp>
 #include <boost/lexical_cast.hpp>
@@ -88,6 +93,9 @@ print_header()
 #ifdef PAPILO_HAVE_GUROBI
    list_of_solvers.push_back( "Gurobi" );
 #endif
+#ifdef PAPILO_HAVE_GLOP
+   list_of_solvers.push_back( "Ortools" );
+#endif
 #ifdef PAPILO_HAVE_SOPLEX
    list_of_solvers.push_back( "SoPlex" );
 #endif
@@ -126,9 +134,14 @@ print_header()
 #endif
 #ifdef PAPILO_HAVE_HIGHS
    // TODO: add Highs Solver -> waiting for official release
-    fmt::print( "  HiGHS   {} \t high performance software\n"
+    fmt::print( "  HiGHS   {} \t high performance software "
                "for linear optimization (https://www.maths.ed.ac.uk/hall/HiGHS/) [GitHash: {}]\n" , "pre-release",
     "TBD");
+#endif
+    //TODO
+#ifdef PAPILO_HAVE_GLOP
+    fmt::print( "  ORTOOLS  {}.{}   \t fast and portable software for combinatorial optimization developed by Google.\n" ,
+                operations_research::OrToolsMajorVersion(), operations_research::OrToolsMinorVersion() );
 #endif
 
 #ifdef PAPILO_HAVE_SCIP

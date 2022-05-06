@@ -366,6 +366,13 @@ class GurobiInterface : public SolverInterface<REAL>
    {
    }
 
+   bool
+   is_dual_solution_available() override
+   {
+      return false;
+   }
+
+
    void
    addParameters( ParameterSet& paramSet ) override
    {
@@ -390,6 +397,10 @@ class GurobiFactory : public SolverFactory<REAL>
       return std::move( gurobi );
    }
 
+   virtual void
+   add_parameters( ParameterSet& parameter ) const
+   {
+   }
    static std::unique_ptr<SolverFactory<REAL>>
    create()
    {

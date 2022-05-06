@@ -493,6 +493,12 @@ class SoplexInterface : public SolverInterface<REAL>
       return "SoPlex";
    }
 
+   bool
+   is_dual_solution_available() override
+   {
+      return true;
+   }
+
    void
    printDetails() override
    {
@@ -514,8 +520,8 @@ class SoplexFactory : public SolverFactory<REAL>
    }
 
  public:
-   virtual std::unique_ptr<SolverInterface<REAL>>
-   newSolver( VerbosityLevel verbosity ) const override
+   std::unique_ptr<SolverInterface<REAL>>
+   newSolver( VerbosityLevel verbosity ) const
    {
       auto soplex =
           std::unique_ptr<SolverInterface<REAL>>( new SoplexInterface<REAL>() );
@@ -532,6 +538,11 @@ class SoplexFactory : public SolverFactory<REAL>
       soplex->setVerbosity( verbosity );
 
       return std::move( soplex );
+   }
+
+   virtual void
+   add_parameters( ParameterSet& parameter ) const
+   {
    }
 
    static std::unique_ptr<SolverFactory<REAL>>
