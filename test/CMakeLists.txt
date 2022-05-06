@@ -230,6 +230,20 @@ if (TARGET papilo-executable)
             "MIP/rgn.mps\;82.19999924"
             )
 
+    set(instances_gurobi_MIP
+            "MIP/bell5.mps\;8966406.49152"
+            "MIP/blend2.mps\;7.598985"
+            #"MIP/dcmulti.mps\;188182" gurobi per default does not close the gap entirely
+            "MIP/egout.mps\;568.1007"
+            "MIP/enigma.mps\;0"
+            "MIP/flugpl.mps\;1201500"
+            "MIP/gt2.mps\;21166"
+            "MIP/lseu.mps\;1120"
+            "MIP/misc03.mps\;3360"
+            "MIP/p0548.mps\;8691"
+            "MIP/rgn.mps\;82.19999924"
+            )
+
 
     # LP instances
     set(instances_LP
@@ -350,7 +364,7 @@ if (TARGET papilo-executable)
     if(PAPILO_HAVE_SCIP)
         add_instancetests(instances_MIP numtypes "default.set")
     elseif(PAPILO_HAVE_GUROBI)
-        add_instancetests(instances_MIP double_numtypes "default.set")
+        add_instancetests(instances_gurobi_MIP double_numtypes "default.set")
     endif()
     # comparing the objective value for LP instances and check if dual postsolve works (with/out basis calculation)
     if(PAPILO_HAVE_SOPLEX OR PAPILO_HAVE_HIGHS)
