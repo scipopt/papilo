@@ -757,7 +757,7 @@ SparseStorage<REAL>::shiftRows( const int* rowinds, int ninds,
 {
    assert( ninds > 0 );
    assert( rowinds != nullptr );
-   assert( (int) requiredSpareSpace.size() == ninds );
+   assert( requiredSpareSpace.size() == ninds );
    assert( std::is_sorted( rowinds, rowinds + ninds ) );
 
    for( int i = 0; i != ninds; ++i )
@@ -888,7 +888,7 @@ SparseStorage<REAL>::shiftRows( const int* rowinds, int ninds,
                assert( &values[rowranges[l].end] == valsout );
                assert( rowranges[l - 1].end <= rowranges[l].start );
                assert( rowranges[l].end - rowranges[l].start ==
-                       (int) tmpvals.size() );
+                       tmpvals.size() );
                assert( std::equal( tmpvals.begin(), tmpvals.end(),
                                    &values[rowranges[l].start] ) );
                assert( std::equal( tmpinds.begin(), tmpinds.end(),
@@ -940,7 +940,7 @@ SparseStorage<REAL>::shiftRows( const int* rowinds, int ninds,
                assert( &values[rowranges[r].start] == valsout );
                assert( rowranges[r + 1].start >= rowranges[r].end );
                assert( rowranges[r].end - rowranges[r].start ==
-                       (int) tmpvals.size() );
+                       tmpvals.size() );
                assert( std::equal( tmpvals.begin(), tmpvals.end(),
                                    &values[rowranges[r].start] ) );
                assert( std::equal( tmpinds.begin(), tmpinds.end(),

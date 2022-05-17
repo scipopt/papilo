@@ -458,7 +458,7 @@ class Problem
    REAL
    computeSolObjective( const Vec<REAL>& sol ) const
    {
-      assert( (int) sol.size() == getNCols() );
+      assert( sol.size() == getNCols() );
 
       StableSum<REAL> obj( objective.offset );
       for( int i = 0; i < getNCols(); ++i )

@@ -159,7 +159,7 @@ class ConstraintMatrix
 
       auto rowranges = cons_matrix.getRowRanges();
 
-      assert( (int) flags.size() == cons_matrix.getNRows() );
+      assert( flags.size() == cons_matrix.getNRows() );
 
       for( int i = 0; i < cons_matrix.getNRows(); ++i )
          rowsize.push_back( rowranges[i].end - rowranges[i].start );

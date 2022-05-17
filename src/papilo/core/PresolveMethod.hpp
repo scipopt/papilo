@@ -164,7 +164,6 @@ class PresolveMethod
          Message::debug( &problemUpdate,
                          "[{}:{}] {} detected unboundedness or infeasibility\n",
                          __FILE__, __LINE__, this->name );
-         break;
       case PresolveStatus::kReduced:
          ++nsuccessCall;
          nconsecutiveUnsuccessCall = 0;

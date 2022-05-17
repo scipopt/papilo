@@ -377,7 +377,7 @@ struct MatrixBuffer
    void
    addBadgeEntry( int row, int col, const REAL& val )
    {
-      assert( badge_start >= 0 && badge_start <= (int)entries.size() );
+      assert( badge_start >= 0 && badge_start <= entries.size() );
       entries.emplace_back( row, col, val );
    }
 
@@ -392,9 +392,9 @@ struct MatrixBuffer
    void
    finishBadge()
    {
-      assert( badge_start >= 0 && badge_start <= (int)entries.size() );
+      assert( badge_start >= 0 && badge_start <= entries.size() );
 
-      for( int i = badge_start; i != (int)entries.size(); ++i )
+      for( int i = badge_start; i != (int) entries.size(); ++i )
       {
          this->template link<true>( i );
          this->template link<false>( i );
