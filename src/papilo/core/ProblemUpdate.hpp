@@ -997,7 +997,7 @@ ProblemUpdate<REAL>::flush( bool reset_changed_activities )
       const Vec<int>& colsizes = problem.getColSizes();
       int k = 0;
       int i;
-      assert( firstNewSingletonCol <= singletonColumns.size() );
+      assert( firstNewSingletonCol <= (int) singletonColumns.size() );
       for( i = 0; i != firstNewSingletonCol; ++i )
       {
          if( colsizes[singletonColumns[i]] != 1 )
@@ -1355,7 +1355,7 @@ ProblemUpdate<REAL>::trivialRowPresolve()
    const Vec<REAL>& lhs = consMatrix.getLeftHandSides();
    const Vec<REAL>& rhs = consMatrix.getRightHandSides();
 
-   assert( activities.size() == problem.getNRows() );
+   assert( (int) activities.size() == problem.getNRows() );
    PresolveStatus status = PresolveStatus::kUnchanged;
 
    for( int row = 0; row != problem.getNRows(); ++row )
