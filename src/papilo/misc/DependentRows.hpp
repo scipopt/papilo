@@ -288,7 +288,7 @@ class DependentRows
       }
 
 #ifndef NDEBUG
-      for( int i = 0; i != colsize.size(); ++i )
+      for( int i = 0; i != (int) colsize.size(); ++i )
       {
          int tmpcolsize = 0;
          for( auto coliter = mat.template beginStart<false>( stack, -1, i );
@@ -296,7 +296,7 @@ class DependentRows
             ++tmpcolsize;
          assert( tmpcolsize == colsize[i] );
       }
-      for( int i = 0; i != rowsize.size(); ++i )
+      for( int i = 0; i != (int) rowsize.size(); ++i )
       {
          int tmprowsize = 0;
          for( auto rowiter = mat.template beginStart<true>( stack, i, -1 );
@@ -418,7 +418,7 @@ class DependentRows
                             newval;
                         int rowentryidx = ( rowentry - &mat.entries[0] );
                         assert( rowentryidx > 0 &&
-                                rowentryidx < mat.entries.size() &&
+                                rowentryidx < (int) mat.entries.size() &&
                                 rowentry == &mat.entries[rowentryidx] );
                         heap.push( PivotCandidate{ rowentryidx,
                                                    colsize[rowentry->col],
@@ -517,7 +517,7 @@ class DependentRows
                             double( mat.entries[i].val ) );
       }
 
-      assert( remainingnnz == lusolInput.A.size() );
+      assert( remainingnnz == (int) lusolInput.A.size() );
 
       return remainingnnz;
    }

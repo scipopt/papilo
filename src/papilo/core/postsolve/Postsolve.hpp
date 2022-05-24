@@ -477,14 +477,14 @@ Postsolve<REAL>::copy_from_reduced_to_original(
           postsolveStorage.presolveOptions.calculate_basis_for_dual;
       int reduced_rows = (int)reducedSolution.dual.size();
 
-      assert( reducedSolution.dual.size() == reduced_rows );
+      assert( (int)  reducedSolution.dual.size() == reduced_rows );
       originalSolution.dual.clear();
       originalSolution.dual.resize( postsolveStorage.nRowsOriginal );
       for( int k = 0; k < reduced_rows; k++ )
          originalSolution.dual[postsolveStorage.origrow_mapping[k]] =
              reducedSolution.dual[k];
 
-      assert( reducedSolution.reducedCosts.size() == reduced_columns );
+      assert( (int) reducedSolution.reducedCosts.size() == reduced_columns );
       originalSolution.reducedCosts.clear();
       originalSolution.reducedCosts.resize( postsolveStorage.nColsOriginal );
       for( int k = 0; k < reduced_columns; k++ )
@@ -499,7 +499,7 @@ Postsolve<REAL>::copy_from_reduced_to_original(
          originalSolution.varBasisStatus[postsolveStorage.origcol_mapping[k]] =
              reducedSolution.varBasisStatus[k];
 
-      assert( reducedSolution.rowBasisStatus.size() == reduced_rows );
+      assert( (int) reducedSolution.rowBasisStatus.size() == reduced_rows );
 
       originalSolution.rowBasisStatus.clear();
       originalSolution.rowBasisStatus.resize( postsolveStorage.nRowsOriginal,

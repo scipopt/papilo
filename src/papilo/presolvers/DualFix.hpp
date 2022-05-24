@@ -324,7 +324,7 @@ DualFix<REAL>::perform_dual_fix_step(
             return PresolveStatus::kUnchanged;
          bool skip_performing = false;
          bool new_ub_init = false;
-         REAL new_ub;
+         REAL new_ub = REAL(0);
          int best_row = -1;
 
          // go through all rows with non-zero entry
@@ -439,7 +439,7 @@ DualFix<REAL>::perform_dual_fix_step(
             return PresolveStatus::kUnchanged;
          bool skip_ = false;
          bool new_lb_init = false;
-         REAL new_lb;
+         REAL new_lb = REAL(0);
          int best_row = -1;
 
          // go through all rows with non-zero entry
