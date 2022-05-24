@@ -127,8 +127,7 @@ SimplifyInequalities<REAL>::computeGreatestCommonDivisor( REAL val1, REAL val2,
 {
    auto isIntegral = [&num]( REAL val )
    {
-      if( val > std::numeric_limits<int64_t>::max() ||
-          val < std::numeric_limits<int64_t>::min() )
+      if( abs( val ) > (double) std::numeric_limits<int64_t>::max() )
          return false;
       if( !num.isEq( num.round( val ), val ) )
          return false;
