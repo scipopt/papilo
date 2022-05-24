@@ -52,9 +52,6 @@ template <typename REAL>
 class SparseVectorView
 {
  public:
-   SparseVectorView<REAL>&
-   operator=( const SparseVectorView<REAL>& ) = default;
-
    SparseVectorView() : vals( nullptr ), indices( nullptr ), len( 0 ) {}
 
    SparseVectorView( const REAL* _vals, const int* _inds, int _len )
