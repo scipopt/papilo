@@ -1351,11 +1351,10 @@ Presolve<REAL>::logStatus( const Problem<REAL>& problem,
    {
       // the primaldual can be disabled therefore calculate only primal for obj
       Solution<REAL> solution{};
-      Solution<REAL> empty_sol{};
-      empty_sol.basisAvailabe = false;
-      empty_sol.type = SolutionType::kPrimal;
-      if(postsolveStorage.postsolveType == PostsolveType::kFull)
-         empty_sol.type = SolutionType::kPrimalDual;
+      SolutionType type = postsolveStorage.postsolveType == PostsolveType::kFull
+                              ? SolutionType::kPrimalDual
+                              : SolutionType::kPrimal;
+      Solution<REAL> empty_sol{ type };
       Postsolve<REAL> postsolve{ msg, num };
       postsolve.undo( empty_sol, solution, postsolveStorage );
       const Problem<REAL>& origprob = postsolveStorage.getOriginalProblem();

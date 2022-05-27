@@ -59,17 +59,18 @@ class Solution
    Vec<VarBasisStatus> rowBasisStatus;
 
    // Default type primal only.
-   Solution() : type( SolutionType::kPrimal ) {}
+   Solution() : type( SolutionType::kPrimal ), basisAvailabe( false ) {}
 
-   Solution( SolutionType type_ ) : type( type_ ) {}
+   explicit Solution( SolutionType type_ ) : type( type_ ), basisAvailabe( false ) {}
 
    Solution( SolutionType type_, Vec<REAL> values )
-       : type( type_ ), primal( std::move( values ) )
+       : type( type_ ), primal( std::move( values ) ), basisAvailabe( false )
    {
    }
 
-   Solution( Vec<REAL> values )
-       : type( SolutionType::kPrimal ), primal( std::move( values ) )
+   explicit Solution( Vec<REAL> values )
+       : type( SolutionType::kPrimal ), primal( std::move( values ) ),
+         basisAvailabe( false )
    {
    }
 
