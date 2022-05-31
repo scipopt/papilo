@@ -54,29 +54,29 @@ class Solution
    Vec<REAL> dual;
    Vec<REAL> reducedCosts;
    Vec<REAL> slack;
-   bool basisAvailabe;
+   bool basisAvailable;
    Vec<VarBasisStatus> varBasisStatus;
    Vec<VarBasisStatus> rowBasisStatus;
 
    // Default type primal only.
-   Solution() : type( SolutionType::kPrimal ), basisAvailabe( false ) {}
+   Solution() : type( SolutionType::kPrimal ), basisAvailable( false ) {}
 
-   explicit Solution( SolutionType type_ ) : type( type_ ), basisAvailabe( false ) {}
+   explicit Solution( SolutionType type_ ) : type( type_ ), basisAvailable( false ) {}
 
    Solution( SolutionType type_, Vec<REAL> values )
-       : type( type_ ), primal( std::move( values ) ), basisAvailabe( false )
+       : type( type_ ), primal( std::move( values ) ), basisAvailable( false )
    {
    }
 
    explicit Solution( Vec<REAL> values )
        : type( SolutionType::kPrimal ), primal( std::move( values ) ),
-         basisAvailabe( false )
+         basisAvailable( false )
    {
    }
 
    Solution( Vec<REAL> primal_values, Vec<REAL> dual_values,
              Vec<REAL> reduced_values, Vec<REAL> slack_values,
-             bool basisAvailabe_value,
+             bool basis_available_value,
              Vec<VarBasisStatus> var_basis_status,
              Vec<VarBasisStatus> row_basis_status
 )
@@ -85,7 +85,7 @@ class Solution
          dual( std::move( dual_values ),
          reducedCosts( std::move( reduced_values ) ),
          slack( std::move( slack_values ) ) ),
-         basisAvailabe( basisAvailabe_value ),
+         basisAvailable( basis_available_value ),
          varBasisStatus( std::move( var_basis_status )),
          rowBasisStatus( std::move( row_basis_status ))
 

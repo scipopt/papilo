@@ -310,7 +310,7 @@ class SoplexInterface : public SolverInterface<REAL>
       sol.dual.resize( numrows );
       for( int i = 0; i != numrows; ++i )
          sol.dual[i] = REAL( buffer[i] );
-      sol.basisAvailabe = true;
+      sol.basisAvailable = true;
 
       sol.varBasisStatus.resize( numcols, VarBasisStatus::UNDEFINED );
       for( int i = 0; i < numcols; ++i )
