@@ -491,7 +491,7 @@ Postsolve<REAL>::copy_from_reduced_to_original(
          originalSolution.reducedCosts[postsolveStorage.origcol_mapping[k]] =
              reducedSolution.reducedCosts[k];
 
-      assert( reducedSolution.varBasisStatus.size() == reduced_columns );
+      assert( (int) reducedSolution.varBasisStatus.size() == reduced_columns );
       originalSolution.varBasisStatus.clear();
       originalSolution.varBasisStatus.resize( postsolveStorage.nColsOriginal,
                                               VarBasisStatus::UNDEFINED );

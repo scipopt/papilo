@@ -610,13 +610,17 @@ ProblemUpdate<REAL>::fixColInfinity( int col, REAL val )
    markColFixed( col );
 
    setColState( col, State::kBoundsModified );
-   if( cflags[col].test( ColFlag::kLbInf ) )
+   if( val == -1 )
    {
-      postsolve.storeFixedInfCol( col, -1, ubs[col], problem );
+      assert(cflags[col].test( ColFlag::kLbInf ));
+      REAL ub = cflags[col].test( ColFlag::kUbInf )? (double) std::numeric_limits<int64_t>::max() :ubs[col];
+      postsolve.storeFixedInfCol( col, -1, ub, problem );
    }
-   if( cflags[col].test( ColFlag::kUbInf ) )
+   if( val == 1 )
    {
-      postsolve.storeFixedInfCol( col, 1, lbs[col], problem );
+      assert(cflags[col].test( ColFlag::kUbInf ));
+      REAL lb = cflags[col].test( ColFlag::kLbInf )? (double) std::numeric_limits<int64_t>::max() :lbs[col];
+      postsolve.storeFixedInfCol( col, 1, lb, problem );
    }
 
    return PresolveStatus::kReduced;
