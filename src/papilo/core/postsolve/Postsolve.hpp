@@ -305,7 +305,7 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
                                                     values, i, row ))
             continue;
 
-         if(originalSolution.basisAvailable )
+         if(originalSolution.basisAvailabe)
          {
             // TODO: setting the bound to infinity might turn the a ZERO
             switch( originalSolution.rowBasisStatus[row] )
@@ -379,7 +379,7 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
       }
       case ReductionType::kRedundantRow:
          assert( originalSolution.type == SolutionType::kPrimalDual );
-         if( originalSolution.basisAvailable )
+         if( originalSolution.basisAvailabe )
             originalSolution.rowBasisStatus[indices[first]] =
                 VarBasisStatus::BASIC;
          if( types[i - 1] == ReductionType::kSubstitutedColWithDual )
@@ -471,8 +471,8 @@ Postsolve<REAL>::copy_from_reduced_to_original(
 
    if( originalSolution.type == SolutionType::kPrimalDual )
    {
-      originalSolution.basisAvailable =
-          reducedSolution.basisAvailable &&
+      originalSolution.basisAvailabe =
+          reducedSolution.basisAvailabe &&
           postsolveStorage.problem.getNumIntegralCols() == 0 &&
           postsolveStorage.presolveOptions.calculate_basis_for_dual;
       int reduced_rows = (int)reducedSolution.dual.size();
@@ -538,7 +538,7 @@ Postsolve<REAL>::apply_fix_var_in_original_solution(
       originalSolution.reducedCosts[col] = stablesum.get();
 
       // mark the variable as fixed in the basis
-      if( originalSolution.basisAvailable )
+      if( originalSolution.basisAvailabe )
          originalSolution.varBasisStatus[col] = VarBasisStatus::FIXED;
    }
 }
@@ -578,7 +578,7 @@ Postsolve<REAL>::apply_fix_infinity_variable_in_original_solution(
              originalSolution.primal, true, col_coefficents[row_counter] );
          if( num.isLT( newValue, solution ) )
          {
-            if( originalSolution.basisAvailable )
+            if( originalSolution.basisAvailabe )
             {
                if( num.isGT( col_coefficents[row_counter], 0 ) )
                   originalSolution.rowBasisStatus[row_indices[row_counter]] =
@@ -589,7 +589,7 @@ Postsolve<REAL>::apply_fix_infinity_variable_in_original_solution(
             }
             solution = newValue;
          }
-         else if( originalSolution.basisAvailable )
+         else if( originalSolution.basisAvailabe )
             originalSolution.rowBasisStatus[row_indices[row_counter]] =
                 VarBasisStatus::BASIC;
 
@@ -618,7 +618,7 @@ Postsolve<REAL>::apply_fix_infinity_variable_in_original_solution(
              originalSolution.primal, false, col_coefficents[row_counter] );
          if( num.isGT( newValue, solution ) )
          {
-            if( originalSolution.basisAvailable )
+            if( originalSolution.basisAvailabe )
             {
                if( num.isGT( col_coefficents[row_counter], 0 ) )
                   originalSolution.rowBasisStatus[row_indices[row_counter]] =
@@ -629,7 +629,7 @@ Postsolve<REAL>::apply_fix_infinity_variable_in_original_solution(
             }
             solution = newValue;
          }
-         else if( originalSolution.basisAvailable )
+         else if( originalSolution.basisAvailabe )
             originalSolution.rowBasisStatus[row_indices[row_counter]] =
                 VarBasisStatus::BASIC;
 
@@ -657,7 +657,7 @@ Postsolve<REAL>::apply_fix_infinity_variable_in_original_solution(
          stored_bounds.set_bounds_of_variable( col, false, true, bound, 0 );
 
       // set the basis depending on the status
-      if( originalSolution.basisAvailable )
+      if( originalSolution.basisAvailabe )
       {
          if( num.isEq( solution, bound ) )
             if( isNegativeInfinity )
@@ -742,7 +742,7 @@ Postsolve<REAL>::apply_substituted_column_to_original_solution(
          assert( variableOnLowerBound || variableOnUpperBound );
 
          // set the basis of the variable
-         if( originalSolution.basisAvailable )
+         if( originalSolution.basisAvailabe )
          {
             if( originalSolution.rowBasisStatus[row] ==
                     VarBasisStatus::BASIC &&
@@ -792,7 +792,7 @@ Postsolve<REAL>::apply_substituted_column_to_original_solution(
          sum_dual.add( obj );
          originalSolution.dual[row] = sum_dual.get() / rowCoef;
 
-         if( originalSolution.basisAvailable )
+         if( originalSolution.basisAvailabe )
          {
             assert( originalSolution.rowBasisStatus[row] ==
                     VarBasisStatus::BASIC );
@@ -848,7 +848,7 @@ Postsolve<REAL>::apply_row_bound_change_to_original_solution(
    {
       originalSolution.dual[deleted_row] = dual_row_value * factor;
       originalSolution.dual[row] = 0;
-      if( originalSolution.basisAvailable )
+      if( originalSolution.basisAvailabe )
       {
          assert( originalSolution.rowBasisStatus[deleted_row] ==
                  VarBasisStatus::BASIC );
@@ -896,7 +896,7 @@ Postsolve<REAL>::apply_row_bound_change_to_original_solution(
          }
       }
    }
-   else if( originalSolution.basisAvailable )
+   else if( originalSolution.basisAvailabe)
    {
       // check if bound is modified on non basic variable and dual solution is 0
       // this can happen in ParallelRowDetection
@@ -960,7 +960,7 @@ Postsolve<REAL>::apply_var_bound_change_forced_by_column_in_original_solution(
 
       originalSolution.dual[saved_row.getRow()] += increasing_value;
 
-      if( originalSolution.basisAvailable &&
+      if( originalSolution.basisAvailabe &&
           originalSolution.rowBasisStatus[row] == VarBasisStatus::BASIC &&
           ! num.isZero( originalSolution.dual[row] ) )
       {
@@ -979,7 +979,7 @@ Postsolve<REAL>::apply_var_bound_change_forced_by_column_in_original_solution(
          originalSolution.reducedCosts[col_index] -=
              increasing_value * saved_row.getValue( j );
 
-         if( originalSolution.basisAvailable &&
+         if( originalSolution.basisAvailabe &&
              originalSolution.varBasisStatus[col_index] ==
                  VarBasisStatus::BASIC &&
              ! num.isZero( originalSolution.reducedCosts[col_index] ) )
@@ -993,13 +993,13 @@ Postsolve<REAL>::apply_var_bound_change_forced_by_column_in_original_solution(
             variables_removed_from_basis++;
          }
 
-         assert( ! originalSolution.basisAvailable ||
+         assert( ! originalSolution.basisAvailabe ||
                  ! num.isZero( originalSolution.reducedCosts[col_index]) ||
                                  originalSolution.varBasisStatus[col_index] !=
                                      VarBasisStatus::BASIC );
 
          // assert for bound tightening
-         assert( !originalSolution.basisAvailable ||
+         assert( !originalSolution.basisAvailabe ||
                  //whether variable was fixed
                  originalSolution.varBasisStatus[col] == VarBasisStatus::FIXED ||
                  // or lowerbound is not tight
@@ -1014,7 +1014,7 @@ Postsolve<REAL>::apply_var_bound_change_forced_by_column_in_original_solution(
                  saved_row.is_violated(originalSolution.primal, stored_bounds)
                  );
       }
-      if( originalSolution.basisAvailable && variables_removed_from_basis > 0 )
+      if( originalSolution.basisAvailabe && variables_removed_from_basis > 0 )
       {
          originalSolution.varBasisStatus[col] = VarBasisStatus::BASIC;
          variables_removed_from_basis--;
@@ -1027,7 +1027,7 @@ Postsolve<REAL>::apply_var_bound_change_forced_by_column_in_original_solution(
 
 
 
-   if( originalSolution.basisAvailable )
+   if( originalSolution.basisAvailabe )
    {
       switch( originalSolution.varBasisStatus[col] )
       {
@@ -1227,7 +1227,7 @@ Postsolve<REAL>::apply_parallel_col_to_original_solution(
          }
       }
 
-      if( originalSolution.basisAvailable )
+      if( originalSolution.basisAvailabe )
       {
 
          originalSolution.varBasisStatus[col1] = calculate_basis(

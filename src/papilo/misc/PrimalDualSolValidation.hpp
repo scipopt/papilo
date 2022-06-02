@@ -280,7 +280,7 @@ class PrimalDualSolValidation
    bool
    checkBasis( const Solution<REAL>& solution, const Problem<REAL>& problem )
    {
-      if(! solution.basisAvailable )
+      if(! solution.basisAvailabe)
          return false;
       int number_basic_variable = 0;
       int number_rows = 0;
