@@ -27,6 +27,7 @@ Interface changes
 
 - probing.maxbadgesize = -1 : maximal number of probing candidates probed in a single badge of candidates (-1 deactivated)
 - ortools.solver_id = PDLP : LP solver of or-tools
+- dualfix.is_fix_to_infinity_allowed = true : should unbounded variables with objective value zero be fixed to infinity?
 
 ### Data structures
 

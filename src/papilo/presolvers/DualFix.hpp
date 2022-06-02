@@ -44,6 +44,8 @@ class DualFix : public PresolveMethod<REAL>
       this->setTiming( PresolverTiming::kMedium );
    }
 
+   bool is_fix_to_infinity_allowed = true;
+
    bool
    initialize( const Problem<REAL>& problem,
                const PresolveOptions& presolveOptions ) override
@@ -52,6 +54,19 @@ class DualFix : public PresolveMethod<REAL>
          this->setEnabled( false );
       return false;
    }
+
+   void
+   addPresolverParams( ParameterSet& paramSet ) override
+   {
+      paramSet.addParameter( "dualfix.is_fix_to_infinity_allowed",
+                             "should variables be set to infinity if their objective value is 0?",
+                             is_fix_to_infinity_allowed );
+   }
+
+   void
+   set_fix_to_infinity_allowed( bool val){
+       is_fix_to_infinity_allowed = val;
+   };
 
    PresolveStatus
    execute( const Problem<REAL>& problem,
@@ -64,7 +79,7 @@ class DualFix : public PresolveMethod<REAL>
                           const ConstraintMatrix<REAL>& consMatrix,
                           const Vec<RowActivity<REAL>>& activities,
                           const Vec<ColFlags>& cflags,
-                          const Vec<REAL>& objective, const Vec<REAL>& skip_variable,
+                          const Vec<REAL>& objective, const Vec<REAL>& lbs,
                           const Vec<REAL>& ubs, const Vec<RowFlags>& rflags,
                           const Vec<REAL>& lhs, const Vec<REAL>& rhs, int& i,
                           bool no_strong_reductions,
@@ -193,7 +208,8 @@ DualFix<REAL>::perform_dual_fix_step(
     const Vec<RowActivity<REAL>>& activities, const Vec<ColFlags>& cflags,
     const Vec<REAL>& objective, const Vec<REAL>& lbs, const Vec<REAL>& ubs,
     const Vec<RowFlags>& rflags, const Vec<REAL>& lhs, const Vec<REAL>& rhs,
-    int& i, bool no_strong_reductions, bool skip_variable_tightening, REAL bound_tightening_offset ) const
+    int& i, bool no_strong_reductions, bool skip_variable_tightening,
+    REAL bound_tightening_offset ) const
 {
    // skip inactive columns
    if( cflags[i].test( ColFlag::kInactive ) )
@@ -247,7 +263,7 @@ DualFix<REAL>::perform_dual_fix_step(
       {
          return PresolveStatus::kUnbndOrInfeas;
       }
-      else
+      else if( is_fix_to_infinity_allowed )
       {
          TransactionGuard<REAL> guard{ reductions };
          reductions.lockCol( i );
@@ -272,7 +288,7 @@ DualFix<REAL>::perform_dual_fix_step(
       {
          return PresolveStatus::kUnbndOrInfeas;
       }
-      else
+      else if( is_fix_to_infinity_allowed )
       {
          TransactionGuard<REAL> guard{ reductions };
          reductions.lockCol( i );
