@@ -157,7 +157,7 @@ Sparsify<REAL>::execute( const Problem<REAL>& problem,
    auto& sparsify = s.sparsify;
    std::size_t sparsifyStart;
    auto& reductionBuffer = s.reductionBuffer;
-   for( int i = 0; i < equalities.size(); ++i )
+   for( int i = 0; i < (int) equalities.size(); ++i )
 #endif
           {
              int eqrow = equalities[i];
