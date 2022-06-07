@@ -357,7 +357,7 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
        [&]( const tbb::blocked_range<int>& r ) {
           for( int k = r.begin(); k != r.end(); ++k )
 #else
-   for( int k = 0; k < unboundedcols.size(); ++k )
+   for( int k = 0; k < (int) unboundedcols.size(); ++k )
 #endif
           {
              int i = unboundedcols[k];
