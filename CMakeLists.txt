@@ -42,7 +42,7 @@ if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Release)
 endif()
 
-find_package(Boost ${BOOST_MIN_VERSION} COMPONENTS program_options REQUIRED)
+find_package(Boost ${BOOST_MIN_VERSION} REQUIRED)
 
 if(GMP)
     find_package(GMP)
