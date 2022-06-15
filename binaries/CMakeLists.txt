@@ -120,7 +120,7 @@ else()
 endif()
 
 #TODO: consider case Gurobi and SCIP are build
-if(PAPILO_HAVE_SCIP AND PAPILO_HAVE_SOPLEX)
+if(PAPILO_HAVE_SCIP AND PAPILO_HAVE_SOPLEX AND Boost_PROGRAM_OPTIONS_FOUND)
    add_library(papilolib SHARED ${CMAKE_CURRENT_LIST_DIR}/../src/papilolib.cpp)
    set_target_properties(papilolib PROPERTIES OUTPUT_NAME papilo LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
    target_include_directories(papilolib INTERFACE
