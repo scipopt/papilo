@@ -397,8 +397,6 @@ set(TBB_MODULE_PATH "\${CMAKE_CURRENT_LIST_DIR}")
 configure_file(${PROJECT_SOURCE_DIR}/papilo-config.cmake.in
     "${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/papilo-config.cmake" @ONLY)
 
-install(FILES ${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/papilo-config.cmake
-   DESTINATION lib/cmake/papilo)
 if(PAPILO_HAVE_FLOAT128)
    install(FILES ${PROJECT_SOURCE_DIR}/cmake/Modules/FindQuadmath.cmake
       DESTINATION lib/cmake/papilo)
