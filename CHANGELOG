@@ -1,10 +1,7 @@
-@section RNNDEV PaPILO next release develop
+@page RN20 Release notes for PAPILO 2.0
+
+@section RN210 PaPILO 2.1.0
 ***************************
-
-Features
---------
-
-### Parameters with default values
 
 Performance improvements
 ------------------------
@@ -19,10 +16,6 @@ Interface changes
 
 - Wrapper in Julia for PaPILO: https://github.com/scipopt/PaPILO.jl
 
-### Deleted and changed API methods
-### New API functions
-### Changed parameters
-
 ### New parameters with default values
 
 - probing.maxbadgesize = -1 : maximal number of probing candidates probed in a single badge of candidates (-1 deactivated)
@@ -31,51 +24,6 @@ Interface changes
 
 ### Data structures
 
-Unit tests
-----------
-
-Testing
--------
-
-Build system
-------------
-
-Fixed bugs
-----------
-
-Miscellaneous
--------------
-- Providing a way to build PaPILO without TBB (warning parallel design can not be used anymore)
-- Providing an interface to gurobi
-- Providing an interface to ortools (GLOP/PDLP)
-- Install all files (also externals) to the include/papilo folder
-- Presolving is aborted if presolvers are activated that do not support dual postsolve
-
-Known bugs
-----------
-
-@page RN20 Release notes for PAPILO 2.0
-
-@section RN201 PaPILO 2.0.1
-***************************
-
-Features
---------
-Performance improvements
-------------------------
-Interface changes
------------------
-### Deleted and changed API methods
-### New API functions
-### Changed parameters
-### New parameters with default values
-### Data structures
-Unit tests
-----------
-Testing
--------
-Build system
-------------
 Fixed bugs
 ----------
 
@@ -88,10 +36,17 @@ Fixed bugs
 - store data for FixInfinityCol correct if bounds are both infinity
 - PaPILO shows some behavior on different OS
 
+
 Miscellaneous
 -------------
-Known bugs
-----------
+
+- Providing a way to build PaPILO without TBB (warning parallel design can not be used anymore)
+- Providing an interface to gurobi
+- Providing an interface to ortools (GLOP/PDLP)
+- Install all files (also externals) to the include/papilo folder
+- Presolving is aborted if presolvers are activated that do not support dual postsolve
+
+@page RN20 Release notes for PAPILO 2.0
 
 @section RN200 PaPILO 2.0.0
 ***************************
