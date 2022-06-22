@@ -1,4 +1,24 @@
-@page RN20 Release notes for PAPILO 2.0
+@page RN21 Release notes for PAPILO 2.0
+
+@section RN211 PaPILO 2.1.1
+***************************
+
+Performance improvements
+------------------------
+
+Interface changes
+-----------------
+
+### New parameters with default values
+
+### Data structures
+
+Fixed bugs
+----------
+
+Miscellaneous
+-------------
+
 
 @section RN210 PaPILO 2.1.0
 ***************************
