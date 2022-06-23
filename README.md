@@ -16,7 +16,6 @@ Further, a Julia wrapper is available [here](https://github.com/scipopt/PaPILO.j
 *Note:* The original instance of this repository is hosted at  [git.zib.de](https://git.zib.de) and a read-only mirror is
 available at [github.com/scipopt/papilo](https://github.com/scipopt/papilo).
 
-
 # Dependencies
 
 External dependencies that need to be installed by the user are the Intel TBB >= 2020, or TBB from oneAPI runtime library and boost >= 1.65 headers.
@@ -336,7 +335,12 @@ Getting the PaPILO binary to call your presolver could be achieved by adding an 
 
 # References and how to cite
 
-The release report of the SCIP Optimization Suite 7.0 contains a section about PaPILO. The report is available under http://www.optimization-online.org/DB_HTML/2020/03/7705.html.
+Any publication for which PaPILO is used must include an acknowledgement and a reference to the following article:
+> PaPILO: A Parallel Presolving Library for Integer and Linear Programming with Multiprecision Support
+>
+> Gleixner, Ambros and Gottwald, Leona and Hoen, Alexander
+>
+> available at https://arxiv.org/abs/2206.10709
 
 Most of the presolve methods implemented in PaPILO are described in the paper "Presolve Reductions in Mixed Integer Programming" by Achterberg et al.
 which is available under https://opus4.kobv.de/opus4-zib/files/6037/Presolve.pdf.
