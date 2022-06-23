@@ -346,7 +346,6 @@ install(FILES
      ${PROJECT_SOURCE_DIR}/src/papilo/misc/Array.hpp
      ${PROJECT_SOURCE_DIR}/src/papilo/misc/compress_vector.hpp
      ${PROJECT_SOURCE_DIR}/src/papilo/misc/DependentRows.hpp
-     ${PROJECT_SOURCE_DIR}/src/papilo/misc/extended_euclidean.hpp
      ${PROJECT_SOURCE_DIR}/src/papilo/misc/Flags.hpp
      ${PROJECT_SOURCE_DIR}/src/papilo/misc/fmt.hpp
      ${PROJECT_SOURCE_DIR}/src/papilo/misc/Hash.hpp
