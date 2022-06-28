@@ -195,6 +195,15 @@ class ProblemBuilder
    }
 
    void
+   setColImplInt( int col, bool isImplInt )
+   {
+      if( isImplInt )
+         domains.flags[col].set( ColFlag::kImplInt );
+      else
+         domains.flags[col].unset( ColFlag::kImplInt );
+   }
+
+   void
    setColIntegralAll( Vec<uint8_t> isIntegral )
    {
       assert( isIntegral.size() == domains.flags.size() );
