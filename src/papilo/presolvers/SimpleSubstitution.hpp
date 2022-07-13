@@ -251,7 +251,7 @@ SimpleSubstitution<REAL>::perform_simple_subsitution_step(
             return PresolveStatus::kInfeasible;
          // TODO: ensure isConstraintsFeasibleWithGivenBounds() works for negative sign
          else if( vals[stay] > 0 && vals[subst] > 0 &&
-            isConstraintsFeasibleWithGivenBounds(
+            !isConstraintsFeasibleWithGivenBounds(
                num, lower_bounds, upper_bounds, vals, rhs, subst, stay, res ) )
             return PresolveStatus::kInfeasible;
          else
