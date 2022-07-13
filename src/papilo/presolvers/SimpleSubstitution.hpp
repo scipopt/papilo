@@ -243,6 +243,10 @@ SimpleSubstitution<REAL>::perform_simple_subsitution_step(
          auto res = boost::integer::extended_euclidean(
             static_cast<int64_t>( abs( vals[stay] ) ),
             static_cast<int64_t>( abs( vals[subst] ) ) );
+         if( vals[stay] < 0 )
+            res.x *= -1;
+         if( vals[subst] < 0 )
+            res.y *= -1;
          if( !num.isIntegral( rhs / res.gcd ) )
             return PresolveStatus::kInfeasible;
          // TODO: ensure isConstraintsFeasibleWithGivenBounds() works for negative sign
