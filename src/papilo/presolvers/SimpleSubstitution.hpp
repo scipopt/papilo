@@ -241,14 +241,21 @@ SimpleSubstitution<REAL>::perform_simple_subsitution_step(
          if( !num.isIntegral( vals[stay] ) || !num.isIntegral( vals[subst] ) )
             return PresolveStatus::kUnchanged;
          auto res = boost::integer::extended_euclidean(
-             static_cast<int64_t>( vals[stay] ),
-             static_cast<int64_t>( vals[subst] ) );
-         bool b = num.isIntegral( rhs / res.gcd );
-         bool b1 = isConstraintsFeasibleWithGivenBounds(
-             num, lower_bounds, upper_bounds, vals, rhs, subst, stay, res );
-         if( b && b1 )
+            static_cast<int64_t>( abs( vals[stay] ) ),
+            static_cast<int64_t>( abs( vals[subst] ) ) );
+         if( vals[stay] < 0 )
+            res.x *= -1;
+         if( vals[subst] < 0 )
+            res.y *= -1;
+         if( !num.isIntegral( rhs / res.gcd ) )
+            return PresolveStatus::kInfeasible;
+         // TODO: ensure isConstraintsFeasibleWithGivenBounds() works for negative sign
+         else if( vals[stay] > 0 && vals[subst] > 0 &&
+            !isConstraintsFeasibleWithGivenBounds(
+               num, lower_bounds, upper_bounds, vals, rhs, subst, stay, res ) )
+            return PresolveStatus::kInfeasible;
+         else
             return PresolveStatus::kUnchanged;
-         return PresolveStatus::kInfeasible;
       }
       // problem is infeasible if gcd (i.e. vals[subst]) is not divisor of
       // rhs

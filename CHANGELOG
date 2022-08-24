@@ -47,7 +47,7 @@ Performance improvements
 
 - ParallelCol: reducing the amount of redundant transactions in case of multiple parallel integer columns
 - Probing: checks the time limit condition before propagating a variable
-- Probing: introduce new parameter to cap the bagdesize
+- Probing: introduce new parameter to cap the badgesize
 - SequentialMode: execute functions like trivialPresolve only once per round and not after every presolver
 
 Interface changes
