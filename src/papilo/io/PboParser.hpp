@@ -136,6 +136,8 @@ class PboParser
 
    enum class parsekey
    {
+      kObjective,
+      kConstraint,
       kFail,
       kComment
    };
