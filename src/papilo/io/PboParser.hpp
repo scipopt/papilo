@@ -21,8 +21,8 @@
 /*                                                                           */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef _PAPILO_IO_OBP_PARSER_HPP_
-#define _PAPILO_IO_OBP_PARSER_HPP_
+#ifndef _PAPILO_IO_PBO_PARSER_HPP_
+#define _PAPILO_IO_PBO_PARSER_HPP_
 
 #include "papilo/Config.hpp"
 #include "papilo/core/ConstraintMatrix.hpp"
@@ -70,9 +70,9 @@ struct RealParseType<REAL, true>
    using type = REAL;
 };
 
-/// Parser for obp files in fixed and free format
+/// Parser for pbo files in fixed and free format
 template <typename REAL>
-class ObpParser
+class PboParser
 {
    static_assert(
        num_traits<typename RealParseType<REAL>::type>::is_floating_point,
@@ -82,7 +82,7 @@ class ObpParser
    static boost::optional<Problem<REAL>>
    loadProblem( const std::string& filename )
    {
-      ObpParser<REAL> parser;
+      PboParser<REAL> parser;
 
       Problem<REAL> problem;
 
@@ -117,9 +117,9 @@ class ObpParser
    }
 
  private:
-   ObpParser() {}
+   PboParser() {}
 
-   /// load LP from OBP file as transposed triplet matrix
+   /// load LP from PBO file as transposed triplet matrix
    bool
    parseFile( const std::string& filename );
 
@@ -166,7 +166,7 @@ class ObpParser
    };
 
    /*
-    * data for obp problem
+    * data for pbo problem
     */
 
    Vec<Triplet<REAL>> entries;
@@ -211,8 +211,8 @@ class ObpParser
 };
 
 template <typename REAL>
-typename ObpParser<REAL>::parsekey
-ObpParser<REAL>::checkFirstWord( std::string& strline,
+typename PboParser<REAL>::parsekey
+PboParser<REAL>::checkFirstWord( std::string& strline,
                                  std::string::iterator& it,
                                  boost::string_ref& word_ref ) const
 {
@@ -233,23 +233,23 @@ ObpParser<REAL>::checkFirstWord( std::string& strline,
    if( word.front() == 'R' ) // todo
    {
       if( word == "ROWS" )
-         return ObpParser<REAL>::parsekey::kRows;
+         return PboParser<REAL>::parsekey::kRows;
       else if( word == "RHS" )
-         return ObpParser<REAL>::parsekey::kRhs;
+         return PboParser<REAL>::parsekey::kRhs;
       else
-         return ObpParser<REAL>::parsekey::kNone;
+         return PboParser<REAL>::parsekey::kNone;
    }
    else if( word == "COLUMNS" )
-      return ObpParser<REAL>::parsekey::kCols;
+      return PboParser<REAL>::parsekey::kCols;
    else if( word == "ENDATA" )
-      return ObpParser<REAL>::parsekey::kEnd;
+      return PboParser<REAL>::parsekey::kEnd;
    else
-      return ObpParser<REAL>::parsekey::kNone;
+      return PboParser<REAL>::parsekey::kNone;
 }
 
 template <typename REAL>
-typename ObpParser<REAL>::parsekey
-ObpParser<REAL>::parseDefault( boost::iostreams::filtering_istream& file ) const
+typename PboParser<REAL>::parsekey
+PboParser<REAL>::parseDefault( boost::iostreams::filtering_istream& file ) const
 {
    std::string strline;
    getline( file, strline );
@@ -260,8 +260,8 @@ ObpParser<REAL>::parseDefault( boost::iostreams::filtering_istream& file ) const
 }
 
 template <typename REAL>
-typename ObpParser<REAL>::parsekey
-ObpParser<REAL>::parseRows( boost::iostreams::filtering_istream& file,
+typename PboParser<REAL>::parsekey
+PboParser<REAL>::parseRows( boost::iostreams::filtering_istream& file,
                             Vec<boundtype>& rowtype )
 {
    using namespace boost::spirit;
@@ -275,7 +275,7 @@ ObpParser<REAL>::parseRows( boost::iostreams::filtering_istream& file,
       bool isobj = false;
       std::string::iterator it;
       boost::string_ref word_ref;
-      ObpParser<REAL>::parsekey key = checkFirstWord( strline, it, word_ref );
+      PboParser<REAL>::parsekey key = checkFirstWord( strline, it, word_ref );
 
       // start of new section?
       if( key != parsekey::kNone )
@@ -357,8 +357,8 @@ ObpParser<REAL>::parseRows( boost::iostreams::filtering_istream& file,
 }
 
 template <typename REAL>
-typename ObpParser<REAL>::parsekey
-ObpParser<REAL>::parseCols( boost::iostreams::filtering_istream& file,
+typename PboParser<REAL>::parsekey
+PboParser<REAL>::parseCols( boost::iostreams::filtering_istream& file,
                             const Vec<boundtype>& rowtype )
 {
    using namespace boost::spirit;
@@ -395,7 +395,7 @@ ObpParser<REAL>::parseCols( boost::iostreams::filtering_istream& file,
    {
       std::string::iterator it;
       boost::string_ref word_ref;
-      ObpParser<REAL>::parsekey key = checkFirstWord( strline, it, word_ref );
+      PboParser<REAL>::parsekey key = checkFirstWord( strline, it, word_ref );
 
       // start of new section?
       if( key != parsekey::kNone )
@@ -493,8 +493,8 @@ ObpParser<REAL>::parseCols( boost::iostreams::filtering_istream& file,
 }
 
 template <typename REAL>
-typename ObpParser<REAL>::parsekey
-ObpParser<REAL>::parseRhs( boost::iostreams::filtering_istream& file )
+typename PboParser<REAL>::parsekey
+PboParser<REAL>::parseRhs( boost::iostreams::filtering_istream& file )
 {
    using namespace boost::spirit;
    std::string strline;
@@ -503,7 +503,7 @@ ObpParser<REAL>::parseRhs( boost::iostreams::filtering_istream& file )
    {
       std::string::iterator it;
       boost::string_ref word_ref;
-      ObpParser<REAL>::parsekey key = checkFirstWord( strline, it, word_ref );
+      PboParser<REAL>::parsekey key = checkFirstWord( strline, it, word_ref );
 
       // start of new section?
       if( key != parsekey::kNone && key != parsekey::kRhs )
@@ -568,7 +568,7 @@ ObpParser<REAL>::parseRhs( boost::iostreams::filtering_istream& file )
 
 template <typename REAL>
 bool
-ObpParser<REAL>::parseFile( const std::string& filename )
+PboParser<REAL>::parseFile( const std::string& filename )
 {
    std::ifstream file( filename, std::ifstream::in );
    boost::iostreams::filtering_istream in;
@@ -593,7 +593,7 @@ ObpParser<REAL>::parseFile( const std::string& filename )
 
 template <typename REAL>
 bool
-ObpParser<REAL>::parse( boost::iostreams::filtering_istream& file )
+PboParser<REAL>::parse( boost::iostreams::filtering_istream& file )
 {
    nnz = 0;
    parsekey keyword = parsekey::kNone;
@@ -639,4 +639,4 @@ ObpParser<REAL>::parse( boost::iostreams::filtering_istream& file )
 
 } // namespace papilo
 
-#endif /* _PARSING_OBP_PARSER_HPP_ */
+#endif /* _PARSING_PBO_PARSER_HPP_ */
