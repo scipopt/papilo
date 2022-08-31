@@ -147,6 +147,12 @@ class PboParser
    {
       switch( keyword )
       {
+      case parsekey::kObjective:
+         std::cerr << "error reading objective " << std::endl;
+         break;
+      case parsekey::kConstraint:
+         std::cerr << "error reading objective " << std::endl;
+         break;
       default:
          std::cerr << "undefined read error " << std::endl;
          break;
