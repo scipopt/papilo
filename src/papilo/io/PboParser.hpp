@@ -167,9 +167,12 @@ class PboParser
    Vec<std::pair<int, REAL>> coeffobj;
    Vec<REAL> rowlhs;
    Vec<REAL> rowrhs;
+   Vec<std::string> colnames;
 
+   HashMap<std::string, int> colname2idx;
    Vec<boundtype> row_type;
    Vec<RowFlags> row_flags;
+   REAL objoffset = 0;
 
    int nCols = 0;
    int nRows = 0;
