@@ -136,7 +136,6 @@ class PboParser
 
    enum class parsekey
    {
-      kRows,
       kCols,
       kRhs,
       kNone,
@@ -150,9 +149,6 @@ class PboParser
    {
       switch( keyword )
       {
-      case parsekey::kRows:
-         std::cerr << "read error in section ROWS " << std::endl;
-         break;
       case parsekey::kCols:
          std::cerr << "read error in section COLUMNS " << std::endl;
          break;
@@ -232,8 +228,6 @@ PboParser<REAL>::checkFirstWord( std::string& strline,
 
    if( word.front() == 'R' ) // todo
    {
-      if( word == "ROWS" )
-         return PboParser<REAL>::parsekey::kRows;
       else if( word == "RHS" )
          return PboParser<REAL>::parsekey::kRhs;
       else
@@ -606,9 +600,6 @@ PboParser<REAL>::parse( boost::iostreams::filtering_istream& file )
       keyword_old = keyword;
       switch( keyword )
       {
-      case parsekey::kRows:
-         keyword = parseRows( file, row_type );
-         break;
       case parsekey::kCols:
          keyword = parseCols( file, row_type );
          break;
