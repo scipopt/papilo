@@ -136,7 +136,6 @@ class PboParser
 
    enum class parsekey
    {
-      kNone,
       kEnd,
       kFail,
       kComment
@@ -213,13 +212,9 @@ PboParser<REAL>::checkFirstWord( std::string& strline,
 
    if( word.front() == 'R' ) // todo
    {
-      else
-         return PboParser<REAL>::parsekey::kNone;
    }
    else if( word == "ENDATA" )
       return PboParser<REAL>::parsekey::kEnd;
-   else
-      return PboParser<REAL>::parsekey::kNone;
 }
 
 template <typename REAL>
@@ -266,8 +261,6 @@ bool
 PboParser<REAL>::parse( boost::iostreams::filtering_istream& file )
 {
    nnz = 0;
-   parsekey keyword = parsekey::kNone;
-   parsekey keyword_old = parsekey::kNone;
 
    // parsing loop
    while( keyword != parsekey::kFail && keyword != parsekey::kEnd &&
