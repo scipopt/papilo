@@ -161,11 +161,7 @@ class PboParser
    Vec<std::pair<int, REAL>> coeffobj;
    Vec<REAL> rowlhs;
    Vec<REAL> rowrhs;
-   Vec<std::string> rownames;
-   Vec<std::string> colnames;
 
-   HashMap<std::string, int> rowname2idx;
-   HashMap<std::string, int> colname2idx;
    Vec<REAL> lb4cols;
    Vec<REAL> ub4cols;
    Vec<boundtype> row_type;
