@@ -136,7 +136,6 @@ class PboParser
 
    enum class parsekey
    {
-      kCols,
       kRhs,
       kNone,
       kEnd,
@@ -149,9 +148,6 @@ class PboParser
    {
       switch( keyword )
       {
-      case parsekey::kCols:
-         std::cerr << "read error in section COLUMNS " << std::endl;
-         break;
       case parsekey::kRhs:
          std::cerr << "read error in section RHS " << std::endl;
          break;
@@ -193,13 +189,6 @@ class PboParser
    parsekey
    parseDefault( boost::iostreams::filtering_istream& file ) const;
 
-   parsekey
-   parseRows( boost::iostreams::filtering_istream& file,
-              Vec<boundtype>& rowtype );
-
-   parsekey
-   parseCols( boost::iostreams::filtering_istream& file,
-              const Vec<boundtype>& rowtype );
 
    parsekey
    parseRhs( boost::iostreams::filtering_istream& file );
@@ -233,8 +222,6 @@ PboParser<REAL>::checkFirstWord( std::string& strline,
       else
          return PboParser<REAL>::parsekey::kNone;
    }
-   else if( word == "COLUMNS" )
-      return PboParser<REAL>::parsekey::kCols;
    else if( word == "ENDATA" )
       return PboParser<REAL>::parsekey::kEnd;
    else
@@ -350,141 +337,6 @@ PboParser<REAL>::parseRows( boost::iostreams::filtering_istream& file,
    return parsekey::kFail;
 }
 
-template <typename REAL>
-typename PboParser<REAL>::parsekey
-PboParser<REAL>::parseCols( boost::iostreams::filtering_istream& file,
-                            const Vec<boundtype>& rowtype )
-{
-   using namespace boost::spirit;
-
-   std::string colname = "";
-   std::string strline;
-   int rowidx;
-   int ncols = 0;
-   int colstart = 0;
-   bool integral_cols = false;
-
-   auto parsename = [&rowidx, this]( std::string name ) {
-      auto mit = rowname2idx.find( name );
-
-      assert( mit != rowname2idx.end() );
-      rowidx = mit->second;
-
-      if( rowidx >= 0 )
-         this->nnz++;
-      else
-         assert( -1 == rowidx );
-   };
-
-   auto addtuple = [&rowidx, &ncols,
-                    this]( typename RealParseType<REAL>::type coeff ) {
-      if( rowidx >= 0 )
-         entries.push_back(
-             std::make_tuple( ncols - 1, rowidx, REAL{ coeff } ) );
-      else
-         coeffobj.push_back( std::make_pair( ncols - 1, REAL{ coeff } ) );
-   };
-
-   while( getline( file, strline ) )
-   {
-      std::string::iterator it;
-      boost::string_ref word_ref;
-      PboParser<REAL>::parsekey key = checkFirstWord( strline, it, word_ref );
-
-      // start of new section?
-      if( key != parsekey::kNone )
-      {
-         if( ncols > 1 )
-            pdqsort( entries.begin() + colstart, entries.end(),
-                     []( Triplet<REAL> a, Triplet<REAL> b ) {
-                        return std::get<1>( b ) > std::get<1>( a );
-                     } );
-
-         return key;
-      }
-
-      // check for integrality marker
-      std::string marker = ""; // todo use ref
-      std::string::iterator it2 = it;
-
-      qi::phrase_parse( it2, strline.end(), qi::lexeme[+qi::graph],
-                        ascii::space, marker );
-
-      if( marker == "'MARKER'" )
-      {
-         marker = "";
-         qi::phrase_parse( it2, strline.end(), qi::lexeme[+qi::graph],
-                           ascii::space, marker );
-
-         if( ( integral_cols && marker != "'INTEND'" ) ||
-             ( !integral_cols && marker != "'INTORG'" ) )
-         {
-            std::cerr << "integrality marker error " << std::endl;
-            return parsekey::kFail;
-         }
-         integral_cols = !integral_cols;
-
-         continue;
-      }
-
-      // new column?
-      if( !( word_ref == colname ) )
-      {
-         if( word_ref.empty() ) // empty line
-            continue;
-
-         colname = word_ref.to_string();
-         auto ret = colname2idx.emplace( colname, ncols++ );
-         colnames.push_back( colname );
-
-         if( !ret.second )
-         {
-            std::cerr << "duplicate column " << std::endl;
-            return parsekey::kFail;
-         }
-
-         assert( lb4cols.size() == col_flags.size() );
-
-         col_flags.emplace_back( integral_cols ? ColFlag::kIntegral
-                                               : ColFlag::kNone );
-
-         // initialize with default bounds
-         if( integral_cols )
-         {
-            lb4cols.push_back( REAL{ 0.0 } );
-            ub4cols.push_back( REAL{ 1.0 } );
-         }
-         else
-         {
-            lb4cols.push_back( REAL{ 0.0 } );
-            ub4cols.push_back( REAL{ 0.0 } );
-            col_flags.back().set( ColFlag::kUbInf );
-         }
-
-         assert( col_flags.size() == lb4cols.size() );
-
-         if( ncols > 1 )
-            pdqsort( entries.begin() + colstart, entries.end(),
-                     []( Triplet<REAL> a, Triplet<REAL> b ) {
-                        return std::get<1>( b ) > std::get<1>( a );
-                     } );
-
-         colstart = entries.size();
-      }
-
-      assert( ncols > 0 );
-
-      if( !qi::phrase_parse(
-              it, strline.end(),
-              +( qi::lexeme[qi::as_string[+qi::graph][( parsename )]] >>
-                 qi::real_parser<typename RealParseType<REAL>::type>()[(
-                     addtuple )] ),
-              ascii::space ) )
-         return parsekey::kFail;
-   }
-
-   return parsekey::kFail;
-}
 
 template <typename REAL>
 typename PboParser<REAL>::parsekey
@@ -600,9 +452,6 @@ PboParser<REAL>::parse( boost::iostreams::filtering_istream& file )
       keyword_old = keyword;
       switch( keyword )
       {
-      case parsekey::kCols:
-         keyword = parseCols( file, row_type );
-         break;
       case parsekey::kRhs:
          keyword = parseRhs( file );
          break;
