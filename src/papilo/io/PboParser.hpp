@@ -170,7 +170,6 @@ class PboParser
 
    Vec<boundtype> row_type;
    Vec<RowFlags> row_flags;
-   REAL objoffset = 0;
 
    int nCols = 0;
    int nRows = 0;
