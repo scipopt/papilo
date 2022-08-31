@@ -136,7 +136,6 @@ class PboParser
 
    enum class parsekey
    {
-      kRhs,
       kNone,
       kEnd,
       kFail,
@@ -148,9 +147,6 @@ class PboParser
    {
       switch( keyword )
       {
-      case parsekey::kRhs:
-         std::cerr << "read error in section RHS " << std::endl;
-         break;
       default:
          std::cerr << "undefined read error " << std::endl;
          break;
@@ -217,8 +213,6 @@ PboParser<REAL>::checkFirstWord( std::string& strline,
 
    if( word.front() == 'R' ) // todo
    {
-      else if( word == "RHS" )
-         return PboParser<REAL>::parsekey::kRhs;
       else
          return PboParser<REAL>::parsekey::kNone;
    }
@@ -240,79 +234,6 @@ PboParser<REAL>::parseDefault( boost::iostreams::filtering_istream& file ) const
    return checkFirstWord( strline, it, word_ref );
 }
 
-
-template <typename REAL>
-typename PboParser<REAL>::parsekey
-PboParser<REAL>::parseRhs( boost::iostreams::filtering_istream& file )
-{
-   using namespace boost::spirit;
-   std::string strline;
-
-   while( getline( file, strline ) )
-   {
-      std::string::iterator it;
-      boost::string_ref word_ref;
-      PboParser<REAL>::parsekey key = checkFirstWord( strline, it, word_ref );
-
-      // start of new section?
-      if( key != parsekey::kNone && key != parsekey::kRhs )
-         return key;
-
-      if( word_ref.empty() )
-         continue;
-
-      int rowidx;
-
-      auto parsename = [&rowidx, this]( std::string name ) {
-         auto mit = rowname2idx.find( name );
-
-         assert( mit != rowname2idx.end() );
-         rowidx = mit->second;
-
-         assert( rowidx >= -1 );
-         assert( rowidx < nRows );
-      };
-
-      auto addrhs = [&rowidx, this]( typename RealParseType<REAL>::type val ) {
-         if( rowidx == -1 )
-         {
-            objoffset = -REAL{ val };
-            return;
-         }
-         if( row_type[rowidx] == boundtype::kEq ||
-             row_type[rowidx] == boundtype::kLE )
-         {
-            assert( size_t( rowidx ) < rowrhs.size() );
-            rowrhs[rowidx] = REAL{ val };
-            row_flags[rowidx].unset( RowFlag::kRhsInf );
-         }
-
-         if( row_type[rowidx] == boundtype::kEq ||
-             row_type[rowidx] == boundtype::kGE )
-         {
-            assert( size_t( rowidx ) < rowlhs.size() );
-            rowlhs[rowidx] = REAL{ val };
-            row_flags[rowidx].unset( RowFlag::kLhsInf );
-         }
-      };
-
-      // Documentation Link to qi:
-      // https://www.boost.org/doc/libs/1_66_0/libs/spirit/doc/html/spirit/qi/tutorials/warming_up.html
-      // +: Parse a one or more times
-      // lexeme[a]: Disable skip parsing for a, does pre-skipping
-      // as_string: Force atomic assignment for string attributes
-      // graph: Matches a character based on the equivalent of std::isgraph in the current character set
-      if( !qi::phrase_parse(
-              it, strline.end(),
-              +( qi::lexeme[qi::as_string[+qi::graph][( parsename )]] >>
-                 qi::real_parser<typename RealParseType<REAL>::type>()[(
-                     addrhs )] ),
-              ascii::space ) )
-         return parsekey::kFail;
-   }
-
-   return parsekey::kFail;
-}
 
 
 template <typename REAL>
@@ -355,9 +276,6 @@ PboParser<REAL>::parse( boost::iostreams::filtering_istream& file )
       keyword_old = keyword;
       switch( keyword )
       {
-      case parsekey::kRhs:
-         keyword = parseRhs( file );
-         break;
       case parsekey::kFail:
          break;
       default:
