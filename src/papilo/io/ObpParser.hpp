@@ -130,7 +130,6 @@ class ObpParser
 
    enum class boundtype
    {
-      kLE,
       kEq,
       kGE
    };
