@@ -139,7 +139,6 @@ class ObpParser
       kRows,
       kCols,
       kRhs,
-      kRanges,
       kBounds,
       kNone,
       kEnd,
@@ -163,9 +162,6 @@ class ObpParser
          break;
       case parsekey::kBounds:
          std::cerr << "read error in section BOUNDS " << std::endl;
-         break;
-      case parsekey::kRanges:
-         std::cerr << "read error in section RANGES " << std::endl;
          break;
       default:
          std::cerr << "undefined read error " << std::endl;
@@ -217,9 +213,6 @@ class ObpParser
    parseRhs( boost::iostreams::filtering_istream& file );
 
    parsekey
-   parseRanges( boost::iostreams::filtering_istream& file );
-
-   parsekey
    parseBounds( boost::iostreams::filtering_istream& file );
 };
 
@@ -249,8 +242,6 @@ ObpParser<REAL>::checkFirstWord( std::string& strline,
          return ObpParser<REAL>::parsekey::kRows;
       else if( word == "RHS" )
          return ObpParser<REAL>::parsekey::kRhs;
-      else if( word == "RANGES" )
-         return ObpParser<REAL>::parsekey::kRanges;
       else
          return ObpParser<REAL>::parsekey::kNone;
    }
@@ -504,92 +495,6 @@ ObpParser<REAL>::parseCols( boost::iostreams::filtering_istream& file,
                      addtuple )] ),
               ascii::space ) )
          return parsekey::kFail;
-   }
-
-   return parsekey::kFail;
-}
-
-template <typename REAL>
-typename ObpParser<REAL>::parsekey
-ObpParser<REAL>::parseRanges( boost::iostreams::filtering_istream& file )
-{
-   using namespace boost::spirit;
-   std::string strline;
-   assert( rowrhs.size() == rowlhs.size() );
-
-   while( getline( file, strline ) )
-   {
-      std::string::iterator it;
-      boost::string_ref word_ref;
-      ObpParser<REAL>::parsekey key = checkFirstWord( strline, it, word_ref );
-
-      // start of new section?
-      if( key != parsekey::kNone && key != parsekey::kRanges )
-         return key;
-
-      if( word_ref.empty() )
-         continue;
-
-      int rowidx;
-
-      auto parsename = [&rowidx, this]( std::string name ) {
-         auto mit = rowname2idx.find( name );
-
-         assert( mit != rowname2idx.end() );
-         rowidx = mit->second;
-
-         assert( rowidx >= 0 && rowidx < nRows );
-      };
-
-      auto addrange = [&rowidx,
-                       this]( typename RealParseType<REAL>::type val ) {
-         assert( size_t( rowidx ) < rowrhs.size() );
-
-         if( row_type[rowidx] == boundtype::kGE )
-         {
-            row_flags[rowidx].unset( RowFlag::kRhsInf );
-            rowrhs[rowidx] = rowlhs[rowidx] + REAL(abs( val ));
-         }
-         else if( row_type[rowidx] == boundtype::kLE )
-         {
-            row_flags[rowidx].unset( RowFlag::kLhsInf );
-            rowlhs[rowidx] = rowrhs[rowidx] - REAL(abs( val ));
-         }
-         else
-         {
-            assert( row_type[rowidx] == boundtype::kEq );
-            assert( rowrhs[rowidx] == rowlhs[rowidx] );
-            assert( row_flags[rowidx].test(RowFlag::kEquation) );
-
-            if( val > REAL{ 0.0 } )
-            {
-               row_flags[rowidx].unset( RowFlag::kEquation );
-               rowrhs[rowidx] = rowrhs[rowidx] + REAL( val );
-            }
-            else if( val < REAL{ 0.0 } )
-            {
-               rowlhs[rowidx] = rowlhs[rowidx] + REAL( val );
-               row_flags[rowidx].unset( RowFlag::kEquation );
-            }
-         }
-      };
-
-      // compulsory part
-      if( !qi::phrase_parse(
-              it, strline.end(),
-              +( qi::lexeme[qi::as_string[+qi::graph][( parsename )]] >>
-                 qi::real_parser<typename RealParseType<REAL>::type>()[(
-                     addrange )] ),
-              ascii::space ) )
-         return parsekey::kFail;
-
-      // optional part todo don't replicate code
-      qi::phrase_parse(
-          it, strline.end(),
-          +( qi::lexeme[qi::as_string[+qi::graph][( parsename )]] >>
-             qi::real_parser<typename RealParseType<REAL>::type>()[(
-                 addrange )] ),
-          ascii::space );
    }
 
    return parsekey::kFail;
@@ -873,9 +778,6 @@ ObpParser<REAL>::parse( boost::iostreams::filtering_istream& file )
          break;
       case parsekey::kRhs:
          keyword = parseRhs( file );
-         break;
-      case parsekey::kRanges:
-         keyword = parseRanges( file );
          break;
       case parsekey::kBounds:
          keyword = parseBounds( file );
