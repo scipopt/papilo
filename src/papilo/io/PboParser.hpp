@@ -352,8 +352,6 @@ PboParser<REAL>::parse( boost::iostreams::filtering_istream& file )
          // being a bit liberal in what is accepted
          const auto strRange = strEnd - strBegin + 1;
 
-         Vec<std::pair<int, REAL> ;
-
          line = line.substr(strBegin, strRange);
          [coeffobj, objoffset] = parseRow(line);
 
@@ -364,6 +362,8 @@ PboParser<REAL>::parse( boost::iostreams::filtering_istream& file )
    while(std::getline(file,line))
    {
       if (line[0] == '*' || line.empty()) continue;
+
+      Vec<std::pair<int, REAL> ; //?
 
       auto [, ] = parseRow(line);
       if (line.find("=") != std::string::npos) 
