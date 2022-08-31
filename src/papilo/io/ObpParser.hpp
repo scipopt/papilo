@@ -126,6 +126,8 @@ class ObpParser
    bool
    parse( boost::iostreams::filtering_istream& file );
 
+   /// Try to comply with http://www.cril.univ-artois.fr/PB16/format.pdf 
+
    enum class boundtype
    {
       kLE,
