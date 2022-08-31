@@ -104,7 +104,7 @@ class PboParser
           std::move( parser.row_flags ), true );
       problem.setVariableDomains( std::move( parser.lb4cols ),
                                   std::move( parser.ub4cols ),
-                                  std::move( parser.col_flags ) );
+                                  std::move( parser.col_flags ) ); // kIntegral
       problem.setVariableNames( std::move( parser.colnames ) );
       problem.setName( std::move( filename ) );
       problem.setConstraintNames( std::move( parser.rownames ) );
@@ -168,11 +168,8 @@ class PboParser
    Vec<REAL> rowlhs;
    Vec<REAL> rowrhs;
 
-   Vec<REAL> lb4cols;
-   Vec<REAL> ub4cols;
    Vec<boundtype> row_type;
    Vec<RowFlags> row_flags;
-   Vec<ColFlags> col_flags;
    REAL objoffset = 0;
 
    int nCols = 0;
