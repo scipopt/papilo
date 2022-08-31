@@ -139,7 +139,6 @@ class ObpParser
       kRows,
       kCols,
       kRhs,
-      kBounds,
       kNone,
       kEnd,
       kFail,
@@ -159,9 +158,6 @@ class ObpParser
          break;
       case parsekey::kRhs:
          std::cerr << "read error in section RHS " << std::endl;
-         break;
-      case parsekey::kBounds:
-         std::cerr << "read error in section BOUNDS " << std::endl;
          break;
       default:
          std::cerr << "undefined read error " << std::endl;
@@ -212,8 +208,6 @@ class ObpParser
    parsekey
    parseRhs( boost::iostreams::filtering_istream& file );
 
-   parsekey
-   parseBounds( boost::iostreams::filtering_istream& file );
 };
 
 template <typename REAL>
@@ -247,8 +241,6 @@ ObpParser<REAL>::checkFirstWord( std::string& strline,
    }
    else if( word == "COLUMNS" )
       return ObpParser<REAL>::parsekey::kCols;
-   else if( word == "BOUNDS" )
-      return ObpParser<REAL>::parsekey::kBounds;
    else if( word == "ENDATA" )
       return ObpParser<REAL>::parsekey::kEnd;
    else
@@ -573,162 +565,6 @@ ObpParser<REAL>::parseRhs( boost::iostreams::filtering_istream& file )
    return parsekey::kFail;
 }
 
-template <typename REAL>
-typename ObpParser<REAL>::parsekey
-ObpParser<REAL>::parseBounds( boost::iostreams::filtering_istream& file )
-{
-   using namespace boost::spirit;
-   std::string strline;
-
-   Vec<bool> ub_is_default( lb4cols.size(), true );
-   Vec<bool> lb_is_default( lb4cols.size(), true );
-
-   while( getline( file, strline ) )
-   {
-      std::string::iterator it;
-      boost::string_ref word_ref;
-      ObpParser<REAL>::parsekey key = checkFirstWord( strline, it, word_ref );
-
-      // start of new section?
-      if( key != parsekey::kNone )
-         return key;
-
-      if( word_ref.empty() )
-         continue;
-
-      bool islb = false;
-      bool isub = false;
-      bool isintegral = false;
-      bool isdefaultbound = false;
-
-      if( word_ref == "UP" ) // lower bound
-         isub = true;
-      else if( word_ref == "LO" ) // upper bound
-         islb = true;
-      else if( word_ref == "FX" ) // fixed
-      {
-         islb = true;
-         isub = true;
-      }
-      else if( word_ref == "MI" ) // infinite lower bound
-      {
-         islb = true;
-         isdefaultbound = true;
-      }
-      else if( word_ref == "PL" ) // infinite upper bound (redundant)
-      {
-         isub = true;
-         isdefaultbound = true;
-      }
-      else if( word_ref == "BV" ) // binary
-      {
-         isintegral = true;
-         isdefaultbound = true;
-         islb = true;
-         isub = true;
-      }
-      else if( word_ref == "LI" ) // integer lower bound
-      {
-         islb = true;
-         isintegral = true;
-      }
-      else if( word_ref == "UI" ) // integer upper bound
-      {
-         isub = true;
-         isintegral = true;
-      }
-      else if( word_ref == "FR" ) // free variable
-      {
-         islb = true;
-         isub = true;
-         isdefaultbound = true;
-      }
-      else
-      {
-         std::cerr << "unknown bound type " << word_ref << std::endl;
-         exit( 1 );
-      }
-
-      // parse over next word
-      qi::phrase_parse( it, strline.end(), qi::lexeme[+qi::graph],
-                        ascii::space );
-
-      int colidx;
-
-      auto parsename = [&colidx, this]( std::string name ) {
-         auto mit = colname2idx.find( name );
-         assert( mit != colname2idx.end() );
-         colidx = mit->second;
-         assert( colidx >= 0 );
-      };
-
-      if( isdefaultbound )
-      {
-         if( !qi::phrase_parse(
-                 it, strline.end(),
-                 ( qi::lexeme[qi::as_string[+qi::graph][( parsename )]] ),
-                 ascii::space ) )
-            return parsekey::kFail;
-
-         if( isintegral ) // binary
-         {
-            if( islb )
-               lb4cols[colidx] = REAL{ 0.0 };
-            if( isub )
-            {
-               col_flags[colidx].unset( ColFlag::kUbInf );
-               ub4cols[colidx] = REAL{ 1.0 };
-            }
-            col_flags[colidx].set( ColFlag::kIntegral );
-         }
-         else
-         {
-            if( islb )
-               col_flags[colidx].set( ColFlag::kLbInf );
-            if( isub )
-               col_flags[colidx].set( ColFlag::kUbInf );
-         }
-         continue;
-      }
-
-      if( !qi::phrase_parse(
-              it, strline.end(),
-              +( qi::lexeme[qi::as_string[+qi::graph][( parsename )]] >>
-                 qi::real_parser<typename RealParseType<REAL>::type>()[(
-                     [&ub_is_default, &lb_is_default, &colidx, &islb, &isub,
-                      &isintegral,
-                      this]( typename RealParseType<REAL>::type val ) {
-                        if( islb )
-                        {
-                           lb4cols[colidx] = REAL{ val };
-                           lb_is_default[colidx] = false;
-                           col_flags[colidx].unset( ColFlag::kLbInf );
-                        }
-                        if( isub )
-                        {
-                           ub4cols[colidx] = REAL{ val };
-                           ub_is_default[colidx] = false;
-                           col_flags[colidx].unset( ColFlag::kUbInf );
-                        }
-
-                        if( isintegral )
-                           col_flags[colidx].set( ColFlag::kIntegral );
-
-                        if( col_flags[colidx].test( ColFlag::kIntegral ) )
-                        {
-                           col_flags[colidx].set( ColFlag::kIntegral );
-                           if( !islb && lb_is_default[colidx] )
-                              lb4cols[colidx] = REAL{ 0.0 };
-                           if( !isub && ub_is_default[colidx] )
-                              col_flags[colidx].set( ColFlag::kUbInf );
-                        }
-                     } )] ),
-              ascii::space ) )
-         return parsekey::kFail;
-   }
-
-   return parsekey::kFail;
-}
 
 template <typename REAL>
 bool
@@ -778,9 +614,6 @@ ObpParser<REAL>::parse( boost::iostreams::filtering_istream& file )
          break;
       case parsekey::kRhs:
          keyword = parseRhs( file );
-         break;
-      case parsekey::kBounds:
-         keyword = parseBounds( file );
          break;
       case parsekey::kFail:
          break;
