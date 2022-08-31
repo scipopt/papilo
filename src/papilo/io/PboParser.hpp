@@ -95,7 +95,7 @@ class PboParser
 
       for( auto i : parser.coeffobj )
          obj_vec[i.first] = i.second;
-
+// TODO from here
       problem.setObjective( std::move( obj_vec ), parser.objoffset );
       problem.setConstraintMatrix(
           SparseStorage<REAL>{ std::move( parser.entries ), parser.nCols,
@@ -172,7 +172,7 @@ class PboParser
    HashMap<std::string, int> colname2idx;
    Vec<boundtype> row_type;
    Vec<RowFlags> row_flags;
-   REAL objoffset = 0;
+   REAL objoffset = REAL(0);
 
    int nCols = 0;
    int nRows = 0;
@@ -273,40 +273,62 @@ std::pair<Vec<std::pair<int, REAL>>,REAL> parseRow(std::string& trimmedstrline)
         const auto newStart = beginSpace + fill.length();
         beginSpace = trimmedstrline.find_first_of(whitespace, newStart);
    } // having a nicer string to work with makes me comfortable i get it right loop maybe O(n^2)
-
-   auto line = beginSpace;
-
    Vec<std::pair<int, REAL>> result;
-   size_t cursor = 0;
 
+   REAL rhsoff = REAL(0);
+
+   std::stringstream row(beginSpace);
+
+   int degree = 0;
    int variable_index;
    REAL weight;
-   REAL rhsoff;
 
-   while( std::string::npos != line.find(' ',cursor)){
-      int degree = 0;
-      while(line[line.find(' ',cursor)+1] != '+') 
-      //last character can't be a space due to getting a trimmed string
+   // I am unfamiliar with error handling conventions in this code base.
+
+   while(getline(row, token, ' '))
+   // You can use space as line break and the getline the result.
+   {
+      if (token == "+")
       {
-         switch(degree)
-         {
-            case size_t(0):
-               
-               break;
-            case size_t(1):
+         assert(degree != 2);
+         degree = 0;
+         result.push_back(std::make_pair(variable_index, weight));
+         continue;
+      } 
+      else if (token == ">=") || (token == "=")
+      {
+         assert(degree != 2);
+         degree = 0;
+         result.push_back(std::make_pair(variable_index, weight));
+         getline(row, token, ' ');
+         std::istringstream(token) >> weight;
+         rhsoff += weight;
 
-               break;
-            default:
-               std::cerr << "Row "<< (nRows -1) << " has unsupported non-linear term, skipped. " << std::endl;
-               // I am unfamiliar with error handling conventions in this code base.
-               break;
-         }
-         degree++;
-
+         break;
       }
-      assert(degree != 2);
-      result.push_back(std::make_pair(variable_index, weight));
+      if (degree == 0)
+      {
+         std::istringstream(token) >> weight;
+      } 
+      else if (degree == 1)
+      {
+         if(token.starts_with('~'))
+         {
+            // a*~x = a*(1-x) = a*1 - a*x = rhs <=> -a*x = rhs-a
+            weight = -weight;
+            rhsoff += weight;
+            token.erase(0,1)
+         }
+         if(colname2idx[token] != nil)
+         {
+            add_key(colname2idx,token,nCols++) //TODO
+         } 
+         variable_index = colname2idx[token];
+      }
+
+      degree++;
    }
+   assert(degree != 2);
    return std::make_pair(result, rhsoff)
 
 }
@@ -325,31 +347,41 @@ PboParser<REAL>::parse( boost::iostreams::filtering_istream& file )
       if (line[0] == '*' || line.empty()) continue;
       if (line[0] == 'm' && line[1] == 'i' && line[2] == 'n' && line[3] == ':')
       {
-         const auto strBegin = line.find_first_not_of("min: "); 
-         const auto strEnd = line.find_last_not_of(" ;\n");
+         const auto strBegin = line.find_first_not_of(" ", 4); 
+         const auto strEnd = line.find_last_not_of(" ;");
          // being a bit liberal in what is accepted
          const auto strRange = strEnd - strBegin + 1;
 
+         Vec<std::pair<int, REAL> ;
+
          line = line.substr(strBegin, strRange);
+         [coeffobj, objoffset] = parseRow(line);
 
          break; // objective may only be first non comment line
       }
       break;
    }
-   while(std::getline(file,line)){
-      parseRow(line);
+   while(std::getline(file,line))
+   {
+      if (line[0] == '*' || line.empty()) continue;
+
+      auto [, ] = parseRow(line);
+      if (line.find("=") != std::string::npos) 
+      {
+         //TODO
+      }
+      else if (line.find(">=") != std::string::npos) 
+      {
+         //TODO
+      }
+      else 
+      {
+         assert(true);
+      }
       nRows++;
    }
 
-   if( keyword == parsekey::kFail )
-   {
-      printErrorMessage( keyword_old );
-      return false;
-   }
-
-   assert( row_type.size() == unsigned( nRows ) );
-
-   nCols = colname2idx.size();
+   nCols = colname2idx.size(); //TODO
    nRows = rowname2idx.size() - 1; // subtract obj row
 
    return true;
