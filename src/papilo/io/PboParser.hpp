@@ -303,6 +303,7 @@ std::pair<Vec<std::pair<int, REAL>>,REAL> parseRow(std::string& trimmedstrline)
          getline(row, token, ' ');
          std::istringstream(token) >> weight;
          rhsoff += weight;
+         assert(std::string::npos != getline(row, token, ' '));
 
          break;
       }
@@ -319,9 +320,9 @@ std::pair<Vec<std::pair<int, REAL>>,REAL> parseRow(std::string& trimmedstrline)
             rhsoff += weight;
             token.erase(0,1)
          }
-         if(colname2idx[token] != nil)
+         if(colname2idx.count(token) == 0)
          {
-            add_key(colname2idx,token,nCols++) //TODO
+            colname2idx.insert(std::pair<std::string,int>(token,nCols++))
          } 
          variable_index = colname2idx[token];
       }
