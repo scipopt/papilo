@@ -258,19 +258,25 @@ bool
 PboParser<REAL>::parse( boost::iostreams::filtering_istream& file )
 {
    nnz = 0;
+   bool has_objective = false;
 
    // parsing loop
-   while( keyword != parsekey::kFail && !file.eof() && file.good() )
-   {
-      keyword_old = keyword;
-      switch( keyword )
+   std::string current_line;
+
+   while(std::getline(in, line)){
+      if (line[0] == '*' || line.empty()) continue;
+      if (line[0] == 'm' && line[1] == 'i' && line[2] == 'n' && line[3] == ':')
       {
-      case parsekey::kFail:
-         break;
-      default:
-         keyword = parseDefault( file );
-         break;
+         if(has_objective){
+            std::cerr << "A problem must only have one objective, line ignored " << std::endl;
+            // ignored because i have no idea how to proper error handling inside this project
+         } 
+         else {
+            
+         }
       }
+
+
    }
 
    if( keyword == parsekey::kFail )
