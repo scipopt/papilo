@@ -187,6 +187,8 @@ class PboParser
    parsekey
    parseRhs( boost::iostreams::filtering_istream& file );
 
+   Vec<std::pair<int, REAL>> parseRow(std::string& trimmedstrline);
+
 };
 
 template <typename REAL>
@@ -254,6 +256,59 @@ PboParser<REAL>::parseFile( const std::string& filename )
 }
 
 template <typename REAL>
+std::pair<Vec<std::pair<int, REAL>>,REAL> parseRow(std::string& trimmedstrline)
+{
+   const std::string whitespace = " "
+   auto beginSpace = trimmedstrline.find_first_of(whitespace);
+   while (beginSpace != std::string::npos)
+   {
+        const auto endSpace = trimmedstrline.find_first_not_of(whitespace, beginSpace);
+        const auto range = endSpace - beginSpace;
+
+        trimmedstrline.replace(beginSpace, range, fill);
+
+        const auto newStart = beginSpace + fill.length();
+        beginSpace = trimmedstrline.find_first_of(whitespace, newStart);
+   } // having a nicer string to work with makes me comfortable i get it right loop maybe O(n^2)
+
+   auto line = beginSpace;
+
+   Vec<std::pair<int, REAL>> result;
+   size_t cursor = 0;
+
+   int variable_index;
+   REAL weight;
+   REAL rhsoff;
+
+   while( std::string::npos != line.find(' ',cursor)){
+      int degree = 0;
+      while(line[line.find(' ',cursor)+1] != '+') 
+      //last character can't be a space due to getting a trimmed string
+      {
+         switch(degree)
+         {
+            case size_t(0):
+               
+               break;
+            case size_t(1):
+
+               break;
+            default:
+               std::cerr << "Row "<< (nRows -1) << " has unsupported non-linear term, skipped. " << std::endl;
+               // I am unfamiliar with error handling conventions in this code base.
+               break;
+         }
+         degree++;
+
+      }
+      assert(degree != 2);
+      result.push_back(std::make_pair(variable_index, weight));
+   }
+   return std::make_pair(result, rhsoff)
+
+}
+
+template <typename REAL>
 bool
 PboParser<REAL>::parse( boost::iostreams::filtering_istream& file )
 {
@@ -263,20 +318,24 @@ PboParser<REAL>::parse( boost::iostreams::filtering_istream& file )
    // parsing loop
    std::string current_line;
 
-   while(std::getline(in, line)){
+   while(std::getline(file, line)){
       if (line[0] == '*' || line.empty()) continue;
       if (line[0] == 'm' && line[1] == 'i' && line[2] == 'n' && line[3] == ':')
       {
-         if(has_objective){
-            std::cerr << "A problem must only have one objective, line ignored " << std::endl;
-            // ignored because i have no idea how to proper error handling inside this project
-         } 
-         else {
-            
-         }
+         const auto strBegin = line.find_first_not_of("min: "); 
+         const auto strEnd = line.find_last_not_of(" ;\n");
+         // being a bit liberal in what is accepted
+         const auto strRange = strEnd - strBegin + 1;
+
+         line = line.substr(strBegin, strRange);
+
+         break; // objective may only be first non comment line
       }
-
-
+      break;
+   }
+   while(std::getline(file,line)){
+      parseRow(line);
+      nRows++;
    }
 
    if( keyword == parsekey::kFail )
