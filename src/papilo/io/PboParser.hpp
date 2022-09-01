@@ -176,7 +176,7 @@ class PboParser
 
    int nCols = 0;
    int nRows = 0;
-   int nnz = -1;
+   int nnz = 0;
 
    /// checks first word of strline and wraps it by it_begin and it_end
    parsekey
@@ -364,20 +364,43 @@ PboParser<REAL>::parse( boost::iostreams::filtering_istream& file )
    {
       if (line[0] == '*' || line.empty()) continue;
 
-      Vec<std::pair<int, REAL> ; //?
+      Vec<std::pair<int, REAL> row;
+      int rhs;
+      const auto strBegin = line.find_first_not_of(" "); 
+      const auto strEnd = line.find_last_not_of(" ;");
+      // being a bit liberal in what is accepted
+      const auto strRange = strEnd - strBegin + 1;
+      line = line.substr(strBegin, strRange);     
 
-      auto [, ] = parseRow(line);
+      auto [row, lhs] = parseRow(line);
+      
+         for (const auto& pair : row)
+         {  
+            entries.push_back(
+               std::make_tuple( pair.first, nRows, pair.second ) );
+            nnz++;
+         }
+
+
       if (line.find("=") != std::string::npos) 
       {
-         //TODO
+         rowlhs.push_back( lhs );
+         rowrhs.push_back( lhs );
+         row_flags.emplace_back( RowFlag::kEquation );
+
       }
       else if (line.find(">=") != std::string::npos) 
       {
-         //TODO
+         rowlhs.push_back( lhs ); 
+         // Not sure what to put here as Floating point in does not exist 
+         // for rational types i think.
+         rowrhs.push_back( REAL{ 0.0 } );
+         row_flags.emplace_back( RowFlag::kRhsInf );
       }
       else 
       {
          assert(true);
+         // I am unfamiliar with error handling conventions in this code base.
       }
       nRows++;
    }
