@@ -128,12 +128,6 @@ class PboParser
 
    /// Try to comply with http://www.cril.univ-artois.fr/PB16/format.pdf 
 
-   enum class boundtype
-   {
-      kEq,
-      kGE
-   };
-
    enum class parsekey
    {
       kObjective,
@@ -170,7 +164,6 @@ class PboParser
    Vec<std::string> colnames;
 
    HashMap<std::string, int> colname2idx;
-   Vec<boundtype> row_type;
    Vec<RowFlags> row_flags;
    REAL objoffset = REAL(0);
 
