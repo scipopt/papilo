@@ -324,8 +324,11 @@ PboParser<REAL>::parse( boost::iostreams::filtering_istream& file )
       nRows++;
    }
 
-   nCols = colname2idx.size(); //TODO
-   nRows = rowname2idx.size() - 1; // subtract obj row
+   // those asserts might be off by one or something
+   assert(nRows == rowname2idx.size());
+   assert(nRows == rowlhs.size());
+   assert(nRows == rowrhs.size());
+   assert(nRows == row_flags.size());
 
    return true;
 }
