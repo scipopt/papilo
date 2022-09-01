@@ -107,7 +107,7 @@ class PboParser
                                   std::move( Vec<ColFlags> vect(n, kIntegral) ) ); // kIntegral
       problem.setVariableNames( std::move( parser.colnames ) );
       problem.setName( std::move( filename ) );
-      problem.setConstraintNames( std::move( parser.rownames ) );
+      //problem.setConstraintNames( std::move( parser.rownames ) );
 
       problem.setInputTolerance(
           REAL{ pow( typename RealParseType<REAL>::type{ 10 },
@@ -282,7 +282,7 @@ std::pair<Vec<std::pair<int, REAL>>,REAL> parseRow(std::string& trimmedstrline)
       {
          if(token.starts_with('~'))
          {
-            // a*~x = a*(1-x) = a*1 - a*x = rhs <=> -a*x = rhs-a
+            // a*~x = a*(1-x) = a*1 - a*x >= lhs <=> -a*x >= lhs-a
             weight = -weight;
             rhsoff += weight;
             token.erase(0,1)
