@@ -127,32 +127,6 @@ class PboParser
    parse( boost::iostreams::filtering_istream& file );
 
    /// Try to comply with http://www.cril.univ-artois.fr/PB16/format.pdf 
-
-   enum class parsekey
-   {
-      kObjective,
-      kConstraint,
-      kFail,
-      kComment
-   };
-
-   void
-   printErrorMessage( parsekey keyword )
-   {
-      switch( keyword )
-      {
-      case parsekey::kObjective:
-         std::cerr << "error reading objective " << std::endl;
-         break;
-      case parsekey::kConstraint:
-         std::cerr << "error reading objective " << std::endl;
-         break;
-      default:
-         std::cerr << "undefined read error " << std::endl;
-         break;
-      }
-   };
-
    /*
     * data for pbo problem
     */
