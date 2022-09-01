@@ -107,12 +107,14 @@ class PboParser
                                   std::move( Vec<ColFlags> vect(n, kIntegral) ) ); // kIntegral
       problem.setVariableNames( std::move( parser.colnames ) );
       problem.setName( std::move( filename ) );
+      // We do not have ConstraintNames
       //problem.setConstraintNames( std::move( parser.rownames ) );
 
-      problem.setInputTolerance(
-          REAL{ pow( typename RealParseType<REAL>::type{ 10 },
-                     -std::numeric_limits<
-                         typename RealParseType<REAL>::type>::digits10 ) } );
+      // Not sure what to do with InputTolerance
+      //problem.setInputTolerance(
+      //    REAL{ pow( typename RealParseType<REAL>::type{ 10 },
+      //               -std::numeric_limits<
+      //                   typename RealParseType<REAL>::type>::digits10 ) } );
       return problem;
    }
 
