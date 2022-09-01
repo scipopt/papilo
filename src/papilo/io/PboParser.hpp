@@ -145,7 +145,7 @@ class PboParser
 
    int nCols = 0;
    int nRows = 0;
-   int nnz = 0;
+   int nnz = -1;
 
    Vec<std::pair<int, REAL>> parseRow(std::string& trimmedstrline);
 
