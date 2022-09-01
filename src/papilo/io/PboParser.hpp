@@ -95,7 +95,7 @@ class PboParser
 
       for( auto i : parser.coeffobj )
          obj_vec[i.first] = i.second;
-// TODO from here
+
       problem.setObjective( std::move( obj_vec ), parser.objoffset );
       problem.setConstraintMatrix(
           SparseStorage<REAL>{ std::move( parser.entries ), parser.nCols,
@@ -263,7 +263,7 @@ PboParser<REAL>::parse( boost::iostreams::filtering_istream& file )
    bool has_objective = false;
 
    // parsing loop
-   std::string current_line;
+   std::string line;
 
    while(std::getline(file, line)){
       if (line[0] == '*' || line.empty()) continue;
@@ -295,13 +295,12 @@ PboParser<REAL>::parse( boost::iostreams::filtering_istream& file )
 
       auto [row, lhs] = parseRow(line);
       
-         for (const auto& pair : row)
-         {  
-            entries.push_back(
-               std::make_tuple( pair.first, nRows, pair.second ) );
-            nnz++;
-         }
-
+      for (const auto& pair : row)
+      {  
+         entries.push_back(
+            std::make_tuple( pair.first, nRows, pair.second ) );
+         nnz++;
+      }
 
       if (line.find("=") != std::string::npos) 
       {
