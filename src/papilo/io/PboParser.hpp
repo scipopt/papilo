@@ -145,60 +145,9 @@ class PboParser
    int nRows = 0;
    int nnz = 0;
 
-   /// checks first word of strline and wraps it by it_begin and it_end
-   parsekey
-   checkFirstWord( std::string& strline, std::string::iterator& it,
-                   boost::string_ref& word_ref ) const;
-
-   parsekey
-   parseDefault( boost::iostreams::filtering_istream& file ) const;
-
-
-   parsekey
-   parseRhs( boost::iostreams::filtering_istream& file );
-
    Vec<std::pair<int, REAL>> parseRow(std::string& trimmedstrline);
 
 };
-
-template <typename REAL>
-typename PboParser<REAL>::parsekey
-PboParser<REAL>::checkFirstWord( std::string& strline,
-                                 std::string::iterator& it,
-                                 boost::string_ref& word_ref ) const
-{
-   using namespace boost::spirit;
-
-   it = strline.begin() + strline.find_first_not_of( " " );
-   std::string::iterator it_start = it;
-
-   // TODO: Daniel
-   qi::parse( it, strline.end(), qi::lexeme[+qi::graph] );
-
-   const std::size_t length = std::distance( it_start, it );
-
-   boost::string_ref word( &( *it_start ), length );
-
-   word_ref = word;
-
-   if( word.front() == 'R' ) // todo
-   {
-   }
-}
-
-template <typename REAL>
-typename PboParser<REAL>::parsekey
-PboParser<REAL>::parseDefault( boost::iostreams::filtering_istream& file ) const
-{
-   std::string strline;
-   getline( file, strline );
-
-   std::string::iterator it;
-   boost::string_ref word_ref;
-   return checkFirstWord( strline, it, word_ref );
-}
-
-
 
 template <typename REAL>
 bool
