@@ -285,9 +285,9 @@ PboParser<REAL>::parse( boost::iostreams::filtering_istream& file )
    while(std::getline(file,line))
    {
       if (line[0] == '*' || line.empty()) continue;
-/*
+      
       Vec<std::pair<int, REAL> row;
-      int rhs; */
+      int rhs; 
       const auto strBegin = line.find_first_not_of(" "); 
       const auto strEnd = line.find_last_not_of(" ;");
       // being a bit liberal in what is accepted
