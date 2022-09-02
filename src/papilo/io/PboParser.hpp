@@ -279,7 +279,7 @@ PboParser<REAL>::parse( boost::iostreams::filtering_istream& file )
          //[coeffobj, objoffset]
          unpack_helper = parseRow(line);
          coeffobj = unpack_helper.first;
-         objoffset = unpack_helper.second;
+         objoffset = - unpack_helper.second; // not sure about the sign exactly
 
          break; // objective may only be first non comment line
       }
