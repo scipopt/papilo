@@ -76,7 +76,7 @@ class PboParser
 {
    static_assert(
        num_traits<typename RealParseType<REAL>::type>::is_floating_point,
-       "the parse type must be a floating point type" ); // TODO replace this so fractional values are requried instead.
+       "the parse type must be a floating point type" ); // TODO replace this so fractional values are required instead.
 
  public:
    static boost::optional<Problem<REAL>>
