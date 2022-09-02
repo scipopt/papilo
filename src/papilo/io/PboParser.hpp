@@ -70,13 +70,13 @@ struct RealParseType<REAL, true>
    using type = REAL;
 };
 
-/// Parser for pbo files in fixed and free format
+/// Parser for pbo files derived from MpsParser.hpp
 template <typename REAL>
 class PboParser
 {
    static_assert(
        num_traits<typename RealParseType<REAL>::type>::is_floating_point,
-       "the parse type must be a floating point type" );
+       "the parse type must be a floating point type" ); // TODO replace this so fractional values are requried instead.
 
  public:
    static boost::optional<Problem<REAL>>
@@ -107,14 +107,15 @@ class PboParser
                                   std::move( Vec<ColFlags> vect(n, kIntegral) ) ); // kIntegral
       problem.setVariableNames( std::move( parser.colnames ) );
       problem.setName( std::move( filename ) );
-      // We do not have ConstraintNames
+      // We do not have ConstraintNames in PBO
       //problem.setConstraintNames( std::move( parser.rownames ) );
 
-      // Not sure what to do with InputTolerance
-      //problem.setInputTolerance(
-      //    REAL{ pow( typename RealParseType<REAL>::type{ 10 },
-      //               -std::numeric_limits<
-      //                   typename RealParseType<REAL>::type>::digits10 ) } );
+      /* Not sure what to do with InputTolerance
+         problem.setInputTolerance(
+            REAL{ pow( typename RealParseType<REAL>::type{ 10 },
+                       -std::numeric_limits<
+                           typename RealParseType<REAL>::type>::digits10 ) } );
+       */
       return problem;
    }
 
@@ -128,7 +129,7 @@ class PboParser
    bool
    parse( boost::iostreams::filtering_istream& file );
 
-   /// Try to comply with http://www.cril.univ-artois.fr/PB16/format.pdf 
+   /// Try to comply with http://www.cril.univ-artois.fr/PB16/format.pdf but not relt on competition specific rules
    /*
     * data for pbo problem
     */
@@ -301,7 +302,7 @@ PboParser<REAL>::parse( boost::iostreams::filtering_istream& file )
             std::make_tuple( pair.first, nRows, pair.second ) );
          nnz++;
       }
-
+      // a1 x1 + a2 x2 = b;
       if (line.find("=") != std::string::npos) 
       {
          rowlhs.push_back( lhs );
@@ -309,6 +310,7 @@ PboParser<REAL>::parse( boost::iostreams::filtering_istream& file )
          row_flags.emplace_back( RowFlag::kEquation );
 
       }
+      // a1 x1 + a2 x2 >= b;
       else if (line.find(">=") != std::string::npos) 
       {
          rowlhs.push_back( lhs ); 
