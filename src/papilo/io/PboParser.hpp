@@ -262,7 +262,7 @@ PboParser<REAL>::parse( boost::iostreams::filtering_istream& file )
 {
    nnz = 0;
    bool has_objective = false;
-
+   std::pair<Vec<std::pair<int, REAL>>,REAL> unpack_helper;
    // parsing loop
    std::string line;
 
@@ -276,7 +276,10 @@ PboParser<REAL>::parse( boost::iostreams::filtering_istream& file )
          const auto strRange = strEnd - strBegin + 1;
 
          line = line.substr(strBegin, strRange);
-         [coeffobj, objoffset] = parseRow(line);
+         //[coeffobj, objoffset]
+         unpack_helper = parseRow(line);
+         coeffobj = unpack_helper.first;
+         objoffset = unpack_helper.second;
 
          break; // objective may only be first non comment line
       }
@@ -285,7 +288,7 @@ PboParser<REAL>::parse( boost::iostreams::filtering_istream& file )
    while(std::getline(file,line))
    {
       if (line[0] == '*' || line.empty()) continue;
-      
+
       Vec<std::pair<int, REAL> row;
       int rhs; 
       const auto strBegin = line.find_first_not_of(" "); 
@@ -294,7 +297,10 @@ PboParser<REAL>::parse( boost::iostreams::filtering_istream& file )
       const auto strRange = strEnd - strBegin + 1;
       line = line.substr(strBegin, strRange);     
 
-      auto [row, lhs] = parseRow(line);
+      //[row, lhs] 
+      unpack_helper = parseRow(line);
+      row = unpack_helper.first;
+      lhs = unpack_helper.second;
       
       for (const auto& pair : row)
       {  
