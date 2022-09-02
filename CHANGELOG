@@ -19,6 +19,25 @@ Fixed bugs
 Miscellaneous
 -------------
 
+@section RNxxx PaPILO nextrelease
+***************************
+
+Performance improvements
+------------------------
+
+Interface changes
+-----------------
+
+### New parameters with default values
+
+### Data structures
+
+Fixed bugs
+----------
+
+Miscellaneous
+-------------
+
 @section RN211 PaPILO 2.1.1
 ***************************
 
