@@ -40,6 +40,7 @@
 #include <boost/optional.hpp>
 #include <boost/spirit/include/qi.hpp>
 #include <boost/utility/string_ref.hpp>
+#include <algorithm>
 #include <fstream>
 #include <iostream>
 #include <iterator>
@@ -76,7 +77,8 @@ class PboParser
 {
    static_assert(
        num_traits<typename RealParseType<REAL>::type>::is_floating_point,
-       "the parse type must be a floating point type" ); // TODO replace this so fractional values are required instead.
+       "the parse type must be a floating point type" ); 
+       // TODO replace this so fractional values are required instead.
 
  public:
    static boost::optional<Problem<REAL>>
@@ -104,7 +106,7 @@ class PboParser
           std::move( parser.row_flags ), true );
       problem.setVariableDomains( std::move( Vec<REAL> vect(n, REAL(0)) ),
                                   std::move( Vec<REAL> vect(n, REAL(1)) ),
-                                  std::move( Vec<ColFlags> vect(n, kIntegral) ) ); // kIntegral
+                                  std::move( Vec<ColFlags> vect(n, kIntegral) ) );
       problem.setVariableNames( std::move( parser.colnames ) );
       problem.setName( std::move( filename ) );
       // We do not have ConstraintNames in PBO
@@ -129,8 +131,8 @@ class PboParser
    bool
    parse( boost::iostreams::filtering_istream& file );
 
-   /// Try to comply with http://www.cril.univ-artois.fr/PB16/format.pdf but not rely on competition specific rules
-   /*
+   /* Try to comply with http://www.cril.univ-artois.fr/PB16/format.pdf 
+    * but not rely on competition specific rules
     * data for pbo problem
     */
 
@@ -209,20 +211,19 @@ std::pair<Vec<std::pair<int, REAL>>,REAL> parseRow(std::string& trimmedstrline)
    {
       if (token == "+")
       {
-         assert(degree != 2);
+         if (degree != 2) variable_index = -1;
          degree = 0;
          result.push_back(std::make_pair(variable_index, weight));
          continue;
       } 
       else if ((token == ">=") || (token == "="))
       {
-         assert(degree != 2);
+         if ((degree != 2) || (std::string::npos != getline(row, token, ' '))) variable_index = -1;
          degree = 0;
          result.push_back(std::make_pair(variable_index, weight));
          getline(row, token, ' ');
          std::istringstream(token) >> weight;
          rhsoff += weight;
-         assert(std::string::npos != getline(row, token, ' '));
 
          break;
       }
@@ -235,7 +236,8 @@ std::pair<Vec<std::pair<int, REAL>>,REAL> parseRow(std::string& trimmedstrline)
          if(token.starts_with('~'))
          {
             // lhs <= a*~x = a*(1-x) = a*1 - a*x <=> lhs -a <= -a*x 
-            weight = -weight; // weight is initialized here since degree == 0 branch must run before
+            weight = -weight; 
+            // weight is initialized here since degree == 0 branch must run before
             rhsoff += weight;
             token.erase(0,1)
          }
@@ -251,8 +253,26 @@ std::pair<Vec<std::pair<int, REAL>>,REAL> parseRow(std::string& trimmedstrline)
 
       degree++;
    }
-   assert(degree != 2);
-   return std::make_pair(result, rhsoff)
+   if(degree != 2) {
+      result[result.begin].first = -1;
+      return std::make_pair(uniqresult, rhsoff)
+   }
+   bool older_var (std::pair<int, REAL> i, std::pair<int, REAL> j) { return (i.first<j.first); }
+
+   std::sort(result.begin,result.end, older_var);
+   Vec<std::pair<int, REAL>> uniqresult;
+
+   int last_index = -2;
+   
+   for (const auto& pair : row)
+   {
+      if (last_index == pair.first)
+      {
+         uniqresult[uniqresult.end] += pair.second;
+      } else uniqresult.push_back(pair);
+   } 
+
+   return std::make_pair(uniqresult, rhsoff)
 
 }
 
@@ -265,6 +285,7 @@ PboParser<REAL>::parse( boost::iostreams::filtering_istream& file )
    std::pair<Vec<std::pair<int, REAL>>,REAL> unpack_helper;
    // parsing loop
    std::string line;
+
 
    while(std::getline(file, line)){
       if (line[0] == '*' || line.empty()) continue;
@@ -280,13 +301,19 @@ PboParser<REAL>::parse( boost::iostreams::filtering_istream& file )
          unpack_helper = parseRow(line);
          coeffobj = unpack_helper.first;
          objoffset = - unpack_helper.second; // not sure about the sign exactly
+         for (const auto& pair : coeffobj)
+         {  
+            if (pair.first == -1) {
+               std::cerr << "Objective contains non-linear and currently unsupported constraint or is malformed" << std::endl;
+               return false;
+            } 
+         }
 
          break; // objective may only be first non comment line
       }
       break;
    }
-   while(std::getline(file,line))
-   {
+   do {
       if (line[0] == '*' || line.empty()) continue;
 
       Vec<std::pair<int, REAL> row;
@@ -300,13 +327,17 @@ PboParser<REAL>::parse( boost::iostreams::filtering_istream& file )
       //[row, lhs] 
       unpack_helper = parseRow(line);
       row = unpack_helper.first;
-      lhs = unpack_helper.second;
+      lhs = unpack_helper.second;      
       
       for (const auto& pair : row)
       {  
          // This implementation assumes there are no constraints like 
          // a1*x1 + a2*~x1 +a3*x1 < bi as (x1, i, a1) and (x1, i, -a2) and (x1, i, a3) 
          // would all be added to entries which might be bad
+      if (pair.first == -1) {
+         std::cerr << "The " << nRows <<" constraint contains non-linear and currently unsupported constraint or is malformed" << std::endl;
+         return false;
+      } 
          entries.push_back(
             std::make_tuple( pair.first, nRows, pair.second ) );
          nnz++;
@@ -331,11 +362,10 @@ PboParser<REAL>::parse( boost::iostreams::filtering_istream& file )
       }
       else 
       {
-         assert(true);
-         // I am unfamiliar with error handling conventions in this code base.
+         return false;
       }
       nRows++;
-   }
+   } while(std::getline(file,line))
 
    // those asserts might be off by one or something
    assert(nRows == rowname2idx.size());
