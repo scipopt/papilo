@@ -179,7 +179,7 @@ PboParser<REAL>::parseFile( const std::string& filename )
 template <typename REAL>
 std::pair<Vec<std::pair<int, REAL>>,REAL> parseRow(std::string& trimmedstrline)
 {
-   const std::string whitespace = " "
+   const std::string whitespace = " ";
    auto beginSpace = trimmedstrline.find_first_of(whitespace);
    while (beginSpace != std::string::npos)
    {
