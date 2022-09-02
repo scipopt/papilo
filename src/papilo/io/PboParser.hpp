@@ -235,7 +235,7 @@ std::pair<Vec<std::pair<int, REAL>>,REAL> parseRow(std::string& trimmedstrline)
          if(token.starts_with('~'))
          {
             // lhs <= a*~x = a*(1-x) = a*1 - a*x <=> lhs -a <= -a*x 
-            weight = -weight;
+            weight = -weight; // weight is initialized here since degree = 0 branch must run before
             rhsoff += weight;
             token.erase(0,1)
          }
