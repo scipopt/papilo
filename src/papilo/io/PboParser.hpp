@@ -334,10 +334,10 @@ PboParser<REAL>::parse( boost::iostreams::filtering_istream& file )
          // This implementation assumes there are no constraints like 
          // a1*x1 + a2*~x1 +a3*x1 < bi as (x1, i, a1) and (x1, i, -a2) and (x1, i, a3) 
          // would all be added to entries which might be bad
-      if (pair.first == -1) {
-         std::cerr << "The " << nRows <<" constraint contains non-linear and currently unsupported constraint or is malformed" << std::endl;
-         return false;
-      } 
+         if (pair.first == -1) {
+            std::cerr << "The " << nRows <<" constraint contains non-linear and currently unsupported constraint or is malformed" << std::endl;
+            return false;
+         } 
          entries.push_back(
             std::make_tuple( pair.first, nRows, pair.second ) );
          nnz++;
