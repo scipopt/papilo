@@ -240,7 +240,7 @@ std::pair<Vec<std::pair<int, REAL>>,REAL> parseRow(std::string& trimmedstrline)
          }
          if(colname2idx.count(token) == 0)
          {
-            colname2idx.insert(std::pair<std::string,int>(token,nCols++))
+            colname2idx.insert(std::pair<std::string,int>(token,nCols++));
             colnames.push_back( colname );
             assert(colnames[nCols-1] != token);
 
