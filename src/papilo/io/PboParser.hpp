@@ -213,7 +213,7 @@ std::pair<Vec<std::pair<int, REAL>>,REAL> parseRow(std::string& trimmedstrline)
          result.push_back(std::make_pair(variable_index, weight));
          continue;
       } 
-      else if (token == ">=") || (token == "=")
+      else if ((token == ">=") || (token == "="))
       {
          assert(degree != 2);
          degree = 0;
