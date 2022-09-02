@@ -129,7 +129,7 @@ class PboParser
    bool
    parse( boost::iostreams::filtering_istream& file );
 
-   /// Try to comply with http://www.cril.univ-artois.fr/PB16/format.pdf but not relt on competition specific rules
+   /// Try to comply with http://www.cril.univ-artois.fr/PB16/format.pdf but not rely on competition specific rules
    /*
     * data for pbo problem
     */
@@ -191,7 +191,7 @@ std::pair<Vec<std::pair<int, REAL>>,REAL> parseRow(std::string& trimmedstrline)
 
         const auto newStart = beginSpace + fill.length();
         beginSpace = trimmedstrline.find_first_of(whitespace, newStart);
-   } // having a nicer string to work with makes me comfortable i get it right loop maybe O(n^2)
+   } // having a nicer string to work with makes me comfortable i get it right. Loop maybe O(n^2)
    Vec<std::pair<int, REAL>> result;
 
    REAL rhsoff = REAL(0);
@@ -234,7 +234,7 @@ std::pair<Vec<std::pair<int, REAL>>,REAL> parseRow(std::string& trimmedstrline)
       {
          if(token.starts_with('~'))
          {
-            // a*~x = a*(1-x) = a*1 - a*x >= lhs <=> -a*x >= lhs-a
+            // lhs <= a*~x = a*(1-x) = a*1 - a*x <=> lhs -a <= -a*x 
             weight = -weight;
             rhsoff += weight;
             token.erase(0,1)
@@ -311,6 +311,7 @@ PboParser<REAL>::parse( boost::iostreams::filtering_istream& file )
 
       }
       // a1 x1 + a2 x2 >= b;
+      // interpret as lhs = b <= a1*x1 + a2*x2 
       else if (line.find(">=") != std::string::npos) 
       {
          rowlhs.push_back( lhs ); 
