@@ -468,3 +468,10 @@ endif()
 # install targets
 install(TARGETS papilo papilo-core ${CLUSOL_TARGET} EXPORT papilo-targets ARCHIVE DESTINATION lib LIBRARY DESTINATION lib)
 install(EXPORT papilo-targets DESTINATION lib/cmake/papilo)
+
+if(TARGET papilo-executable)
+   install(TARGETS papilo-executable ARCHIVE DESTINATION bin LIBRARY DESTINATION lib)
+endif()
+if(TARGET duplicates)
+   install(TARGETS duplicates ARCHIVE DESTINATION bin LIBRARY DESTINATION lib)
+endif()

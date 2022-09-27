@@ -60,6 +60,9 @@ add_executable(unit_test TestMain.cpp
         ${PAPILOLIB_TEST_FILE})
 
 target_link_libraries(unit_test papilo ${PAPILOLIB_TARGET} ${Boost_LIBRARIES})
+if(${CMAKE_SYSTEM_NAME} STREQUAL "Android")
+    target_link_libraries(unit_test log)
+endif()
 
 set(unit_tests
         "accurate-numerical-statistics"
