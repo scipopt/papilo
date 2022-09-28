@@ -1,0 +1,4 @@
+* taken from Wikipedia 
+min -4 ~green -2 ~blue -2 ~grey -1 ~orange -10 ~yellow;
+-12 green -2 blue -1 grey -1 orange -4 yellow >= -15;
+* https://en.wikipedia.org/wiki/Knapsack_problem#/media/File:Knapsack.svg
