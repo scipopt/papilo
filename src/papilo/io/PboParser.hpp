@@ -29,10 +29,10 @@
 #include "papilo/core/Objective.hpp"
 #include "papilo/core/Problem.hpp"
 #include "papilo/core/VariableDomains.hpp"
+#include "papilo/external/pdqsort/pdqsort.h"
 #include "papilo/misc/Flags.hpp"
 #include "papilo/misc/Hash.hpp"
 #include "papilo/misc/Num.hpp"
-#include "papilo/external/pdqsort/pdqsort.h"
 #include <algorithm>
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/dynamic_bitset.hpp>
@@ -40,7 +40,6 @@
 #include <boost/optional.hpp>
 #include <boost/spirit/include/qi.hpp>
 #include <boost/utility/string_ref.hpp>
-#include <algorithm>
 #include <fstream>
 #include <iostream>
 #include <iterator>
@@ -77,8 +76,8 @@ class PboParser
 {
    static_assert(
        num_traits<typename RealParseType<REAL>::type>::is_floating_point,
-       "the parse type must be a floating point type" ); 
-       // TODO replace this so fractional values are required instead.
+       "the parse type must be a floating point type" );
+   // TODO replace this so fractional values are required instead.
 
  public:
    static boost::optional<Problem<REAL>>
@@ -104,13 +103,14 @@ class PboParser
                                parser.nRows, true },
           std::move( parser.rowlhs ), std::move( parser.rowrhs ),
           std::move( parser.row_flags ), true );
-      problem.setVariableDomains( std::move( Vec<REAL> vect(n, REAL(0)) ),
-                                  std::move( Vec<REAL> vect(n, REAL(1)) ),
-                                  std::move( Vec<ColFlags> vect(n, kIntegral) ) );
+      problem.setVariableDomains(
+          std::move( Vec<REAL> vect( n, REAL( 0 ) ) ),
+          std::move( Vec<REAL> vect( n, REAL( 1 ) ) ),
+          std::move( Vec<ColFlags> vect( n, kIntegral ) ) );
       problem.setVariableNames( std::move( parser.colnames ) );
       problem.setName( std::move( filename ) );
       // We do not have ConstraintNames in PBO
-      //problem.setConstraintNames( std::move( parser.rownames ) );
+      // problem.setConstraintNames( std::move( parser.rownames ) );
 
       /* Not sure what to do with InputTolerance
          problem.setInputTolerance(
@@ -131,7 +131,7 @@ class PboParser
    bool
    parse( boost::iostreams::filtering_istream& file );
 
-   /* Try to comply with http://www.cril.univ-artois.fr/PB16/format.pdf 
+   /* Try to comply with http://www.cril.univ-artois.fr/PB16/format.pdf
     * but not rely on competition specific rules
     * data for pbo problem
     */
@@ -144,14 +144,14 @@ class PboParser
 
    HashMap<std::string, int> colname2idx;
    Vec<RowFlags> row_flags;
-   REAL objoffset = REAL(0);
+   REAL objoffset = REAL( 0 );
 
    int nCols = 0;
    int nRows = 0;
    int nnz = -1;
 
-   Vec<std::pair<int, REAL>> parseRow(std::string& trimmedstrline);
-
+   Vec<std::pair<int, REAL>>
+   parseRow( std::string& trimmedstrline );
 };
 
 template <typename REAL>
@@ -180,25 +180,28 @@ PboParser<REAL>::parseFile( const std::string& filename )
 }
 
 template <typename REAL>
-std::pair<Vec<std::pair<int, REAL>>,REAL> parseRow(std::string& trimmedstrline)
+std::pair<Vec<std::pair<int, REAL>>, REAL>
+parseRow( std::string& trimmedstrline )
 {
    const std::string whitespace = " ";
-   auto beginSpace = trimmedstrline.find_first_of(whitespace);
-   while (beginSpace != std::string::npos)
+   auto beginSpace = trimmedstrline.find_first_of( whitespace );
+   while( beginSpace != std::string::npos )
    {
-        const auto endSpace = trimmedstrline.find_first_not_of(whitespace, beginSpace);
-        const auto range = endSpace - beginSpace;
+      const auto endSpace =
+          trimmedstrline.find_first_not_of( whitespace, beginSpace );
+      const auto range = endSpace - beginSpace;
 
-        trimmedstrline.replace(beginSpace, range, fill);
+      trimmedstrline.replace( beginSpace, range, fill );
 
-        const auto newStart = beginSpace + fill.length();
-        beginSpace = trimmedstrline.find_first_of(whitespace, newStart);
-   } // having a nicer string to work with makes me comfortable i get it right. Loop maybe O(n^2)
+      const auto newStart = beginSpace + fill.length();
+      beginSpace = trimmedstrline.find_first_of( whitespace, newStart );
+   } // having a nicer string to work with makes me comfortable i get it right.
+     // Loop maybe O(n^2)
    Vec<std::pair<int, REAL>> result;
 
-   REAL rhsoff = REAL(0);
+   REAL rhsoff = REAL( 0 );
 
-   std::stringstream row(beginSpace);
+   std::stringstream row( beginSpace );
 
    int degree = 0;
    int variable_index;
@@ -206,74 +209,82 @@ std::pair<Vec<std::pair<int, REAL>>,REAL> parseRow(std::string& trimmedstrline)
 
    // I am unfamiliar with error handling conventions in this code base.
 
-   while(getline(row, token, ' '))
+   while( getline( row, token, ' ' ) )
    // You can use space as line break and the getline the result.
    {
-      if (token == "+")
+      if( token == "+" )
       {
-         if (degree != 2) variable_index = -1;
+         if( degree != 2 )
+            variable_index = -1;
          degree = 0;
-         result.push_back(std::make_pair(variable_index, weight));
+         result.push_back( std::make_pair( variable_index, weight ) );
          continue;
-      } 
-      else if ((token == ">=") || (token == "="))
+      }
+      else if( ( token == ">=" ) || ( token == "=" ) )
       {
-         if ((degree != 2) || (std::string::npos != getline(row, token, ' '))) variable_index = -1;
+         if( ( degree != 2 ) ||
+             ( std::string::npos != getline( row, token, ' ' ) ) )
+            variable_index = -1;
          degree = 0;
-         result.push_back(std::make_pair(variable_index, weight));
-         getline(row, token, ' ');
-         std::istringstream(token) >> weight;
+         result.push_back( std::make_pair( variable_index, weight ) );
+         getline( row, token, ' ' );
+         std::istringstream( token ) >> weight;
          rhsoff += weight;
 
          break;
       }
-      if (degree == 0)
+      if( degree == 0 )
       {
-         std::istringstream(token) >> weight;
-      } 
-      else if (degree == 1)
+         std::istringstream( token ) >> weight;
+      }
+      else if( degree == 1 )
       {
-         if(token.starts_with('~'))
+         if( token.starts_with( '~' ) )
          {
-            // lhs <= a*~x = a*(1-x) = a*1 - a*x <=> lhs -a <= -a*x 
-            weight = -weight; 
-            // weight is initialized here since degree == 0 branch must run before
+            // lhs <= a*~x = a*(1-x) = a*1 - a*x <=> lhs -a <= -a*x
+            weight = -weight;
+            // weight is initialized here since degree == 0 branch must run
+            // before
             rhsoff += weight;
-            token.erase(0,1)
+            token.erase( 0, 1 )
          }
-         if(colname2idx.count(token) == 0)
+         if( colname2idx.count( token ) == 0 )
          {
-            colname2idx.insert(std::pair<std::string,int>(token,nCols++));
+            colname2idx.insert( std::pair<std::string, int>( token, nCols++ ) );
             colnames.push_back( colname );
-            assert(colnames[nCols-1] != token);
-
-         } 
+            assert( colnames[nCols - 1] != token );
+         }
          variable_index = colname2idx[token];
       }
 
       degree++;
    }
-   if(degree != 2) {
+   if( degree != 2 )
+   {
       result[result.begin].first = -1;
-      return std::make_pair(uniqresult, rhsoff)
+      return std::make_pair( uniqresult, rhsoff )
    }
-   bool older_var (std::pair<int, REAL> i, std::pair<int, REAL> j) { return (i.first<j.first); }
+   bool older_var( std::pair<int, REAL> i, std::pair<int, REAL> j )
+   {
+      return ( i.first < j.first );
+   }
 
-   std::sort(result.begin,result.end, older_var);
+   std::sort( result.begin, result.end, older_var );
    Vec<std::pair<int, REAL>> uniqresult;
 
    int last_index = -2;
-   
-   for (const auto& pair : row)
+
+   for( const auto& pair : row )
    {
-      if (last_index == pair.first)
+      if( last_index == pair.first )
       {
          uniqresult[uniqresult.end].second += pair.second;
-      } else uniqresult.push_back(pair);
-   } 
+      }
+      else
+         uniqresult.push_back( pair );
+   }
 
-   return std::make_pair(uniqresult, rhsoff)
-
+   return std::make_pair( uniqresult, rhsoff )
 }
 
 template <typename REAL>
@@ -282,93 +293,101 @@ PboParser<REAL>::parse( boost::iostreams::filtering_istream& file )
 {
    nnz = 0;
    bool has_objective = false;
-   std::pair<Vec<std::pair<int, REAL>>,REAL> unpack_helper;
+   std::pair<Vec<std::pair<int, REAL>>, REAL> unpack_helper;
    // parsing loop
    std::string line;
 
-
-   while(std::getline(file, line)){
-      if (line[0] == '*' || line.empty()) continue;
-      if (line[0] == 'm' && line[1] == 'i' && line[2] == 'n' && line[3] == ':')
+   while( std::getline( file, line ) )
+   {
+      if( line[0] == '*' || line.empty() )
+         continue;
+      if( line[0] == 'm' && line[1] == 'i' && line[2] == 'n' && line[3] == ':' )
       {
-         const auto strBegin = line.find_first_not_of(" ", 4); 
-         const auto strEnd = line.find_last_not_of(" ;");
+         const auto strBegin = line.find_first_not_of( " ", 4 );
+         const auto strEnd = line.find_last_not_of( " ;" );
          // being a bit liberal in what is accepted
          const auto strRange = strEnd - strBegin + 1;
 
-         line = line.substr(strBegin, strRange);
+         line = line.substr( strBegin, strRange );
          //[coeffobj, objoffset]
-         unpack_helper = parseRow(line);
+         unpack_helper = parseRow( line );
          coeffobj = unpack_helper.first;
-         objoffset = - unpack_helper.second; // not sure about the sign exactly
-         for (const auto& pair : coeffobj)
-         {  
-            if (pair.first == -1) {
-               std::cerr << "Objective contains non-linear and currently unsupported constraint or is malformed" << std::endl;
+         objoffset = -unpack_helper.second; // not sure about the sign exactly
+         for( const auto& pair : coeffobj )
+         {
+            if( pair.first == -1 )
+            {
+               std::cerr << "Objective contains non-linear and currently "
+                            "unsupported constraint or is malformed"
+                         << std::endl;
                return false;
-            } 
+            }
          }
 
          break; // objective may only be first non comment line
       }
       break;
    }
-   do {
-      if (line[0] == '*' || line.empty()) continue;
+   do
+   {
+      if( line[0] == '*' || line.empty() )
+         continue;
 
-      Vec<std::pair<int, REAL> row;
-      int rhs; 
-      const auto strBegin = line.find_first_not_of(" "); 
-      const auto strEnd = line.find_last_not_of(" ;");
+      Vec < std::pair<int, REAL> row;
+      int rhs;
+      const auto strBegin = line.find_first_not_of( " " );
+      const auto strEnd = line.find_last_not_of( " ;" );
       // being a bit liberal in what is accepted
       const auto strRange = strEnd - strBegin + 1;
-      line = line.substr(strBegin, strRange);     
+      line = line.substr( strBegin, strRange );
 
-      //[row, lhs] 
-      unpack_helper = parseRow(line);
+      //[row, lhs]
+      unpack_helper = parseRow( line );
       row = unpack_helper.first;
-      lhs = unpack_helper.second;      
-      
-      for (const auto& pair : row)
-      {  
-         if (pair.first == -1) {
-            std::cerr << "The " << nRows <<" constraint contains non-linear and currently unsupported constraint or is malformed" << std::endl;
+      lhs = unpack_helper.second;
+
+      for( const auto& pair : row )
+      {
+         if( pair.first == -1 )
+         {
+            std::cerr << "The " << nRows
+                      << " constraint contains non-linear and currently "
+                         "unsupported constraint or is malformed"
+                      << std::endl;
             return false;
-         } 
-         entries.push_back(
-            std::make_tuple( pair.first, nRows, pair.second ) );
+         }
+         entries.push_back( std::make_tuple( pair.first, nRows, pair.second ) );
          nnz++;
       }
       // a1 x1 + a2 x2 = b;
-      if (line.find("=") != std::string::npos) 
+      if( line.find( "=" ) != std::string::npos )
       {
          rowlhs.push_back( lhs );
          rowrhs.push_back( lhs );
          row_flags.emplace_back( RowFlag::kEquation );
-
       }
       // a1 x1 + a2 x2 >= b;
-      // interpret as lhs = b <= a1*x1 + a2*x2 
-      else if (line.find(">=") != std::string::npos) 
+      // interpret as lhs = b <= a1*x1 + a2*x2
+      else if( line.find( ">=" ) != std::string::npos )
       {
-         rowlhs.push_back( lhs ); 
-         // Not sure what to put here as Floating point in does not exist 
+         rowlhs.push_back( lhs );
+         // Not sure what to put here as Floating point in does not exist
          // for rational types i think.
          rowrhs.push_back( REAL{ 0.0 } );
          row_flags.emplace_back( RowFlag::kRhsInf );
       }
-      else 
+      else
       {
          return false;
       }
       nRows++;
-   } while(std::getline(file,line))
+   } while( std::getline( file, line ) )
 
-   // those asserts might be off by one or something
-   assert(nRows == rowname2idx.size());
-   assert(nRows == rowlhs.size());
-   assert(nRows == rowrhs.size());
-   assert(nRows == row_flags.size());
+       // those asserts might be off by one or something
+       assert( nRows == rowname2idx.size() );
+   assert( nRows == rowlhs.size() );
+   assert( nRows == rowrhs.size() );
+   assert( nRows == row_flags.size() );
 
    return true;
 }
