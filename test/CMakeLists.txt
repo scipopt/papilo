@@ -13,18 +13,31 @@ else ()
     set(PAPILOLIB_TARGET "")
 endif ()
 
+set(problemfiles
+#    "dual_fix_neg_inf.postsolve"
+#    "dual_fix_pos_inf.postsolve"
+        "knapsack.opb"
+        "pos_objective.opb"
+        "neg_objective.opb"
+        "dual_fix_neg_inf.mps"
+   )
+
 if (Boost_IOSTREAMS_FOUND AND Boost_SERIALIZATION_FOUND AND Boost_PROGRAM_OPTIONS_FOUND)
-#    configure_file(resources/dual_fix_neg_inf.postsolve resources/dual_fix_neg_inf.postsolve COPYONLY)
-#    configure_file(resources/dual_fix_pos_inf.postsolve resources/dual_fix_pos_inf.postsolve COPYONLY)
-    configure_file(instances/dual_fix_neg_inf.mps resources/dual_fix_neg_inf.mps COPYONLY)
+    foreach (probfile ${problemfiles})
+        configure_file(instances/${probfile} resources/${probfile} COPYONLY)
+    endforeach()
     set(BOOST_REQUIRED_TESTS
 #            "finding-the-right-value-in-postsolve-for-a-column-fixed-pos-inf"
 #            "finding-the-right-value-in-postsolve-for-a-column-fixed-neg-inf"
             "mps-parser-loading-simple-problem"
+            "pbo-parser-loading-neg-objective-problem"
+            "pbo-parser-loading-pos-objective-problem"
+            "pbo-parser-loading-knapsack-problem"
             )
     set(BOOST_REQUIRED_TEST_FILES
 #            papilo/core/PostsolveTest.cpp
             papilo/io/MpsParserTest.cpp
+            papilo/io/PboParserTest.cpp
             )
 else ()
     set(BOOST_REQUIRED_TESTS "")
