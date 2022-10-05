@@ -368,7 +368,7 @@ install(FILES
   DESTINATION include/papilo/misc)
 
 
-if((DEFINED BOOST_VERSION) AND (BOOST_VERSION VERSION_LESS 107000))
+if((DEFINED Boost_VERSION) AND (Boost_VERSION VERSION_LESS 107000))
    install(FILES
            ${PROJECT_SOURCE_DIR}/src/papilo/misc/extended_euclidean.hpp
            DESTINATION include/papilo/misc)
