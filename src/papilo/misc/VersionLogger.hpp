@@ -78,7 +78,7 @@ void
 print_header()
 {
    std::string mode = "optimized";
-#ifdef NDEBUG
+#ifndef NDEBUG
    mode = "debug";
 #endif
 
