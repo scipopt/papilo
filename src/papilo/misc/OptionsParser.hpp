@@ -111,27 +111,6 @@ struct OptionsInfo
          fmt::print( "file {} is not valid\n", optimal_solution_file );
          return false;
       }
-      if( existsFile( orig_reduced_costs_file ) )
-      {
-         fmt::print( "file {} is not valid\n", orig_reduced_costs_file );
-         return false;
-      }
-      if( existsFile( orig_basis_file ) )
-      {
-         fmt::print( "file {} is not valid\n", orig_basis_file );
-         return false;
-      }
-      if( existsFile( orig_dual_solution_file ) )
-      {
-         fmt::print( "file {} is not valid\n", orig_dual_solution_file );
-         return false;
-      }
-      if( existsFile( optimal_solution_file ) )
-      {
-         fmt::print( "file {} is not valid\n", optimal_solution_file );
-         return false;
-      }
-
 
       if( existsFile( soplex_settings_file ))
       {
