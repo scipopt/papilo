@@ -74,6 +74,7 @@ Fixed bugs
 - postsolving FixInfinityCol works also in primal case
 - store data for FixInfinityCol correct if bounds are both infinity
 - PaPILO shows some behavior on different OS
+- avoid abort because of calling extended_euclidean with negative coefficients
 
 
 Miscellaneous

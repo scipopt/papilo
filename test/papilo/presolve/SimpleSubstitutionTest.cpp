@@ -34,7 +34,9 @@ setupProblemWithSimpleSubstitution( uint8_t is_x_integer, uint8_t is_y_integer,
                                     double a_y );
 
 Problem<double>
-setupProblemWithInfeasibleBounds( double x, double y, double rhs );
+setupProblemWithInfeasibleBounds( double x, double y, double rhs, double coef1,
+                                  double coef2, double lb1, double ub1,
+                                  double lb2, double ub2 );
 
 Problem<double>
 setupProblemWithSimpleSubstitutionInfeasibleGcd();
@@ -42,7 +44,11 @@ setupProblemWithSimpleSubstitutionInfeasibleGcd();
 Problem<double>
 setupProblemWithSimpleSubstitutionFeasibleGcd();
 
-TEST_CASE( "happy-path-simple-substitution-for-2-int", "[presolve]" )
+PresolveStatus
+check_gcd_result_with_expectation(double x, double y, double rhs, double coef1,
+                                   double coef2, double lb1, double ub1, double lb2, double ub2 );
+
+TEST_CASE( "simple-substitution-happy-path-for-2-int", "[presolve]" )
 {
    Num<double> num{};
    double time = 0.0;
@@ -91,7 +97,7 @@ TEST_CASE( "happy-path-simple-substitution-for-2-int", "[presolve]" )
    REQUIRE( reductions.getReduction( 4 ).newval == 0 );
 }
 
-TEST_CASE( "happy-path-simple-substitution-for-int-continuous-coeff",
+TEST_CASE( "simple-substitution-happy-path-for-int-continuous-coeff",
            "[presolve]" )
 {
    Message msg {};
@@ -115,7 +121,7 @@ TEST_CASE( "happy-path-simple-substitution-for-int-continuous-coeff",
    REQUIRE( presolveStatus == PresolveStatus::kUnchanged );
 }
 
-TEST_CASE( "happy-path-simple-substitution-for-2-continuous", "[presolve]" )
+TEST_CASE( "simple-substitution-happy-path-for-2-continuous", "[presolve]" )
 {
    Num<double> num{};
    double time = 0.0;
@@ -154,7 +160,7 @@ TEST_CASE( "happy-path-simple-substitution-for-2-continuous", "[presolve]" )
    REQUIRE( reductions.getReduction( 2 ).newval == 0 );
 }
 
-TEST_CASE( "happy-path-simple-substitution-for-continuous-and-integer",
+TEST_CASE( "simple-substitution-happy-path-for-continuous-and-integer",
            "[presolve]" )
 {
    Num<double> num{};
@@ -194,7 +200,7 @@ TEST_CASE( "happy-path-simple-substitution-for-continuous-and-integer",
    REQUIRE( reductions.getReduction( 2 ).newval == 0 );
 }
 
-TEST_CASE( "failed-path-simple-substitution-for-2-int", "[presolve]" )
+TEST_CASE( "simple-substitution-simple-substitution-for-2-int", "[presolve]" )
 {
    Num<double> num{};
    double time = 0.0;
@@ -218,27 +224,48 @@ TEST_CASE( "failed-path-simple-substitution-for-2-int", "[presolve]" )
    REQUIRE( presolveStatus == PresolveStatus::kUnchanged );
 }
 
+TEST_CASE( "simple-substitution-2-negative-integer", "[presolve]" )
+{
+   // 2x - 2y = 4 with x,y in [0,3]
+   REQUIRE( check_gcd_result_with_expectation(
+                1.0, 1.0, 4.0, 2.0, 2.0, 0.0, 3.0, 0.0, 3.0 ) == PresolveStatus::kReduced );
+}
+
+TEST_CASE( "simple-substitution-feasible-gcd", "[presolve]" )
+{
+   // 3x + 8y = 37 with x in {0,7} y in {0,5} -> solution x = 7, y = 2
+   REQUIRE( check_gcd_result_with_expectation(
+                8.0, 3.0, 37.0, 3.0, 8.0, 0.0, 7.0, 0.0, 5.0 ) == PresolveStatus::kUnchanged );
+   // -3x -8y = 37 with x in {-7,0} y in {-5,0} -> solution x = -7, y = -2
+   REQUIRE( check_gcd_result_with_expectation(
+                8.0, 3.0, 37.0, -3.0, -8.0, -7.0, 0.0, -5.0, 0.0 ) == PresolveStatus::kUnchanged );
+   // -3x -8y = -37 with x in {0,7} y in {0,5} -> solution x = 7, y = 2
+   REQUIRE( check_gcd_result_with_expectation(
+                8.0, 3.0, -37.0, -3.0, -8.0, 0.0, 7.0, 0.0, 5.0 ) == PresolveStatus::kUnchanged );
+   // -3x + 8y = 37 with x in {-7,0} y in {0,5} -> solution x = -7, y = 2
+   REQUIRE( check_gcd_result_with_expectation(
+                8.0, 3.0, 37.0, -3.0, 8.0, -7.0, 0.0, 0.0, 5.0 ) == PresolveStatus::kUnchanged );
+   // 3x - 8y = 37 with x in {0,7} y in {-5,0} -> solution x = 7, y = -2
+   REQUIRE( check_gcd_result_with_expectation(
+                8.0, 3.0, 37.0, 3.0, -8.0, 0.0, 7.0, -5.0, 0.0 ) == PresolveStatus::kUnchanged );
+}
+
+TEST_CASE( "simple-substitution-violated-gcd", "[presolve]" )
+{
+   // -3x - 8y = 37 with x,y in {-5,0}
+   REQUIRE( check_gcd_result_with_expectation(
+                8.0, 3.0, 37.0, -3.0, 8.0, -5.0, 0.0, -5.0, 0.0 ) == PresolveStatus::kInfeasible );
+   // -3x - 8y = -37 with x,y in {0,5}
+   REQUIRE( check_gcd_result_with_expectation(
+                8.0, 3.0, -37.0, -3.0, -8.0, 0.0, 5.0, 0.0, 5.0 ) == PresolveStatus::kInfeasible );
+}
+
+
 TEST_CASE( "example_10_1_in_constraint_integer_programming", "[presolve]" )
 {
-   Message msg {};
-   double time = 0.0;
-   Timer t{ time };
-   Num<double> num{};
-   Problem<double> problem = setupProblemWithInfeasibleBounds( 8.0, 3.0, 37.0 );
-   Statistics statistics{};
-   PresolveOptions presolveOptions{};
-   presolveOptions.dualreds = 0;
-   PostsolveStorage<double> postsolve =
-       PostsolveStorage<double>( problem, num, presolveOptions );
-   ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
-                                        presolveOptions, num, msg );
-   SimpleSubstitution<double> presolvingMethod{};
-   Reductions<double> reductions{};
-   problem.recomputeAllActivities();
-
-   PresolveStatus presolveStatus =
-       presolvingMethod.execute( problem, problemUpdate, num, reductions, t );
-   REQUIRE( presolveStatus == PresolveStatus::kInfeasible );
+   // 3x + 8y = 37 with x,y in {0,5}
+   REQUIRE( check_gcd_result_with_expectation(
+                8.0, 3.0, 37.0, 3.0, 8.0, 0.0, 5.0, 0.0, 5.0 ) == PresolveStatus::kInfeasible );
 }
 
 
@@ -290,6 +317,69 @@ TEST_CASE( "should_return_infeasible_if_gcd_of_coeff_is_in_rhs", "[presolve]" )
    REQUIRE( presolveStatus == PresolveStatus::kInfeasible );
 }
 
+PresolveStatus
+check_gcd_result_with_expectation( double x, double y, double rhs, double coef1,
+                                  double coef2, double lb1, double ub1,
+                                  double lb2, double ub2 )
+{
+   Message msg {};
+   double time = 0.0;
+   Timer t{ time };
+   Num<double> num{};
+   Problem<double> problem = setupProblemWithInfeasibleBounds(
+       x, y, rhs, coef1, coef2, lb1, ub1, lb2, ub2 );
+   Statistics statistics{};
+   PresolveOptions presolveOptions{};
+   presolveOptions.dualreds = 0;
+   PostsolveStorage<double> postsolve =
+       PostsolveStorage<double>( problem, num, presolveOptions );
+   ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
+                                        presolveOptions, num, msg );
+   SimpleSubstitution<double> presolvingMethod{};
+   Reductions<double> reductions{};
+   problem.recomputeAllActivities();
+
+   return
+       presolvingMethod.execute( problem, problemUpdate, num, reductions, t );
+}
+
+Problem<double>
+setupProblemWithInfeasibleBounds( double x, double y, double rhs, double coef1,
+                                  double coef2, double lb1, double ub1,
+                                  double lb2, double ub2 )
+{
+   Num<double> num{};
+   Vec<double> coefficients{ x, y };
+   Vec<double> upperBounds{ ub1, ub2 };
+   Vec<double> lowerBounds{ lb1, lb2 };
+   Vec<uint8_t> isIntegral{ 1, 1 };
+
+   Vec<double> rhs_values{ rhs };
+   Vec<std::string> rowNames{ "A1" };
+   Vec<std::string> columnNames{ "c1", "c2" };
+   Vec<std::tuple<int, int, double>> entries{
+       std::tuple<int, int, double>{ 0, 0, coef1 },
+       std::tuple<int, int, double>{ 0, 1, coef2 },
+   };
+
+   ProblemBuilder<double> pb;
+   pb.reserve( entries.size(), rowNames.size(), columnNames.size() );
+   pb.setNumRows( rowNames.size() );
+   pb.setNumCols( columnNames.size() );
+   pb.setColUbAll( upperBounds );
+   pb.setColLbAll( lowerBounds );
+   pb.setObjAll( coefficients );
+   pb.setObjOffset( 0.0 );
+   pb.setColIntegralAll( isIntegral );
+   pb.setRowRhsAll( rhs_values );
+   pb.addEntryAll( entries );
+   pb.setColNameAll( columnNames );
+   pb.setProblemName( "example 10.1 in Constraint Integer Programming" );
+   Problem<double> problem = pb.build();
+   problem.getConstraintMatrix().modifyLeftHandSide( 0,num, rhs );
+   return problem;
+}
+
 Problem<double>
 setupProblemWithSimpleSubstitution( uint8_t is_x_integer, uint8_t is_y_integer,
                                     double a_y )
@@ -311,9 +401,9 @@ setupProblemWithSimpleSubstitution( uint8_t is_x_integer, uint8_t is_y_integer,
    };
 
    ProblemBuilder<double> pb;
-   pb.reserve( entries.size(), rowNames.size(), columnNames.size() );
-   pb.setNumRows( rowNames.size() );
-   pb.setNumCols( columnNames.size() );
+   pb.reserve( (int) entries.size(), (int) rowNames.size(), (int) columnNames.size() );
+   pb.setNumRows( (int) rowNames.size() );
+   pb.setNumCols( (int) columnNames.size() );
    pb.setColUbAll( upperBounds );
    pb.setColLbAll( lowerBounds );
    pb.setObjAll( coefficients );
@@ -325,43 +415,6 @@ setupProblemWithSimpleSubstitution( uint8_t is_x_integer, uint8_t is_y_integer,
    pb.setProblemName( "matrix for testing simple probing" );
    Problem<double> problem = pb.build();
    problem.getConstraintMatrix().modifyLeftHandSide( 0,num, rhs[0] );
-   return problem;
-}
-
-Problem<double>
-setupProblemWithInfeasibleBounds( double x, double y, double rhs )
-{
-   // 3x + 8y = 37
-   // 0<= x,y y= 5
-   Num<double> num{};
-   Vec<double> coefficients{ x, y };
-   Vec<double> upperBounds{ 5.0, 5.0 };
-   Vec<double> lowerBounds{ 0.0, 0.0 };
-   Vec<uint8_t> isIntegral{ 1, 1 };
-
-   Vec<double> rhs_values{ rhs };
-   Vec<std::string> rowNames{ "A1" };
-   Vec<std::string> columnNames{ "c1", "c2" };
-   Vec<std::tuple<int, int, double>> entries{
-       std::tuple<int, int, double>{ 0, 0, 3.0 },
-       std::tuple<int, int, double>{ 0, 1, 8.0 },
-   };
-
-   ProblemBuilder<double> pb;
-   pb.reserve( entries.size(), rowNames.size(), columnNames.size() );
-   pb.setNumRows( rowNames.size() );
-   pb.setNumCols( columnNames.size() );
-   pb.setColUbAll( upperBounds );
-   pb.setColLbAll( lowerBounds );
-   pb.setObjAll( coefficients );
-   pb.setObjOffset( 0.0 );
-   pb.setColIntegralAll( isIntegral );
-   pb.setRowRhsAll( rhs_values );
-   pb.addEntryAll( entries );
-   pb.setColNameAll( columnNames );
-   pb.setProblemName( "example 10.1 in Constraint Integer Programming" );
-   Problem<double> problem = pb.build();
-   problem.getConstraintMatrix().modifyLeftHandSide( 0,num, rhs );
    return problem;
 }
 
