@@ -15,6 +15,7 @@ Interface changes
 
 Fixed bugs
 ----------
+- SimpleSubstitution: fixing bug in the infeasibility detection of the extended euclidean
 
 Miscellaneous
 -------------
@@ -22,21 +23,9 @@ Miscellaneous
 @section RN211 PaPILO 2.1.1
 ***************************
 
-Performance improvements
-------------------------
-
-Interface changes
------------------
-
-### New parameters with default values
-
-### Data structures
-
 Fixed bugs
 ----------
-
-Miscellaneous
--------------
+- SimpleSubstitution: avoid abort because of calling extended_euclidean with negative coefficients
 
 
 @section RN210 PaPILO 2.1.0
@@ -74,7 +63,6 @@ Fixed bugs
 - postsolving FixInfinityCol works also in primal case
 - store data for FixInfinityCol correct if bounds are both infinity
 - PaPILO shows some behavior on different OS
-
 
 Miscellaneous
 -------------

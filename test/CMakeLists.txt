@@ -176,13 +176,16 @@ set(unit_tests
         "happy-path-simple-probing-only-binary-positive-coefficient"
 
         #Simple Substitution
-        "happy-path-simple-substitution-for-2-int"
-        "happy-path-simple-substitution-for-2-continuous"
-        "happy-path-simple-substitution-for-continuous-and-integer"
-        "happy-path-simple-substitution-for-int-continuous-coeff"
-        "should_return_infeasible_if_gcd_of_coeff_is_in_rhs"
-        "should_return_feasible_if_gcd_of_coeff_is_in_rhs"
-        "failed-path-simple-substitution-for-2-int"
+        "simple-substitution-happy-path-for-2-int"
+        "simple-substitution-happy-path-for-2-continuous"
+        "simple-substitution-happy-path-for-continuous-and-integer"
+        "simple-substitution-happy-path-for-int-continuous-coeff"
+        "simple-substitution-should_return_infeasible_if_gcd_of_coeff_is_in_rhs"
+        "simple-substitution-should_return_feasible_if_gcd_of_coeff_is_in_rhs"
+        "simple-substitution-failed-path-for-2-int"
+        "simple-substitution-2-negative-integer"
+        "simple-substitution-feasible-gcd"
+        "simple-substitution-violated-gcd"
 
         #Simplify Inequality
         "happy-path-simplify-inequalities-only-greatest-divisor"
