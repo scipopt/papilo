@@ -1,26 +1,6 @@
-@page RN21 Release notes for PAPILO 2.1
+@page RN Release notes for PAPILO NEXT
 
-@section RNxxx PaPILO nextrelease
-
-@section RN211 PaPILO 2.1.2
-
-Performance improvements
-------------------------
-
-Interface changes
------------------
-
-### New parameters with default values
-
-### Data structures
-
-Fixed bugs
-----------
-
-Miscellaneous
--------------
-
-@section RN211 PaPILO 2.1.1
+@section RNNEXT PaPILO NEXT
 ***************************
 
 Performance improvements
@@ -35,9 +15,17 @@ Interface changes
 
 Fixed bugs
 ----------
+- SimpleSubstitution: fixing bug in the infeasibility detection of the extended euclidean
 
 Miscellaneous
 -------------
+
+@section RN211 PaPILO 2.1.1
+***************************
+
+Fixed bugs
+----------
+- SimpleSubstitution: avoid abort because of calling extended_euclidean with negative coefficients
 
 
 @section RN210 PaPILO 2.1.0
@@ -55,6 +43,7 @@ Interface changes
 -----------------
 
 - Wrapper in Julia for PaPILO: https://github.com/scipopt/PaPILO.jl
+- ProblemBuilder - setColImplInt(int,boolean): (un)sets the Flag Implied Integer for a variable
 
 ### New parameters with default values
 
@@ -75,7 +64,6 @@ Fixed bugs
 - postsolving FixInfinityCol works also in primal case
 - store data for FixInfinityCol correct if bounds are both infinity
 - PaPILO shows some behavior on different OS
-
 
 Miscellaneous
 -------------

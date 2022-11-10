@@ -243,15 +243,10 @@ SimpleSubstitution<REAL>::perform_simple_subsitution_step(
          auto res = boost::integer::extended_euclidean(
             static_cast<int64_t>( abs( vals[stay] ) ),
             static_cast<int64_t>( abs( vals[subst] ) ) );
-         if( vals[stay] < 0 )
-            res.x *= -1;
-         if( vals[subst] < 0 )
-            res.y *= -1;
          if( !num.isIntegral( rhs / res.gcd ) )
             return PresolveStatus::kInfeasible;
          // TODO: ensure isConstraintsFeasibleWithGivenBounds() works for negative sign
-         else if( vals[stay] > 0 && vals[subst] > 0 &&
-            !isConstraintsFeasibleWithGivenBounds(
+         else if( !isConstraintsFeasibleWithGivenBounds(
                num, lower_bounds, upper_bounds, vals, rhs, subst, stay, res ) )
             return PresolveStatus::kInfeasible;
          else
@@ -321,6 +316,16 @@ SimpleSubstitution<REAL>::perform_simple_subsitution_step(
    reductions.aggregateFreeCol( inds[subst], i );
    return result;
 }
+
+/**
+ * check if the aggregated variable y of the equation a2x1 + a2x2 = b is within its bounds.
+ * 1. generate a solution for s a1 + t a2 = gcd(a1,a2)
+ * 2. substitute variable x1 = -a2 y + s and x2 = a1 y + t
+ * 3. check bounds of y
+ *
+ * see chapter 10.1.1 Constraint Integer Programming of Tobias Achterberg
+ *
+ */
 template <typename REAL>
 bool
 SimpleSubstitution<REAL>::isConstraintsFeasibleWithGivenBounds(
@@ -328,18 +333,24 @@ SimpleSubstitution<REAL>::isConstraintsFeasibleWithGivenBounds(
     const Vec<REAL>& upper_bounds, const REAL* vals, REAL rhs, int subst,
     int stay, const boost::integer::euclidean_result_t<int64_t>& res ) const
 {
-   REAL initial_solution_for_x = res.x * rhs;
-   REAL initial_solution_for_y = res.y * rhs;
-   REAL factor = (int)(initial_solution_for_y * res.gcd / vals[stay]);
-   REAL solution_for_x =
-       initial_solution_for_x + factor / res.gcd * vals[subst];
-   REAL solution_for_y =
-       initial_solution_for_y - factor / res.gcd * vals[stay];
+   int res_x = vals[stay] < 0 ? res.x * -1 : res.x;
+   int res_y = vals[subst] < 0 ? res.y * -1 : res.y;
 
-   REAL ub_sol_y = ( solution_for_y - lower_bounds[stay] ) / vals[stay];
-   REAL lb_sol_y = ( solution_for_y - upper_bounds[stay] ) / vals[stay];
-   REAL ub_sol_x = ( upper_bounds[subst] - solution_for_x ) / vals[subst];
-   REAL lb_sol_x = ( lower_bounds[subst] - solution_for_x ) / vals[subst];
+   REAL initial_solution_for_x = res_x * rhs;
+   REAL initial_solution_for_y = res_y * rhs;
+   REAL factor = (int)(initial_solution_for_y * res.gcd / vals[stay]);
+
+   REAL s = initial_solution_for_x + factor / res.gcd * vals[subst];
+   REAL t = initial_solution_for_y - factor / res.gcd * vals[stay];
+
+   REAL ub_sol_y = ( t - lower_bounds[subst] ) / vals[stay];
+   REAL lb_sol_y = ( t - upper_bounds[subst] ) / vals[stay];
+   if( vals[stay] < 0 )
+      std::swap( ub_sol_y, lb_sol_y );
+   REAL ub_sol_x = ( upper_bounds[stay] - s ) / vals[subst];
+   REAL lb_sol_x = ( lower_bounds[stay] - s ) / vals[subst];
+   if( vals[subst] < 0 )
+      std::swap( ub_sol_x, lb_sol_x );
 
    return num.isFeasLE( num.epsCeil( lb_sol_y ), num.epsFloor( ub_sol_y ) ) &&
           num.isFeasLE( num.epsCeil( lb_sol_x ), num.epsFloor( ub_sol_x ) );
