@@ -1,6 +1,6 @@
-@page RN21 Release notes for PAPILO 2.1
+@page RN Release notes for PAPILO NEXT
 
-@section RN211 PaPILO 2.1.2
+@section RNNEXT PaPILO NEXT
 ***************************
 
 Performance improvements
@@ -43,6 +43,7 @@ Interface changes
 -----------------
 
 - Wrapper in Julia for PaPILO: https://github.com/scipopt/PaPILO.jl
+- ProblemBuilder - setColImplInt(int,boolean): (un)sets the Flag Implied Integer for a variable
 
 ### New parameters with default values
 
