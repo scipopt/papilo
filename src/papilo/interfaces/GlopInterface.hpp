@@ -47,6 +47,7 @@ class GlopInterface : public SolverInterface<REAL>
  private:
    int n_cols{};
    Vec<MPVariable*> variables;
+   Vec<MPConstraint*> constraints;
    std::unique_ptr<MPSolver> solver;
    std::string solver_id = "PDLP";
 
@@ -75,7 +76,7 @@ class GlopInterface : public SolverInterface<REAL>
       auto coefficients = problem.getObjective().coefficients;
 
       variables = Vec<MPVariable*>{};
-      variables.reserve(problem.getNRows());
+      variables.reserve(problem.getNCols());
       MPObjective* const objective = solver->MutableObjective();
       for( int i = 0; i < problem.getNCols(); i++ )
       {
@@ -90,6 +91,8 @@ class GlopInterface : public SolverInterface<REAL>
       }
       assert( solver->NumVariables() == problem.getNCols() );
 
+      constraints = Vec<MPConstraint*>{};
+      constraints.reserve(problem.getNRows());
       for( int i = 0; i < problem.getNRows(); i++ )
       {
          auto data = problem.getConstraintMatrix().getRowCoefficients( i );
@@ -103,6 +106,7 @@ class GlopInterface : public SolverInterface<REAL>
             int index = data.getIndices()[j];
             con->SetCoefficient( variables[index], coeff );
          }
+         constraints.push_back(con);
       }
       assert( solver->NumConstraints() == problem.getNRows() );
 
@@ -266,7 +270,7 @@ class GlopInterface : public SolverInterface<REAL>
    bool
    is_dual_solution_available() override
    {
-      return false;
+      return true;
    }
 
 
@@ -274,9 +278,16 @@ class GlopInterface : public SolverInterface<REAL>
    getSolution( Solution<REAL>& solbuffer ) override
    {
       Vec<REAL> primal{};
+      Vec<REAL> dual{};
+      Vec<REAL> reduced{};
       for( int i = 0; i < n_cols; i++ )
-         primal.push_back( variables[i]->solution_value() );
-      solbuffer = Solution<REAL>( primal );
+      {
+         solbuffer.primal.push_back( variables[i]->solution_value() );
+         solbuffer.reducedCosts.push_back( variables[i]->reduced_cost() );
+      }
+      for(auto & constraint : constraints)
+         solbuffer.dual.push_back( constraint->dual_value() );
+      solbuffer.basisAvailabe=false;
       return true;
    }
 
@@ -287,8 +298,13 @@ class GlopInterface : public SolverInterface<REAL>
       const int* colset = components.getComponentsCols( component );
 
       for( std::size_t i = 0; i < n_cols; ++i )
+      {
          solbuffer.primal[colset[i]] = variables[i]->solution_value();
-
+         solbuffer.reducedCosts[colset[i]] = variables[i]->reduced_cost();
+      }
+      for(auto & constraint : constraints)
+         solbuffer.dual.push_back( constraint->dual_value() );
+      solbuffer.basisAvailabe = false;
       return true;
    }
 
