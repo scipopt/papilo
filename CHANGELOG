@@ -8,6 +8,7 @@ Performance improvements
 
 Interface changes
 -----------------
+- Ortools: PaPILO parses the dual solution and the reduced costs from ortools
 
 ### New parameters with default values
 

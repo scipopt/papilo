@@ -491,22 +491,28 @@ Postsolve<REAL>::copy_from_reduced_to_original(
          originalSolution.reducedCosts[postsolveStorage.origcol_mapping[k]] =
              reducedSolution.reducedCosts[k];
 
-      assert( (int) reducedSolution.varBasisStatus.size() == reduced_columns );
-      originalSolution.varBasisStatus.clear();
-      originalSolution.varBasisStatus.resize( postsolveStorage.nColsOriginal,
-                                              VarBasisStatus::UNDEFINED );
-      for( int k = 0; k < reduced_columns; k++ )
-         originalSolution.varBasisStatus[postsolveStorage.origcol_mapping[k]] =
-             reducedSolution.varBasisStatus[k];
+      if( reducedSolution.basisAvailabe )
+      {
+         assert( (int)reducedSolution.varBasisStatus.size() ==
+                 reduced_columns );
+         originalSolution.varBasisStatus.clear();
+         originalSolution.varBasisStatus.resize( postsolveStorage.nColsOriginal,
+                                                 VarBasisStatus::UNDEFINED );
+         for( int k = 0; k < reduced_columns; k++ )
+            originalSolution
+                .varBasisStatus[postsolveStorage.origcol_mapping[k]] =
+                reducedSolution.varBasisStatus[k];
 
-      assert( (int) reducedSolution.rowBasisStatus.size() == reduced_rows );
+         assert( (int)reducedSolution.rowBasisStatus.size() == reduced_rows );
 
-      originalSolution.rowBasisStatus.clear();
-      originalSolution.rowBasisStatus.resize( postsolveStorage.nRowsOriginal,
-                                              VarBasisStatus::UNDEFINED );
-      for( int k = 0; k < reduced_rows; k++ )
-         originalSolution.rowBasisStatus[postsolveStorage.origrow_mapping[k]] =
-             reducedSolution.rowBasisStatus[k];
+         originalSolution.rowBasisStatus.clear();
+         originalSolution.rowBasisStatus.resize( postsolveStorage.nRowsOriginal,
+                                                 VarBasisStatus::UNDEFINED );
+         for( int k = 0; k < reduced_rows; k++ )
+            originalSolution
+                .rowBasisStatus[postsolveStorage.origrow_mapping[k]] =
+                reducedSolution.rowBasisStatus[k];
+      }
    }
 }
 
