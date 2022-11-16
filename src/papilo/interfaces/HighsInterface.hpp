@@ -94,10 +94,10 @@ class HighsInterface : public SolverInterface<REAL>
              rflags[i].test( RowFlag::kRhsInf ) ? inf : double( rhs_values[i] );
       }
 
-      model.a_index_.resize( consMatrix.getNnz() );
-      model.a_value_.resize( consMatrix.getNnz() );
-      model.a_start_.resize( ncols + 1 );
-      model.a_start_[ncols] = consMatrix.getNnz();
+      model.a_matrix_.index_.resize( consMatrix.getNnz() );
+      model.a_matrix_.value_.resize( consMatrix.getNnz() );
+      model.a_matrix_.start_.resize( ncols + 1 );
+      model.a_matrix_.start_[ncols] = consMatrix.getNnz();
 
       int start = 0;
 
@@ -127,12 +127,12 @@ class HighsInterface : public SolverInterface<REAL>
          const int* colrows = colvec.getIndices();
          const REAL* colvals = colvec.getValues();
 
-         model.a_start_[i] = start;
+         model.a_matrix_.start_[i] = start;
 
          for( int k = 0; k != collen; ++k )
          {
-            model.a_value_[start + k] = double( colvals[k] );
-            model.a_index_[start + k] = colrows[k];
+            model.a_matrix_.value_[start + k] = double( colvals[k] );
+            model.a_matrix_.index_[start + k] = colrows[k];
          }
 
          start += collen;
@@ -190,10 +190,10 @@ class HighsInterface : public SolverInterface<REAL>
                                   : double( rhs_values[row] );
       }
 
-      model.a_index_.resize( component.nnonz );
-      model.a_value_.resize( component.nnonz );
-      model.a_start_.resize( numcols + 1 );
-      model.a_start_[numcols] = component.nnonz;
+      model.a_matrix_.index_.resize( component.nnonz );
+      model.a_matrix_.value_.resize( component.nnonz );
+      model.a_matrix_.start_.resize( numcols + 1 );
+      model.a_matrix_.start_[numcols] = component.nnonz;
 
       int start = 0;
 
@@ -226,12 +226,12 @@ class HighsInterface : public SolverInterface<REAL>
          const int* colrows = colvec.getIndices();
          const REAL* colvals = colvec.getValues();
 
-         model.a_start_[i] = start;
+         model.a_matrix_.start_[i] = start;
 
          for( int k = 0; k != collen; ++k )
          {
-            model.a_value_[start + k] = double( colvals[k] );
-            model.a_index_[start + k] =
+            model.a_matrix_.value_[start + k] = double( colvals[k] );
+            model.a_matrix_.index_[start + k] =
                 components.getRowComponentIdx( colrows[k] );
          }
 
