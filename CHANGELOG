@@ -8,7 +8,6 @@ Performance improvements
 
 Interface changes
 -----------------
-- Ortools: PaPILO parses the dual solution and the reduced costs from ortools
 
 ### New parameters with default values
 
@@ -16,10 +15,12 @@ Interface changes
 
 Fixed bugs
 ----------
-- SimpleSubstitution: fixing bug in the infeasibility detection of the extended euclidean
+- SimpleSubstitution: fixed bug in the infeasibility detection of the extended euclidean
 
 Miscellaneous
 -------------
+- Ortools: PaPILO parses the dual solution and the reduced costs from ortools
+- HiGHS: PaPILO supports HiGHS version 1.3
 
 @section RN211 PaPILO 2.1.1
 ***************************

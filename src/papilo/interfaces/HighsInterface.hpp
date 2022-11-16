@@ -94,10 +94,17 @@ class HighsInterface : public SolverInterface<REAL>
              rflags[i].test( RowFlag::kRhsInf ) ? inf : double( rhs_values[i] );
       }
 
+#if HIGHS_VERSION_MAJOR == 1 && HIGHS_VERSION_MINOR < 2
       model.a_index_.resize( consMatrix.getNnz() );
       model.a_value_.resize( consMatrix.getNnz() );
       model.a_start_.resize( ncols + 1 );
       model.a_start_[ncols] = consMatrix.getNnz();
+#else
+      model.a_matrix_.index_.resize( consMatrix.getNnz() );
+      model.a_matrix_.value_.resize( consMatrix.getNnz() );
+      model.a_matrix_.start_.resize( ncols + 1 );
+      model.a_matrix_.start_[ncols] = consMatrix.getNnz();
+#endif
 
       int start = 0;
 
@@ -127,12 +134,21 @@ class HighsInterface : public SolverInterface<REAL>
          const int* colrows = colvec.getIndices();
          const REAL* colvals = colvec.getValues();
 
+#if HIGHS_VERSION_MAJOR == 1 && HIGHS_VERSION_MINOR < 2
          model.a_start_[i] = start;
+#else
+         model.a_matrix_.start_[i] = start;
+#endif
 
          for( int k = 0; k != collen; ++k )
          {
+#if HIGHS_VERSION_MAJOR == 1 && HIGHS_VERSION_MINOR < 2
             model.a_value_[start + k] = double( colvals[k] );
             model.a_index_[start + k] = colrows[k];
+#else
+            model.a_matrix_.value_[start + k] = double( colvals[k] );
+            model.a_matrix_.index_[start + k] = colrows[k];
+#endif
          }
 
          start += collen;
@@ -190,10 +206,18 @@ class HighsInterface : public SolverInterface<REAL>
                                   : double( rhs_values[row] );
       }
 
+#if HIGHS_VERSION_MAJOR == 1 && HIGHS_VERSION_MINOR < 2
       model.a_index_.resize( component.nnonz );
       model.a_value_.resize( component.nnonz );
       model.a_start_.resize( numcols + 1 );
       model.a_start_[numcols] = component.nnonz;
+#else
+      model.a_matrix_.index_.resize( component.nnonz );
+      model.a_matrix_.value_.resize( component.nnonz );
+      model.a_matrix_.start_.resize( numcols + 1 );
+      model.a_matrix_.start_[numcols] = component.nnonz;
+#endif
+
 
       int start = 0;
 
@@ -226,13 +250,23 @@ class HighsInterface : public SolverInterface<REAL>
          const int* colrows = colvec.getIndices();
          const REAL* colvals = colvec.getValues();
 
+#if HIGHS_VERSION_MAJOR == 1 && HIGHS_VERSION_MINOR < 2
          model.a_start_[i] = start;
+#else
+         model.a_matrix_.start_[i] = start;
+#endif
 
          for( int k = 0; k != collen; ++k )
          {
+#if HIGHS_VERSION_MAJOR == 1 && HIGHS_VERSION_MINOR < 2
             model.a_value_[start + k] = double( colvals[k] );
             model.a_index_[start + k] =
                 components.getRowComponentIdx( colrows[k] );
+#else
+            model.a_matrix_.value_[start + k] = double( colvals[k] );
+            model.a_matrix_.index_[start + k] =
+                components.getRowComponentIdx( colrows[k] );
+#endif
          }
 
          start += collen;
