@@ -445,8 +445,8 @@ postsolve( PostsolveStorage<REAL>& postsolveStorage,
                   primal_solution_output, sec3 );
    }
 
-   if( ( reduced_solution_output.empty() || dual_solution_output.empty() ||
-         basis_output.empty() ) &&
+   if( ( !reduced_solution_output.empty() || !dual_solution_output.empty() ||
+         !basis_output.empty() ) &&
        original_sol.type == SolutionType::kPrimal )
    {
       fmt::print(

@@ -278,7 +278,7 @@ class HighsInterface : public SolverInterface<REAL>
    void
    solve() override
    {
-      solver.passHighsOptions( opts );
+      solver.passOptions( opts );
 
       if( solver.run() == HighsStatus::kError )
       {
@@ -315,14 +315,14 @@ class HighsInterface : public SolverInterface<REAL>
       {
       case VerbosityLevel::kQuiet:
          opts.output_flag = false;
-         solver.setHighsOptionValue( "output_flag", false );
+         solver.setOptionValue( "output_flag", false );
          break;
       case VerbosityLevel::kError:
       case VerbosityLevel::kWarning:
       case VerbosityLevel::kInfo:
       case VerbosityLevel::kDetailed:
          opts.output_flag = true;
-         solver.setHighsOptionValue( "output_flag", true );
+         solver.setOptionValue( "output_flag", true );
       }
    }
 
@@ -340,8 +340,8 @@ class HighsInterface : public SolverInterface<REAL>
    getSolution( Solution<REAL>& sol ) override
    {
       const HighsSolution& highsSol = solver.getSolution();
-      int numcols = solver.getNumCols();
-      int numrows = solver.getNumRows();
+      int numcols = solver.getNumCol();
+      int numrows = solver.getNumRow();
 
       if( highsSol.col_value.size() != numcols )
          return false;
