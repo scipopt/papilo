@@ -21,6 +21,7 @@
 /*                                                                           */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
+#include <memory>
 #include "papilo/io/MpsParser.hpp"
 #include "papilo/external/catch/catch.hpp"
 #include "papilo/core/PresolveMethod.hpp"
