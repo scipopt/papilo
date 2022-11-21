@@ -76,7 +76,7 @@ class PostsolveStorage
    // PostsolveType postsolveType = PostsolveType::kFull;
    PostsolveType postsolveType = PostsolveType::kPrimal;
 
-   //types containes the Reductiontypes
+   //types contains the ReductionTypes
    Vec<ReductionType> types;
 
    // indices/values can be considered as Vec<Vec<int/REAL>>

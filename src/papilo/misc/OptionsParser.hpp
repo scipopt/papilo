@@ -60,6 +60,9 @@ struct OptionsInfo
    Command command = Command::kNone;
    std::string instance_file;
    std::string reduced_problem_file;
+   std::string reduced_dual_solution_file;
+   std::string reduced_reduced_costs_solution_file;
+   std::string reduced_basis_solution_file;
    std::string postsolve_archive_file;
    std::string reduced_solution_file;
    std::string orig_solution_file;
@@ -192,6 +195,18 @@ struct OptionsInfo
 
          desc.add_options()( "threads,t",
                              value( &nthreads )->default_value( 0 ) );
+      }
+
+      if(command == Command::kPostsolve){
+         desc.add_options()( "dual-reduced-solution",
+                             value( &reduced_dual_solution_file ),
+                             "filename for the dual solution of the reduced problem" );
+         desc.add_options()( "costs-reduced-solution",
+                             value( &reduced_reduced_costs_solution_file ),
+                             "filename for the reduced costs of the reduced problem" );
+         desc.add_options()( "basis-reduced-solution",
+                             value( &reduced_basis_solution_file ),
+                             "filename for the basis (*bas) of the reduced problem" );
       }
 
       if( command != Command::kPresolve )
