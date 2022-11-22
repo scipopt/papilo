@@ -8,6 +8,7 @@ Performance improvements
 
 Interface changes
 -----------------
+- CML: new options dual-reduced-solution/costs-reduced-solution/basis-reduced-solution to pass the dual/reduced costs/basis information of the reduced solution via command-line to PaPILO in the postsolve call
 
 ### New parameters with default values
 
