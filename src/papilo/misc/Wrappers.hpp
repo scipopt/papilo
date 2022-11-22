@@ -209,17 +209,13 @@ presolve_and_solve(
       presolve.getPresolveOptions().tlim =
           std::min( opts.tlim, presolve.getPresolveOptions().tlim );
 
-      bool store_dual_postsolve = false;
       std::unique_ptr<SolverInterface<REAL>> solver;
       if(opts.command == Command::kSolve)
       {
          if( problem.getNumIntegralCols() == 0 &&
              presolve.getLPSolverFactory() )
-         {
             solver = presolve.getLPSolverFactory()->newSolver(
                 presolve.getVerbosityLevel() );
-            store_dual_postsolve = solver->is_dual_solution_available();
-         }
          else if( presolve.getMIPSolverFactory() )
             solver = presolve.getMIPSolverFactory()->newSolver(
                 presolve.getVerbosityLevel() );
@@ -230,7 +226,7 @@ presolve_and_solve(
          }
       }
 
-      auto result = presolve.apply( problem, store_dual_postsolve );
+      auto result = presolve.apply( problem, true );
 
       if( !opts.optimal_solution_file.empty() )
       {
@@ -329,8 +325,7 @@ presolve_and_solve(
          Solution<REAL> solution;
          solution.type = SolutionType::kPrimal;
 
-         if( result.postsolve.getOriginalProblem().getNumIntegralCols() == 0 &&
-             store_dual_postsolve )
+         if( result.postsolve.getOriginalProblem().getNumIntegralCols() == 0 )
             solution.type = SolutionType::kPrimalDual;
 
          if( ( status == SolverStatus::kOptimal ||
@@ -559,15 +554,72 @@ postsolve( const OptionsInfo& opts )
    inArchiveFile.close();
 
    SolParser<REAL> parser;
-   Solution<REAL> reduced_solution;
+   Vec<REAL> primal_solution;
    bool success = parser.read( opts.reduced_solution_file, ps.origcol_mapping,
                                ps.getOriginalProblem().getVariableNames(),
-                               reduced_solution );
+                               primal_solution );
+   Solution<REAL> reduced_solution{primal_solution};
    if( success )
+   {
+      if( !opts.reduced_dual_solution_file.empty() !=
+          !opts.reduced_reduced_costs_solution_file.empty() )
+      {
+         fmt::print( "Dual solution and reduced costs must be provided. Only "
+                     "original primal solution reconstructed.\n" );
+      }
+      else if( !opts.reduced_dual_solution_file.empty() &&
+          !opts.reduced_reduced_costs_solution_file.empty() )
+      {
+         if(ps.postsolveType == PostsolveType::kFull)
+         {
+            bool dual_success = parser.read(
+                opts.reduced_dual_solution_file, ps.origrow_mapping,
+                ps.getOriginalProblem().getConstraintNames(),
+                reduced_solution.dual );
+
+            if( !dual_success )
+               return;
+
+            bool reduced_costs_success = parser.read(
+                opts.reduced_reduced_costs_solution_file, ps.origcol_mapping,
+                ps.getOriginalProblem().getVariableNames(),
+                reduced_solution.reducedCosts );
+            if( !reduced_costs_success )
+               return;
+            reduced_solution.type = SolutionType::kPrimalDual;
+
+            if( !opts.reduced_basis_solution_file.empty() && ps.presolveOptions.calculate_basis_for_dual )
+            {
+                  reduced_solution.basisAvailabe = true;
+                  parser.read_basis( opts.reduced_basis_solution_file, ps,
+                                     reduced_solution.varBasisStatus,
+                                     reduced_solution.rowBasisStatus );
+            }
+            else
+            {
+               if(!opts.reduced_basis_solution_file.empty())
+                  fmt::print("Postsolve storage not suitable for basis calculation.\n");
+               reduced_solution.basisAvailabe = false;
+               reduced_solution.varBasisStatus =
+                   Vec<VarBasisStatus>{ reduced_solution.primal.size() };
+               reduced_solution.rowBasisStatus =
+                   Vec<VarBasisStatus>( reduced_solution.dual.size() );
+            }
+         }
+         else
+         {
+            fmt::print(
+                "Postsolve does not contain information about dual solution. "
+                "Only original primal solution reconstructed.\n" );
+         }
+      }
       postsolve( ps, reduced_solution, opts.objective_reference,
                  opts.orig_solution_file, opts.orig_dual_solution_file,
                  opts.orig_reduced_costs_file, opts.orig_basis_file );
-}
+
+
+   }
+   }
 
 } // namespace papilo
 

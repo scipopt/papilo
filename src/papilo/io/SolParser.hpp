@@ -44,7 +44,7 @@ struct SolParser
 
    static bool
    read( const std::string& filename, const Vec<int>& origcol_mapping,
-         const Vec<String>& colnames, Solution<REAL>& sol)
+         const Vec<String>& colnames, Vec<REAL>& solution_vector )
    {
       std::ifstream file( filename, std::ifstream::in );
       boost::iostreams::filtering_istream in;
@@ -72,7 +72,7 @@ struct SolParser
          nameToCol.emplace( colnames[origcol], i );
       }
 
-      sol.primal.resize( origcol_mapping.size(), REAL{ 0 } );
+      solution_vector.resize( origcol_mapping.size(), REAL{ 0 } );
       String strline;
 
       skip_header( colnames, in, strline );
@@ -86,7 +86,7 @@ struct SolParser
          if( it != nameToCol.end() )
          {
             assert( tokens.size() > 1 );
-            sol.primal[it->second] = std::stod( tokens[1] );
+            solution_vector[it->second] = std::stod( tokens[1] );
          }
          else if(strline.empty()){}
          else
@@ -100,6 +100,124 @@ struct SolParser
       return true;
    }
 
+   static bool
+   read_basis( const std::string& filename, const PostsolveStorage<REAL>& ps,
+         Vec<VarBasisStatus>& var_basis, Vec<VarBasisStatus>& row_basis )
+   {
+      std::ifstream file( filename, std::ifstream::in );
+      boost::iostreams::filtering_istream in;
+
+      if( !file )
+         return false;
+
+#ifdef PAPILO_USE_BOOST_IOSTREAMS_WITH_ZLIB
+      if( boost::algorithm::ends_with( filename, ".gz" ) )
+         in.push( boost::iostreams::gzip_decompressor() );
+#endif
+
+#ifdef PAPILO_USE_BOOST_IOSTREAMS_WITH_BZIP2
+      if( boost::algorithm::ends_with( filename, ".bz2" ) )
+         in.push( boost::iostreams::bzip2_decompressor() );
+#endif
+
+      in.push( file );
+
+      HashMap<String, int> nameToCol;
+
+      auto var_names = ps.getOriginalProblem().getVariableNames();
+      for( size_t i = 0; i != ps.origcol_mapping.size(); ++i )
+      {
+         int origcol = ps.origcol_mapping[i];
+         nameToCol.emplace( var_names[origcol], i );
+      }
+
+      HashMap<String, int> nameToRow;
+
+      for( size_t i = 0; i != ps.origrow_mapping.size(); ++i )
+      {
+         int origcol = ps.origrow_mapping[i];
+         nameToRow.emplace( ps.getOriginalProblem().getConstraintNames()[origcol], i );
+      }
+
+      var_basis.resize( ps.origcol_mapping.size(),  VarBasisStatus::ON_LOWER);
+      for( int i = 0; i < ps.problem.getNCols(); i++ )
+      {
+         if(ps.problem.getColFlags()[i].test(ColFlag::kUbInf) &&
+             ps.problem.getColFlags()[i].test(ColFlag::kLbInf) )
+            var_basis[ps.origcol_mapping[i]] = VarBasisStatus::ZERO;
+      }
+      row_basis.resize( ps.origrow_mapping.size(),  VarBasisStatus::BASIC);
+      String strline;
+
+      skip_header( var_names, in, strline );
+
+      do
+      {
+         auto tokens = split( strline.c_str() );
+         assert( !tokens.empty() );
+         if(strline.rfind("ENDATA") == 0)
+            break;
+         auto it = nameToCol.find( tokens[2] );
+         if( it != nameToCol.end() )
+         {
+            assert( tokens.size() > 1 );
+            if( tokens[1] == "UL" )
+            {
+               assert( tokens.size() == 3 );
+               var_basis[it->second] = VarBasisStatus::ON_UPPER;
+            }
+            else if( tokens[1] == "LL" )
+            {
+               assert( tokens.size() == 3 );
+               var_basis[it->second] = VarBasisStatus::ON_LOWER;
+            }
+            else if( tokens[1] == "XL" )
+            {
+               var_basis[it->second] = VarBasisStatus::BASIC;
+               assert( tokens.size() == 4 );
+               auto it_row = nameToRow.find( tokens[3] );
+               if( it_row != nameToCol.end() )
+                  row_basis[it_row->second] = VarBasisStatus::ON_LOWER;
+               else
+               {
+                  fmt::print( stderr,
+                              "WARNING: skipping unknown row {} in solution\n",
+                              tokens[3] );
+               }
+
+            }
+            else if( tokens[1] == "XU" )
+            {
+               var_basis[it->second] = VarBasisStatus::BASIC;
+               assert( tokens.size() == 4 );
+               auto it_row = nameToRow.find( tokens[3] );
+               if( it_row != nameToCol.end() )
+                  row_basis[it_row->second] = VarBasisStatus::ON_UPPER;
+               else
+                  fmt::print( stderr,
+                              "WARNING: skipping unknown row {} in solution\n",
+                              tokens[3] );
+            }
+            else
+            {
+               fmt::print(
+                   stderr,
+                   "WARNING: skipping unknown basistype {} in solution\n",
+                   tokens[1] );
+            }
+         }
+         else
+         {
+            fmt::print( stderr,
+                        "WARNING: skipping unknown column {} in solution\n",
+                        tokens[2] );
+         }
+      } while( getline( in, strline ) );
+
+      return true;
+   }
+
+
  private:
 
    static void
@@ -110,8 +228,8 @@ struct SolParser
       while(getline( filteringIstream, strline ))
       {
          for(const auto & colname : colnames)
-         {
-            if( strline.rfind( colname ) == 0 )
+          {
+            if( strline.rfind( colname ) != ULLONG_MAX)
                return;
          }
       }

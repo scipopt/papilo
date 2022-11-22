@@ -383,7 +383,16 @@ if (TARGET papilo-executable)
     endif()
 endif ()
 
-
+if(BUILD_POSTSOLVE_TESTS)
+    add_test(NAME postsolve-kb2
+            COMMAND $<TARGET_FILE:papilo-executable> postsolve -v "${PROJECT_SOURCE_DIR}/test/resources/kb2.postsolve" -u "${PROJECT_SOURCE_DIR}/test/resources/kb2_primal.solution" --dual-reduced-solution "${PROJECT_SOURCE_DIR}/test/resources/kb2_dual.solution" --costs-reduced-solution ${PROJECT_SOURCE_DIR}/test/resources/kb2_reduced.solution --basis-reduced-solution "${PROJECT_SOURCE_DIR}/test/resources/kb2.bas"
+            )
+    set_tests_properties(postsolve-kb2
+            PROPERTIES
+            PASS_REGULAR_EXPRESSION "Solution passed validation\n"
+            DEPENDS papilo-build
+        )
+endif()
 
 set(filename_for_solutions "solutions.test")
 # the following code block checks if a solution is contained in a reduced problem.
@@ -406,6 +415,7 @@ if (TARGET papilo-executable AND EXISTS "${PROJECT_SOURCE_DIR}/${filename_for_so
     #solution is still contained after presolving
     macro(validate_solution instance settings)
         split_solution(${instance})
+        MESSAGE("${path}")
         file(TO_NATIVE_PATH "${path}" instance_file)
         file(TO_NATIVE_PATH "${path_solution}" solution_file)
         file(TO_NATIVE_PATH "${PROJECT_SOURCE_DIR}/settings/${settings}" settings_file)
@@ -424,4 +434,6 @@ if (TARGET papilo-executable AND EXISTS "${PROJECT_SOURCE_DIR}/${filename_for_so
         validate_solution(${instance}, "no_strong_dual_reductions.set")
 #        validate_solution(${instance}, "scip_no_strong_dual_reductions.set")
     endforeach (instance)
+
+
 endif ()

@@ -97,7 +97,8 @@ struct Validation
 
       return parser.read(
           optimal_solution_file, one_to_one_mapping,
-          postsolveStorage.getOriginalProblem().getVariableNames(), optimal_solution );
+          postsolveStorage.getOriginalProblem().getVariableNames(),
+          optimal_solution.primal );
    }
 
    static bool
