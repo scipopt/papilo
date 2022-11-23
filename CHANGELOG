@@ -9,6 +9,7 @@ Performance improvements
 Interface changes
 -----------------
 - CML: new options dual-reduced-solution/costs-reduced-solution/basis-reduced-solution to pass the dual/reduced costs/basis information of the reduced solution via command-line to PaPILO in the postsolve call
+- Boost: program_options is no longer required but needed to use PaPILO via command-line.
 
 ### New parameters with default values
 
@@ -22,6 +23,7 @@ Miscellaneous
 -------------
 - Ortools: PaPILO parses the dual solution and the reduced costs from ortools
 - HiGHS: PaPILO supports HiGHS version 1.3
+
 
 @section RN211 PaPILO 2.1.1
 ***************************

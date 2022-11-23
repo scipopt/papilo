@@ -25,18 +25,20 @@
 #define _PAPILO_MISC_OPTIONS_PARSER_HPP_
 
 #include "papilo/misc/fmt.hpp"
+#ifdef PAPILO_COMMAND_LINE_AVAILABLE
 #include <boost/program_options.hpp>
 #include <fstream>
 #include <initializer_list>
 #include <string>
 #include <utility>
 #include <vector>
+#endif
 
 namespace papilo
 {
-
+#ifdef PAPILO_COMMAND_LINE_AVAILABLE
 using namespace boost::program_options;
-
+#endif
 enum class Command
 {
    kNone,
@@ -135,7 +137,7 @@ struct OptionsInfo
    {
       return !filename.empty() && !std::ifstream( filename );
    }
-
+#ifdef PAPILO_COMMAND_LINE_AVAILABLE
    void
    parse( const std::string& commandString,
           const std::vector<std::string>& opts = std::vector<std::string>() )
@@ -297,11 +299,13 @@ struct OptionsInfo
 
       is_complete = true;
    }
+#endif
 };
 
 OptionsInfo
 parseOptions( int argc, char* argv[] )
 {
+#ifdef PAPILO_COMMAND_LINE_AVAILABLE
    OptionsInfo optionsInfo;
    using namespace boost::program_options;
    using boost::none;
@@ -355,7 +359,13 @@ parseOptions( int argc, char* argv[] )
    }
 
    return optionsInfo;
+#else
+   fmt::print("PaPILO not build with Boost program_options. Comandline interface not aviable. Exiting...");
+   exit(-1);
+#endif
 }
+
+
 
 } // namespace papilo
 
