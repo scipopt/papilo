@@ -26,7 +26,7 @@
 
 #include "papilo/core/Presolve.hpp"
 #include "papilo/core/postsolve/Postsolve.hpp"
-#include "papilo/io/MpsParser.hpp"
+#include "papilo/io/Parser.hpp"
 #include "papilo/io/MpsWriter.hpp"
 #include "papilo/io/SolParser.hpp"
 #include "papilo/io/SolWriter.hpp"
@@ -71,7 +71,7 @@ presolve_and_solve(
 
       {
          Timer t( readtime );
-         prob = MpsParser<REAL>::loadProblem( opts.instance_file );
+         prob = Parser<REAL>::loadProblem( opts.instance_file );
       }
 
       // Check whether reading was successful or not
