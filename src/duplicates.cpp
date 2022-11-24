@@ -24,7 +24,7 @@
 #include "papilo/core/ConstraintMatrix.hpp"
 #include "papilo/core/Problem.hpp"
 #include "papilo/core/VariableDomains.hpp"
-#include "papilo/io/MpsParser.hpp"
+#include "papilo/io/Parser.hpp"
 #include "papilo/misc/Hash.hpp"
 #include "papilo/misc/Vec.hpp"
 #include "papilo/misc/fmt.hpp"
@@ -960,7 +960,7 @@ main( int argc, char* argv[] )
       return 1;
    }
    boost::optional<Problem<double>> prob1t =
-       MpsParser<double>::loadProblem( argv[1] );
+       Parser<double>::loadProblem( argv[1] );
    if( !prob1t )
    {
       fmt::print( "error loading problem {}\n", argv[1] );
@@ -982,7 +982,7 @@ main( int argc, char* argv[] )
          return 1;
       }
       boost::optional<Problem<double>> prob2t =
-          MpsParser<double>::loadProblem( argv[2] );
+          Parser<double>::loadProblem( argv[2] );
       if( !prob2t )
       {
          fmt::print( "error loading problem {}\n", argv[1] );

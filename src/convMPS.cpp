@@ -30,7 +30,7 @@
 #include "papilo/core/Objective.hpp"
 #include "papilo/core/Problem.hpp"
 #include "papilo/core/VariableDomains.hpp"
-#include "papilo/io/MpsParser.hpp"
+#include "papilo/io/Parser.hpp"
 #include "papilo/misc/Hash.hpp"
 #include "papilo/misc/Vec.hpp"
 #include "papilo/misc/fmt.hpp"
@@ -173,7 +173,7 @@ main( int argc, char* argv[] )
    }
    assert( argc == 2 );
 
-   auto prob = MpsParser<double>::loadProblem( argv[1] );
+   auto prob = Parser<double>::loadProblem( argv[1] );
 
    convMPS( prob.get() );
 
