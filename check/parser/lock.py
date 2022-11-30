@@ -172,7 +172,7 @@ def evaluate(row: int, col: int, val: float, presolver: str, modified_columns: l
                 conflict = [x for x in redundant_rows if x.index == val][0]
                 conflict_presolver = conflict.presolver
                 redundant = True
-                representation = "REDUNDANT: SUBSTITUTE column " + col.__str__() + " with red. row " + val.__str__()
+                representation = "REDUNDANT: SUBSTITUTE column " + col.__str__() + " with red. row " + (val.__int__()).__str__()
             else:
                 deleted_columns_in_tsx.append(Lock(col, presolver))
                 representation += "SUBSTITUTE column " + col.__str__() + " with row " + val.__str__()
