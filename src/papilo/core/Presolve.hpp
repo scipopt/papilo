@@ -50,6 +50,7 @@
 #ifdef PAPILO_TBB
 #include "papilo/misc/tbb.hpp"
 #endif
+#include "papilo/verification/VeriPb.hpp"
 #include "papilo/presolvers/CoefficientStrengthening.hpp"
 #include "papilo/presolvers/ConstraintPropagation.hpp"
 #include "papilo/presolvers/DominatedCols.hpp"
@@ -442,7 +443,11 @@ Presolve<REAL>::apply( Problem<REAL>& problem, bool store_dual_postsolve )
 
       int npresolvers = static_cast<int>( presolvers.size() );
 
+      auto veripb = VeriPb<REAL>{problem, num, msg};
+      veripb.print_header();
+
       fastPresolvers.first = fastPresolvers.second = 0;
+
       while( fastPresolvers.second < npresolvers &&
              presolvers[fastPresolvers.second]->getTiming() ==
                  PresolverTiming::kFast )
@@ -470,6 +475,9 @@ Presolve<REAL>::apply( Problem<REAL>& problem, bool store_dual_postsolve )
 
       ProblemUpdate<REAL> probUpdate( problem, result.postsolve, stats,
                                       presolveOptions, num, msg );
+
+      //TODO:
+      probUpdate.setVeriPb(veripb);
 
       for( int i = 0; i != npresolvers; ++i )
       {
@@ -503,6 +511,7 @@ Presolve<REAL>::apply( Problem<REAL>& problem, bool store_dual_postsolve )
             break;
          }
       }
+
 
       Statistics last_rounds_stats = stats;
       do

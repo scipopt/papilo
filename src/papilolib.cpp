@@ -1231,7 +1231,7 @@ papilo_solver_start( PAPILO_SOLVER* solver )
 
             solverInterface->setUp(
                 solver->problem,
-                solver->presolveResult.postsolve.origrow_mapping,
+                solver->presolveResult.postsolve.rhs_row_mapping,
                 solver->presolveResult.postsolve.origcol_mapping );
 
             solverInterface->solve();

@@ -24,6 +24,7 @@
 #ifndef _PAPILO_CORE_PROBLEM_UPDATE_HPP_
 #define _PAPILO_CORE_PROBLEM_UPDATE_HPP_
 
+#include "boost/random.hpp"
 #include "papilo/core/MatrixBuffer.hpp"
 #include "papilo/core/PresolveMethod.hpp"
 #include "papilo/core/PresolveOptions.hpp"
@@ -35,9 +36,9 @@
 #include "papilo/misc/Flags.hpp"
 #include "papilo/misc/MultiPrecision.hpp"
 #include "papilo/misc/Num.hpp"
+#include "papilo/verification/VeriPb.hpp"
 #include <cstdint>
 #include <random>
-#include "boost/random.hpp"
 
 namespace papilo
 {
@@ -102,9 +103,13 @@ class ProblemUpdate
 
    Vec<Flags<State>> row_state;
    Vec<Flags<State>> col_state;
+   VeriPb<REAL> veri_pb;
 
+ public:
+   void
+   setVeriPb( const VeriPb<REAL>& veriPb );
 
-
+ private:
    template <typename... Args>
    void
    setColState( int col, Args... flags )
@@ -426,7 +431,7 @@ ProblemUpdate<REAL>::ProblemUpdate( Problem<REAL>& _problem,
                                     PostsolveStorage<REAL>& _postsolve,
                                     Statistics& _stats,
                                     const PresolveOptions& _presolveOptions,
-                                    const Num<REAL>& _num, const Message& _msg )
+                                    const Num<REAL>& _num, const Message& _msg)
     : problem( _problem ), postsolve( _postsolve ), stats( _stats ),
       presolveOptions( _presolveOptions ), num( _num ), msg( _msg )
 {
@@ -787,6 +792,7 @@ ProblemUpdate<REAL>::changeUB( int col, REAL val )
 
       postsolve.storeVarBoundChange( false, col, ubs[col], isInfinity,
                                      newbound );
+      veri_pb.change_upper_bound( val, problem.getVariableNames()[postsolve.origcol_mapping[col]] );
       ubs[col] = newbound;
 
       if( !cflags[col].test( ColFlag::kLbInf ) && ubs[col] == lbs[col] )
@@ -2919,6 +2925,13 @@ ProblemUpdate<REAL>::print_detailed( const Reduction<REAL>* first,
       }
       msg.detailed( "tsx\n" );
    }
+}
+
+template <typename REAL>
+void
+ProblemUpdate<REAL>::setVeriPb( const VeriPb<REAL>& _veriPb )
+{
+   veri_pb = _veriPb;
 }
 
 } // namespace papilo

@@ -340,12 +340,12 @@ install(FILES
   DESTINATION include/papilo/interfaces)
 
 install(FILES
-        ${PROJECT_SOURCE_DIR}/src/papilo/io/BoundType.hpp
+     ${PROJECT_SOURCE_DIR}/src/papilo/io/BoundType.hpp
      ${PROJECT_SOURCE_DIR}/src/papilo/io/Message.hpp
      ${PROJECT_SOURCE_DIR}/src/papilo/io/MpsParser.hpp
      ${PROJECT_SOURCE_DIR}/src/papilo/io/MpsWriter.hpp
      ${PROJECT_SOURCE_DIR}/src/papilo/io/OpbParser.hpp
-        ${PROJECT_SOURCE_DIR}/src/papilo/io/ParseKey.hpp
+     ${PROJECT_SOURCE_DIR}/src/papilo/io/ParseKey.hpp
      ${PROJECT_SOURCE_DIR}/src/papilo/io/Parser.hpp
      ${PROJECT_SOURCE_DIR}/src/papilo/io/SolParser.hpp
      ${PROJECT_SOURCE_DIR}/src/papilo/io/SolWriter.hpp
@@ -376,6 +376,10 @@ install(FILES
      ${PROJECT_SOURCE_DIR}/src/papilo/misc/VectorUtils.hpp
      ${PROJECT_SOURCE_DIR}/src/papilo/misc/Wrappers.hpp
   DESTINATION include/papilo/misc)
+
+install(FILES
+        ${PROJECT_SOURCE_DIR}/src/papilo/verification/VeriPb.hpp
+        DESTINATION include/papilo/verification)
 
 
 if((DEFINED Boost_VERSION) AND (Boost_VERSION VERSION_LESS 107000))
