@@ -157,7 +157,7 @@ class VeriPb : public CertificateInterface<REAL>
             fmt::print( " +" );
       }
 
-      fmt::print( " >= {} ;\n", val );
+      fmt::print( " >= {} ;\n", (double) val );
       rhs_row_mapping[row] = next_constraint_id;
    }
 
