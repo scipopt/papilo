@@ -106,7 +106,6 @@ TEST_CASE( "replacing-variables-is-postponed-by-flag", "[core]" )
    REQUIRE( result.second == 0 );
 }
 
-//todo #fails
 TEST_CASE( "happy-path-replace-variable", "[core]" )
 {
    papilo::Reductions<double> reductions{};
@@ -250,7 +249,7 @@ setupProblemWithMultiplePresolvingOptions()
 {
    // 2x + y + z = 2           for simple probing
    //      z + w = 1           w = singleton column can be replaced & simple
-   //      substituion
+   //      substitution
    Num<double> num{};
    Vec<std::string> rowNames{ "A1", "A2" };
    Vec<std::string> columnNames{ "c1", "c2", "c3", "c4" };
@@ -262,9 +261,9 @@ setupProblemWithMultiplePresolvingOptions()
        std::tuple<int, int, double>{ 1, 3, 1.0 } };
 
    ProblemBuilder<double> pb;
-   pb.reserve( entries.size(), rowNames.size(), columnNames.size() );
-   pb.setNumRows( rowNames.size() );
-   pb.setNumCols( columnNames.size() );
+   pb.reserve( (int) entries.size(), (int) rowNames.size(), (int) columnNames.size() );
+   pb.setNumRows( (int) rowNames.size() );
+   pb.setNumCols( (int) columnNames.size() );
    pb.setColUbAll( upperBounds() );
    pb.setColLbAll( lowerBounds() );
    pb.setObjAll( coefficients() );

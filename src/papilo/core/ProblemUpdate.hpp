@@ -36,6 +36,7 @@
 #include "papilo/misc/Flags.hpp"
 #include "papilo/misc/MultiPrecision.hpp"
 #include "papilo/misc/Num.hpp"
+#include "papilo/verification/EmptyCertificate.hpp"
 #include "papilo/verification/VeriPb.hpp"
 #include <cstdint>
 #include <random>
@@ -103,11 +104,14 @@ class ProblemUpdate
 
    Vec<Flags<State>> row_state;
    Vec<Flags<State>> col_state;
-   VeriPb<REAL> veri_pb;
+   std::unique_ptr<CertificateInterface<REAL>> certificate_interface =
+       std::unique_ptr<CertificateInterface<REAL>>(
+           new EmptyCertificate<REAL>() );
 
  public:
+
    void
-   setVeriPb( const VeriPb<REAL>& veriPb );
+   init_veri_pb( );
 
  private:
    template <typename... Args>
@@ -210,7 +214,7 @@ class ProblemUpdate
          rflags.set( RowFlag::kRedundant );
       }
       postsolve.storeRedundantRow( row );
-      veri_pb.mark_row_redundant(row);
+      certificate_interface->mark_row_redundant(row);
    }
 
    void
@@ -566,7 +570,7 @@ ProblemUpdate<REAL>::fixCol( int col, REAL val, ArgumentType argument )
          postsolve.storeVarBoundChange(
              true, col, lbs[col],
              problem.getColFlags()[col].test( ColFlag::kLbInf ), val );
-         veri_pb.change_lower_bound(
+         certificate_interface->change_lower_bound(
              val, problem.getVariableNames()[postsolve.origcol_mapping[col]],
              argument );
          lbs[col] = val;
@@ -584,7 +588,7 @@ ProblemUpdate<REAL>::fixCol( int col, REAL val, ArgumentType argument )
          postsolve.storeVarBoundChange(
              false, col, ubs[col],
              problem.getColFlags()[col].test( ColFlag::kUbInf ), val );
-         veri_pb.change_upper_bound(
+         certificate_interface->change_upper_bound(
              val, problem.getVariableNames()[postsolve.origcol_mapping[col]],
              argument );
          ubs[col] = val;
@@ -709,7 +713,7 @@ ProblemUpdate<REAL>::changeLB( int col, REAL val, ArgumentType argument )
 
       postsolve.storeVarBoundChange( true, col, lbs[col], isInfinity,
                                      newbound );
-      veri_pb.change_lower_bound( val, problem.getVariableNames()[postsolve.origcol_mapping[col]], argument );
+      certificate_interface->change_lower_bound( val, problem.getVariableNames()[postsolve.origcol_mapping[col]], argument );
 
       lbs[col] = newbound;
 
@@ -802,7 +806,7 @@ ProblemUpdate<REAL>::changeUB( int col, REAL val, ArgumentType argument )
 
       postsolve.storeVarBoundChange( false, col, ubs[col], isInfinity,
                                      newbound );
-      veri_pb.change_upper_bound( val, problem.getVariableNames()[postsolve.origcol_mapping[col]], argument );
+      certificate_interface->change_upper_bound( val, problem.getVariableNames()[postsolve.origcol_mapping[col]], argument );
       ubs[col] = newbound;
 
       if( !cflags[col].test( ColFlag::kLbInf ) && ubs[col] == lbs[col] )
@@ -876,7 +880,7 @@ ProblemUpdate<REAL>::compress( bool full )
              singletonRows.shrink_to_fit();
        },
        [this, &mappings, full]() {
-          veri_pb.compress( mappings.first, mappings.second, full );
+          certificate_interface->compress( mappings.first, mappings.second, full );
        },
        // update column index sets
        [this, &mappings, full]() {
@@ -2479,7 +2483,7 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
                 constraintMatrix.getLeftHandSides()[reduction.row],
                 constraintMatrix.getRowFlags()[reduction.row].test(
                     RowFlag::kLhsInf ) );
-            veri_pb.change_lhs(
+            certificate_interface->change_lhs(
                 reduction.row, reduction.newval,
                 constraintMatrix.getRowCoefficients( reduction.row ),
                 problem.getVariableNames(), postsolve.origcol_mapping );
@@ -2518,7 +2522,7 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
                                                  reduction.newval );
             postsolve.storeRowBoundChangeForcedByRow( true, reduction.row,
                                                       reduction.newval, false );
-            veri_pb.change_lhs(
+            certificate_interface->change_lhs(
                 reduction.row, reduction.newval,
                 constraintMatrix.getRowCoefficients( reduction.row ),
                 problem.getVariableNames(), postsolve.origcol_mapping );
@@ -2582,7 +2586,7 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
                 constraintMatrix.getRightHandSides()[reduction.row],
                 constraintMatrix.getRowFlags()[reduction.row].test(
                     RowFlag::kRhsInf ) );
-            veri_pb.change_rhs(
+            certificate_interface->change_rhs(
                 reduction.row, reduction.newval,
                 constraintMatrix.getRowCoefficients( reduction.row ),
                 problem.getVariableNames(), postsolve.origcol_mapping );
@@ -2621,7 +2625,7 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
                                                   reduction.newval );
             postsolve.storeRowBoundChangeForcedByRow( false, reduction.row,
                                                       reduction.newval, false );
-            veri_pb.change_rhs(
+            certificate_interface->change_rhs(
                 reduction.row, reduction.newval,
                 constraintMatrix.getRowCoefficients( reduction.row ),
                 problem.getVariableNames(), postsolve.origcol_mapping );
@@ -2956,9 +2960,11 @@ ProblemUpdate<REAL>::print_detailed( const Reduction<REAL>* first,
 
 template <typename REAL>
 void
-ProblemUpdate<REAL>::setVeriPb( const VeriPb<REAL>& _veriPb )
+ProblemUpdate<REAL>::init_veri_pb(  )
 {
-   veri_pb = _veriPb;
+   certificate_interface = std::unique_ptr<CertificateInterface<REAL>>(
+       new VeriPb<REAL>{ problem, num, msg } );
+   certificate_interface->print_header();
 }
 
 } // namespace papilo

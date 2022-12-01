@@ -378,6 +378,9 @@ install(FILES
   DESTINATION include/papilo/misc)
 
 install(FILES
+        ${PROJECT_SOURCE_DIR}/src/papilo/verification/ArgumentType.hpp
+        ${PROJECT_SOURCE_DIR}/src/papilo/verification/CertificateInterface.hpp
+        ${PROJECT_SOURCE_DIR}/src/papilo/verification/EmptyCertificate.hpp
         ${PROJECT_SOURCE_DIR}/src/papilo/verification/VeriPb.hpp
         DESTINATION include/papilo/verification)
 

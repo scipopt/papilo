@@ -443,8 +443,7 @@ Presolve<REAL>::apply( Problem<REAL>& problem, bool store_dual_postsolve )
 
       int npresolvers = static_cast<int>( presolvers.size() );
 
-      auto veripb = VeriPb<REAL>{problem, num, msg};
-      veripb.print_header();
+
 
       fastPresolvers.first = fastPresolvers.second = 0;
 
@@ -475,9 +474,10 @@ Presolve<REAL>::apply( Problem<REAL>& problem, bool store_dual_postsolve )
 
       ProblemUpdate<REAL> probUpdate( problem, result.postsolve, stats,
                                       presolveOptions, num, msg );
-
-      //TODO:
-      probUpdate.setVeriPb(veripb);
+     // TODO: overwrite only if parameter is set
+     {
+        probUpdate.init_veri_pb( );
+      }
 
       for( int i = 0; i != npresolvers; ++i )
       {

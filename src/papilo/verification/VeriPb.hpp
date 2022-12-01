@@ -30,6 +30,7 @@
 #include "papilo/misc/compress_vector.hpp"
 #include "papilo/misc/fmt.hpp"
 #include "papilo/verification/ArgumentType.hpp"
+#include "papilo/verification/CertificateInterface.hpp"
 
 
 
@@ -39,7 +40,7 @@ namespace papilo
 
 /// type to store necessary data for post solve
 template <typename REAL>
-class VeriPb
+class VeriPb : public CertificateInterface<REAL>
 {
  public:
    unsigned int nRowsOriginal;
@@ -151,7 +152,7 @@ class VeriPb
       for( int i = 0; i < data.getLength(); i++ )
       {
          fmt::print( " ~{} {}", names[var_mapping[data.getIndices()[i]]],
-                     ( ( -1 ) * data.getValues()[i] ) );
+                     (double) ( ( -1 ) * data.getValues()[i] ) );
          if( i != data.getLength() - 1 )
             fmt::print( " +" );
       }
@@ -169,7 +170,7 @@ class VeriPb
       for( int i = 0; i < data.getLength(); i++ )
       {
          fmt::print( " {} {}", names[var_mapping[data.getIndices()[i]]],
-                     data.getValues()[i] );
+                     (double) data.getValues()[i] );
          if( i != data.getLength() - 1 )
             fmt::print( " +" );
       }
