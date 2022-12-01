@@ -51,8 +51,7 @@ class VeriPb
 
    Vec<int> lhs_row_mapping;
 
-   // number of cons in VeriPb
-   int veri_pb_rows = 0;
+   int next_constraint_id = 0;
 
    Num<REAL> num;
    Message msg;
@@ -64,7 +63,6 @@ class VeriPb
        : num( _num ), msg( _msg )
    {
       nRowsOriginal = _problem.getNRows();
-
       rhs_row_mapping.reserve( nRowsOriginal );
       lhs_row_mapping.reserve( nRowsOriginal );
 
@@ -72,18 +70,18 @@ class VeriPb
       {
          if(!_problem.getRowFlags()[i].test(RowFlag::kLhsInf))
          {
-            veri_pb_rows++;
-            lhs_row_mapping.push_back( veri_pb_rows );
+            next_constraint_id++;
+            lhs_row_mapping.push_back( next_constraint_id );
          }
          else
             lhs_row_mapping.push_back( -1 );
-         if(!_problem.getRowFlags()[i].test(RowFlag::kLhsInf))
+         if(!_problem.getRowFlags()[i].test(RowFlag::kRhsInf))
          {
-            veri_pb_rows++;
-            rhs_row_mapping.push_back( veri_pb_rows );
+            next_constraint_id++;
+            rhs_row_mapping.push_back( next_constraint_id );
          }
          else
-            lhs_row_mapping.push_back( -1 );
+            rhs_row_mapping.push_back( -1 );
       }
       assert( rhs_row_mapping.size() == lhs_row_mapping.size() );
       assert( rhs_row_mapping.size() == nRowsOriginal );
@@ -93,14 +91,14 @@ class VeriPb
    print_header()
    {
       msg.info( "pseudo-Boolean proof version 1.1\n" );
-      msg.info( "f {}\n", veri_pb_rows );
+      msg.info( "f {}\n", next_constraint_id );
    };
 
    void
    change_upper_bound( REAL val, const String& name,
                        ArgumentType argument = ArgumentType::kPrimal )
    {
-      veri_pb_rows++;
+      next_constraint_id++;
       // VeriPb can only handle >= constraint and they must start with variables
       // -> invert variable
       assert( val == 0 );
@@ -124,7 +122,7 @@ class VeriPb
    void
    change_lower_bound(  REAL val, const String& name, ArgumentType argument = ArgumentType::kPrimal)
    {
-      veri_pb_rows++;
+      next_constraint_id++;
       assert( val == 1 );
       switch( argument )
       {
@@ -144,10 +142,39 @@ class VeriPb
    }
 
    void
-   change_rhs( int row, REAL val )
+   change_rhs( int row, REAL val, const SparseVectorView<REAL>& data,
+               const Vec<String>& names, const Vec<int>& var_mapping )
    {
-      veri_pb_rows++;
-      // TODO: entire row is needed
+      // TODO: think about it
+      next_constraint_id++;
+      fmt::print( "rup" );
+      for( int i = 0; i < data.getLength(); i++ )
+      {
+         fmt::print( " ~{} {}", names[var_mapping[data.getIndices()[i]]],
+                     ( ( -1 ) * data.getValues()[i] ) );
+         if( i != data.getLength() - 1 )
+            fmt::print( " +" );
+      }
+
+      fmt::print( " >= {} ;\n", val );
+      rhs_row_mapping[row] = next_constraint_id;
+   }
+
+   void
+   change_lhs( int row, REAL val, const SparseVectorView<REAL>& data,
+               const Vec<String>& names, const Vec<int>& var_mapping )
+   {
+      next_constraint_id++;
+      fmt::print( "rup" );
+      for( int i = 0; i < data.getLength(); i++ )
+      {
+         fmt::print( " {} {}", names[var_mapping[data.getIndices()[i]]],
+                     data.getValues()[i] );
+         if( i != data.getLength() - 1 )
+            fmt::print( " +" );
+      }
+      fmt::print( " >= {};\n", val );
+      rhs_row_mapping[row] = next_constraint_id;
    }
 
    void

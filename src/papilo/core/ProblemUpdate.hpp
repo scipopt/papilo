@@ -210,6 +210,7 @@ class ProblemUpdate
          rflags.set( RowFlag::kRedundant );
       }
       postsolve.storeRedundantRow( row );
+      veri_pb.mark_row_redundant(row);
    }
 
    void
@@ -2478,6 +2479,10 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
                 constraintMatrix.getLeftHandSides()[reduction.row],
                 constraintMatrix.getRowFlags()[reduction.row].test(
                     RowFlag::kLhsInf ) );
+            veri_pb.change_lhs(
+                reduction.row, reduction.newval,
+                constraintMatrix.getRowCoefficients( reduction.row ),
+                problem.getVariableNames(), postsolve.origcol_mapping );
             constraintMatrix.modifyLeftHandSide( reduction.row, num,
                                                  reduction.newval );
 
@@ -2513,6 +2518,10 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
                                                  reduction.newval );
             postsolve.storeRowBoundChangeForcedByRow( true, reduction.row,
                                                       reduction.newval, false );
+            veri_pb.change_lhs(
+                reduction.row, reduction.newval,
+                constraintMatrix.getRowCoefficients( reduction.row ),
+                problem.getVariableNames(), postsolve.origcol_mapping );
 
             ++stats.nsidechgs;
             break;
@@ -2573,6 +2582,10 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
                 constraintMatrix.getRightHandSides()[reduction.row],
                 constraintMatrix.getRowFlags()[reduction.row].test(
                     RowFlag::kRhsInf ) );
+            veri_pb.change_rhs(
+                reduction.row, reduction.newval,
+                constraintMatrix.getRowCoefficients( reduction.row ),
+                problem.getVariableNames(), postsolve.origcol_mapping );
             constraintMatrix.modifyRightHandSide( reduction.row, num,
                                                   reduction.newval );
 
@@ -2608,6 +2621,10 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
                                                   reduction.newval );
             postsolve.storeRowBoundChangeForcedByRow( false, reduction.row,
                                                       reduction.newval, false );
+            veri_pb.change_rhs(
+                reduction.row, reduction.newval,
+                constraintMatrix.getRowCoefficients( reduction.row ),
+                problem.getVariableNames(), postsolve.origcol_mapping );
 
             ++stats.nsidechgs;
             break;
