@@ -1122,6 +1122,7 @@ Presolve<REAL>::applyReductions( int p, const Reductions<REAL>& reductions_,
 
    msg.detailed( "Presolver {} applying \n", presolvers[p]->getName() );
 
+   auto argument = presolvers[p]->getArgument();
    for( const auto& transaction : reductions_.getTransactions() )
    {
       int start = transaction.start;
@@ -1129,7 +1130,7 @@ Presolve<REAL>::applyReductions( int p, const Reductions<REAL>& reductions_,
 
       for( ; k != start; ++k )
       {
-         result = probUpdate.applyTransaction( &reds[k], &reds.data()[k + 1] );
+         result = probUpdate.applyTransaction( &reds[k], &reds.data()[k + 1], argument );
          if( result == ApplyResult::kApplied )
             ++stats.ntsxapplied;
          else if( result == ApplyResult::kRejected )
@@ -1142,7 +1143,7 @@ Presolve<REAL>::applyReductions( int p, const Reductions<REAL>& reductions_,
          ++nbtsxTotal;
       }
 
-      result = probUpdate.applyTransaction( &reds[start], &reds.data()[end] );
+      result = probUpdate.applyTransaction( &reds[start], &reds.data()[end], argument );
       if( result == ApplyResult::kApplied )
          ++stats.ntsxapplied;
       else if( result == ApplyResult::kRejected )
@@ -1158,7 +1159,7 @@ Presolve<REAL>::applyReductions( int p, const Reductions<REAL>& reductions_,
 
    for( ; k != static_cast<int>( reds.size() ); ++k )
    {
-      result = probUpdate.applyTransaction( &reds[k], &reds.data()[k + 1] );
+      result = probUpdate.applyTransaction( &reds[k], &reds.data()[k + 1], argument );
       if( result == ApplyResult::kApplied )
          ++stats.ntsxapplied;
       else if( result == ApplyResult::kRejected )
@@ -1192,7 +1193,7 @@ Presolve<REAL>::applyPostponed( ProblemUpdate<REAL>& probUpdate )
          const auto& ptrpair = postponedReductions[i];
 
          ApplyResult r =
-             probUpdate.applyTransaction( ptrpair.first, ptrpair.second );
+             probUpdate.applyTransaction( ptrpair.first, ptrpair.second, ArgumentType::kPrimal );
          if( r == ApplyResult::kApplied )
          {
             ++stats.ntsxapplied;

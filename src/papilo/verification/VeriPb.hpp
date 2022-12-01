@@ -21,17 +21,15 @@
 /*                                                                           */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef _PAPILO_CORE_VERI_PB_HPP_
-#define _PAPILO_CORE_VERI_PB_HPP_
+#ifndef _PAPILO_VERI_VERI_PB_HPP_
+#define _PAPILO_VERI_VERI_PB_HPP_
 
 #include "papilo/core/Problem.hpp"
-#include "papilo/core/postsolve/PostsolveType.hpp"
-#include "papilo/core/postsolve/ReductionType.hpp"
-#include "papilo/misc/MultiPrecision.hpp"
 #include "papilo/misc/Num.hpp"
 #include "papilo/misc/Vec.hpp"
 #include "papilo/misc/compress_vector.hpp"
 #include "papilo/misc/fmt.hpp"
+#include "papilo/verification/ArgumentType.hpp"
 
 
 
@@ -94,30 +92,75 @@ class VeriPb
 
    //TODO: information if dual reduction
    void
-   change_upper_bound( REAL val, const String& name )
+   change_upper_bound( REAL val, const String& name,
+                       ArgumentType argument = ArgumentType::kPrimal )
    {
+      veri_pb_rows++;
       // VeriPb can only handle >= constraint and they must start with variables
       // -> invert variable
-      veri_pb_rows++;
       assert( val == 0 );
-      msg.info("rup 1 ~{} >= 1 ;\n", name, (int) val);
+      switch( argument )
+      {
+      case ArgumentType::kPrimal:
+         msg.info( "rup 1 ~{} >= 1 ;\n", name, (int)val );
+         break;
+      case ArgumentType::kDual:
+         msg.info( "red 1 ~{} >= 1 ; {} -> 0\n", name, (int)val, name );
+         break;
+      case ArgumentType::kSymmetry:
+         assert( false );
+         break;
+      default:
+         assert( false );
+      }
+
    }
 
    //TODO: information if dual reduction
    void
-   change_lower_bound(  REAL val, const String& name )
+   change_lower_bound(  REAL val, const String& name, ArgumentType argument = ArgumentType::kPrimal)
    {
       veri_pb_rows++;
       assert( val == 1 );
-      msg.info("rup 1 {} >= {} ;\n", name, (int) val);
+      switch( argument )
+      {
+      case ArgumentType::kPrimal:
+         msg.info( "rup 1 {} >= {} ;\n", name, (int)val );
+         break;
+      case ArgumentType::kDual:
+         msg.info( "red 1 {} >= {} ; {} -> {}\n", name, (int)val, name,
+                   (int)val );
+         break;
+      case ArgumentType::kSymmetry:
+         assert( false );
+         break;
+      default:
+         assert( false );
+      }
    }
 
    //TODO: information if dual reduction
    void
-   fix_var( REAL val,  const String& name )
+   fix_var( REAL val,  const String& name , ArgumentType argument = ArgumentType::kPrimal)
    {
-      veri_pb_rows++;
-      msg.info("rup 1 {} = {} ;\n", name, (int) val);
+      assert( val == 0 || val == 1 );
+      switch( argument )
+      {
+      case ArgumentType::kPrimal:
+         veri_pb_rows++;
+         msg.info("rup 1 {} >= {} ;\n", name, (int) val);
+         veri_pb_rows++;
+         msg.info( "rup 1 ~{} >= 1 ;\n", name, val==0? 1:0);
+         break;
+      case ArgumentType::kDual:
+         assert(false);
+         break;
+      case ArgumentType::kSymmetry:
+         assert( false );
+         break;
+      default:
+         assert( false );
+      }
    }
 
    //TODO: compress the mappings

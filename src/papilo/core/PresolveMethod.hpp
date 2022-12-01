@@ -35,6 +35,7 @@
 #include "papilo/misc/Timer.hpp"
 #ifdef PAPILO_TBB
 #include "papilo/misc/tbb.hpp"
+#include "papilo/verification/ArgumentType.hpp"
 #else
 #include <chrono>
 #endif
@@ -91,6 +92,7 @@ class PresolveMethod
       ncalls = 0;
       nsuccessCall = 0;
       name = "unnamed";
+      argument = ArgumentType::kPrimal;
       type = PresolverType::kAllCols;
       timing = PresolverTiming::kExhaustive;
       delayed = false;
@@ -234,6 +236,12 @@ class PresolveMethod
       return this->name;
    }
 
+   ArgumentType
+   getArgument() const
+   {
+      return this->argument;
+   }
+
    unsigned int
    getNCalls() const
    {
@@ -265,6 +273,13 @@ class PresolveMethod
    {
       this->name = value;
    }
+
+   void
+   setArgument( ArgumentType value )
+   {
+      this->argument = value;
+   }
+
 
    void
    setTiming( PresolverTiming value )
@@ -312,6 +327,7 @@ class PresolveMethod
 
  private:
    std::string name;
+   ArgumentType argument;
    double execTime;
    bool enabled;
    bool delayed;

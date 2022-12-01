@@ -170,7 +170,7 @@ class ProblemUpdate
    fixColInfinity( int col, REAL val );
 
    PresolveStatus
-   changeLB( int col, REAL val );
+   changeLB( int col, REAL val, ArgumentType argument = ArgumentType::kPrimal );
 
    void
    merge_parallel_columns(
@@ -197,7 +197,7 @@ class ProblemUpdate
    }
 
    PresolveStatus
-   changeUB( int col, REAL val );
+   changeUB( int col, REAL val, ArgumentType argument = ArgumentType::kPrimal );
 
    void
    markRowRedundant( int row )
@@ -398,7 +398,8 @@ class ProblemUpdate
    /// returns true if the given transaction was applied and false otherwise
    ApplyResult
    applyTransaction( const Reduction<REAL>* first,
-                     const Reduction<REAL>* last );
+                     const Reduction<REAL>* last, ArgumentType argument );
+
    void
    roundIntegralColumns( Vec<REAL>& lbs, Vec<REAL>& ubs, int col,
                          Vec<ColFlags>& cflags, PresolveStatus& status );
@@ -633,7 +634,7 @@ ProblemUpdate<REAL>::fixColInfinity( int col, REAL val )
 
 template <typename REAL>
 PresolveStatus
-ProblemUpdate<REAL>::changeLB( int col, REAL val )
+ProblemUpdate<REAL>::changeLB( int col, REAL val, ArgumentType argument )
 {
    ConstraintMatrix<REAL>& constraintMatrix = problem.getConstraintMatrix();
    Vec<ColFlags>& cflags = problem.getColFlags();
@@ -701,6 +702,8 @@ ProblemUpdate<REAL>::changeLB( int col, REAL val )
 
       postsolve.storeVarBoundChange( true, col, lbs[col], isInfinity,
                                      newbound );
+      veri_pb.change_lower_bound( val, problem.getVariableNames()[postsolve.origcol_mapping[col]], argument );
+
       lbs[col] = newbound;
 
       if( !cflags[col].test( ColFlag::kUbInf ) && ubs[col] == lbs[col] )
@@ -725,7 +728,7 @@ ProblemUpdate<REAL>::changeLB( int col, REAL val )
 
 template <typename REAL>
 PresolveStatus
-ProblemUpdate<REAL>::changeUB( int col, REAL val )
+ProblemUpdate<REAL>::changeUB( int col, REAL val, ArgumentType argument )
 {
    ConstraintMatrix<REAL>& constraintMatrix = problem.getConstraintMatrix();
    Vec<ColFlags>& cflags = problem.getColFlags();
@@ -792,7 +795,7 @@ ProblemUpdate<REAL>::changeUB( int col, REAL val )
 
       postsolve.storeVarBoundChange( false, col, ubs[col], isInfinity,
                                      newbound );
-      veri_pb.change_upper_bound( val, problem.getVariableNames()[postsolve.origcol_mapping[col]] );
+      veri_pb.change_upper_bound( val, problem.getVariableNames()[postsolve.origcol_mapping[col]], argument );
       ubs[col] = newbound;
 
       if( !cflags[col].test( ColFlag::kLbInf ) && ubs[col] == lbs[col] )
@@ -1953,7 +1956,7 @@ ProblemUpdate<REAL>::checkTransactionConflicts( const Reduction<REAL>* first,
 template <typename REAL>
 ApplyResult
 ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
-                                       const Reduction<REAL>* last )
+                                       const Reduction<REAL>* last, ArgumentType argument )
 {
 
    Objective<REAL>& objective = problem.getObjective();
@@ -2024,14 +2027,14 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
          }
          case ColReduction::LOWER_BOUND:
          {
-            if( changeLB( reduction.col, reduction.newval ) ==
+            if( changeLB( reduction.col, reduction.newval, argument ) ==
                 PresolveStatus::kInfeasible )
                return ApplyResult::kInfeasible;
             break;
          }
          case ColReduction::UPPER_BOUND:
          {
-            if( changeUB( reduction.col, reduction.newval ) ==
+            if( changeUB( reduction.col, reduction.newval, argument ) ==
                 PresolveStatus::kInfeasible )
                return ApplyResult::kInfeasible;
             break;
