@@ -128,11 +128,11 @@ class VeriPb : public CertificateInterface<REAL>
       switch( argument )
       {
       case ArgumentType::kPrimal:
-         msg.info( "rup 1 {} >= {} ;\n", name, (int)val );
+         msg.info( "rup 1 {} >= {} ;\n", name, (int) val );
          break;
       case ArgumentType::kDual:
-         msg.info( "red 1 {} >= {} ; {} -> {}\n", name, (int)val, name,
-                   (int)val );
+         msg.info( "red 1 {} >= {} ; {} -> {}\n", name, (int) val, name,
+                   (int) val );
          break;
       case ArgumentType::kSymmetry:
          assert( false );
@@ -174,7 +174,7 @@ class VeriPb : public CertificateInterface<REAL>
          if( i != data.getLength() - 1 )
             fmt::print( " +" );
       }
-      fmt::print( " >= {};\n", val );
+      fmt::print( " >= {};\n", (double) val );
       rhs_row_mapping[row] = next_constraint_id;
    }
 
@@ -184,12 +184,12 @@ class VeriPb : public CertificateInterface<REAL>
       assert( lhs_row_mapping[row] != -1 || rhs_row_mapping[row] != -1 );
       if( lhs_row_mapping[row] != -1 )
       {
-         msg.info( "del id {}\n", lhs_row_mapping[row] );
+         msg.info( "del id {}\n", (double) lhs_row_mapping[row] );
          lhs_row_mapping[row] = -1;
       }
       if( rhs_row_mapping[row] != -1 )
       {
-         msg.info( "del id {}\n", rhs_row_mapping[row] );
+         msg.info( "del id {}\n", (double) rhs_row_mapping[row] );
          rhs_row_mapping[row] = -1;
       }
    }
