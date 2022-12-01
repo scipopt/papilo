@@ -75,12 +75,18 @@ class VeriPb
             veri_pb_rows++;
             lhs_row_mapping.push_back( veri_pb_rows );
          }
+         else
+            lhs_row_mapping.push_back( -1 );
          if(!_problem.getRowFlags()[i].test(RowFlag::kLhsInf))
          {
             veri_pb_rows++;
             rhs_row_mapping.push_back( veri_pb_rows );
          }
+         else
+            lhs_row_mapping.push_back( -1 );
       }
+      assert( rhs_row_mapping.size() == lhs_row_mapping.size() );
+      assert( rhs_row_mapping.size() == nRowsOriginal );
    }
 
    void
@@ -90,7 +96,6 @@ class VeriPb
       msg.info( "f {}\n", veri_pb_rows );
    };
 
-   //TODO: information if dual reduction
    void
    change_upper_bound( REAL val, const String& name,
                        ArgumentType argument = ArgumentType::kPrimal )
@@ -116,7 +121,6 @@ class VeriPb
 
    }
 
-   //TODO: information if dual reduction
    void
    change_lower_bound(  REAL val, const String& name, ArgumentType argument = ArgumentType::kPrimal)
    {
@@ -139,31 +143,29 @@ class VeriPb
       }
    }
 
-   //TODO: information if dual reduction
    void
-   fix_var( REAL val,  const String& name , ArgumentType argument = ArgumentType::kPrimal)
+   change_rhs( int row, REAL val )
    {
-      assert( val == 0 || val == 1 );
-      switch( argument )
+      veri_pb_rows++;
+      // TODO: entire row is needed
+   }
+
+   void
+   mark_row_redundant( int row )
+   {
+      assert( lhs_row_mapping[row] != -1 || rhs_row_mapping[row] != -1 );
+      if( lhs_row_mapping[row] != -1 )
       {
-      case ArgumentType::kPrimal:
-         veri_pb_rows++;
-         msg.info("rup 1 {} >= {} ;\n", name, (int) val);
-         veri_pb_rows++;
-         msg.info( "rup 1 ~{} >= 1 ;\n", name, val==0? 1:0);
-         break;
-      case ArgumentType::kDual:
-         assert(false);
-         break;
-      case ArgumentType::kSymmetry:
-         assert( false );
-         break;
-      default:
-         assert( false );
+         msg.info( "del id {}\n", lhs_row_mapping[row] );
+         lhs_row_mapping[row] = -1;
+      }
+      if( rhs_row_mapping[row] != -1 )
+      {
+         msg.info( "del id {}\n", rhs_row_mapping[row] );
+         rhs_row_mapping[row] = -1;
       }
    }
 
-   //TODO: compress the mappings
    void
    compress( const Vec<int>& rowmapping, const Vec<int>& colmapping,
              bool full = false )
@@ -192,9 +194,6 @@ class VeriPb
       }
 #endif
    }
-
-
- private:
 
 
 };

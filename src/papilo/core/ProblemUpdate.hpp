@@ -164,7 +164,7 @@ class ProblemUpdate
                     RowActivity<REAL>& activity );
 
    PresolveStatus
-   fixCol( int col, REAL val );
+   fixCol( int col, REAL val, ArgumentType argument = ArgumentType::kPrimal );
 
    PresolveStatus
    fixColInfinity( int col, REAL val );
@@ -501,7 +501,7 @@ ProblemUpdate<REAL>::update_activity( ActivityChange actChange, int rowid,
 
 template <typename REAL>
 PresolveStatus
-ProblemUpdate<REAL>::fixCol( int col, REAL val )
+ProblemUpdate<REAL>::fixCol( int col, REAL val, ArgumentType argument )
 {
    ConstraintMatrix<REAL>& constraintMatrix = problem.getConstraintMatrix();
    Vec<REAL>& lbs = problem.getLowerBounds();
@@ -565,6 +565,9 @@ ProblemUpdate<REAL>::fixCol( int col, REAL val )
          postsolve.storeVarBoundChange(
              true, col, lbs[col],
              problem.getColFlags()[col].test( ColFlag::kLbInf ), val );
+         veri_pb.change_lower_bound(
+             val, problem.getVariableNames()[postsolve.origcol_mapping[col]],
+             argument );
          lbs[col] = val;
          cflags[col].unset( ColFlag::kLbUseless );
       }
@@ -580,6 +583,9 @@ ProblemUpdate<REAL>::fixCol( int col, REAL val )
          postsolve.storeVarBoundChange(
              false, col, ubs[col],
              problem.getColFlags()[col].test( ColFlag::kUbInf ), val );
+         veri_pb.change_upper_bound(
+             val, problem.getVariableNames()[postsolve.origcol_mapping[col]],
+             argument );
          ubs[col] = val;
          cflags[col].unset( ColFlag::kUbUseless );
       }
@@ -825,9 +831,6 @@ ProblemUpdate<REAL>::compress( bool full )
    if( problem.getNCols() == getNActiveCols() &&
        problem.getNRows() == getNActiveRows() && !full )
       return;
-   // TODO: do not compress if ActiveRows are zero because rowmapping in Postsolve is deleted.
-//   if(getNActiveRows() <= 0)
-//      return;
 
    Message::debug( this,
                    "compressing problem ({} rows, {} cols) to active problem "
@@ -871,6 +874,9 @@ ProblemUpdate<REAL>::compress( bool full )
           if( full )
              singletonRows.shrink_to_fit();
        },
+       [this, &mappings, full]() {
+          veri_pb.compress( mappings.first, mappings.second, full );
+       },
        // update column index sets
        [this, &mappings, full]() {
           int numNewSingletonCols =
@@ -896,6 +902,7 @@ ProblemUpdate<REAL>::compress( bool full )
    compress_index_vector( mappings.first, random_row_perm );
    compress_index_vector( mappings.second, random_col_perm );
    postsolve.compress( mappings.first, mappings.second, full );
+   veri_pb.compress( mappings.first, mappings.second, full );
    compress_index_vector( mappings.first, changed_activities );
    compress_index_vector( mappings.first, singletonRows );
    compress_index_vector( mappings.second, emptyColumns );
@@ -2013,7 +2020,7 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
             break;
          case ColReduction::FIXED:
          {
-            if( fixCol( reduction.col, reduction.newval ) ==
+            if( fixCol( reduction.col, reduction.newval, argument ) ==
                 PresolveStatus::kInfeasible )
                return ApplyResult::kInfeasible;
             break;
