@@ -67,6 +67,9 @@ class CertificateInterface
    virtual void
    compress( const Vec<int>& rowmapping, const Vec<int>& colmapping,
              bool full = false ) = 0;
+
+   virtual ~CertificateInterface() = default;
+
 };
 
 } // namespace papilo

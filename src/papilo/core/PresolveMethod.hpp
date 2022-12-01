@@ -35,10 +35,11 @@
 #include "papilo/misc/Timer.hpp"
 #ifdef PAPILO_TBB
 #include "papilo/misc/tbb.hpp"
-#include "papilo/verification/ArgumentType.hpp"
 #else
 #include <chrono>
 #endif
+
+#include "papilo/verification/ArgumentType.hpp"
 #include <bitset>
 
 
