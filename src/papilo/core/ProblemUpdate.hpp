@@ -2009,6 +2009,17 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
                                            reduction.newval );
          matrix_buffer.addEntry( reduction.row, reduction.col,
                                  reduction.newval );
+         if( first == last - 1 )
+         {
+            REAL lhs = constraintMatrix.getLeftHandSides()[reduction.row];
+            REAL rhs =
+                constraintMatrix.getRightHandSides()[reduction.row];
+//            certificate_interface.update_row(
+//                reduction.row,
+//                constraintMatrix.getRowCoefficients( reduction.row ),
+//                rflags[reduction.row], lhs, rhs,
+//                problem.getVariableNames(), postsolve.origcol_mapping);
+         }
       }
       else if( reduction.row < 0 )
       {
