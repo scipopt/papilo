@@ -27,6 +27,7 @@
 #include "papilo/core/Problem.hpp"
 #include "papilo/core/SingleRow.hpp"
 #include "papilo/io/Message.hpp"
+#include <memory>
 #include "papilo/misc/MultiPrecision.hpp"
 #include "papilo/misc/Vec.hpp"
 
