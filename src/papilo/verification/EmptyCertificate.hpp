@@ -24,35 +24,30 @@
 #ifndef _PAPILO_VERI_EMPTY_CERTIFICATE_HPP_
 #define _PAPILO_VERI_EMPTY_CERTIFICATE_HPP_
 
-
 #include "papilo/verification/CertificateInterface.hpp"
 
 namespace papilo
 {
-
 
 /// type to store necessary data for post solve
 template <typename REAL>
 class EmptyCertificate : public CertificateInterface<REAL>
 {
  public:
-
    EmptyCertificate() = default;
 
    void
-   print_header()
-   {
-   };
+   print_header(){};
 
    void
    change_upper_bound( REAL val, const String& name,
                        ArgumentType argument = ArgumentType::kPrimal )
    {
-
    }
 
    void
-   change_lower_bound(  REAL val, const String& name, ArgumentType argument = ArgumentType::kPrimal)
+   change_lower_bound( REAL val, const String& name,
+                       ArgumentType argument = ArgumentType::kPrimal )
    {
    }
 
@@ -74,20 +69,16 @@ class EmptyCertificate : public CertificateInterface<REAL>
    }
 
    void
-   update_row( int row, const SparseVectorView<REAL>& data,
-               RowFlags& rflags, REAL lhs, REAL rhs,
-               const Vec<String>& names, const Vec<int>& var_mapping ) {};
+   update_row( int row, const SparseVectorView<REAL>& data, RowFlags& rflags,
+               REAL lhs, REAL rhs, const Vec<String>& names,
+               const Vec<int>& var_mapping ){};
 
    void
    compress( const Vec<int>& rowmapping, const Vec<int>& colmapping,
              bool full = false )
    {
    }
-
-
 };
-
-
 
 } // namespace papilo
 
