@@ -1,24 +1,12 @@
 @page RN Release notes for PAPILO NEXT
 
-@section RNNEXT PaPILO NEXT
+@section RN212 PaPILO 2.1.2
 ***************************
-
-Performance improvements
-------------------------
-
-Interface changes
------------------
-
-### New parameters with default values
-
-### Data structures
 
 Fixed bugs
 ----------
-- SimpleSubstitution: fixing bug in the infeasibility detection of the extended euclidean
 
-Miscellaneous
--------------
+- SimpleSubstitution: fixing bug in the infeasibility detection of the extended euclidean
 
 @section RN211 PaPILO 2.1.1
 ***************************
