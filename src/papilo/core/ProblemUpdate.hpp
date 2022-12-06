@@ -907,7 +907,7 @@ ProblemUpdate<REAL>::compress( bool full )
    compress_index_vector( mappings.first, random_row_perm );
    compress_index_vector( mappings.second, random_col_perm );
    postsolve.compress( mappings.first, mappings.second, full );
-   certificate_interface.compress( mappings.first, mappings.second, full );
+   certificate_interface->compress( mappings.first, mappings.second, full );
    compress_index_vector( mappings.first, changed_activities );
    compress_index_vector( mappings.first, singletonRows );
    compress_index_vector( mappings.second, emptyColumns );
@@ -2011,15 +2011,13 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
                                  reduction.newval );
          if( first == last - 1 )
          {
-            REAL lhs = constraintMatrix.getLeftHandSides()[reduction.row];
-            REAL rhs =
-                constraintMatrix.getRightHandSides()[reduction.row];
-            //TODO:
-//            certificate_interface.update_row(
-//                reduction.row,
-//                constraintMatrix.getRowCoefficients( reduction.row ),
-//                rflags[reduction.row], lhs, rhs,
-//                problem.getVariableNames(), postsolve.origcol_mapping);
+           certificate_interface->update_row(
+               reduction.row,
+               constraintMatrix.getRowCoefficients( reduction.row ),
+               rflags[reduction.row],
+               constraintMatrix.getLeftHandSides()[reduction.row],
+               constraintMatrix.getRightHandSides()[reduction.row],
+               problem.getVariableNames(), postsolve.origcol_mapping );
          }
       }
       else if( reduction.row < 0 )
