@@ -12,7 +12,7 @@ Interface changes
 - Boost: program_options is no longer required but needed to use PaPILO via command-line.
 
 ### New parameters with default values
-
+- verification_with_VeriPB = 0 : should PaPILO print a VeriPB log (only for PseudoBoolean problems)?
 ### Data structures
 
 Fixed bugs
@@ -21,9 +21,10 @@ Fixed bugs
 
 Miscellaneous
 -------------
+- VeriPB:
+- OPB-Format: PaPILO can now parse files in linear opb format
 - Ortools: PaPILO parses the dual solution and the reduced costs from ortools
 - HiGHS: PaPILO supports HiGHS version 1.3
-- OPB-Format: PaPILO can now parse files in linear opb format
 
 
 @section RN212 PaPILO 2.1.3

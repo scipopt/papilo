@@ -37,7 +37,6 @@
 namespace papilo
 {
 
-
 /// type to store necessary data for post solve
 template <typename REAL>
 class VeriPb : public CertificateInterface<REAL>

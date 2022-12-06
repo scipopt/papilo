@@ -154,5 +154,8 @@ calculate_basis_for_dual = 1
 # should the primal/dual solution be validated during after every postsolving step?
 validation_after_every_postsolving_step = 0
 
+# should PaPILO print a VeriPB log (only for PseudoBoolean problems)?
+verification_with_VeriPB = 0
+
 # defines the offset for bound tightening
 bound_tightening_offset = 0.0001

@@ -95,6 +95,8 @@ struct PresolveOptions
 
    bool validation_after_every_postsolving_step = false;
 
+   bool verification_with_VeriPB = false;
+
    void
    addParameters( ParameterSet& paramSet )
    {
@@ -217,6 +219,10 @@ struct PresolveOptions
           "bound_tightening_offset",
           "# defines the offset for bound tightening ",
           bound_tightening_offset );
+      paramSet.addParameter(
+          "verification_with_VeriPB",
+          "# should PaPILO print a VeriPB log (only for PseudoBoolean problems)? ",
+          verification_with_VeriPB );
    }
 
    bool

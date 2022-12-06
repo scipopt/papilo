@@ -474,10 +474,9 @@ Presolve<REAL>::apply( Problem<REAL>& problem, bool store_dual_postsolve )
 
       ProblemUpdate<REAL> probUpdate( problem, result.postsolve, stats,
                                       presolveOptions, num, msg );
-     // TODO: overwrite only if parameter is set
-     {
+     // TODO: check if PseudoProblem
+      if(presolveOptions.verification_with_VeriPB)
         probUpdate.init_veri_pb( );
-      }
 
       for( int i = 0; i != npresolvers; ++i )
       {
