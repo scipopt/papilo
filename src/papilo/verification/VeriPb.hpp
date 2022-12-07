@@ -148,18 +148,17 @@ class VeriPb : public CertificateInterface<REAL>
    change_rhs( int row, REAL val, const SparseVectorView<REAL>& data,
                const Vec<String>& names, const Vec<int>& var_mapping )
    {
-      // TODO: think about it
       next_constraint_id++;
       fmt::print( "rup" );
       for( int i = 0; i < data.getLength(); i++ )
       {
          fmt::print( " ~{} {}", names[var_mapping[data.getIndices()[i]]],
-                     (double) ( ( -1 ) * data.getValues()[i] ) );
+                     (int) ( ( -1 ) * data.getValues()[i] ) );
          if( i != data.getLength() - 1 )
             fmt::print( " +" );
       }
 
-      fmt::print( " >= {};\n", (double)( val + 1 ) );
+      fmt::print( " >= {};\n", (int)( val + 1 ) );
       rhs_row_mapping[row] = next_constraint_id;
    }
 
@@ -172,34 +171,45 @@ class VeriPb : public CertificateInterface<REAL>
       for( int i = 0; i < data.getLength(); i++ )
       {
          fmt::print( " {} {}", names[var_mapping[data.getIndices()[i]]],
-                     (double) data.getValues()[i] );
+                     (int) data.getValues()[i] );
          if( i != data.getLength() - 1 )
             fmt::print( " +" );
       }
-      fmt::print( " >= {};\n", (double)( val ) );
+      fmt::print( " >= {};\n", (int)( val ) );
       rhs_row_mapping[row] = next_constraint_id;
    }
 
    void
-   update_row( int row, const SparseVectorView<REAL>& data,
+   update_row( int row, int col, REAL new_val,  const SparseVectorView<REAL>& data,
                RowFlags& rflags, REAL lhs, REAL rhs,
                const Vec<String>& names, const Vec<int>& var_mapping )
-   //TODO: test it
    {
       if( !rflags.test( RowFlag::kLhsInf ) )
       {
          next_constraint_id++;
-         fmt::print( "rup" );
+         fmt::print( "rup " );
          for( int i = 0; i < data.getLength(); i++ )
          {
-            fmt::print( " ~{} {}", names[var_mapping[data.getIndices()[i]]],
-                        (double)( ( -1 ) * data.getValues()[i] ) );
-            if( i != data.getLength() - 1 )
-               fmt::print( " +" );
+            if(data.getIndices()[i] == col)
+            {
+               if(new_val == 0)
+                  continue ;
+               if( i != 0 )
+                  fmt::print( " +" );
+               fmt::print( "{} {}", (int)( new_val ), names[col] );
+            }
+            else
+            {
+               if( i != 0 )
+                  fmt::print( " +" );
+               fmt::print( "{} {}",
+                           (int)( data.getValues()[i] ), names[var_mapping[data.getIndices()[i]]] );
+            }
          }
 
-         fmt::print( " >= {} ;\n", (double)lhs );
-         rhs_row_mapping[row] = next_constraint_id;
+         fmt::print( " >= {} ;\n", (int)lhs );
+         fmt::print( "del id {}\n", lhs_row_mapping[row] );
+         lhs_row_mapping[row] = next_constraint_id;
       }
       if( !rflags.test( RowFlag::kRhsInf ) )
       {
@@ -207,13 +217,24 @@ class VeriPb : public CertificateInterface<REAL>
          fmt::print( "rup" );
          for( int i = 0; i < data.getLength(); i++ )
          {
-            fmt::print( " ~{} {}", names[var_mapping[data.getIndices()[i]]],
-                        (double)( ( -1 ) * data.getValues()[i] ) );
-            if( i != data.getLength() - 1 )
-               fmt::print( " +" );
+            if( data.getIndices()[i] == col )
+            {
+               if( new_val == 0 )
+                  continue;
+               if( i != 0 )
+                  fmt::print( " +" );
+               fmt::print( "{} ~{}", (int)( new_val ),  names[col] );
+            }
+            else
+            {
+               if( i != 0 )
+                  fmt::print( " +" );
+               fmt::print( "{} ~{}", (int)( ( -1 ) * data.getValues()[i] ), names[var_mapping[data.getIndices()[i]]] );
+            }
          }
 
-         fmt::print( " >= {} ;\n", (double)( rhs + 1 ) );
+         fmt::print( " >= {} ;\n", (int)( rhs + 1 ) );
+         fmt::print( "del id {}\n", rhs_row_mapping[row] );
          rhs_row_mapping[row] = next_constraint_id;
       }
    }
@@ -225,12 +246,12 @@ class VeriPb : public CertificateInterface<REAL>
       assert( lhs_row_mapping[row] != -1 || rhs_row_mapping[row] != -1 );
       if( lhs_row_mapping[row] != -1 )
       {
-         msg.info( "del id {}\n", (double) lhs_row_mapping[row] );
+         msg.info( "del id {}\n", (int) lhs_row_mapping[row] );
          lhs_row_mapping[row] = -1;
       }
       if( rhs_row_mapping[row] != -1 )
       {
-         msg.info( "del id {}\n", (double) rhs_row_mapping[row] );
+         msg.info( "del id {}\n", (int) rhs_row_mapping[row] );
          rhs_row_mapping[row] = -1;
       }
    }

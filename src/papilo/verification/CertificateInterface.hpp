@@ -65,7 +65,7 @@ class CertificateInterface
    mark_row_redundant( int row ) = 0;
 
    virtual void
-   update_row( int row, const SparseVectorView<REAL>& data,
+   update_row( int row, int col, REAL new_val,  const SparseVectorView<REAL>& data,
                RowFlags& rflags, REAL lhs, REAL rhs,
                const Vec<String>& names, const Vec<int>& var_mapping ) = 0;
 
