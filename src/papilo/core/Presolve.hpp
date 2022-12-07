@@ -415,7 +415,7 @@ Presolve<REAL>::apply( Problem<REAL>& problem, bool store_dual_postsolve )
       presolveOptions.threads = 1;
 #endif
 
-      if( store_dual_postsolve && problem.getNumIntegralCols() == 0 )
+      if( store_dual_postsolve && problem.test_problem_type(ProblemFlag::kLinear) )
       {
          if( presolveOptions.componentsmaxint == -1 && presolveOptions.detectlindep == 0 &&
              are_only_dual_postsolve_presolvers_enabled())
@@ -474,9 +474,10 @@ Presolve<REAL>::apply( Problem<REAL>& problem, bool store_dual_postsolve )
 
       ProblemUpdate<REAL> probUpdate( problem, result.postsolve, stats,
                                       presolveOptions, num, msg );
-     // TODO: check if PseudoProblem
-      if(presolveOptions.verification_with_VeriPB)
-        probUpdate.init_veri_pb( );
+
+      if( presolveOptions.verification_with_VeriPB &&
+          problem.test_problem_type( ProblemFlag::kPseudoBoolean ) )
+         probUpdate.init_veri_pb();
 
       for( int i = 0; i != npresolvers; ++i )
       {

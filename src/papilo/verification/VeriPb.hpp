@@ -60,9 +60,8 @@ class VeriPb : public CertificateInterface<REAL>
 
    VeriPb( const Problem<REAL>& _problem, const Num<REAL>& _num,
            const Message& _msg )
-       : num( _num ), msg( _msg )
+       : num( _num ), msg( _msg ), nRowsOriginal(_problem.getNRows())
    {
-      nRowsOriginal = _problem.getNRows();
       rhs_row_mapping.reserve( nRowsOriginal );
       lhs_row_mapping.reserve( nRowsOriginal );
 

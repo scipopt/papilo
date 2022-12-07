@@ -107,6 +107,10 @@ class OpbParser
       problem.setName( std::move( filename ) );
       problem.setConstraintNames( std::move( parser.rownames ) );
 
+      problem.set_problem_type( ProblemFlag::kMixedInteger );
+      problem.set_problem_type( ProblemFlag::kInteger );
+      problem.set_problem_type( ProblemFlag::kPseudoBoolean );
+
       problem.setInputTolerance(
           REAL{ pow( typename RealParseType<REAL>::type{ 10 },
                      -std::numeric_limits<
