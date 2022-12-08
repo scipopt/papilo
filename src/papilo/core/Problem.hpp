@@ -34,8 +34,8 @@
 #include "papilo/misc/String.hpp"
 #include "papilo/misc/Vec.hpp"
 #include "papilo/misc/fmt.hpp"
-#ifdef PAPILO_TBB
 #include "papilo/core/ProblemFlag.hpp"
+#ifdef PAPILO_TBB
 #include "papilo/misc/tbb.hpp"
 #endif
 
