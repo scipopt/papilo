@@ -17,7 +17,6 @@ Interface changes
 
 Fixed bugs
 ----------
-- SimpleSubstitution: fixed bug in the infeasibility detection of the extended euclidean
 
 Miscellaneous
 -------------
@@ -25,6 +24,15 @@ Miscellaneous
 - HiGHS: PaPILO supports HiGHS version 1.3
 - OPB-Format: PaPILO can now parse files in linear opb format
 
+
+
+@section RN212 PaPILO 2.1.2
+***************************
+
+Fixed bugs
+----------
+
+- SimpleSubstitution: fixing bug in the infeasibility detection of the extended euclidean
 
 @section RN211 PaPILO 2.1.1
 ***************************
