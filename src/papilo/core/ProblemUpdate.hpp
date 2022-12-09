@@ -1913,7 +1913,6 @@ ProblemUpdate<REAL>::checkTransactionConflicts( const Reduction<REAL>* first,
                return ConflictType::kConflict;
             }
             break;
-         case ColReduction::OBJECTIVE:
          case ColReduction::PARALLEL:
          case ColReduction::SUBSTITUTE_OBJ:
             break;
@@ -2026,10 +2025,6 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
          {
          case ColReduction::NONE:
             assert( false );
-            break;
-         case ColReduction::OBJECTIVE:
-            setColState( reduction.col, State::kModified );
-            objective.coefficients[reduction.col] = reduction.newval;
             break;
          case ColReduction::FIXED:
          {
@@ -2442,9 +2437,10 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
                                      constraintMatrix.getLeftHandSides()[row],
                                      constraintMatrix.getRightHandSides()[row],
                                      problem.getRowFlags()[row] );
+            break;
          }
-         break;
          case RowReduction::LHS:
+         {
             assert( rflags[reduction.row].test( RowFlag::kLhsInf ) ||
                     reduction.newval !=
                         constraintMatrix.getLeftHandSides()[reduction.row] );
@@ -2500,7 +2496,9 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
 
             ++stats.nsidechgs;
             break;
+         }
          case RowReduction::LHS_LESS_RESTRICTIVE:
+         {
             assert( rflags[reduction.row].test( RowFlag::kLhsInf ) ||
                     reduction.newval !=
                         constraintMatrix.getLeftHandSides()[reduction.row] );
@@ -2537,6 +2535,7 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
 
             ++stats.nsidechgs;
             break;
+         }
          case RowReduction::REASON_FOR_LESS_RESTRICTIVE_BOUND_CHANGE:
          {
             REAL factor = problem.getConstraintMatrix()
@@ -2550,6 +2549,7 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
             break;
          }
          case RowReduction::RHS:
+         {
             assert( rflags[reduction.row].test( RowFlag::kRhsInf ) ||
                     reduction.newval !=
                         constraintMatrix.getRightHandSides()[reduction.row] );
@@ -2603,7 +2603,9 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
 
             ++stats.nsidechgs;
             break;
+         }
          case RowReduction::RHS_LESS_RESTRICTIVE:
+         {
             assert( rflags[reduction.row].test( RowFlag::kRhsInf ) ||
                     reduction.newval !=
                         constraintMatrix.getRightHandSides()[reduction.row] );
@@ -2640,7 +2642,10 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
 
             ++stats.nsidechgs;
             break;
+         }
          case RowReduction::LHS_INF:
+         {
+            assert( !problem.test_problem_type( ProblemFlag::kPseudoBoolean ) );
             if( !rflags[reduction.row].test( RowFlag::kLhsInf ) )
             {
                setRowState( reduction.row, State::kBoundsModified );
@@ -2652,11 +2657,13 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
                constraintMatrix.template modifyLeftHandSide<true>(
                    reduction.row, num, REAL{ 0 } );
 
-
                ++stats.nsidechgs;
             }
             break;
+         }
          case RowReduction::RHS_INF:
+         {
+            assert( !problem.test_problem_type( ProblemFlag::kPseudoBoolean ) );
             if( !rflags[reduction.row].test( RowFlag::kRhsInf ) )
             {
                setRowState( reduction.row, State::kBoundsModified );
@@ -2669,13 +2676,16 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
                ++stats.nsidechgs;
             }
             break;
+         }
          case RowReduction::REDUNDANT:
+         {
             if( !rflags[reduction.row].test( RowFlag::kRedundant ) )
             {
                setRowState( reduction.row, State::kBoundsModified );
                markRowRedundant( reduction.row );
             }
             break;
+         }
          case RowReduction::SPARSIFY:
          {
             int nsparsifyrows = static_cast<int>( reduction.newval );
@@ -2734,8 +2744,8 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
                }
                msg.detailed( "\n" );
             }
+            break;
          }
-         break;
          default:
             break;
          }
