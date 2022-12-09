@@ -26,6 +26,9 @@
 
 #include "papilo/Config.hpp"
 
+// work around build failure with boost on Fedora 37
+#include <memory>
+
 #include <boost/serialization/split_free.hpp>
 
 #ifdef PAPILO_HAVE_FLOAT128
