@@ -360,7 +360,7 @@ parseOptions( int argc, char* argv[] )
 
    return optionsInfo;
 #else
-   fmt::print("PaPILO not build with Boost program_options. Comandline interface not aviable. Exiting...");
+   fmt::print("PaPILO not build with Boost program_options. Comandline interface not available. Exiting...");
    exit(-1);
 #endif
 }
