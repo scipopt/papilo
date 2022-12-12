@@ -2110,6 +2110,7 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
             const int* colindices = colvec.getIndices();
             const int nbrelevantrows = colvec.getLength();
 
+            certificate_interface->substitute(col, equalityrow, problem);
             postsolve.storeSubstitution( col, equalityrow, problem );
 
             assert(
@@ -2196,6 +2197,7 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
                 constraintMatrix.getRowCoefficients( equalityrow );
 
             postsolve.storeSubstitution( col, equalityrow, problem );
+            certificate_interface->substitute(col, equalityrow, problem);
 
             // change the objective coefficients and offset
             problem.substituteVarInObj( num, col, equalityrow );
@@ -2384,6 +2386,7 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
 
                // perform changes in matrix and sides
                //TODO:
+//               certificate_interface->substitute(col1, equalityLHS, problem);
                postsolve.storeSubstitution( col1, equalityLHS, offset );
 
                constraintMatrix.aggregate(

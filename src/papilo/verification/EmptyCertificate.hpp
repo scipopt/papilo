@@ -74,6 +74,10 @@ class EmptyCertificate : public CertificateInterface<REAL>
                const Vec<int>& var_mapping ){};
 
    void
+   substitute( int col, int row,
+               const Problem<REAL>& currentProblem ) {};
+
+   void
    compress( const Vec<int>& rowmapping, const Vec<int>& colmapping,
              bool full = false )
    {

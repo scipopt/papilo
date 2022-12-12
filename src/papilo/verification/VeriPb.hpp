@@ -238,6 +238,56 @@ class VeriPb : public CertificateInterface<REAL>
       }
    }
 
+   void
+   substitute( int col, int row, const Problem<REAL>& currentProblem )
+   {
+      auto col_vec =
+          currentProblem.getConstraintMatrix().getColumnCoefficients( col );
+
+      REAL div = 0;
+      for( int i = 0; i < col_vec.getLength(); i++ )
+      {
+         if(col_vec.getIndices()[i] == row)
+         {
+            div = col_vec.getValues()[i];
+            break;
+         }
+      }
+      assert(div != 0);
+      for( int i = 0; i < col_vec.getLength(); i++ )
+      {
+         if(col_vec.getIndices()[i] == row)
+            continue ;
+         REAL factor = col_vec.getValues()[i];
+         int current_row = col_vec.getIndices()[i];
+         if( num.isIntegral( factor / div ) )
+         {
+            if(!currentProblem.getConstraintMatrix().getRowFlags()[i].test(RowFlag::kRhsInf))
+            {
+               next_constraint_id++;
+               msg.info( "pol {} {} * {} -\n",
+                         (int)rhs_row_mapping[current_row], (int)factor,
+                         (int)rhs_row_mapping[row] );
+               msg.info( "del id {}\n", (int)rhs_row_mapping[current_row] );
+               rhs_row_mapping[current_row] = next_constraint_id;
+            }
+            if(!currentProblem.getConstraintMatrix().getRowFlags()[i].test(RowFlag::kLhsInf))
+            {
+               next_constraint_id++;
+               msg.info( "pol {} {} * {} -\n",
+                         (int)lhs_row_mapping[current_row], (int)factor,
+                         (int)lhs_row_mapping[row] );
+               msg.info( "del id {}\n", (int)lhs_row_mapping[current_row] );
+               lhs_row_mapping[current_row] = next_constraint_id;
+            }
+         }
+         else
+         {
+            //TODO check if factor/div is integer and mark scale
+         }
+      }
+      //TODO: check if constraint of row are already deleted
+   };
 
    void
    mark_row_redundant( int row )
