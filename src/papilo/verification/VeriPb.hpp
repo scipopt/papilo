@@ -239,10 +239,12 @@ class VeriPb : public CertificateInterface<REAL>
    }
 
    void
-   substitute( int col, int row, const Problem<REAL>& currentProblem )
+   substitute( int col, int row, const Problem<REAL>& currentProblem, const Vec<String>& names, const Vec<int>& var_mapping )
    {
-      auto col_vec =
-          currentProblem.getConstraintMatrix().getColumnCoefficients( col );
+      const ConstraintMatrix<REAL>& matrix =
+          currentProblem.getConstraintMatrix();
+      auto col_vec = matrix.getColumnCoefficients( col );
+      auto row_data = matrix.getRowCoefficients(row);
 
       REAL div = 0;
       for( int i = 0; i < col_vec.getLength(); i++ )
@@ -262,31 +264,36 @@ class VeriPb : public CertificateInterface<REAL>
          int current_row = col_vec.getIndices()[i];
          if( num.isIntegral( factor / div ) )
          {
-            if(!currentProblem.getConstraintMatrix().getRowFlags()[i].test(RowFlag::kRhsInf))
+            auto data = matrix.getRowCoefficients(current_row);
+            if( !matrix.getRowFlags()[current_row].test( RowFlag::kRhsInf ) )
             {
                next_constraint_id++;
-               msg.info( "pol {} {} * {} -\n",
+               msg.info( "pol {} {} * {} +\n",
                          (int)rhs_row_mapping[current_row], (int)factor,
-                         (int)rhs_row_mapping[row] );
+                         (int)lhs_row_mapping[row] );
                msg.info( "del id {}\n", (int)rhs_row_mapping[current_row] );
                rhs_row_mapping[current_row] = next_constraint_id;
             }
-            if(!currentProblem.getConstraintMatrix().getRowFlags()[i].test(RowFlag::kLhsInf))
+            if( !matrix.getRowFlags()[current_row].test( RowFlag::kLhsInf ) )
             {
                next_constraint_id++;
-               msg.info( "pol {} {} * {} -\n",
+               msg.info( "pol {} {} * {} +\n",
                          (int)lhs_row_mapping[current_row], (int)factor,
-                         (int)lhs_row_mapping[row] );
+                         (int)rhs_row_mapping[row] );
                msg.info( "del id {}\n", (int)lhs_row_mapping[current_row] );
                lhs_row_mapping[current_row] = next_constraint_id;
             }
          }
          else
          {
-            //TODO check if factor/div is integer and mark scale
+            // TODO handle the case if factor is not integer
+            assert( false );
          }
       }
-      //TODO: check if constraint of row are already deleted
+      assert( !matrix.getRowFlags()[row].test( RowFlag::kRhsInf ) );
+      assert( !matrix.getRowFlags()[row].test( RowFlag::kLhsInf ) );
+      msg.info( "del id {}\n", (int)rhs_row_mapping[row] );
+      msg.info( "del id {}\n", (int)lhs_row_mapping[row] );
    };
 
    void

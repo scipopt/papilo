@@ -71,7 +71,7 @@ class CertificateInterface
 
    virtual void
    substitute( int col, int row,
-               const Problem<REAL>& currentProblem ) = 0;
+               const Problem<REAL>& currentProblem, const Vec<String>& names, const Vec<int>& var_mapping ) = 0;
 
    virtual void
    compress( const Vec<int>& rowmapping, const Vec<int>& colmapping,
