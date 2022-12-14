@@ -14,11 +14,20 @@
 
 include(FindPackageHandleStandardArgs)
 
+# Check whether environment variable TBB_DIR was set.
+if(NOT TBB_DIR)
+  set(ENV_TBB_DIR $ENV{TBB_DIR})
+  if(ENV_TBB_DIR)
+    set(TBB_DIR $ENV{TBB_DIR} CACHE PATH "Path to tbb directory")
+  endif()
+endif()
+
 # Define search paths based on user input and environment variables
 set(TBB_SEARCH_DIR ${TBB_LIBRARY_DIR} ${TBB_ROOT_DIR} ${TBB_DIR} $ENV{TBB_INSTALL_DIR} $ENV{TBBROOT})
 
 # Firstly search for TBB in config mode (i.e. search for TBBConfig.cmake).
-find_package(TBB CONFIG HINTS ${TBB_SEARCH_DIR})
+find_package(TBB CONFIG HINTS ${TBB_SEARCH_DIR}
+             PATH_SUFFIXES "cmake" "lib/cmake")
 if (TBB_FOUND)
     find_package_handle_standard_args(TBB CONFIG_MODE)
     return()
