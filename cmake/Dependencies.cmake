@@ -57,15 +57,15 @@ endfunction()
 # Use FetchContent to download a package if it was not found and build it inside the build tree.
 function(find_or_download_package)
     set(options)
-    set(oneValueArgs NAME URL URL_HASH VERSION COMPONENTS)
-    set(multiValueArgs CONFIGURE_ARGS)
+    set(oneValueArgs NAME URL URL_HASH VERSION)
+    set(multiValueArgs COMPONENTS CONFIGURE_ARGS)
     cmake_parse_arguments(ARG "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
     if(${ARG_NAME}_FOUND)
         return()
     endif()
 
-    if(${ARG_COMPONENTS})
+    if(ARG_COMPONENTS)
         find_package(${ARG_NAME} ${ARG_VERSION} COMPONENTS ${ARG_COMPONENTS})
     else()
         find_package(${ARG_NAME} ${ARG_VERSION} )
