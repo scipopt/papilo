@@ -249,17 +249,17 @@ class VeriPb : public CertificateInterface<REAL>
       //TODO:
       //TODO: consider already existing scale factors
       assert( scale != 0 );
-      if( num.isIntegral( scale ) and scale > 0 )
+      if( num.isIntegral( scale ) && scale > 0 )
       {
 
       }
-      else if( num.isIntegral( scale ) and scale < 0 )
+      else if( num.isIntegral( scale ) && scale < 0 )
       {
       }
-      else if( num.isIntegral( 1 / scale ) and scale > 0 )
+      else if( num.isIntegral( 1 / scale ) && scale > 0 )
       {
       }
-      else if( num.isIntegral( 1 / scale ) and scale < 0 )
+      else if( num.isIntegral( 1 / scale ) && scale < 0 )
       {
          fmt::print("yes");
       }
