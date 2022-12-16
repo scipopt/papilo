@@ -74,8 +74,18 @@ class EmptyCertificate : public CertificateInterface<REAL>
                const Vec<int>& var_mapping ){};
 
    void
+   sparsify( int eqrow, int candrow, REAL scale )
+   { }
+
+
+   void
    substitute( int col, int row,
-               const Problem<REAL>& currentProblem, const Vec<String>& names, const Vec<int>& var_mapping ) {};
+               const Problem<REAL>& currentProblem ) {};
+
+   void
+   substitute( int col, const SparseVectorView<REAL>& equality, const Problem<REAL>& currentProblem )
+   { }
+
 
    void
    compress( const Vec<int>& rowmapping, const Vec<int>& colmapping,

@@ -244,7 +244,39 @@ class VeriPb : public CertificateInterface<REAL>
    }
 
    void
-   substitute( int col, int row, const Problem<REAL>& currentProblem, const Vec<String>& names, const Vec<int>& var_mapping )
+   sparsify( int eqrow, int candrow, REAL scale )
+   {
+      //TODO:
+      //TODO: consider already existing scale factors
+      assert( scale != 0 );
+      if( num.isIntegral( scale ) and scale > 0 )
+      {
+
+      }
+      else if( num.isIntegral( scale ) and scale < 0 )
+      {
+      }
+      else if( num.isIntegral( 1 / scale ) and scale > 0 )
+      {
+      }
+      else if( num.isIntegral( 1 / scale ) and scale < 0 )
+      {
+      }
+      else
+      {
+         // TODO:
+      }
+   }
+
+   //TODO:
+   void
+   substitute( int col, const SparseVectorView<REAL>& equality, const Problem<REAL>& currentProblem )
+   {
+
+   }
+
+   void
+   substitute( int col, int row, const Problem<REAL>& currentProblem )
    {
       const ConstraintMatrix<REAL>& matrix =
           currentProblem.getConstraintMatrix();
@@ -339,8 +371,10 @@ class VeriPb : public CertificateInterface<REAL>
       }
       assert( !matrix.getRowFlags()[row].test( RowFlag::kRhsInf ) );
       assert( !matrix.getRowFlags()[row].test( RowFlag::kLhsInf ) );
-      msg.info( "del id {}\n", (int)rhs_row_mapping[row] );
-      msg.info( "del id {}\n", (int)lhs_row_mapping[row] );
+      msg.info( "* postsolve stack : row id {}\n", (int)rhs_row_mapping[row] );
+      msg.info( "* postsolve stack : row id {}\n", (int)rhs_row_mapping[row] );
+//      msg.info( "del id {}\n", (int) rhs_row_mapping[row] );
+//      msg.info( "del id {}\n", (int) lhs_row_mapping[row] );
    };
 
    void
