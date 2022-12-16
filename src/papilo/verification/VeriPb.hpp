@@ -280,14 +280,15 @@ class VeriPb : public CertificateInterface<REAL>
       const REAL* values = equality.getValues();
       const int* indices = equality.getIndices();
       assert( equality.getLength() == 2 );
+      assert( num.isIntegral( values[0] ) && num.isIntegral( values[1] ) );
 
       next_constraint_id++;
       msg.info( "* postsolve stack : row id {}\n", next_constraint_id );
-      msg.info( "rup {} {} + {} {} >= {};\n", values[0], var_mapping[indices[0]], values[1], var_mapping[indices[1]], (int) offset);
+      msg.info( "rup {} {} + {} {} >= {};\n", (int) (values[0]), var_mapping[indices[0]],(int) (values[1]), var_mapping[indices[1]], (int) (offset));
 
       next_constraint_id++;
       msg.info( "* postsolve stack : row id {}\n", next_constraint_id );
-      msg.info( "rup {} ~{} + {} ~{} >= {};\n", values[0], var_mapping[indices[0]], values[1], var_mapping[indices[1]], (int) offset);
+      msg.info( "rup {} ~{} + {} ~{} >= {};\n", (int) (values[0]), var_mapping[indices[0]],(int) (values[1]), var_mapping[indices[1]], (int) (offset));
 
       // TODO handle it like below
    }
