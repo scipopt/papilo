@@ -45,12 +45,15 @@ class VeriPb : public CertificateInterface<REAL>
    unsigned int nRowsOriginal;
 
 
-   /// mapping of reduced problems row indices to row indices in the original
-   /// problem
+   /// mapping constraint ids from PaPILO to VeriPb
+   /// since VeriPb only supports >= each equation is mapped to 2 constraints
    Vec<int> rhs_row_mapping;
-
    Vec<int> lhs_row_mapping;
 
+   /// it may be necessary to scale constraints to secure positive integer cons
+   Vec<int> scale_factor;
+
+   /// this holds the id of the constraints of VeriPB
    int next_constraint_id = 0;
 
    Num<REAL> num;
@@ -64,9 +67,11 @@ class VeriPb : public CertificateInterface<REAL>
    {
       rhs_row_mapping.reserve( nRowsOriginal );
       lhs_row_mapping.reserve( nRowsOriginal );
+      scale_factor.reserve( nRowsOriginal );
 
       for( unsigned int i = 0; i < nRowsOriginal; ++i )
       {
+         scale_factor.push_back( 1 );
          if(!_problem.getRowFlags()[i].test(RowFlag::kLhsInf))
          {
             next_constraint_id++;
@@ -246,31 +251,33 @@ class VeriPb : public CertificateInterface<REAL>
       auto col_vec = matrix.getColumnCoefficients( col );
       auto row_data = matrix.getRowCoefficients(row);
 
-      REAL div = 0;
+      REAL factor = 0;
       for( int i = 0; i < col_vec.getLength(); i++ )
       {
          if(col_vec.getIndices()[i] == row)
          {
-            div = col_vec.getValues()[i];
+            factor = col_vec.getValues()[i];
             break;
          }
       }
-      assert(div != 0);
+      assert( factor != 0);
       for( int i = 0; i < col_vec.getLength(); i++ )
       {
          if(col_vec.getIndices()[i] == row)
             continue ;
-         REAL factor = col_vec.getValues()[i];
+         REAL div = col_vec.getValues()[i];
+         assert( div != 0 && factor != 0);
          int current_row = col_vec.getIndices()[i];
-         if( num.isIntegral( factor / div ) )
+         auto data = matrix.getRowCoefficients(current_row);
+         if( num.isIntegral( div * scale_factor[i] / factor / scale_factor[row] ) )
          {
-            auto data = matrix.getRowCoefficients(current_row);
+            assert( div * scale_factor[i] / factor / scale_factor[row]  > 0 );
             if( !matrix.getRowFlags()[current_row].test( RowFlag::kRhsInf ) )
             {
                next_constraint_id++;
                msg.info( "pol {} {} * {} +\n",
-                         (int)rhs_row_mapping[current_row], (int)factor,
-                         (int)lhs_row_mapping[row] );
+                         (int)lhs_row_mapping[row], (int)( div / factor ),
+                         (int)rhs_row_mapping[current_row] );
                msg.info( "del id {}\n", (int)rhs_row_mapping[current_row] );
                rhs_row_mapping[current_row] = next_constraint_id;
             }
@@ -278,16 +285,56 @@ class VeriPb : public CertificateInterface<REAL>
             {
                next_constraint_id++;
                msg.info( "pol {} {} * {} +\n",
-                         (int)lhs_row_mapping[current_row], (int)factor,
-                         (int)rhs_row_mapping[row] );
+                         (int)rhs_row_mapping[row], (int)( div / factor ),
+                         (int)lhs_row_mapping[current_row] );
+               msg.info( "del id {}\n", (int)lhs_row_mapping[current_row] );
+               lhs_row_mapping[current_row] = next_constraint_id;
+            }
+         }
+         else if( num.isIntegral( factor * scale_factor[row] / div / scale_factor[i] ) )
+         {
+            assert( factor / div > 0 );
+            if( !matrix.getRowFlags()[current_row].test( RowFlag::kRhsInf ) )
+            {
+               next_constraint_id++;
+               msg.info( "pol {} {} * {} +\n",
+                         (int)rhs_row_mapping[current_row],
+                         (int)( factor / div ), (int)lhs_row_mapping[row] );
+               msg.info( "del id {}\n", (int)rhs_row_mapping[current_row] );
+               rhs_row_mapping[current_row] = next_constraint_id;
+            }
+            if( !matrix.getRowFlags()[current_row].test( RowFlag::kLhsInf ) )
+            {
+               next_constraint_id++;
+               msg.info( "pol {} {} * {} +\n",
+                         (int)lhs_row_mapping[current_row],
+                         (int)( factor / div ), (int)rhs_row_mapping[row] );
                msg.info( "del id {}\n", (int)lhs_row_mapping[current_row] );
                lhs_row_mapping[current_row] = next_constraint_id;
             }
          }
          else
          {
-            // TODO handle the case if factor is not integer
-            assert( false );
+            assert( num.isIntegral( factor ) );
+            scale_factor[row] =  (int) factor;
+            if( !matrix.getRowFlags()[current_row].test( RowFlag::kRhsInf ) )
+            {
+               next_constraint_id++;
+               msg.info( "pol {} {} * {} {} * +\n",
+                         (int)lhs_row_mapping[row], (int)( div ),
+                         (int)rhs_row_mapping[current_row], int (factor) );
+               msg.info( "del id {}\n", (int)rhs_row_mapping[current_row] );
+               rhs_row_mapping[current_row] = next_constraint_id;
+            }
+            if( !matrix.getRowFlags()[current_row].test( RowFlag::kLhsInf ) )
+            {
+               next_constraint_id++;
+               msg.info( "pol {} {} * {} {} * +\n",
+                         (int)rhs_row_mapping[row], (int) ( div ),
+                         (int)lhs_row_mapping[current_row], (int) (factor) );
+               msg.info( "del id {}\n", (int)lhs_row_mapping[current_row] );
+               lhs_row_mapping[current_row] = next_constraint_id;
+            }
          }
       }
       assert( !matrix.getRowFlags()[row].test( RowFlag::kRhsInf ) );
@@ -323,6 +370,12 @@ class VeriPb : public CertificateInterface<REAL>
              compress_vector( rowmapping, lhs_row_mapping );
              if( full )
                 lhs_row_mapping.shrink_to_fit();
+          },
+          [this, &rowmapping, full]() {
+             // update information about rows that is stored by index
+             compress_vector( rowmapping, scale_factor );
+             if( full )
+                scale_factor.shrink_to_fit();
           },
           [this, &rowmapping, full]() {
              // update information about rows that is stored by index
