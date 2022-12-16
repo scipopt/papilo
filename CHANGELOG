@@ -13,6 +13,7 @@ Interface changes
 
 ### New parameters with default values
 - verification_with_VeriPB = 0 : should PaPILO print a VeriPB log (only for PseudoBoolean problems)?
+
 ### Data structures
 
 Fixed bugs
@@ -21,7 +22,7 @@ Fixed bugs
 
 Miscellaneous
 -------------
-- VeriPB:
+- VeriPB: prints VeriPB parseable verification certificate for pseudoboolean problem in the log (experimental)
 - OPB-Format: PaPILO can now parse files in linear opb format
 - Ortools: PaPILO parses the dual solution and the reduced costs from ortools
 - HiGHS: PaPILO supports HiGHS version 1.3
