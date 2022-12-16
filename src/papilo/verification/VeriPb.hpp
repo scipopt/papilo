@@ -261,6 +261,7 @@ class VeriPb : public CertificateInterface<REAL>
       }
       else if( num.isIntegral( 1 / scale ) and scale < 0 )
       {
+         fmt::print("yes");
       }
       else
       {
@@ -268,11 +269,27 @@ class VeriPb : public CertificateInterface<REAL>
       }
    }
 
-   //TODO:
+   // TODO:
    void
-   substitute( int col, const SparseVectorView<REAL>& equality, const Problem<REAL>& currentProblem )
+   substitute( int col, const SparseVectorView<REAL>& equality, REAL offset,
+               const Problem<REAL>& currentProblem, const Vec<String>& names,
+               const Vec<int>& var_mapping )
    {
+      // TODO: test it
+      assert( num.isIntegral( offset ) );
+      const REAL* values = equality.getValues();
+      const int* indices = equality.getIndices();
+      assert( equality.getLength() == 2 );
 
+      next_constraint_id++;
+      msg.info( "* postsolve stack : row id {}\n", next_constraint_id );
+      msg.info( "rup {} {} + {} {} >= {};\n", values[0], var_mapping[indices[0]], values[1], var_mapping[indices[1]], (int) offset);
+
+      next_constraint_id++;
+      msg.info( "* postsolve stack : row id {}\n", next_constraint_id );
+      msg.info( "rup {} ~{} + {} ~{} >= {};\n", values[0], var_mapping[indices[0]], values[1], var_mapping[indices[1]], (int) offset);
+
+      // TODO handle it like below
    }
 
    void
@@ -372,7 +389,7 @@ class VeriPb : public CertificateInterface<REAL>
       assert( !matrix.getRowFlags()[row].test( RowFlag::kRhsInf ) );
       assert( !matrix.getRowFlags()[row].test( RowFlag::kLhsInf ) );
       msg.info( "* postsolve stack : row id {}\n", (int)rhs_row_mapping[row] );
-      msg.info( "* postsolve stack : row id {}\n", (int)rhs_row_mapping[row] );
+      msg.info( "* postsolve stack : row id {}\n", (int)lhs_row_mapping[row] );
 //      msg.info( "del id {}\n", (int) rhs_row_mapping[row] );
 //      msg.info( "del id {}\n", (int) lhs_row_mapping[row] );
    };

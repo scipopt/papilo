@@ -83,7 +83,7 @@ class EmptyCertificate : public CertificateInterface<REAL>
                const Problem<REAL>& currentProblem ) {};
 
    void
-   substitute( int col, const SparseVectorView<REAL>& equality, const Problem<REAL>& currentProblem )
+   substitute( int col, const SparseVectorView<REAL>& equality, REAL offset, const Problem<REAL>& currentProblem, const Vec<String>& names, const Vec<int>& var_mapping )
    { }
 
 

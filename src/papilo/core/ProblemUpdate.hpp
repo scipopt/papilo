@@ -2385,7 +2385,7 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
                msg.detailed( "\n" );
 
                // perform changes in matrix and side
-               certificate_interface->substitute(col1, equalityLHS, problem);
+               certificate_interface->substitute(col1, equalityLHS, offset,  problem, problem.getVariableNames(), postsolve.origcol_mapping);
                postsolve.storeSubstitution( col1, equalityLHS, offset );
 
                constraintMatrix.aggregate(
