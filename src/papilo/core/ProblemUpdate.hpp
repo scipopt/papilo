@@ -2647,7 +2647,8 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
          }
          case RowReduction::LHS_INF:
          {
-            assert( !problem.test_problem_type( ProblemFlag::kPseudoBoolean ) );
+            //TODO:
+//            assert( !problem.test_problem_type( ProblemFlag::kPseudoBoolean ) );
             if( !rflags[reduction.row].test( RowFlag::kLhsInf ) )
             {
                setRowState( reduction.row, State::kBoundsModified );
@@ -2718,7 +2719,7 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
                if( canceled != 0 )
                {
                   setRowState( candrow, State::kModified );
-                  certificate_interface->sparsify(eqrow, candrow, scale);
+                  certificate_interface->sparsify(eqrow, candrow, scale, problem);
                   msg.detailed( "modified rows: {}, \n", candrow );
                   ++ncanceledrows;
                   ncancel += canceled;

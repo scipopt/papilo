@@ -74,7 +74,7 @@ class EmptyCertificate : public CertificateInterface<REAL>
                const Vec<int>& var_mapping ){};
 
    void
-   sparsify( int eqrow, int candrow, REAL scale )
+   sparsify( int eqrow, int candrow, REAL scale, const Problem<REAL>& currentProblem)
    { }
 
 

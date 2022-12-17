@@ -70,7 +70,7 @@ class CertificateInterface
                const Vec<String>& names, const Vec<int>& var_mapping ) = 0;
 
    virtual void
-   sparsify( int eqrow, int candrow, REAL scale ) = 0;
+   sparsify( int eqrow, int candrow, REAL scale, const Problem<REAL>& currentProblem ) = 0;
 
    virtual void
    substitute( int col, int row, const Problem<REAL>& currentProblem ) = 0;
