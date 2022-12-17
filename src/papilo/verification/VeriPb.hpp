@@ -98,6 +98,8 @@ class VeriPb : public CertificateInterface<REAL>
       msg.info( "f {}\n", next_constraint_id );
    };
 
+   //TODO: LHS_INF und RHS is missing
+
    void
    change_upper_bound( REAL val, const String& name,
                        ArgumentType argument = ArgumentType::kPrimal )
@@ -122,7 +124,6 @@ class VeriPb : public CertificateInterface<REAL>
       }
 
    }
-
 
    void
    change_lower_bound(  REAL val, const String& name, ArgumentType argument = ArgumentType::kPrimal)
