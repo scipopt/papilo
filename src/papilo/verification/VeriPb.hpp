@@ -146,79 +146,113 @@ class VeriPb : public CertificateInterface<REAL>
       }
    }
 
-
-   //TODO: test change_rhs and change_lhs
-
+   // TODO: test change_rhs and change_lhs
    void
    change_rhs( int row, REAL val, const SparseVectorView<REAL>& data,
                const Vec<String>& names, const Vec<int>& var_mapping )
    {
+      assert( num.isIntegral( val * scale_factor[row] ) );
       next_constraint_id++;
       fmt::print( "rup" );
+      int offset = 0;
       for( int i = 0; i < data.getLength(); i++ )
       {
-         fmt::print( " ~{} {}", names[var_mapping[data.getIndices()[i]]],
-                     (int) ( data.getValues()[i] *  scale_factor[row]) );
+         int coeff = (int) data.getValues()[i] * scale_factor[row];
+         const String& varname = names[var_mapping[data.getIndices()[i]]];
+         assert( coeff != 0 );
+         fmt::print( "{}", abs(coeff) );
+         if( coeff < 0 )
+            offset -= coeff;
+         else
+            fmt::print( " ~" );
+         fmt::print( "{}",  varname );
          if( i != data.getLength() - 1 )
             fmt::print( " +" );
       }
 
-      fmt::print( " >= {};\n", (int)( val * scale_factor[row]) );
+      fmt::print( " >= {};\n", (int)( val * scale_factor[row] ) + offset );
       rhs_row_mapping[row] = next_constraint_id;
    }
 
+   // TODO: test change_rhs and change_lhs
    void
    change_lhs( int row, REAL val, const SparseVectorView<REAL>& data,
                const Vec<String>& names, const Vec<int>& var_mapping )
    {
+      assert( num.isIntegral( val * scale_factor[row] ) );
       next_constraint_id++;
       fmt::print( "rup" );
+      int offset = 0;
       for( int i = 0; i < data.getLength(); i++ )
       {
-         fmt::print( " {} {}", names[var_mapping[data.getIndices()[i]]],
-                     (int) (data.getValues()[i] *  scale_factor[row]) );
+         int coeff = (int) data.getValues()[i] * scale_factor[row];
+         const String& varname = names[var_mapping[data.getIndices()[i]]];
+         assert( coeff != 0 );
+         fmt::print( "{} ", abs(coeff) );
+         if( coeff < 0 )
+         {
+            fmt::print( "~" );
+            offset -= coeff;
+         }
+         fmt::print( "{}",  varname );
          if( i != data.getLength() - 1 )
             fmt::print( " +" );
       }
-      fmt::print( " >= {};\n", (int)( val * scale_factor[row]) );
+      fmt::print( " >= {};\n", (int)( val * scale_factor[row]) + offset );
       rhs_row_mapping[row] = next_constraint_id;
    }
 
+   //TODO test for negative values in the coeff
    void
    update_row( int row, int col, REAL new_val,  const SparseVectorView<REAL>& data,
                RowFlags& rflags, REAL lhs, REAL rhs,
                const Vec<String>& names, const Vec<int>& var_mapping )
    {
+      assert( num.isIntegral( new_val * scale_factor[row] ) );
       if( !rflags.test( RowFlag::kLhsInf ) )
       {
          next_constraint_id++;
          fmt::print( "rup " );
+         int offset = 0;
          for( int i = 0; i < data.getLength(); i++ )
          {
+
             if(data.getIndices()[i] == col)
             {
                if(new_val == 0)
                   continue ;
                if( i != 0 )
                   fmt::print( " +" );
-               fmt::print( "{} {}", (int)( new_val*  scale_factor[row] ), names[col] );
+               fmt::print( "{} ", abs((int) new_val * scale_factor[row]) );
+               if( new_val < 0 )
+               {
+                  fmt::print( "~" );
+                  offset -= (int) new_val * scale_factor[row];
+               }
             }
             else
             {
                if( i != 0 )
                   fmt::print( " +" );
-               fmt::print( "{} {}",
-                           (int)( data.getValues()[i]* scale_factor[row] ), names[var_mapping[data.getIndices()[i]]] );
+               int val = (int)( data.getValues()[i] * scale_factor[row] );
+               fmt::print( "{} ", abs(val) );
+               if(val < 0 )
+               {
+                  fmt::print( "~" );
+                  offset -= val;
+               }
             }
-         }
+            fmt::print( "{}",  names[var_mapping[col]] );
 
-         fmt::print( " >= {} ;\n", (int)lhs *  scale_factor[row] );
+         }
+         fmt::print( " >= {} ;\n", (int)lhs *  scale_factor[row] + offset );
          fmt::print( "del id {}\n", lhs_row_mapping[row] );
          lhs_row_mapping[row] = next_constraint_id;
       }
       if( !rflags.test( RowFlag::kRhsInf ) )
       {
          next_constraint_id++;
+         int offset = 0;
          fmt::print( "rup" );
          for( int i = 0; i < data.getLength(); i++ )
          {
@@ -226,23 +260,31 @@ class VeriPb : public CertificateInterface<REAL>
             {
                if( new_val == 0 )
                   continue;
-               if( i != 0 )
-                  fmt::print( " +" );
-               fmt::print( "{} ~{}", (int)( new_val * scale_factor[row] ),  names[col] );
+               fmt::print( "{} ", abs((int) new_val * scale_factor[row]) );
+               if( new_val < 0 )
+                  offset += (int) new_val * scale_factor[row];
+               else
+                  fmt::print( "~" );
             }
             else
             {
                if( i != 0 )
                   fmt::print( " +" );
-               fmt::print( "{} ~{}", (int)( data.getValues()[i] * scale_factor[row] ), names[var_mapping[data.getIndices()[i]]] );
+               int val = (int)( data.getValues()[i] * scale_factor[row] );
+               fmt::print( "{} ", abs( val ) );
+               if( val < 0 )
+                  offset -= val;
+               else
+                  fmt::print( "~" );
             }
          }
-
-         fmt::print( " >= {} ;\n", (int)( rhs * scale_factor[row] ) );
+         fmt::print( "{}",  names[var_mapping[col]] );
+         fmt::print( " >= {} ;\n", (int)( rhs * scale_factor[row] ) + offset);
          fmt::print( "del id {}\n", rhs_row_mapping[row] );
          rhs_row_mapping[row] = next_constraint_id;
       }
    }
+
 
    void
    sparsify( int eqrow, int candrow, REAL scale, const Problem<REAL>& currentProblem )
@@ -361,7 +403,6 @@ class VeriPb : public CertificateInterface<REAL>
 //      msg.info( "del id {}\n", (int) rhs_row_mapping[row] );
 //      msg.info( "del id {}\n", (int) lhs_row_mapping[row] );
    };
-
 
 
    void
