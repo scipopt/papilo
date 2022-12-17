@@ -328,7 +328,6 @@ class VeriPb : public CertificateInterface<REAL>
       // TODO handle it like below
    }
 
-   // TODO: consider minus scale factors
    void
    substitute( int col, int substituted_row, const Problem<REAL>& currentProblem )
    {
@@ -346,56 +345,74 @@ class VeriPb : public CertificateInterface<REAL>
             break;
          }
       }
-      assert( sub_factor > 0);
       for( int i = 0; i < col_vec.getLength(); i++ )
       {
          int row = col_vec.getIndices()[i];
          if( row == substituted_row )
             continue ;
          REAL factor = col_vec.getValues()[i] * scale_factor[row];
-         assert( factor > 0 );
          auto data = matrix.getRowCoefficients( row );
          if( num.isIntegral( factor / sub_factor ) )
          {
-            assert( factor / sub_factor  > 0 );
+            int val = (int)( factor / sub_factor );
             if( !matrix.getRowFlags()[row].test( RowFlag::kRhsInf ) )
             {
                next_constraint_id++;
-               msg.info( "pol {} {} * {} +\n",
-                         (int)lhs_row_mapping[substituted_row], (int)( factor / sub_factor ),
-                         (int)rhs_row_mapping[row] );
+               if(sub_factor * factor > 0)
+                  msg.info( "pol {} {} * {} +\n",
+                            (int)lhs_row_mapping[substituted_row], val,
+                            (int)rhs_row_mapping[row] );
+               else
+                  msg.info( "pol {} {} * {} +\n",
+                            (int)lhs_row_mapping[substituted_row], val,
+                            (int)lhs_row_mapping[row] );
                msg.info( "del id {}\n", (int)rhs_row_mapping[row] );
                rhs_row_mapping[row] = next_constraint_id;
             }
             if( !matrix.getRowFlags()[row].test( RowFlag::kLhsInf ) )
             {
                next_constraint_id++;
-               msg.info( "pol {} {} * {} +\n",
-                         (int)rhs_row_mapping[substituted_row], (int)( factor / sub_factor ),
-                         (int)lhs_row_mapping[row] );
+               if(sub_factor * factor > 0)
+                  msg.info( "pol {} {} * {} +\n",
+                            (int)rhs_row_mapping[substituted_row], val,
+                            (int)lhs_row_mapping[row] );
+               else
+                  msg.info( "pol {} {} * {} +\n",
+                            (int)rhs_row_mapping[substituted_row], val,
+                            (int)rhs_row_mapping[row] );
                msg.info( "del id {}\n", (int)lhs_row_mapping[row] );
                lhs_row_mapping[row] = next_constraint_id;
             }
          }
          else if( num.isIntegral( sub_factor / factor ) )
          {
-            assert( sub_factor / factor > 0 );
+            scale_factor[row] *= (int) (sub_factor / factor);
+            int val = abs( (int)( sub_factor / factor ));
             if( !matrix.getRowFlags()[row].test( RowFlag::kRhsInf ) )
             {
                next_constraint_id++;
-               scale_factor[row] *= (int) (sub_factor / factor);
-               msg.info( "pol {} {} * {} +\n",
-                         (int)rhs_row_mapping[row],
-                         (int)( sub_factor / factor ), (int) lhs_row_mapping[substituted_row] );
+
+               if( sub_factor * factor > 0 )
+                  msg.info( "pol {} {} * {} +\n", (int)rhs_row_mapping[row],
+                            val, (int)lhs_row_mapping[substituted_row] );
+               else
+                  msg.info( "pol {} {} * {} +\n", (int)rhs_row_mapping[row],
+                            val, (int)rhs_row_mapping[substituted_row] );
+
                msg.info( "del id {}\n", (int)rhs_row_mapping[row] );
                rhs_row_mapping[row] = next_constraint_id;
             }
             if( !matrix.getRowFlags()[row].test( RowFlag::kLhsInf ) )
             {
                next_constraint_id++;
-               msg.info( "pol {} {} * {} +\n",
-                         (int)lhs_row_mapping[row],
-                         (int)( sub_factor / factor ), (int)rhs_row_mapping[substituted_row] );
+               if( sub_factor * factor > 0 )
+                  msg.info( "pol {} {} * {} +\n",
+                            (int)lhs_row_mapping[row],
+                           val, (int)rhs_row_mapping[substituted_row] );
+               else
+                  msg.info( "pol {} {} * {} +\n", (int)lhs_row_mapping[row],
+                            val,
+                            (int)lhs_row_mapping[substituted_row] );
                msg.info( "del id {}\n", (int)lhs_row_mapping[row] );
                lhs_row_mapping[row] = next_constraint_id;
             }
@@ -405,21 +422,37 @@ class VeriPb : public CertificateInterface<REAL>
             assert( num.isIntegral( sub_factor ) );
             assert( num.isIntegral( factor ) );
             scale_factor[row] *= (int) sub_factor;
+            int val = abs( (int) factor );
+            int val2 = abs( (int)sub_factor );
+
             if( !matrix.getRowFlags()[row].test( RowFlag::kRhsInf ) )
             {
                next_constraint_id++;
-               msg.info( "pol {} {} * {} {} * +\n",
-                         (int)lhs_row_mapping[substituted_row], (int)( factor ),
-                         (int)rhs_row_mapping[row], int ( sub_factor ) );
+               if( sub_factor * factor > 0 )
+               {
+                  msg.info( "pol {} {} * {} {} * +\n",
+                            (int)lhs_row_mapping[substituted_row], val,
+                            (int)rhs_row_mapping[row], val2 );
+               }
+               else
+                  msg.info( "pol {} {} * {} {} * +\n",
+                            (int)rhs_row_mapping[substituted_row], val,
+                            (int)rhs_row_mapping[row], val2 );
                msg.info( "del id {}\n", (int)rhs_row_mapping[row] );
                rhs_row_mapping[row] = next_constraint_id;
             }
             if( !matrix.getRowFlags()[row].test( RowFlag::kLhsInf ) )
             {
                next_constraint_id++;
-               msg.info( "pol {} {} * {} {} * +\n",
-                         (int)rhs_row_mapping[substituted_row], (int) ( factor ),
-                         (int)lhs_row_mapping[row], (int) ( sub_factor ) );
+               if( sub_factor * factor > 0 )
+                  msg.info( "pol {} {} * {} {} * +\n",
+                            (int)rhs_row_mapping[substituted_row], val,
+                            (int)lhs_row_mapping[row], val2 );
+               else
+                  msg.info( "pol {} {} * {} {} * +\n",
+                            (int)lhs_row_mapping[substituted_row], val,
+                            (int)lhs_row_mapping[row], val2 );
+
                msg.info( "del id {}\n", (int)lhs_row_mapping[row] );
                lhs_row_mapping[row] = next_constraint_id;
             }
