@@ -111,10 +111,10 @@ class VeriPb : public CertificateInterface<REAL>
       switch( argument )
       {
       case ArgumentType::kPrimal:
-         msg.info( "rup 1 ~{} >= 1 ;\n", name, (int)val );
+         msg.info( "rup 1 ~{} >= 1 ;\n", name );
          break;
       case ArgumentType::kDual:
-         msg.info( "red 1 ~{} >= 1 ; {} -> 0\n", name, (int)val, name );
+         msg.info( "red 1 ~{} >= 1 ; {} -> 0\n", name, name );
          break;
       case ArgumentType::kSymmetry:
          assert( false );
