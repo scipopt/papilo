@@ -42,7 +42,7 @@ template <typename REAL>
 class VeriPb : public CertificateInterface<REAL>
 {
  public:
-   unsigned int nRowsOriginal;
+   unsigned int nRowsOriginal{};
 
 
    /// mapping constraint ids from PaPILO to VeriPb
@@ -293,21 +293,23 @@ class VeriPb : public CertificateInterface<REAL>
       const ConstraintMatrix<REAL>& matrix =
           currentProblem.getConstraintMatrix();
       //TODO: test
-      //TODO: handle scale_factor
       int scale_eqrow = scale_factor[eqrow];
       int scale_candrow = scale_factor[candrow];
       assert( scale != 0 );
-      int scale_updated = scale * scale_candrow / scale_eqrow;
+      REAL scale_updated = scale * scale_candrow / scale_eqrow;
       if( num.isIntegral( scale_updated ) )
          {
+         int int_scale_updated = (int) scale_updated;
          if( !matrix.getRowFlags()[candrow].test( RowFlag::kRhsInf ) )
          {
             next_constraint_id++;
-            if( scale_updated > 0)
-               msg.info( "pol {} {} * {} +\n", rhs_row_mapping[eqrow], scale_updated,
+            if( int_scale_updated > 0)
+               msg.info( "pol {} {} * {} +\n", rhs_row_mapping[eqrow],
+                         int_scale_updated,
                          rhs_row_mapping[candrow] );
             else
-               msg.info( "pol {} {} * {} +\n", lhs_row_mapping[eqrow], scale_updated,
+               msg.info( "pol {} {} * {} +\n", lhs_row_mapping[eqrow],
+                         abs(int_scale_updated),
                          rhs_row_mapping[candrow] );
             msg.info( "del id {}\n", rhs_row_mapping[candrow] );
             rhs_row_mapping[candrow] = next_constraint_id;
@@ -315,11 +317,13 @@ class VeriPb : public CertificateInterface<REAL>
          if( !matrix.getRowFlags()[candrow].test( RowFlag::kLhsInf ) )
          {
             next_constraint_id++;
-            if( scale_updated > 0)
-               msg.info( "pol {} {} * {} +\n", lhs_row_mapping[eqrow], scale_updated,
+            if( int_scale_updated > 0)
+               msg.info( "pol {} {} * {} +\n", lhs_row_mapping[eqrow],
+                         int_scale_updated,
                          lhs_row_mapping[candrow] );
             else
-               msg.info( "pol {} {} * {} +\n", rhs_row_mapping[eqrow], scale_updated,
+               msg.info( "pol {} {} * {} +\n", rhs_row_mapping[eqrow],
+                         abs(int_scale_updated),
                          lhs_row_mapping[candrow] );
 
             msg.info( "del id {}\n", (int)lhs_row_mapping[candrow] );
@@ -329,16 +333,18 @@ class VeriPb : public CertificateInterface<REAL>
       }
       else if( num.isIntegral( 1.0 / scale_updated )  )
       {
-         scale_updated = (int) (1.0 / scale_updated);
+         int int_scale_updated = (int) (1.0 / scale_updated );
 
          if( !matrix.getRowFlags()[candrow].test( RowFlag::kRhsInf ) )
          {
             next_constraint_id++;
-            if( scale_updated > 0)
-               msg.info( "pol {} {} * {} +\n", rhs_row_mapping[candrow], scale_updated,
+            if( int_scale_updated > 0)
+               msg.info( "pol {} {} * {} +\n", rhs_row_mapping[candrow],
+                         int_scale_updated,
                          rhs_row_mapping[eqrow] );
             else
-               msg.info( "pol {} {} * {} +\n", rhs_row_mapping[candrow], scale_updated,
+               msg.info( "pol {} {} * {} +\n", rhs_row_mapping[candrow],
+                         abs(int_scale_updated),
                          lhs_row_mapping[eqrow] );
             msg.info( "del id {}\n", rhs_row_mapping[candrow] );
             rhs_row_mapping[candrow] = next_constraint_id;
@@ -346,15 +352,18 @@ class VeriPb : public CertificateInterface<REAL>
          if( !matrix.getRowFlags()[candrow].test( RowFlag::kLhsInf ) )
          {
             next_constraint_id++;
-            if( scale_updated > 0)
-               msg.info( "pol {} {} * {} +\n", lhs_row_mapping[candrow], scale_updated,
+            if( int_scale_updated > 0)
+               msg.info( "pol {} {} * {} +\n", lhs_row_mapping[candrow],
+                         int_scale_updated,
                          lhs_row_mapping[eqrow] );
             else
-               msg.info( "pol {} {} * {} +\n", lhs_row_mapping[candrow], scale_updated,
+               msg.info( "pol {} {} * {} +\n", lhs_row_mapping[candrow],
+                         abs(int_scale_updated),
                          rhs_row_mapping[eqrow] );
+            msg.info( "del id {}\n", lhs_row_mapping[candrow] );
             lhs_row_mapping[candrow] = next_constraint_id;
          }
-         scale_factor[candrow] *= scale_updated;
+         scale_factor[candrow] *= int_scale_updated;
       }
       else
       {
