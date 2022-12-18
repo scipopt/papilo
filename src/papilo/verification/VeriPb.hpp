@@ -154,18 +154,18 @@ class VeriPb : public CertificateInterface<REAL>
    {
       assert( num.isIntegral( val * scale_factor[row] ) );
       next_constraint_id++;
-      fmt::print( "rup" );
+      fmt::print( "rup " );
       int offset = 0;
       for( int i = 0; i < data.getLength(); i++ )
       {
          int coeff = (int) data.getValues()[i] * scale_factor[row];
          const String& varname = names[var_mapping[data.getIndices()[i]]];
          assert( coeff != 0 );
-         fmt::print( "{}", abs(coeff) );
+         fmt::print( "{} ", abs(coeff) );
          if( coeff < 0 )
-            offset -= coeff;
+            offset += coeff;
          else
-            fmt::print( " ~" );
+            fmt::print( "~" );
          fmt::print( "{}",  varname );
          if( i != data.getLength() - 1 )
             fmt::print( " +" );
@@ -182,24 +182,20 @@ class VeriPb : public CertificateInterface<REAL>
    {
       assert( num.isIntegral( val * scale_factor[row] ) );
       next_constraint_id++;
-      fmt::print( "rup" );
-      int offset = 0;
+      fmt::print( "rup " );
       for( int i = 0; i < data.getLength(); i++ )
       {
          int coeff = (int) data.getValues()[i] * scale_factor[row];
          const String& varname = names[var_mapping[data.getIndices()[i]]];
          assert( coeff != 0 );
-         fmt::print( "{} ", abs(coeff) );
+         fmt::print( "{}  ", abs(coeff) );
          if( coeff < 0 )
-         {
             fmt::print( "~" );
-            offset -= coeff;
-         }
          fmt::print( "{}",  varname );
          if( i != data.getLength() - 1 )
             fmt::print( " +" );
       }
-      fmt::print( " >= {};\n", (int)( val * scale_factor[row]) + offset );
+      fmt::print( " >= {};\n", (int)( val * scale_factor[row]) );
       rhs_row_mapping[row] = next_constraint_id;
    }
 
