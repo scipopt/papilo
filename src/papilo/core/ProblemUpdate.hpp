@@ -1319,6 +1319,10 @@ ProblemUpdate<REAL>::apply_dualfix( Vec<REAL>& lbs, Vec<REAL>& ubs,
             postsolve.storeVarBoundChange( false, col, ubs[col],
                                            cflags[col].test( ColFlag::kUbInf ),
                                            lbs[col] );
+            certificate_interface->change_upper_bound(
+                lbs[col],
+                problem.getVariableNames()[postsolve.origcol_mapping[col]],
+                ArgumentType::kDual );
             ubs[col] = lbs[col];
             cflags[col].unset( ColFlag::kUbInf );
             ++stats.nboundchgs;
@@ -1346,6 +1350,10 @@ ProblemUpdate<REAL>::apply_dualfix( Vec<REAL>& lbs, Vec<REAL>& ubs,
             postsolve.storeVarBoundChange( true, col, lbs[col],
                                            cflags[col].test( ColFlag::kLbInf ),
                                            ubs[col] );
+            certificate_interface->change_lower_bound(
+                ubs[col],
+                problem.getVariableNames()[postsolve.origcol_mapping[col]],
+                ArgumentType::kDual );
             lbs[col] = ubs[col];
             cflags[col].unset( ColFlag::kLbInf );
             ++stats.nboundchgs;
@@ -1816,14 +1824,26 @@ ProblemUpdate<REAL>::removeEmptyColumns()
                // notify for storing the bound for recalculation
                if( domains.flags[col].test( ColFlag::kLbInf ) ||
                    !num.isEq( domains.lower_bounds[col], fixval ) )
+               {
                   postsolve.storeVarBoundChange(
                       true, col, domains.lower_bounds[col],
                       domains.flags[col].test( ColFlag::kLbInf ), fixval );
+                  certificate_interface->change_lower_bound(
+                      fixval,
+                      problem.getVariableNames()[postsolve.origcol_mapping[col]],
+                      ArgumentType::kDual );
+               }
                if( domains.flags[col].test( ColFlag::kUbInf ) ||
                    !num.isEq( domains.upper_bounds[col], fixval ) )
+               {
                   postsolve.storeVarBoundChange(
                       false, col, domains.upper_bounds[col],
                       domains.flags[col].test( ColFlag::kUbInf ), fixval );
+                  certificate_interface->change_upper_bound(
+                      fixval,
+                      problem.getVariableNames()[postsolve.origcol_mapping[col]],
+                      ArgumentType::kDual );
+               }
             }
             else
             {
