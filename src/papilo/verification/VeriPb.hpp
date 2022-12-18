@@ -286,13 +286,12 @@ class VeriPb : public CertificateInterface<REAL>
       }
    }
 
-
+   //TODO test with scale_factor already in place
    void
    sparsify( int eqrow, int candrow, REAL scale, const Problem<REAL>& currentProblem )
    {
       const ConstraintMatrix<REAL>& matrix =
           currentProblem.getConstraintMatrix();
-      //TODO: test
       int scale_eqrow = scale_factor[eqrow];
       int scale_candrow = scale_factor[candrow];
       assert( scale != 0 );
@@ -305,7 +304,7 @@ class VeriPb : public CertificateInterface<REAL>
             next_constraint_id++;
             if( int_scale_updated > 0)
                msg.info( "pol {} {} * {} +\n", rhs_row_mapping[eqrow],
-                         int_scale_updated,
+                         abs(int_scale_updated),
                          rhs_row_mapping[candrow] );
             else
                msg.info( "pol {} {} * {} +\n", lhs_row_mapping[eqrow],
@@ -319,7 +318,7 @@ class VeriPb : public CertificateInterface<REAL>
             next_constraint_id++;
             if( int_scale_updated > 0)
                msg.info( "pol {} {} * {} +\n", lhs_row_mapping[eqrow],
-                         int_scale_updated,
+                         abs(int_scale_updated),
                          lhs_row_mapping[candrow] );
             else
                msg.info( "pol {} {} * {} +\n", rhs_row_mapping[eqrow],
@@ -340,7 +339,7 @@ class VeriPb : public CertificateInterface<REAL>
             next_constraint_id++;
             if( int_scale_updated > 0)
                msg.info( "pol {} {} * {} +\n", rhs_row_mapping[candrow],
-                         int_scale_updated,
+                         abs(int_scale_updated),
                          rhs_row_mapping[eqrow] );
             else
                msg.info( "pol {} {} * {} +\n", rhs_row_mapping[candrow],
@@ -354,7 +353,7 @@ class VeriPb : public CertificateInterface<REAL>
             next_constraint_id++;
             if( int_scale_updated > 0)
                msg.info( "pol {} {} * {} +\n", lhs_row_mapping[candrow],
-                         int_scale_updated,
+                         abs(int_scale_updated),
                          lhs_row_mapping[eqrow] );
             else
                msg.info( "pol {} {} * {} +\n", lhs_row_mapping[candrow],
@@ -367,7 +366,41 @@ class VeriPb : public CertificateInterface<REAL>
       }
       else
       {
-         // TODO:
+         auto frac =
+             sparsify_convert_scale_to_frac( eqrow, candrow, scale, matrix );
+         assert( frac.second / frac.first == -scale );
+         int frac_eqrow = abs( (int)( frac.second * scale_candrow ) );
+         int frac_candrow = abs( (int)( frac.first * scale_eqrow ) );
+
+         if( !matrix.getRowFlags()[candrow].test( RowFlag::kRhsInf ) )
+         {
+            next_constraint_id++;
+            if( scale > 0)
+               msg.info( "pol {} {} * {} {} * +\n", rhs_row_mapping[candrow],
+                         frac_candrow,
+                         rhs_row_mapping[eqrow], frac_eqrow );
+            else
+               msg.info( "pol {} {} * {} {} * +\n", rhs_row_mapping[candrow],
+                         frac_candrow,
+                         lhs_row_mapping[eqrow], frac_eqrow );
+            msg.info( "del id {}\n", rhs_row_mapping[candrow] );
+            rhs_row_mapping[candrow] = next_constraint_id;
+         }
+         if( !matrix.getRowFlags()[candrow].test( RowFlag::kLhsInf ) )
+         {
+            next_constraint_id++;
+            if( scale > 0)
+               msg.info( "pol {} {} * {} {} * +\n", lhs_row_mapping[candrow],
+                         frac_candrow,
+                         lhs_row_mapping[eqrow], frac_eqrow );
+            else
+               msg.info( "pol {} {} * {} {} * +\n", lhs_row_mapping[candrow],
+                         frac_candrow,
+                         rhs_row_mapping[eqrow], frac_eqrow );
+            msg.info( "del id {}\n", lhs_row_mapping[candrow] );
+            lhs_row_mapping[candrow] = next_constraint_id;
+         }
+         scale_factor[candrow] *= frac_candrow ;
       }
    }
 
@@ -387,15 +420,15 @@ class VeriPb : public CertificateInterface<REAL>
       next_constraint_id++;
       msg.info( "* postsolve stack : row id {}\n", next_constraint_id );
       msg.info( "rup {} {} + {} {} >= {};\n", (int)( values[0] ),
-                var_mapping[indices[0]], (int)( values[1] ),
-                var_mapping[indices[1]], (int)( offset ) );
+                names[var_mapping[indices[0]]], (int)( values[1] ),
+                names[var_mapping[indices[1]]], (int)( offset ) );
 
       int lhs_id = next_constraint_id;
       next_constraint_id++;
       msg.info( "* postsolve stack : row id {}\n", next_constraint_id );
       msg.info( "rup {} ~{} + {} ~{} >= {};\n", (int)( values[0] ),
-                var_mapping[indices[0]], (int)( values[1] ),
-                var_mapping[indices[1]], (int)( offset ) );
+                names[var_mapping[indices[0]]], (int)( values[1] ),
+                names[var_mapping[indices[1]]], (int)( offset ) );
 
       substitute( col, substitute_factor, lhs_id, next_constraint_id,
                   currentProblem );
@@ -603,6 +636,33 @@ class VeriPb : public CertificateInterface<REAL>
 
      };
 
+     std::pair<REAL, REAL>
+     sparsify_convert_scale_to_frac( int eqrow, int candrow, REAL scale,
+                                     const ConstraintMatrix<REAL>& matrix ) const
+     {
+      auto data_eq_row = matrix.getRowCoefficients( eqrow );
+      auto data_cand_row = matrix.getRowCoefficients( candrow );
+      int index_eq_row = 0;
+      int index_cand_row = 0;
+      while( true )
+      {
+         assert( index_eq_row < data_eq_row.getLength() );
+         assert( index_cand_row < data_cand_row.getLength() );
+         if( data_eq_row.getIndices()[index_eq_row] ==
+             data_cand_row.getIndices()[index_cand_row] )
+         {
+            index_eq_row++;
+            index_cand_row++;
+            continue ;
+         }
+         if( data_eq_row.getIndices()[index_eq_row] <
+             data_cand_row.getIndices()[index_cand_row] )
+            break;
+         if( data_eq_row.getIndices()[index_cand_row] < data_cand_row.getIndices()[index_eq_row] )
+            index_eq_row++;
+      }
+      return { data_eq_row.getValues()[index_eq_row], data_cand_row.getValues()[index_cand_row] };
+     }
 
 };
 
