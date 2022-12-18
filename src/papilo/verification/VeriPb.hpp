@@ -203,6 +203,19 @@ class VeriPb : public CertificateInterface<REAL>
       rhs_row_mapping[row] = next_constraint_id;
    }
 
+   //TODO test
+   void
+   change_lhs_inf( int row )
+   {
+      fmt::print( "del id {}\n", lhs_row_mapping[row] );
+   }
+
+   void
+   change_rhs_inf( int row )
+   {
+      fmt::print( "del id {}\n", rhs_row_mapping[row] );
+   }
+
    //TODO test for negative values in the coeff
    void
    update_row( int row, int col, REAL new_val,  const SparseVectorView<REAL>& data,
@@ -478,6 +491,24 @@ class VeriPb : public CertificateInterface<REAL>
          rhs_row_mapping[row] = -1;
       }
    }
+
+   //TODO: test
+   void
+   log_solution( const Solution<REAL>& orig_solution, const Vec<String>& names )
+   {
+      fmt::print( "o " );
+      next_constraint_id++;
+      for( int i = 0; i < orig_solution.primal.size(); i++ )
+      {
+         assert( orig_solution.primal[i] == 0 || orig_solution.primal[i] == 1 );
+         if( orig_solution.primal[i] == 0 )
+            fmt::print( "~" );
+         fmt::print( "{} ", names[i] );
+      }
+      next_constraint_id++;
+      fmt::print( "u >= 1 ;" );
+      fmt::print("c {}", next_constraint_id);
+   };
 
    void
    compress( const Vec<int>& rowmapping, const Vec<int>& colmapping,

@@ -64,6 +64,12 @@ class EmptyCertificate : public CertificateInterface<REAL>
    }
 
    void
+   change_lhs_inf( int row ){};
+
+   void
+   change_rhs_inf( int row ){};
+
+   void
    mark_row_redundant( int row )
    {
    }
@@ -74,17 +80,19 @@ class EmptyCertificate : public CertificateInterface<REAL>
                const Vec<int>& var_mapping ){};
 
    void
-   sparsify( int eqrow, int candrow, REAL scale, const Problem<REAL>& currentProblem)
-   { }
-
-
-   void
    substitute( int col, int row,
                const Problem<REAL>& currentProblem ) {};
 
    void
    substitute( int col, const SparseVectorView<REAL>& equality, REAL offset, const Problem<REAL>& currentProblem, const Vec<String>& names, const Vec<int>& var_mapping )
    { }
+
+   void
+   sparsify( int eqrow, int candrow, REAL scale, const Problem<REAL>& currentProblem)
+   { }
+
+   void
+   log_solution( const Solution<REAL>& orig_solution, const Vec<String>& names ) {};
 
 
    void

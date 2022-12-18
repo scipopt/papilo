@@ -62,6 +62,12 @@ class CertificateInterface
                const Vec<String>& names, const Vec<int>& var_mapping ) = 0;
 
    virtual void
+   change_lhs_inf( int row ) = 0;
+
+   virtual void
+   change_rhs_inf( int row ) = 0;
+
+   virtual void
    mark_row_redundant( int row ) = 0;
 
    virtual void
@@ -70,14 +76,17 @@ class CertificateInterface
                const Vec<String>& names, const Vec<int>& var_mapping ) = 0;
 
    virtual void
-   sparsify( int eqrow, int candrow, REAL scale, const Problem<REAL>& currentProblem ) = 0;
-
-   virtual void
    substitute( int col, int row, const Problem<REAL>& currentProblem ) = 0;
 
    virtual void
    substitute( int col, const SparseVectorView<REAL>& equality, REAL offset,
                const Problem<REAL>& currentProblem, const Vec<String>& names, const Vec<int>& var_mapping ) = 0;
+
+   virtual void
+   sparsify( int eqrow, int candrow, REAL scale, const Problem<REAL>& currentProblem ) = 0;
+
+   virtual void
+   log_solution( const Solution<REAL>& orig_solution, const Vec<String>& names ) = 0;
 
    virtual void
    compress( const Vec<int>& rowmapping, const Vec<int>& colmapping,

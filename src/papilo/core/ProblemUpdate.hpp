@@ -108,10 +108,7 @@ class ProblemUpdate
        std::unique_ptr<CertificateInterface<REAL>>(
            new EmptyCertificate<REAL>() );
 
- public:
 
-   void
-   init_veri_pb( );
 
  private:
    template <typename... Args>
@@ -156,6 +153,14 @@ class ProblemUpdate
    ProblemUpdate( Problem<REAL>& problem, PostsolveStorage<REAL>& postsolve,
                   Statistics& stats, const PresolveOptions& presolveOptions,
                   const Num<REAL>& num, const Message& msg );
+
+   void
+   log_solution( const Solution<REAL>& orig_solution)
+   {
+      certificate_interface->log_solution(orig_solution, problem.getVariableNames());
+   };
+
+   void init_veri_pb( );
 
    void
    setPostponeSubstitutions( bool value )
@@ -2677,7 +2682,7 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
                        RowFlag::kLhsInf ) );
                constraintMatrix.template modifyLeftHandSide<true>(
                    reduction.row, num, REAL{ 0 } );
-
+               certificate_interface->change_lhs_inf(reduction.row);
                ++stats.nsidechgs;
             }
             break;
@@ -2693,6 +2698,7 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
                        RowFlag::kRhsInf ) );
                constraintMatrix.template modifyRightHandSide<true>(
                    reduction.row, num, REAL{ 0 } );
+               certificate_interface->change_rhs_inf(reduction.row);
                ++stats.nsidechgs;
             }
             break;

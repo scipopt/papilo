@@ -302,7 +302,7 @@ class Presolve
 
  private:
    void
-   logStatus( const Problem<REAL>& problem,
+   logStatus( ProblemUpdate<REAL>& problem,
               const PostsolveStorage<REAL>& postsolveStorage ) const;
 
    bool
@@ -887,7 +887,7 @@ Presolve<REAL>::apply( Problem<REAL>& problem, bool store_dual_postsolve )
             }
          }
 
-         logStatus( problem, result.postsolve );
+         logStatus( probUpdate, result.postsolve );
          result.status = PresolveStatus::kReduced;
          if( result.postsolve.postsolveType == PostsolveType::kFull )
          {
@@ -907,7 +907,7 @@ Presolve<REAL>::apply( Problem<REAL>& problem, bool store_dual_postsolve )
          return result;
       }
 
-      logStatus( problem, result.postsolve );
+      logStatus( probUpdate, result.postsolve );
 
       // problem was not changed
       result.status = PresolveStatus::kUnchanged;
@@ -1374,11 +1374,12 @@ Presolve<REAL>::printPresolversStats()
 
 template <typename REAL>
 void
-Presolve<REAL>::logStatus( const Problem<REAL>& problem,
+Presolve<REAL>::logStatus( ProblemUpdate<REAL>& problem_update,
                            const PostsolveStorage<REAL>& postsolveStorage ) const
 {
    if(msg.getVerbosityLevel() == VerbosityLevel::kQuiet)
       return;
+   Problem<REAL>& problem = problem_update.getProblem();
    msg.info( "reduced problem:\n" );
    msg.info( "  reduced rows:     {}\n", problem.getNRows() );
    msg.info( "  reduced columns:  {}\n", problem.getNCols() );
@@ -1388,7 +1389,7 @@ Presolve<REAL>::logStatus( const Problem<REAL>& problem,
              problem.getConstraintMatrix().getNnz() );
    if( problem.getNCols() == 0)
    {
-      // the primaldual can be disabled therefore calculate only primal for obj
+      // the primal dual can be disabled therefore calculate only primal for obj
       Solution<REAL> solution{};
       SolutionType type = postsolveStorage.postsolveType == PostsolveType::kFull
                               ? SolutionType::kPrimalDual
@@ -1401,6 +1402,7 @@ Presolve<REAL>::logStatus( const Problem<REAL>& problem,
       msg.info(
           "problem is solved [optimal solution found] [objective value: {} (double precision)]\n",
           (double) origobj );
+      problem_update.log_solution( solution );
    }
 }
 
