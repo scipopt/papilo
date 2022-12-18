@@ -183,6 +183,7 @@ class VeriPb : public CertificateInterface<REAL>
       assert( num.isIntegral( val * scale_factor[row] ) );
       next_constraint_id++;
       fmt::print( "rup " );
+      int offset = 0;
       for( int i = 0; i < data.getLength(); i++ )
       {
          int coeff = (int) data.getValues()[i] * scale_factor[row];
@@ -190,12 +191,15 @@ class VeriPb : public CertificateInterface<REAL>
          assert( coeff != 0 );
          fmt::print( "{}  ", abs(coeff) );
          if( coeff < 0 )
+         {
             fmt::print( "~" );
+            offset += coeff;
+         }
          fmt::print( "{}",  varname );
          if( i != data.getLength() - 1 )
             fmt::print( " +" );
       }
-      fmt::print( " >= {};\n", (int)( val * scale_factor[row]) );
+      fmt::print( " >= {};\n", (int)( val * scale_factor[row] + offset) );
       rhs_row_mapping[row] = next_constraint_id;
    }
 
