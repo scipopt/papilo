@@ -2647,8 +2647,6 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
          }
          case RowReduction::LHS_INF:
          {
-            //TODO:
-//            assert( !problem.test_problem_type( ProblemFlag::kPseudoBoolean ) );
             if( !rflags[reduction.row].test( RowFlag::kLhsInf ) )
             {
                setRowState( reduction.row, State::kBoundsModified );
@@ -2666,7 +2664,6 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
          }
          case RowReduction::RHS_INF:
          {
-            assert( !problem.test_problem_type( ProblemFlag::kPseudoBoolean ) );
             if( !rflags[reduction.row].test( RowFlag::kRhsInf ) )
             {
                setRowState( reduction.row, State::kBoundsModified );
