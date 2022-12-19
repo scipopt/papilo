@@ -40,6 +40,9 @@ class EmptyCertificate : public CertificateInterface<REAL>
    print_header(){};
 
    void
+   flush(){};
+
+   void
    change_upper_bound( REAL val, const String& name,
                        ArgumentType argument = ArgumentType::kPrimal )
    {

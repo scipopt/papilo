@@ -477,7 +477,7 @@ Presolve<REAL>::apply( Problem<REAL>& problem, bool store_dual_postsolve )
 
       if( presolveOptions.verification_with_VeriPB &&
           problem.test_problem_type( ProblemFlag::kPseudoBoolean ) )
-         probUpdate.init_veri_pb();
+         probUpdate.init_certificate();
 
       for( int i = 0; i != npresolvers; ++i )
       {
@@ -678,6 +678,7 @@ Presolve<REAL>::apply( Problem<REAL>& problem, bool store_dual_postsolve )
       // finally compress problem fully and release excess storage even if
       // problem was not reduced
       probUpdate.compress( true );
+      probUpdate.flush_certificate();
 
       // check whether problem was reduced
       if( stats.ntsxapplied > 0 || stats.nboundchgs > 0 ||

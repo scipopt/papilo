@@ -46,6 +46,9 @@ class CertificateInterface
    print_header() = 0;
 
    virtual void
+   flush() = 0;
+
+   virtual void
    change_upper_bound( REAL val, const String& name,
                        ArgumentType argument = ArgumentType::kPrimal ) = 0;
 

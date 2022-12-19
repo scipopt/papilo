@@ -160,7 +160,14 @@ class ProblemUpdate
       certificate_interface->log_solution(orig_solution, problem.getVariableNames());
    };
 
-   void init_veri_pb( );
+   void
+   init_certificate( );
+
+   void
+   flush_certificate( ){
+      certificate_interface->flush();
+   }
+
 
    void
    setPostponeSubstitutions( bool value )
@@ -3005,7 +3012,7 @@ ProblemUpdate<REAL>::print_detailed( const Reduction<REAL>* first,
 
 template <typename REAL>
 void
-ProblemUpdate<REAL>::init_veri_pb(  )
+ProblemUpdate<REAL>::init_certificate(  )
 {
    certificate_interface = std::unique_ptr<CertificateInterface<REAL>>(
        new VeriPb<REAL>{ problem, num, msg } );
