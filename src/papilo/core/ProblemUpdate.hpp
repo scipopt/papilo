@@ -3015,7 +3015,7 @@ void
 ProblemUpdate<REAL>::init_certificate(  )
 {
    certificate_interface = std::unique_ptr<CertificateInterface<REAL>>(
-       new VeriPb<REAL>{ problem, num, msg } );
+       new VeriPb<REAL>{ problem, num } );
    certificate_interface->print_header();
 }
 
