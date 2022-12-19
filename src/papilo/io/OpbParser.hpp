@@ -175,22 +175,16 @@ class OpbParser
    int nnz = -1;
 
    ParseKey
-   parseRows( const std::string& line );
+   parseRows( std::string& line );
 
    ParseKey
-   parseObjective( const std::string& line );
-
-   Vec<String>
-   split( const char* str );
-
-   bool
-   isNumeric( const String& token );
+   parseObjective( std::string& line );
 
    void
    add_binary_variable( const String& name );
 
-   REAL
-   to_int( const String& token ) const;
+   int
+   read_number( const std::string& s );
 };
 
 template <typename REAL>
@@ -227,9 +221,12 @@ OpbParser<REAL>::parse( boost::iostreams::filtering_istream& file )
 
    while( getline( file, strline ) )
    {
-      if( strline.rfind( '*', 0 ) == 0 || strline.empty() )
+
+      if( strline[0] == '*' || strline.empty() )
          continue;
-      else if( strline.rfind( "min:", 0 ) == 0 )
+      for (char& c : strline)
+         if (c == ';') c = ' ';
+      if( strline.substr(0, 4) == "min:" )
       {
          auto type = parseObjective( strline );
          if( type == ParseKey::kFail )
@@ -252,111 +249,102 @@ OpbParser<REAL>::parse( boost::iostreams::filtering_istream& file )
 
 template <typename REAL>
 ParseKey
-OpbParser<REAL>::parseRows( const std::string& line )
+OpbParser<REAL>::parseRows( std::string& line )
 {
-   auto tokens = split( line.c_str() );
-   bool init_last_value = false;
-   bool operator_occurred = false;
-   REAL last_value;
-   REAL offset = REAL{ 0 };
    rownames.push_back( std::to_string( nRows ) );
    rowname2idx.insert( { std::to_string( nRows ), nRows } );
-   for( String token : tokens )
+
+   unsigned long pos = line.find(">=");
+   std::string line_rhs;
+   int offset = 0;
+   if( pos == std::string::npos )
    {
-      if( token == "<=" )
+      pos = line.find( '=' );
+      row_type.push_back( BoundType::kEq );
+      RowFlags flags{};
+      flags.unset( RowFlag::kRhsInf );
+      flags.unset( RowFlag::kLhsInf );
+      flags.set( RowFlag::kEquation );
+      row_flags.push_back( flags );
+      line_rhs = line.substr( pos + 1 );
+
+   }
+   else
+   {
+      row_type.push_back( BoundType::kGE );
+      RowFlags flags{};
+      flags.set( RowFlag::kRhsInf );
+      flags.unset( RowFlag::kLhsInf );
+      row_flags.push_back( flags );
+      line_rhs = line.substr( pos + 2 );
+   }
+   line = line.substr(0, pos);
+   assert( pos != std::string::npos );
+   assert( line.find( "<=" ) == std::string::npos );
+
+   std::istringstream is(line);
+   std::vector<std::string> tokens;
+   std::string tmp;
+   while (is >> tmp)
+      tokens.push_back(tmp);
+
+   if (tokens.size() % 2 != 0)
+   {
+      fmt::print(
+          "PaPILO does not support non-linear pseudo-boolean equations" );
+      return ParseKey::kFail;
+   }
+   for (int i = 0; i < (long long)tokens.size(); i += 2)
+      if (find(tokens[i].begin(), tokens[i].end(), 'x') != tokens[i].end())
       {
-         row_type.push_back( BoundType::kLE );
-         RowFlags flags{};
-         flags.unset( RowFlag::kRhsInf );
-         flags.set( RowFlag::kLhsInf );
-         row_flags.push_back( flags );
-         operator_occurred = true;
+         fmt::print(
+             "PaPILO does not support non-linear pseudo-boolean equations" );
+         return ParseKey::kFail;
       }
-      else if( token == ">=" )
+
+   for( int counter = 0; counter < (long long)tokens.size(); counter += 2 )
+   {
+      std::string s_coef = tokens[counter];
+      std::string var = tokens[counter + 1];
+      int coef = read_number( s_coef );
+      bool negated = false;
+      if( !var.empty() && var[0] == '~' )
       {
-         row_type.push_back( BoundType::kGE );
-         RowFlags flags{};
-         flags.set( RowFlag::kRhsInf );
-         flags.unset( RowFlag::kLhsInf );
-         row_flags.push_back( flags );
-         operator_occurred = true;
+         negated = true;
+         var = var.substr( 1 );
+         offset += coef;
       }
-      else if( token == "=" )
+      if( var.empty() || var[0] != 'x' )
       {
-         row_type.push_back( BoundType::kEq );
-         RowFlags flags{};
-         flags.unset( RowFlag::kRhsInf );
-         flags.unset( RowFlag::kLhsInf );
-         flags.set( RowFlag::kEquation );
-         row_flags.push_back( flags );
-         operator_occurred = true;
+         fmt::print( "Variable must start with 'x'" );
+         return ParseKey::kFail;
       }
-      else if( isNumeric( token ) )
+
+      auto iterator = colname2idx.find( var );
+      int col = iterator->second;
+      if( iterator == colname2idx.end() )
       {
-         init_last_value = true;
-         if( operator_occurred )
-         {
-            if( row_type[row_type.size() - 1] == BoundType::kEq )
-            {
-               REAL val = to_int( token ) - offset;
-               rowrhs.push_back( val );
-               rowlhs.push_back( val );
-            }
-            else if( row_type[row_type.size() - 1] == BoundType::kGE )
-            {
-               rowlhs.push_back( to_int( token ) - offset );
-               rowrhs.push_back( REAL{ 0 } );
-            }
-            else
-            {
-               assert( row_type[row_type.size() - 1] == BoundType::kLE );
-               rowlhs.push_back( REAL{ 0 } );
-               rowrhs.push_back( to_int( token ) - offset );
-            }
-         }
-         else
-            last_value = to_int( token );
+         col = nCols;
+         add_binary_variable( var );
+         coeffobj.push_back( { nCols, REAL{ 0 } } );
       }
-      else if( token == ";" )
-      {
-         assert( operator_occurred );
-         assert( init_last_value );
-         break;
-      }
-      else
-      {
-         assert( !operator_occurred );
-         std::string& name = token;
-         bool is_negated = false;
-         if( token[0] == '~' )
-         {
-            is_negated = true;
-            offset += last_value;
-            name = token.substr( 1, token.size() );
-         }
-         auto iterator = colname2idx.find( name );
-         int col = iterator->second;
-         if( iterator == colname2idx.end() )
-         {
-            col = nCols;
-            add_binary_variable( name );
-            coeffobj.push_back( { nCols, REAL{ 0 } } );
-         }
-         if( !init_last_value )
-         {
-            fmt::print(
-                "PaPILO does not support non-linear pseudo-boolean equations" );
-            return ParseKey::kFail;
-         }
-         entries.push_back(
-             { nRows, col, is_negated ? -last_value : last_value } );
-         nnz++;
-         init_last_value = false;
-      }
+      entries.push_back( { nRows, col, negated ? -coef : coef } );
+      nnz++;
+   }
+   int rhs = read_number(line_rhs);
+
+   if( row_type[row_type.size() - 1] == BoundType::kEq )
+   {
+      REAL val = rhs - offset;
+      rowrhs.push_back( val );
+      rowlhs.push_back( val );
+   }
+   else if( row_type[row_type.size() - 1] == BoundType::kGE )
+   {
+      rowlhs.push_back( rhs - offset );
+      rowrhs.push_back( REAL{ 0 } );
    }
    nRows++;
-   assert( operator_occurred );
-   assert( init_last_value );
    assert( rowlhs.size() == rowrhs.size() );
    assert( rowlhs.size() == row_flags.size() );
    assert( rowlhs.size() == row_type.size() );
@@ -367,68 +355,68 @@ OpbParser<REAL>::parseRows( const std::string& line )
 
 template <typename REAL>
 ParseKey
-OpbParser<REAL>::parseObjective( const std::string& line )
+OpbParser<REAL>::parseObjective( std::string& line )
 {
-   auto tokens = split( line.c_str() );
-   bool is_last_token_numeric = false;
-   int counter = 0;
-   REAL val;
-   for( String token : tokens )
+   assert(line.substr(0, 4) == "min:");
+
+   line = line.substr( 4 );
+
+   std::istringstream is(line);
+   std::vector<std::string> tokens;
+   std::string tmp;
+   while (is >> tmp)
+      tokens.push_back(tmp);
+
+   if (tokens.size() % 2 != 0)
    {
-      // TODO: token ~
-      if( token == ( "min:" ) )
-      {
-         assert( counter == 0 );
-         counter++;
-      }
-      else if( token == ";" )
-         break;
-      else if( isNumeric( token ) )
-      {
-         assert( !is_last_token_numeric );
-         is_last_token_numeric = true;
-         counter++;
-         val = to_int( token );
-      }
-      else
-      {
-         assert( colname2idx.empty() ||
-                 colname2idx.find( token ) == colname2idx.end() );
-
-         bool is_negated = false;
-         if( token[0] == '~' )
-         {
-            coeffobj.push_back( { nCols, -val } );
-            objoffset += val;
-            add_binary_variable( token.substr( 1, token.size() ) );
-         }
-         else
-         {
-            coeffobj.push_back( { nCols, val } );
-            add_binary_variable( token );
-         }
-         counter++;
-         if( !is_last_token_numeric )
-         {
-            fmt::print(
-                "PaPILO does not support non-linear pseudo-boolean equations" );
-            return ParseKey::kFail;
-         }
-         assert( coeffobj.size() == colnames.size() );
-         is_last_token_numeric = false;
-      }
+      fmt::print(
+          "PaPILO does not support non-linear pseudo-boolean equations" );
+      return ParseKey::kFail;
    }
-   assert( !is_last_token_numeric );
-   return ParseKey::kNone;
-}
+   for (int i = 0; i < (long long)tokens.size(); i += 2)
+      if (find(tokens[i].begin(), tokens[i].end(), 'x') != tokens[i].end())
+      {
+         fmt::print(
+             "PaPILO does not support non-linear pseudo-boolean equations" );
+         return ParseKey::kFail;
+      }
 
-template <typename REAL>
-REAL
-OpbParser<REAL>::to_int( const String& token ) const
-{
-   int val = std::stoi( token );
-   assert( std::stof( token ) == val );
-   return REAL{ (double)val };
+   int offset = 0;
+
+   for( int counter = 0; counter < (long long)tokens.size(); counter += 2 )
+   {
+      std::string s_coef = tokens[counter];
+      std::string var = tokens[counter + 1];
+      int coef = read_number( s_coef );
+      bool negated = false;
+      if( !var.empty() && var[0] == '~' )
+      {
+         negated = true;
+         var = var.substr( 1 );
+         offset += coef;
+      }
+      if( var.empty() || var[0] != 'x' )
+      {
+         fmt::print( "Variable must start with 'x'" );
+         return ParseKey::kFail;
+      }
+
+      auto iterator = colname2idx.find( var );
+      if( negated )
+         objoffset += coef;
+
+      coeffobj.push_back( { nCols, negated ? -coef: coef } );
+      int col = iterator->second;
+      if( iterator == colname2idx.end() )
+      {
+         col = nCols;
+         coeffobj.push_back( { nCols, REAL{ 0 } } );
+      }
+      add_binary_variable( var);
+      entries.push_back( { nRows, col, negated ? -coef : coef } );
+      nnz++;
+   }
+   return ParseKey::kNone;
 }
 
 template <typename REAL>
@@ -448,36 +436,19 @@ OpbParser<REAL>::add_binary_variable( const String& name )
 }
 
 template <typename REAL>
-Vec<String>
-OpbParser<REAL>::split( const char* str )
-{
-   Vec<String> tokens;
-   char c1 = ' ';
-   char c2 = '\t';
-
-   do
-   {
-      const char* begin = str;
-
-      while( *str != c1 && *str != c2 && *str )
-         str++;
-
-      tokens.emplace_back( begin, str );
-
-      while( ( *str == c1 || *str == c2 ) && *str )
-         str++;
-
-   } while( 0 != *str );
-
-   return tokens;
-}
-
-template <typename REAL>
-bool
-OpbParser<REAL>::isNumeric( const String& token )
-{
-   return std::regex_match( token,
-                            std::regex( "(\\+|-)?[0-9]*(\\.?([0-9]+))$" ) );
+int
+OpbParser<REAL>::read_number(const std::string& s) {
+   int answer = 0;
+   bool negated = false;
+   for (char c : s) {
+      if ('0' <= c && c <= '9') {
+         answer *= 10;
+         answer += c - '0';
+      }
+      else if (c == '-')
+         negated = true;
+   }
+   return negated ? -answer : answer;
 }
 
 } // namespace papilo
