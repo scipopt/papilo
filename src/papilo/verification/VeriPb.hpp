@@ -36,6 +36,8 @@ namespace papilo
 {
 
 static const char* const DELETE_CONS = "del id ";
+static const char* const NEGATED = "~";
+static const char* const RUP = "rup ";
 
 template <typename REAL>
 class VeriPb : public CertificateInterface<REAL>
@@ -187,7 +189,7 @@ class VeriPb : public CertificateInterface<REAL>
             offset += coeff;
          else
             //            fmt::print( "~" );
-            proof_out << "~";
+            proof_out << NEGATED;
 
          //         fmt::print( "{}", varname );
          proof_out << varname;
@@ -199,7 +201,7 @@ class VeriPb : public CertificateInterface<REAL>
 
       //      fmt::print( " >= {};\n", (int)( val * scale_factor[row] ) + offset
       //      );
-      proof_out << " >=  " << (int)( val * scale_factor[row] ) + offset
+      proof_out << " >=  " << ( (int)( val ) + offset ) * scale_factor[row]
                 << ";\n";
       rhs_row_mapping[row] = next_constraint_id;
    }
@@ -223,8 +225,8 @@ class VeriPb : public CertificateInterface<REAL>
          proof_out << abs( coeff ) << " ";
          if( coeff < 0 )
          {
-            fmt::print( "~" );
-            proof_out << "~";
+            fmt::print( NEGATED );
+            proof_out << NEGATED;
             offset += coeff;
          }
          //         fmt::print( "{}",  varname );
@@ -234,7 +236,7 @@ class VeriPb : public CertificateInterface<REAL>
       }
       //      fmt::print( " >= {};\n", (int)( val * scale_factor[row] + offset)
       //      );
-      proof_out << " >=  " << (int)( val * scale_factor[row] ) + offset
+      proof_out << " >=  " << ( (int)( val ) + offset ) * scale_factor[row]
                 << ";\n";
 
       rhs_row_mapping[row] = next_constraint_id;
@@ -266,7 +268,7 @@ class VeriPb : public CertificateInterface<REAL>
       {
          next_constraint_id++;
          //         fmt::print( "rup " );
-         proof_out << "rup ";
+         proof_out << RUP;
          int offset = 0;
          for( int i = 0; i < data.getLength(); i++ )
          {
@@ -283,7 +285,7 @@ class VeriPb : public CertificateInterface<REAL>
 
                if( new_val < 0 )
                {
-                  proof_out << "~";
+                  proof_out << NEGATED;
                   offset -= (int)new_val * scale_factor[row];
                }
             }
@@ -296,7 +298,7 @@ class VeriPb : public CertificateInterface<REAL>
                proof_out << abs( val ) << " ";
                if( val < 0 )
                {
-                  proof_out << "~";
+                  proof_out << NEGATED;
                   offset -= val;
                }
             }
@@ -316,7 +318,7 @@ class VeriPb : public CertificateInterface<REAL>
       {
          next_constraint_id++;
          int offset = 0;
-         fmt::print( "rup" );
+         fmt::print( RUP );
          for( int i = 0; i < data.getLength(); i++ )
          {
             if( data.getIndices()[i] == col )
@@ -332,7 +334,7 @@ class VeriPb : public CertificateInterface<REAL>
                if( new_val < 0 )
                   offset += (int)new_val * scale_factor[row];
                else
-                  proof_out << "~";
+                  proof_out << NEGATED;
             }
             else
             {
@@ -344,7 +346,7 @@ class VeriPb : public CertificateInterface<REAL>
                if( val < 0 )
                   offset -= val;
                else
-                  proof_out << "~";
+                  proof_out << NEGATED;
             }
             proof_out << names[var_mapping[col]];
          }
@@ -479,7 +481,7 @@ class VeriPb : public CertificateInterface<REAL>
       else
       {
          auto frac =
-             sparsify_convert_scale_to_frac( eqrow, candrow, scale, matrix );
+             sparsify_convert_scale_to_frac( eqrow, candrow, matrix );
          assert( frac.second / frac.first == -scale );
          int frac_eqrow = abs( (int)( frac.second * scale_candrow ) );
          int frac_candrow = abs( (int)( frac.first * scale_eqrow ) );
@@ -554,7 +556,7 @@ class VeriPb : public CertificateInterface<REAL>
       //      msg.info( "rup {} {} + {} {} >= {};\n", (int)( values[0] ),
       //                names[var_mapping[indices[0]]], (int)( values[1] ),
       //                names[var_mapping[indices[1]]], (int)( offset ) );
-      proof_out << "rup " << (int)( values[0] ) << " "
+      proof_out << RUP << (int)( values[0] ) << " "
                 << names[var_mapping[indices[0]]] << " + " << (int)( values[1] )
                 << " " << names[var_mapping[indices[1]]]
                 << ">= " << (int)( offset ) << ";\n";
@@ -566,7 +568,7 @@ class VeriPb : public CertificateInterface<REAL>
       //      msg.info( "rup {} ~{} + {} ~{} >= {};\n", (int)( values[0] ),
       //                names[var_mapping[indices[0]]], (int)( values[1] ),
       //                names[var_mapping[indices[1]]], (int)( offset ) );
-      proof_out << "rup " << (int)( values[0] ) << " ~"
+      proof_out << RUP << (int)( values[0] ) << " ~"
                 << names[var_mapping[indices[0]]] << " + " << (int)( values[1] )
                 << " ~" << names[var_mapping[indices[1]]]
                 << ">= " << (int)( offset ) << ";\n";
@@ -639,7 +641,7 @@ class VeriPb : public CertificateInterface<REAL>
       {
          assert( orig_solution.primal[i] == 0 || orig_solution.primal[i] == 1 );
          if( orig_solution.primal[i] == 0 )
-            proof_out << "~";
+            proof_out << NEGATED;
          //            fmt::print( "~" );
          //         fmt::print( "{} ", names[i] );
          proof_out << names[i];
@@ -837,7 +839,7 @@ class VeriPb : public CertificateInterface<REAL>
    };
 
    std::pair<REAL, REAL>
-   sparsify_convert_scale_to_frac( int eqrow, int candrow, REAL scale,
+   sparsify_convert_scale_to_frac( int eqrow, int candrow,
                                    const ConstraintMatrix<REAL>& matrix ) const
    {
       auto data_eq_row = matrix.getRowCoefficients( eqrow );
