@@ -76,27 +76,29 @@ struct OpbWriter
 
       if( prob.getNumContinuousCols() > 0 )
       {
-         fmt::print("Problem contains continuous variables. Opb is not the write format.");
+         fmt::print( "Problem contains continuous variables. Opb is not the "
+                     "write format." );
          return false;
       }
       for( int i = 0; i < prob.getNumIntegralCols(); ++i )
       {
          if( !prob.getVariableDomains().isBinary( i ) )
          {
-            fmt::print("Problem contains non binary integer variables. Opb is not the write format.");
+            fmt::print( "Problem contains non binary integer variables. Opb is "
+                        "not the write format." );
             return false;
          }
       }
       for( int i = 0; i < prob.getNRows(); ++i )
       {
-         auto vector = matrix.getRowCoefficients(i);
+         auto vector = matrix.getRowCoefficients( i );
          for( int j = 0; j < vector.getLength(); j++ )
-            //TODO: check values
-            //if( !num.isIntegral( vector.getValues()[j] ) )
-            {
-            //   fmt::print( "Matrix contains fractional values. Opb is not the write format." );
-            //   return false;
-            }
+         // TODO: check values and rhs and lhs
+         // if( !num.isIntegral( vector.getValues()[j] ) )
+         {
+            //   fmt::print( "Matrix contains fractional values. Opb is not the
+            //   write format." ); return false;
+         }
       }
       out.push( file );
 
@@ -120,7 +122,7 @@ struct OpbWriter
 
       if( obj_has_nonzeros )
       {
-         fmt::print(out, "min: ");
+         fmt::print( out, "min: " );
          for( int i = 0; i < prob.getNCols(); i++ )
          {
             REAL coef = obj.coefficients[i];
@@ -129,13 +131,14 @@ struct OpbWriter
             fmt::print( out, "{}{} {} ", coef > 0 ? "+" : "-", abs( (int)coef ),
                         varnames[col_mapping[i]] );
          }
-         int obj_offset = (int) prob.getObjective().offset;
+         int obj_offset = (int)prob.getObjective().offset;
          if( obj_offset != 0 )
-            fmt::print( out, "{}{} ", obj_offset > 0 ? "+" : "-", abs( obj_offset ) );
+            fmt::print( out, "{}{} ", obj_offset > 0 ? "+" : "-",
+                        abs( obj_offset ) );
          fmt::print( ";\n" );
       }
 
-      //TODO: scaling and more
+      // TODO: scaling and more
       for( int row = 0; row < matrix.getNRows(); ++row )
       {
          assert( !matrix.isRowRedundant( row ) );
@@ -153,15 +156,16 @@ struct OpbWriter
                            abs( (int)val ),
                            varnames[col_mapping[vector.getIndices()[j]]] );
             }
-            if(row_flags[row].test( RowFlag::kEquation ))
-               fmt::print(out, "= ");
+            if( row_flags[row].test( RowFlag::kEquation ) )
+               fmt::print( out, "= " );
             else
-               fmt::print(out, ">= ");
-            fmt::print(out, " {} ;\n", lhs[row]);
+               fmt::print( out, ">= " );
+            fmt::print( out, " {} ;\n", (int)( lhs[row] ) );
          }
-         else{
-            assert(row_flags[row].test( RowFlag::kLhsInf ));
-            assert(!row_flags[row].test( RowFlag::kRhsInf ));
+         else
+         {
+            assert( row_flags[row].test( RowFlag::kLhsInf ) );
+            assert( !row_flags[row].test( RowFlag::kRhsInf ) );
             auto vector = matrix.getRowCoefficients( row );
             for( int j = 0; j < vector.getLength(); j++ )
             {
@@ -171,13 +175,12 @@ struct OpbWriter
                            abs( (int)val ),
                            varnames[col_mapping[vector.getIndices()[j]]] );
             }
-            if(row_flags[row].test( RowFlag::kEquation ))
-               fmt::print(out, "= ");
+            if( row_flags[row].test( RowFlag::kEquation ) )
+               fmt::print( out, "= " );
             else
-               fmt::print(out, ">= ");
-            fmt::print(out, " {} ;\n", rhs[row]);
+               fmt::print( out, ">= " );
+            fmt::print( out, " {} ;\n", (int)( rhs[row] ) );
          }
-
       }
       return true;
    }
