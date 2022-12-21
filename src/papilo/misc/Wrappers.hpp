@@ -28,6 +28,7 @@
 #include "papilo/core/postsolve/Postsolve.hpp"
 #include "papilo/io/Parser.hpp"
 #include "papilo/io/MpsWriter.hpp"
+#include "papilo/io/OpbWriter.hpp"
 #include "papilo/io/SolParser.hpp"
 #include "papilo/io/SolWriter.hpp"
 #include "papilo/misc/NumericalStatistics.hpp"
@@ -275,9 +276,22 @@ presolve_and_solve(
       {
          Timer t( writetime );
 
-         MpsWriter<REAL>::writeProb( opts.reduced_problem_file, problem,
-                                     result.postsolve.origrow_mapping,
-                                     result.postsolve.origcol_mapping );
+         if(boost::algorithm::ends_with( opts.reduced_problem_file, ".opb" )
+             || boost::algorithm::ends_with( opts.reduced_problem_file, ".opb.bz2" )
+             || boost::algorithm::ends_with( opts.reduced_problem_file, ".opb.gz" ))
+         {
+            bool success = OpbWriter<REAL>::writeProb( opts.reduced_problem_file, problem,
+                                        result.postsolve.origcol_mapping );
+            //TODO: change name
+            if(!success)
+               MpsWriter<REAL>::writeProb( opts.reduced_problem_file, problem,
+                                           result.postsolve.origrow_mapping,
+                                           result.postsolve.origcol_mapping );
+         }
+         else
+            MpsWriter<REAL>::writeProb( opts.reduced_problem_file, problem,
+                                        result.postsolve.origrow_mapping,
+                                        result.postsolve.origcol_mapping );
 
          fmt::print( "reduced problem written to {} in {:.3f} seconds\n\n",
                      opts.reduced_problem_file, t.getTime() );

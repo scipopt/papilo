@@ -92,8 +92,14 @@ class VeriPb : public CertificateInterface<REAL>
       auto problem_name = _problem.getName();
       int length = problem_name.length();
       int ending = 4;
+#ifdef PAPILO_USE_BOOST_IOSTREAMS_WITH_ZLIB
       if( problem_name.substr( length - 3 ) == ".gz" )
          ending = 7;
+#endif
+#ifdef PAPILO_USE_BOOST_IOSTREAMS_WITH_BZIP2
+      if( problem_name.substr( length - 4 ) == ".bz2" )
+         ending = 8;
+#endif
       proof_out = std::ofstream(
              problem_name.substr( 0, length - ending ) + ".pbp" );
    }

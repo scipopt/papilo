@@ -346,6 +346,7 @@ install(FILES
      ${PROJECT_SOURCE_DIR}/src/papilo/io/MpsParser.hpp
      ${PROJECT_SOURCE_DIR}/src/papilo/io/MpsWriter.hpp
      ${PROJECT_SOURCE_DIR}/src/papilo/io/OpbParser.hpp
+     ${PROJECT_SOURCE_DIR}/src/papilo/io/OpbWriter.hpp
      ${PROJECT_SOURCE_DIR}/src/papilo/io/ParseKey.hpp
      ${PROJECT_SOURCE_DIR}/src/papilo/io/Parser.hpp
      ${PROJECT_SOURCE_DIR}/src/papilo/io/SolParser.hpp

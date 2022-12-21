@@ -21,8 +21,8 @@
 /*                                                                           */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef _PAPILO_IO_MPS_WRITER_
-#define _PAPILO_IO_MPS_WRITER_
+#ifndef _PAPILO_IO_OPB_WRITER_
+#define _PAPILO_IO_OPB_WRITER_
 
 #include "papilo/Config.hpp"
 #include "papilo/core/Problem.hpp"
@@ -46,17 +46,17 @@ namespace papilo
 
 /// Writer to write problem structures into an opb file
 template <typename REAL>
-struct MpsWriter
+struct OpbWriter
 {
    static bool
    writeProb( const std::string& filename, const Problem<REAL>& prob,
-              const Vec<int>& row_mapping, const Vec<int>& col_mapping )
+              const Vec<int>& col_mapping )
    {
-      const ConstraintMatrix<REAL>& consmatrix = prob.getConstraintMatrix();
+      const ConstraintMatrix<REAL>& matrix = prob.getConstraintMatrix();
       const Vec<std::string>& consnames = prob.getConstraintNames();
       const Vec<std::string>& varnames = prob.getVariableNames();
-      const Vec<REAL>& lhs = consmatrix.getLeftHandSides();
-      const Vec<REAL>& rhs = consmatrix.getRightHandSides();
+      const Vec<REAL>& lhs = matrix.getLeftHandSides();
+      const Vec<REAL>& rhs = matrix.getRightHandSides();
       const Objective<REAL>& obj = prob.getObjective();
       const Vec<ColFlags>& col_flags = prob.getColFlags();
       const Vec<RowFlags>& row_flags = prob.getRowFlags();
@@ -75,25 +75,40 @@ struct MpsWriter
 #endif
 
       if( prob.getNumContinuousCols() > 0 )
+      {
+         fmt::print("Problem contains continuous variables. Opb is not the write format.");
          return false;
+      }
       for( int i = 0; i < prob.getNumIntegralCols(); ++i )
       {
          if( !prob.getVariableDomains().isBinary( i ) )
+         {
+            fmt::print("Problem contains non binary integer variables. Opb is not the write format.");
             return false;
+         }
       }
-
+      for( int i = 0; i < prob.getNRows(); ++i )
+      {
+         auto vector = matrix.getRowCoefficients(i);
+         for( int j = 0; j < vector.getLength(); j++ )
+            //TODO: check values
+            //if( !num.isIntegral( vector.getValues()[j] ) )
+            {
+            //   fmt::print( "Matrix contains fractional values. Opb is not the write format." );
+            //   return false;
+            }
+      }
       out.push( file );
 
-      fmt::print( out, "*ROWS:         {}\n", consmatrix.getNRows() );
-      fmt::print( out, "*INTEGER:      {}\n", prob.getNumIntegralCols() );
-      fmt::print( out, "*NONZERO:      {}\n*\n*\n", consmatrix.getNnz() );
-
-      fmt::print( out, "min: ", consmatrix.getNnz() );
+      fmt::print( out, "*NAME          {}\n", prob.getName() );
+      fmt::print( out, "*ROWS:         {}\n", matrix.getNRows() );
+      fmt::print( out, "*VARIABLES:    {}\n", prob.getNumIntegralCols() );
+      fmt::print( out, "*NONZERO:      {}\n*\n*\n", matrix.getNnz() );
 
       bool obj_has_nonzeros = false;
-      if( prob.getObjective().offset != 0 )
+      if( obj.offset != 0 )
       {
-         for( auto coef : prob.getObjective().coefficients )
+         for( auto coef : obj.coefficients )
             if( coef != 0 )
             {
                obj_has_nonzeros = true;
@@ -103,50 +118,66 @@ struct MpsWriter
       else
          obj_has_nonzeros = true;
 
-      if( objective_has_nonzeros( prob.getObjective() ) )
+      if( obj_has_nonzeros )
       {
-         int offset = 0;
+         fmt::print(out, "min: ");
          for( int i = 0; i < prob.getNCols(); i++ )
          {
-            REAL coef = prob.getObjective().coefficients[i];
+            REAL coef = obj.coefficients[i];
             if( coef == 0 )
                continue;
-            if( coef < 0 )
-               offset += abs( (int)coef );
-            fmt::print( out, "+{} {} ", coef > 0 ? "" : "~", abs( (int)coef ),
-                        prob.getConstraintNames()[col_mapping[i]] );
+            fmt::print( out, "{}{} {} ", coef > 0 ? "+" : "-", abs( (int)coef ),
+                        varnames[col_mapping[i]] );
          }
-         assert( prob.getObjective().offset >= 0 );
-         int obj_offset = (int) prob.getObjective().offset + offset;
+         int obj_offset = (int) prob.getObjective().offset;
          if( obj_offset != 0 )
-            fmt::print( out, "+{} ", abs( obj_offset ) );
-         fmt::print( "\n;" );
-      };
+            fmt::print( out, "+{} ", obj_offset > 0 ? "+" : "-", abs( obj_offset ) );
+         fmt::print( ";\n" );
+      }
 
       //TODO: scaling and more
-      for( int i = 0; i < consmatrix.getNRows(); ++i )
+      for( int row = 0; row < matrix.getNRows(); ++row )
       {
-         assert( !consmatrix.isRowRedundant( i ) );
+         assert( !matrix.isRowRedundant( row ) );
          char type;
-         if( row_flags[i].test( RowFlag::kEquation ) &&
-             row_flags[i].test( RowFlag::kRhsInf ) )
+         if( row_flags[row].test( RowFlag::kEquation ) &&
+             row_flags[row].test( RowFlag::kRhsInf ) )
          {
-            assert( row_flags[i].test( RowFlag::kLhsInf ) );
+            assert( !row_flags[row].test( RowFlag::kLhsInf ) );
+            auto vector = matrix.getRowCoefficients( row );
+            for( int j = 0; j < vector.getLength(); j++ )
+            {
+               REAL val = vector.getValues()[j];
+               assert( !val == 0 );
+               fmt::print( out, "{}{} {} ", val > 0 ? "+" : "-",
+                           abs( (int)val ),
+                           varnames[col_mapping[vector.getIndices()[j]]] );
+            }
+            if(row_flags[row].test( RowFlag::kEquation ))
+               fmt::print(out, "= ");
+            else
+               fmt::print(out, ">= ");
+            fmt::print(out, " {} ;\n", lhs[row]);
+         }
+         else{
+            assert(row_flags[row].test( RowFlag::kLhsInf ));
+            assert(!row_flags[row].test( RowFlag::kRhsInf ));
+            auto vector = matrix.getRowCoefficients( row );
+            for( int j = 0; j < vector.getLength(); j++ )
+            {
+               REAL val = vector.getValues()[j];
+               assert( !val == 0 );
+               fmt::print( out, "{}{} {} ", val < 0 ? "+" : "-",
+                           abs( (int)val ),
+                           varnames[col_mapping[vector.getIndices()[j]]] );
+            }
+            if(row_flags[row].test( RowFlag::kEquation ))
+               fmt::print(out, "= ");
+            else
+               fmt::print(out, ">= ");
+            fmt::print(out, " {} ;\n", rhs[row]);
          }
 
-         if( row_flags[i].test( RowFlag::kLhsInf ) &&
-             row_flags[i].test( RowFlag::kRhsInf ) )
-            type = 'N';
-         else if( row_flags[i].test( RowFlag::kRhsInf ) )
-            type = 'G';
-         else if( row_flags[i].test( RowFlag::kLhsInf ) )
-            type = 'L';
-         else
-         {
-            type = 'E';
-         }
-
-         fmt::print( out, " {}  {}\n", type, consnames[row_mapping[i]] );
       }
       return true;
    }
