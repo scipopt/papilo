@@ -131,7 +131,7 @@ struct OpbWriter
          }
          int obj_offset = (int) prob.getObjective().offset;
          if( obj_offset != 0 )
-            fmt::print( out, "+{} ", obj_offset > 0 ? "+" : "-", abs( obj_offset ) );
+            fmt::print( out, "{}{} ", obj_offset > 0 ? "+" : "-", abs( obj_offset ) );
          fmt::print( ";\n" );
       }
 
