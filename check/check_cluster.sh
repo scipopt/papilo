@@ -107,7 +107,7 @@ export PAPILO_OPT_COMMAND
 
 
 # configure cluster-related environment variables
-# defines the following environment variables: NICE, ACCOUNT, CLUSTERQUEUE
+# defines the following environment variables: NICE, ACCOUNT, CLUSTERQUEUE, CONSTRAINT
 . ./configuration_cluster.sh "${QUEUE}" "${PPN}" "${EXCLUSIVE}" "${QUEUETYPE}"
 
 # the srun queue requires a format duration HH:MM:SS (and optionally days),
@@ -234,9 +234,9 @@ do
 
                     if test "${CLUSTERNODES}" = "all"
                     then
-                        sbatch --job-name="${JOBNAME}" --mem="${HARDMEMLIMIT}" -p "${CLUSTERQUEUE}" -A "${SLURMACCOUNT}" ${NICE} --time="${HARDTIMELIMIT}" --cpu-freq=highm1 ${EXCLUSIVE} --output=/dev/null run.sh
+                        sbatch --job-name="${JOBNAME}" --constraint="${CONSTRAINT}" --mem="${HARDMEMLIMIT}" -p "${CLUSTERQUEUE}" -A "${SLURMACCOUNT}" ${NICE} --time="${HARDTIMELIMIT}" --cpu-freq=highm1 ${EXCLUSIVE} --output=/dev/null run.sh
                     else
-                        sbatch --job-name="${JOBNAME}" --mem="${HARDMEMLIMIT}" -p "${CLUSTERQUEUE}" -A "${SLURMACCOUNT}" ${NICE} --time="${HARDTIMELIMIT}" --cpu-freq=highm1 ${EXCLUSIVE} -w "${CLUSTERNODES}" --output=/dev/null run.sh
+                        sbatch --job-name="${JOBNAME}" --constraint="${CONSTRAINT}" --mem="${HARDMEMLIMIT}" -p "${CLUSTERQUEUE}" -A "${SLURMACCOUNT}" ${NICE} --time="${HARDTIMELIMIT}" --cpu-freq=highm1 ${EXCLUSIVE} -w "${CLUSTERNODES}" --output=/dev/null run.sh
                     fi
                 else
                     # -V to copy all environment variables
