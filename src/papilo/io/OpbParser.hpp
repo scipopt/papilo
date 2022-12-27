@@ -129,7 +129,7 @@ class OpbParser
    parse( boost::iostreams::filtering_istream& file );
 
    /*
-    * data for mps problem
+    * data for opb problem
     */
 
    Vec<Triplet<REAL>> entries;
