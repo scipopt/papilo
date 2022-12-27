@@ -151,7 +151,7 @@ struct OpbWriter
             for( int j = 0; j < vector.getLength(); j++ )
             {
                REAL val = vector.getValues()[j];
-               assert( !val == 0 );
+               assert( val != 0 );
                fmt::print( out, "{}{} {} ", val > 0 ? "+" : "-",
                            abs( (int)val ),
                            varnames[col_mapping[vector.getIndices()[j]]] );
@@ -170,7 +170,7 @@ struct OpbWriter
             for( int j = 0; j < vector.getLength(); j++ )
             {
                REAL val = vector.getValues()[j];
-               assert( !val == 0 );
+               assert( val != 0 );
                fmt::print( out, "{}{} {} ", val < 0 ? "+" : "-",
                            abs( (int)val ),
                            varnames[col_mapping[vector.getIndices()[j]]] );
