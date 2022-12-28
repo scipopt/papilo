@@ -2562,10 +2562,11 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
                                                  reduction.newval );
             postsolve.storeRowBoundChangeForcedByRow( true, reduction.row,
                                                       reduction.newval, false );
-            certificate_interface->change_lhs(
-                reduction.row, reduction.newval,
-                constraintMatrix.getRowCoefficients( reduction.row ),
-                problem.getVariableNames(), postsolve.origcol_mapping );
+            const auto& prev_reduction = *(iter-1);
+            assert( prev_reduction.col ==
+                    RowReduction::REASON_FOR_LESS_RESTRICTIVE_BOUND_CHANGE );
+            certificate_interface->change_lhs_parallel_row(
+                reduction.row, reduction.newval,prev_reduction.row, problem );
 
             ++stats.nsidechgs;
             break;
@@ -2669,10 +2670,12 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
                                                   reduction.newval );
             postsolve.storeRowBoundChangeForcedByRow( false, reduction.row,
                                                       reduction.newval, false );
-            certificate_interface->change_rhs(
-                reduction.row, reduction.newval,
-                constraintMatrix.getRowCoefficients( reduction.row ),
-                problem.getVariableNames(), postsolve.origcol_mapping );
+
+            const auto& prev_reduction = *(iter-1);
+            assert( prev_reduction.col ==
+                    RowReduction::REASON_FOR_LESS_RESTRICTIVE_BOUND_CHANGE );
+            certificate_interface->change_lhs_parallel_row(
+                reduction.row, reduction.newval,prev_reduction.row, problem );
 
             ++stats.nsidechgs;
             break;

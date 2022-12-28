@@ -67,6 +67,16 @@ class EmptyCertificate : public CertificateInterface<REAL>
    }
 
    void
+   change_rhs_parallel_row( int row, REAL val, int parallel_row,  const Problem<REAL>& problem)
+   {
+   }
+
+   void
+   change_lhs_parallel_row( int row, REAL val, int parallel_row,  const Problem<REAL>& problem)
+   {
+   }
+
+   void
    change_lhs_inf( int row ){};
 
    void
