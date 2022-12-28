@@ -310,7 +310,7 @@ class VeriPb : public CertificateInterface<REAL>
             //            fmt::print( "{}", names[var_mapping[col]] );
             proof_out << names[var_mapping[col]];
          }
-         fmt::print( " >= {} ;\n", (int)lhs * scale_factor[row] + offset );
+         //fmt::print( " >= {} ;\n", (int)lhs * scale_factor[row] + offset );
          proof_out << " >=  " << (int)( lhs * scale_factor[row] ) + offset
                    << ";\n";
          //         fmt::print( "del id {}\n", lhs_row_mapping[row] );
