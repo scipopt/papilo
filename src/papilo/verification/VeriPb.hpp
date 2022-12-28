@@ -40,6 +40,7 @@ static const char* const NEGATED = "~";
 static const char* const RUP = "rup ";
 static const char* const COMMENT = "* ";
 static const char* const POL = "pol ";
+static const int UNKNOWN = -1;
 
 template <typename REAL>
 class VeriPb : public CertificateInterface<REAL>
@@ -61,6 +62,11 @@ class VeriPb : public CertificateInterface<REAL>
 
    Num<REAL> num;
 
+
+   bool skip_deleting_rhs_constraint_id = UNKNOWN;
+   bool skip_deleting_lhs_constraint_id = UNKNOWN;
+
+
    VeriPb() = default;
 
    VeriPb( const Problem<REAL>& _problem, const Num<REAL>& _num )
@@ -79,14 +85,14 @@ class VeriPb : public CertificateInterface<REAL>
             lhs_row_mapping.push_back( next_constraint_id );
          }
          else
-            lhs_row_mapping.push_back( -1 );
+            lhs_row_mapping.push_back( UNKNOWN );
          if( !_problem.getRowFlags()[i].test( RowFlag::kRhsInf ) )
          {
             next_constraint_id++;
             rhs_row_mapping.push_back( next_constraint_id );
          }
          else
-            rhs_row_mapping.push_back( -1 );
+            rhs_row_mapping.push_back( UNKNOWN );
       }
       assert( rhs_row_mapping.size() == lhs_row_mapping.size() );
       assert( rhs_row_mapping.size() == nRowsOriginal );
@@ -248,16 +254,24 @@ class VeriPb : public CertificateInterface<REAL>
                     problem.getConstraintMatrix()
                         .getRowCoefficients( row )
                         .getValues()[0];
-      if( factor == 1 )
+      if( abs(factor) == 1 )
       {
-         assert( rhs_row_mapping[row] == -1 );
-         rhs_row_mapping[row] = rhs_row_mapping[parallel_row];
+         assert( rhs_row_mapping[row] == UNKNOWN );
+         assert( ( rhs_row_mapping[parallel_row] != UNKNOWN && factor == 1 ) ||
+                 ( factor == UNKNOWN && lhs_row_mapping[parallel_row] ) );
+
+         proof_out << COMMENT << rhs_row_mapping[parallel_row]  << " and " <<
+             lhs_row_mapping[row] << " are parallel.\n";
+         if(factor == 1)
+            rhs_row_mapping[row] = rhs_row_mapping[parallel_row];
+         else
+            rhs_row_mapping[row] = lhs_row_mapping[parallel_row];
       }
       else
       {
          assert( false );
       }
-      //TODO: skip deleting row
+      skip_deleting_lhs_constraint_id = rhs_row_mapping[row];
 
    }
 
@@ -270,16 +284,22 @@ class VeriPb : public CertificateInterface<REAL>
                     problem.getConstraintMatrix()
                         .getRowCoefficients( row )
                         .getValues()[0];
-      if( factor == 1 )
+      if( abs(factor) == 1 )
       {
-         assert( rhs_row_mapping[row] == -1 );
-         lhs_row_mapping[row] = lhs_row_mapping[parallel_row];
-      }
+         assert( lhs_row_mapping[row] == UNKNOWN );
+         assert( ( lhs_row_mapping[parallel_row] != UNKNOWN && factor == 1 ) ||
+                 ( factor == UNKNOWN && rhs_row_mapping[parallel_row] ) );
+         proof_out << COMMENT << lhs_row_mapping[parallel_row]  << " and " <<
+             rhs_row_mapping[row] << " are parallel.\n";
+         if(factor == 1)
+            lhs_row_mapping[row] = lhs_row_mapping[parallel_row];
+         else
+            lhs_row_mapping[row] = rhs_row_mapping[parallel_row];      }
       else
       {
          assert( false );
       }
-      //TODO: skip deleting row
+      skip_deleting_lhs_constraint_id = lhs_row_mapping[row];
    }
 
    // TODO test
@@ -657,18 +677,26 @@ class VeriPb : public CertificateInterface<REAL>
    void
    mark_row_redundant( int row )
    {
-      assert( lhs_row_mapping[row] != -1 || rhs_row_mapping[row] != -1 );
-      if( lhs_row_mapping[row] != -1 )
+      assert( lhs_row_mapping[row] != UNKNOWN || rhs_row_mapping[row] != UNKNOWN );
+      if( lhs_row_mapping[row] != UNKNOWN )
       {
-         //         msg.info( "del id {}\n", (int)lhs_row_mapping[row] );
-         proof_out << DELETE_CONS << lhs_row_mapping[row] << "\n";
-         lhs_row_mapping[row] = -1;
+         if(lhs_row_mapping[row] == skip_deleting_lhs_constraint_id)
+            skip_deleting_lhs_constraint_id = UNKNOWN;
+         else
+         {
+            proof_out << DELETE_CONS << lhs_row_mapping[row] << "\n";
+            lhs_row_mapping[row] = UNKNOWN;
+         }
       }
-      if( rhs_row_mapping[row] != -1 )
+      if( rhs_row_mapping[row] != UNKNOWN )
       {
-         //         msg.info( "del id {}\n", (int)rhs_row_mapping[row] );
-         proof_out << DELETE_CONS << rhs_row_mapping[row] << "\n";
-         rhs_row_mapping[row] = -1;
+         if(rhs_row_mapping[row] == skip_deleting_rhs_constraint_id)
+            skip_deleting_rhs_constraint_id = UNKNOWN;
+         else
+         {
+            proof_out << DELETE_CONS << rhs_row_mapping[row] << "\n";
+            rhs_row_mapping[row] = UNKNOWN;
+         }
       }
    }
 
@@ -738,7 +766,7 @@ class VeriPb : public CertificateInterface<REAL>
  private:
    void
    substitute( int col, REAL substitute_factor, int lhs_id, int rhs_id,
-               const Problem<REAL>& currentProblem, int skip_row_id = -1 )
+               const Problem<REAL>& currentProblem, int skip_row_id = UNKNOWN )
    {
       const ConstraintMatrix<REAL>& matrix =
           currentProblem.getConstraintMatrix();

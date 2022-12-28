@@ -2674,7 +2674,7 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
             const auto& prev_reduction = *(iter-1);
             assert( prev_reduction.col ==
                     RowReduction::REASON_FOR_LESS_RESTRICTIVE_BOUND_CHANGE );
-            certificate_interface->change_lhs_parallel_row(
+            certificate_interface->change_rhs_parallel_row(
                 reduction.row, reduction.newval,prev_reduction.row, problem );
 
             ++stats.nsidechgs;
