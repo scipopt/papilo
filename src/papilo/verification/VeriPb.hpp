@@ -175,7 +175,6 @@ class VeriPb : public CertificateInterface<REAL>
       }
    }
 
-   // TODO: test change_rhs and change_lhs
    void
    change_rhs( int row, REAL val, const SparseVectorView<REAL>& data,
                const Vec<String>& names, const Vec<int>& var_mapping )
@@ -183,37 +182,28 @@ class VeriPb : public CertificateInterface<REAL>
 
       assert( num.isIntegral( val * scale_factor[row] ) );
       next_constraint_id++;
-      //      fmt::print( "rup " );
       proof_out << RUP;
       int offset = 0;
       for( int i = 0; i < data.getLength(); i++ )
       {
          int coeff = (int)data.getValues()[i] * scale_factor[row];
          assert( coeff != 0 );
-         //         fmt::print( "{} ", abs( coeff ) );
          proof_out << abs( coeff ) << " ";
          if( coeff < 0 )
+         {
             offset += coeff;
-         else
-            //            fmt::print( "~" );
             proof_out << NEGATED;
-
-         //         fmt::print( "{}", varname );
+         }
          proof_out << names[var_mapping[data.getIndices()[i]]];
 
          if( i != data.getLength() - 1 )
-            //            fmt::print( " +" );
             proof_out << " +";
       }
-
-      //      fmt::print( " >= {};\n", (int)( val * scale_factor[row] ) + offset
-      //      );
-      proof_out << " >=  " << ( (int)( val ) + offset ) * scale_factor[row]
+      proof_out << " >=  " << ( abs(offset) - (int)( val ) ) * scale_factor[row]
                 << ";\n";
       rhs_row_mapping[row] = next_constraint_id;
    }
 
-   // TODO: test change_rhs and change_lhs
    void
    change_lhs( int row, REAL val, const SparseVectorView<REAL>& data,
                const Vec<String>& names, const Vec<int>& var_mapping )
