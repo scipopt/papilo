@@ -182,7 +182,7 @@ class VeriPb : public CertificateInterface<REAL>
       assert( num.isIntegral( val * scale_factor[row] ) );
       next_constraint_id++;
       //      fmt::print( "rup " );
-      proof_out << "rup";
+      proof_out << "rup ";
       int offset = 0;
       for( int i = 0; i < data.getLength(); i++ )
       {
@@ -220,7 +220,7 @@ class VeriPb : public CertificateInterface<REAL>
       assert( num.isIntegral( val * scale_factor[row] ) );
       next_constraint_id++;
       //      fmt::print( "rup " );
-      proof_out << "rup";
+      proof_out << "rup ";
       int offset = 0;
       for( int i = 0; i < data.getLength(); i++ )
       {
