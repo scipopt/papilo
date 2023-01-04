@@ -141,6 +141,7 @@ set(unit_tests
         "parallel-row-mixed-second-row-equation"
         "parallel-row-mixed-infeasible-second-row-equation"
         "parallel-row-multiple-parallel-rows"
+        "parallel-row-two-identical-equations"
 
         #parallel Column Detection
         "parallel_col_detection_2_integer_columns"
