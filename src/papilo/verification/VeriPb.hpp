@@ -245,6 +245,7 @@ class VeriPb : public CertificateInterface<REAL>
    }
 
 
+   //TODO: consider scale factor
    void
    change_rhs_parallel_row( int row, REAL val, int parallel_row,  const Problem<REAL>& problem)
    {
