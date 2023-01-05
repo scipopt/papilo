@@ -65,7 +65,7 @@ class CertificateInterface
                const Vec<String>& names, const Vec<int>& var_mapping ) = 0;
 
    virtual void
-   change_rhs_parallel_row( int row, REAL val, int parallel_row,  const Problem<REAL>& problem) = 0;
+   change_rhs_parallel_row( int row, REAL val, int parallel_row,  const Problem<REAL>& problem, const Vec<int>& var_mapping) = 0;
 
    virtual void
    change_lhs_parallel_row( int row, REAL val, int parallel_row,  const Problem<REAL>& problem) = 0;
