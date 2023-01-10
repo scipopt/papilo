@@ -351,7 +351,7 @@ class VeriPb : public CertificateInterface<REAL>
                   continue;
                if( i != 0 )
                   proof_out << " +";
-               proof_out << abs( (int)new_val * scale_factor[row] ) << " ";
+               proof_out << abs( (int) new_val * scale_factor[row] ) << " ";
 
                if( new_val < 0 )
                {
@@ -580,13 +580,13 @@ class VeriPb : public CertificateInterface<REAL>
       if(values[0] < 0)
       {
          proof_out << NEGATED;
-         lhs += (int) values[0];
+         lhs += abs((int) values[0]);
       }
       proof_out << names[var_mapping[indices[0]]] << " +" << abs( (int)( values[1] )) << " ";
       if(values[1] < 0)
       {
          proof_out << NEGATED;
-         lhs += (int) values[1];
+         lhs += abs((int) values[1]);
       }
       proof_out << names[var_mapping[indices[1]]] << " >= " << lhs << ";\n";
       int lhs_id = next_constraint_id;
