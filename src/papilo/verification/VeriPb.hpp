@@ -63,8 +63,8 @@ class VeriPb : public CertificateInterface<REAL>
    Num<REAL> num;
 
 
-   bool skip_deleting_rhs_constraint_id = UNKNOWN;
-   bool skip_deleting_lhs_constraint_id = UNKNOWN;
+   int skip_deleting_rhs_constraint_id = UNKNOWN;
+   int skip_deleting_lhs_constraint_id = UNKNOWN;
 
 
    VeriPb() = default;
@@ -246,7 +246,7 @@ class VeriPb : public CertificateInterface<REAL>
       if( abs(factor) == 1 )
       {
          assert( ( rhs_row_mapping[row] != UNKNOWN && factor == 1 ) ||
-                 ( factor == UNKNOWN && lhs_row_mapping[row] ) );
+                 ( factor == -1 && lhs_row_mapping[row] != UNKNOWN ) );
 
          if( factor == 1 )
          {
@@ -288,15 +288,28 @@ class VeriPb : public CertificateInterface<REAL>
                         .getValues()[0];
       if( abs(factor) == 1 )
       {
-         assert( lhs_row_mapping[row] == UNKNOWN );
-         assert( ( lhs_row_mapping[parallel_row] != UNKNOWN && factor == 1 ) ||
-                 ( factor == UNKNOWN && rhs_row_mapping[parallel_row] ) );
-         proof_out << COMMENT << lhs_row_mapping[parallel_row]  << " and " <<
-             rhs_row_mapping[row] << " are parallel.\n";
+         assert( ( lhs_row_mapping[row] != UNKNOWN && factor == 1 ) ||
+                 ( factor == -1 && rhs_row_mapping[row] != UNKNOWN ) );
+
+         if( factor == 1 )
+         {
+            proof_out << COMMENT << lhs_row_mapping[parallel_row] << " and "
+                      << rhs_row_mapping[row] << " are parallel.\n";
+            assert( lhs_row_mapping[parallel_row] != UNKNOWN &&
+                    rhs_row_mapping[row] != UNKNOWN );
+         }
+         else
+         {
+            proof_out << COMMENT << rhs_row_mapping[parallel_row] << " and "
+                      << rhs_row_mapping[row] << " are parallel.\n";
+            assert( rhs_row_mapping[row] != UNKNOWN &&
+                    rhs_row_mapping[parallel_row] != UNKNOWN );
+         }
          if(factor == 1)
             lhs_row_mapping[row] = lhs_row_mapping[parallel_row];
          else
-            lhs_row_mapping[row] = rhs_row_mapping[parallel_row];      }
+            lhs_row_mapping[row] = rhs_row_mapping[parallel_row];
+      }
       else
       {
          assert( false );
@@ -428,6 +441,8 @@ class VeriPb : public CertificateInterface<REAL>
          if( !matrix.getRowFlags()[candrow].test( RowFlag::kRhsInf ) )
          {
             next_constraint_id++;
+            assert( rhs_row_mapping[candrow] != UNKNOWN );
+            assert( rhs_row_mapping[eqrow] != UNKNOWN );
             if( int_scale_updated > 0 )
                proof_out << POL << rhs_row_mapping[eqrow] << " "
                          << abs( int_scale_updated ) << " * "
@@ -442,6 +457,8 @@ class VeriPb : public CertificateInterface<REAL>
          if( !matrix.getRowFlags()[candrow].test( RowFlag::kLhsInf ) )
          {
             next_constraint_id++;
+            assert( lhs_row_mapping[candrow] != UNKNOWN );
+            assert( lhs_row_mapping[eqrow] != UNKNOWN );
             if( int_scale_updated > 0 )
                proof_out << POL << lhs_row_mapping[eqrow] << " "
                          << abs( int_scale_updated ) << " * "
@@ -462,6 +479,8 @@ class VeriPb : public CertificateInterface<REAL>
          if( !matrix.getRowFlags()[candrow].test( RowFlag::kRhsInf ) )
          {
             next_constraint_id++;
+            assert( rhs_row_mapping[candrow] != UNKNOWN );
+            assert( rhs_row_mapping[eqrow] != UNKNOWN );
             if( int_scale_updated > 0 )
                proof_out << POL << rhs_row_mapping[candrow] << " "
                          << abs( int_scale_updated ) << " * "
@@ -476,6 +495,8 @@ class VeriPb : public CertificateInterface<REAL>
          if( !matrix.getRowFlags()[candrow].test( RowFlag::kLhsInf ) )
          {
             next_constraint_id++;
+            assert( lhs_row_mapping[candrow] != UNKNOWN );
+            assert( lhs_row_mapping[eqrow] != UNKNOWN );
             if( int_scale_updated > 0 )
                proof_out << POL << lhs_row_mapping[candrow] << " "
                          << abs( int_scale_updated ) << " * "
@@ -502,6 +523,8 @@ class VeriPb : public CertificateInterface<REAL>
          if( !matrix.getRowFlags()[candrow].test( RowFlag::kRhsInf ) )
          {
             next_constraint_id++;
+            assert( rhs_row_mapping[candrow] != UNKNOWN );
+            assert( rhs_row_mapping[eqrow] != UNKNOWN );
             if( scale > 0 )
                proof_out << POL << rhs_row_mapping[candrow] << " "
                          << frac_candrow << " * " << rhs_row_mapping[eqrow]
@@ -516,6 +539,8 @@ class VeriPb : public CertificateInterface<REAL>
          if( !matrix.getRowFlags()[candrow].test( RowFlag::kLhsInf ) )
          {
             next_constraint_id++;
+            assert( lhs_row_mapping[candrow] != UNKNOWN );
+            assert( lhs_row_mapping[eqrow] != UNKNOWN );
             if( scale > 0 )
                proof_out << POL << lhs_row_mapping[candrow] << " "
                          << frac_candrow << " * " << lhs_row_mapping[eqrow]
@@ -729,6 +754,7 @@ class VeriPb : public CertificateInterface<REAL>
             if( !matrix.getRowFlags()[row].test( RowFlag::kRhsInf ) )
             {
                next_constraint_id++;
+               assert( rhs_row_mapping[row] != UNKNOWN );
                if( substitute_factor * factor > 0 )
                   proof_out << POL << lhs_id << " " << val << " * "
                             << rhs_row_mapping[row] << " +\n";
@@ -742,6 +768,7 @@ class VeriPb : public CertificateInterface<REAL>
             if( !matrix.getRowFlags()[row].test( RowFlag::kLhsInf ) )
             {
                next_constraint_id++;
+               assert( lhs_row_mapping[row] != UNKNOWN );
                if( substitute_factor * factor > 0 )
                   proof_out << POL << rhs_id << " " << val << " * "
                             << lhs_row_mapping[row] << " +\n";
@@ -760,7 +787,7 @@ class VeriPb : public CertificateInterface<REAL>
             if( !matrix.getRowFlags()[row].test( RowFlag::kRhsInf ) )
             {
                next_constraint_id++;
-
+               assert( rhs_row_mapping[row] != UNKNOWN );
                if( substitute_factor * factor > 0 )
                   proof_out << POL << rhs_row_mapping[row] << " " << val
                             << " * " << lhs_id << " +\n";
@@ -774,6 +801,7 @@ class VeriPb : public CertificateInterface<REAL>
             if( !matrix.getRowFlags()[row].test( RowFlag::kLhsInf ) )
             {
                next_constraint_id++;
+               assert( lhs_row_mapping[row] != UNKNOWN );
                if( substitute_factor * factor > 0 )
                   proof_out << POL << lhs_row_mapping[row] << " " << val
                             << " * " << rhs_id << " +\n";
@@ -795,6 +823,7 @@ class VeriPb : public CertificateInterface<REAL>
             if( !matrix.getRowFlags()[row].test( RowFlag::kRhsInf ) )
             {
                next_constraint_id++;
+               assert( rhs_row_mapping[row] != UNKNOWN );
                if( substitute_factor * factor > 0 )
                   proof_out << POL << lhs_id << " " << val << " * "
                             << rhs_row_mapping[row] << " " << val2 << " +\n";
@@ -807,8 +836,9 @@ class VeriPb : public CertificateInterface<REAL>
             if( !matrix.getRowFlags()[row].test( RowFlag::kLhsInf ) )
             {
                next_constraint_id++;
+               assert( lhs_row_mapping[row] != UNKNOWN );
                if( substitute_factor * factor > 0 )
-               proof_out << POL << rhs_id << " " << val << " * "
+                  proof_out << POL << rhs_id << " " << val << " * "
                          << lhs_row_mapping[row] << " " << val2 << " +\n";
                else
                   proof_out << POL << lhs_id << " " << val << " * "
