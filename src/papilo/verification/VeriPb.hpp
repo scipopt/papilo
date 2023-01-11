@@ -237,12 +237,13 @@ class VeriPb : public CertificateInterface<REAL>
    void
    change_rhs_parallel_row( int row, REAL val, int parallel_row,  const Problem<REAL>& problem, const Vec<int>& var_mapping)
    {
-      REAL factor = problem.getConstraintMatrix()
-                        .getRowCoefficients( parallel_row )
-                        .getValues()[0] /
-                    problem.getConstraintMatrix()
-                        .getRowCoefficients( row )
-                        .getValues()[0];
+      REAL value_parallel = problem.getConstraintMatrix()
+                           .getRowCoefficients( parallel_row )
+                           .getValues()[0];
+      REAL value_row = problem.getConstraintMatrix()
+                                .getRowCoefficients( row )
+                                .getValues()[0];
+      REAL factor = value_parallel / value_row;
       if( abs(factor) == 1 )
       {
          assert( ( rhs_row_mapping[row] != UNKNOWN && factor == 1 ) ||
@@ -268,12 +269,16 @@ class VeriPb : public CertificateInterface<REAL>
             rhs_row_mapping[row] = rhs_row_mapping[parallel_row];
          else
             rhs_row_mapping[row] = lhs_row_mapping[parallel_row];
+         skip_deleting_lhs_constraint_id = rhs_row_mapping[row];
+      }
+      else if( num.isIntegral( factor ) )
+      {
+         proof_out << "here";
       }
       else
       {
          assert( false );
       }
-      skip_deleting_lhs_constraint_id = rhs_row_mapping[row];
 
    }
 
