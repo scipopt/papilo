@@ -77,7 +77,6 @@ set(unit_tests
         "happy-path-aggregate-free-column"
         "presolve-activity-is-updated-correctly-huge-values"
 
-
         #ProblemUpdate
         "trivial-presolve-singleton-row"
         "trivial-presolve-singleton-row-pt-2"
@@ -170,10 +169,11 @@ set(unit_tests
         "singleton-stuffing-make-sure-to-first-set-bounds-to-infinity"
 
         #Simple Probing
-        "happy-path-simple-probing"
-        "happy-path-simple-probing-only-negative-coeff"
-        "happy-path-simple-probing-only-binary-negative-coefficient"
-        "happy-path-simple-probing-only-binary-positive-coefficient"
+        "simple-probing-trivial-example"
+        "simple-probing-negative-binary-coeff"
+        "simple-probing-positive-binary-coeff"
+        "simple-different-int-coeff"
+        "simple-different-int-coeff-pt2"
 
         #Simple Substitution
         "simple-substitution-happy-path-for-2-int"
