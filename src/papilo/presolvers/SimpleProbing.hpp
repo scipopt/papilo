@@ -49,11 +49,11 @@ class SimpleProbing : public PresolveMethod<REAL>
             Reductions<REAL>& reductions, const Timer& timer ) override;
 
    void
-   calculateReductionsForSimpleProbing(
-       const Num<REAL>& num, Reductions<REAL>& reductions,
-       const VariableDomains<REAL>& domains,
-       const Vec<papilo::RowActivity<REAL>>& activities, const REAL* rowvals,
-       const int* rowcols, int rowlen, int bincol, REAL binary_coeff );
+   calculateReductionsForSimpleProbing( Reductions<REAL>& reductions,
+                                        const VariableDomains<REAL>& domains,
+                                        const REAL* rowvals, const int* rowcols,
+                                        int rowlen, int bincol,
+                                        REAL binary_coeff );
 
    PresolveStatus
    perform_simple_probing_step(
@@ -198,9 +198,8 @@ SimpleProbing<REAL>::perform_simple_probing_step(
       Message::debug( this,
                       "probing on simple equation detected {} substitutions\n",
                       rowlen - 1 );
-      calculateReductionsForSimpleProbing( num, reductions, domains, activities,
-                                           rowvals, rowcols, rowlen, col,
-                                           rowvals[k] );
+      calculateReductionsForSimpleProbing( reductions, domains, rowvals,
+                                           rowcols, rowlen, col, rowvals[k] );
       status = PresolveStatus::kReduced;
    }
    return status;
@@ -208,10 +207,9 @@ SimpleProbing<REAL>::perform_simple_probing_step(
 template <typename REAL>
 void
 SimpleProbing<REAL>::calculateReductionsForSimpleProbing(
-    const Num<REAL>& num, Reductions<REAL>& reductions,
-    const VariableDomains<REAL>& domains,
-    const Vec<papilo::RowActivity<REAL>>& activities, const REAL* rowvals,
-    const int* rowcols, int rowlen, int bincol, REAL binary_coeff )
+    Reductions<REAL>& reductions, const VariableDomains<REAL>& domains,
+    const REAL* rowvals, const int* rowcols, int rowlen, int bincol,
+    REAL binary_coeff )
 {
    for( int k = 0; k != rowlen; ++k )
    {
