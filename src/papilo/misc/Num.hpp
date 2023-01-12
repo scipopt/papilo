@@ -193,6 +193,14 @@ class Num
       return floor( REAL( x + REAL( 0.5 ) ) );
    }
 
+   template <typename R>
+   static constexpr int
+   round_to_int( const R& x )
+   {
+      return (int) floor( REAL( x + REAL( 0.5 ) ) );
+   }
+
+
    template <typename R1, typename R2>
    bool
    isEq( const R1& a, const R2& b ) const
