@@ -89,6 +89,8 @@ class OpbParser
 
       assert( parser.nnz >= 0 );
 
+      assert(parser.coeffobj.size() == parser.nCols);
+
       Vec<REAL> obj_vec( size_t( parser.nCols ), REAL{ 0.0 } );
 
       for( auto i : parser.coeffobj )
