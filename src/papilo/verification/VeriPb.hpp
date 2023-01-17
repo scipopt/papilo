@@ -139,10 +139,8 @@ class VeriPb : public CertificateInterface<REAL>
          proof_out << "rup 1 ~" << name << " >= 1 ;\n";
          break;
       case ArgumentType::kDual:
-         proof_out << "red 1 ~" << name << " >= 1 ; " << name << " -> 0\n";
-         break;
       case ArgumentType::kSymmetry:
-         assert( false );
+         proof_out << "red 1 ~" << name << " >= 1 ; " << name << " -> 0\n";
          break;
       default:
          assert( false );
@@ -162,16 +160,25 @@ class VeriPb : public CertificateInterface<REAL>
 
          break;
       case ArgumentType::kDual:
+      case ArgumentType::kSymmetry:
          proof_out << "red 1 " << name << " >= " << num.round_to_int(val) << " ; " << name
                    << " -> " << num.round_to_int(val) << "\n";
-
-         break;
-      case ArgumentType::kSymmetry:
-         assert( false );
          break;
       default:
          assert( false );
       }
+   }
+
+   void
+   dominating_columns( int dominating_column, int dominated_column,
+                       const Vec<String>& names, const Vec<int>& var_mapping )
+   {
+      next_constraint_id ++;
+      auto name_dominated = names[var_mapping[dominated_column]];
+      auto name_dominating = names[var_mapping[dominating_column]];
+      proof_out << "red 1 " << name_dominated << " +1 ~" << name_dominating
+                << " >= 1 ; " << name_dominated << " -> " << name_dominating
+                << " " << name_dominating << " -> " << name_dominated << "\n";
    }
 
    void

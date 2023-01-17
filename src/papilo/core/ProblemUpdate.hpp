@@ -2072,6 +2072,13 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
                return ApplyResult::kInfeasible;
             break;
          }
+         case ColReduction::DOMINANCE:
+         {
+            int dominating_col = reduction.col;
+            int dominated_col = reduction.newval;
+            certificate_interface->dominating_columns(dominating_col, dominated_col, problem.getVariableNames(), postsolve.origcol_mapping);
+            break;
+         }
          case ColReduction::LOWER_BOUND:
          {
             if( changeLB( reduction.col, reduction.newval, argument ) ==

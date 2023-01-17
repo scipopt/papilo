@@ -291,7 +291,7 @@ class ParameterSet
       }
    };
 
-   std::map<String, Parameter, std::less<String>,
+   std::map<String, Parameter, std::less<>,
             Allocator<std::pair<const String, Parameter>>>
        parameters;
 

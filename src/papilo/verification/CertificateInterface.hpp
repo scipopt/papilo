@@ -57,6 +57,10 @@ class CertificateInterface
                        ArgumentType argument = ArgumentType::kPrimal ) = 0;
 
    virtual void
+   dominating_columns( int dominating_column, int dominated_column,
+               const Vec<String>& names, const Vec<int>& var_mapping ) = 0;
+
+   virtual void
    change_rhs( int row, REAL val, const SparseVectorView<REAL>& data,
                const Vec<String>& names, const Vec<int>& var_mapping ) = 0;
 

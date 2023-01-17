@@ -55,6 +55,12 @@ class EmptyCertificate : public CertificateInterface<REAL>
    }
 
    void
+   dominating_columns( int dominating_column, int dominated_column,
+                       const Vec<String>& names, const Vec<int>& var_mapping )
+   {
+   }
+
+   void
    change_rhs( int row, REAL val, const SparseVectorView<REAL>& data,
                const Vec<String>& names, const Vec<int>& var_mapping )
    {

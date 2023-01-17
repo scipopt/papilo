@@ -47,6 +47,7 @@ struct ColReduction
       PARALLEL = -12,
       IMPL_INT = -13,
       FIXED_INFINITY = -14,
+      DOMINANCE = -15,
    };
 };
 
@@ -312,6 +313,17 @@ class Reductions
       for( int i = 0; i != numrows; ++i )
          reductions.emplace_back( sparsifiedrows[i].second,
                                   sparsifiedrows[i].first, RowReduction::NONE );
+   }
+
+   void
+   dominance( int dominating_column, int dominated_column )
+   {
+      assert( !transactions.empty() && transactions.back().end == -1 );
+      assert( transactions.back().start + transactions.back().nlocks ==
+              static_cast<int>( reductions.size() ) );
+
+      reductions.emplace_back( dominated_column, ColReduction::DOMINANCE, dominating_column );
+      ++transactions.back().nlocks;
    }
 
    unsigned int
