@@ -63,7 +63,7 @@ TEST_CASE( "domcol-happy-path", "[presolve]" )
        presolvingMethod.execute( problem, problemUpdate, num, reductions, t);
 
    REQUIRE( presolveStatus == PresolveStatus::kReduced );
-   REQUIRE( reductions.size() == 7 );
+   REQUIRE( reductions.size() == 8 );
 
    REQUIRE( reductions.getReduction( 0 ).row == ColReduction::LOCKED );
    REQUIRE( reductions.getReduction( 0 ).col == 0 );
@@ -77,15 +77,19 @@ TEST_CASE( "domcol-happy-path", "[presolve]" )
    REQUIRE( reductions.getReduction( 3 ).row == ColReduction::BOUNDS_LOCKED );
    REQUIRE( reductions.getReduction( 3 ).col == 1 );
 
-   REQUIRE( reductions.getReduction( 4 ).row == 0 );
-   REQUIRE( reductions.getReduction( 4 ).col == RowReduction::LOCKED );
+   REQUIRE( reductions.getReduction( 4 ).row == ColReduction::DOMINANCE );
+   REQUIRE( reductions.getReduction( 4 ).col == 0 );
+   REQUIRE( reductions.getReduction( 4 ).newval == 1 );
 
    REQUIRE( reductions.getReduction( 5 ).row == 0 );
-   REQUIRE( reductions.getReduction( 5 ).col == RowReduction::SAVE_ROW );
+   REQUIRE( reductions.getReduction( 5 ).col == RowReduction::LOCKED );
 
-   REQUIRE( reductions.getReduction( 6 ).row == ColReduction::FIXED );
-   REQUIRE( reductions.getReduction( 6 ).col == 1 );
-   REQUIRE( reductions.getReduction( 6 ).newval == 0 );
+   REQUIRE( reductions.getReduction( 6 ).row == 0 );
+   REQUIRE( reductions.getReduction( 6 ).col == RowReduction::SAVE_ROW );
+
+   REQUIRE( reductions.getReduction( 7 ).row == ColReduction::FIXED );
+   REQUIRE( reductions.getReduction( 7 ).col == 1 );
+   REQUIRE( reductions.getReduction( 7 ).newval == 0 );
 }
 
 TEST_CASE( "domcol-parallel-columns", "[presolve]" )
