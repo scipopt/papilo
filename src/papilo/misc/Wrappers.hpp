@@ -209,13 +209,17 @@ presolve_and_solve(
       presolve.getPresolveOptions().tlim =
           std::min( opts.tlim, presolve.getPresolveOptions().tlim );
 
+      bool store_dual = false;
       std::unique_ptr<SolverInterface<REAL>> solver;
       if(opts.command == Command::kSolve)
       {
          if( problem.getNumIntegralCols() == 0 &&
              presolve.getLPSolverFactory() )
+         {
             solver = presolve.getLPSolverFactory()->newSolver(
                 presolve.getVerbosityLevel() );
+            store_dual = solver->is_dual_solution_available();
+         }
          else if( presolve.getMIPSolverFactory() )
             solver = presolve.getMIPSolverFactory()->newSolver(
                 presolve.getVerbosityLevel() );
@@ -226,7 +230,7 @@ presolve_and_solve(
          }
       }
 
-      auto result = presolve.apply( problem, true );
+      auto result = presolve.apply( problem, store_dual );
 
       if( !opts.optimal_solution_file.empty() )
       {
@@ -325,7 +329,7 @@ presolve_and_solve(
          Solution<REAL> solution;
          solution.type = SolutionType::kPrimal;
 
-         if( result.postsolve.getOriginalProblem().getNumIntegralCols() == 0 )
+         if( result.postsolve.getOriginalProblem().getNumIntegralCols() == 0 && store_dual )
             solution.type = SolutionType::kPrimalDual;
 
          if( ( status == SolverStatus::kOptimal ||
