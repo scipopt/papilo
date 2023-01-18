@@ -2075,7 +2075,8 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
          case ColReduction::DOMINANCE:
          {
             int dominating_col = reduction.col;
-            int dominated_col = reduction.newval;
+            assert(num.isIntegral(reduction.newval));
+            int dominated_col = (int) reduction.newval;
             certificate_interface->dominating_columns(dominating_col, dominated_col, problem.getVariableNames(), postsolve.origcol_mapping);
             break;
          }
