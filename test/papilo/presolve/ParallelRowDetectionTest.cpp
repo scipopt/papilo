@@ -106,6 +106,43 @@ TEST_CASE( "parallel-row-two-equations-infeasible-second-row-dominant",
    REQUIRE( presolveStatus == PresolveStatus::kInfeasible );
 }
 
+
+TEST_CASE( "parallel-row-two-identical-equations", "[presolve]" )
+{
+   Num<double> num{};
+   double time = 0.0;
+   Timer t{ time };
+   Message msg{};
+   Problem<double> problem =
+       setupParallelRowWithTwoParallelEquations( 2.0, -2.0, 1, -1 );
+   Statistics statistics{};
+   PresolveOptions presolveOptions{};
+   PostsolveStorage<double> postsolve =
+       PostsolveStorage<double>( problem, num, presolveOptions );
+   ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
+                                        presolveOptions, num, msg );
+   problemUpdate.checkChangedActivities();
+   ParallelRowDetection<double> presolvingMethod{};
+   Reductions<double> reductions{};
+
+   PresolveStatus presolveStatus =
+       presolvingMethod.execute( problem, problemUpdate, num, reductions, t );
+
+   REQUIRE( presolveStatus == PresolveStatus::kReduced );
+   REQUIRE( reductions.size() == 3 );
+   REQUIRE( reductions.getReduction( 0 ).col == RowReduction::LOCKED );
+   REQUIRE( reductions.getReduction( 0 ).row == 0 );
+   REQUIRE( reductions.getReduction( 0 ).newval == 0 );
+
+   REQUIRE( reductions.getReduction( 1 ).row == 2 );
+   REQUIRE( reductions.getReduction( 1 ).col == RowReduction::LOCKED );
+   REQUIRE( reductions.getReduction( 1 ).newval == 0 );
+
+   REQUIRE( reductions.getReduction( 2 ).col == RowReduction::REDUNDANT );
+   REQUIRE( reductions.getReduction( 2 ).newval == 0 );
+   REQUIRE( reductions.getReduction( 2 ).row == 2 );
+}
+
 TEST_CASE( "parallel-row-two-equations-infeasible-first-row-dominant",
            "[presolve]" )
 {
