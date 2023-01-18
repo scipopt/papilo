@@ -124,32 +124,6 @@ class OpbParser
    bool
    parse( boost::iostreams::filtering_istream& file );
 
-   void
-   printErrorMessage( ParseKey keyword )
-   {
-      switch( keyword )
-      {
-      case ParseKey::kRows:
-         std::cerr << "read error in section ROWS " << std::endl;
-         break;
-      case ParseKey::kCols:
-         std::cerr << "read error in section COLUMNS " << std::endl;
-         break;
-      case ParseKey::kRhs:
-         std::cerr << "read error in section RHS " << std::endl;
-         break;
-      case ParseKey::kBounds:
-         std::cerr << "read error in section BOUNDS " << std::endl;
-         break;
-      case ParseKey::kRanges:
-         std::cerr << "read error in section RANGES " << std::endl;
-         break;
-      default:
-         std::cerr << "undefined read error " << std::endl;
-         break;
-      }
-   };
-
    /*
     * data for mps problem
     */
@@ -291,14 +265,14 @@ OpbParser<REAL>::parseRows( std::string& line )
    if (tokens.size() % 2 != 0)
    {
       fmt::print(
-          "PaPILO does not support non-linear pseudo-boolean equations" );
+          "PaPILO does not support non-linear pseudo-boolean equations\n" );
       return ParseKey::kFail;
    }
    for (int i = 0; i < (long long)tokens.size(); i += 2)
       if (find(tokens[i].begin(), tokens[i].end(), 'x') != tokens[i].end())
       {
          fmt::print(
-             "PaPILO does not support non-linear pseudo-boolean equations" );
+             "PaPILO does not support non-linear pseudo-boolean equations\n" );
          return ParseKey::kFail;
       }
 
@@ -316,18 +290,20 @@ OpbParser<REAL>::parseRows( std::string& line )
       }
       if( var.empty() || var[0] != 'x' )
       {
-         fmt::print( "Variable must start with 'x'" );
+         fmt::print( "Variable must start with 'x'\n" );
          return ParseKey::kFail;
       }
 
       auto iterator = colname2idx.find( var );
-      int col = iterator->second;
+      int col;
       if( iterator == colname2idx.end() )
       {
          col = nCols;
          add_binary_variable( var );
-         coeffobj.push_back( { nCols, REAL{ 0 } } );
+         coeffobj.push_back( { col, REAL{ 0 } } );
       }
+      else
+         col = iterator->second;
       entries.push_back( { nRows, col, negated ? -coef : coef } );
       nnz++;
    }
@@ -370,14 +346,14 @@ OpbParser<REAL>::parseObjective( std::string& line )
    if (tokens.size() % 2 != 0)
    {
       fmt::print(
-          "PaPILO does not support non-linear pseudo-boolean equations" );
+          "PaPILO does not support non-linear pseudo-boolean equations\n" );
       return ParseKey::kFail;
    }
    for (int i = 0; i < (long long)tokens.size(); i += 2)
       if (find(tokens[i].begin(), tokens[i].end(), 'x') != tokens[i].end())
       {
          fmt::print(
-             "PaPILO does not support non-linear pseudo-boolean equations" );
+             "PaPILO does not support non-linear pseudo-boolean equations\n" );
          return ParseKey::kFail;
       }
 
@@ -397,7 +373,7 @@ OpbParser<REAL>::parseObjective( std::string& line )
       }
       if( var.empty() || var[0] != 'x' )
       {
-         fmt::print( "Variable must start with 'x'" );
+         fmt::print( "Variable must start with 'x'\n" );
          return ParseKey::kFail;
       }
 
@@ -406,15 +382,8 @@ OpbParser<REAL>::parseObjective( std::string& line )
          objoffset += coef;
 
       coeffobj.push_back( { nCols, negated ? -coef: coef } );
-      int col = iterator->second;
-      if( iterator == colname2idx.end() )
-      {
-         col = nCols;
-         coeffobj.push_back( { nCols, REAL{ 0 } } );
-      }
+      assert(iterator == colname2idx.end());
       add_binary_variable( var);
-      entries.push_back( { nRows, col, negated ? -coef : coef } );
-      nnz++;
    }
    return ParseKey::kNone;
 }
