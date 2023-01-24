@@ -147,85 +147,86 @@ class VeriPb : public CertificateInterface<REAL>
       default:
          assert( false );
       }
-      auto col_coeff =
-          problem.getConstraintMatrix().getColumnCoefficients( col );
-      for( int row_index = 0; row_index < col_coeff.getLength(); row_index++ )
-      {
-         int row = col_coeff.getIndices()[row_index];
-         auto data = problem.getConstraintMatrix().getRowCoefficients( row );
-         if( !problem.getRowFlags()[row].test( RowFlag::kLhsInf ) )
-         {
-            next_constraint_id++;
-            proof_out << RUP;
-            int offset = 0;
-            for( int i = 0; i < data.getLength(); i++ )
-            {
-
-               int index = data.getIndices()[i];
-               if( index == col )
-               {
-                  continue;
-               }
-               else
-               {
-                  if( i != 0 )
-                     proof_out << " +";
-                  int v = num.round_to_int( data.getValues()[i] *
-                                            scale_factor[row] );
-                  proof_out << abs( v ) << " ";
-                  if( v < 0 )
-                  {
-                     proof_out << NEGATED;
-                     offset -= v;
-                  }
-               }
-               proof_out << names[var_mapping[index]];
-            }
-            proof_out << " >=  "
-                      << offset + num.round_to_int( problem.getConstraintMatrix()
-                                                 .getLeftHandSides()[row] *
-                                             scale_factor[row])
-                      << ";\n";
-
-            proof_out << DELETE_CONS << lhs_row_mapping[row] << "\n";
-
-            lhs_row_mapping[row] = next_constraint_id;
-         }
-         if( !problem.getRowFlags()[row].test( RowFlag::kRhsInf ) )
-         {
-            next_constraint_id++;
-            int offset = 0;
-            proof_out << RUP;
-            for( int i = 0; i < data.getLength(); i++ )
-            {
-               if( data.getIndices()[i] == col )
-               {
-                  continue;
-               }
-               else
-               {
-                  if( i != 0 )
-                     proof_out << " +";
-                  int v = num.round_to_int( data.getValues()[i] *
-                                            scale_factor[row] );
-                  proof_out << abs( v ) << " ";
-                  if( v > 0 )
-                  {
-                     offset += v;
-                     proof_out << NEGATED;
-                  }
-               }
-               proof_out << names[var_mapping[col]];
-            }
-
-            proof_out << " >=  "
-                      << offset - num.round_to_int( problem.getConstraintMatrix().getRightHandSides()[row] *
-                                           scale_factor[row] )
-                      << ";\n";
-            proof_out << DELETE_CONS << rhs_row_mapping[row] << "\n";
-            rhs_row_mapping[row] = next_constraint_id;
-         }
-      }   }
+//      auto col_coeff =
+//          problem.getConstraintMatrix().getColumnCoefficients( col );
+//      for( int row_index = 0; row_index < col_coeff.getLength(); row_index++ )
+//      {
+//         int row = col_coeff.getIndices()[row_index];
+//         auto data = problem.getConstraintMatrix().getRowCoefficients( row );
+//         if( !problem.getRowFlags()[row].test( RowFlag::kLhsInf ) )
+//         {
+//            next_constraint_id++;
+//            proof_out << RUP;
+//            int offset = 0;
+//            for( int i = 0; i < data.getLength(); i++ )
+//            {
+//
+//               int index = data.getIndices()[i];
+//               if( index == col )
+//               {
+//                  continue;
+//               }
+//               else
+//               {
+//                  if( i != 0 )
+//                     proof_out << " +";
+//                  int v = num.round_to_int( data.getValues()[i] *
+//                                            scale_factor[row] );
+//                  proof_out << abs( v ) << " ";
+//                  if( v < 0 )
+//                  {
+//                     proof_out << NEGATED;
+//                     offset -= v;
+//                  }
+//               }
+//               proof_out << names[var_mapping[index]];
+//            }
+//            proof_out << " >=  "
+//                      << offset + num.round_to_int( problem.getConstraintMatrix()
+//                                                 .getLeftHandSides()[row] *
+//                                             scale_factor[row])
+//                      << ";\n";
+//
+//            proof_out << DELETE_CONS << lhs_row_mapping[row] << "\n";
+//
+//            lhs_row_mapping[row] = next_constraint_id;
+//         }
+//         if( !problem.getRowFlags()[row].test( RowFlag::kRhsInf ) )
+//         {
+//            next_constraint_id++;
+//            int offset = 0;
+//            proof_out << RUP;
+//            for( int i = 0; i < data.getLength(); i++ )
+//            {
+//               if( data.getIndices()[i] == col )
+//               {
+//                  continue;
+//               }
+//               else
+//               {
+//                  if( i != 0 )
+//                     proof_out << " +";
+//                  int v = num.round_to_int( data.getValues()[i] *
+//                                            scale_factor[row] );
+//                  proof_out << abs( v ) << " ";
+//                  if( v > 0 )
+//                  {
+//                     offset += v;
+//                     proof_out << NEGATED;
+//                  }
+//               }
+//               proof_out << names[var_mapping[col]];
+//            }
+//
+//            proof_out << " >=  "
+//                      << offset - num.round_to_int( problem.getConstraintMatrix().getRightHandSides()[row] *
+//                                           scale_factor[row] )
+//                      << ";\n";
+//            proof_out << DELETE_CONS << rhs_row_mapping[row] << "\n";
+//            rhs_row_mapping[row] = next_constraint_id;
+//         }
+//      }
+   }
 
    void
    change_lower_bound( REAL val, int col, const Problem<REAL>& problem,
@@ -253,90 +254,90 @@ class VeriPb : public CertificateInterface<REAL>
       default:
          assert( false );
       }
-      auto col_coeff =
-          problem.getConstraintMatrix().getColumnCoefficients( col );
-      for( int row_index = 0; row_index < col_coeff.getLength(); row_index++ )
-      {
-         int row = col_coeff.getIndices()[row_index];
-         auto data = problem.getConstraintMatrix().getRowCoefficients( row );
-         if( !problem.getRowFlags()[row].test( RowFlag::kLhsInf ) )
-         {
-            next_constraint_id++;
-            proof_out << RUP;
-            int offset = 0;
-            for( int i = 0; i < data.getLength(); i++ )
-            {
-
-               int index = data.getIndices()[i];
-               if( index == col )
-               {
-                  int v = num.round_to_int( data.getValues()[i] *
-                                            scale_factor[row] );
-                  offset -= v;
-                  continue;
-               }
-               else
-               {
-                  if( i != 0 )
-                     proof_out << " +";
-                  int v = num.round_to_int( data.getValues()[i] *
-                                            scale_factor[row] );
-                  proof_out << abs( v ) << " ";
-                  if( v < 0 )
-                  {
-                     proof_out << NEGATED;
-                     offset -= v;
-                  }
-               }
-               proof_out << names[var_mapping[index]];
-            }
-            proof_out << " >=  "
-                      << offset + num.round_to_int( problem.getConstraintMatrix().getLeftHandSides()[row] *
-                                           scale_factor[row] )
-                      << ";\n";
-
-            proof_out << DELETE_CONS << lhs_row_mapping[row] << "\n";
-
-            lhs_row_mapping[row] = next_constraint_id;
-         }
-         if( !problem.getRowFlags()[row].test( RowFlag::kRhsInf ) )
-         {
-            next_constraint_id++;
-            int offset = 0;
-            proof_out << RUP;
-            for( int i = 0; i < data.getLength(); i++ )
-            {
-               if( data.getIndices()[i] == col )
-               {
-                  int v = num.round_to_int( data.getValues()[i] *
-                                            scale_factor[row] );
-                  offset += v;
-                  continue;
-               }
-               else
-               {
-                  if( i != 0 )
-                     proof_out << " +";
-                  int v = num.round_to_int( data.getValues()[i] *
-                                            scale_factor[row] );
-                  proof_out << abs( v ) << " ";
-                  if( v > 0 )
-                  {
-                     offset += v;
-                     proof_out << NEGATED;
-                  }
-               }
-               proof_out << names[var_mapping[col]];
-            }
-
-            proof_out << " >=  "
-                      << offset - num.round_to_int(  problem.getConstraintMatrix().getRightHandSides()[row] *
-                                           scale_factor[row] )
-                      << ";\n";
-            proof_out << DELETE_CONS << rhs_row_mapping[row] << "\n";
-            rhs_row_mapping[row] = next_constraint_id;
-         }
-      }
+//      auto col_coeff =
+//          problem.getConstraintMatrix().getColumnCoefficients( col );
+//      for( int row_index = 0; row_index < col_coeff.getLength(); row_index++ )
+//      {
+//         int row = col_coeff.getIndices()[row_index];
+//         auto data = problem.getConstraintMatrix().getRowCoefficients( row );
+//         if( !problem.getRowFlags()[row].test( RowFlag::kLhsInf ) )
+//         {
+//            next_constraint_id++;
+//            proof_out << RUP;
+//            int offset = 0;
+//            for( int i = 0; i < data.getLength(); i++ )
+//            {
+//
+//               int index = data.getIndices()[i];
+//               if( index == col )
+//               {
+//                  int v = num.round_to_int( data.getValues()[i] *
+//                                            scale_factor[row] );
+//                  offset -= v;
+//                  continue;
+//               }
+//               else
+//               {
+//                  if( i != 0 )
+//                     proof_out << " +";
+//                  int v = num.round_to_int( data.getValues()[i] *
+//                                            scale_factor[row] );
+//                  proof_out << abs( v ) << " ";
+//                  if( v < 0 )
+//                  {
+//                     proof_out << NEGATED;
+//                     offset -= v;
+//                  }
+//               }
+//               proof_out << names[var_mapping[index]];
+//            }
+//            proof_out << " >=  "
+//                      << offset + num.round_to_int( problem.getConstraintMatrix().getLeftHandSides()[row] *
+//                                           scale_factor[row] )
+//                      << ";\n";
+//
+//            proof_out << DELETE_CONS << lhs_row_mapping[row] << "\n";
+//
+//            lhs_row_mapping[row] = next_constraint_id;
+//         }
+//         if( !problem.getRowFlags()[row].test( RowFlag::kRhsInf ) )
+//         {
+//            next_constraint_id++;
+//            int offset = 0;
+//            proof_out << RUP;
+//            for( int i = 0; i < data.getLength(); i++ )
+//            {
+//               if( data.getIndices()[i] == col )
+//               {
+//                  int v = num.round_to_int( data.getValues()[i] *
+//                                            scale_factor[row] );
+//                  offset += v;
+//                  continue;
+//               }
+//               else
+//               {
+//                  if( i != 0 )
+//                     proof_out << " +";
+//                  int v = num.round_to_int( data.getValues()[i] *
+//                                            scale_factor[row] );
+//                  proof_out << abs( v ) << " ";
+//                  if( v > 0 )
+//                  {
+//                     offset += v;
+//                     proof_out << NEGATED;
+//                  }
+//               }
+//               proof_out << names[var_mapping[col]];
+//            }
+//
+//            proof_out << " >=  "
+//                      << offset - num.round_to_int(  problem.getConstraintMatrix().getRightHandSides()[row] *
+//                                           scale_factor[row] )
+//                      << ";\n";
+//            proof_out << DELETE_CONS << rhs_row_mapping[row] << "\n";
+//            rhs_row_mapping[row] = next_constraint_id;
+//         }
+//      }
    }
 
    void
@@ -837,6 +838,7 @@ class VeriPb : public CertificateInterface<REAL>
       REAL substitute_factor = indices[0] == col ? values[0] : values[1];
 
       next_constraint_id++;
+      int first_constraint_id = next_constraint_id;
       proof_out << COMMENT << "postsolve stack : row id " << next_constraint_id << "\n";
       proof_out << RUP;
 
@@ -857,6 +859,7 @@ class VeriPb : public CertificateInterface<REAL>
       int lhs_id = next_constraint_id;
 
       next_constraint_id++;
+      int second_constraint_id = next_constraint_id;
 
       proof_out << COMMENT << "postsolve stack : row id " << next_constraint_id << "\n";
 
@@ -880,6 +883,9 @@ class VeriPb : public CertificateInterface<REAL>
 
       substitute( col, substitute_factor, lhs_id, next_constraint_id,
                   currentProblem );
+      proof_out << DELETE_CONS << first_constraint_id << "\n";
+      proof_out << DELETE_CONS << second_constraint_id << "\n";
+
    }
 
    void
