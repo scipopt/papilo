@@ -77,12 +77,12 @@ TEST_CASE( "domcol-happy-path", "[presolve]" )
    REQUIRE( reductions.getReduction( 3 ).row == ColReduction::BOUNDS_LOCKED );
    REQUIRE( reductions.getReduction( 3 ).col == 1 );
 
-   REQUIRE( reductions.getReduction( 4 ).row == ColReduction::DOMINANCE );
-   REQUIRE( reductions.getReduction( 4 ).col == 0 );
-   REQUIRE( reductions.getReduction( 4 ).newval == 1 );
+   REQUIRE( reductions.getReduction( 4 ).row == 0 );
+   REQUIRE( reductions.getReduction( 4 ).col == RowReduction::LOCKED );
 
-   REQUIRE( reductions.getReduction( 5 ).row == 0 );
-   REQUIRE( reductions.getReduction( 5 ).col == RowReduction::LOCKED );
+   REQUIRE( reductions.getReduction( 5 ).row == ColReduction::DOMINANCE );
+   REQUIRE( reductions.getReduction( 5 ).col == 1 );
+   REQUIRE( reductions.getReduction( 5 ).newval == 0 );
 
    REQUIRE( reductions.getReduction( 6 ).row == 0 );
    REQUIRE( reductions.getReduction( 6 ).col == RowReduction::SAVE_ROW );
@@ -128,12 +128,12 @@ TEST_CASE( "domcol-parallel-columns", "[presolve]" )
    REQUIRE( reductions.getReduction( 3 ).row ==ColReduction::BOUNDS_LOCKED );
    REQUIRE( reductions.getReduction( 3 ).col == 3 );
 
-   REQUIRE( reductions.getReduction( 4 ).row == ColReduction::DOMINANCE );
-   REQUIRE( reductions.getReduction( 4 ).col == 0 );
-   REQUIRE( reductions.getReduction( 4 ).newval == 3 );
+   REQUIRE( reductions.getReduction( 4 ).row == 0 );
+   REQUIRE( reductions.getReduction( 4 ).col == RowReduction::LOCKED );
 
-   REQUIRE( reductions.getReduction( 5 ).row == 0 );
-   REQUIRE( reductions.getReduction( 5 ).col == RowReduction::LOCKED );
+   REQUIRE( reductions.getReduction( 5 ).row == ColReduction::DOMINANCE );
+   REQUIRE( reductions.getReduction( 5 ).col == 3 );
+   REQUIRE( reductions.getReduction( 5 ).newval == 0 );
 
    REQUIRE( reductions.getReduction( 6 ).row == 0 );
    REQUIRE( reductions.getReduction( 6 ).col == RowReduction::SAVE_ROW );
@@ -192,8 +192,8 @@ TEST_CASE( "domcol-multiple-columns", "[presolve]" )
    REQUIRE( presolveStatus == PresolveStatus::kReduced );
    REQUIRE( reductions.size() == 24 );
 
-   Vec<int> dominating_cols = { 0, 0, 1 };
-   Vec<int> dominated_cols = { 1, 2, 2 };
+   Vec<int> dominated_cols = { 0, 0, 1 };
+   Vec<int> dominating_cols = { 1, 2, 2 };
    for( int i = 0; i < 24; i = i + 8 )
    {
       REQUIRE( reductions.getReduction( i ).row == ColReduction::LOCKED );
@@ -210,12 +210,12 @@ TEST_CASE( "domcol-multiple-columns", "[presolve]" )
                ColReduction::BOUNDS_LOCKED );
       REQUIRE( reductions.getReduction( i + 3 ).col == dominated_cols[i / 8] );
 
-      REQUIRE( reductions.getReduction( i + 4 ).row == ColReduction::DOMINANCE );
-      REQUIRE( reductions.getReduction( i + 4 ).col == dominating_cols[i / 8] );
-      REQUIRE( reductions.getReduction( i + 4 ).newval == dominated_cols[i / 8] );
+      REQUIRE( reductions.getReduction( i + 4 ).row == 0 );
+      REQUIRE( reductions.getReduction( i + 4 ).col == RowReduction::LOCKED );
 
-      REQUIRE( reductions.getReduction( i + 5 ).row == 0 );
-      REQUIRE( reductions.getReduction( i + 5 ).col == RowReduction::LOCKED );
+      REQUIRE( reductions.getReduction( i + 5 ).row == ColReduction::DOMINANCE );
+      REQUIRE( reductions.getReduction( i + 5 ).col == dominating_cols[i / 8] );
+      REQUIRE( reductions.getReduction( i + 5 ).newval == dominated_cols[i / 8] );
 
       REQUIRE( reductions.getReduction( i + 6 ).row == 0 );
       REQUIRE( reductions.getReduction( i + 6 ).col == RowReduction::SAVE_ROW );

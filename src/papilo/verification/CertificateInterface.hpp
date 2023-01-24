@@ -49,11 +49,11 @@ class CertificateInterface
    flush() = 0;
 
    virtual void
-   change_upper_bound( REAL val, const String& name,
+   change_upper_bound( REAL val, int col, const Problem<REAL>& problem, const Vec<int>& var_mapping,
                        ArgumentType argument = ArgumentType::kPrimal ) = 0;
 
    virtual void
-   change_lower_bound( REAL val, const String& name,
+   change_lower_bound( REAL val, int col, const Problem<REAL>& problem, const Vec<int>& var_mapping,
                        ArgumentType argument = ArgumentType::kPrimal ) = 0;
 
    virtual void

@@ -583,8 +583,7 @@ ProblemUpdate<REAL>::fixCol( int col, REAL val, ArgumentType argument )
              true, col, lbs[col],
              problem.getColFlags()[col].test( ColFlag::kLbInf ), val );
          certificate_interface->change_lower_bound(
-             val, problem.getVariableNames()[postsolve.origcol_mapping[col]],
-             argument );
+             val, col, problem, postsolve.origcol_mapping, argument );
          lbs[col] = val;
          cflags[col].unset( ColFlag::kLbUseless );
       }
@@ -601,7 +600,7 @@ ProblemUpdate<REAL>::fixCol( int col, REAL val, ArgumentType argument )
              false, col, ubs[col],
              problem.getColFlags()[col].test( ColFlag::kUbInf ), val );
          certificate_interface->change_upper_bound(
-             val, problem.getVariableNames()[postsolve.origcol_mapping[col]],
+             val, col, problem, postsolve.origcol_mapping,
              argument );
          ubs[col] = val;
          cflags[col].unset( ColFlag::kUbUseless );
@@ -725,7 +724,7 @@ ProblemUpdate<REAL>::changeLB( int col, REAL val, ArgumentType argument )
 
       postsolve.storeVarBoundChange( true, col, lbs[col], isInfinity,
                                      newbound );
-      certificate_interface->change_lower_bound( val, problem.getVariableNames()[postsolve.origcol_mapping[col]], argument );
+      certificate_interface->change_lower_bound( val, col, problem, postsolve.origcol_mapping, argument );
 
       lbs[col] = newbound;
 
@@ -818,7 +817,7 @@ ProblemUpdate<REAL>::changeUB( int col, REAL val, ArgumentType argument )
 
       postsolve.storeVarBoundChange( false, col, ubs[col], isInfinity,
                                      newbound );
-      certificate_interface->change_upper_bound( val, problem.getVariableNames()[postsolve.origcol_mapping[col]], argument );
+      certificate_interface->change_upper_bound( val, col, problem, postsolve.origcol_mapping, argument );
       ubs[col] = newbound;
 
       if( !cflags[col].test( ColFlag::kLbInf ) && ubs[col] == lbs[col] )
@@ -1332,8 +1331,8 @@ ProblemUpdate<REAL>::apply_dualfix( Vec<REAL>& lbs, Vec<REAL>& ubs,
                                            cflags[col].test( ColFlag::kUbInf ),
                                            lbs[col] );
             certificate_interface->change_upper_bound(
-                lbs[col],
-                problem.getVariableNames()[postsolve.origcol_mapping[col]],
+                lbs[col], col, problem,
+                postsolve.origcol_mapping,
                 ArgumentType::kDual );
             ubs[col] = lbs[col];
             cflags[col].unset( ColFlag::kUbInf );
@@ -1363,8 +1362,7 @@ ProblemUpdate<REAL>::apply_dualfix( Vec<REAL>& lbs, Vec<REAL>& ubs,
                                            cflags[col].test( ColFlag::kLbInf ),
                                            ubs[col] );
             certificate_interface->change_lower_bound(
-                ubs[col],
-                problem.getVariableNames()[postsolve.origcol_mapping[col]],
+                ubs[col],col, problem, postsolve.origcol_mapping,
                 ArgumentType::kDual );
             lbs[col] = ubs[col];
             cflags[col].unset( ColFlag::kLbInf );
@@ -1841,8 +1839,7 @@ ProblemUpdate<REAL>::removeEmptyColumns()
                       true, col, domains.lower_bounds[col],
                       domains.flags[col].test( ColFlag::kLbInf ), fixval );
                   certificate_interface->change_lower_bound(
-                      fixval,
-                      problem.getVariableNames()[postsolve.origcol_mapping[col]],
+                      fixval,col, problem, postsolve.origcol_mapping,
                       ArgumentType::kDual );
                }
                if( domains.flags[col].test( ColFlag::kUbInf ) ||
@@ -1852,8 +1849,8 @@ ProblemUpdate<REAL>::removeEmptyColumns()
                       false, col, domains.upper_bounds[col],
                       domains.flags[col].test( ColFlag::kUbInf ), fixval );
                   certificate_interface->change_upper_bound(
-                      fixval,
-                      problem.getVariableNames()[postsolve.origcol_mapping[col]],
+                      fixval, col, problem,
+                      postsolve.origcol_mapping,
                       ArgumentType::kDual );
                }
             }

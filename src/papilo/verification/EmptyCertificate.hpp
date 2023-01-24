@@ -43,13 +43,13 @@ class EmptyCertificate : public CertificateInterface<REAL>
    flush(){};
 
    void
-   change_upper_bound( REAL val, const String& name,
-                       ArgumentType argument = ArgumentType::kPrimal )
+   change_upper_bound( REAL val, int col, const Problem<REAL>& problem, const Vec<int>& var_mapping,
+                       ArgumentType argument = ArgumentType::kPrimal)
    {
    }
 
    void
-   change_lower_bound( REAL val, const String& name,
+   change_lower_bound( REAL val, int col, const Problem<REAL>& problem, const Vec<int>& var_mapping,
                        ArgumentType argument = ArgumentType::kPrimal )
    {
    }
