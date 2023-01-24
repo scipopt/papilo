@@ -174,11 +174,11 @@ class VeriPb : public CertificateInterface<REAL>
                        const Vec<String>& names, const Vec<int>& var_mapping )
    {
       next_constraint_id ++;
-      auto name_dominated = names[var_mapping[dominated_column]];
       auto name_dominating = names[var_mapping[dominating_column]];
-      proof_out << "red 1 " << name_dominated << " +1 ~" << name_dominating
-                << " >= 1 ; " << name_dominated << " -> " << name_dominating
-                << " " << name_dominating << " -> " << name_dominated << "\n";
+      auto name_dominated = names[var_mapping[dominated_column]];
+      proof_out << "red 1 " << name_dominating << " +1 ~" << name_dominated
+                << " >= 1 ; " << name_dominating << " -> " << name_dominated
+                << " " << name_dominated << " -> " << name_dominating << "\n";
    }
 
    void

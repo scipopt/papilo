@@ -526,14 +526,19 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
          reductions.lockColBounds( dr.col1 );
          reductions.lockCol( dr.col2 );
          reductions.lockColBounds( dr.col2 );
-         reductions.dominance(dr.col1, dr.col2);
          if( dr.implrowlock >= 0 )
             reductions.lockRow( dr.implrowlock );
 
          if( dr.boundchg == BoundChange::kUpper )
+         {
+            reductions.dominance(dr.col2, dr.col1);
             reductions.fixCol( dr.col2, lbValues[dr.col2], dr.implrowlock );
+         }
          else
-            reductions.fixCol( dr.col2, ubValues[dr.col2], dr.implrowlock);
+         {
+            reductions.dominance(dr.col1, dr.col2);
+            reductions.fixCol( dr.col2, ubValues[dr.col2], dr.implrowlock );
+         }
       }
 
    }
