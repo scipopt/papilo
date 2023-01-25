@@ -328,7 +328,7 @@ class VeriPb : public CertificateInterface<REAL>
       REAL factor = factor_row / factor_parallel;
       assert( abs( factor ) >= 1 );
       proof_out << COMMENT ;
-      if( factor > 0 )
+      if( factor < 0 )
          proof_out << lhs_row_mapping[parallel_row] ;
       else
          proof_out << rhs_row_mapping[parallel_row] ;
