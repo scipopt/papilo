@@ -138,20 +138,20 @@ class VeriPb : public CertificateInterface<REAL>
       switch( argument )
       {
       case ArgumentType::kPrimal:
-         proof_out << "rup 1 ~" << problem.getVariableNames()[orig_col] << " >= 1 ;\n";
+         proof_out << "rup 1 ~" << names[orig_col] << " >= 1 ;\n";
          break;
       case ArgumentType::kDual:
       case ArgumentType::kSymmetry:
-         proof_out << "red 1 ~" << problem.getVariableNames()[orig_col] << " >= 1 ; " << problem.getVariableNames()[orig_col] << " -> 0\n";
+         proof_out << "red 1 ~" << names[orig_col] << " >= 1 ; " << names[orig_col] << " -> 0\n";
          break;
       default:
          assert( false );
          return;
       }
       int cons_id_fixing = next_constraint_id;
-      next_constraint_id++;
-      proof_out << "rup 1 " << problem.getVariableNames()[orig_col] << " >= 0 ;\n";
-      int cons_id_opposing = next_constraint_id;
+//      next_constraint_id++;
+//      proof_out << "rup 1 " << names[orig_col] << " >= 0 ;\n";
+//      int cons_id_opposing = next_constraint_id;
       auto col_coeff = problem.getConstraintMatrix().getColumnCoefficients( col );
       for( int row_index = 0; row_index < col_coeff.getLength(); row_index++ )
       {
@@ -163,8 +163,9 @@ class VeriPb : public CertificateInterface<REAL>
             assert(lhs_row_mapping[row] != UNKNOWN);
             int cons = cons_id_fixing;
             if( row_value < 0)
-               cons = cons_id_opposing;
-            proof_out << POL << lhs_row_mapping[row] << " " << cons  << " " << abs(row_value) << " * + \n";
+               proof_out << POL << rhs_row_mapping[row] << " " << names[orig_col] << " " << abs(row_value) << " * + \n";
+            else
+               proof_out << POL << lhs_row_mapping[row] << " " << cons_id_fixing << " " << abs(row_value) << " * + \n";
             proof_out << DELETE_CONS << lhs_row_mapping[row] << "\n";
             lhs_row_mapping[row] = next_constraint_id;
          }
@@ -174,13 +175,13 @@ class VeriPb : public CertificateInterface<REAL>
             assert(rhs_row_mapping[row] != UNKNOWN);
             int cons = cons_id_fixing;
             if( row_value > 0)
-               cons = cons_id_opposing;
-            proof_out << POL << rhs_row_mapping[row] << " " << cons << " " << abs(row_value) << " * + \n";
+               proof_out << POL << rhs_row_mapping[row] << " " << names[orig_col] << " " << abs(row_value) << " * + \n";
+            else
+               proof_out << POL << rhs_row_mapping[row] << " " << cons_id_fixing << " " << abs(row_value) << " * + \n";
             proof_out << DELETE_CONS << rhs_row_mapping[row] << "\n";
             rhs_row_mapping[row] = next_constraint_id;
          }
       }
-      proof_out << DELETE_CONS << cons_id_opposing << "\n";
    }
 
    void
@@ -211,9 +212,9 @@ class VeriPb : public CertificateInterface<REAL>
          return;
       }
       int cons_id_fixing = next_constraint_id;
-      next_constraint_id++;
-      proof_out << "rup 1 ~" << problem.getVariableNames()[orig_col] << " >= 0 ;\n";
-      int cons_id_opposing = next_constraint_id;
+//      next_constraint_id++;
+//      proof_out << "rup 1 ~" << problem.getVariableNames()[orig_col] << " >= 0 ;\n";
+//      int cons_id_opposing = next_constraint_id;
       auto col_coeff = problem.getConstraintMatrix().getColumnCoefficients( col );
       for( int row_index = 0; row_index < col_coeff.getLength(); row_index++ )
       {
@@ -225,8 +226,9 @@ class VeriPb : public CertificateInterface<REAL>
             assert(lhs_row_mapping[row] != UNKNOWN);
             int cons = cons_id_fixing;
             if( row_value > 0)
-               cons = cons_id_opposing;
-            proof_out << POL << lhs_row_mapping[row] << " " << cons  << " " << abs(row_value) << " * + \n";
+               proof_out << POL << lhs_row_mapping[row] << " ~" << names[orig_col] << " " << abs(row_value) << " * + \n";
+            else
+               proof_out << POL << lhs_row_mapping[row] << " " << cons_id_fixing  << " " << abs(row_value) << " * + \n";
             proof_out << DELETE_CONS << lhs_row_mapping[row] << "\n";
             lhs_row_mapping[row] = next_constraint_id;
          }
@@ -234,16 +236,14 @@ class VeriPb : public CertificateInterface<REAL>
          {
             next_constraint_id++;
             assert(rhs_row_mapping[row] != UNKNOWN);
-            int cons = cons_id_fixing;
             if( row_value < 0)
-               cons = cons_id_opposing;
-            proof_out << POL << rhs_row_mapping[row] << " " << cons << " " << abs(row_value) << " * + \n";
+               proof_out << POL << lhs_row_mapping[row] << " ~" << names[orig_col] << " " << abs(row_value) << " * + \n";
+            else
+               proof_out << POL << rhs_row_mapping[row] << " " << cons_id_fixing << " " << abs(row_value) << " * + \n";
             proof_out << DELETE_CONS << rhs_row_mapping[row] << "\n";
             rhs_row_mapping[row] = next_constraint_id;
          }
       }
-      proof_out << DELETE_CONS << cons_id_opposing << "\n";
-
    }
 
    void
