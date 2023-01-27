@@ -19,6 +19,8 @@ Fixed bugs
 Miscellaneous
 -------------
 
+- Boost: minimal 1.81 requirement for Mac since compiler complained about deprecated declarations in Boost
+
 @section RN212 PaPILO 2.1.2
 ***************************
 
