@@ -803,6 +803,10 @@ class VeriPb : public CertificateInterface<REAL>
       auto col_vec = matrix.getColumnCoefficients( col );
       auto row_data = matrix.getRowCoefficients( substituted_row );
 
+      // TODO: if singleton column is substiuted in objective -> continue there is nothing to do in this case
+      if(col_vec.getLength() == 1)
+         return ;
+
       REAL substitute_factor = 0;
       for( int i = 0; i < col_vec.getLength(); i++ )
       {
