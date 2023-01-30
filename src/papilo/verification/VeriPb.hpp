@@ -38,6 +38,7 @@ namespace papilo
 static const char* const DELETE_CONS = "del id ";
 static const char* const NEGATED = "~";
 static const char* const RUP = "rup ";
+static const char* const RED = "red ";
 static const char* const COMMENT = "* ";
 static const char* const POL = "pol ";
 static const int UNKNOWN = -1;
@@ -138,20 +139,18 @@ class VeriPb : public CertificateInterface<REAL>
       switch( argument )
       {
       case ArgumentType::kPrimal:
-         proof_out << "rup 1 ~" << names[orig_col] << " >= 1 ;\n";
+         proof_out << RUP << "1 ~" << names[orig_col] << " >= 1 ;\n";
          break;
       case ArgumentType::kDual:
       case ArgumentType::kSymmetry:
-         proof_out << "red 1 ~" << names[orig_col] << " >= 1 ; " << names[orig_col] << " -> 0\n";
+         proof_out << RED << "1 ~" << names[orig_col] << " >= 1 ; " << names[orig_col] << " -> 0\n";
          break;
       default:
          assert( false );
          return;
       }
       int cons_id_fixing = next_constraint_id;
-//      next_constraint_id++;
-//      proof_out << "rup 1 " << names[orig_col] << " >= 0 ;\n";
-//      int cons_id_opposing = next_constraint_id;
+
       auto col_coeff = problem.getConstraintMatrix().getColumnCoefficients( col );
       for( int row_index = 0; row_index < col_coeff.getLength(); row_index++ )
       {
@@ -196,13 +195,12 @@ class VeriPb : public CertificateInterface<REAL>
       switch( argument )
       {
       case ArgumentType::kPrimal:
-         proof_out << "rup 1 " << names[orig_col]
+         proof_out << RUP << "1 " << names[orig_col]
                    << " >= " << num.round_to_int( val ) << " ;\n";
-
          break;
       case ArgumentType::kDual:
       case ArgumentType::kSymmetry:
-         proof_out << "red 1 " << names[orig_col]
+         proof_out << RED << "1 " << names[orig_col]
                    << " >= " << num.round_to_int( val ) << " ; "
                    << names[orig_col] << " -> " << num.round_to_int( val )
                    << "\n";
@@ -212,9 +210,6 @@ class VeriPb : public CertificateInterface<REAL>
          return;
       }
       int cons_id_fixing = next_constraint_id;
-//      next_constraint_id++;
-//      proof_out << "rup 1 ~" << problem.getVariableNames()[orig_col] << " >= 0 ;\n";
-//      int cons_id_opposing = next_constraint_id;
       auto col_coeff = problem.getConstraintMatrix().getColumnCoefficients( col );
       for( int row_index = 0; row_index < col_coeff.getLength(); row_index++ )
       {
@@ -253,7 +248,7 @@ class VeriPb : public CertificateInterface<REAL>
       next_constraint_id ++;
       auto name_dominating = names[var_mapping[dominating_column]];
       auto name_dominated = names[var_mapping[dominated_column]];
-      proof_out << "red 1 " << name_dominating << " +1 ~" << name_dominated
+      proof_out << RED << "1 " << name_dominating << " +1 ~" << name_dominated
                 << " >= 1 ; " << name_dominating << " -> " << name_dominated
                 << " " << name_dominated << " -> " << name_dominating << "\n";
    }
@@ -559,7 +554,8 @@ class VeriPb : public CertificateInterface<REAL>
          proof_out<< RUP ;
          for( int i = 0; i < data.getLength(); i++ )
          {
-            if( data.getIndices()[i] == col )
+            int index = data.getIndices()[i];
+            if( index == col )
             {
                if( new_val == 0 )
                   continue;
@@ -585,7 +581,7 @@ class VeriPb : public CertificateInterface<REAL>
                   proof_out << NEGATED;
                }
             }
-            proof_out << names[var_mapping[col]];
+            proof_out << names[var_mapping[index]];
          }
 
          proof_out << " >=  " << offset - num.round_to_int( rhs * scale_factor[row] )
