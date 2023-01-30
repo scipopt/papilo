@@ -163,7 +163,7 @@ class VeriPb : public CertificateInterface<REAL>
             assert(lhs_row_mapping[row] != UNKNOWN);
             int cons = cons_id_fixing;
             if( row_value < 0)
-               proof_out << POL << rhs_row_mapping[row] << " " << names[orig_col] << " " << abs(row_value) << " * + \n";
+               proof_out << POL << lhs_row_mapping[row] << " " << names[orig_col] << " " << abs(row_value) << " * + \n";
             else
                proof_out << POL << lhs_row_mapping[row] << " " << cons_id_fixing << " " << abs(row_value) << " * + \n";
             proof_out << DELETE_CONS << lhs_row_mapping[row] << "\n";
