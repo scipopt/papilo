@@ -155,6 +155,12 @@ class VeriPb : public CertificateInterface<REAL>
       for( int row_index = 0; row_index < col_coeff.getLength(); row_index++ )
       {
          int row = col_coeff.getIndices()[row_index];
+         if( problem.getRowFlags()[row].test( RowFlag::kRedundant ) )
+         {
+            assert( rhs_row_mapping[row] == UNKNOWN );
+            assert( lhs_row_mapping[row] == UNKNOWN );
+            continue;
+         }
          REAL row_value = col_coeff.getValues()[row_index] * scale_factor[row];
          if( !problem.getRowFlags()[row].test( RowFlag::kLhsInf ) )
          {
@@ -540,7 +546,7 @@ class VeriPb : public CertificateInterface<REAL>
             }
             proof_out << names[var_mapping[index]];
          }
-         proof_out << " >=  " << offset + num.round_to_int( lhs * scale_factor[row] )
+         proof_out << " >= " << offset + num.round_to_int( lhs * scale_factor[row] )
                    << ";\n";
 
          proof_out << DELETE_CONS << lhs_row_mapping[row] << "\n";
@@ -584,7 +590,7 @@ class VeriPb : public CertificateInterface<REAL>
             proof_out << names[var_mapping[index]];
          }
 
-         proof_out << " >=  " << offset - num.round_to_int( rhs * scale_factor[row] )
+         proof_out << " >= " << offset - num.round_to_int( rhs * scale_factor[row] )
                    << ";\n";
          proof_out << DELETE_CONS << rhs_row_mapping[row] << "\n";
          rhs_row_mapping[row] = next_constraint_id;
@@ -835,20 +841,18 @@ class VeriPb : public CertificateInterface<REAL>
          if(lhs_row_mapping[row] == skip_deleting_lhs_constraint_id)
             skip_deleting_lhs_constraint_id = UNKNOWN;
          else
-         {
             proof_out << DELETE_CONS << lhs_row_mapping[row] << "\n";
-            lhs_row_mapping[row] = UNKNOWN;
-         }
+         lhs_row_mapping[row] = UNKNOWN;
+
       }
       if( rhs_row_mapping[row] != UNKNOWN )
       {
          if(rhs_row_mapping[row] == skip_deleting_rhs_constraint_id)
             skip_deleting_rhs_constraint_id = UNKNOWN;
          else
-         {
             proof_out << DELETE_CONS << rhs_row_mapping[row] << "\n";
-            rhs_row_mapping[row] = UNKNOWN;
-         }
+         rhs_row_mapping[row] = UNKNOWN;
+
       }
    }
 
@@ -918,11 +922,18 @@ class VeriPb : public CertificateInterface<REAL>
           currentProblem.getConstraintMatrix();
       auto col_vec = matrix.getColumnCoefficients( col );
 
+      proof_out.flush();
       for( int i = 0; i < col_vec.getLength(); i++ )
       {
          int row = col_vec.getIndices()[i];
          if( row == skip_row_id )
             continue;
+         if( matrix.getRowFlags()[row].test( RowFlag::kRedundant ) )
+         {
+            assert( rhs_row_mapping[row] == UNKNOWN );
+            assert( lhs_row_mapping[row] == UNKNOWN );
+            continue;
+         }
          REAL factor = col_vec.getValues()[i] * scale_factor[row];
          auto data = matrix.getRowCoefficients( row );
          if( num.isIntegral( factor / substitute_factor ) )
