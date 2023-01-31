@@ -2044,7 +2044,7 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
              rflags[reduction.row],
              constraintMatrix.getLeftHandSides()[reduction.row],
              constraintMatrix.getRightHandSides()[reduction.row],
-             problem.getVariableNames(), postsolve.origcol_mapping );
+             problem.getVariableNames(), postsolve.origcol_mapping, argument );
       }
       else if( reduction.row < 0 )
       {

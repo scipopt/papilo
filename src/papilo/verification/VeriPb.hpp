@@ -66,6 +66,8 @@ class VeriPb : public CertificateInterface<REAL>
 
    int skip_deleting_rhs_constraint_id = UNKNOWN;
    int skip_deleting_lhs_constraint_id = UNKNOWN;
+   int skip_changing_rhs = UNKNOWN;
+   int skip_changing_lhs = UNKNOWN;
 
 
    VeriPb() = default;
@@ -138,6 +140,7 @@ class VeriPb : public CertificateInterface<REAL>
       int orig_col = var_mapping[col];
       switch( argument )
       {
+      case ArgumentType::kSingelton:
       case ArgumentType::kPrimal:
          proof_out << RUP << "1 ~" << names[orig_col] << " >= 1 ;\n";
          break;
@@ -200,6 +203,7 @@ class VeriPb : public CertificateInterface<REAL>
       int orig_col = var_mapping[col];
       switch( argument )
       {
+      case ArgumentType::kSingelton:
       case ArgumentType::kPrimal:
          proof_out << RUP << "1 " << names[orig_col]
                    << " >= " << num.round_to_int( val ) << " ;\n";
@@ -238,7 +242,7 @@ class VeriPb : public CertificateInterface<REAL>
             next_constraint_id++;
             assert(rhs_row_mapping[row] != UNKNOWN);
             if( row_value < 0)
-               proof_out << POL << lhs_row_mapping[row] << " ~" << names[orig_col] << " " << abs(row_value) << " * + \n";
+               proof_out << POL << rhs_row_mapping[row] << " ~" << names[orig_col] << " " << abs(row_value) << " * + \n";
             else
                proof_out << POL << rhs_row_mapping[row] << " " << cons_id_fixing << " " << abs(row_value) << " * + \n";
             proof_out << DELETE_CONS << rhs_row_mapping[row] << "\n";
@@ -263,7 +267,11 @@ class VeriPb : public CertificateInterface<REAL>
    change_rhs( int row, REAL val, const SparseVectorView<REAL>& data,
                const Vec<String>& names, const Vec<int>& var_mapping )
    {
-
+      if(skip_changing_rhs == row)
+      {
+         skip_changing_rhs = UNKNOWN;
+         return ;
+      }
       assert( num.isIntegral( val * scale_factor[row] ) );
       next_constraint_id++;
       proof_out << RUP;
@@ -292,6 +300,11 @@ class VeriPb : public CertificateInterface<REAL>
    change_lhs( int row, REAL val, const SparseVectorView<REAL>& data,
                const Vec<String>& names, const Vec<int>& var_mapping )
    {
+      if(skip_changing_lhs == row)
+      {
+         skip_changing_lhs = UNKNOWN;
+         return ;
+      }
       assert( num.isIntegral( val * scale_factor[row] ) );
       next_constraint_id++;
       proof_out << RUP;
@@ -505,8 +518,56 @@ class VeriPb : public CertificateInterface<REAL>
    void
    update_row( int row, int col, REAL new_val,
                const SparseVectorView<REAL>& data, RowFlags& rflags, REAL lhs,
-               REAL rhs, const Vec<String>& names, const Vec<int>& var_mapping )
+               REAL rhs, const Vec<String>& names, const Vec<int>& var_mapping, ArgumentType argument )
    {
+      // remove singleton variable from equation
+      if(argument == ArgumentType::kSingelton)
+      {
+         assert( lhs == rhs );
+         assert( !rflags.test( RowFlag::kLhsInf ) );
+         assert( !rflags.test( RowFlag::kRhsInf ) );
+         assert( new_val == 0 );
+         assert(skip_changing_lhs == UNKNOWN);
+         assert(skip_changing_rhs == UNKNOWN);
+         int old_value = 0;
+         for( int i = 0; i < data.getLength(); i++ )
+            if( data.getIndices()[i] == col )
+            {
+               assert(num.isIntegral(data.getValues()[i] * scale_factor[row]) );
+               old_value = num.round_to_int(data.getValues()[i] * scale_factor[row]);
+            }
+         assert( old_value != 0 );
+
+         auto name = names[var_mapping[col]];
+         next_constraint_id++;
+         assert(lhs_row_mapping[row] != UNKNOWN);
+         if( old_value > 0)
+            proof_out << POL << lhs_row_mapping[row] << " ~" << name << " " << abs(old_value) << " * + \n";
+         else
+            proof_out << POL << lhs_row_mapping[row] << " " << name << " " << abs(old_value) << " * + \n";
+         proof_out << DELETE_CONS << lhs_row_mapping[row] << "\n";
+         lhs_row_mapping[row] = next_constraint_id;
+
+
+         next_constraint_id++;
+         assert(rhs_row_mapping[row] != UNKNOWN);
+         if( old_value < 0)
+         {
+            skip_changing_rhs = row;
+            proof_out << POL << rhs_row_mapping[row] << " ~" << name << " "
+                      << abs( old_value ) << " * + \n";
+         }
+         else
+         {
+            skip_changing_lhs = row;
+            proof_out << POL << rhs_row_mapping[row] << " " << name << " "
+                      << abs( old_value ) << " * + \n";
+         }
+         proof_out << DELETE_CONS << rhs_row_mapping[row] << "\n";
+         rhs_row_mapping[row] = next_constraint_id;
+
+         return;
+      }
 
       assert( num.isIntegral( new_val * scale_factor[row] ) );
       if( !rflags.test( RowFlag::kLhsInf ) )
@@ -597,7 +658,6 @@ class VeriPb : public CertificateInterface<REAL>
       }
    }
 
-   // TODO test with scale_factor already in place
    void
    sparsify( int eqrow, int candrow, REAL scale,
              const Problem<REAL>& currentProblem )
@@ -787,8 +847,6 @@ class VeriPb : public CertificateInterface<REAL>
       }
       proof_out << names[var_mapping[indices[1]]] << " >= " << rhs << ";\n";
 
-      proof_out.flush();
-
       substitute( col, substitute_factor, lhs_id, next_constraint_id,
                   currentProblem );
       proof_out << DELETE_CONS << first_constraint_id << "\n";
@@ -879,7 +937,7 @@ class VeriPb : public CertificateInterface<REAL>
    compress( const Vec<int>& rowmapping, const Vec<int>& colmapping,
              bool full = false )
    {
-      proof_out.flush();
+      flush();
 #ifdef PAPILO_TBB
       tbb::parallel_invoke(
           [this, &rowmapping, full]()
@@ -922,7 +980,6 @@ class VeriPb : public CertificateInterface<REAL>
           currentProblem.getConstraintMatrix();
       auto col_vec = matrix.getColumnCoefficients( col );
 
-      proof_out.flush();
       for( int i = 0; i < col_vec.getLength(); i++ )
       {
          int row = col_vec.getIndices()[i];
@@ -1120,7 +1177,6 @@ class VeriPb : public CertificateInterface<REAL>
                              scale_factor[row] << ";\n";
          }
       }
-      proof_out.flush();
    }
 
 };
