@@ -140,10 +140,10 @@ class VeriPb : public CertificateInterface<REAL>
       int orig_col = var_mapping[col];
       switch( argument )
       {
-      case ArgumentType::kSingelton:
       case ArgumentType::kPrimal:
          proof_out << RUP << "1 ~" << names[orig_col] << " >= 1 ;\n";
          break;
+      case ArgumentType::kSingelton:
       case ArgumentType::kDual:
       case ArgumentType::kSymmetry:
          proof_out << RED << "1 ~" << names[orig_col] << " >= 1 ; " << names[orig_col] << " -> 0\n";
@@ -203,11 +203,11 @@ class VeriPb : public CertificateInterface<REAL>
       int orig_col = var_mapping[col];
       switch( argument )
       {
-      case ArgumentType::kSingelton:
       case ArgumentType::kPrimal:
          proof_out << RUP << "1 " << names[orig_col]
                    << " >= " << num.round_to_int( val ) << " ;\n";
          break;
+      case ArgumentType::kSingelton:
       case ArgumentType::kDual:
       case ArgumentType::kSymmetry:
          proof_out << RED << "1 " << names[orig_col]
