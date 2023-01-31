@@ -351,7 +351,9 @@ class VeriPb : public CertificateInterface<REAL>
 
       if( abs(factor) == 1 )
       {
-         assert( rhs_row_mapping[row] == UNKNOWN );
+         // rhs_row_mapping[row] can be KNOWN for example if Singleton relaxed a constraint.
+         if(rhs_row_mapping[row] != UNKNOWN)
+            proof_out << DELETE_CONS << rhs_row_mapping[row] << "\n";
          if(factor == 1)
             rhs_row_mapping[row] = rhs_row_mapping[parallel_row];
          else
@@ -438,6 +440,9 @@ class VeriPb : public CertificateInterface<REAL>
       // shift the constraint ids
       if( abs(factor) == 1 )
       {
+         // lhs_row_mapping[row] can be KNOWN for example if Singleton relaxed a constraint.
+         if(lhs_row_mapping[row] != UNKNOWN)
+            proof_out << DELETE_CONS << lhs_row_mapping[row] << "\n";
          assert( ( lhs_row_mapping[row] != UNKNOWN && factor == 1 ) ||
                  ( factor == -1 && rhs_row_mapping[row] != UNKNOWN ) );
          assert( factor == 1 || factor == -1 );
