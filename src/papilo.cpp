@@ -89,6 +89,19 @@ get_mip_solver_factory( papilo::OptionsInfo& optionsInfo )
 {
    return papilo::GurobiFactory<REAL>::create( );
 }
+
+#elif defined PAPILO_HAVE_ROUNDINGSAT
+
+#include "papilo/interfaces/RoundingsatInterface.hpp"
+
+
+template <typename REAL>
+static std::unique_ptr<papilo::SolverFactory<REAL>>
+get_mip_solver_factory( papilo::OptionsInfo& optionsInfo )
+{
+   return papilo::RoundingsatFactory<REAL>::create( );
+}
+
 #else
 
 template <typename REAL>
