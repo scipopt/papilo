@@ -54,8 +54,8 @@ To install papilo into a folder, add `-DCMAKE_INSTALL_PREFIX=/path/to/install/di
 If you use a relative path to SCIP, then the reference point is the location of the `CMakeLists.txt`.
 If you want to build PaPILO with a provided Boost version please add one of these option to the cmake command:
 ```
--DBOOST_ROOT=../boost_1_66_0
--DBOOST_INCLUDEDIR=../boost_1_66_0/include
+-DBOOST_ROOT=../boost_1_72_0
+-DBOOST_INCLUDEDIR=../boost_1_72_0/include
 ```
 
 Solvers that are found in the system are automatically linked to the executable.
@@ -368,7 +368,9 @@ For other licensing options we refer to https://scipopt.org/, where PaPILO can b
 
 [Alexander Hoen](https://www.zib.de/members/hoen)  ([@alexhoen](https://github.com/alexhoen)) &mdash; main developer
 
-[Franziska Schlösser](https://www.zib.de/members/schloesser)  ([@fschloesser](https://github.com/fschloesser)) &mdash; build system
+[Julian Manns](https://www.zib.de/members/manns)  () &mdash; build system
+
+
 
 #### Former Contributors
 
@@ -383,3 +385,5 @@ Gabriel Kressin ([@GabrielKP](https://github.com/GabrielKP)) &mdash; numerical s
 Anass Meskini &mdash; general development and contributions to substitution presolver in terms of internship
 
 [Daniel Rehfeldt](https://www.zib.de/members/rehfeldt) ([@dRehfeldt](https://github.com/dRehfeldt)) &mdash; core data structures and MPS parsing
+
+[Franziska Schlösser](https://www.zib.de/members/schloesser)  ([@fschloesser](https://github.com/fschloesser)) &mdash; build system
