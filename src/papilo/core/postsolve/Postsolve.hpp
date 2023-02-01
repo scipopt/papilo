@@ -382,7 +382,7 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
          if( originalSolution.basisAvailabe )
             originalSolution.rowBasisStatus[indices[first]] =
                 VarBasisStatus::BASIC;
-         if( types[i - 1] == ReductionType::kSubstitutedColWithDual )
+         if( i >= 1 && types[i - 1] == ReductionType::kSubstitutedColWithDual )
             continue;
          break;
          // the remaining Types are used as additional information for other
