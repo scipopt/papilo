@@ -39,17 +39,17 @@ cmake ..
 make
 ```
 
-Building PaPILO with SCIP and SOPLEX works also with the standard cmake workflow:
+Building PaPILO with SCIP, Gurobi, OrTools or SOPLEX works also with the standard cmake workflow:
 ```
 mkdir build
 cd build
 cmake -DSCIP_DIR=PATH_TO_SCIP_BUILD_DIR ..
 make
 ```
-After this, your papilo binary should be found in the `bin` folder.
+After this, your PaPILO binary should be found in the `bin` folder.
 To install into your system, run `sudo make install`.
 
-To install papilo into a folder, add `-DCMAKE_INSTALL_PREFIX=/path/to/install/dir/` to the cmake call and run `make install` after the build.
+To install PaPILO into a folder, add `-DCMAKE_INSTALL_PREFIX=/path/to/install/dir/` to the cmake call and run `make install` after the build.
 
 If you use a relative path to SCIP, then the reference point is the location of the `CMakeLists.txt`.
 If you want to build PaPILO with a provided Boost version please add one of these option to the cmake command:
@@ -73,6 +73,7 @@ Assuming a problem instance is stored in the file `problem.mps` the following ca
 ```
 papilo presolve -f problem.mps -r reduced.mps -v reduced.postsolve
 ```
+_Not all presolver are able to dual-postsolve the dual solution (and the reduced costs and the basis information). Please use the settings file lp_presolvers_with*_basis.set._
 
 Now we can use the reduced problem `reduced.mps` to obtain a solution
 using any solver or from any other source to the file `reduced.sol`.
@@ -263,10 +264,10 @@ The printed parameters will have the values they were set to, not the default va
 For adjusting the parameters programatically there are two ways.
 The first way is to obtain an instance of `papilo::ParameterSet` by calling `papilo::Presolve<REAL>::getParameters()`.
 It is important to call this member function after all presolvers have been added to the `papilo::Presolve<REAL>` class.
-Otherwise not all parameters are available, e.g. the ones that are added by individual presolvers.
+Otherwise, not all parameters are available, e.g. the ones that are added by individual presolvers.
 Now we can call `papilo::ParameterSet::setParameter( key, val )` to set parameters to their desired values.
 
-If we want to adjust the random seed programatically this would look like
+If we want to adjust the random seed programmatically this would look like
 ```
 papilo::Presolve<REAL> presolve;
 ...
@@ -283,7 +284,7 @@ For debugging it can be helpful to print the parameters stored within a `papilo:
 The second way to set a subset of parameters is by directly accessing the instance of `papilo::PresolveOptions` that is stored within each instance of `papilo::Presolve<REAL>`.
 Setting the random seed with this method can simply be achieved by `presolve.getPresolveOptions().randomseed = 42`.
 The caveat with directly accessing the `papilo::PresolveOptions` is, that parameters added by individual presolvers cannot be set and that no error checking is performed in case the user sets a parameter to an invalid value.
-Nevertheless this can be convenient for setting basic things like tolerances, time limits, and thread limits.
+Nevertheless, this can be convenient for setting basic things like tolerances, time limits, and thread limits.
 
 # Adding a presolver
 
