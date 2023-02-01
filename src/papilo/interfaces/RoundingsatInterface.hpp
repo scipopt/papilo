@@ -24,14 +24,14 @@
 #ifndef _PAPILO_INTERFACES_ROUNDINGSAT_INTERFACE_HPP_
 #define _PAPILO_INTERFACES_ROUNDINGSAT_INTERFACE_HPP_
 
-#include "Options.hpp"
-#include "Stats.hpp"
-#include "Solver.hpp"
-#include "run.hpp"
-#include "typedefs.hpp"
 #include <csignal>
 #include <fstream>
 #include <memory>
+#include "auxiliary.hpp"
+#include "globals.hpp"
+#include "parsing.hpp"
+#include "run.hpp"
+
 
 namespace papilo
 {
@@ -225,7 +225,11 @@ class RoundingsatInterface : public SolverInterface<REAL>
    bool
    getSolution( Solution<REAL>& solbuffer ) override
    {
-      return false;
+      if (!rs::run::solver.foundSolution())
+         return false;
+      // TODO:
+//      solbuffer = Solution<REAL>(rs::run::solver.lastSol);
+      return true;
    }
 
    bool
