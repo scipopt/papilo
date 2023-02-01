@@ -61,7 +61,8 @@ ResultStatus
 presolve_and_solve(
     const OptionsInfo& opts,
     std::unique_ptr<SolverFactory<REAL>> lpSolverFactory = nullptr,
-    std::unique_ptr<SolverFactory<REAL>> mipSolverFactory = nullptr )
+    std::unique_ptr<SolverFactory<REAL>> mipSolverFactory = nullptr,
+    std::unique_ptr<SolverFactory<REAL>> satSolverFactory = nullptr )
 {
    try
    {
@@ -99,6 +100,8 @@ presolve_and_solve(
             lpSolverFactory->add_parameters(paramSet);
          if(mipSolverFactory != nullptr)
             mipSolverFactory->add_parameters(paramSet);
+         if(satSolverFactory != nullptr)
+            satSolverFactory->add_parameters(paramSet);
 
          if( !opts.param_settings_file.empty() && !opts.print_params )
          {
@@ -205,6 +208,7 @@ presolve_and_solve(
 
       presolve.setLPSolverFactory( std::move( lpSolverFactory ) );
       presolve.setMIPSolverFactory( std::move( mipSolverFactory ) );
+      presolve.setSATSolverFactory( std::move( satSolverFactory ) );
 
       presolve.getPresolveOptions().tlim =
           std::min( opts.tlim, presolve.getPresolveOptions().tlim );
@@ -220,8 +224,9 @@ presolve_and_solve(
                 presolve.getVerbosityLevel() );
             store_dual = solver->is_dual_solution_available();
          }
-         else if( presolve.getMIPSolverFactory() )
-            solver = presolve.getMIPSolverFactory()->newSolver(
+         else if( presolve.getSATSolverFactory() )
+            //TODO: check problem type
+            solver = presolve.getSATSolverFactory()->newSolver(
                 presolve.getVerbosityLevel() );
          else
          {

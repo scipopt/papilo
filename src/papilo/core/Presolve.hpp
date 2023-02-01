@@ -167,11 +167,25 @@ class Presolve
       this->mipSolverFactory = std::move( value );
    }
 
+   void
+   setSATSolverFactory( std::unique_ptr<SolverFactory<REAL>> value )
+   {
+      this->satSolverFactory = std::move( value );
+   }
+
+
    const std::unique_ptr<SolverFactory<REAL>>&
    getLPSolverFactory() const
    {
       return this->lpSolverFactory;
    }
+
+   const std::unique_ptr<SolverFactory<REAL>>&
+   getSATSolverFactory() const
+   {
+      return this->satSolverFactory;
+   }
+
 
    const std::unique_ptr<SolverFactory<REAL>>&
    getMIPSolverFactory() const
@@ -268,6 +282,7 @@ class Presolve
 
    std::unique_ptr<SolverFactory<REAL>> lpSolverFactory;
    std::unique_ptr<SolverFactory<REAL>> mipSolverFactory;
+   std::unique_ptr<SolverFactory<REAL>> satSolverFactory;
 
    Vec<std::pair<int, int>> presolverStats;
    bool lastRoundReduced;
@@ -693,8 +708,9 @@ Presolve<REAL>::apply( Problem<REAL>& problem, bool store_dual_postsolve )
          if( !lpSolverFactory && problem.getNumContinuousCols() != 0 )
             detectComponents = false;
 
-         if( !mipSolverFactory && problem.getNumIntegralCols() != 0 )
+         if( !(mipSolverFactory || satSolverFactory) && problem.getNumIntegralCols() != 0 )
             detectComponents = false;
+
 
          if( problem.getNCols() == 0 )
             detectComponents = false;
@@ -782,6 +798,7 @@ Presolve<REAL>::apply( Problem<REAL>& problem, bool store_dual_postsolve )
                          else if( compInfo[i].nintegral <=
                                   presolveOptions.componentsmaxint )
                          {
+                            //TODO: add satsolverfactory
                             std::unique_ptr<SolverInterface<REAL>> solver =
                                 mipSolverFactory->newSolver(
                                     VerbosityLevel::kQuiet );

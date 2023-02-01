@@ -90,23 +90,23 @@ if(Boost_IOSTREAMS_FOUND AND Boost_SERIALIZATION_FOUND AND Boost_PROGRAM_OPTIONS
    target_compile_definitions(duplicates PRIVATE PAPILO_USE_EXTERN_TEMPLATES PAPILO_MPS_WRITER)
 
    if(ROUNDINGSAT_DIR)
-   set(roundingsat_source_files
-   ${ROUNDINGSAT_DIR}/src/Constr.cpp
-   ${ROUNDINGSAT_DIR}/src/ConstrExp.cpp
-   ${ROUNDINGSAT_DIR}/src/ConstrSimple.cpp
-   ${ROUNDINGSAT_DIR}/src/LpSolver.cpp
-   ${ROUNDINGSAT_DIR}/src/Solver.cpp
-   ${ROUNDINGSAT_DIR}/src/SolverStructs.cpp
-   ${ROUNDINGSAT_DIR}/src/parsing.cpp
-   ${ROUNDINGSAT_DIR}/src/quit.cpp
-   ${ROUNDINGSAT_DIR}/src/run.cpp
-   ${ROUNDINGSAT_DIR}/src/used_licenses/gpl_3_0.cpp
-   ${ROUNDINGSAT_DIR}/src/used_licenses/zib_academic.cpp
-   ${ROUNDINGSAT_DIR}/src/used_licenses/roundingsat.cpp
-   ${ROUNDINGSAT_DIR}/src/used_licenses/MIT.cpp
-   ${ROUNDINGSAT_DIR}/src/used_licenses/licenses.cpp
-   ${ROUNDINGSAT_DIR}/src/used_licenses/boost.cpp
-   ${ROUNDINGSAT_DIR}/src/used_licenses/lgpl_3_0.cpp
+      set(
+         roundingsat_source_files
+         ${ROUNDINGSAT_DIR}/src/Constr.cpp
+         ${ROUNDINGSAT_DIR}/src/ConstrExp.cpp
+         ${ROUNDINGSAT_DIR}/src/ConstrSimple.cpp
+         ${ROUNDINGSAT_DIR}/src/LpSolver.cpp
+         ${ROUNDINGSAT_DIR}/src/parsing.cpp
+         ${ROUNDINGSAT_DIR}/src/quit.cpp
+         ${ROUNDINGSAT_DIR}/src/run.cpp
+         ${ROUNDINGSAT_DIR}/src/SolverStructs.cpp
+         ${ROUNDINGSAT_DIR}/src/used_licenses/gpl_3_0.cpp
+         ${ROUNDINGSAT_DIR}/src/used_licenses/zib_academic.cpp
+         ${ROUNDINGSAT_DIR}/src/used_licenses/roundingsat.cpp
+         ${ROUNDINGSAT_DIR}/src/used_licenses/MIT.cpp
+         ${ROUNDINGSAT_DIR}/src/used_licenses/licenses.cpp
+         ${ROUNDINGSAT_DIR}/src/used_licenses/boost.cpp
+         ${ROUNDINGSAT_DIR}/src/used_licenses/lgpl_3_0.cpp
    )
    endif()
    add_executable(papilo-executable ${CMAKE_CURRENT_LIST_DIR}/../src/papilo.cpp ${roundingsat_source_files})
