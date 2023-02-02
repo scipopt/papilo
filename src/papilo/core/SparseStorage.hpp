@@ -694,10 +694,12 @@ SparseStorage<REAL>::compress( const Vec<int>& rowsize, const Vec<int>& colsize,
                // move values and columns
                assert( start >= offset );
 
-               std::move( &values[start], &values[end],
-                          &values[start - offset] );
-               std::move( &columns[start], &columns[end],
-                          &columns[start - offset] );
+               const auto values_ptr = values.data();
+               const auto columns_ptr = columns.data();
+               std::move( &values_ptr[start], &values_ptr[end],
+                          &values_ptr[start - offset] );
+               std::move( &columns_ptr[start], &columns_ptr[end],
+                          &columns_ptr[start - offset] );
 
                rowranges[rowcount].start -= offset;
                rowranges[rowcount].end -= offset;

@@ -219,7 +219,8 @@ compute_row_and_column_permutation( const Problem<double>& prob, bool verbose )
                 int row = rowperm[i];
                 int start = csrstarts[row];
                 int end = csrstarts[row + 1];
-                pdqsort( &csrvals[start], &csrvals[end], comp_rowvals );
+                const auto csrvals_ptr = csrvals.data();
+                pdqsort( &csrvals_ptr[start], &csrvals_ptr[end], comp_rowvals );
 
                 Hasher<uint64_t> hasher( end - start );
                 for( int k = start; k < end; ++k )
@@ -285,7 +286,8 @@ compute_row_and_column_permutation( const Problem<double>& prob, bool verbose )
                 int col = colperm[i];
                 int start = cscstarts[col];
                 int end = cscstarts[col + 1];
-                pdqsort( &cscvals[start], &cscvals[end], comp_colvals );
+                const auto cscvals_ptr = cscvals.data();
+                pdqsort( &cscvals_ptr[start], &cscvals_ptr[end], comp_colvals );
 
                 Hasher<uint64_t> hasher( end - start );
                 for( int k = start; k < end; ++k )
@@ -807,7 +809,8 @@ compute_instancehash( const Problem<double>& prob )
                 int row = rowperm[i];
                 int start = csrstarts[row];
                 int end = csrstarts[row + 1];
-                pdqsort( &csrvals[start], &csrvals[end], comp_rowvals );
+                const auto csrvals_ptr = csrvals.data();
+                pdqsort( &csrvals_ptr[start], &csrvals_ptr[end], comp_rowvals );
 
                 Hasher<uint64_t> hasher( end - start );
                 for( int k = start; k < end; ++k )
@@ -874,7 +877,8 @@ compute_instancehash( const Problem<double>& prob )
                 int col = colperm[i];
                 int start = cscstarts[col];
                 int end = cscstarts[col + 1];
-                pdqsort( &cscvals[start], &cscvals[end], comp_colvals );
+                const auto cscvals_ptr = cscvals.data();
+                pdqsort( &cscvals_ptr[start], &cscvals_ptr[end], comp_colvals );
 
                 Hasher<uint64_t> hasher( end - start );
                 for( int k = start; k < end; ++k )
