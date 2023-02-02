@@ -302,7 +302,7 @@ presolve_and_solve(
                      opts.postsolve_archive_file, t.getTime() );
       }
 
-      if( opts.command == Command::kPresolve )
+      if( opts.command == Command::kPresolve || problem.getNCols() == 0 )
          return ResultStatus::kOk;
 
       double solvetime = 0;
