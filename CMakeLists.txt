@@ -315,6 +315,7 @@ install(FILES
      ${PROJECT_SOURCE_DIR}/src/papilo/core/ProbingView.hpp
      ${PROJECT_SOURCE_DIR}/src/papilo/core/Problem.hpp
      ${PROJECT_SOURCE_DIR}/src/papilo/core/ProblemBuilder.hpp
+     ${PROJECT_SOURCE_DIR}/src/papilo/core/ProblemFlag.hpp
      ${PROJECT_SOURCE_DIR}/src/papilo/core/ProblemUpdate.hpp
      ${PROJECT_SOURCE_DIR}/src/papilo/core/Reductions.hpp
      ${PROJECT_SOURCE_DIR}/src/papilo/core/RowFlags.hpp

@@ -112,6 +112,15 @@ class MpsParser
       problem.setName( std::move( filename ) );
       problem.setConstraintNames( std::move( parser.rownames ) );
 
+      problem.set_problem_type( ProblemFlag::kMixedInteger );
+      if(problem.getNumIntegralCols() == 0 )
+         problem.set_problem_type( ProblemFlag::kLinear );
+      if(problem.getNumContinuousCols() == 0 )
+      {
+         //TODO check if PseudoBoolean
+         problem.set_problem_type( ProblemFlag::kInteger );
+      }
+
       problem.setInputTolerance(
           REAL{ pow( typename RealParseType<REAL>::type{ 10 },
                      -std::numeric_limits<

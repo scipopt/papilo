@@ -34,6 +34,7 @@
 #include "papilo/misc/String.hpp"
 #include "papilo/misc/Vec.hpp"
 #include "papilo/misc/fmt.hpp"
+#include "papilo/core/ProblemFlag.hpp"
 #ifdef PAPILO_TBB
 #include "papilo/misc/tbb.hpp"
 #endif
@@ -75,6 +76,18 @@ class Problem
    setObjective( Objective<REAL>&& obj )
    {
       objective = obj;
+   }
+
+   void
+   set_problem_type( ProblemFlag flag)
+   {
+      problem_flags.set(flag);
+   }
+
+   bool
+   test_problem_type( ProblemFlag flag)
+   {
+      return problem_flags.test(flag);
    }
 
    /// set (transposed) constraint matrix
@@ -702,6 +715,7 @@ class Problem
       ar& name;
       ar& inputTolerance;
       ar& objective;
+      ar& problem_flags;
 
       ar& constraintMatrix;
       ar& variableDomains;
@@ -719,6 +733,7 @@ class Problem
    String name;
    REAL inputTolerance{ 0 };
    Objective<REAL> objective;
+   ProblemFlags problem_flags;
    ConstraintMatrix<REAL> constraintMatrix;
    VariableDomains<REAL> variableDomains;
    int ncontinuous;

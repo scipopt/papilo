@@ -224,8 +224,8 @@ presolve_and_solve(
                 presolve.getVerbosityLevel() );
             store_dual = solver->is_dual_solution_available();
          }
-         else if( presolve.getSATSolverFactory() )
-            //TODO: check problem type
+         else if( presolve.getSATSolverFactory() &&
+                  problem.test_problem_type(ProblemFlag::kBinary) )
             solver = presolve.getSATSolverFactory()->newSolver(
                 presolve.getVerbosityLevel() );
          else

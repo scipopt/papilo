@@ -316,7 +316,7 @@ class Presolve
 
  private:
    void
-   logStatus( const Problem<REAL>& problem,
+   logStatus( ProblemUpdate<REAL>& problem,
               const PostsolveStorage<REAL>& postsolveStorage ) const;
 
    bool
@@ -429,7 +429,7 @@ Presolve<REAL>::apply( Problem<REAL>& problem, bool store_dual_postsolve )
       presolveOptions.threads = 1;
 #endif
 
-      if( store_dual_postsolve && problem.getNumIntegralCols() == 0 )
+      if( store_dual_postsolve && problem.test_problem_type(ProblemFlag::kLinear) )
       {
          if( presolveOptions.componentsmaxint == -1 && presolveOptions.detectlindep == 0 &&
              are_only_dual_postsolve_presolvers_enabled())
@@ -458,6 +458,7 @@ Presolve<REAL>::apply( Problem<REAL>& problem, bool store_dual_postsolve )
       int npresolvers = static_cast<int>( presolvers.size() );
 
       fastPresolvers.first = fastPresolvers.second = 0;
+
       while( fastPresolvers.second < npresolvers &&
              presolvers[fastPresolvers.second]->getTiming() ==
                  PresolverTiming::kFast )
@@ -895,7 +896,7 @@ Presolve<REAL>::apply( Problem<REAL>& problem, bool store_dual_postsolve )
             }
          }
 
-         logStatus( problem, result.postsolve );
+         logStatus( probUpdate, result.postsolve );
          result.status = PresolveStatus::kReduced;
          if( result.postsolve.postsolveType == PostsolveType::kFull )
          {
@@ -915,7 +916,7 @@ Presolve<REAL>::apply( Problem<REAL>& problem, bool store_dual_postsolve )
          return result;
       }
 
-      logStatus( problem, result.postsolve );
+      logStatus( probUpdate, result.postsolve );
 
       // problem was not changed
       result.status = PresolveStatus::kUnchanged;
@@ -1381,11 +1382,12 @@ Presolve<REAL>::printPresolversStats()
 
 template <typename REAL>
 void
-Presolve<REAL>::logStatus( const Problem<REAL>& problem,
+Presolve<REAL>::logStatus( ProblemUpdate<REAL>& problem_update,
                            const PostsolveStorage<REAL>& postsolveStorage ) const
 {
    if(msg.getVerbosityLevel() == VerbosityLevel::kQuiet)
       return;
+   Problem<REAL>& problem = problem_update.getProblem();
    msg.info( "reduced problem:\n" );
    msg.info( "  reduced rows:     {}\n", problem.getNRows() );
    msg.info( "  reduced columns:  {}\n", problem.getNCols() );
@@ -1395,7 +1397,7 @@ Presolve<REAL>::logStatus( const Problem<REAL>& problem,
              problem.getConstraintMatrix().getNnz() );
    if( problem.getNCols() == 0)
    {
-      // the primaldual can be disabled therefore calculate only primal for obj
+      // the primal dual can be disabled therefore calculate only primal for obj
       Solution<REAL> solution{};
       SolutionType type = postsolveStorage.postsolveType == PostsolveType::kFull
                               ? SolutionType::kPrimalDual
