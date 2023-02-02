@@ -308,7 +308,7 @@ class Presolve
    is_time_exceeded( const Timer& presolvetimer ) const;
 
    bool
-   is_only_slightly_changes( const Problem<REAL>& problem,
+   are_applied_tsx_negligible( const Problem<REAL>& problem,
                              const ProblemUpdate<REAL>& probUpdate,
                              const Statistics& roundStats ) ;
 
@@ -1247,7 +1247,7 @@ Presolve<REAL>::is_time_exceeded( const Timer& presolvetimer ) const
 
 template <typename REAL>
 bool
-Presolve<REAL>::is_only_slightly_changes( const Problem<REAL>& problem,
+Presolve<REAL>::are_applied_tsx_negligible( const Problem<REAL>& problem,
                                           const ProblemUpdate<REAL>& probUpdate,
                                           const Statistics& roundStats )
 {
@@ -1280,7 +1280,7 @@ Presolve<REAL>::increase_round_if_last_run_was_not_successfull(
    Delegator next_round;
    if( !unchanged )
    {
-      if( is_only_slightly_changes( problem, probUpdate, roundStats ) )
+      if( are_applied_tsx_negligible( problem, probUpdate, roundStats ) )
       {
          lastRoundReduced =
              lastRoundReduced || roundStats.nsidechgs > 0 ||
