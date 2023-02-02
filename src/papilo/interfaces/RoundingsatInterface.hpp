@@ -24,14 +24,20 @@
 #ifndef _PAPILO_INTERFACES_ROUNDINGSAT_INTERFACE_HPP_
 #define _PAPILO_INTERFACES_ROUNDINGSAT_INTERFACE_HPP_
 
-#include <csignal>
-#include <fstream>
-#include <memory>
 #include "auxiliary.hpp"
 #include "globals.hpp"
 #include "parsing.hpp"
 #include "run.hpp"
+#include <csignal>
+#include <fstream>
+#include <memory>
 
+namespace rs
+{
+bool asynch_interrupt;
+Options options;
+Stats stats;
+} // namespace rs
 
 namespace papilo
 {
@@ -51,7 +57,6 @@ class RoundingsatInterface : public SolverInterface<REAL>
       assert( objective->isReset() );
       rs::CeArb input = rs::run::solver.cePools.takeArb();
 
-      const VariableDomains<REAL>& domains = problem.getVariableDomains();
       const Vec<REAL>& obj = problem.getObjective().coefficients;
       const Vec<REAL>& rhs = problem.getConstraintMatrix().getRightHandSides();
       const Vec<REAL>& lhs = problem.getConstraintMatrix().getLeftHandSides();
@@ -64,9 +69,8 @@ class RoundingsatInterface : public SolverInterface<REAL>
          assert( num.isIntegral( obj[col] ) );
          if( obj[col] == 0 )
             continue;
-         // TODO round to integer and scale
          int var_index = col;
-         int coeff = (int)obj[col];
+         int coeff = to_int(obj[col], -1);
          if( obj[col] < 0 )
             var_index = -col;
          rs::run::solver.setNbVars( abs( var_index ), true );
@@ -82,7 +86,7 @@ class RoundingsatInterface : public SolverInterface<REAL>
          if( !consMatrix.getRowFlags()[row].test( RowFlag::kEquation ) )
          {
             map_cons_to_lhs( input, row_coeff );
-            input->addRhs( (int) lhs[row] );
+            input->addRhs( to_int( lhs[row], row ) );
             if( rs::run::solver.addConstraint( input, rs::Origin::FORMULA )
                     .second == rs::ID_Unsat )
             {
@@ -102,7 +106,7 @@ class RoundingsatInterface : public SolverInterface<REAL>
          if( !consMatrix.getRowFlags()[row].test( RowFlag::kLhsInf ) )
          {
             map_cons_to_lhs( input, row_coeff );
-            input->addRhs( (int) lhs[row] );
+            input->addRhs( to_int(lhs[row], row) );
             if( rs::run::solver.addConstraint( input, rs::Origin::FORMULA )
                     .second == rs::ID_Unsat )
             {
@@ -113,9 +117,7 @@ class RoundingsatInterface : public SolverInterface<REAL>
          if( !consMatrix.getRowFlags()[row].test( RowFlag::kRhsInf ) )
          {
             map_cons_to_lhs( input, row_coeff );
-
-            //TODO: fix rounding
-            input->addRhs( (int) rhs[row] );
+            input->addRhs( to_int( rhs[row], row ) );
             input->invert();
             if( rs::run::solver.addConstraint( input, rs::Origin::FORMULA )
                     .second == rs::ID_Unsat )
@@ -128,6 +130,13 @@ class RoundingsatInterface : public SolverInterface<REAL>
       return 0;
    }
 
+   int
+   to_int( REAL val, int row )
+   {
+      assert( val == (int)val );
+      return (int)val;
+   }
+
    void
    map_cons_to_lhs( rs::CeArb& input,
                     const SparseVectorView<REAL>& row_coeff ) const
@@ -138,8 +147,7 @@ class RoundingsatInterface : public SolverInterface<REAL>
       {
          int var_index = row_coeff.getIndices()[j];
          assert( num.isIntegral( row_coeff.getValues()[j] ) );
-         // TODO round to integer and scale
-         int coeff = (int)row_coeff.getValues()[j];
+         int coeff = to_int( row_coeff.getValues()[j], -1 );
          if( coeff < 0 )
             var_index = -var_index;
          rs::run::solver.setNbVars( abs( var_index ), true );
@@ -225,10 +233,10 @@ class RoundingsatInterface : public SolverInterface<REAL>
    bool
    getSolution( Solution<REAL>& solbuffer ) override
    {
-      if (!rs::run::solver.foundSolution())
+      if( !rs::run::solver.foundSolution() )
          return false;
       // TODO:
-//      solbuffer = Solution<REAL>(rs::run::solver.lastSol);
+      //      solbuffer = Solution<REAL>(rs::run::solver.lastSol);
       return true;
    }
 

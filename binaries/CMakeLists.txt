@@ -96,6 +96,7 @@ if(Boost_IOSTREAMS_FOUND AND Boost_SERIALIZATION_FOUND AND Boost_PROGRAM_OPTIONS
          ${ROUNDINGSAT_DIR}/src/ConstrExp.cpp
          ${ROUNDINGSAT_DIR}/src/ConstrSimple.cpp
          ${ROUNDINGSAT_DIR}/src/LpSolver.cpp
+         ${ROUNDINGSAT_DIR}/src/Solver.cpp
          ${ROUNDINGSAT_DIR}/src/parsing.cpp
          ${ROUNDINGSAT_DIR}/src/quit.cpp
          ${ROUNDINGSAT_DIR}/src/run.cpp
