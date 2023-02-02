@@ -17,6 +17,7 @@ Interface changes
 
 Fixed bugs
 ----------
+- fixing vector bound checks which failed if compiled with -D_GLIBCXX_ASSERTIONS (Fedora/ArchLinux)
 
 Miscellaneous
 -------------
