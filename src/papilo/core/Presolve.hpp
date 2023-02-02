@@ -1110,7 +1110,6 @@ Presolve<REAL>::applyReductions( int p, const Reductions<REAL>& reductions_,
    int nbtsxTotal = 0;
 
    const auto& reds = reductions_.getReductions();
-   const auto reds_ptr = reds.data();
 
    msg.detailed( "Presolver {} applying \n", presolvers[p]->getName() );
 
@@ -1121,7 +1120,7 @@ Presolve<REAL>::applyReductions( int p, const Reductions<REAL>& reductions_,
 
       for( ; k != start; ++k )
       {
-         result = probUpdate.applyTransaction( &reds_ptr[k], &reds_ptr[k + 1] );
+         result = probUpdate.applyTransaction( &reds[k], &reds.data()[k + 1] );
          if( result == ApplyResult::kApplied )
             ++stats.ntsxapplied;
          else if( result == ApplyResult::kRejected )
@@ -1129,12 +1128,12 @@ Presolve<REAL>::applyReductions( int p, const Reductions<REAL>& reductions_,
          else if( result == ApplyResult::kInfeasible )
             return std::make_pair( -1, -1 );
          else if( result == ApplyResult::kPostponed )
-            postponedReductions.emplace_back( &reds_ptr[k], &reds_ptr[k + 1] );
+            postponedReductions.emplace_back( &reds[k], &reds.data()[k + 1] );
 
          ++nbtsxTotal;
       }
 
-      result = probUpdate.applyTransaction( &reds_ptr[start], &reds_ptr[end] );
+      result = probUpdate.applyTransaction( &reds[start], &reds.data()[end] );
       if( result == ApplyResult::kApplied )
          ++stats.ntsxapplied;
       else if( result == ApplyResult::kRejected )
@@ -1142,7 +1141,7 @@ Presolve<REAL>::applyReductions( int p, const Reductions<REAL>& reductions_,
       else if( result == ApplyResult::kInfeasible )
          return std::make_pair( -1, -1 );
       else if( result == ApplyResult::kPostponed )
-         postponedReductions.emplace_back( &reds_ptr[start], &reds_ptr[end] );
+         postponedReductions.emplace_back( &reds[start], &reds.data()[end] );
 
       k = end;
       ++nbtsxTotal;
@@ -1150,7 +1149,7 @@ Presolve<REAL>::applyReductions( int p, const Reductions<REAL>& reductions_,
 
    for( ; k != static_cast<int>( reds.size() ); ++k )
    {
-      result = probUpdate.applyTransaction( &reds_ptr[k], &reds_ptr[k + 1] );
+      result = probUpdate.applyTransaction( &reds[k], &reds.data()[k + 1] );
       if( result == ApplyResult::kApplied )
          ++stats.ntsxapplied;
       else if( result == ApplyResult::kRejected )
@@ -1158,7 +1157,7 @@ Presolve<REAL>::applyReductions( int p, const Reductions<REAL>& reductions_,
       else if( result == ApplyResult::kInfeasible )
          return std::make_pair( -1, -1 );
       else if( result == ApplyResult::kPostponed )
-         postponedReductions.emplace_back( &reds_ptr[k], &reds_ptr[k + 1] );
+         postponedReductions.emplace_back( &reds[k], &reds.data()[k + 1] );
 
       ++nbtsxTotal;
    }
