@@ -228,6 +228,9 @@ presolve_and_solve(
                   problem.test_problem_type(ProblemFlag::kBinary) )
             solver = presolve.getSATSolverFactory()->newSolver(
                 presolve.getVerbosityLevel() );
+         else if( presolve.getMIPSolverFactory() )
+            solver = presolve.getMIPSolverFactory()->newSolver(
+                presolve.getVerbosityLevel() );
          else
          {
             fmt::print( "no solver available for solving; aborting\n" );
