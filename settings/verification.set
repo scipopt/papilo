@@ -1,1 +1,3 @@
 verification_with_VeriPB = 1
+simpleprobing.enabled = 0
+parallelcols.enabled = 0

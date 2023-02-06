@@ -40,6 +40,7 @@ class CoefficientStrengthening : public PresolveMethod<REAL>
       this->setName( "coefftightening" );
       this->setType( PresolverType::kIntegralCols );
       this->setTiming( PresolverTiming::kFast );
+      this->setArgument( ArgumentType::kSingelton );
    }
 
    PresolveStatus
