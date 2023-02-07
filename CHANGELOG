@@ -12,6 +12,7 @@ Interface changes
 - Boost: program_options is no longer required but needed to use PaPILO via command-line.
 
 ### New parameters with default values
+- max_consecutive_rounds_of_only_bound_changes = 500: PaPILO resumes with the next higher complexity class if the last n rounds only consisted of bound changes
 
 ### Data structures
 
