@@ -1,0 +1,44 @@
+pseudo-Boolean proof version 1.0
+f 2
+* SimpleProbing works on an equation with
+* - max_act + min_act = 2*rhs
+* - max_act - rhs = coeff[x_j]
+* then w.l.o.g. x_j = 1 -> x_k = 0 \forall k \in equation\{k}
+* see chapter 3.6 in https://opus4.kobv.de/opus4-zib/files/6037/Presolve.pdf
+
+* in this example there are two options for x_j = x17618 and x_j = x17686
+* PaPILO decides to go with "smaller" one
+
+****************************
+* Case 1: x_j = 17686
+****************************
+* x17618 = 1 - 17686
+* VeriPB is able to verify this
+rup 1 x17686 +1 x17618 >= 1;
+rup 1 ~x17686 +1 ~x17618 >= 1;
+
+* x17557 = 1 - 17686
+rup 1 x17686 +1 x17557 >= 1;
+rup 1 ~x17686 +1 ~x17557 >= 1;
+
+* x17588 = 1 - 17686
+rup 1 x17686 +1 x17588 >= 1;
+rup 1 ~x17686 +1 ~x17588 >= 1;
+
+
+****************************
+* Case 2: x_j = 17686
+****************************
+
+* x17557 = x17618
+rup 1 ~x17557 +1 x17618 >= 1;
+rup 1 x17557 +1 ~x17618 >= 1;
+
+* x17588 = x17618
+rup 1 ~x17588 +1 x17618 >= 1;
+rup 1 x17588 +1 ~x17618 >= 1;
+
+* VeriPb is able to verify this
+* x17686 = 1 -x17618
+rup 1 x17686 +1 x17618 >= 1;
+rup 1 ~x17686 +1 ~x17618 >= 1;
