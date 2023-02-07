@@ -514,17 +514,15 @@ class VeriPb : public CertificateInterface<REAL>
    void
    change_lhs_inf( int row )
    {
-      if(skip_changing_lhs == row)
-         skip_changing_lhs = UNKNOWN;
       proof_out << DELETE_CONS << lhs_row_mapping[row] << "\n";
+      lhs_row_mapping[row] = UNKNOWN;
    }
 
    void
    change_rhs_inf( int row )
    {
-      if(skip_changing_rhs == row)
-         skip_changing_rhs = UNKNOWN;
       proof_out << DELETE_CONS << rhs_row_mapping[row] << "\n";
+      rhs_row_mapping[row] = UNKNOWN;
    }
 
    void
