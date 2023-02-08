@@ -32,68 +32,72 @@ namespace papilo
 
 struct PresolveOptions
 {
-   // add the parameters with their default values
-   int maxfillinpersubstitution = 10;
-
-   double markowitz_tolerance = 0.01;
-
-   int maxshiftperrow = 10;
-
-   bool substitutebinarieswithints = true;
-
-   int dualreds = 2;
-
-   double abortfac = 8e-4;
-
-   double lpabortfac = 1e-2;
+   bool apply_results_immediately_if_run_sequentially = true;
 
    bool boundrelax = false;
 
-   int componentsmaxint = 0;
-
-   double compressfac = 0.85;
-
-   double tlim = std::numeric_limits<double>::max();
-
-   double minabscoeff = 1e-10;
-
-   double feastol = 1e-6;
-
-   double epsilon = 1e-9;
-
-   double hugeval = 1e8;
-
-   bool removeslackvars = true;
-
-   int weakenlpvarbounds = 0;
-
-   int detectlindep = 1;
-
-   int threads = 0;
-
-   unsigned int randomseed = 0;
-
-   bool apply_results_immediately_if_run_sequentially = true;
-
-   bool dual_fix_parallel = false;
-
-   bool simple_probing_parallel = false;
-
-   bool implied_integer_parallel = false;
-
-   bool simple_substitution_parallel = false;
+   bool calculate_basis_for_dual = true;
 
    bool constraint_propagation_parallel = true;
 
    bool coefficient_strengthening_parallel = true;
 
+   bool dual_fix_parallel = false;
+
+   bool implied_integer_parallel = false;
+
+   bool removeslackvars = true;
+
+   bool simple_probing_parallel = false;
+
+   bool simple_substitution_parallel = false;
+
    bool simplify_inequalities_parallel = true;
 
-   bool calculate_basis_for_dual = true;
+   bool substitutebinarieswithints = true;
+
+   bool validation_after_every_postsolving_step = false;
+
+
+   int componentsmaxint = 0;
+
+   int detectlindep = 1;
+
+   int dualreds = 2;
+
+   int maxfillinpersubstitution = 10;
+
+   int maxshiftperrow = 10;
+
+   int max_consecutive_rounds_of_only_bound_changes = 500;
+
+   int threads = 0;
+
+   int weakenlpvarbounds = 0;
+
+   unsigned int randomseed = 0;
+
+
+   double abortfac = 8e-4;
 
    double bound_tightening_offset = 0.0001;
 
-   bool validation_after_every_postsolving_step = false;
+   double compressfac = 0.85;
+
+   double epsilon = 1e-9;
+
+   double feastol = 1e-6;
+
+   double hugeval = 1e8;
+
+   double lpabortfac = 1e-2;
+
+   double markowitz_tolerance = 0.01;
+
+   double minabscoeff = 1e-10;
+
+   double tlim = std::numeric_limits<double>::max();
+
 
    bool verification_with_VeriPB = false;
 
@@ -223,6 +227,10 @@ struct PresolveOptions
           "verification_with_VeriPB",
           "# should PaPILO print a VeriPB log (only for PseudoBoolean problems)? ",
           verification_with_VeriPB );
+      paramSet.addParameter(
+          "max_consecutive_rounds_of_only_bound_changes",
+           "PaPILO resumes with the next higher complexity class if the last n rounds only consisted of bound changes (-1 deactivated) [Integer: [-1,2147483647]]",
+          max_consecutive_rounds_of_only_bound_changes );
    }
 
    bool

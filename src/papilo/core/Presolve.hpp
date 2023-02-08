@@ -309,9 +309,9 @@ class Presolve
    is_time_exceeded( const Timer& presolvetimer ) const;
 
    bool
-   is_only_slighlty_changes( const Problem<REAL>& problem,
+   are_applied_tsx_negligible( const Problem<REAL>& problem,
                              const ProblemUpdate<REAL>& probUpdate,
-                             const Statistics& roundStats ) const;
+                             const Statistics& roundStats ) ;
 
    Delegator
    increase_delegator( Delegator delegator );
@@ -1258,13 +1258,22 @@ Presolve<REAL>::is_time_exceeded( const Timer& presolvetimer ) const
 
 template <typename REAL>
 bool
-Presolve<REAL>::is_only_slighlty_changes( const Problem<REAL>& problem,
+Presolve<REAL>::are_applied_tsx_negligible( const Problem<REAL>& problem,
                                           const ProblemUpdate<REAL>& probUpdate,
-                                          const Statistics& roundStats ) const
+                                          const Statistics& roundStats )
 {
    double abort_factor = problem.getNumIntegralCols() == 0
                              ? presolveOptions.lpabortfac
                              : presolveOptions.abortfac;
+   if( roundStats.ndeletedcols == 0 && roundStats.ndeletedrows == 0 && roundStats.ncoefchgs == 0 && presolveOptions.max_consecutive_rounds_of_only_bound_changes >= 0)
+   {
+      ++stats.consecutive_rounds_of_only_boundchanges;
+      if (stats.consecutive_rounds_of_only_boundchanges > presolveOptions.max_consecutive_rounds_of_only_bound_changes)
+         return true;
+   }
+   else
+      stats.consecutive_rounds_of_only_boundchanges = 0;
+
    return ( 0.1 * roundStats.nboundchgs + roundStats.ndeletedcols ) <=
               abort_factor * probUpdate.getNActiveCols() &&
           ( roundStats.nsidechgs + roundStats.ndeletedrows ) <=
@@ -1282,7 +1291,7 @@ Presolve<REAL>::increase_round_if_last_run_was_not_successfull(
    Delegator next_round;
    if( !unchanged )
    {
-      if( is_only_slighlty_changes( problem, probUpdate, roundStats ) )
+      if( are_applied_tsx_negligible( problem, probUpdate, roundStats ) )
       {
          lastRoundReduced =
              lastRoundReduced || roundStats.nsidechgs > 0 ||
