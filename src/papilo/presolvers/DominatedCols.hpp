@@ -360,13 +360,13 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
    for( int k = 0; k < (int) unboundedcols.size(); ++k )
 #endif
           {
-             int i = unboundedcols[k];
-             int lbfree = colinfo[i].lbfree;
-             int ubfree = colinfo[i].ubfree;
+             int unbounded_col = unboundedcols[k];
+             int lbfree = colinfo[unbounded_col].lbfree;
+             int ubfree = colinfo[unbounded_col].ubfree;
 
              assert( lbfree != 0 || ubfree != 0 );
 
-             auto colvec = consMatrix.getColumnCoefficients( i );
+             auto colvec = consMatrix.getColumnCoefficients( unbounded_col );
              int collen = colvec.getLength();
              const int* colrows = colvec.getIndices();
              const REAL* colvals = colvec.getValues();
@@ -412,8 +412,8 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
 
              auto candrowvec =
                  consMatrix.getRowCoefficients( colrows[bestrow] );
-             REAL colval = colvals[bestrow] * scale;
-             REAL colobj = obj[i] * scale;
+             REAL scaled_val = colvals[bestrow] * scale;
+             REAL scaled_obj = obj[unbounded_col] * scale;
              bestrow = colrows[bestrow];
              int rowlen = candrowvec.getLength();
              const int* rowcols = candrowvec.getIndices();
@@ -422,66 +422,66 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
              for( int j = 0; j != rowlen; ++j )
              {
                 int col = rowcols[j];
-                if( col == i || ( cflags[i].test( ColFlag::kIntegral ) &&
+                if( col == unbounded_col || ( cflags[unbounded_col].test( ColFlag::kIntegral ) &&
                                   !cflags[col].test( ColFlag::kIntegral ) ) )
                    continue;
 
-                bool fixtolb = false;
-                bool fixtoub = false;
+                bool to_ub = false;
+                bool to_lb = false;
 
                 if( !rflags[bestrow].test( RowFlag::kLhsInf,
                                            RowFlag::kRhsInf ) )
                 {
                    if( !cflags[col].test( ColFlag::kLbInf ) &&
-                       num.isEq( colval, rowvals[j] ) &&
-                       num.isLE( colobj, obj[col] ) &&
-                       checkDominance( i, col, scale, 1 ) )
-                      fixtolb = true;
+                       num.isEq( scaled_val, rowvals[j] ) &&
+                       num.isLE( scaled_obj, obj[col] ) &&
+                       checkDominance( unbounded_col, col, scale, 1 ) )
+                      to_ub = true;
 
                    if( !cflags[col].test( ColFlag::kUbInf ) &&
-                       num.isEq( colval, -rowvals[j] ) &&
-                       num.isLE( colobj, -obj[col] ) &&
-                       checkDominance( i, col, scale, -1 ) )
-                      fixtoub = true;
+                       num.isEq( scaled_val, -rowvals[j] ) &&
+                       num.isLE( scaled_obj, -obj[col] ) &&
+                       checkDominance( unbounded_col, col, scale, -1 ) )
+                      to_lb = true;
                 }
                 else if( rflags[bestrow].test( RowFlag::kLhsInf ) )
                 {
-                   assert( colval > 0 &&
+                   assert( scaled_val > 0 &&
                            !rflags[bestrow].test( RowFlag::kRhsInf ) );
                    if( !cflags[col].test( ColFlag::kLbInf ) &&
-                       num.isLE( colval, rowvals[j] ) &&
-                       num.isLE( colobj, obj[col] ) &&
-                       checkDominance( i, col, scale, 1 ) )
-                      fixtolb = true;
+                       num.isLE( scaled_val, rowvals[j] ) &&
+                       num.isLE( scaled_obj, obj[col] ) &&
+                       checkDominance( unbounded_col, col, scale, 1 ) )
+                      to_ub = true;
 
                    if( !cflags[col].test( ColFlag::kUbInf ) &&
-                       num.isLE( colval, -rowvals[j] ) &&
-                       num.isLE( colobj, -obj[col] ) &&
-                       checkDominance( i, col, scale, -1 ) )
-                      fixtoub = true;
+                       num.isLE( scaled_val, -rowvals[j] ) &&
+                       num.isLE( scaled_obj, -obj[col] ) &&
+                       checkDominance( unbounded_col, col, scale, -1 ) )
+                      to_lb = true;
                 }
                 else
                 {
-                   assert( colval < 0 &&
+                   assert( scaled_val < 0 &&
                            rflags[bestrow].test( RowFlag::kRhsInf ) );
                    if( !cflags[col].test( ColFlag::kLbInf ) &&
-                       num.isGE( colval, rowvals[j] ) &&
-                       num.isLE( colobj, obj[col] ) &&
-                       checkDominance( i, col, scale, 1 ) )
-                      fixtolb = true;
+                       num.isGE( scaled_val, rowvals[j] ) &&
+                       num.isLE( scaled_obj, obj[col] ) &&
+                       checkDominance( unbounded_col, col, scale, 1 ) )
+                      to_ub = true;
 
                    if( !cflags[col].test( ColFlag::kUbInf ) &&
-                       num.isGE( colval, -rowvals[j] ) &&
-                       num.isLE( colobj, -obj[col] ) &&
-                       checkDominance( i, col, scale, -1 ) )
-                      fixtoub = true;
+                       num.isGE( scaled_val, -rowvals[j] ) &&
+                       num.isLE( scaled_obj, -obj[col] ) &&
+                       checkDominance( unbounded_col, col, scale, -1 ) )
+                      to_lb = true;
                 }
 
-                if( fixtolb || fixtoub )
+                if( to_ub || to_lb )
                 {
                    domcolreductions.push_back( DomcolReduction{
-                       i, col, implrowlock,
-                       fixtolb ? BoundChange::kUpper : BoundChange::kLower } );
+                       unbounded_col, col, implrowlock,
+                       to_ub ? BoundChange::kUpper : BoundChange::kLower } );
                 }
              }
           }
