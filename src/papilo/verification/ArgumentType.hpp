@@ -31,6 +31,8 @@ enum class ArgumentType : int
    kDual = 1,
    kSymmetry = 2,
    kSingelton = 3,
+   kWeakening = 4,
+   kSaturation = 5,
 };
 
 #endif

@@ -55,6 +55,7 @@ class SimplifyInequalities : public PresolveMethod<REAL>
       this->setName( "simplifyineq" );
       this->setTiming( PresolverTiming::kMedium );
       this->setType( PresolverType::kIntegralCols );
+      this->setType( ArgumentType::kWeakening );
    }
 
    PresolveStatus
