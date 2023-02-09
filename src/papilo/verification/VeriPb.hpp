@@ -24,6 +24,8 @@
 #ifndef _PAPILO_VERI_VERI_PB_HPP_
 #define _PAPILO_VERI_VERI_PB_HPP_
 
+#define VERIPB_DEBUG
+
 #include "papilo/core/Problem.hpp"
 #include "papilo/misc/Num.hpp"
 #include "papilo/misc/Vec.hpp"
@@ -41,6 +43,8 @@ static const char* const RUP = "rup ";
 static const char* const RED = "red ";
 static const char* const COMMENT = "* ";
 static const char* const POL = "pol ";
+static const char* const SATURATION = "s";
+static const char* const EQUAL = "e ";
 static const int UNKNOWN = -1;
 
 template <typename REAL>
@@ -144,7 +148,7 @@ class VeriPb : public CertificateInterface<REAL>
       case ArgumentType::kPrimal:
          proof_out << RUP << "1 ~" << names[orig_col] << " >= 1 ;\n";
          break;
-      case ArgumentType::kSingelton:
+      case ArgumentType::kAggregation:
       case ArgumentType::kDual:
       case ArgumentType::kSymmetry:
          proof_out << RED << "1 ~" << names[orig_col] << " >= 1 ; " << names[orig_col] << " -> 0\n";
@@ -209,7 +213,7 @@ class VeriPb : public CertificateInterface<REAL>
          proof_out << RUP << "1 " << names[orig_col]
                    << " >= " << num.round_to_int( val ) << " ;\n";
          break;
-      case ArgumentType::kSingelton:
+      case ArgumentType::kAggregation:
       case ArgumentType::kDual:
       case ArgumentType::kSymmetry:
          proof_out << RED << "1 " << names[orig_col]
@@ -526,33 +530,35 @@ class VeriPb : public CertificateInterface<REAL>
    }
 
    void
-   update_row( int row, int col, REAL new_val,
+   change_matrix_entry( int row, int col, REAL new_val,
                const SparseVectorView<REAL>& data, RowFlags& rflags, REAL lhs,
                REAL rhs, const Vec<String>& names, const Vec<int>& var_mapping, ArgumentType argument )
    {
       // remove singleton variable from equation
-      if(argument == ArgumentType::kSingelton)
+      if( argument == ArgumentType::kAggregation )
       {
-//         assert( lhs == rhs );
-//         assert( !rflags.test( RowFlag::kLhsInf ) );
-//         assert( !rflags.test( RowFlag::kRhsInf ) );
-//         assert( new_val == 0 );
-//         assert(skip_changing_lhs == UNKNOWN);
-//         assert(skip_changing_rhs == UNKNOWN);
+         assert( lhs == rhs );
+         assert( !rflags.test( RowFlag::kLhsInf ) );
+         assert( !rflags.test( RowFlag::kRhsInf ) );
+         assert( new_val == 0 );
+//         assert( skip_changing_lhs == UNKNOWN );
+//         assert( skip_changing_rhs == UNKNOWN );
          skip_changing_lhs = UNKNOWN;
          skip_changing_rhs = UNKNOWN;
          int old_value = 0;
          for( int i = 0; i < data.getLength(); i++ )
             if( data.getIndices()[i] == col )
             {
-               assert(num.isIntegral(data.getValues()[i] * scale_factor[row]) );
-               old_value = num.round_to_int(data.getValues()[i] * scale_factor[row]);
+               assert(
+                   num.isIntegral( data.getValues()[i] * scale_factor[row] ) );
+               old_value =
+                   num.round_to_int( data.getValues()[i] * scale_factor[row] );
             }
          assert( old_value != 0 );
 
          auto name = names[var_mapping[col]];
-         assert( num.isIntegral(new_val));
-         int diff = old_value - num.round_to_int(new_val);
+         assert( num.isIntegral( new_val ) );
+         int diff = old_value - num.round_to_int( new_val );
          if( !rflags.test( RowFlag::kLhsInf ) )
          {
             next_constraint_id++;
@@ -588,94 +594,138 @@ class VeriPb : public CertificateInterface<REAL>
 
          return;
       }
-
-      assert( num.isIntegral( new_val * scale_factor[row] ) );
-      if( !rflags.test( RowFlag::kLhsInf ) )
+      else if( argument == ArgumentType::kSaturation )
       {
          next_constraint_id++;
-         proof_out << RUP;
-         int offset = 0;
-         for( int i = 0; i < data.getLength(); i++ )
+         assert(!rflags.test( RowFlag::kEquation ));
+         assert(rflags.test( RowFlag::kRhsInf ) || rflags.test( RowFlag::kLhsInf ));
+         proof_out << POL;
+         if(!rflags.test( RowFlag::kRhsInf ))
          {
+            assert(rhs_row_mapping[row] != UNKNOWN);
+            proof_out << rhs_row_mapping[row] << " ";
+            skip_changing_rhs = rhs_row_mapping[row];
 
-            int index = data.getIndices()[i];
-            if( index == col )
-            {
-               if( new_val == 0 )
-                  continue;
-               if( i != 0 )
-                  proof_out << " +";
-               proof_out << abs( num.round(new_val) * scale_factor[row] ) << " ";
-
-               if( new_val < 0 )
-               {
-                  proof_out << NEGATED;
-                  offset -= num.round_to_int(new_val);
-               }
-            }
-            else
-            {
-               if( i != 0 )
-                  proof_out << " +";
-               int val = num.round_to_int( data.getValues()[i] * scale_factor[row] );
-               proof_out << abs( val ) << " ";
-               if( val < 0 )
-               {
-                  proof_out << NEGATED;
-                  offset -= val;
-               }
-            }
-            proof_out << names[var_mapping[index]];
          }
-         proof_out << " >= " << offset + num.round_to_int( lhs * scale_factor[row] )
-                   << ";\n";
-
-         proof_out << DELETE_CONS << lhs_row_mapping[row] << "\n";
-
-         lhs_row_mapping[row] = next_constraint_id;
+         else
+         {
+            assert(lhs_row_mapping[row] != UNKNOWN);
+            proof_out << lhs_row_mapping[row] << " ";
+            lhs_row_mapping[row] = next_constraint_id;
+            skip_changing_lhs = rhs_row_mapping[row];
+         }
+         proof_out << SATURATION << "\n";
+#ifdef VERIPB_DEBUG
+         verify_updated_row( row, col, new_val, data, rflags, lhs, rhs,
+                             names, var_mapping );
+#endif
+         if( !rflags.test( RowFlag::kRhsInf ) )
+         {
+            proof_out << DELETE_CONS << rhs_row_mapping[row];
+            rhs_row_mapping[row] = next_constraint_id;
+         }
+         else
+         {
+            proof_out << DELETE_CONS << lhs_row_mapping[row];
+            lhs_row_mapping[row] = next_constraint_id;
+         }
       }
-      if( !rflags.test( RowFlag::kRhsInf ) )
+      else if( argument == ArgumentType::kWeakening )
       {
-         next_constraint_id++;
-         int offset = 0;
-         proof_out<< RUP ;
-         for( int i = 0; i < data.getLength(); i++ )
-         {
-            int index = data.getIndices()[i];
-            if( index == col )
-            {
-               if( new_val == 0 )
-                  continue;
-               if( i != 0 )
-                  proof_out << " +";
-               proof_out << abs( num.round_to_int(new_val) * scale_factor[row] ) << " ";
-
-               if( new_val > 0 )
-               {
-                  offset += num.round_to_int(new_val);
-                  proof_out << NEGATED;
-               }
-            }
-            else
-            {
-               if( i != 0 )
-                  proof_out << " +";
-               int val = num.round_to_int( data.getValues()[i] * scale_factor[row] );
-               proof_out << abs( val ) << " ";
-               if( val > 0 )
-               {
-                  offset += val;
-                  proof_out << NEGATED;
-               }
-            }
-            proof_out << names[var_mapping[index]];
-         }
-
-         proof_out << " >= " << offset - num.round_to_int( rhs * scale_factor[row] )
-                   << ";\n";
-         proof_out << DELETE_CONS << rhs_row_mapping[row] << "\n";
-         rhs_row_mapping[row] = next_constraint_id;
+         assert( false );
       }
+      else
+      {
+         assert( false );
+      }
+
+//      assert( num.isIntegral( new_val * scale_factor[row] ) );
+//      if( !rflags.test( RowFlag::kLhsInf ) )
+//      {
+//         next_constraint_id++;
+//         proof_out << RUP;
+//         int offset = 0;
+//         for( int i = 0; i < data.getLength(); i++ )
+//         {
+//
+//            int index = data.getIndices()[i];
+//            if( index == col )
+//            {
+//               if( new_val == 0 )
+//                  continue;
+//               if( i != 0 )
+//                  proof_out << " +";
+//               proof_out << abs( num.round(new_val) * scale_factor[row] ) << " ";
+//
+//               if( new_val < 0 )
+//               {
+//                  proof_out << NEGATED;
+//                  offset -= num.round_to_int(new_val);
+//               }
+//            }
+//            else
+//            {
+//               if( i != 0 )
+//                  proof_out << " +";
+//               int val = num.round_to_int( data.getValues()[i] * scale_factor[row] );
+//               proof_out << abs( val ) << " ";
+//               if( val < 0 )
+//               {
+//                  proof_out << NEGATED;
+//                  offset -= val;
+//               }
+//            }
+//            proof_out << names[var_mapping[index]];
+//         }
+//         proof_out << " >= " << offset + num.round_to_int( lhs * scale_factor[row] )
+//                   << ";\n";
+//
+//         proof_out << DELETE_CONS << lhs_row_mapping[row] << "\n";
+//
+//         lhs_row_mapping[row] = next_constraint_id;
+//      }
+//      if( !rflags.test( RowFlag::kRhsInf ) )
+//      {
+//         next_constraint_id++;
+//         int offset = 0;
+//         proof_out<< RUP ;
+//         for( int i = 0; i < data.getLength(); i++ )
+//         {
+//            int index = data.getIndices()[i];
+//            if( index == col )
+//            {
+//               if( new_val == 0 )
+//                  continue;
+//               if( i != 0 )
+//                  proof_out << " +";
+//               proof_out << abs( num.round_to_int(new_val) * scale_factor[row] ) << " ";
+//
+//               if( new_val > 0 )
+//               {
+//                  offset += num.round_to_int(new_val);
+//                  proof_out << NEGATED;
+//               }
+//            }
+//            else
+//            {
+//               if( i != 0 )
+//                  proof_out << " +";
+//               int val = num.round_to_int( data.getValues()[i] * scale_factor[row] );
+//               proof_out << abs( val ) << " ";
+//               if( val > 0 )
+//               {
+//                  offset += val;
+//                  proof_out << NEGATED;
+//               }
+//            }
+//            proof_out << names[var_mapping[index]];
+//         }
+//
+//         proof_out << " >= " << offset - num.round_to_int( rhs * scale_factor[row] )
+//                   << ";\n";
+//         proof_out << DELETE_CONS << rhs_row_mapping[row] << "\n";
+//         rhs_row_mapping[row] = next_constraint_id;
+//      }
    }
 
    void
@@ -1147,58 +1197,49 @@ class VeriPb : public CertificateInterface<REAL>
    }
 
    void
-   add_problem_mapping_to_log( const Vec<int> colmapping,
-                               const Problem<REAL>& problem )
+   verify_updated_row( int row, int col, REAL new_val,
+               const SparseVectorView<REAL>& data, RowFlags& rflags, REAL lhs,
+               REAL rhs, const Vec<String>& names, const Vec<int>& var_mapping )
    {
-      auto matrix = problem.getConstraintMatrix();
-      assert(matrix.getLeftHandSides().size() == lhs_row_mapping.size());
-      assert(matrix.getRightHandSides().size() == rhs_row_mapping.size());
-      for(int row = 0; row < lhs_row_mapping.size(); row ++)
+      if( lhs_row_mapping[row] != UNKNOWN )
       {
-         if(lhs_row_mapping[row] != UNKNOWN)
+         proof_out << EQUAL << lhs_row_mapping[row] << " ";
+         int offset = 0;
+         for( int i = 0; i < data.getLength(); i++ )
          {
-            proof_out << "e " << lhs_row_mapping[row] << " ";
-            auto data = matrix.getRowCoefficients(row);
-            int offset = 0;
-            for( int i = 0; i < data.getLength(); i++ )
+            if( i != 0 )
+               proof_out << "+";
+            proof_out << num.round_to_int(abs( data.getValues()[i] ) * scale_factor[row]) << " ";
+            if( data.getValues()[i] < 0 )
             {
-               if(i !=0)
-                  proof_out << "+";
-               proof_out << abs(data.getValues()[i]) * scale_factor[row] << " ";
-               if( data.getValues()[i] < 0 )
-               {
-                  offset += num.round_to_int(data.getValues()[i]);
-                  proof_out << "~";
-               }
-               assert(colmapping.size() > data.getIndices()[i]);
-               proof_out << problem.getVariableNames()[colmapping[data.getIndices()[i]]] << " ";
+               offset += num.round_to_int( data.getValues()[i] );
+               proof_out << "~";
             }
-            proof_out << " >= " << (matrix.getLeftHandSides()[row] + offset) * scale_factor[row] << ";\n";
+            assert( var_mapping.size() > data.getIndices()[i] );
+            proof_out << names[var_mapping[data.getIndices()[i]]] << " ";
          }
-         if( rhs_row_mapping[row] != UNKNOWN )
+         proof_out << " >= " << ( num.round_to_int( lhs ) + offset ) * scale_factor[row] << ";\n";
+      }
+      if( rhs_row_mapping[row] != UNKNOWN )
+      {
+         proof_out << EQUAL << rhs_row_mapping[row] << " ";
+         int offset = 0;
+         for( int i = 0; i < data.getLength(); i++ )
          {
-            proof_out << "e " << rhs_row_mapping[row] << " ";
-            auto data = matrix.getRowCoefficients( row );
-            int offset = 0;
-            for( int i = 0; i < data.getLength(); i++ )
+            if( i != 0 )
+               proof_out << "+";
+            proof_out << num.round_to_int(abs( data.getValues()[i] ) * scale_factor[row]) << " ";
+            if( data.getValues()[i] < 0 )
             {
-               if( i != 0 )
-                  proof_out << "+";
-               proof_out << abs( data.getValues()[i] ) * scale_factor[row]
-                         << " ";
-               if( data.getValues()[i] < 0 )
-               {
-                  offset += num.round_to_int(data.getValues()[i]);
-                  proof_out << "~";
-               }
-               proof_out << problem.getVariableNames()[colmapping[data.getIndices()[i]]] << " ";
+               offset += num.round_to_int( data.getValues()[i] );
+               proof_out << "~";
             }
-            proof_out << " >= " << ( abs( offset ) - matrix.getRightHandSides()[row] ) *
-                             scale_factor[row] << ";\n";
+            proof_out << names[var_mapping[data.getIndices()[i]]] << " ";
          }
+         proof_out << " >= " << ( abs(offset) - num.round_to_int( rhs ) ) * scale_factor[row]
+                   << ";\n";
       }
    }
-
 };
 
 } // namespace papilo

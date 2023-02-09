@@ -2038,7 +2038,7 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
          matrix_buffer.addEntry( reduction.row, reduction.col,
                                  reduction.newval );
 
-         certificate_interface->update_row(
+         certificate_interface->change_matrix_entry(
              reduction.row, reduction.col, reduction.newval,
              constraintMatrix.getRowCoefficients( reduction.row ),
              rflags[reduction.row],

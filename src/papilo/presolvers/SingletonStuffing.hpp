@@ -41,7 +41,7 @@ class SingletonStuffing : public PresolveMethod<REAL>
    {
       this->setName( "stuffing" );
       this->setTiming( PresolverTiming::kMedium );
-      this->setArgument( ArgumentType::kSingelton );
+      this->setArgument( ArgumentType::kAggregation );
    }
 
    virtual PresolveStatus

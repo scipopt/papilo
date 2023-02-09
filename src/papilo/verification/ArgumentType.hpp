@@ -30,7 +30,7 @@ enum class ArgumentType : int
    kPrimal = 0,
    kDual = 1,
    kSymmetry = 2,
-   kSingelton = 3,
+   kAggregation = 3,
    kWeakening = 4,
    kSaturation = 5,
 };
