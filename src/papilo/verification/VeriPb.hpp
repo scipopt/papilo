@@ -332,7 +332,7 @@ class VeriPb : public CertificateInterface<REAL>
             proof_out << " +";
       }
 
-      proof_out << " >=  " << num.round_to_int( val ) * scale_factor[row] + offset )
+      proof_out << " >=  " << num.round_to_int( val ) * scale_factor[row] + abs(offset)
                 << ";\n";
 
       lhs_row_mapping[row] = next_constraint_id;
@@ -605,31 +605,29 @@ class VeriPb : public CertificateInterface<REAL>
          {
             assert(rhs_row_mapping[row] != UNKNOWN);
             proof_out << rhs_row_mapping[row] << " ";
-            skip_changing_rhs = rhs_row_mapping[row];
-
+            skip_changing_rhs = next_constraint_id;
          }
          else
          {
             assert(lhs_row_mapping[row] != UNKNOWN);
             proof_out << lhs_row_mapping[row] << " ";
-            lhs_row_mapping[row] = next_constraint_id;
-            skip_changing_lhs = rhs_row_mapping[row];
+            skip_changing_lhs = next_constraint_id;
          }
          proof_out << SATURATION << "\n";
-#ifdef VERIPB_DEBUG
-         verify_updated_row( row, col, new_val, data, rflags, lhs, rhs,
-                             names, var_mapping );
-#endif
          if( !rflags.test( RowFlag::kRhsInf ) )
          {
-            proof_out << DELETE_CONS << rhs_row_mapping[row];
+            proof_out << DELETE_CONS << rhs_row_mapping[row] << "\n";
             rhs_row_mapping[row] = next_constraint_id;
          }
          else
          {
-            proof_out << DELETE_CONS << lhs_row_mapping[row];
+            proof_out << DELETE_CONS << lhs_row_mapping[row] << "\n";
             lhs_row_mapping[row] = next_constraint_id;
          }
+#ifdef VERIPB_DEBUG
+         verify_changed_row( row, col, new_val, data, rflags, lhs, rhs,
+                             names, var_mapping );
+#endif
       }
       else if( argument == ArgumentType::kWeakening )
       {
@@ -1198,7 +1196,7 @@ class VeriPb : public CertificateInterface<REAL>
    }
 
    void
-   verify_updated_row( int row, int col, REAL new_val,
+   verify_changed_row( int row, int col, REAL new_val,
                const SparseVectorView<REAL>& data, RowFlags& rflags, REAL lhs,
                REAL rhs, const Vec<String>& names, const Vec<int>& var_mapping )
    {
@@ -1223,7 +1221,7 @@ class VeriPb : public CertificateInterface<REAL>
             assert( var_mapping.size() > data.getIndices()[i] );
             proof_out << names[var_mapping[data.getIndices()[i]]] << " ";
          }
-         proof_out << " >= " << ( num.round_to_int( lhs ) + offset ) * scale_factor[row] << ";\n";
+         proof_out << " >= " << num.round_to_int( lhs ) * scale_factor[row] + abs(offset) << ";\n";
       }
       if( rhs_row_mapping[row] != UNKNOWN )
       {
@@ -1244,7 +1242,7 @@ class VeriPb : public CertificateInterface<REAL>
             }
             proof_out << names[var_mapping[data.getIndices()[i]]] << " ";
          }
-         proof_out << " >= " << ( abs(offset) - num.round_to_int( rhs ) ) * scale_factor[row]
+         proof_out << " >= " << abs(offset) - num.round_to_int( rhs ) * scale_factor[row]
                    << ";\n";
       }
    }
