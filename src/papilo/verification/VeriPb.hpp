@@ -146,12 +146,12 @@ class VeriPb : public CertificateInterface<REAL>
       switch( argument )
       {
       case ArgumentType::kPrimal:
-         proof_out << RUP << "1 ~" << names[orig_col] << " >= 1 ;\n";
+         proof_out << RUP << "1 " << NEGATED << names[orig_col] << " >= 1 ;\n";
          break;
       case ArgumentType::kAggregation:
       case ArgumentType::kDual:
       case ArgumentType::kSymmetry:
-         proof_out << RED << "1 ~" << names[orig_col] << " >= 1 ; " << names[orig_col] << " -> 0\n";
+         proof_out << RED << "1 " << NEGATED << names[orig_col] << " >= 1 ; " << names[orig_col] << " -> 0\n";
          break;
       default:
          assert( false );
@@ -238,7 +238,7 @@ class VeriPb : public CertificateInterface<REAL>
             assert(lhs_row_mapping[row] != UNKNOWN);
             int cons = cons_id_fixing;
             if( row_value > 0)
-               proof_out << POL << lhs_row_mapping[row] << " ~" << names[orig_col] << " " << abs(row_value) << " * + \n";
+               proof_out << POL << lhs_row_mapping[row] << " " << NEGATED << names[orig_col] << " " << abs(row_value) << " * + \n";
             else
                proof_out << POL << lhs_row_mapping[row] << " " << cons_id_fixing  << " " << abs(row_value) << " * + \n";
             proof_out << DELETE_CONS << lhs_row_mapping[row] << "\n";
@@ -249,7 +249,7 @@ class VeriPb : public CertificateInterface<REAL>
             next_constraint_id++;
             assert(rhs_row_mapping[row] != UNKNOWN);
             if( row_value < 0)
-               proof_out << POL << rhs_row_mapping[row] << " ~" << names[orig_col] << " " << abs(row_value) << " * + \n";
+               proof_out << POL << rhs_row_mapping[row] << " " << NEGATED  << names[orig_col] << " " << abs(row_value) << " * + \n";
             else
                proof_out << POL << rhs_row_mapping[row] << " " << cons_id_fixing << " " << abs(row_value) << " * + \n";
             proof_out << DELETE_CONS << rhs_row_mapping[row] << "\n";
@@ -265,7 +265,7 @@ class VeriPb : public CertificateInterface<REAL>
       next_constraint_id ++;
       auto name_dominating = names[var_mapping[dominating_column]];
       auto name_dominated = names[var_mapping[dominated_column]];
-      proof_out << RED << "1 " << name_dominating << " +1 ~" << name_dominated
+      proof_out << RED << "1 " << name_dominating << " +1 " << NEGATED << name_dominated
                 << " >= 1 ; " << name_dominating << " -> " << name_dominated
                 << " " << name_dominated << " -> " << name_dominating << "\n";
    }
@@ -298,7 +298,7 @@ class VeriPb : public CertificateInterface<REAL>
          if( i != data.getLength() - 1 )
             proof_out << " +";
       }
-      proof_out << " >=  " << ( abs(offset) - num.round_to_int( val ) ) * scale_factor[row]
+      proof_out << " >=  " << abs(offset) - num.round_to_int( val ) * scale_factor[row]
                 << ";\n";
       rhs_row_mapping[row] = next_constraint_id;
    }
@@ -318,7 +318,8 @@ class VeriPb : public CertificateInterface<REAL>
       int offset = 0;
       for( int i = 0; i < data.getLength(); i++ )
       {
-         int coeff =num.round_to_int(data.getValues()[i]) * scale_factor[row];
+         int coeff =
+             num.round_to_int( data.getValues()[i] ) * scale_factor[row];
          assert( coeff != 0 );
          proof_out << abs( coeff ) << " ";
          if( coeff < 0 )
@@ -331,7 +332,7 @@ class VeriPb : public CertificateInterface<REAL>
             proof_out << " +";
       }
 
-      proof_out << " >=  " << ( num.round_to_int( val ) + offset ) * scale_factor[row]
+      proof_out << " >=  " << num.round_to_int( val ) * scale_factor[row] + offset )
                 << ";\n";
 
       lhs_row_mapping[row] = next_constraint_id;
@@ -564,7 +565,7 @@ class VeriPb : public CertificateInterface<REAL>
             next_constraint_id++;
             assert( lhs_row_mapping[row] != UNKNOWN );
             if( old_value > 0 )
-               proof_out << POL << lhs_row_mapping[row] << " ~" << name << " "
+               proof_out << POL << lhs_row_mapping[row] << " " << NEGATED  << name << " "
                          << abs( diff ) << " * + \n";
             else
                proof_out << POL << lhs_row_mapping[row] << " " << name << " "
@@ -580,7 +581,7 @@ class VeriPb : public CertificateInterface<REAL>
             skip_changing_rhs = row;
             if( old_value < 0 )
             {
-               proof_out << POL << rhs_row_mapping[row] << " ~" << name << " "
+               proof_out << POL << rhs_row_mapping[row] << " " << NEGATED  << name << " "
                          << abs( diff ) << " * + \n";
             }
             else
@@ -1209,11 +1210,15 @@ class VeriPb : public CertificateInterface<REAL>
          {
             if( i != 0 )
                proof_out << "+";
-            proof_out << num.round_to_int(abs( data.getValues()[i] ) * scale_factor[row]) << " ";
-            if( data.getValues()[i] < 0 )
+
+            REAL value = data.getValues()[i];
+            if( data.getIndices()[i] == col )
+               value = new_val;
+            proof_out << num.round_to_int(abs( value ) * scale_factor[row]) << " ";
+            if( value < 0 )
             {
-               offset += num.round_to_int( data.getValues()[i] );
-               proof_out << "~";
+               offset += num.round_to_int( value );
+               proof_out << NEGATED;
             }
             assert( var_mapping.size() > data.getIndices()[i] );
             proof_out << names[var_mapping[data.getIndices()[i]]] << " ";
@@ -1228,11 +1233,14 @@ class VeriPb : public CertificateInterface<REAL>
          {
             if( i != 0 )
                proof_out << "+";
-            proof_out << num.round_to_int(abs( data.getValues()[i] ) * scale_factor[row]) << " ";
-            if( data.getValues()[i] < 0 )
+            REAL value = data.getValues()[i];
+            if( data.getIndices()[i] == col )
+               value = new_val;
+            proof_out << num.round_to_int(abs( value ) * scale_factor[row]) << " ";
+            if( value < 0 )
             {
-               offset += num.round_to_int( data.getValues()[i] );
-               proof_out << "~";
+               offset += num.round_to_int( value );
+               proof_out << NEGATED;
             }
             proof_out << names[var_mapping[data.getIndices()[i]]] << " ";
          }
