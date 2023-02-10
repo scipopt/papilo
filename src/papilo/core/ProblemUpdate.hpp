@@ -1613,57 +1613,70 @@ ProblemUpdate<REAL>::removeSingletonRow( int row )
    const bool isLhsInfinity = rflags[row].test( RowFlag::kLhsInf );
    const bool isRhsInfinity = rflags[row].test( RowFlag::kRhsInf );
 
-   if( rflags[row].test( RowFlag::kEquation ) )
+   // TODO: we could perform an actual division rhs / val
+   // and compare to the bounds of the column. This could be numerically safer.
+   // It would mean that we do not claim infeasibility if the variable is unbounded.
+   if( num.isZero( val ) )
    {
-      postsolve.storeSavedRow( row, rowvec, lhs, rhs, rflags[row] );
-      REAL fixed_val = rhs / val;
-      if( num.isZero( rhs ) )
-         fixed_val = 0.0;
-      status = fixCol( col, fixed_val );
+      if( ( !isRhsInfinity && num.isLT( rhs, 0 ) ) ||
+          ( !isLhsInfinity && num.isGT( lhs, 0 ) ) )
+         status = PresolveStatus::kInfeasible;
    }
    else
    {
-      if( val < 0 )
-      {
-         if( !isLhsInfinity )
+         if( rflags[row].test( RowFlag::kEquation ) )
          {
-            REAL fixed_val = lhs / val;
-            if( num.isZero( lhs ) )
-               fixed_val = 0.0;
+            assert( num.isEq( lhs, rhs ) );
             postsolve.storeSavedRow( row, rowvec, lhs, rhs, rflags[row] );
-            status = changeUB( col, fixed_val );
-         }
-
-         if( !isRhsInfinity && status != PresolveStatus::kInfeasible )
-         {
             REAL fixed_val = rhs / val;
             if( num.isZero( rhs ) )
                fixed_val = 0.0;
-            postsolve.storeSavedRow( row, rowvec, lhs, rhs, rflags[row] );
-            status = changeLB( col, fixed_val );
+            status = fixCol( col, fixed_val );
          }
-      }
-      else
-      {
-         assert( val > 0 );
-         if( !isLhsInfinity )
+         else
          {
-            REAL fixed_val = lhs / val;
-            if( num.isZero( lhs ) )
-               fixed_val = 0.0;
-            postsolve.storeSavedRow( row, rowvec, lhs, rhs, rflags[row] );
-            status = changeLB( col, fixed_val );
-         }
+            if( val < 0 )
+            {
+               if( !isLhsInfinity )
+               {
+                  REAL fixed_val = lhs / val;
+                  if( num.isZero( lhs ) )
+                  fixed_val = 0.0;
+                  postsolve.storeSavedRow( row, rowvec, lhs, rhs, rflags[row] );
+                  status = changeUB( col, fixed_val );
+               }
 
-         if( !isRhsInfinity && status != PresolveStatus::kInfeasible )
-         {
-            REAL fixed_val = rhs / val;
-            if( num.isZero( rhs ) )
-               fixed_val = 0.0;
-            postsolve.storeSavedRow( row, rowvec, lhs, rhs, rflags[row] );
-            status = changeUB( col, fixed_val );
+               if( !isRhsInfinity && status != PresolveStatus::kInfeasible )
+               {
+                  REAL fixed_val = rhs / val;
+                  if( num.isZero( rhs ) )
+                  fixed_val = 0.0;
+                  postsolve.storeSavedRow( row, rowvec, lhs, rhs, rflags[row] );
+                  status = changeLB( col, fixed_val );
+               }
+            }
+            else
+            {
+               assert( val > 0 );
+               if( !isLhsInfinity )
+               {
+                  REAL fixed_val = lhs / val;
+                  if( num.isZero( lhs ) )
+                  fixed_val = 0.0;
+                  postsolve.storeSavedRow( row, rowvec, lhs, rhs, rflags[row] );
+                  status = changeLB( col, fixed_val );
+               }
+
+               if( !isRhsInfinity && status != PresolveStatus::kInfeasible )
+               {
+                  REAL fixed_val = rhs / val;
+                  if( num.isZero( rhs ) )
+                  fixed_val = 0.0;
+                  postsolve.storeSavedRow( row, rowvec, lhs, rhs, rflags[row] );
+                  status = changeUB( col, fixed_val );
+               }
+            }
          }
-      }
    }
 
    markRowRedundant( row );
@@ -2280,6 +2293,9 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
                                             ColFlag::kSubstituted ) )
                {
                   assert( cflags[col1].test( ColFlag::kFixed ) );
+                  // skip substitution if factor is too small -> in this case the result would be very likely infeasible
+                  if( num.isZero( factor ) )
+                     break;
                   if( fixCol( col2, ( lbs[col1] - offset ) / factor ) ==
                       PresolveStatus::kInfeasible )
                      return ApplyResult::kInfeasible;
