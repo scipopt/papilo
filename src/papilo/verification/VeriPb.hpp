@@ -131,7 +131,12 @@ class VeriPb : public CertificateInterface<REAL>
    };
 
    void
-   start_transaction() {};
+   start_transaction() {
+       skip_changing_lhs = UNKNOWN;
+       skip_changing_rhs = UNKNOWN;
+       skip_deleting_lhs_constraint_id = UNKNOWN;
+       skip_deleting_rhs_constraint_id = UNKNOWN;
+   };
 
    void
    end_transaction() {};
