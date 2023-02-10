@@ -37,14 +37,15 @@
 namespace papilo
 {
 
-static const char* const DELETE_CONS = "del id ";
 static const char* const NEGATED = "~";
+static const char* const COMMENT = "* ";
+static const char* const DELETE_CONS = "del id ";
 static const char* const RUP = "rup ";
 static const char* const RED = "red ";
-static const char* const COMMENT = "* ";
 static const char* const POL = "pol ";
+static const char* const EQUAL_CHECK = "e ";
 static const char* const SATURATION = "s";
-static const char* const EQUAL = "e ";
+static const char* const WEAKENING = "w";
 static const int UNKNOWN = -1;
 
 template <typename REAL>
@@ -128,6 +129,12 @@ class VeriPb : public CertificateInterface<REAL>
       proof_out << "f " << next_constraint_id << "\n";
       proof_out << std::fixed;
    };
+
+   void
+   start_transaction() {};
+
+   void
+   end_transaction() {};
 
    void
    flush()
@@ -631,7 +638,34 @@ class VeriPb : public CertificateInterface<REAL>
       }
       else if( argument == ArgumentType::kWeakening )
       {
-         assert( false );
+         assert( new_val == 0);
+         assert( rflags.test(RowFlag::kRhsInf) || rflags.test(RowFlag::kLhsInf));
+         next_constraint_id++;
+         proof_out << POL;
+         if(rhs_row_mapping[row] != UNKNOWN)
+         {
+            assert(!rflags.test(RowFlag::kRhsInf));
+            proof_out << rhs_row_mapping[row] << " ";
+         }
+         else
+         {
+            assert( !rflags.test( RowFlag::kLhsInf ) );
+            proof_out << lhs_row_mapping[row] << " ";
+         }
+         proof_out << names[var_mapping[col]] << " " << WEAKENING << "\n";
+         if(rhs_row_mapping[row] != UNKNOWN)
+         {
+            proof_out << DELETE_CONS << rhs_row_mapping[row] << "\n";
+            rhs_row_mapping[row] = next_constraint_id;         }
+         else
+         {
+            proof_out << DELETE_CONS << lhs_row_mapping[row] << "\n";
+            lhs_row_mapping[row] = next_constraint_id;
+         }
+#ifdef VERIPB_DEBUG
+         verify_changed_row( row, col, new_val, data, rflags, lhs, rhs,
+                             names, var_mapping );
+#endif
       }
       else
       {
@@ -1202,7 +1236,7 @@ class VeriPb : public CertificateInterface<REAL>
    {
       if( lhs_row_mapping[row] != UNKNOWN )
       {
-         proof_out << EQUAL << lhs_row_mapping[row] << " ";
+         proof_out << EQUAL_CHECK << lhs_row_mapping[row] << " ";
          int offset = 0;
          for( int i = 0; i < data.getLength(); i++ )
          {
@@ -1225,7 +1259,7 @@ class VeriPb : public CertificateInterface<REAL>
       }
       if( rhs_row_mapping[row] != UNKNOWN )
       {
-         proof_out << EQUAL << rhs_row_mapping[row] << " ";
+         proof_out << EQUAL_CHECK << rhs_row_mapping[row] << " ";
          int offset = 0;
          for( int i = 0; i < data.getLength(); i++ )
          {

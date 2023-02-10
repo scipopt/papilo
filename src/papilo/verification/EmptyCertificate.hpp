@@ -40,6 +40,12 @@ class EmptyCertificate : public CertificateInterface<REAL>
    print_header(){};
 
    void
+   start_transaction() {};
+
+   void
+   end_transaction() {};
+
+   void
    flush(){};
 
    void

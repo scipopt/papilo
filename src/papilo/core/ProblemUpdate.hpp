@@ -2024,6 +2024,7 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
 
    print_detailed( first, last );
 
+   certificate_interface->start_transaction();
    for( auto iter = first; iter < last; ++iter )
    {
       const auto& reduction = *iter;
@@ -2793,6 +2794,7 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
          }
       }
    }
+   certificate_interface->end_transaction();
 
    // no conflicts found
    return ApplyResult::kApplied;

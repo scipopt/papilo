@@ -43,6 +43,12 @@ class CertificateInterface
    CertificateInterface() = default;
 
    virtual void
+   start_transaction() = 0;
+
+   virtual void
+   end_transaction() = 0;
+
+   virtual void
    print_header() = 0;
 
    virtual void
