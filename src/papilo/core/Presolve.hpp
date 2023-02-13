@@ -104,12 +104,12 @@ class Presolve
       addPresolveMethod( uptr( new ConstraintPropagation<REAL>() ) );
 
       //medium presolvers
+      addPresolveMethod( uptr( new FixContinuous<REAL>() ) );
       addPresolveMethod( uptr( new SimpleProbing<REAL>() ) );
       addPresolveMethod( uptr( new ParallelRowDetection<REAL>() ) );
       addPresolveMethod( uptr( new ParallelColDetection<REAL>() ) );
       addPresolveMethod( uptr( new SingletonStuffing<REAL>() ) );
       addPresolveMethod( uptr( new DualFix<REAL>() ) );
-      addPresolveMethod( uptr( new FixContinuous<REAL>() ) );
       addPresolveMethod( uptr( new SimplifyInequalities<REAL>() ) );
       addPresolveMethod( uptr( new SimpleSubstitution<REAL>() ) );
 
