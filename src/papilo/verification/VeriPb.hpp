@@ -27,6 +27,7 @@
 #define VERIPB_DEBUG
 
 #include "papilo/core/Problem.hpp"
+#include "papilo/misc/Hash.hpp"
 #include "papilo/misc/Num.hpp"
 #include "papilo/misc/Vec.hpp"
 #include "papilo/misc/compress_vector.hpp"
@@ -73,6 +74,9 @@ class VeriPb : public CertificateInterface<REAL>
    int skip_deleting_lhs_constraint_id = UNKNOWN;
    int skip_changing_rhs = UNKNOWN;
    int skip_changing_lhs = UNKNOWN;
+   // TODO: maybe this is not sufficient and matrix buffer needs to be handed over
+   HashMap<int, int> changed_entries {};
+
 
 
    VeriPb() = default;
@@ -136,6 +140,7 @@ class VeriPb : public CertificateInterface<REAL>
        skip_changing_rhs = UNKNOWN;
        skip_deleting_lhs_constraint_id = UNKNOWN;
        skip_deleting_rhs_constraint_id = UNKNOWN;
+       changed_entries.clear();
    };
 
    void
@@ -297,8 +302,18 @@ class VeriPb : public CertificateInterface<REAL>
       int offset = 0;
       for( int i = 0; i < data.getLength(); i++ )
       {
-         int coeff = num.round_to_int(data.getValues()[i]) * scale_factor[row];
-         assert( coeff != 0 );
+         int unscaled_coeff = num.round_to_int( data.getValues()[i] );
+         assert( unscaled_coeff != 0 );
+         auto found = changed_entries.find( data.getIndices()[i] );
+         if( found != changed_entries.end() )
+         {
+            unscaled_coeff = found->second;
+            if(unscaled_coeff == 0)
+               continue ;
+         }
+         if( i != 0 )
+            proof_out << " +";
+         int coeff = unscaled_coeff * scale_factor[row];
          proof_out << abs( coeff ) << " ";
          if( coeff > 0 )
          {
@@ -306,9 +321,6 @@ class VeriPb : public CertificateInterface<REAL>
             proof_out << NEGATED;
          }
          proof_out << names[var_mapping[data.getIndices()[i]]];
-
-         if( i != data.getLength() - 1 )
-            proof_out << " +";
       }
       proof_out << " >=  " << abs(offset) - num.round_to_int( val ) * scale_factor[row]
                 << ";\n";
@@ -330,9 +342,18 @@ class VeriPb : public CertificateInterface<REAL>
       int offset = 0;
       for( int i = 0; i < data.getLength(); i++ )
       {
-         int coeff =
-             num.round_to_int( data.getValues()[i] ) * scale_factor[row];
-         assert( coeff != 0 );
+         int unscaled_coeff = num.round_to_int( data.getValues()[i] );
+         assert( unscaled_coeff != 0 );
+         auto found = changed_entries.find( data.getIndices()[i] );
+         if( found != changed_entries.end() )
+         {
+            unscaled_coeff = found->second;
+            if(unscaled_coeff == 0)
+               continue ;
+         }
+         if( i != 0 )
+            proof_out << " +";
+         int coeff = unscaled_coeff * scale_factor[row];
          proof_out << abs( coeff ) << " ";
          if( coeff < 0 )
          {
@@ -340,8 +361,7 @@ class VeriPb : public CertificateInterface<REAL>
             offset += coeff;
          }
          proof_out << names[var_mapping[data.getIndices()[i]]];
-         if( i != data.getLength() - 1 )
-            proof_out << " +";
+
       }
 
       proof_out << " >=  " << num.round_to_int( val ) * scale_factor[row] + abs(offset)
@@ -548,14 +568,15 @@ class VeriPb : public CertificateInterface<REAL>
                REAL rhs, const Vec<String>& names, const Vec<int>& var_mapping, ArgumentType argument )
    {
       // remove singleton variable from equation
+      changed_entries.emplace( col, num.round_to_int( new_val ) );
       if( argument == ArgumentType::kAggregation )
       {
          assert( lhs == rhs );
          assert( !rflags.test( RowFlag::kLhsInf ) );
          assert( !rflags.test( RowFlag::kRhsInf ) );
          assert( new_val == 0 );
-//         assert( skip_changing_lhs == UNKNOWN );
-//         assert( skip_changing_rhs == UNKNOWN );
+         assert( skip_changing_lhs == UNKNOWN );
+         assert( skip_changing_rhs == UNKNOWN );
          skip_changing_lhs = UNKNOWN;
          skip_changing_rhs = UNKNOWN;
          int old_value = 0;
@@ -1245,12 +1266,17 @@ class VeriPb : public CertificateInterface<REAL>
          int offset = 0;
          for( int i = 0; i < data.getLength(); i++ )
          {
-            if( i != 0 )
-               proof_out << "+";
 
             REAL value = data.getValues()[i];
-            if( data.getIndices()[i] == col )
-               value = new_val;
+            auto found = changed_entries.find(data.getIndices()[i]);
+            if( found != changed_entries.end() )
+            {
+               value = found->second;
+               if(value == 0)
+                  continue ;
+            }
+            if( i != 0 )
+               proof_out << "+";
             proof_out << num.round_to_int(abs( value ) * scale_factor[row]) << " ";
             if( value < 0 )
             {
@@ -1268,11 +1294,15 @@ class VeriPb : public CertificateInterface<REAL>
          int offset = 0;
          for( int i = 0; i < data.getLength(); i++ )
          {
+            REAL value = data.getValues()[i];
+            auto found = changed_entries.find(data.getIndices()[i]);
+            {
+               value = found->second;
+               if(value == 0)
+                  continue ;
+            }
             if( i != 0 )
                proof_out << "+";
-            REAL value = data.getValues()[i];
-            if( data.getIndices()[i] == col )
-               value = new_val;
             proof_out << num.round_to_int(abs( value ) * scale_factor[row]) << " ";
             if( value < 0 )
             {
