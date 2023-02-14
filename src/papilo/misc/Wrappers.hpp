@@ -62,7 +62,8 @@ ResultStatus
 presolve_and_solve(
     const OptionsInfo& opts,
     std::unique_ptr<SolverFactory<REAL>> lpSolverFactory = nullptr,
-    std::unique_ptr<SolverFactory<REAL>> mipSolverFactory = nullptr )
+    std::unique_ptr<SolverFactory<REAL>> mipSolverFactory = nullptr,
+    std::unique_ptr<SolverFactory<REAL>> satSolverFactory = nullptr )
 {
    try
    {
@@ -100,6 +101,8 @@ presolve_and_solve(
             lpSolverFactory->add_parameters(paramSet);
          if(mipSolverFactory != nullptr)
             mipSolverFactory->add_parameters(paramSet);
+         if(satSolverFactory != nullptr)
+            satSolverFactory->add_parameters(paramSet);
 
          if( !opts.param_settings_file.empty() && !opts.print_params )
          {
@@ -206,6 +209,7 @@ presolve_and_solve(
 
       presolve.setLPSolverFactory( std::move( lpSolverFactory ) );
       presolve.setMIPSolverFactory( std::move( mipSolverFactory ) );
+      presolve.setSATSolverFactory( std::move( satSolverFactory ) );
 
       presolve.getPresolveOptions().tlim =
           std::min( opts.tlim, presolve.getPresolveOptions().tlim );
@@ -221,6 +225,10 @@ presolve_and_solve(
                 presolve.getVerbosityLevel() );
             store_dual = solver->is_dual_solution_available();
          }
+         else if( presolve.getSATSolverFactory() &&
+                  problem.test_problem_type(ProblemFlag::kBinary) )
+            solver = presolve.getSATSolverFactory()->newSolver(
+                presolve.getVerbosityLevel() );
          else if( presolve.getMIPSolverFactory() )
             solver = presolve.getMIPSolverFactory()->newSolver(
                 presolve.getVerbosityLevel() );
@@ -311,7 +319,7 @@ presolve_and_solve(
                      opts.postsolve_archive_file, t.getTime() );
       }
 
-      if( opts.command == Command::kPresolve )
+      if( opts.command == Command::kPresolve || problem.getNCols() == 0 )
          return ResultStatus::kOk;
 
       double solvetime = 0;

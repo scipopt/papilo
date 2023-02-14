@@ -56,7 +56,16 @@ else()
    set(PAPILO_HAVE_HIGHS 0)
 endif()
 
+if(ROUNDINGSAT_DIR)
+   message(STATUS "Finding Roundingsat - found")
+   set(PAPILO_HAVE_ROUNDINGSAT 1)
+endif()
+
 set(CMAKE_CXX_STANDARD 14)
+if(ROUNDINGSAT_DIR)
+   message("ROUNDINGSAT_DIR: ${ROUNDINGSAT_DIR}")
+   set(CMAKE_CXX_STANDARD 17)
+endif()
 
 include_directories(${SCIP_INCLUDE_DIRS} ${SOPLEX_INCLUDE_DIRS} ${HIGHS_INCLUDE_DIRS} ${CMAKE_CURRENT_BINARY_DIR})
 find_package(Boost REQUIRED OPTIONAL_COMPONENTS iostreams serialization program_options)
@@ -79,8 +88,35 @@ if(Boost_IOSTREAMS_FOUND AND Boost_SERIALIZATION_FOUND AND Boost_PROGRAM_OPTIONS
    set_target_properties(duplicates PROPERTIES OUTPUT_NAME duplicates RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin" )
    target_link_libraries(duplicates papilo-core ${Boost_LIBRARIES})
    target_compile_definitions(duplicates PRIVATE PAPILO_USE_EXTERN_TEMPLATES PAPILO_MPS_WRITER)
-   add_executable(papilo-executable ${CMAKE_CURRENT_LIST_DIR}/../src/papilo.cpp)
 
+   if(ROUNDINGSAT_DIR)
+      set(
+         roundingsat_source_files
+         ${ROUNDINGSAT_DIR}/src/Constr.cpp
+         ${ROUNDINGSAT_DIR}/src/ConstrExp.cpp
+         ${ROUNDINGSAT_DIR}/src/ConstrSimple.cpp
+         ${ROUNDINGSAT_DIR}/src/LpSolver.cpp
+         ${ROUNDINGSAT_DIR}/src/Solver.cpp
+         ${ROUNDINGSAT_DIR}/src/parsing.cpp
+         ${ROUNDINGSAT_DIR}/src/quit.cpp
+         ${ROUNDINGSAT_DIR}/src/run.cpp
+         ${ROUNDINGSAT_DIR}/src/SolverStructs.cpp
+         ${ROUNDINGSAT_DIR}/src/used_licenses/gpl_3_0.cpp
+         ${ROUNDINGSAT_DIR}/src/used_licenses/zib_academic.cpp
+         ${ROUNDINGSAT_DIR}/src/used_licenses/roundingsat.cpp
+         ${ROUNDINGSAT_DIR}/src/used_licenses/MIT.cpp
+         ${ROUNDINGSAT_DIR}/src/used_licenses/licenses.cpp
+         ${ROUNDINGSAT_DIR}/src/used_licenses/boost.cpp
+         ${ROUNDINGSAT_DIR}/src/used_licenses/lgpl_3_0.cpp
+   )
+   endif()
+   add_executable(papilo-executable ${CMAKE_CURRENT_LIST_DIR}/../src/papilo.cpp ${roundingsat_source_files})
+
+   if(PAPILO_HAVE_ROUNDINGSAT)
+      list(APPEND linked_solvers "Roundingsat")
+      set(PAPILO_HAVE_ROUNDINGSAT 1 PARENT_SCOPE)
+      target_compile_definitions(papilo-executable PRIVATE PAPILO_HAVE_ROUNDINGSAT)
+   endif()
    if(PAPILO_HAVE_SCIP)
       list(APPEND linked_solvers "SCIP")
       set(PAPILO_HAVE_SCIP 1 PARENT_SCOPE)

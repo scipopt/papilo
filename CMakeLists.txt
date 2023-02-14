@@ -113,13 +113,18 @@ else()
 endif()
 
 add_library(papilo INTERFACE)
+if(ROUNDINGSAT_DIR)
+   set(ROUNDINGSAT_INCLUDE_DIRS ${ROUNDINGSAT_DIR}/src/)
+endif()
 target_include_directories(papilo INTERFACE
    $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}>
    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src>
    $<INSTALL_INTERFACE:include>
    ${Boost_INCLUDE_DIRS}
    ${GMP_INCLUDE_DIRS}
-   ${Quadmath_INCLUDE_DIRS})
+   ${Quadmath_INCLUDE_DIRS}
+   ${ROUNDINGSAT_INCLUDE_DIRS})
+
 
 option(TBB "should TBB be linked if found" ON)
 
@@ -257,6 +262,7 @@ add_library(papilo-core STATIC
    src/papilo/presolvers/SingletonStuffing.cpp
    src/papilo/presolvers/Sparsify.cpp
    src/papilo/presolvers/SimplifyInequalities.cpp
+   ${roundingsat_source_files}
   )
 
 #
@@ -338,6 +344,7 @@ install(FILES
      ${PROJECT_SOURCE_DIR}/src/papilo/interfaces/ScipInterface.hpp
      ${PROJECT_SOURCE_DIR}/src/papilo/interfaces/SolverInterface.hpp
      ${PROJECT_SOURCE_DIR}/src/papilo/interfaces/SoplexInterface.hpp
+     ${PROJECT_SOURCE_DIR}/src/papilo/interfaces/RoundingsatInterface.hpp
   DESTINATION include/papilo/interfaces)
 
 install(FILES

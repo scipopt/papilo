@@ -38,7 +38,8 @@ namespace papilo
 enum class SolverType : int
 {
    LP,
-   MIP
+   MIP,
+   PseudoBoolean
 };
 
 enum class SolverStatus : int

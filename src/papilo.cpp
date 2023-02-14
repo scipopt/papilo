@@ -100,6 +100,27 @@ get_mip_solver_factory( papilo::OptionsInfo& optionsInfo )
 
 #endif
 
+#if defined PAPILO_HAVE_ROUNDINGSAT
+
+#include "papilo/interfaces/RoundingsatInterface.hpp"
+
+template <typename REAL>
+static std::unique_ptr<papilo::SolverFactory<REAL>>
+get_sat_solver_factory( papilo::OptionsInfo& optionsInfo )
+{
+   return papilo::RoundingsatFactory<REAL>::create( );
+}
+#else
+
+template <typename REAL>
+static std::unique_ptr<papilo::SolverFactory<REAL>>
+get_sat_solver_factory( papilo::OptionsInfo& optionsInfo )
+{
+   return nullptr;
+}
+#endif
+
+
 #if defined( PAPILO_HAVE_SOPLEX )
 #include "papilo/interfaces/SoplexInterface.hpp"
 
@@ -179,21 +200,24 @@ main( int argc, char* argv[] )
       case ArithmeticType::kDouble:
          if( presolve_and_solve<double>(
                  optionsInfo, get_lp_solver_factory<double>( optionsInfo ),
-                 get_mip_solver_factory<double>( optionsInfo ) ) !=
+                 get_mip_solver_factory<double>( optionsInfo ),
+                 get_sat_solver_factory<double>( optionsInfo )) !=
              ResultStatus::kOk )
             return 1;
          break;
       case ArithmeticType::kQuad:
          if( presolve_and_solve<Quad>(
                  optionsInfo, get_lp_solver_factory<Quad>( optionsInfo ),
-                 get_mip_solver_factory<Quad>( optionsInfo ) ) !=
+                 get_mip_solver_factory<Quad>( optionsInfo ),
+                 get_sat_solver_factory<Quad>( optionsInfo )) !=
              ResultStatus::kOk )
             return 1;
          break;
       case ArithmeticType::kRational:
          if( presolve_and_solve<papilo::Rational>(
                  optionsInfo, get_lp_solver_factory<papilo::Rational>( optionsInfo ),
-                 get_mip_solver_factory<papilo::Rational>( optionsInfo ) ) !=
+                 get_mip_solver_factory<papilo::Rational>( optionsInfo ),
+                 get_sat_solver_factory<papilo::Rational>( optionsInfo )) !=
              ResultStatus::kOk )
             return 1;
       }

@@ -111,7 +111,7 @@ class OpbParser
 
       problem.set_problem_type( ProblemFlag::kMixedInteger );
       problem.set_problem_type( ProblemFlag::kInteger );
-      problem.set_problem_type( ProblemFlag::kPseudoBoolean );
+      problem.set_problem_type( ProblemFlag::kBinary );
 
       problem.setInputTolerance(
           REAL{ pow( typename RealParseType<REAL>::type{ 10 },

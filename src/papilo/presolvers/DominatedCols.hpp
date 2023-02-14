@@ -427,8 +427,8 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
                                   !cflags[col].test( ColFlag::kIntegral ) ) )
                    continue;
 
-                bool to_ub = false;
                 bool to_lb = false;
+                bool to_ub = false;
 
                 if( !rflags[bestrow].test( RowFlag::kLhsInf,
                                            RowFlag::kRhsInf ) )
@@ -437,13 +437,13 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
                        num.isEq( scaled_val, rowvals[j] ) &&
                        num.isLE( scaled_obj, obj[col] ) &&
                        checkDominance( unbounded_col, col, scale, 1 ) )
-                      to_ub = true;
+                      to_lb = true;
 
                    if( !cflags[col].test( ColFlag::kUbInf ) &&
                        num.isEq( scaled_val, -rowvals[j] ) &&
                        num.isLE( scaled_obj, -obj[col] ) &&
                        checkDominance( unbounded_col, col, scale, -1 ) )
-                      to_lb = true;
+                      to_ub = true;
                 }
                 else if( rflags[bestrow].test( RowFlag::kLhsInf ) )
                 {
@@ -453,13 +453,13 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
                        num.isLE( scaled_val, rowvals[j] ) &&
                        num.isLE( scaled_obj, obj[col] ) &&
                        checkDominance( unbounded_col, col, scale, 1 ) )
-                      to_ub = true;
+                      to_lb = true;
 
                    if( !cflags[col].test( ColFlag::kUbInf ) &&
                        num.isLE( scaled_val, -rowvals[j] ) &&
                        num.isLE( scaled_obj, -obj[col] ) &&
                        checkDominance( unbounded_col, col, scale, -1 ) )
-                      to_lb = true;
+                      to_ub = true;
                 }
                 else
                 {
@@ -469,20 +469,20 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
                        num.isGE( scaled_val, rowvals[j] ) &&
                        num.isLE( scaled_obj, obj[col] ) &&
                        checkDominance( unbounded_col, col, scale, 1 ) )
-                      to_ub = true;
+                      to_lb = true;
 
                    if( !cflags[col].test( ColFlag::kUbInf ) &&
                        num.isGE( scaled_val, -rowvals[j] ) &&
                        num.isLE( scaled_obj, -obj[col] ) &&
                        checkDominance( unbounded_col, col, scale, -1 ) )
-                      to_lb = true;
+                      to_ub = true;
                 }
 
-                if( to_ub || to_lb )
+                if( to_lb || to_ub )
                 {
                    domcolreductions.push_back( DomcolReduction{
                        unbounded_col, col, implrowlock,
-                       to_ub ? BoundChange::kUpper : BoundChange::kLower } );
+                       to_lb ? BoundChange::kUpper : BoundChange::kLower } );
                 }
              }
           }
@@ -529,11 +529,13 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
          if( dr.implrowlock >= 0 )
             reductions.lockRow( dr.implrowlock );
 
+         // upper bound is changed to lower bound
          if( dr.boundchg == BoundChange::kUpper )
          {
             reductions.dominance(dr.col2, dr.col1);
             reductions.fixCol( dr.col2, lbValues[dr.col2], dr.implrowlock );
          }
+         // lower bound is changed to upper bound
          else
          {
             reductions.dominance(dr.col1, dr.col2);

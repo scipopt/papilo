@@ -3,7 +3,7 @@
 /*               This file is part of the program and library                */
 /*    PaPILO --- Parallel Presolve for Integer and Linear Optimization       */
 /*                                                                           */
-/* Copyright (C) 2020-2022 Konrad-Zuse-Zentrum                               */
+/* Copyright (C) 2020-2023 Konrad-Zuse-Zentrum                               */
 /*                     fuer Informationstechnik Berlin                       */
 /*                                                                           */
 /* This program is free software: you can redistribute it and/or modify      */
@@ -34,7 +34,7 @@ enum class ProblemFlag : uint8_t
    kMixedInteger = 1 << 0,
    kInteger = 1 << 1,
    kLinear = 1 << 2,
-   kPseudoBoolean = 1 << 3,
+   kBinary = 1 << 3,
 };
 
 using ProblemFlags = Flags<ProblemFlag>;
