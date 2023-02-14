@@ -491,7 +491,7 @@ Presolve<REAL>::apply( Problem<REAL>& problem, bool store_dual_postsolve )
                                       presolveOptions, num, msg );
 
       if( presolveOptions.verification_with_VeriPB &&
-          problem.test_problem_type( ProblemFlag::kPseudoBoolean ) )
+          problem.test_problem_type( ProblemFlag::kBinary ) )
          probUpdate.init_certificate();
 
       for( int i = 0; i != npresolvers; ++i )
