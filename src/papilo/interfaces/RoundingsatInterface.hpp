@@ -48,6 +48,7 @@ class RoundingsatInterface : public SolverInterface<REAL>
 
    //   Num<REAL>& num;
    rs::CeArb objective;
+   Vec<int> scaling_row_factor;
 
    int
    doSetUp( const Problem<REAL>& problem, const Vec<int>& origRowMap,
@@ -61,6 +62,7 @@ class RoundingsatInterface : public SolverInterface<REAL>
       const Vec<REAL>& rhs = problem.getConstraintMatrix().getRightHandSides();
       const Vec<REAL>& lhs = problem.getConstraintMatrix().getLeftHandSides();
       const auto consMatrix = problem.getConstraintMatrix();
+      scaling_row_factor.resize( problem.getNCols() );
 
       input->reset();
       for( int col = 0; col < problem.getNCols(); ++col )
@@ -69,8 +71,8 @@ class RoundingsatInterface : public SolverInterface<REAL>
          assert( num.isIntegral( obj[col] ) );
          if( obj[col] == 0 )
             continue;
-         int sat_var_index = col +1 ;
-         int coeff = to_int(obj[col], -1);
+         int sat_var_index = col + 1;
+         int coeff = to_int( obj[col] );
          rs::run::solver.setNbVars( abs( sat_var_index ), true );
          input->addLhs( coeff, sat_var_index );
       }
@@ -83,8 +85,8 @@ class RoundingsatInterface : public SolverInterface<REAL>
              problem.getConstraintMatrix().getRowCoefficients( row );
          if( consMatrix.getRowFlags()[row].test( RowFlag::kEquation ) )
          {
-            int offset = map_cons_to_lhs( input, row_coeff );
-            input->addRhs( to_int(lhs[row], row) + offset );
+            map_cons_to_lhs( input, row_coeff );
+            input->addRhs( to_int( lhs[row] * scaling_row_factor[row] ) );
             if( rs::run::solver.addConstraint( input, rs::Origin::FORMULA )
                     .second == rs::ID_Unsat )
             {
@@ -104,8 +106,8 @@ class RoundingsatInterface : public SolverInterface<REAL>
 
          if( !consMatrix.getRowFlags()[row].test( RowFlag::kLhsInf ) )
          {
-            int offset = map_cons_to_lhs( input, row_coeff );
-            input->addRhs( to_int(lhs[row], row) + offset );
+            map_cons_to_lhs( input, row_coeff );
+            input->addRhs( to_int( lhs[row] * scaling_row_factor[row] ) );
             const std::pair<rs::ID, rs::ID>& pair =
                 rs::run::solver.addConstraint( input, rs::Origin::FORMULA );
             if( pair.second == rs::ID_Unsat )
@@ -117,7 +119,7 @@ class RoundingsatInterface : public SolverInterface<REAL>
          if( !consMatrix.getRowFlags()[row].test( RowFlag::kRhsInf ) )
          {
             map_cons_to_lhs( input, row_coeff );
-            input->addRhs( to_int( rhs[row], row ) );
+            input->addRhs( to_int( rhs[row] * scaling_row_factor[row] ) );
             input->invert();
             const std::pair<rs::ID, rs::ID>& pair =
                 rs::run::solver.addConstraint( input, rs::Origin::FORMULA );
@@ -132,27 +134,24 @@ class RoundingsatInterface : public SolverInterface<REAL>
    }
 
    int
-   to_int( REAL val, int row )
+   to_int( REAL val )
    {
       assert( val == (int)val );
       return (int)val;
    }
 
-   int
-   map_cons_to_lhs( rs::CeArb& input,
-                    const SparseVectorView<REAL>& row_coeff )
+   void
+   map_cons_to_lhs( rs::CeArb& input, const SparseVectorView<REAL>& row_coeff )
    {
       Num<REAL> num{};
-      rs::bigint offset = 0;
       for( int j = 0; j < row_coeff.getLength(); ++j )
       {
          int sat_var_index = row_coeff.getIndices()[j] + 1;
-         assert( num.isIntegral( row_coeff.getValues()[j] ) );
-         rs::bigint coeff = to_int( row_coeff.getValues()[j], -1 );
-         rs::run::solver.setNbVars( abs( sat_var_index ) , true );
+         assert( num.isIntegral( row_coeff.getValues()[j] * scaling_row_factor[j] )  );
+         rs::bigint coeff = to_int( row_coeff.getValues()[j] * scaling_row_factor[j]);
+         rs::run::solver.setNbVars( abs( sat_var_index ), true );
          input->addLhs( coeff, sat_var_index );
       }
-      return (int) offset;
    }
 
    int
@@ -192,6 +191,13 @@ class RoundingsatInterface : public SolverInterface<REAL>
    }
 
    void
+   setRowScalingFactor( Vec<int> _scaling_row_factor )
+   {
+      assert(scaling_row_factor.size() <= _scaling_row_factor.size());
+      scaling_row_factor = _scaling_row_factor;
+   }
+
+   void
    setSoftTimeLimit( double tlim ) override
    {
    }
@@ -222,11 +228,11 @@ class RoundingsatInterface : public SolverInterface<REAL>
 
       rs::run::run( objective );
 
-      //TODO how to detect (infeasibility or) time limit reached
+      // TODO how to detect (infeasibility or) time limit reached
       bool satisfiable = rs::run::solver.foundSolution();
-      this->status = satisfiable ? SolverStatus::kOptimal : SolverStatus::kError;
+      this->status =
+          satisfiable ? SolverStatus::kOptimal : SolverStatus::kError;
    }
-
 
    REAL
    getDualBound() override
@@ -241,9 +247,9 @@ class RoundingsatInterface : public SolverInterface<REAL>
       std::vector<rs::Lit>& sol = rs::run::solver.lastSol;
       Vec<REAL> primal{};
       primal.resize( sol.size() - 1 );
-      for (int v = 1; v < sol.size(); ++v)
+      for( int v = 1; v < sol.size(); ++v )
       {
-         assert(abs(sol[v]) == v);
+         assert( abs( sol[v] ) == v );
          primal[v - 1] = sol[v] > 0 ? 1 : 0;
       }
       solbuffer = Solution<REAL>( primal );

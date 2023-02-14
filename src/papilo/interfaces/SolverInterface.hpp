@@ -117,6 +117,9 @@ class SolverInterface
    virtual void
    setVerbosity( VerbosityLevel verbosity ) = 0;
 
+   virtual void
+   setRowScalingFactor( Vec<int> scaling_factor ) {}
+
    virtual bool
    getSolution( Solution<REAL>& sol ) = 0;
 

@@ -227,8 +227,15 @@ presolve_and_solve(
          }
          else if( presolve.getSATSolverFactory() &&
                   problem.test_problem_type(ProblemFlag::kBinary) )
+         {
+            if( !presolve.getPresolveOptions().verification_with_VeriPB )
+            {
+               fmt::print( "please activate VeriPB to provide row scaling for SAT Solvers\n" );
+               return ResultStatus::kError;
+            }
             solver = presolve.getSATSolverFactory()->newSolver(
                 presolve.getVerbosityLevel() );
+         }
          else if( presolve.getMIPSolverFactory() )
             solver = presolve.getMIPSolverFactory()->newSolver(
                 presolve.getVerbosityLevel() );
@@ -328,6 +335,8 @@ presolve_and_solve(
 
          solver->setUp( problem, result.postsolve.origrow_mapping,
                         result.postsolve.origcol_mapping );
+//         TODO:
+//         solver->setRowScalingFactor(pro)
 
          if( opts.tlim != std::numeric_limits<double>::max() )
          {
