@@ -135,6 +135,14 @@ class Presolve
       return paramSet;
    }
 
+   Vec<int>
+   getRowScalingFactors()
+   {
+      //TODO:
+      assert(presolveOptions.verification_with_VeriPB);
+      return {};
+   }
+
    /***
     * presolves the problem and applies the reductions found by the presolvers
     * immediately to it.
@@ -263,6 +271,9 @@ class Presolve
    applyReductions( int p, const Reductions<REAL>& reductions_,
                     ProblemUpdate<REAL>& probUpdate );
 
+   Vec<int> sat_scaling_row{};
+
+
  private:
    // data to perform presolving
    Vec<PresolveStatus> results;
@@ -273,12 +284,13 @@ class Presolve
    Vec<std::pair<const Reduction<REAL>*, const Reduction<REAL>*>>
        postponedReductions;
    Vec<int> postponedReductionToPresolver;
+   std::unique_ptr<CertificateInterface<REAL>> certificate_interface =
+       std::unique_ptr<CertificateInterface<REAL>>(
+           new EmptyCertificate<REAL>() );
 
-   // settings for presolve behavior
    Num<REAL> num;
    Message msg;
    PresolveOptions presolveOptions;
-   // statistics
    Statistics stats;
 
    std::unique_ptr<SolverFactory<REAL>> lpSolverFactory;
@@ -289,6 +301,7 @@ class Presolve
    bool lastRoundReduced;
    int nunsuccessful;
    bool rundelayed;
+
 
    /// evaluate result array of each presolver, return the largest result value
    PresolveStatus
@@ -443,6 +456,14 @@ Presolve<REAL>::apply( Problem<REAL>& problem, bool store_dual_postsolve )
             return result;
          }
       }
+      if(presolveOptions.verification_with_VeriPB &&
+          problem.test_problem_type( ProblemFlag::kBinary ))
+      {
+         certificate_interface = std::unique_ptr<CertificateInterface<REAL>>(
+             new VeriPb<REAL>{ problem, num } );
+         certificate_interface->print_header();
+      }
+
       result.status = PresolveStatus::kUnchanged;
 
       std::stable_sort( presolvers.begin(), presolvers.end(),
@@ -457,8 +478,6 @@ Presolve<REAL>::apply( Problem<REAL>& problem, bool store_dual_postsolve )
       std::pair<int, int> exhaustivePresolvers;
 
       int npresolvers = static_cast<int>( presolvers.size() );
-
-
 
       fastPresolvers.first = fastPresolvers.second = 0;
 
@@ -488,11 +507,8 @@ Presolve<REAL>::apply( Problem<REAL>& problem, bool store_dual_postsolve )
       presolverStats.resize( presolvers.size(), std::pair<int, int>( 0, 0 ) );
 
       ProblemUpdate<REAL> probUpdate( problem, result.postsolve, stats,
-                                      presolveOptions, num, msg );
-
-      if( presolveOptions.verification_with_VeriPB &&
-          problem.test_problem_type( ProblemFlag::kBinary ) )
-         probUpdate.init_certificate();
+                                      presolveOptions, num, msg, certificate_interface
+      );
 
       for( int i = 0; i != npresolvers; ++i )
       {
@@ -693,7 +709,11 @@ Presolve<REAL>::apply( Problem<REAL>& problem, bool store_dual_postsolve )
       // finally compress problem fully and release excess storage even if
       // problem was not reduced
       probUpdate.compress( true );
-      probUpdate.flush_certificate();
+      probUpdate.getCertificateInterface()->flush();
+      if(satSolverFactory)
+      {
+         probUpdate.getCertificateInterface().getRowScalingFactor();
+      }
 
       // check whether problem was reduced
       if( stats.ntsxapplied > 0 || stats.nboundchgs > 0 ||
@@ -717,6 +737,7 @@ Presolve<REAL>::apply( Problem<REAL>& problem, bool store_dual_postsolve )
 
          if( !lpSolverFactory && problem.getNumContinuousCols() != 0 )
             detectComponents = false;
+
 
          if( !(mipSolverFactory || satSolverFactory) && problem.getNumIntegralCols() != 0 )
             detectComponents = false;
@@ -907,6 +928,11 @@ Presolve<REAL>::apply( Problem<REAL>& problem, bool store_dual_postsolve )
 
          logStatus( probUpdate, result.postsolve );
          result.status = PresolveStatus::kReduced;
+         //TODO:
+//         if( presolveOptions.verification_with_VeriPB &&
+//             problem.test_problem_type( ProblemFlag::kBinary ) )
+//            satSolverFactory->
+
          if( result.postsolve.postsolveType == PostsolveType::kFull )
          {
             auto& coefficients = problem.getObjective().coefficients;
@@ -1075,6 +1101,7 @@ Presolve<REAL>::is_status_infeasible_or_unbounded(
           status == PresolveStatus::kUnbounded ||
           status == PresolveStatus::kInfeasible;
 }
+
 
 template <typename REAL>
 PresolveStatus
@@ -1429,7 +1456,7 @@ Presolve<REAL>::logStatus( ProblemUpdate<REAL>& problem_update,
       msg.info(
           "problem is solved [optimal solution found] [objective value: {} (double precision)]\n",
           (double) origobj );
-      problem_update.log_solution( solution );
+      problem_update.getCertificateInterface()->log_solution( solution, problem.getVariableNames() );
    }
 }
 

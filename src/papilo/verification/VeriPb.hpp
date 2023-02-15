@@ -64,16 +64,23 @@ class VeriPb : public CertificateInterface<REAL>
    /// therefore store scale factors to ensure the integrality
    Vec<int> scale_factor;
 
+   const Vec<int>&
+   getRowScalingFactor() const
+   {
+      return scale_factor;
+   }
+
    /// this holds the id of the next generated constraint of VeriPB
    int next_constraint_id = 0;
 
+   //TODO: set Num
    Num<REAL> num;
-
 
    int skip_deleting_rhs_constraint_id = UNKNOWN;
    int skip_deleting_lhs_constraint_id = UNKNOWN;
    int skip_changing_rhs = UNKNOWN;
    int skip_changing_lhs = UNKNOWN;
+
    // TODO: maybe this is not sufficient and matrix buffer needs to be handed over
    HashMap<int, int> changed_entries {};
 

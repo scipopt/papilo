@@ -48,6 +48,11 @@ class EmptyCertificate : public CertificateInterface<REAL>
    void
    flush(){};
 
+   const Vec<int>&
+   getRowScalingFactor() const
+   {
+   }
+
    void
    change_upper_bound( REAL val, int col, const Problem<REAL>& problem, const Vec<int>& var_mapping,
                        ArgumentType argument = ArgumentType::kPrimal)

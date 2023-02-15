@@ -104,11 +104,15 @@ class ProblemUpdate
 
    Vec<Flags<State>> row_state;
    Vec<Flags<State>> col_state;
-   std::unique_ptr<CertificateInterface<REAL>> certificate_interface =
-       std::unique_ptr<CertificateInterface<REAL>>(
-           new EmptyCertificate<REAL>() );
+   std::unique_ptr<CertificateInterface<REAL>> certificate_interface;
 
+ public:
 
+   const std::unique_ptr<CertificateInterface<REAL>>&
+   getCertificateInterface( ) const
+   {
+      return this->certificate_interface;
+   }
 
  private:
    template <typename... Args>
@@ -152,28 +156,19 @@ class ProblemUpdate
  public:
    ProblemUpdate( Problem<REAL>& problem, PostsolveStorage<REAL>& postsolve,
                   Statistics& stats, const PresolveOptions& presolveOptions,
-                  const Num<REAL>& num, const Message& msg );
+                  const Num<REAL>& num, const Message& msg);
 
-   void
-   log_solution( const Solution<REAL>& orig_solution)
-   {
-      certificate_interface->log_solution(orig_solution, problem.getVariableNames());
-   };
-
-   void
-   init_certificate( );
-
-   void
-   flush_certificate( ){
-      certificate_interface->flush();
-   }
-
+   ProblemUpdate( Problem<REAL>& problem, PostsolveStorage<REAL>& postsolve,
+                  Statistics& stats, const PresolveOptions& presolveOptions,
+                  const Num<REAL>& num, const Message& msg,
+                  std::unique_ptr<CertificateInterface<REAL>>&_certificateinterface );
 
    void
    setPostponeSubstitutions( bool value )
    {
       this->postponeSubstitutions = value;
    }
+
 
    void
    update_activity( ActivityChange actChange, int rowid,
@@ -445,11 +440,10 @@ extern template class ProblemUpdate<Rational>;
 #endif
 
 template <typename REAL>
-ProblemUpdate<REAL>::ProblemUpdate( Problem<REAL>& _problem,
-                                    PostsolveStorage<REAL>& _postsolve,
-                                    Statistics& _stats,
-                                    const PresolveOptions& _presolveOptions,
-                                    const Num<REAL>& _num, const Message& _msg)
+ProblemUpdate<REAL>::ProblemUpdate(
+    Problem<REAL>& _problem, PostsolveStorage<REAL>& _postsolve,
+    Statistics& _stats, const PresolveOptions& _presolveOptions,
+    const Num<REAL>& _num, const Message& _msg )
     : problem( _problem ), postsolve( _postsolve ), stats( _stats ),
       presolveOptions( _presolveOptions ), num( _num ), msg( _msg )
 {
@@ -457,6 +451,38 @@ ProblemUpdate<REAL>::ProblemUpdate( Problem<REAL>& _problem,
    col_state.resize( _problem.getNCols() );
    postponeSubstitutions = true;
    firstNewSingletonCol = 0;
+   certificate_interface =
+       std::unique_ptr<CertificateInterface<REAL>>(
+           new EmptyCertificate<REAL>() );
+   lastcompress_ndelcols = 0;
+   lastcompress_ndelrows = 0;
+
+   std::ranlux24 randgen( _presolveOptions.randomseed );
+   random_col_perm.resize( _problem.getNCols() );
+   for( int i = 0; i < _problem.getNCols(); ++i )
+      random_col_perm[i] = i;
+   shuffle( randgen, random_col_perm );
+
+   random_row_perm.resize( _problem.getNRows() );
+   for( int i = 0; i < _problem.getNRows(); ++i )
+      random_row_perm[i] = i;
+   shuffle( randgen, random_row_perm );
+}
+
+template <typename REAL>
+ProblemUpdate<REAL>::ProblemUpdate(
+    Problem<REAL>& _problem, PostsolveStorage<REAL>& _postsolve,
+    Statistics& _stats, const PresolveOptions& _presolveOptions,
+    const Num<REAL>& _num, const Message& _msg,
+    std::unique_ptr<CertificateInterface<REAL>>& _certificate_interface )
+    : problem( _problem ), postsolve( _postsolve ), stats( _stats ),
+      presolveOptions( _presolveOptions ), num( _num ), msg( _msg )
+{
+   row_state.resize( _problem.getNRows() );
+   col_state.resize( _problem.getNCols() );
+   postponeSubstitutions = true;
+   firstNewSingletonCol = 0;
+   certificate_interface = std::move(_certificate_interface);
 
    lastcompress_ndelcols = 0;
    lastcompress_ndelrows = 0;
@@ -3036,14 +3062,6 @@ ProblemUpdate<REAL>::print_detailed( const Reduction<REAL>* first,
    }
 }
 
-template <typename REAL>
-void
-ProblemUpdate<REAL>::init_certificate(  )
-{
-   certificate_interface = std::unique_ptr<CertificateInterface<REAL>>(
-       new VeriPb<REAL>{ problem, num } );
-   certificate_interface->print_header();
-}
 
 } // namespace papilo
 
