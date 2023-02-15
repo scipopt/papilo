@@ -33,6 +33,10 @@ namespace papilo
 template <typename REAL>
 class EmptyCertificate : public CertificateInterface<REAL>
 {
+
+ private:
+   Vec<int> vec{};
+
  public:
    EmptyCertificate() = default;
 
@@ -40,27 +44,30 @@ class EmptyCertificate : public CertificateInterface<REAL>
    print_header(){};
 
    void
-   start_transaction() {};
+   start_transaction(){};
 
    void
-   end_transaction() {};
+   end_transaction(){};
 
    void
    flush(){};
 
    const Vec<int>&
-   getRowScalingFactor() const
+   getRowScalingFactor()
+   {
+      return vec;
+   }
+
+   void
+   change_upper_bound( REAL val, int col, const Problem<REAL>& problem,
+                       const Vec<int>& var_mapping,
+                       ArgumentType argument = ArgumentType::kPrimal )
    {
    }
 
    void
-   change_upper_bound( REAL val, int col, const Problem<REAL>& problem, const Vec<int>& var_mapping,
-                       ArgumentType argument = ArgumentType::kPrimal)
-   {
-   }
-
-   void
-   change_lower_bound( REAL val, int col, const Problem<REAL>& problem, const Vec<int>& var_mapping,
+   change_lower_bound( REAL val, int col, const Problem<REAL>& problem,
+                       const Vec<int>& var_mapping,
                        ArgumentType argument = ArgumentType::kPrimal )
    {
    }
@@ -84,12 +91,15 @@ class EmptyCertificate : public CertificateInterface<REAL>
    }
 
    void
-   change_rhs_parallel_row( int row, REAL val, int parallel_row,  const Problem<REAL>& problem, const Vec<int>& var_mapping)
+   change_rhs_parallel_row( int row, REAL val, int parallel_row,
+                            const Problem<REAL>& problem,
+                            const Vec<int>& var_mapping )
    {
    }
 
    void
-   change_lhs_parallel_row( int row, REAL val, int parallel_row,  const Problem<REAL>& problem)
+   change_lhs_parallel_row( int row, REAL val, int parallel_row,
+                            const Problem<REAL>& problem )
    {
    }
 
@@ -105,25 +115,30 @@ class EmptyCertificate : public CertificateInterface<REAL>
    }
 
    void
-   change_matrix_entry( int row, int col, REAL new_val,  const SparseVectorView<REAL>& data, RowFlags& rflags,
-               REAL lhs, REAL rhs, const Vec<String>& names,
-               const Vec<int>& var_mapping, ArgumentType argument ){};
+   change_matrix_entry( int row, int col, REAL new_val,
+                        const SparseVectorView<REAL>& data, RowFlags& rflags,
+                        REAL lhs, REAL rhs, const Vec<String>& names,
+                        const Vec<int>& var_mapping, ArgumentType argument ){};
 
    void
-   substitute( int col, int row,
-               const Problem<REAL>& currentProblem ) {};
+   substitute( int col, int row, const Problem<REAL>& currentProblem ){};
 
    void
-   substitute( int col, const SparseVectorView<REAL>& equality, REAL offset, const Problem<REAL>& currentProblem, const Vec<String>& names, const Vec<int>& var_mapping )
-   { }
+   substitute( int col, const SparseVectorView<REAL>& equality, REAL offset,
+               const Problem<REAL>& currentProblem, const Vec<String>& names,
+               const Vec<int>& var_mapping )
+   {
+   }
 
    void
-   sparsify( int eqrow, int candrow, REAL scale, const Problem<REAL>& currentProblem)
-   { }
+   sparsify( int eqrow, int candrow, REAL scale,
+             const Problem<REAL>& currentProblem )
+   {
+   }
 
    void
-   log_solution( const Solution<REAL>& orig_solution, const Vec<String>& names ) {};
-
+   log_solution( const Solution<REAL>& orig_solution,
+                 const Vec<String>& names ){};
 
    void
    compress( const Vec<int>& rowmapping, const Vec<int>& colmapping,

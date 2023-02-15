@@ -135,12 +135,11 @@ class Presolve
       return paramSet;
    }
 
-   Vec<int>
+   Vec<int>&
    getRowScalingFactors()
    {
-      //TODO:
       assert(presolveOptions.verification_with_VeriPB);
-      return {};
+      return row_scaling;
    }
 
    /***
@@ -271,7 +270,6 @@ class Presolve
    applyReductions( int p, const Reductions<REAL>& reductions_,
                     ProblemUpdate<REAL>& probUpdate );
 
-   Vec<int> sat_scaling_row{};
 
 
  private:
@@ -288,6 +286,8 @@ class Presolve
        std::unique_ptr<CertificateInterface<REAL>>(
            new EmptyCertificate<REAL>() );
 
+   Vec<int> row_scaling{};
+
    Num<REAL> num;
    Message msg;
    PresolveOptions presolveOptions;
@@ -298,9 +298,9 @@ class Presolve
    std::unique_ptr<SolverFactory<REAL>> satSolverFactory;
 
    Vec<std::pair<int, int>> presolverStats;
-   bool lastRoundReduced;
-   int nunsuccessful;
-   bool rundelayed;
+   bool lastRoundReduced{};
+   int nunsuccessful{};
+   bool rundelayed{};
 
 
    /// evaluate result array of each presolver, return the largest result value
@@ -712,7 +712,7 @@ Presolve<REAL>::apply( Problem<REAL>& problem, bool store_dual_postsolve )
       probUpdate.getCertificateInterface()->flush();
       if(satSolverFactory)
       {
-         probUpdate.getCertificateInterface().getRowScalingFactor();
+         row_scaling = probUpdate.getCertificateInterface()->getRowScalingFactor();
       }
 
       // check whether problem was reduced

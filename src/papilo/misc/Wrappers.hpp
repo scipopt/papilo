@@ -235,6 +235,7 @@ presolve_and_solve(
             }
             solver = presolve.getSATSolverFactory()->newSolver(
                 presolve.getVerbosityLevel() );
+            solver->setRowScalingFactor(presolve.getRowScalingFactors());
          }
          else if( presolve.getMIPSolverFactory() )
             solver = presolve.getMIPSolverFactory()->newSolver(

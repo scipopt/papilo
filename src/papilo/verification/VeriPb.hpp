@@ -65,7 +65,7 @@ class VeriPb : public CertificateInterface<REAL>
    Vec<int> scale_factor;
 
    const Vec<int>&
-   getRowScalingFactor() const
+   getRowScalingFactor()
    {
       return scale_factor;
    }

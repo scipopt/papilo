@@ -51,8 +51,8 @@ class CertificateInterface
    virtual void
    print_header() = 0;
 
-   const Vec<int>&
-   getRowScalingFactor() const = 0;
+   virtual const Vec<int>&
+   getRowScalingFactor() = 0;
 
    virtual void
    flush() = 0;
