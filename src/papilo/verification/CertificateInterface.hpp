@@ -46,7 +46,8 @@ class CertificateInterface
    start_transaction() = 0;
 
    virtual void
-   end_transaction() = 0;
+   end_transaction( const Problem<REAL>& problem,
+                    const Vec<int>& var_mapping) = 0;
 
    virtual void
    print_header() = 0;

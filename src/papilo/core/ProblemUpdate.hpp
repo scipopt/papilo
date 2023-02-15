@@ -2836,7 +2836,7 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
          }
       }
    }
-   certificate_interface->end_transaction();
+   certificate_interface->end_transaction(problem, postsolve.origcol_mapping);
 
    // no conflicts found
    return ApplyResult::kApplied;

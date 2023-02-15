@@ -47,7 +47,8 @@ class EmptyCertificate : public CertificateInterface<REAL>
    start_transaction(){};
 
    void
-   end_transaction(){};
+   end_transaction( const Problem<REAL>& problem,
+                    const Vec<int>& var_mapping){};
 
    void
    flush(){};
