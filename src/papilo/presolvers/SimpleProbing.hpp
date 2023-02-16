@@ -49,11 +49,9 @@ class SimpleProbing : public PresolveMethod<REAL>
             Reductions<REAL>& reductions, const Timer& timer ) override;
 
    void
-   calculateReductionsForSimpleProbing( Reductions<REAL>& reductions,
-                                        const VariableDomains<REAL>& domains,
-                                        const REAL* rowvals, const int* rowcols,
-                                        int rowlen, int bincol,
-                                        REAL binary_coeff );
+   calculateReductionsForSimpleProbing( const Num<REAL>& num, Reductions<REAL>& reductions,
+       const VariableDomains<REAL>& domains, const REAL* rowvals, const int* rowcols, int rowlen, int bincol,
+       REAL binary_coeff );
 
    PresolveStatus
    perform_simple_probing_step(
@@ -198,17 +196,15 @@ SimpleProbing<REAL>::perform_simple_probing_step(
       Message::debug( this,
                       "probing on simple equation detected {} substitutions\n",
                       rowlen - 1 );
-      calculateReductionsForSimpleProbing( reductions, domains, rowvals,
-                                           rowcols, rowlen, col, rowvals[k] );
+      calculateReductionsForSimpleProbing( num, reductions, domains, rowvals, rowcols, rowlen, col, rowvals[k] );
       status = PresolveStatus::kReduced;
    }
    return status;
 }
 template <typename REAL>
 void
-SimpleProbing<REAL>::calculateReductionsForSimpleProbing(
-    Reductions<REAL>& reductions, const VariableDomains<REAL>& domains,
-    const REAL* rowvals, const int* rowcols, int rowlen, int bincol,
+SimpleProbing<REAL>::calculateReductionsForSimpleProbing( const Num<REAL>& num, Reductions<REAL>& reductions,
+    const VariableDomains<REAL>& domains, const REAL* rowvals, const int* rowcols, int rowlen, int bincol,
     REAL binary_coeff )
 {
    for( int k = 0; k != rowlen; ++k )
