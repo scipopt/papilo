@@ -235,7 +235,6 @@ presolve_and_solve(
             }
             solver = presolve.getSATSolverFactory()->newSolver(
                 presolve.getVerbosityLevel() );
-            solver->setRowScalingFactor(presolve.getRowScalingFactors());
          }
          else if( presolve.getMIPSolverFactory() )
             solver = presolve.getMIPSolverFactory()->newSolver(
@@ -334,10 +333,10 @@ presolve_and_solve(
       {
          Timer t( solvetime );
 
+         solver->setRowScalingFactor(presolve.getRowScalingFactors());
          solver->setUp( problem, result.postsolve.origrow_mapping,
                         result.postsolve.origcol_mapping );
-//         TODO:
-//         solver->setRowScalingFactor(pro)
+
 
          if( opts.tlim != std::numeric_limits<double>::max() )
          {

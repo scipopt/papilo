@@ -62,7 +62,6 @@ class RoundingsatInterface : public SolverInterface<REAL>
       const Vec<REAL>& rhs = problem.getConstraintMatrix().getRightHandSides();
       const Vec<REAL>& lhs = problem.getConstraintMatrix().getLeftHandSides();
       const auto consMatrix = problem.getConstraintMatrix();
-      scaling_row_factor.resize( problem.getNCols() );
 
       input->reset();
       for( int col = 0; col < problem.getNCols(); ++col )
@@ -85,7 +84,7 @@ class RoundingsatInterface : public SolverInterface<REAL>
              problem.getConstraintMatrix().getRowCoefficients( row );
          if( consMatrix.getRowFlags()[row].test( RowFlag::kEquation ) )
          {
-            map_cons_to_lhs( input, row_coeff );
+            map_cons_to_lhs( input, row_coeff, row );
             input->addRhs( to_int( lhs[row] * scaling_row_factor[row] ) );
             if( rs::run::solver.addConstraint( input, rs::Origin::FORMULA )
                     .second == rs::ID_Unsat )
@@ -106,7 +105,7 @@ class RoundingsatInterface : public SolverInterface<REAL>
 
          if( !consMatrix.getRowFlags()[row].test( RowFlag::kLhsInf ) )
          {
-            map_cons_to_lhs( input, row_coeff );
+            map_cons_to_lhs( input, row_coeff, row );
             input->addRhs( to_int( lhs[row] * scaling_row_factor[row] ) );
             const std::pair<rs::ID, rs::ID>& pair =
                 rs::run::solver.addConstraint( input, rs::Origin::FORMULA );
@@ -118,7 +117,7 @@ class RoundingsatInterface : public SolverInterface<REAL>
          }
          if( !consMatrix.getRowFlags()[row].test( RowFlag::kRhsInf ) )
          {
-            map_cons_to_lhs( input, row_coeff );
+            map_cons_to_lhs( input, row_coeff, row );
             input->addRhs( to_int( rhs[row] * scaling_row_factor[row] ) );
             input->invert();
             const std::pair<rs::ID, rs::ID>& pair =
@@ -141,14 +140,14 @@ class RoundingsatInterface : public SolverInterface<REAL>
    }
 
    void
-   map_cons_to_lhs( rs::CeArb& input, const SparseVectorView<REAL>& row_coeff )
+   map_cons_to_lhs( rs::CeArb& input, const SparseVectorView<REAL>& row_coeff, int row )
    {
       Num<REAL> num{};
       for( int j = 0; j < row_coeff.getLength(); ++j )
       {
          int sat_var_index = row_coeff.getIndices()[j] + 1;
-         assert( num.isIntegral( row_coeff.getValues()[j] * scaling_row_factor[j] )  );
-         rs::bigint coeff = to_int( row_coeff.getValues()[j] * scaling_row_factor[j]);
+         assert( num.isIntegral( row_coeff.getValues()[j] * scaling_row_factor[row] )  );
+         rs::bigint coeff = to_int( row_coeff.getValues()[j] * scaling_row_factor[row]);
          rs::run::solver.setNbVars( abs( sat_var_index ), true );
          input->addLhs( coeff, sat_var_index );
       }
@@ -223,6 +222,8 @@ class RoundingsatInterface : public SolverInterface<REAL>
    void
    solve() override
    {
+      if(this->status == SolverStatus::kError)
+         return ;
 
       rs::run::solver.initLP( objective );
 

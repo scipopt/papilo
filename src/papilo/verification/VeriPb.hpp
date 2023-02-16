@@ -73,6 +73,7 @@ class VeriPb : public CertificateInterface<REAL>
    int skip_deleting_lhs_constraint_id = UNKNOWN;
    int skip_changing_rhs = UNKNOWN;
    int skip_changing_lhs = UNKNOWN;
+   bool saturation_already_called = false;
 
 #ifdef VERIPB_DEBUG
    int validate_row = UNKNOWN;
@@ -156,6 +157,7 @@ class VeriPb : public CertificateInterface<REAL>
       skip_deleting_lhs_constraint_id = UNKNOWN;
       skip_deleting_rhs_constraint_id = UNKNOWN;
       changed_entries.clear();
+      saturation_already_called = false;
 #ifdef VERIPB_DEBUG
       validate_row = UNKNOWN;
 #endif
@@ -696,6 +698,8 @@ class VeriPb : public CertificateInterface<REAL>
       }
       else if( argument == ArgumentType::kSaturation )
       {
+         if(saturation_already_called)
+            return;
          next_constraint_id++;
          assert( !rflags.test( RowFlag::kEquation ) );
          assert( rflags.test( RowFlag::kRhsInf ) ||
@@ -724,11 +728,12 @@ class VeriPb : public CertificateInterface<REAL>
             proof_out << DELETE_CONS << lhs_row_mapping[row] << "\n";
             lhs_row_mapping[row] = next_constraint_id;
          }
+         skip_changing_lhs= row;
+         skip_changing_rhs= row;
+         saturation_already_called = true;
 #ifdef VERIPB_DEBUG
          assert( validate_row == row || validate_row == UNKNOWN );
          validate_row = row;
-//         verify_changed_row( row, data, rflags, lhs, rhs, names, var_mapping
-//         );
 #endif
       }
       else if( argument == ArgumentType::kWeakening )
