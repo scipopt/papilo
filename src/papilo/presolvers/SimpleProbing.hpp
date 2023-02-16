@@ -214,7 +214,7 @@ SimpleProbing<REAL>::calculateReductionsForSimpleProbing(
    for( int k = 0; k != rowlen; ++k )
    {
       int col = rowcols[k];
-      if( col == bincol )
+      if( col == bincol || num.isFeasEq(domains.lower_bounds[col], domains.upper_bounds[col]) )
          continue;
 
       REAL factor;
