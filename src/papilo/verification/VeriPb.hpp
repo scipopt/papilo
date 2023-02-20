@@ -928,7 +928,7 @@ class VeriPb : public CertificateInterface<REAL>
       }
       else
       {
-         auto frac = sparsify_convert_scale_to_frac( eqrow, candrow, matrix );
+         auto frac = sparsify_convert_scale_to_frac( eqrow, candrow, scale, matrix );
          assert( frac.second / frac.first == -scale );
          int frac_eqrow =
              abs( num.round_to_int( frac.second * scale_candrow ) );
@@ -1280,48 +1280,40 @@ class VeriPb : public CertificateInterface<REAL>
    };
 
    std::pair<REAL, REAL>
-   sparsify_convert_scale_to_frac( int eqrow, int candrow,
+   sparsify_convert_scale_to_frac( int eqrow, int candrow, REAL scale,
                                    const ConstraintMatrix<REAL>& matrix ) const
    {
       auto data_eq_row = matrix.getRowCoefficients( eqrow );
       auto data_cand_row = matrix.getRowCoefficients( candrow );
-      int index_eq_row = 0;
-      int index_cand_row = 0;
+      int counter_eq_row = 0;
+      int counter_cand_row = 0;
       while( true )
       {
-         assert( index_eq_row < data_eq_row.getLength() );
-         assert( index_cand_row < data_cand_row.getLength() );
-         if( data_eq_row.getIndices()[index_eq_row] ==
-             data_cand_row.getIndices()[index_cand_row] )
+         assert( counter_eq_row < data_eq_row.getLength() );
+         int col_index_eq = data_eq_row.getIndices()[counter_eq_row];
+         if( counter_cand_row >= data_cand_row.getLength() )
          {
-            fmt::print( "{} {} {} {}\n", (double) data_eq_row.getValues()[index_eq_row],
-                        (double) data_cand_row.getValues()[index_cand_row],
-                        (double)data_eq_row.getValues()[index_eq_row] /
-                            (double)data_cand_row.getValues()[index_cand_row],
-                        (double)data_cand_row.getValues()[index_cand_row] /
-                            (double)data_eq_row.getValues()[index_eq_row] );
-            index_eq_row++;
-            index_cand_row++;
-            continue;
+            REAL val_eq = data_eq_row.getValues()[counter_eq_row];
+            assert( num.isIntegral( val_eq * -scale ) );
+            return { val_eq, num.round_to_int( val_eq * -scale ) };
          }
-         if( data_eq_row.getIndices()[index_eq_row] <
-             data_cand_row.getIndices()[index_cand_row] )
+         int col_index_cand = data_cand_row.getIndices()[counter_cand_row];
+         if( col_index_eq == col_index_cand)
          {
-            fmt::print( "next {} {}\n", data_eq_row.getIndices()[index_eq_row],
-                        data_cand_row.getIndices()[index_cand_row] );
-            index_eq_row++;
+            counter_eq_row++;
+            counter_cand_row++;
          }
-
-         if( data_eq_row.getIndices()[index_cand_row] <
-             data_cand_row.getIndices()[index_eq_row] )
+         else if( col_index_eq > col_index_cand )
+            col_index_cand++;
+         else
          {
-            fmt::print( "next {} {}\n", data_eq_row.getIndices()[index_eq_row],
-                        data_cand_row.getIndices()[index_cand_row] );
-            index_cand_row++;
+            REAL val_eq = data_eq_row.getValues()[counter_eq_row];
+            assert( num.isIntegral( val_eq * -scale ) );
+            return { val_eq, num.round_to_int( val_eq * -scale ) };
          }
       }
-      return { data_eq_row.getValues()[index_eq_row],
-               data_cand_row.getValues()[index_cand_row] };
+      assert(false);
+      return {-1, -1};
    }
 
    void
