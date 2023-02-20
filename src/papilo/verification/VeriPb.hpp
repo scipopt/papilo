@@ -1294,12 +1294,12 @@ class VeriPb : public CertificateInterface<REAL>
          if( data_eq_row.getIndices()[index_eq_row] ==
              data_cand_row.getIndices()[index_cand_row] )
          {
-            fmt::print( "{} {} {} {}\n", data_eq_row.getValues()[index_eq_row],
-                        data_cand_row.getValues()[index_cand_row],
-                        data_eq_row.getValues()[index_eq_row] /
-                            data_cand_row.getValues()[index_cand_row],
-                        data_cand_row.getValues()[index_cand_row] /
-                            data_eq_row.getValues()[index_eq_row] );
+            fmt::print( "{} {} {} {}\n", (double) data_eq_row.getValues()[index_eq_row],
+                        (double) data_cand_row.getValues()[index_cand_row],
+                        (double)data_eq_row.getValues()[index_eq_row] /
+                            (double)data_cand_row.getValues()[index_cand_row],
+                        (double)data_cand_row.getValues()[index_cand_row] /
+                            (double)data_eq_row.getValues()[index_eq_row] );
             index_eq_row++;
             index_cand_row++;
             continue;
