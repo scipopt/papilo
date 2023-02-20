@@ -1294,8 +1294,7 @@ class VeriPb : public CertificateInterface<REAL>
          if( counter_cand_row >= data_cand_row.getLength() )
          {
             REAL val_eq = data_eq_row.getValues()[counter_eq_row];
-            assert( num.isIntegral( val_eq * -scale ) );
-            return { val_eq, num.round_to_int( val_eq * -scale ) };
+            return { val_eq, val_eq * -scale };
          }
          int col_index_cand = data_cand_row.getIndices()[counter_cand_row];
          if( col_index_eq == col_index_cand)
@@ -1308,8 +1307,7 @@ class VeriPb : public CertificateInterface<REAL>
          else
          {
             REAL val_eq = data_eq_row.getValues()[counter_eq_row];
-            assert( num.isIntegral( val_eq * -scale ) );
-            return { val_eq, num.round_to_int( val_eq * -scale ) };
+            return { val_eq, val_eq * -scale };
          }
       }
       assert(false);
