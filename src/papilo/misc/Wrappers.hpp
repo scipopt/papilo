@@ -333,7 +333,8 @@ presolve_and_solve(
       {
          Timer t( solvetime );
 
-         solver->setRowScalingFactor(presolve.getRowScalingFactors());
+         if(presolve.getPresolveOptions().verification_with_VeriPB)
+            solver->setRowScalingFactor(presolve.getRowScalingFactors());
          solver->setUp( problem, result.postsolve.origrow_mapping,
                         result.postsolve.origcol_mapping );
 
