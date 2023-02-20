@@ -81,13 +81,13 @@ class EmptyCertificate : public CertificateInterface<REAL>
 
    void
    change_rhs( int row, REAL val, const SparseVectorView<REAL>& data,
-               const Vec<String>& names, const Vec<int>& var_mapping )
+               const Vec<String>& names, const Vec<int>& var_mapping, ArgumentType argument = ArgumentType::kPrimal  )
    {
    }
 
    void
    change_lhs( int row, REAL val, const SparseVectorView<REAL>& data,
-               const Vec<String>& names, const Vec<int>& var_mapping )
+               const Vec<String>& names, const Vec<int>& var_mapping, ArgumentType argument = ArgumentType::kPrimal  )
    {
    }
 
@@ -103,6 +103,9 @@ class EmptyCertificate : public CertificateInterface<REAL>
                             const Problem<REAL>& problem )
    {
    }
+
+   void
+   store_gcd( int row, REAL gcd ) {};
 
    void
    change_lhs_inf( int row ){};

@@ -80,7 +80,7 @@ TEST_CASE( "domcol-happy-path", "[presolve]" )
    REQUIRE( reductions.getReduction( 4 ).row == 0 );
    REQUIRE( reductions.getReduction( 4 ).col == RowReduction::LOCKED );
 
-   REQUIRE( reductions.getReduction( 5 ).row == ColReduction::DOMINANCE );
+   REQUIRE( reductions.getReduction( 5 ).row == ColReduction::CERTIFICATE_DOMINANCE );
    REQUIRE( reductions.getReduction( 5 ).col == 1 );
    REQUIRE( reductions.getReduction( 5 ).newval == 0 );
 
@@ -131,7 +131,7 @@ TEST_CASE( "domcol-parallel-columns", "[presolve]" )
    REQUIRE( reductions.getReduction( 4 ).row == 0 );
    REQUIRE( reductions.getReduction( 4 ).col == RowReduction::LOCKED );
 
-   REQUIRE( reductions.getReduction( 5 ).row == ColReduction::DOMINANCE );
+   REQUIRE( reductions.getReduction( 5 ).row == ColReduction::CERTIFICATE_DOMINANCE );
    REQUIRE( reductions.getReduction( 5 ).col == 3 );
    REQUIRE( reductions.getReduction( 5 ).newval == 0 );
 
@@ -213,7 +213,7 @@ TEST_CASE( "domcol-multiple-columns", "[presolve]" )
       REQUIRE( reductions.getReduction( i + 4 ).row == 0 );
       REQUIRE( reductions.getReduction( i + 4 ).col == RowReduction::LOCKED );
 
-      REQUIRE( reductions.getReduction( i + 5 ).row == ColReduction::DOMINANCE );
+      REQUIRE( reductions.getReduction( i + 5 ).row == ColReduction::CERTIFICATE_DOMINANCE );
       REQUIRE( reductions.getReduction( i + 5 ).col == dominating_cols[i / 8] );
       REQUIRE( reductions.getReduction( i + 5 ).newval == dominated_cols[i / 8] );
 

@@ -35,7 +35,6 @@ struct ColReduction
    enum
    {
       NONE = -1,
-      OBJECTIVE = -2,
       LOWER_BOUND = -3,
       UPPER_BOUND = -4,
       FIXED = -5,
@@ -47,7 +46,8 @@ struct ColReduction
       PARALLEL = -12,
       IMPL_INT = -13,
       FIXED_INFINITY = -14,
-      DOMINANCE = -15,
+      /// needed for the certificate
+      CERTIFICATE_DOMINANCE = -15,
    };
 };
 
@@ -65,8 +65,11 @@ struct RowReduction
       SPARSIFY = -9,
       RHS_LESS_RESTRICTIVE = -10,
       LHS_LESS_RESTRICTIVE = -11,
+      /// needed for dual postsolve
       REASON_FOR_LESS_RESTRICTIVE_BOUND_CHANGE = -12,
-      SAVE_ROW = -13
+      SAVE_ROW = -13,
+      /// needed for the certificate
+      CERTIFICATE_RHS_GCD = -14,
    };
 };
 
@@ -156,6 +159,14 @@ class Reductions
           RowReduction::REASON_FOR_LESS_RESTRICTIVE_BOUND_CHANGE );
    }
 
+
+   void
+   submit_gcd( int row, REAL gcd )
+   {
+      reductions.emplace_back(
+          gcd, row,
+          RowReduction::CERTIFICATE_RHS_GCD );
+   }
    void
    changeRowLHSInf( int row )
    {
@@ -322,7 +333,7 @@ class Reductions
       assert( transactions.back().start + transactions.back().nlocks ==
               static_cast<int>( reductions.size() ) );
 
-      reductions.emplace_back( dominated_column, ColReduction::DOMINANCE, dominating_column );
+      reductions.emplace_back( dominated_column, ColReduction::CERTIFICATE_DOMINANCE, dominating_column );
       ++transactions.back().nlocks;
    }
 

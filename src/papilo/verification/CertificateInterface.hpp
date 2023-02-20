@@ -47,7 +47,7 @@ class CertificateInterface
 
    virtual void
    end_transaction( const Problem<REAL>& problem,
-                    const Vec<int>& var_mapping) = 0;
+                    const Vec<int>& var_mapping ) = 0;
 
    virtual void
    print_header() = 0;
@@ -59,30 +59,41 @@ class CertificateInterface
    flush() = 0;
 
    virtual void
-   change_upper_bound( REAL val, int col, const Problem<REAL>& problem, const Vec<int>& var_mapping,
+   change_upper_bound( REAL val, int col, const Problem<REAL>& problem,
+                       const Vec<int>& var_mapping,
                        ArgumentType argument = ArgumentType::kPrimal ) = 0;
 
    virtual void
-   change_lower_bound( REAL val, int col, const Problem<REAL>& problem, const Vec<int>& var_mapping,
+   change_lower_bound( REAL val, int col, const Problem<REAL>& problem,
+                       const Vec<int>& var_mapping,
                        ArgumentType argument = ArgumentType::kPrimal ) = 0;
 
    virtual void
    dominating_columns( int dominating_column, int dominated_column,
-               const Vec<String>& names, const Vec<int>& var_mapping ) = 0;
+                       const Vec<String>& names,
+                       const Vec<int>& var_mapping ) = 0;
 
    virtual void
    change_rhs( int row, REAL val, const SparseVectorView<REAL>& data,
-               const Vec<String>& names, const Vec<int>& var_mapping ) = 0;
+               const Vec<String>& names, const Vec<int>& var_mapping,
+               ArgumentType argument = ArgumentType::kPrimal ) = 0;
 
    virtual void
    change_lhs( int row, REAL val, const SparseVectorView<REAL>& data,
-               const Vec<String>& names, const Vec<int>& var_mapping ) = 0;
+               const Vec<String>& names, const Vec<int>& var_mapping,
+               ArgumentType argument = ArgumentType::kPrimal ) = 0;
 
    virtual void
-   change_rhs_parallel_row( int row, REAL val, int parallel_row,  const Problem<REAL>& problem, const Vec<int>& var_mapping) = 0;
+   store_gcd( int row, REAL gcd ) = 0;
 
    virtual void
-   change_lhs_parallel_row( int row, REAL val, int parallel_row,  const Problem<REAL>& problem) = 0;
+   change_rhs_parallel_row( int row, REAL val, int parallel_row,
+                            const Problem<REAL>& problem,
+                            const Vec<int>& var_mapping ) = 0;
+
+   virtual void
+   change_lhs_parallel_row( int row, REAL val, int parallel_row,
+                            const Problem<REAL>& problem ) = 0;
 
    virtual void
    change_lhs_inf( int row ) = 0;
@@ -94,29 +105,33 @@ class CertificateInterface
    mark_row_redundant( int row ) = 0;
 
    virtual void
-   change_matrix_entry( int row, int col, REAL new_val,  const SparseVectorView<REAL>& data,
-               RowFlags& rflags, REAL lhs, REAL rhs,
-               const Vec<String>& names, const Vec<int>& var_mapping, ArgumentType argument ) = 0;
+   change_matrix_entry( int row, int col, REAL new_val,
+                        const SparseVectorView<REAL>& data, RowFlags& rflags,
+                        REAL lhs, REAL rhs, const Vec<String>& names,
+                        const Vec<int>& var_mapping,
+                        ArgumentType argument ) = 0;
 
    virtual void
    substitute( int col, int row, const Problem<REAL>& currentProblem ) = 0;
 
    virtual void
    substitute( int col, const SparseVectorView<REAL>& equality, REAL offset,
-               const Problem<REAL>& currentProblem, const Vec<String>& names, const Vec<int>& var_mapping ) = 0;
+               const Problem<REAL>& currentProblem, const Vec<String>& names,
+               const Vec<int>& var_mapping ) = 0;
 
    virtual void
-   sparsify( int eqrow, int candrow, REAL scale, const Problem<REAL>& currentProblem ) = 0;
+   sparsify( int eqrow, int candrow, REAL scale,
+             const Problem<REAL>& currentProblem ) = 0;
 
    virtual void
-   log_solution( const Solution<REAL>& orig_solution, const Vec<String>& names ) = 0;
+   log_solution( const Solution<REAL>& orig_solution,
+                 const Vec<String>& names ) = 0;
 
    virtual void
    compress( const Vec<int>& rowmapping, const Vec<int>& colmapping,
              bool full = false ) = 0;
 
    virtual ~CertificateInterface() = default;
-
 };
 
 } // namespace papilo

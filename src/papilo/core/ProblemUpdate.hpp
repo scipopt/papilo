@@ -2109,7 +2109,7 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
                return ApplyResult::kInfeasible;
             break;
          }
-         case ColReduction::DOMINANCE:
+         case ColReduction::CERTIFICATE_DOMINANCE:
          {
             int dominated_col = reduction.col;
             assert(num.isIntegral(reduction.newval));
@@ -2572,7 +2572,7 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
             certificate_interface->change_lhs(
                 reduction.row, reduction.newval,
                 constraintMatrix.getRowCoefficients( reduction.row ),
-                problem.getVariableNames(), postsolve.origcol_mapping );
+                problem.getVariableNames(), postsolve.origcol_mapping, argument );
             constraintMatrix.modifyLeftHandSide( reduction.row, num,
                                                  reduction.newval );
 
@@ -2680,7 +2680,7 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
             certificate_interface->change_rhs(
                 reduction.row, reduction.newval,
                 constraintMatrix.getRowCoefficients( reduction.row ),
-                problem.getVariableNames(), postsolve.origcol_mapping );
+                problem.getVariableNames(), postsolve.origcol_mapping, argument );
             constraintMatrix.modifyRightHandSide( reduction.row, num,
                                                   reduction.newval );
 
@@ -2830,6 +2830,10 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
                msg.detailed( "\n" );
             }
             break;
+         }
+         case RowReduction::CERTIFICATE_RHS_GCD:
+         {
+            certificate_interface->store_gcd(reduction.row, reduction.newval);
          }
          default:
             break;
