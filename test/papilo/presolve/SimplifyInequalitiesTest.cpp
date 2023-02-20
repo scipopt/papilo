@@ -114,8 +114,8 @@ TEST_CASE( "simplify_inequ_doesnt_lock_more_rows", "[presolve]" )
        presolvingMethod.execute( problem, problemUpdate, num, reductions, t );
 
    REQUIRE( presolveStatus == PresolveStatus::kReduced );
-   REQUIRE( reductions.getReduction( 1 ).newval == -275 );
-   REQUIRE( reductions.getReduction( 1 ).row == 1 );
+   REQUIRE( reductions.getReduction( 2 ).newval == -275 );
+   REQUIRE( reductions.getReduction( 2 ).row == 1 );
 }
 
 TEST_CASE( "simplify_inequ_doesnt_apply_lb_and_ub_on_one_row", "[presolve]" )
