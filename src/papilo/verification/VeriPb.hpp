@@ -170,6 +170,24 @@ class VeriPb : public CertificateInterface<REAL>
    void
    end_transaction( const Problem<REAL>& problem, const Vec<int>& var_mapping )
    {
+      if( row_with_gcd.first != UNKNOWN )
+      {
+         int row = row_with_gcd.first;
+         assert( ( lhs_row_mapping[row] == UNKNOWN &&
+                   rhs_row_mapping[row] != UNKNOWN ) ||
+                 ( rhs_row_mapping[row] == UNKNOWN &&
+                   lhs_row_mapping[row] != UNKNOWN ) );
+         if( lhs_row_mapping[row] != UNKNOWN )
+            change_lhs( row, row_with_gcd.second,
+                        problem.getConstraintMatrix().getRowCoefficients( row ),
+                        problem.getVariableNames(), var_mapping,
+                        ArgumentType::kWeakening );
+         else
+            change_rhs( row, row_with_gcd.second,
+                        problem.getConstraintMatrix().getRowCoefficients( row ),
+                        problem.getVariableNames(), var_mapping,
+                        ArgumentType::kWeakening );
+      }
 #ifdef VERIPB_DEBUG
       if( validate_row != UNKNOWN )
       {
@@ -403,6 +421,7 @@ class VeriPb : public CertificateInterface<REAL>
                    << abs( offset ) -
                           num.round_to_int( val ) * scale_factor[row]
                    << ";\n";
+         row_with_gcd = {UNKNOWN, UNKNOWN};
          break;
       }
       case ArgumentType::kWeakening:
@@ -1319,6 +1338,8 @@ class VeriPb : public CertificateInterface<REAL>
                        const RowFlags& rflags, REAL lhs, REAL rhs,
                        const Vec<String>& names, const Vec<int>& var_mapping )
    {
+      assert( rhs_row_mapping[row] != UNKNOWN ||
+                lhs_row_mapping[row] != UNKNOWN );
       if( lhs_row_mapping[row] != UNKNOWN )
       {
          proof_out << EQUAL_CHECK << lhs_row_mapping[row] << " ";
@@ -1346,7 +1367,7 @@ class VeriPb : public CertificateInterface<REAL>
             assert( var_mapping.size() > data.getIndices()[i] );
             proof_out << names[var_mapping[data.getIndices()[i]]] << " ";
          }
-         proof_out << " >= "
+         proof_out << ">= "
                    << num.round_to_int( lhs ) * scale_factor[row] +
                           abs( offset )
                    << ";\n";
@@ -1375,7 +1396,7 @@ class VeriPb : public CertificateInterface<REAL>
             }
             proof_out << names[var_mapping[data.getIndices()[i]]] << " ";
          }
-         proof_out << " >= "
+         proof_out << ">= "
                    << abs( offset ) -
                           num.round_to_int( rhs ) * scale_factor[row]
                    << ";\n";

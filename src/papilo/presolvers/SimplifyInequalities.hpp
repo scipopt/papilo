@@ -448,17 +448,16 @@ SimplifyInequalities<REAL>::perform_simplify_ineq_task(
 
       // round side to multiple of greatestCommonDivisor; don't divide
       // row by greatestCommonDivisor
+      reductions.submit_gcd( row, greatestCommonDivisor );
       if( rhs_needs_update )
       {
          assert( rhs[row] != 0 );
-         reductions.submit_gcd( row, greatestCommonDivisor );
          reductions.changeRowRHS( row, new_rhs );
          result = PresolveStatus::kReduced;
       }
       if( lhs_needs_update )
       {
          assert( lhs[row] != 0 );
-         reductions.submit_gcd( row, greatestCommonDivisor );
          reductions.changeRowLHS( row, new_lhs );
          result = PresolveStatus::kReduced;
       }
