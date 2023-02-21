@@ -421,7 +421,6 @@ class VeriPb : public CertificateInterface<REAL>
                    << abs( offset ) -
                           num.round_to_int( val ) * scale_factor[row]
                    << ";\n";
-         row_with_gcd = {UNKNOWN, UNKNOWN};
          break;
       }
       case ArgumentType::kWeakening:
@@ -434,6 +433,7 @@ class VeriPb : public CertificateInterface<REAL>
          assert( validate_row == row || validate_row == UNKNOWN );
          validate_row = row;
 #endif
+         row_with_gcd = {UNKNOWN, UNKNOWN};
          break;
       }
       default:
@@ -502,6 +502,7 @@ class VeriPb : public CertificateInterface<REAL>
          assert( validate_row == row || validate_row == UNKNOWN );
          validate_row = row;
 #endif
+         row_with_gcd = {UNKNOWN, UNKNOWN};
          break;
       }
       default:
