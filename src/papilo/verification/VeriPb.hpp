@@ -969,11 +969,11 @@ class VeriPb : public CertificateInterface<REAL>
             if( scale > 0 )
                proof_out << POL << rhs_row_mapping[candrow] << " "
                          << frac_candrow << " * " << rhs_row_mapping[eqrow]
-                         << " * " << frac_eqrow << " +\n";
+                         << " " << frac_eqrow << " * +\n";
             else
                proof_out << POL << rhs_row_mapping[candrow] << " "
                          << frac_candrow << " * " << lhs_row_mapping[eqrow]
-                         << " * " << frac_eqrow << " +\n";
+                         << " " << frac_eqrow << " * +\n";
             proof_out << DELETE_CONS << rhs_row_mapping[candrow] << "\n";
             rhs_row_mapping[candrow] = next_constraint_id;
          }
@@ -985,11 +985,11 @@ class VeriPb : public CertificateInterface<REAL>
             if( scale > 0 )
                proof_out << POL << lhs_row_mapping[candrow] << " "
                          << frac_candrow << " * " << lhs_row_mapping[eqrow]
-                         << " * " << frac_eqrow << " +\n";
+                         << " " << frac_eqrow << " * +\n";
             else
                proof_out << POL << lhs_row_mapping[candrow] << " "
                          << frac_candrow << " * " << rhs_row_mapping[eqrow]
-                         << " * " << frac_eqrow << " +\n";
+                         << " " << frac_eqrow << " * +\n";
             proof_out << DELETE_CONS << lhs_row_mapping[candrow] << "\n";
 
             lhs_row_mapping[candrow] = next_constraint_id;
