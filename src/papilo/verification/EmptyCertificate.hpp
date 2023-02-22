@@ -61,14 +61,14 @@ class EmptyCertificate : public CertificateInterface<REAL>
 
    void
    change_upper_bound( REAL val, int col, const Problem<REAL>& problem,
-                       const Vec<int>& var_mapping,
+                       const Vec<int>& var_mapping, MatrixBuffer<REAL>& matrix_buffer,
                        ArgumentType argument = ArgumentType::kPrimal )
    {
    }
 
    void
    change_lower_bound( REAL val, int col, const Problem<REAL>& problem,
-                       const Vec<int>& var_mapping,
+                       const Vec<int>& var_mapping, MatrixBuffer<REAL>& matrix_buffer,
                        ArgumentType argument = ArgumentType::kPrimal )
    {
    }
@@ -81,13 +81,15 @@ class EmptyCertificate : public CertificateInterface<REAL>
 
    void
    change_rhs( int row, REAL val, const SparseVectorView<REAL>& data,
-               const Vec<String>& names, const Vec<int>& var_mapping, ArgumentType argument = ArgumentType::kPrimal  )
+               const Vec<String>& names, const Vec<int>& var_mapping,
+               ArgumentType argument = ArgumentType::kPrimal )
    {
    }
 
    void
    change_lhs( int row, REAL val, const SparseVectorView<REAL>& data,
-               const Vec<String>& names, const Vec<int>& var_mapping, ArgumentType argument = ArgumentType::kPrimal  )
+               const Vec<String>& names, const Vec<int>& var_mapping,
+               ArgumentType argument = ArgumentType::kPrimal )
    {
    }
 

@@ -211,7 +211,7 @@ class VeriPb : public CertificateInterface<REAL>
 
    void
    change_upper_bound( REAL val, int col, const Problem<REAL>& problem,
-                       const Vec<int>& var_mapping,
+                       const Vec<int>& var_mapping, MatrixBuffer<REAL>& matrix_buffer,
                        ArgumentType argument = ArgumentType::kPrimal )
    {
       next_constraint_id++;
@@ -248,8 +248,15 @@ class VeriPb : public CertificateInterface<REAL>
          }
          assert( num.isIntegral( col_coeff.getValues()[row_index] *
                                  scale_factor[row] ) );
-         int row_value = num.round_to_int( col_coeff.getValues()[row_index] *
-                                           scale_factor[row] );
+         REAL unscaled_row_value;
+         // check if the matrix coefficients were updated since the last call
+         const MatrixEntry<REAL>* entry = matrix_buffer.template findEntry<false>( row, col);
+         if( entry != nullptr )
+            unscaled_row_value = entry->val;
+         else
+            unscaled_row_value = col_coeff.getValues()[row_index];
+         assert(num.isIntegral(unscaled_row_value * scale_factor[row]));
+         int row_value = num.round_to_int( unscaled_row_value * scale_factor[row] );
          if( !problem.getRowFlags()[row].test( RowFlag::kLhsInf ) )
          {
             next_constraint_id++;
@@ -285,7 +292,7 @@ class VeriPb : public CertificateInterface<REAL>
 
    void
    change_lower_bound( REAL val, int col, const Problem<REAL>& problem,
-                       const Vec<int>& var_mapping,
+                       const Vec<int>& var_mapping, MatrixBuffer<REAL>& matrix_buffer,
                        ArgumentType argument = ArgumentType::kPrimal )
    {
       next_constraint_id++;

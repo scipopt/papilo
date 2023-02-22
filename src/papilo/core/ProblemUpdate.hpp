@@ -608,8 +608,9 @@ ProblemUpdate<REAL>::fixCol( int col, REAL val, ArgumentType argument )
          postsolve.storeVarBoundChange(
              true, col, lbs[col],
              problem.getColFlags()[col].test( ColFlag::kLbInf ), val );
-         certificate_interface->change_lower_bound(
-             val, col, problem, postsolve.origcol_mapping, argument );
+         certificate_interface->change_lower_bound( val, col, problem,
+                                                    postsolve.origcol_mapping,
+                                                    matrix_buffer, argument );
          lbs[col] = val;
          cflags[col].unset( ColFlag::kLbUseless );
       }
@@ -626,7 +627,7 @@ ProblemUpdate<REAL>::fixCol( int col, REAL val, ArgumentType argument )
              false, col, ubs[col],
              problem.getColFlags()[col].test( ColFlag::kUbInf ), val );
          certificate_interface->change_upper_bound(
-             val, col, problem, postsolve.origcol_mapping,
+             val, col, problem, postsolve.origcol_mapping, matrix_buffer,
              argument );
          ubs[col] = val;
          cflags[col].unset( ColFlag::kUbUseless );
@@ -750,7 +751,9 @@ ProblemUpdate<REAL>::changeLB( int col, REAL val, ArgumentType argument )
 
       postsolve.storeVarBoundChange( true, col, lbs[col], isInfinity,
                                      newbound );
-      certificate_interface->change_lower_bound( newbound, col, problem, postsolve.origcol_mapping, argument );
+      certificate_interface->change_lower_bound( newbound, col, problem,
+                                                 postsolve.origcol_mapping,
+                                                 matrix_buffer, argument );
 
       lbs[col] = newbound;
 
@@ -843,7 +846,7 @@ ProblemUpdate<REAL>::changeUB( int col, REAL val, ArgumentType argument )
 
       postsolve.storeVarBoundChange( false, col, ubs[col], isInfinity,
                                      newbound );
-      certificate_interface->change_upper_bound( newbound, col, problem, postsolve.origcol_mapping, argument );
+      certificate_interface->change_upper_bound( newbound, col, problem, postsolve.origcol_mapping, matrix_buffer, argument );
       ubs[col] = newbound;
 
       if( !cflags[col].test( ColFlag::kLbInf ) && ubs[col] == lbs[col] )
@@ -1358,7 +1361,7 @@ ProblemUpdate<REAL>::apply_dualfix( Vec<REAL>& lbs, Vec<REAL>& ubs,
                                            lbs[col] );
             certificate_interface->change_upper_bound(
                 lbs[col], col, problem,
-                postsolve.origcol_mapping,
+                postsolve.origcol_mapping, matrix_buffer,
                 ArgumentType::kDual );
             ubs[col] = lbs[col];
             cflags[col].unset( ColFlag::kUbInf );
@@ -1388,7 +1391,7 @@ ProblemUpdate<REAL>::apply_dualfix( Vec<REAL>& lbs, Vec<REAL>& ubs,
                                            cflags[col].test( ColFlag::kLbInf ),
                                            ubs[col] );
             certificate_interface->change_lower_bound(
-                ubs[col],col, problem, postsolve.origcol_mapping,
+                ubs[col],col, problem, postsolve.origcol_mapping, matrix_buffer,
                 ArgumentType::kDual );
             lbs[col] = ubs[col];
             cflags[col].unset( ColFlag::kLbInf );
@@ -1878,7 +1881,7 @@ ProblemUpdate<REAL>::removeEmptyColumns()
                       true, col, domains.lower_bounds[col],
                       domains.flags[col].test( ColFlag::kLbInf ), fixval );
                   certificate_interface->change_lower_bound(
-                      fixval,col, problem, postsolve.origcol_mapping,
+                      fixval,col, problem, postsolve.origcol_mapping, matrix_buffer,
                       ArgumentType::kDual );
                }
                if( domains.flags[col].test( ColFlag::kUbInf ) ||
@@ -1889,7 +1892,7 @@ ProblemUpdate<REAL>::removeEmptyColumns()
                       domains.flags[col].test( ColFlag::kUbInf ), fixval );
                   certificate_interface->change_upper_bound(
                       fixval, col, problem,
-                      postsolve.origcol_mapping,
+                      postsolve.origcol_mapping, matrix_buffer,
                       ArgumentType::kDual );
                }
             }

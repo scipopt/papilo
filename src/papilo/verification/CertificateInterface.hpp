@@ -60,12 +60,12 @@ class CertificateInterface
 
    virtual void
    change_upper_bound( REAL val, int col, const Problem<REAL>& problem,
-                       const Vec<int>& var_mapping,
+                       const Vec<int>& var_mapping, MatrixBuffer<REAL>& matrix_buffer,
                        ArgumentType argument = ArgumentType::kPrimal ) = 0;
 
    virtual void
    change_lower_bound( REAL val, int col, const Problem<REAL>& problem,
-                       const Vec<int>& var_mapping,
+                       const Vec<int>& var_mapping, MatrixBuffer<REAL>& matrix_buffer,
                        ArgumentType argument = ArgumentType::kPrimal ) = 0;
 
    virtual void
