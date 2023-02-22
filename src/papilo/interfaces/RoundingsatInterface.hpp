@@ -135,8 +135,10 @@ class RoundingsatInterface : public SolverInterface<REAL>
    int
    to_int( REAL val )
    {
-      assert( val == (int)val );
-      return (int)val;
+      //TODO: num
+      Num<REAL> num;
+      assert( num.isIntegral(val) );
+      return num.round_to_int(val);
    }
 
    void

@@ -53,7 +53,7 @@ template <typename REAL>
 class VeriPb : public CertificateInterface<REAL>
 {
  public:
-   // TODO: set Num
+
    Num<REAL> num;
    std::ofstream proof_out;
 
@@ -80,17 +80,15 @@ class VeriPb : public CertificateInterface<REAL>
    int validate_row = UNKNOWN;
 #endif
 
-   // TODO: maybe this is not sufficient and matrix buffer needs to be handed
-   // over
-   HashMap<int, int> changed_entries{};
+   /// this stores the changed entries for the current row (otherwise refer to
+   /// the matrix_buffer)
+   HashMap<int, int> changed_entries_during_current_tsxs{};
 
    const Vec<int>&
    getRowScalingFactor()
    {
       return scale_factor;
    }
-
-   VeriPb() = default;
 
    VeriPb( const Problem<REAL>& _problem, const Num<REAL>& _num ) : num( _num )
    {
@@ -159,7 +157,7 @@ class VeriPb : public CertificateInterface<REAL>
       skip_changing_rhs = UNKNOWN;
       skip_deleting_lhs_constraint_id = UNKNOWN;
       skip_deleting_rhs_constraint_id = UNKNOWN;
-      changed_entries.clear();
+      changed_entries_during_current_tsxs.clear();
       saturation_already_called = false;
       row_with_gcd = {UNKNOWN, UNKNOWN};
 #ifdef VERIPB_DEBUG
@@ -406,8 +404,8 @@ class VeriPb : public CertificateInterface<REAL>
          {
             int unscaled_coeff = num.round_to_int( data.getValues()[i] );
             assert( unscaled_coeff != 0 );
-            auto found = changed_entries.find( data.getIndices()[i] );
-            if( found != changed_entries.end() )
+            auto found = changed_entries_during_current_tsxs.find( data.getIndices()[i] );
+            if( found != changed_entries_during_current_tsxs.end() )
             {
                unscaled_coeff = found->second;
                if( unscaled_coeff == 0 )
@@ -475,8 +473,8 @@ class VeriPb : public CertificateInterface<REAL>
          {
             int unscaled_coeff = num.round_to_int( data.getValues()[i] );
             assert( unscaled_coeff != 0 );
-            auto found = changed_entries.find( data.getIndices()[i] );
-            if( found != changed_entries.end() )
+            auto found = changed_entries_during_current_tsxs.find( data.getIndices()[i] );
+            if( found != changed_entries_during_current_tsxs.end() )
             {
                unscaled_coeff = found->second;
                if( unscaled_coeff == 0 )
@@ -726,7 +724,7 @@ class VeriPb : public CertificateInterface<REAL>
                         const Vec<int>& var_mapping, ArgumentType argument )
    {
       // remove singleton variable from equation
-      changed_entries.emplace( col, num.round_to_int( new_val ) );
+      changed_entries_during_current_tsxs.emplace( col, num.round_to_int( new_val ) );
       if( argument == ArgumentType::kAggregation )
       {
          assert( lhs == rhs );
@@ -1073,8 +1071,7 @@ class VeriPb : public CertificateInterface<REAL>
       auto col_vec = matrix.getColumnCoefficients( col );
       auto row_data = matrix.getRowCoefficients( substituted_row );
 
-      // TODO: if singleton column is substiuted in objective -> continue there
-      // is nothing to do in this case
+      // for singleton removing the coefficient is done seperately
       if( col_vec.getLength() == 1 )
          return;
 
@@ -1356,8 +1353,8 @@ class VeriPb : public CertificateInterface<REAL>
          {
 
             REAL value = data.getValues()[i];
-            auto found = changed_entries.find( data.getIndices()[i] );
-            if( found != changed_entries.end() )
+            auto found = changed_entries_during_current_tsxs.find( data.getIndices()[i] );
+            if( found != changed_entries_during_current_tsxs.end() )
             {
                value = found->second;
                if( value == 0 )
@@ -1387,7 +1384,7 @@ class VeriPb : public CertificateInterface<REAL>
          for( int i = 0; i < data.getLength(); i++ )
          {
             REAL value = data.getValues()[i];
-            auto found = changed_entries.find( data.getIndices()[i] );
+            auto found = changed_entries_during_current_tsxs.find( data.getIndices()[i] );
             {
                value = found->second;
                if( value == 0 )
