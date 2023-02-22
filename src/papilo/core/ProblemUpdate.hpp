@@ -750,7 +750,7 @@ ProblemUpdate<REAL>::changeLB( int col, REAL val, ArgumentType argument )
 
       postsolve.storeVarBoundChange( true, col, lbs[col], isInfinity,
                                      newbound );
-      certificate_interface->change_lower_bound( val, col, problem, postsolve.origcol_mapping, argument );
+      certificate_interface->change_lower_bound( newbound, col, problem, postsolve.origcol_mapping, argument );
 
       lbs[col] = newbound;
 
@@ -843,7 +843,7 @@ ProblemUpdate<REAL>::changeUB( int col, REAL val, ArgumentType argument )
 
       postsolve.storeVarBoundChange( false, col, ubs[col], isInfinity,
                                      newbound );
-      certificate_interface->change_upper_bound( val, col, problem, postsolve.origcol_mapping, argument );
+      certificate_interface->change_upper_bound( newbound, col, problem, postsolve.origcol_mapping, argument );
       ubs[col] = newbound;
 
       if( !cflags[col].test( ColFlag::kLbInf ) && ubs[col] == lbs[col] )
