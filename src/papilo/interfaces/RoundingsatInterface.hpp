@@ -182,7 +182,7 @@ class RoundingsatInterface : public SolverInterface<REAL>
    }
 
    void
-   setNodeLimit( int num ) override
+   setNodeLimit( int nodelimit ) override
    {
    }
 
