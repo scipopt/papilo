@@ -128,6 +128,11 @@ class CertificateInterface
                  const Vec<String>& names ) = 0;
 
    virtual void
+   symmetries(
+       const SymmetryStorage& symmetries, const Vec<String>& names,
+       const Vec<int>& var_mapping ) = 0;
+
+   virtual void
    compress( const Vec<int>& rowmapping, const Vec<int>& colmapping,
              bool full = false ) = 0;
 

@@ -32,6 +32,7 @@
 #include "papilo/core/Reductions.hpp"
 #include "papilo/core/SingleRow.hpp"
 #include "papilo/core/Statistics.hpp"
+#include "papilo/core/SymmetryStorage.hpp"
 #include "papilo/core/postsolve/PostsolveStorage.hpp"
 #include "papilo/misc/Flags.hpp"
 #include "papilo/misc/MultiPrecision.hpp"
@@ -456,6 +457,8 @@ ProblemUpdate<REAL>::ProblemUpdate(
            new EmptyCertificate<REAL>() );
    lastcompress_ndelcols = 0;
    lastcompress_ndelrows = 0;
+
+
 
    std::ranlux24 randgen( _presolveOptions.randomseed );
    random_col_perm.resize( _problem.getNCols() );
@@ -2353,8 +2356,10 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
 
 
             ++stats.ndeletedcols;
-
-            merge_parallel_columns( col1, col2, col2scale, constraintMatrix,
+            if(problem.test_problem_type(ProblemFlag::kBinary))
+               problem.getSymmetries().addSymmetry(col1, col2);
+            else
+               merge_parallel_columns( col1, col2, col2scale, constraintMatrix,
                                     lbs, ubs, cflags );
 
             break;

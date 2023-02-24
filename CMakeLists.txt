@@ -323,6 +323,7 @@ install(FILES
      ${PROJECT_SOURCE_DIR}/src/papilo/core/Solution.hpp
      ${PROJECT_SOURCE_DIR}/src/papilo/core/SparseStorage.hpp
      ${PROJECT_SOURCE_DIR}/src/papilo/core/Statistics.hpp
+     ${PROJECT_SOURCE_DIR}/src/papilo/core/SymmetryStorage.hpp
      ${PROJECT_SOURCE_DIR}/src/papilo/core/VariableDomains.hpp
    DESTINATION include/papilo/core)
 

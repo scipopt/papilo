@@ -143,6 +143,11 @@ class EmptyCertificate : public CertificateInterface<REAL>
    }
 
    void
+   symmetries(
+       const SymmetryStorage& symmetries, const Vec<String>& names,
+       const Vec<int>& var_mapping ) {};
+
+   void
    log_solution( const Solution<REAL>& orig_solution,
                  const Vec<String>& names ){};
 

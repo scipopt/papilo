@@ -1141,6 +1141,22 @@ class VeriPb : public CertificateInterface<REAL>
    };
 
    void
+   symmetries( const SymmetryStorage& symmetries, const Vec<String>& names,
+               const Vec<int>& var_mapping )
+   {
+      proof_out << COMMENT << "symmetries: \n";
+      for(Symmetry symmetry: symmetries.symmetries)
+      {
+         auto name_dominating = names[var_mapping[symmetry.getDominatingCol()]];
+         auto name_dominated = names[var_mapping[symmetry.getDominatedCol()]];
+         proof_out << RED << "1 " << name_dominating << " +1 " << NEGATED
+                   << name_dominated << " >= 1 ; " << name_dominating << " -> "
+                   << name_dominated << " " << name_dominated << " -> "
+                   << name_dominating << "\n";
+      }
+   };
+
+   void
    compress( const Vec<int>& rowmapping, const Vec<int>& colmapping,
              bool full = false )
    {

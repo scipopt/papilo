@@ -32,6 +32,7 @@
 #include "papilo/misc/MultiPrecision.hpp"
 #include "papilo/misc/StableSum.hpp"
 #include "papilo/misc/String.hpp"
+#include "papilo/core/SymmetryStorage.hpp"
 #include "papilo/misc/Vec.hpp"
 #include "papilo/misc/fmt.hpp"
 #include "papilo/core/ProblemFlag.hpp"
@@ -365,6 +366,12 @@ class Problem
       return constraintMatrix.getRowSizes();
    }
 
+   SymmetryStorage&
+   getSymmetries()
+   {
+      return symmetries;
+   }
+
    /// substitute a variable in the objective using an equality constraint
    /// given by a row index
    void
@@ -520,6 +527,9 @@ class Problem
           },
           [this, &mappings, full]() {
              variableDomains.compress( mappings.second, full );
+          },
+          [this, &mappings, full]() {
+             symmetries.compress( mappings.second, full );
           },
           [this, &mappings, full]() {
              // compress row activities
@@ -727,6 +737,9 @@ class Problem
       ar& rowActivities;
 
       ar& locks;
+
+      //TODO:
+//      ar& symmetries;
    }
 
  private:
@@ -747,6 +760,8 @@ class Problem
 
    /// up and down locks for each column
    Vec<Locks> locks;
+
+   SymmetryStorage symmetries;
 };
 
 template <typename REAL>
