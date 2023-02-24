@@ -1144,6 +1144,8 @@ class VeriPb : public CertificateInterface<REAL>
    symmetries( const SymmetryStorage& symmetries, const Vec<String>& names,
                const Vec<int>& var_mapping )
    {
+      if( symmetries.symmetries.empty() )
+         return;
       proof_out << COMMENT << "symmetries: \n";
       for(Symmetry symmetry: symmetries.symmetries)
       {

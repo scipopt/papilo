@@ -50,10 +50,13 @@ struct Symmetry
       return dominated_col;
    }
 
+   Symmetry() = default;
+
    Symmetry( int _dominating_col, int _dominated_col )
        : dominating_col( _dominating_col ), dominated_col( _dominated_col )
    {
    }
+
 
    template <typename Archive>
    void
@@ -73,16 +76,31 @@ struct SymmetryStorage
    }
 
    Symmetry
-   findSymmetry( int dominating_col, int dominated_col )
+   find_symmetry( int dominating_col, int dominated_col ) const
    {
       for(auto symmetry : symmetries)
       {
-         if( symmetry.dominated_col == dominating_col || dominated_col == symmetry.dominating_col)
-            return symmetry;
-         if( symmetry.dominated_col == dominated_col || dominating_col == symmetry.dominating_col)
+         if( ( symmetry.dominated_col == dominating_col &&
+               dominated_col == symmetry.dominating_col ) ||
+             ( symmetry.dominated_col == dominated_col &&
+               dominating_col == symmetry.dominating_col ) )
             return symmetry;
       }
       return { -1, -1 };
+   }
+
+   bool
+   contains_symmetry( int dominating_col, int dominated_col ) const
+   {
+      for(auto symmetry : symmetries)
+      {
+         if( ( symmetry.dominated_col == dominating_col &&
+               dominated_col == symmetry.dominating_col ) ||
+             ( symmetry.dominated_col == dominated_col &&
+               dominating_col == symmetry.dominating_col ) )
+            return true;
+      }
+      return false;
    }
 
    void
@@ -112,8 +130,7 @@ struct SymmetryStorage
             newSize++;
          }
       }
-//      TODO:
-//      symmetries.resize( newSize );
+      symmetries.resize( newSize );
       if( full )
          symmetries.shrink_to_fit();
    }

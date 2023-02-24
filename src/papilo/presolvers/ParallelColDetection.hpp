@@ -96,7 +96,7 @@ class ParallelColDetection : public PresolveMethod<REAL>
    findParallelCols( const Num<REAL>& num, const int* bucket, int bucketSize,
                      const ConstraintMatrix<REAL>& constMatrix,
                      const Vec<REAL>& obj, const VariableDomains<REAL>& domains,
-                     Reductions<REAL>& reductions );
+                     const SymmetryStorage& symmetries, Reductions<REAL>& reductions );
 
    void
    computeColHashes( const ConstraintMatrix<REAL>& constMatrix,
@@ -160,7 +160,8 @@ void
 ParallelColDetection<REAL>::findParallelCols(
     const Num<REAL>& num, const int* bucket, int bucketSize,
     const ConstraintMatrix<REAL>& constMatrix, const Vec<REAL>& obj,
-    const VariableDomains<REAL>& domains, Reductions<REAL>& reductions )
+    const VariableDomains<REAL>& domains, const SymmetryStorage& symmetries,
+    Reductions<REAL>& reductions )
 {
    // TODO if bucketSize too large do gurobi trick
    const Vec<ColFlags>& cflags = domains.flags;
@@ -250,7 +251,6 @@ ParallelColDetection<REAL>::findParallelCols(
          assert( !cflags[col2].test( ColFlag::kIntegral ) );
          const REAL* coefs2 =
              constMatrix.getColumnCoefficients( col2 ).getValues();
-
          if( check_parallelity( num, obj, col1, length, coefs1, col2, coefs2 ) )
          {
             TransactionGuard<REAL> tg{ reductions };
@@ -298,6 +298,7 @@ ParallelColDetection<REAL>::findParallelCols(
             bool parallel = check_parallelity( num, obj, col1, length, coefs1,
                                                col2, coefs2 );
             if( parallel &&
+                !symmetries.contains_symmetry(col1, col2) &&
                 !checkDomainsForHoles( col1, col2, coefs1[0] / coefs2[0] ) )
             {
                TransactionGuard<REAL> tg{ reductions };
@@ -513,6 +514,7 @@ ParallelColDetection<REAL>::execute( const Problem<REAL>& problem,
    const auto& constMatrix = problem.getConstraintMatrix();
    const auto& obj = problem.getObjective().coefficients;
    const auto& cflags = problem.getColFlags();
+   const auto& symmetries = problem.getSymmetries();
    const int ncols = constMatrix.getNCols();
    const Vec<int>& colperm = problemUpdate.getRandomColPerm();
 
@@ -583,11 +585,8 @@ ParallelColDetection<REAL>::execute( const Problem<REAL>& problem,
 
       // if more than one col is in the bucket find parallel cols
       if( bucketSize > 1 )
-      {
          findParallelCols( num, col.get() + i, bucketSize, constMatrix, obj,
-                           problem.getVariableDomains(), reductions );
-      }
-
+                           problem.getVariableDomains(), symmetries, reductions );
       i = i + bucketSize;
    }
    if( reductions.getTransactions().size() > 0 )

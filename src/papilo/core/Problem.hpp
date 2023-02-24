@@ -366,11 +366,18 @@ class Problem
       return constraintMatrix.getRowSizes();
    }
 
+   const SymmetryStorage&
+   getSymmetries() const
+   {
+      return symmetries;
+   }
+
    SymmetryStorage&
    getSymmetries()
    {
       return symmetries;
    }
+
 
    /// substitute a variable in the objective using an equality constraint
    /// given by a row index
