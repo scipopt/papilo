@@ -129,6 +129,25 @@ class RoundingsatInterface : public SolverInterface<REAL>
             }
          }
       }
+      //TODO: test symmetries to problem -> implement for other solvers
+      for( int symmetry_index = 0; symmetry_index < problem.getSymmetries(); ++symmetry_index )
+      {
+         assert( problem.test_problem_type(ProblemFlag::kBinary) );
+         input->reset();
+         auto& symmetry = problem.getSymmetries().symmetries[symmetry_index];
+         int col1 = symmetry.getDominatingCol() + 1;
+         int col2 = symmetry.getDominatedCol() + 1;
+         input->addLhs( 1, col1 );
+         input->addLhs( -1, col2 );
+         input->addRhs( 0 );
+         const std::pair<rs::ID, rs::ID>& pair =
+             rs::run::solver.addConstraint( input, rs::Origin::FORMULA );
+         if( pair.second == rs::ID_Unsat )
+         {
+            fmt::print( "An error occurred\n" );
+            return -1;
+         }
+      }
       return 0;
    }
 

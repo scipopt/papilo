@@ -119,7 +119,7 @@ class PapiloSolver(SCIPSolver):
     presolving_rounds = re.compile("presolved\s+(\S+)")
     columns_deleted = re.compile("presolved \d+ rounds:\s+(\S+)")
     rows_deleted = re.compile("presolved \d+ rounds:\s+\d+ del cols,\s+(\S+)")
-    bound_changes = re.compile("presolved \d+ rounds:\s+\d+ del cols,\s+\d+ del rows,\s+(\S+)")
+    bound_changes = re.compile("presolved reduced int. columns:\d+ rounds:\s+\d+ del cols,\s+\d+ del rows,\s+(\S+)")
     changed_sides = re.compile("presolved \d+ rounds:\s+\d+ del cols,\s+\d+ del rows,\s+\d+ chg bounds,\s+(\S+)")
     changed_coefficients = re.compile(
         "presolved \d+ rounds:\s+\d+ del cols,\s+\d+ del rows,\s+\d+ chg bounds,\s+\d+ chg sides,\s+(\S+)")

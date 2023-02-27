@@ -2357,7 +2357,10 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
 
             ++stats.ndeletedcols;
             if(problem.test_problem_type(ProblemFlag::kBinary))
-               problem.getSymmetries().addSymmetry(col1, col2);
+            {
+               stats.nsymmetries++;
+               problem.getSymmetries().addSymmetry( col1, col2 );
+            }
             else
                merge_parallel_columns( col1, col2, col2scale, constraintMatrix,
                                     lbs, ubs, cflags );
