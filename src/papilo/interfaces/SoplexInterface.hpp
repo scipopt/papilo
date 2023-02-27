@@ -72,6 +72,7 @@ class SoplexInterface : public SolverInterface<REAL>
    {
       using namespace soplex;
 
+      assert( problem.getSymmetries().symmetries.empty() );
       int ncols = problem.getNCols();
       int nrows = problem.getNRows();
       const VariableDomains<REAL>& domains = problem.getVariableDomains();

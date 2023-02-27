@@ -137,8 +137,8 @@ class RoundingsatInterface : public SolverInterface<REAL>
          auto& symmetry = problem.getSymmetries().symmetries[symmetry_index];
          int col1 = symmetry.getDominatingCol() + 1;
          int col2 = symmetry.getDominatedCol() + 1;
-         input->addLhs( 1, col1 );
-         input->addLhs( -1, col2 );
+         input->addLhs( 1, col1 + 1 );
+         input->addLhs( -1, col2 +1 );
          input->addRhs( 0 );
          const std::pair<rs::ID, rs::ID>& pair =
              rs::run::solver.addConstraint( input, rs::Origin::FORMULA );

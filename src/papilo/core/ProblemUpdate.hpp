@@ -2358,8 +2358,13 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
             ++stats.ndeletedcols;
             if(problem.test_problem_type(ProblemFlag::kBinary))
             {
-               stats.nsymmetries++;
-               problem.getSymmetries().addSymmetry( col1, col2 );
+               if(col2scale == 1)
+               {
+                  //TODO:
+                  assert(vals1[0] == vals2[0]);
+                  stats.nsymmetries++;
+                  problem.getSymmetries().addSymmetry( col1, col2 );
+               }
             }
             else
                merge_parallel_columns( col1, col2, col2scale, constraintMatrix,
