@@ -130,9 +130,9 @@ class RoundingsatInterface : public SolverInterface<REAL>
          }
       }
       //TODO: test symmetries to problem -> implement for other solvers
-      for( int symmetry_index = 0; symmetry_index < problem.getSymmetries(); ++symmetry_index )
+      for( int symmetry_index = 0; symmetry_index < problem.getSymmetries().symmetries.size(); ++symmetry_index )
       {
-         assert( problem.test_problem_type(ProblemFlag::kBinary) );
+//         assert( problem.test_problem_type(ProblemFlag::kBinary) );
          input->reset();
          auto& symmetry = problem.getSymmetries().symmetries[symmetry_index];
          int col1 = symmetry.getDominatingCol() + 1;

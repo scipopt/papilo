@@ -86,7 +86,7 @@ class Problem
    }
 
    bool
-   test_problem_type( ProblemFlag flag)
+   test_problem_type( const ProblemFlag flag)
    {
       return problem_flags.test(flag);
    }
