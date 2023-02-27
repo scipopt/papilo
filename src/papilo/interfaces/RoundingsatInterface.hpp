@@ -71,7 +71,7 @@ class RoundingsatInterface : public SolverInterface<REAL>
          if( obj[col] == 0 )
             continue;
          int sat_var_index = col + 1;
-         int coeff = to_int( obj[col] );
+         int coeff = to_int( obj[col], 1 );
          rs::run::solver.setNbVars( abs( sat_var_index ), true );
          input->addLhs( coeff, sat_var_index );
       }
@@ -85,7 +85,7 @@ class RoundingsatInterface : public SolverInterface<REAL>
          if( consMatrix.getRowFlags()[row].test( RowFlag::kEquation ) )
          {
             map_cons_to_lhs( input, row_coeff, row );
-            input->addRhs( to_int( lhs[row] * scaling_row_factor[row] ) );
+            input->addRhs( to_int( lhs[row], scaling_row_factor[row] ) );
             if( rs::run::solver.addConstraint( input, rs::Origin::FORMULA )
                     .second == rs::ID_Unsat )
             {
@@ -106,7 +106,7 @@ class RoundingsatInterface : public SolverInterface<REAL>
          if( !consMatrix.getRowFlags()[row].test( RowFlag::kLhsInf ) )
          {
             map_cons_to_lhs( input, row_coeff, row );
-            input->addRhs( to_int( lhs[row] * scaling_row_factor[row] ) );
+            input->addRhs( to_int( lhs[row], scaling_row_factor[row] ) );
             const std::pair<rs::ID, rs::ID>& pair =
                 rs::run::solver.addConstraint( input, rs::Origin::FORMULA );
             if( pair.second == rs::ID_Unsat )
@@ -118,7 +118,7 @@ class RoundingsatInterface : public SolverInterface<REAL>
          if( !consMatrix.getRowFlags()[row].test( RowFlag::kRhsInf ) )
          {
             map_cons_to_lhs( input, row_coeff, row );
-            input->addRhs( to_int( rhs[row] * scaling_row_factor[row] ) );
+            input->addRhs( to_int( rhs[row], scaling_row_factor[row] ) );
             input->invert();
             const std::pair<rs::ID, rs::ID>& pair =
                 rs::run::solver.addConstraint( input, rs::Origin::FORMULA );
@@ -152,12 +152,14 @@ class RoundingsatInterface : public SolverInterface<REAL>
    }
 
    int
-   to_int( REAL val )
+   to_int( REAL val, REAL scale )
    {
       //TODO: num
       Num<REAL> num;
-      assert( num.isIntegral(val) );
-      return num.round_to_int(val);
+      if( num.isZero( val ) )
+         return 0;
+      assert( num.isIntegral( val * scale ) );
+      return num.round_to_int( val * scale );
    }
 
    void
@@ -168,7 +170,7 @@ class RoundingsatInterface : public SolverInterface<REAL>
       {
          int sat_var_index = row_coeff.getIndices()[j] + 1;
          assert( num.isIntegral( row_coeff.getValues()[j] * scaling_row_factor[row] )  );
-         rs::bigint coeff = to_int( row_coeff.getValues()[j] * scaling_row_factor[row]);
+         rs::bigint coeff = to_int( row_coeff.getValues()[j], scaling_row_factor[row]);
          rs::run::solver.setNbVars( abs( sat_var_index ), true );
          input->addLhs( coeff, sat_var_index );
       }
