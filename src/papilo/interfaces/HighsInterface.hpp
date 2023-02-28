@@ -69,6 +69,7 @@ class HighsInterface : public SolverInterface<REAL>
       const auto& rhs_values = consMatrix.getRightHandSides();
       const auto& rflags = problem.getRowFlags();
 
+      //TODO: symmetries missing
       HighsLp model;
 
       model.sense_ = ObjSense::kMinimize;
