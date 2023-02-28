@@ -48,9 +48,11 @@ namespace papilo
 template <typename REAL>
 struct OpbWriter
 {
+
    static bool
    writeProb( const std::string& filename, const Problem<REAL>& prob,
-              const Vec<int>& col_mapping )
+              const Vec<int>& col_mapping, const Vec<int>& row_scaling,
+              const Num<REAL>& num)
    {
       const ConstraintMatrix<REAL>& matrix = prob.getConstraintMatrix();
       const Vec<std::string>& consnames = prob.getConstraintNames();
@@ -60,6 +62,7 @@ struct OpbWriter
       const Objective<REAL>& obj = prob.getObjective();
       const Vec<ColFlags>& col_flags = prob.getColFlags();
       const Vec<RowFlags>& row_flags = prob.getRowFlags();
+      const Vec<Symmetry>& sym = prob.getSymmetries().symmetries;
 
       std::ofstream file( filename, std::ofstream::out );
       boost::iostreams::filtering_ostream out;
@@ -93,11 +96,18 @@ struct OpbWriter
       {
          auto vector = matrix.getRowCoefficients( i );
          for( int j = 0; j < vector.getLength(); j++ )
-         // TODO: check values and rhs and lhs
-         // if( !num.isIntegral( vector.getValues()[j] ) )
+            if( !num.isIntegral( vector.getValues()[j] * row_scaling[i] ) )
+            {
+               fmt::print( "Matrix contains fractional values. Opb is not the "
+                           "write format." );
+               return false;
+            }
+         if( !num.isIntegral( lhs[i] * row_scaling[i] ) ||
+             !num.isIntegral( rhs[i] * row_scaling[i] ) )
          {
-            //   fmt::print( "Matrix contains fractional values. Opb is not the
-            //   write format." ); return false;
+            fmt::print( "Lhs/Rhs contains fractional values. Opb is not the "
+                        "write format." );
+            return false;
          }
       }
       out.push( file );
@@ -108,7 +118,7 @@ struct OpbWriter
       fmt::print( out, "*NONZERO:      {}\n*\n*\n", matrix.getNnz() );
 
       bool obj_has_nonzeros = false;
-      if( obj.offset != 0 )
+      if( obj.offset == 0 )
       {
          for( auto coef : obj.coefficients )
             if( coef != 0 )
@@ -138,29 +148,31 @@ struct OpbWriter
          fmt::print( ";\n" );
       }
 
-      // TODO: scaling and more
       for( int row = 0; row < matrix.getNRows(); ++row )
       {
          assert( !matrix.isRowRedundant( row ) );
          char type;
-         if( row_flags[row].test( RowFlag::kEquation ) &&
+         if( row_flags[row].test( RowFlag::kEquation ) ||
              row_flags[row].test( RowFlag::kRhsInf ) )
          {
             assert( !row_flags[row].test( RowFlag::kLhsInf ) );
             auto vector = matrix.getRowCoefficients( row );
             for( int j = 0; j < vector.getLength(); j++ )
             {
-               REAL val = vector.getValues()[j];
+               REAL val = vector.getValues()[j] * row_scaling[row];
                assert( val != 0 );
+               assert( num.isIntegral(val ) );
                fmt::print( out, "{}{} {} ", val > 0 ? "+" : "-",
-                           abs( (int)val ),
+                           abs( num.round_to_int(val) ),
                            varnames[col_mapping[vector.getIndices()[j]]] );
             }
+            assert(num.isIntegral( lhs[row] * row_scaling[row] ));
             if( row_flags[row].test( RowFlag::kEquation ) )
                fmt::print( out, "= " );
             else
                fmt::print( out, ">= " );
-            fmt::print( out, " {} ;\n", (int)( lhs[row] ) );
+            fmt::print( out, " {} ;\n",
+                        num.round_to_int( lhs[row] * row_scaling[row] ) );
          }
          else
          {
@@ -169,19 +181,25 @@ struct OpbWriter
             auto vector = matrix.getRowCoefficients( row );
             for( int j = 0; j < vector.getLength(); j++ )
             {
-               REAL val = vector.getValues()[j];
+               REAL val = vector.getValues()[j] * row_scaling[row];
                assert( val != 0 );
+               assert( num.isIntegral(val ) );
                fmt::print( out, "{}{} {} ", val < 0 ? "+" : "-",
                            abs( (int)val ),
                            varnames[col_mapping[vector.getIndices()[j]]] );
             }
-            if( row_flags[row].test( RowFlag::kEquation ) )
-               fmt::print( out, "= " );
-            else
-               fmt::print( out, ">= " );
-            fmt::print( out, " {} ;\n", (int)( rhs[row] ) );
+            assert(num.isIntegral( rhs[row] * row_scaling[row] ));
+            fmt::print( out, ">= {} ;\n",
+                        num.round_to_int( rhs[row] * row_scaling[row] ) );
          }
       }
+      for( auto sym_c : sym )
+      {
+         fmt::print( out, "+1 {} +1 ~{} >= 1\n",
+                     varnames[col_mapping[sym_c.getDominatingCol()]],
+                     varnames[col_mapping[sym_c.getDominatedCol()]] );
+      }
+
       return true;
    }
 };

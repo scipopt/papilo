@@ -120,15 +120,12 @@ struct SymmetryStorage
       int newSize = 0;
       for( int i = 0; i < static_cast<int>( symmetries.size() ); ++i )
       {
-
-         if( colmapping[symmetries[i].getDominatingCol()] != -1
-             || colmapping[symmetries[i].getDominatedCol()] != -1 )
-         {
-            symmetries[newSize] = {
-                colmapping[symmetries[i].getDominatingCol()],
-                colmapping[symmetries[i].getDominatedCol()] };
-            newSize++;
-         }
+         if( colmapping[symmetries[i].getDominatingCol()] == -1 ||
+             colmapping[symmetries[i].getDominatedCol()] == -1 )
+            continue;
+         symmetries[newSize] = { colmapping[symmetries[i].getDominatingCol()],
+                                 colmapping[symmetries[i].getDominatedCol()] };
+         newSize++;
       }
       symmetries.resize( newSize );
       if( full )

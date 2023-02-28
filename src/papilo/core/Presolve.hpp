@@ -705,13 +705,12 @@ Presolve<REAL>::apply( Problem<REAL>& problem, bool store_dual_postsolve )
             }
          }
       }
-
-      probUpdate.getCertificateInterface()->symmetries(
-          problem.getSymmetries(), problem.getVariableNames(),
-          result.postsolve.origcol_mapping );
       // finally compress problem fully and release excess storage even if
       // problem was not reduced
       probUpdate.compress( true );
+      probUpdate.getCertificateInterface()->symmetries(
+          problem.getSymmetries(), problem.getVariableNames(),
+          result.postsolve.origcol_mapping );
       probUpdate.getCertificateInterface()->flush();
       if(satSolverFactory)
       {

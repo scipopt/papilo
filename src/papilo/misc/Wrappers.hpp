@@ -295,8 +295,12 @@ presolve_and_solve(
              || boost::algorithm::ends_with( opts.reduced_problem_file, ".opb.bz2" )
              || boost::algorithm::ends_with( opts.reduced_problem_file, ".opb.gz" ))
          {
+            Num<REAL> num{};
+            num.setFeasTol( REAL{ presolve.getPresolveOptions().feastol } );
+            num.setEpsilon( REAL{ presolve.getPresolveOptions().epsilon } );
+            num.setHugeVal( REAL{ presolve.getPresolveOptions().hugeval } );
             bool success = OpbWriter<REAL>::writeProb( opts.reduced_problem_file, problem,
-                                        result.postsolve.origcol_mapping );
+                                        result.postsolve.origcol_mapping, presolve.getRowScalingFactors(), num );
             //TODO: change name
             if(!success)
                MpsWriter<REAL>::writeProb( opts.reduced_problem_file, problem,
