@@ -82,13 +82,13 @@ class Problem
    void
    set_problem_type( ProblemFlag flag)
    {
-      problem_flags.set(flag);
+      problem_flags.set( flag );
    }
 
    bool
-   test_problem_type( const ProblemFlag flag)
+   test_problem_type( const ProblemFlag flag) const
    {
-      return problem_flags.test(flag);
+      return problem_flags.test( flag );
    }
 
    /// set (transposed) constraint matrix

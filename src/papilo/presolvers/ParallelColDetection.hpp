@@ -96,7 +96,8 @@ class ParallelColDetection : public PresolveMethod<REAL>
    findParallelCols( const Num<REAL>& num, const int* bucket, int bucketSize,
                      const ConstraintMatrix<REAL>& constMatrix,
                      const Vec<REAL>& obj, const VariableDomains<REAL>& domains,
-                     const SymmetryStorage& symmetries, Reductions<REAL>& reductions );
+                     const SymmetryStorage& symmetries,
+                     bool is_binary, Reductions<REAL>& reductions );
 
    void
    computeColHashes( const ConstraintMatrix<REAL>& constMatrix,
@@ -161,7 +162,7 @@ ParallelColDetection<REAL>::findParallelCols(
     const Num<REAL>& num, const int* bucket, int bucketSize,
     const ConstraintMatrix<REAL>& constMatrix, const Vec<REAL>& obj,
     const VariableDomains<REAL>& domains, const SymmetryStorage& symmetries,
-    Reductions<REAL>& reductions )
+    bool is_binary, Reductions<REAL>& reductions )
 {
    // TODO if bucketSize too large do gurobi trick
    const Vec<ColFlags>& cflags = domains.flags;
@@ -241,6 +242,7 @@ ParallelColDetection<REAL>::findParallelCols(
    // only continuous columns
    if( !cflags[bucket[bucketSize - 1]].test( ColFlag::kIntegral ) )
    {
+      assert(!is_binary);
       int col1 = bucket[0];
       auto col1vec = constMatrix.getColumnCoefficients( col1 );
       const int length = col1vec.getLength();
@@ -267,7 +269,7 @@ ParallelColDetection<REAL>::findParallelCols(
       // to avoid adding redundant tsxs in case of multiple parallel cols
       // all tsxs only refer to the first col in the bucket IF it is possible
       // to construct a tsxs between the first and the remaining ones
-      bool abort_after_first_loop = true;
+      bool abort_after_first_loop = !is_binary;
       int first_col_with_finite_bounds = -1;
 
       for( int i = 0; i < bucketSize; i++ )
@@ -301,6 +303,8 @@ ParallelColDetection<REAL>::findParallelCols(
                 !symmetries.contains_symmetry(col1, col2) &&
                 !checkDomainsForHoles( col1, col2, coefs1[0] / coefs2[0] ) )
             {
+               if(is_binary && coefs1[0] / coefs2[0] != 1)
+                  continue ;
                TransactionGuard<REAL> tg{ reductions };
                reductions.lockCol( col2 );
                reductions.lockCol( col1 );
@@ -314,6 +318,7 @@ ParallelColDetection<REAL>::findParallelCols(
    }
    else
    {
+      assert(!is_binary);
       int col1 = bucket[0];
       auto col1vec = constMatrix.getColumnCoefficients( col1 );
       const int length = col1vec.getLength();
@@ -578,6 +583,7 @@ ParallelColDetection<REAL>::execute( const Problem<REAL>& problem,
                 colperm[a] < colperm[b] );
        } );
 
+   const bool is_binary = problem.test_problem_type( ProblemFlag::kBinary );
    for( int i = 0; i < ncols; )
    {
       int bucketSize =
@@ -586,7 +592,7 @@ ParallelColDetection<REAL>::execute( const Problem<REAL>& problem,
       // if more than one col is in the bucket find parallel cols
       if( bucketSize > 1 )
          findParallelCols( num, col.get() + i, bucketSize, constMatrix, obj,
-                           problem.getVariableDomains(), symmetries, reductions );
+                           problem.getVariableDomains(), symmetries, is_binary, reductions );
       i = i + bucketSize;
    }
    if( reductions.getTransactions().size() > 0 )
