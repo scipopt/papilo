@@ -55,6 +55,7 @@ class GlopInterface : public SolverInterface<REAL>
    doSetUp( const Problem<REAL>& problem, const Vec<int>& origRowMap,
             const Vec<int>& origColMap )
    {
+      assert( problem.getSymmetries().symmetries.empty() );
       if( !std::is_same<REAL, double>::value )
       {
          fmt::print( "Please use double precision when solving with "
@@ -120,6 +121,7 @@ class GlopInterface : public SolverInterface<REAL>
             const Vec<int>& origColMap, const Components& components,
             const ComponentInfo& component )
    {
+      assert( problem.getSymmetries().symmetries.empty() );
       if( !std::is_same<REAL, double>::value )
       {
          fmt::print( "Please use double precision when solving with "

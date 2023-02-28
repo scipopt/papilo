@@ -62,6 +62,7 @@ class GurobiInterface : public SolverInterface<REAL>
       const Vec<REAL>& rhs = problem.getConstraintMatrix().getRightHandSides();
       const Vec<REAL>& lhs = problem.getConstraintMatrix().getLeftHandSides();
       const auto consMatrix = problem.getConstraintMatrix();
+      const auto& symmetries = problem.getSymmetries().symmetries;
 
       env = new GRBEnv();
       GRBModel model = GRBModel( *env );
@@ -123,8 +124,19 @@ class GurobiInterface : public SolverInterface<REAL>
                              rowNames[origRowMap[i]] + "_rhs" );
          model.update();
       }
+
+      for( int i = 0; i < symmetries.size(); ++i )
+      {
+         GRBLinExpr grbLinExpr = 0;
+         grbLinExpr += vars[symmetries[i].getDominatingCol()];
+         grbLinExpr -= vars[symmetries[i].getDominatedCol()];
+         if( !consMatrix.getRowFlags()[i].test( RowFlag::kLhsInf ) )
+            model.addConstr( grbLinExpr, GRB_GREATER_EQUAL, double( 0 ),
+                             "symmetry_" + std::to_string(i) );
+
+         model.update();
+      }
       model.update();
-      model.write( "test.mps" );
       model.optimize();
       grb_status = model.get( GRB_IntAttr_Status );
       fmt::print( "{}\n", model.get( GRB_DoubleAttr_ObjVal ) );

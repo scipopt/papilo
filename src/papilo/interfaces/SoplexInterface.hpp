@@ -144,7 +144,7 @@ class SoplexInterface : public SolverInterface<REAL>
           const ComponentInfo& component ) override
    {
       using namespace soplex;
-
+      assert( problem.getSymmetries().symmetries.empty() );
       const VariableDomains<REAL>& domains = problem.getVariableDomains();
       const Objective<REAL>& obj = problem.getObjective();
       const auto& consMatrix = problem.getConstraintMatrix();
