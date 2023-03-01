@@ -129,17 +129,30 @@ class RoundingsatInterface : public SolverInterface<REAL>
             }
          }
       }
-      //TODO: test symmetries to problem -> implement for other solvers
+      //TODO: test symmetries to problem
       for( int symmetry_index = 0; symmetry_index < problem.getSymmetries().symmetries.size(); ++symmetry_index )
       {
-//         assert( problem.test_problem_type(ProblemFlag::kBinary) );
+         assert( problem.test_problem_type(ProblemFlag::kBinary) );
          input->reset();
          auto& symmetry = problem.getSymmetries().symmetries[symmetry_index];
          int col1 = symmetry.getDominatingCol() + 1;
          int col2 = symmetry.getDominatedCol() + 1;
-         input->addLhs( 1, col1 + 1 );
-         input->addLhs( -1, col2 +1 );
-         input->addRhs( 0 );
+         switch( symmetry.getSymmetryType() )
+         {
+         case SymmetryType::kXgeY:
+            input->addLhs( 1, col1 + 1 );
+            input->addLhs( -1, col2 + 1 );
+            input->addRhs( 0 );
+            break;
+         case SymmetryType::kXplusYge1:
+            input->addLhs( 1, col1 + 1 );
+            input->addLhs( 1, col2 + 1 );
+            input->addRhs( 1 );
+            break;
+         default:
+            assert( false );
+         }
+
          const std::pair<rs::ID, rs::ID>& pair =
              rs::run::solver.addConstraint( input, rs::Origin::FORMULA );
          if( pair.second == rs::ID_Unsat )

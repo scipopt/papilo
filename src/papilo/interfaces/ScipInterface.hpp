@@ -137,14 +137,29 @@ class ScipInterface : public SolverInterface<REAL>
       {
          assert(problem.test_problem_type( ProblemFlag::kBinary));
          SCIP_CONS* cons;
-         SCIP_Real lhs = 0;
+         SCIP_Real lhs;
          SCIP_Real rhs = SCIPinfinity( scip ) ;
          auto  symmetry = symmetries[i];
 
-         consvars[0] = vars[symmetry.getDominatingCol()];
-         consvals[0] = SCIP_Real( 1 );
-         consvars[1] = vars[symmetry.getDominatedCol()];
-         consvals[1] = SCIP_Real( -1 );
+         switch( symmetry.getSymmetryType() )
+         {
+         case SymmetryType::kXgeY:
+            consvars[0] = vars[symmetry.getDominatingCol()];
+            consvals[0] = SCIP_Real( 1 );
+            consvars[1] = vars[symmetry.getDominatedCol()];
+            consvals[1] = SCIP_Real( -1 );
+            lhs = 0;
+            break;
+         case SymmetryType::kXplusYge1:
+            consvars[0] = vars[symmetry.getDominatingCol()];
+            consvals[0] = SCIP_Real( 1 );
+            consvars[1] = vars[symmetry.getDominatedCol()];
+            consvals[1] = SCIP_Real( 1 );
+            lhs = 1;
+         default:
+            assert( false );
+         }
+
 
          SCIP_CALL( SCIPcreateConsBasicLinear(
              scip, &cons, ("Sym"+ std::to_string(i)).c_str(), 2,

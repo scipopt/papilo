@@ -303,8 +303,8 @@ ParallelColDetection<REAL>::findParallelCols(
                 !symmetries.contains_symmetry(col1, col2) &&
                 !checkDomainsForHoles( col1, col2, coefs1[0] / coefs2[0] ) )
             {
-               if(is_binary && coefs1[0] / coefs2[0] != 1)
-                  continue ;
+               if( is_binary && abs( coefs1[0] / coefs2[0] ) != 1 )
+                  continue;
                TransactionGuard<REAL> tg{ reductions };
                reductions.lockCol( col2 );
                reductions.lockCol( col1 );

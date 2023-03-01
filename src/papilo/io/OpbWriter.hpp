@@ -195,9 +195,22 @@ struct OpbWriter
       }
       for( auto sym_c : sym )
       {
-         fmt::print( out, "+1 {} +1 ~{} >= 1\n",
-                     varnames[col_mapping[sym_c.getDominatingCol()]],
-                     varnames[col_mapping[sym_c.getDominatedCol()]] );
+         switch( sym_c.getSymmetryType() )
+         {
+         case SymmetryType::kXgeY:
+            fmt::print( out, "+1 {} +1 ~{} >= 1\n",
+                        varnames[col_mapping[sym_c.getDominatingCol()]],
+                        varnames[col_mapping[sym_c.getDominatedCol()]] );
+            break;
+         case SymmetryType::kXplusYge1:
+            fmt::print( out, "+1 {} +1 {} >= 1\n",
+                        varnames[col_mapping[sym_c.getDominatingCol()]],
+                        varnames[col_mapping[sym_c.getDominatedCol()]] );
+            break;
+         default:
+            assert( false );
+         }
+
       }
 
       return true;

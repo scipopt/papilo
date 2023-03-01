@@ -255,6 +255,7 @@ struct MpsWriter
          }
       }
       fmt::print( out, "ENDATA\n" );
+      //TODO: add symmetries
    }
 };
 

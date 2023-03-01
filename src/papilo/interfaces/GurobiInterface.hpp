@@ -128,10 +128,26 @@ class GurobiInterface : public SolverInterface<REAL>
       for( int i = 0; i < symmetries.size(); ++i )
       {
          GRBLinExpr grbLinExpr = 0;
-         grbLinExpr += vars[symmetries[i].getDominatingCol()];
-         grbLinExpr -= vars[symmetries[i].getDominatedCol()];
+         auto& symmetry = symmetries[i];
+         double lhs;
+         switch( symmetry.getSymmetryType() )
+         {
+         case SymmetryType::kXgeY:
+            grbLinExpr += vars[symmetry.getDominatingCol()];
+            grbLinExpr -= vars[symmetry.getDominatedCol()];
+            lhs = 0;
+            break;
+         case SymmetryType::kXplusYge1:
+            grbLinExpr += vars[symmetry.getDominatingCol()];
+            grbLinExpr += vars[symmetry.getDominatedCol()];
+            lhs = 1;
+            break;
+         default:
+            assert( false );
+         }
+
          if( !consMatrix.getRowFlags()[i].test( RowFlag::kLhsInf ) )
-            model.addConstr( grbLinExpr, GRB_GREATER_EQUAL, double( 0 ),
+            model.addConstr( grbLinExpr, GRB_GREATER_EQUAL, lhs,
                              "symmetry_" + std::to_string(i) );
 
          model.update();

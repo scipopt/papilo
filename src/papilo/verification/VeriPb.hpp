@@ -1151,10 +1151,24 @@ class VeriPb : public CertificateInterface<REAL>
       {
          auto name_dominating = names[var_mapping[symmetry.getDominatingCol()]];
          auto name_dominated = names[var_mapping[symmetry.getDominatedCol()]];
-         proof_out << RED << "1 " << name_dominating << " +1 " << NEGATED
-                   << name_dominated << " >= 1 ; " << name_dominating << " -> "
-                   << name_dominated << " " << name_dominated << " -> "
-                   << name_dominating << "\n";
+         switch( symmetry.getSymmetryType() )
+         {
+         case SymmetryType::kXgeY:
+            proof_out << RED << "1 " << name_dominating << " +1 " << NEGATED
+                      << name_dominated << " >= 1 ; " << name_dominating << " -> "
+                      << name_dominated << " " << name_dominated << " -> "
+                      << name_dominating << "\n";
+            break;
+         case SymmetryType::kXplusYge1:
+            proof_out << RED << "1 " << name_dominating << " +1 "
+                      << name_dominated << " >= 1 ; " << name_dominating << " -> ~"
+                      << name_dominated << " " << name_dominated << " -> ~"
+                      << name_dominating << "\n";
+            break;
+         default:
+            assert(false);
+         }
+
       }
    };
 

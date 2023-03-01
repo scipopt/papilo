@@ -32,11 +32,19 @@
 namespace papilo
 {
 
+/// possible types of post solving
+enum class SymmetryType : int
+{
+   kXgeY = 0,
+   kXplusYge1 = 1,
+};
+
 struct Symmetry
 {
 //   REAL val;
    int dominating_col;
    int dominated_col;
+   SymmetryType symmetryType;
 
    int
    getDominatingCol() const
@@ -50,10 +58,16 @@ struct Symmetry
       return dominated_col;
    }
 
+   SymmetryType
+   getSymmetryType() const
+   {
+      return symmetryType;
+   }
+
    Symmetry() = default;
 
-   Symmetry( int _dominating_col, int _dominated_col )
-       : dominating_col( _dominating_col ), dominated_col( _dominated_col )
+   Symmetry( int _dominating_col, int _dominated_col, SymmetryType _type )
+       : dominating_col( _dominating_col ), dominated_col( _dominated_col ), symmetryType(_type)
    {
    }
 
@@ -64,15 +78,16 @@ struct Symmetry
    {
       ar& dominating_col;
       ar& dominated_col;
+      ar& symmetryType;
    }
 };
 
 struct SymmetryStorage
 {
    void
-   addSymmetry( int dominating_dominated_col, int dominated_col )
+   addSymmetry( int dominating_dominated_col, int dominated_col, SymmetryType symmetryType )
    {
-      symmetries.emplace_back( dominating_dominated_col, dominated_col );
+      symmetries.emplace_back( dominating_dominated_col, dominated_col, symmetryType );
    }
 
    Symmetry
@@ -86,7 +101,7 @@ struct SymmetryStorage
                dominating_col == symmetry.dominating_col ) )
             return symmetry;
       }
-      return { -1, -1 };
+      return { -1, -1, SymmetryType::kXgeY };
    }
 
    bool
@@ -124,7 +139,8 @@ struct SymmetryStorage
              colmapping[symmetries[i].getDominatedCol()] == -1 )
             continue;
          symmetries[newSize] = { colmapping[symmetries[i].getDominatingCol()],
-                                 colmapping[symmetries[i].getDominatedCol()] };
+                                 colmapping[symmetries[i].getDominatedCol()],
+                                 symmetries[i].getSymmetryType()};
          newSize++;
       }
       symmetries.resize( newSize );
