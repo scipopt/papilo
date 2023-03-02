@@ -732,8 +732,11 @@ MpsParser<REAL>::parseBounds( boost::iostreams::filtering_istream& file )
       }
       else
       {
-         std::cerr << "unknown bound type " << word_ref << std::endl;
-         exit( 1 );
+         if( word_ref == "INDICATORS" )
+            std::cerr << "PaPILO does not support INDICATORS in the MPS file!!"<< std::endl;
+         else
+            std::cerr << "unknown bound type " << word_ref << std::endl;
+         return ParseKey::kFail;
       }
 
       // parse over next word
