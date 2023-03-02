@@ -120,6 +120,8 @@ class ParallelColDetection : public PresolveMethod<REAL>
    {
       if( presolveOptions.dualreds < 2 )
          this->setEnabled( false );
+      if( problem.test_problem_type( ProblemFlag::kBinary ) )
+         this->setDelayed( true );
       return false;
    }
 
