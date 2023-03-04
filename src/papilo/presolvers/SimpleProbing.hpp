@@ -193,9 +193,6 @@ SimpleProbing<REAL>::perform_simple_probing_step(
       assert( domains.upper_bounds[col] == 1 );
       assert( cflags[col].test( ColFlag::kIntegral ) );
 
-      Message::debug( this,
-                      "probing on simple equation detected {} substitutions\n",
-                      rowlen - 1 );
       calculateReductionsForSimpleProbing( num, reductions, domains, rowvals, rowcols, rowlen, col, rowvals[k] );
       status = PresolveStatus::kReduced;
    }
