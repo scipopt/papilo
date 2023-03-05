@@ -617,6 +617,7 @@ ProbingView<REAL>::analyzeImplications()
             probing_lower_bounds[boundChg.col] ==
                 probing_upper_bounds[boundChg.col] );
 
+      // for stability only replace column with sufficient range
       if( impliedFixing && fixed &&
           !num.isFeasEq( probing_lower_bounds[boundChg.col], boundChg.bound ) )
       { // column is fixed to different values in both probing branches
