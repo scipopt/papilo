@@ -2390,6 +2390,7 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
                                        ColFlag::kSubstituted ) )
                {
                   assert( cflags[col2].test( ColFlag::kFixed ) );
+                  assert( abs(factor) < std::numeric_limits<REAL>::infinity() );
                   if( fixCol( col1, factor * lbs[col2] + offset ) ==
                       PresolveStatus::kInfeasible )
                      return ApplyResult::kInfeasible;
@@ -2398,6 +2399,7 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
                                             ColFlag::kSubstituted ) )
                {
                   assert( cflags[col1].test( ColFlag::kFixed ) );
+                  assert( !num.isFeasZero(factor) );
                   // skip substitution if factor is too small -> in this case the result would be very likely infeasible
                   if( num.isZero( factor ) )
                      break;
