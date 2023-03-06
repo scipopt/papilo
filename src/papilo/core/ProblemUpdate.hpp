@@ -2359,7 +2359,6 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
             if(problem.test_problem_type(ProblemFlag::kBinary))
             {
                assert( col2scale == 1 || col2scale == -1 );
-               stats.nsymmetries++;
 
                problem.getSymmetries().addSymmetry(
                    col2, col1,

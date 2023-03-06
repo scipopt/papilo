@@ -118,10 +118,9 @@ class ParallelColDetection : public PresolveMethod<REAL>
    initialize( const Problem<REAL>& problem,
                const PresolveOptions& presolveOptions ) override
    {
-      if( presolveOptions.dualreds < 2 )
+      if( presolveOptions.dualreds < 2 ||
+          problem.test_problem_type( ProblemFlag::kBinary ) )
          this->setEnabled( false );
-      if( problem.test_problem_type( ProblemFlag::kBinary ) )
-         this->setDelayed( true );
       return false;
    }
 
@@ -302,7 +301,7 @@ ParallelColDetection<REAL>::findParallelCols(
             bool parallel = check_parallelity( num, obj, col1, length, coefs1,
                                                col2, coefs2 );
             if( parallel &&
-                !symmetries.contains_symmetry(col1, col2) &&
+//                !symmetries.contains_symmetry(col1, col2) &&
                 !checkDomainsForHoles( col1, col2, coefs1[0] / coefs2[0] ) )
             {
                if( is_binary && abs( coefs1[0] / coefs2[0] ) != 1 )

@@ -1311,7 +1311,7 @@ Presolve<REAL>::are_applied_tsx_negligible( const Problem<REAL>& problem,
    double abort_factor = problem.getNumIntegralCols() == 0
                              ? presolveOptions.lpabortfac
                              : presolveOptions.abortfac;
-   if( roundStats.ndeletedcols == 0 && roundStats.nsymmetries == 0 &&
+   if( roundStats.ndeletedcols == 0 &&
        roundStats.ndeletedrows == 0 && roundStats.ncoefchgs == 0 &&
        presolveOptions.max_consecutive_rounds_of_only_bound_changes >= 0 )
    {
@@ -1322,7 +1322,7 @@ Presolve<REAL>::are_applied_tsx_negligible( const Problem<REAL>& problem,
    else
       stats.consecutive_rounds_of_only_boundchanges = 0;
 
-   return ( 0.1 * roundStats.nboundchgs + roundStats.ndeletedcols + roundStats.nsymmetries ) <=
+   return ( 0.1 * roundStats.nboundchgs + roundStats.ndeletedcols ) <=
               abort_factor * probUpdate.getNActiveCols() &&
           ( roundStats.nsidechgs + roundStats.ndeletedrows ) <=
               abort_factor * probUpdate.getNActiveRows() &&
@@ -1344,8 +1344,7 @@ Presolve<REAL>::increase_round_if_last_run_was_not_successfull(
          lastRoundReduced =
              lastRoundReduced || roundStats.nsidechgs > 0 ||
              roundStats.nboundchgs > 0 || roundStats.ndeletedcols > 0 ||
-             roundStats.ndeletedrows > 0 || roundStats.ncoefchgs > 0 ||
-             roundStats.nsymmetries > 0;
+             roundStats.ndeletedrows > 0 || roundStats.ncoefchgs > 0;
          next_round = increase_delegator( round_to_evaluate );
       }
       else

@@ -39,19 +39,16 @@ struct Statistics
    int ndeletedcols;
    int ndeletedrows;
    int consecutive_rounds_of_only_boundchanges;
-   int nsymmetries;
 
    Statistics( double _presolvetime, int _ntsxapplied, int _ntsxconflicts,
                int _nboundchgs, int _nsidechgs, int _ncoefchgs, int _nrounds,
-               int _ndeletedcols, int _ndeletedrows, int _consecutive_rounds_of_only_boundchanges,
-               int _nsymmetries
+               int _ndeletedcols, int _ndeletedrows, int _consecutive_rounds_of_only_boundchanges
                    )
        : presolvetime( _presolvetime ), ntsxapplied( _ntsxapplied ),
          ntsxconflicts( _ntsxconflicts ), nboundchgs( _nboundchgs ),
          nsidechgs( _nsidechgs ), ncoefchgs( _ncoefchgs ), nrounds( _nrounds ),
          ndeletedcols( _ndeletedcols ), ndeletedrows( _ndeletedrows ),
-         consecutive_rounds_of_only_boundchanges(_consecutive_rounds_of_only_boundchanges),
-         nsymmetries(_nsymmetries)
+         consecutive_rounds_of_only_boundchanges(_consecutive_rounds_of_only_boundchanges)
    {
    }
 
@@ -59,7 +56,7 @@ struct Statistics
        : presolvetime( 0.0 ), ntsxapplied( 0 ), ntsxconflicts( 0 ),
          nboundchgs( 0 ), nsidechgs( 0 ), ncoefchgs( 0 ), nrounds( 0 ),
          ndeletedcols( 0 ), ndeletedrows( 0 ),
-         consecutive_rounds_of_only_boundchanges( 0 ), nsymmetries(0)
+         consecutive_rounds_of_only_boundchanges( 0 )
    {
    }
 };
@@ -71,8 +68,8 @@ operator-( const Statistics& a, const Statistics& b )
        0.0, a.ntsxapplied - b.ntsxapplied, a.ntsxconflicts - b.ntsxconflicts,
        a.nboundchgs - b.nboundchgs, a.nsidechgs - b.nsidechgs,
        a.ncoefchgs - b.ncoefchgs, a.nrounds - b.nrounds,
-       a.ndeletedcols - b.ndeletedcols, a.ndeletedrows - b.ndeletedrows, a.consecutive_rounds_of_only_boundchanges,
-       a.nsymmetries - b.nsymmetries};
+       a.ndeletedcols - b.ndeletedcols, a.ndeletedrows - b.ndeletedrows, a.consecutive_rounds_of_only_boundchanges
+   };
 }
 
 } // namespace papilo
