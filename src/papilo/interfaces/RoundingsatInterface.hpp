@@ -263,17 +263,19 @@ class RoundingsatInterface : public SolverInterface<REAL>
          return ;
 
       rs::run::solver.initLP( objective );
+      bool satisfiable = rs::run::solver.foundSolution();
+
 
       rs::run::run( objective );
-      bool time_expired = rs::stats.getTime() > rs::options.time_limit.get() ;
-      if (time_expired)
-      {
+      bool time_expired = rs::stats.getTime() > rs::options.time_limit.get();
+      if( time_expired && !satisfiable )
+         // postsolving not possible -> so return error to avoid it
          this->status = SolverStatus::kError;
-         return;
-      }
-      bool satisfiable = rs::run::solver.foundSolution();
-      this->status =
-          satisfiable ? SolverStatus::kOptimal : SolverStatus::kError;
+      else if( time_expired )
+         this->status = SolverStatus::kInterrupted;
+      else
+         this->status =
+             satisfiable ? SolverStatus::kOptimal : SolverStatus::kInfeasible;
    }
 
    REAL
