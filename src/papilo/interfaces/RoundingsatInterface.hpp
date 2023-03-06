@@ -240,6 +240,7 @@ class RoundingsatInterface : public SolverInterface<REAL>
    void
    setTimeLimit( double tlim ) override
    {
+      rs::options.time_limit.parse( std::to_string(tlim));
    }
 
    void
@@ -264,8 +265,12 @@ class RoundingsatInterface : public SolverInterface<REAL>
       rs::run::solver.initLP( objective );
 
       rs::run::run( objective );
-
-      // TODO how to detect (infeasibility or) time limit reached
+      bool time_expired = rs::stats.getTime() > rs::options.time_limit.get() ;
+      if (time_expired)
+      {
+         this->status = SolverStatus::kError;
+         return;
+      }
       bool satisfiable = rs::run::solver.foundSolution();
       this->status =
           satisfiable ? SolverStatus::kOptimal : SolverStatus::kError;

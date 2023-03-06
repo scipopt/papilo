@@ -374,29 +374,41 @@ presolve_and_solve(
             postsolve( result.postsolve, solution, opts.objective_reference,
                        opts.orig_solution_file, opts.orig_dual_solution_file,
                        opts.orig_reduced_costs_file, opts.orig_basis_file );
-
-         if( status == SolverStatus::kInfeasible )
+         solvetime = t.getTime();
+         switch( status )
+         {
+         case SolverStatus::kInfeasible:
             fmt::print(
                 "\nsolving detected infeasible problem after {:.3f} seconds\n",
                 presolve.getStatistics().presolvetime + solvetime + writetime );
-         else if( status == SolverStatus::kUnbounded )
+            break;
+         case SolverStatus::kUnbounded:
             fmt::print(
                 "\nsolving detected unbounded problem after {:.3f} seconds\n",
                 presolve.getStatistics().presolvetime + solvetime + writetime );
-         else if( status == SolverStatus::kUnbndOrInfeas )
+            break;
+         case SolverStatus::kUnbndOrInfeas:
             fmt::print(
                 "\nsolving detected unbounded or infeasible problem after "
                 "{:.3f} seconds\n",
                 presolve.getStatistics().presolvetime + solvetime + writetime );
-         else
+            break;
+         case SolverStatus::kInterrupted:
+         case SolverStatus::kError:
+            fmt::print( "\nsolving interrupted after {:.3f} seconds\n",
+                        presolve.getStatistics().presolvetime + solvetime + writetime );
+            break;
+         default:
             fmt::print( "\nsolving finished after {:.3f} seconds\n",
                         presolve.getStatistics().presolvetime + solvetime +
                             writetime );
+            break;
+         }
       }
    }
    catch( std::bad_alloc& ex )
    {
-      fmt::print( "Memory out exception occured! Please assign more memory\n" );
+      fmt::print( "Memory out exception occurred! Please assign more memory\n" );
       return ResultStatus::kError;
    }
 
