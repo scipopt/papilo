@@ -597,6 +597,41 @@ Presolve<REAL>::apply( Problem<REAL>& problem, bool store_dual_postsolve )
 
       printPresolversStats();
 
+      //TODO: refactor
+      if( presolveOptions.symmetries == 1 )
+      {
+         double time = 0;
+         Timer t {time};
+         int index_parallel_col = -1;
+         for( int i = 0; i < presolvers.size(); ++i )
+            if( presolvers[i]->getName() == "parallelcols" )
+            {
+               index_parallel_col = i;
+               break;
+            }
+         if(index_parallel_col != -1)
+         {
+            assert( presolvers[index_parallel_col]->getName() ==
+                    "parallelcols" );
+            assert( !presolvers[index_parallel_col]->isEnabled() );
+            presolvers[index_parallel_col]->setEnabled( true );
+            results[index_parallel_col] = presolvers[index_parallel_col]->run(
+                problem, probUpdate, num, reductions[index_parallel_col], t );
+            apply_reduction_of_solver( probUpdate, index_parallel_col );
+            probUpdate.clearStates();
+            results[index_parallel_col] = PresolveStatus::kUnchanged;
+            reductions[index_parallel_col].clear();
+         }
+         else {
+            //TODO: required
+            fmt::print("not implemented");
+         }
+      }
+      else if(presolveOptions.symmetries == 2 )
+      {
+         fmt::print("not implemented");
+      }
+
       if( DependentRows<REAL>::Enabled &&
           ( presolveOptions.detectlindep == 2 ||
             ( problem.getNumIntegralCols() == 0 &&
