@@ -263,10 +263,9 @@ class RoundingsatInterface : public SolverInterface<REAL>
          return ;
 
       rs::run::solver.initLP( objective );
-      bool satisfiable = rs::run::solver.foundSolution();
-
-
       rs::run::run( objective );
+
+      bool satisfiable = rs::run::solver.foundSolution();
       bool time_expired = rs::stats.getTime() > rs::options.time_limit.get();
       if( time_expired && !satisfiable )
          // postsolving not possible -> so return error to avoid it
