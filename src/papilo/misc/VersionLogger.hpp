@@ -99,6 +99,9 @@ print_header()
 #ifdef PAPILO_HAVE_SOPLEX
    list_of_solvers.push_back( "SoPlex" );
 #endif
+#ifdef PAPILO_HAVE_ROUNDINGSAT
+   list_of_solvers.push_back( "ROUNDINGSAT" );
+#endif
    if( list_of_solvers.empty() )
       solvers = "none";
    else

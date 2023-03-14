@@ -57,14 +57,16 @@ else()
 endif()
 
 if(ROUNDINGSAT_DIR)
-   message(STATUS "Finding Roundingsat - found")
    set(PAPILO_HAVE_ROUNDINGSAT 1)
 endif()
 
 set(CMAKE_CXX_STANDARD 14)
 if(ROUNDINGSAT_DIR)
-   message("ROUNDINGSAT_DIR: ${ROUNDINGSAT_DIR}")
+   message("-- Found ROUNDINGSAT: ${ROUNDINGSAT_DIR}")
    set(CMAKE_CXX_STANDARD 17)
+else()
+   message(STATUS "Finding ROUNDINGSAT - not found")
+   set(PAPILO_HAVE_ROUNDINGSAT 0)
 endif()
 
 include_directories(${SCIP_INCLUDE_DIRS} ${SOPLEX_INCLUDE_DIRS} ${HIGHS_INCLUDE_DIRS} ${CMAKE_CURRENT_BINARY_DIR})

@@ -117,9 +117,9 @@ class RoundingsatInterface : public SolverInterface<REAL>
          }
          if( !consMatrix.getRowFlags()[row].test( RowFlag::kRhsInf ) )
          {
-            map_cons_to_lhs( input, row_coeff, row );
-            input->addRhs( to_int( rhs[row], scaling_row_factor[row] ) );
-            input->invert();
+            map_cons_to_rhs( input, row_coeff, row );
+            input->addRhs( -to_int( rhs[row], scaling_row_factor[row] ) );
+//            input->invert();
             const std::pair<rs::ID, rs::ID>& pair =
                 rs::run::solver.addConstraint( input, rs::Origin::FORMULA );
             if( pair.second == rs::ID_Unsat )
@@ -184,6 +184,21 @@ class RoundingsatInterface : public SolverInterface<REAL>
          int sat_var_index = row_coeff.getIndices()[j] + 1;
          assert( num.isIntegral( row_coeff.getValues()[j] * scaling_row_factor[row] )  );
          rs::bigint coeff = to_int( row_coeff.getValues()[j], scaling_row_factor[row]);
+         rs::run::solver.setNbVars( abs( sat_var_index ), true );
+         input->addLhs( coeff, sat_var_index );
+      }
+   }
+
+
+   void
+   map_cons_to_rhs( rs::CeArb& input, const SparseVectorView<REAL>& row_coeff, int row )
+   {
+      Num<REAL> num{};
+      for( int j = 0; j < row_coeff.getLength(); ++j )
+      {
+         int sat_var_index = row_coeff.getIndices()[j] + 1;
+         assert( num.isIntegral( -row_coeff.getValues()[j] * scaling_row_factor[row] )  );
+         rs::bigint coeff = to_int( -row_coeff.getValues()[j], scaling_row_factor[row]);
          rs::run::solver.setNbVars( abs( sat_var_index ), true );
          input->addLhs( coeff, sat_var_index );
       }
@@ -263,6 +278,7 @@ class RoundingsatInterface : public SolverInterface<REAL>
          return ;
 
       rs::run::solver.initLP( objective );
+      rs::run::solver.init( );
       rs::run::run( objective );
 
       bool satisfiable = rs::run::solver.foundSolution();
