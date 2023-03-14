@@ -163,5 +163,8 @@ bound_tightening_offset = 0.0001
 # PaPILO resumes with the next higher complexity class if the last n rounds only consisted of bound changes (-1 deactivated) [Integer: [-1,2147483647]]
  max_consecutive_rounds_of_only_bound_changes = 500
 
-# calculate symmetries (0: off, 1: instead of parallelcols, 2: extended dominated cols)
-presolve.symmetries = 0
+# should ParallelCols search for symmetries at the end (for example for binary problems where merging columns does not work)
+parallelcols.symmetries_enabled = 0
+
+# should DominatedCol search for symmetries at the end (for example for binary problems)
+domcol.symmetries_enabled = 0

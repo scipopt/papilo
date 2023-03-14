@@ -57,6 +57,17 @@ class DominatedCols : public PresolveMethod<REAL>
       return false;
    }
 
+   void
+   addPresolverParams( ParameterSet& paramSet ) override
+   {
+      paramSet.addParameter( "domcol.symmetries_enabled",
+                             "should DominatedCol search for symmetries at the end?",
+                             symmetries );
+   }
+
+   bool symmetries = false;
+
+
    /// stores implied bound information and signatures for a column
    struct ColInfo
    {
@@ -97,10 +108,18 @@ class DominatedCols : public PresolveMethod<REAL>
       BoundChange boundchg;
    };
 
+
    PresolveStatus
    execute( const Problem<REAL>& problem,
             const ProblemUpdate<REAL>& problemUpdate, const Num<REAL>& num,
             Reductions<REAL>& reductions, const Timer& timer ) override;
+
+   PresolveStatus
+   execute_symmetries( const Problem<REAL>& problem,
+                       const ProblemUpdate<REAL>& problemUpdate,
+                       const Num<REAL>& num, Reductions<REAL>& reductions,
+                       const Timer& timer ) override;
+
 };
 
 #ifdef PAPILO_USE_EXTERN_TEMPLATES
@@ -546,6 +565,20 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
    }
 
    return result;
+}
+
+template <typename REAL>
+PresolveStatus
+DominatedCols<REAL>::execute_symmetries( const Problem<REAL>& problem,
+                                                const ProblemUpdate<REAL>& problemUpdate,
+                                                const Num<REAL>& num, Reductions<REAL>& reductions,
+                                                const Timer& timer )
+{
+   if( !symmetries )
+      return PresolveStatus::kUnchanged;
+
+   //TODO: implement
+   return PresolveStatus::kUnchanged;
 }
 
 } // namespace papilo

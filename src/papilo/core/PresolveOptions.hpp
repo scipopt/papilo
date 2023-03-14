@@ -71,8 +71,6 @@ struct PresolveOptions
 
    int max_consecutive_rounds_of_only_bound_changes = 500;
 
-   int symmetries = 0;
-
    int threads = 0;
 
    int weakenlpvarbounds = 0;
@@ -180,9 +178,6 @@ struct PresolveOptions
       paramSet.addParameter( "presolve.threads",
                              "maximal number of threads to use (0: automatic)",
                              threads, 0 );
-      paramSet.addParameter( "presolve.symmetries",
-                             "calculate symmetries (0: off, 1: instead of parallelcols, 2: extended dominated cols)",
-                             symmetries, 0, 2 );
       paramSet.addParameter(
           "presolve.apply_results_immediately_if_run_sequentially",
           "# if only one thread (presolve.threads = 1) is used, apply the "

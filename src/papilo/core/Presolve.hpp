@@ -595,42 +595,36 @@ Presolve<REAL>::apply( Problem<REAL>& problem, bool store_dual_postsolve )
          probUpdate.check_and_compress();
       }
 
-      printPresolversStats();
-
-      //TODO: refactor
-      if( presolveOptions.symmetries == 1 )
+      //TODO: refactor symmetries
       {
          double time = 0;
-         Timer t {time};
          int index_parallel_col = -1;
          for( int i = 0; i < presolvers.size(); ++i )
-            if( presolvers[i]->getName() == "parallelcols" )
-            {
-               index_parallel_col = i;
-               break;
-            }
-         if(index_parallel_col != -1)
          {
-            assert( presolvers[index_parallel_col]->getName() ==
-                    "parallelcols" );
-            assert( !presolvers[index_parallel_col]->isEnabled() );
-            presolvers[index_parallel_col]->setEnabled( true );
-            results[index_parallel_col] = presolvers[index_parallel_col]->run(
-                problem, probUpdate, num, reductions[index_parallel_col], t );
-            apply_reduction_of_solver( probUpdate, index_parallel_col );
+            auto res = presolvers[i]->run_symmetries(
+                problem, probUpdate, num, reductions[i], timer );
+            if( res == PresolveStatus::kUnchanged)
+               continue;
+            if(problem.getSymmetries().symmetries.size() > 0)
+            {
+               fmt::print("Currently only 1 presolver can search for symmetries. Skipping symmetries...\n");
+               continue;
+            }
+            presolverStats[i].first += reductions[i].getTransactions().size();
+            presolverStats[i].second += reductions[i].getTransactions().size();
+            for(Reduction<REAL> red: reductions[i].getReductions())
+            {
+               assert(red.row == ColReduction::PARALLEL || red.row == ColReduction::LOCKED);
+               if(red.row == ColReduction::LOCKED)
+                  continue;
+               probUpdate.applySymmetry( red );
+            }
             probUpdate.clearStates();
-            results[index_parallel_col] = PresolveStatus::kUnchanged;
-            reductions[index_parallel_col].clear();
-         }
-         else {
-            //TODO: required
-            fmt::print("not implemented");
+            reductions[i].clear();
          }
       }
-      else if(presolveOptions.symmetries == 2 )
-      {
-         fmt::print("not implemented");
-      }
+
+      printPresolversStats();
 
       if( DependentRows<REAL>::Enabled &&
           ( presolveOptions.detectlindep == 2 ||

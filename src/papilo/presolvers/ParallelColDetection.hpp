@@ -107,6 +107,15 @@ class ParallelColDetection : public PresolveMethod<REAL>
    computeSupportId( const ConstraintMatrix<REAL>& constMatrix,
                      unsigned int* supportHashes );
 
+   void
+   addPresolverParams( ParameterSet& paramSet ) override
+   {
+      paramSet.addParameter( "parallelcols.symmetries_enabled",
+          "should Parallel Cols search for symmetries at the end (for example "
+          "for binary problems where merging columns does not work)",
+          symmetries );
+   }
+
  public:
    ParallelColDetection() : PresolveMethod<REAL>()
    {
@@ -129,6 +138,12 @@ class ParallelColDetection : public PresolveMethod<REAL>
             const ProblemUpdate<REAL>& problemUpdate, const Num<REAL>& num,
             Reductions<REAL>& reductions, const Timer& timer ) override;
 
+   PresolveStatus
+   execute_symmetries( const Problem<REAL>& problem,
+                       const ProblemUpdate<REAL>& problemUpdate,
+                       const Num<REAL>& num, Reductions<REAL>& reductions,
+                       const Timer& timer ) override;
+
  private:
    int
    determineBucketSize( int nColumns,
@@ -149,6 +164,8 @@ class ParallelColDetection : public PresolveMethod<REAL>
    bool
    determineOderingForZeroObj( REAL val1, REAL val2, int colpermCol1,
             int colpermCol2 ) const;
+
+   bool symmetries = false;
 };
 
 #ifdef PAPILO_USE_EXTERN_TEMPLATES
@@ -602,6 +619,25 @@ ParallelColDetection<REAL>::execute( const Problem<REAL>& problem,
 }
 
 template <typename REAL>
+PresolveStatus
+ParallelColDetection<REAL>::execute_symmetries( const Problem<REAL>& problem,
+                    const ProblemUpdate<REAL>& problemUpdate,
+                    const Num<REAL>& num, Reductions<REAL>& reductions,
+                    const Timer& timer )
+{
+   if( !symmetries )
+      return PresolveStatus::kUnchanged;
+   if( this->isEnabled() )
+   {
+      fmt::print( "For Symmetries parallel columns need to be "
+                  "disabled!\n" );
+      return PresolveStatus::kUnchanged;
+   }
+
+   return execute( problem, problemUpdate, num, reductions, timer );
+}
+
+template <typename REAL>
 int
 ParallelColDetection<REAL>::determineBucketSize(
     int nColumns, std::unique_ptr<unsigned int[]>& supportid,
@@ -620,6 +656,7 @@ ParallelColDetection<REAL>::determineBucketSize(
    assert( j > i );
    return j - i;
 }
+
 template <typename REAL>
 bool
 ParallelColDetection<REAL>::determineOderingForZeroObj( REAL val1, REAL val2,

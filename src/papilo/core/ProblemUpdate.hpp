@@ -185,6 +185,9 @@ class ProblemUpdate
    changeLB( int col, REAL val, ArgumentType argument = ArgumentType::kPrimal );
 
    void
+   applySymmetry(const Reduction<REAL>& red);
+
+   void
    merge_parallel_columns(
        int col1, int col2, REAL col2scale,
        ConstraintMatrix<REAL>& constraintMatrix, Vec<REAL>& lbs, Vec<REAL>& ubs,
@@ -2356,17 +2359,7 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
 
 
             ++stats.ndeletedcols;
-            if(problem.test_problem_type(ProblemFlag::kBinary))
-            {
-               assert( col2scale == 1 || col2scale == -1 );
-
-               problem.getSymmetries().addSymmetry(
-                   col2, col1,
-                   col2scale == 1 ? SymmetryType::kXgeY
-                                  : SymmetryType::kXplusYge1 );
-            }
-            else
-               merge_parallel_columns( col1, col2, col2scale, constraintMatrix,
+             merge_parallel_columns( col1, col2, col2scale, constraintMatrix,
                                     lbs, ubs, cflags );
 
             break;
@@ -2861,6 +2854,29 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
 
    // no conflicts found
    return ApplyResult::kApplied;
+}
+
+template <typename REAL>
+void
+ProblemUpdate<REAL>::applySymmetry( const Reduction<REAL>& reduction )
+{
+   int col1 = reduction.col;
+   int col2 = static_cast<int>( reduction.newval );
+   auto col1vec = problem.getConstraintMatrix().getColumnCoefficients( col1 );
+   auto col2vec = problem.getConstraintMatrix().getColumnCoefficients( col2 );
+   const REAL* vals1 = col1vec.getValues();
+   const REAL* vals2 = col2vec.getValues();
+   assert( col1vec.getLength() > 0 );
+   REAL col2scale = vals1[0] / vals2[0];
+   assert( col2vec.getLength() == col1vec.getLength() );
+   assert( num.isEq( problem.getObjective().coefficients[col1],
+                     problem.getObjective().coefficients[col2] * col2scale ) );
+   assert( col2scale == 1 || col2scale == -1 );
+
+   problem.getSymmetries().addSymmetry(
+       col2, col1,
+       col2scale == 1 ? SymmetryType::kXgeY : SymmetryType::kXplusYge1 );
+
 }
 
 template <typename REAL>
