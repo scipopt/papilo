@@ -106,7 +106,7 @@ struct OpbWriter
              !num.isIntegral( rhs[i] * row_scaling[i] ) )
          {
             fmt::print( "Lhs/Rhs contains fractional values. Opb is not the "
-                        "write format." );
+                        "correct format.\n" );
             return false;
          }
       }
@@ -153,7 +153,7 @@ struct OpbWriter
          assert( !matrix.isRowRedundant( row ) );
          char type;
          if( row_flags[row].test( RowFlag::kEquation ) ||
-             row_flags[row].test( RowFlag::kRhsInf ) )
+             !row_flags[row].test( RowFlag::kLhsInf ) )
          {
             assert( !row_flags[row].test( RowFlag::kLhsInf ) );
             auto vector = matrix.getRowCoefficients( row );
@@ -174,9 +174,9 @@ struct OpbWriter
             fmt::print( out, " {} ;\n",
                         num.round_to_int( lhs[row] * row_scaling[row] ) );
          }
-         else
+         if(!row_flags[row].test( RowFlag::kEquation ) &&
+             !row_flags[row].test( RowFlag::kRhsInf ))
          {
-            assert( row_flags[row].test( RowFlag::kLhsInf ) );
             assert( !row_flags[row].test( RowFlag::kRhsInf ) );
             auto vector = matrix.getRowCoefficients( row );
             for( int j = 0; j < vector.getLength(); j++ )
