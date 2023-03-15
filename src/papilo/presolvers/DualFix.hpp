@@ -64,6 +64,11 @@ class DualFix : public PresolveMethod<REAL>
                              is_fix_to_infinity_allowed );
    }
 
+   void
+   set_fix_to_infinity_allowed( bool val){
+       is_fix_to_infinity_allowed = val;
+   };
+
    PresolveStatus
    execute( const Problem<REAL>& problem,
             const ProblemUpdate<REAL>& problemUpdate, const Num<REAL>& num,
