@@ -596,6 +596,7 @@ Presolve<REAL>::apply( Problem<REAL>& problem, bool store_dual_postsolve )
       }
 
       //TODO: refactor symmetries
+      if(probUpdate.getProblem().getNCols() > 0)
       {
          double time = 0;
          int index_parallel_col = -1;
