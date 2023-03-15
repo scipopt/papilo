@@ -141,6 +141,10 @@ print_header()
                "for linear optimization (https://www.maths.ed.ac.uk/hall/HiGHS/) [GitHash: {}]\n" , "pre-release",
     "TBD");
 #endif
+#ifdef PAPILO_HAVE_ROUNDINGSAT
+    fmt::print( "  RoundingSAT    \t SAT Solver "
+                "(https://gitlab.com/MIAOresearch/software/roundingsat)\n");
+#endif
     //TODO
 #ifdef PAPILO_HAVE_GLOP
     fmt::print( "  ORTOOLS  {}.{}   \t fast and portable software for combinatorial optimization developed by Google.\n" ,
