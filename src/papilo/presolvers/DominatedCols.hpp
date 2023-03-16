@@ -577,7 +577,322 @@ DominatedCols<REAL>::execute_symmetries( const Problem<REAL>& problem,
    if( !symmetries )
       return PresolveStatus::kUnchanged;
 
-   //TODO: implement
+   const auto& obj = problem.getObjective().coefficients;
+   const auto& consMatrix = problem.getConstraintMatrix();
+   const auto& lbValues = problem.getLowerBounds();
+   const auto& ubValues = problem.getUpperBounds();
+   const auto& lhsValues = consMatrix.getLeftHandSides();
+   const auto& rhsValues = consMatrix.getRightHandSides();
+   const auto& rflags = consMatrix.getRowFlags();
+   const auto& cflags = problem.getColFlags();
+   const auto& activities = problem.getRowActivities();
+   const auto& rowsize = consMatrix.getRowSizes();
+   const int ncols = problem.getNCols();
+
+   Vec<ColInfo> colinfo( ncols );
+
+   // compute signatures  of all columns in parallel
+#ifdef PAPILO_TBB
+   tbb::parallel_for(
+       tbb::blocked_range<int>( 0, ncols ),
+       [&]( const tbb::blocked_range<int>& r )
+       {
+          for( int col = r.begin(); col != r.end(); ++col )
+#else
+   for( int col = 0; col != ncols; ++col )
+#endif
+          {
+             auto colvec = consMatrix.getColumnCoefficients( col );
+             int collen = colvec.getLength();
+             const int* colrows = colvec.getIndices();
+             const REAL* colvals = colvec.getValues();
+             for( int j = 0; j != collen; ++j )
+             {
+                int row = colrows[j];
+                if( !rflags[row].test( RowFlag::kLhsInf, RowFlag::kRhsInf ) )
+                {
+                   // ranged row or equality, add to positive and negative
+                   // signature
+                   colinfo[col].pos.add( row );
+                   colinfo[col].neg.add( row );
+                }
+                else if( rflags[row].test( RowFlag::kLhsInf ) )
+                {
+                   // <= constraint, add to positive signature for positive
+                   // coefficient and negative signature otherwise
+                   if( colvals[j] < 0 )
+                      colinfo[col].neg.add( row );
+                   else
+                      colinfo[col].pos.add( row );
+                }
+                else
+                {
+                   // >= constraint, add to positive signature for negative
+                   // coefficient and negative signature otherwise
+                   assert( rflags[row].test( RowFlag::kRhsInf ) );
+                   if( colvals[j] < 0 )
+                      colinfo[col].pos.add( row );
+                   else
+                      colinfo[col].neg.add( row );
+                }
+             }
+          }
+#ifdef PAPILO_TBB
+       } );
+#endif
+
+   auto checkDominance = [&]( int col1, int col2, int scal1, int scal2 )
+   {
+      assert( !cflags[col1].test( ColFlag::kIntegral ) ||
+              cflags[col2].test( ColFlag::kIntegral ) );
+
+      // first check if the signatures rule out domination
+      if( !colinfo[col1].allowsDomination( scal1, colinfo[col2], scal2 ) )
+         return false;
+
+      auto col1vec = consMatrix.getColumnCoefficients( col1 );
+      int col1len = col1vec.getLength();
+      const int* col1rows = col1vec.getIndices();
+      const REAL* col1vals = col1vec.getValues();
+
+      auto col2vec = consMatrix.getColumnCoefficients( col2 );
+      int col2len = col2vec.getLength();
+      const int* col2rows = col2vec.getIndices();
+      const REAL* col2vals = col2vec.getValues();
+
+      int i = 0;
+      int j = 0;
+
+      while( i != col1len && j != col2len )
+      {
+         REAL val1;
+         REAL val2;
+         RowFlags rowf;
+
+         if( col1rows[i] == col2rows[j] )
+         {
+            val1 = col1vals[i] * scal1;
+            val2 = col2vals[j] * scal2;
+            rowf = rflags[col1rows[i]];
+
+            ++i;
+            ++j;
+         }
+         else if( col1rows[i] < col2rows[j] )
+         {
+            val1 = col1vals[i] * scal1;
+            val2 = 0;
+            rowf = rflags[col1rows[i]];
+
+            ++i;
+         }
+         else
+         {
+            assert( col1rows[i] > col2rows[j] );
+            val1 = 0;
+            val2 = col2vals[j] * scal2;
+            rowf = rflags[col2rows[j]];
+
+            ++j;
+         }
+
+         if( !rowf.test( RowFlag::kLhsInf, RowFlag::kRhsInf ) )
+         {
+            // ranged row or equality, values must be equal
+            if( !num.isEq( val1, val2 ) )
+               return false;
+         }
+         else if( rowf.test( RowFlag::kLhsInf ) )
+         {
+            // <= constraint, col1 must have a smaller or equal coefficient
+            if( num.isGT( val1, val2 ) )
+               return false;
+         }
+         else
+         {
+            // >= constraint, col1 must have a larger or equal coefficient
+            assert( rowf.test( RowFlag::kRhsInf ) );
+            if( num.isLT( val1, val2 ) )
+               return false;
+         }
+      }
+
+      while( i != col1len )
+      {
+         REAL val1 = col1vals[i] * scal1;
+         RowFlags rowf = rflags[col1rows[i]];
+         ++i;
+
+         if( !rowf.test( RowFlag::kLhsInf, RowFlag::kRhsInf ) )
+         {
+            // ranged row or equality, values must be equal
+            return false;
+         }
+         else if( rowf.test( RowFlag::kLhsInf ) )
+         {
+            // <= constraint, col1 must have a smaller or equal coefficient
+            if( num.isGT( val1, 0 ) )
+               return false;
+         }
+         else
+         {
+            // >= constraint, col1 must have a larger or equal coefficient
+            assert( rowf.test( RowFlag::kRhsInf ) );
+            if( num.isLT( val1, 0 ) )
+               return false;
+         }
+      }
+
+      while( j != col2len )
+      {
+         REAL val2 = col2vals[j] * scal2;
+         RowFlags rowf = rflags[col2rows[j]];
+         ++j;
+
+         if( !rowf.test( RowFlag::kLhsInf, RowFlag::kRhsInf ) )
+         {
+            // ranged row or equality, values must be equal
+            return false;
+         }
+         else if( rowf.test( RowFlag::kLhsInf ) )
+         {
+            // <= constraint, col1 must have a smaller or equal coefficient
+            if( num.isGT( 0, val2 ) )
+               return false;
+         }
+         else
+         {
+            // >= constraint, col1 must have a larger or equal coefficient
+            assert( rowf.test( RowFlag::kRhsInf ) );
+            if( num.isLT( 0, val2 ) )
+               return false;
+         }
+      }
+
+      return true;
+   };
+
+#ifdef PAPILO_TBB
+   tbb::concurrent_vector<DomcolReduction> domcolreductions;
+#else
+   Vec<DomcolReduction> domcolreductions;
+#endif
+
+#ifdef PAPILO_TBB
+   tbb::parallel_for(
+       tbb::blocked_range<int>( 0, ncols ),
+       [&]( const tbb::blocked_range<int>& r ) {
+          for( int ucol = r.begin(); ucol != r.end(); ++ucol )
+#else
+   for( int k = 0; k < (int) unboundedcols.size(); ++k )
+#endif
+          {
+             auto colvec = consMatrix.getColumnCoefficients( ucol );
+             int collen = colvec.getLength();
+             const int* colrows = colvec.getIndices();
+             const REAL* colvals = colvec.getValues();
+             int scale = 1;
+
+             int bestrow = -1;
+             int bestrowsize = std::numeric_limits<int>::max();
+
+             for( int j = 0; j < collen; ++j )
+             {
+                int row = colrows[j];
+                if( ( !rflags[row].test( RowFlag::kLhsInf, RowFlag::kRhsInf ) ||
+                      ( !rflags[row].test( RowFlag::kRhsInf ) &&
+                        scale * colvals[j] > 0 ) ||
+                      ( !rflags[row].test( RowFlag::kLhsInf ) &&
+                        scale * colvals[j] < 0 ) ) &&
+                    rowsize[row] < bestrowsize )
+                {
+                   bestrow = j;
+                   bestrowsize = rowsize[row];
+                }
+             }
+
+             if( bestrow == -1 || bestrowsize <= 1 )
+                continue;
+
+             auto candrowvec =
+                 consMatrix.getRowCoefficients( colrows[bestrow] );
+             REAL scaled_val = colvals[bestrow] * scale;
+             REAL scaled_obj = obj[ucol] * scale;
+             bestrow = colrows[bestrow];
+             int rowlen = candrowvec.getLength();
+             const int* rowcols = candrowvec.getIndices();
+             const REAL* rowvals = candrowvec.getValues();
+
+             for( int j = 0; j != rowlen; ++j )
+             {
+                int col = rowcols[j];
+                if( col == ucol || ( cflags[ucol].test( ColFlag::kIntegral ) &&
+                                              !cflags[col].test( ColFlag::kIntegral ) ) )
+                   continue;
+
+                bool to_lb = false;
+                bool to_ub = false;
+
+                if( !rflags[bestrow].test( RowFlag::kLhsInf,
+                                           RowFlag::kRhsInf ) )
+                {
+                   if( !cflags[col].test( ColFlag::kLbInf ) &&
+                       num.isEq( scaled_val, rowvals[j] ) &&
+                       num.isLE( scaled_obj, obj[col] ) &&
+                       checkDominance( ucol, col, scale, 1 ) )
+                      to_lb = true;
+
+                   if( !cflags[col].test( ColFlag::kUbInf ) &&
+                       num.isEq( scaled_val, -rowvals[j] ) &&
+                       num.isLE( scaled_obj, -obj[col] ) &&
+                       checkDominance( ucol, col, scale, -1 ) )
+                      to_ub = true;
+                }
+                else if( rflags[bestrow].test( RowFlag::kLhsInf ) )
+                {
+                   assert( scaled_val > 0 &&
+                           !rflags[bestrow].test( RowFlag::kRhsInf ) );
+                   if( !cflags[col].test( ColFlag::kLbInf ) &&
+                       num.isLE( scaled_val, rowvals[j] ) &&
+                       num.isLE( scaled_obj, obj[col] ) &&
+                       checkDominance( ucol, col, scale, 1 ) )
+                      to_lb = true;
+
+                   if( !cflags[col].test( ColFlag::kUbInf ) &&
+                       num.isLE( scaled_val, -rowvals[j] ) &&
+                       num.isLE( scaled_obj, -obj[col] ) &&
+                       checkDominance( ucol, col, scale, -1 ) )
+                      to_ub = true;
+                }
+                else
+                {
+                   assert( scaled_val < 0 &&
+                           rflags[bestrow].test( RowFlag::kRhsInf ) );
+                   if( !cflags[col].test( ColFlag::kLbInf ) &&
+                       num.isGE( scaled_val, rowvals[j] ) &&
+                       num.isLE( scaled_obj, obj[col] ) &&
+                       checkDominance( ucol, col, scale, 1 ) )
+                      to_lb = true;
+
+                   if( !cflags[col].test( ColFlag::kUbInf ) &&
+                       num.isGE( scaled_val, -rowvals[j] ) &&
+                       num.isLE( scaled_obj, -obj[col] ) &&
+                       checkDominance( ucol, col, scale, -1 ) )
+                      to_ub = true;
+                }
+
+                if( to_lb || to_ub )
+                {
+                   domcolreductions.push_back( DomcolReduction{
+                       ucol, col, 0,
+                       to_lb ? BoundChange::kUpper : BoundChange::kLower } );
+                }
+             }
+          }
+#ifdef PAPILO_TBB
+       } );
+#endif
+   // TODO: implement
    return PresolveStatus::kUnchanged;
 }
 
