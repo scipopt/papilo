@@ -190,7 +190,7 @@ struct OpbWriter
             }
             assert(num.isIntegral( rhs[row] * row_scaling[row] ));
             fmt::print( out, ">= {} ;\n",
-                        num.round_to_int( rhs[row] * row_scaling[row] ) );
+                        - num.round_to_int( rhs[row] * row_scaling[row] ) );
          }
       }
       for( auto sym_c : sym )
