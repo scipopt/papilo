@@ -742,10 +742,7 @@ Presolve<REAL>::apply( Problem<REAL>& problem, bool store_dual_postsolve )
           problem.getSymmetries(), problem.getVariableNames(),
           result.postsolve.origcol_mapping );
       probUpdate.getCertificateInterface()->flush();
-      if(satSolverFactory)
-      {
-         row_scaling = probUpdate.getCertificateInterface()->getRowScalingFactor();
-      }
+      row_scaling = probUpdate.getCertificateInterface()->getRowScalingFactor();
 
       // check whether problem was reduced
       if( stats.ntsxapplied > 0 || stats.nboundchgs > 0 ||
