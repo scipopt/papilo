@@ -1,5 +1,6 @@
 import re
 
+from ipet import Key
 from ipet.parsing.Solver import SCIPSolver
 
 PRESOLVE_TIME_NAME = "presolve_time"
@@ -90,6 +91,8 @@ class PapiloSolver(SCIPSolver):
     recognition_expr = re.compile("starting presolve of problem")
     version_expr = re.compile("PaPILO version (\S+)")
 
+    solvingtime_expr = re.compile("Solving time\s+(\S+)")
+
     presolving_time_expr = re.compile("presolving finished after\s+(\S+)")
     presolving_time_inf_expr = re.compile("presolving detected infeasible problem after\s+(\S+)")
     presolving_time_unb_expr = re.compile("presolving detected unbounded problem after\s+(\S+)")
@@ -131,6 +134,14 @@ class PapiloSolver(SCIPSolver):
     fast_rounds = 0
     medium_rounds = 0
     exhaustive_rounds = 0
+
+    solverstatusmap = {
+        "solving detected infeasible problem after\s+(\S+)": Key.SolverStatusCodes.Infeasible,
+        "presolving detected infeasible problem after\s+(\S+)": Key.SolverStatusCodes.Infeasible,
+        "solving finished after\s+(\S+)": Key.SolverStatusCodes.Optimal,
+        "solving interrupted after\s+(\S+)": Key.SolverStatusCodes.TimeLimit,
+        "time limit reached in presolving(\S+)": Key.SolverStatusCodes.TimeLimit,
+    }
 
     def __init__(self, **kw):
         super(PapiloSolver, self).__init__(**kw)
@@ -177,10 +188,13 @@ class PapiloSolver(SCIPSolver):
             self.extractByExpression(line, self.presolving_time_expr, PRESOLVE_TIME_NAME)
         elif line.startswith("presolving detected infeasible problem"):
             self.extractByExpression(line, self.presolving_time_inf_expr, PRESOLVE_TIME_NAME)
+            self.extractByExpression(line, self.presolving_time_inf_expr, Key.SolvingTime)
         elif line.startswith("presolving detected unbounded or infeasible problem"):
             self.extractByExpression(line, self.presolving_time_unb_inf_expr, PRESOLVE_TIME_NAME)
+            self.extractByExpression(line, self.presolving_time_unb_inf_expr, Key.SolvingTime)
         elif line.startswith("presolving detected unbounded problem"):
             self.extractByExpression(line, self.presolving_time_unb_expr, PRESOLVE_TIME_NAME)
+            self.extractByExpression(line, self.presolving_time_unb_expr, Key.SolvingTime)
 
         self.extractByExpression(line, self.rows_expr, ROWS_NAME)
         self.extractByExpression(line, self.columns_expr, COLUMNS_NAME)

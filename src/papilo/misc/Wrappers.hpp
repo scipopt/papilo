@@ -375,33 +375,33 @@ presolve_and_solve(
                        opts.orig_solution_file, opts.orig_dual_solution_file,
                        opts.orig_reduced_costs_file, opts.orig_basis_file );
          solvetime = t.getTime();
+         double time =
+             presolve.getStatistics().presolvetime + solvetime + writetime;
+         fmt::print("Solving time {:.3f} seconds\n", time);
          switch( status )
          {
-         case SolverStatus::kInfeasible:
+      case SolverStatus::kInfeasible:
             fmt::print(
                 "\nsolving detected infeasible problem after {:.3f} seconds\n",
-                presolve.getStatistics().presolvetime + solvetime + writetime );
+                time );
             break;
          case SolverStatus::kUnbounded:
             fmt::print(
                 "\nsolving detected unbounded problem after {:.3f} seconds\n",
-                presolve.getStatistics().presolvetime + solvetime + writetime );
+                time );
             break;
          case SolverStatus::kUnbndOrInfeas:
             fmt::print(
                 "\nsolving detected unbounded or infeasible problem after "
                 "{:.3f} seconds\n",
-                presolve.getStatistics().presolvetime + solvetime + writetime );
+                time );
             break;
          case SolverStatus::kInterrupted:
          case SolverStatus::kError:
-            fmt::print( "\nsolving interrupted after {:.3f} seconds\n",
-                        presolve.getStatistics().presolvetime + solvetime + writetime );
+            fmt::print( "\nsolving interrupted after {:.3f} seconds\n", time );
             break;
          default:
-            fmt::print( "\nsolving finished after {:.3f} seconds\n",
-                        presolve.getStatistics().presolvetime + solvetime +
-                            writetime );
+            fmt::print( "\nsolving finished after {:.3f} seconds\n", time );
             break;
          }
       }
