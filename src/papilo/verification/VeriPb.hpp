@@ -65,6 +65,8 @@ class VeriPb : public CertificateInterface<REAL>
    /// therefore store scale factors to ensure the integrality
    Vec<int> scale_factor;
 
+//   int obj_scale_factor;
+
    /// this holds the id of the next generated constraint of VeriPB
    int next_constraint_id = 0;
 
@@ -321,6 +323,12 @@ class VeriPb : public CertificateInterface<REAL>
       for( int row_index = 0; row_index < col_coeff.getLength(); row_index++ )
       {
          int row = col_coeff.getIndices()[row_index];
+         if( problem.getRowFlags()[row].test( RowFlag::kRedundant ) )
+         {
+            assert( rhs_row_mapping[row] == UNKNOWN );
+            assert( lhs_row_mapping[row] == UNKNOWN );
+            continue;
+         }
          assert( num.isIntegral( col_coeff.getValues()[row_index] *
                                  scale_factor[row] ) );
          int row_value = num.round_to_int( col_coeff.getValues()[row_index] *
@@ -1333,6 +1341,12 @@ class VeriPb : public CertificateInterface<REAL>
             }
          }
       }
+
+//      if( abs( substitute_factor ) != 1 ||
+//          !num.isIntegral( currentProblem.getObjective().coefficients[col] /
+//                          substitute_factor ) )
+//         obj_scale_factor *= abs(substitute_factor);
+
    };
 
    std::pair<REAL, REAL>
