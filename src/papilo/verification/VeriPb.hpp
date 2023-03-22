@@ -191,13 +191,7 @@ class VeriPb : public CertificateInterface<REAL>
 #ifdef VERIPB_DEBUG
       if( validate_row != UNKNOWN )
       {
-         auto& constraintMatrix = problem.getConstraintMatrix();
-         verify_changed_row(
-             validate_row, constraintMatrix.getRowCoefficients( validate_row ),
-             constraintMatrix.getRowFlags()[validate_row],
-             constraintMatrix.getLeftHandSides()[validate_row],
-             constraintMatrix.getRightHandSides()[validate_row],
-             problem.getVariableNames(), var_mapping );
+         verify_changed_row( validate_row, problem, var_mapping );
          validate_row = UNKNOWN;
       }
 #endif
@@ -1385,10 +1379,14 @@ class VeriPb : public CertificateInterface<REAL>
    }
 
    void
-   verify_changed_row( int row, const SparseVectorView<REAL>& data,
-                       const RowFlags& rflags, REAL lhs, REAL rhs,
-                       const Vec<String>& names, const Vec<int>& var_mapping )
+   verify_changed_row( int row, const Problem<REAL>& problem, const Vec<int>& var_mapping )
    {
+      auto constraintMatrix = problem.getConstraintMatrix();
+      auto data = constraintMatrix.getRowCoefficients( validate_row );
+      const RowFlags& rflags = constraintMatrix.getRowFlags()[validate_row];
+      const REAL lhs = constraintMatrix.getLeftHandSides()[validate_row];
+      const REAL rhs = constraintMatrix.getRightHandSides()[validate_row];
+      const Vec<String>& names = problem.getVariableNames();
       assert( rhs_row_mapping[row] != UNKNOWN ||
                 lhs_row_mapping[row] != UNKNOWN );
       if( lhs_row_mapping[row] != UNKNOWN )
@@ -1399,12 +1397,19 @@ class VeriPb : public CertificateInterface<REAL>
          {
 
             REAL value = data.getValues()[i];
-            auto found = changed_entries_during_current_tsxs.find( data.getIndices()[i] );
+            int index = data.getIndices()[i];
+            auto found = changed_entries_during_current_tsxs.find( index );
             if( found != changed_entries_during_current_tsxs.end() )
             {
                value = found->second;
                if( value == 0 )
                   continue;
+            }
+            if(problem.getUpperBounds()[index] == problem.getLowerBounds()[index])
+            {
+               assert(num.isIntegral(problem.getUpperBounds()[index] * value * scale_factor[row]));
+               offset -= num.round_to_int(problem.getUpperBounds()[index] * value * scale_factor[row]);
+               continue;
             }
             if( i != 0 )
                proof_out << "+";
@@ -1415,8 +1420,8 @@ class VeriPb : public CertificateInterface<REAL>
                offset += num.round_to_int( value );
                proof_out << NEGATED;
             }
-            assert( var_mapping.size() > data.getIndices()[i] );
-            proof_out << names[var_mapping[data.getIndices()[i]]] << " ";
+            assert( var_mapping.size() > index );
+            proof_out << names[var_mapping[index]] << " ";
          }
          proof_out << ">= "
                    << num.round_to_int( lhs ) * scale_factor[row] +
@@ -1430,11 +1435,19 @@ class VeriPb : public CertificateInterface<REAL>
          for( int i = 0; i < data.getLength(); i++ )
          {
             REAL value = data.getValues()[i];
-            auto found = changed_entries_during_current_tsxs.find( data.getIndices()[i] );
+            int index = data.getIndices()[i];
+
+            auto found = changed_entries_during_current_tsxs.find( index );
             {
                value = found->second;
                if( value == 0 )
                   continue;
+            }
+            if(problem.getUpperBounds()[index] == problem.getLowerBounds()[index])
+            {
+               assert(num.isIntegral(problem.getUpperBounds()[index] * value * scale_factor[row]));
+               offset -= num.round_to_int(problem.getUpperBounds()[index] * value * scale_factor[row]);
+               continue;
             }
             if( i != 0 )
                proof_out << "+";
@@ -1445,7 +1458,8 @@ class VeriPb : public CertificateInterface<REAL>
                offset += num.round_to_int( value );
                proof_out << NEGATED;
             }
-            proof_out << names[var_mapping[data.getIndices()[i]]] << " ";
+            assert( var_mapping.size() > index );
+            proof_out << names[var_mapping[index]] << " ";
          }
          proof_out << ">= "
                    << abs( offset ) -
