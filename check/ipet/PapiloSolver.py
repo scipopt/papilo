@@ -136,11 +136,11 @@ class PapiloSolver(SCIPSolver):
     exhaustive_rounds = 0
 
     solverstatusmap = {
-        "solving detected infeasible problem after\s+(\S+)": Key.SolverStatusCodes.Infeasible,
-        "presolving detected infeasible problem after\s+(\S+)": Key.SolverStatusCodes.Infeasible,
-        "solving finished after\s+(\S+)": Key.SolverStatusCodes.Optimal,
-        "solving interrupted after\s+(\S+)": Key.SolverStatusCodes.TimeLimit,
-        "time limit reached in presolving(\S+)": Key.SolverStatusCodes.TimeLimit,
+        "solving detected infeasible problem after\s+": Key.SolverStatusCodes.Infeasible,
+        "presolving detected infeasible problem after\s+": Key.SolverStatusCodes.Infeasible,
+        "Solution passed validation": Key.SolverStatusCodes.Optimal,
+        "solving interrupted after\s+": Key.SolverStatusCodes.TimeLimit,
+        "time limit reached in presolving\s+": Key.SolverStatusCodes.TimeLimit,
     }
 
     def __init__(self, **kw):
