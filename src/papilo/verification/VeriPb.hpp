@@ -1447,6 +1447,7 @@ class VeriPb : public CertificateInterface<REAL>
             int index = data.getIndices()[i];
 
             auto found = changed_entries_during_current_tsxs.find( index );
+            if( found != changed_entries_during_current_tsxs.end() )
             {
                value = found->second;
                if( value == 0 )
@@ -1462,11 +1463,12 @@ class VeriPb : public CertificateInterface<REAL>
                proof_out << "+";
             proof_out << num.round_to_int( abs( value ) * scale_factor[row] )
                       << " ";
-            if( value < 0 )
+            if( value > 0 )
             {
                offset += num.round_to_int( value );
                proof_out << NEGATED;
             }
+            else
             assert( var_mapping.size() > index );
             proof_out << names[var_mapping[index]] << " ";
          }
