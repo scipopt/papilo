@@ -136,6 +136,9 @@ class CertificateInterface
    compress( const Vec<int>& rowmapping, const Vec<int>& colmapping,
              bool full = false ) = 0;
 
+   virtual void
+   infeasible( ) {};
+
    virtual ~CertificateInterface() = default;
 };
 

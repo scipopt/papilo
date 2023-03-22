@@ -1143,6 +1143,15 @@ class VeriPb : public CertificateInterface<REAL>
    };
 
    void
+   infeasible( )
+   {
+      next_constraint_id++;
+      proof_out << "u >= 1 ;\n";
+      proof_out << "c " << next_constraint_id << "\n";
+
+   };
+
+   void
    symmetries( const SymmetryStorage& symmetries, const Vec<String>& names,
                const Vec<int>& var_mapping )
    {

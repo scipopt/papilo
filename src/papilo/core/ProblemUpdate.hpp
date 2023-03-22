@@ -434,6 +434,11 @@ class ProblemUpdate
                    const Reduction<REAL>* last ) const;
 
    void
+   log_infeasiblity_in_certificate( ){
+       certificate_interface->infeasible();
+   };
+
+   void
    shuffle( std::ranlux24& random_generator, Vec<int>& array );
 };
 
@@ -1502,6 +1507,7 @@ ProblemUpdate<REAL>::trivialRowPresolve()
          if( !rflags[row].test( RowFlag::kLhsInf ) &&
              num.isFeasGT( lhs[row], 0 ) )
          {
+            certificate_interface->infeasible( );
             Message::debug(
                 this, "[{}:{}] trivial presolve detected infeasible row\n",
                 __FILE__, __LINE__ );
@@ -1510,6 +1516,7 @@ ProblemUpdate<REAL>::trivialRowPresolve()
          if( !rflags[row].test( RowFlag::kRhsInf ) &&
              num.isFeasLT( rhs[row], 0 ) )
          {
+            certificate_interface->infeasible( );
             Message::debug(
                 this, "[{}:{}] trivial presolve detected infeasible row\n",
                 __FILE__, __LINE__ );
@@ -1557,6 +1564,7 @@ ProblemUpdate<REAL>::trivialRowPresolve()
             cleanupSmallCoefficients( row );
             break;
          case RowStatus::kInfeasible:
+            certificate_interface->infeasible( );
             return PresolveStatus::kInfeasible;
          case RowStatus::kUnknown:
             if( !rflags[row].test( RowFlag::kRhsInf, RowFlag::kLhsInf,
@@ -1756,7 +1764,8 @@ ProblemUpdate<REAL>::removeSingletonRow( int row )
             }
          }
    }
-
+   if(status == PresolveStatus::kInfeasible)
+         certificate_interface->infeasible( );
    markRowRedundant( row );
 
    return status;

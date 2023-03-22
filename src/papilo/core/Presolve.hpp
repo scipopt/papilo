@@ -1097,7 +1097,10 @@ Presolve<REAL>::evaluate_and_apply( const Timer& timer, Problem<REAL>& problem,
    {
    case PresolveStatus::kUnbndOrInfeas:
    case PresolveStatus::kUnbounded:
+      printPresolversStats();
+      return result.status;
    case PresolveStatus::kInfeasible:
+      probUpdate.log_infeasiblity_in_certificate();
       printPresolversStats();
       return result.status;
    case PresolveStatus::kUnchanged:
@@ -1112,7 +1115,10 @@ Presolve<REAL>::evaluate_and_apply( const Timer& timer, Problem<REAL>& problem,
       else
          status = PresolveStatus::kReduced;
       if( is_status_infeasible_or_unbounded( status ) )
+      {
+         probUpdate.log_infeasiblity_in_certificate();
          return status;
+      }
       round_to_evaluate = determine_next_round( problem, probUpdate,
                                                 ( stats - oldstats ), timer );
       finishRound( probUpdate );
