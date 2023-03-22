@@ -1010,6 +1010,7 @@ ProblemUpdate<REAL>::checkChangedActivities()
          postsolve.storeRowBoundChange(
              true, r, REAL{ 0 }, true, REAL{ 0 },
              consmatrix.getRowFlags()[r].test( RowFlag::kLhsInf ) );
+         certificate_interface->change_lhs_inf(r);
          consmatrix.template modifyLeftHandSide<true>( r, num );
          status = PresolveStatus::kReduced;
          break;
@@ -1017,6 +1018,7 @@ ProblemUpdate<REAL>::checkChangedActivities()
          postsolve.storeRowBoundChange(
              false, r, REAL{ 0 }, true, REAL{ 0 },
              consmatrix.getRowFlags()[r].test( RowFlag::kRhsInf ) );
+         certificate_interface->change_rhs_inf(r);
          consmatrix.template modifyRightHandSide<true>( r, num );
          status = PresolveStatus::kReduced;
          break;
@@ -1540,6 +1542,7 @@ ProblemUpdate<REAL>::trivialRowPresolve()
             postsolve.storeRowBoundChange(
                 true, row, REAL{ 0 }, true, REAL{ 0 },
                 consMatrix.getRowFlags()[row].test( RowFlag::kLhsInf ) );
+            certificate_interface->change_lhs_inf(row);
             consMatrix.template modifyLeftHandSide<true>( row, num );
             status = PresolveStatus::kReduced;
             cleanupSmallCoefficients( row );
@@ -1548,6 +1551,7 @@ ProblemUpdate<REAL>::trivialRowPresolve()
             postsolve.storeRowBoundChange(
                 false, row, REAL{ 0 }, true, REAL{ 0 },
                 consMatrix.getRowFlags()[row].test( RowFlag::kRhsInf ) );
+            certificate_interface->change_rhs_inf(row);
             consMatrix.template modifyRightHandSide<true>( row, num );
             status = PresolveStatus::kReduced;
             cleanupSmallCoefficients( row );
