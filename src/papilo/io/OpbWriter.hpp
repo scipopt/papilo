@@ -112,10 +112,7 @@ struct OpbWriter
       }
       out.push( file );
 
-      fmt::print( out, "*NAME          {}\n", prob.getName() );
-      fmt::print( out, "*ROWS:         {}\n", matrix.getNRows() );
-      fmt::print( out, "*VARIABLES:    {}\n", prob.getNumIntegralCols() );
-      fmt::print( out, "*NONZERO:      {}\n*\n*\n", matrix.getNnz() );
+      fmt::print( out, "* #variable= {} #constraint= {}\n", prob.getNumIntegralCols(), matrix.getNRows() );
 
       bool obj_has_nonzeros = false;
       if( obj.offset == 0 )
@@ -151,46 +148,59 @@ struct OpbWriter
       for( int row = 0; row < matrix.getNRows(); ++row )
       {
          assert( !matrix.isRowRedundant( row ) );
+         auto vector = matrix.getRowCoefficients( row );
+
+         bool scale_necessary = false;
+         for( int j = 0; j < vector.getLength(); ++j )
+         {
+            if(scale_necessary)
+               break;
+            scale_necessary = !num.isIntegral(vector.getValues()[j]);
+         }
          char type;
          if( row_flags[row].test( RowFlag::kEquation ) ||
              !row_flags[row].test( RowFlag::kLhsInf ) )
          {
+            scale_necessary = scale_necessary || !num.isIntegral(lhs[row]);
+            REAL scale = scale_necessary ? abs(row_scaling[row]) : 1;
+
             assert( !row_flags[row].test( RowFlag::kLhsInf ) );
-            auto vector = matrix.getRowCoefficients( row );
             for( int j = 0; j < vector.getLength(); j++ )
             {
-               REAL val = vector.getValues()[j] * row_scaling[row];
+               REAL val = vector.getValues()[j] * scale;
                assert( val != 0 );
                assert( num.isIntegral(val ) );
                fmt::print( out, "{}{} {} ", val > 0 ? "+" : "-",
                            abs( num.round_to_int(val) ),
                            varnames[col_mapping[vector.getIndices()[j]]] );
             }
-            assert(num.isIntegral( lhs[row] * row_scaling[row] ));
+            assert(num.isIntegral( lhs[row] * scale ));
             if( row_flags[row].test( RowFlag::kEquation ) )
                fmt::print( out, "= " );
             else
                fmt::print( out, ">= " );
             fmt::print( out, " {} ;\n",
-                        num.round_to_int( lhs[row] * row_scaling[row] ) );
+                        num.round_to_int( lhs[row] * scale ) );
          }
          if(!row_flags[row].test( RowFlag::kEquation ) &&
              !row_flags[row].test( RowFlag::kRhsInf ))
          {
             assert( !row_flags[row].test( RowFlag::kRhsInf ) );
-            auto vector = matrix.getRowCoefficients( row );
+
+            scale_necessary = scale_necessary || !num.isIntegral(rhs[row]);
+            REAL scale = scale_necessary ? abs(row_scaling[row]) : 1;
             for( int j = 0; j < vector.getLength(); j++ )
             {
-               REAL val = vector.getValues()[j] * row_scaling[row];
+               REAL val = vector.getValues()[j] * scale;
                assert( val != 0 );
                assert( num.isIntegral(val ) );
                fmt::print( out, "{}{} {} ", val < 0 ? "+" : "-",
                            abs( (int)val ),
                            varnames[col_mapping[vector.getIndices()[j]]] );
             }
-            assert(num.isIntegral( rhs[row] * row_scaling[row] ));
+            assert(num.isIntegral( rhs[row] * scale ));
             fmt::print( out, ">= {} ;\n",
-                        - num.round_to_int( rhs[row] * row_scaling[row] ) );
+                        - num.round_to_int( rhs[row] * scale ) );
          }
       }
       for( auto sym_c : sym )

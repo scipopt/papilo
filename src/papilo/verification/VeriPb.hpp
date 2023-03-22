@@ -579,7 +579,7 @@ class VeriPb : public CertificateInterface<REAL>
                          << factor_parallel << " *\n";
                proof_out << DELETE_CONS << lhs_row_mapping[row] << "\n";
                lhs_row_mapping[row] = next_constraint_id;
-               scale_factor[row] *= (num.round_to_int( abs(factor_parallel) ));
+               scale_factor[row] *= num.round_to_int( factor_parallel );
             }
          }
          else
@@ -673,7 +673,7 @@ class VeriPb : public CertificateInterface<REAL>
                          << factor_parallel << " *\n";
                proof_out << DELETE_CONS << rhs_row_mapping[row] << "\n";
                rhs_row_mapping[row] = next_constraint_id;
-               scale_factor[row] *= num.round_to_int( abs(factor_parallel) );
+               scale_factor[row] *= num.round_to_int( factor_parallel );
             }
          }
          else
@@ -951,7 +951,7 @@ class VeriPb : public CertificateInterface<REAL>
 
             lhs_row_mapping[candrow] = next_constraint_id;
          }
-         scale_factor[candrow] *= abs(int_scale_updated);
+         scale_factor[candrow] *= int_scale_updated;
       }
       else
       {
@@ -994,7 +994,7 @@ class VeriPb : public CertificateInterface<REAL>
 
             lhs_row_mapping[candrow] = next_constraint_id;
          }
-         scale_factor[candrow] *= abs(frac_candrow);
+         scale_factor[candrow] *= frac_candrow;
       }
    }
 
@@ -1276,7 +1276,7 @@ class VeriPb : public CertificateInterface<REAL>
          }
          else if( num.isIntegral( substitute_factor / factor ) )
          {
-            scale_factor[row] *= num.round_to_int( abs(substitute_factor / factor) );
+            scale_factor[row] *= num.round_to_int( substitute_factor / factor );
             int val = abs( num.round_to_int( substitute_factor / factor ) );
             assert( val > 0 );
             if( !matrix.getRowFlags()[row].test( RowFlag::kRhsInf ) )
@@ -1311,7 +1311,7 @@ class VeriPb : public CertificateInterface<REAL>
          {
             assert( num.isIntegral( substitute_factor ) );
             assert( num.isIntegral( factor ) );
-            scale_factor[row] *= num.round_to_int( abs(substitute_factor) );
+            scale_factor[row] *= num.round_to_int( substitute_factor );
             int val = abs( num.round_to_int( factor ) );
             int val2 = abs( num.round_to_int( substitute_factor ) );
 
