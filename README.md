@@ -328,11 +328,38 @@ to the reductions class. This is only the broad picture and there are some more 
 Looking at some of the default implemented presolvers can help for understanding further details and also the resources in the next section.
 
 Finally when a new presolve method is implemented it needs to be added to the `papilo::Presolve<REAL>` instance that is used for presolving.
-Assuming the new presolve method is called `MyPresolveMethod` this is achieved by the following call:
+Assuming the new presolve method is called `MyPresolveMethod` this is achiev
+ed by the following call:
 ```
 presolve.addPresolver( std::unique_ptr<papilo::PresolveMethod<REAL>>( new MyPresolveMethod<REAL>() ) );
 ```
 Getting the PaPILO binary to call your presolver could be achieved by adding an include for your presolver in `papilo/core/Presolve.hpp` and then adding it together with the other default presolvers in the member function `papilo::Presolve<REAL>::addDefaultPresolvers()`.
+
+# Evaluating PaPILO #
+
+## Experiments ##
+
+You can run your performance tests by executing the command `make test` in the root directory or sent the jobs to a slurm cluster with `make testcluster`.
+
+The options of the make command are explained here:
+
+```
+  make test EXECUTABLE=build/bin/papilo TEST=short SETTINGS=default
+```
+- `EXECUTABLE` Location of the papilo executable from the root repository
+- `TEST` all instances  of the current experiments. File should be located at check/testset. For an example please refer to short.test.
+- `SETTINGS` settings file located in the settings folder
+- `PAPILO_SOLVE_COMMAND` `solve` or `presolve`
+- `TIME` timelimit
+- `MEM` maximal memory
+- `OUTPUTDIR` output directory where the results are stored
+- `QUEUE` queue (only make testcluster)
+
+The make command generates an `.out` and `.err` file for each instance specified in the `TEST` file and in case of `make test` also an overall `out` file is created containing logs of all instances.
+If `make testcluster` is used the overall `out` file must be generated with `./evalcheck_cluster.sh  results/name.eval`
+
+Note that the options all have default values. Executing a plain make test will run experiments on the short testset.
+
 
 # References and how to cite
 

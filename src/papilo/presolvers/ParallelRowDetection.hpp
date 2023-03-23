@@ -403,6 +403,7 @@ ParallelRowDetection<REAL>::execute( const Problem<REAL>& problem,
                if( new_ratio < REAL{ 0.0 } )
                {
                   swap( new_adjusted_lhs, new_adjusted_rhs );
+                  swap( scaled_lhs_inf, scaled_rhs_inf );
                   swap( lhs_infinity, rhs_infinity );
                }
 
