@@ -19,6 +19,7 @@ Fixed bugs
 - fixing vector bound checks which failed if compiled with -D_GLIBCXX_ASSERTIONS (Fedora/ArchLinux)
 - SingletonRow: consider case if remaining coefficient is close to zero -> could lead to false variable fixings
 - increase Priority of FixContinuous to detect numerical difficulties earlier
+- ParallelRows: use correct lhs_inf/rhs_inf with negative scale factor under certain circumstances
 
 Miscellaneous
 -------------
