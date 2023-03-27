@@ -368,8 +368,6 @@ OpbParser<REAL>::parseObjective( std::string& line )
    {
       std::string s_coef = tokens[counter];
       std::string var = tokens[counter + 1];
-      if(var == "x6404")
-         fmt::print("hier");
       boost::multiprecision::cpp_int anInt = read_number( s_coef );
       REAL coef = REAL{ anInt };
       bool negated = false;
