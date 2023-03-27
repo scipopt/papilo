@@ -49,12 +49,15 @@ class RoundingsatInterface : public SolverInterface<REAL>
    //   Num<REAL>& num;
    rs::CeArb objective;
    Vec<int> scaling_row_factor;
+   int ncols;
 
    int
    doSetUp( const Problem<REAL>& problem, const Vec<int>& origRowMap,
             const Vec<int>& origColMap )
    {
       Num<REAL> num{};
+      ncols = problem.getNCols();
+      objective = rs::run::solver.cePools.takeArb();
       assert( objective->isReset() );
       rs::CeArb input = rs::run::solver.cePools.takeArb();
 
@@ -66,16 +69,16 @@ class RoundingsatInterface : public SolverInterface<REAL>
       input->reset();
       for( int col = 0; col < problem.getNCols(); ++col )
       {
-         input->reset();
          assert( num.isIntegral( obj[col] ) );
          if( obj[col] == 0 )
             continue;
          int sat_var_index = col + 1;
-         int coeff = to_int( obj[col], 1, num );
+         rs::BigCoef coeff = rs::BigCoef ( obj[col] );
          rs::run::solver.setNbVars( abs( sat_var_index ), true );
          input->addLhs( coeff, sat_var_index );
       }
       input->copyTo( objective );
+
 
       for( int row = 0; row < problem.getNRows(); ++row )
       {
@@ -160,16 +163,18 @@ class RoundingsatInterface : public SolverInterface<REAL>
             return -1;
          }
       }
+      input->reset();
+
       return 0;
    }
 
-   int
+   rs::BigCoef
    to_int( REAL val, REAL scale, Num<REAL>& num )
    {
       if( num.isZero( val ) )
          return 0;
       assert( num.isIntegral( val * scale ) );
-      return num.round_to_int( val * scale );
+      return rs::BigCoef ( val * scale );
    }
 
    void
@@ -187,7 +192,7 @@ class RoundingsatInterface : public SolverInterface<REAL>
       {
          int sat_var_index = row_coeff.getIndices()[j] + 1;
          assert( num.isIntegral( row_coeff.getValues()[j] * scale )  );
-         rs::bigint coeff = to_int( row_coeff.getValues()[j], scale, num);
+         rs::BigCoef coeff = to_int( row_coeff.getValues()[j], scale, num);
          rs::run::solver.setNbVars( abs( sat_var_index ), true );
          input->addLhs( coeff, sat_var_index );
       }
@@ -210,7 +215,7 @@ class RoundingsatInterface : public SolverInterface<REAL>
       {
          int sat_var_index = row_coeff.getIndices()[j] + 1;
          assert( num.isIntegral( -row_coeff.getValues()[j] * scale )  );
-         rs::bigint coeff = to_int( -row_coeff.getValues()[j], scale, num);
+         rs::BigCoef coeff = to_int( -row_coeff.getValues()[j], scale, num);
          rs::run::solver.setNbVars( abs( sat_var_index ), true );
          input->addLhs( coeff, sat_var_index );
       }
@@ -231,7 +236,6 @@ class RoundingsatInterface : public SolverInterface<REAL>
    {
       // TODO: num = {};
       rs::run::solver.init();
-      objective = rs::run::solver.cePools.takeArb();
    }
 
    void
@@ -291,7 +295,6 @@ class RoundingsatInterface : public SolverInterface<REAL>
          return ;
 
       rs::run::solver.initLP( objective );
-      rs::run::solver.init( );
       rs::run::run( objective );
 
       bool satisfiable = rs::run::solver.foundSolution();
@@ -318,8 +321,12 @@ class RoundingsatInterface : public SolverInterface<REAL>
 
       std::vector<rs::Lit>& sol = rs::run::solver.lastSol;
       Vec<REAL> primal{};
-      primal.resize( sol.size() - 1 );
-      for( int v = 1; v < sol.size(); ++v )
+      //TODO:
+//      assert(ncols == sol.size());
+      primal.resize( ncols );
+
+      for( int v = 1; v < ncols +1; ++v )
+//      for( int v = 1; v < sol.size(); ++v )
       {
          assert( abs( sol[v] ) == v );
          primal[v - 1] = sol[v] > 0 ? 1 : 0;

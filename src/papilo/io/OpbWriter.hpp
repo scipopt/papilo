@@ -113,6 +113,7 @@ struct OpbWriter
       out.push( file );
 
       fmt::print( out, "* #variable= {} #constraint= {}\n", prob.getNumIntegralCols(), matrix.getNRows() );
+      fmt::print( out, "* Objective Offset {}\n", prob.getObjective().offset );
 
       bool obj_has_nonzeros = false;
       if( obj.offset == 0 )
