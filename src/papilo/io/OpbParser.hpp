@@ -313,7 +313,7 @@ OpbParser<REAL>::parseRows( std::string& line )
       entries.push_back( { nRows, col, negated ? -coef : coef } );
       nnz++;
    }
-   int rhs = read_number(line_rhs);
+   REAL rhs = REAL{read_number(line_rhs)};
 
    if( row_type[row_type.size() - 1] == BoundType::kEq )
    {
