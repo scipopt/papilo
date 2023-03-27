@@ -516,7 +516,7 @@ SingletonStuffing<REAL>::execute( const Problem<REAL>& problem,
          if( colsize[col] == 1 && !cflags[col].test( ColFlag::kIntegral ) )
          {
             // for penalty variables adjust the right hand side as if it
-            // where complemented whith the cheapest bound
+            // where complemented with the cheapest bound
             if( coeff > 0 && obj[col] < 0 &&
                 !cflags[col].test( ColFlag::kUbUseless ) )
             {

@@ -91,6 +91,9 @@ class PapiloSolver(SCIPSolver):
     recognition_expr = re.compile("starting presolve of problem")
     version_expr = re.compile("PaPILO version (\S+)")
 
+    primalbound_expr = re.compile("objective value:\s*(\S+)")
+    dualbound_expr = re.compile("objective value:\s*(\S+)")
+
     solvingtime_expr = re.compile("Solving time\s+(\S+)")
 
     presolving_time_expr = re.compile("presolving finished after\s+(\S+)")

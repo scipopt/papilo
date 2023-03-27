@@ -221,7 +221,7 @@ SingletonCols<REAL>::execute( const Problem<REAL>& problem,
          // Found singleton column within an equation:
          // Check if it is implied free on one bound. In that case the
          // variable is substituted and the constraint stays as an inequality
-         // constraint. Otherwise it is equaivalent to implied free variable
+         // constraint. Otherwise it is equivalent to implied free variable
          // substitution.
 
          bool lowerboundImplied =
