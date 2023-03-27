@@ -135,14 +135,14 @@ struct OpbWriter
             REAL coef = obj.coefficients[i];
             if( coef == 0 )
                continue;
-            fmt::print( out, "{}{} {} ", coef > 0 ? "+" : "-", abs( (int)coef ),
+            fmt::print( out, "{}{} {} ", coef > 0 ? "+" : "-", abs( boost::multiprecision::cpp_int(coef) ),
                         varnames[col_mapping[i]] );
          }
-         int obj_offset = (int)prob.getObjective().offset;
-         if( obj_offset != 0 )
-            fmt::print( out, "{}{} ", obj_offset > 0 ? "+" : "-",
-                        abs( obj_offset ) );
-         fmt::print( ";\n" );
+//         int obj_offset = boost::multiprecision::cpp_int(prob.getObjective().offset);
+//         if( obj_offset != 0 )
+//            fmt::print( out, "{}{} ", obj_offset > 0 ? "+" : "-",
+//                        abs( obj_offset ) );
+         fmt::print( out, ";\n" );
       }
 
       for( int row = 0; row < matrix.getNRows(); ++row )
@@ -195,7 +195,7 @@ struct OpbWriter
                assert( val != 0 );
                assert( num.isIntegral(val ) );
                fmt::print( out, "{}{} {} ", val < 0 ? "+" : "-",
-                           abs( (int)val ),
+                           abs( boost::multiprecision::cpp_int(val) ),
                            varnames[col_mapping[vector.getIndices()[j]]] );
             }
             assert(num.isIntegral( rhs[row] * scale ));

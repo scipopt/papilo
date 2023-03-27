@@ -163,7 +163,7 @@ class OpbParser
    void
    add_binary_variable( const String& name );
 
-   int
+   boost::multiprecision::cpp_int
    read_number( const std::string& s );
 };
 
@@ -236,7 +236,7 @@ OpbParser<REAL>::parseRows( std::string& line )
 
    unsigned long pos = line.find(">=");
    std::string line_rhs;
-   int offset = 0;
+   REAL offset = 0;
    if( pos == std::string::npos )
    {
       pos = line.find( '=' );
@@ -286,7 +286,7 @@ OpbParser<REAL>::parseRows( std::string& line )
    {
       std::string s_coef = tokens[counter];
       std::string var = tokens[counter + 1];
-      int coef = read_number( s_coef );
+      REAL coef = REAL{ read_number( s_coef )};
       bool negated = false;
       if( !var.empty() && var[0] == '~' )
       {
@@ -363,13 +363,15 @@ OpbParser<REAL>::parseObjective( std::string& line )
          return ParseKey::kFail;
       }
 
-   int offset = 0;
-
+   REAL offset = 0;
    for( int counter = 0; counter < (long long)tokens.size(); counter += 2 )
    {
       std::string s_coef = tokens[counter];
       std::string var = tokens[counter + 1];
-      int coef = read_number( s_coef );
+      if(var == "x6404")
+         fmt::print("hier");
+      boost::multiprecision::cpp_int anInt = read_number( s_coef );
+      REAL coef = REAL{ anInt };
       bool negated = false;
       if( !var.empty() && var[0] == '~' )
       {
@@ -411,9 +413,9 @@ OpbParser<REAL>::add_binary_variable( const String& name )
 }
 
 template <typename REAL>
-int
+boost::multiprecision::cpp_int
 OpbParser<REAL>::read_number(const std::string& s) {
-   int answer = 0;
+   boost::multiprecision::cpp_int answer = 0;
    bool negated = false;
    for (char c : s) {
       if ('0' <= c && c <= '9') {
