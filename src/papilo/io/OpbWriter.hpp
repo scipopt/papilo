@@ -113,7 +113,7 @@ struct OpbWriter
       out.push( file );
 
       fmt::print( out, "* #variable= {} #constraint= {}\n", prob.getNumIntegralCols(), matrix.getNRows() );
-      fmt::print( out, "* Objective Offset {}\n", prob.getObjective().offset );
+      fmt::print( out, "* Objective Offset {}\n", boost::multiprecision::cpp_int( abs(prob.getObjective().offset) ).str() );
 
       bool obj_has_nonzeros = false;
       if( obj.offset == 0 )
@@ -136,7 +136,7 @@ struct OpbWriter
             REAL coef = obj.coefficients[i];
             if( coef == 0 )
                continue;
-            fmt::print( out, "{}{} {} ", coef > 0 ? "+" : "-", abs( boost::multiprecision::cpp_int(coef) ),
+            fmt::print( out, "{}{} {} ", coef > 0 ? "+" : "-", boost::multiprecision::cpp_int( abs(coef) ).str(),
                         varnames[col_mapping[i]] );
          }
 //         int obj_offset = boost::multiprecision::cpp_int(prob.getObjective().offset);
