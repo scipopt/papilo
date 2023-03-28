@@ -1308,7 +1308,7 @@ papilo_solver_start( PAPILO_SOLVER* solver )
             solver->solveinfo.dualbound = solverInterface->getDualBound();
 
          if( solverInterface != nullptr &&
-             !solverInterface->getSolution( solution, presolveResult.postsolve ) )
+             !solverInterface->getSolution( solution, solver->presolveResult.postsolve ) )
             break;
 
          if( postsolve.undo( solution, solver->solution,
