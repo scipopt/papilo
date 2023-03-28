@@ -417,7 +417,7 @@ class ScipInterface : public SolverInterface<REAL>
    }
 
    bool
-   getSolution( Solution<REAL>& solbuffer ) override
+   getSolution( Solution<REAL>& sol, PostsolveStorage<REAL>& postsolve ) override
    {
       SCIP_SOL* sol = SCIPgetBestSol( scip );
 

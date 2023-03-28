@@ -121,7 +121,7 @@ class SolverInterface
    setRowScalingFactor( Vec<int> scaling_factor ) {}
 
    virtual bool
-   getSolution( Solution<REAL>& sol ) = 0;
+   getSolution( Solution<REAL>& sol, PostsolveStorage<REAL>& postsolve ) = 0;
 
    virtual bool
    getSolution( const Components& components, int component,

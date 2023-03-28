@@ -357,7 +357,7 @@ class GurobiInterface : public SolverInterface<REAL>
    }
 
    bool
-   getSolution( Solution<REAL>& solbuffer ) override
+   getSolution( Solution<REAL>& sol, PostsolveStorage<REAL>& postsolve ) override
    {
       solbuffer = sol;
       return true;

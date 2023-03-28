@@ -370,7 +370,7 @@ presolve_and_solve(
 
          if( ( status == SolverStatus::kOptimal ||
                status == SolverStatus::kInterrupted ) &&
-             solver->getSolution( solution ) )
+             solver->getSolution( solution, result.postsolve ) )
             postsolve( result.postsolve, solution, opts.objective_reference,
                        opts.orig_solution_file, opts.orig_dual_solution_file,
                        opts.orig_reduced_costs_file, opts.orig_basis_file );

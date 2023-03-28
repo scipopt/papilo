@@ -338,7 +338,7 @@ class HighsInterface : public SolverInterface<REAL>
    }
 
    bool
-   getSolution( Solution<REAL>& sol ) override
+   getSolution( Solution<REAL>& sol, PostsolveStorage<REAL>& postsolve ) override
    {
       const HighsSolution& highsSol = solver.getSolution();
       int numcols = solver.getNumCol();

@@ -45,18 +45,15 @@ namespace papilo
 template <typename REAL>
 class RoundingsatInterface : public SolverInterface<REAL>
 {
-
    //   Num<REAL>& num;
    rs::CeArb objective;
    Vec<int> scaling_row_factor;
-   int ncols;
 
    int
    doSetUp( const Problem<REAL>& problem, const Vec<int>& origRowMap,
             const Vec<int>& origColMap )
    {
       Num<REAL> num{};
-      ncols = problem.getNCols();
       objective = rs::run::solver.cePools.takeArb();
       assert( objective->isReset() );
       rs::CeArb input = rs::run::solver.cePools.takeArb();
@@ -72,13 +69,15 @@ class RoundingsatInterface : public SolverInterface<REAL>
          assert( num.isIntegral( obj[col] ) );
          if( obj[col] == 0 )
             continue;
-         int sat_var_index = col + 1;
+         int sat_var_index = get_index_of_variable_name(
+             problem.getVariableNames(), origColMap, col );
+         if(sat_var_index < 1)
+            return -1;
          rs::BigCoef coeff = rs::BigCoef ( obj[col] );
          rs::run::solver.setNbVars( abs( sat_var_index ), true );
          input->addLhs( coeff, sat_var_index );
       }
       input->copyTo( objective );
-
 
       for( int row = 0; row < problem.getNRows(); ++row )
       {
@@ -87,8 +86,8 @@ class RoundingsatInterface : public SolverInterface<REAL>
              problem.getConstraintMatrix().getRowCoefficients( row );
          if( consMatrix.getRowFlags()[row].test( RowFlag::kEquation ) )
          {
-            map_cons_to_lhs( input, row_coeff, row, lhs[row], num);
-            if( rs::run::solver.addConstraint( input, rs::Origin::FORMULA )
+            int ret = map_cons_to_lhs( input, row_coeff, row, lhs[row], num, problem, origColMap );
+            if( ret < 0 || rs::run::solver.addConstraint( input, rs::Origin::FORMULA )
                     .second == rs::ID_Unsat )
             {
                fmt::print( "An error occurred\n" );
@@ -107,11 +106,10 @@ class RoundingsatInterface : public SolverInterface<REAL>
 
          if( !consMatrix.getRowFlags()[row].test( RowFlag::kLhsInf ) )
          {
-            map_cons_to_lhs( input, row_coeff, row, lhs[row], num );
+            int ret = map_cons_to_lhs( input, row_coeff, row, lhs[row], num, problem, origColMap );
             const std::pair<rs::ID, rs::ID>& pair =
                 rs::run::solver.addConstraint( input, rs::Origin::FORMULA );
-
-            if( pair.second == rs::ID_Unsat )
+            if( ret < 0 || pair.second == rs::ID_Unsat )
             {
                fmt::print( "An error occurred\n" );
                return -1;
@@ -121,10 +119,10 @@ class RoundingsatInterface : public SolverInterface<REAL>
          {
             if(!consMatrix.getRowFlags()[row].test( RowFlag::kLhsInf ))
                input->reset();
-            map_cons_to_rhs( input, row_coeff, row, rhs[row], num );
+            int ret = map_cons_to_rhs( input, row_coeff, row, rhs[row], num, problem, origColMap );
             const std::pair<rs::ID, rs::ID>& pair =
                 rs::run::solver.addConstraint( input, rs::Origin::FORMULA );
-            if( pair.second == rs::ID_Unsat )
+            if( ret < 0 || pair.second == rs::ID_Unsat )
             {
                fmt::print( "An error occurred\n" );
                return -1;
@@ -137,18 +135,22 @@ class RoundingsatInterface : public SolverInterface<REAL>
          assert( problem.test_problem_type(ProblemFlag::kBinary) );
          input->reset();
          auto& symmetry = problem.getSymmetries().symmetries[symmetry_index];
-         int col1 = symmetry.getDominatingCol() + 1;
-         int col2 = symmetry.getDominatedCol() + 1;
+         int col1 = get_index_of_variable_name( problem.getVariableNames(), origColMap,
+                                                symmetry.getDominatingCol() );
+         int col2 = get_index_of_variable_name( problem.getVariableNames(), origColMap,
+                                                symmetry.getDominatedCol() );
+         if(col1 < 1 || col2 < 1)
+            return -1;
          switch( symmetry.getSymmetryType() )
          {
          case SymmetryType::kXgeY:
-            input->addLhs( 1, col1 + 1 );
-            input->addLhs( -1, col2 + 1 );
+            input->addLhs( 1, col1 );
+            input->addLhs( -1, col2 );
             input->addRhs( 0 );
             break;
          case SymmetryType::kXplusYge1:
-            input->addLhs( 1, col1 + 1 );
-            input->addLhs( 1, col2 + 1 );
+            input->addLhs( 1, col1 );
+            input->addLhs( 1, col2 );
             input->addRhs( 1 );
             break;
          default:
@@ -168,6 +170,22 @@ class RoundingsatInterface : public SolverInterface<REAL>
       return 0;
    }
 
+   int
+   get_index_of_variable_name( const Vec<String>& _names,
+                               const Vec<int>& origColMap, int col) const
+   {
+      auto name = _names[origColMap[col]];
+      int sat_var_index;
+      if (name.empty() || name[0] != 'x')
+      {
+         sat_var_index = 0;
+         fmt::print("RoundingSAT: variablename must start with an 'x'!\n");
+      }
+      else
+         sat_var_index = atoi(name.substr(1).c_str());
+      return sat_var_index;
+   }
+
    rs::BigCoef
    to_int( REAL val, REAL scale, Num<REAL>& num )
    {
@@ -177,8 +195,10 @@ class RoundingsatInterface : public SolverInterface<REAL>
       return rs::BigCoef ( val * scale );
    }
 
-   void
-   map_cons_to_lhs( rs::CeArb& input, const SparseVectorView<REAL>& row_coeff, int row, REAL lhs, Num<REAL>& num )
+   int
+   map_cons_to_lhs( rs::CeArb& input, const SparseVectorView<REAL>& row_coeff,
+                    int row, REAL lhs, Num<REAL>& num,
+                    const Problem<REAL>& problem, const Vec<int>& map )
    {
       bool scale_necessary = !num.isIntegral(lhs);
       for( int j = 0; j < row_coeff.getLength(); ++j )
@@ -190,18 +210,23 @@ class RoundingsatInterface : public SolverInterface<REAL>
       REAL scale = scale_necessary ? abs(scaling_row_factor[row]) : 1;
       for( int j = 0; j < row_coeff.getLength(); ++j )
       {
-         int sat_var_index = row_coeff.getIndices()[j] + 1;
+         int sat_var_index = get_index_of_variable_name(
+             problem.getVariableNames(), map, row_coeff.getIndices()[j]);
+         if(sat_var_index < 1)
+            return -1;
          assert( num.isIntegral( row_coeff.getValues()[j] * scale )  );
          rs::BigCoef coeff = to_int( row_coeff.getValues()[j], scale, num);
          rs::run::solver.setNbVars( abs( sat_var_index ), true );
          input->addLhs( coeff, sat_var_index );
       }
       input->addRhs( to_int( lhs, scale, num ) );
+      return 0;
    }
 
 
-   void
-   map_cons_to_rhs( rs::CeArb& input, const SparseVectorView<REAL>& row_coeff, int row, REAL rhs, Num<REAL>& num )
+   int
+   map_cons_to_rhs( rs::CeArb& input, const SparseVectorView<REAL>& row_coeff, int row, REAL rhs, Num<REAL>& num,
+                    const Problem<REAL>& problem, const Vec<int>& map )
    {
       bool scale_necessary = !num.isIntegral(rhs);
       for( int j = 0; j < row_coeff.getLength(); ++j )
@@ -213,13 +238,17 @@ class RoundingsatInterface : public SolverInterface<REAL>
       REAL scale = scale_necessary ? abs(scaling_row_factor[row]) : 1;
       for( int j = 0; j < row_coeff.getLength(); ++j )
       {
-         int sat_var_index = row_coeff.getIndices()[j] + 1;
+         int sat_var_index = get_index_of_variable_name(
+             problem.getVariableNames(), map, row_coeff.getIndices()[j]);
+         if(sat_var_index < 1)
+            return -1;
          assert( num.isIntegral( -row_coeff.getValues()[j] * scale )  );
          rs::BigCoef coeff = to_int( -row_coeff.getValues()[j], scale, num);
          rs::run::solver.setNbVars( abs( sat_var_index ), true );
          input->addLhs( coeff, sat_var_index );
       }
       input->addRhs( -to_int( rhs, scale, num ) );
+      return 0;
    }
 
    int
@@ -316,22 +345,24 @@ class RoundingsatInterface : public SolverInterface<REAL>
    }
 
    bool
-   getSolution( Solution<REAL>& solbuffer ) override
+   getSolution( Solution<REAL>& sol_buffer, PostsolveStorage<REAL>& postsolve ) override
    {
 
       std::vector<rs::Lit>& sol = rs::run::solver.lastSol;
       Vec<REAL> primal{};
-      //TODO:
-//      assert(ncols == sol.size());
+
+      int ncols = postsolve.origcol_mapping.size();
+      auto names = postsolve.getOriginalProblem().getVariableNames();
+      auto origcol_mapping = postsolve.origcol_mapping;
       primal.resize( ncols );
 
-      for( int v = 1; v < ncols +1; ++v )
-//      for( int v = 1; v < sol.size(); ++v )
+      for( int red_col = 0; red_col < ncols ; ++red_col )
       {
-         assert( abs( sol[v] ) == v );
-         primal[v - 1] = sol[v] > 0 ? 1 : 0;
+         int orig_col = get_index_of_variable_name( names, origcol_mapping, red_col );
+         assert( abs( sol[orig_col] ) == orig_col );
+         primal[red_col] = sol[orig_col] > 0 ? 1 : 0;
       }
-      solbuffer = Solution<REAL>( primal );
+      sol_buffer = Solution<REAL>( primal );
       return true;
    }
 

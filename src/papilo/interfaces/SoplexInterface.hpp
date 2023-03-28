@@ -278,7 +278,7 @@ class SoplexInterface : public SolverInterface<REAL>
    }
 
    bool
-   getSolution( Solution<REAL>& sol ) override
+   getSolution( Solution<REAL>& sol, PostsolveStorage<REAL>& postsolve ) override
    {
       Vec<soplex::Real> buffer;
 

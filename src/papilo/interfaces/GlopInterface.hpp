@@ -277,7 +277,7 @@ class GlopInterface : public SolverInterface<REAL>
 
 
    bool
-   getSolution( Solution<REAL>& solbuffer ) override
+   getSolution( Solution<REAL>& sol, PostsolveStorage<REAL>& postsolve ) override
    {
       Vec<REAL> primal{};
       Vec<REAL> dual{};

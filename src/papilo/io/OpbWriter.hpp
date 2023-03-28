@@ -196,7 +196,7 @@ struct OpbWriter
                assert( val != 0 );
                assert( num.isIntegral(val ) );
                fmt::print( out, "{}{} {} ", val < 0 ? "+" : "-",
-                           abs( boost::multiprecision::cpp_int(val) ),
+                           boost::multiprecision::cpp_int( abs( val ) ).str(),
                            varnames[col_mapping[vector.getIndices()[j]]] );
             }
             assert(num.isIntegral( rhs[row] * scale ));
