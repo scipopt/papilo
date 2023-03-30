@@ -62,6 +62,7 @@ VISUALIZE="${27}"
 CLUSTERNODES="${28}"
 SLURMACCOUNT="${29}"
 SOLVE_EXECUTABLE="${30}"
+SKIP_PRESOLVE="${31}"
 
 # check if all variables defined (by checking the last one)
 if test -z "${SLURMACCOUNT}"
@@ -97,6 +98,7 @@ then
     echo "CLUSTERNODES  = ${CLUSTERNODES}"
     echo "SLURMACCOUNT  = ${SLURMACCOUNT}"
     echo "SOLVE_EXECUTABLE  = ${SOLVE_EXECUTABLE}"
+    echo "SKIP_PRESOLVE  = ${SKIP_PRESOLVE}"
     exit 1;
 fi
 
@@ -107,6 +109,7 @@ then
 fi
 export PAPILO_OPT_COMMAND
 export SOLVE_EXECUTABLE
+export SKIP_PRESOLVE
 
 
 

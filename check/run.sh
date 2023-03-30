@@ -126,10 +126,15 @@ then
     eval "${EXECNAME} ${PAPILO_OPT_COMMAND} -p ${SETFILEPAPILO} -s ${SETFILESCIP} -f ${FILENAME} --tlim ${TIMELIMIT} --presolve.randomseed=${SEED}" 2>> "${ERRFILE}" | tee -a "${OUTFILE}"
     echo "----------------------------------------------------------"
 else
-    PRESOLVED_FILENAME="${FILENAME[@]//./_presolved.}"
-    echo ">>> Experimental feature!!"
-    echo ">>> Executing: ${EXECNAME} presolve -f ${FILENAME} -p ${SETFILEPAPILO} -s ${SETFILESCIP} --tlim ${TIMELIMIT} --presolve.randomseed=${SEED} -r ${PRESOLVED_FILENAME}"
-    eval "${EXECNAME} presolve -p ${SETFILEPAPILO} -s ${SETFILESCIP} -f ${FILENAME} --tlim ${TIMELIMIT} --presolve.randomseed=${SEED} -r ${PRESOLVED_FILENAME}" 2>> "${ERRFILE}" | tee -a "${OUTFILE}"
+    if [[ ${SKIP_PRESOLVE} == "true" ]]
+    then
+        PRESOLVED_FILENAME="${FILENAME[@]//./_presolved.}"
+        echo ">>> Experimental feature!!"
+        echo ">>> Executing: ${EXECNAME} presolve -f ${FILENAME} -p ${SETFILEPAPILO} -s ${SETFILESCIP} --tlim ${TIMELIMIT} --presolve.randomseed=${SEED} -r ${PRESOLVED_FILENAME}"
+        eval "${EXECNAME} presolve -p ${SETFILEPAPILO} -s ${SETFILESCIP} -f ${FILENAME} --tlim ${TIMELIMIT} --presolve.randomseed=${SEED} -r ${PRESOLVED_FILENAME}" 2>> "${ERRFILE}" | tee -a "${OUTFILE}"
+    else
+        PRESOLVED_FILENAME="${FILENAME}"
+    fi
 
     if [[ ${SOLVE_EXECUTABLE} =~ $"scip" ]]
     then
@@ -143,11 +148,18 @@ else
     then
         echo ">>> Executing SOPLEX ${SOLVE_EXECUTABLE} ${PRESOLVED_FILENAME}"
         eval "${SOLVE_EXECUTABLE} ${PRESOLVED_FILENAME}" 2>> "${ERRFILE}" | tee -a "${OUTFILE}"
+    elif [[ ${SOLVE_EXECUTABLE} =~ .*"sat4j".* ]]
+    then
+        echo ">>> Executing Sat4j ${SOLVE_EXECUTABLE} ${PRESOLVED_FILENAME}"
+        eval "java -jar ${SOLVE_EXECUTABLE} ${PRESOLVED_FILENAME}" 2>> "${ERRFILE}" | tee -a "${OUTFILE}"
     else
       echo "Unknown solver ${SOLVE_EXECUTABLE}"
     fi
     echo "----------------------------------------------------------"
-    rm ${PRESOLVED_FILENAME}
+    if [[ ${SKIP_PRESOLVE} == "true" ]]
+    then
+      rm ${PRESOLVED_FILENAME}
+    fi
 fi
 
 

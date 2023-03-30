@@ -36,6 +36,7 @@ CLIENTTMPDIR    =       /tmp
 REOPT           =       false
 PAPILO_OPT_COMMAND      =       presolve
 SOLVE_EXECUTABLE        =       off
+SKIP_PRESOLVE   =       false
 SETCUTOFF       =       0
 VISUALIZE       =       false
 MAXJOBS         =       1
