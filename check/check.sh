@@ -43,6 +43,7 @@ PERMUTE="${22}"
 SEEDS="${23}"
 GLBSEEDSHIFT="${24}"
 STARTPERM="${25}"
+SOLVE_EXECUTABLE="${26}"
 
 # check if all variables defined (by checking the last one)
 if test -z "${STARTPERM}"
@@ -74,9 +75,11 @@ then
     echo "SEEDS         = ${SEEDS}"
     echo "GLBSEEDSHIFT  = ${GLBSEEDSHIFT}"
     echo "STARTPERM     = ${STARTPERM}"
+    echo "SOLVE_EXECUTABLE     = ${SOLVE_EXECUTABLE}"
     exit 1;
 fi
 export PAPILO_OPT_COMMAND
+export SOLVE_EXECUTABLE
 
 # call routines for creating the result directory, checking for existence
 # of passed settings, etc

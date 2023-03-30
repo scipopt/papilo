@@ -119,10 +119,38 @@ echo "@05 ${TIMELIMIT}"                   >> "${OUTFILE}"
 EXECNAME="${EXECNAME/ERRFILE_PLACEHOLDER/${ERRFILE}}"
 EXECNAME="${SRUN}${EXECNAME/RRTRACEFOLDER_PLACEHOLDER/${ERRFILE}}"
 
-# FILENAME is exported in the calling script check_cluster.sh
-echo ">>> Executing: ${EXECNAME} ${PAPILO_OPT_COMMAND} -f ${FILENAME} -p ${SETFILEPAPILO} -s ${SETFILESCIP} --tlim ${TIMELIMIT} --presolve.randomseed=${SEED}"
-eval "${EXECNAME} ${PAPILO_OPT_COMMAND} -p ${SETFILEPAPILO} -s ${SETFILESCIP} -f ${FILENAME} --tlim ${TIMELIMIT} --presolve.randomseed=${SEED}" 2>> "${ERRFILE}" | tee -a "${OUTFILE}"
-echo "----------------------------------------------------------"
+if [[ ${SOLVE_EXECUTABLE} == "off" ]]
+then
+    # FILENAME is exported in the calling script check_cluster.sh
+    echo ">>> Executing: ${EXECNAME} ${PAPILO_OPT_COMMAND} -f ${FILENAME} -p ${SETFILEPAPILO} -s ${SETFILESCIP} --tlim ${TIMELIMIT} --presolve.randomseed=${SEED}"
+    eval "${EXECNAME} ${PAPILO_OPT_COMMAND} -p ${SETFILEPAPILO} -s ${SETFILESCIP} -f ${FILENAME} --tlim ${TIMELIMIT} --presolve.randomseed=${SEED}" 2>> "${ERRFILE}" | tee -a "${OUTFILE}"
+    echo "----------------------------------------------------------"
+else
+    PRESOLVED_FILENAME="${FILENAME[@]//./_presolved.}"
+    echo ">>> Experimental feature!!"
+    echo ">>> Executing: ${EXECNAME} presolve -f ${FILENAME} -p ${SETFILEPAPILO} -s ${SETFILESCIP} --tlim ${TIMELIMIT} --presolve.randomseed=${SEED} -r ${PRESOLVED_FILENAME}"
+    eval "${EXECNAME} presolve -p ${SETFILEPAPILO} -s ${SETFILESCIP} -f ${FILENAME} --tlim ${TIMELIMIT} --presolve.randomseed=${SEED} -r ${PRESOLVED_FILENAME}" 2>> "${ERRFILE}" | tee -a "${OUTFILE}"
+
+    if [[ ${SOLVE_EXECUTABLE} =~ $"scip" ]]
+    then
+        echo ">>> Executing SCIP ${SOLVE_EXECUTABLE} -f ${PRESOLVED_FILENAME}"
+        eval "${SOLVE_EXECUTABLE} -f ${PRESOLVED_FILENAME}" 2>> "${ERRFILE}" | tee -a "${OUTFILE}"
+    elif [[ ${SOLVE_EXECUTABLE} =~ $"roundingsat" ]]
+    then
+        echo ">>> Executing ROUNDINGSAT ${SOLVE_EXECUTABLE} ${PRESOLVED_FILENAME}"
+        eval "${SOLVE_EXECUTABLE} ${PRESOLVED_FILENAME}" 2>> "${ERRFILE}" | tee -a "${OUTFILE}"
+    elif [[ ${SOLVE_EXECUTABLE} =~ $"soplex" ]]
+    then
+        echo ">>> Executing SOPLEX ${SOLVE_EXECUTABLE} ${PRESOLVED_FILENAME}"
+        eval "${SOLVE_EXECUTABLE} ${PRESOLVED_FILENAME}" 2>> "${ERRFILE}" | tee -a "${OUTFILE}"
+    else
+      echo "Unknown solver ${SOLVE_EXECUTABLE}"
+    fi
+    echo "----------------------------------------------------------"
+    rm ${PRESOLVED_FILENAME}
+fi
+
+
 
 retcode=${PIPESTATUS[0]}
 if test "${retcode}" != 0

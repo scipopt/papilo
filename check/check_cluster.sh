@@ -61,6 +61,7 @@ SETCUTOFF="${26}"
 VISUALIZE="${27}"
 CLUSTERNODES="${28}"
 SLURMACCOUNT="${29}"
+SOLVE_EXECUTABLE="${30}"
 
 # check if all variables defined (by checking the last one)
 if test -z "${SLURMACCOUNT}"
@@ -95,6 +96,7 @@ then
     echo "VISUALIZE     = ${VISUALIZE}"
     echo "CLUSTERNODES  = ${CLUSTERNODES}"
     echo "SLURMACCOUNT  = ${SLURMACCOUNT}"
+    echo "SOLVE_EXECUTABLE  = ${SOLVE_EXECUTABLE}"
     exit 1;
 fi
 
@@ -104,6 +106,8 @@ then
   exit 1
 fi
 export PAPILO_OPT_COMMAND
+export SOLVE_EXECUTABLE
+
 
 
 # configure cluster-related environment variables
