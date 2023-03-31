@@ -126,13 +126,13 @@ then
     eval "${EXECNAME} ${PAPILO_OPT_COMMAND} -p ${SETFILEPAPILO} -s ${SETFILESCIP} -f ${FILENAME} --tlim ${TIMELIMIT} --presolve.randomseed=${SEED}" 2>> "${ERRFILE}" | tee -a "${OUTFILE}"
     echo "----------------------------------------------------------"
 else
-    if [[ ${SKIP_PRESOLVE} == "true" ]]
+    if [[ ${SKIP_PRESOLVE} == "false" ]]
     then
         PRESOLVED_FILENAME="${FILENAME[@]//./_presolved.}"
-        echo ">>> Experimental feature!!"
         echo ">>> Executing: ${EXECNAME} presolve -f ${FILENAME} -p ${SETFILEPAPILO} -s ${SETFILESCIP} --tlim ${TIMELIMIT} --presolve.randomseed=${SEED} -r ${PRESOLVED_FILENAME}"
         eval "${EXECNAME} presolve -p ${SETFILEPAPILO} -s ${SETFILESCIP} -f ${FILENAME} --tlim ${TIMELIMIT} --presolve.randomseed=${SEED} -r ${PRESOLVED_FILENAME}" 2>> "${ERRFILE}" | tee -a "${OUTFILE}"
     else
+        echo "skipped presolving"
         PRESOLVED_FILENAME="${FILENAME}"
     fi
 
@@ -148,15 +148,15 @@ else
     then
         echo ">>> Executing SOPLEX ${SOLVE_EXECUTABLE} ${PRESOLVED_FILENAME}"
         eval "${SOLVE_EXECUTABLE} ${PRESOLVED_FILENAME}" 2>> "${ERRFILE}" | tee -a "${OUTFILE}"
-    elif [[ ${SOLVE_EXECUTABLE} =~ .*"sat4j".* ]]
+    elif [[ ${SOLVE_EXECUTABLE} =~ .*"sat4j.pb.".* ]]
     then
-        echo ">>> Executing Sat4j ${SOLVE_EXECUTABLE} ${PRESOLVED_FILENAME}"
-        eval "java -jar ${SOLVE_EXECUTABLE} ${PRESOLVED_FILENAME}" 2>> "${ERRFILE}" | tee -a "${OUTFILE}"
+        echo ">>> Executing Sat4j java -jar ${SOLVE_EXECUTABLE} sat4j.pb ${TIMELIMIT} ${PRESOLVED_FILENAME}"
+        eval "java -jar ${SOLVE_EXECUTABLE} sat4j.pb ${TIMELIMIT} ${PRESOLVED_FILENAME}" 2>> "${ERRFILE}" | tee -a "${OUTFILE}"
     else
-      echo "Unknown solver ${SOLVE_EXECUTABLE}"
+      echo "Unknown solver: ${SOLVE_EXECUTABLE}"
     fi
     echo "----------------------------------------------------------"
-    if [[ ${SKIP_PRESOLVE} == "true" ]]
+    if [[ ${SKIP_PRESOLVE} == "false" ]]
     then
       rm ${PRESOLVED_FILENAME}
     fi

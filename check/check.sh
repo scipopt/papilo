@@ -44,7 +44,7 @@ SEEDS="${23}"
 GLBSEEDSHIFT="${24}"
 STARTPERM="${25}"
 SOLVE_EXECUTABLE="${26}"
-SKIP_PRESOLVE="${26}"
+SKIP_PRESOLVE="${27}"
 
 # check if all variables defined (by checking the last one)
 if test -z "${STARTPERM}"
