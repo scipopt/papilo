@@ -1126,7 +1126,7 @@ class VeriPb : public CertificateInterface<REAL>
    void
    log_solution( const Solution<REAL>& orig_solution, const Vec<String>& names )
    {
-      proof_out << "o";
+      proof_out << "ov";
       next_constraint_id++;
       for( int i = 0; i < orig_solution.primal.size(); i++ )
       {
