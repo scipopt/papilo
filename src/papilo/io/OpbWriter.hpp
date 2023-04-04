@@ -112,7 +112,8 @@ struct OpbWriter
       }
       out.push( file );
 
-      fmt::print( out, "* #variable= {} #constraint= {}\n", prob.getNumIntegralCols(), matrix.getNRows() );
+      fmt::print( out, "* #variable= {} #constraint= {}\n",
+                  getVars( prob, col_mapping ), getRows( prob ) );
       fmt::print( out, "* Objective Offset {}\n", boost::multiprecision::cpp_int( abs(prob.getObjective().offset) ).str() );
 
       bool obj_has_nonzeros = false;
@@ -139,10 +140,6 @@ struct OpbWriter
             fmt::print( out, "{}{} {} ", coef > 0 ? "+" : "-", boost::multiprecision::cpp_int( abs(coef) ).str(),
                         varnames[col_mapping[i]] );
          }
-//         int obj_offset = boost::multiprecision::cpp_int(prob.getObjective().offset);
-//         if( obj_offset != 0 )
-//            fmt::print( out, "{}{} ", obj_offset > 0 ? "+" : "-",
-//                        abs( obj_offset ) );
          fmt::print( out, ";\n" );
       }
 
@@ -225,6 +222,45 @@ struct OpbWriter
       }
 
       return true;
+   }
+
+   static int
+   getVars( const Problem<REAL>& prob,
+                 const Vec<int>& col_mapping)
+   {
+      int var = -1;
+      for( int i = 0; i < prob.getNCols(); i++ )
+      {
+         auto var_name = prob.getVariableNames()[col_mapping[i]];
+         assert( !var_name.empty() );
+         assert( var_name[0] == 'x' );
+         var_name = var_name.substr( 1 );
+         int v = atoi( var_name.c_str() );
+         if( v >= var )
+            var = v;
+      }
+      assert(var > 0);
+      return var;
+   }
+
+   static int
+   getRows( const Problem<REAL>& prob)
+   {
+      int rows = 0;
+      for(int i =0; i< prob.getNRows(); i++)
+      {
+         if(prob.getRowFlags()[i].test(RowFlag::kEquation))
+         {
+            rows++;
+            continue ;
+         }
+         if(!prob.getRowFlags()[i].test(RowFlag::kLhsInf))
+            rows++;
+         if(!prob.getRowFlags()[i].test(RowFlag::kRhsInf))
+            rows++;
+      }
+      return rows;
+
    }
 };
 
