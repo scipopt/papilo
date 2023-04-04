@@ -128,7 +128,7 @@ then
 else
     if [[ ${SKIP_PRESOLVE} == "false" ]]
     then
-        PRESOLVED_FILENAME="${FILENAME[@]//./_presolved.}"
+        PRESOLVED_FILENAME="${FILENAME[@]//.opb/_presolved.opb}"
         echo ">>> Executing: ${EXECNAME} presolve -f ${FILENAME} -p ${SETFILEPAPILO} -s ${SETFILESCIP} --tlim ${TIMELIMIT} --presolve.randomseed=${SEED} -r ${PRESOLVED_FILENAME}"
         eval "${EXECNAME} presolve -p ${SETFILEPAPILO} -s ${SETFILESCIP} -f ${FILENAME} --tlim ${TIMELIMIT} --presolve.randomseed=${SEED} -r ${PRESOLVED_FILENAME}" 2>> "${ERRFILE}" | tee -a "${OUTFILE}"
     else
