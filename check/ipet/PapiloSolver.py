@@ -4,6 +4,7 @@ from ipet import Key
 from ipet.parsing.Solver import SCIPSolver
 
 PRESOLVE_TIME_NAME = "presolve_time"
+SOLVER_SOLVING_TIME = "solver_solving_time"
 
 ROWS_NAME = "rows"
 COLUMNS_NAME = "columns"
@@ -87,13 +88,14 @@ DEFAULT_VALUE = -1.0
 
 class PapiloSolver(SCIPSolver):
     solverId = "PaPILO"
+
+    floating_point_expr = "[-+]?[0-9]*\.?[0-9]*"
+
     # used to identify the solver
     recognition_expr = re.compile("starting presolve of problem")
     version_expr = re.compile("PaPILO version (\S+)")
 
     primalbound_expr = re.compile("objective value:\s*(\S+)")
-    dualbound_expr = re.compile("objective value:\s*(\S+)")
-
     solvingtime_expr = re.compile("Solving time\s+(\S+)")
 
     presolving_time_expr = re.compile("presolving finished after\s+(\S+)")
@@ -101,7 +103,8 @@ class PapiloSolver(SCIPSolver):
     presolving_time_unb_expr = re.compile("presolving detected unbounded problem after\s+(\S+)")
     presolving_time_unb_inf_expr = re.compile("presolving detected unbounded or infeasible problem after\s+(\S+)")
 
-    floating_point_expr = "[-+]?[0-9]*\.?[0-9]*"
+    solving_time_rounding_sat_expr = re.compile("c cpu time\s+(\S+)")
+    solving_time_sat4j_expr = re.compile("c Total wall clock time \(in seconds\):\s+(\S+)")
 
     rows_expr = re.compile("\s+rows:\s+(\S+)")
     columns_expr = re.compile("\s+columns:\s+(\S+)")
@@ -187,6 +190,7 @@ class PapiloSolver(SCIPSolver):
         pass
 
     def extractOptionalInformation(self, line: str):
+        # extract presolving time and solving time (in case PaPILO finished)
         if line.startswith("presolving finished"):
             self.extractByExpression(line, self.presolving_time_expr, PRESOLVE_TIME_NAME)
         elif line.startswith("presolving detected infeasible problem"):
@@ -198,6 +202,22 @@ class PapiloSolver(SCIPSolver):
         elif line.startswith("presolving detected unbounded problem"):
             self.extractByExpression(line, self.presolving_time_unb_expr, PRESOLVE_TIME_NAME)
             self.extractByExpression(line, self.presolving_time_unb_expr, Key.SolvingTime)
+
+        # extract solving for Solvers (SAT4J and RoundingSAT)
+        elif line.startswith("c Total wall clock time (in seconds):"):
+            self.extractByExpression(line, self.solving_time_sat4j_expr, SOLVER_SOLVING_TIME)
+            self.addData(Key.SolvingTime,
+                         float(self.getData(SOLVER_SOLVING_TIME)) + float(self.getData(PRESOLVE_TIME_NAME)))
+        elif line.startswith("c cpu time"):
+            self.extractByExpression(line, self.solving_time_rounding_sat_expr, SOLVER_SOLVING_TIME)
+            self.addData(Key.SolvingTime,
+                 float(self.getData(SOLVER_SOLVING_TIME)) + float(self.getData(PRESOLVE_TIME_NAME)))
+        elif line.startswith("s UNSATISFIABLE"):
+            self.addData(Key.SolverStatus, Key.SolverStatusCodes.Infeasible)
+        elif line.startswith("s SATISFIABLE") or line.startswith("s OPTIMUM FOUND") :
+            self.addData(Key.SolverStatus, Key.SolverStatusCodes.Optimal)
+        elif line.startswith("s TIMELIMIT") or line.startswith("s UNKNOWN"):
+            self.addData(Key.SolverStatus, Key.SolverStatusCodes.Optimal)
 
         self.extractByExpression(line, self.rows_expr, ROWS_NAME)
         self.extractByExpression(line, self.columns_expr, COLUMNS_NAME)
