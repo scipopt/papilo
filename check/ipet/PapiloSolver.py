@@ -317,13 +317,3 @@ class PapiloSolver(Solver):
     def setup_time_expr_for_solver(self, name):
         return re.compile(
             "\s+" + name + "\s+\d+\s+" + self.floating_point_expr + "\s+\d+\s+" + self.floating_point_expr + "\s+(\S+)")
-
-
-if __name__ == '__main__':
-    line = "s UNKNOWN"
-    ps = PapiloSolver()
-    stat = ps.getData(Key.SolverStatus)
-    if stat == -1:
-        ps.addData(Key.SolverStatus, Key.SolverStatusCodes.TimeLimit)
-    stat = ps.getData(Key.SolverStatus)
-    print(stat)
