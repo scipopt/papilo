@@ -1,7 +1,11 @@
+import logging
 import re
 
 from ipet import Key
-from ipet.parsing.Solver import SCIPSolver
+from ipet.parsing.Solver import Solver
+
+logger = logging.getLogger(__name__)
+
 
 PRESOLVE_TIME_NAME = "presolve_time"
 SOLVER_SOLVING_TIME = "solver_solving_time"
@@ -86,7 +90,7 @@ TIME_sparsify = "time%sparsify"
 DEFAULT_VALUE = -1.0
 
 
-class PapiloSolver(SCIPSolver):
+class PapiloSolver(Solver):
     solverId = "PaPILO"
 
     floating_point_expr = "[-+]?[0-9]*\.?[0-9]*"
@@ -141,14 +145,6 @@ class PapiloSolver(SCIPSolver):
     medium_rounds = 0
     exhaustive_rounds = 0
 
-    solverstatusmap = {
-        "solving detected infeasible problem after\s+": Key.SolverStatusCodes.Infeasible,
-        "presolving detected infeasible problem after\s+": Key.SolverStatusCodes.Infeasible,
-        "Solution passed validation": Key.SolverStatusCodes.Optimal,
-        "solving interrupted after\s+": Key.SolverStatusCodes.TimeLimit,
-        "time limit reached in presolving\s+": Key.SolverStatusCodes.TimeLimit,
-    }
-
     def __init__(self, **kw):
         super(PapiloSolver, self).__init__(**kw)
 
@@ -196,12 +192,19 @@ class PapiloSolver(SCIPSolver):
         elif line.startswith("presolving detected infeasible problem"):
             self.extractByExpression(line, self.presolving_time_inf_expr, PRESOLVE_TIME_NAME)
             self.extractByExpression(line, self.presolving_time_inf_expr, Key.SolvingTime)
+            self.addData(Key.SolverStatus, Key.SolverStatusCodes.Infeasible)
         elif line.startswith("presolving detected unbounded or infeasible problem"):
             self.extractByExpression(line, self.presolving_time_unb_inf_expr, PRESOLVE_TIME_NAME)
             self.extractByExpression(line, self.presolving_time_unb_inf_expr, Key.SolvingTime)
+            self.addData(Key.SolverStatus, Key.SolverStatusCodes.InfOrUnbounded)
         elif line.startswith("presolving detected unbounded problem"):
             self.extractByExpression(line, self.presolving_time_unb_expr, PRESOLVE_TIME_NAME)
             self.extractByExpression(line, self.presolving_time_unb_expr, Key.SolvingTime)
+            self.addData(Key.SolverStatus, Key.SolverStatusCodes.Unbounded)
+        elif line.startswith("Solution passed validation"):
+            self.addData(Key.SolverStatus, Key.SolverStatusCodes.Optimal)
+        elif line.startswith("time limit reached in presolving") or line.startswith("solving interrupted after"):
+            self.addData(Key.SolverStatus, Key.SolverStatusCodes.TimeLimit)
 
         # extract solving for Solvers (SAT4J and RoundingSAT)
         elif line.startswith("c Total wall clock time (in seconds):"):
@@ -214,10 +217,12 @@ class PapiloSolver(SCIPSolver):
                  float(self.getData(SOLVER_SOLVING_TIME)) + float(self.getData(PRESOLVE_TIME_NAME)))
         elif line.startswith("s UNSATISFIABLE"):
             self.addData(Key.SolverStatus, Key.SolverStatusCodes.Infeasible)
-        elif line.startswith("s SATISFIABLE") or line.startswith("s OPTIMUM FOUND") :
+        elif line.startswith("s SATISFIABLE") or line.startswith("s OPTIMUM FOUND"):
             self.addData(Key.SolverStatus, Key.SolverStatusCodes.Optimal)
-        elif line.startswith("s TIMELIMIT") or line.startswith("s UNKNOWN"):
-            self.addData(Key.SolverStatus, Key.SolverStatusCodes.Optimal)
+        elif line.startswith("s TIMELIMIT"):
+            self.addData(Key.SolverStatus, Key.SolverStatusCodes.TimeLimit)
+        elif line.startswith("s UNKNOWN") and self.getData(Key.SolverStatus) == -1:
+                self.addData(Key.SolverStatus, Key.SolverStatusCodes.TimeLimit)
 
         self.extractByExpression(line, self.rows_expr, ROWS_NAME)
         self.extractByExpression(line, self.columns_expr, COLUMNS_NAME)
@@ -312,3 +317,13 @@ class PapiloSolver(SCIPSolver):
     def setup_time_expr_for_solver(self, name):
         return re.compile(
             "\s+" + name + "\s+\d+\s+" + self.floating_point_expr + "\s+\d+\s+" + self.floating_point_expr + "\s+(\S+)")
+
+
+if __name__ == '__main__':
+    line = "s UNKNOWN"
+    ps = PapiloSolver()
+    stat = ps.getData(Key.SolverStatus)
+    if stat == -1:
+        ps.addData(Key.SolverStatus, Key.SolverStatusCodes.TimeLimit)
+    stat = ps.getData(Key.SolverStatus)
+    print(stat)
