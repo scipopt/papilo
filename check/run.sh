@@ -139,7 +139,7 @@ else
     if [[ ${SOLVE_EXECUTABLE} =~ $"scip" ]]
     then
         echo ">>> Executing SCIP ${SOLVE_EXECUTABLE} -f ${PRESOLVED_FILENAME}"
-        eval "${SOLVE_EXECUTABLE} -f ${PRESOLVED_FILENAME}" 2>> "${ERRFILE}" | tee -a "${OUTFILE}"
+        eval "${SOLVE_EXECUTABLE} -f ${PRESOLVED_FILENAME}" -s ${SETFILESCIP} 2>> "${ERRFILE}" | tee -a "${OUTFILE}"
     elif [[ ${SOLVE_EXECUTABLE} =~ $"roundingsat" ]]
     then
         echo ">>> Executing ROUNDINGSAT ${SOLVE_EXECUTABLE} ${PRESOLVED_FILENAME}"
