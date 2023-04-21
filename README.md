@@ -239,7 +239,7 @@ papilo::Solution<REAL> reducedsol(std::move(reducedsolvals));
 papilo::Solution<REAL> origsol;
 
 // transform the reduced solution into the original problem space
-PostsolveStatus status = result.postsolve.undo(reducedsol, origsol);
+PostsolveStatus status = result.postsolve.undo(reducedsol, origsol, postsolve_storage);
 ```
 
 The value of `status` is `PostsolveStatus::kOk` if everything worked or `PostsolveStatus::kFail` otherwise.

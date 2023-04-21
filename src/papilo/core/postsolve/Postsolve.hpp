@@ -77,7 +77,7 @@ class Postsolve
    PostsolveStatus
    undo( const Solution<REAL>& reducedSolution,
          Solution<REAL>& originalSolution,
-         PostsolveStorage<REAL> postsolveStorage, bool is_optimal = true ) const;
+         const PostsolveStorage<REAL>& postsolveStorage, bool is_optimal = true ) const;
 
  private:
    REAL
@@ -177,7 +177,7 @@ template <typename REAL>
 PostsolveStatus
 Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
                        Solution<REAL>& originalSolution,
-                       PostsolveStorage<REAL> postsolveStorage, bool is_optimal ) const
+                       const PostsolveStorage<REAL>& postsolveStorage, bool is_optimal ) const
 {
 
    PrimalDualSolValidation<REAL> validation{message, num};
