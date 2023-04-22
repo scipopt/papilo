@@ -621,7 +621,7 @@ ProblemUpdate<REAL>::fixCol( int col, REAL val, ArgumentType argument )
              problem.getColFlags()[col].test( ColFlag::kLbInf ), val );
          certificate_interface->change_lower_bound( val, col, problem,
                                                     postsolve.origcol_mapping,
-                                                    matrix_buffer, argument );
+                                                    matrix_buffer, postsolve, argument );
          lbs[col] = val;
          cflags[col].unset( ColFlag::kLbUseless );
       }
@@ -639,7 +639,7 @@ ProblemUpdate<REAL>::fixCol( int col, REAL val, ArgumentType argument )
              problem.getColFlags()[col].test( ColFlag::kUbInf ), val );
          certificate_interface->change_upper_bound(
              val, col, problem, postsolve.origcol_mapping, matrix_buffer,
-             argument );
+             postsolve, argument );
          ubs[col] = val;
          cflags[col].unset( ColFlag::kUbUseless );
       }
@@ -764,7 +764,7 @@ ProblemUpdate<REAL>::changeLB( int col, REAL val, ArgumentType argument )
                                      newbound );
       certificate_interface->change_lower_bound( newbound, col, problem,
                                                  postsolve.origcol_mapping,
-                                                 matrix_buffer, argument );
+                                                 matrix_buffer, postsolve, argument );
 
       lbs[col] = newbound;
 
@@ -857,7 +857,7 @@ ProblemUpdate<REAL>::changeUB( int col, REAL val, ArgumentType argument )
 
       postsolve.storeVarBoundChange( false, col, ubs[col], isInfinity,
                                      newbound );
-      certificate_interface->change_upper_bound( newbound, col, problem, postsolve.origcol_mapping, matrix_buffer, argument );
+      certificate_interface->change_upper_bound( newbound, col, problem, postsolve.origcol_mapping, matrix_buffer, postsolve, argument );
       ubs[col] = newbound;
 
       if( !cflags[col].test( ColFlag::kLbInf ) && ubs[col] == lbs[col] )
@@ -1374,7 +1374,7 @@ ProblemUpdate<REAL>::apply_dualfix( Vec<REAL>& lbs, Vec<REAL>& ubs,
                                            lbs[col] );
             certificate_interface->change_upper_bound(
                 lbs[col], col, problem,
-                postsolve.origcol_mapping, matrix_buffer,
+                postsolve.origcol_mapping, matrix_buffer, postsolve,
                 ArgumentType::kDual );
             ubs[col] = lbs[col];
             cflags[col].unset( ColFlag::kUbInf );
@@ -1405,7 +1405,7 @@ ProblemUpdate<REAL>::apply_dualfix( Vec<REAL>& lbs, Vec<REAL>& ubs,
                                            ubs[col] );
             certificate_interface->change_lower_bound(
                 ubs[col],col, problem, postsolve.origcol_mapping, matrix_buffer,
-                ArgumentType::kDual );
+                postsolve, ArgumentType::kDual );
             lbs[col] = ubs[col];
             cflags[col].unset( ColFlag::kLbInf );
             ++stats.nboundchgs;
@@ -1901,7 +1901,7 @@ ProblemUpdate<REAL>::removeEmptyColumns()
                       domains.flags[col].test( ColFlag::kLbInf ), fixval );
                   certificate_interface->change_lower_bound(
                       fixval,col, problem, postsolve.origcol_mapping, matrix_buffer,
-                      ArgumentType::kDual );
+                      postsolve, ArgumentType::kDual );
                }
                if( domains.flags[col].test( ColFlag::kUbInf ) ||
                    !num.isEq( domains.upper_bounds[col], fixval ) )
@@ -1912,7 +1912,7 @@ ProblemUpdate<REAL>::removeEmptyColumns()
                   certificate_interface->change_upper_bound(
                       fixval, col, problem,
                       postsolve.origcol_mapping, matrix_buffer,
-                      ArgumentType::kDual );
+                      postsolve, ArgumentType::kDual );
                }
             }
             else
@@ -2136,7 +2136,7 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
             int dominated_col = reduction.col;
             assert(num.isIntegral(reduction.newval));
             int dominating_col = (int) reduction.newval;
-            certificate_interface->dominating_columns(dominating_col, dominated_col, problem.getVariableNames(), postsolve.origcol_mapping);
+            certificate_interface->dominating_columns(dominating_col, dominated_col, problem.getVariableNames(), postsolve.origcol_mapping, postsolve);
             break;
          }
          case ColReduction::LOWER_BOUND:

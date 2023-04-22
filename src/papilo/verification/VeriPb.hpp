@@ -206,6 +206,7 @@ class VeriPb : public CertificateInterface<REAL>
    void
    change_upper_bound( REAL val, int col, const Problem<REAL>& problem,
                        const Vec<int>& var_mapping, MatrixBuffer<REAL>& matrix_buffer,
+                       const PostsolveStorage<REAL>& postsolve_storage,
                        ArgumentType argument = ArgumentType::kPrimal )
    {
       next_constraint_id++;
@@ -221,7 +222,9 @@ class VeriPb : public CertificateInterface<REAL>
       case ArgumentType::kDual:
       case ArgumentType::kSymmetry:
          proof_out << RED << "1 " << NEGATED << names[orig_col] << " >= 1 ; "
-                   << names[orig_col] << " -> 0\n";
+                   << names[orig_col] << " -> 0";
+         map_postsolve_stack_to_witnesses(postsolve_storage, names);
+         proof_out << "\n";
          break;
       default:
          assert( false );
@@ -287,6 +290,7 @@ class VeriPb : public CertificateInterface<REAL>
    void
    change_lower_bound( REAL val, int col, const Problem<REAL>& problem,
                        const Vec<int>& var_mapping, MatrixBuffer<REAL>& matrix_buffer,
+                       const PostsolveStorage<REAL>& postsolve_storage,
                        ArgumentType argument = ArgumentType::kPrimal )
    {
       next_constraint_id++;
@@ -304,8 +308,9 @@ class VeriPb : public CertificateInterface<REAL>
       case ArgumentType::kSymmetry:
          proof_out << RED << "1 " << names[orig_col]
                    << " >= " << num.round_to_int( val ) << " ; "
-                   << names[orig_col] << " -> " << num.round_to_int( val )
-                   << "\n";
+                   << names[orig_col] << " -> " << num.round_to_int( val );
+         map_postsolve_stack_to_witnesses(postsolve_storage, names);
+         proof_out << "\n";
          break;
       default:
          assert( false );
@@ -361,7 +366,8 @@ class VeriPb : public CertificateInterface<REAL>
 
    void
    dominating_columns( int dominating_column, int dominated_column,
-                       const Vec<String>& names, const Vec<int>& var_mapping )
+                       const Vec<String>& names, const Vec<int>& var_mapping,
+                       const PostsolveStorage<REAL>& postsolve)
    {
       next_constraint_id++;
       auto name_dominating = names[var_mapping[dominating_column]];
@@ -369,7 +375,9 @@ class VeriPb : public CertificateInterface<REAL>
       proof_out << RED << "1 " << name_dominating << " +1 " << NEGATED
                 << name_dominated << " >= 1 ; " << name_dominating << " -> "
                 << name_dominated << " " << name_dominated << " -> "
-                << name_dominating << "\n";
+                << name_dominating;
+      map_postsolve_stack_to_witnesses(postsolve, names);
+      proof_out << "\n";
    }
 
    void
@@ -1157,6 +1165,7 @@ class VeriPb : public CertificateInterface<REAL>
    {
       if( symmetries.symmetries.empty() )
          return;
+      //TODO: implement
       proof_out << COMMENT << "symmetries: \n";
       for(Symmetry symmetry: symmetries.symmetries)
       {
@@ -1476,6 +1485,133 @@ class VeriPb : public CertificateInterface<REAL>
                    << abs( offset ) -
                           num.round_to_int( rhs ) * scale_factor[row]
                    << ";\n";
+      }
+   }
+
+   void
+   map_postsolve_stack_to_witnesses(const PostsolveStorage<REAL>& postsolveStorage, const Vec<String>& names)
+   {
+
+      auto types = postsolveStorage.types;
+      auto start = postsolveStorage.start;
+      auto indices = postsolveStorage.indices;
+      auto values = postsolveStorage.values;
+      auto origcol_mapping = postsolveStorage.origcol_mapping;
+      auto origrow_mapping = postsolveStorage.origrow_mapping;
+      auto problem = postsolveStorage.problem;
+
+      for( int i = (int)postsolveStorage.types.size() - 1; i >= 0; --i )
+      {
+         auto type = types[i];
+         int first = start[i];
+         int last = start[i + 1];
+
+         switch( type )
+         {
+         case ReductionType::kVarBoundChange:
+         case ReductionType::kReducedBoundsCost:
+         case ReductionType::kRedundantRow:
+         case ReductionType::kReasonForRowBoundChangeForcedByRow:
+         case ReductionType::kRowBoundChange:
+         case ReductionType::kRowBoundChangeForcedByRow:
+         case ReductionType::kCoefficientChange:
+         case ReductionType::kColumnDualValue:
+         case ReductionType::kRowDualValue:
+         case ReductionType::kFixedInfCol:
+         case ReductionType::kSaveRow:
+         case ReductionType::kParallelCol:
+            assert( false );
+            break;
+         case ReductionType::kFixedCol:
+         {
+            int col = indices[first];
+            int value = values[first];
+            proof_out << " " << names[col] << " -> " << value;
+            break;
+         }
+         case ReductionType::kSubstitutedCol:
+         {
+            int col = indices[first];
+            REAL side = values[first];
+            assert( abs( side ) == 1 || side == 0 );
+            if( last - first > 2 )
+            {
+               assert( false );
+               // TODO: abort
+            }
+            int col_coeff_2 = -1;
+            int value2 = 0;
+
+            int colCoef = 0.0;
+            int index2 = 0;
+            StableSum<REAL> sumcols;
+            for( int j = first + 1; j < last; ++j )
+            {
+               if( indices[j] == col )
+               {
+                  colCoef = (int) values[j];
+                  assert( abs( colCoef ) == 1 );
+               }
+               else
+               {
+                  assert( col_coeff_2 == -1 );
+                  col_coeff_2 = (int) values[j];
+                  index2 = indices[j];
+                  assert( abs( col_coeff_2 ) == 1 );
+               }
+            }
+            assert( colCoef != 0.0 );
+            side = side / colCoef;
+            col_coeff_2 = col_coeff_2 / colCoef;
+            if( side == 1 && col_coeff_2 == 1 )
+               proof_out << " " << names[col] << " -> " << NEGATED
+                         << names[index2];
+            else if( side == 0 && col_coeff_2 == -1 )
+               proof_out << " " << names[col] << " -> " << names[index2];
+            else
+               assert( false );
+            break;
+         }
+         case ReductionType::kSubstitutedColWithDual:
+         {
+            int row = indices[first];
+            int row_length = (int)values[first];
+            if(row_length != 2)
+            {
+               assert( false );
+               // TODO: abort
+            }
+            assert( indices[first + 1] == 0 );
+            REAL side = values[first + 1];
+            assert( side == values[first + 2] );
+            assert( indices[first + 2] == 0 );
+            int col = indices[first + 3 + row_length];
+            int index2 = 0;
+            int col_coeff_2 = 0;
+            int colCoef = 0.0;
+            for( int j = first + 3; j < first + 3 + row_length; ++j )
+            {
+               if( indices[j] == col )
+                  colCoef = (int) values[j];
+               else
+               {
+                  index2 = indices[j];
+                  col_coeff_2 = (int) values[j];
+               }
+            }
+            assert( colCoef != 0.0 );
+            side = side / colCoef;
+            col_coeff_2 = col_coeff_2 / colCoef;
+            if( side == 1 && col_coeff_2 == 1 )
+               proof_out << " " << names[col] << " -> " << NEGATED
+                         << names[index2];
+            else if( side == 0 && col_coeff_2 == -1 )
+               proof_out << " " << names[col] << " -> " << names[index2];
+            else
+               assert( false );
+            break;
+         }
+         }
       }
    }
 };
