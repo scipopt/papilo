@@ -1525,7 +1525,7 @@ class VeriPb : public CertificateInterface<REAL>
          case ReductionType::kFixedCol:
          {
             int col = indices[first];
-            int value = values[first];
+            int value = (int) values[first];
             proof_out << " " << names[col] << " -> " << value;
             break;
          }
