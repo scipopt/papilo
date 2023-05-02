@@ -61,11 +61,14 @@ class VeriPb : public CertificateInterface<REAL>
    Vec<int> rhs_row_mapping;
    Vec<int> lhs_row_mapping;
 
+   /// information required for optimization problems
+   bool is_optimization_problem = false;
+   bool verification_possible = true;
+   Vec<std::pair<int,int>> substitutions;
+
    /// PaPILO does not care about the integrality of the coefficient
    /// therefore store scale factors to ensure the integrality
    Vec<int> scale_factor;
-
-//   int obj_scale_factor;
 
    /// this holds the id of the next generated constraint of VeriPB
    int next_constraint_id = 0;
@@ -77,6 +80,7 @@ class VeriPb : public CertificateInterface<REAL>
    int skip_changing_lhs = UNKNOWN;
    bool saturation_already_called = false;
    std::pair<int, int> row_with_gcd = {UNKNOWN, UNKNOWN};
+
 
 #ifdef VERIPB_DEBUG
    int validate_row = UNKNOWN;
@@ -92,11 +96,12 @@ class VeriPb : public CertificateInterface<REAL>
       return scale_factor;
    }
 
-   VeriPb( const Problem<REAL>& _problem, const Num<REAL>& _num ) : num( _num )
+   VeriPb( const Problem<REAL>& _problem, const Num<REAL>& _num ) : num( _num ), substitutions( {})
    {
       rhs_row_mapping.reserve( _problem.getNRows() );
       lhs_row_mapping.reserve( _problem.getNRows() );
       scale_factor.reserve( _problem.getNRows() );
+      auto coefficients = _problem.getObjective().coefficients;
 
       for( unsigned int i = 0; i < _problem.getNRows(); ++i )
       {
@@ -116,6 +121,15 @@ class VeriPb : public CertificateInterface<REAL>
          else
             rhs_row_mapping.push_back( UNKNOWN );
       }
+      for( unsigned int i = 0; i < _problem.getNCols(); ++i )
+      {
+         if( coefficients[i] != 0 )
+         {
+            is_optimization_problem = true;
+            break;
+         }
+      }
+
       assert( rhs_row_mapping.size() == lhs_row_mapping.size() );
       assert( rhs_row_mapping.size() == _problem.getNRows() );
 
@@ -209,6 +223,8 @@ class VeriPb : public CertificateInterface<REAL>
                        const PostsolveStorage<REAL>& postsolve_storage,
                        ArgumentType argument = ArgumentType::kPrimal )
    {
+      if( !verification_possible )
+         return;
       next_constraint_id++;
       assert( val == 0 );
       const Vec<String>& names = problem.getVariableNames();
@@ -293,6 +309,8 @@ class VeriPb : public CertificateInterface<REAL>
                        const PostsolveStorage<REAL>& postsolve_storage,
                        ArgumentType argument = ArgumentType::kPrimal )
    {
+      if( !verification_possible )
+         return;
       next_constraint_id++;
       assert( val == 1 );
       const Vec<String>& names = problem.getVariableNames();
@@ -369,6 +387,8 @@ class VeriPb : public CertificateInterface<REAL>
                        const Vec<String>& names, const Vec<int>& var_mapping,
                        const PostsolveStorage<REAL>& postsolve)
    {
+      if( !verification_possible )
+         return;
       next_constraint_id++;
       auto name_dominating = names[var_mapping[dominating_column]];
       auto name_dominated = names[var_mapping[dominated_column]];
@@ -392,7 +412,8 @@ class VeriPb : public CertificateInterface<REAL>
                const Vec<String>& names, const Vec<int>& var_mapping,
                ArgumentType argument = ArgumentType::kPrimal )
    {
-
+      if( !verification_possible )
+         return;
       if( skip_changing_rhs == row )
       {
          skip_changing_rhs = UNKNOWN;
@@ -462,6 +483,8 @@ class VeriPb : public CertificateInterface<REAL>
    change_lhs( int row, REAL val, const SparseVectorView<REAL>& data,
                const Vec<String>& names, const Vec<int>& var_mapping, ArgumentType argument = ArgumentType::kPrimal )
    {
+      if( !verification_possible )
+         return;
       if( skip_changing_lhs == row )
       {
          skip_changing_lhs = UNKNOWN;
@@ -532,6 +555,8 @@ class VeriPb : public CertificateInterface<REAL>
                             const Problem<REAL>& problem,
                             const Vec<int>& var_mapping )
    {
+      if( !verification_possible )
+         return;
       REAL factor_row = problem.getConstraintMatrix()
                             .getRowCoefficients( row )
                             .getValues()[0] *
@@ -623,6 +648,8 @@ class VeriPb : public CertificateInterface<REAL>
    change_lhs_parallel_row( int row, REAL val, int parallel_row,
                             const Problem<REAL>& problem )
    {
+      if( !verification_possible )
+         return;
       REAL factor_row = problem.getConstraintMatrix()
                             .getRowCoefficients( row )
                             .getValues()[0] *
@@ -716,6 +743,8 @@ class VeriPb : public CertificateInterface<REAL>
    void
    change_lhs_inf( int row )
    {
+      if( !verification_possible )
+         return;
       proof_out << DELETE_CONS << lhs_row_mapping[row] << "\n";
       lhs_row_mapping[row] = UNKNOWN;
    }
@@ -723,6 +752,8 @@ class VeriPb : public CertificateInterface<REAL>
    void
    change_rhs_inf( int row )
    {
+      if( !verification_possible )
+         return;
       proof_out << DELETE_CONS << rhs_row_mapping[row] << "\n";
       rhs_row_mapping[row] = UNKNOWN;
    }
@@ -733,6 +764,8 @@ class VeriPb : public CertificateInterface<REAL>
                         REAL lhs, REAL rhs, const Vec<String>& names,
                         const Vec<int>& var_mapping, ArgumentType argument )
    {
+      if( !verification_possible )
+         return;
       // remove singleton variable from equation
       changed_entries_during_current_tsxs.emplace( col, num.round_to_int( new_val ) );
       if( argument == ArgumentType::kAggregation )
@@ -877,7 +910,8 @@ class VeriPb : public CertificateInterface<REAL>
    sparsify( int eqrow, int candrow, REAL scale,
              const Problem<REAL>& currentProblem )
    {
-
+      if( !verification_possible )
+         return;
       const ConstraintMatrix<REAL>& matrix =
           currentProblem.getConstraintMatrix();
       int scale_eqrow = scale_factor[eqrow];
@@ -1019,6 +1053,7 @@ class VeriPb : public CertificateInterface<REAL>
       assert( num.round_to_int( values[0] ) != 0 );
       assert( num.round_to_int( values[1] ) != 0 );
       REAL substitute_factor = indices[0] == col ? values[0] : values[1];
+      assert(equality.getLength() == 2);
 
       next_constraint_id++;
       int first_constraint_id = next_constraint_id;
@@ -1068,8 +1103,12 @@ class VeriPb : public CertificateInterface<REAL>
 
       substitute( col, substitute_factor, lhs_id, next_constraint_id,
                   currentProblem );
-      proof_out << DELETE_CONS << first_constraint_id << "\n";
-      proof_out << DELETE_CONS << second_constraint_id << "\n";
+      if(!is_optimization_problem)
+      {
+         substitutions.push_back(var_mapping[indices[0]])
+         proof_out << DELETE_CONS << first_constraint_id << "\n";
+         proof_out << DELETE_CONS << second_constraint_id << "\n";
+      }
    }
 
    void
@@ -1100,17 +1139,22 @@ class VeriPb : public CertificateInterface<REAL>
                   substituted_row );
       assert( !matrix.getRowFlags()[substituted_row].test( RowFlag::kRhsInf ) );
       assert( !matrix.getRowFlags()[substituted_row].test( RowFlag::kLhsInf ) );
-      proof_out << COMMENT << "postsolve stack : row id "
+      if(is_optimization_problem)
+      {
+         proof_out << COMMENT << "postsolve stack : row id "
                 << rhs_row_mapping[substituted_row] << "\n";
-      proof_out << COMMENT << "postsolve stack : row id "
+         proof_out << COMMENT << "postsolve stack : row id "
                 << lhs_row_mapping[substituted_row] << "\n";
-      proof_out << DELETE_CONS << rhs_row_mapping[substituted_row] << "\n";
-      proof_out << DELETE_CONS << lhs_row_mapping[substituted_row] << "\n";
+         proof_out << DELETE_CONS << rhs_row_mapping[substituted_row] << "\n";
+         proof_out << DELETE_CONS << lhs_row_mapping[substituted_row] << "\n";
+      }
    };
 
    void
    mark_row_redundant( int row )
    {
+      if( !verification_possible )
+         return;
       assert( lhs_row_mapping[row] != UNKNOWN ||
               rhs_row_mapping[row] != UNKNOWN );
       if( lhs_row_mapping[row] != UNKNOWN )
@@ -1134,6 +1178,8 @@ class VeriPb : public CertificateInterface<REAL>
    void
    log_solution( const Solution<REAL>& orig_solution, const Vec<String>& names )
    {
+      if( !verification_possible )
+         return;
       proof_out << "v";
       next_constraint_id++;
       for( int i = 0; i < orig_solution.primal.size(); i++ )
@@ -1153,6 +1199,8 @@ class VeriPb : public CertificateInterface<REAL>
    void
    infeasible( )
    {
+      if( !verification_possible )
+         return;
       next_constraint_id++;
       proof_out << "u >= 1 ;\n";
       proof_out << "c " << next_constraint_id << "\n";
@@ -1163,7 +1211,7 @@ class VeriPb : public CertificateInterface<REAL>
    symmetries( const SymmetryStorage& symmetries, const Vec<String>& names,
                const Vec<int>& var_mapping )
    {
-      if( symmetries.symmetries.empty() )
+      if( symmetries.symmetries.empty() || !verification_possible )
          return;
       //TODO: implement
       proof_out << COMMENT << "symmetries: \n";
@@ -1353,11 +1401,6 @@ class VeriPb : public CertificateInterface<REAL>
             }
          }
       }
-
-//      if( abs( substitute_factor ) != 1 ||
-//          !num.isIntegral( currentProblem.getObjective().coefficients[col] /
-//                          substitute_factor ) )
-//         obj_scale_factor *= abs(substitute_factor);
 
    };
 
