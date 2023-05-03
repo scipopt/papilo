@@ -126,6 +126,8 @@ class VeriPb : public CertificateInterface<REAL>
          if( coefficients[i] != 0 )
          {
             is_optimization_problem = true;
+            verification_possible = false;
+            fmt::print("Verification currently not possible for optimization problems!\n");
             break;
          }
       }
@@ -163,6 +165,8 @@ class VeriPb : public CertificateInterface<REAL>
       proof_out << COMMENT
                 << "Be aware that this is currently an experimental feature\n";
       proof_out << "f " << next_constraint_id << "\n";
+      if(!verification_possible)
+         proof_out << "* Verification currently not possible for optimization problems!\n";
       proof_out << std::fixed;
    };
 
@@ -239,7 +243,7 @@ class VeriPb : public CertificateInterface<REAL>
       case ArgumentType::kSymmetry:
          proof_out << RED << "1 " << NEGATED << names[orig_col] << " >= 1 ; "
                    << names[orig_col] << " -> 0";
-         map_postsolve_stack_to_witnesses(postsolve_storage, names);
+//         map_postsolve_stack_to_witnesses(postsolve_storage, names);
          proof_out << "\n";
          break;
       default:
@@ -327,7 +331,7 @@ class VeriPb : public CertificateInterface<REAL>
          proof_out << RED << "1 " << names[orig_col]
                    << " >= " << num.round_to_int( val ) << " ; "
                    << names[orig_col] << " -> " << num.round_to_int( val );
-         map_postsolve_stack_to_witnesses(postsolve_storage, names);
+//         map_postsolve_stack_to_witnesses(postsolve_storage, names);
          proof_out << "\n";
          break;
       default:
@@ -396,13 +400,15 @@ class VeriPb : public CertificateInterface<REAL>
                 << name_dominated << " >= 1 ; " << name_dominating << " -> "
                 << name_dominated << " " << name_dominated << " -> "
                 << name_dominating;
-      map_postsolve_stack_to_witnesses(postsolve, names);
+//      map_postsolve_stack_to_witnesses(postsolve, names);
       proof_out << "\n";
    }
 
    void
    store_gcd( int row, REAL gcd )
    {
+      if( !verification_possible )
+         return;
       assert( num.isIntegral( gcd ) );
       row_with_gcd = {row, num.round_to_int(gcd)};
    };
@@ -1045,6 +1051,8 @@ class VeriPb : public CertificateInterface<REAL>
                const Problem<REAL>& currentProblem, const Vec<String>& names,
                const Vec<int>& var_mapping )
    {
+      if( !verification_possible )
+         return;
       assert( num.isIntegral( offset ) );
       const REAL* values = equality.getValues();
       const int* indices = equality.getIndices();
@@ -1105,7 +1113,7 @@ class VeriPb : public CertificateInterface<REAL>
                   currentProblem );
       if(!is_optimization_problem)
       {
-         substitutions.push_back(var_mapping[indices[0]])
+         //TODO push back substitution
          proof_out << DELETE_CONS << first_constraint_id << "\n";
          proof_out << DELETE_CONS << second_constraint_id << "\n";
       }
@@ -1115,6 +1123,8 @@ class VeriPb : public CertificateInterface<REAL>
    substitute( int col, int substituted_row,
                const Problem<REAL>& currentProblem )
    {
+      if( !verification_possible )
+         return;
       const ConstraintMatrix<REAL>& matrix =
           currentProblem.getConstraintMatrix();
       auto col_vec = matrix.getColumnCoefficients( col );
@@ -1213,7 +1223,6 @@ class VeriPb : public CertificateInterface<REAL>
    {
       if( symmetries.symmetries.empty() || !verification_possible )
          return;
-      //TODO: implement
       proof_out << COMMENT << "symmetries: \n";
       for(Symmetry symmetry: symmetries.symmetries)
       {
