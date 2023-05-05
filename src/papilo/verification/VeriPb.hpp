@@ -1149,7 +1149,7 @@ class VeriPb : public CertificateInterface<REAL>
                   substituted_row );
       assert( !matrix.getRowFlags()[substituted_row].test( RowFlag::kRhsInf ) );
       assert( !matrix.getRowFlags()[substituted_row].test( RowFlag::kLhsInf ) );
-      if(is_optimization_problem)
+      if(!is_optimization_problem)
       {
          proof_out << COMMENT << "postsolve stack : row id "
                 << rhs_row_mapping[substituted_row] << "\n";
