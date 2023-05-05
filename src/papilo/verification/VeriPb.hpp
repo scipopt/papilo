@@ -64,7 +64,8 @@ class VeriPb : public CertificateInterface<REAL>
    /// information required for optimization problems
    bool is_optimization_problem = false;
    bool verification_possible = true;
-   Vec<std::pair<int,int>> substitutions;
+   HashMap<int, Vec<int>> substitutions;
+   Vec<int> substituted_rows;
 
    /// PaPILO does not care about the integrality of the coefficient
    /// therefore store scale factors to ensure the integrality
@@ -224,7 +225,6 @@ class VeriPb : public CertificateInterface<REAL>
    void
    change_upper_bound( REAL val, int col, const Problem<REAL>& problem,
                        const Vec<int>& var_mapping, MatrixBuffer<REAL>& matrix_buffer,
-                       const PostsolveStorage<REAL>& postsolve_storage,
                        ArgumentType argument = ArgumentType::kPrimal )
    {
       if( !verification_possible )
@@ -243,7 +243,7 @@ class VeriPb : public CertificateInterface<REAL>
       case ArgumentType::kSymmetry:
          proof_out << RED << "1 " << NEGATED << names[orig_col] << " >= 1 ; "
                    << names[orig_col] << " -> 0";
-//         map_postsolve_stack_to_witnesses(postsolve_storage, names);
+         add_substitutions_to_witness( names, var_mapping[col], val == 1 );
          proof_out << "\n";
          break;
       default:
@@ -310,7 +310,6 @@ class VeriPb : public CertificateInterface<REAL>
    void
    change_lower_bound( REAL val, int col, const Problem<REAL>& problem,
                        const Vec<int>& var_mapping, MatrixBuffer<REAL>& matrix_buffer,
-                       const PostsolveStorage<REAL>& postsolve_storage,
                        ArgumentType argument = ArgumentType::kPrimal )
    {
       if( !verification_possible )
@@ -331,7 +330,7 @@ class VeriPb : public CertificateInterface<REAL>
          proof_out << RED << "1 " << names[orig_col]
                    << " >= " << num.round_to_int( val ) << " ; "
                    << names[orig_col] << " -> " << num.round_to_int( val );
-//         map_postsolve_stack_to_witnesses(postsolve_storage, names);
+         add_substitutions_to_witness( names, var_mapping[col], val == 1 );
          proof_out << "\n";
          break;
       default:
@@ -388,8 +387,7 @@ class VeriPb : public CertificateInterface<REAL>
 
    void
    dominating_columns( int dominating_column, int dominated_column,
-                       const Vec<String>& names, const Vec<int>& var_mapping,
-                       const PostsolveStorage<REAL>& postsolve)
+                       const Vec<String>& names, const Vec<int>& var_mapping)
    {
       if( !verification_possible )
          return;
@@ -400,7 +398,7 @@ class VeriPb : public CertificateInterface<REAL>
                 << name_dominated << " >= 1 ; " << name_dominating << " -> "
                 << name_dominated << " " << name_dominated << " -> "
                 << name_dominating;
-//      map_postsolve_stack_to_witnesses(postsolve, names);
+      add_substitutions_to_witness(names, dominating_column, dominated_column);
       proof_out << "\n";
    }
 
@@ -1061,9 +1059,11 @@ class VeriPb : public CertificateInterface<REAL>
       assert( num.round_to_int( values[0] ) != 0 );
       assert( num.round_to_int( values[1] ) != 0 );
       REAL substitute_factor = indices[0] == col ? values[0] : values[1];
-      assert(equality.getLength() == 2);
 
       next_constraint_id++;
+      int orig_index_0 = var_mapping[indices[0]];
+      int orig_index_1 = var_mapping[indices[1]];
+
       int first_constraint_id = next_constraint_id;
       proof_out << COMMENT << "postsolve stack : row id " << next_constraint_id
                 << "\n";
@@ -1076,14 +1076,14 @@ class VeriPb : public CertificateInterface<REAL>
          proof_out << NEGATED;
          lhs += abs( num.round_to_int( values[0] ) );
       }
-      proof_out << names[var_mapping[indices[0]]] << " +"
+      proof_out << names[orig_index_0] << " +"
                 << abs( num.round_to_int( values[1] ) ) << " ";
       if( values[1] < 0 )
       {
          proof_out << NEGATED;
          lhs += abs( num.round_to_int( values[1] ) );
       }
-      proof_out << names[var_mapping[indices[1]]] << " >= " << lhs << ";\n";
+      proof_out << names[orig_index_1] << " >= " << lhs << ";\n";
       int lhs_id = next_constraint_id;
 
       next_constraint_id++;
@@ -1100,28 +1100,33 @@ class VeriPb : public CertificateInterface<REAL>
          proof_out << NEGATED;
          rhs += abs( num.round_to_int( values[0] ) );
       }
-      proof_out << names[var_mapping[indices[0]]] << " +"
+      proof_out << names[orig_index_0] << " +"
                 << abs( num.round_to_int( values[1] ) ) << " ";
       if( values[1] > 0 )
       {
          proof_out << NEGATED;
          rhs += abs( num.round_to_int( values[1] ) );
       }
-      proof_out << names[var_mapping[indices[1]]] << " >= " << rhs << ";\n";
+      proof_out << names[orig_index_1] << " >= " << rhs << ";\n";
 
       substitute( col, substitute_factor, lhs_id, next_constraint_id,
                   currentProblem );
       if(!is_optimization_problem)
       {
-         //TODO push back substitution
          proof_out << DELETE_CONS << first_constraint_id << "\n";
          proof_out << DELETE_CONS << second_constraint_id << "\n";
+      }
+      else
+      {
+         substituted_rows.push_back(first_constraint_id);
+         substituted_rows.push_back(second_constraint_id);
+         store_substitution( values[0], values[1], orig_index_0, orig_index_1 );
       }
    }
 
    void
    substitute( int col, int substituted_row,
-               const Problem<REAL>& currentProblem )
+               const Problem<REAL>& currentProblem, const Vec<int>& var_mapping )
    {
       if( !verification_possible )
          return;
@@ -1130,10 +1135,18 @@ class VeriPb : public CertificateInterface<REAL>
       auto col_vec = matrix.getColumnCoefficients( col );
       auto row_data = matrix.getRowCoefficients( substituted_row );
 
-      // for singleton removing the coefficient is done seperately
+      //TODO: handle this
+      // for singleton removing the coefficient is done separately
       if( col_vec.getLength() == 1 )
          return;
 
+      if( currentProblem.getConstraintMatrix().getRowSizes()[substituted_row] > 2)
+      {
+         fmt::print("Verification currently not possible for multi-aggregations for optimization problem!\n");
+         proof_out << "Verification currently not possible for multi-aggregations for optimization problem!\n";
+         verification_possible = false;
+         return;
+      }
       REAL substitute_factor = 0;
       for( int i = 0; i < col_vec.getLength(); i++ )
       {
@@ -1157,6 +1170,16 @@ class VeriPb : public CertificateInterface<REAL>
                 << lhs_row_mapping[substituted_row] << "\n";
          proof_out << DELETE_CONS << rhs_row_mapping[substituted_row] << "\n";
          proof_out << DELETE_CONS << lhs_row_mapping[substituted_row] << "\n";
+      }
+      else
+      {
+         substituted_rows.push_back(rhs_row_mapping[substituted_row]);
+         substituted_rows.push_back(lhs_row_mapping[substituted_row]);
+         auto row = currentProblem.getConstraintMatrix().getRowCoefficients(substituted_row);
+         assert(row.getLength() == 2);
+         int col2 = row.getIndices()[0] == col ? row.getIndices()[1] : row.getIndices()[0];
+         store_substitution(row.getValues()[0], row.getValues()[1],
+                             var_mapping[col], var_mapping[col2]);
       }
    };
 
@@ -1190,6 +1213,9 @@ class VeriPb : public CertificateInterface<REAL>
    {
       if( !verification_possible )
          return;
+      assert(is_optimization_problem || substituted_rows.empty());
+      for(auto sub_row: substituted_rows)
+         mark_row_redundant(sub_row);
       proof_out << "v";
       next_constraint_id++;
       for( int i = 0; i < orig_solution.primal.size(); i++ )
@@ -1211,6 +1237,9 @@ class VeriPb : public CertificateInterface<REAL>
    {
       if( !verification_possible )
          return;
+      assert(is_optimization_problem || substituted_rows.empty());
+      for(auto sub_row: substituted_rows)
+         mark_row_redundant(sub_row);
       next_constraint_id++;
       proof_out << "u >= 1 ;\n";
       proof_out << "c " << next_constraint_id << "\n";
@@ -1288,6 +1317,41 @@ class VeriPb : public CertificateInterface<REAL>
    }
 
  private:
+
+   void
+   store_substitution( const REAL value_0, const REAL value_1, int orig_index_0,
+                       int orig_index_1 )
+   {
+      if (  substitutions.find(orig_index_1) == substitutions.end() )
+      {
+         Vec<int> v {};
+         substitutions.insert_or_assign(orig_index_1, v);
+      }
+      int sign = -(int) value_1 / (int) value_0;
+      assert( abs(sign) == 1);
+      int index = orig_index_0;
+      if (sign < 0 )
+         index = -orig_index_0 -1;
+
+      auto it1 = substitutions.find(orig_index_1);
+      assert(it1 != substitutions.end());
+      it1->second.push_back(index);
+
+      auto it0 = substitutions.find(orig_index_0);
+      if (  it0 == substitutions.end() )
+         return;
+      for( const auto& subs_vars : it0->second )
+      {
+         if(sign > 0)
+            it1->second.push_back(subs_vars);
+         else
+            if( subs_vars >= 0)
+               it1->second.push_back(-subs_vars -1);
+            else
+               convert_substitution_to_col(subs_vars);
+      }
+   }
+
    void
    substitute( int col, REAL substitute_factor, int lhs_id, int rhs_id,
                const Problem<REAL>& currentProblem, int skip_row_id = UNKNOWN )
@@ -1541,130 +1605,19 @@ class VeriPb : public CertificateInterface<REAL>
    }
 
    void
-   map_postsolve_stack_to_witnesses(const PostsolveStorage<REAL>& postsolveStorage, const Vec<String>& names)
+   add_substitutions_to_witness(const Vec<String>& names, int orig_col_1, int orig_col_2)
    {
+      if(!is_optimization_problem )
+         return;
+      //TODO:
+   }
 
-      auto types = postsolveStorage.types;
-      auto start = postsolveStorage.start;
-      auto indices = postsolveStorage.indices;
-      auto values = postsolveStorage.values;
-      auto origcol_mapping = postsolveStorage.origcol_mapping;
-      auto origrow_mapping = postsolveStorage.origrow_mapping;
-      auto problem = postsolveStorage.problem;
-
-      for( int i = (int)postsolveStorage.types.size() - 1; i >= 0; --i )
-      {
-         auto type = types[i];
-         int first = start[i];
-         int last = start[i + 1];
-
-         switch( type )
-         {
-         case ReductionType::kVarBoundChange:
-         case ReductionType::kReducedBoundsCost:
-         case ReductionType::kRedundantRow:
-         case ReductionType::kReasonForRowBoundChangeForcedByRow:
-         case ReductionType::kRowBoundChange:
-         case ReductionType::kRowBoundChangeForcedByRow:
-         case ReductionType::kCoefficientChange:
-         case ReductionType::kColumnDualValue:
-         case ReductionType::kRowDualValue:
-         case ReductionType::kFixedInfCol:
-         case ReductionType::kSaveRow:
-         case ReductionType::kParallelCol:
-            assert( false );
-            break;
-         case ReductionType::kFixedCol:
-         {
-            int col = indices[first];
-            int value = (int) values[first];
-            proof_out << " " << names[col] << " -> " << value;
-            break;
-         }
-         case ReductionType::kSubstitutedCol:
-         {
-            int col = indices[first];
-            REAL side = values[first];
-            assert( abs( side ) == 1 || side == 0 );
-            if( last - first > 2 )
-            {
-               assert( false );
-               // TODO: abort
-            }
-            int col_coeff_2 = -1;
-            int value2 = 0;
-
-            int colCoef = 0.0;
-            int index2 = 0;
-            StableSum<REAL> sumcols;
-            for( int j = first + 1; j < last; ++j )
-            {
-               if( indices[j] == col )
-               {
-                  colCoef = (int) values[j];
-                  assert( abs( colCoef ) == 1 );
-               }
-               else
-               {
-                  assert( col_coeff_2 == -1 );
-                  col_coeff_2 = (int) values[j];
-                  index2 = indices[j];
-                  assert( abs( col_coeff_2 ) == 1 );
-               }
-            }
-            assert( colCoef != 0.0 );
-            side = side / colCoef;
-            col_coeff_2 = col_coeff_2 / colCoef;
-            if( side == 1 && col_coeff_2 == 1 )
-               proof_out << " " << names[col] << " -> " << NEGATED
-                         << names[index2];
-            else if( side == 0 && col_coeff_2 == -1 )
-               proof_out << " " << names[col] << " -> " << names[index2];
-            else
-               assert( false );
-            break;
-         }
-         case ReductionType::kSubstitutedColWithDual:
-         {
-            int row = indices[first];
-            int row_length = (int)values[first];
-            if(row_length != 2)
-            {
-               assert( false );
-               // TODO: abort
-            }
-            assert( indices[first + 1] == 0 );
-            REAL side = values[first + 1];
-            assert( side == values[first + 2] );
-            assert( indices[first + 2] == 0 );
-            int col = indices[first + 3 + row_length];
-            int index2 = 0;
-            int col_coeff_2 = 0;
-            int colCoef = 0.0;
-            for( int j = first + 3; j < first + 3 + row_length; ++j )
-            {
-               if( indices[j] == col )
-                  colCoef = (int) values[j];
-               else
-               {
-                  index2 = indices[j];
-                  col_coeff_2 = (int) values[j];
-               }
-            }
-            assert( colCoef != 0.0 );
-            side = side / colCoef;
-            col_coeff_2 = col_coeff_2 / colCoef;
-            if( side == 1 && col_coeff_2 == 1 )
-               proof_out << " " << names[col] << " -> " << NEGATED
-                         << names[index2];
-            else if( side == 0 && col_coeff_2 == -1 )
-               proof_out << " " << names[col] << " -> " << names[index2];
-            else
-               assert( false );
-            break;
-         }
-         }
-      }
+   int
+   convert_substitution_to_col( const int cols ) const
+   {
+      if(cols >= 0)
+         return cols;
+      return abs(cols + 1);
    }
 };
 

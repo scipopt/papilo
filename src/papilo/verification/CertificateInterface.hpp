@@ -61,20 +61,17 @@ class CertificateInterface
    virtual void
    change_upper_bound( REAL val, int col, const Problem<REAL>& problem,
                        const Vec<int>& var_mapping, MatrixBuffer<REAL>& matrix_buffer,
-                       const PostsolveStorage<REAL>& postsolve_storage,
                        ArgumentType argument = ArgumentType::kPrimal ) = 0;
 
    virtual void
    change_lower_bound( REAL val, int col, const Problem<REAL>& problem,
                        const Vec<int>& var_mapping, MatrixBuffer<REAL>& matrix_buffer,
-                       const PostsolveStorage<REAL>& postsolve_storage,
                        ArgumentType argument = ArgumentType::kPrimal ) = 0;
 
    virtual void
    dominating_columns( int dominating_column, int dominated_column,
                        const Vec<String>& names,
-                       const Vec<int>& var_mapping,
-                       const PostsolveStorage<REAL>& postsolve_storage) = 0;
+                       const Vec<int>& var_mapping) = 0;
 
    virtual void
    change_rhs( int row, REAL val, const SparseVectorView<REAL>& data,
@@ -115,7 +112,7 @@ class CertificateInterface
                         ArgumentType argument ) = 0;
 
    virtual void
-   substitute( int col, int row, const Problem<REAL>& currentProblem ) = 0;
+   substitute( int col, int row, const Problem<REAL>& currentProblem, const Vec<int>& var_mapping ) = 0;
 
    virtual void
    substitute( int col, const SparseVectorView<REAL>& equality, REAL offset,

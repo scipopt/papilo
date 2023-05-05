@@ -62,7 +62,6 @@ class EmptyCertificate : public CertificateInterface<REAL>
    void
    change_upper_bound( REAL val, int col, const Problem<REAL>& problem,
                        const Vec<int>& var_mapping, MatrixBuffer<REAL>& matrix_buffer,
-                       const PostsolveStorage<REAL>& postsolve_storage,
                        ArgumentType argument = ArgumentType::kPrimal )
    {
    }
@@ -70,15 +69,13 @@ class EmptyCertificate : public CertificateInterface<REAL>
    void
    change_lower_bound( REAL val, int col, const Problem<REAL>& problem,
                        const Vec<int>& var_mapping, MatrixBuffer<REAL>& matrix_buffer,
-                       const PostsolveStorage<REAL>& postsolve_storage,
                        ArgumentType argument = ArgumentType::kPrimal )
    {
    }
 
    void
    dominating_columns( int dominating_column, int dominated_column,
-                       const Vec<String>& names, const Vec<int>& var_mapping,
-                       const PostsolveStorage<REAL>& postsolve_storage )
+                       const Vec<String>& names, const Vec<int>& var_mapping )
    {
    }
 
@@ -130,7 +127,7 @@ class EmptyCertificate : public CertificateInterface<REAL>
                         const Vec<int>& var_mapping, ArgumentType argument ){};
 
    void
-   substitute( int col, int row, const Problem<REAL>& currentProblem ){};
+   substitute( int col, int row, const Problem<REAL>& currentProblem, const Vec<int>& var_mapping ){};
 
    void
    substitute( int col, const SparseVectorView<REAL>& equality, REAL offset,
