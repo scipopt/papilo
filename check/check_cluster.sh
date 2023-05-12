@@ -102,11 +102,11 @@ then
     exit 1;
 fi
 
-if [[ ${PAPILO_OPT_COMMAND} != "solve" ]] && [[ ${PAPILO_OPT_COMMAND} != "presolve" ]]
-then
-  echo "PAPILO_OPT_COMMAND should be either 'presolve' or 'solve'"
-  exit 1
-fi
+#if [[ ${PAPILO_OPT_COMMAND} != "solve" ]] && [[ ${PAPILO_OPT_COMMAND} != "presolve" ]]
+#then
+#  echo "PAPILO_OPT_COMMAND should be either 'presolve' or 'solve'"
+#  exit 1
+#fi
 export PAPILO_OPT_COMMAND
 export SOLVE_EXECUTABLE
 export SKIP_PRESOLVE
