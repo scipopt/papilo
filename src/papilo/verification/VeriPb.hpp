@@ -65,7 +65,8 @@ class VeriPb : public CertificateInterface<REAL>
    bool is_optimization_problem = false;
    bool verification_possible = true;
    HashMap<int, Vec<int>> substitutions;
-   Vec<int> substituted_rows;
+   // VeriPB of substitutions
+//   Vec<int> substituted_rows;
 
    /// PaPILO does not care about the integrality of the coefficient
    /// therefore store scale factors to ensure the integrality
@@ -243,15 +244,15 @@ class VeriPb : public CertificateInterface<REAL>
       case ArgumentType::kSymmetry:
          proof_out << RED << "1 " << NEGATED << names[orig_col] << " >= 1 ; "
                    << names[orig_col] << " -> 0";
-         add_substitutions_to_witness( names, var_mapping[col], val == 1 );
+         add_substitutions_fix_to_witness( names, var_mapping[col], val == 1 );
          proof_out << "\n";
          break;
       default:
          assert( false );
          return;
       }
+      substitutions.erase(col);
       int cons_id_fixing = next_constraint_id;
-
       auto col_coeff =
           problem.getConstraintMatrix().getColumnCoefficients( col );
       for( int row_index = 0; row_index < col_coeff.getLength(); row_index++ )
@@ -330,13 +331,14 @@ class VeriPb : public CertificateInterface<REAL>
          proof_out << RED << "1 " << names[orig_col]
                    << " >= " << num.round_to_int( val ) << " ; "
                    << names[orig_col] << " -> " << num.round_to_int( val );
-         add_substitutions_to_witness( names, var_mapping[col], val == 1 );
+         add_substitutions_fix_to_witness( names, var_mapping[col], val == 1 );
          proof_out << "\n";
          break;
       default:
          assert( false );
          return;
       }
+      substitutions.erase(col);
       int cons_id_fixing = next_constraint_id;
       auto col_coeff =
           problem.getConstraintMatrix().getColumnCoefficients( col );
@@ -1118,8 +1120,8 @@ class VeriPb : public CertificateInterface<REAL>
       }
       else
       {
-         substituted_rows.push_back(first_constraint_id);
-         substituted_rows.push_back(second_constraint_id);
+//         substituted_rows.push_back(first_constraint_id);
+//         substituted_rows.push_back(second_constraint_id);
          store_substitution( values[0], values[1], orig_index_0, orig_index_1 );
       }
    }
@@ -1173,8 +1175,8 @@ class VeriPb : public CertificateInterface<REAL>
       }
       else
       {
-         substituted_rows.push_back(rhs_row_mapping[substituted_row]);
-         substituted_rows.push_back(lhs_row_mapping[substituted_row]);
+//         substituted_rows.push_back(rhs_row_mapping[substituted_row]);
+//         substituted_rows.push_back(lhs_row_mapping[substituted_row]);
          auto row = currentProblem.getConstraintMatrix().getRowCoefficients(substituted_row);
          assert(row.getLength() == 2);
          int col2 = row.getIndices()[0] == col ? row.getIndices()[1] : row.getIndices()[0];
@@ -1213,9 +1215,9 @@ class VeriPb : public CertificateInterface<REAL>
    {
       if( !verification_possible )
          return;
-      assert(is_optimization_problem || substituted_rows.empty());
-      for(auto sub_row: substituted_rows)
-         mark_row_redundant(sub_row);
+//      assert(is_optimization_problem || substituted_rows.empty());
+//      for(auto sub_row: substituted_rows)
+//         proof_out << DELETE_CONS << sub_row << "\n";
       proof_out << "v";
       next_constraint_id++;
       for( int i = 0; i < orig_solution.primal.size(); i++ )
@@ -1237,9 +1239,9 @@ class VeriPb : public CertificateInterface<REAL>
    {
       if( !verification_possible )
          return;
-      assert(is_optimization_problem || substituted_rows.empty());
-      for(auto sub_row: substituted_rows)
-         mark_row_redundant(sub_row);
+//      assert(is_optimization_problem || substituted_rows.empty());
+//      for(auto sub_row: substituted_rows)
+//         proof_out << DELETE_CONS << sub_row << "\n";
       next_constraint_id++;
       proof_out << "u >= 1 ;\n";
       proof_out << "c " << next_constraint_id << "\n";
@@ -1604,12 +1606,56 @@ class VeriPb : public CertificateInterface<REAL>
       }
    }
 
+
+   void
+   add_substitutions_fix_to_witness(const Vec<String>& names, int orig_col_1, bool var)
+   {
+      if(!is_optimization_problem )
+         return;
+      for( const auto& item : substitutions )
+      {
+         for( const auto& substituted_vars : item.second )
+         {
+            proof_out << " " << names[convert_substitution_to_col(substituted_vars)] << " -> ";
+            if(item.first == orig_col_1)
+            {
+               if( substituted_vars > 0 )
+                     proof_out << ( var == true ? "1" : "0" );
+               else
+                     proof_out << ( var == true ? "0" : "1" );
+            }
+            else
+               proof_out << names[convert_substitution_to_col(orig_col_1)];
+         }
+      }
+   }
+
    void
    add_substitutions_to_witness(const Vec<String>& names, int orig_col_1, int orig_col_2)
    {
       if(!is_optimization_problem )
          return;
-      //TODO:
+      for( const auto& item : substitutions )
+      {
+         for( const auto& substituted_vars : item.second )
+         {
+            proof_out << " " << names[convert_substitution_to_col(substituted_vars)] << " -> ";
+            if(item.first == orig_col_1)
+            {
+               if( substituted_vars < 0 )
+                     proof_out << NEGATED;
+               proof_out << names[orig_col_2];
+            }
+            else if(item.first == orig_col_2)
+            {
+               if( substituted_vars < 0 )
+                     proof_out << NEGATED;
+               proof_out << names[orig_col_1];
+            }
+            else
+               proof_out << names[convert_substitution_to_col(orig_col_1)];
+         }
+      }
    }
 
    int
