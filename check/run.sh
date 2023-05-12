@@ -148,10 +148,10 @@ else
     then
         echo ">>> Executing SOPLEX ${SOLVE_EXECUTABLE} ${PRESOLVED_FILENAME}"
         eval "${SOLVE_EXECUTABLE} ${PRESOLVED_FILENAME}" 2>> "${ERRFILE}" | tee -a "${OUTFILE}"
-    elif [[ ${SOLVE_EXECUTABLE} =~ .*"sat4j.pb.".* ]]
+    elif [[ ${SOLVE_EXECUTABLE} =~ .*"sat4j-pb.".* ]]
     then
-        echo ">>> Executing Sat4j java -jar ${SOLVE_EXECUTABLE} sat4j.pb ${TIMELIMIT} ${PRESOLVED_FILENAME}"
-        eval "java -jar ${SOLVE_EXECUTABLE} sat4j.pb ${TIMELIMIT} ${PRESOLVED_FILENAME}" 2>> "${ERRFILE}" | tee -a "${OUTFILE}"
+        echo ">>> Executing Sat4j java -jar ${SOLVE_EXECUTABLE} ${PAPILO_OPT_COMMAND} ${TIMELIMIT} ${PRESOLVED_FILENAME}"
+        eval "java -jar ${SOLVE_EXECUTABLE} ${PAPILO_OPT_COMMAND} ${TIMELIMIT} ${PRESOLVED_FILENAME}" 2>> "${ERRFILE}" | tee -a "${OUTFILE}"
     else
       echo "Unknown solver: ${SOLVE_EXECUTABLE}"
     fi
