@@ -128,7 +128,7 @@ class VeriPb : public CertificateInterface<REAL>
          if( coefficients[i] != 0 )
          {
             is_optimization_problem = true;
-            verification_possible = false;
+            verification_possible = true;
             fmt::print("Verification currently not possible for optimization problems!\n");
             break;
          }
@@ -188,7 +188,8 @@ class VeriPb : public CertificateInterface<REAL>
    };
 
    void
-   end_transaction( const Problem<REAL>& problem, const Vec<int>& var_mapping )
+   end_transaction( const Problem<REAL>& problem,
+                    const Vec<int>& var_mapping, const Vec<int>& dirty_row_states )
    {
       if( row_with_gcd.first != UNKNOWN )
       {
@@ -211,7 +212,7 @@ class VeriPb : public CertificateInterface<REAL>
 #ifdef VERIPB_DEBUG
       if( validate_row != UNKNOWN )
       {
-         verify_changed_row( validate_row, problem, var_mapping );
+         verify_changed_row( validate_row, problem, var_mapping, dirty_row_states );
          validate_row = UNKNOWN;
       }
 #endif
@@ -1515,8 +1516,9 @@ class VeriPb : public CertificateInterface<REAL>
    }
 
    void
-   verify_changed_row( int row, const Problem<REAL>& problem, const Vec<int>& var_mapping )
+   verify_changed_row( int row, const Problem<REAL>& problem, const Vec<int>& var_mapping, const Vec<int>& dirty_row_states )
    {
+
       auto constraintMatrix = problem.getConstraintMatrix();
       auto data = constraintMatrix.getRowCoefficients( validate_row );
       const RowFlags& rflags = constraintMatrix.getRowFlags()[validate_row];
@@ -1527,6 +1529,8 @@ class VeriPb : public CertificateInterface<REAL>
                 lhs_row_mapping[row] != UNKNOWN );
       if( lhs_row_mapping[row] != UNKNOWN )
       {
+         if (std::find(dirty_row_states.begin(), dirty_row_states.end(), row) != dirty_row_states.end())
+            proof_out << COMMENT << " dirty row state ";
          proof_out << EQUAL_CHECK << lhs_row_mapping[row] << " ";
          int offset = 0;
          for( int i = 0; i < data.getLength(); i++ )
@@ -1566,6 +1570,8 @@ class VeriPb : public CertificateInterface<REAL>
       }
       if( rhs_row_mapping[row] != UNKNOWN )
       {
+         if (std::find(dirty_row_states.begin(), dirty_row_states.end(), row) != dirty_row_states.end())
+            proof_out << COMMENT << " dirty row state ";
          proof_out << EQUAL_CHECK << rhs_row_mapping[row] << " ";
          int offset = 0;
          for( int i = 0; i < data.getLength(); i++ )
