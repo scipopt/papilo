@@ -128,7 +128,7 @@ class VeriPb : public CertificateInterface<REAL>
          if( coefficients[i] != 0 )
          {
             is_optimization_problem = true;
-            verification_possible = true;
+            verification_possible = false;
             fmt::print("Verification currently not possible for optimization problems!\n");
             break;
          }
@@ -1631,7 +1631,11 @@ class VeriPb : public CertificateInterface<REAL>
                      proof_out << ( var == true ? "0" : "1" );
             }
             else
-               proof_out << names[convert_substitution_to_col(orig_col_1)];
+            {
+               if(substituted_vars < 0)
+                     proof_out << NEGATED;
+               proof_out << names[item.first];
+            }
          }
       }
    }
@@ -1659,7 +1663,11 @@ class VeriPb : public CertificateInterface<REAL>
                proof_out << names[orig_col_1];
             }
             else
-               proof_out << names[convert_substitution_to_col(orig_col_1)];
+            {
+               if(substituted_vars < 0)
+                     proof_out << NEGATED;
+               proof_out << names[item.first];
+            }
          }
       }
    }
