@@ -1219,7 +1219,7 @@ class VeriPb : public CertificateInterface<REAL>
 //      assert(is_optimization_problem || substituted_rows.empty());
 //      for(auto sub_row: substituted_rows)
 //         proof_out << DELETE_CONS << sub_row << "\n";
-      proof_out << "v";
+      proof_out << "o";
       next_constraint_id++;
       for( int i = 0; i < orig_solution.primal.size(); i++ )
       {
