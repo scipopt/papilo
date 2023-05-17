@@ -1146,7 +1146,7 @@ class VeriPb : public CertificateInterface<REAL>
       if( currentProblem.getConstraintMatrix().getRowSizes()[substituted_row] > 2 && is_optimization_problem)
       {
          fmt::print("Verification currently not possible for multi-aggregations for optimization problem!\n");
-         proof_out << "Verification currently not possible for multi-aggregations for optimization problem!\n";
+         proof_out << "* Verification currently not possible for multi-aggregations for optimization problem!\n";
          verification_possible = false;
          return;
       }
