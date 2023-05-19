@@ -592,7 +592,7 @@ class VeriPb : public CertificateInterface<REAL>
             rhs_row_mapping[row] = rhs_row_mapping[parallel_row];
          else
             rhs_row_mapping[row] = lhs_row_mapping[parallel_row];
-         skip_deleting_lhs_constraint_id = rhs_row_mapping[row];
+         skip_deleting_rhs_constraint_id = (int) factor * rhs_row_mapping[row];
       }
       else
       {
@@ -689,7 +689,7 @@ class VeriPb : public CertificateInterface<REAL>
             lhs_row_mapping[row] = lhs_row_mapping[parallel_row];
          else
             lhs_row_mapping[row] = rhs_row_mapping[parallel_row];
-         skip_deleting_lhs_constraint_id = lhs_row_mapping[row];
+         skip_deleting_lhs_constraint_id = ((int) factor) * lhs_row_mapping[row];
       }
       else
       {
@@ -1138,12 +1138,10 @@ class VeriPb : public CertificateInterface<REAL>
       auto col_vec = matrix.getColumnCoefficients( col );
       auto row_data = matrix.getRowCoefficients( substituted_row );
 
-      //TODO: handle this
-      // for singleton removing the coefficient is done separately
-//      if( col_vec.getLength() == 1 )
-//      {
-//         return;
-//      }
+      if( col_vec.getLength() == 1 && !is_optimization_problem )
+      {
+         return;
+      }
 
       if( currentProblem.getConstraintMatrix().getRowSizes()[substituted_row] > 2 && is_optimization_problem)
       {
@@ -1204,13 +1202,17 @@ class VeriPb : public CertificateInterface<REAL>
       {
          if( lhs_row_mapping[row] == skip_deleting_lhs_constraint_id )
             skip_deleting_lhs_constraint_id = UNKNOWN;
+         else if( lhs_row_mapping[row] == -skip_deleting_rhs_constraint_id )
+            skip_deleting_rhs_constraint_id = UNKNOWN;
          else
             proof_out << DELETE_CONS << lhs_row_mapping[row] << "\n";
          lhs_row_mapping[row] = UNKNOWN;
       }
       if( rhs_row_mapping[row] != UNKNOWN )
       {
-         if( rhs_row_mapping[row] == skip_deleting_rhs_constraint_id )
+         if( rhs_row_mapping[row] == skip_deleting_lhs_constraint_id )
+            skip_deleting_lhs_constraint_id = UNKNOWN;
+         else if( rhs_row_mapping[row] == -skip_deleting_rhs_constraint_id )
             skip_deleting_rhs_constraint_id = UNKNOWN;
          else
             proof_out << DELETE_CONS << rhs_row_mapping[row] << "\n";
