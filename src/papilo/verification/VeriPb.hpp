@@ -128,7 +128,7 @@ class VeriPb : public CertificateInterface<REAL>
          if( coefficients[i] != 0 )
          {
             is_optimization_problem = true;
-            verification_possible = false;
+            verification_possible = true;
             fmt::print("Verification currently not possible for optimization problems!\n");
             break;
          }
@@ -1140,8 +1140,10 @@ class VeriPb : public CertificateInterface<REAL>
 
       //TODO: handle this
       // for singleton removing the coefficient is done separately
-      if( col_vec.getLength() == 1 )
-         return;
+//      if( col_vec.getLength() == 1 )
+//      {
+//         return;
+//      }
 
       if( currentProblem.getConstraintMatrix().getRowSizes()[substituted_row] > 2 && is_optimization_problem)
       {
@@ -1183,6 +1185,11 @@ class VeriPb : public CertificateInterface<REAL>
          int col2 = row.getIndices()[0] == col ? row.getIndices()[1] : row.getIndices()[0];
          store_substitution(row.getValues()[0], row.getValues()[1],
                              var_mapping[col], var_mapping[col2]);
+         if( col_vec.getLength() == 1 )
+         {
+            skip_deleting_lhs_constraint_id = lhs_row_mapping[substituted_row];
+            skip_deleting_rhs_constraint_id = rhs_row_mapping[substituted_row];
+         }
       }
    };
 
