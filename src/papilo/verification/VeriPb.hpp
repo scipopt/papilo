@@ -1210,9 +1210,9 @@ class VeriPb : public CertificateInterface<REAL>
       }
       if( rhs_row_mapping[row] != UNKNOWN )
       {
-         if( rhs_row_mapping[row] == skip_deleting_lhs_constraint_id )
+         if( rhs_row_mapping[row] == -skip_deleting_lhs_constraint_id )
             skip_deleting_lhs_constraint_id = UNKNOWN;
-         else if( rhs_row_mapping[row] == -skip_deleting_rhs_constraint_id )
+         else if( rhs_row_mapping[row] == skip_deleting_rhs_constraint_id )
             skip_deleting_rhs_constraint_id = UNKNOWN;
          else
             proof_out << DELETE_CONS << rhs_row_mapping[row] << "\n";
