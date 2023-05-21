@@ -401,7 +401,7 @@ class VeriPb : public CertificateInterface<REAL>
                 << name_dominated << " >= 1 ; " << name_dominating << " -> "
                 << name_dominated << " " << name_dominated << " -> "
                 << name_dominating;
-      add_substitutions_to_witness(names, dominating_column, dominated_column);
+      add_substitutions_to_witness(names, var_mapping[dominating_column], var_mapping[dominated_column]);
       proof_out << "\n";
    }
 
@@ -1123,7 +1123,7 @@ class VeriPb : public CertificateInterface<REAL>
       {
 //         substituted_rows.push_back(first_constraint_id);
 //         substituted_rows.push_back(second_constraint_id);
-         store_substitution( values[0], values[1], orig_index_0, orig_index_1 );
+         store_substitution( values[1], values[0], orig_index_1, orig_index_0 );
       }
    }
 
@@ -1635,9 +1635,9 @@ class VeriPb : public CertificateInterface<REAL>
             if(item.first == orig_col_1)
             {
                if( substituted_vars > 0 )
-                     proof_out << ( var == true ? "1" : "0" );
+                     proof_out << ( var ? "1" : "0" );
                else
-                     proof_out << ( var == true ? "0" : "1" );
+                     proof_out << ( var ? "0" : "1" );
             }
             else
             {
