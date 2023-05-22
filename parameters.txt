@@ -165,6 +165,3 @@ bound_tightening_offset = 0.0001
 
 # should ParallelCols search for symmetries at the end (for example for binary problems where merging columns does not work)
 parallelcols.symmetries_enabled = 0
-
-# should DominatedCol search for symmetries at the end (for example for binary problems)
-domcol.symmetries_enabled = 0

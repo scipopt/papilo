@@ -135,7 +135,7 @@ class PresolveMethod
 
    PresolveStatus
    run( const Problem<REAL>& problem, const ProblemUpdate<REAL>& problemUpdate,
-        const Num<REAL>& num, Reductions<REAL>& reductions, const Timer& timer )
+        const Num<REAL>& num, Reductions<REAL>& reductions, const Timer& timer, int& cause )
    {
       if( !enabled || delayed )
          return PresolveStatus::kUnchanged;
@@ -164,7 +164,7 @@ class PresolveMethod
       auto start = std::chrono::steady_clock::now();
 #endif
       PresolveStatus result =
-          execute( problem, problemUpdate, num, reductions, timer );
+          execute( problem, problemUpdate, num, reductions, timer, cause );
 #ifdef PAPILO_TBB
       auto end = tbb::tick_count::now();
       auto duration = end - start;
@@ -316,8 +316,9 @@ class PresolveMethod
    /// and can communicate reductions via the given reductions object
    virtual PresolveStatus
    execute( const Problem<REAL>& problem,
-            const ProblemUpdate<REAL>& problemUpdate, const Num<REAL>& num,
-            Reductions<REAL>& reductions, const Timer& timer ) = 0;
+            const ProblemUpdate<REAL>& problemUpdate,
+            const Num<REAL>& num, Reductions<REAL>& reductions,
+            const Timer& timer, int& reason_of_infeasibility) = 0;
 
    virtual
    PresolveStatus

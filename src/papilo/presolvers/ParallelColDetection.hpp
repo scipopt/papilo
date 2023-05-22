@@ -135,8 +135,10 @@ class ParallelColDetection : public PresolveMethod<REAL>
 
    PresolveStatus
    execute( const Problem<REAL>& problem,
-            const ProblemUpdate<REAL>& problemUpdate, const Num<REAL>& num,
-            Reductions<REAL>& reductions, const Timer& timer ) override;
+            const ProblemUpdate<REAL>& problemUpdate,
+            const Num<REAL>& num, Reductions<REAL>& reductions,
+            const Timer& timer, int& reason_of_infeasibility)
+       override;
 
    PresolveStatus
    execute_symmetries( const Problem<REAL>& problem,
@@ -531,9 +533,8 @@ template <typename REAL>
 PresolveStatus
 ParallelColDetection<REAL>::execute( const Problem<REAL>& problem,
                                      const ProblemUpdate<REAL>& problemUpdate,
-                                     const Num<REAL>& num,
-                                     Reductions<REAL>& reductions, const Timer& timer )
-{
+                                     const Num<REAL>& num, Reductions<REAL>& reductions,
+                                     const Timer& timer, int& reason_of_infeasibility){
    const auto& constMatrix = problem.getConstraintMatrix();
    const auto& obj = problem.getObjective().coefficients;
    const auto& cflags = problem.getColFlags();
@@ -634,7 +635,8 @@ ParallelColDetection<REAL>::execute_symmetries( const Problem<REAL>& problem,
       return PresolveStatus::kUnchanged;
    }
 
-   return execute( problem, problemUpdate, num, reductions, timer );
+   int cause = -1;
+   return execute( problem, problemUpdate, num, reductions, timer,  cause);
 }
 
 template <typename REAL>

@@ -73,8 +73,10 @@ class Substitution : public PresolveMethod<REAL>
 
    PresolveStatus
    execute( const Problem<REAL>& problem,
-            const ProblemUpdate<REAL>& problemUpdate, const Num<REAL>& num,
-            Reductions<REAL>& reductions, const Timer& timer ) override;
+            const ProblemUpdate<REAL>& problemUpdate,
+            const Num<REAL>& num, Reductions<REAL>& reductions,
+            const Timer& timer, int& reason_of_infeasibility)
+       override;
    bool
    is_divisible( const Num<REAL>& num, int length, const REAL* row_values,
                  REAL min_abs_int_value ) const;
@@ -90,9 +92,8 @@ template <typename REAL>
 PresolveStatus
 Substitution<REAL>::execute( const Problem<REAL>& problem,
                              const ProblemUpdate<REAL>& problemUpdate,
-                             const Num<REAL>& num,
-                             Reductions<REAL>& reductions, const Timer& timer )
-{
+                             const Num<REAL>& num, Reductions<REAL>& reductions,
+                             const Timer& timer, int& reason_of_infeasibility){
    // go over the rows and get the equalities, extract the columns that
    // verify the conditions add them to a hash map, loop over the hash map
    // and compute the implied bounds and finally look for implied free

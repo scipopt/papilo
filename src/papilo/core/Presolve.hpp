@@ -1003,14 +1003,21 @@ Presolve<REAL>::run_presolvers( const Problem<REAL>& problem,
    if( presolveOptions.runs_sequential() &&
        presolveOptions.apply_results_immediately_if_run_sequentially )
    {
+      int cause = -1;
       probUpdate.setPostponeSubstitutions( false );
       for( int i = presolver_2_run.first; i != presolver_2_run.second; ++i )
       {
          results[i] =
-             presolvers[i]->run( problem, probUpdate, num, reductions[i], timer );
+             presolvers[i]->run( problem, probUpdate, num, reductions[i], timer, cause );
          apply_result_sequential( i, probUpdate, run_sequential );
          if( results[i] == PresolveStatus::kInfeasible )
+         {
+            if( presolvers[i]->getName() == "probing" )
+            {
+               assert( cause != -1 );
+            }
             return;
+         }
          if( problem.getNRows() == 0 || problem.getNCols() == 0 )
             return;
       }
@@ -1026,6 +1033,7 @@ Presolve<REAL>::run_presolvers( const Problem<REAL>& problem,
 #ifdef PAPILO_TBB
    else
    {
+      int cause = -1;
       tbb::parallel_for(
           tbb::blocked_range<int>( presolver_2_run.first,
                                    presolver_2_run.second ),
@@ -1033,7 +1041,12 @@ Presolve<REAL>::run_presolvers( const Problem<REAL>& problem,
              for( int i = r.begin(); i != r.end(); ++i )
              {
                 results[i] = presolvers[i]->run( problem, probUpdate, num,
-                                                 reductions[i], timer );
+                                                 reductions[i], timer, cause );
+                if(results[i] == PresolveStatus::kInfeasible && presolvers[i]->getName() == "probing")
+                {
+                   assert(cause != -1);
+                   probUpdate.getCertificateInterface()->setInfeasibleCause(cause);
+                }
              }
           },
           tbb::simple_partitioner() );
@@ -1100,7 +1113,7 @@ Presolve<REAL>::evaluate_and_apply( const Timer& timer, Problem<REAL>& problem,
       printPresolversStats();
       return result.status;
    case PresolveStatus::kInfeasible:
-      probUpdate.log_infeasiblity_in_certificate();
+      probUpdate.log_infeasiblity_in_certificate(result.postsolve.origcol_mapping, problem.getVariableNames());
       printPresolversStats();
       return result.status;
    case PresolveStatus::kUnchanged:
@@ -1116,7 +1129,8 @@ Presolve<REAL>::evaluate_and_apply( const Timer& timer, Problem<REAL>& problem,
          status = PresolveStatus::kReduced;
       if( is_status_infeasible_or_unbounded( status ) )
       {
-         probUpdate.log_infeasiblity_in_certificate();
+         probUpdate.log_infeasiblity_in_certificate(
+             result.postsolve.origcol_mapping, problem.getVariableNames() );
          return status;
       }
       round_to_evaluate = determine_next_round( problem, probUpdate,

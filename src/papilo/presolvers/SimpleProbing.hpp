@@ -45,8 +45,9 @@ class SimpleProbing : public PresolveMethod<REAL>
 
    PresolveStatus
    execute( const Problem<REAL>& problem,
-            const ProblemUpdate<REAL>& problemUpdate, const Num<REAL>& num,
-            Reductions<REAL>& reductions, const Timer& timer ) override;
+            const ProblemUpdate<REAL>& problemUpdate,
+            const Num<REAL>& num, Reductions<REAL>& reductions,
+            const Timer& timer, int& reason_of_infeasibility) override;
 
    void
    calculateReductionsForSimpleProbing( const Num<REAL>& num, Reductions<REAL>& reductions,
@@ -72,9 +73,8 @@ template <typename REAL>
 PresolveStatus
 SimpleProbing<REAL>::execute( const Problem<REAL>& problem,
                               const ProblemUpdate<REAL>& problemUpdate,
-                              const Num<REAL>& num,
-                              Reductions<REAL>& reductions, const Timer& timer )
-{
+                              const Num<REAL>& num, Reductions<REAL>& reductions,
+                              const Timer& timer, int& reason_of_infeasibility){
    assert( problem.getNumIntegralCols() != 0 );
 
    PresolveStatus status = PresolveStatus::kUnchanged;

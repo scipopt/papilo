@@ -47,8 +47,9 @@ class SingletonCols : public PresolveMethod<REAL>
 
    virtual PresolveStatus
    execute( const Problem<REAL>& problem,
-            const ProblemUpdate<REAL>& problemUpdate, const Num<REAL>& num,
-            Reductions<REAL>& reductions, const Timer& timer) override;
+            const ProblemUpdate<REAL>& problemUpdate,
+            const Num<REAL>& num, Reductions<REAL>& reductions,
+            const Timer& timer, int& reason_of_infeasibility) override;
 };
 
 #ifdef PAPILO_USE_EXTERN_TEMPLATES
@@ -61,9 +62,8 @@ template <typename REAL>
 PresolveStatus
 SingletonCols<REAL>::execute( const Problem<REAL>& problem,
                               const ProblemUpdate<REAL>& problemUpdate,
-                              const Num<REAL>& num,
-                              Reductions<REAL>& reductions, const Timer& timer )
-{
+                              const Num<REAL>& num, Reductions<REAL>& reductions,
+                              const Timer& timer, int& reason_of_infeasibility){
    const auto& domains = problem.getVariableDomains();
    const auto& lower_bounds = domains.lower_bounds;
    const auto& upper_bounds = domains.upper_bounds;

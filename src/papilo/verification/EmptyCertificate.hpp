@@ -152,6 +152,9 @@ class EmptyCertificate : public CertificateInterface<REAL>
                  const Vec<String>& names ){};
 
    void
+   setInfeasibleCause(int col){};
+
+   void
    compress( const Vec<int>& rowmapping, const Vec<int>& colmapping,
              bool full = false )
    {

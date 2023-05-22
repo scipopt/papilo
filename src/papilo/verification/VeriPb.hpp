@@ -65,6 +65,7 @@ class VeriPb : public CertificateInterface<REAL>
    bool is_optimization_problem = false;
    bool verification_possible = true;
    HashMap<int, Vec<int>> substitutions;
+   int cause = -1;
    // VeriPB of substitutions
 //   Vec<int> substituted_rows;
 
@@ -1245,13 +1246,35 @@ class VeriPb : public CertificateInterface<REAL>
    };
 
    void
+   setInfeasibleCause(int col)
+   {
+      cause = col;
+   }
+
+   void
    infeasible( )
    {
       if( !verification_possible )
          return;
-//      assert(is_optimization_problem || substituted_rows.empty());
-//      for(auto sub_row: substituted_rows)
-//         proof_out << DELETE_CONS << sub_row << "\n";
+      next_constraint_id++;
+      proof_out << "u >= 1 ;\n";
+      proof_out << "c " << next_constraint_id << "\n";
+
+   };
+
+   void
+   infeasible( const Vec<int>& colmapping, const Vec<String>& names )
+   {
+      if( !verification_possible )
+         return;
+      if(cause != -1)
+      {
+         next_constraint_id++;
+         proof_out << RUP << "1 " << names[colmapping[cause]] << " >= 1 ;\n";
+      }
+      //      assert(is_optimization_problem || substituted_rows.empty());
+      //      for(auto sub_row: substituted_rows)
+      //         proof_out << DELETE_CONS << sub_row << "\n";
       next_constraint_id++;
       proof_out << "u >= 1 ;\n";
       proof_out << "c " << next_constraint_id << "\n";

@@ -434,8 +434,8 @@ class ProblemUpdate
                    const Reduction<REAL>* last ) const;
 
    void
-   log_infeasiblity_in_certificate( ){
-       certificate_interface->infeasible();
+   log_infeasiblity_in_certificate( const Vec<int>& var_mapping, const Vec<String>& names ){
+       certificate_interface->infeasible( var_mapping, names );
    };
 
    void

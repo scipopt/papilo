@@ -62,6 +62,7 @@ class Probing : public PresolveMethod<REAL>
       this->setType( PresolverType::kIntegralCols );
    }
 
+
    void
    compress( const Vec<int>& rowmap, const Vec<int>& colmap ) override
    {
@@ -113,12 +114,14 @@ class Probing : public PresolveMethod<REAL>
 
    PresolveStatus
    execute( const Problem<REAL>& problem,
-            const ProblemUpdate<REAL>& problemUpdate, const Num<REAL>& num,
-            Reductions<REAL>& reductions, const Timer& timer ) override;
+            const ProblemUpdate<REAL>& problemUpdate,
+            const Num<REAL>& num, Reductions<REAL>& reductions,
+            const Timer& timer, int& reason_of_infeasibility) override;
 
    bool
    isBinaryVariable( REAL upper_bound, REAL lower_bound, int column_size,
                      const Flags<ColFlag>& colFlag ) const;
+
 
    void
    set_max_badge_size( int val);
@@ -136,7 +139,7 @@ PresolveStatus
 Probing<REAL>::execute( const Problem<REAL>& problem,
                         const ProblemUpdate<REAL>& problemUpdate,
                         const Num<REAL>& num, Reductions<REAL>& reductions,
-                        const Timer& timer)
+                        const Timer& timer, int& reason_of_infeasibility)
 {
    if( problem.getNumIntegralCols() == 0 )
       return PresolveStatus::kUnchanged;
@@ -350,6 +353,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
    boundChanges.reserve( ncols );
 
    std::atomic_bool infeasible{ false };
+   std::atomic_int infeasible_variable {-1};
 
    // use tbb combinable so that each thread will copy the activities and
    // bounds at most once
@@ -416,6 +420,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
                    if( globalInfeasible )
                    {
                       infeasible.store( true, std::memory_order_relaxed );
+                      infeasible_variable.store(col);
                       break;
                    }
                 }
@@ -431,7 +436,10 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
          return PresolveStatus::kUnchanged;
 
       if( infeasible.load( std::memory_order_relaxed ) )
+      {
+         reason_of_infeasibility = infeasible_variable.load(std::memory_order_relaxed);
          return PresolveStatus::kInfeasible;
+      }
 
       int64_t amountofwork = 0;
       int nfixings = 0;
