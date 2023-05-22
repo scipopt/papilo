@@ -34,7 +34,8 @@ setupProblemForTest( double upperBoundForVar3 );
 
 TEST_CASE( "happy-path-presolve-fix-continuous", "[presolve]" )
 {
-      double time = 0.0;
+   double time = 0.0;
+   int cause = -1;
    Timer t{time};
    Num<double> num{};
    Message msg{};
@@ -49,7 +50,7 @@ TEST_CASE( "happy-path-presolve-fix-continuous", "[presolve]" )
    Reductions<double> reductions{};
 
    PresolveStatus presolveStatus =
-       presolvingMethod.execute( problem, problemUpdate, num, reductions, t );
+       presolvingMethod.execute( problem, problemUpdate, num, reductions, t, cause );
 
    REQUIRE( presolveStatus == PresolveStatus::kReduced );
    REQUIRE( reductions.size() == 2 );
@@ -63,7 +64,8 @@ TEST_CASE( "happy-path-presolve-fix-continuous", "[presolve]" )
 
 TEST_CASE( "happy-path-no-presolve-fix-continuous", "[presolve]" )
 {
-      double time = 0.0;
+   double time = 0.0;
+   int cause = -1;
    Timer t{time};
    Num<double> num{};
    Message msg{};
@@ -77,7 +79,7 @@ TEST_CASE( "happy-path-no-presolve-fix-continuous", "[presolve]" )
    FixContinuous<double> presolvingMethod{};
    Reductions<double> reductions{};
    PresolveStatus presolveStatus =
-       presolvingMethod.execute( problem, problemUpdate, num, reductions, t );
+       presolvingMethod.execute( problem, problemUpdate, num, reductions, t, cause );
    REQUIRE( presolveStatus == PresolveStatus::kUnchanged );
    REQUIRE( reductions.size() == 0 );
 }

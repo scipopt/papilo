@@ -39,6 +39,7 @@ TEST_CASE( "happy-path-probing", "[presolve]" )
 {
    Num<double> num{};
    double time = 0.0;
+   int cause = -1;
    Timer t{ time };
    Message msg{};
    Problem<double> problem = setupProblemWithProbing();
@@ -54,7 +55,7 @@ TEST_CASE( "happy-path-probing", "[presolve]" )
    problem.recomputeAllActivities();
 
    PresolveStatus presolveStatus =
-       presolvingMethod.execute( problem, problemUpdate, num, reductions, t );
+       presolvingMethod.execute( problem, problemUpdate, num, reductions, t, cause );
 
    REQUIRE( presolveStatus == PresolveStatus::kReduced );
    REQUIRE( reductions.size() == 1 );
@@ -67,6 +68,7 @@ TEST_CASE( "happy-path-probing", "[presolve]" )
 TEST_CASE( "failed-path-probing-on-not-binary-variables", "[presolve]" )
 {
    double time = 0.0;
+   int cause = -1;
    Timer t{ time };
    Num<double> num{};
    Message msg{};
@@ -83,7 +85,7 @@ TEST_CASE( "failed-path-probing-on-not-binary-variables", "[presolve]" )
    problem.recomputeAllActivities();
 
    PresolveStatus presolveStatus =
-       presolvingMethod.execute( problem, problemUpdate, num, reductions, t );
+       presolvingMethod.execute( problem, problemUpdate, num, reductions, t, cause );
 
    REQUIRE( presolveStatus == PresolveStatus::kUnchanged );
 }

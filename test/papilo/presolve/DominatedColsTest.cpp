@@ -43,7 +43,8 @@ setupMatrixForMultipleDominatedCols();
 
 TEST_CASE( "domcol-happy-path", "[presolve]" )
 {
-      double time = 0.0;
+   double time = 0.0;
+   int cause = -1;
    Timer t{time};
    Num<double> num{};
    Message msg{};
@@ -60,7 +61,7 @@ TEST_CASE( "domcol-happy-path", "[presolve]" )
    problem.recomputeAllActivities();
 
    PresolveStatus presolveStatus =
-       presolvingMethod.execute( problem, problemUpdate, num, reductions, t);
+       presolvingMethod.execute( problem, problemUpdate, num, reductions, t, cause);
 
    REQUIRE( presolveStatus == PresolveStatus::kReduced );
    REQUIRE( reductions.size() == 8 );
@@ -94,7 +95,8 @@ TEST_CASE( "domcol-happy-path", "[presolve]" )
 
 TEST_CASE( "domcol-parallel-columns", "[presolve]" )
 {
-      double time = 0.0;
+   double time = 0.0;
+   int cause = -1;
    Timer t{time};
    Num<double> num{};
    Message msg{};
@@ -111,7 +113,7 @@ TEST_CASE( "domcol-parallel-columns", "[presolve]" )
    problem.recomputeAllActivities();
 
    PresolveStatus presolveStatus =
-       presolvingMethod.execute( problem, problemUpdate, num, reductions, t );
+       presolvingMethod.execute( problem, problemUpdate, num, reductions, t, cause );
 
    REQUIRE( presolveStatus == PresolveStatus::kReduced );
    REQUIRE( reductions.size() == 8 );
@@ -145,7 +147,8 @@ TEST_CASE( "domcol-parallel-columns", "[presolve]" )
 
 TEST_CASE( "domcol-multiple-parallel-cols-generate_redundant-reductions", "[presolve]" )
 {
-      double time = 0.0;
+   double time = 0.0;
+   int cause = -1;
    Timer t{time};
    Num<double> num{};
    Message msg{};
@@ -162,7 +165,7 @@ TEST_CASE( "domcol-multiple-parallel-cols-generate_redundant-reductions", "[pres
    problem.recomputeAllActivities();
 
    PresolveStatus presolveStatus =
-       presolvingMethod.execute( problem, problemUpdate, num, reductions, t);
+       presolvingMethod.execute( problem, problemUpdate, num, reductions, t, cause);
 
    REQUIRE( presolveStatus == PresolveStatus::kReduced );
    REQUIRE( reductions.getTransactions().size() == 3 );
@@ -170,7 +173,8 @@ TEST_CASE( "domcol-multiple-parallel-cols-generate_redundant-reductions", "[pres
 
 TEST_CASE( "domcol-multiple-columns", "[presolve]" )
 {
-      double time = 0.0;
+   double time = 0.0;
+   int cause = -1;
    Timer t{time};
    Num<double> num{};
    Message msg{};
@@ -187,7 +191,7 @@ TEST_CASE( "domcol-multiple-columns", "[presolve]" )
    problem.recomputeAllActivities();
 
    PresolveStatus presolveStatus =
-       presolvingMethod.execute( problem, problemUpdate, num, reductions, t );
+       presolvingMethod.execute( problem, problemUpdate, num, reductions, t, cause );
 
    REQUIRE( presolveStatus == PresolveStatus::kReduced );
    REQUIRE( reductions.size() == 24 );

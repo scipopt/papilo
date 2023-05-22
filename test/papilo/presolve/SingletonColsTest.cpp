@@ -55,7 +55,8 @@ forceCalculationOfSingletonRows( Problem<double>& problem,
 TEST_CASE( "happy-path-singleton-column", "[presolve]" )
 {
    Num<double> num{};
-   double time = 0.0;
+      double time = 0.0;
+   int cause = -1;
    Timer t{ time };
    Message msg{};
    Problem<double> problem = setupProblemWithSingletonColumn();
@@ -70,7 +71,7 @@ TEST_CASE( "happy-path-singleton-column", "[presolve]" )
    Reductions<double> reductions{};
 
    PresolveStatus presolveStatus =
-       presolvingMethod.execute( problem, problemUpdate, num, reductions, t );
+       presolvingMethod.execute( problem, problemUpdate, num, reductions, t, cause );
 
    REQUIRE( presolveStatus == PresolveStatus::kReduced );
    REQUIRE( reductions.size() == 5 );
@@ -99,7 +100,8 @@ TEST_CASE( "happy-path-singleton-column", "[presolve]" )
 TEST_CASE( "happy-path-singleton-column-equation", "[presolve]" )
 {
    Num<double> num{};
-   double time = 0.0;
+      double time = 0.0;
+   int cause = -1;
    Timer t{ time };
    Message msg{};
    Problem<double> problem = setupProblemWithOnlyOneEntryIn1stRowAndColumn();
@@ -114,7 +116,7 @@ TEST_CASE( "happy-path-singleton-column-equation", "[presolve]" )
    Reductions<double> reductions{};
 
    PresolveStatus presolveStatus =
-       presolvingMethod.execute( problem, problemUpdate, num, reductions, t );
+       presolvingMethod.execute( problem, problemUpdate, num, reductions, t, cause );
 
    REQUIRE( presolveStatus == PresolveStatus::kReduced );
    REQUIRE( reductions.size() == 5 );
@@ -142,7 +144,8 @@ TEST_CASE( "happy-path-singleton-column-equation", "[presolve]" )
 TEST_CASE( "happy-path-singleton-column-implied-bounds-negative-coeff-pos-bounds", "[presolve]" )
 {
    Message msg{};
-   double time = 0.0;
+      double time = 0.0;
+   int cause = -1;
    Timer t{ time };
    const Num<double> num{};
    Problem<double> problem =
@@ -159,7 +162,7 @@ TEST_CASE( "happy-path-singleton-column-implied-bounds-negative-coeff-pos-bounds
    Reductions<double> reductions{};
 
    PresolveStatus presolveStatus =
-       presolvingMethod.execute( problem, problemUpdate, num, reductions, t );
+       presolvingMethod.execute( problem, problemUpdate, num, reductions, t, cause );
 
    REQUIRE( presolveStatus == PresolveStatus::kReduced );
    REQUIRE( reductions.size() == 6 );
@@ -191,7 +194,8 @@ TEST_CASE( "happy-path-singleton-column-implied-bounds-negative-coeff-pos-bounds
 TEST_CASE( "happy-path-singleton-column-implied-bounds-negative-coeff-neg-bounds", "[presolve]" )
 {
    Message msg{};
-   double time = 0.0;
+      double time = 0.0;
+   int cause = -1;
    Timer t{ time };
    const Num<double> num{};
    Problem<double> problem =
@@ -208,7 +212,7 @@ TEST_CASE( "happy-path-singleton-column-implied-bounds-negative-coeff-neg-bounds
    Reductions<double> reductions{};
 
    PresolveStatus presolveStatus =
-       presolvingMethod.execute( problem, problemUpdate, num, reductions, t );
+       presolvingMethod.execute( problem, problemUpdate, num, reductions, t, cause );
 
    REQUIRE( presolveStatus == PresolveStatus::kReduced );
    REQUIRE( reductions.size() == 6 );
@@ -240,7 +244,8 @@ TEST_CASE( "happy-path-singleton-column-implied-bounds-negative-coeff-neg-bounds
 TEST_CASE( "happy-path-singleton-column-implied-bounds-positive-coeff-pos-bounds", "[presolve]" )
 {
    Message msg{};
-   double time = 0.0;
+      double time = 0.0;
+   int cause = -1;
    Timer t{ time };
    const Num<double> num{};
    Problem<double> problem =
@@ -257,7 +262,7 @@ TEST_CASE( "happy-path-singleton-column-implied-bounds-positive-coeff-pos-bounds
    Reductions<double> reductions{};
 
    PresolveStatus presolveStatus =
-       presolvingMethod.execute( problem, problemUpdate, num, reductions, t );
+       presolvingMethod.execute( problem, problemUpdate, num, reductions, t, cause );
 
    REQUIRE( presolveStatus == PresolveStatus::kReduced );
    REQUIRE( reductions.size() == 6 );
@@ -291,7 +296,8 @@ TEST_CASE( "happy-path-singleton-column-implied-bounds-positive-coeff-pos-bounds
 TEST_CASE( "happy-path-singleton-column-implied-bounds-positive-coeff-neg-bounds", "[presolve]" )
 {
    Message msg{};
-   double time = 0.0;
+      double time = 0.0;
+   int cause = -1;
    Timer t{ time };
    const Num<double> num{};
    Problem<double> problem =
@@ -308,7 +314,7 @@ TEST_CASE( "happy-path-singleton-column-implied-bounds-positive-coeff-neg-bounds
    Reductions<double> reductions{};
 
    PresolveStatus presolveStatus =
-       presolvingMethod.execute( problem, problemUpdate, num, reductions, t );
+       presolvingMethod.execute( problem, problemUpdate, num, reductions, t, cause );
 
    REQUIRE( presolveStatus == PresolveStatus::kReduced );
    REQUIRE( reductions.size() == 6 );
@@ -340,7 +346,8 @@ TEST_CASE( "happy-path-singleton-column-implied-bounds-positive-coeff-neg-bounds
 TEST_CASE( "happy-path-singleton-column-infinity-bounds-equation", "[presolve]" )
 {
    Message msg{};
-   double time = 0.0;
+      double time = 0.0;
+   int cause = -1;
    Timer t{ time };
    const Num<double> num{};
    Problem<double> problem =
@@ -356,7 +363,7 @@ TEST_CASE( "happy-path-singleton-column-infinity-bounds-equation", "[presolve]" 
    Reductions<double> reductions{};
 
    PresolveStatus presolveStatus =
-       presolvingMethod.execute( problem, problemUpdate, num, reductions, t );
+       presolvingMethod.execute( problem, problemUpdate, num, reductions, t, cause );
 
    REQUIRE( presolveStatus == PresolveStatus::kReduced );
    REQUIRE( reductions.size() == 5 );
