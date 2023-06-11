@@ -41,6 +41,10 @@
 #include "soplex/spxgithash.h"
 #endif
 
+#ifdef  PAPILO_HAVE_HIGHS
+#include "Highs.h"
+#endif
+
 #ifdef PAPILO_HAVE_SCIP
 #include "scip/scipgithash.h"
 #endif
@@ -133,10 +137,9 @@ print_header()
                GMP_VERSION );
 #endif
 #ifdef PAPILO_HAVE_HIGHS
-   // TODO: add Highs Solver -> waiting for official release
-    fmt::print( "  HiGHS   {} \t high performance software "
-               "for linear optimization (https://www.maths.ed.ac.uk/hall/HiGHS/) [GitHash: {}]\n" , "pre-release",
-    "TBD");
+   fmt::print( "  HiGHS   {}.{}.{} \t high performance software "
+               "for linear optimization (https://www.maths.ed.ac.uk/hall/HiGHS/) [GitHash: {}]\n" , HIGHS_VERSION_MAJOR, HIGHS_VERSION_MINOR, HIGHS_VERSION_PATCH,
+               HIGHS_GITHASH);
 #endif
     //TODO
 #ifdef PAPILO_HAVE_GLOP
