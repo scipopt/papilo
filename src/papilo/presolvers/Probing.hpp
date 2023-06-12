@@ -551,11 +551,6 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
 
    if( !boundChanges.empty() )
    {
-      pdqsort(
-          boundChanges.begin(), boundChanges.end(),
-          []( const ProbingBoundChg<REAL>& a, const ProbingBoundChg<REAL>& b ) {
-             return ( a.col << 1 | a.upper ) < ( b.col << 1 | b.upper );
-          } );
 
       for( const ProbingBoundChg<REAL>& boundChg : boundChanges )
       {
