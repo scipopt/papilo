@@ -40,14 +40,17 @@ struct ProbingBoundChg
    REAL bound;
    unsigned int col : 31;
    unsigned int upper : 1;
+   unsigned int probing_col : 32;
 
-   ProbingBoundChg( bool upper_, int col_, REAL bound_ )
+   ProbingBoundChg( bool upper_, int col_, REAL bound_, int probing_col_ )
    {
       this->upper = upper_ ? 1 : 0;
       this->col = static_cast<unsigned int>( col_ );
       this->bound = bound_;
+      this->probing_col = static_cast<unsigned int>( probing_col_ );
    }
 };
+
 
 template <typename REAL>
 struct ProbingSubstitution
@@ -135,6 +138,7 @@ class ProbingView
       return boundChanges;
    }
 
+   
    Vec<ProbingSubstitution<REAL>>&
    getProbingSubstitutions()
    {
@@ -501,7 +505,7 @@ ProbingView<REAL>::storeImplications()
          continue;
 
       otherValueImplications.emplace_back(
-          ProbingBoundChg<REAL>( false, col, probing_lower_bounds[col] ) );
+          ProbingBoundChg<REAL>( false, col, probing_lower_bounds[col], -1 ) );
    }
 
    for( int c : changed_ubs )
@@ -512,7 +516,7 @@ ProbingView<REAL>::storeImplications()
          continue;
 
       otherValueImplications.emplace_back(
-          ProbingBoundChg<REAL>( true, col, probing_upper_bounds[col] ) );
+          ProbingBoundChg<REAL>( true, col, probing_upper_bounds[col], -1 ) );
    }
 }
 
@@ -550,7 +554,7 @@ ProbingView<REAL>::analyzeImplications()
          assert( c < 0 || probing_lower_bounds[col] > orig_lbs[col] );
 
          boundChanges.emplace_back(
-             ProbingBoundChg<REAL>( false, col, probing_lower_bounds[col] ) );
+             ProbingBoundChg<REAL>( false, col, probing_lower_bounds[col], -1 ) );
       }
 
       for( int c : changed_ubs )
@@ -566,7 +570,7 @@ ProbingView<REAL>::analyzeImplications()
          assert( c < 0 || probing_upper_bounds[col] < orig_ubs[col] );
 
          boundChanges.emplace_back(
-             ProbingBoundChg<REAL>( true, col, probing_upper_bounds[col] ) );
+             ProbingBoundChg<REAL>( true, col, probing_upper_bounds[col], -1 ) );
       }
 
       return false;
@@ -581,13 +585,13 @@ ProbingView<REAL>::analyzeImplications()
       {
          // probing to 1 is infeasible, fix probing column to 0
          boundChanges.emplace_back(
-             ProbingBoundChg<REAL>( true, probingCol, 0.0 ) );
+             ProbingBoundChg<REAL>( true, probingCol, 0.0, -1 ) );
       }
       else
       {
          // probing to 0 is infeasible, fix probing column to 1
          boundChanges.emplace_back(
-             ProbingBoundChg<REAL>( false, probingCol, 1.0 ) );
+             ProbingBoundChg<REAL>( false, probingCol, 1.0, -1 ) );
       }
    }
 
@@ -660,9 +664,9 @@ ProbingView<REAL>::analyzeImplications()
                  orig_ubs[boundChg.col] > boundChg.bound );
 
          // upper bound is tightened in both probing branches
+         REAL bound = num.max( boundChg.bound, probing_upper_bounds[boundChg.col] );
          boundChanges.emplace_back( ProbingBoundChg<REAL>(
-             true, boundChg.col,
-             num.max( boundChg.bound, probing_upper_bounds[boundChg.col] ) ) );
+             true, boundChg.col, bound, probingCol ) );
       }
       else if( !boundChg.upper &&
                !probing_domain_flags[boundChg.col].test( ColFlag::kLbInf ) &&
@@ -673,9 +677,8 @@ ProbingView<REAL>::analyzeImplications()
                  orig_lbs[boundChg.col] < boundChg.bound );
 
          // lower bound is tightened in both probing branches
-         boundChanges.emplace_back( ProbingBoundChg<REAL>(
-             false, boundChg.col,
-             num.min( boundChg.bound, probing_lower_bounds[boundChg.col] ) ) );
+         REAL bound = num.min( boundChg.bound, probing_lower_bounds[boundChg.col] );
+         boundChanges.emplace_back( ProbingBoundChg<REAL>(false, boundChg.col, bound, probingCol ) );
       }
    }
 

@@ -471,8 +471,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
             {
                // found new bound change
                boundChanges.emplace_back( boundChg );
-               boundPos[2 * boundChg.col + boundChg.upper] =
-                   boundChanges.size();
+               boundPos[2 * boundChg.col + boundChg.upper] = boundChanges.size();
 
                // check if column is now fixed
                if( ( boundChg.upper &&
@@ -486,9 +485,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
             else
             {
                // already changed that bound
-               ProbingBoundChg<REAL>& otherBoundChg =
-                   boundChanges[boundPos[2 * boundChg.col + boundChg.upper] -
-                                1];
+               ProbingBoundChg<REAL>& otherBoundChg = boundChanges[boundPos[2 * boundChg.col + boundChg.upper] - 1];
 
                if( boundChg.upper && boundChg.bound < otherBoundChg.bound )
                {
@@ -563,9 +560,18 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
       for( const ProbingBoundChg<REAL>& boundChg : boundChanges )
       {
          if( boundChg.upper )
+         {
+            if(boundChg.probing_col!= -1)
+               reductions.reason_probing_upper_bound_change(boundChg.probing_col, boundChg.col);
             reductions.changeColUB( boundChg.col, boundChg.bound );
+         }
          else
+         {
+            if(boundChg.probing_col!= -1)
+               reductions.reason_probing_lower_bound_change(boundChg.probing_col, boundChg.col);
             reductions.changeColLB( boundChg.col, boundChg.bound );
+
+         }
       }
 
       result = PresolveStatus::kReduced;

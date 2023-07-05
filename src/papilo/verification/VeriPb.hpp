@@ -406,6 +406,26 @@ class VeriPb : public CertificateInterface<REAL>
       proof_out << "\n";
    }
 
+   virtual void
+   add_probing_reasoning( bool is_upper, int causing_col, int col,
+                          const Vec<String>& names,
+                          const Vec<int>& var_mapping)
+   {
+      if( !verification_possible )
+         return;
+      auto name_causing_col = names[var_mapping[causing_col]];
+      auto name_col = names[var_mapping[col]];
+      next_constraint_id++;
+      proof_out << RUP << "1 " << name_causing_col << " +1 ";
+      if(is_upper)
+         proof_out << NEGATED;
+      proof_out << name_col << " >= 1;\n";
+      proof_out << RUP << "1 " << NEGATED << name_causing_col << " +1 ";
+      if(is_upper)
+         proof_out << NEGATED;
+      proof_out << name_col << " >= 1;\n";
+   }
+
    void
    store_gcd( int row, REAL gcd )
    {
