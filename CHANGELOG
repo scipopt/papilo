@@ -3,8 +3,38 @@
 @section RNNEXT PaPILO NEXT
 ***************************
 
+
+Features
+--------
+
 Performance improvements
 ------------------------
+
+Interface changes
+-----------------
+
+### New API functions
+
+### Changed parameters
+
+### New parameters with default values
+
+### Data structures
+
+Unit tests
+----------
+
+Testing
+-------
+
+Build system
+------------
+
+Fixed bugs
+----------
+
+@section RN212 PaPILO 2.1.3
+***************************
 
 Interface changes
 -----------------
