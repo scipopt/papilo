@@ -561,13 +561,13 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
       {
          if( boundChg.upper )
          {
-            if(boundChg.probing_col!= -1)
+            if(problemUpdate.getPresolveOptions().verification_with_VeriPB && boundChg.probing_col!= -1)
                reductions.reason_probing_upper_bound_change(boundChg.probing_col, boundChg.col);
             reductions.changeColUB( boundChg.col, boundChg.bound );
          }
          else
          {
-            if(boundChg.probing_col!= -1)
+            if(problemUpdate.getPresolveOptions().verification_with_VeriPB && boundChg.probing_col!= -1)
                reductions.reason_probing_lower_bound_change(boundChg.probing_col, boundChg.col);
             reductions.changeColLB( boundChg.col, boundChg.bound );
 
