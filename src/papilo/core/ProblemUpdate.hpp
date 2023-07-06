@@ -2140,9 +2140,9 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
          }
          case ColReduction::CERTIFICATE_PROBING_LOWER:
          {
-            int causing_col = reduction.col;
+            int col = reduction.col;
             assert(num.isIntegral(reduction.newval));
-            int col = (int) reduction.newval;
+            int causing_col = (int) reduction.newval;
             certificate_interface->add_probing_reasoning(false, causing_col, col, problem.getVariableNames(), postsolve.origcol_mapping );
             break;
          }
