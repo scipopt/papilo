@@ -420,6 +420,7 @@ class VeriPb : public CertificateInterface<REAL>
       if(is_upper)
          proof_out << NEGATED;
       proof_out << name_col << " >= 1;\n";
+      next_constraint_id++;
       proof_out << RUP << "1 " << NEGATED << name_causing_col << " +1 ";
       if(is_upper)
          proof_out << NEGATED;

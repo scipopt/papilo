@@ -495,6 +495,13 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
                   // check if column is now fixed
                   if( boundChg.bound == lower_bounds[boundChg.col] )
                      ++nfixings;
+
+                  if(problemUpdate.getPresolveOptions().verification_with_VeriPB)
+                  {
+                     if(boundChg.probing_col == -1 )
+                        otherBoundChg.probing_col = -1;
+                  }
+
                }
                else if( !boundChg.upper &&
                         boundChg.bound > otherBoundChg.bound )
