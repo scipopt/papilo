@@ -628,7 +628,7 @@ class VeriPb : public CertificateInterface<REAL>
             }
             assert( rhs_row_mapping[parallel_row] != UNKNOWN );
             next_constraint_id++;
-            proof_out << POL << rhs_row_mapping[parallel_row] << " " << factor
+            proof_out << POL << rhs_row_mapping[parallel_row] << " " <<  (int) factor
                       << " *\n";
             if( rhs_row_mapping[row] != UNKNOWN )
                proof_out << DELETE_CONS << rhs_row_mapping[row] << "\n";
@@ -638,7 +638,7 @@ class VeriPb : public CertificateInterface<REAL>
             {
                next_constraint_id++;
                proof_out << POL << lhs_row_mapping[row] << " "
-                         << factor_parallel << " *\n";
+                         << (int) factor_parallel << " *\n";
                proof_out << DELETE_CONS << lhs_row_mapping[row] << "\n";
                lhs_row_mapping[row] = next_constraint_id;
                scale_factor[row] *= num.round_to_int( factor_parallel );
@@ -655,7 +655,7 @@ class VeriPb : public CertificateInterface<REAL>
             next_constraint_id++;
             assert( lhs_row_mapping[parallel_row] != UNKNOWN );
             proof_out << POL << lhs_row_mapping[parallel_row] << " "
-                      << abs( factor ) << " *\n";
+                      << (int) abs( factor ) << " *\n";
             if( rhs_row_mapping[row] != UNKNOWN )
                proof_out << DELETE_CONS << rhs_row_mapping[row] << "\n";
             rhs_row_mapping[row] = next_constraint_id;
@@ -724,7 +724,7 @@ class VeriPb : public CertificateInterface<REAL>
                factor = factor_row;
             }
             next_constraint_id++;
-            proof_out << POL << lhs_row_mapping[parallel_row] << " " << factor
+            proof_out << POL << lhs_row_mapping[parallel_row] << " " << (int) factor
                       << " *\n";
             if( lhs_row_mapping[row] != UNKNOWN )
                proof_out << DELETE_CONS << lhs_row_mapping[row] << "\n";
@@ -734,7 +734,7 @@ class VeriPb : public CertificateInterface<REAL>
             {
                next_constraint_id++;
                proof_out << POL << rhs_row_mapping[row] << " "
-                         << factor_parallel << " *\n";
+                         << (int) factor_parallel << " *\n";
                proof_out << DELETE_CONS << rhs_row_mapping[row] << "\n";
                rhs_row_mapping[row] = next_constraint_id;
                scale_factor[row] *= num.round_to_int( factor_parallel );
@@ -760,7 +760,7 @@ class VeriPb : public CertificateInterface<REAL>
             {
                next_constraint_id++;
                proof_out << POL << rhs_row_mapping[row] << " "
-                         << abs( factor_parallel ) << " *\n";
+                         << (int) abs( factor_parallel ) << " *\n";
                proof_out << DELETE_CONS << rhs_row_mapping[row] << "\n";
                rhs_row_mapping[row] = next_constraint_id;
                scale_factor[row] *= num.round_to_int( abs( factor_parallel ) );
@@ -1507,10 +1507,10 @@ class VeriPb : public CertificateInterface<REAL>
                assert( rhs_row_mapping[row] != UNKNOWN );
                if( substitute_factor * factor > 0 )
                   proof_out << POL << lhs_id << " " << val << " * "
-                            << rhs_row_mapping[row] << " " << val2 << " +\n";
+                            << rhs_row_mapping[row] << " " << val2 << " * +\n";
                else
                   proof_out << POL << rhs_id << " " << val << " * "
-                            << rhs_row_mapping[row] << " " << val2 << " +\n";
+                            << rhs_row_mapping[row] << " " << val2 << " * +\n";
                proof_out << DELETE_CONS << rhs_row_mapping[row] << "\n";
                rhs_row_mapping[row] = next_constraint_id;
             }
@@ -1520,10 +1520,10 @@ class VeriPb : public CertificateInterface<REAL>
                assert( lhs_row_mapping[row] != UNKNOWN );
                if( substitute_factor * factor > 0 )
                   proof_out << POL << rhs_id << " " << val << " * "
-                            << lhs_row_mapping[row] << " " << val2 << " +\n";
+                            << lhs_row_mapping[row] << " " << val2 << " * +\n";
                else
                   proof_out << POL << lhs_id << " " << val << " * "
-                            << lhs_row_mapping[row] << " " << val2 << " +\n";
+                            << lhs_row_mapping[row] << " " << val2 << " * +\n";
 
                proof_out << DELETE_CONS << lhs_row_mapping[row] << "\n";
                lhs_row_mapping[row] = next_constraint_id;
