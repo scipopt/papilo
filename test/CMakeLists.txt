@@ -359,7 +359,7 @@ if (TARGET papilo-executable)
                         )
                 set_tests_properties(${numtype}-infeas-${instance}
                         PROPERTIES
-                        PASS_REGULAR_EXPRESSION "(presolving|solving) detected infeasible problem after [0-9].[0-9][0-9][0-9] seconds"
+                        PASS_REGULAR_EXPRESSION "(presolving|solving) detected infeasible problem after ([0-9][0-9]|[0-9]).[0-9][0-9][0-9] seconds"
                         DEPENDS papilo-build
                         )
             endforeach (numtype)
