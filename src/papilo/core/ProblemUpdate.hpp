@@ -2138,6 +2138,22 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
             certificate_interface->dominating_columns(dominating_col, dominated_col, problem.getVariableNames(), postsolve.origcol_mapping );
             break;
          }
+         case ColReduction::CERTIFICATE_PROBING_LOWER:
+         {
+            int col = reduction.col;
+            assert(num.isIntegral(reduction.newval));
+            int causing_col = (int) reduction.newval;
+            certificate_interface->add_probing_reasoning(false, causing_col, col, problem.getVariableNames(), postsolve.origcol_mapping );
+            break;
+         }
+         case ColReduction::CERTIFICATE_PROBING_UPPER:
+         {
+            int causing_col = reduction.col;
+            assert(num.isIntegral(reduction.newval));
+            int col = (int) reduction.newval;
+            certificate_interface->add_probing_reasoning(true, causing_col, col, problem.getVariableNames(), postsolve.origcol_mapping );
+            break;
+         }
          case ColReduction::LOWER_BOUND:
          {
             if( changeLB( reduction.col, reduction.newval, argument ) ==

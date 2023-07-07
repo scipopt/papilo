@@ -48,6 +48,8 @@ struct ColReduction
       FIXED_INFINITY = -14,
       /// needed for the certificate
       CERTIFICATE_DOMINANCE = -15,
+      CERTIFICATE_PROBING_LOWER = -16,
+      CERTIFICATE_PROBING_UPPER = -17,
    };
 };
 
@@ -335,6 +337,16 @@ class Reductions
 
       reductions.emplace_back( dominated_column, ColReduction::CERTIFICATE_DOMINANCE, dominating_column );
       ++transactions.back().nlocks;
+   }
+
+   void reason_probing_upper_bound_change(int causing_col, int col)
+   {
+      reductions.emplace_back(col, ColReduction::CERTIFICATE_PROBING_UPPER, causing_col);
+   }
+
+   void reason_probing_lower_bound_change(int causing_col, int col)
+   {
+      reductions.emplace_back(causing_col, ColReduction::CERTIFICATE_PROBING_LOWER, col);
    }
 
    unsigned int

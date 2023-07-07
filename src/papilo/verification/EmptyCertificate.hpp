@@ -79,6 +79,11 @@ class EmptyCertificate : public CertificateInterface<REAL>
    {
    }
 
+
+   void
+   add_probing_reasoning( bool is_upper, int causing_col, int col,
+                          const Vec<String>& names,
+                          const Vec<int>& var_mapping) {}
    void
    change_rhs( int row, REAL val, const SparseVectorView<REAL>& data,
                const Vec<String>& names, const Vec<int>& var_mapping,
