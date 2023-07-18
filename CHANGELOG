@@ -3,18 +3,61 @@
 @section RNNEXT PaPILO NEXT
 ***************************
 
+
+Features
+--------
+
 Performance improvements
 ------------------------
+- Symmetries: For binary problems ParallelCols adds symmetry-breaking constraints to avoid introducing non-binary integer variables via parameter
 
 Interface changes
 -----------------
 - CML: new options dual-reduced-solution/costs-reduced-solution/basis-reduced-solution to pass the dual/reduced costs/basis information of the reduced solution via command-line to PaPILO in the postsolve call
 - Boost: program_options is no longer required but needed to use PaPILO via command-line.
 
+### New API functions
+
+### Changed parameters
+
 ### New parameters with default values
 - verification_with_VeriPB = 0 : should PaPILO print a VeriPB log (only for PseudoBoolean problems)?
 - max_consecutive_rounds_of_only_bound_changes = 500: PaPILO resumes with the next higher complexity class if the last n rounds only consisted of bound changes
 - parallelcols.symmetries_enabled = 0 : should ParallelCols add symmetry-breaking constraints instead of introducing new variables?
+
+### Data structures
+
+Unit tests
+----------
+
+Testing
+-------
+
+Build system
+------------
+
+Fixed bugs
+----------
+- SimpleProbing: avoid unstable replacements of columns with small ranges
+- if PaPILO solves the problem a backend solver is no longer called
+
+Miscellaneous
+-------------
+- Ortools: PaPILO parses the dual solution and the reduced costs from ortools
+- HiGHS: PaPILO supports HiGHS version 1.3+
+- VeriPB: prints VeriPB parseable verification certificate for pseudoboolean problem in the log (experimental)
+- OPB-Format: PaPILO can now parse files in linear opb format
+- RoundingSat https://gitlab.com/MIAOresearch/software/roundingsat is available as PseudoBoolean solver
+- make testcluster script extended by SKIP_PRESOLVE and SOLVE_EXECUTABLE to solve the reduced/original problem
+
+@section RN212 PaPILO 2.1.3
+***************************
+
+Interface changes
+-----------------
+
+### New parameters with default values
+- max_consecutive_rounds_of_only_bound_changes = 500: PaPILO resumes with the next higher complexity class if the last n rounds only consisted of bound changes
 
 ### Data structures
 
@@ -24,22 +67,9 @@ Fixed bugs
 - SingletonRow: consider case if remaining coefficient is close to zero -> could lead to false variable fixings
 - increase Priority of FixContinuous to detect numerical difficulties earlier
 - ParallelRows: use correct lhs_inf/rhs_inf with negative scale factor under certain circumstances
-- SimpleProbing: avoid unstable replacements of columns with small ranges
-- if PaPILO solves the problem a backend solver is no longer called
 
 Miscellaneous
 -------------
-- Symmetries: For binary problems ParallelCols adds symmetry-breaking constraints to avoid introducing non-binary integer variables via parameter
-- VeriPB: prints VeriPB parseable verification certificate for pseudoboolean problem in the log (experimental)
-- OPB-Format: PaPILO can now parse files in linear opb format
-- OPB-Format: PaPILO can now write files in linear opb format
-- RoundingSat https://gitlab.com/MIAOresearch/software/roundingsat is available as PseudoBoolean solver
-- Ortools: PaPILO parses the dual solution and the reduced costs from ortools
-- HiGHS: PaPILO supports HiGHS version 1.3+
-- make testcluster script extended by SKIP_PRESOLVE and SOLVE_EXECUTABLE to solve the reduced/original problem
-
-@section RN212 PaPILO 2.1.3
-***************************
 
 - Boost: minimal 1.81 requirement for Mac since compiler complained about deprecated declarations in Boost
 

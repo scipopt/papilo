@@ -90,7 +90,7 @@ function(find_or_download_package)
                 BUILD_DIR "${${ARG_NAME_LOWER}_BINARY_DIR}"
                 INSTALL_DIR "${FETCHCONTENT_INSTALL_DIR}"
             )
-            if(${ARG_COMPONENTS})
+            if(ARG_COMPONENTS)
                 find_package(${ARG_NAME} ${ARG_VERSION}
                     COMPONENTS ${ARG_COMPONENTS}
                     HINTS "${FETCHCONTENT_INSTALL_DIR}"
