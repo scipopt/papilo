@@ -24,7 +24,6 @@ if(MSVC)
 endif()
 
 include(GNUInstallDirs)
-message("da GNUInstallDirs: ${CMAKE_INSTALL_INCLUDEDIR}" ", ${CMAKE_INSTALL_LIBDIR}" ", ${CMAKE_INSTALL_BINDIR}")
 
 # path to e.g. findGMP module
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/Modules/)
