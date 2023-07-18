@@ -23,6 +23,9 @@ if(MSVC)
    add_compile_options(/permissive)
 endif()
 
+include(GNUInstallDirs)
+message("da GNUInstallDirs: ${CMAKE_INSTALL_INCLUDEDIR}" ", ${CMAKE_INSTALL_LIBDIR}" ", ${CMAKE_INSTALL_BINDIR}")
+
 # path to e.g. findGMP module
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/Modules/)
 set(CMAKE_CXX_VISIBILITY_PRESET hidden)
@@ -265,7 +268,7 @@ add_library(papilo-core STATIC
 function(setLibProperties targetname outputname)
     set_target_properties(${targetname} PROPERTIES
         OUTPUT_NAME ${outputname}
-        MACOSX_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
+        MACOSX_RPATH "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}")
 endfunction(setLibProperties)
 if(MSVC)
     setLibProperties(papilo-core "libpapilo-core")
@@ -292,11 +295,11 @@ add_subdirectory(${PROJECT_SOURCE_DIR}/test)
 install(FILES
      ${PROJECT_BINARY_DIR}/papilo/CMakeConfig.hpp
      ${PROJECT_SOURCE_DIR}/src/papilo/Config.hpp
-  DESTINATION include/papilo)
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/papilo)
 
 install(FILES
      ${CMAKE_BINARY_DIR}/papilo-config-version.cmake
-  DESTINATION lib/cmake/papilo)
+  DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/papilo)
 
 install(FILES
      ${PROJECT_SOURCE_DIR}/src/papilo/core/Components.hpp
@@ -317,7 +320,7 @@ install(FILES
      ${PROJECT_SOURCE_DIR}/src/papilo/core/SparseStorage.hpp
      ${PROJECT_SOURCE_DIR}/src/papilo/core/Statistics.hpp
      ${PROJECT_SOURCE_DIR}/src/papilo/core/VariableDomains.hpp
-   DESTINATION include/papilo/core)
+   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/papilo/core)
 
 
 install(FILES
@@ -328,7 +331,7 @@ install(FILES
      ${PROJECT_SOURCE_DIR}/src/papilo/core/postsolve/PostsolveType.hpp
      ${PROJECT_SOURCE_DIR}/src/papilo/core/postsolve/ReductionType.hpp
      ${PROJECT_SOURCE_DIR}/src/papilo/core/postsolve/SavedRow.hpp
-  DESTINATION include/papilo/core/postsolve)
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/papilo/core/postsolve)
 
 install(FILES
      ${PROJECT_SOURCE_DIR}/src/papilo/interfaces/HighsInterface.hpp
@@ -337,7 +340,7 @@ install(FILES
      ${PROJECT_SOURCE_DIR}/src/papilo/interfaces/ScipInterface.hpp
      ${PROJECT_SOURCE_DIR}/src/papilo/interfaces/SolverInterface.hpp
      ${PROJECT_SOURCE_DIR}/src/papilo/interfaces/SoplexInterface.hpp
-  DESTINATION include/papilo/interfaces)
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/papilo/interfaces)
 
 install(FILES
         ${PROJECT_SOURCE_DIR}/src/papilo/io/BoundType.hpp
@@ -349,7 +352,7 @@ install(FILES
      ${PROJECT_SOURCE_DIR}/src/papilo/io/Parser.hpp
      ${PROJECT_SOURCE_DIR}/src/papilo/io/SolParser.hpp
      ${PROJECT_SOURCE_DIR}/src/papilo/io/SolWriter.hpp
-  DESTINATION include/papilo/io)
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/papilo/io)
 
 install(FILES
      ${PROJECT_SOURCE_DIR}/src/papilo/misc/Alloc.hpp
@@ -375,13 +378,13 @@ install(FILES
      ${PROJECT_SOURCE_DIR}/src/papilo/misc/Vec.hpp
      ${PROJECT_SOURCE_DIR}/src/papilo/misc/VectorUtils.hpp
      ${PROJECT_SOURCE_DIR}/src/papilo/misc/Wrappers.hpp
-  DESTINATION include/papilo/misc)
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/papilo/misc)
 
 
 if((DEFINED Boost_VERSION) AND (Boost_VERSION VERSION_LESS 107000))
    install(FILES
            ${PROJECT_SOURCE_DIR}/src/papilo/misc/extended_euclidean.hpp
-           DESTINATION include/papilo/misc)
+           DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/papilo/misc)
 endif()
 
 
@@ -403,7 +406,7 @@ install(FILES
      ${PROJECT_SOURCE_DIR}/src/papilo/presolvers/SingletonCols.hpp
      ${PROJECT_SOURCE_DIR}/src/papilo/presolvers/SingletonStuffing.hpp
      ${PROJECT_SOURCE_DIR}/src/papilo/presolvers/Sparsify.hpp
-  DESTINATION include/papilo/presolvers)
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/papilo/presolvers)
 
 install(FILES
      ${PROJECT_SOURCE_DIR}/src/papilo/external/fmt/chrono.h
@@ -419,21 +422,21 @@ install(FILES
      ${PROJECT_SOURCE_DIR}/src/papilo/external/fmt/ranges.h
      ${PROJECT_SOURCE_DIR}/src/papilo/external/fmt/format.cc
      ${PROJECT_SOURCE_DIR}/src/papilo/external/fmt/posix.cc
- DESTINATION include/papilo/external/fmt)
+ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/papilo/external/fmt)
 
 install(FILES
      ${PROJECT_SOURCE_DIR}/src/papilo/external/pdqsort/pdqsort.h
-  DESTINATION include/papilo/external/pdqsort)
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/papilo/external/pdqsort)
 
 install(FILES
      ${PROJECT_SOURCE_DIR}/src/papilo/external/ska/bytell_hash_map.hpp
      ${PROJECT_SOURCE_DIR}/src/papilo/external/ska/flat_hash_map.hpp
      ${PROJECT_SOURCE_DIR}/src/papilo/external/ska/unordered_map.hpp
-  DESTINATION include/papilo/external/ska)
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/papilo/external/ska)
 
 install(FILES
      ${PROJECT_SOURCE_DIR}/src/papilo/external/lusol/clusol.h
-  DESTINATION include/papilo/external/lusol)
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/papilo/external/lusol)
 
 # configure the config file for the build tree
 set(QUADMATH_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/Modules)
@@ -449,22 +452,22 @@ configure_file(${PROJECT_SOURCE_DIR}/papilo-config.cmake.in
 
 if(PAPILO_HAVE_FLOAT128)
    install(FILES ${PROJECT_SOURCE_DIR}/cmake/Modules/FindQuadmath.cmake
-      DESTINATION lib/cmake/papilo)
+      DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/papilo)
 endif()
 
 # install dependencies
 install(FILES ${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/papilo-config.cmake
-   DESTINATION lib/cmake/papilo)
+   DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/papilo)
 
 install(FILES ${PROJECT_SOURCE_DIR}/cmake/Modules/FindTBB.cmake
-   DESTINATION lib/cmake/papilo)
+   DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/papilo)
 if(INSTALL_TBB AND CMAKE_SYSTEM_NAME STREQUAL "Windows")
    if(EXISTS "${TBB_tbb_DLL}")
-      install(FILES "${TBB_tbb_DLL}" DESTINATION bin)
-      install(FILES "${TBB_tbb_DLL}" DESTINATION lib/cmake/papilo)
+      install(FILES "${TBB_tbb_DLL}" DESTINATION ${CMAKE_INSTALL_BINDIR})
+      install(FILES "${TBB_tbb_DLL}" DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/papilo)
    endif()
    if(EXISTS "${TBB_tbbmalloc_DLL}")
-      install(FILES "${TBB_tbbmalloc_DLL}" DESTINATION bin)
+      install(FILES "${TBB_tbbmalloc_DLL}" DESTINATION ${CMAKE_INSTALL_BINDIR})
    endif()
 endif()
 
@@ -472,16 +475,16 @@ endif()
 export(TARGETS papilo papilo-core ${CLUSOL_TARGET} FILE "${CMAKE_BINARY_DIR}/papilo-targets.cmake")
 
 if(EXISTS ${CMAKE_BINARY_DIR}/_deps)
-   install(DIRECTORY ${CMAKE_BINARY_DIR}/_deps DESTINATION lib/cmake/papilo/)
+   install(DIRECTORY ${CMAKE_BINARY_DIR}/_deps DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/papilo/)
 endif()
 
 # install targets
-install(TARGETS papilo papilo-core ${CLUSOL_TARGET} EXPORT papilo-targets ARCHIVE DESTINATION lib LIBRARY DESTINATION lib)
-install(EXPORT papilo-targets DESTINATION lib/cmake/papilo)
+install(TARGETS papilo papilo-core ${CLUSOL_TARGET} EXPORT papilo-targets ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
+install(EXPORT papilo-targets DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/papilo)
 
 if(TARGET papilo-executable)
-   install(TARGETS papilo-executable ARCHIVE DESTINATION bin LIBRARY DESTINATION lib)
+   install(TARGETS papilo-executable ARCHIVE DESTINATION ${CMAKE_INSTALL_BINDIR} LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
 endif()
 if(TARGET duplicates)
-   install(TARGETS duplicates ARCHIVE DESTINATION bin LIBRARY DESTINATION lib)
+   install(TARGETS duplicates ARCHIVE DESTINATION ${CMAKE_INSTALL_BINDIR} LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
 endif()
