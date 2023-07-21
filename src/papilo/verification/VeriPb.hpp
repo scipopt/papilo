@@ -335,7 +335,6 @@ class VeriPb : public CertificateInterface<REAL>
                    << names[orig_col] << " -> " << num.round_to_int( val );
          add_substitutions_fix_to_witness( names, var_mapping[col], val == 1 );
          proof_out << "\n";
-         add_substitutions_fix_to_witness_( names, var_mapping[col], val == 1 );
          break;
       default:
          assert( false );
@@ -1698,34 +1697,6 @@ class VeriPb : public CertificateInterface<REAL>
       }
    }
 
-   void
-   add_substitutions_fix_to_witness_(const Vec<String>& names, int orig_col_1, bool var)
-   {
-      proof_out << COMMENT;
-      if(!is_optimization_problem )
-         return;
-      for( const auto& item : substitutions )
-      {
-         for( const auto& substituted_vars : item.second )
-         {
-            proof_out << " " << names[convert_substitution_to_col(substituted_vars)] << " -> ";
-            if(item.first == orig_col_1)
-            {
-               if( substituted_vars > 0 )
-                     proof_out << ( var ? "1" : "0" );
-               else
-                     proof_out << ( var ? "0" : "1" );
-            }
-            else
-            {
-               if(substituted_vars < 0)
-                     proof_out << NEGATED;
-               proof_out << names[item.first];
-            }
-         }
-      }
-      proof_out << "\n";
-   }
 
    void
    add_substitutions_to_witness(const Vec<String>& names, int orig_col_1, int orig_col_2)
