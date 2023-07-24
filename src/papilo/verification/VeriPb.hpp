@@ -66,8 +66,6 @@ class VeriPb : public CertificateInterface<REAL>
    bool verification_possible = true;
    HashMap<int, Vec<int>> substitutions;
    int cause = -1;
-   // VeriPB of substitutions
-//   Vec<int> substituted_rows;
 
    /// PaPILO does not care about the integrality of the coefficient
    /// therefore store scale factors to ensure the integrality
@@ -1673,26 +1671,16 @@ class VeriPb : public CertificateInterface<REAL>
    {
       if(!is_optimization_problem )
          return;
-      for( const auto& item : substitutions )
+      auto it = substitutions.find(orig_col_1);
+      if(it != substitutions.end())
       {
-         if(item.first != orig_col_1)
-            continue ;
-         for( const auto& substituted_vars : item.second )
+         for( const auto& substituted_vars : it->second )
          {
             proof_out << " " << names[convert_substitution_to_col(substituted_vars)] << " -> ";
-            if(item.first == orig_col_1)
-            {
-               if( substituted_vars > 0 )
-                     proof_out << ( var ? "1" : "0" );
-               else
-                     proof_out << ( var ? "0" : "1" );
-            }
+            if( substituted_vars > 0 )
+            proof_out << ( var ? "1" : "0" );
             else
-            {
-               if(substituted_vars < 0)
-                     proof_out << NEGATED;
-               proof_out << names[item.first];
-            }
+            proof_out << ( var ? "0" : "1" );
          }
       }
    }
@@ -1703,31 +1691,26 @@ class VeriPb : public CertificateInterface<REAL>
    {
       if(!is_optimization_problem )
          return;
-      for( const auto& item : substitutions )
+      auto it1 = substitutions.find(orig_col_1);
+      if(it1 != substitutions.end())
       {
-         if(item.first != orig_col_1 && item.first != orig_col_2)
-            continue ;
-         for( const auto& substituted_vars : item.second )
+         for( const auto& substituted_vars : it1->second )
          {
             proof_out << " " << names[convert_substitution_to_col(substituted_vars)] << " -> ";
-            if(item.first == orig_col_1)
-            {
-               if( substituted_vars < 0 )
-                     proof_out << NEGATED;
-               proof_out << names[orig_col_2];
-            }
-            else if(item.first == orig_col_2)
-            {
-               if( substituted_vars < 0 )
-                     proof_out << NEGATED;
-               proof_out << names[orig_col_1];
-            }
-            else
-            {
-               if(substituted_vars < 0)
-                     proof_out << NEGATED;
-               proof_out << names[item.first];
-            }
+            if( substituted_vars < 0 )
+               proof_out << NEGATED;
+            proof_out << names[orig_col_2];
+         }
+      }
+      auto it2 = substitutions.find(orig_col_2);
+      if(it2 != substitutions.end())
+      {
+         for( const auto& substituted_vars : it2->second )
+         {
+            proof_out << " " << names[convert_substitution_to_col(substituted_vars)] << " -> ";
+            if( substituted_vars < 0 )
+               proof_out << NEGATED;
+            proof_out << names[orig_col_1];
          }
       }
    }
