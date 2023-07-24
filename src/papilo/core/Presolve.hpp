@@ -181,7 +181,6 @@ class Presolve
       this->satSolverFactory = std::move( value );
    }
 
-
    const std::unique_ptr<SolverFactory<REAL>>&
    getLPSolverFactory() const
    {
@@ -193,7 +192,6 @@ class Presolve
    {
       return this->satSolverFactory;
    }
-
 
    const std::unique_ptr<SolverFactory<REAL>>&
    getMIPSolverFactory() const
@@ -270,8 +268,6 @@ class Presolve
    applyReductions( int p, const Reductions<REAL>& reductions_,
                     ProblemUpdate<REAL>& probUpdate );
 
-
-
  private:
    // data to perform presolving
    Vec<PresolveStatus> results;
@@ -301,7 +297,6 @@ class Presolve
    bool lastRoundReduced{};
    int nunsuccessful{};
    bool rundelayed{};
-
 
    /// evaluate result array of each presolver, return the largest result value
    PresolveStatus
@@ -460,7 +455,7 @@ Presolve<REAL>::apply( Problem<REAL>& problem, bool store_dual_postsolve )
           problem.test_problem_type( ProblemFlag::kBinary ))
       {
          certificate_interface = std::unique_ptr<CertificateInterface<REAL>>(
-             new VeriPb<REAL>{ problem, num } );
+             new VeriPb<REAL>{ problem, num, presolveOptions } );
          certificate_interface->print_header();
       }
 
@@ -480,7 +475,6 @@ Presolve<REAL>::apply( Problem<REAL>& problem, bool store_dual_postsolve )
       int npresolvers = static_cast<int>( presolvers.size() );
 
       fastPresolvers.first = fastPresolvers.second = 0;
-
       while( fastPresolvers.second < npresolvers &&
              presolvers[fastPresolvers.second]->getTiming() ==
                  PresolverTiming::kFast )
@@ -542,7 +536,6 @@ Presolve<REAL>::apply( Problem<REAL>& problem, bool store_dual_postsolve )
             break;
          }
       }
-
 
       Statistics last_rounds_stats = stats;
       do
@@ -735,6 +728,7 @@ Presolve<REAL>::apply( Problem<REAL>& problem, bool store_dual_postsolve )
             }
          }
       }
+
       // finally compress problem fully and release excess storage even if
       // problem was not reduced
       probUpdate.compress( true );
@@ -767,10 +761,8 @@ Presolve<REAL>::apply( Problem<REAL>& problem, bool store_dual_postsolve )
          if( !lpSolverFactory && problem.getNumContinuousCols() != 0 )
             detectComponents = false;
 
-
          if( !(mipSolverFactory || satSolverFactory) && problem.getNumIntegralCols() != 0 )
             detectComponents = false;
-
 
          if( problem.getNCols() == 0 )
             detectComponents = false;
@@ -1358,9 +1350,8 @@ Presolve<REAL>::are_applied_tsx_negligible( const Problem<REAL>& problem,
    double abort_factor = problem.getNumIntegralCols() == 0
                              ? presolveOptions.lpabortfac
                              : presolveOptions.abortfac;
-   if( roundStats.ndeletedcols == 0 &&
-       roundStats.ndeletedrows == 0 && roundStats.ncoefchgs == 0 &&
-       presolveOptions.max_consecutive_rounds_of_only_bound_changes >= 0 )
+   if( roundStats.ndeletedcols == 0 && roundStats.ndeletedrows == 0 &&
+       roundStats.ncoefchgs == 0 && presolveOptions.max_consecutive_rounds_of_only_bound_changes >= 0 )
    {
       ++stats.consecutive_rounds_of_only_boundchanges;
       if (stats.consecutive_rounds_of_only_boundchanges > presolveOptions.max_consecutive_rounds_of_only_bound_changes)

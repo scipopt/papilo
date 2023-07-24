@@ -157,6 +157,9 @@ validation_after_every_postsolving_step = 0
 # should PaPILO print a VeriPB log (only for PseudoBoolean problems)?
 verification_with_VeriPB = 0
 
+# how to log the proof of verification? 0: reverse unit propagation, 1: Addition in polish notation
+veripb.verify_propagation = 0
+
 # defines the offset for bound tightening
 bound_tightening_offset = 0.0001
 

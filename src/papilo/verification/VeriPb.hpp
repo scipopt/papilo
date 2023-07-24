@@ -57,6 +57,8 @@ class VeriPb : public CertificateInterface<REAL>
    Num<REAL> num;
    std::ofstream proof_out;
 
+   int propagation_option = 0;
+
    /// mapping constraint from PaPILO to constraint ids from PaPILO to VeriPb
    Vec<int> rhs_row_mapping;
    Vec<int> lhs_row_mapping;
@@ -66,6 +68,7 @@ class VeriPb : public CertificateInterface<REAL>
    bool verification_possible = true;
    HashMap<int, Vec<int>> substitutions;
    int cause = -1;
+   int row_forcing_propagation = -1;
 
    ////
    int stored_dominating_col = UNKNOWN;
@@ -101,7 +104,8 @@ class VeriPb : public CertificateInterface<REAL>
       return scale_factor;
    }
 
-   VeriPb( const Problem<REAL>& _problem, const Num<REAL>& _num ) : num( _num ), substitutions( {})
+   VeriPb( const Problem<REAL>& _problem, const Num<REAL>& _num, PresolveOptions options ) :
+         num( _num ), substitutions( {}), propagation_option(options.veripb_propagation_option)
    {
       rhs_row_mapping.reserve( _problem.getNRows() );
       lhs_row_mapping.reserve( _problem.getNRows() );
@@ -242,6 +246,14 @@ class VeriPb : public CertificateInterface<REAL>
       int orig_col = var_mapping[col];
       switch( argument )
       {
+      case ArgumentType::kPropagation:
+         if(propagation_option == 1)
+         {
+            assert( row_forcing_propagation != -1 );
+            propagate_row( row_forcing_propagation, col, val, false, problem,
+                           var_mapping );
+            break;
+         }
       case ArgumentType::kPrimal:
          if( stored_dominated_col == orig_col)
          {
@@ -338,6 +350,14 @@ class VeriPb : public CertificateInterface<REAL>
       int orig_col = var_mapping[col];
       switch( argument )
       {
+      case ArgumentType::kPropagation:
+         if( propagation_option == 1)
+         {
+            assert( row_forcing_propagation != -1 );
+            propagate_row( row_forcing_propagation, col, val, true, problem,
+                           var_mapping );
+            break;
+         }
       case ArgumentType::kPrimal:
          if( stored_dominating_col == orig_col)
          {
@@ -481,6 +501,7 @@ class VeriPb : public CertificateInterface<REAL>
       switch( argument )
       {
       case ArgumentType::kPrimal:
+      case ArgumentType::kPropagation:
       case ArgumentType::kAggregation:
       case ArgumentType::kDual:
       case ArgumentType::kSymmetry:
@@ -552,6 +573,7 @@ class VeriPb : public CertificateInterface<REAL>
       switch( argument )
       {
       case ArgumentType::kPrimal:
+      case ArgumentType::kPropagation:
       case ArgumentType::kAggregation:
       case ArgumentType::kDual:
       case ArgumentType::kSymmetry:
@@ -1401,6 +1423,12 @@ class VeriPb : public CertificateInterface<REAL>
 #endif
    }
 
+   void
+   log_forcing_row ( int row ) {
+      row_forcing_propagation = row;
+   }
+
+
  private:
 
    void
@@ -1752,6 +1780,78 @@ class VeriPb : public CertificateInterface<REAL>
       if(cols >= 0)
          return cols;
       return abs(cols + 1);
+   }
+
+   void
+   propagate_row( int row, int col, REAL val, bool is_lb,
+                  const Problem<REAL>& problem, const Vec<int>& var_mapping )
+   {
+      proof_out << POL << " ";
+      const Vec<String>& names = problem.getVariableNames();
+      const SparseVectorView<REAL>& row_data = problem.getConstraintMatrix().getRowCoefficients( row );
+      const REAL* values = row_data.getValues();
+      const int* indices = row_data.getIndices();
+      auto& col_flags = problem.getVariableDomains().flags;
+      bool is_lhs = false;
+      if(lhs_row_mapping[row] != UNKNOWN && rhs_row_mapping[row] != UNKNOWN)
+      {    
+         REAL col_coef = 0;
+         for(int i = 0; i < row_data.getLength(); i++)
+            if( indices[i] == col )
+            {
+               col_coef = values[i];
+               break;
+            }
+         assert( col_coef != 0);
+         is_lhs = (is_lb && col_coef > 0) || (!is_lb && col_coef < 0);
+      }
+      else if(lhs_row_mapping[row] != UNKNOWN)
+      {
+         assert(rhs_row_mapping[row] == UNKNOWN);
+         is_lhs = true;
+      }
+      else
+      {
+         assert(lhs_row_mapping[row] == UNKNOWN);
+         is_lhs = false;
+      }
+      if(is_lhs)
+         proof_out << lhs_row_mapping[row];
+      else
+         proof_out << rhs_row_mapping[row];
+      proof_out <<  " " ;
+      REAL col_coef = 0;
+      for(int i = 0; i < row_data.getLength(); i++)
+      {
+         int c = indices[i];
+         if(c == col)
+         {
+            col_coef = values[i];
+            continue;
+         }
+         if( col_flags[c].test(ColFlag::kFixed, ColFlag::kSubstituted) )
+            continue ;
+         assert(num.isIntegral( values[i]));
+         if(!( (values[i] < 0 && is_lhs) || (values[i] > 0 && !is_lhs)) )
+            proof_out << NEGATED;
+         proof_out << names[var_mapping[c]] << " " << num.round_to_int(abs(values[i])) << " * + ";
+      }
+      assert(col_coef != 0);
+      proof_out << num.round_to_int(abs(col_coef)) << " d\n";
+      assert(
+          (col_coef > 0 && is_lb && lhs_row_mapping[row]!= UNKNOWN) ||
+          (col_coef < 0 && is_lb && rhs_row_mapping[row]!= UNKNOWN) ||
+          (col_coef > 0 && !is_lb && rhs_row_mapping[row]!= UNKNOWN) ||
+          (col_coef < 0 && !is_lb && lhs_row_mapping[row]!= UNKNOWN)
+                  );
+#ifdef VERIPB_DEBUG
+      int orig_col = var_mapping[col];
+      if(is_lb)
+         proof_out << EQUAL_CHECK << next_constraint_id <<  " +1 " << names[orig_col] << " >= 1 ;\n";
+      else 
+         proof_out << EQUAL_CHECK << next_constraint_id << " +1 " << NEGATED << names[orig_col] << " >= 1 ;\n";
+
+#endif
    }
 };
 

@@ -1,4 +1,3 @@
-verification_with_VeriPB = 1
 #colsingleton.enabled = 0
 #propagation.enabled = 0
 #coefftightening.enabled = 0

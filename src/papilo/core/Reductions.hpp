@@ -69,9 +69,10 @@ struct RowReduction
       LHS_LESS_RESTRICTIVE = -11,
       /// needed for dual postsolve
       REASON_FOR_LESS_RESTRICTIVE_BOUND_CHANGE = -12,
-      SAVE_ROW = -13,
       /// needed for the certificate
       CERTIFICATE_RHS_GCD = -14,
+      /// needed for the certificate and dual postsolve
+      SAVE_ROW = -13,
    };
 };
 

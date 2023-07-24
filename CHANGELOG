@@ -22,7 +22,7 @@ Interface changes
 
 ### New parameters with default values
 - verification_with_VeriPB = 0 : should PaPILO print a VeriPB log (only for PseudoBoolean problems)?
-- max_consecutive_rounds_of_only_bound_changes = 500: PaPILO resumes with the next higher complexity class if the last n rounds only consisted of bound changes
+- veripb.verify_propagation = 0 : how to log the proof of verification? 0: reverse unit propagation, 1: Addition in polish notation
 - parallelcols.symmetries_enabled = 0 : should ParallelCols add symmetry-breaking constraints instead of introducing new variables?
 
 ### Data structures

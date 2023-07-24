@@ -110,6 +110,9 @@ class CertificateInterface
    mark_row_redundant( int row ) = 0;
 
    virtual void
+   log_forcing_row ( int row ) = 0;
+
+   virtual void
    change_matrix_entry( int row, int col, REAL new_val,
                         const SparseVectorView<REAL>& data, RowFlags& rflags,
                         REAL lhs, REAL rhs, const Vec<String>& names,

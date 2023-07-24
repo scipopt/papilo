@@ -33,6 +33,7 @@ enum class ArgumentType : int
    kAggregation = 3,
    kWeakening = 4,
    kSaturation = 5,
+   kPropagation = 6,
 };
 
 #endif

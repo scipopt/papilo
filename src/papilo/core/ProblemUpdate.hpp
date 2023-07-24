@@ -2552,6 +2552,7 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
          case RowReduction::SAVE_ROW:
          {
             int row = reduction.row;
+            certificate_interface->log_forcing_row(row);
             postsolve.storeSavedRow( row,
                                      constraintMatrix.getRowCoefficients( row ),
                                      constraintMatrix.getLeftHandSides()[row],

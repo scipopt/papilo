@@ -75,6 +75,8 @@ struct PresolveOptions
 
    int weakenlpvarbounds = 0;
 
+   int veripb_propagation_option = 0;
+
    unsigned int randomseed = 0;
 
 
@@ -231,6 +233,10 @@ struct PresolveOptions
           "max_consecutive_rounds_of_only_bound_changes",
            "PaPILO resumes with the next higher complexity class if the last n rounds only consisted of bound changes (-1 deactivated) [Integer: [-1,2147483647]]",
           max_consecutive_rounds_of_only_bound_changes );
+      paramSet.addParameter(
+          "veripb.verify_propagation",
+          "how to log the proof of verification? 0: reverse unit propagation, 1: Addition in polish notation",
+          veripb_propagation_option, 0.0, 1.0 );
    }
 
    bool

@@ -115,10 +115,13 @@ class EmptyCertificate : public CertificateInterface<REAL>
    store_gcd( int row, REAL gcd ) {};
 
    void
-   change_lhs_inf( int row ){};
+   change_lhs_inf( int row ){}
 
    void
-   change_rhs_inf( int row ){};
+   change_rhs_inf( int row ){}
+
+   void
+   log_forcing_row ( int row ) {}
 
    void
    mark_row_redundant( int row )

@@ -40,6 +40,7 @@ class ConstraintPropagation : public PresolveMethod<REAL>
    {
       this->setName( "propagation" );
       this->setTiming( PresolverTiming::kFast );
+      this->setArgument(ArgumentType::kPropagation);
    }
 
    /// todo how to communicate about postsolve information
