@@ -261,7 +261,13 @@ SimpleSubstitution<REAL>::perform_simple_subsitution_step(
    {
       REAL absval0 = abs( vals[0] );
       REAL absval1 = abs( vals[1] );
-      if( absval0 * problemUpdate.getPresolveOptions().markowitz_tolerance >
+      bool integral0 = num.isIntegral(absval0/absval1);
+      bool integral1 = num.isIntegral(absval1/absval0);
+      if( integral1 && !integral0 )
+         subst = 1;
+      else if( integral0 && !integral1 )
+         subst = 0;
+      else if( absval0 * problemUpdate.getPresolveOptions().markowitz_tolerance >
           absval1 )
          subst = 0;
       else if( absval1 *
