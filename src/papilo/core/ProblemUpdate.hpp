@@ -328,7 +328,7 @@ class ProblemUpdate
    }
 
    bool
-   isColBetterForSubstitution( int col1, int col2 ) const
+   check_sparsification_condition_on_substitution( int col1, int col2 ) const
    {
       int col1size = problem.getColSizes()[col1];
       int col2size = problem.getColSizes()[col2];

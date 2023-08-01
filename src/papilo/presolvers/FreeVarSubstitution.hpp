@@ -223,7 +223,9 @@ Substitution<REAL>::execute( const Problem<REAL>& problem,
                [&]( int i1, int i2 ) {
                   int col1 = rowindices[i1];
                   int col2 = rowindices[i2];
-                  return problemUpdate.isColBetterForSubstitution( col1, col2 );
+                  return problemUpdate
+                      .check_sparsification_condition_on_substitution( col1,
+                                                                       col2 );
                } );
 
       for( int i : column_candidates )
