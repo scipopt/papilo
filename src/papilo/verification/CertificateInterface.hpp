@@ -150,10 +150,13 @@ class CertificateInterface
    setInfeasibleCause(int col) = 0;
 
    virtual void
-   infeasible( ) {};
+   infeasible( ) { };
 
    virtual void
-   infeasible( const Vec<int>& colmapping, const Vec<String>& names ){};
+   infeasible( const Vec<int>& colmapping, const Vec<String>& names ){ };
+
+   virtual void
+   end_proof( ) { };
 
    virtual ~CertificateInterface() = default;
 };

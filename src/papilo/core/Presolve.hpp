@@ -619,6 +619,7 @@ Presolve<REAL>::apply( Problem<REAL>& problem, bool store_dual_postsolve )
       }
 
       printPresolversStats();
+      probUpdate.end_presolve();
 
       if( DependentRows<REAL>::Enabled &&
           ( presolveOptions.detectlindep == 2 ||

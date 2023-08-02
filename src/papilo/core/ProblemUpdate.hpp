@@ -439,6 +439,11 @@ class ProblemUpdate
    };
 
    void
+   end_presolve( ){
+       certificate_interface->end_proof( );
+   };
+
+   void
    shuffle( std::ranlux24& random_generator, Vec<int>& array );
 };
 

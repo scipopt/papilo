@@ -167,6 +167,9 @@ class EmptyCertificate : public CertificateInterface<REAL>
              bool full = false )
    {
    }
+
+   void
+   end_proof( ) { };
 };
 
 } // namespace papilo
