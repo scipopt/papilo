@@ -34,6 +34,9 @@ Fixed bugs
 - Propagation: avoid numerical difficulties
 - ParallelColDetection: avoid segfault by handling already fixed variables separately during sorting
 
+Miscellaneous
+-------------
+- update version of fmt from 6.1.2 to 8.1.1
 
 @section RN212 PaPILO 2.2.0
 ***************************
@@ -85,6 +88,9 @@ Fixed bugs
 - DualInfer: check if propagating dual variables leads to infeasibility to return Unbounded or Infeasible
 - DualInfer: ensure the primal problem is bounded before changing constraints to equalities
 - Substitutions: if applying substitutions lead to small or huge coefficients leading to numerical troubles in the process
+
+Miscellaneous
+-------------
 
 @section RN212 PaPILO 2.1.3
 ***************************
