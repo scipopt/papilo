@@ -7,9 +7,6 @@ set(PAPILO_VERSION_PATCH 3)
 project(papilo VERSION ${PAPILO_VERSION_MAJOR}.${PAPILO_VERSION_MINOR}.${PAPILO_VERSION_PATCH}.0)
 
 set(BOOST_MIN_VERSION 1.65)
-if(APPLE)
-   set(BOOST_MIN_VERSION 1.81)
-endif()
 set(CMAKE_CXX_STANDARD 14)
 set(CXX_STANDARD_REQUIRED ON)
 # set(CMAKE_CXX_EXTENSIONS OFF) # use -std=c++... instead of -std=gnu++...
@@ -114,9 +111,10 @@ target_include_directories(papilo INTERFACE
    $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}>
    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src>
    $<INSTALL_INTERFACE:include>
-   ${Boost_INCLUDE_DIRS}
    ${GMP_INCLUDE_DIRS}
    ${Quadmath_INCLUDE_DIRS})
+
+target_include_directories(papilo SYSTEM INTERFACE ${Boost_INCLUDE_DIRS})
 
 option(TBB "should TBB be linked if found" ON)
 
