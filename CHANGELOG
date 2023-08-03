@@ -32,6 +32,7 @@ Build system
 
 Fixed bugs
 ----------
+- DoubleToNEq: prefer variables with integral scalar over fractional scalar
 
 @section RN212 PaPILO 2.1.3
 ***************************
