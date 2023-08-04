@@ -46,9 +46,10 @@ static const char* const CONCLUSION = "conclusion ";
 static const char* const OUTPUT = "output ";
 static const char* const NONE = "NONE";
 static const char* const DELETE_CONS = "del id ";
+static const char* const OBJECTIVE = "obju ";
+static const char* const POL = "pol ";
 static const char* const RUP = "rup ";
 static const char* const RED = "red ";
-static const char* const POL = "pol ";
 static const char* const EQUAL_CHECK = "e ";
 static const char* const SATURATION = "s";
 static const char* const WEAKENING = "w";
@@ -1241,6 +1242,10 @@ class VeriPb : public CertificateInterface<REAL>
       if(!is_optimization_problem)
       {
 #endif
+#if VERIPB_VERSION >= 2
+         update_objective(currentProblem.getObjective(), col, equality, lhs, names, var_mapping);
+#endif
+
          proof_out << DELETE_CONS << first_constraint_id << "\n";
          proof_out << DELETE_CONS << second_constraint_id << "\n";
 #if VERIPB_VERSION == 1
@@ -1257,7 +1262,7 @@ class VeriPb : public CertificateInterface<REAL>
                const Problem<REAL>& currentProblem, const Vec<int>& var_mapping )
    {
 #if VERIPB_VERSION == 1
-      if( !verification_possible )
+      if( !verification_possible || (matrix.getColumnCoefficients( col ).getLength() == 1 && !is_optimization_problem))
          return;
 #endif
       const ConstraintMatrix<REAL>& matrix =
@@ -1265,10 +1270,9 @@ class VeriPb : public CertificateInterface<REAL>
       auto col_vec = matrix.getColumnCoefficients( col );
       auto row_data = matrix.getRowCoefficients( substituted_row );
 
-      //TODO:
-//      if( col_vec.getLength() == 1 && !is_optimization_problem )
       if( col_vec.getLength() == 1 )
       {
+         update_objective(currentProblem.getObjective(), col, row_data, matrix.getLeftHandSides()[substituted_row], currentProblem.getVariableNames(), var_mapping);
          return;
       }
 #if VERIPB_VERSION == 1
@@ -1298,6 +1302,10 @@ class VeriPb : public CertificateInterface<REAL>
 #if VERIPB_VERSION == 1
       if(!is_optimization_problem)
       {
+#endif
+#if VERIPB_VERSION >= 2
+         assert(matrix.getLeftHandSides()[substituted_row] == matrix.getRightHandSides()[substituted_row]);
+         update_objective(currentProblem.getObjective(), col, row_data, matrix.getLeftHandSides()[substituted_row], currentProblem.getVariableNames(), var_mapping);
 #endif
          proof_out << COMMENT << "postsolve stack : row id "
                 << rhs_row_mapping[substituted_row] << "\n";
@@ -1426,7 +1434,7 @@ class VeriPb : public CertificateInterface<REAL>
    void
    end_proof( )
    {
-#if VERIPB_VERSION == 2
+#if VERIPB_VERSION >= 2
       proof_out << OUTPUT << NONE << " \n";
       proof_out << CONCLUSION;
       if( status > 0 )
@@ -1521,6 +1529,52 @@ class VeriPb : public CertificateInterface<REAL>
 
 
  private:
+
+#if VERIPB_VERSION >= 2
+   void
+   update_objective( Objective<REAL> objective, int sub_col,
+                     const SparseVectorView<REAL> equality, REAL rhs,
+                     const Vec<String>& names, const Vec<int>& var_mapping )
+   {
+      int length = equality.getLength();
+      auto indices = equality.getIndices();
+      auto values = equality.getValues();
+      auto coeff = objective.coefficients;
+      REAL substscale = 0;
+      for(int i=0; i <length; i++)
+         if(indices[i] == sub_col)
+            substscale = objective.coefficients[sub_col] / values[i];
+//      assert(substscale != 0);
+      proof_out << OBJECTIVE;
+      for( int j = 0; j < indices[0]; j++)
+         if(coeff[j] != 0)
+            proof_out << ( num.round_to_int( coeff[j] ) ) << " "
+                      << names[var_mapping[j]];
+      for( int j = 0; j < length; ++j )
+      {
+         int col = indices[j];
+         REAL new_obj_coeff = coeff[col] + values[j] * substscale;
+         if( new_obj_coeff == 0 )
+            continue;
+         if(new_obj_coeff < 0)
+            proof_out << " -";
+         else
+            proof_out << " +";
+         proof_out << abs(num.round_to_int( new_obj_coeff )) << " " << names[var_mapping[col]];
+         if( length != j + 1 )
+            for( int k = indices[j]; k < indices[j+1]; k++)
+               if(coeff[k] != 0)
+                  proof_out << ( num.round_to_int( coeff[k] ) ) << " "
+                           << names[var_mapping[k]];
+      }
+      for( int j = indices[length - 1]; j < var_mapping.size(); j++ )
+         if(coeff[j] != 0)
+            proof_out << ( num.round_to_int( coeff[j] ) )
+                        << " " << names[var_mapping[j]];
+      proof_out << " " << num.round_to_int(objective.offset - rhs * substscale);
+      proof_out << ";\n";
+   }
+#endif
 
    void
    store_substitution( const REAL value_0, const REAL value_1, int orig_index_0,
