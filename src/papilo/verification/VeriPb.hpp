@@ -21,8 +21,8 @@
 /*                                                                           */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef _PAPILO_VERI_VERI_PB_HPP_
-#define _PAPILO_VERI_VERI_PB_HPP_
+#ifndef PAPILO_VERI_VERI_PB_HPP_
+#define PAPILO_VERI_VERI_PB_HPP_
 
 #define VERIPB_DEBUG
 
@@ -71,8 +71,8 @@ class VeriPb : public CertificateInterface<REAL>
    Vec<int> lhs_row_mapping;
 
    /// information required for optimization problems
-#if VERIPB_VERSION == 1
    bool is_optimization_problem = false;
+#if VERIPB_VERSION == 1
    bool verification_possible = true;
 #endif
    HashMap<int, Vec<int>> substitutions;
@@ -139,18 +139,18 @@ class VeriPb : public CertificateInterface<REAL>
          else
             rhs_row_mapping.push_back( UNKNOWN );
       }
-#if VERIPB_VERSION == 1
       for( unsigned int i = 0; i < _problem.getNCols(); ++i )
       {
          if( coefficients[i] != 0 )
          {
             is_optimization_problem = true;
+#if VERIPB_VERSION == 1
             verification_possible = true;
-            fmt::print("Verification currently not possible for optimization problems!\n");
+            fmt::print("VeriPB 1.0 does not support objective update rule. Hence verification not entirely supported for optimization problems.\n");
+#endif
             break;
          }
       }
-#endif
 
       assert( rhs_row_mapping.size() == lhs_row_mapping.size() );
       assert( rhs_row_mapping.size() == _problem.getNRows() );
@@ -493,8 +493,8 @@ class VeriPb : public CertificateInterface<REAL>
       if( !verification_possible )
          return;
 #endif
-      auto name_causing_col = names[var_mapping[causing_col]];
-      auto name_col = names[var_mapping[col]];
+      const auto& name_causing_col = names[var_mapping[causing_col]];
+      const auto& name_col = names[var_mapping[col]];
       next_constraint_id++;
       proof_out << RUP << "1 " << name_causing_col << " +1 ";
       if(is_upper)
@@ -916,7 +916,7 @@ class VeriPb : public CertificateInterface<REAL>
             }
          assert( old_value != 0 );
 
-         auto name = names[var_mapping[col]];
+         const auto& name = names[var_mapping[col]];
          assert( num.isIntegral( new_val ) );
          int diff = old_value - num.round_to_int( new_val );
          if( !rflags.test( RowFlag::kLhsInf ) )
@@ -1422,9 +1422,6 @@ class VeriPb : public CertificateInterface<REAL>
          next_constraint_id++;
          proof_out << RUP << "1 " << names[colmapping[cause]] << " >= 1 ;\n";
       }
-      //      assert(is_optimization_problem || substituted_rows.empty());
-      //      for(auto sub_row: substituted_rows)
-      //         proof_out << DELETE_CONS << sub_row << "\n";
       next_constraint_id++;
       proof_out << "u >= 1 ;\n";
       proof_out << "c " << next_constraint_id << "\n";
@@ -1461,8 +1458,8 @@ class VeriPb : public CertificateInterface<REAL>
       proof_out << COMMENT << "symmetries: \n";
       for(Symmetry symmetry: symmetries.symmetries)
       {
-         auto name_dominating = names[var_mapping[symmetry.getDominatingCol()]];
-         auto name_dominated = names[var_mapping[symmetry.getDominatedCol()]];
+         const auto& name_dominating = names[var_mapping[symmetry.getDominatingCol()]];
+         const auto& name_dominated = names[var_mapping[symmetry.getDominatedCol()]];
          switch( symmetry.getSymmetryType() )
          {
          case SymmetryType::kXgeY:
@@ -1536,6 +1533,8 @@ class VeriPb : public CertificateInterface<REAL>
                      const SparseVectorView<REAL> equality, REAL rhs,
                      const Vec<String>& names, const Vec<int>& var_mapping )
    {
+      if(!is_optimization_problem)
+         return;
       int length = equality.getLength();
       auto indices = equality.getIndices();
       auto values = equality.getValues();
@@ -1544,11 +1543,10 @@ class VeriPb : public CertificateInterface<REAL>
       for(int i=0; i <length; i++)
          if(indices[i] == sub_col)
             substscale = objective.coefficients[sub_col] / values[i];
-//      assert(substscale != 0);
       proof_out << OBJECTIVE;
       for( int j = 0; j < indices[0]; j++)
          if(coeff[j] != 0)
-            proof_out << ( num.round_to_int( coeff[j] ) ) << " "
+            proof_out << " " << ( num.round_to_int( coeff[j] ) ) << " "
                       << names[var_mapping[j]];
       for( int j = 0; j < length; ++j )
       {
@@ -1569,7 +1567,7 @@ class VeriPb : public CertificateInterface<REAL>
       }
       for( int j = indices[length - 1]; j < var_mapping.size(); j++ )
          if(coeff[j] != 0)
-            proof_out << ( num.round_to_int( coeff[j] ) )
+            proof_out << " " << ( num.round_to_int( coeff[j] ) )
                         << " " << names[var_mapping[j]];
       proof_out << " " << num.round_to_int(objective.offset - rhs * substscale);
       proof_out << ";\n";
