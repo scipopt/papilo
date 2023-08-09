@@ -44,7 +44,7 @@ class DominatedCols : public PresolveMethod<REAL>
    DominatedCols() : PresolveMethod<REAL>()
    {
       this->setName( "domcol" );
-      this->setArgument( ArgumentType::kPrimal );
+      this->setArgument( ArgumentType::kSymmetry );
       this->setTiming( PresolverTiming::kExhaustive );
    }
 
