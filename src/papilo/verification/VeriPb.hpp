@@ -67,6 +67,10 @@ class VeriPb : public CertificateInterface<REAL>
    HashMap<int, Vec<int>> substitutions;
    int cause = -1;
 
+   ////
+   int stored_dominating_col = UNKNOWN;
+   int stored_dominated_col = UNKNOWN;
+
    /// PaPILO does not care about the integrality of the coefficient
    /// therefore store scale factors to ensure the integrality
    Vec<int> scale_factor;
@@ -178,6 +182,8 @@ class VeriPb : public CertificateInterface<REAL>
       skip_changing_rhs = UNKNOWN;
       skip_deleting_lhs_constraint_id = UNKNOWN;
       skip_deleting_rhs_constraint_id = UNKNOWN;
+      stored_dominating_col = UNKNOWN;
+      stored_dominated_col = UNKNOWN;
       changed_entries_during_current_tsxs.clear();
       saturation_already_called = false;
       row_with_gcd = {UNKNOWN, UNKNOWN};
@@ -237,6 +243,17 @@ class VeriPb : public CertificateInterface<REAL>
       switch( argument )
       {
       case ArgumentType::kPrimal:
+         if( stored_dominated_col == orig_col)
+         {
+            assert(stored_dominating_col != UNKNOWN);
+            proof_out << RED << "1 " << NEGATED << names[orig_col] << " >= 1 ; "
+                      << names[orig_col] << " -> 0 " << names[stored_dominating_col] << " -> 0";
+            add_substitutions_fix_to_witness( names, stored_dominated_col, val == 1 );
+            add_substitutions_fix_to_witness( names, stored_dominating_col, val == 1 );
+            proof_out << "\n";
+            break;
+         }
+
          proof_out << RUP << "1 " << NEGATED << names[orig_col] << " >= 1 ;\n";
          break;
       case ArgumentType::kAggregation:
@@ -322,6 +339,18 @@ class VeriPb : public CertificateInterface<REAL>
       switch( argument )
       {
       case ArgumentType::kPrimal:
+         if( stored_dominating_col == orig_col)
+         {
+            assert(stored_dominated_col != UNKNOWN);
+            proof_out << RED << "1 " << names[orig_col]
+                      << " >= " << num.round_to_int( val ) << " ; "
+                      << names[orig_col] << " -> " << num.round_to_int( val ) << " "
+                      << names[stored_dominated_col] << " -> 1";
+            add_substitutions_fix_to_witness( names, stored_dominated_col, val == 1 );
+            add_substitutions_fix_to_witness( names, stored_dominating_col, val == 1 );
+            proof_out << "\n";
+            break;
+         }
          proof_out << RUP << "1 " << names[orig_col]
                    << " >= " << num.round_to_int( val ) << " ;\n";
          break;
@@ -394,13 +423,15 @@ class VeriPb : public CertificateInterface<REAL>
       if( !verification_possible )
          return;
       next_constraint_id++;
-      auto name_dominating = names[var_mapping[dominating_column]];
-      auto name_dominated = names[var_mapping[dominated_column]];
+      stored_dominating_col = var_mapping[dominating_column];
+      stored_dominated_col = var_mapping[dominated_column];
+      auto name_dominating = names[stored_dominating_col];
+      auto name_dominated = names[stored_dominated_col];
       proof_out << RED << "1 " << name_dominating << " +1 " << NEGATED
                 << name_dominated << " >= 1 ; " << name_dominating << " -> "
                 << name_dominated << " " << name_dominated << " -> "
                 << name_dominating;
-      add_substitutions_to_witness(names, var_mapping[dominating_column], var_mapping[dominated_column]);
+      add_substitutions_to_witness(names, stored_dominating_col, stored_dominated_col);
       proof_out << "\n";
    }
 

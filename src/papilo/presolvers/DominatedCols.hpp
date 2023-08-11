@@ -44,7 +44,8 @@ class DominatedCols : public PresolveMethod<REAL>
    DominatedCols() : PresolveMethod<REAL>()
    {
       this->setName( "domcol" );
-      this->setArgument( ArgumentType::kSymmetry );
+      /// argument case can be primal or dual depending on the sign of the domination
+      this->setArgument( ArgumentType::kPrimal );
       this->setTiming( PresolverTiming::kExhaustive );
    }
 
