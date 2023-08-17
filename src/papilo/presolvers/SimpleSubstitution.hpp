@@ -283,6 +283,9 @@ SimpleSubstitution<REAL>::perform_simple_substitution_step(
       stay = 1 - subst;
    }
 
+   if (!this->check_if_substitution_generates_huge_or_small_coefficients(num, constMatrix, i, inds[subst]))
+      return PresolveStatus::kUnchanged;
+
    result = PresolveStatus::kReduced;
 
    TransactionGuard<REAL> guard{ reductions };

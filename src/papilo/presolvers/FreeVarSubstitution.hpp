@@ -312,6 +312,8 @@ Substitution<REAL>::execute( const Problem<REAL>& problem,
 
          if( upperboundImplied && lowerboundImplied )
          {
+            if (!this->check_if_substitution_generates_huge_or_small_coefficients(num, constMatrix, row, col))
+               return PresolveStatus::kUnchanged;
             // reductions
             result = PresolveStatus::kReduced;
             ++ntried[row];
