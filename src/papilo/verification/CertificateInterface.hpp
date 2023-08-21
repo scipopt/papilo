@@ -122,8 +122,6 @@ class CertificateInterface
    virtual void
    substitute( int col, int row, const Problem<REAL>& currentProblem, const Vec<int>& var_mapping ) = 0;
 
-
-
    virtual void
    substitute( int col, const SparseVectorView<REAL>& equality, REAL offset,
                const Problem<REAL>& currentProblem, const Vec<String>& names,

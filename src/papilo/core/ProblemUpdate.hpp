@@ -2229,7 +2229,6 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
             const int* colindices = colvec.getIndices();
             const int nbrelevantrows = colvec.getLength();
 
-            certificate_interface->substitute(col, equalityrow, problem, postsolve.origcol_mapping );
             postsolve.storeSubstitution( col, equalityrow, problem );
 
             assert(
@@ -2238,6 +2237,8 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
 
             // change the objective coefficients and offset
             problem.substituteVarInObj( num, col, equalityrow );
+
+            certificate_interface->substitute(col, equalityrow, problem, postsolve.origcol_mapping );
 
             // update row states
             msg.detailed( "modified rows: " );
@@ -2316,10 +2317,11 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
                 constraintMatrix.getRowCoefficients( equalityrow );
 
             postsolve.storeSubstitution( col, equalityrow, problem );
-            certificate_interface->substitute(col, equalityrow, problem, postsolve.origcol_mapping );
 
             // change the objective coefficients and offset
             problem.substituteVarInObj( num, col, equalityrow );
+
+            certificate_interface->substitute(col, equalityrow, problem, postsolve.origcol_mapping );
 
             auto colvec = constraintMatrix.getColumnCoefficients( col );
 
@@ -2506,20 +2508,7 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
                   setRowState( colindices[k], State::kModified );
                }
                msg.detailed( "\n" );
-
-               // perform changes in matrix and side
-               certificate_interface->substitute(col1, equalityLHS, offset,  problem, problem.getVariableNames(), postsolve.origcol_mapping);
                postsolve.storeSubstitution( col1, equalityLHS, offset );
-
-               constraintMatrix.aggregate(
-                   num, col1, equalityLHS, offset, problem.getVariableDomains(),
-                   intbuffer, realbuffer, tripletbuffer, changed_activities,
-                   problem.getRowActivities(), singletonRows, singletonColumns,
-                   emptyColumns, stats.nrounds );
-
-               // update col flags
-               setColState( col1, State::kModified );
-               setColState( col2, State::kModified );
 
                // change the objective
                auto& obj = problem.getObjective();
@@ -2532,6 +2521,19 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
                   obj.offset += obj_coef[col1] * offset;
                   obj_coef[col1] = REAL{ 0 };
                }
+
+               certificate_interface->substitute(col1, equalityLHS, offset,  problem, problem.getVariableNames(), postsolve.origcol_mapping);
+
+               // perform changes in matrix and side
+               constraintMatrix.aggregate(
+                   num, col1, equalityLHS, offset, problem.getVariableDomains(),
+                   intbuffer, realbuffer, tripletbuffer, changed_activities,
+                   problem.getRowActivities(), singletonRows, singletonColumns,
+                   emptyColumns, stats.nrounds );
+
+               // update col flags
+               setColState( col1, State::kModified );
+               setColState( col2, State::kModified );
 
                // statistics
                if( offset != REAL{ 0 } )
