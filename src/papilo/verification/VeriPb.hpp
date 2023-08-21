@@ -54,6 +54,7 @@ static const char* const EQUAL_CHECK = "e ";
 static const char* const SATURATION = "s";
 static const char* const WEAKENING = "w";
 static const int UNKNOWN = -1;
+static const char* const MOVE_LAST_CONS_TO_CORE = "core id -1\n";
 
 template <typename REAL>
 class VeriPb : public CertificateInterface<REAL>
@@ -301,6 +302,9 @@ class VeriPb : public CertificateInterface<REAL>
          assert( false );
          return;
       }
+#if VERIPB_VERSION == 2
+      proof_out << MOVE_LAST_CONS_TO_CORE;
+#endif
       substitutions.erase(var_mapping[col]);
       int cons_id_fixing = next_constraint_id;
       auto col_coeff =
@@ -429,6 +433,9 @@ class VeriPb : public CertificateInterface<REAL>
          assert( false );
          return;
       }
+#if VERIPB_VERSION == 2
+      proof_out << MOVE_LAST_CONS_TO_CORE;
+#endif
       substitutions.erase(var_mapping[col]);
       int cons_id_fixing = next_constraint_id;
       auto col_coeff =
@@ -1245,6 +1252,9 @@ class VeriPb : public CertificateInterface<REAL>
       }
       proof_out << names[orig_index_1] << " >= " << lhs << ";\n";
       int lhs_id = next_constraint_id;
+#if VERIPB_VERSION == 2
+      proof_out << MOVE_LAST_CONS_TO_CORE;
+#endif
 
       next_constraint_id++;
       int second_constraint_id = next_constraint_id;
@@ -1268,6 +1278,10 @@ class VeriPb : public CertificateInterface<REAL>
          rhs += abs( num.round_to_int( values[1] ) );
       }
       proof_out << names[orig_index_1] << " >= " << rhs << ";\n";
+
+#if VERIPB_VERSION == 2
+      proof_out << MOVE_LAST_CONS_TO_CORE;
+#endif
 
       substitute( col, substitute_factor, lhs_id, next_constraint_id,
                   currentProblem );
