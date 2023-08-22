@@ -281,8 +281,10 @@ class VeriPb : public CertificateInterface<REAL>
             assert(stored_dominating_col != UNKNOWN);
             proof_out << RED << "1 " << NEGATED << names[orig_col] << " >= 1 ; "
                       << names[orig_col] << " -> 0 " << names[stored_dominating_col] << " -> 0";
+#if VERIPB_VERSION == 1
             add_substitutions_fix_to_witness( names, stored_dominated_col, val == 1 );
             add_substitutions_fix_to_witness( names, stored_dominating_col, val == 1 );
+#endif
             proof_out << "\n";
             break;
          }
@@ -398,8 +400,10 @@ class VeriPb : public CertificateInterface<REAL>
                       << " >= " << num.round_to_int( val ) << " ; "
                       << names[orig_col] << " -> " << num.round_to_int( val ) << " "
                       << names[stored_dominated_col] << " -> 1";
+#if VERIPB_VERSION == 1
             add_substitutions_fix_to_witness( names, stored_dominated_col, val == 1 );
             add_substitutions_fix_to_witness( names, stored_dominating_col, val == 1 );
+#endif
             proof_out << "\n";
             break;
          }
@@ -471,7 +475,7 @@ class VeriPb : public CertificateInterface<REAL>
             rhs_row_mapping[row] = next_constraint_id;
          }
       }
-#if VERIPB_VERSION == 2
+#if VERIPB_VERSION >= 2
       update_objective(problem.getObjective(), names, var_mapping);
 #endif
    }
@@ -1227,7 +1231,7 @@ class VeriPb : public CertificateInterface<REAL>
       }
       proof_out << names[orig_index_1] << " >= " << lhs << ";\n";
       int lhs_id = next_constraint_id;
-#if VERIPB_VERSION == 2
+#if VERIPB_VERSION >= 2
       proof_out << MOVE_LAST_CONS_TO_CORE;
 #endif
 
@@ -1254,7 +1258,7 @@ class VeriPb : public CertificateInterface<REAL>
       }
       proof_out << names[orig_index_1] << " >= " << rhs << ";\n";
 
-#if VERIPB_VERSION == 2
+#if VERIPB_VERSION >= 2
       proof_out << MOVE_LAST_CONS_TO_CORE;
 #endif
 
