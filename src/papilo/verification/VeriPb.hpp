@@ -55,6 +55,7 @@ static const char* const SATURATION = "s";
 static const char* const WEAKENING = "w";
 static const int UNKNOWN = -1;
 static const char* const MOVE_LAST_CONS_TO_CORE = "core id -1\n";
+static const char* const MOVE_CONS_TO_CORE = "core id ";
 
 template <typename REAL>
 class VeriPb : public CertificateInterface<REAL>
@@ -362,20 +363,7 @@ class VeriPb : public CertificateInterface<REAL>
       }
 
 #if VERIPB_VERSION == 2
-      auto& coefficients = problem.getObjective().coefficients;
-      if( coefficients[col] != 0)
-      {
-         proof_out << OBJECTIVE;
-         for( int j = 0; j < coefficients.size(); ++j )
-         {
-            if( coefficients[j] == 0 || j == col)
-               continue;
-            proof_out << abs(num.round_to_int( coefficients[j] )) << " " << names[var_mapping[j]]+ " ";
-         }
-
-         proof_out << " " << num.round_to_int(problem.getObjective().offset);
-         proof_out << ";\n";
-      }
+      update_objective(problem.getObjective(), names, var_mapping);
 #endif
    }
 
@@ -484,20 +472,7 @@ class VeriPb : public CertificateInterface<REAL>
          }
       }
 #if VERIPB_VERSION == 2
-      auto& coefficients = problem.getObjective().coefficients;
-      if( coefficients[col] != 0)
-      {
-         proof_out << OBJECTIVE;
-         for( int j = 0; j < coefficients.size(); ++j )
-         {
-            if( coefficients[j] == 0 || j == col)
-               continue;
-            proof_out << abs(num.round_to_int( coefficients[j] )) << " " << names[var_mapping[j]]+ " ";
-         }
-
-         proof_out << " " << num.round_to_int(problem.getObjective().offset + coefficients[col]);
-         proof_out << ";\n";
-      }
+      update_objective(problem.getObjective(), names, var_mapping);
 #endif
    }
 
@@ -1315,6 +1290,11 @@ class VeriPb : public CertificateInterface<REAL>
       auto col_vec = matrix.getColumnCoefficients( col );
       auto row_data = matrix.getRowCoefficients( substituted_row );
 
+#if VERIPB_VERSION >= 2
+      proof_out<< MOVE_CONS_TO_CORE << lhs_row_mapping[substituted_row] << "\n";
+      proof_out<< MOVE_CONS_TO_CORE << rhs_row_mapping[substituted_row] << "\n";
+#endif
+
       if( col_vec.getLength() == 1 )
       {
          update_objective(currentProblem.getObjective(), currentProblem.getVariableNames(), var_mapping);
@@ -1572,7 +1552,7 @@ class VeriPb : public CertificateInterface<REAL>
 
 #if VERIPB_VERSION >= 2
    void
-   update_objective( Objective<REAL> objective, const Vec<String>& names, const Vec<int>& var_mapping )
+   update_objective( const Objective<REAL>& objective, const Vec<String>& names, const Vec<int>& var_mapping )
    {
       if(!is_optimization_problem)
          return;
