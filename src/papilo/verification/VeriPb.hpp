@@ -68,6 +68,9 @@ class VeriPb : public CertificateInterface<REAL>
    int propagation_option = 0;
    int status = 0; // 1 = solved, -1 = infeasible;
 
+   Objective<REAL> stored_objective;
+
+
    /// mapping constraint from PaPILO to constraint ids from PaPILO to VeriPb
    Vec<int> rhs_row_mapping;
    Vec<int> lhs_row_mapping;
@@ -121,7 +124,8 @@ class VeriPb : public CertificateInterface<REAL>
       rhs_row_mapping.reserve( _problem.getNRows() );
       lhs_row_mapping.reserve( _problem.getNRows() );
       scale_factor.reserve( _problem.getNRows() );
-      auto coefficients = _problem.getObjective().coefficients;
+      stored_objective = Objective<REAL>(_problem.getObjective());
+      auto coefficients = stored_objective.coefficients;
 
       for( unsigned int i = 0; i < _problem.getNRows(); ++i )
       {
@@ -365,7 +369,12 @@ class VeriPb : public CertificateInterface<REAL>
       }
 
 #if VERIPB_VERSION == 2
-      update_objective(problem.getObjective(), names, var_mapping);
+      assert( stored_objective.coefficients[col] == problem.getObjective().coefficients[col] );
+      if(stored_objective.coefficients[col] != 0)
+      {
+         stored_objective.coefficients[col] = 0;
+         print_objective( names, var_mapping, problem.getNCols() );
+      }
 #endif
    }
 
@@ -476,7 +485,13 @@ class VeriPb : public CertificateInterface<REAL>
          }
       }
 #if VERIPB_VERSION >= 2
-      update_objective(problem.getObjective(), names, var_mapping);
+      assert( stored_objective.coefficients[col] == problem.getObjective().coefficients[col] );
+      if( stored_objective.coefficients[col] != 0)
+      {
+         stored_objective.offset += stored_objective.coefficients[col] * val;
+         stored_objective.coefficients[col] = 0;
+         print_objective( names, var_mapping, problem.getNCols() );
+      }
 #endif
    }
 
@@ -1269,7 +1284,8 @@ class VeriPb : public CertificateInterface<REAL>
       {
 #endif
 #if VERIPB_VERSION >= 2
-         update_objective(currentProblem.getObjective(), names, var_mapping);
+         apply_substitution_to_objective(col, equality, rhs);
+         print_objective( names, var_mapping, currentProblem.getNCols() );
 #endif
 
          proof_out << DELETE_CONS << first_constraint_id << "\n";
@@ -1301,7 +1317,9 @@ class VeriPb : public CertificateInterface<REAL>
 
       if( col_vec.getLength() == 1 )
       {
-         update_objective(currentProblem.getObjective(), currentProblem.getVariableNames(), var_mapping);
+         apply_substitution_to_objective(col, row_data, matrix.getLeftHandSides()[substituted_row]);
+         print_objective( currentProblem.getVariableNames(), var_mapping,
+                          currentProblem.getNCols() );
          return;
       }
 #if VERIPB_VERSION == 1
@@ -1334,7 +1352,9 @@ class VeriPb : public CertificateInterface<REAL>
 #endif
 #if VERIPB_VERSION >= 2
          assert(matrix.getLeftHandSides()[substituted_row] == matrix.getRightHandSides()[substituted_row]);
-         update_objective(currentProblem.getObjective(), currentProblem.getVariableNames(), var_mapping);
+         apply_substitution_to_objective(col, row_data, matrix.getLeftHandSides()[substituted_row]);
+         print_objective( currentProblem.getVariableNames(), var_mapping,
+                          currentProblem.getNCols() );
 #endif
          proof_out << COMMENT << "postsolve stack : row id "
                 << rhs_row_mapping[substituted_row] << "\n";
@@ -1527,6 +1547,20 @@ class VeriPb : public CertificateInterface<REAL>
              if( full )
                 scale_factor.shrink_to_fit();
           },
+          [this, &colmapping, full]()
+          {
+             REAL count = 0;
+             int length = stored_objective.coefficients.size();
+             for(auto v: stored_objective.coefficients)
+                count += v;
+             compress_vector( colmapping, stored_objective.coefficients );
+             REAL count2 = 0;
+             int length2 = stored_objective.coefficients.size();
+             for(auto v: stored_objective.coefficients)
+                count2 += v;
+             if( full )
+                stored_objective.coefficients.shrink_to_fit();
+          },
           [this, &rowmapping, full]()
           {
              compress_vector( rowmapping, rhs_row_mapping );
@@ -1537,11 +1571,13 @@ class VeriPb : public CertificateInterface<REAL>
       compress_vector( rowmapping, lhs_row_mapping );
       compress_vector( rowmapping, rhs_row_mapping );
       compress_vector( rowmapping, scale_factor );
+      compress_vector( colmapping, stored_objective.coefficients );
       if( full )
       {
          rhs_row_mapping.shrink_to_fit();
          lhs_row_mapping.shrink_to_fit();
          scale_factor.shrink_to_fit();
+         stored_objective.coefficients.shrink_to_fit();
       }
 #endif
    }
@@ -1555,21 +1591,47 @@ class VeriPb : public CertificateInterface<REAL>
  private:
 
 #if VERIPB_VERSION >= 2
+   
    void
-   update_objective( const Objective<REAL>& objective, const Vec<String>& names, const Vec<int>& var_mapping )
+   apply_substitution_to_objective(int sub_col, const SparseVectorView<REAL>& equality, REAL rhs)
+   {
+      if(stored_objective.coefficients[sub_col] == 0 )
+         return;
+      REAL factor = 0;
+      const REAL* values = equality.getValues();
+      const int* indices = equality.getIndices();
+      for(int i=0; i<equality.getLength(); i++)
+         if( indices[i] == sub_col)
+         {
+            factor = stored_objective.coefficients[sub_col]/ values[i];
+            break;
+         }
+      for(int i=0; i<equality.getLength(); i++)
+      {
+         if( indices[i] == sub_col)
+            continue;
+         stored_objective.coefficients[indices[i]] -= factor * values[i];
+      }
+      stored_objective.offset -= rhs * factor;
+      stored_objective.coefficients[sub_col] = 0;
+   }
+
+   void
+   print_objective( const Vec<String>& names, const Vec<int>& var_mapping,
+                    int ncols )
    {
       if(!is_optimization_problem)
          return;
-      auto objective_coefficients = objective.coefficients;
+      auto objective_coefficients = stored_objective.coefficients;
       REAL substscale = 0;
       proof_out << OBJECTIVE;
-      for( int col = 0; col < objective_coefficients.size(); ++col )
+      for( int col = 0; col < ncols; ++col )
       {
          if( objective_coefficients[col] == 0 )
             continue;
          proof_out << abs(num.round_to_int( objective_coefficients[col] )) << " " << names[var_mapping[col]]+ " ";
       }
-      proof_out << " " << num.round_to_int(objective.offset);
+      proof_out << " " << num.round_to_int(stored_objective.offset);
       proof_out << ";\n";
    }
 #endif
