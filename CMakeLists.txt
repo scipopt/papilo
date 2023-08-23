@@ -398,6 +398,7 @@ install(FILES
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/papilo/presolvers)
 
 install(FILES
+     ${PROJECT_SOURCE_DIR}/src/papilo/external/fmt/args.h
      ${PROJECT_SOURCE_DIR}/src/papilo/external/fmt/chrono.h
      ${PROJECT_SOURCE_DIR}/src/papilo/external/fmt/color.h
      ${PROJECT_SOURCE_DIR}/src/papilo/external/fmt/compile.h
@@ -405,12 +406,14 @@ install(FILES
      ${PROJECT_SOURCE_DIR}/src/papilo/external/fmt/format.h
      ${PROJECT_SOURCE_DIR}/src/papilo/external/fmt/format-inl.h
      ${PROJECT_SOURCE_DIR}/src/papilo/external/fmt/locale.h
+     ${PROJECT_SOURCE_DIR}/src/papilo/external/fmt/os.h
      ${PROJECT_SOURCE_DIR}/src/papilo/external/fmt/ostream.h
-     ${PROJECT_SOURCE_DIR}/src/papilo/external/fmt/posix.h
      ${PROJECT_SOURCE_DIR}/src/papilo/external/fmt/printf.h
      ${PROJECT_SOURCE_DIR}/src/papilo/external/fmt/ranges.h
+     ${PROJECT_SOURCE_DIR}/src/papilo/external/fmt/xchar.h
      ${PROJECT_SOURCE_DIR}/src/papilo/external/fmt/format.cc
-     ${PROJECT_SOURCE_DIR}/src/papilo/external/fmt/posix.cc
+     ${PROJECT_SOURCE_DIR}/src/papilo/external/fmt/fmt.cc
+     ${PROJECT_SOURCE_DIR}/src/papilo/external/fmt/os.cc
  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/papilo/external/fmt)
 
 install(FILES
