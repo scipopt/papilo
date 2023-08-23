@@ -34,6 +34,11 @@ Fixed bugs
 ----------
 - DoubleToNEq: prefer variables with integral scalar over fractional scalar
 
+Miscellaneous
+-------------
+
+- update version of fmt from 6.1.2 to 8.1.1
+
 @section RN212 PaPILO 2.1.3
 ***************************
 
