@@ -1930,6 +1930,9 @@ ProblemUpdate<REAL>::removeEmptyColumns()
                   postsolve.storeVarBoundChange(
                       true, col, domains.lower_bounds[col],
                       domains.flags[col].test( ColFlag::kLbInf ), fixval );
+                  certificate_interface->change_lower_bound(
+                      fixval,col, problem, postsolve.origcol_mapping, matrix_buffer,
+                      ArgumentType::kDual );
                }
                else
                {
@@ -1941,6 +1944,9 @@ ProblemUpdate<REAL>::removeEmptyColumns()
                   postsolve.storeVarBoundChange(
                       false, col, domains.upper_bounds[col],
                       domains.flags[col].test( ColFlag::kUbInf ), fixval );
+                  certificate_interface->change_upper_bound(
+                      fixval, col, problem,
+                      postsolve.origcol_mapping, matrix_buffer, ArgumentType::kDual );
                }
             }
             postsolve.storeFixedCol( col, fixval, empty_column,
