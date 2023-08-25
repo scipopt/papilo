@@ -2213,7 +2213,7 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
             const int length = rowvec.getLength();
             const int* indices = rowvec.getIndices();
 
-            msg.detailed( "modified columns: ", ColReduction::SUBSTITUTE, col,
+            msg.detailed( "modified columns: ", (int) ColReduction::SUBSTITUTE, col,
                           equalityrow );
             for( int j = 0; j != length; ++j )
             {
