@@ -51,6 +51,29 @@ class DualInfer : public PresolveMethod<REAL>
          this->setEnabled( false );
       return false;
    }
+   
+   bool
+   is_primal_problem_bounded(  const Problem<REAL>& problem, const Num<REAL>& num, int& primal_bounded )
+   {
+      assert( primal_bounded == 1 || primal_bounded == 0 || primal_bounded == -1 );
+      if(primal_bounded == 0)
+           return false;
+      if(primal_bounded == 1)
+           return true;
+      auto& colflags = problem.getColFlags();
+      auto& coefficients = problem.getObjective().coefficients;
+      for( int i = 0; i < problem.getNCols(); i++ )
+      {
+           if( ( num.isGT( coefficients[i], 0 ) && colflags[i].test( ColFlag::kLbInf ) )
+               || ( num.isLT( coefficients[i], 0 ) && colflags[i].test( ColFlag::kUbInf ) ) )
+           {
+            primal_bounded = 0;
+            return false;
+         }
+      }
+      primal_bounded = 1;
+      return true;
+   }
 
    virtual PresolveStatus
    execute( const Problem<REAL>& problem,
@@ -448,6 +471,8 @@ DualInfer<REAL>::execute( const Problem<REAL>& problem,
    int fixedints = 0;
    int fixedconts = 0;
 
+   int primal_bounded = -1; // -1 not initialized
+
    // change inequality rows to equations if their dual value cannot be zero
    for( int i = 0; i < nrows; ++i )
    {
@@ -458,7 +483,6 @@ DualInfer<REAL>::execute( const Problem<REAL>& problem,
           !rflags[i].test( RowFlag::kRhsInf ) && lhsValues[i] == rhsValues[i] )
          continue;
 
-
       if( ( !dualColFlags[i].test( ColFlag::kLbInf ) &&
             num.isFeasGT( dualLB[i], 0 ) ) )
       {
@@ -467,6 +491,9 @@ DualInfer<REAL>::execute( const Problem<REAL>& problem,
          if( dualLB[i] == std::numeric_limits<REAL>::infinity() && !num.isZero( lhsValues[i] ) )
             return PresolveStatus::kUnbndOrInfeas;
 
+         if( !is_primal_problem_bounded( problem, num, primal_bounded ) )
+            continue;
+         
          if( activities[i].ninfmax != 0 ||
              num.isFeasLT( lhsValues[i], activities[i].max ) )
          {
@@ -483,6 +510,9 @@ DualInfer<REAL>::execute( const Problem<REAL>& problem,
 
          if( abs(dualUB[i]) == std::numeric_limits<REAL>::infinity() && !num.isZero( rhsValues[i] ) )
             return PresolveStatus::kUnbndOrInfeas;
+
+         if( !is_primal_problem_bounded( problem, num, primal_bounded ) )
+            continue;
 
          if( activities[i].ninfmin != 0 ||
              num.isFeasGT( rhsValues[i], activities[i].min ) )
