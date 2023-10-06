@@ -458,10 +458,14 @@ DualInfer<REAL>::execute( const Problem<REAL>& problem,
           !rflags[i].test( RowFlag::kRhsInf ) && lhsValues[i] == rhsValues[i] )
          continue;
 
+
       if( ( !dualColFlags[i].test( ColFlag::kLbInf ) &&
             num.isFeasGT( dualLB[i], 0 ) ) )
       {
          assert( !rflags[i].test( RowFlag::kLhsInf ) );
+
+         if( dualLB[i] == std::numeric_limits<REAL>::infinity() && !num.isZero( lhsValues[i] ) )
+            return PresolveStatus::kUnbndOrInfeas;
 
          if( activities[i].ninfmax != 0 ||
              num.isFeasLT( lhsValues[i], activities[i].max ) )
@@ -476,6 +480,9 @@ DualInfer<REAL>::execute( const Problem<REAL>& problem,
                num.isFeasLT( dualUB[i], 0 ) )
       {
          assert( !rflags[i].test( RowFlag::kRhsInf ) );
+
+         if( abs(dualUB[i]) == std::numeric_limits<REAL>::infinity() && !num.isZero( rhsValues[i] ) )
+            return PresolveStatus::kUnbndOrInfeas;
 
          if( activities[i].ninfmin != 0 ||
              num.isFeasGT( rhsValues[i], activities[i].min ) )
