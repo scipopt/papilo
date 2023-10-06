@@ -53,7 +53,7 @@ class DualInfer : public PresolveMethod<REAL>
    }
    
    bool
-   is_primal_problem_bounded(  const Problem<REAL>& problem, const Num<REAL>& num, int& primal_bounded )
+   is_primal_problem_bounded( const Problem<REAL>& problem, const Num<REAL>& num, int& primal_bounded )
    {
       assert( primal_bounded == 1 || primal_bounded == 0 || primal_bounded == -1 );
       if(primal_bounded == 0)
