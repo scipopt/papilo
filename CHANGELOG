@@ -35,6 +35,7 @@ Fixed bugs
 - DoubleToNEq: prefer variables with integral scalar over fractional scalar
 - DualInfer: check if propagating dual variables leads to infeasibility to return Unbounded or Infeasible
 - DualInfer: ensure the primal problem is bounded before changing constraints to equalities
+- check if applying substitutions lead to small or huge coefficients leading to numerical troubles in the process
 
 Miscellaneous
 -------------
