@@ -61,7 +61,7 @@ struct PresolveOptions
 
    int componentsmaxint = 0;
 
-   int detectlindep = 1;
+   int detectlindep = 0;
 
    int dualreds = 2;
 
@@ -71,7 +71,7 @@ struct PresolveOptions
 
    int max_consecutive_rounds_of_only_bound_changes = 500;
 
-   int threads = 0;
+   int threads = 1;
 
    int weakenlpvarbounds = 0;
 
