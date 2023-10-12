@@ -255,7 +255,6 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
             val1 = col1vals[i] * scal1;
             val2 = 0;
             rowf = rflags[col1rows[i]];
-
             ++i;
          }
          else
@@ -264,7 +263,6 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
             val1 = 0;
             val2 = col2vals[j] * scal2;
             rowf = rflags[col2rows[j]];
-
             ++j;
          }
 
@@ -341,6 +339,8 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
          }
       }
 
+      if(problemUpdate.getPresolveOptions().dualreds <= 1 && num.isEq( obj[col1], obj[col2] ) )
+         return false;
       return true;
    };
 
