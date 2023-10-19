@@ -45,7 +45,11 @@ static const char* const COMMENT = "* ";
 static const char* const CONCLUSION = "conclusion ";
 static const char* const OUTPUT = "output ";
 static const char* const NONE = "NONE";
+#if VERIPB_VERSION >= 2
+static const char* const DELETE_CONS = "delc ";
+#else
 static const char* const DELETE_CONS = "del id ";
+#endif
 static const char* const OBJECTIVE = "obju ";
 static const char* const POL = "pol ";
 static const char* const RUP = "rup ";
@@ -1612,7 +1616,8 @@ class VeriPb : public CertificateInterface<REAL>
             continue;
          stored_objective.coefficients[indices[i]] -= factor * values[i];
       }
-      stored_objective.offset -= rhs * factor;
+      //TODO unsure if += is here correct
+      stored_objective.offset += rhs * factor ;
       stored_objective.coefficients[sub_col] = 0;
    }
 
