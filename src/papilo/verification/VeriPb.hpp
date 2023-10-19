@@ -352,6 +352,9 @@ class VeriPb : public CertificateInterface<REAL>
             else
                proof_out << POL << lhs_row_mapping[row] << " " << cons_id_fixing
                          << " " << abs( row_value ) << " * +\n";
+#if VERIPB_VERSION>= 2
+            proof_out << MOVE_LAST_CONS_TO_CORE;
+#endif
             proof_out << DELETE_CONS << lhs_row_mapping[row] << "\n";
             lhs_row_mapping[row] = next_constraint_id;
          }
@@ -367,6 +370,9 @@ class VeriPb : public CertificateInterface<REAL>
             else
                proof_out << POL << rhs_row_mapping[row] << " " << cons_id_fixing
                          << " " << abs( row_value ) << " * +\n";
+#if VERIPB_VERSION>= 2
+            proof_out << MOVE_LAST_CONS_TO_CORE;
+#endif
             proof_out << DELETE_CONS << rhs_row_mapping[row] << "\n";
             rhs_row_mapping[row] = next_constraint_id;
          }
@@ -470,6 +476,9 @@ class VeriPb : public CertificateInterface<REAL>
             else
                proof_out << POL << lhs_row_mapping[row] << " " << cons_id_fixing
                          << " " << abs( row_value ) << " * +\n";
+#if VERIPB_VERSION>= 2
+            proof_out << MOVE_LAST_CONS_TO_CORE;
+#endif
             proof_out << DELETE_CONS << lhs_row_mapping[row] << "\n";
             lhs_row_mapping[row] = next_constraint_id;
          }
@@ -484,6 +493,9 @@ class VeriPb : public CertificateInterface<REAL>
             else
                proof_out << POL << rhs_row_mapping[row] << " " << cons_id_fixing
                          << " " << abs( row_value ) << " * +\n";
+#if VERIPB_VERSION>= 2
+            proof_out << MOVE_LAST_CONS_TO_CORE;
+#endif
             proof_out << DELETE_CONS << rhs_row_mapping[row] << "\n";
             rhs_row_mapping[row] = next_constraint_id;
          }
@@ -968,6 +980,9 @@ class VeriPb : public CertificateInterface<REAL>
                proof_out << POL << lhs_row_mapping[row] << " " << name << " "
                          << abs( diff ) << " * +\n";
             skip_changing_lhs = row;
+#if VERIPB_VERSION>= 2
+            proof_out << MOVE_LAST_CONS_TO_CORE;
+#endif
             proof_out << DELETE_CONS << lhs_row_mapping[row] << "\n";
             lhs_row_mapping[row] = next_constraint_id;
          }
@@ -986,6 +1001,9 @@ class VeriPb : public CertificateInterface<REAL>
                proof_out << POL << rhs_row_mapping[row] << " " << name << " "
                          << abs( diff ) << " * +\n";
             }
+#if VERIPB_VERSION>= 2
+            proof_out << MOVE_LAST_CONS_TO_CORE;
+#endif
             proof_out << DELETE_CONS << rhs_row_mapping[row] << "\n";
             rhs_row_mapping[row] = next_constraint_id;
          }
@@ -1101,6 +1119,9 @@ class VeriPb : public CertificateInterface<REAL>
                proof_out << POL << lhs_row_mapping[eqrow] << " "
                          << abs( int_scale_updated ) << " * "
                          << rhs_row_mapping[candrow] << " +\n";
+#if VERIPB_VERSION>= 2
+            proof_out << MOVE_LAST_CONS_TO_CORE;
+#endif
             proof_out << DELETE_CONS << rhs_row_mapping[candrow] << "\n";
             rhs_row_mapping[candrow] = next_constraint_id;
          }
@@ -1117,6 +1138,9 @@ class VeriPb : public CertificateInterface<REAL>
                proof_out << POL << rhs_row_mapping[eqrow] << " "
                          << abs( int_scale_updated ) << " * "
                          << lhs_row_mapping[candrow] << " +\n";
+#if VERIPB_VERSION>= 2
+            proof_out << MOVE_LAST_CONS_TO_CORE;
+#endif
             proof_out << DELETE_CONS << lhs_row_mapping[candrow] << "\n";
 
             lhs_row_mapping[candrow] = next_constraint_id;
@@ -1139,6 +1163,9 @@ class VeriPb : public CertificateInterface<REAL>
                proof_out << POL << rhs_row_mapping[candrow] << " "
                          << abs( int_scale_updated ) << " * "
                          << lhs_row_mapping[candrow] << " +\n";
+#if VERIPB_VERSION>= 2
+            proof_out << MOVE_LAST_CONS_TO_CORE;
+#endif
             proof_out << DELETE_CONS << rhs_row_mapping[candrow] << "\n";
             rhs_row_mapping[candrow] = next_constraint_id;
          }
@@ -1155,7 +1182,9 @@ class VeriPb : public CertificateInterface<REAL>
                proof_out << POL << lhs_row_mapping[candrow] << " "
                          << abs( int_scale_updated ) << " * "
                          << rhs_row_mapping[eqrow] << " +\n";
-
+#if VERIPB_VERSION>= 2
+            proof_out << MOVE_LAST_CONS_TO_CORE;
+#endif
             proof_out << DELETE_CONS << lhs_row_mapping[candrow] << "\n";
 
             lhs_row_mapping[candrow] = next_constraint_id;
@@ -1183,6 +1212,9 @@ class VeriPb : public CertificateInterface<REAL>
                proof_out << POL << rhs_row_mapping[candrow] << " "
                          << frac_candrow << " * " << lhs_row_mapping[eqrow]
                          << " " << frac_eqrow << " * +\n";
+#if VERIPB_VERSION>= 2
+            proof_out << MOVE_LAST_CONS_TO_CORE;
+#endif
             proof_out << DELETE_CONS << rhs_row_mapping[candrow] << "\n";
             rhs_row_mapping[candrow] = next_constraint_id;
          }
@@ -1199,6 +1231,9 @@ class VeriPb : public CertificateInterface<REAL>
                proof_out << POL << lhs_row_mapping[candrow] << " "
                          << frac_candrow << " * " << rhs_row_mapping[eqrow]
                          << " " << frac_eqrow << " * +\n";
+#if VERIPB_VERSION>= 2
+            proof_out << MOVE_LAST_CONS_TO_CORE;
+#endif
             proof_out << DELETE_CONS << lhs_row_mapping[candrow] << "\n";
 
             lhs_row_mapping[candrow] = next_constraint_id;
@@ -1230,8 +1265,7 @@ class VeriPb : public CertificateInterface<REAL>
       int orig_index_1 = var_mapping[indices[1]];
 
       int first_constraint_id = next_constraint_id;
-      proof_out << COMMENT << "postsolve stack : row id " << next_constraint_id
-                << "\n";
+      proof_out << COMMENT << "postsolve stack : row id " << next_constraint_id << "\n";
       proof_out << RUP;
 
       int lhs = num.round_to_int( offset );
@@ -1291,9 +1325,16 @@ class VeriPb : public CertificateInterface<REAL>
          apply_substitution_to_objective(col, equality, rhs);
          print_objective( names, var_mapping, currentProblem.getNCols() );
 #endif
-
-         proof_out << DELETE_CONS << first_constraint_id << "\n";
-         proof_out << DELETE_CONS << second_constraint_id << "\n";
+         proof_out << DELETE_CONS << first_constraint_id ;
+#if VERIPB_VERSION >= 2
+         //TODO add witness
+#endif       
+         proof_out << "\n";
+         proof_out << DELETE_CONS << second_constraint_id ;
+#if VERIPB_VERSION >= 2
+         //TODO add witness
+#endif       
+         proof_out << "\n";
 #if VERIPB_VERSION == 1
       }
       else
@@ -1360,12 +1401,28 @@ class VeriPb : public CertificateInterface<REAL>
          print_objective( currentProblem.getVariableNames(), var_mapping,
                           currentProblem.getNCols() );
 #endif
+
+         proof_out << COMMENT << "postsolve stack : row id "
+                   << lhs_row_mapping[substituted_row] << "\n";
+         proof_out << DELETE_CONS << rhs_row_mapping[substituted_row] << " ; ";
+#if VERIPB_VERSION >= 2
+         //TODO add witness
+         int value = (substitute_factor < 0) ? 1 : 0;
+         const String name = currentProblem.getVariableNames()[var_mapping[col]];
+         proof_out << name << " -> " << value;
+#endif
+         proof_out << "\n";
+
          proof_out << COMMENT << "postsolve stack : row id "
                 << rhs_row_mapping[substituted_row] << "\n";
-         proof_out << COMMENT << "postsolve stack : row id "
-                << lhs_row_mapping[substituted_row] << "\n";
-         proof_out << DELETE_CONS << rhs_row_mapping[substituted_row] << "\n";
-         proof_out << DELETE_CONS << lhs_row_mapping[substituted_row] << "\n";
+         proof_out << DELETE_CONS << lhs_row_mapping[substituted_row]  << " ; ";
+#if VERIPB_VERSION >= 2
+         value = (substitute_factor > 0) ? 1 : 0;
+         proof_out << name << " -> " << value;
+#endif
+         proof_out << "\n";
+
+
 #if VERIPB_VERSION == 1
       }
       else
@@ -1711,7 +1768,9 @@ class VeriPb : public CertificateInterface<REAL>
                else
                   proof_out << POL << rhs_id << " " << abs( val ) << " * "
                             << rhs_row_mapping[row] << " +\n";
-
+#if VERIPB_VERSION>= 2
+               proof_out << MOVE_LAST_CONS_TO_CORE;
+#endif
                proof_out << DELETE_CONS << rhs_row_mapping[row] << "\n";
                rhs_row_mapping[row] = next_constraint_id;
             }
@@ -1725,6 +1784,9 @@ class VeriPb : public CertificateInterface<REAL>
                else
                   proof_out << POL << lhs_id << " " << abs( val ) << " * "
                             << lhs_row_mapping[row] << " +\n";
+#if VERIPB_VERSION>= 2
+               proof_out << MOVE_LAST_CONS_TO_CORE;
+#endif
                proof_out << DELETE_CONS << lhs_row_mapping[row] << "\n";
                lhs_row_mapping[row] = next_constraint_id;
             }
@@ -1744,7 +1806,9 @@ class VeriPb : public CertificateInterface<REAL>
                else
                   proof_out << POL << rhs_row_mapping[row] << " " << val
                             << " * " << rhs_id << " +\n";
-
+#if VERIPB_VERSION>= 2
+               proof_out << MOVE_LAST_CONS_TO_CORE;
+#endif
                proof_out << DELETE_CONS << rhs_row_mapping[row] << "\n";
                rhs_row_mapping[row] = next_constraint_id;
             }
@@ -1758,6 +1822,9 @@ class VeriPb : public CertificateInterface<REAL>
                else
                   proof_out << POL << lhs_row_mapping[row] << " " << val
                             << " * " << lhs_id << " +\n";
+#if VERIPB_VERSION>= 2
+               proof_out << MOVE_LAST_CONS_TO_CORE;
+#endif
                proof_out << DELETE_CONS << lhs_row_mapping[row] << "\n";
                lhs_row_mapping[row] = next_constraint_id;
             }
@@ -1780,6 +1847,9 @@ class VeriPb : public CertificateInterface<REAL>
                else
                   proof_out << POL << rhs_id << " " << val << " * "
                             << rhs_row_mapping[row] << " " << val2 << " * +\n";
+#if VERIPB_VERSION>= 2
+               proof_out << MOVE_LAST_CONS_TO_CORE;
+#endif
                proof_out << DELETE_CONS << rhs_row_mapping[row] << "\n";
                rhs_row_mapping[row] = next_constraint_id;
             }
@@ -1793,7 +1863,9 @@ class VeriPb : public CertificateInterface<REAL>
                else
                   proof_out << POL << lhs_id << " " << val << " * "
                             << lhs_row_mapping[row] << " " << val2 << " * +\n";
-
+#if VERIPB_VERSION>= 2
+               proof_out << MOVE_LAST_CONS_TO_CORE;
+#endif
                proof_out << DELETE_CONS << lhs_row_mapping[row] << "\n";
                lhs_row_mapping[row] = next_constraint_id;
             }
