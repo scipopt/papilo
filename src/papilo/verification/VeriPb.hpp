@@ -639,6 +639,9 @@ class VeriPb : public CertificateInterface<REAL>
       default:
          assert( false );
       }
+#if VERIPB_VERSION >= 2
+      proof_out << MOVE_LAST_CONS_TO_CORE;
+#endif
       proof_out << DELETE_CONS << rhs_row_mapping[row] << "\n";
       rhs_row_mapping[row] = next_constraint_id;
    }
@@ -713,6 +716,9 @@ class VeriPb : public CertificateInterface<REAL>
       default:
          assert( false );
       }
+#if VERIPB_VERSION >= 2
+      proof_out << MOVE_LAST_CONS_TO_CORE;
+#endif
       proof_out << DELETE_CONS << lhs_row_mapping[row] << "\n";
       lhs_row_mapping[row] = next_constraint_id;
    }
@@ -1032,6 +1038,9 @@ class VeriPb : public CertificateInterface<REAL>
             skip_changing_lhs = next_constraint_id;
          }
          proof_out << SATURATION << "\n";
+#if VERIPB_VERSION >= 2
+         proof_out << MOVE_LAST_CONS_TO_CORE;
+#endif
          if( !rflags.test( RowFlag::kRhsInf ) )
          {
             proof_out << DELETE_CONS << rhs_row_mapping[row] << "\n";
@@ -1068,6 +1077,9 @@ class VeriPb : public CertificateInterface<REAL>
             proof_out << lhs_row_mapping[row] << " ";
          }
          proof_out << names[var_mapping[col]] << " " << WEAKENING << "\n";
+#if VERIPB_VERSION >= 2
+         proof_out << MOVE_LAST_CONS_TO_CORE;
+#endif
          if( rhs_row_mapping[row] != UNKNOWN )
          {
             proof_out << DELETE_CONS << rhs_row_mapping[row] << "\n";
