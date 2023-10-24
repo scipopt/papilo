@@ -732,12 +732,8 @@ class VeriPb : public CertificateInterface<REAL>
       if( !verification_possible )
          return;
 #endif
-      REAL factor_row = problem.getConstraintMatrix()
-                            .getRowCoefficients( row )
-                            .getValues()[0] *
-                        scale_factor[row];
-      REAL factor_parallel = problem.getConstraintMatrix()
-                                 .getRowCoefficients( parallel_row )
+      REAL factor_row = problem.getConstraintMatrix().getRowCoefficients( row ).getValues()[0] * scale_factor[row];
+      REAL factor_parallel = problem.getConstraintMatrix().getRowCoefficients( parallel_row )
                                  .getValues()[0] *
                              scale_factor[parallel_row];
       REAL factor = factor_row / factor_parallel;
@@ -776,6 +772,7 @@ class VeriPb : public CertificateInterface<REAL>
             next_constraint_id++;
             proof_out << POL << rhs_row_mapping[parallel_row] << " " <<  (int) factor
                       << " *\n";
+            proof_out << MOVE_LAST_CONS_TO_CORE;
             if( rhs_row_mapping[row] != UNKNOWN )
                proof_out << DELETE_CONS << rhs_row_mapping[row] << "\n";
             rhs_row_mapping[row] = next_constraint_id;
@@ -783,8 +780,8 @@ class VeriPb : public CertificateInterface<REAL>
             if( lhs_row_mapping[row] != UNKNOWN && is_not_integral )
             {
                next_constraint_id++;
-               proof_out << POL << lhs_row_mapping[row] << " "
-                         << (int) factor_parallel << " *\n";
+               proof_out << POL << lhs_row_mapping[row] << " " << (int) factor_parallel << " *\n";
+               proof_out << MOVE_LAST_CONS_TO_CORE;
                proof_out << DELETE_CONS << lhs_row_mapping[row] << "\n";
                lhs_row_mapping[row] = next_constraint_id;
                scale_factor[row] *= num.round_to_int( factor_parallel );
@@ -800,8 +797,8 @@ class VeriPb : public CertificateInterface<REAL>
             }
             next_constraint_id++;
             assert( lhs_row_mapping[parallel_row] != UNKNOWN );
-            proof_out << POL << lhs_row_mapping[parallel_row] << " "
-                      << (int) abs( factor ) << " *\n";
+            proof_out << POL << lhs_row_mapping[parallel_row] << " " << (int) abs( factor ) << " *\n";
+            proof_out << MOVE_LAST_CONS_TO_CORE;
             if( rhs_row_mapping[row] != UNKNOWN )
                proof_out << DELETE_CONS << rhs_row_mapping[row] << "\n";
             rhs_row_mapping[row] = next_constraint_id;
@@ -809,8 +806,8 @@ class VeriPb : public CertificateInterface<REAL>
             if( lhs_row_mapping[row] != UNKNOWN && is_not_integral )
             {
                next_constraint_id++;
-               proof_out << POL << lhs_row_mapping[row] << " "
-                         << abs( factor_parallel ) << " *\n";
+               proof_out << POL << lhs_row_mapping[row] << " " << abs( factor_parallel ) << " *\n";
+               proof_out << MOVE_LAST_CONS_TO_CORE;
                proof_out << DELETE_CONS << lhs_row_mapping[row] << "\n";
                lhs_row_mapping[row] = next_constraint_id;
                scale_factor[row] *= num.round_to_int( abs( factor_parallel ) );
@@ -874,6 +871,7 @@ class VeriPb : public CertificateInterface<REAL>
             next_constraint_id++;
             proof_out << POL << lhs_row_mapping[parallel_row] << " " << (int) factor
                       << " *\n";
+            proof_out << MOVE_LAST_CONS_TO_CORE;
             if( lhs_row_mapping[row] != UNKNOWN )
                proof_out << DELETE_CONS << lhs_row_mapping[row] << "\n";
             lhs_row_mapping[row] = next_constraint_id;
@@ -883,6 +881,7 @@ class VeriPb : public CertificateInterface<REAL>
                next_constraint_id++;
                proof_out << POL << rhs_row_mapping[row] << " "
                          << (int) factor_parallel << " *\n";
+               proof_out << MOVE_LAST_CONS_TO_CORE;
                proof_out << DELETE_CONS << rhs_row_mapping[row] << "\n";
                rhs_row_mapping[row] = next_constraint_id;
                scale_factor[row] *= num.round_to_int( factor_parallel );
@@ -898,8 +897,8 @@ class VeriPb : public CertificateInterface<REAL>
             }
             next_constraint_id++;
             assert( rhs_row_mapping[parallel_row] != UNKNOWN );
-            proof_out << POL << rhs_row_mapping[parallel_row] << " "
-                      << abs( factor ) << " *\n";
+            proof_out << POL << rhs_row_mapping[parallel_row] << " " << abs( factor ) << " *\n";
+            proof_out << MOVE_LAST_CONS_TO_CORE;
             if( lhs_row_mapping[row] != UNKNOWN )
                proof_out << DELETE_CONS << lhs_row_mapping[row] << "\n";
             lhs_row_mapping[row] = next_constraint_id;
@@ -907,8 +906,8 @@ class VeriPb : public CertificateInterface<REAL>
             if( rhs_row_mapping[row] != UNKNOWN && is_not_integral )
             {
                next_constraint_id++;
-               proof_out << POL << rhs_row_mapping[row] << " "
-                         << (int) abs( factor_parallel ) << " *\n";
+               proof_out << POL << rhs_row_mapping[row] << " " << (int) abs( factor_parallel ) << " *\n";
+               proof_out << MOVE_LAST_CONS_TO_CORE;
                proof_out << DELETE_CONS << rhs_row_mapping[row] << "\n";
                rhs_row_mapping[row] = next_constraint_id;
                scale_factor[row] *= num.round_to_int( abs( factor_parallel ) );
@@ -1286,13 +1285,11 @@ class VeriPb : public CertificateInterface<REAL>
 #if VERIPB_VERSION >= 2
             proof_out << " ; ; begin \n\t";
             if( scale > 0 )
-               proof_out << POL << rhs_row_mapping[candrow] << " "
-                         << frac_candrow << " * " << lhs_row_mapping[eqrow]
-                         << " " << frac_eqrow << " * +\n";
+               proof_out << POL << rhs_row_mapping[candrow] << " " << lhs_row_mapping[eqrow] << " " << frac_eqrow << " * + "
+                         << frac_candrow << " d "  <<"\n";
             else
-               proof_out << POL << rhs_row_mapping[candrow] << " "
-                         << frac_candrow << " * " << rhs_row_mapping[eqrow]
-                         << " " << frac_eqrow << " * +\n";
+               proof_out << POL << rhs_row_mapping[candrow] << " " << rhs_row_mapping[eqrow] << " " << frac_eqrow << " * + "
+                         << frac_candrow << " d "  <<"\n";
             proof_out << "end";
             next_constraint_id += 2;
 #endif
@@ -1319,16 +1316,15 @@ class VeriPb : public CertificateInterface<REAL>
 #if VERIPB_VERSION >= 2
             proof_out << " ; ; begin \n\t";
             if( scale > 0 )
-               proof_out << POL << rhs_row_mapping[candrow] << " "
-                         << frac_candrow << " * " << rhs_row_mapping[eqrow]
-                         << " " << frac_eqrow << " * +\n";
+               proof_out << POL << lhs_row_mapping[candrow] << " " << rhs_row_mapping[eqrow] << " " << frac_eqrow << " * + "
+                         << frac_candrow << " d "  <<"\n";
             else
-               proof_out << POL << rhs_row_mapping[candrow] << " "
-                         << frac_candrow << " * " << lhs_row_mapping[eqrow]
-                         << " " << frac_eqrow << " * +\n";
+               proof_out << POL << lhs_row_mapping[candrow] << " " << lhs_row_mapping[eqrow] << " " << frac_eqrow << " * + "
+                         << frac_candrow << " d "  <<"\n";
             proof_out << "end";
             next_constraint_id += 2;
 #endif
+            proof_out << "\n";
          }
          scale_factor[candrow] *= frac_candrow;
       }
