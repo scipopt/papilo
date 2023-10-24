@@ -405,6 +405,7 @@ ParallelRowDetection<REAL>::execute( const Problem<REAL>& problem,
                   swap( new_adjusted_lhs, new_adjusted_rhs );
                   swap( scaled_lhs_inf, scaled_rhs_inf );
                   swap( lhs_infinity, rhs_infinity );
+                  swap( row_with_best_lhs_value, row_with_best_rhs_value );
                }
 
                remaining_row = parallel_row;
