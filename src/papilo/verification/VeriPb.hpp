@@ -1131,11 +1131,25 @@ class VeriPb : public CertificateInterface<REAL>
                proof_out << POL << lhs_row_mapping[eqrow] << " "
                          << abs( int_scale_updated ) << " * "
                          << rhs_row_mapping[candrow] << " +\n";
-#if VERIPB_VERSION>= 2
+#if VERIPB_VERSION >= 2
             proof_out << MOVE_LAST_CONS_TO_CORE;
 #endif
-            proof_out << DELETE_CONS << rhs_row_mapping[candrow] << "\n";
+            proof_out << DELETE_CONS << rhs_row_mapping[candrow];
             rhs_row_mapping[candrow] = next_constraint_id;
+#if VERIPB_VERSION >= 2
+            proof_out << " ; ; begin \n\t";
+            if( int_scale_updated > 0 )
+               proof_out << POL << lhs_row_mapping[eqrow] << " "
+                         << abs( int_scale_updated ) << " * "
+                         << lhs_row_mapping[candrow] << " +\n";
+            else
+               proof_out << POL << rhs_row_mapping[eqrow] << " "
+                         << abs( int_scale_updated ) << " * "
+                         << lhs_row_mapping[candrow] << " +\n";
+            proof_out << "end";
+            next_constraint_id += 2;
+#endif
+            proof_out << "\n";
          }
          if( !matrix.getRowFlags()[candrow].test( RowFlag::kLhsInf ) )
          {
@@ -1150,12 +1164,25 @@ class VeriPb : public CertificateInterface<REAL>
                proof_out << POL << rhs_row_mapping[eqrow] << " "
                          << abs( int_scale_updated ) << " * "
                          << lhs_row_mapping[candrow] << " +\n";
-#if VERIPB_VERSION>= 2
+#if VERIPB_VERSION >= 2
             proof_out << MOVE_LAST_CONS_TO_CORE;
 #endif
-            proof_out << DELETE_CONS << lhs_row_mapping[candrow] << "\n";
-
+            proof_out << DELETE_CONS << lhs_row_mapping[candrow];
             lhs_row_mapping[candrow] = next_constraint_id;
+#if VERIPB_VERSION >= 2
+            proof_out << " ; ; begin \n\t";
+            if( int_scale_updated > 0 )
+               proof_out << POL << rhs_row_mapping[eqrow] << " "
+                         << abs( int_scale_updated ) << " * "
+                         << lhs_row_mapping[candrow] << " +\n";
+            else
+               proof_out << POL << lhs_row_mapping[eqrow] << " "
+                         << abs( int_scale_updated ) << " * "
+                         << lhs_row_mapping[candrow] << " +\n";
+            proof_out << "end";
+            next_constraint_id += 2;
+#endif
+            proof_out << "\n";
          }
       }
       else if( num.isIntegral( 1.0 / scale_updated ) )
@@ -1178,8 +1205,22 @@ class VeriPb : public CertificateInterface<REAL>
 #if VERIPB_VERSION>= 2
             proof_out << MOVE_LAST_CONS_TO_CORE;
 #endif
-            proof_out << DELETE_CONS << rhs_row_mapping[candrow] << "\n";
+            proof_out << DELETE_CONS << rhs_row_mapping[candrow] << "";
             rhs_row_mapping[candrow] = next_constraint_id;
+#if VERIPB_VERSION >= 2
+            proof_out << " ; ; begin \n\t";
+            if( int_scale_updated > 0 )
+               proof_out << POL << lhs_row_mapping[eqrow] << " "
+                         << abs( int_scale_updated ) << " * "
+                         << lhs_row_mapping[candrow] << " +\n";
+            else
+               proof_out << POL << rhs_row_mapping[eqrow] << " "
+                         << abs( int_scale_updated ) << " * "
+                         << lhs_row_mapping[candrow] << " +\n";
+            proof_out << "end";
+            next_constraint_id += 2;
+#endif
+            proof_out << "\n";
          }
          if( !matrix.getRowFlags()[candrow].test( RowFlag::kLhsInf ) )
          {
@@ -1197,9 +1238,22 @@ class VeriPb : public CertificateInterface<REAL>
 #if VERIPB_VERSION>= 2
             proof_out << MOVE_LAST_CONS_TO_CORE;
 #endif
-            proof_out << DELETE_CONS << lhs_row_mapping[candrow] << "\n";
-
+            proof_out << DELETE_CONS << lhs_row_mapping[candrow];
             lhs_row_mapping[candrow] = next_constraint_id;
+#if VERIPB_VERSION >= 2
+            proof_out << " ; ; begin \n\t";
+            if( int_scale_updated > 0 )
+               proof_out << POL << lhs_row_mapping[eqrow] << " "
+                         << abs( int_scale_updated ) << " * "
+                         << lhs_row_mapping[candrow] << " +\n";
+            else
+               proof_out << POL << rhs_row_mapping[eqrow] << " "
+                         << abs( int_scale_updated ) << " * "
+                         << lhs_row_mapping[candrow] << " +\n";
+            proof_out << "end";
+            next_constraint_id += 2;
+#endif
+            proof_out << "\n";
          }
          scale_factor[candrow] *= int_scale_updated;
       }
@@ -1227,8 +1281,22 @@ class VeriPb : public CertificateInterface<REAL>
 #if VERIPB_VERSION>= 2
             proof_out << MOVE_LAST_CONS_TO_CORE;
 #endif
-            proof_out << DELETE_CONS << rhs_row_mapping[candrow] << "\n";
+            proof_out << DELETE_CONS << rhs_row_mapping[candrow];
             rhs_row_mapping[candrow] = next_constraint_id;
+#if VERIPB_VERSION >= 2
+            proof_out << " ; ; begin \n\t";
+            if( scale > 0 )
+               proof_out << POL << rhs_row_mapping[candrow] << " "
+                         << frac_candrow << " * " << lhs_row_mapping[eqrow]
+                         << " " << frac_eqrow << " * +\n";
+            else
+               proof_out << POL << rhs_row_mapping[candrow] << " "
+                         << frac_candrow << " * " << rhs_row_mapping[eqrow]
+                         << " " << frac_eqrow << " * +\n";
+            proof_out << "end";
+            next_constraint_id += 2;
+#endif
+            proof_out << "\n";
          }
          if( !matrix.getRowFlags()[candrow].test( RowFlag::kLhsInf ) )
          {
@@ -1246,9 +1314,21 @@ class VeriPb : public CertificateInterface<REAL>
 #if VERIPB_VERSION>= 2
             proof_out << MOVE_LAST_CONS_TO_CORE;
 #endif
-            proof_out << DELETE_CONS << lhs_row_mapping[candrow] << "\n";
-
+            proof_out << DELETE_CONS << lhs_row_mapping[candrow];
             lhs_row_mapping[candrow] = next_constraint_id;
+#if VERIPB_VERSION >= 2
+            proof_out << " ; ; begin \n\t";
+            if( scale > 0 )
+               proof_out << POL << rhs_row_mapping[candrow] << " "
+                         << frac_candrow << " * " << rhs_row_mapping[eqrow]
+                         << " " << frac_eqrow << " * +\n";
+            else
+               proof_out << POL << rhs_row_mapping[candrow] << " "
+                         << frac_candrow << " * " << lhs_row_mapping[eqrow]
+                         << " " << frac_eqrow << " * +\n";
+            proof_out << "end";
+            next_constraint_id += 2;
+#endif
          }
          scale_factor[candrow] *= frac_candrow;
       }
