@@ -47,6 +47,7 @@ static const char* const OUTPUT = "output ";
 static const char* const NONE = "NONE";
 #if VERIPB_VERSION >= 2
 static const char* const DELETE_CONS = "delc ";
+static const char* const DELETE_UNCHECKED = "del id";
 #else
 static const char* const DELETE_CONS = "del id ";
 #endif
@@ -1438,9 +1439,9 @@ class VeriPb : public CertificateInterface<REAL>
       }
       proof_out << names[orig_index_1] << " >= " << lhs << ";\n";
       int lhs_id = next_constraint_id;
-#if VERIPB_VERSION >= 2
-      proof_out << MOVE_LAST_CONS_TO_CORE;
-#endif
+//#if VERIPB_VERSION >= 2
+//      proof_out << MOVE_LAST_CONS_TO_CORE;
+//#endif
 
       next_constraint_id++;
       int second_constraint_id = next_constraint_id;
@@ -1465,9 +1466,9 @@ class VeriPb : public CertificateInterface<REAL>
       }
       proof_out << names[orig_index_1] << " >= " << rhs << ";\n";
 
-#if VERIPB_VERSION >= 2
-      proof_out << MOVE_LAST_CONS_TO_CORE;
-#endif
+//#if VERIPB_VERSION >= 2
+//      proof_out << MOVE_LAST_CONS_TO_CORE;
+//#endif
 
       substitute( col, substitute_factor, lhs_id, next_constraint_id,
                   currentProblem );
@@ -1480,15 +1481,17 @@ class VeriPb : public CertificateInterface<REAL>
          if(old_obj_coeff != 0)
             print_objective( names, var_mapping, currentProblem.getNCols() );
 #endif
-         proof_out << DELETE_CONS << first_constraint_id ;
 #if VERIPB_VERSION >= 2
-         //TODO add witness
+         proof_out << DELETE_UNCHECKED << first_constraint_id;
+#else
+      proof_out << DELETE_CONS << first_constraint_id ;
 #endif       
          proof_out << "\n";
-         proof_out << DELETE_CONS << second_constraint_id ;
 #if VERIPB_VERSION >= 2
-         //TODO add witness
-#endif       
+         proof_out << DELETE_UNCHECKED << second_constraint_id;
+#else
+         proof_out << DELETE_CONS << second_constraint_id ;
+#endif
          proof_out << "\n";
 #if VERIPB_VERSION == 1
       }
