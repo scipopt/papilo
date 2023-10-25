@@ -1398,10 +1398,9 @@ class VeriPb : public CertificateInterface<REAL>
    }
 
    void
-   substitute( int col, const SparseVectorView<REAL>& equality, REAL offset,
+   substitute( int col, const SparseVectorView<REAL>& equality, REAL offset, REAL old_obj_coeff,
                const Problem<REAL>& currentProblem, const Vec<String>& names,
-               const Vec<int>& var_mapping )
-   {
+               const Vec<int>& var_mapping )   {
 #if VERIPB_VERSION == 1
       if( !verification_possible )
          return;
@@ -1478,7 +1477,8 @@ class VeriPb : public CertificateInterface<REAL>
 #endif
 #if VERIPB_VERSION >= 2
          apply_substitution_to_objective(col, equality, rhs);
-         print_objective( names, var_mapping, currentProblem.getNCols() );
+         if(old_obj_coeff != 0)
+            print_objective( names, var_mapping, currentProblem.getNCols() );
 #endif
          proof_out << DELETE_CONS << first_constraint_id ;
 #if VERIPB_VERSION >= 2
@@ -1498,9 +1498,7 @@ class VeriPb : public CertificateInterface<REAL>
    }
 
    void
-   substitute( int col, int substituted_row,
-               const Problem<REAL>& currentProblem, const Vec<int>& var_mapping )
-   {
+   substitute( int col, int substituted_row, REAL old_obj_coeff, const Problem<REAL>& currentProblem, const Vec<int>& var_mapping )   {
 #if VERIPB_VERSION == 1
       if( !verification_possible || (matrix.getColumnCoefficients( col ).getLength() == 1 && !is_optimization_problem))
          return;
@@ -1518,8 +1516,9 @@ class VeriPb : public CertificateInterface<REAL>
       if( col_vec.getLength() == 1 )
       {
          apply_substitution_to_objective(col, row_data, matrix.getLeftHandSides()[substituted_row]);
-         print_objective( currentProblem.getVariableNames(), var_mapping,
-                          currentProblem.getNCols() );
+         if( old_obj_coeff != 0)
+            print_objective( currentProblem.getVariableNames(), var_mapping,
+                             currentProblem.getNCols() );
          return;
       }
 #if VERIPB_VERSION == 1
@@ -1553,8 +1552,9 @@ class VeriPb : public CertificateInterface<REAL>
 #if VERIPB_VERSION >= 2
          assert(matrix.getLeftHandSides()[substituted_row] == matrix.getRightHandSides()[substituted_row]);
          apply_substitution_to_objective(col, row_data, matrix.getLeftHandSides()[substituted_row]);
-         print_objective( currentProblem.getVariableNames(), var_mapping,
-                          currentProblem.getNCols() );
+         if( old_obj_coeff != 0)
+            print_objective( currentProblem.getVariableNames(), var_mapping,
+                             currentProblem.getNCols() );
 #endif
 
          proof_out << COMMENT << "postsolve stack : row id "

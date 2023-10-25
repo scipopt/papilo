@@ -135,13 +135,12 @@ class EmptyCertificate : public CertificateInterface<REAL>
                         const Vec<int>& var_mapping, ArgumentType argument ){};
 
    void
-   substitute( int col, int row, const Problem<REAL>& currentProblem, const Vec<int>& var_mapping ){};
+   substitute( int col, int row, REAL old_obj_coeff, const Problem<REAL>& currentProblem, const Vec<int>& var_mapping ){};
 
    void
-   substitute( int col, const SparseVectorView<REAL>& equality, REAL offset,
+   substitute( int col, const SparseVectorView<REAL>& equality, REAL offset, REAL old_obj_coeff,
                const Problem<REAL>& currentProblem, const Vec<String>& names,
-               const Vec<int>& var_mapping )
-   {
+               const Vec<int>& var_mapping )   {
    }
 
    void

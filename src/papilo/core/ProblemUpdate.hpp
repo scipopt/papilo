@@ -2241,10 +2241,11 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
                 !cflags[col].test( ColFlag::kSubstituted, ColFlag::kFixed ) );
             cflags[col].set( ColFlag::kSubstituted );
 
+            REAL old_obj_coeff = objective.coefficients[col];
             // change the objective coefficients and offset
             problem.substituteVarInObj( num, col, equalityrow );
 
-            certificate_interface->substitute(col, equalityrow, problem, postsolve.origcol_mapping );
+            certificate_interface->substitute(col, equalityrow, old_obj_coeff, problem, postsolve.origcol_mapping );
 
             // update row states
             msg.detailed( "modified rows: " );
@@ -2322,12 +2323,13 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
             const auto rowvec =
                 constraintMatrix.getRowCoefficients( equalityrow );
 
+            REAL old_obj_coeff =  objective.coefficients[col];
             postsolve.storeSubstitution( col, equalityrow, problem );
 
             // change the objective coefficients and offset
             problem.substituteVarInObj( num, col, equalityrow );
 
-            certificate_interface->substitute(col, equalityrow, problem, postsolve.origcol_mapping );
+            certificate_interface->substitute(col, equalityrow, old_obj_coeff, problem, postsolve.origcol_mapping );
 
             auto colvec = constraintMatrix.getColumnCoefficients( col );
 
@@ -2516,6 +2518,7 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
                msg.detailed( "\n" );
                postsolve.storeSubstitution( col1, equalityLHS, offset );
 
+               REAL old_obj_coeff = objective.coefficients[col1];
                // change the objective
                auto& obj = problem.getObjective();
                auto& obj_coef = obj.coefficients;
@@ -2528,7 +2531,7 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
                   obj_coef[col1] = REAL{ 0 };
                }
 
-               certificate_interface->substitute(col1, equalityLHS, offset,  problem, problem.getVariableNames(), postsolve.origcol_mapping);
+               certificate_interface->substitute(col1, equalityLHS, offset, old_obj_coeff, problem, problem.getVariableNames(), postsolve.origcol_mapping);
 
                // perform changes in matrix and side
                constraintMatrix.aggregate(
