@@ -344,7 +344,6 @@ class VeriPb : public CertificateInterface<REAL>
          {
             next_constraint_id++;
             assert( lhs_row_mapping[row] != UNKNOWN );
-            int cons = cons_id_fixing;
             if( row_value < 0 )
                proof_out << POL << lhs_row_mapping[row] << " "
                          << names[orig_col] << " " << abs( row_value )
@@ -352,11 +351,28 @@ class VeriPb : public CertificateInterface<REAL>
             else
                proof_out << POL << lhs_row_mapping[row] << " " << cons_id_fixing
                          << " " << abs( row_value ) << " * +\n";
-#if VERIPB_VERSION>= 2
+#if VERIPB_VERSION >= 2
             proof_out << MOVE_LAST_CONS_TO_CORE;
 #endif
-            proof_out << DELETE_CONS << lhs_row_mapping[row] << "\n";
+            proof_out << DELETE_CONS << lhs_row_mapping[row];
             lhs_row_mapping[row] = next_constraint_id;
+#if VERIPB_VERSION >= 2
+            if( problem.getConstraintMatrix().getRowCoefficients(row).getLength() >1 )
+            {
+               proof_out << " ; ; begin \n\t";
+               if( row_value < 0 )
+                  proof_out << POL << lhs_row_mapping[row] << " "
+                            << cons_id_fixing << " " << abs( row_value )
+                            << " * +\n";
+               else
+                  proof_out << POL << lhs_row_mapping[row] << " "
+                            << names[orig_col] << " " << abs( row_value )
+                            << " * +\n";
+               proof_out << "end";
+               next_constraint_id += 2;
+            }
+#endif
+            proof_out << "\n";
          }
          if( !problem.getRowFlags()[row].test( RowFlag::kRhsInf ) )
          {
@@ -370,11 +386,28 @@ class VeriPb : public CertificateInterface<REAL>
             else
                proof_out << POL << rhs_row_mapping[row] << " " << cons_id_fixing
                          << " " << abs( row_value ) << " * +\n";
-#if VERIPB_VERSION>= 2
+#if VERIPB_VERSION >= 2
             proof_out << MOVE_LAST_CONS_TO_CORE;
 #endif
-            proof_out << DELETE_CONS << rhs_row_mapping[row] << "\n";
+            proof_out << DELETE_CONS << rhs_row_mapping[row];
             rhs_row_mapping[row] = next_constraint_id;
+#if VERIPB_VERSION >= 2
+            if( problem.getConstraintMatrix().getRowCoefficients(row).getLength() >1 )
+            {
+               proof_out << " ; ; begin \n\t";
+               if( row_value > 0 )
+                  proof_out << POL << rhs_row_mapping[row] << " "
+                            << cons_id_fixing << " " << abs( row_value )
+                            << " * +\n";
+               else
+                  proof_out << POL << rhs_row_mapping[row] << " "
+                            << names[orig_col] << " " << abs( row_value )
+                            << " * +\n";
+               proof_out << "end";
+               next_constraint_id += 2;
+            }
+#endif
+            proof_out << "\n";
          }
       }
 
@@ -479,8 +512,25 @@ class VeriPb : public CertificateInterface<REAL>
 #if VERIPB_VERSION>= 2
             proof_out << MOVE_LAST_CONS_TO_CORE;
 #endif
-            proof_out << DELETE_CONS << lhs_row_mapping[row] << "\n";
+            proof_out << DELETE_CONS << lhs_row_mapping[row];
             lhs_row_mapping[row] = next_constraint_id;
+#if VERIPB_VERSION >= 2
+            if( problem.getConstraintMatrix().getRowCoefficients(row).getLength() >1 )
+            {
+               proof_out << " ; ; begin \n\t";
+               if( row_value > 0 )
+                  proof_out << POL << lhs_row_mapping[row] << " "
+                            << cons_id_fixing << " " << abs( row_value )
+                            << " * +\n";
+               else
+                  proof_out << POL << lhs_row_mapping[row] << " " << NEGATED
+                            << names[orig_col] << " " << abs( row_value )
+                            << " * +\n";
+               proof_out << "end";
+               next_constraint_id += 2;
+            }
+#endif
+            proof_out << "\n";
          }
          if( !problem.getRowFlags()[row].test( RowFlag::kRhsInf ) )
          {
@@ -496,8 +546,25 @@ class VeriPb : public CertificateInterface<REAL>
 #if VERIPB_VERSION>= 2
             proof_out << MOVE_LAST_CONS_TO_CORE;
 #endif
-            proof_out << DELETE_CONS << rhs_row_mapping[row] << "\n";
+            proof_out << DELETE_CONS << rhs_row_mapping[row];
             rhs_row_mapping[row] = next_constraint_id;
+#if VERIPB_VERSION >= 2
+            if( problem.getConstraintMatrix().getRowCoefficients(row).getLength() >1 )
+            {
+               proof_out << " ; ; begin \n\t";
+               if( row_value < 0 )
+                  proof_out << POL << rhs_row_mapping[row] << " "
+                            << cons_id_fixing << " " << abs( row_value )
+                            << " * +\n";
+               else
+                  proof_out << POL << rhs_row_mapping[row] << " " << NEGATED
+                            << names[orig_col] << " " << abs( row_value )
+                            << " * +\n";
+               proof_out << "end";
+               next_constraint_id += 2;
+            }
+#endif
+            proof_out << "\n";
          }
       }
 #if VERIPB_VERSION >= 2
