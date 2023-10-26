@@ -619,7 +619,6 @@ Presolve<REAL>::apply( Problem<REAL>& problem, bool store_dual_postsolve )
       }
 
       printPresolversStats();
-      probUpdate.end_presolve();
 
       if( DependentRows<REAL>::Enabled &&
           ( presolveOptions.detectlindep == 2 ||
@@ -1502,7 +1501,7 @@ Presolve<REAL>::logStatus( ProblemUpdate<REAL>& problem_update,
       msg.info(
           "problem is solved [optimal solution found] [objective value: {} (double precision)]\n",
           (double) origobj );
-      problem_update.getCertificateInterface()->log_solution( solution, problem.getVariableNames() );
+      problem_update.getCertificateInterface()->log_solution( solution, problem.getVariableNames(), origobj );
    }
 }
 

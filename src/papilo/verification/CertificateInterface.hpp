@@ -133,7 +133,7 @@ class CertificateInterface
 
    virtual void
    log_solution( const Solution<REAL>& orig_solution,
-                 const Vec<String>& names ) = 0;
+                 const Vec<String>& names, REAL origobj ) = 0;
 
    virtual void
    symmetries(
@@ -152,9 +152,6 @@ class CertificateInterface
 
    virtual void
    infeasible( const Vec<int>& colmapping, const Vec<String>& names ){ };
-
-   virtual void
-   end_proof( ) { };
 
    virtual ~CertificateInterface() = default;
 };

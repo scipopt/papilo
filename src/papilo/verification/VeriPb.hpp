@@ -1631,16 +1631,18 @@ class VeriPb : public CertificateInterface<REAL>
    }
 
    void
-   log_solution( const Solution<REAL>& orig_solution, const Vec<String>& names )
+   log_solution( const Solution<REAL>& orig_solution, const Vec<String>& names, REAL origobj )
    {
 #if VERIPB_VERSION == 1
       if( !verification_possible )
          return;
-#endif
-//      assert(is_optimization_problem || substituted_rows.empty());
-//      for(auto sub_row: substituted_rows)
-//         proof_out << DELETE_CONS << sub_row << "\n";
       proof_out << "o";
+#else
+      if( is_optimization_problem )
+         proof_out << "o";
+      else
+         proof_out << "sol";
+#endif
       next_constraint_id++;
       for( int i = 0; i < orig_solution.primal.size(); i++ )
       {
@@ -1652,9 +1654,13 @@ class VeriPb : public CertificateInterface<REAL>
       }
       next_constraint_id++;
       proof_out << "\n";
+#if VERIPB_VERSION == 1
       proof_out << "u >= 1 ;\n";
       proof_out << "c " << next_constraint_id << "\n";
+#else
       status = 1;
+      end_proof((int)origobj);
+#endif
    };
 
    void
@@ -1699,17 +1705,29 @@ class VeriPb : public CertificateInterface<REAL>
    };
 
    void
-   end_proof( )
+   end_proof( int obj = 0 )
    {
 #if VERIPB_VERSION >= 2
       proof_out << OUTPUT << NONE << " \n";
       proof_out << CONCLUSION;
-      if( status > 0 )
-         proof_out << "SAT";
-      else if ( status < 0)
-         proof_out << "UNSAT";
+      if(is_optimization_problem)
+      {
+         if( status > 0 )
+            proof_out << "BOUNDS " << obj << " " << obj;
+         else if( status < 0 )
+            proof_out << " BOUNDS INF INF";
+         else
+            proof_out << NONE;
+      }
       else
-         proof_out << NONE;
+      {
+         if( status > 0 )
+            proof_out << "SAT";
+         else if( status < 0 )
+            proof_out << "UNSAT";
+         else
+            proof_out << NONE;
+      }
       proof_out << "\n";
       proof_out << "end pseudo-Boolean proof\n";
 #endif

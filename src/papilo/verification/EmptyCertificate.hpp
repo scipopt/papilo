@@ -156,7 +156,7 @@ class EmptyCertificate : public CertificateInterface<REAL>
 
    void
    log_solution( const Solution<REAL>& orig_solution,
-                 const Vec<String>& names ){};
+                 const Vec<String>& names, REAL origobj ){};
 
    void
    setInfeasibleCause(int col){};
@@ -167,8 +167,6 @@ class EmptyCertificate : public CertificateInterface<REAL>
    {
    }
 
-   void
-   end_proof( ) { };
 };
 
 } // namespace papilo
