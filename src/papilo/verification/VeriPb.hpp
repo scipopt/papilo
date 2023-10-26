@@ -1951,11 +1951,22 @@ class VeriPb : public CertificateInterface<REAL>
                else
                   proof_out << POL << rhs_id << " " << abs( val ) << " * "
                             << rhs_row_mapping[row] << " +\n";
-#if VERIPB_VERSION>= 2
+#if VERIPB_VERSION >= 2
                proof_out << MOVE_LAST_CONS_TO_CORE;
 #endif
-               proof_out << DELETE_CONS << rhs_row_mapping[row] << "\n";
+               proof_out << DELETE_CONS << rhs_row_mapping[row];
                rhs_row_mapping[row] = next_constraint_id;
+#if VERIPB_VERSION >= 2
+               proof_out << " ; ; begin \n\t";
+               if( substitute_factor * factor > 0 )
+                  proof_out << POL << rhs_id << " " << rhs_row_mapping[row] << " + " << num.round_to_int( abs(val )) << " d\n";
+               else
+                  proof_out << POL << lhs_id << " " << rhs_row_mapping[row] << " + " << num.round_to_int( abs(val )) << " d\n";
+
+               proof_out << "end";
+               next_constraint_id += 2;
+#endif
+               proof_out << "\n";
             }
             if( !matrix.getRowFlags()[row].test( RowFlag::kLhsInf ) )
             {
@@ -1967,11 +1978,21 @@ class VeriPb : public CertificateInterface<REAL>
                else
                   proof_out << POL << lhs_id << " " << abs( val ) << " * "
                             << lhs_row_mapping[row] << " +\n";
-#if VERIPB_VERSION>= 2
+#if VERIPB_VERSION >= 2
                proof_out << MOVE_LAST_CONS_TO_CORE;
 #endif
-               proof_out << DELETE_CONS << lhs_row_mapping[row] << "\n";
+               proof_out << DELETE_CONS << lhs_row_mapping[row];
                lhs_row_mapping[row] = next_constraint_id;
+#if VERIPB_VERSION >= 2
+               proof_out << " ; ; begin \n\t";
+               if( substitute_factor * factor > 0 )
+                  proof_out << POL << lhs_id << " " << lhs_row_mapping[row] << " + " << num.round_to_int( abs(val )) << " *\n";
+               else
+                  proof_out << POL << rhs_id << " " << lhs_row_mapping[row] << " + " << num.round_to_int( abs(val )) << " *\n";
+               proof_out << "end";
+               next_constraint_id += 2;
+#endif
+               proof_out << "\n";
             }
          }
          else if( num.isIntegral( substitute_factor / factor ) )
@@ -1989,11 +2010,22 @@ class VeriPb : public CertificateInterface<REAL>
                else
                   proof_out << POL << rhs_row_mapping[row] << " " << val
                             << " * " << rhs_id << " +\n";
-#if VERIPB_VERSION>= 2
+#if VERIPB_VERSION >= 2
                proof_out << MOVE_LAST_CONS_TO_CORE;
 #endif
-               proof_out << DELETE_CONS << rhs_row_mapping[row] << "\n";
+               proof_out << DELETE_CONS << rhs_row_mapping[row];
                rhs_row_mapping[row] = next_constraint_id;
+#if VERIPB_VERSION >= 2
+               proof_out << " ; ; begin \n\t";
+               if( substitute_factor * factor > 0 )
+                  proof_out << POL << rhs_id << " " << rhs_row_mapping[row] << " + " << num.round_to_int( abs(val )) << " d\n";
+               else
+                  proof_out << POL << lhs_id << " " << rhs_row_mapping[row] << " + " << num.round_to_int( abs(val )) << " d\n";
+               proof_out << "end";
+               next_constraint_id += 2;
+#endif
+               proof_out << "\n";
+
             }
             if( !matrix.getRowFlags()[row].test( RowFlag::kLhsInf ) )
             {
@@ -2005,11 +2037,21 @@ class VeriPb : public CertificateInterface<REAL>
                else
                   proof_out << POL << lhs_row_mapping[row] << " " << val
                             << " * " << lhs_id << " +\n";
-#if VERIPB_VERSION>= 2
+#if VERIPB_VERSION >= 2
                proof_out << MOVE_LAST_CONS_TO_CORE;
 #endif
-               proof_out << DELETE_CONS << lhs_row_mapping[row] << "\n";
+               proof_out << DELETE_CONS << lhs_row_mapping[row];
                lhs_row_mapping[row] = next_constraint_id;
+#if VERIPB_VERSION >= 2
+               proof_out << " ; ; begin \n\t";
+               if( substitute_factor * factor > 0 )
+                  proof_out << POL << rhs_id << " " << lhs_row_mapping[row] << " + " << num.round_to_int( abs(val )) << " d\n";
+               else
+                  proof_out << POL << lhs_id << " " << lhs_row_mapping[row] << " + " << num.round_to_int( abs(val )) << " d\n";
+               proof_out << "end";
+               next_constraint_id += 2;
+#endif
+               proof_out << "\n";
             }
          }
          else
@@ -2030,11 +2072,21 @@ class VeriPb : public CertificateInterface<REAL>
                else
                   proof_out << POL << rhs_id << " " << val << " * "
                             << rhs_row_mapping[row] << " " << val2 << " * +\n";
-#if VERIPB_VERSION>= 2
+#if VERIPB_VERSION >= 2
                proof_out << MOVE_LAST_CONS_TO_CORE;
 #endif
-               proof_out << DELETE_CONS << rhs_row_mapping[row] << "\n";
+               proof_out << DELETE_CONS << rhs_row_mapping[row];
                rhs_row_mapping[row] = next_constraint_id;
+#if VERIPB_VERSION >= 2
+               proof_out << " ; ; begin \n\t";
+               if( substitute_factor * factor > 0 )
+                  proof_out << POL << lhs_id << " " << num.round_to_int( abs(val )) << " *" << rhs_row_mapping[row] << " + " << num.round_to_int( abs(val2 )) << " d\n";
+               else
+                  proof_out << POL << rhs_id << " " << num.round_to_int( abs(val )) << " *" << rhs_row_mapping[row] << " + " << num.round_to_int( abs(val2 )) << " d\n";
+               proof_out << "end";
+               next_constraint_id += 2;
+#endif
+               proof_out << "\n";
             }
             if( !matrix.getRowFlags()[row].test( RowFlag::kLhsInf ) )
             {
@@ -2046,11 +2098,21 @@ class VeriPb : public CertificateInterface<REAL>
                else
                   proof_out << POL << lhs_id << " " << val << " * "
                             << lhs_row_mapping[row] << " " << val2 << " * +\n";
-#if VERIPB_VERSION>= 2
+#if VERIPB_VERSION >= 2
                proof_out << MOVE_LAST_CONS_TO_CORE;
 #endif
-               proof_out << DELETE_CONS << lhs_row_mapping[row] << "\n";
+               proof_out << DELETE_CONS << lhs_row_mapping[row];
                lhs_row_mapping[row] = next_constraint_id;
+#if VERIPB_VERSION >= 2
+               proof_out << " ; ; begin \n\t";
+               if( substitute_factor * factor > 0 )
+                  proof_out << POL << lhs_id << " " << num.round_to_int( abs(val )) << " *" << lhs_row_mapping[row] << " + " << num.round_to_int( abs(val2 )) << " d\n";
+               else
+                  proof_out << POL << rhs_id << " " << num.round_to_int( abs(val )) << " *" << lhs_row_mapping[row] << " + " << num.round_to_int( abs(val2 )) << " d\n";
+               proof_out << "end";
+               next_constraint_id += 2;
+#endif
+               proof_out << "\n";
             }
          }
       }
