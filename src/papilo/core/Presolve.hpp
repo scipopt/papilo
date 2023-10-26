@@ -1473,19 +1473,7 @@ void
 Presolve<REAL>::logStatus( ProblemUpdate<REAL>& problem_update,
                            const PostsolveStorage<REAL>& postsolveStorage ) const
 {
-   if(msg.getVerbosityLevel() == VerbosityLevel::kQuiet)
-      return;
    Problem<REAL>& problem = problem_update.getProblem();
-   msg.info( "reduced problem:\n" );
-   msg.info( "  reduced rows:     {}\n", problem.getNRows() );
-   msg.info( "  reduced columns:  {}\n", problem.getNCols() );
-   msg.info( "  reduced int. columns:  {}\n", problem.getNumIntegralCols() );
-   msg.info( "  reduced cont. columns:  {}\n", problem.getNumContinuousCols() );
-   msg.info( "  reduced nonzeros: {}\n",
-             problem.getConstraintMatrix().getNnz() );
-   if( problem.test_problem_type( ProblemFlag::kBinary ) )
-      msg.info( "  found symmetries: {}\n",
-                problem.getSymmetries().symmetries.size() );
    if( problem.getNCols() == 0)
    {
       // the primal dual can be disabled therefore calculate only primal for obj
@@ -1503,6 +1491,21 @@ Presolve<REAL>::logStatus( ProblemUpdate<REAL>& problem_update,
           (double) origobj );
       problem_update.getCertificateInterface()->log_solution( solution, problem.getVariableNames(), origobj );
    }
+   else
+      problem_update.getCertificateInterface()->end_proof();
+   if(msg.getVerbosityLevel() == VerbosityLevel::kQuiet)
+      return;
+   msg.info( "reduced problem:\n" );
+   msg.info( "  reduced rows:     {}\n", problem.getNRows() );
+   msg.info( "  reduced columns:  {}\n", problem.getNCols() );
+   msg.info( "  reduced int. columns:  {}\n", problem.getNumIntegralCols() );
+   msg.info( "  reduced cont. columns:  {}\n", problem.getNumContinuousCols() );
+   msg.info( "  reduced nonzeros: {}\n",
+             problem.getConstraintMatrix().getNnz() );
+   if( problem.test_problem_type( ProblemFlag::kBinary ) )
+      msg.info( "  found symmetries: {}\n",
+                problem.getSymmetries().symmetries.size() );
+
 }
 
 template <typename REAL>

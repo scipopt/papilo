@@ -151,6 +151,9 @@ class CertificateInterface
    infeasible( ) { };
 
    virtual void
+   end_proof( ) { };
+
+   virtual void
    infeasible( const Vec<int>& colmapping, const Vec<String>& names ){ };
 
    virtual ~CertificateInterface() = default;

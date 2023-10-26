@@ -1439,9 +1439,9 @@ class VeriPb : public CertificateInterface<REAL>
       }
       proof_out << names[orig_index_1] << " >= " << lhs << ";\n";
       int lhs_id = next_constraint_id;
-//#if VERIPB_VERSION >= 2
-//      proof_out << MOVE_LAST_CONS_TO_CORE;
-//#endif
+#if VERIPB_VERSION >= 2
+      proof_out << MOVE_LAST_CONS_TO_CORE;
+#endif
 
       next_constraint_id++;
       int second_constraint_id = next_constraint_id;
@@ -1466,9 +1466,9 @@ class VeriPb : public CertificateInterface<REAL>
       }
       proof_out << names[orig_index_1] << " >= " << rhs << ";\n";
 
-//#if VERIPB_VERSION >= 2
-//      proof_out << MOVE_LAST_CONS_TO_CORE;
-//#endif
+#if VERIPB_VERSION >= 2
+      proof_out << MOVE_LAST_CONS_TO_CORE;
+#endif
 
       substitute( col, substitute_factor, lhs_id, next_constraint_id,
                   currentProblem );
@@ -1481,16 +1481,20 @@ class VeriPb : public CertificateInterface<REAL>
          if(old_obj_coeff != 0)
             print_objective( names, var_mapping, currentProblem.getNCols() );
 #endif
+
+         proof_out << DELETE_CONS << first_constraint_id << " ; ";
 #if VERIPB_VERSION >= 2
-         proof_out << DELETE_UNCHECKED << first_constraint_id;
-#else
-      proof_out << DELETE_CONS << first_constraint_id ;
-#endif       
+         int index = indices[0] == col ? 0 : 1;
+         auto name = names[var_mapping[indices[index]]];
+         int value = (values[index] > 0) ? 1 : 0;
+         proof_out << name << " -> " << value;
+#endif
          proof_out << "\n";
+
+         proof_out << DELETE_CONS << second_constraint_id << " ; ";
 #if VERIPB_VERSION >= 2
-         proof_out << DELETE_UNCHECKED << second_constraint_id;
-#else
-         proof_out << DELETE_CONS << second_constraint_id ;
+         value = (values[index] > 0) ? 0 : 1;
+         proof_out << name << " -> " << value;
 #endif
          proof_out << "\n";
 #if VERIPB_VERSION == 1
@@ -1564,7 +1568,6 @@ class VeriPb : public CertificateInterface<REAL>
                    << lhs_row_mapping[substituted_row] << "\n";
          proof_out << DELETE_CONS << rhs_row_mapping[substituted_row] << " ; ";
 #if VERIPB_VERSION >= 2
-         //TODO add witness
          int value = (substitute_factor < 0) ? 1 : 0;
          const String name = currentProblem.getVariableNames()[var_mapping[col]];
          proof_out << name << " -> " << value;
