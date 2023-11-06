@@ -1208,11 +1208,11 @@ class VeriPb : public CertificateInterface<REAL>
             if( int_scale_updated > 0 )
                proof_out << POL << lhs_row_mapping[eqrow] << " "
                          << abs( int_scale_updated ) << " * "
-                         << lhs_row_mapping[candrow] << " +\n";
+                         << rhs_row_mapping[candrow] << " +\n";
             else
                proof_out << POL << rhs_row_mapping[eqrow] << " "
                          << abs( int_scale_updated ) << " * "
-                         << lhs_row_mapping[candrow] << " +\n";
+                         << rhs_row_mapping[candrow] << " +\n";
             proof_out << "end";
             next_constraint_id += 2;
 #endif
@@ -1708,7 +1708,13 @@ class VeriPb : public CertificateInterface<REAL>
    };
 
    void
-   end_proof( int obj = 0 )
+   end_proof( ) override
+   {
+      end_proof( 0 ) ;
+   }
+
+   void
+   end_proof( int obj )
    {
 #if VERIPB_VERSION >= 2
       proof_out << OUTPUT << NONE << " \n";
