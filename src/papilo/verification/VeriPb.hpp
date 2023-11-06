@@ -256,7 +256,7 @@ class VeriPb : public CertificateInterface<REAL>
    };
 
    void
-   flush()
+   flush() override
    {
       proof_out.flush();
    };
@@ -639,7 +639,7 @@ class VeriPb : public CertificateInterface<REAL>
    void
    change_rhs( int row, REAL val, const SparseVectorView<REAL>& data,
                const Vec<String>& names, const Vec<int>& var_mapping,
-               ArgumentType argument = ArgumentType::kPrimal )
+               ArgumentType argument = ArgumentType::kPrimal ) override
    {
 #if VERIPB_VERSION == 1
       if( !verification_possible )
@@ -716,7 +716,7 @@ class VeriPb : public CertificateInterface<REAL>
 
    void
    change_lhs( int row, REAL val, const SparseVectorView<REAL>& data,
-               const Vec<String>& names, const Vec<int>& var_mapping, ArgumentType argument = ArgumentType::kPrimal )
+               const Vec<String>& names, const Vec<int>& var_mapping, ArgumentType argument = ArgumentType::kPrimal ) override
    {
 #if VERIPB_VERSION == 1
       if( !verification_possible )
@@ -794,7 +794,7 @@ class VeriPb : public CertificateInterface<REAL>
    void
    change_rhs_parallel_row( int row, REAL val, int parallel_row,
                             const Problem<REAL>& problem,
-                            const Vec<int>& var_mapping )
+                            const Vec<int>& var_mapping ) override
    {
 #if VERIPB_VERSION == 1
       if( !verification_possible )
@@ -1717,7 +1717,7 @@ class VeriPb : public CertificateInterface<REAL>
 
    void
    symmetries( const SymmetryStorage& symmetries, const Vec<String>& names,
-               const Vec<int>& var_mapping )
+               const Vec<int>& var_mapping ) override
    {
 #if VERIPB_VERSION == 1
       if( !verification_possible )
@@ -1753,7 +1753,7 @@ class VeriPb : public CertificateInterface<REAL>
 
    void
    compress( const Vec<int>& rowmapping, const Vec<int>& colmapping,
-             bool full = false )
+             bool full = false ) override
    {
       flush();
 #ifdef PAPILO_TBB
