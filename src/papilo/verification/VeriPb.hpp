@@ -182,7 +182,7 @@ class VeriPb : public CertificateInterface<REAL>
    }
 
    void
-   print_header()
+   print_header() override
    {
 #if VERIPB_VERSION == 1
       proof_out << "pseudo-Boolean proof version 1.0\n";
@@ -208,7 +208,7 @@ class VeriPb : public CertificateInterface<REAL>
    };
 
    void
-   start_transaction()
+   start_transaction() override
    {
       skip_changing_lhs = UNKNOWN;
       skip_changing_rhs = UNKNOWN;
@@ -226,7 +226,7 @@ class VeriPb : public CertificateInterface<REAL>
 
    void
    end_transaction( const Problem<REAL>& problem,
-                    const Vec<int>& var_mapping, const Vec<int>& dirty_row_states )
+                    const Vec<int>& var_mapping, const Vec<int>& dirty_row_states ) override
    {
       if( row_with_gcd.first != UNKNOWN )
       {
@@ -264,7 +264,7 @@ class VeriPb : public CertificateInterface<REAL>
    void
    change_upper_bound( REAL val, int col, const Problem<REAL>& problem,
                        const Vec<int>& var_mapping, MatrixBuffer<REAL>& matrix_buffer,
-                       ArgumentType argument = ArgumentType::kPrimal )
+                       ArgumentType argument = ArgumentType::kPrimal ) override
    {
 #if VERIPB_VERSION == 1
       if( !verification_possible )
@@ -425,7 +425,7 @@ class VeriPb : public CertificateInterface<REAL>
    void
    change_lower_bound( REAL val, int col, const Problem<REAL>& problem,
                        const Vec<int>& var_mapping, MatrixBuffer<REAL>& matrix_buffer,
-                       ArgumentType argument = ArgumentType::kPrimal )
+                       ArgumentType argument = ArgumentType::kPrimal ) override
    {
 #if VERIPB_VERSION == 1
       if( !verification_possible )
@@ -581,7 +581,7 @@ class VeriPb : public CertificateInterface<REAL>
 
    void
    dominating_columns( int dominating_column, int dominated_column,
-                       const Vec<String>& names, const Vec<int>& var_mapping)
+                       const Vec<String>& names, const Vec<int>& var_mapping) override
    {
 #if VERIPB_VERSION == 1
       if( !verification_possible )
@@ -605,7 +605,7 @@ class VeriPb : public CertificateInterface<REAL>
    virtual void
    add_probing_reasoning( bool is_upper, int causing_col, int col,
                           const Vec<String>& names,
-                          const Vec<int>& var_mapping)
+                          const Vec<int>& var_mapping) override
    {
 #if VERIPB_VERSION == 1
       if( !verification_possible )
@@ -626,7 +626,7 @@ class VeriPb : public CertificateInterface<REAL>
    }
 
    void
-   store_gcd( int row, REAL gcd )
+   store_gcd( int row, REAL gcd ) override
    {
 #if VERIPB_VERSION == 1
       if( !verification_possible )
@@ -886,7 +886,7 @@ class VeriPb : public CertificateInterface<REAL>
 
    void
    change_lhs_parallel_row( int row, REAL val, int parallel_row,
-                            const Problem<REAL>& problem )
+                            const Problem<REAL>& problem ) override
    {
 #if VERIPB_VERSION == 1
       if( !verification_possible )
@@ -985,7 +985,7 @@ class VeriPb : public CertificateInterface<REAL>
    }
 
    void
-   change_lhs_inf( int row )
+   change_lhs_inf( int row ) override
    {
 #if VERIPB_VERSION == 1
       if( !verification_possible )
@@ -996,7 +996,7 @@ class VeriPb : public CertificateInterface<REAL>
    }
 
    void
-   change_rhs_inf( int row )
+   change_rhs_inf( int row ) override
    {
 #if VERIPB_VERSION == 1
       if( !verification_possible )
@@ -1010,7 +1010,7 @@ class VeriPb : public CertificateInterface<REAL>
    change_matrix_entry( int row, int col, REAL new_val,
                         const SparseVectorView<REAL>& data, RowFlags& rflags,
                         REAL lhs, REAL rhs, const Vec<String>& names,
-                        const Vec<int>& var_mapping, ArgumentType argument )
+                        const Vec<int>& var_mapping, ArgumentType argument ) override
    {
 #if VERIPB_VERSION == 1
       if( !verification_possible )
@@ -1170,7 +1170,7 @@ class VeriPb : public CertificateInterface<REAL>
 
    void
    sparsify( int eqrow, int candrow, REAL scale,
-             const Problem<REAL>& currentProblem )
+             const Problem<REAL>& currentProblem ) override
    {
 #if VERIPB_VERSION == 1
       if( !verification_possible )
@@ -1401,7 +1401,7 @@ class VeriPb : public CertificateInterface<REAL>
    void
    substitute( int col, const SparseVectorView<REAL>& equality, REAL offset, REAL old_obj_coeff,
                const Problem<REAL>& currentProblem, const Vec<String>& names,
-               const Vec<int>& var_mapping )   {
+               const Vec<int>& var_mapping ) override {
 #if VERIPB_VERSION == 1
       if( !verification_possible )
          return;
@@ -1505,7 +1505,7 @@ class VeriPb : public CertificateInterface<REAL>
    }
 
    void
-   substitute( int col, int substituted_row, REAL old_obj_coeff, const Problem<REAL>& currentProblem, const Vec<int>& var_mapping )   {
+   substitute( int col, int substituted_row, REAL old_obj_coeff, const Problem<REAL>& currentProblem, const Vec<int>& var_mapping )  override {
 #if VERIPB_VERSION == 1
       if( !verification_possible || (matrix.getColumnCoefficients( col ).getLength() == 1 && !is_optimization_problem))
          return;
@@ -1603,7 +1603,7 @@ class VeriPb : public CertificateInterface<REAL>
    };
 
    void
-   mark_row_redundant( int row )
+   mark_row_redundant( int row ) override
    {
 #if VERIPB_VERSION == 1
       if( !verification_possible )
@@ -1634,7 +1634,7 @@ class VeriPb : public CertificateInterface<REAL>
    }
 
    void
-   log_solution( const Solution<REAL>& orig_solution, const Vec<String>& names, REAL origobj )
+   log_solution( const Solution<REAL>& orig_solution, const Vec<String>& names, REAL origobj ) override
    {
 #if VERIPB_VERSION == 1
       if( !verification_possible )
@@ -1667,13 +1667,13 @@ class VeriPb : public CertificateInterface<REAL>
    };
 
    void
-   setInfeasibleCause(int col)
+   setInfeasibleCause(int col) override
    {
       cause = col;
    }
 
    void
-   infeasible( )
+   infeasible( ) override
    {
 #if VERIPB_VERSION == 1
       if( !verification_possible )
@@ -1690,7 +1690,7 @@ class VeriPb : public CertificateInterface<REAL>
    };
 
    void
-   infeasible( const Vec<int>& colmapping, const Vec<String>& names )
+   infeasible( const Vec<int>& colmapping, const Vec<String>& names ) override
    {
 #if VERIPB_VERSION == 1
       if( !verification_possible )
@@ -1713,34 +1713,7 @@ class VeriPb : public CertificateInterface<REAL>
       end_proof( 0 ) ;
    }
 
-   void
-   end_proof( int obj )
-   {
-#if VERIPB_VERSION >= 2
-      proof_out << OUTPUT << NONE << " \n";
-      proof_out << CONCLUSION;
-      if(is_optimization_problem)
-      {
-         if( status > 0 )
-            proof_out << "BOUNDS " << obj << " " << obj;
-         else if( status < 0 )
-            proof_out << " BOUNDS INF INF";
-         else
-            proof_out << NONE;
-      }
-      else
-      {
-         if( status > 0 )
-            proof_out << "SAT";
-         else if( status < 0 )
-            proof_out << "UNSAT";
-         else
-            proof_out << NONE;
-      }
-      proof_out << "\n";
-      proof_out << "end pseudo-Boolean proof\n";
-#endif
-   };
+
 
    void
    symmetries( const SymmetryStorage& symmetries, const Vec<String>& names,
@@ -1833,12 +1806,41 @@ class VeriPb : public CertificateInterface<REAL>
    }
 
    void
-   log_forcing_row ( int row ) {
+   log_forcing_row ( int row ) override {
       row_forcing_propagation = row;
    }
 
 
  private:
+
+   void
+   end_proof( int obj )
+   {
+#if VERIPB_VERSION >= 2
+      proof_out << OUTPUT << NONE << " \n";
+      proof_out << CONCLUSION;
+      if(is_optimization_problem)
+      {
+         if( status > 0 )
+            proof_out << "BOUNDS " << obj << " " << obj;
+         else if( status < 0 )
+            proof_out << " BOUNDS INF INF";
+         else
+            proof_out << NONE;
+      }
+      else
+      {
+         if( status > 0 )
+            proof_out << "SAT";
+         else if( status < 0 )
+            proof_out << "UNSAT";
+         else
+            proof_out << NONE;
+      }
+      proof_out << "\n";
+      proof_out << "end pseudo-Boolean proof\n";
+#endif
+   };
 
 #if VERIPB_VERSION >= 2
    
