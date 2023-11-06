@@ -118,7 +118,7 @@ class VeriPb : public CertificateInterface<REAL>
    HashMap<int, int> changed_entries_during_current_tsxs{};
 
    const Vec<int>&
-   getRowScalingFactor()
+   getRowScalingFactor() override
    {
       return scale_factor;
    }
