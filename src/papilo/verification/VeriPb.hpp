@@ -1893,7 +1893,7 @@ class VeriPb : public CertificateInterface<REAL>
       proof_out << OBJECTIVE;
       for( int col = 0; col < ncols; ++col )
       {
-         double obj = objective_coefficients[col];
+         REAL obj = objective_coefficients[col];
          if( obj == 0 )
             continue;
          proof_out << abs(num.round_to_int( obj )) << " ";
