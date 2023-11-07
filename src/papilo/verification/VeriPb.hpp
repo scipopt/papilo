@@ -1889,15 +1889,22 @@ class VeriPb : public CertificateInterface<REAL>
       if(!is_optimization_problem)
          return;
       auto objective_coefficients = stored_objective.coefficients;
-      REAL substscale = 0;
+      REAL sum = 0;
       proof_out << OBJECTIVE;
       for( int col = 0; col < ncols; ++col )
       {
-         if( objective_coefficients[col] == 0 )
+         double obj = objective_coefficients[col];
+         if( obj == 0 )
             continue;
-         proof_out << abs(num.round_to_int( objective_coefficients[col] )) << " " << names[var_mapping[col]]+ " ";
+         proof_out << abs(num.round_to_int( obj )) << " ";
+         if( obj < 0)
+         {
+            proof_out << NEGATED;
+            sum += abs(obj);
+         }
+         proof_out << names[var_mapping[col]]+ " ";
       }
-      proof_out << " " << num.round_to_int(stored_objective.offset);
+      proof_out << " " << num.round_to_int(stored_objective.offset - sum);
       proof_out << ";\n";
    }
 #endif
