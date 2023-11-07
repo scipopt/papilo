@@ -325,6 +325,11 @@ Substitution<REAL>::execute( const Problem<REAL>& problem,
 
             reductions.lockColBounds( col );
 
+            if( lbrowlock != -1 )
+               reductions.impliedBounds( true, lbrowlock );
+            if( ubrowlock != -1 )
+               reductions.impliedBounds( false, ubrowlock );
+
             reductions.aggregateFreeCol( col, row );
             const int* indices = colvec.getIndices();
             const int len = colvec.getLength();

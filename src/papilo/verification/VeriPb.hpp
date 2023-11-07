@@ -107,6 +107,8 @@ class VeriPb : public CertificateInterface<REAL>
    int skip_changing_lhs = UNKNOWN;
    bool saturation_already_called = false;
    std::pair<int, int> row_with_gcd = {UNKNOWN, UNKNOWN};
+   int row_implying_lb = UNKNOWN;
+   int row_implying_ub = UNKNOWN;
 
 
 #ifdef VERIPB_DEBUG
@@ -219,6 +221,8 @@ class VeriPb : public CertificateInterface<REAL>
       changed_entries_during_current_tsxs.clear();
       saturation_already_called = false;
       row_with_gcd = {UNKNOWN, UNKNOWN};
+      row_implying_lb = UNKNOWN;
+      row_implying_ub = UNKNOWN;
 #ifdef VERIPB_DEBUG
       validate_row = UNKNOWN;
 #endif
@@ -635,6 +639,17 @@ class VeriPb : public CertificateInterface<REAL>
       assert( num.isIntegral( gcd ) );
       row_with_gcd = {row, num.round_to_int(gcd)};
    };
+
+   void
+   store_implied_bound( int row, REAL lowerbound ) override
+   {
+      assert(lowerbound == 1 || lowerbound == 0 );
+      if( lowerbound == 1 )
+         row_implying_lb = row;
+      else
+         row_implying_ub = row;
+   };
+
 
    void
    change_rhs( int row, REAL val, const SparseVectorView<REAL>& data,
@@ -1561,6 +1576,34 @@ class VeriPb : public CertificateInterface<REAL>
             break;
          }
       }
+      const String name = currentProblem.getVariableNames()[var_mapping[col]];
+#if VERIPB_VERSION >= 2
+      int implied_constraint_lhs;
+      int implied_constraint_rhs;
+      if( row_implying_lb != UNKNOWN || row_implying_ub != UNKNOWN)
+      {
+         if( substitute_factor > 0)
+         {
+            proof_out << POL << lhs_row_mapping[substituted_row] << " " << NEGATED << name << " " << abs(num.round_to_int(substitute_factor)) << " * +\n";
+            proof_out << MOVE_LAST_CONS_TO_CORE;
+            proof_out << POL << rhs_row_mapping[substituted_row] << " " << name << " " << abs(num.round_to_int(substitute_factor)) << " * +\n";
+            proof_out << MOVE_LAST_CONS_TO_CORE;
+            implied_constraint_lhs = next_constraint_id;
+            implied_constraint_rhs = next_constraint_id + 1;
+         }
+         else
+         {
+            proof_out << POL << rhs_row_mapping[substituted_row] << " " << NEGATED << name << " " << abs(num.round_to_int(substitute_factor)) << " * +\n";
+            proof_out << MOVE_LAST_CONS_TO_CORE;
+            proof_out << POL << lhs_row_mapping[substituted_row] << " " << name << " " << abs(num.round_to_int(substitute_factor)) << " * +\n";
+            proof_out << MOVE_LAST_CONS_TO_CORE;
+            implied_constraint_rhs = next_constraint_id;
+            implied_constraint_lhs = next_constraint_id + 1;
+         }
+         next_constraint_id++;
+         next_constraint_id++;
+      }
+#endif
       substitute( col, substitute_factor, lhs_row_mapping[substituted_row],
                   rhs_row_mapping[substituted_row], currentProblem,
                   substituted_row );
@@ -1582,9 +1625,24 @@ class VeriPb : public CertificateInterface<REAL>
                    << lhs_row_mapping[substituted_row] << "\n";
          proof_out << DELETE_CONS << rhs_row_mapping[substituted_row] << " ; ";
 #if VERIPB_VERSION >= 2
-         int value = (substitute_factor < 0) ? 1 : 0;
-         const String name = currentProblem.getVariableNames()[var_mapping[col]];
-         proof_out << name << " -> " << value;
+         if( substitute_factor > 0)
+         {
+            proof_out << name << " -> 0";
+            if( row_implying_lb != UNKNOWN)
+            {
+               proof_out << " ; begin\n\t" << POL << rhs_row_mapping[row_implying_lb] << " " << (next_constraint_id+1) << " +\nend";
+               next_constraint_id += 2;
+            }
+         }
+         else
+         {
+            proof_out << name << " -> 1";
+            if( row_implying_ub != UNKNOWN)
+            {
+               proof_out << " ; begin\n\t" << POL << lhs_row_mapping[row_implying_ub] << " " << (next_constraint_id+1) << " +\nend";
+               next_constraint_id += 2;
+            }
+         }
 #endif
          proof_out << "\n";
 
@@ -1592,8 +1650,24 @@ class VeriPb : public CertificateInterface<REAL>
                 << rhs_row_mapping[substituted_row] << "\n";
          proof_out << DELETE_CONS << lhs_row_mapping[substituted_row]  << " ; ";
 #if VERIPB_VERSION >= 2
-         value = (substitute_factor > 0) ? 1 : 0;
-         proof_out << name << " -> " << value;
+         if( substitute_factor < 0)
+         {
+            proof_out << name << " -> 0";
+            if( row_implying_lb != UNKNOWN)
+            {
+               proof_out << " ; begin\n\t" << POL << lhs_row_mapping[row_implying_lb] << " " << (next_constraint_id+1) << " +\nend";
+               next_constraint_id += 2;
+            }
+         }
+         else
+         {
+            proof_out << name << " -> 1";
+            if( row_implying_ub != UNKNOWN)
+            {
+               proof_out << " ; begin\n\t" << POL << rhs_row_mapping[row_implying_ub] << " " << (next_constraint_id+1) << " +\nend";
+               next_constraint_id += 2;
+            }
+         }
 #endif
          proof_out << "\n";
 

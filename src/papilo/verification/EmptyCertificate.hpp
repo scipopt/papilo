@@ -115,6 +115,9 @@ class EmptyCertificate : public CertificateInterface<REAL>
    store_gcd( int row, REAL gcd ) {};
 
    void
+   store_implied_bound( int row, REAL lowerbound ) {};
+
+   void
    change_lhs_inf( int row ){}
 
    void

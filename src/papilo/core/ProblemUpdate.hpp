@@ -2884,6 +2884,12 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
          case RowReduction::CERTIFICATE_RHS_GCD:
          {
             certificate_interface->store_gcd(reduction.row, reduction.newval);
+            break;
+         }
+         case RowReduction::IMPLIED_BOUNDS:
+         {
+            certificate_interface->store_implied_bound(reduction.row, reduction.newval);
+            break;
          }
          default:
             break;

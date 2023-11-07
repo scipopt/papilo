@@ -71,6 +71,7 @@ struct RowReduction
       REASON_FOR_LESS_RESTRICTIVE_BOUND_CHANGE = -12,
       /// needed for the certificate
       CERTIFICATE_RHS_GCD = -14,
+      IMPLIED_BOUNDS = -15 ,
       /// needed for the certificate and dual postsolve
       SAVE_ROW = -13,
    };
@@ -338,6 +339,12 @@ class Reductions
 
       reductions.emplace_back( dominated_column, ColReduction::CERTIFICATE_DOMINANCE, dominating_column );
       ++transactions.back().nlocks;
+   }
+
+   void
+   impliedBounds( bool lower_bound, int row )
+   {
+      reductions.emplace_back( lower_bound ? 1 : 0, row, RowReduction::IMPLIED_BOUNDS );
    }
 
    void reason_probing_upper_bound_change(int causing_col, int col)

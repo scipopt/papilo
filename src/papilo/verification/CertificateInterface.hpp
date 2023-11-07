@@ -92,6 +92,9 @@ class CertificateInterface
    store_gcd( int row, REAL gcd ) = 0;
 
    virtual void
+   store_implied_bound( int row, REAL lowerbound ) = 0;
+
+   virtual void
    change_rhs_parallel_row( int row, REAL val, int parallel_row,
                             const Problem<REAL>& problem,
                             const Vec<int>& var_mapping ) = 0;
