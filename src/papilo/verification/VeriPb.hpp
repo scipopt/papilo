@@ -1059,15 +1059,10 @@ class VeriPb : public CertificateInterface<REAL>
             proof_out << DELETE_CONS << lhs_row_mapping[row];
             lhs_row_mapping[row] = next_constraint_id;
 #if VERIPB_VERSION >= 2
-            proof_out << " ; ; begin \n\t";
             if( old_value > 0 )
-               proof_out << POL << lhs_row_mapping[row] << " "
-                         << name << " " << abs( diff ) << " * +\n";
+               proof_out << " ; " << name << " -> 1" ;
             else
-               proof_out << POL << lhs_row_mapping[row] << " " << NEGATED
-                         << name << " " << abs( diff ) << " * +\n";
-            proof_out << "end";
-            next_constraint_id += 2;
+               proof_out << " ; " << name << " -> 0" ;
 #endif
             proof_out << "\n";
          }
@@ -1092,15 +1087,10 @@ class VeriPb : public CertificateInterface<REAL>
             proof_out << DELETE_CONS << rhs_row_mapping[row];
             rhs_row_mapping[row] = next_constraint_id;
 #if VERIPB_VERSION >= 2
-            proof_out << " ; ; begin \n\t";
             if( old_value < 0 )
-               proof_out << POL << rhs_row_mapping[row] << " "
-                         << name << " " << abs( diff ) << " * +\n";
+               proof_out << " ; " << name << " -> 1" ;
             else
-               proof_out << POL << rhs_row_mapping[row] << " " << NEGATED
-                         << name << " " << abs( diff ) << " * +\n";
-            proof_out << "end";
-            next_constraint_id += 2;
+               proof_out << " ; " << name << " -> 0" ;
 #endif
             proof_out << "\n";
          }
