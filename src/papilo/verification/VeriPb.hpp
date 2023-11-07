@@ -1056,8 +1056,20 @@ class VeriPb : public CertificateInterface<REAL>
 #if VERIPB_VERSION>= 2
             proof_out << MOVE_LAST_CONS_TO_CORE;
 #endif
-            proof_out << DELETE_CONS << lhs_row_mapping[row] << "\n";
+            proof_out << DELETE_CONS << lhs_row_mapping[row];
             lhs_row_mapping[row] = next_constraint_id;
+#if VERIPB_VERSION >= 2
+            proof_out << " ; ; begin \n\t";
+            if( old_value > 0 )
+               proof_out << POL << lhs_row_mapping[row] << " "
+                         << name << " " << abs( diff ) << " * +\n";
+            else
+               proof_out << POL << lhs_row_mapping[row] << " " << NEGATED
+                         << name << " " << abs( diff ) << " * +\n";
+            proof_out << "end";
+            next_constraint_id += 2;
+#endif
+            proof_out << "\n";
          }
          if( !rflags.test( RowFlag::kRhsInf ) )
          {
@@ -1077,8 +1089,20 @@ class VeriPb : public CertificateInterface<REAL>
 #if VERIPB_VERSION>= 2
             proof_out << MOVE_LAST_CONS_TO_CORE;
 #endif
-            proof_out << DELETE_CONS << rhs_row_mapping[row] << "\n";
+            proof_out << DELETE_CONS << rhs_row_mapping[row];
             rhs_row_mapping[row] = next_constraint_id;
+#if VERIPB_VERSION >= 2
+            proof_out << " ; ; begin \n\t";
+            if( old_value < 0 )
+               proof_out << POL << rhs_row_mapping[row] << " "
+                         << name << " " << abs( diff ) << " * +\n";
+            else
+               proof_out << POL << rhs_row_mapping[row] << " " << NEGATED
+                         << name << " " << abs( diff ) << " * +\n";
+            proof_out << "end";
+            next_constraint_id += 2;
+#endif
+            proof_out << "\n";
          }
 
          return;
@@ -1864,7 +1888,6 @@ class VeriPb : public CertificateInterface<REAL>
             continue;
          stored_objective.coefficients[indices[i]] -= factor * values[i];
       }
-      //TODO unsure if += is here correct
       stored_objective.offset += rhs * factor ;
       stored_objective.coefficients[sub_col] = 0;
    }
@@ -1967,9 +1990,9 @@ class VeriPb : public CertificateInterface<REAL>
 #if VERIPB_VERSION >= 2
                proof_out << " ; ; begin \n\t";
                if( substitute_factor * factor > 0 )
-                  proof_out << POL << rhs_id << " " << rhs_row_mapping[row] << " + " << num.round_to_int( abs(val )) << " d\n";
+                  proof_out << POL << " " << rhs_row_mapping[row] << " " << rhs_id <<  " " << num.round_to_int( abs(val )) << " * + \n";
                else
-                  proof_out << POL << lhs_id << " " << rhs_row_mapping[row] << " + " << num.round_to_int( abs(val )) << " d\n";
+                  proof_out << POL << " " << rhs_row_mapping[row] << " " << lhs_id << " " <<  num.round_to_int( abs(val )) << " * + \n";
 
                proof_out << "end";
                next_constraint_id += 2;
@@ -1994,9 +2017,9 @@ class VeriPb : public CertificateInterface<REAL>
 #if VERIPB_VERSION >= 2
                proof_out << " ; ; begin \n\t";
                if( substitute_factor * factor > 0 )
-                  proof_out << POL << lhs_id << " " << lhs_row_mapping[row] << " + " << num.round_to_int( abs(val )) << " *\n";
+                  proof_out << POL << lhs_row_mapping[row] << " " << lhs_id << " " << num.round_to_int( abs(val )) << " * + \n";
                else
-                  proof_out << POL << rhs_id << " " << lhs_row_mapping[row] << " + " << num.round_to_int( abs(val )) << " *\n";
+                  proof_out << POL << lhs_row_mapping[row] << " " << rhs_id << " " <<  num.round_to_int( abs(val )) << " * + \n";
                proof_out << "end";
                next_constraint_id += 2;
 #endif
@@ -2013,11 +2036,9 @@ class VeriPb : public CertificateInterface<REAL>
                next_constraint_id++;
                assert( rhs_row_mapping[row] != UNKNOWN );
                if( substitute_factor * factor > 0 )
-                  proof_out << POL << rhs_row_mapping[row] << " " << val
-                            << " * " << lhs_id << " +\n";
+                  proof_out << POL << rhs_row_mapping[row] << " " << val << " * " << lhs_id << " +\n";
                else
-                  proof_out << POL << rhs_row_mapping[row] << " " << val
-                            << " * " << rhs_id << " +\n";
+                  proof_out << POL << rhs_row_mapping[row] << " " << val << " * " << rhs_id << " +\n";
 #if VERIPB_VERSION >= 2
                proof_out << MOVE_LAST_CONS_TO_CORE;
 #endif
@@ -2026,9 +2047,9 @@ class VeriPb : public CertificateInterface<REAL>
 #if VERIPB_VERSION >= 2
                proof_out << " ; ; begin \n\t";
                if( substitute_factor * factor > 0 )
-                  proof_out << POL << rhs_id << " " << rhs_row_mapping[row] << " + " << num.round_to_int( abs(val )) << " d\n";
+                  proof_out << POL << rhs_row_mapping[row] << " " << rhs_id << " "  << num.round_to_int( abs(val )) << " * +\n";
                else
-                  proof_out << POL << lhs_id << " " << rhs_row_mapping[row] << " + " << num.round_to_int( abs(val )) << " d\n";
+                  proof_out << POL << rhs_row_mapping[row] << " " << lhs_id << " " << num.round_to_int( abs(val )) << " * + \n";
                proof_out << "end";
                next_constraint_id += 2;
 #endif
@@ -2053,9 +2074,9 @@ class VeriPb : public CertificateInterface<REAL>
 #if VERIPB_VERSION >= 2
                proof_out << " ; ; begin \n\t";
                if( substitute_factor * factor > 0 )
-                  proof_out << POL << rhs_id << " " << lhs_row_mapping[row] << " + " << num.round_to_int( abs(val )) << " d\n";
+                  proof_out << POL << lhs_row_mapping[row] << " " << rhs_id << " " << num.round_to_int( abs(val )) << " * + \n";
                else
-                  proof_out << POL << lhs_id << " " << lhs_row_mapping[row] << " + " << num.round_to_int( abs(val )) << " d\n";
+                  proof_out << POL << lhs_row_mapping[row] << " " << lhs_id << " " << num.round_to_int( abs(val )) << " * + \n";
                proof_out << "end";
                next_constraint_id += 2;
 #endif
