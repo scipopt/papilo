@@ -1139,13 +1139,23 @@ class VeriPb : public CertificateInterface<REAL>
 #endif
          if( !rflags.test( RowFlag::kRhsInf ) )
          {
-            proof_out << DELETE_CONS << rhs_row_mapping[row] << "\n";
+            proof_out << DELETE_CONS << rhs_row_mapping[row];
             rhs_row_mapping[row] = next_constraint_id;
+#if VERIPB_VERSION >= 2
+            proof_out << " ; ; begin \n\t" << POL << rhs_row_mapping[row] << " -1 +\nend -1";
+            next_constraint_id += 2;
+#endif
+            proof_out << "\n";
          }
          else
          {
-            proof_out << DELETE_CONS << lhs_row_mapping[row] << "\n";
+            proof_out << DELETE_CONS << lhs_row_mapping[row];
             lhs_row_mapping[row] = next_constraint_id;
+#if VERIPB_VERSION >= 2
+            proof_out << " ; ; begin \n\t" << POL << lhs_row_mapping[row] << " -1 +\nend -1";
+            next_constraint_id += 2;
+#endif
+            proof_out << "\n";
          }
          skip_changing_lhs = row;
          skip_changing_rhs = row;
