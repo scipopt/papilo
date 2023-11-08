@@ -1554,19 +1554,6 @@ class VeriPb : public CertificateInterface<REAL>
       auto col_vec = matrix.getColumnCoefficients( col );
       auto row_data = matrix.getRowCoefficients( substituted_row );
 
-#if VERIPB_VERSION >= 2
-      proof_out<< MOVE_CONS_TO_CORE << lhs_row_mapping[substituted_row] << "\n";
-      proof_out<< MOVE_CONS_TO_CORE << rhs_row_mapping[substituted_row] << "\n";
-#endif
-
-      if( col_vec.getLength() == 1 )
-      {
-         apply_substitution_to_objective(col, row_data, matrix.getLeftHandSides()[substituted_row]);
-         if( old_obj_coeff != 0)
-            print_objective( currentProblem.getVariableNames(), var_mapping,
-                             currentProblem.getNCols() );
-         return;
-      }
 #if VERIPB_VERSION == 1
       if( currentProblem.getConstraintMatrix().getRowSizes()[substituted_row] > 2 && is_optimization_problem)
       {
@@ -1614,9 +1601,17 @@ class VeriPb : public CertificateInterface<REAL>
          next_constraint_id++;
       }
 #endif
-      substitute( col, substitute_factor, lhs_row_mapping[substituted_row],
-                  rhs_row_mapping[substituted_row], currentProblem,
-                  substituted_row );
+      if( col_vec.getLength() != 1)
+      {
+         substitute( col, substitute_factor, lhs_row_mapping[substituted_row],
+                     rhs_row_mapping[substituted_row], currentProblem,
+                     substituted_row );
+      }
+      else
+      {
+         skip_deleting_lhs_constraint_id = lhs_row_mapping[substituted_row];
+         skip_deleting_rhs_constraint_id = rhs_row_mapping[substituted_row];
+      }
       assert( !matrix.getRowFlags()[substituted_row].test( RowFlag::kRhsInf ) );
       assert( !matrix.getRowFlags()[substituted_row].test( RowFlag::kLhsInf ) );
 #if VERIPB_VERSION == 1
