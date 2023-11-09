@@ -92,6 +92,9 @@ class CertificateInterface
    store_gcd( int row, REAL gcd ) = 0;
 
    virtual void
+   store_parallel_row( int row ) = 0;
+
+   virtual void
    store_implied_bound( int row, REAL lowerbound ) = 0;
 
    virtual void
@@ -110,7 +113,7 @@ class CertificateInterface
    change_rhs_inf( int row ) = 0;
 
    virtual void
-   mark_row_redundant( int row ) = 0;
+   mark_row_redundant( int row, const Problem<REAL>& currentProblem, ArgumentType argument = ArgumentType::kPrimal  ) = 0;
 
    virtual void
    log_forcing_row ( int row ) = 0;

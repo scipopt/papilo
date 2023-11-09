@@ -34,6 +34,7 @@ enum class ArgumentType : int
    kWeakening = 4,
    kSaturation = 5,
    kPropagation = 6,
+   kRedundant = 7,
 };
 
 #endif

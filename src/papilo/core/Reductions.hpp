@@ -72,6 +72,7 @@ struct RowReduction
       /// needed for the certificate
       CERTIFICATE_RHS_GCD = -14,
       IMPLIED_BOUNDS = -15 ,
+      PARALLEL_ROW = -16 ,
       /// needed for the certificate and dual postsolve
       SAVE_ROW = -13,
    };
@@ -202,6 +203,12 @@ class Reductions
 
       reductions.emplace_back( 0.0, row, RowReduction::LOCKED );
       ++transactions.back().nlocks;
+   }
+
+   void
+   parallel_remaining_row ( int row )
+   {
+      reductions.emplace_back( 0.0, row, RowReduction::PARALLEL_ROW );
    }
 
    void

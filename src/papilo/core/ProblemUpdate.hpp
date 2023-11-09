@@ -215,7 +215,7 @@ class ProblemUpdate
    changeUB( int col, REAL val, ArgumentType argument = ArgumentType::kPrimal );
 
    void
-   markRowRedundant( int row )
+   markRowRedundant( int row, ArgumentType argument = ArgumentType::kPrimal)
    {
       RowFlags& rflags = problem.getRowFlags()[row];
       if( !rflags.test( RowFlag::kRedundant ) )
@@ -225,7 +225,7 @@ class ProblemUpdate
          rflags.set( RowFlag::kRedundant );
       }
       postsolve.storeRedundantRow( row );
-      certificate_interface->mark_row_redundant(row);
+      certificate_interface->mark_row_redundant(row, problem, argument);
    }
 
    void
@@ -2044,6 +2044,10 @@ ProblemUpdate<REAL>::checkTransactionConflicts( const Reduction<REAL>* first,
          case RowReduction::RHS:
          case RowReduction::RHS_LESS_RESTRICTIVE:
          case RowReduction::SAVE_ROW:
+         case RowReduction::IMPLIED_BOUNDS:
+         case RowReduction::PARALLEL_ROW:
+         case RowReduction::REASON_FOR_LESS_RESTRICTIVE_BOUND_CHANGE:
+         case RowReduction::CERTIFICATE_RHS_GCD:
             break;
          case RowReduction::SPARSIFY:
             if( postponeSubstitutions )
@@ -2816,7 +2820,7 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
             if( !rflags[reduction.row].test( RowFlag::kRedundant ) )
             {
                setRowState( reduction.row, State::kBoundsModified );
-               markRowRedundant( reduction.row );
+               markRowRedundant( reduction.row, argument );
             }
             break;
          }
@@ -2884,6 +2888,11 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
          case RowReduction::CERTIFICATE_RHS_GCD:
          {
             certificate_interface->store_gcd(reduction.row, reduction.newval);
+            break;
+         }
+         case RowReduction::PARALLEL_ROW:
+         {
+            certificate_interface->store_parallel_row( reduction.row );
             break;
          }
          case RowReduction::IMPLIED_BOUNDS:

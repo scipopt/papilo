@@ -116,6 +116,7 @@ class ParallelRowDetection : public PresolveMethod<REAL>
    {
       this->setName( "parallelrows" );
       this->setTiming( PresolverTiming::kMedium );
+      this->setArgument( ArgumentType::kRedundant );
    }
 
    PresolveStatus
@@ -468,6 +469,7 @@ ParallelRowDetection<REAL>::execute( const Problem<REAL>& problem,
          if( parallel_row != remaining_row )
             reductions.lockRow( parallel_row );
       }
+      reductions.parallel_remaining_row( remaining_row );
       if( lhs_infinity != rflags[remaining_row].test( RowFlag::kLhsInf ) ||
           lhs_value != lhs_values[remaining_row] )
       {

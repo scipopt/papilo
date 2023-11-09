@@ -115,6 +115,9 @@ class EmptyCertificate : public CertificateInterface<REAL>
    store_gcd( int row, REAL gcd ) {};
 
    void
+   store_parallel_row( int row ) {};
+
+   void
    store_implied_bound( int row, REAL lowerbound ) {};
 
    void
@@ -127,7 +130,7 @@ class EmptyCertificate : public CertificateInterface<REAL>
    log_forcing_row ( int row ) {}
 
    void
-   mark_row_redundant( int row )
+   mark_row_redundant( int row, const Problem<REAL>& currentProblem, ArgumentType argument = ArgumentType::kPrimal  )
    {
    }
 

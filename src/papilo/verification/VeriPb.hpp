@@ -109,6 +109,7 @@ class VeriPb : public CertificateInterface<REAL>
    std::pair<int, int> row_with_gcd = {UNKNOWN, UNKNOWN};
    int row_implying_lb = UNKNOWN;
    int row_implying_ub = UNKNOWN;
+   int parallel_remaining_row = UNKNOWN;
 
 
 #ifdef VERIPB_DEBUG
@@ -223,6 +224,7 @@ class VeriPb : public CertificateInterface<REAL>
       row_with_gcd = {UNKNOWN, UNKNOWN};
       row_implying_lb = UNKNOWN;
       row_implying_ub = UNKNOWN;
+      parallel_remaining_row = UNKNOWN;
 #ifdef VERIPB_DEBUG
       validate_row = UNKNOWN;
 #endif
@@ -638,6 +640,12 @@ class VeriPb : public CertificateInterface<REAL>
 #endif
       assert( num.isIntegral( gcd ) );
       row_with_gcd = {row, num.round_to_int(gcd)};
+   };
+
+   void
+   store_parallel_row( int row )
+   {
+      parallel_remaining_row = row;
    };
 
    void
@@ -1696,7 +1704,7 @@ class VeriPb : public CertificateInterface<REAL>
    };
 
    void
-   mark_row_redundant( int row ) override
+   mark_row_redundant( int row, const Problem<REAL>& currentProblem, ArgumentType argument = ArgumentType::kPrimal ) override
    {
 #if VERIPB_VERSION == 1
       if( !verification_possible )
@@ -1711,7 +1719,20 @@ class VeriPb : public CertificateInterface<REAL>
          else if( lhs_row_mapping[row] == -skip_deleting_rhs_constraint_id )
             skip_deleting_rhs_constraint_id = UNKNOWN;
          else
-            proof_out << DELETE_CONS << lhs_row_mapping[row] << "\n";
+         {
+            proof_out << DELETE_CONS << lhs_row_mapping[row];
+            if(argument == ArgumentType::kRedundant)
+            {
+               assert(parallel_remaining_row != UNKNOWN);
+               int coeff_remaining = num.round_to_int(currentProblem.getConstraintMatrix().getRowCoefficients(parallel_remaining_row).getValues()[0]);
+               int coeff = num.round_to_int(currentProblem.getConstraintMatrix().getRowCoefficients(row).getValues()[0]);
+               int use_row_to_proof = lhs_row_mapping[parallel_remaining_row];
+               if(coeff/coeff_remaining <1)
+                  use_row_to_proof = rhs_row_mapping[parallel_remaining_row];
+               proof_out << " ; ; begin\n\t"<< POL << use_row_to_proof << " " << abs(coeff_remaining) << " * -1 " << abs(coeff) << " * +\nend -1";
+            }
+            proof_out << "\n";
+         }
          lhs_row_mapping[row] = UNKNOWN;
       }
       if( rhs_row_mapping[row] != UNKNOWN )
@@ -1721,8 +1742,26 @@ class VeriPb : public CertificateInterface<REAL>
          else if( rhs_row_mapping[row] == skip_deleting_rhs_constraint_id )
             skip_deleting_rhs_constraint_id = UNKNOWN;
          else
-            proof_out << DELETE_CONS << rhs_row_mapping[row] << "\n";
-         rhs_row_mapping[row] = UNKNOWN;
+         {
+            proof_out << DELETE_CONS << rhs_row_mapping[row];
+            if( argument == ArgumentType::kRedundant )
+            {
+               assert( parallel_remaining_row != UNKNOWN );
+               int coeff_remaining = num.round_to_int(
+                   currentProblem.getConstraintMatrix()
+                       .getRowCoefficients( parallel_remaining_row )
+                       .getValues()[0] );
+               int coeff = num.round_to_int( currentProblem.getConstraintMatrix()
+                                         .getRowCoefficients( row )
+                                         .getValues()[0] );
+               int use_row_to_proof = rhs_row_mapping[parallel_remaining_row];
+               if( coeff / coeff_remaining < 1 )
+                  use_row_to_proof = lhs_row_mapping[parallel_remaining_row];
+               proof_out << " ; ; begin\n\t" << POL << use_row_to_proof << " " << abs(coeff_remaining) << " * -1 " << abs(coeff) << " * +\nend -1";
+            }
+            proof_out << "\n";
+            rhs_row_mapping[row] = UNKNOWN;
+         }
       }
    }
 
