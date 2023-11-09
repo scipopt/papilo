@@ -133,9 +133,9 @@ TEST_CASE( "parallel-row-two-identical-equations", "[presolve]" )
 
    REQUIRE( presolveStatus == PresolveStatus::kReduced );
    REQUIRE( reductions.size() == 4 );
-   REQUIRE( reductions.getReduction( 1 ).col == RowReduction::LOCKED );
-   REQUIRE( reductions.getReduction( 1 ).row == 0 );
-   REQUIRE( reductions.getReduction( 1 ).newval == 0 );
+   REQUIRE( reductions.getReduction( 0 ).col == RowReduction::LOCKED );
+   REQUIRE( reductions.getReduction( 0 ).row == 0 );
+   REQUIRE( reductions.getReduction( 0 ).newval == 0 );
 
    REQUIRE( reductions.getReduction( 2 ).row == 2 );
    REQUIRE( reductions.getReduction( 2 ).col == RowReduction::LOCKED );
@@ -197,9 +197,9 @@ int cause = -1;
 
    REQUIRE( presolveStatus == PresolveStatus::kReduced );
    REQUIRE( reductions.size() == 4 );
-   REQUIRE( reductions.getReduction( 1 ).col == RowReduction::LOCKED );
-   REQUIRE( reductions.getReduction( 1 ).row == 2 );
-   REQUIRE( reductions.getReduction( 1 ).newval == 0 );
+   REQUIRE( reductions.getReduction( 0 ).col == RowReduction::LOCKED );
+   REQUIRE( reductions.getReduction( 0 ).row == 2 );
+   REQUIRE( reductions.getReduction( 0 ).newval == 0 );
 
    REQUIRE( reductions.getReduction( 2 ).row == 0 );
    REQUIRE( reductions.getReduction( 2 ).col == RowReduction::LOCKED );
@@ -239,9 +239,9 @@ TEST_CASE( "parallel-row-two-equations-feasible-first-row-dominant",
    REQUIRE( reductions.getReduction( 0 ).row == 0 );
    REQUIRE( reductions.getReduction( 0 ).newval == 0 );
 
-   REQUIRE( reductions.getReduction( 2 ).row == 2 );
-   REQUIRE( reductions.getReduction( 2 ).col == RowReduction::LOCKED );
-   REQUIRE( reductions.getReduction( 2 ).newval == 0 );
+   REQUIRE( reductions.getReduction( 1 ).row == 2 );
+   REQUIRE( reductions.getReduction( 1 ).col == RowReduction::LOCKED );
+   REQUIRE( reductions.getReduction( 1 ).newval == 0 );
 
    REQUIRE( reductions.getReduction( 3 ).col == RowReduction::REDUNDANT );
    REQUIRE( reductions.getReduction( 3 ).newval == 0 );
@@ -277,9 +277,9 @@ int cause = -1;
    REQUIRE( reductions.getReduction( 0 ).row == 2 );
    REQUIRE( reductions.getReduction( 0 ).newval == 0 );
 
-   REQUIRE( reductions.getReduction( 2 ).row == 0 );
-   REQUIRE( reductions.getReduction( 2 ).col == RowReduction::LOCKED );
-   REQUIRE( reductions.getReduction( 2 ).newval == 0 );
+   REQUIRE( reductions.getReduction( 1 ).row == 0 );
+   REQUIRE( reductions.getReduction( 1 ).col == RowReduction::LOCKED );
+   REQUIRE( reductions.getReduction( 1 ).newval == 0 );
 
    REQUIRE( reductions.getReduction( 3 ).col == RowReduction::REDUNDANT );
    REQUIRE( reductions.getReduction( 3 ).newval == 0 );
@@ -315,9 +315,9 @@ int cause = -1;
    REQUIRE( reductions.getReduction( 0 ).row == 0 );
    REQUIRE( reductions.getReduction( 0 ).newval == 0 );
 
-   REQUIRE( reductions.getReduction( 2 ).row == 2 );
-   REQUIRE( reductions.getReduction( 2 ).col == RowReduction::LOCKED );
-   REQUIRE( reductions.getReduction( 2 ).newval == 0 );
+   REQUIRE( reductions.getReduction( 1 ).row == 2 );
+   REQUIRE( reductions.getReduction( 1 ).col == RowReduction::LOCKED );
+   REQUIRE( reductions.getReduction( 1 ).newval == 0 );
 
    REQUIRE( reductions.getReduction( 3 ).col == RowReduction::REDUNDANT );
    REQUIRE( reductions.getReduction( 3 ).newval == 0 );
@@ -449,7 +449,7 @@ int cause = -1;
    REQUIRE( presolveStatus == PresolveStatus::kReduced );
    REQUIRE( reductions.size() == 6 );
    REQUIRE( reductions.getReduction( 0 ).col == RowReduction::LOCKED );
-   REQUIRE( reductions.getReduction( 1 ).row == 2 );
+   REQUIRE( reductions.getReduction( 0 ).row == 2 );
    REQUIRE( reductions.getReduction( 0 ).newval == 0 );
 
    REQUIRE( reductions.getReduction( 1 ).row == 0 );
