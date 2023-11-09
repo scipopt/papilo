@@ -842,12 +842,29 @@ class VeriPb : public CertificateInterface<REAL>
          // rhs_row_mapping[row] can be KNOWN for example if Singleton relaxed a
          // constraint.
          if( rhs_row_mapping[row] != UNKNOWN )
-            proof_out << DELETE_CONS << rhs_row_mapping[row] << "\n";
-         if( factor == 1 )
-            rhs_row_mapping[row] = rhs_row_mapping[parallel_row];
+         {
+            proof_out << DELETE_CONS << rhs_row_mapping[row];
+            if( factor == 1 )
+               rhs_row_mapping[row] = rhs_row_mapping[parallel_row];
+            else
+               rhs_row_mapping[row] = lhs_row_mapping[parallel_row];
+#if VERIPB_VERSION >= 2
+            int used_row = rhs_row_mapping[parallel_row];
+            if( factor < 0)
+               used_row = lhs_row_mapping[parallel_row];
+            proof_out << " ; ; begin\n\t" << POL << used_row << " -1 + \nend -1";
+            next_constraint_id+=2;
+#endif
+            proof_out << "\n";
+         }
          else
-            rhs_row_mapping[row] = lhs_row_mapping[parallel_row];
-         skip_deleting_rhs_constraint_id = (int) factor * rhs_row_mapping[row];
+         {
+            if( factor == 1 )
+               rhs_row_mapping[row] = rhs_row_mapping[parallel_row];
+            else
+               rhs_row_mapping[row] = lhs_row_mapping[parallel_row];
+         }
+         skip_deleting_rhs_constraint_id = rhs_row_mapping[row];
       }
       else
       {
@@ -861,20 +878,40 @@ class VeriPb : public CertificateInterface<REAL>
             }
             assert( rhs_row_mapping[parallel_row] != UNKNOWN );
             next_constraint_id++;
-            proof_out << POL << rhs_row_mapping[parallel_row] << " " <<  (int) factor
-                      << " *\n";
+            proof_out << POL << rhs_row_mapping[parallel_row] << " " <<  (int) factor << " *\n";
+#if VERIPB_VERSION >= 2
             proof_out << MOVE_LAST_CONS_TO_CORE;
+#endif
             if( rhs_row_mapping[row] != UNKNOWN )
+            {
                proof_out << DELETE_CONS << rhs_row_mapping[row] << "\n";
-            rhs_row_mapping[row] = next_constraint_id;
+               rhs_row_mapping[row] = next_constraint_id;
+#if VERIPB_VERSION >= 2
+               int used_row = rhs_row_mapping[parallel_row];
+               proof_out << " ; ; begin\n\t" << POL << used_row << " " << factor <<" * -1 + \nend -1";
+               next_constraint_id += 2;
+#endif
+               proof_out << "\n";
+            }
+            else
+               rhs_row_mapping[row] = next_constraint_id;
+
             // scale also lhs
             if( lhs_row_mapping[row] != UNKNOWN && is_not_integral )
             {
                next_constraint_id++;
                proof_out << POL << lhs_row_mapping[row] << " " << (int) factor_parallel << " *\n";
+#if VERIPB_VERSION >= 2
                proof_out << MOVE_LAST_CONS_TO_CORE;
-               proof_out << DELETE_CONS << lhs_row_mapping[row] << "\n";
+#endif
+               proof_out << DELETE_CONS << lhs_row_mapping[row] ;
                lhs_row_mapping[row] = next_constraint_id;
+#if VERIPB_VERSION >= 2
+               int used_row = lhs_row_mapping[parallel_row];
+               proof_out << " ; ; begin\n\t" << POL << used_row << " " << factor <<" * -1 + \nend -1";
+               next_constraint_id += 2;
+#endif
+               proof_out << "\n";
                scale_factor[row] *= num.round_to_int( factor_parallel );
             }
          }
@@ -889,18 +926,38 @@ class VeriPb : public CertificateInterface<REAL>
             next_constraint_id++;
             assert( lhs_row_mapping[parallel_row] != UNKNOWN );
             proof_out << POL << lhs_row_mapping[parallel_row] << " " << (int) abs( factor ) << " *\n";
+#if VERIPB_VERSION >= 2
             proof_out << MOVE_LAST_CONS_TO_CORE;
+#endif
             if( rhs_row_mapping[row] != UNKNOWN )
-               proof_out << DELETE_CONS << rhs_row_mapping[row] << "\n";
-            rhs_row_mapping[row] = next_constraint_id;
+            {
+               proof_out << DELETE_CONS << rhs_row_mapping[row];
+               rhs_row_mapping[row] = next_constraint_id;
+#if VERIPB_VERSION >= 2
+               int used_row = lhs_row_mapping[parallel_row];
+               proof_out << " ; ; begin\n\t" << POL << used_row << " " << (int) abs( factor ) <<" * -1 + \nend -1";
+               next_constraint_id += 2;
+#endif
+               proof_out << "\n";
+            }
+            else
+               rhs_row_mapping[row] = next_constraint_id;
             // scale also lhs
             if( lhs_row_mapping[row] != UNKNOWN && is_not_integral )
             {
                next_constraint_id++;
                proof_out << POL << lhs_row_mapping[row] << " " << abs( factor_parallel ) << " *\n";
+#if VERIPB_VERSION >= 2
                proof_out << MOVE_LAST_CONS_TO_CORE;
-               proof_out << DELETE_CONS << lhs_row_mapping[row] << "\n";
+#endif
+               proof_out << DELETE_CONS << lhs_row_mapping[row];
                lhs_row_mapping[row] = next_constraint_id;
+#if VERIPB_VERSION >= 2
+               int used_row = rhs_row_mapping[parallel_row];
+               proof_out << " ; ; begin\n\t" << POL << used_row << " " << (int) abs( factor ) <<" * -1 + \nend -1";
+               next_constraint_id += 2;
+#endif
+               proof_out << "\n";
                scale_factor[row] *= num.round_to_int( abs( factor_parallel ) );
             }
          }
@@ -939,15 +996,32 @@ class VeriPb : public CertificateInterface<REAL>
          // lhs_row_mapping[row] can be KNOWN for example if Singleton relaxed a
          // constraint.
          if( lhs_row_mapping[row] != UNKNOWN )
-            proof_out << DELETE_CONS << lhs_row_mapping[row] << "\n";
-         assert( ( lhs_row_mapping[row] != UNKNOWN && factor == 1 ) ||
-                 ( factor == -1 && rhs_row_mapping[row] != UNKNOWN ) );
-         assert( factor == 1 || factor == -1 );
-         if( factor == 1 )
-            lhs_row_mapping[row] = lhs_row_mapping[parallel_row];
+         {
+            proof_out << DELETE_CONS << lhs_row_mapping[row];
+            if( factor == 1 )
+               lhs_row_mapping[row] = lhs_row_mapping[parallel_row];
+            else
+               lhs_row_mapping[row] = rhs_row_mapping[parallel_row];
+#if VERIPB_VERSION >= 2
+            int used_row = lhs_row_mapping[parallel_row];
+            if( factor < 0)
+               used_row = rhs_row_mapping[parallel_row];
+            proof_out << " ; ; begin\n" << POL << used_row << " -1 + \nend -1";
+            next_constraint_id+=2;
+#endif
+            proof_out << "\n";
+         }
          else
-            lhs_row_mapping[row] = rhs_row_mapping[parallel_row];
-         skip_deleting_lhs_constraint_id = ((int) factor) * lhs_row_mapping[row];
+         {
+            assert( ( lhs_row_mapping[row] != UNKNOWN && factor == 1 ) ||
+                    ( factor == -1 && rhs_row_mapping[row] != UNKNOWN ) );
+            assert( factor == 1 || factor == -1 );
+            if( factor == 1 )
+               lhs_row_mapping[row] = lhs_row_mapping[parallel_row];
+            else
+               lhs_row_mapping[row] = rhs_row_mapping[parallel_row];
+         }
+         skip_deleting_lhs_constraint_id = lhs_row_mapping[row];
       }
       else
       {
@@ -964,17 +1038,39 @@ class VeriPb : public CertificateInterface<REAL>
                       << " *\n";
             proof_out << MOVE_LAST_CONS_TO_CORE;
             if( lhs_row_mapping[row] != UNKNOWN )
-               proof_out << DELETE_CONS << lhs_row_mapping[row] << "\n";
-            lhs_row_mapping[row] = next_constraint_id;
+            {
+               proof_out << DELETE_CONS << lhs_row_mapping[row];
+               lhs_row_mapping[row] = next_constraint_id;
+#if VERIPB_VERSION >= 2
+               int used_row = lhs_row_mapping[parallel_row];
+               if( factor < 0)
+                  used_row = rhs_row_mapping[parallel_row];
+               proof_out << " ; ; begin\n" << POL << used_row << " " << factor <<" * -1 + \nend -1";
+               next_constraint_id += 2;
+#endif
+               proof_out << "\n";
+            }
+            else
+               lhs_row_mapping[row] = next_constraint_id;
             // scale also rhs
             if( rhs_row_mapping[row] != UNKNOWN && is_not_integral )
             {
                next_constraint_id++;
                proof_out << POL << rhs_row_mapping[row] << " "
                          << (int) factor_parallel << " *\n";
+#if VERIPB_VERSION >= 2
                proof_out << MOVE_LAST_CONS_TO_CORE;
-               proof_out << DELETE_CONS << rhs_row_mapping[row] << "\n";
+#endif
+               proof_out << DELETE_CONS << rhs_row_mapping[row];
                rhs_row_mapping[row] = next_constraint_id;
+#if VERIPB_VERSION >= 2
+               int used_row = rhs_row_mapping[parallel_row];
+               if( factor < 0)
+                  used_row = lhs_row_mapping[parallel_row];
+               proof_out << " ; ; begin\n" << POL << used_row << " " << factor <<" * -1 + \nend -1";
+               next_constraint_id += 2;
+#endif
+               proof_out << "\n";
                scale_factor[row] *= num.round_to_int( factor_parallel );
             }
          }
@@ -988,19 +1084,37 @@ class VeriPb : public CertificateInterface<REAL>
             }
             next_constraint_id++;
             assert( rhs_row_mapping[parallel_row] != UNKNOWN );
-            proof_out << POL << rhs_row_mapping[parallel_row] << " " << abs( factor ) << " *\n";
+            proof_out << POL << rhs_row_mapping[parallel_row] << " " << (int) abs( factor ) << " *\n";
+#if VERIPB_VERSION >= 2
             proof_out << MOVE_LAST_CONS_TO_CORE;
+#endif
             if( lhs_row_mapping[row] != UNKNOWN )
-               proof_out << DELETE_CONS << lhs_row_mapping[row] << "\n";
-            lhs_row_mapping[row] = next_constraint_id;
+            {
+               proof_out << DELETE_CONS << lhs_row_mapping[row];
+               lhs_row_mapping[row] = next_constraint_id;
+#if VERIPB_VERSION >= 2
+               int used_row = lhs_row_mapping[parallel_row];
+               proof_out << " ; ; begin\n\t" << POL << used_row << " " << (int) abs( factor ) <<" * -1 + \nend -1";
+               next_constraint_id += 2;
+#endif
+               proof_out << "\n";
+            }
+            else
+               lhs_row_mapping[row] = next_constraint_id;
             // scale also rhs
             if( rhs_row_mapping[row] != UNKNOWN && is_not_integral )
             {
                next_constraint_id++;
                proof_out << POL << rhs_row_mapping[row] << " " << (int) abs( factor_parallel ) << " *\n";
                proof_out << MOVE_LAST_CONS_TO_CORE;
-               proof_out << DELETE_CONS << rhs_row_mapping[row] << "\n";
+               proof_out << DELETE_CONS << rhs_row_mapping[row];
                rhs_row_mapping[row] = next_constraint_id;
+#if VERIPB_VERSION >= 2
+               int used_row = lhs_row_mapping[parallel_row];
+               proof_out << " ; ; begin\n\t" << POL << used_row << " " << (int) abs( factor ) <<" * -1 + \nend -1";
+               next_constraint_id += 2;
+#endif
+               proof_out << "\n";
                scale_factor[row] *= num.round_to_int( abs( factor_parallel ) );
             }
          }
@@ -1730,6 +1844,7 @@ class VeriPb : public CertificateInterface<REAL>
                if(coeff/coeff_remaining <1)
                   use_row_to_proof = rhs_row_mapping[parallel_remaining_row];
                proof_out << " ; ; begin\n\t"<< POL << use_row_to_proof << " " << abs(coeff_remaining) << " * -1 " << abs(coeff) << " * +\nend -1";
+               next_constraint_id+=2;
             }
             proof_out << "\n";
          }
@@ -1758,6 +1873,7 @@ class VeriPb : public CertificateInterface<REAL>
                if( coeff / coeff_remaining < 1 )
                   use_row_to_proof = lhs_row_mapping[parallel_remaining_row];
                proof_out << " ; ; begin\n\t" << POL << use_row_to_proof << " " << abs(coeff_remaining) << " * -1 " << abs(coeff) << " * +\nend -1";
+               next_constraint_id+=2;
             }
             proof_out << "\n";
             rhs_row_mapping[row] = UNKNOWN;
