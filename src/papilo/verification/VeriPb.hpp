@@ -862,9 +862,9 @@ class VeriPb : public CertificateInterface<REAL>
             if( factor == 1 )
                rhs_row_mapping[row] = rhs_row_mapping[parallel_row];
             else
-               rhs_row_mapping[row] = -lhs_row_mapping[parallel_row];
+               rhs_row_mapping[row] = lhs_row_mapping[parallel_row];
          }
-         skip_deleting_rhs_constraint_id = rhs_row_mapping[row];
+         skip_deleting_rhs_constraint_id = -rhs_row_mapping[row];
       }
       else
       {
