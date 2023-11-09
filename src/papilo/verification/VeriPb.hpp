@@ -1690,7 +1690,7 @@ class VeriPb : public CertificateInterface<REAL>
    }
 
    void
-   substitute( int col, int substituted_row, REAL old_obj_coeff, const Problem<REAL>& currentProblem, const Vec<int>& var_mapping )  override {
+   substitute( int col, int substituted_row, REAL old_obj_coeff, const Problem<REAL>& currentProblem, const Vec<int>& var_mapping, ArgumentType argument  )  override {
 #if VERIPB_VERSION == 1
       if( !verification_possible || (matrix.getColumnCoefficients( col ).getLength() == 1 && !is_optimization_problem))
          return;
@@ -1753,8 +1753,11 @@ class VeriPb : public CertificateInterface<REAL>
                      rhs_row_mapping[substituted_row], currentProblem,
                      substituted_row );
       }
+      else if (argument == ArgumentType::kAggregation)
+         return;
       else
       {
+
          skip_deleting_lhs_constraint_id = lhs_row_mapping[substituted_row];
          skip_deleting_rhs_constraint_id = rhs_row_mapping[substituted_row];
       }

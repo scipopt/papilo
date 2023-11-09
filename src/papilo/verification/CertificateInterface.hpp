@@ -126,7 +126,7 @@ class CertificateInterface
                         ArgumentType argument ) = 0;
 
    virtual void
-   substitute( int col, int row, REAL old_obj_coeff, const Problem<REAL>& currentProblem, const Vec<int>& var_mapping ) = 0;
+   substitute( int col, int row, REAL old_obj_coeff, const Problem<REAL>& currentProblem, const Vec<int>& var_mapping, ArgumentType argument  ) = 0;
 
    virtual void
    substitute( int col, const SparseVectorView<REAL>& equality, REAL offset, REAL old_obj_coeff,

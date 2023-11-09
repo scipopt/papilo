@@ -2247,7 +2247,7 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
             // change the objective coefficients and offset
             problem.substituteVarInObj( num, col, equalityrow );
 
-            certificate_interface->substitute(col, equalityrow, old_obj_coeff, problem, postsolve.origcol_mapping );
+            certificate_interface->substitute(col, equalityrow, old_obj_coeff, problem, postsolve.origcol_mapping, argument );
 
             // update row states
             msg.detailed( "modified rows: " );
@@ -2331,7 +2331,7 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
             // change the objective coefficients and offset
             problem.substituteVarInObj( num, col, equalityrow );
 
-            certificate_interface->substitute(col, equalityrow, old_obj_coeff, problem, postsolve.origcol_mapping );
+            certificate_interface->substitute(col, equalityrow, old_obj_coeff, problem, postsolve.origcol_mapping, argument );
 
             auto colvec = constraintMatrix.getColumnCoefficients( col );
 
