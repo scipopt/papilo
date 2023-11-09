@@ -862,7 +862,7 @@ class VeriPb : public CertificateInterface<REAL>
             if( factor == 1 )
                rhs_row_mapping[row] = rhs_row_mapping[parallel_row];
             else
-               rhs_row_mapping[row] = lhs_row_mapping[parallel_row];
+               rhs_row_mapping[row] = -lhs_row_mapping[parallel_row];
          }
          skip_deleting_rhs_constraint_id = rhs_row_mapping[row];
       }
@@ -941,7 +941,7 @@ class VeriPb : public CertificateInterface<REAL>
                proof_out << "\n";
             }
             else
-               rhs_row_mapping[row] = next_constraint_id;
+               rhs_row_mapping[row] = -next_constraint_id;
             // scale also lhs
             if( lhs_row_mapping[row] != UNKNOWN && is_not_integral )
             {
