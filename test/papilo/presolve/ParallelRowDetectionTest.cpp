@@ -132,18 +132,18 @@ TEST_CASE( "parallel-row-two-identical-equations", "[presolve]" )
        presolvingMethod.execute( problem, problemUpdate, num, reductions, t, cause );
 
    REQUIRE( presolveStatus == PresolveStatus::kReduced );
-   REQUIRE( reductions.size() == 3 );
-   REQUIRE( reductions.getReduction( 0 ).col == RowReduction::LOCKED );
-   REQUIRE( reductions.getReduction( 0 ).row == 0 );
-   REQUIRE( reductions.getReduction( 0 ).newval == 0 );
-
-   REQUIRE( reductions.getReduction( 1 ).row == 2 );
+   REQUIRE( reductions.size() == 4 );
    REQUIRE( reductions.getReduction( 1 ).col == RowReduction::LOCKED );
+   REQUIRE( reductions.getReduction( 1 ).row == 0 );
    REQUIRE( reductions.getReduction( 1 ).newval == 0 );
 
-   REQUIRE( reductions.getReduction( 2 ).col == RowReduction::REDUNDANT );
-   REQUIRE( reductions.getReduction( 2 ).newval == 0 );
    REQUIRE( reductions.getReduction( 2 ).row == 2 );
+   REQUIRE( reductions.getReduction( 2 ).col == RowReduction::LOCKED );
+   REQUIRE( reductions.getReduction( 2 ).newval == 0 );
+
+   REQUIRE( reductions.getReduction( 3 ).col == RowReduction::REDUNDANT );
+   REQUIRE( reductions.getReduction( 3 ).newval == 0 );
+   REQUIRE( reductions.getReduction( 3 ).row == 2 );
 }
 
 TEST_CASE( "parallel-row-two-equations-infeasible-first-row-dominant",
@@ -196,18 +196,18 @@ int cause = -1;
        presolvingMethod.execute( problem, problemUpdate, num, reductions, t, cause );
 
    REQUIRE( presolveStatus == PresolveStatus::kReduced );
-   REQUIRE( reductions.size() == 3 );
-   REQUIRE( reductions.getReduction( 0 ).col == RowReduction::LOCKED );
-   REQUIRE( reductions.getReduction( 0 ).row == 2 );
-   REQUIRE( reductions.getReduction( 0 ).newval == 0 );
-
-   REQUIRE( reductions.getReduction( 1 ).row == 0 );
+   REQUIRE( reductions.size() == 4 );
    REQUIRE( reductions.getReduction( 1 ).col == RowReduction::LOCKED );
+   REQUIRE( reductions.getReduction( 1 ).row == 2 );
    REQUIRE( reductions.getReduction( 1 ).newval == 0 );
 
-   REQUIRE( reductions.getReduction( 2 ).col == RowReduction::REDUNDANT );
-   REQUIRE( reductions.getReduction( 2 ).newval == 0 );
    REQUIRE( reductions.getReduction( 2 ).row == 0 );
+   REQUIRE( reductions.getReduction( 2 ).col == RowReduction::LOCKED );
+   REQUIRE( reductions.getReduction( 2 ).newval == 0 );
+
+   REQUIRE( reductions.getReduction( 3 ).col == RowReduction::REDUNDANT );
+   REQUIRE( reductions.getReduction( 3 ).newval == 0 );
+   REQUIRE( reductions.getReduction( 3 ).row == 0 );
 }
 
 TEST_CASE( "parallel-row-two-equations-feasible-first-row-dominant",
@@ -234,18 +234,18 @@ int cause = -1;
        presolvingMethod.execute( problem, problemUpdate, num, reductions, t, cause );
 
    REQUIRE( presolveStatus == PresolveStatus::kReduced );
-   REQUIRE( reductions.size() == 3 );
-   REQUIRE( reductions.getReduction( 0 ).col == RowReduction::LOCKED );
-   REQUIRE( reductions.getReduction( 0 ).row == 0 );
-   REQUIRE( reductions.getReduction( 0 ).newval == 0 );
-
-   REQUIRE( reductions.getReduction( 1 ).row == 2 );
+   REQUIRE( reductions.size() == 4 );
    REQUIRE( reductions.getReduction( 1 ).col == RowReduction::LOCKED );
+   REQUIRE( reductions.getReduction( 1 ).row == 0 );
    REQUIRE( reductions.getReduction( 1 ).newval == 0 );
 
-   REQUIRE( reductions.getReduction( 2 ).col == RowReduction::REDUNDANT );
-   REQUIRE( reductions.getReduction( 2 ).newval == 0 );
    REQUIRE( reductions.getReduction( 2 ).row == 2 );
+   REQUIRE( reductions.getReduction( 2 ).col == RowReduction::LOCKED );
+   REQUIRE( reductions.getReduction( 2 ).newval == 0 );
+
+   REQUIRE( reductions.getReduction( 3 ).col == RowReduction::REDUNDANT );
+   REQUIRE( reductions.getReduction( 3 ).newval == 0 );
+   REQUIRE( reductions.getReduction( 3 ).row == 2 );
 }
 
 TEST_CASE( "parallel-row-two-inequalities-redundant-row-second-row-dominant",
@@ -272,18 +272,18 @@ int cause = -1;
        presolvingMethod.execute( problem, problemUpdate, num, reductions, t, cause );
 
    REQUIRE( presolveStatus == PresolveStatus::kReduced );
-   REQUIRE( reductions.size() == 3 );
-   REQUIRE( reductions.getReduction( 0 ).col == RowReduction::LOCKED );
-   REQUIRE( reductions.getReduction( 0 ).row == 2 );
-   REQUIRE( reductions.getReduction( 0 ).newval == 0 );
-
-   REQUIRE( reductions.getReduction( 1 ).row == 0 );
+   REQUIRE( reductions.size() == 4 );
    REQUIRE( reductions.getReduction( 1 ).col == RowReduction::LOCKED );
+   REQUIRE( reductions.getReduction( 1 ).row == 2 );
    REQUIRE( reductions.getReduction( 1 ).newval == 0 );
 
-   REQUIRE( reductions.getReduction( 2 ).col == RowReduction::REDUNDANT );
-   REQUIRE( reductions.getReduction( 2 ).newval == 0 );
    REQUIRE( reductions.getReduction( 2 ).row == 0 );
+   REQUIRE( reductions.getReduction( 2 ).col == RowReduction::LOCKED );
+   REQUIRE( reductions.getReduction( 2 ).newval == 0 );
+
+   REQUIRE( reductions.getReduction( 3 ).col == RowReduction::REDUNDANT );
+   REQUIRE( reductions.getReduction( 3 ).newval == 0 );
+   REQUIRE( reductions.getReduction( 3 ).row == 0 );
 }
 
 TEST_CASE( "parallel-row-two-inequalities-redundant-row-first-row-dominant",
@@ -310,18 +310,18 @@ int cause = -1;
        presolvingMethod.execute( problem, problemUpdate, num, reductions, t, cause );
 
    REQUIRE( presolveStatus == PresolveStatus::kReduced );
-   REQUIRE( reductions.size() == 3 );
-   REQUIRE( reductions.getReduction( 0 ).col == RowReduction::LOCKED );
-   REQUIRE( reductions.getReduction( 0 ).row == 0 );
-   REQUIRE( reductions.getReduction( 0 ).newval == 0 );
-
-   REQUIRE( reductions.getReduction( 1 ).row == 2 );
+   REQUIRE( reductions.size() == 4 );
    REQUIRE( reductions.getReduction( 1 ).col == RowReduction::LOCKED );
+   REQUIRE( reductions.getReduction( 1 ).row == 0 );
    REQUIRE( reductions.getReduction( 1 ).newval == 0 );
 
-   REQUIRE( reductions.getReduction( 2 ).col == RowReduction::REDUNDANT );
-   REQUIRE( reductions.getReduction( 2 ).newval == 0 );
    REQUIRE( reductions.getReduction( 2 ).row == 2 );
+   REQUIRE( reductions.getReduction( 2 ).col == RowReduction::LOCKED );
+   REQUIRE( reductions.getReduction( 2 ).newval == 0 );
+
+   REQUIRE( reductions.getReduction( 3 ).col == RowReduction::REDUNDANT );
+   REQUIRE( reductions.getReduction( 3 ).newval == 0 );
+   REQUIRE( reductions.getReduction( 3 ).row == 2 );
 }
 
 TEST_CASE(
@@ -349,28 +349,28 @@ int cause = -1;
        presolvingMethod.execute( problem, problemUpdate, num, reductions, t, cause );
 
    REQUIRE( presolveStatus == PresolveStatus::kReduced );
-   REQUIRE( reductions.size() == 5 );
-   REQUIRE( reductions.getReduction( 0 ).col == RowReduction::LOCKED );
-   REQUIRE( reductions.getReduction( 0 ).row == 2 );
-   REQUIRE( reductions.getReduction( 0 ).newval == 0 );
-
-   REQUIRE( reductions.getReduction( 1 ).row == 0 );
+   REQUIRE( reductions.size() == 6 );
    REQUIRE( reductions.getReduction( 1 ).col == RowReduction::LOCKED );
+   REQUIRE( reductions.getReduction( 1 ).row == 2 );
    REQUIRE( reductions.getReduction( 1 ).newval == 0 );
 
-   REQUIRE( reductions.getReduction( 2 ).col ==
-            RowReduction::REASON_FOR_LESS_RESTRICTIVE_BOUND_CHANGE );
-   REQUIRE( reductions.getReduction( 2 ).newval == 2 );
    REQUIRE( reductions.getReduction( 2 ).row == 0 );
+   REQUIRE( reductions.getReduction( 2 ).col == RowReduction::LOCKED );
+   REQUIRE( reductions.getReduction( 2 ).newval == 0 );
 
    REQUIRE( reductions.getReduction( 3 ).col ==
-            RowReduction::LHS_LESS_RESTRICTIVE );
-   REQUIRE( reductions.getReduction( 3 ).newval == 0 );
-   REQUIRE( reductions.getReduction( 3 ).row == 2 );
+            RowReduction::REASON_FOR_LESS_RESTRICTIVE_BOUND_CHANGE );
+   REQUIRE( reductions.getReduction( 3 ).newval == 2 );
+   REQUIRE( reductions.getReduction( 3 ).row == 0 );
 
-   REQUIRE( reductions.getReduction( 4 ).col == RowReduction::REDUNDANT );
+   REQUIRE( reductions.getReduction( 4 ).col ==
+            RowReduction::LHS_LESS_RESTRICTIVE );
    REQUIRE( reductions.getReduction( 4 ).newval == 0 );
-   REQUIRE( reductions.getReduction( 4 ).row == 0 );
+   REQUIRE( reductions.getReduction( 4 ).row == 2 );
+
+   REQUIRE( reductions.getReduction( 5 ).col == RowReduction::REDUNDANT );
+   REQUIRE( reductions.getReduction( 5 ).newval == 0 );
+   REQUIRE( reductions.getReduction( 5 ).row == 0 );
 }
 
 TEST_CASE(
@@ -398,28 +398,28 @@ int cause = -1;
        presolvingMethod.execute( problem, problemUpdate, num, reductions, t, cause );
 
    REQUIRE( presolveStatus == PresolveStatus::kReduced );
-   REQUIRE( reductions.size() == 5 );
-   REQUIRE( reductions.getReduction( 0 ).col == RowReduction::LOCKED );
-   REQUIRE( reductions.getReduction( 0 ).row == 0 );
-   REQUIRE( reductions.getReduction( 0 ).newval == 0 );
-
-   REQUIRE( reductions.getReduction( 1 ).row == 2 );
+   REQUIRE( reductions.size() == 6 );
    REQUIRE( reductions.getReduction( 1 ).col == RowReduction::LOCKED );
+   REQUIRE( reductions.getReduction( 1 ).row == 0 );
    REQUIRE( reductions.getReduction( 1 ).newval == 0 );
 
-   REQUIRE( reductions.getReduction( 2 ).col ==
-            RowReduction::REASON_FOR_LESS_RESTRICTIVE_BOUND_CHANGE );
-   REQUIRE( reductions.getReduction( 2 ).newval == 0 );
    REQUIRE( reductions.getReduction( 2 ).row == 2 );
+   REQUIRE( reductions.getReduction( 2 ).col == RowReduction::LOCKED );
+   REQUIRE( reductions.getReduction( 2 ).newval == 0 );
 
    REQUIRE( reductions.getReduction( 3 ).col ==
-            RowReduction::LHS_LESS_RESTRICTIVE );
-   REQUIRE( reductions.getReduction( 3 ).newval == -3 );
-   REQUIRE( reductions.getReduction( 3 ).row == 0 );
+            RowReduction::REASON_FOR_LESS_RESTRICTIVE_BOUND_CHANGE );
+   REQUIRE( reductions.getReduction( 3 ).newval == 0 );
+   REQUIRE( reductions.getReduction( 3 ).row == 2 );
 
-   REQUIRE( reductions.getReduction( 4 ).col == RowReduction::REDUNDANT );
-   REQUIRE( reductions.getReduction( 4 ).newval == 0 );
-   REQUIRE( reductions.getReduction( 4 ).row == 2 );
+   REQUIRE( reductions.getReduction( 4 ).col ==
+            RowReduction::LHS_LESS_RESTRICTIVE );
+   REQUIRE( reductions.getReduction( 4 ).newval == -3 );
+   REQUIRE( reductions.getReduction( 4 ).row == 0 );
+
+   REQUIRE( reductions.getReduction( 5 ).col == RowReduction::REDUNDANT );
+   REQUIRE( reductions.getReduction( 5 ).newval == 0 );
+   REQUIRE( reductions.getReduction( 5 ).row == 2 );
 }
 
 TEST_CASE(
@@ -447,28 +447,28 @@ int cause = -1;
        presolvingMethod.execute( problem, problemUpdate, num, reductions, t, cause );
 
    REQUIRE( presolveStatus == PresolveStatus::kReduced );
-   REQUIRE( reductions.size() == 5 );
-   REQUIRE( reductions.getReduction( 0 ).col == RowReduction::LOCKED );
-   REQUIRE( reductions.getReduction( 0 ).row == 2 );
-   REQUIRE( reductions.getReduction( 0 ).newval == 0 );
-
-   REQUIRE( reductions.getReduction( 1 ).row == 0 );
+   REQUIRE( reductions.size() == 6 );
    REQUIRE( reductions.getReduction( 1 ).col == RowReduction::LOCKED );
+   REQUIRE( reductions.getReduction( 1 ).row == 2 );
    REQUIRE( reductions.getReduction( 1 ).newval == 0 );
 
-   REQUIRE( reductions.getReduction( 2 ).col ==
-            RowReduction::REASON_FOR_LESS_RESTRICTIVE_BOUND_CHANGE );
-   REQUIRE( reductions.getReduction( 2 ).newval == 2 );
    REQUIRE( reductions.getReduction( 2 ).row == 0 );
+   REQUIRE( reductions.getReduction( 2 ).col == RowReduction::LOCKED );
+   REQUIRE( reductions.getReduction( 2 ).newval == 0 );
 
    REQUIRE( reductions.getReduction( 3 ).col ==
-            RowReduction::RHS_LESS_RESTRICTIVE );
-   REQUIRE( reductions.getReduction( 3 ).newval == 3 );
-   REQUIRE( reductions.getReduction( 3 ).row == 2 );
+            RowReduction::REASON_FOR_LESS_RESTRICTIVE_BOUND_CHANGE );
+   REQUIRE( reductions.getReduction( 3 ).newval == 2 );
+   REQUIRE( reductions.getReduction( 3 ).row == 0 );
 
-   REQUIRE( reductions.getReduction( 4 ).col == RowReduction::REDUNDANT );
-   REQUIRE( reductions.getReduction( 4 ).newval == 0 );
-   REQUIRE( reductions.getReduction( 4 ).row == 0 );
+   REQUIRE( reductions.getReduction( 4 ).col ==
+            RowReduction::RHS_LESS_RESTRICTIVE );
+   REQUIRE( reductions.getReduction( 4 ).newval == 3 );
+   REQUIRE( reductions.getReduction( 4 ).row == 2 );
+
+   REQUIRE( reductions.getReduction( 5 ).col == RowReduction::REDUNDANT );
+   REQUIRE( reductions.getReduction( 5 ).newval == 0 );
+   REQUIRE( reductions.getReduction( 5 ).row == 0 );
 }
 
 TEST_CASE(
@@ -496,28 +496,28 @@ int cause = -1;
        presolvingMethod.execute( problem, problemUpdate, num, reductions, t, cause );
 
    REQUIRE( presolveStatus == PresolveStatus::kReduced );
-   REQUIRE( reductions.size() == 5 );
-   REQUIRE( reductions.getReduction( 0 ).col == RowReduction::LOCKED );
-   REQUIRE( reductions.getReduction( 0 ).row == 0 );
-   REQUIRE( reductions.getReduction( 0 ).newval == 0 );
-
-   REQUIRE( reductions.getReduction( 1 ).row == 2 );
+   REQUIRE( reductions.size() == 6 );
    REQUIRE( reductions.getReduction( 1 ).col == RowReduction::LOCKED );
+   REQUIRE( reductions.getReduction( 1 ).row == 0 );
    REQUIRE( reductions.getReduction( 1 ).newval == 0 );
 
-   REQUIRE( reductions.getReduction( 2 ).col ==
-            RowReduction::REASON_FOR_LESS_RESTRICTIVE_BOUND_CHANGE );
-   REQUIRE( reductions.getReduction( 2 ).newval == 0 );
    REQUIRE( reductions.getReduction( 2 ).row == 2 );
+   REQUIRE( reductions.getReduction( 2 ).col == RowReduction::LOCKED );
+   REQUIRE( reductions.getReduction( 2 ).newval == 0 );
 
    REQUIRE( reductions.getReduction( 3 ).col ==
-            RowReduction::RHS_LESS_RESTRICTIVE );
-   REQUIRE( reductions.getReduction( 3 ).newval == 3 );
-   REQUIRE( reductions.getReduction( 3 ).row == 0 );
+            RowReduction::REASON_FOR_LESS_RESTRICTIVE_BOUND_CHANGE );
+   REQUIRE( reductions.getReduction( 3 ).newval == 0 );
+   REQUIRE( reductions.getReduction( 3 ).row == 2 );
 
-   REQUIRE( reductions.getReduction( 4 ).col == RowReduction::REDUNDANT );
-   REQUIRE( reductions.getReduction( 4 ).newval == 0 );
-   REQUIRE( reductions.getReduction( 4 ).row == 2 );
+   REQUIRE( reductions.getReduction( 4 ).col ==
+            RowReduction::RHS_LESS_RESTRICTIVE );
+   REQUIRE( reductions.getReduction( 4 ).newval == 3 );
+   REQUIRE( reductions.getReduction( 4 ).row == 0 );
+
+   REQUIRE( reductions.getReduction( 5 ).col == RowReduction::REDUNDANT );
+   REQUIRE( reductions.getReduction( 5 ).newval == 0 );
+   REQUIRE( reductions.getReduction( 5 ).row == 2 );
 }
 
 TEST_CASE( "parallel-row-two-inequalities-infeasible-first-row-dominant",
@@ -597,28 +597,28 @@ int cause = -1;
        presolvingMethod.execute( problem, problemUpdate, num, reductions, t, cause );
 
    REQUIRE( presolveStatus == PresolveStatus::kReduced );
-   REQUIRE( reductions.size() == 5 );
-   REQUIRE( reductions.getReduction( 0 ).col == RowReduction::LOCKED );
-   REQUIRE( reductions.getReduction( 0 ).row == 0 );
-   REQUIRE( reductions.getReduction( 0 ).newval == 0 );
-
-   REQUIRE( reductions.getReduction( 1 ).row == 2 );
+   REQUIRE( reductions.size() == 6 );
    REQUIRE( reductions.getReduction( 1 ).col == RowReduction::LOCKED );
+   REQUIRE( reductions.getReduction( 1 ).row == 0 );
    REQUIRE( reductions.getReduction( 1 ).newval == 0 );
 
-   REQUIRE( reductions.getReduction( 2 ).col ==
-            RowReduction::REASON_FOR_LESS_RESTRICTIVE_BOUND_CHANGE );
-   REQUIRE( reductions.getReduction( 2 ).newval == 0 );
    REQUIRE( reductions.getReduction( 2 ).row == 2 );
+   REQUIRE( reductions.getReduction( 2 ).col == RowReduction::LOCKED );
+   REQUIRE( reductions.getReduction( 2 ).newval == 0 );
 
    REQUIRE( reductions.getReduction( 3 ).col ==
-            RowReduction::RHS_LESS_RESTRICTIVE );
-   REQUIRE( reductions.getReduction( 3 ).newval == 3 );
-   REQUIRE( reductions.getReduction( 3 ).row == 0 );
+            RowReduction::REASON_FOR_LESS_RESTRICTIVE_BOUND_CHANGE );
+   REQUIRE( reductions.getReduction( 3 ).newval == 0 );
+   REQUIRE( reductions.getReduction( 3 ).row == 2 );
 
-   REQUIRE( reductions.getReduction( 4 ).col == RowReduction::REDUNDANT );
-   REQUIRE( reductions.getReduction( 4 ).newval == 0 );
-   REQUIRE( reductions.getReduction( 4 ).row == 2 );
+   REQUIRE( reductions.getReduction( 4 ).col ==
+            RowReduction::RHS_LESS_RESTRICTIVE );
+   REQUIRE( reductions.getReduction( 4 ).newval == 3 );
+   REQUIRE( reductions.getReduction( 4 ).row == 0 );
+
+   REQUIRE( reductions.getReduction( 5 ).col == RowReduction::REDUNDANT );
+   REQUIRE( reductions.getReduction( 5 ).newval == 0 );
+   REQUIRE( reductions.getReduction( 5 ).row == 2 );
 }
 
 TEST_CASE( "parallel-row-overwrite-inf-first-row-rhs-inf", "[presolve]" )
@@ -644,28 +644,28 @@ int cause = -1;
        presolvingMethod.execute( problem, problemUpdate, num, reductions, t, cause );
 
    REQUIRE( presolveStatus == PresolveStatus::kReduced );
-   REQUIRE( reductions.size() == 5 );
-   REQUIRE( reductions.getReduction( 0 ).col == RowReduction::LOCKED );
-   REQUIRE( reductions.getReduction( 0 ).row == 0 );
-   REQUIRE( reductions.getReduction( 0 ).newval == 0 );
-
-   REQUIRE( reductions.getReduction( 1 ).row == 2 );
+   REQUIRE( reductions.size() == 6 );
    REQUIRE( reductions.getReduction( 1 ).col == RowReduction::LOCKED );
+   REQUIRE( reductions.getReduction( 1 ).row == 0 );
    REQUIRE( reductions.getReduction( 1 ).newval == 0 );
 
-   REQUIRE( reductions.getReduction( 2 ).col ==
-            RowReduction::REASON_FOR_LESS_RESTRICTIVE_BOUND_CHANGE );
-   REQUIRE( reductions.getReduction( 2 ).newval == 0 );
    REQUIRE( reductions.getReduction( 2 ).row == 2 );
+   REQUIRE( reductions.getReduction( 2 ).col == RowReduction::LOCKED );
+   REQUIRE( reductions.getReduction( 2 ).newval == 0 );
 
    REQUIRE( reductions.getReduction( 3 ).col ==
-            RowReduction::RHS_LESS_RESTRICTIVE );
-   REQUIRE( reductions.getReduction( 3 ).newval == 2 );
-   REQUIRE( reductions.getReduction( 3 ).row == 0 );
+            RowReduction::REASON_FOR_LESS_RESTRICTIVE_BOUND_CHANGE );
+   REQUIRE( reductions.getReduction( 3 ).newval == 0 );
+   REQUIRE( reductions.getReduction( 3 ).row == 2 );
 
-   REQUIRE( reductions.getReduction( 4 ).col == RowReduction::REDUNDANT );
-   REQUIRE( reductions.getReduction( 4 ).newval == 0 );
-   REQUIRE( reductions.getReduction( 4 ).row == 2 );
+   REQUIRE( reductions.getReduction( 4 ).col ==
+            RowReduction::RHS_LESS_RESTRICTIVE );
+   REQUIRE( reductions.getReduction( 4 ).newval == 2 );
+   REQUIRE( reductions.getReduction( 4 ).row == 0 );
+
+   REQUIRE( reductions.getReduction( 5 ).col == RowReduction::REDUNDANT );
+   REQUIRE( reductions.getReduction( 5 ).newval == 0 );
+   REQUIRE( reductions.getReduction( 5 ).row == 2 );
 }
 
 TEST_CASE( "parallel-row-overwrite-inf-first-row-lhs-inf", "[presolve]" )
@@ -691,28 +691,28 @@ int cause = -1;
        presolvingMethod.execute( problem, problemUpdate, num, reductions, t, cause );
 
    REQUIRE( presolveStatus == PresolveStatus::kReduced );
-   REQUIRE( reductions.size() == 5 );
-   REQUIRE( reductions.getReduction( 0 ).col == RowReduction::LOCKED );
-   REQUIRE( reductions.getReduction( 0 ).row == 0 );
-   REQUIRE( reductions.getReduction( 0 ).newval == 0 );
-
-   REQUIRE( reductions.getReduction( 1 ).row == 2 );
+   REQUIRE( reductions.size() == 6 );
    REQUIRE( reductions.getReduction( 1 ).col == RowReduction::LOCKED );
+   REQUIRE( reductions.getReduction( 1 ).row == 0 );
    REQUIRE( reductions.getReduction( 1 ).newval == 0 );
 
-   REQUIRE( reductions.getReduction( 2 ).col ==
-            RowReduction::REASON_FOR_LESS_RESTRICTIVE_BOUND_CHANGE );
-   REQUIRE( reductions.getReduction( 2 ).newval == 0 );
    REQUIRE( reductions.getReduction( 2 ).row == 2 );
+   REQUIRE( reductions.getReduction( 2 ).col == RowReduction::LOCKED );
+   REQUIRE( reductions.getReduction( 2 ).newval == 0 );
 
    REQUIRE( reductions.getReduction( 3 ).col ==
-            RowReduction::LHS_LESS_RESTRICTIVE );
-   REQUIRE( reductions.getReduction( 3 ).newval == 2 );
-   REQUIRE( reductions.getReduction( 3 ).row == 0 );
+            RowReduction::REASON_FOR_LESS_RESTRICTIVE_BOUND_CHANGE );
+   REQUIRE( reductions.getReduction( 3 ).newval == 0 );
+   REQUIRE( reductions.getReduction( 3 ).row == 2 );
 
-   REQUIRE( reductions.getReduction( 4 ).col == RowReduction::REDUNDANT );
-   REQUIRE( reductions.getReduction( 4 ).newval == 0 );
-   REQUIRE( reductions.getReduction( 4 ).row == 2 );
+   REQUIRE( reductions.getReduction( 4 ).col ==
+            RowReduction::LHS_LESS_RESTRICTIVE );
+   REQUIRE( reductions.getReduction( 4 ).newval == 2 );
+   REQUIRE( reductions.getReduction( 4 ).row == 0 );
+
+   REQUIRE( reductions.getReduction( 5 ).col == RowReduction::REDUNDANT );
+   REQUIRE( reductions.getReduction( 5 ).newval == 0 );
+   REQUIRE( reductions.getReduction( 5 ).row == 2 );
 }
 
 TEST_CASE( "parallel-row-overwrite-inf-first-row-lhs-inf-neg-factor",
@@ -739,28 +739,28 @@ int cause = -1;
        presolvingMethod.execute( problem, problemUpdate, num, reductions, t, cause );
 
    REQUIRE( presolveStatus == PresolveStatus::kReduced );
-   REQUIRE( reductions.size() == 5 );
-   REQUIRE( reductions.getReduction( 0 ).col == RowReduction::LOCKED );
-   REQUIRE( reductions.getReduction( 0 ).row == 0 );
-   REQUIRE( reductions.getReduction( 0 ).newval == 0 );
-
-   REQUIRE( reductions.getReduction( 1 ).row == 2 );
+   REQUIRE( reductions.size() == 6 );
    REQUIRE( reductions.getReduction( 1 ).col == RowReduction::LOCKED );
+   REQUIRE( reductions.getReduction( 1 ).row == 0 );
    REQUIRE( reductions.getReduction( 1 ).newval == 0 );
 
-   REQUIRE( reductions.getReduction( 2 ).col ==
-            RowReduction::REASON_FOR_LESS_RESTRICTIVE_BOUND_CHANGE );
-   REQUIRE( reductions.getReduction( 2 ).newval == 0 );
    REQUIRE( reductions.getReduction( 2 ).row == 2 );
+   REQUIRE( reductions.getReduction( 2 ).col == RowReduction::LOCKED );
+   REQUIRE( reductions.getReduction( 2 ).newval == 0 );
 
    REQUIRE( reductions.getReduction( 3 ).col ==
-            RowReduction::RHS_LESS_RESTRICTIVE );
-   REQUIRE( reductions.getReduction( 3 ).newval == 1 );
-   REQUIRE( reductions.getReduction( 3 ).row == 0 );
+            RowReduction::REASON_FOR_LESS_RESTRICTIVE_BOUND_CHANGE );
+   REQUIRE( reductions.getReduction( 3 ).newval == 0 );
+   REQUIRE( reductions.getReduction( 3 ).row == 2 );
 
-   REQUIRE( reductions.getReduction( 4 ).col == RowReduction::REDUNDANT );
-   REQUIRE( reductions.getReduction( 4 ).newval == 0 );
-   REQUIRE( reductions.getReduction( 4 ).row == 2 );
+   REQUIRE( reductions.getReduction( 4 ).col ==
+            RowReduction::RHS_LESS_RESTRICTIVE );
+   REQUIRE( reductions.getReduction( 4 ).newval == 1 );
+   REQUIRE( reductions.getReduction( 4 ).row == 0 );
+
+   REQUIRE( reductions.getReduction( 5 ).col == RowReduction::REDUNDANT );
+   REQUIRE( reductions.getReduction( 5 ).newval == 0 );
+   REQUIRE( reductions.getReduction( 5 ).row == 2 );
 }
 
 TEST_CASE( "parallel-row-mixed-infeasible-first-row-equation", "[presolve]" )
@@ -811,18 +811,18 @@ int cause = -1;
        presolvingMethod.execute( problem, problemUpdate, num, reductions, t, cause );
 
    REQUIRE( presolveStatus == PresolveStatus::kReduced );
-   REQUIRE( reductions.size() == 3 );
-   REQUIRE( reductions.getReduction( 0 ).col == RowReduction::LOCKED );
-   REQUIRE( reductions.getReduction( 0 ).row == 2 );
-   REQUIRE( reductions.getReduction( 0 ).newval == 0 );
-
-   REQUIRE( reductions.getReduction( 1 ).row == 0 );
+   REQUIRE( reductions.size() == 4 );
    REQUIRE( reductions.getReduction( 1 ).col == RowReduction::LOCKED );
+   REQUIRE( reductions.getReduction( 1 ).row == 2 );
    REQUIRE( reductions.getReduction( 1 ).newval == 0 );
 
-   REQUIRE( reductions.getReduction( 2 ).col == RowReduction::REDUNDANT );
-   REQUIRE( reductions.getReduction( 2 ).newval == 0 );
    REQUIRE( reductions.getReduction( 2 ).row == 0 );
+   REQUIRE( reductions.getReduction( 2 ).col == RowReduction::LOCKED );
+   REQUIRE( reductions.getReduction( 2 ).newval == 0 );
+
+   REQUIRE( reductions.getReduction( 3 ).col == RowReduction::REDUNDANT );
+   REQUIRE( reductions.getReduction( 3 ).newval == 0 );
+   REQUIRE( reductions.getReduction( 3 ).row == 0 );
 }
 
 TEST_CASE( "parallel-row-mixed-infeasible-second-row-equation", "[presolve]" )
@@ -873,29 +873,29 @@ int cause = -1;
        presolvingMethod.execute( problem, problemUpdate, num, reductions, t, cause );
 
    REQUIRE( presolveStatus == PresolveStatus::kReduced );
-   REQUIRE( reductions.size() == 7 );
+   REQUIRE( reductions.size() == 8 );
    int locked_rows[] = { 0, 1, 2 };
    for( int i = 0; i < 3; i++ )
    {
-      REQUIRE( reductions.getReduction( i ).col == RowReduction::LOCKED );
-      REQUIRE( reductions.getReduction( i ).row == locked_rows[i] );
-      REQUIRE( reductions.getReduction( i ).newval == 0 );
+      REQUIRE( reductions.getReduction( i+1 ).col == RowReduction::LOCKED );
+      REQUIRE( reductions.getReduction( i+1 ).row == locked_rows[i] );
+      REQUIRE( reductions.getReduction( i+1 ).newval == 0 );
    }
 
-   REQUIRE( reductions.getReduction( 3 ).col ==
+   REQUIRE( reductions.getReduction( 4 ).col ==
             RowReduction::REASON_FOR_LESS_RESTRICTIVE_BOUND_CHANGE );
 
-   REQUIRE( reductions.getReduction( 4 ).col ==
+   REQUIRE( reductions.getReduction( 5 ).col ==
             RowReduction::LHS_LESS_RESTRICTIVE );
-   REQUIRE( reductions.getReduction( 4 ).row == 0 );
-   REQUIRE( reductions.getReduction( 4 ).newval == -1 );
+   REQUIRE( reductions.getReduction( 5 ).row == 0 );
+   REQUIRE( reductions.getReduction( 5 ).newval == -1 );
 
    for( int i = 0; i < 2; i++ )
    {
-      REQUIRE( reductions.getReduction( 5 + i ).col ==
+      REQUIRE( reductions.getReduction( 6 + i ).col ==
                RowReduction::REDUNDANT );
-      REQUIRE( reductions.getReduction( 5 + i ).row == locked_rows[i + 1] );
-      REQUIRE( reductions.getReduction( 5 + i ).newval == 0 );
+      REQUIRE( reductions.getReduction( 6 + i ).row == locked_rows[i + 1] );
+      REQUIRE( reductions.getReduction( 6 + i ).newval == 0 );
    }
 }
 
@@ -922,29 +922,29 @@ int cause = -1;
        presolvingMethod.execute( problem, problemUpdate, num, reductions, t, cause );
 
    REQUIRE( presolveStatus == PresolveStatus::kReduced );
-   REQUIRE( reductions.size() == 7 );
+   REQUIRE( reductions.size() == 8 );
    int locked_rows[] = { 0, 1, 2 };
    for( int i = 0; i < 3; i++ )
    {
-      REQUIRE( reductions.getReduction( i ).col == RowReduction::LOCKED );
-      REQUIRE( reductions.getReduction( i ).row == locked_rows[i] );
-      REQUIRE( reductions.getReduction( i ).newval == 0 );
+      REQUIRE( reductions.getReduction( i+1 ).col == RowReduction::LOCKED );
+      REQUIRE( reductions.getReduction( i+1 ).row == locked_rows[i] );
+      REQUIRE( reductions.getReduction( i+1 ).newval == 0 );
    }
 
-   REQUIRE( reductions.getReduction( 3 ).col ==
+   REQUIRE( reductions.getReduction( 4 ).col ==
             RowReduction::REASON_FOR_LESS_RESTRICTIVE_BOUND_CHANGE );
 
-   REQUIRE( reductions.getReduction( 4 ).col ==
+   REQUIRE( reductions.getReduction( 5 ).col ==
             RowReduction::LHS_LESS_RESTRICTIVE );
-   REQUIRE( reductions.getReduction( 4 ).row == 0 );
-   REQUIRE( reductions.getReduction( 4 ).newval == -1 );
+   REQUIRE( reductions.getReduction( 5 ).row == 0 );
+   REQUIRE( reductions.getReduction( 5 ).newval == -1 );
 
    for( int i = 0; i < 2; i++ )
    {
-      REQUIRE( reductions.getReduction( 5 + i ).col ==
+      REQUIRE( reductions.getReduction( 6 + i ).col ==
                RowReduction::REDUNDANT );
-      REQUIRE( reductions.getReduction( 5 + i ).row == locked_rows[i + 1] );
-      REQUIRE( reductions.getReduction( 5 + i ).newval == 0 );
+      REQUIRE( reductions.getReduction( 6 + i ).row == locked_rows[i + 1] );
+      REQUIRE( reductions.getReduction( 6 + i ).newval == 0 );
    }
 }
 
@@ -970,21 +970,21 @@ int cause = -1;
        presolvingMethod.execute( problem, problemUpdate, num, reductions, t, cause );
 
    REQUIRE( presolveStatus == PresolveStatus::kReduced );
-   REQUIRE( reductions.size() == 7 );
+   REQUIRE( reductions.size() == 8 );
    int locked_rows[] = { 1, 2, 0, 3 };
    for( int i = 0; i < 4; i++ )
    {
-      REQUIRE( reductions.getReduction( i ).col == RowReduction::LOCKED );
-      REQUIRE( reductions.getReduction( i ).row == locked_rows[i] );
-      REQUIRE( reductions.getReduction( i ).newval == 0 );
+      REQUIRE( reductions.getReduction( i+1 ).col == RowReduction::LOCKED );
+      REQUIRE( reductions.getReduction( i+1 ).row == locked_rows[i] );
+      REQUIRE( reductions.getReduction( i+1 ).newval == 0 );
    }
 
    for( int i = 0; i < 3; i++ )
    {
-      REQUIRE( reductions.getReduction( 4 + i ).col ==
+      REQUIRE( reductions.getReduction( 5 + i ).col ==
                RowReduction::REDUNDANT );
-      REQUIRE( reductions.getReduction( 4 + i ).row == locked_rows[i + 1] );
-      REQUIRE( reductions.getReduction( 4 + i ).newval == 0 );
+      REQUIRE( reductions.getReduction( 5 + i ).row == locked_rows[i + 1] );
+      REQUIRE( reductions.getReduction( 5 + i ).newval == 0 );
    }
 }
 
