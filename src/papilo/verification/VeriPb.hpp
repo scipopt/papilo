@@ -643,7 +643,7 @@ class VeriPb : public CertificateInterface<REAL>
    };
 
    void
-   store_parallel_row( int row )
+   store_parallel_row( int row ) override
    {
       parallel_remaining_row = row;
    };
