@@ -1951,8 +1951,12 @@ class VeriPb : public CertificateInterface<REAL>
       }
       next_constraint_id++;
       proof_out << "u >= 1 ;\n";
+#if VERIPB_VERSION == 1
       proof_out << "c " << next_constraint_id << "\n";
+#else
       status = -1;
+      end_proof();
+#endif
    };
 
    void
