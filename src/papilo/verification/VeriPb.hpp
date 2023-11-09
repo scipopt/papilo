@@ -92,6 +92,11 @@ class VeriPb : public CertificateInterface<REAL>
    ////
    int stored_dominating_col = UNKNOWN;
    int stored_dominated_col = UNKNOWN;
+   Vec<int> weakened_columns{};
+   std::pair<int, int> row_with_gcd = {UNKNOWN, UNKNOWN};
+   int row_implying_lb = UNKNOWN;
+   int row_implying_ub = UNKNOWN;
+   int parallel_remaining_row = UNKNOWN;
 
    /// PaPILO does not care about the integrality of the coefficient
    /// therefore store scale factors to ensure the integrality
@@ -106,10 +111,7 @@ class VeriPb : public CertificateInterface<REAL>
    int skip_changing_rhs = UNKNOWN;
    int skip_changing_lhs = UNKNOWN;
    bool saturation_already_called = false;
-   std::pair<int, int> row_with_gcd = {UNKNOWN, UNKNOWN};
-   int row_implying_lb = UNKNOWN;
-   int row_implying_ub = UNKNOWN;
-   int parallel_remaining_row = UNKNOWN;
+
 
 
 #ifdef VERIPB_DEBUG
@@ -223,6 +225,7 @@ class VeriPb : public CertificateInterface<REAL>
       saturation_already_called = false;
       row_with_gcd = {UNKNOWN, UNKNOWN};
       row_implying_lb = UNKNOWN;
+      weakened_columns.clear();
       row_implying_ub = UNKNOWN;
       parallel_remaining_row = UNKNOWN;
 #ifdef VERIPB_DEBUG
@@ -252,6 +255,7 @@ class VeriPb : public CertificateInterface<REAL>
                         problem.getVariableNames(), var_mapping,
                         ArgumentType::kWeakening );
       }
+      assert(weakened_columns.empty());
 #ifdef VERIPB_DEBUG
       if( validate_row != UNKNOWN )
       {
@@ -1147,7 +1151,7 @@ class VeriPb : public CertificateInterface<REAL>
    change_matrix_entry( int row, int col, REAL new_val,
                         const SparseVectorView<REAL>& data, RowFlags& rflags,
                         REAL lhs, REAL rhs, const Vec<String>& names,
-                        const Vec<int>& var_mapping, ArgumentType argument ) override
+                        const Vec<int>& var_mapping, bool is_next_reduction_matrix_entry, ArgumentType argument ) override
    {
 #if VERIPB_VERSION == 1
       if( !verification_possible )
@@ -1289,7 +1293,13 @@ class VeriPb : public CertificateInterface<REAL>
       }
       else if( argument == ArgumentType::kWeakening )
       {
+
          assert( new_val == 0 );
+         weakened_columns.push_back(col);
+         if( is_next_reduction_matrix_entry )
+         {
+            return;
+         }
          assert( rflags.test( RowFlag::kRhsInf ) ||
                  rflags.test( RowFlag::kLhsInf ) );
          next_constraint_id++;
@@ -1304,19 +1314,33 @@ class VeriPb : public CertificateInterface<REAL>
             assert( !rflags.test( RowFlag::kLhsInf ) );
             proof_out << lhs_row_mapping[row] << " ";
          }
-         proof_out << names[var_mapping[col]] << " " << WEAKENING << "\n";
+         for( int c : weakened_columns)
+            proof_out << names[var_mapping[c]] << " " << WEAKENING << " ";
+         proof_out << "\n";
+         weakened_columns.clear();
 #if VERIPB_VERSION >= 2
          proof_out << MOVE_LAST_CONS_TO_CORE;
 #endif
          if( rhs_row_mapping[row] != UNKNOWN )
          {
-            proof_out << DELETE_CONS << rhs_row_mapping[row] << "\n";
+            proof_out << DELETE_CONS << rhs_row_mapping[row];
             rhs_row_mapping[row] = next_constraint_id;
+#if VERIPB_VERSION >= 2
+            proof_out << " ; ; begin\n\t" << POL << next_constraint_id << " " << row_with_gcd.second << " d " << row_with_gcd.second << " * -1 + \nend -1" ;
+            next_constraint_id+=2;
+#endif
+            proof_out << "\n";
          }
          else
          {
-            proof_out << DELETE_CONS << lhs_row_mapping[row] << "\n";
+            proof_out << DELETE_CONS << lhs_row_mapping[row];
             lhs_row_mapping[row] = next_constraint_id;
+#if VERIPB_VERSION >= 2
+            proof_out << " ; ; begin\n\t" << POL << next_constraint_id << " " << row_with_gcd.second << " d " << row_with_gcd.second << " * -1 + \nend -1" ;
+            next_constraint_id+=2;
+#endif
+            proof_out << "\n";
+
          }
 #ifdef VERIPB_DEBUG
          assert( validate_row == row || validate_row == UNKNOWN );

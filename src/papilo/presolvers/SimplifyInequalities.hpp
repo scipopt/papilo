@@ -439,6 +439,7 @@ SimplifyInequalities<REAL>::perform_simplify_ineq_task(
 
       TransactionGuard<REAL> guard{ reductions };
       reductions.lockRow( row );
+      reductions.submit_gcd( row, greatestCommonDivisor );
 
       for( int col : coefficientsThatCanBeDeleted )
       {
@@ -448,7 +449,6 @@ SimplifyInequalities<REAL>::perform_simplify_ineq_task(
 
       // round side to multiple of greatestCommonDivisor; don't divide
       // row by greatestCommonDivisor
-      reductions.submit_gcd( row, greatestCommonDivisor );
       if( rhs_needs_update )
       {
          assert( rhs[row] != 0 );

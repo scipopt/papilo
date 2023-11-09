@@ -138,7 +138,7 @@ class EmptyCertificate : public CertificateInterface<REAL>
    change_matrix_entry( int row, int col, REAL new_val,
                         const SparseVectorView<REAL>& data, RowFlags& rflags,
                         REAL lhs, REAL rhs, const Vec<String>& names,
-                        const Vec<int>& var_mapping, ArgumentType argument ){};
+                        const Vec<int>& var_mapping, bool is_next_reduction_matrix_entry, ArgumentType argument ){};
 
    void
    substitute( int col, int row, REAL old_obj_coeff, const Problem<REAL>& currentProblem, const Vec<int>& var_mapping ){};

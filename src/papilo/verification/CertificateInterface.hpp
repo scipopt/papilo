@@ -122,7 +122,7 @@ class CertificateInterface
    change_matrix_entry( int row, int col, REAL new_val,
                         const SparseVectorView<REAL>& data, RowFlags& rflags,
                         REAL lhs, REAL rhs, const Vec<String>& names,
-                        const Vec<int>& var_mapping,
+                        const Vec<int>& var_mapping, bool is_next_reduction_matrix_entry,
                         ArgumentType argument ) = 0;
 
    virtual void

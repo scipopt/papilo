@@ -2109,13 +2109,16 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
          matrix_buffer.addEntry( reduction.row, reduction.col,
                                  reduction.newval );
 
+         auto& next_reduction = *(iter+1);
+         bool next_matrix_change = next_reduction.row >= 0 && next_reduction.col >= 0;
          certificate_interface->change_matrix_entry(
              reduction.row, reduction.col, reduction.newval,
              constraintMatrix.getRowCoefficients( reduction.row ),
              rflags[reduction.row],
              constraintMatrix.getLeftHandSides()[reduction.row],
              constraintMatrix.getRightHandSides()[reduction.row],
-             problem.getVariableNames(), postsolve.origcol_mapping, argument );
+             problem.getVariableNames(), postsolve.origcol_mapping,
+             next_matrix_change,argument );
       }
       else if( reduction.row < 0 )
       {
