@@ -262,6 +262,7 @@ class VeriPb : public CertificateInterface<REAL>
          verify_changed_row( validate_row, problem, var_mapping, dirty_row_states );
          validate_row = UNKNOWN;
       }
+      proof_out << "*end trans " << next_constraint_id << "\n";
 #endif
    };
 
@@ -428,6 +429,7 @@ class VeriPb : public CertificateInterface<REAL>
       {
          stored_objective.coefficients[col] = 0;
          print_objective( names, var_mapping, problem.getNCols() );
+         proof_out << "\n";
       }
 #endif
    }
@@ -585,6 +587,7 @@ class VeriPb : public CertificateInterface<REAL>
          stored_objective.offset += stored_objective.coefficients[col] * val;
          stored_objective.coefficients[col] = 0;
          print_objective( names, var_mapping, problem.getNCols() );
+         proof_out << "\n";
       }
 #endif
    }
@@ -1662,9 +1665,27 @@ class VeriPb : public CertificateInterface<REAL>
       {
 #endif
 #if VERIPB_VERSION >= 2
-         apply_substitution_to_objective(col, equality, rhs);
+         apply_substitution_to_objective(col, equality, offset);
          if(old_obj_coeff != 0)
+         {
             print_objective( names, var_mapping, currentProblem.getNCols() );
+            if ( abs(old_obj_coeff) != 1 )
+            {
+               proof_out << " ; begin\n\tproofgoal #1\n\t\t" << POL;
+               if(old_obj_coeff/ substitute_factor < 0 )
+                  proof_out << first_constraint_id << " " << num.round_to_int(abs(old_obj_coeff)) << " * " << " -1 " << num.round_to_int(abs(substitute_factor)) << " * +";
+               else
+                  proof_out << second_constraint_id << " " << num.round_to_int(abs(old_obj_coeff)) << " * " << " -1 " << num.round_to_int(abs(substitute_factor)) << " * +";
+               proof_out << "\nend -1\n\tproofgoal #2\n\t\t" << POL;
+               if(old_obj_coeff/ substitute_factor > 0 )
+                  proof_out << first_constraint_id << " " << num.round_to_int(abs(old_obj_coeff)) << " * " << " -1 " << num.round_to_int(abs(substitute_factor)) << " * +";
+               else
+                  proof_out << second_constraint_id << " " << num.round_to_int(abs(old_obj_coeff)) << " * " << " -1 " << num.round_to_int(abs(substitute_factor)) << " * +";
+               proof_out << "\nend -1\nend";
+               next_constraint_id += 4;
+            }
+            proof_out << "\n";
+         }
 #endif
 
          proof_out << DELETE_CONS << first_constraint_id << " ; ";
@@ -1731,8 +1752,8 @@ class VeriPb : public CertificateInterface<REAL>
             proof_out << MOVE_LAST_CONS_TO_CORE;
             proof_out << POL << rhs_row_mapping[substituted_row] << " " << name << " " << abs(num.round_to_int(substitute_factor)) << " * +\n";
             proof_out << MOVE_LAST_CONS_TO_CORE;
-            implied_constraint_lhs = next_constraint_id;
-            implied_constraint_rhs = next_constraint_id + 1;
+            implied_constraint_lhs = next_constraint_id + 1;
+            implied_constraint_rhs = next_constraint_id + 2;
          }
          else
          {
@@ -1740,8 +1761,8 @@ class VeriPb : public CertificateInterface<REAL>
             proof_out << MOVE_LAST_CONS_TO_CORE;
             proof_out << POL << lhs_row_mapping[substituted_row] << " " << name << " " << abs(num.round_to_int(substitute_factor)) << " * +\n";
             proof_out << MOVE_LAST_CONS_TO_CORE;
-            implied_constraint_rhs = next_constraint_id;
-            implied_constraint_lhs = next_constraint_id + 1;
+            implied_constraint_rhs = next_constraint_id + 1;
+            implied_constraint_lhs = next_constraint_id + 2;
          }
          next_constraint_id++;
          next_constraint_id++;
@@ -1771,60 +1792,93 @@ class VeriPb : public CertificateInterface<REAL>
          assert(matrix.getLeftHandSides()[substituted_row] == matrix.getRightHandSides()[substituted_row]);
          apply_substitution_to_objective(col, row_data, matrix.getLeftHandSides()[substituted_row]);
          if( old_obj_coeff != 0)
+         {
             print_objective( currentProblem.getVariableNames(), var_mapping,
                              currentProblem.getNCols() );
+            if( abs(old_obj_coeff) != 1)
+            {
+               proof_out << " ; begin\n\tproofgoal #1\n\t\t" << POL;
+               if(old_obj_coeff/ substitute_factor < 0 )
+                  proof_out << lhs_row_mapping[substituted_row] << " " << num.round_to_int(abs(old_obj_coeff)) << " * " << " -1 " << num.round_to_int(abs(substitute_factor)) << " * +";
+               else
+                  proof_out << rhs_row_mapping[substituted_row] << " " << num.round_to_int(abs(old_obj_coeff)) << " * " << " -1 " << num.round_to_int(abs(substitute_factor)) << " * +";
+               proof_out << "\nend -1\n\tproofgoal #2\n\t\t" << POL;
+               if(old_obj_coeff/ substitute_factor > 0 )
+                  proof_out << lhs_row_mapping[substituted_row] << " " << num.round_to_int(abs(old_obj_coeff)) << " * " << " -1 " << num.round_to_int(abs(substitute_factor)) << " * +";
+               else
+                  proof_out << rhs_row_mapping[substituted_row] << " " << num.round_to_int(abs(old_obj_coeff)) << " * " << " -1 " << num.round_to_int(abs(substitute_factor)) << " * +";
+               proof_out << "\nend -1\nend";
+               next_constraint_id += 4;
+            }
+            proof_out << "\n";
+
+         }
 #endif
 
          proof_out << COMMENT << "postsolve stack : row id "
                    << lhs_row_mapping[substituted_row] << "\n";
-         proof_out << DELETE_CONS << rhs_row_mapping[substituted_row] << " ; ";
+         proof_out << DELETE_CONS << rhs_row_mapping[substituted_row];
 #if VERIPB_VERSION >= 2
          if( substitute_factor > 0)
-         {
-            proof_out << name << " -> 0";
-            if( row_implying_lb != UNKNOWN)
-            {
-               proof_out << " ; begin\n\t" << POL << rhs_row_mapping[row_implying_lb] << " " << (next_constraint_id+1) << " +\nend";
-               next_constraint_id += 2;
-            }
-         }
+            proof_out << " ; " << name << " -> 0";
          else
+            proof_out << " ; " << name << " -> 1";
+         if( row_implying_lb != UNKNOWN || row_implying_ub != UNKNOWN)
          {
-            proof_out << name << " -> 1";
-            if( row_implying_ub != UNKNOWN)
-            {
-               proof_out << " ; begin\n\t" << POL << lhs_row_mapping[row_implying_ub] << " " << (next_constraint_id+1) << " +\nend";
-               next_constraint_id += 2;
-            }
+            proof_out << " ; begin\n\t" << POL << implied_constraint_lhs << " " ;
+                if( substitute_factor < 0)
+               proof_out << NEGATED ;
+            proof_out << name << " " << abs(num.round_to_int(substitute_factor)) << " * +\nend";
+            next_constraint_id += 2;
          }
 #endif
          proof_out << "\n";
+
 
          proof_out << COMMENT << "postsolve stack : row id "
                 << rhs_row_mapping[substituted_row] << "\n";
-         proof_out << DELETE_CONS << lhs_row_mapping[substituted_row]  << " ; ";
+         proof_out << DELETE_CONS << lhs_row_mapping[substituted_row];
 #if VERIPB_VERSION >= 2
          if( substitute_factor < 0)
-         {
-            proof_out << name << " -> 0";
-            if( row_implying_lb != UNKNOWN)
-            {
-               proof_out << " ; begin\n\t" << POL << lhs_row_mapping[row_implying_lb] << " " << (next_constraint_id+1) << " +\nend";
-               next_constraint_id += 2;
-            }
-         }
+            proof_out << " ; " <<  name << " -> 0";
          else
+            proof_out << " ; " << name << " -> 1";
+
+         if( row_implying_lb != UNKNOWN || row_implying_ub != UNKNOWN)
          {
-            proof_out << name << " -> 1";
-            if( row_implying_ub != UNKNOWN)
-            {
-               proof_out << " ; begin\n\t" << POL << rhs_row_mapping[row_implying_ub] << " " << (next_constraint_id+1) << " +\nend";
-               next_constraint_id += 2;
-            }
+            proof_out << " ; begin\n\t" << POL << implied_constraint_rhs << " " ;
+            if( substitute_factor > 0)
+               proof_out << NEGATED ;
+            proof_out << name << " " << abs(num.round_to_int(substitute_factor)) << " * +\nend";
+            next_constraint_id += 2;
+            //TODO:
          }
 #endif
          proof_out << "\n";
 
+         if( row_implying_lb != UNKNOWN || row_implying_ub != UNKNOWN)
+         {
+            //TODO:
+            if( row_implying_lb == UNKNOWN)
+            {
+               proof_out << DELETE_CONS << implied_constraint_lhs << "\n";
+            }
+            else
+            {
+               proof_out << DELETE_CONS << implied_constraint_lhs << " ; ; begin\n\t" << POL << lhs_row_mapping[row_implying_lb] << " -1 +\nend\n";
+
+               next_constraint_id += 2;
+            }
+            if( row_implying_ub == UNKNOWN)
+            {
+               proof_out << DELETE_CONS << implied_constraint_rhs << "\n";
+            }
+            else
+            {
+               proof_out << DELETE_CONS << implied_constraint_rhs << " ; ; begin\n\t" << POL << rhs_row_mapping[row_implying_ub] << " -1 +\nend\n";
+               next_constraint_id += 2;
+            }
+         }
 
 #if VERIPB_VERSION == 1
       }
@@ -2170,7 +2224,7 @@ class VeriPb : public CertificateInterface<REAL>
          proof_out << names[var_mapping[col]]+ " ";
       }
       proof_out << " " << num.round_to_int(stored_objective.offset - sum);
-      proof_out << ";\n";
+      proof_out << ";";
    }
 #endif
 
