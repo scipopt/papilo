@@ -2044,8 +2044,8 @@ class VeriPb : public CertificateInterface<REAL>
                   proof_out << " ; ; begin\n\t" << POL << use_row_to_proof
                             << " " << abs( coeff_remaining ) << " * -1 "
                             << abs( coeff ) << " * +\nend -1";
+                  next_constraint_id+=2;
                }
-               next_constraint_id+=2;
             }
             proof_out << "\n";
             rhs_row_mapping[row] = UNKNOWN;
