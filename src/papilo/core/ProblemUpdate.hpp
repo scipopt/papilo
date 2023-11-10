@@ -2110,7 +2110,7 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
                                  reduction.newval );
 
          auto& next_reduction = *(iter+1);
-         bool next_matrix_change = next_reduction.row >= 0 && next_reduction.col >= 0;
+         bool next_matrix_change = (iter+1 < last) && next_reduction.row >= 0 && next_reduction.col >= 0;
          certificate_interface->change_matrix_entry(
              reduction.row, reduction.col, reduction.newval,
              constraintMatrix.getRowCoefficients( reduction.row ),
@@ -2331,7 +2331,11 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
             // change the objective coefficients and offset
             problem.substituteVarInObj( num, col, equalityrow );
 
-            certificate_interface->substitute(col, equalityrow, old_obj_coeff, problem, postsolve.origcol_mapping, argument );
+            bool bounds_implied = iter+1 != last && (*(iter+1)).col == RowReduction::REDUNDANT;
+            if(bounds_implied)
+               certificate_interface->substitute_col_singleton_implied(col, equalityrow, old_obj_coeff, problem, postsolve.origcol_mapping );
+            else
+               certificate_interface->substitute(col, equalityrow, old_obj_coeff, problem, postsolve.origcol_mapping, argument );
 
             auto colvec = constraintMatrix.getColumnCoefficients( col );
 

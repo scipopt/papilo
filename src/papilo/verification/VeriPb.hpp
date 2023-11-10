@@ -1718,6 +1718,80 @@ class VeriPb : public CertificateInterface<REAL>
    }
 
    void
+   substitute_col_singleton_implied( int col, int row, REAL old_obj_coeff, const Problem<REAL>& currentProblem, const Vec<int>& var_mapping  )
+   {
+#if VERIPB_VERSION == 1
+      if( !verification_possible || (matrix.getColumnCoefficients( col ).getLength() == 1 && !is_optimization_problem))
+         return;
+#endif
+      const ConstraintMatrix<REAL>& matrix =
+          currentProblem.getConstraintMatrix();
+      auto col_vec = matrix.getColumnCoefficients( col );
+      auto row_data = matrix.getRowCoefficients( row );
+#if VERIPB_VERSION == 1
+      if( currentProblem.getConstraintMatrix().getRowSizes()[row] > 2 && is_optimization_problem)
+      {
+         fmt::print("Verification currently not possible for multi-aggregations for optimization problem!\n");
+         proof_out << "* Verification currently not possible for multi-aggregations for optimization problem!\n";
+         verification_possible = false;
+         return;
+      }
+#endif
+      REAL substitute_factor = 0;
+      for( int i = 0; i < col_vec.getLength(); i++ )
+      {
+         if( col_vec.getIndices()[i] == row )
+         {
+            substitute_factor =
+                col_vec.getValues()[i] * scale_factor[row];
+            break;
+         }
+      }
+      const String name = currentProblem.getVariableNames()[var_mapping[col]];
+      assert(col_vec.getLength() == 1);
+      apply_substitution_to_objective(col, row_data, matrix.getLeftHandSides()[row]);
+      if( old_obj_coeff != 0)
+      {
+         print_objective( currentProblem.getVariableNames(), var_mapping,
+                          currentProblem.getNCols() );
+         if( abs(old_obj_coeff) != 1)
+         {
+            proof_out << " ; begin\n\tproofgoal #1\n\t\t" << POL;
+            if(old_obj_coeff/ substitute_factor < 0 )
+               proof_out << lhs_row_mapping[row] << " " << num.round_to_int(abs(old_obj_coeff)) << " * " << " -1 " << num.round_to_int(abs(substitute_factor)) << " * +";
+            else
+               proof_out << rhs_row_mapping[row] << " " << num.round_to_int(abs(old_obj_coeff)) << " * " << " -1 " << num.round_to_int(abs(substitute_factor)) << " * +";
+            proof_out << "\nend -1\n\tproofgoal #2\n\t\t" << POL;
+            if(old_obj_coeff/ substitute_factor > 0 )
+               proof_out << lhs_row_mapping[row] << " " << num.round_to_int(abs(old_obj_coeff)) << " * " << " -1 " << num.round_to_int(abs(substitute_factor)) << " * +";
+            else
+               proof_out << rhs_row_mapping[row] << " " << num.round_to_int(abs(old_obj_coeff)) << " * " << " -1 " << num.round_to_int(abs(substitute_factor)) << " * +";
+            proof_out << "\nend -1\nend";
+            next_constraint_id += 4;
+         }
+         proof_out << "\n";
+      }
+      proof_out << DELETE_CONS << lhs_row_mapping[row];
+#if VERIPB_VERSION >= 2
+      if( substitute_factor > 0)
+         proof_out << " ; " << name << " -> 1";
+      else
+         proof_out << " ; " << name << " -> 0";
+#endif
+      proof_out << "\n";
+      proof_out << DELETE_CONS << rhs_row_mapping[row];
+#if VERIPB_VERSION >= 2
+      if( substitute_factor < 0)
+         proof_out << " ; " << name << " -> 1";
+      else
+         proof_out << " ; " << name << " -> 0";
+#endif
+      proof_out << "\n";
+      skip_deleting_rhs_constraint_id = rhs_row_mapping[row];
+      skip_deleting_lhs_constraint_id = lhs_row_mapping[row];
+   };
+
+   void
    substitute( int col, int substituted_row, REAL old_obj_coeff, const Problem<REAL>& currentProblem, const Vec<int>& var_mapping, ArgumentType argument  )  override {
 #if VERIPB_VERSION == 1
       if( !verification_possible || (matrix.getColumnCoefficients( col ).getLength() == 1 && !is_optimization_problem))
