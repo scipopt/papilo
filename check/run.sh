@@ -162,7 +162,25 @@ else
     fi
 fi
 
-
+#TODO run only if pbp file exists and veripb can be activated
+#TODO check if ends with .gz and if pbp file exists
+#hard coded veripb exists
+#if test -f "../veripb-dev/venv/bin/activate" ;
+#then
+#  if [[ ${FILENAME} == "*.opb.gz" ]];
+#  then
+    eval gzip -dkf ${FILENAME}
+    PBP_FILENAME=${FILENAME%.opb.gz}.pbp
+    UNZIPPED_FILENAME=${FILENAME%.opb.gz}.opb
+    if test -f ${PBP_FILENAME} ;
+      then
+      echo ">>> Executing: veripb --stats --forceCheckDeletion --useColor --trace ${UNZIPPED_FILENAME} ${PBP_FILENAME}"
+      eval "source ../veripb-dev/venv/bin/activate"
+      eval "veripb --stats --forceCheckDeletion --useColor --trace ${UNZIPPED_FILENAME} ${PBP_FILENAME}" 2>> "${ERRFILE}" | tee -a "${OUTFILE}"
+      eval "rm -r ${UNZIPPED_FILENAME}"
+    fi
+#  fi
+#fi
 
 retcode=${PIPESTATUS[0]}
 if test "${retcode}" != 0
