@@ -71,7 +71,7 @@ class VeriPb : public CertificateInterface<REAL>
    std::ofstream proof_out;
 
    int propagation_option = 0;
-   int status = 0; // 1 = solved, -1 = infeasible;
+   int status = 0; // 1 = solved, -1 = infeasible -2 = finished;
 
    Objective<REAL> stored_objective;
 
@@ -1986,6 +1986,8 @@ class VeriPb : public CertificateInterface<REAL>
       if( !verification_possible )
          return;
 #endif
+      if(status == -2)
+         return;
       assert( lhs_row_mapping[row] != UNKNOWN ||
               rhs_row_mapping[row] != UNKNOWN );
       if( lhs_row_mapping[row] != UNKNOWN )
@@ -2116,6 +2118,8 @@ class VeriPb : public CertificateInterface<REAL>
       if( !verification_possible )
          return;
 #endif
+      if( status == -2)
+         return;
       if(cause != -1)
       {
          next_constraint_id++;
@@ -2240,6 +2244,8 @@ class VeriPb : public CertificateInterface<REAL>
    void
    end_proof( int obj )
    {
+      if( status == -2)
+         return;
 #if VERIPB_VERSION >= 2
       proof_out << OUTPUT << NONE << " \n";
       proof_out << CONCLUSION;
@@ -2263,6 +2269,7 @@ class VeriPb : public CertificateInterface<REAL>
       }
       proof_out << "\n";
       proof_out << "end pseudo-Boolean proof\n";
+      status = -2;
 #endif
    };
 
