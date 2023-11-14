@@ -518,8 +518,10 @@ Presolve<REAL>::apply( Problem<REAL>& problem, bool store_dual_postsolve )
       if( result.status == PresolveStatus::kInfeasible ||
           result.status == PresolveStatus::kUnbndOrInfeas ||
           result.status == PresolveStatus::kUnbounded )
+      {
+         probUpdate.getCertificateInterface()->infeasible();
          return result;
-
+      }
       printRoundStats( false, "Trivial" );
       round_to_evaluate = Delegator::kFast;
 
