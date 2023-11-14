@@ -2124,6 +2124,8 @@ class VeriPb : public CertificateInterface<REAL>
    void
    infeasible( ) override
    {
+      if( status == -2)
+         return;
 #if VERIPB_VERSION == 1
       if( !verification_possible )
          return;
