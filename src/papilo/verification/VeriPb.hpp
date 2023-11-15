@@ -905,6 +905,7 @@ class VeriPb : public CertificateInterface<REAL>
             }
             else
                rhs_row_mapping[row] = next_constraint_id;
+            //TODO: handle also lhs
 
             // scale also lhs
             if( lhs_row_mapping[row] != UNKNOWN && is_not_integral )
@@ -951,7 +952,11 @@ class VeriPb : public CertificateInterface<REAL>
                proof_out << "\n";
             }
             else
-               rhs_row_mapping[row] = -next_constraint_id;
+            {
+               rhs_row_mapping[row] = next_constraint_id;
+            }
+            scale_factor[row] *= 10;
+
             // scale also lhs
             if( lhs_row_mapping[row] != UNKNOWN && is_not_integral )
             {
@@ -2029,16 +2034,16 @@ class VeriPb : public CertificateInterface<REAL>
             if(argument == ArgumentType::kRedundant)
             {
                assert(parallel_remaining_row != UNKNOWN);
-               int coeff_remaining = num.round_to_int(currentProblem.getConstraintMatrix().getRowCoefficients(parallel_remaining_row).getValues()[0]);
+               int coeff_remaining = num.round_to_int(currentProblem.getConstraintMatrix().getRowCoefficients(parallel_remaining_row).getValues()[0]) ;
                int coeff = num.round_to_int(currentProblem.getConstraintMatrix().getRowCoefficients(row).getValues()[0]);
                if(abs(coeff/coeff_remaining) != 1)
                {
                   int use_row_to_proof =lhs_row_mapping[parallel_remaining_row];
-                  if( coeff / coeff_remaining < 1 )
+                  if( coeff / coeff_remaining < 0 )
                      use_row_to_proof = rhs_row_mapping[parallel_remaining_row];
                   proof_out << " ; ; begin\n\t" << POL << use_row_to_proof
-                            << " " << abs( coeff_remaining ) << " * -1 "
-                            << abs( coeff ) << " * +\nend -1";
+                            << " " << abs( coeff ) << " * -1 "
+                            << abs( coeff_remaining ) << " * +\nend -1";
                   next_constraint_id += 2;
                }
             }
@@ -2068,11 +2073,11 @@ class VeriPb : public CertificateInterface<REAL>
                if(abs(coeff/coeff_remaining) != 1)
                {
                   int use_row_to_proof =rhs_row_mapping[parallel_remaining_row];
-                  if( coeff / coeff_remaining < 1 )
+                  if( coeff / coeff_remaining < 0 )
                      use_row_to_proof = lhs_row_mapping[parallel_remaining_row];
                   proof_out << " ; ; begin\n\t" << POL << use_row_to_proof
-                            << " " << abs( coeff_remaining ) << " * -1 "
-                            << abs( coeff ) << " * +\nend -1";
+                            << " " << abs( coeff ) << " * -1 "
+                            << abs( coeff_remaining ) << " * +\nend -1";
                   next_constraint_id+=2;
                }
             }
