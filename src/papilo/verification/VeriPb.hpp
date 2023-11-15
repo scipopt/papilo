@@ -955,8 +955,6 @@ class VeriPb : public CertificateInterface<REAL>
             {
                rhs_row_mapping[row] = next_constraint_id;
             }
-            scale_factor[row] *= 10;
-
             // scale also lhs
             if( lhs_row_mapping[row] != UNKNOWN && is_not_integral )
             {
@@ -2039,7 +2037,7 @@ class VeriPb : public CertificateInterface<REAL>
                if(abs(coeff/coeff_remaining) != 1)
                {
                   int use_row_to_proof =lhs_row_mapping[parallel_remaining_row];
-                  if( coeff / coeff_remaining < 0 )
+                  if( coeff * 1.0 / coeff_remaining < 0 )
                      use_row_to_proof = rhs_row_mapping[parallel_remaining_row];
                   proof_out << " ; ; begin\n\t" << POL << use_row_to_proof
                             << " " << abs( coeff ) << " * -1 "
@@ -2073,7 +2071,7 @@ class VeriPb : public CertificateInterface<REAL>
                if(abs(coeff/coeff_remaining) != 1)
                {
                   int use_row_to_proof =rhs_row_mapping[parallel_remaining_row];
-                  if( coeff / coeff_remaining < 0 )
+                  if( coeff *1.0/ coeff_remaining < 0 )
                      use_row_to_proof = lhs_row_mapping[parallel_remaining_row];
                   proof_out << " ; ; begin\n\t" << POL << use_row_to_proof
                             << " " << abs( coeff ) << " * -1 "
