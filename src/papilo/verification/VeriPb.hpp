@@ -1974,7 +1974,7 @@ class VeriPb : public CertificateInterface<REAL>
                next_constraint_id += 2;
             }
             else
-               proof_out << DELETE_CONS << implied_constraint_lhs << "\n";
+               proof_out << DELETE_CONS << implied_constraint_rhs << "\n";
          }
 
 #if VERIPB_VERSION == 1
