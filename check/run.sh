@@ -124,7 +124,6 @@ then
     # FILENAME is exported in the calling script check_cluster.sh
     echo ">>> Executing: ${EXECNAME} ${PAPILO_OPT_COMMAND} -f ${FILENAME} -p ${SETFILEPAPILO} -s ${SETFILESCIP} --tlim ${TIMELIMIT} --presolve.randomseed=${SEED}"
     eval "${EXECNAME} ${PAPILO_OPT_COMMAND} -p ${SETFILEPAPILO} -s ${SETFILESCIP} -f ${FILENAME} --tlim ${TIMELIMIT} --presolve.randomseed=${SEED}" 2>> "${ERRFILE}" | tee -a "${OUTFILE}"
-    echo "----------------------------------------------------------"
 else
     if [[ ${SKIP_PRESOLVE} == "false" ]]
     then
@@ -155,7 +154,6 @@ else
     else
       echo "Unknown solver: ${SOLVE_EXECUTABLE}"
     fi
-    echo "----------------------------------------------------------"
     if [[ ${SKIP_PRESOLVE} == "false" ]]
     then
       rm ${PRESOLVED_FILENAME}
@@ -174,13 +172,14 @@ fi
     UNZIPPED_FILENAME=${FILENAME%.opb.gz}.opb
     if test -f ${PBP_FILENAME} ;
       then
-      echo ">>> Executing: veripb --stats --forceCheckDeletion --useColor --trace ${UNZIPPED_FILENAME} ${PBP_FILENAME}"
-      eval "source ../veripb-dev/venv/bin/activate"
-      eval "veripb --stats --forceCheckDeletion --useColor --trace ${UNZIPPED_FILENAME} ${PBP_FILENAME}" 2>> "${ERRFILE}" | tee -a "${OUTFILE}"
-      eval "rm -r ${UNZIPPED_FILENAME}"
+      echo ">>> Executing: veripb --stats --forceCheckDeletion ${UNZIPPED_FILENAME} ${PBP_FILENAME}"
+      eval "source /home/alexander/git_repositories/veripb-dev/venv/bin/activate"
+      eval "veripb --stats --forceCheckDeletion ${UNZIPPED_FILENAME} ${PBP_FILENAME}" 2>> "${ERRFILE}" | tee -a "${OUTFILE}"
+#      eval "rm -r ${UNZIPPED_FILENAME}"
     fi
 #  fi
 #fi
+echo "----------------------------------------------------------"
 
 retcode=${PIPESTATUS[0]}
 if test "${retcode}" != 0
