@@ -1862,9 +1862,7 @@ class VeriPb : public CertificateInterface<REAL>
                      rhs_row_mapping[substituted_row], currentProblem,
                      substituted_row );
       }
-      else if (argument == ArgumentType::kAggregation)
-         return;
-      else
+      else if (argument != ArgumentType::kAggregation)
       {
 
          skip_deleting_lhs_constraint_id = lhs_row_mapping[substituted_row];
@@ -1901,6 +1899,8 @@ class VeriPb : public CertificateInterface<REAL>
             proof_out << "\n";
 
          }
+         if (argument == ArgumentType::kAggregation)
+            return;
 #endif
 
          proof_out << COMMENT << "postsolve stack : row id "
@@ -2555,9 +2555,9 @@ class VeriPb : public CertificateInterface<REAL>
 #if VERIPB_VERSION >= 2
                proof_out << " ; ; begin \n\t";
                if( substitute_factor * factor > 0 )
-                  proof_out << POL << lhs_id << " " << num.round_to_int( abs(val )) << " *" << rhs_row_mapping[row] << " + " << num.round_to_int( abs(val2 )) << " d\n";
+                  proof_out << POL << lhs_id << " " << num.round_to_int( abs(val )) << " * " << rhs_row_mapping[row] << " + " << num.round_to_int( abs(val2 )) << " d\n";
                else
-                  proof_out << POL << rhs_id << " " << num.round_to_int( abs(val )) << " *" << rhs_row_mapping[row] << " + " << num.round_to_int( abs(val2 )) << " d\n";
+                  proof_out << POL << rhs_id << " " << num.round_to_int( abs(val )) << " * " << rhs_row_mapping[row] << " + " << num.round_to_int( abs(val2 )) << " d\n";
                proof_out << "end";
                next_constraint_id += 2;
 #endif
@@ -2581,9 +2581,9 @@ class VeriPb : public CertificateInterface<REAL>
 #if VERIPB_VERSION >= 2
                proof_out << " ; ; begin \n\t";
                if( substitute_factor * factor > 0 )
-                  proof_out << POL << lhs_id << " " << num.round_to_int( abs(val )) << " *" << lhs_row_mapping[row] << " + " << num.round_to_int( abs(val2 )) << " d\n";
+                  proof_out << POL << lhs_id << " " << num.round_to_int( abs(val )) << " * " << lhs_row_mapping[row] << " + " << num.round_to_int( abs(val2 )) << " d\n";
                else
-                  proof_out << POL << rhs_id << " " << num.round_to_int( abs(val )) << " *" << lhs_row_mapping[row] << " + " << num.round_to_int( abs(val2 )) << " d\n";
+                  proof_out << POL << rhs_id << " " << num.round_to_int( abs(val )) << " * " << lhs_row_mapping[row] << " + " << num.round_to_int( abs(val2 )) << " d\n";
                proof_out << "end";
                next_constraint_id += 2;
 #endif
