@@ -2637,10 +2637,10 @@ class VeriPb : public CertificateInterface<REAL>
       return {-1, -1};
    }
 
+#ifdef VERIPB_DEBUG
    void
    verify_changed_row( int row, const Problem<REAL>& problem, const Vec<int>& var_mapping, const Vec<int>& dirty_row_states )
    {
-
       auto constraintMatrix = problem.getConstraintMatrix();
       auto data = constraintMatrix.getRowCoefficients( validate_row );
       const RowFlags& rflags = constraintMatrix.getRowFlags()[validate_row];
@@ -2733,6 +2733,7 @@ class VeriPb : public CertificateInterface<REAL>
                    << ";\n";
       }
    }
+#endif
 
 #if VERIPB_VERSION == 1
    void
