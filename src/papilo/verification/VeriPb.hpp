@@ -1725,7 +1725,7 @@ class VeriPb : public CertificateInterface<REAL>
    }
 
    void
-   substitute_col_singleton_implied( int col, int row, REAL old_obj_coeff, const Problem<REAL>& currentProblem, const Vec<int>& var_mapping  )
+   substitute_col_singleton_implied( int col, int row, REAL old_obj_coeff, const Problem<REAL>& currentProblem, const Vec<int>& var_mapping  ) override
    {
 #if VERIPB_VERSION == 1
       if( !verification_possible || (matrix.getColumnCoefficients( col ).getLength() == 1 && !is_optimization_problem))
