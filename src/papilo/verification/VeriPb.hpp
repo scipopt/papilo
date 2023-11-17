@@ -24,7 +24,7 @@
 #ifndef PAPILO_VERI_VERI_PB_HPP_
 #define PAPILO_VERI_VERI_PB_HPP_
 
-#define VERIPB_DEBUG
+//#define VERIPB_DEBUG
 
 #define VERIPB_VERSION 2
 
@@ -836,6 +836,7 @@ class VeriPb : public CertificateInterface<REAL>
                              scale_factor[parallel_row];
       REAL factor = factor_row / factor_parallel;
       assert( abs( factor ) >= 1 );
+#ifdef VERIPB_DEBUG
       proof_out << COMMENT;
       if( factor < 0 )
          proof_out << lhs_row_mapping[parallel_row];
@@ -843,7 +844,7 @@ class VeriPb : public CertificateInterface<REAL>
          proof_out << rhs_row_mapping[parallel_row];
       proof_out << " is parallel to " << rhs_row_mapping[row] << "/"
                 << lhs_row_mapping[row] << " are parallel.\n";
-
+#endif
       if( abs( factor ) == 1 )
       {
          // rhs_row_mapping[row] can be KNOWN for example if Singleton relaxed a
@@ -995,6 +996,7 @@ class VeriPb : public CertificateInterface<REAL>
                              scale_factor[parallel_row];
       REAL factor = factor_row / factor_parallel;
       assert( abs( factor ) >= 1 );
+#ifdef VERIPB_DEBUG
       proof_out << COMMENT;
       if( factor > 0 )
          proof_out << lhs_row_mapping[parallel_row];
@@ -1002,7 +1004,7 @@ class VeriPb : public CertificateInterface<REAL>
          proof_out << rhs_row_mapping[parallel_row];
       proof_out << " is parallel to " << rhs_row_mapping[row] << "/"
                 << lhs_row_mapping[row] << " are parallel.\n";
-
+#endif
       // shift the constraint ids
       if( abs( factor ) == 1 )
       {
@@ -1618,7 +1620,9 @@ class VeriPb : public CertificateInterface<REAL>
       int orig_index_1 = var_mapping[indices[1]];
 
       int first_constraint_id = next_constraint_id;
+#ifdef VERIPB_DEBUG
       proof_out << COMMENT << "postsolve stack : row id " << next_constraint_id << "\n";
+#endif
       proof_out << RUP;
 
       int lhs = num.round_to_int( offset );
@@ -1644,9 +1648,9 @@ class VeriPb : public CertificateInterface<REAL>
       next_constraint_id++;
       int second_constraint_id = next_constraint_id;
 
-      proof_out << COMMENT << "postsolve stack : row id " << next_constraint_id
-                << "\n";
-
+#ifdef VERIPB_DEBUG
+      proof_out << COMMENT << "postsolve stack : row id " << next_constraint_id << "\n";
+#endif
       proof_out << RUP;
       int rhs = -num.round_to_int( offset );
       proof_out << abs( num.round_to_int( values[0] ) ) << " ";
@@ -1902,9 +1906,10 @@ class VeriPb : public CertificateInterface<REAL>
          if (argument == ArgumentType::kAggregation)
             return;
 #endif
-
+#ifdef VERIPB_DEBUG
          proof_out << COMMENT << "postsolve stack : row id "
                    << lhs_row_mapping[substituted_row] << "\n";
+#endif
          proof_out << DELETE_CONS << rhs_row_mapping[substituted_row];
 #if VERIPB_VERSION >= 2
          if( substitute_factor > 0)
@@ -1922,9 +1927,10 @@ class VeriPb : public CertificateInterface<REAL>
 #endif
          proof_out << "\n";
 
-
+#ifdef VERIPB_DEBUG
          proof_out << COMMENT << "postsolve stack : row id "
                 << rhs_row_mapping[substituted_row] << "\n";
+#endif
          proof_out << DELETE_CONS << lhs_row_mapping[substituted_row];
 #if VERIPB_VERSION >= 2
          if( substitute_factor < 0)
@@ -2185,7 +2191,9 @@ class VeriPb : public CertificateInterface<REAL>
 #endif
       if( symmetries.symmetries.empty() )
          return;
+#ifdef VERIPB_DEBUG
       proof_out << COMMENT << "symmetries: \n";
+#endif
       for(Symmetry symmetry: symmetries.symmetries)
       {
          const auto& name_dominating = names[var_mapping[symmetry.getDominatingCol()]];
