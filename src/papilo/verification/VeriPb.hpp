@@ -427,7 +427,7 @@ class VeriPb : public CertificateInterface<REAL>
       assert( stored_objective.coefficients[col] == problem.getObjective().coefficients[col] );
       if(stored_objective.coefficients[col] != 0)
       {
-         stored_objective.coefficients[col] = 0;
+         stored_objective.coefficients[col] = -std::numeric_limits<REAL>::infinity();
          print_objective( names, var_mapping, problem.getNCols() );
          proof_out << "\n";
       }
@@ -585,7 +585,7 @@ class VeriPb : public CertificateInterface<REAL>
       if( stored_objective.coefficients[col] != 0)
       {
          stored_objective.offset += stored_objective.coefficients[col] * val;
-         stored_objective.coefficients[col] = 0;
+         stored_objective.coefficients[col] = std::numeric_limits<REAL>::infinity();
          print_objective( names, var_mapping, problem.getNCols() );
          proof_out << "\n";
       }
@@ -1464,11 +1464,11 @@ class VeriPb : public CertificateInterface<REAL>
             if( int_scale_updated > 0 )
                proof_out << POL << rhs_row_mapping[candrow] << " "
                          << abs( int_scale_updated ) << " * "
-                         << rhs_row_mapping[candrow] << " +\n";
+                         << rhs_row_mapping[eqrow] << " +\n";
             else
                proof_out << POL << rhs_row_mapping[candrow] << " "
                          << abs( int_scale_updated ) << " * "
-                         << lhs_row_mapping[candrow] << " +\n";
+                         << lhs_row_mapping[eqrow] << " +\n";
 #if VERIPB_VERSION>= 2
             proof_out << MOVE_LAST_CONS_TO_CORE;
 #endif
@@ -1478,12 +1478,12 @@ class VeriPb : public CertificateInterface<REAL>
             proof_out << " ; ; begin \n\t";
             if( int_scale_updated > 0 )
                proof_out << POL << lhs_row_mapping[eqrow] << " "
-                         << abs( int_scale_updated ) << " * "
-                         << lhs_row_mapping[candrow] << " +\n";
+                         << next_constraint_id  << " + "
+                         << abs( int_scale_updated ) << " d \n";
             else
                proof_out << POL << rhs_row_mapping[eqrow] << " "
-                         << abs( int_scale_updated ) << " * "
-                         << lhs_row_mapping[candrow] << " +\n";
+                         << next_constraint_id  << " + "
+                         << abs( int_scale_updated ) << " d \n";
             proof_out << "end";
             next_constraint_id += 2;
 #endif
@@ -1510,13 +1510,14 @@ class VeriPb : public CertificateInterface<REAL>
 #if VERIPB_VERSION >= 2
             proof_out << " ; ; begin \n\t";
             if( int_scale_updated > 0 )
-               proof_out << POL << lhs_row_mapping[eqrow] << " "
-                         << abs( int_scale_updated ) << " * "
-                         << lhs_row_mapping[candrow] << " +\n";
-            else
                proof_out << POL << rhs_row_mapping[eqrow] << " "
-                         << abs( int_scale_updated ) << " * "
-                         << lhs_row_mapping[candrow] << " +\n";
+                         << next_constraint_id  << " + "
+                         << abs( int_scale_updated ) << " d \n";
+            else
+               proof_out << POL << lhs_row_mapping[eqrow] << " "
+                         << next_constraint_id  << " + "
+                         << abs( int_scale_updated ) << " d \n";
+
             proof_out << "end";
             next_constraint_id += 2;
 #endif
@@ -1945,7 +1946,6 @@ class VeriPb : public CertificateInterface<REAL>
                proof_out << NEGATED ;
             proof_out << name << " " << abs(num.round_to_int(substitute_factor)) << " * +\nend";
             next_constraint_id += 2;
-            //TODO:
          }
 #endif
          proof_out << "\n";
@@ -2331,8 +2331,13 @@ class VeriPb : public CertificateInterface<REAL>
          }
       for(int i=0; i<equality.getLength(); i++)
       {
-         if( indices[i] == sub_col)
+         if( indices[i] == sub_col || stored_objective.coefficients[indices[i]]  == -INFINITY)
             continue;
+         if( stored_objective.coefficients[indices[i]]  == INFINITY )
+         {
+            stored_objective.offset -= factor * values[i];
+            continue;
+         }
          stored_objective.coefficients[indices[i]] -= factor * values[i];
       }
       stored_objective.offset += rhs * factor ;
@@ -2350,6 +2355,8 @@ class VeriPb : public CertificateInterface<REAL>
       proof_out << OBJECTIVE;
       for( int col = 0; col < ncols; ++col )
       {
+         if (stored_objective.coefficients[col]  == -INFINITY || stored_objective.coefficients[col]  == INFINITY)
+            continue;
          REAL obj = objective_coefficients[col];
          if( obj == 0 )
             continue;
