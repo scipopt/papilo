@@ -2571,9 +2571,9 @@ class VeriPb : public CertificateInterface<REAL>
 #if VERIPB_VERSION >= 2
                proof_out << " ; ; begin \n\t";
                if( substitute_factor * factor > 0 )
-                  proof_out << POL << lhs_id << " " << num.round_to_int( abs(val )) << " * " << rhs_row_mapping[row] << " + " << num.round_to_int( abs(val2 )) << " d\n";
-               else
                   proof_out << POL << rhs_id << " " << num.round_to_int( abs(val )) << " * " << rhs_row_mapping[row] << " + " << num.round_to_int( abs(val2 )) << " d\n";
+               else
+                  proof_out << POL << lhs_id << " " << num.round_to_int( abs(val )) << " * " << rhs_row_mapping[row] << " + " << num.round_to_int( abs(val2 )) << " d\n";
                proof_out << "end";
                next_constraint_id += 2;
 #endif
