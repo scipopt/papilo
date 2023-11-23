@@ -2079,8 +2079,8 @@ class VeriPb : public CertificateInterface<REAL>
                }
             }
             proof_out << "\n";
-            rhs_row_mapping[row] = UNKNOWN;
          }
+         rhs_row_mapping[row] = UNKNOWN;
       }
    }
 
