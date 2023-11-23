@@ -1825,8 +1825,6 @@ class VeriPb : public CertificateInterface<REAL>
 #if VERIPB_VERSION >= 2
       int implied_constraint_lhs;
       int implied_constraint_rhs;
-      REAL value_lb = 0;
-      REAL value_ub = 0;
       if( row_implying_lb != UNKNOWN || row_implying_ub != UNKNOWN)
       {
          if( substitute_factor > 0)
@@ -1849,16 +1847,6 @@ class VeriPb : public CertificateInterface<REAL>
          }
          next_constraint_id++;
          next_constraint_id++;
-      }
-      if( row_implying_lb != UNKNOWN )
-      {
-         value_lb = getCoeffOfColInRow( row_implying_lb, col_vec );
-         assert(substitute_factor != 0);
-      }
-      else if(row_implying_ub != UNKNOWN)
-      {
-         value_ub = getCoeffOfColInRow( row_implying_ub, col_vec );
-         assert(substitute_factor != 0);
       }
 #endif
       if( col_vec.getLength() != 1)
@@ -1952,33 +1940,37 @@ class VeriPb : public CertificateInterface<REAL>
 
          if( row_implying_lb != UNKNOWN || row_implying_ub != UNKNOWN)
          {
-            //TODO:
-
-            if( row_implying_lb != UNKNOWN && value_lb > 0)
+            /**
+             * lb implied externally + coeff > 0 -> proof rhs
+             * ub implied externally + coeff > 0 -> proof lhs
+             * lb implied externally + coeff < 0 -> proof lhs
+             * ub implied externally + coeff < 0 -> proof rhs
+             */
+            if( row_implying_lb != UNKNOWN && substitute_factor > 0)
             {
-               proof_out << DELETE_CONS << implied_constraint_lhs << " ; ; begin\n\t" << POL << lhs_row_mapping[row_implying_lb] << " -1 +\nend\n";
+               proof_out << DELETE_CONS << implied_constraint_rhs << " ; ; begin\n\t" << POL << lhs_row_mapping[row_implying_lb] << " -1 +\nend\n";
                next_constraint_id += 2;
             }
-            else if ( row_implying_ub != UNKNOWN && value_ub < 0)
+            else if ( row_implying_ub != UNKNOWN && substitute_factor < 0)
             {
-               proof_out << DELETE_CONS << implied_constraint_lhs << " ; ; begin\n\t" << POL << lhs_row_mapping[row_implying_ub] << " -1 +\nend\n";
-               next_constraint_id += 2;
-            }
-            else
-               proof_out << DELETE_CONS << implied_constraint_lhs << "\n";
-
-            if( row_implying_ub != UNKNOWN && value_ub > 0)
-            {
-               proof_out << DELETE_CONS << implied_constraint_rhs << " ; ; begin\n\t" << POL << rhs_row_mapping[row_implying_ub] << " -1 +\nend\n";
-               next_constraint_id += 2;
-            }
-            else if ( row_implying_lb != UNKNOWN && value_lb < 0)
-            {
-               proof_out << DELETE_CONS << implied_constraint_rhs << " ; ; begin\n\t" << POL << rhs_row_mapping[row_implying_lb] << " -1 +\nend\n";
+               proof_out << DELETE_CONS << implied_constraint_rhs << " ; ; begin\n\t" << POL << lhs_row_mapping[row_implying_ub] << " -1 +\nend\n";
                next_constraint_id += 2;
             }
             else
                proof_out << DELETE_CONS << implied_constraint_rhs << "\n";
+
+            if( row_implying_ub != UNKNOWN && substitute_factor > 0)
+            {
+               proof_out << DELETE_CONS << implied_constraint_lhs << " ; ; begin\n\t" << POL << rhs_row_mapping[row_implying_ub] << " -1 +\nend\n";
+               next_constraint_id += 2;
+            }
+            else if ( row_implying_lb != UNKNOWN && substitute_factor < 0)
+            {
+               proof_out << DELETE_CONS << implied_constraint_lhs << " ; ; begin\n\t" << POL << rhs_row_mapping[row_implying_lb] << " -1 +\nend\n";
+               next_constraint_id += 2;
+            }
+            else
+               proof_out << DELETE_CONS << implied_constraint_lhs << "\n";
          }
 
 #if VERIPB_VERSION == 1
