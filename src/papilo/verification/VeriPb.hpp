@@ -3,7 +3,7 @@
 /*               This file is part of the program and library                */
 /*    PaPILO --- Parallel Presolve for Integer and Linear Optimization       */
 /*                                                                           */
-/* Copyright (C) 2020-2022 Konrad-Zuse-Zentrum                               */
+/* Copyright (C) 2020-2023 Konrad-Zuse-Zentrum                               */
 /*                     fuer Informationstechnik Berlin                       */
 /*                                                                           */
 /* This program is free software: you can redistribute it and/or modify      */
@@ -24,6 +24,7 @@
 #ifndef PAPILO_VERI_VERI_PB_HPP_
 #define PAPILO_VERI_VERI_PB_HPP_
 
+//turn on to enable some comments and extended checks
 //#define VERIPB_DEBUG
 
 #define VERIPB_VERSION 2
@@ -47,7 +48,6 @@ static const char* const OUTPUT = "output ";
 static const char* const NONE = "NONE";
 #if VERIPB_VERSION >= 2
 static const char* const DELETE_CONS = "delc ";
-static const char* const DELETE_UNCHECKED = "del id";
 #else
 static const char* const DELETE_CONS = "del id ";
 #endif
@@ -60,7 +60,6 @@ static const char* const SATURATION = "s";
 static const char* const WEAKENING = "w";
 static const int UNKNOWN = -1;
 static const char* const MOVE_LAST_CONS_TO_CORE = "core id -1\n";
-static const char* const MOVE_CONS_TO_CORE = "core id ";
 
 template <typename REAL>
 class VeriPb : public CertificateInterface<REAL>
@@ -351,7 +350,8 @@ class VeriPb : public CertificateInterface<REAL>
          else
             unscaled_row_value = col_coeff.getValues()[row_index];
          assert(num.isIntegral(unscaled_row_value * scale_factor[row]));
-         int row_value = num.round_to_int( unscaled_row_value * scale_factor[row] );
+         int row_value =
+             cast_to_long( unscaled_row_value * scale_factor[row] );
          if( !problem.getRowFlags()[row].test( RowFlag::kLhsInf ) )
          {
             next_constraint_id++;
@@ -462,8 +462,8 @@ class VeriPb : public CertificateInterface<REAL>
          {
             assert(stored_dominated_col != UNKNOWN);
             proof_out << RED << "1 " << names[orig_col]
-                      << " >= " << num.round_to_int( val ) << " ; "
-                      << names[orig_col] << " -> " << num.round_to_int( val ) << " "
+                      << " >= " << cast_to_long( val ) << " ; "
+                      << names[orig_col] << " -> " << cast_to_long( val ) << " "
                       << names[stored_dominated_col] << " -> 1";
 #if VERIPB_VERSION == 1
             add_substitutions_fix_to_witness( names, stored_dominated_col, val == 1 );
@@ -473,14 +473,14 @@ class VeriPb : public CertificateInterface<REAL>
             break;
          }
          proof_out << RUP << "1 " << names[orig_col]
-                   << " >= " << num.round_to_int( val ) << " ;\n";
+                   << " >= " << cast_to_long( val ) << " ;\n";
          break;
       case ArgumentType::kAggregation:
       case ArgumentType::kDual:
       case ArgumentType::kSymmetry:
          proof_out << RED << "1 " << names[orig_col]
-                   << " >= " << num.round_to_int( val ) << " ; "
-                   << names[orig_col] << " -> " << num.round_to_int( val );
+                   << " >= " << cast_to_long( val ) << " ; "
+                   << names[orig_col] << " -> " << cast_to_long( val );
 #if VERIPB_VERSION == 1
          add_substitutions_fix_to_witness( names, var_mapping[col], val == 1 );
 #endif
@@ -508,7 +508,7 @@ class VeriPb : public CertificateInterface<REAL>
          }
          assert( num.isIntegral( col_coeff.getValues()[row_index] *
                                  scale_factor[row] ) );
-         int row_value = num.round_to_int( col_coeff.getValues()[row_index] *
+         int row_value = cast_to_long( col_coeff.getValues()[row_index] *
                                            scale_factor[row] );
          if( !problem.getRowFlags()[row].test( RowFlag::kLhsInf ) )
          {
@@ -646,7 +646,7 @@ class VeriPb : public CertificateInterface<REAL>
          return;
 #endif
       assert( num.isIntegral( gcd ) );
-      row_with_gcd = {row, num.round_to_int(gcd)};
+      row_with_gcd = {row, cast_to_long( gcd )};
    };
 
    void
@@ -695,7 +695,7 @@ class VeriPb : public CertificateInterface<REAL>
          int offset = 0;
          for( int i = 0; i < data.getLength(); i++ )
          {
-            int unscaled_coeff = num.round_to_int( data.getValues()[i] );
+            int unscaled_coeff = cast_to_long( data.getValues()[i] );
             assert( unscaled_coeff != 0 );
             auto found = changed_entries_during_current_tsxs.find( data.getIndices()[i] );
             if( found != changed_entries_during_current_tsxs.end() )
@@ -717,7 +717,7 @@ class VeriPb : public CertificateInterface<REAL>
          }
          proof_out << " >=  "
                    << abs( offset ) -
-                          num.round_to_int( val ) * scale_factor[row]
+                          cast_to_long( val ) * scale_factor[row]
                    << ";\n";
          break;
       }
@@ -772,7 +772,7 @@ class VeriPb : public CertificateInterface<REAL>
          int offset = 0;
          for( int i = 0; i < data.getLength(); i++ )
          {
-            int unscaled_coeff = num.round_to_int( data.getValues()[i] );
+            int unscaled_coeff = cast_to_long( data.getValues()[i] );
             assert( unscaled_coeff != 0 );
             auto found = changed_entries_during_current_tsxs.find( data.getIndices()[i] );
             if( found != changed_entries_during_current_tsxs.end() )
@@ -794,7 +794,7 @@ class VeriPb : public CertificateInterface<REAL>
          }
 
          proof_out << " >=  "
-                   << num.round_to_int( val ) * scale_factor[row] + abs( offset )
+                   << cast_to_long( val ) * scale_factor[row] + abs( offset )
                    << ";\n";
          break;
       }
@@ -924,7 +924,7 @@ class VeriPb : public CertificateInterface<REAL>
                next_constraint_id += 2;
 #endif
                proof_out << "\n";
-               scale_factor[row] *= num.round_to_int( abs(factor_parallel ));
+               scale_factor[row] *= cast_to_long( abs( factor_parallel ) );
             }
          }
          else
@@ -972,7 +972,7 @@ class VeriPb : public CertificateInterface<REAL>
                next_constraint_id += 2;
 #endif
                proof_out << "\n";
-               scale_factor[row] *= num.round_to_int( abs( factor_parallel ) );
+               scale_factor[row] *= cast_to_long( abs( factor_parallel ) );
             }
          }
       }
@@ -1090,7 +1090,7 @@ class VeriPb : public CertificateInterface<REAL>
                next_constraint_id += 2;
 #endif
                proof_out << "\n";
-               scale_factor[row] *= num.round_to_int( abs(factor_parallel) );
+               scale_factor[row] *= cast_to_long( abs( factor_parallel ) );
             }
          }
          else
@@ -1134,7 +1134,7 @@ class VeriPb : public CertificateInterface<REAL>
                next_constraint_id += 2;
 #endif
                proof_out << "\n";
-               scale_factor[row] *= num.round_to_int( abs( factor_parallel ) );
+               scale_factor[row] *= cast_to_long( abs( factor_parallel ) );
             }
          }
       }
@@ -1173,7 +1173,7 @@ class VeriPb : public CertificateInterface<REAL>
          return;
 #endif
       // remove singleton variable from equation
-      changed_entries_during_current_tsxs.emplace( col, num.round_to_int( new_val ) );
+      changed_entries_during_current_tsxs.emplace( col, cast_to_long( new_val ) );
       if( argument == ArgumentType::kAggregation )
       {
          assert( lhs == rhs );
@@ -1191,13 +1191,13 @@ class VeriPb : public CertificateInterface<REAL>
                assert(
                    num.isIntegral( data.getValues()[i] * scale_factor[row] ) );
                old_value =
-                   num.round_to_int( data.getValues()[i] * scale_factor[row] );
+                   cast_to_long( data.getValues()[i] * scale_factor[row] );
             }
          assert( old_value != 0 );
 
          const auto& name = names[var_mapping[col]];
          assert( num.isIntegral( new_val ) );
-         int diff = old_value - num.round_to_int( new_val );
+         int diff = old_value - cast_to_long( new_val );
          if( !rflags.test( RowFlag::kLhsInf ) )
          {
             next_constraint_id++;
@@ -1384,7 +1384,7 @@ class VeriPb : public CertificateInterface<REAL>
       REAL scale_updated = scale * scale_candrow / scale_eqrow;
       if( num.isIntegral( scale_updated ) )
       {
-         int int_scale_updated = num.round_to_int( scale_updated );
+         int int_scale_updated = cast_to_long( scale_updated );
          if( !matrix.getRowFlags()[candrow].test( RowFlag::kRhsInf ) )
          {
             next_constraint_id++;
@@ -1454,7 +1454,7 @@ class VeriPb : public CertificateInterface<REAL>
       }
       else if( num.isIntegral( 1.0 / scale_updated ) )
       {
-         int int_scale_updated = num.round_to_int( 1.0 / scale_updated );
+         int int_scale_updated = cast_to_long( 1.0 / scale_updated );
 
          if( !matrix.getRowFlags()[candrow].test( RowFlag::kRhsInf ) )
          {
@@ -1530,8 +1530,8 @@ class VeriPb : public CertificateInterface<REAL>
          auto frac = sparsify_convert_scale_to_frac( eqrow, candrow, scale, matrix );
          assert( frac.second / frac.first == -scale );
          int frac_eqrow =
-             abs( num.round_to_int( frac.second * scale_candrow ) );
-         int frac_candrow = abs( num.round_to_int( frac.first * scale_eqrow ) );
+             abs( cast_to_long( frac.second * scale_candrow ) );
+         int frac_candrow = abs( cast_to_long( frac.first * scale_eqrow ) );
 
          if( !matrix.getRowFlags()[candrow].test( RowFlag::kRhsInf ) )
          {
@@ -1612,8 +1612,8 @@ class VeriPb : public CertificateInterface<REAL>
       const int* indices = equality.getIndices();
       assert( equality.getLength() == 2 );
       assert( num.isIntegral( values[0] ) && num.isIntegral( values[1] ) );
-      assert( num.round_to_int( values[0] ) != 0 );
-      assert( num.round_to_int( values[1] ) != 0 );
+      assert( cast_to_long( values[0] ) != 0 );
+      assert( cast_to_long( values[1] ) != 0 );
       REAL substitute_factor = indices[0] == col ? values[0] : values[1];
 
       next_constraint_id++;
@@ -1626,19 +1626,19 @@ class VeriPb : public CertificateInterface<REAL>
 #endif
       proof_out << RUP;
 
-      int lhs = num.round_to_int( offset );
-      proof_out << abs( num.round_to_int( values[0] ) ) << " ";
+      int lhs = cast_to_long( offset );
+      proof_out << abs( cast_to_long( values[0] ) ) << " ";
       if( values[0] < 0 )
       {
          proof_out << NEGATED;
-         lhs += abs( num.round_to_int( values[0] ) );
+         lhs += abs( cast_to_long( values[0] ) );
       }
       proof_out << names[orig_index_0] << " +"
-                << abs( num.round_to_int( values[1] ) ) << " ";
+                << abs( cast_to_long( values[1] ) ) << " ";
       if( values[1] < 0 )
       {
          proof_out << NEGATED;
-         lhs += abs( num.round_to_int( values[1] ) );
+         lhs += abs( cast_to_long( values[1] ) );
       }
       proof_out << names[orig_index_1] << " >= " << lhs << ";\n";
       int lhs_id = next_constraint_id;
@@ -1653,19 +1653,19 @@ class VeriPb : public CertificateInterface<REAL>
       proof_out << COMMENT << "postsolve stack : row id " << next_constraint_id << "\n";
 #endif
       proof_out << RUP;
-      int rhs = -num.round_to_int( offset );
-      proof_out << abs( num.round_to_int( values[0] ) ) << " ";
+      int rhs = -cast_to_long( offset );
+      proof_out << abs( cast_to_long( values[0] ) ) << " ";
       if( values[0] > 0 )
       {
          proof_out << NEGATED;
-         rhs += abs( num.round_to_int( values[0] ) );
+         rhs += abs( cast_to_long( values[0] ) );
       }
       proof_out << names[orig_index_0] << " +"
-                << abs( num.round_to_int( values[1] ) ) << " ";
+                << abs( cast_to_long( values[1] ) ) << " ";
       if( values[1] > 0 )
       {
          proof_out << NEGATED;
-         rhs += abs( num.round_to_int( values[1] ) );
+         rhs += abs( cast_to_long( values[1] ) );
       }
       proof_out << names[orig_index_1] << " >= " << rhs << ";\n";
 
@@ -1688,14 +1688,14 @@ class VeriPb : public CertificateInterface<REAL>
             {
                proof_out << " ; begin\n\tproofgoal #1\n\t\t" << POL;
                if(old_obj_coeff/ substitute_factor < 0 )
-                  proof_out << first_constraint_id << " " << num.round_to_int(abs(old_obj_coeff)) << " * " << " -1 " << num.round_to_int(abs(substitute_factor)) << " * +";
+                  proof_out << first_constraint_id << " " << cast_to_long( abs( old_obj_coeff ) ) << " * " << " -1 " << cast_to_long( abs( substitute_factor ) ) << " * +";
                else
-                  proof_out << second_constraint_id << " " << num.round_to_int(abs(old_obj_coeff)) << " * " << " -1 " << num.round_to_int(abs(substitute_factor)) << " * +";
+                  proof_out << second_constraint_id << " " << cast_to_long( abs( old_obj_coeff ) ) << " * " << " -1 " << cast_to_long( abs( substitute_factor ) ) << " * +";
                proof_out << "\nend -1\n\tproofgoal #2\n\t\t" << POL;
                if(old_obj_coeff/ substitute_factor > 0 )
-                  proof_out << first_constraint_id << " " << num.round_to_int(abs(old_obj_coeff)) << " * " << " -1 " << num.round_to_int(abs(substitute_factor)) << " * +";
+                  proof_out << first_constraint_id << " " << cast_to_long( abs( old_obj_coeff ) ) << " * " << " -1 " << cast_to_long( abs( substitute_factor ) ) << " * +";
                else
-                  proof_out << second_constraint_id << " " << num.round_to_int(abs(old_obj_coeff)) << " * " << " -1 " << num.round_to_int(abs(substitute_factor)) << " * +";
+                  proof_out << second_constraint_id << " " << cast_to_long( abs( old_obj_coeff ) ) << " * " << " -1 " << cast_to_long( abs( substitute_factor ) ) << " * +";
                proof_out << "\nend -1\nend";
                next_constraint_id += 4;
             }
@@ -1706,7 +1706,7 @@ class VeriPb : public CertificateInterface<REAL>
          proof_out << DELETE_CONS << first_constraint_id << " ; ";
 #if VERIPB_VERSION >= 2
          int index = indices[0] == col ? 0 : 1;
-         auto name = names[var_mapping[indices[index]]];
+         const auto& name = names[var_mapping[indices[index]]];
          int value = (values[index] > 0) ? 1 : 0;
          proof_out << name << " -> " << value;
 #endif
@@ -1766,14 +1766,14 @@ class VeriPb : public CertificateInterface<REAL>
          {
             proof_out << " ; begin\n\tproofgoal #1\n\t\t" << POL;
             if(old_obj_coeff/ substitute_factor < 0 )
-               proof_out << lhs_row_mapping[row] << " " << num.round_to_int(abs(old_obj_coeff)) << " * " << " -1 " << num.round_to_int(abs(substitute_factor)) << " * +";
+               proof_out << lhs_row_mapping[row] << " " << cast_to_long( abs( old_obj_coeff ) ) << " * " << " -1 " << cast_to_long( abs( substitute_factor ) ) << " * +";
             else
-               proof_out << rhs_row_mapping[row] << " " << num.round_to_int(abs(old_obj_coeff)) << " * " << " -1 " << num.round_to_int(abs(substitute_factor)) << " * +";
+               proof_out << rhs_row_mapping[row] << " " << cast_to_long( abs( old_obj_coeff ) ) << " * " << " -1 " << cast_to_long( abs( substitute_factor ) ) << " * +";
             proof_out << "\nend -1\n\tproofgoal #2\n\t\t" << POL;
             if(old_obj_coeff/ substitute_factor > 0 )
-               proof_out << lhs_row_mapping[row] << " " << num.round_to_int(abs(old_obj_coeff)) << " * " << " -1 " << num.round_to_int(abs(substitute_factor)) << " * +";
+               proof_out << lhs_row_mapping[row] << " " << cast_to_long( abs( old_obj_coeff ) ) << " * " << " -1 " << cast_to_long( abs( substitute_factor ) ) << " * +";
             else
-               proof_out << rhs_row_mapping[row] << " " << num.round_to_int(abs(old_obj_coeff)) << " * " << " -1 " << num.round_to_int(abs(substitute_factor)) << " * +";
+               proof_out << rhs_row_mapping[row] << " " << cast_to_long( abs( old_obj_coeff ) ) << " * " << " -1 " << cast_to_long( abs( substitute_factor ) ) << " * +";
             proof_out << "\nend -1\nend";
             next_constraint_id += 4;
          }
@@ -1829,18 +1829,18 @@ class VeriPb : public CertificateInterface<REAL>
       {
          if( substitute_factor > 0)
          {
-            proof_out << POL << lhs_row_mapping[substituted_row] << " " << NEGATED << name << " " << abs(num.round_to_int(substitute_factor)) << " * +\n";
+            proof_out << POL << lhs_row_mapping[substituted_row] << " " << NEGATED << name << " " << abs( cast_to_long( substitute_factor )) << " * +\n";
             proof_out << MOVE_LAST_CONS_TO_CORE;
-            proof_out << POL << rhs_row_mapping[substituted_row] << " " << name << " " << abs(num.round_to_int(substitute_factor)) << " * +\n";
+            proof_out << POL << rhs_row_mapping[substituted_row] << " " << name << " " << abs( cast_to_long( substitute_factor )) << " * +\n";
             proof_out << MOVE_LAST_CONS_TO_CORE;
             implied_constraint_lhs = next_constraint_id + 1;
             implied_constraint_rhs = next_constraint_id + 2;
          }
          else
          {
-            proof_out << POL << rhs_row_mapping[substituted_row] << " " << NEGATED << name << " " << abs(num.round_to_int(substitute_factor)) << " * +\n";
+            proof_out << POL << rhs_row_mapping[substituted_row] << " " << NEGATED << name << " " << abs( cast_to_long( substitute_factor )) << " * +\n";
             proof_out << MOVE_LAST_CONS_TO_CORE;
-            proof_out << POL << lhs_row_mapping[substituted_row] << " " << name << " " << abs(num.round_to_int(substitute_factor)) << " * +\n";
+            proof_out << POL << lhs_row_mapping[substituted_row] << " " << name << " " << abs( cast_to_long( substitute_factor )) << " * +\n";
             proof_out << MOVE_LAST_CONS_TO_CORE;
             implied_constraint_rhs = next_constraint_id + 1;
             implied_constraint_lhs = next_constraint_id + 2;
@@ -1878,14 +1878,14 @@ class VeriPb : public CertificateInterface<REAL>
             {
                proof_out << " ; begin\n\tproofgoal #1\n\t\t" << POL;
                if(old_obj_coeff/ substitute_factor < 0 )
-                  proof_out << lhs_row_mapping[substituted_row] << " " << num.round_to_int(abs(old_obj_coeff)) << " * " << " -1 " << num.round_to_int(abs(substitute_factor)) << " * +";
+                  proof_out << lhs_row_mapping[substituted_row] << " " << cast_to_long( abs( old_obj_coeff ) ) << " * " << " -1 " << cast_to_long( abs( substitute_factor ) ) << " * +";
                else
-                  proof_out << rhs_row_mapping[substituted_row] << " " << num.round_to_int(abs(old_obj_coeff)) << " * " << " -1 " << num.round_to_int(abs(substitute_factor)) << " * +";
+                  proof_out << rhs_row_mapping[substituted_row] << " " << cast_to_long( abs( old_obj_coeff ) ) << " * " << " -1 " << cast_to_long( abs( substitute_factor ) ) << " * +";
                proof_out << "\nend -1\n\tproofgoal #2\n\t\t" << POL;
                if(old_obj_coeff/ substitute_factor > 0 )
-                  proof_out << lhs_row_mapping[substituted_row] << " " << num.round_to_int(abs(old_obj_coeff)) << " * " << " -1 " << num.round_to_int(abs(substitute_factor)) << " * +";
+                  proof_out << lhs_row_mapping[substituted_row] << " " << cast_to_long( abs( old_obj_coeff ) ) << " * " << " -1 " << cast_to_long( abs( substitute_factor ) ) << " * +";
                else
-                  proof_out << rhs_row_mapping[substituted_row] << " " << num.round_to_int(abs(old_obj_coeff)) << " * " << " -1 " << num.round_to_int(abs(substitute_factor)) << " * +";
+                  proof_out << rhs_row_mapping[substituted_row] << " " << cast_to_long( abs( old_obj_coeff ) ) << " * " << " -1 " << cast_to_long( abs( substitute_factor ) ) << " * +";
                proof_out << "\nend -1\nend";
                next_constraint_id += 4;
             }
@@ -1910,7 +1910,7 @@ class VeriPb : public CertificateInterface<REAL>
             proof_out << " ; begin\n\t" << POL << implied_constraint_lhs << " " ;
                 if( substitute_factor < 0)
                proof_out << NEGATED ;
-            proof_out << name << " " << abs(num.round_to_int(substitute_factor)) << " * +\nend";
+            proof_out << name << " " << abs( cast_to_long( substitute_factor )) << " * +\nend";
             next_constraint_id += 2;
          }
 #endif
@@ -1932,7 +1932,7 @@ class VeriPb : public CertificateInterface<REAL>
             proof_out << " ; begin\n\t" << POL << implied_constraint_rhs << " " ;
             if( substitute_factor > 0)
                proof_out << NEGATED ;
-            proof_out << name << " " << abs(num.round_to_int(substitute_factor)) << " * +\nend";
+            proof_out << name << " " << abs( cast_to_long( substitute_factor )) << " * +\nend";
             next_constraint_id += 2;
          }
 #endif
@@ -2030,8 +2030,15 @@ class VeriPb : public CertificateInterface<REAL>
             if(argument == ArgumentType::kRedundant)
             {
                assert(parallel_remaining_row != UNKNOWN);
-               int coeff_remaining = num.round_to_int(currentProblem.getConstraintMatrix().getRowCoefficients(parallel_remaining_row).getValues()[0]) * scale_factor[parallel_remaining_row];
-               int coeff = num.round_to_int(currentProblem.getConstraintMatrix().getRowCoefficients(row).getValues()[0]) * scale_factor[row];
+               int coeff_remaining =
+                   cast_to_long(
+                       currentProblem.getConstraintMatrix()
+                           .getRowCoefficients( parallel_remaining_row )
+                           .getValues()[0] ) * scale_factor[parallel_remaining_row];
+               int coeff =
+                   cast_to_long( currentProblem.getConstraintMatrix()
+                                         .getRowCoefficients( row )
+                                         .getValues()[0] ) * scale_factor[row];
                if(abs(coeff/coeff_remaining) != 1)
                {
                   int use_row_to_proof =lhs_row_mapping[parallel_remaining_row];
@@ -2059,11 +2066,13 @@ class VeriPb : public CertificateInterface<REAL>
             if( argument == ArgumentType::kRedundant )
             {
                assert( parallel_remaining_row != UNKNOWN );
-               int coeff_remaining = num.round_to_int(
-                   currentProblem.getConstraintMatrix()
-                       .getRowCoefficients( parallel_remaining_row )
-                       .getValues()[0] )* scale_factor[parallel_remaining_row];
-               int coeff = num.round_to_int( currentProblem.getConstraintMatrix()
+               int coeff_remaining =
+                   cast_to_long(
+                       currentProblem.getConstraintMatrix()
+                           .getRowCoefficients( parallel_remaining_row )
+                           .getValues()[0] )* scale_factor[parallel_remaining_row];
+               int coeff =
+                   cast_to_long( currentProblem.getConstraintMatrix()
                                          .getRowCoefficients( row )
                                          .getValues()[0] )
                         * scale_factor[row];
@@ -2337,6 +2346,12 @@ class VeriPb : public CertificateInterface<REAL>
       stored_objective.coefficients[sub_col] = 0;
    }
 
+   long
+   cast_to_long( const REAL& x )
+   {
+      return (long) floor( REAL( x + REAL( 0.5 ) ) );
+   }
+
    void
    print_objective( const Vec<String>& names, const Vec<int>& var_mapping,
                     int ncols )
@@ -2344,7 +2359,7 @@ class VeriPb : public CertificateInterface<REAL>
       if(!is_optimization_problem)
          return;
       auto objective_coefficients = stored_objective.coefficients;
-      REAL sum = 0;
+      StableSum<REAL> sum{};
       proof_out << OBJECTIVE;
       for( int col = 0; col < ncols; ++col )
       {
@@ -2353,15 +2368,16 @@ class VeriPb : public CertificateInterface<REAL>
          REAL obj = objective_coefficients[col];
          if( obj == 0 )
             continue;
-         proof_out << abs(num.round_to_int( obj )) << " ";
+         proof_out << abs( cast_to_long( obj )) << " ";
          if( obj < 0)
          {
             proof_out << NEGATED;
-            sum += abs(obj);
+            sum.add(-abs(obj));
          }
          proof_out << names[var_mapping[col]]+ " ";
       }
-      proof_out << " " << num.round_to_int(stored_objective.offset - sum);
+      sum.add(stored_objective.offset);
+      proof_out << " " << cast_to_long( sum.get() );
       proof_out << ";";
    }
 #endif
@@ -2425,7 +2441,7 @@ class VeriPb : public CertificateInterface<REAL>
          auto data = matrix.getRowCoefficients( row );
          if( num.isIntegral( factor / substitute_factor ) )
          {
-            int val = num.round_to_int( factor / substitute_factor );
+            int val = cast_to_long( factor / substitute_factor );
             if( !matrix.getRowFlags()[row].test( RowFlag::kRhsInf ) )
             {
                next_constraint_id++;
@@ -2444,9 +2460,9 @@ class VeriPb : public CertificateInterface<REAL>
 #if VERIPB_VERSION >= 2
                proof_out << " ; ; begin \n\t";
                if( substitute_factor * factor > 0 )
-                  proof_out << POL << " " << rhs_row_mapping[row] << " " << rhs_id <<  " " << num.round_to_int( abs(val )) << " * + \n";
+                  proof_out << POL << " " << rhs_row_mapping[row] << " " << rhs_id <<  " " << cast_to_long( abs( val ) ) << " * + \n";
                else
-                  proof_out << POL << " " << rhs_row_mapping[row] << " " << lhs_id << " " <<  num.round_to_int( abs(val )) << " * + \n";
+                  proof_out << POL << " " << rhs_row_mapping[row] << " " << lhs_id << " " << cast_to_long( abs( val ) ) << " * + \n";
 
                proof_out << "end";
                next_constraint_id += 2;
@@ -2471,9 +2487,9 @@ class VeriPb : public CertificateInterface<REAL>
 #if VERIPB_VERSION >= 2
                proof_out << " ; ; begin \n\t";
                if( substitute_factor * factor > 0 )
-                  proof_out << POL << lhs_row_mapping[row] << " " << lhs_id << " " << num.round_to_int( abs(val )) << " * + \n";
+                  proof_out << POL << lhs_row_mapping[row] << " " << lhs_id << " " << cast_to_long( abs( val ) ) << " * + \n";
                else
-                  proof_out << POL << lhs_row_mapping[row] << " " << rhs_id << " " <<  num.round_to_int( abs(val )) << " * + \n";
+                  proof_out << POL << lhs_row_mapping[row] << " " << rhs_id << " " << cast_to_long( abs( val ) ) << " * + \n";
                proof_out << "end";
                next_constraint_id += 2;
 #endif
@@ -2482,8 +2498,9 @@ class VeriPb : public CertificateInterface<REAL>
          }
          else if( num.isIntegral( substitute_factor / factor ) )
          {
-            scale_factor[row] *= num.round_to_int( abs(substitute_factor / factor) );
-            int val = abs( num.round_to_int( substitute_factor / factor ) );
+            scale_factor[row] *=
+                cast_to_long( abs( substitute_factor / factor ) );
+            int val = abs( cast_to_long( substitute_factor / factor ) );
             assert( val > 0 );
             if( !matrix.getRowFlags()[row].test( RowFlag::kRhsInf ) )
             {
@@ -2501,9 +2518,9 @@ class VeriPb : public CertificateInterface<REAL>
 #if VERIPB_VERSION >= 2
                proof_out << " ; ; begin \n\t";
                if( substitute_factor * factor > 0 )
-                  proof_out << POL << rhs_row_mapping[row] << " " << rhs_id << " + "  << num.round_to_int( abs(val )) << " d\n";
+                  proof_out << POL << rhs_row_mapping[row] << " " << rhs_id << " + "  << cast_to_long( abs( val ) ) << " d\n";
                else
-                  proof_out << POL << rhs_row_mapping[row] << " " << lhs_id << " + " << num.round_to_int( abs(val )) << " d\n";
+                  proof_out << POL << rhs_row_mapping[row] << " " << lhs_id << " + " << cast_to_long( abs( val ) ) << " d\n";
                proof_out << "end";
                next_constraint_id += 2;
 #endif
@@ -2528,9 +2545,9 @@ class VeriPb : public CertificateInterface<REAL>
 #if VERIPB_VERSION >= 2
                proof_out << " ; ; begin \n\t";
                if( substitute_factor * factor < 0 )
-                  proof_out << POL << lhs_row_mapping[row] << " " << rhs_id << " + " << num.round_to_int( abs(val )) << " d\n";
+                  proof_out << POL << lhs_row_mapping[row] << " " << rhs_id << " + " << cast_to_long( abs( val ) ) << " d\n";
                else
-                  proof_out << POL << lhs_row_mapping[row] << " " << lhs_id << " + " << num.round_to_int( abs(val )) << " d\n";
+                  proof_out << POL << lhs_row_mapping[row] << " " << lhs_id << " + " << cast_to_long( abs( val ) ) << " d\n";
                proof_out << "end";
                next_constraint_id += 2;
 #endif
@@ -2541,9 +2558,9 @@ class VeriPb : public CertificateInterface<REAL>
          {
             assert( num.isIntegral( substitute_factor ) );
             assert( num.isIntegral( factor ) );
-            scale_factor[row] *= num.round_to_int( abs(substitute_factor) );
-            int val = abs( num.round_to_int( factor ) );
-            int val2 = abs( num.round_to_int( substitute_factor ) );
+            scale_factor[row] *= cast_to_long( abs( substitute_factor ) );
+            int val = abs( cast_to_long( factor ) );
+            int val2 = abs( cast_to_long( substitute_factor ) );
 
             if( !matrix.getRowFlags()[row].test( RowFlag::kRhsInf ) )
             {
@@ -2563,9 +2580,9 @@ class VeriPb : public CertificateInterface<REAL>
 #if VERIPB_VERSION >= 2
                proof_out << " ; ; begin \n\t";
                if( substitute_factor * factor > 0 )
-                  proof_out << POL << rhs_id << " " << num.round_to_int( abs(val )) << " * " << rhs_row_mapping[row] << " + " << num.round_to_int( abs(val2 )) << " d\n";
+                  proof_out << POL << rhs_id << " " << cast_to_long( abs( val ) ) << " * " << rhs_row_mapping[row] << " + " << cast_to_long( abs( val2 ) ) << " d\n";
                else
-                  proof_out << POL << lhs_id << " " << num.round_to_int( abs(val )) << " * " << rhs_row_mapping[row] << " + " << num.round_to_int( abs(val2 )) << " d\n";
+                  proof_out << POL << lhs_id << " " << cast_to_long( abs( val ) ) << " * " << rhs_row_mapping[row] << " + " << cast_to_long( abs( val2 ) ) << " d\n";
                proof_out << "end";
                next_constraint_id += 2;
 #endif
@@ -2589,9 +2606,9 @@ class VeriPb : public CertificateInterface<REAL>
 #if VERIPB_VERSION >= 2
                proof_out << " ; ; begin \n\t";
                if( substitute_factor * factor > 0 )
-                  proof_out << POL << lhs_id << " " << num.round_to_int( abs(val )) << " * " << lhs_row_mapping[row] << " + " << num.round_to_int( abs(val2 )) << " d\n";
+                  proof_out << POL << lhs_id << " " << cast_to_long( abs( val ) ) << " * " << lhs_row_mapping[row] << " + " << cast_to_long( abs( val2 ) ) << " d\n";
                else
-                  proof_out << POL << rhs_id << " " << num.round_to_int( abs(val )) << " * " << lhs_row_mapping[row] << " + " << num.round_to_int( abs(val2 )) << " d\n";
+                  proof_out << POL << rhs_id << " " << cast_to_long( abs( val ) ) << " * " << lhs_row_mapping[row] << " + " << cast_to_long( abs( val2 ) ) << " d\n";
                proof_out << "end";
                next_constraint_id += 2;
 #endif
@@ -2845,10 +2862,10 @@ class VeriPb : public CertificateInterface<REAL>
          assert(num.isIntegral( values[i]));
          if(!( (values[i] < 0 && is_lhs) || (values[i] > 0 && !is_lhs)) )
             proof_out << NEGATED;
-         proof_out << names[var_mapping[c]] << " " << num.round_to_int(abs(values[i])) << " * + ";
+         proof_out << names[var_mapping[c]] << " " << cast_to_long( abs( values[i] ) ) << " * + ";
       }
       assert(col_coef != 0);
-      proof_out << num.round_to_int(abs(col_coef)) << " d\n";
+      proof_out << cast_to_long( abs( col_coef ) ) << " d\n";
       assert(
           (col_coef > 0 && is_lb && lhs_row_mapping[row]!= UNKNOWN) ||
           (col_coef < 0 && is_lb && rhs_row_mapping[row]!= UNKNOWN) ||

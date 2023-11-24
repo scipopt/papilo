@@ -169,7 +169,7 @@ struct OpbWriter
                assert( val != 0 );
                assert( num.isIntegral(val ) );
                fmt::print( out, "{}{} {} ", val > 0 ? "+" : "-",
-                           abs( num.round_to_int(val) ),
+                           abs( cast_to_long( val ) ),
                            varnames[col_mapping[vector.getIndices()[j]]] );
             }
             assert(num.isIntegral( lhs[row] * scale ));
@@ -177,8 +177,7 @@ struct OpbWriter
                fmt::print( out, "= " );
             else
                fmt::print( out, ">= " );
-            fmt::print( out, " {} ;\n",
-                        num.round_to_int( lhs[row] * scale ) );
+            fmt::print( out, " {} ;\n", cast_to_long( lhs[row] * scale ) );
          }
          if(!row_flags[row].test( RowFlag::kEquation ) &&
              !row_flags[row].test( RowFlag::kRhsInf ))
@@ -198,7 +197,7 @@ struct OpbWriter
             }
             assert(num.isIntegral( rhs[row] * scale ));
             fmt::print( out, ">= {} ;\n",
-                        - num.round_to_int( rhs[row] * scale ) );
+                        -cast_to_long( rhs[row] * scale ) );
          }
       }
       for( auto sym_c : sym )
@@ -261,6 +260,12 @@ struct OpbWriter
       }
       return rows;
 
+   }
+
+   static long
+   cast_to_long( const REAL& x )
+   {
+      return (long) floor( REAL( x + REAL( 0.5 ) ) );
    }
 };
 
