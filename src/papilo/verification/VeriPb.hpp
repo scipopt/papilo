@@ -1819,7 +1819,7 @@ class VeriPb : public CertificateInterface<REAL>
          return;
       }
 #endif
-      REAL substitute_factor = getCoeffOfColInRow( substituted_row, col_vec );
+      REAL substitute_factor = get_coeff_in_col_vec( substituted_row, col_vec );
       assert(substitute_factor != 0);
       const String name = currentProblem.getVariableNames()[var_mapping[col]];
 #if VERIPB_VERSION >= 2
@@ -1948,12 +1948,19 @@ class VeriPb : public CertificateInterface<REAL>
              */
             if( row_implying_lb != UNKNOWN && substitute_factor > 0)
             {
-               proof_out << DELETE_CONS << implied_constraint_rhs << " ; ; begin\n\t" << POL << lhs_row_mapping[row_implying_lb] << " -1 +\nend\n";
+               REAL coeff_lb = get_coeff_in_col_vec( row_implying_lb, col_vec );
+               int contradiction = coeff_lb > 0 ? lhs_row_mapping[row_implying_lb]: rhs_row_mapping[row_implying_lb];
+               assert(contradiction != UNKNOWN);
+               proof_out << DELETE_CONS << implied_constraint_rhs << " ; ; begin\n\t" << POL << contradiction
+                         << " -1 +\nend\n";
                next_constraint_id += 2;
             }
             else if ( row_implying_ub != UNKNOWN && substitute_factor < 0)
             {
-               proof_out << DELETE_CONS << implied_constraint_rhs << " ; ; begin\n\t" << POL << lhs_row_mapping[row_implying_ub] << " -1 +\nend\n";
+               REAL coeff_ub = get_coeff_in_col_vec( row_implying_ub, col_vec );
+               int contradiction = coeff_ub > 0 ? rhs_row_mapping[row_implying_ub]: lhs_row_mapping[row_implying_ub];
+               assert(contradiction != UNKNOWN);
+               proof_out << DELETE_CONS << implied_constraint_rhs << " ; ; begin\n\t" << POL << contradiction << " -1 +\nend\n";
                next_constraint_id += 2;
             }
             else
@@ -1961,11 +1968,17 @@ class VeriPb : public CertificateInterface<REAL>
 
             if( row_implying_ub != UNKNOWN && substitute_factor > 0)
             {
+               REAL coeff_ub = get_coeff_in_col_vec( row_implying_ub, col_vec );
+               int contradiction = coeff_ub > 0 ? rhs_row_mapping[row_implying_ub]: lhs_row_mapping[row_implying_ub];
+               assert(contradiction != UNKNOWN);
                proof_out << DELETE_CONS << implied_constraint_lhs << " ; ; begin\n\t" << POL << rhs_row_mapping[row_implying_ub] << " -1 +\nend\n";
                next_constraint_id += 2;
             }
             else if ( row_implying_lb != UNKNOWN && substitute_factor < 0)
             {
+               REAL coeff_lb = get_coeff_in_col_vec( row_implying_lb, col_vec );
+               int contradiction = coeff_lb > 0 ? lhs_row_mapping[row_implying_lb]: rhs_row_mapping[row_implying_lb];
+               assert(contradiction != UNKNOWN);
                proof_out << DELETE_CONS << implied_constraint_lhs << " ; ; begin\n\t" << POL << rhs_row_mapping[row_implying_lb] << " -1 +\nend\n";
                next_constraint_id += 2;
             }
@@ -1990,22 +2003,6 @@ class VeriPb : public CertificateInterface<REAL>
       }
 #endif
    }
-   REAL
-   getCoeffOfColInRow( int substituted_row,
-                       const SparseVectorView<REAL>& col_vec )
-   {
-      REAL substitute_factor;
-      for( int i = 0; i < col_vec.getLength(); i++ )
-      {
-         if( col_vec.getIndices()[i] == substituted_row )
-         {
-            substitute_factor =
-                col_vec.getValues()[i] * scale_factor[substituted_row];
-            break;
-         }
-      }
-      return substitute_factor;
-   };
 
    void
    mark_row_redundant( int row, const Problem<REAL>& currentProblem, ArgumentType argument = ArgumentType::kPrimal ) override
@@ -2282,6 +2279,25 @@ class VeriPb : public CertificateInterface<REAL>
 
 
  private:
+
+   REAL
+   get_coeff_in_col_vec( int substituted_row,
+                       const SparseVectorView<REAL>& col_vec )
+   {
+      REAL substitute_factor;
+      for( int i = 0; i < col_vec.getLength(); i++ )
+      {
+         if( col_vec.getIndices()[i] == substituted_row )
+         {
+            substitute_factor =
+                col_vec.getValues()[i] * scale_factor[substituted_row];
+            return substitute_factor;
+         }
+      }
+      assert(false);
+      return 0;
+   };
+
 
    void
    end_proof( int obj )
