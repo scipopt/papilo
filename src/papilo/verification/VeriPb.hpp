@@ -2398,6 +2398,7 @@ class VeriPb : public CertificateInterface<REAL>
    }
 #endif
 
+#if VERIPB_VERSION == 1
    void
    store_substitution( const REAL value_0, const REAL value_1, int orig_index_0,
                        int orig_index_1 )
@@ -2433,6 +2434,7 @@ class VeriPb : public CertificateInterface<REAL>
          }
       }
    }
+#endif
 
    void
    substitute( int col, REAL substitute_factor, int lhs_id, int rhs_id,
