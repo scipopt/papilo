@@ -3,7 +3,6 @@
 @section RNNEXT PaPILO NEXT
 ***************************
 
-
 Features
 --------
 
@@ -29,6 +28,12 @@ Testing
 
 Build system
 ------------
+
+Fixed bugs
+----------
+
+@section RN212 PaPILO 2.1.4
+***************************
 
 Fixed bugs
 ----------
