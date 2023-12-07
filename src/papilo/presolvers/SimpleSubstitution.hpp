@@ -68,7 +68,7 @@ class SimpleSubstitution : public PresolveMethod<REAL>
        int stay, const boost::integer::euclidean_result_t<int64_t>& res ) const;
 
    PresolveStatus
-   perform_simple_subsitution_step(
+   perform_simple_substitution_step(
        const ProblemUpdate<REAL>& problemUpdate, const Num<REAL>& num,
        Reductions<REAL>& reductions, const VariableDomains<REAL>& domains,
        const Vec<ColFlags>& cflags, const ConstraintMatrix<REAL>& constMatrix,
@@ -117,7 +117,7 @@ SimpleSubstitution<REAL>::execute( const Problem<REAL>& problem,
    {
       for( int k = 0; k < nrows; ++k )
       {
-         PresolveStatus s = perform_simple_subsitution_step(
+         PresolveStatus s = perform_simple_substitution_step(
              problemUpdate, num, reductions, domains, cflags, constMatrix,
              lhs_values, rhs_values, lower_bounds, upper_bounds, rflags,
              rowperm, k );
@@ -137,7 +137,7 @@ SimpleSubstitution<REAL>::execute( const Problem<REAL>& problem,
           [&]( const tbb::blocked_range<int>& r ) {
              for( int j = r.begin(); j < r.end(); ++j )
              {
-                PresolveStatus s = perform_simple_subsitution_step(
+                PresolveStatus s = perform_simple_substitution_step(
                     problemUpdate, num, stored_reductions[j], domains, cflags,
                     constMatrix, lhs_values, rhs_values, lower_bounds,
                     upper_bounds, rflags, rowperm, j );
@@ -181,7 +181,7 @@ SimpleSubstitution<REAL>::execute( const Problem<REAL>& problem,
 }
 template <typename REAL>
 PresolveStatus
-SimpleSubstitution<REAL>::perform_simple_subsitution_step(
+SimpleSubstitution<REAL>::perform_simple_substitution_step(
     const ProblemUpdate<REAL>& problemUpdate, const Num<REAL>& num,
     Reductions<REAL>& reductions, const VariableDomains<REAL>& domains,
     const Vec<ColFlags>& cflags, const ConstraintMatrix<REAL>& constMatrix,
@@ -229,7 +229,8 @@ SimpleSubstitution<REAL>::perform_simple_subsitution_step(
       assert( cflags[inds[1]].test( ColFlag::kIntegral ) );
       if( abs( vals[0] ) < abs( vals[1] ) ||
           ( abs( vals[0] ) == abs( vals[1] ) &&
-            problemUpdate.isColBetterForSubstitution( inds[0], inds[1] ) ) )
+            problemUpdate.check_sparsification_condition_on_substitution(
+                inds[0], inds[1] ) ) )
          subst = 0;
       else
          subst = 1;
@@ -245,7 +246,6 @@ SimpleSubstitution<REAL>::perform_simple_subsitution_step(
             static_cast<int64_t>( abs( vals[subst] ) ) );
          if( !num.isIntegral( rhs / res.gcd ) )
             return PresolveStatus::kInfeasible;
-         // TODO: ensure isConstraintsFeasibleWithGivenBounds() works for negative sign
          else if( !isConstraintsFeasibleWithGivenBounds(
                num, lower_bounds, upper_bounds, vals, rhs, subst, stay, res ) )
             return PresolveStatus::kInfeasible;
@@ -261,20 +261,30 @@ SimpleSubstitution<REAL>::perform_simple_subsitution_step(
    {
       REAL absval0 = abs( vals[0] );
       REAL absval1 = abs( vals[1] );
-      if( absval0 * problemUpdate.getPresolveOptions().markowitz_tolerance >
+      bool integral0 = num.isIntegral(absval0/absval1);
+      bool integral1 = num.isIntegral(absval1/absval0);
+      if( integral1 && !integral0 )
+         subst = 1;
+      else if( integral0 && !integral1 )
+         subst = 0;
+      else if( absval0 * problemUpdate.getPresolveOptions().markowitz_tolerance >
           absval1 )
          subst = 0;
       else if( absval1 *
                    problemUpdate.getPresolveOptions().markowitz_tolerance >
                absval0 )
          subst = 1;
-      else if( problemUpdate.isColBetterForSubstitution( inds[0], inds[1] ) )
+      else if( problemUpdate.check_sparsification_condition_on_substitution(
+                   inds[0], inds[1] ) )
          subst = 0;
       else
          subst = 1;
 
       stay = 1 - subst;
    }
+
+   if (!this->check_if_substitution_generates_huge_or_small_coefficients(num, constMatrix, i, inds[subst]))
+      return PresolveStatus::kUnchanged;
 
    result = PresolveStatus::kReduced;
 

@@ -25,6 +25,7 @@
 #define _PAPILO_CORE_PRESOLVE_METHOD_HPP_
 
 #include "papilo/core/PresolveOptions.hpp"
+#include "papilo/core/ConstraintMatrix.hpp"
 #include "papilo/core/Reductions.hpp"
 #include "papilo/core/RowFlags.hpp"
 #include "papilo/core/VariableDomains.hpp"
@@ -283,6 +284,60 @@ class PresolveMethod
    {
       return tlim != std::numeric_limits<double>::max() &&
              timer.getTime() >= tlim;
+   }
+
+   bool
+   check_if_substitution_generates_huge_or_small_coefficients( const Num<REAL>& num,
+                                       const ConstraintMatrix<REAL>& constMatrix,
+                                       int equalityrow, int col )
+   {
+      assert(col < constMatrix.getNCols());
+      assert(equalityrow < constMatrix.getNRows());
+      assert(constMatrix.getRowFlags()[equalityrow].test(RowFlag::kEquation));
+
+      const auto colvec = constMatrix.getColumnCoefficients( col );
+      const int* colindices = colvec.getIndices();
+
+      const auto rowvec = constMatrix.getRowCoefficients( equalityrow );
+      const int row_length = rowvec.getLength();
+      const int* row_indices = rowvec.getIndices();
+      REAL coeff = 0;
+      REAL min_col_vector = -1;
+      REAL max_col_vector = 0;
+      for( int i = 0; i < colvec.getLength(); i++ )
+      {
+         REAL val = colvec.getValues()[i];
+         if( colindices[i] == equalityrow )
+            coeff = val;
+         if( min_col_vector == -1 || abs( min_col_vector ) > abs( val ) )
+            min_col_vector = abs( val );
+         if( abs( max_col_vector ) < abs( val ) )
+            max_col_vector = abs( val );
+      }
+      assert( coeff != 0 );
+
+      if( num.isHugeVal( coeff ) )
+         return false;
+
+      REAL min_row_vector = -1;
+      REAL max_row_vector = 0;
+      for( int j = 0; j < row_length; j++ )
+      {
+         REAL val = rowvec.getValues()[j];
+         if( row_indices[j] == col )
+            continue;
+         if( min_row_vector == -1 || abs( min_row_vector ) > abs( val ) )
+            min_row_vector = abs( val );
+         if( abs( max_row_vector ) < abs( val ) )
+            max_row_vector = abs( val );
+      }
+      if( num.isHugeVal( max_col_vector ) || num.isHugeVal( max_row_vector ) ||
+          num.isHugeVal( max_col_vector / coeff * max_row_vector ) ||
+          num.isZero( min_col_vector / coeff * min_row_vector ) )
+      {
+         return false;
+      }
+      return true;
    }
 
    void
