@@ -89,6 +89,8 @@ class OpbParser
 
       assert( parser.nnz >= 0 );
 
+      assert(parser.coeffobj.size() == parser.nCols);
+
       Vec<REAL> obj_vec( size_t( parser.nCols ), REAL{ 0.0 } );
 
       for( auto i : parser.coeffobj )
@@ -106,6 +108,10 @@ class OpbParser
       problem.setVariableNames( std::move( parser.colnames ) );
       problem.setName( std::move( filename ) );
       problem.setConstraintNames( std::move( parser.rownames ) );
+
+      problem.set_problem_type( ProblemFlag::kMixedInteger );
+      problem.set_problem_type( ProblemFlag::kInteger );
+      problem.set_problem_type( ProblemFlag::kBinary );
 
       problem.setInputTolerance(
           REAL{ pow( typename RealParseType<REAL>::type{ 10 },
@@ -125,7 +131,7 @@ class OpbParser
    parse( boost::iostreams::filtering_istream& file );
 
    /*
-    * data for mps problem
+    * data for opb problem
     */
 
    Vec<Triplet<REAL>> entries;
@@ -157,7 +163,7 @@ class OpbParser
    void
    add_binary_variable( const String& name );
 
-   int
+   boost::multiprecision::cpp_int
    read_number( const std::string& s );
 };
 
@@ -230,7 +236,7 @@ OpbParser<REAL>::parseRows( std::string& line )
 
    unsigned long pos = line.find(">=");
    std::string line_rhs;
-   int offset = 0;
+   REAL offset = 0;
    if( pos == std::string::npos )
    {
       pos = line.find( '=' );
@@ -280,7 +286,7 @@ OpbParser<REAL>::parseRows( std::string& line )
    {
       std::string s_coef = tokens[counter];
       std::string var = tokens[counter + 1];
-      int coef = read_number( s_coef );
+      REAL coef = REAL{ read_number( s_coef )};
       bool negated = false;
       if( !var.empty() && var[0] == '~' )
       {
@@ -307,7 +313,7 @@ OpbParser<REAL>::parseRows( std::string& line )
       entries.push_back( { nRows, col, negated ? -coef : coef } );
       nnz++;
    }
-   int rhs = read_number(line_rhs);
+   REAL rhs = REAL{read_number(line_rhs)};
 
    if( row_type[row_type.size() - 1] == BoundType::kEq )
    {
@@ -357,13 +363,13 @@ OpbParser<REAL>::parseObjective( std::string& line )
          return ParseKey::kFail;
       }
 
-   int offset = 0;
-
+   REAL offset = 0;
    for( int counter = 0; counter < (long long)tokens.size(); counter += 2 )
    {
       std::string s_coef = tokens[counter];
       std::string var = tokens[counter + 1];
-      int coef = read_number( s_coef );
+      boost::multiprecision::cpp_int anInt = read_number( s_coef );
+      REAL coef = REAL{ anInt };
       bool negated = false;
       if( !var.empty() && var[0] == '~' )
       {
@@ -405,9 +411,9 @@ OpbParser<REAL>::add_binary_variable( const String& name )
 }
 
 template <typename REAL>
-int
+boost::multiprecision::cpp_int
 OpbParser<REAL>::read_number(const std::string& s) {
-   int answer = 0;
+   boost::multiprecision::cpp_int answer = 0;
    bool negated = false;
    for (char c : s) {
       if ('0' <= c && c <= '9') {

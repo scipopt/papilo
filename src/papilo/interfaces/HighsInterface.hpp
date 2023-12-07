@@ -69,6 +69,7 @@ class HighsInterface : public SolverInterface<REAL>
       const auto& rhs_values = consMatrix.getRightHandSides();
       const auto& rflags = problem.getRowFlags();
 
+      //TODO: symmetries missing
       HighsLp model;
 
       model.sense_ = ObjSense::kMinimize;
@@ -337,7 +338,7 @@ class HighsInterface : public SolverInterface<REAL>
    }
 
    bool
-   getSolution( Solution<REAL>& sol ) override
+   getSolution( Solution<REAL>& sol, PostsolveStorage<REAL>& postsolve ) override
    {
       const HighsSolution& highsSol = solver.getSolution();
       int numcols = solver.getNumCol();

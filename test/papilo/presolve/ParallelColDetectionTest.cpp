@@ -41,6 +41,7 @@ setupProblemWithMultipleParallelColumns();
 TEST_CASE( "parallel_col_detection_2_integer_columns", "[presolve]" )
 {
    double time = 0.0;
+   int cause = -1;
    Timer t{time};
    Num<double> num{};
    Message msg{};
@@ -57,7 +58,7 @@ TEST_CASE( "parallel_col_detection_2_integer_columns", "[presolve]" )
    Reductions<double> reductions{};
 
    PresolveStatus presolveStatus =
-       presolvingMethod.execute( problem, problemUpdate, num, reductions, t );
+       presolvingMethod.execute( problem, problemUpdate, num, reductions, t, cause );
 
    REQUIRE( presolveStatus == PresolveStatus::kReduced );
    REQUIRE( reductions.size() == 3 );
@@ -77,6 +78,7 @@ TEST_CASE( "parallel_col_detection_2_integer_columns", "[presolve]" )
 TEST_CASE( "parallel_col_detection_objective_zero", "[presolve]" )
 {
    double time = 0.0;
+   int cause = -1;
    Timer t{time};
    Num<double> num{};
    Message msg{};
@@ -93,7 +95,7 @@ TEST_CASE( "parallel_col_detection_objective_zero", "[presolve]" )
    Reductions<double> reductions{};
 
    PresolveStatus presolveStatus =
-       presolvingMethod.execute( problem, problemUpdate, num, reductions, t );
+       presolvingMethod.execute( problem, problemUpdate, num, reductions, t, cause );
 
    REQUIRE( presolveStatus == PresolveStatus::kReduced );
    REQUIRE( reductions.size() == 3 );
@@ -114,6 +116,7 @@ TEST_CASE( "parallel_col_detection_objective_zero", "[presolve]" )
 TEST_CASE( "parallel_col_detection_2_continuous_columns", "[presolve]" )
 {
    double time = 0.0;
+   int cause = -1;
    Timer t{time};
    Num<double> num{};
    Message msg{};
@@ -130,7 +133,7 @@ TEST_CASE( "parallel_col_detection_2_continuous_columns", "[presolve]" )
    Reductions<double> reductions{};
 
    PresolveStatus presolveStatus =
-       presolvingMethod.execute( problem, problemUpdate, num, reductions, t );
+       presolvingMethod.execute( problem, problemUpdate, num, reductions, t, cause );
 
    REQUIRE( presolveStatus == PresolveStatus::kReduced );
    REQUIRE( reductions.size() == 3 );
@@ -150,6 +153,7 @@ TEST_CASE( "parallel_col_detection_2_continuous_columns", "[presolve]" )
 TEST_CASE( "parallel_col_detection_int_cont_merge_possible", "[presolve]" )
 {
    double time = 0.0;
+   int cause = -1;
    Timer t{time};
    Num<double> num{};
    Message msg{};
@@ -166,7 +170,7 @@ TEST_CASE( "parallel_col_detection_int_cont_merge_possible", "[presolve]" )
    Reductions<double> reductions{};
 
    PresolveStatus presolveStatus =
-       presolvingMethod.execute( problem, problemUpdate, num, reductions, t );
+       presolvingMethod.execute( problem, problemUpdate, num, reductions, t, cause );
 
    REQUIRE( presolveStatus == PresolveStatus::kReduced );
    REQUIRE( reductions.size() == 4 );
@@ -190,6 +194,7 @@ TEST_CASE( "parallel_col_detection_int_cont_merge_possible", "[presolve]" )
 TEST_CASE( "parallel_col_detection_cont_int_merge_possible", "[presolve]" )
 {
    double time = 0.0;
+   int cause = -1;
    Timer t{time};
    Num<double> num{};
    Message msg{};
@@ -206,7 +211,7 @@ TEST_CASE( "parallel_col_detection_cont_int_merge_possible", "[presolve]" )
    Reductions<double> reductions{};
 
    PresolveStatus presolveStatus =
-       presolvingMethod.execute( problem, problemUpdate, num, reductions, t );
+       presolvingMethod.execute( problem, problemUpdate, num, reductions, t, cause );
 
    REQUIRE( presolveStatus == PresolveStatus::kReduced );
    REQUIRE( reductions.size() == 4 );
@@ -230,6 +235,7 @@ TEST_CASE( "parallel_col_detection_cont_int_merge_possible", "[presolve]" )
 TEST_CASE( "parallel_col_detection_cont_int_merge_failed", "[presolve]" )
 {
    double time = 0.0;
+   int cause = -1;
    Timer t{time};
    Num<double> num{};
    Message msg{};
@@ -246,7 +252,7 @@ TEST_CASE( "parallel_col_detection_cont_int_merge_failed", "[presolve]" )
    Reductions<double> reductions{};
 
    PresolveStatus presolveStatus =
-       presolvingMethod.execute( problem, problemUpdate, num, reductions, t );
+       presolvingMethod.execute( problem, problemUpdate, num, reductions, t, cause );
 
    REQUIRE( presolveStatus == PresolveStatus::kUnchanged );
 }
@@ -254,6 +260,7 @@ TEST_CASE( "parallel_col_detection_cont_int_merge_failed", "[presolve]" )
 TEST_CASE( "parallel_col_detection_int_cont_merge_failed", "[presolve]" )
 {
    double time = 0.0;
+   int cause = -1;
    Timer t{time};
    Num<double> num{};
    Message msg{};
@@ -270,7 +277,7 @@ TEST_CASE( "parallel_col_detection_int_cont_merge_failed", "[presolve]" )
    Reductions<double> reductions{};
 
    PresolveStatus presolveStatus =
-       presolvingMethod.execute( problem, problemUpdate, num, reductions, t );
+       presolvingMethod.execute( problem, problemUpdate, num, reductions, t, cause );
 
    REQUIRE( presolveStatus == PresolveStatus::kUnchanged );
 }
@@ -278,6 +285,7 @@ TEST_CASE( "parallel_col_detection_int_cont_merge_failed", "[presolve]" )
 TEST_CASE( "parallel_col_detection_int_merge_failed_hole", "[presolve]" )
 {
    double time = 0.0;
+   int cause = -1;
    Timer t{time};
    Num<double> num{};
    Message msg{};
@@ -294,7 +302,7 @@ TEST_CASE( "parallel_col_detection_int_merge_failed_hole", "[presolve]" )
    Reductions<double> reductions{};
 
    PresolveStatus presolveStatus =
-       presolvingMethod.execute( problem, problemUpdate, num, reductions, t );
+       presolvingMethod.execute( problem, problemUpdate, num, reductions, t, cause );
 
    REQUIRE( presolveStatus == PresolveStatus::kUnchanged );
 }
@@ -302,6 +310,7 @@ TEST_CASE( "parallel_col_detection_int_merge_failed_hole", "[presolve]" )
 TEST_CASE( "parallel_col_detection_obj_not_parallel", "[presolve]" )
 {
    double time = 0.0;
+   int cause = -1;
    Timer t{time};
    Num<double> num{};
    Message msg{};
@@ -320,7 +329,7 @@ TEST_CASE( "parallel_col_detection_obj_not_parallel", "[presolve]" )
    Reductions<double> reductions{};
 
    PresolveStatus presolveStatus =
-       presolvingMethod.execute( problem, problemUpdate, num, reductions, t );
+       presolvingMethod.execute( problem, problemUpdate, num, reductions, t, cause );
 
    REQUIRE( presolveStatus == PresolveStatus::kUnchanged );
 }
@@ -328,6 +337,7 @@ TEST_CASE( "parallel_col_detection_obj_not_parallel", "[presolve]" )
 TEST_CASE( "parallel_col_detection_multiple_parallel_columns", "[presolve]" )
 {
    double time = 0.0;
+   int cause = -1;
    Timer t{time};
    Num<double> num{};
    Message msg{};
@@ -343,7 +353,7 @@ TEST_CASE( "parallel_col_detection_multiple_parallel_columns", "[presolve]" )
    Reductions<double> reductions{};
 
    PresolveStatus presolveStatus =
-       presolvingMethod.execute( problem, problemUpdate, num, reductions, t );
+       presolvingMethod.execute( problem, problemUpdate, num, reductions, t, cause );
 
    REQUIRE( presolveStatus == PresolveStatus::kReduced );
    REQUIRE( reductions.size() == 13 );

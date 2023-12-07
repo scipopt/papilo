@@ -464,6 +464,7 @@ Postsolve<REAL>::copy_from_reduced_to_original(
    originalSolution.primal.clear();
    originalSolution.primal.resize( postsolveStorage.nColsOriginal );
 
+   assert(reducedSolution.primal.size() == postsolveStorage.origcol_mapping.size());
    int reduced_columns = (int)reducedSolution.primal.size();
    for( int k = 0; k < reduced_columns; ++k )
       originalSolution.primal[postsolveStorage.origcol_mapping[k]] =

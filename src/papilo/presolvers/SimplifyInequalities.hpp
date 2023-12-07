@@ -55,12 +55,14 @@ class SimplifyInequalities : public PresolveMethod<REAL>
       this->setName( "simplifyineq" );
       this->setTiming( PresolverTiming::kMedium );
       this->setType( PresolverType::kIntegralCols );
+      this->setArgument( ArgumentType::kWeakening );
    }
 
    PresolveStatus
    execute( const Problem<REAL>& problem,
-            const ProblemUpdate<REAL>& problemUpdate, const Num<REAL>& num,
-            Reductions<REAL>& reductions, const Timer& timer ) override;
+            const ProblemUpdate<REAL>& problemUpdate,
+            const Num<REAL>& num, Reductions<REAL>& reductions,
+            const Timer& timer, int& reason_of_infeasibility) override;
 
  private:
    REAL
@@ -291,9 +293,8 @@ template <typename REAL>
 PresolveStatus
 SimplifyInequalities<REAL>::execute( const Problem<REAL>& problem,
                                      const ProblemUpdate<REAL>& problemUpdate,
-                                     const Num<REAL>& num,
-                                     Reductions<REAL>& reductions, const Timer& timer )
-{
+                                     const Num<REAL>& num, Reductions<REAL>& reductions,
+                                     const Timer& timer, int& reason_of_infeasibility){
    const auto& consMatrix = problem.getConstraintMatrix();
    const Vec<RowActivity<REAL>>& activities = problem.getRowActivities();
    const Vec<RowFlags>& rflags = consMatrix.getRowFlags();
@@ -438,6 +439,7 @@ SimplifyInequalities<REAL>::perform_simplify_ineq_task(
 
       TransactionGuard<REAL> guard{ reductions };
       reductions.lockRow( row );
+      reductions.submit_gcd( row, greatestCommonDivisor );
 
       for( int col : coefficientsThatCanBeDeleted )
       {

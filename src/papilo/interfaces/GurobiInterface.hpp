@@ -62,6 +62,7 @@ class GurobiInterface : public SolverInterface<REAL>
       const Vec<REAL>& rhs = problem.getConstraintMatrix().getRightHandSides();
       const Vec<REAL>& lhs = problem.getConstraintMatrix().getLeftHandSides();
       const auto consMatrix = problem.getConstraintMatrix();
+      const auto& symmetries = problem.getSymmetries().symmetries;
 
       env = new GRBEnv();
       GRBModel model = GRBModel( *env );
@@ -123,8 +124,35 @@ class GurobiInterface : public SolverInterface<REAL>
                              rowNames[origRowMap[i]] + "_rhs" );
          model.update();
       }
+
+      for( int i = 0; i < symmetries.size(); ++i )
+      {
+         GRBLinExpr grbLinExpr = 0;
+         auto& symmetry = symmetries[i];
+         double lhs;
+         switch( symmetry.getSymmetryType() )
+         {
+         case SymmetryType::kXgeY:
+            grbLinExpr += vars[symmetry.getDominatingCol()];
+            grbLinExpr -= vars[symmetry.getDominatedCol()];
+            lhs = 0;
+            break;
+         case SymmetryType::kXplusYge1:
+            grbLinExpr += vars[symmetry.getDominatingCol()];
+            grbLinExpr += vars[symmetry.getDominatedCol()];
+            lhs = 1;
+            break;
+         default:
+            assert( false );
+         }
+
+         if( !consMatrix.getRowFlags()[i].test( RowFlag::kLhsInf ) )
+            model.addConstr( grbLinExpr, GRB_GREATER_EQUAL, lhs,
+                             "symmetry_" + std::to_string(i) );
+
+         model.update();
+      }
       model.update();
-      model.write( "test.mps" );
       model.optimize();
       grb_status = model.get( GRB_IntAttr_Status );
       fmt::print( "{}\n", model.get( GRB_DoubleAttr_ObjVal ) );
@@ -329,7 +357,7 @@ class GurobiInterface : public SolverInterface<REAL>
    }
 
    bool
-   getSolution( Solution<REAL>& solbuffer ) override
+   getSolution( Solution<REAL>& solbuffer, PostsolveStorage<REAL>& postsolve ) override
    {
       solbuffer = sol;
       return true;

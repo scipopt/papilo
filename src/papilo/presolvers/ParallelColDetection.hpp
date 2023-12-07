@@ -96,7 +96,8 @@ class ParallelColDetection : public PresolveMethod<REAL>
    findParallelCols( const Num<REAL>& num, const int* bucket, int bucketSize,
                      const ConstraintMatrix<REAL>& constMatrix,
                      const Vec<REAL>& obj, const VariableDomains<REAL>& domains,
-                     Reductions<REAL>& reductions );
+                     const SymmetryStorage& symmetries,
+                     bool is_binary, Reductions<REAL>& reductions );
 
    void
    computeColHashes( const ConstraintMatrix<REAL>& constMatrix,
@@ -105,6 +106,15 @@ class ParallelColDetection : public PresolveMethod<REAL>
    void
    computeSupportId( const ConstraintMatrix<REAL>& constMatrix,
                      unsigned int* supportHashes );
+
+   void
+   addPresolverParams( ParameterSet& paramSet ) override
+   {
+      paramSet.addParameter( "parallelcols.symmetries_enabled",
+          "should Parallel Cols search for symmetries at the end (for example "
+          "for binary problems where merging columns does not work)",
+          symmetries );
+   }
 
  public:
    ParallelColDetection() : PresolveMethod<REAL>()
@@ -117,15 +127,24 @@ class ParallelColDetection : public PresolveMethod<REAL>
    initialize( const Problem<REAL>& problem,
                const PresolveOptions& presolveOptions ) override
    {
-      if( presolveOptions.dualreds < 2 )
+      if( presolveOptions.dualreds < 2 ||
+          problem.test_problem_type( ProblemFlag::kBinary ) )
          this->setEnabled( false );
       return false;
    }
 
    PresolveStatus
    execute( const Problem<REAL>& problem,
-            const ProblemUpdate<REAL>& problemUpdate, const Num<REAL>& num,
-            Reductions<REAL>& reductions, const Timer& timer ) override;
+            const ProblemUpdate<REAL>& problemUpdate,
+            const Num<REAL>& num, Reductions<REAL>& reductions,
+            const Timer& timer, int& reason_of_infeasibility)
+       override;
+
+   PresolveStatus
+   execute_symmetries( const Problem<REAL>& problem,
+                       const ProblemUpdate<REAL>& problemUpdate,
+                       const Num<REAL>& num, Reductions<REAL>& reductions,
+                       const Timer& timer ) override;
 
  private:
    int
@@ -147,6 +166,8 @@ class ParallelColDetection : public PresolveMethod<REAL>
    bool
    determineOderingForZeroObj( REAL val1, REAL val2, int colpermCol1,
             int colpermCol2 ) const;
+
+   bool symmetries = false;
 };
 
 #ifdef PAPILO_USE_EXTERN_TEMPLATES
@@ -160,7 +181,8 @@ void
 ParallelColDetection<REAL>::findParallelCols(
     const Num<REAL>& num, const int* bucket, int bucketSize,
     const ConstraintMatrix<REAL>& constMatrix, const Vec<REAL>& obj,
-    const VariableDomains<REAL>& domains, Reductions<REAL>& reductions )
+    const VariableDomains<REAL>& domains, const SymmetryStorage& symmetries,
+    bool is_binary, Reductions<REAL>& reductions )
 {
    // TODO if bucketSize too large do gurobi trick
    const Vec<ColFlags>& cflags = domains.flags;
@@ -240,6 +262,7 @@ ParallelColDetection<REAL>::findParallelCols(
    // only continuous columns
    if( !cflags[bucket[bucketSize - 1]].test( ColFlag::kIntegral ) )
    {
+      assert(!is_binary);
       int col1 = bucket[0];
       auto col1vec = constMatrix.getColumnCoefficients( col1 );
       const int length = col1vec.getLength();
@@ -250,7 +273,6 @@ ParallelColDetection<REAL>::findParallelCols(
          assert( !cflags[col2].test( ColFlag::kIntegral ) );
          const REAL* coefs2 =
              constMatrix.getColumnCoefficients( col2 ).getValues();
-
          if( check_parallelity( num, obj, col1, length, coefs1, col2, coefs2 ) )
          {
             TransactionGuard<REAL> tg{ reductions };
@@ -267,7 +289,7 @@ ParallelColDetection<REAL>::findParallelCols(
       // to avoid adding redundant tsxs in case of multiple parallel cols
       // all tsxs only refer to the first col in the bucket IF it is possible
       // to construct a tsxs between the first and the remaining ones
-      bool abort_after_first_loop = true;
+      bool abort_after_first_loop = !is_binary;
       int first_col_with_finite_bounds = -1;
 
       for( int i = 0; i < bucketSize; i++ )
@@ -298,8 +320,11 @@ ParallelColDetection<REAL>::findParallelCols(
             bool parallel = check_parallelity( num, obj, col1, length, coefs1,
                                                col2, coefs2 );
             if( parallel &&
+//                !symmetries.contains_symmetry(col1, col2) &&
                 !checkDomainsForHoles( col1, col2, coefs1[0] / coefs2[0] ) )
             {
+               if( is_binary && abs( coefs1[0] / coefs2[0] ) != 1 )
+                  continue;
                TransactionGuard<REAL> tg{ reductions };
                reductions.lockCol( col2 );
                reductions.lockCol( col1 );
@@ -313,6 +338,7 @@ ParallelColDetection<REAL>::findParallelCols(
    }
    else
    {
+      assert(!is_binary);
       int col1 = bucket[0];
       auto col1vec = constMatrix.getColumnCoefficients( col1 );
       const int length = col1vec.getLength();
@@ -507,12 +533,12 @@ template <typename REAL>
 PresolveStatus
 ParallelColDetection<REAL>::execute( const Problem<REAL>& problem,
                                      const ProblemUpdate<REAL>& problemUpdate,
-                                     const Num<REAL>& num,
-                                     Reductions<REAL>& reductions, const Timer& timer )
-{
+                                     const Num<REAL>& num, Reductions<REAL>& reductions,
+                                     const Timer& timer, int& reason_of_infeasibility){
    const auto& constMatrix = problem.getConstraintMatrix();
    const auto& obj = problem.getObjective().coefficients;
    const auto& cflags = problem.getColFlags();
+   const auto& symmetries = problem.getSymmetries();
    const int ncols = constMatrix.getNCols();
    const Vec<int>& colperm = problemUpdate.getRandomColPerm();
 
@@ -576,6 +602,7 @@ ParallelColDetection<REAL>::execute( const Problem<REAL>& problem,
                 colperm[a] < colperm[b] );
        } );
 
+   const bool is_binary = problem.test_problem_type( ProblemFlag::kBinary );
    for( int i = 0; i < ncols; )
    {
       int bucketSize =
@@ -583,16 +610,33 @@ ParallelColDetection<REAL>::execute( const Problem<REAL>& problem,
 
       // if more than one col is in the bucket find parallel cols
       if( bucketSize > 1 )
-      {
          findParallelCols( num, col.get() + i, bucketSize, constMatrix, obj,
-                           problem.getVariableDomains(), reductions );
-      }
-
+                           problem.getVariableDomains(), symmetries, is_binary, reductions );
       i = i + bucketSize;
    }
    if( reductions.getTransactions().size() > 0 )
       result = PresolveStatus::kReduced;
    return result;
+}
+
+template <typename REAL>
+PresolveStatus
+ParallelColDetection<REAL>::execute_symmetries( const Problem<REAL>& problem,
+                    const ProblemUpdate<REAL>& problemUpdate,
+                    const Num<REAL>& num, Reductions<REAL>& reductions,
+                    const Timer& timer )
+{
+   if( !symmetries )
+      return PresolveStatus::kUnchanged;
+   if( this->isEnabled() )
+   {
+      fmt::print( "For Symmetries parallel columns need to be "
+                  "disabled!\n" );
+      return PresolveStatus::kUnchanged;
+   }
+
+   int cause = -1;
+   return execute( problem, problemUpdate, num, reductions, timer,  cause);
 }
 
 template <typename REAL>
@@ -614,6 +658,7 @@ ParallelColDetection<REAL>::determineBucketSize(
    assert( j > i );
    return j - i;
 }
+
 template <typename REAL>
 bool
 ParallelColDetection<REAL>::determineOderingForZeroObj( REAL val1, REAL val2,

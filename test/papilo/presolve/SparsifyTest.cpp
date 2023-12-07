@@ -47,7 +47,8 @@ setupProblemForSparsifyWithContinuousVariableMissTwo();
 TEST_CASE( "happy-path-sparsify", "[presolve]" )
 {
    Num<double> num{};
-   double time = 0.0;
+      double time = 0.0;
+   int cause = -1;
    Timer t{ time };
    Message msg{};
    Problem<double> problem = setupProblemWithSparsify();
@@ -62,7 +63,7 @@ TEST_CASE( "happy-path-sparsify", "[presolve]" )
    problem.recomputeAllActivities();
 
    PresolveStatus presolveStatus =
-       presolvingMethod.execute( problem, problemUpdate, num, reductions, t );
+       presolvingMethod.execute( problem, problemUpdate, num, reductions, t, cause );
    REQUIRE( presolveStatus == PresolveStatus::kReduced );
    REQUIRE( reductions.size() == 3 );
    REQUIRE( reductions.getReduction( 0 ).row == 0 );
@@ -80,7 +81,8 @@ TEST_CASE( "happy-path-sparsify", "[presolve]" )
 
 TEST_CASE( "happy-path-sparsify-two-equalities", "[presolve]" )
 {
-   double time = 0.0;
+      double time = 0.0;
+   int cause = -1;
    Timer t{ time };
    Num<double> num{};
    Message msg{};
@@ -96,7 +98,7 @@ TEST_CASE( "happy-path-sparsify-two-equalities", "[presolve]" )
    problem.recomputeAllActivities();
 
    PresolveStatus presolveStatus =
-       presolvingMethod.execute( problem, problemUpdate, num, reductions, t );
+       presolvingMethod.execute( problem, problemUpdate, num, reductions, t, cause );
    REQUIRE( presolveStatus == PresolveStatus::kReduced );
    REQUIRE( reductions.size() == 6 );
    REQUIRE( reductions.getReduction( 0 ).row == 0 );
@@ -128,7 +130,8 @@ TEST_CASE( "failed-path-sparsify-if-misses-one-for-integer", "[presolve]" )
 {
    Num<double> num{};
    Message msg{};
-   double time = 0.0;
+      double time = 0.0;
+   int cause = -1;
    Timer t{ time };
 
    Problem<double> problem = setupProblemForSparsifyWithOneMiss( 1 );
@@ -143,7 +146,7 @@ TEST_CASE( "failed-path-sparsify-if-misses-one-for-integer", "[presolve]" )
    problem.recomputeAllActivities();
 
    PresolveStatus presolveStatus =
-       presolvingMethod.execute( problem, problemUpdate, num, reductions, t );
+       presolvingMethod.execute( problem, problemUpdate, num, reductions, t, cause );
    REQUIRE( presolveStatus == PresolveStatus::kUnchanged );
 }
 
@@ -153,7 +156,8 @@ TEST_CASE( "happy-path-sparsify-if-misses-one-for-continuous", "[presolve]" )
 {
    Num<double> num{};
    Message msg{};
-   double time = 0.0;
+      double time = 0.0;
+   int cause = -1;
    Timer t{ time };
 
    Problem<double> problem = setupProblemForSparsifyWithOneMiss( 0 );
@@ -168,7 +172,7 @@ TEST_CASE( "happy-path-sparsify-if-misses-one-for-continuous", "[presolve]" )
    problem.recomputeAllActivities();
 
 //   PresolveStatus presolveStatus =
-       presolvingMethod.execute( problem, problemUpdate, num, reductions, t );
+       presolvingMethod.execute( problem, problemUpdate, num, reductions, t, cause );
 //   REQUIRE( presolveStatus == PresolveStatus::kReduced );
 }
 
@@ -176,7 +180,8 @@ TEST_CASE( "happy-path-sparsify-if-misses-one-for-continuous_2", "[presolve]" )
 {
    Num<double> num{};
    Message msg{};
-   double time = 0.0;
+      double time = 0.0;
+   int cause = -1;
    Timer t{ time };
 
    Problem<double> problem = setupProblemForSparsifyWithOneMiss_2( 0 );
@@ -191,7 +196,7 @@ TEST_CASE( "happy-path-sparsify-if-misses-one-for-continuous_2", "[presolve]" )
    problem.recomputeAllActivities();
 
    PresolveStatus presolveStatus =
-       presolvingMethod.execute( problem, problemUpdate, num, reductions, t );
+       presolvingMethod.execute( problem, problemUpdate, num, reductions, t, cause );
    // TODO:
    REQUIRE( presolveStatus == PresolveStatus::kReduced );
 }
@@ -200,7 +205,8 @@ TEST_CASE( "failed-path-sparsify-if-misses-two-for-continuous", "[presolve]" )
 {
    Num<double> num{};
    Message msg{};
-   double time = 0.0;
+      double time = 0.0;
+   int cause = -1;
    Timer t{ time };
 
    Problem<double> problem =
@@ -216,7 +222,7 @@ TEST_CASE( "failed-path-sparsify-if-misses-two-for-continuous", "[presolve]" )
    problem.recomputeAllActivities();
 
    PresolveStatus presolveStatus =
-       presolvingMethod.execute( problem, problemUpdate, num, reductions, t );
+       presolvingMethod.execute( problem, problemUpdate, num, reductions, t, cause );
    REQUIRE( presolveStatus == PresolveStatus::kUnchanged );
 }
 

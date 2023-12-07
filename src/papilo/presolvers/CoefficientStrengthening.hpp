@@ -40,12 +40,14 @@ class CoefficientStrengthening : public PresolveMethod<REAL>
       this->setName( "coefftightening" );
       this->setType( PresolverType::kIntegralCols );
       this->setTiming( PresolverTiming::kFast );
+      this->setArgument( ArgumentType::kSaturation );
    }
 
    PresolveStatus
    execute( const Problem<REAL>& problem,
-            const ProblemUpdate<REAL>& problemUpdate, const Num<REAL>& num,
-            Reductions<REAL>& reductions, const Timer& timer ) override;
+            const ProblemUpdate<REAL>& problemUpdate,
+            const Num<REAL>& num, Reductions<REAL>& reductions,
+            const Timer& timer, int& reason_of_infeasibility) override;
 
  private:
    PresolveStatus
@@ -66,10 +68,10 @@ extern template class CoefficientStrengthening<Rational>;
 
 template <typename REAL>
 PresolveStatus
-CoefficientStrengthening<REAL>::execute(
-    const Problem<REAL>& problem, const ProblemUpdate<REAL>& problemUpdate,
-    const Num<REAL>& num, Reductions<REAL>& reductions, const Timer& timer )
-{
+CoefficientStrengthening<REAL>::execute( const Problem<REAL>& problem,
+                                         const ProblemUpdate<REAL>& problemUpdate,
+                                         const Num<REAL>& num, Reductions<REAL>& reductions,
+                                         const Timer& timer, int& reason_of_infeasibility){
    assert( problem.getNumIntegralCols() != 0 );
 
    const auto& domains = problem.getVariableDomains();

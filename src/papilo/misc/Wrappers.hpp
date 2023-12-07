@@ -28,6 +28,7 @@
 #include "papilo/core/postsolve/Postsolve.hpp"
 #include "papilo/io/Parser.hpp"
 #include "papilo/io/MpsWriter.hpp"
+#include "papilo/io/OpbWriter.hpp"
 #include "papilo/io/SolParser.hpp"
 #include "papilo/io/SolWriter.hpp"
 #include "papilo/misc/NumericalStatistics.hpp"
@@ -61,7 +62,8 @@ ResultStatus
 presolve_and_solve(
     const OptionsInfo& opts,
     std::unique_ptr<SolverFactory<REAL>> lpSolverFactory = nullptr,
-    std::unique_ptr<SolverFactory<REAL>> mipSolverFactory = nullptr )
+    std::unique_ptr<SolverFactory<REAL>> mipSolverFactory = nullptr,
+    std::unique_ptr<SolverFactory<REAL>> satSolverFactory = nullptr )
 {
    try
    {
@@ -99,6 +101,8 @@ presolve_and_solve(
             lpSolverFactory->add_parameters(paramSet);
          if(mipSolverFactory != nullptr)
             mipSolverFactory->add_parameters(paramSet);
+         if(satSolverFactory != nullptr)
+            satSolverFactory->add_parameters(paramSet);
 
          if( !opts.param_settings_file.empty() && !opts.print_params )
          {
@@ -205,6 +209,7 @@ presolve_and_solve(
 
       presolve.setLPSolverFactory( std::move( lpSolverFactory ) );
       presolve.setMIPSolverFactory( std::move( mipSolverFactory ) );
+      presolve.setSATSolverFactory( std::move( satSolverFactory ) );
 
       presolve.getPresolveOptions().tlim =
           std::min( opts.tlim, presolve.getPresolveOptions().tlim );
@@ -219,6 +224,17 @@ presolve_and_solve(
             solver = presolve.getLPSolverFactory()->newSolver(
                 presolve.getVerbosityLevel() );
             store_dual = solver->is_dual_solution_available();
+         }
+         else if( presolve.getSATSolverFactory() &&
+                  problem.test_problem_type(ProblemFlag::kBinary) )
+         {
+            if( !presolve.getPresolveOptions().verification_with_VeriPB )
+            {
+               fmt::print( "please activate VeriPB to provide row scaling for SAT Solvers\n" );
+               return ResultStatus::kError;
+            }
+            solver = presolve.getSATSolverFactory()->newSolver(
+                presolve.getVerbosityLevel() );
          }
          else if( presolve.getMIPSolverFactory() )
             solver = presolve.getMIPSolverFactory()->newSolver(
@@ -275,9 +291,26 @@ presolve_and_solve(
       {
          Timer t( writetime );
 
-         MpsWriter<REAL>::writeProb( opts.reduced_problem_file, problem,
-                                     result.postsolve.origrow_mapping,
-                                     result.postsolve.origcol_mapping );
+         if(boost::algorithm::ends_with( opts.reduced_problem_file, ".opb" )
+             || boost::algorithm::ends_with( opts.reduced_problem_file, ".opb.bz2" )
+             || boost::algorithm::ends_with( opts.reduced_problem_file, ".opb.gz" ))
+         {
+            Num<REAL> num{};
+            num.setFeasTol( REAL{ presolve.getPresolveOptions().feastol } );
+            num.setEpsilon( REAL{ presolve.getPresolveOptions().epsilon } );
+            num.setHugeVal( REAL{ presolve.getPresolveOptions().hugeval } );
+            bool success = OpbWriter<REAL>::writeProb( opts.reduced_problem_file, problem,
+                                        result.postsolve.origcol_mapping, presolve.getRowScalingFactors(), num );
+            //TODO: change name
+            if(!success)
+               MpsWriter<REAL>::writeProb( opts.reduced_problem_file, problem,
+                                           result.postsolve.origrow_mapping,
+                                           result.postsolve.origcol_mapping );
+         }
+         else
+            MpsWriter<REAL>::writeProb( opts.reduced_problem_file, problem,
+                                        result.postsolve.origrow_mapping,
+                                        result.postsolve.origcol_mapping );
 
          fmt::print( "reduced problem written to {} in {:.3f} seconds\n\n",
                      opts.reduced_problem_file, t.getTime() );
@@ -297,15 +330,18 @@ presolve_and_solve(
                      opts.postsolve_archive_file, t.getTime() );
       }
 
-      if( opts.command == Command::kPresolve )
+      if( opts.command == Command::kPresolve || problem.getNCols() == 0 )
          return ResultStatus::kOk;
 
       double solvetime = 0;
       {
          Timer t( solvetime );
 
+         if(presolve.getPresolveOptions().verification_with_VeriPB)
+            solver->setRowScalingFactor(presolve.getRowScalingFactors());
          solver->setUp( problem, result.postsolve.origrow_mapping,
                         result.postsolve.origcol_mapping );
+
 
          if( opts.tlim != std::numeric_limits<double>::max() )
          {
@@ -334,33 +370,45 @@ presolve_and_solve(
 
          if( ( status == SolverStatus::kOptimal ||
                status == SolverStatus::kInterrupted ) &&
-             solver->getSolution( solution ) )
+             solver->getSolution( solution, result.postsolve ) )
             postsolve( result.postsolve, solution, opts.objective_reference,
                        opts.orig_solution_file, opts.orig_dual_solution_file,
                        opts.orig_reduced_costs_file, opts.orig_basis_file );
-
-         if( status == SolverStatus::kInfeasible )
+         solvetime = t.getTime();
+         double time =
+             presolve.getStatistics().presolvetime + solvetime + writetime;
+         fmt::print("Solving time {:.3f} seconds\n", time);
+         switch( status )
+         {
+      case SolverStatus::kInfeasible:
             fmt::print(
                 "\nsolving detected infeasible problem after {:.3f} seconds\n",
-                presolve.getStatistics().presolvetime + solvetime + writetime );
-         else if( status == SolverStatus::kUnbounded )
+                time );
+            break;
+         case SolverStatus::kUnbounded:
             fmt::print(
                 "\nsolving detected unbounded problem after {:.3f} seconds\n",
-                presolve.getStatistics().presolvetime + solvetime + writetime );
-         else if( status == SolverStatus::kUnbndOrInfeas )
+                time );
+            break;
+         case SolverStatus::kUnbndOrInfeas:
             fmt::print(
                 "\nsolving detected unbounded or infeasible problem after "
                 "{:.3f} seconds\n",
-                presolve.getStatistics().presolvetime + solvetime + writetime );
-         else
-            fmt::print( "\nsolving finished after {:.3f} seconds\n",
-                        presolve.getStatistics().presolvetime + solvetime +
-                            writetime );
+                time );
+            break;
+         case SolverStatus::kInterrupted:
+         case SolverStatus::kError:
+            fmt::print( "\nsolving interrupted after {:.3f} seconds\n", time );
+            break;
+         default:
+            fmt::print( "\nsolving finished after {:.3f} seconds\n", time );
+            break;
+         }
       }
    }
    catch( std::bad_alloc& ex )
    {
-      fmt::print( "Memory out exception occured! Please assign more memory\n" );
+      fmt::print( "Memory out exception occurred! Please assign more memory\n" );
       return ResultStatus::kError;
    }
 

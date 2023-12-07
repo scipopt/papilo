@@ -8,6 +8,7 @@ Features
 
 Performance improvements
 ------------------------
+- Symmetries: For binary problems ParallelCols adds symmetry-breaking constraints to avoid introducing non-binary integer variables via parameter
 
 Interface changes
 -----------------
@@ -19,6 +20,9 @@ Interface changes
 ### Changed parameters
 
 ### New parameters with default values
+- verification_with_VeriPB = 0 : should PaPILO print a VeriPB log (only for PseudoBoolean problems)?
+- veripb.verify_propagation = 0 : how to log the proof of verification? 0: reverse unit propagation, 1: Addition in polish notation
+- parallelcols.symmetries_enabled = 0 : should ParallelCols add symmetry-breaking constraints instead of introducing new variables?
 
 ### Data structures
 
@@ -34,12 +38,16 @@ Build system
 Fixed bugs
 ----------
 - SimpleProbing: avoid unstable replacements of columns with small ranges
+- if PaPILO solves the problem a backend solver is no longer called
 
 Miscellaneous
 -------------
 - Ortools: PaPILO parses the dual solution and the reduced costs from ortools
-- HiGHS: PaPILO supports HiGHS version 1.3
+- HiGHS: PaPILO supports HiGHS version 1.3+
+- VeriPB: prints VeriPB parseable verification certificate for pseudoboolean problem in the log (experimental)
 - OPB-Format: PaPILO can now parse files in linear opb format
+- RoundingSat https://gitlab.com/MIAOresearch/software/roundingsat is available as PseudoBoolean solver
+- make testcluster script extended by SKIP_PRESOLVE and SOLVE_EXECUTABLE to solve the reduced/original problem
 
 @section RN212 PaPILO 2.1.4
 ***************************

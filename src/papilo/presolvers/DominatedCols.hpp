@@ -44,6 +44,8 @@ class DominatedCols : public PresolveMethod<REAL>
    DominatedCols() : PresolveMethod<REAL>()
    {
       this->setName( "domcol" );
+      /// argument case can be primal or dual depending on the sign of the domination
+      this->setArgument( ArgumentType::kPrimal );
       this->setTiming( PresolverTiming::kExhaustive );
    }
 
@@ -99,7 +101,8 @@ class DominatedCols : public PresolveMethod<REAL>
    PresolveStatus
    execute( const Problem<REAL>& problem,
             const ProblemUpdate<REAL>& problemUpdate, const Num<REAL>& num,
-            Reductions<REAL>& reductions, const Timer& timer ) override;
+            Reductions<REAL>& reductions, const Timer& timer,
+            int& reason_of_infeasibility ) override;
 };
 
 #ifdef PAPILO_USE_EXTERN_TEMPLATES
@@ -112,9 +115,8 @@ template <typename REAL>
 PresolveStatus
 DominatedCols<REAL>::execute( const Problem<REAL>& problem,
                               const ProblemUpdate<REAL>& problemUpdate,
-                              const Num<REAL>& num,
-                              Reductions<REAL>& reductions, const Timer& timer )
-{
+                              const Num<REAL>& num, Reductions<REAL>& reductions,
+                              const Timer& timer, int& reason_of_infeasibility){
    const auto& obj = problem.getObjective().coefficients;
    const auto& consMatrix = problem.getConstraintMatrix();
    const auto& lbValues = problem.getLowerBounds();
@@ -426,8 +428,8 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
                                   !cflags[col].test( ColFlag::kIntegral ) ) )
                    continue;
 
-                bool to_ub = false;
                 bool to_lb = false;
+                bool to_ub = false;
 
                 if( !rflags[bestrow].test( RowFlag::kLhsInf,
                                            RowFlag::kRhsInf ) )
@@ -436,13 +438,13 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
                        num.isEq( scaled_val, rowvals[j] ) &&
                        num.isLE( scaled_obj, obj[col] ) &&
                        checkDominance( unbounded_col, col, scale, 1 ) )
-                      to_ub = true;
+                      to_lb = true;
 
                    if( !cflags[col].test( ColFlag::kUbInf ) &&
                        num.isEq( scaled_val, -rowvals[j] ) &&
                        num.isLE( scaled_obj, -obj[col] ) &&
                        checkDominance( unbounded_col, col, scale, -1 ) )
-                      to_lb = true;
+                      to_ub = true;
                 }
                 else if( rflags[bestrow].test( RowFlag::kLhsInf ) )
                 {
@@ -452,13 +454,13 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
                        num.isLE( scaled_val, rowvals[j] ) &&
                        num.isLE( scaled_obj, obj[col] ) &&
                        checkDominance( unbounded_col, col, scale, 1 ) )
-                      to_ub = true;
+                      to_lb = true;
 
                    if( !cflags[col].test( ColFlag::kUbInf ) &&
                        num.isLE( scaled_val, -rowvals[j] ) &&
                        num.isLE( scaled_obj, -obj[col] ) &&
                        checkDominance( unbounded_col, col, scale, -1 ) )
-                      to_lb = true;
+                      to_ub = true;
                 }
                 else
                 {
@@ -468,20 +470,20 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
                        num.isGE( scaled_val, rowvals[j] ) &&
                        num.isLE( scaled_obj, obj[col] ) &&
                        checkDominance( unbounded_col, col, scale, 1 ) )
-                      to_ub = true;
+                      to_lb = true;
 
                    if( !cflags[col].test( ColFlag::kUbInf ) &&
                        num.isGE( scaled_val, -rowvals[j] ) &&
                        num.isLE( scaled_obj, -obj[col] ) &&
                        checkDominance( unbounded_col, col, scale, -1 ) )
-                      to_lb = true;
+                      to_ub = true;
                 }
 
-                if( to_ub || to_lb )
+                if( to_lb || to_ub )
                 {
                    domcolreductions.push_back( DomcolReduction{
                        unbounded_col, col, implrowlock,
-                       to_ub ? BoundChange::kUpper : BoundChange::kLower } );
+                       to_lb ? BoundChange::kUpper : BoundChange::kLower } );
                 }
              }
           }
@@ -525,20 +527,28 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
          reductions.lockColBounds( dr.col1 );
          reductions.lockCol( dr.col2 );
          reductions.lockColBounds( dr.col2 );
-         //TODO: check if >=0 is correct instead of >0
          if( dr.implrowlock >= 0 )
             reductions.lockRow( dr.implrowlock );
 
+         // upper bound is changed to lower bound
          if( dr.boundchg == BoundChange::kUpper )
+         {
+            reductions.dominance(dr.col2, dr.col1);
             reductions.fixCol( dr.col2, lbValues[dr.col2], dr.implrowlock );
+         }
+         // lower bound is changed to upper bound
          else
-            reductions.fixCol( dr.col2, ubValues[dr.col2], dr.implrowlock);
+         {
+            reductions.dominance(dr.col1, dr.col2);
+            reductions.fixCol( dr.col2, ubValues[dr.col2], dr.implrowlock );
+         }
       }
 
    }
 
    return result;
 }
+
 
 } // namespace papilo
 

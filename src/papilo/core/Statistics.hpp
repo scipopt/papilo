@@ -68,7 +68,8 @@ operator-( const Statistics& a, const Statistics& b )
        0.0, a.ntsxapplied - b.ntsxapplied, a.ntsxconflicts - b.ntsxconflicts,
        a.nboundchgs - b.nboundchgs, a.nsidechgs - b.nsidechgs,
        a.ncoefchgs - b.ncoefchgs, a.nrounds - b.nrounds,
-       a.ndeletedcols - b.ndeletedcols, a.ndeletedrows - b.ndeletedrows, a.consecutive_rounds_of_only_boundchanges };
+       a.ndeletedcols - b.ndeletedcols, a.ndeletedrows - b.ndeletedrows, a.consecutive_rounds_of_only_boundchanges
+   };
 }
 
 } // namespace papilo

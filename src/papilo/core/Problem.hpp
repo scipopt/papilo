@@ -32,8 +32,10 @@
 #include "papilo/misc/MultiPrecision.hpp"
 #include "papilo/misc/StableSum.hpp"
 #include "papilo/misc/String.hpp"
+#include "papilo/core/SymmetryStorage.hpp"
 #include "papilo/misc/Vec.hpp"
 #include "papilo/misc/fmt.hpp"
+#include "papilo/core/ProblemFlag.hpp"
 #ifdef PAPILO_TBB
 #include "papilo/misc/tbb.hpp"
 #endif
@@ -75,6 +77,18 @@ class Problem
    setObjective( Objective<REAL>&& obj )
    {
       objective = obj;
+   }
+
+   void
+   set_problem_type( ProblemFlag flag)
+   {
+      problem_flags.set( flag );
+   }
+
+   bool
+   test_problem_type( const ProblemFlag flag) const
+   {
+      return problem_flags.test( flag );
    }
 
    /// set (transposed) constraint matrix
@@ -352,6 +366,19 @@ class Problem
       return constraintMatrix.getRowSizes();
    }
 
+   const SymmetryStorage&
+   getSymmetries() const
+   {
+      return symmetries;
+   }
+
+   SymmetryStorage&
+   getSymmetries()
+   {
+      return symmetries;
+   }
+
+
    /// substitute a variable in the objective using an equality constraint
    /// given by a row index
    void
@@ -507,6 +534,9 @@ class Problem
           },
           [this, &mappings, full]() {
              variableDomains.compress( mappings.second, full );
+          },
+          [this, &mappings, full]() {
+             symmetries.compress( mappings.second, full );
           },
           [this, &mappings, full]() {
              // compress row activities
@@ -702,6 +732,7 @@ class Problem
       ar& name;
       ar& inputTolerance;
       ar& objective;
+      ar& problem_flags;
 
       ar& constraintMatrix;
       ar& variableDomains;
@@ -713,12 +744,16 @@ class Problem
       ar& rowActivities;
 
       ar& locks;
+
+      //TODO:
+//      ar& symmetries;
    }
 
  private:
    String name;
    REAL inputTolerance{ 0 };
    Objective<REAL> objective;
+   ProblemFlags problem_flags;
    ConstraintMatrix<REAL> constraintMatrix;
    VariableDomains<REAL> variableDomains;
    int ncontinuous;
@@ -732,6 +767,8 @@ class Problem
 
    /// up and down locks for each column
    Vec<Locks> locks;
+
+   SymmetryStorage symmetries;
 };
 
 template <typename REAL>

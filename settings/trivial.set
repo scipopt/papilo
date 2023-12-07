@@ -1,0 +1,24 @@
+verification_with_VeriPB = 1
+colsingleton.enabled = 0
+propagation.enabled = 0
+coefftightening.enabled = 0
+
+parallelcols.symmetries_enabled = 0
+parallelrows.enabled = 0
+stuffing.enabled = 0
+doubletoneq.enabled = 0
+dualfix.enabled = 0
+simplifyineq.enabled = 0
+simpleprobing.enabled = 0
+fixcontinuous.enabled = 0
+
+probing.enabled = 0
+implint.enabled = 0
+domcol.enabled = 0
+sparsify.enabled = 0
+substitution.enabled = 0
+
+presolve.dualreds = 0
+
+
+#message.verbosity = 4

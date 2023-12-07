@@ -119,9 +119,83 @@ echo "@05 ${TIMELIMIT}"                   >> "${OUTFILE}"
 EXECNAME="${EXECNAME/ERRFILE_PLACEHOLDER/${ERRFILE}}"
 EXECNAME="${SRUN}${EXECNAME/RRTRACEFOLDER_PLACEHOLDER/${ERRFILE}}"
 
-# FILENAME is exported in the calling script check_cluster.sh
-echo ">>> Executing: ${EXECNAME} ${PAPILO_OPT_COMMAND} -f ${FILENAME} -p ${SETFILEPAPILO} -s ${SETFILESCIP} --tlim ${TIMELIMIT} --presolve.randomseed=${SEED}"
-eval "${EXECNAME} ${PAPILO_OPT_COMMAND} -p ${SETFILEPAPILO} -s ${SETFILESCIP} -f ${FILENAME} --tlim ${TIMELIMIT} --presolve.randomseed=${SEED}" 2>> "${ERRFILE}" | tee -a "${OUTFILE}"
+if [[ ${SOLVE_EXECUTABLE} == "off" ]]
+then
+    # FILENAME is exported in the calling script check_cluster.sh
+    echo ">>> Executing: ${EXECNAME} ${PAPILO_OPT_COMMAND} -f ${FILENAME} -p ${SETFILEPAPILO} -s ${SETFILESCIP} --tlim ${TIMELIMIT} --presolve.randomseed=${SEED}"
+    eval "${EXECNAME} ${PAPILO_OPT_COMMAND} -p ${SETFILEPAPILO} -s ${SETFILESCIP} -f ${FILENAME} --tlim ${TIMELIMIT} --presolve.randomseed=${SEED}" 2>> "${ERRFILE}" | tee -a "${OUTFILE}"
+else
+    if [[ ${SKIP_PRESOLVE} == "false" ]]
+    then
+        PRESOLVED_FILENAME="${FILENAME[@]//.opb/_presolved.opb}"
+        echo ">>> Executing: ${EXECNAME} presolve -f ${FILENAME} -p ${SETFILEPAPILO} -s ${SETFILESCIP} --tlim ${TIMELIMIT} --presolve.randomseed=${SEED} -r ${PRESOLVED_FILENAME}"
+        eval "${EXECNAME} presolve -p ${SETFILEPAPILO} -s ${SETFILESCIP} -f ${FILENAME} --tlim ${TIMELIMIT} --presolve.randomseed=${SEED} -r ${PRESOLVED_FILENAME}" 2>> "${ERRFILE}" | tee -a "${OUTFILE}"
+    else
+        echo "skipped presolving"
+        PRESOLVED_FILENAME="${FILENAME}"
+    fi
+
+    if [[ ${SOLVE_EXECUTABLE} =~ $"scip" ]]
+    then
+        echo ">>> Executing SCIP ${SOLVE_EXECUTABLE} -f ${PRESOLVED_FILENAME}"
+        eval "${SOLVE_EXECUTABLE} -f ${PRESOLVED_FILENAME}" -s ${SETFILESCIP} 2>> "${ERRFILE}" | tee -a "${OUTFILE}"
+    elif [[ ${SOLVE_EXECUTABLE} =~ $"roundingsat" ]]
+    then
+        echo ">>> Executing ROUNDINGSAT ${SOLVE_EXECUTABLE} ${PRESOLVED_FILENAME}"
+        eval "${SOLVE_EXECUTABLE} ${PRESOLVED_FILENAME}" 2>> "${ERRFILE}" | tee -a "${OUTFILE}"
+    elif [[ ${SOLVE_EXECUTABLE} =~ $"soplex" ]]
+    then
+        echo ">>> Executing SOPLEX ${SOLVE_EXECUTABLE} ${PRESOLVED_FILENAME}"
+        eval "${SOLVE_EXECUTABLE} ${PRESOLVED_FILENAME}" 2>> "${ERRFILE}" | tee -a "${OUTFILE}"
+    elif [[ ${SOLVE_EXECUTABLE} =~ .*"sat4j-pb.".* ]]
+    then
+        echo ">>> Executing Sat4j java -jar ${SOLVE_EXECUTABLE} ${PAPILO_OPT_COMMAND} ${TIMELIMIT} ${PRESOLVED_FILENAME}"
+        eval "java -jar ${SOLVE_EXECUTABLE} ${PAPILO_OPT_COMMAND} ${TIMELIMIT} ${PRESOLVED_FILENAME}" 2>> "${ERRFILE}" | tee -a "${OUTFILE}"
+    else
+      echo "Unknown solver: ${SOLVE_EXECUTABLE}"
+    fi
+    if [[ ${SKIP_PRESOLVE} == "false" ]]
+    then
+      rm ${PRESOLVED_FILENAME}
+    fi
+fi
+
+# TODO extract these variables to be configurable from make file
+VERIPB_PATH="/home/alexander/git_repositories/veripb-dev/venv/bin/activate"
+VERIPB=true
+if ${VERIPB} && ( test -z "${VERIPB_PATH}" || test -f ${VERIPB_PATH} )
+then
+  if [[ ${FILENAME} == *.opb.gz ]]
+  then
+      eval gzip -dkf ${FILENAME}
+      PBP_FILENAME=${FILENAME%.opb.gz}.pbp
+      if test -f ${PBP_FILENAME}
+      then
+        UNZIPPED_FILENAME=${FILENAME%.opb.gz}.opb
+        echo ">>> Executing: veripb --stats --forceCheckDeletion ${UNZIPPED_FILENAME} ${PBP_FILENAME}"
+        if ! test -z "${VERIPB_PATH}"
+        then
+          eval "source ${VERIPB_PATH}"
+        fi
+        eval "veripb --stats --forceCheckDeletion ${UNZIPPED_FILENAME} ${PBP_FILENAME}" 2>> "${ERRFILE}" | tee -a "${OUTFILE}"
+        eval "rm -r ${UNZIPPED_FILENAME}"
+      fi
+  elif [[ ${FILENAME} == *.opb ]]
+  then
+      PBP_FILENAME=${FILENAME%.opb}.pbp
+      if test -f ${PBP_FILENAME}
+      then
+        echo ">>> Executing: veripb --stats --forceCheckDeletion ${FILENAME} ${PBP_FILENAME}"
+        if ! test -z "${VERIPB_PATH}"
+        then
+          eval "source ${VERIPB_PATH}"
+        fi
+        eval "veripb --stats --forceCheckDeletion ${FILENAME} ${PBP_FILENAME}" 2>> "${ERRFILE}" | tee -a "${OUTFILE}"
+      fi
+    else
+      echo "$FILENAME has to end with .opb or .opb.gz to run Veripb"
+  fi
+fi
 echo "----------------------------------------------------------"
 
 retcode=${PIPESTATUS[0]}

@@ -61,6 +61,8 @@ class ScipInterface : public SolverInterface<REAL>
       const auto& lhs_values = consMatrix.getLeftHandSides();
       const auto& rhs_values = consMatrix.getRightHandSides();
       const auto& rflags = problem.getRowFlags();
+      const auto& symmetries = problem.getSymmetries().symmetries;
+
 
       SCIP_CALL( SCIPcreateProbBasic( scip, problem.getName().c_str() ) );
 
@@ -131,6 +133,41 @@ class ScipInterface : public SolverInterface<REAL>
          SCIP_CALL( SCIPreleaseCons( scip, &cons ) );
       }
 
+      for( int i = 0; i < symmetries.size(); ++i )
+      {
+         assert(problem.test_problem_type( ProblemFlag::kBinary));
+         SCIP_CONS* cons;
+         SCIP_Real lhs;
+         SCIP_Real rhs = SCIPinfinity( scip ) ;
+         auto  symmetry = symmetries[i];
+
+         switch( symmetry.getSymmetryType() )
+         {
+         case SymmetryType::kXgeY:
+            consvars[0] = vars[symmetry.getDominatingCol()];
+            consvals[0] = SCIP_Real( 1 );
+            consvars[1] = vars[symmetry.getDominatedCol()];
+            consvals[1] = SCIP_Real( -1 );
+            lhs = 0;
+            break;
+         case SymmetryType::kXplusYge1:
+            consvars[0] = vars[symmetry.getDominatingCol()];
+            consvals[0] = SCIP_Real( 1 );
+            consvars[1] = vars[symmetry.getDominatedCol()];
+            consvals[1] = SCIP_Real( 1 );
+            lhs = 1;
+         default:
+            assert( false );
+         }
+
+
+         SCIP_CALL( SCIPcreateConsBasicLinear(
+             scip, &cons, ("Sym"+ std::to_string(i)).c_str(), 2,
+             consvars.data(), consvals.data(), lhs, rhs ) );
+         SCIP_CALL( SCIPaddCons( scip, cons ) );
+         SCIP_CALL( SCIPreleaseCons( scip, &cons ) );
+      }
+
       if( obj.offset != REAL{ 0 } )
          SCIP_CALL( SCIPaddOrigObjoffset( scip, SCIP_Real( obj.offset ) ) );
 
@@ -154,6 +191,7 @@ class ScipInterface : public SolverInterface<REAL>
       const auto& lhs_values = consMatrix.getLeftHandSides();
       const auto& rhs_values = consMatrix.getRightHandSides();
       const auto& rflags = problem.getRowFlags();
+      const auto& symmetries = problem.getSymmetries().symmetries;
 
       SCIP_CALL( SCIPcreateProbBasic( scip, problem.getName().c_str() ) );
 
@@ -379,7 +417,7 @@ class ScipInterface : public SolverInterface<REAL>
    }
 
    bool
-   getSolution( Solution<REAL>& solbuffer ) override
+   getSolution( Solution<REAL>& solbuffer, PostsolveStorage<REAL>& postsolve ) override
    {
       SCIP_SOL* sol = SCIPgetBestSol( scip );
 

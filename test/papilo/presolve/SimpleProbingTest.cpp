@@ -40,6 +40,7 @@ TEST_CASE( "simple-probing-trivial-example", "[presolve]" )
 {
    Message msg{};
    double time = 0.0;
+   int cause = -1;
    Timer t{ time };
    Num<double> num{};
    Problem<double> problem = setupProblemWithSimpleProbing( );
@@ -54,7 +55,7 @@ TEST_CASE( "simple-probing-trivial-example", "[presolve]" )
    problem.recomputeAllActivities();
 
    PresolveStatus presolveStatus =
-       presolvingMethod.execute( problem, problemUpdate, num, reductions, t );
+       presolvingMethod.execute( problem, problemUpdate, num, reductions, t, cause );
 
    REQUIRE( presolveStatus == PresolveStatus::kReduced );
    REQUIRE( reductions.size() == 4 );
@@ -82,6 +83,7 @@ TEST_CASE( "simple-probing-trivial-example", "[presolve]" )
 TEST_CASE( "simple-probing-negative-binary-coeff", "[presolve]" )
 {
    double time = 0.0;
+   int cause = -1;
    Timer t{ time };
    Message msg{};
    Num<double> num{};
@@ -98,7 +100,7 @@ TEST_CASE( "simple-probing-negative-binary-coeff", "[presolve]" )
    problem.recomputeAllActivities();
 
    PresolveStatus presolveStatus =
-       presolvingMethod.execute( problem, problemUpdate, num, reductions, t );
+       presolvingMethod.execute( problem, problemUpdate, num, reductions, t, cause );
 
    REQUIRE( presolveStatus == PresolveStatus::kReduced );
    REQUIRE( reductions.size() == 6 );
@@ -120,6 +122,7 @@ TEST_CASE( "simple-probing-positive-binary-coeff", "[presolve]" )
 {
    Message msg{};
    double time = 0.0;
+   int cause = -1;
    Timer t{ time };
    Num<double> num{};
    Problem<double> problem =
@@ -135,7 +138,7 @@ TEST_CASE( "simple-probing-positive-binary-coeff", "[presolve]" )
    problem.recomputeAllActivities();
 
    PresolveStatus presolveStatus =
-       presolvingMethod.execute( problem, problemUpdate, num, reductions, t );
+       presolvingMethod.execute( problem, problemUpdate, num, reductions, t, cause );
 
    REQUIRE( presolveStatus == PresolveStatus::kReduced );
    REQUIRE( reductions.size() == 6 );
@@ -157,6 +160,7 @@ TEST_CASE( "simple-different-int-coeff", "[presolve]" )
 {
    Message msg{};
    double time = 0.0;
+   int cause = -1;
    Timer t{ time };
    Num<double> num{};
    Problem<double> problem =
@@ -172,7 +176,7 @@ TEST_CASE( "simple-different-int-coeff", "[presolve]" )
    problem.recomputeAllActivities();
 
    PresolveStatus presolveStatus =
-       presolvingMethod.execute( problem, problemUpdate, num, reductions, t );
+       presolvingMethod.execute( problem, problemUpdate, num, reductions, t, cause );
 
    REQUIRE( presolveStatus == PresolveStatus::kReduced );
    REQUIRE( reductions.size() == 6 );
@@ -198,6 +202,7 @@ TEST_CASE( "simple-different-int-coeff.pt2", "[presolve]" )
 {
    Message msg{};
    double time = 0.0;
+   int cause = -1;
    Timer t{ time };
    Num<double> num{};
    Problem<double> problem =
@@ -213,7 +218,7 @@ TEST_CASE( "simple-different-int-coeff.pt2", "[presolve]" )
    problem.recomputeAllActivities();
 
    PresolveStatus presolveStatus =
-       presolvingMethod.execute( problem, problemUpdate, num, reductions, t );
+       presolvingMethod.execute( problem, problemUpdate, num, reductions, t, cause );
 
    REQUIRE( presolveStatus == PresolveStatus::kReduced );
    REQUIRE( reductions.size() == 6 );

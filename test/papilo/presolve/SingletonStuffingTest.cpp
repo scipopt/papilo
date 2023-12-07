@@ -46,7 +46,8 @@ TEST_CASE( "singleton-stuffing-make-sure-to-first-set-bounds-to-infinity", "[pre
 {
    Num<double> num{};
    Message msg{};
-   double time = 0.0;
+      double time = 0.0;
+   int cause = -1;
    Timer t{ time };
    Problem<double> problem = setupProblemWithSingletonStuffingColumn();
    Statistics statistics{};
@@ -62,7 +63,7 @@ TEST_CASE( "singleton-stuffing-make-sure-to-first-set-bounds-to-infinity", "[pre
 
 
    PresolveStatus presolveStatus =
-       presolvingMethod.execute( problem, problemUpdate, num, reductions, t );
+       presolvingMethod.execute( problem, problemUpdate, num, reductions, t, cause );
 
    REQUIRE( presolveStatus == PresolveStatus::kReduced );
    REQUIRE( reductions.size() == 7 );

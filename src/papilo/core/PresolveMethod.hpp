@@ -39,6 +39,8 @@
 #else
 #include <chrono>
 #endif
+
+#include "papilo/verification/ArgumentType.hpp"
 #include <bitset>
 
 
@@ -92,6 +94,7 @@ class PresolveMethod
       ncalls = 0;
       nsuccessCall = 0;
       name = "unnamed";
+      argument = ArgumentType::kPrimal;
       type = PresolverType::kAllCols;
       timing = PresolverTiming::kExhaustive;
       delayed = false;
@@ -133,7 +136,7 @@ class PresolveMethod
 
    PresolveStatus
    run( const Problem<REAL>& problem, const ProblemUpdate<REAL>& problemUpdate,
-        const Num<REAL>& num, Reductions<REAL>& reductions, const Timer& timer )
+        const Num<REAL>& num, Reductions<REAL>& reductions, const Timer& timer, int& cause )
    {
       if( !enabled || delayed )
          return PresolveStatus::kUnchanged;
@@ -162,7 +165,7 @@ class PresolveMethod
       auto start = std::chrono::steady_clock::now();
 #endif
       PresolveStatus result =
-          execute( problem, problemUpdate, num, reductions, timer );
+          execute( problem, problemUpdate, num, reductions, timer, cause );
 #ifdef PAPILO_TBB
       auto end = tbb::tick_count::now();
       auto duration = end - start;
@@ -235,6 +238,12 @@ class PresolveMethod
       return this->name;
    }
 
+   ArgumentType
+   getArgument() const
+   {
+      return this->argument;
+   }
+
    unsigned int
    getNCalls() const
    {
@@ -253,19 +262,87 @@ class PresolveMethod
       this->enabled = value;
    }
 
+   void
+   set_symmetries_enabled( bool value )
+   {
+      this->symmetries_active = value;
+   }
+
+   PresolveStatus
+   run_symmetries( const Problem<REAL>& problem, const ProblemUpdate<REAL>& problemUpdate,
+                    const Num<REAL>& num, Reductions<REAL>& reductions, const Timer& timer )
+   {
+
+      ncalls++;
+#ifdef PAPILO_TBB
+      auto start = tbb::tick_count::now();
+#else
+      auto start = std::chrono::steady_clock::now();
+#endif
+      PresolveStatus result =
+          execute_symmetries( problem, problemUpdate, num, reductions, timer );
+#ifdef PAPILO_TBB
+      auto end = tbb::tick_count::now();
+      auto duration = end - start;
+      execTime = execTime + duration.seconds();
+#else
+      auto end = std::chrono::steady_clock::now();
+      execTime = execTime + std::chrono::duration_cast<std::chrono::milliseconds>(
+                                end- start ).count()/1000;
+#endif
+
+      switch( result )
+      {
+      case PresolveStatus::kUnbounded:
+      case PresolveStatus::kUnbndOrInfeas:
+      case PresolveStatus::kInfeasible:
+         assert( false );
+         break;
+      case PresolveStatus::kReduced:
+         ++nsuccessCall;
+         nconsecutiveUnsuccessCall = 0;
+         break;
+      case PresolveStatus::kUnchanged:
+         ++nconsecutiveUnsuccessCall;
+         break;
+      }
+      return result;
+
+   }
+
+
+
  protected:
    /// execute member function for a presolve method gets the constant problem
    /// and can communicate reductions via the given reductions object
    virtual PresolveStatus
    execute( const Problem<REAL>& problem,
-            const ProblemUpdate<REAL>& problemUpdate, const Num<REAL>& num,
-            Reductions<REAL>& reductions, const Timer& timer ) = 0;
+            const ProblemUpdate<REAL>& problemUpdate,
+            const Num<REAL>& num, Reductions<REAL>& reductions,
+            const Timer& timer, int& reason_of_infeasibility) = 0;
+
+   virtual
+   PresolveStatus
+   execute_symmetries( const Problem<REAL>& problem,
+                       const ProblemUpdate<REAL>& problemUpdate,
+                       const Num<REAL>& num, Reductions<REAL>& reductions,
+                       const Timer& timer )
+   {
+      return PresolveStatus::kUnchanged;
+   }
 
    void
    setName( const std::string& value )
    {
       this->name = value;
    }
+
+   void
+   setArgument( ArgumentType value )
+   {
+      this->argument = value;
+   }
+
 
    void
    setTiming( PresolverTiming value )
@@ -367,6 +444,7 @@ class PresolveMethod
 
  private:
    std::string name;
+   ArgumentType argument;
    double execTime;
    bool enabled;
    bool delayed;

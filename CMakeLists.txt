@@ -112,12 +112,17 @@ else()
 endif()
 
 add_library(papilo INTERFACE)
+if(ROUNDINGSAT_DIR)
+   set(ROUNDINGSAT_INCLUDE_DIRS ${ROUNDINGSAT_DIR}/src/)
+endif()
 target_include_directories(papilo INTERFACE
    $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}>
    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src>
    $<INSTALL_INTERFACE:include>
    ${GMP_INCLUDE_DIRS}
-   ${Quadmath_INCLUDE_DIRS})
+   ${Quadmath_INCLUDE_DIRS}
+   ${ROUNDINGSAT_INCLUDE_DIRS})
+
 
 target_include_directories(papilo SYSTEM INTERFACE ${Boost_INCLUDE_DIRS})
 
@@ -257,6 +262,7 @@ add_library(papilo-core STATIC
    src/papilo/presolvers/SingletonStuffing.cpp
    src/papilo/presolvers/Sparsify.cpp
    src/papilo/presolvers/SimplifyInequalities.cpp
+   ${roundingsat_source_files}
   )
 
 #
@@ -309,6 +315,7 @@ install(FILES
      ${PROJECT_SOURCE_DIR}/src/papilo/core/ProbingView.hpp
      ${PROJECT_SOURCE_DIR}/src/papilo/core/Problem.hpp
      ${PROJECT_SOURCE_DIR}/src/papilo/core/ProblemBuilder.hpp
+     ${PROJECT_SOURCE_DIR}/src/papilo/core/ProblemFlag.hpp
      ${PROJECT_SOURCE_DIR}/src/papilo/core/ProblemUpdate.hpp
      ${PROJECT_SOURCE_DIR}/src/papilo/core/Reductions.hpp
      ${PROJECT_SOURCE_DIR}/src/papilo/core/RowFlags.hpp
@@ -316,6 +323,7 @@ install(FILES
      ${PROJECT_SOURCE_DIR}/src/papilo/core/Solution.hpp
      ${PROJECT_SOURCE_DIR}/src/papilo/core/SparseStorage.hpp
      ${PROJECT_SOURCE_DIR}/src/papilo/core/Statistics.hpp
+     ${PROJECT_SOURCE_DIR}/src/papilo/core/SymmetryStorage.hpp
      ${PROJECT_SOURCE_DIR}/src/papilo/core/VariableDomains.hpp
    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/papilo/core)
 
@@ -337,15 +345,17 @@ install(FILES
      ${PROJECT_SOURCE_DIR}/src/papilo/interfaces/ScipInterface.hpp
      ${PROJECT_SOURCE_DIR}/src/papilo/interfaces/SolverInterface.hpp
      ${PROJECT_SOURCE_DIR}/src/papilo/interfaces/SoplexInterface.hpp
+     ${PROJECT_SOURCE_DIR}/src/papilo/interfaces/RoundingsatInterface.hpp
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/papilo/interfaces)
 
 install(FILES
-        ${PROJECT_SOURCE_DIR}/src/papilo/io/BoundType.hpp
+     ${PROJECT_SOURCE_DIR}/src/papilo/io/BoundType.hpp
      ${PROJECT_SOURCE_DIR}/src/papilo/io/Message.hpp
      ${PROJECT_SOURCE_DIR}/src/papilo/io/MpsParser.hpp
      ${PROJECT_SOURCE_DIR}/src/papilo/io/MpsWriter.hpp
      ${PROJECT_SOURCE_DIR}/src/papilo/io/OpbParser.hpp
-        ${PROJECT_SOURCE_DIR}/src/papilo/io/ParseKey.hpp
+     ${PROJECT_SOURCE_DIR}/src/papilo/io/OpbWriter.hpp
+     ${PROJECT_SOURCE_DIR}/src/papilo/io/ParseKey.hpp
      ${PROJECT_SOURCE_DIR}/src/papilo/io/Parser.hpp
      ${PROJECT_SOURCE_DIR}/src/papilo/io/SolParser.hpp
      ${PROJECT_SOURCE_DIR}/src/papilo/io/SolWriter.hpp
@@ -376,6 +386,13 @@ install(FILES
      ${PROJECT_SOURCE_DIR}/src/papilo/misc/VectorUtils.hpp
      ${PROJECT_SOURCE_DIR}/src/papilo/misc/Wrappers.hpp
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/papilo/misc)
+
+install(FILES
+        ${PROJECT_SOURCE_DIR}/src/papilo/verification/ArgumentType.hpp
+        ${PROJECT_SOURCE_DIR}/src/papilo/verification/CertificateInterface.hpp
+        ${PROJECT_SOURCE_DIR}/src/papilo/verification/EmptyCertificate.hpp
+        ${PROJECT_SOURCE_DIR}/src/papilo/verification/VeriPb.hpp
+        DESTINATION include/papilo/verification)
 
 
 if((DEFINED Boost_VERSION) AND (Boost_VERSION VERSION_LESS 107000))

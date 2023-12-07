@@ -45,8 +45,10 @@ class FixContinuous : public PresolveMethod<REAL>
 
    virtual PresolveStatus
    execute( const Problem<REAL>& problem,
-            const ProblemUpdate<REAL>& problemUpdate, const Num<REAL>& num,
-            Reductions<REAL>& reductions, const Timer& timer ) override;
+            const ProblemUpdate<REAL>& problemUpdate,
+            const Num<REAL>& num, Reductions<REAL>& reductions,
+            const Timer& timer, int& reason_of_infeasibility)
+       override;
 };
 
 #ifdef PAPILO_USE_EXTERN_TEMPLATES
@@ -59,9 +61,8 @@ template <typename REAL>
 PresolveStatus
 FixContinuous<REAL>::execute( const Problem<REAL>& problem,
                               const ProblemUpdate<REAL>& problemUpdate,
-                              const Num<REAL>& num,
-                              Reductions<REAL>& reductions, const Timer& timer )
-{
+                              const Num<REAL>& num, Reductions<REAL>& reductions,
+                              const Timer& timer, int& reason_of_infeasibility){
    assert( problem.getNumContinuousCols() != 0 );
 
    const auto& consMatrix = problem.getConstraintMatrix();

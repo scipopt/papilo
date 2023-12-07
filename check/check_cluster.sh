@@ -61,6 +61,8 @@ SETCUTOFF="${26}"
 VISUALIZE="${27}"
 CLUSTERNODES="${28}"
 SLURMACCOUNT="${29}"
+SOLVE_EXECUTABLE="${30}"
+SKIP_PRESOLVE="${31}"
 
 # check if all variables defined (by checking the last one)
 if test -z "${SLURMACCOUNT}"
@@ -95,15 +97,20 @@ then
     echo "VISUALIZE     = ${VISUALIZE}"
     echo "CLUSTERNODES  = ${CLUSTERNODES}"
     echo "SLURMACCOUNT  = ${SLURMACCOUNT}"
+    echo "SOLVE_EXECUTABLE  = ${SOLVE_EXECUTABLE}"
+    echo "SKIP_PRESOLVE  = ${SKIP_PRESOLVE}"
     exit 1;
 fi
 
-if [[ ${PAPILO_OPT_COMMAND} != "solve" ]] && [[ ${PAPILO_OPT_COMMAND} != "presolve" ]]
-then
-  echo "PAPILO_OPT_COMMAND should be either 'presolve' or 'solve'"
-  exit 1
-fi
+#if [[ ${PAPILO_OPT_COMMAND} != "solve" ]] && [[ ${PAPILO_OPT_COMMAND} != "presolve" ]]
+#then
+#  echo "PAPILO_OPT_COMMAND should be either 'presolve' or 'solve'"
+#  exit 1
+#fi
 export PAPILO_OPT_COMMAND
+export SOLVE_EXECUTABLE
+export SKIP_PRESOLVE
+
 
 
 # configure cluster-related environment variables

@@ -103,6 +103,9 @@ print_header()
 #ifdef PAPILO_HAVE_SOPLEX
    list_of_solvers.push_back( "SoPlex" );
 #endif
+#ifdef PAPILO_HAVE_ROUNDINGSAT
+   list_of_solvers.push_back( "ROUNDINGSAT" );
+#endif
    if( list_of_solvers.empty() )
       solvers = "none";
    else
@@ -140,6 +143,10 @@ print_header()
    fmt::print( "  HiGHS   {}.{}.{} \t high performance software "
                "for linear optimization (https://www.maths.ed.ac.uk/hall/HiGHS/) [GitHash: {}]\n" , HIGHS_VERSION_MAJOR, HIGHS_VERSION_MINOR, HIGHS_VERSION_PATCH,
                HIGHS_GITHASH);
+#endif
+#ifdef PAPILO_HAVE_ROUNDINGSAT
+    fmt::print( "  RoundingSAT    \t SAT Solver "
+                "(https://gitlab.com/MIAOresearch/software/roundingsat)\n");
 #endif
     //TODO
 #ifdef PAPILO_HAVE_GLOP

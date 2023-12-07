@@ -1,8 +1,14 @@
+import logging
 import re
 
-from ipet.parsing.Solver import SCIPSolver
+from ipet import Key
+from ipet.parsing.Solver import Solver
+
+logger = logging.getLogger(__name__)
+
 
 PRESOLVE_TIME_NAME = "presolve_time"
+SOLVER_SOLVING_TIME = "solver_solving_time"
 
 ROWS_NAME = "rows"
 COLUMNS_NAME = "columns"
@@ -84,18 +90,25 @@ TIME_sparsify = "time%sparsify"
 DEFAULT_VALUE = -1.0
 
 
-class PapiloSolver(SCIPSolver):
+class PapiloSolver(Solver):
     solverId = "PaPILO"
+
+    floating_point_expr = "[-+]?[0-9]*\.?[0-9]*"
+
     # used to identify the solver
     recognition_expr = re.compile("starting presolve of problem")
     version_expr = re.compile("PaPILO version (\S+)")
+
+    primalbound_expr = re.compile("objective value:\s*(\S+)")
+    solvingtime_expr = re.compile("Solving time\s+(\S+)")
 
     presolving_time_expr = re.compile("presolving finished after\s+(\S+)")
     presolving_time_inf_expr = re.compile("presolving detected infeasible problem after\s+(\S+)")
     presolving_time_unb_expr = re.compile("presolving detected unbounded problem after\s+(\S+)")
     presolving_time_unb_inf_expr = re.compile("presolving detected unbounded or infeasible problem after\s+(\S+)")
 
-    floating_point_expr = "[-+]?[0-9]*\.?[0-9]*"
+    solving_time_rounding_sat_expr = re.compile("c cpu time\s+(\S+)")
+    solving_time_sat4j_expr = re.compile("c Total wall clock time \(in seconds\):\s+(\S+)")
 
     rows_expr = re.compile("\s+rows:\s+(\S+)")
     columns_expr = re.compile("\s+columns:\s+(\S+)")
@@ -119,7 +132,7 @@ class PapiloSolver(SCIPSolver):
     presolving_rounds = re.compile("presolved\s+(\S+)")
     columns_deleted = re.compile("presolved \d+ rounds:\s+(\S+)")
     rows_deleted = re.compile("presolved \d+ rounds:\s+\d+ del cols,\s+(\S+)")
-    bound_changes = re.compile("presolved \d+ rounds:\s+\d+ del cols,\s+\d+ del rows,\s+(\S+)")
+    bound_changes = re.compile("presolved reduced int. columns:\d+ rounds:\s+\d+ del cols,\s+\d+ del rows,\s+(\S+)")
     changed_sides = re.compile("presolved \d+ rounds:\s+\d+ del cols,\s+\d+ del rows,\s+\d+ chg bounds,\s+(\S+)")
     changed_coefficients = re.compile(
         "presolved \d+ rounds:\s+\d+ del cols,\s+\d+ del rows,\s+\d+ chg bounds,\s+\d+ chg sides,\s+(\S+)")
@@ -173,14 +186,43 @@ class PapiloSolver(SCIPSolver):
         pass
 
     def extractOptionalInformation(self, line: str):
+        # extract presolving time and solving time (in case PaPILO finished)
         if line.startswith("presolving finished"):
             self.extractByExpression(line, self.presolving_time_expr, PRESOLVE_TIME_NAME)
         elif line.startswith("presolving detected infeasible problem"):
             self.extractByExpression(line, self.presolving_time_inf_expr, PRESOLVE_TIME_NAME)
+            self.extractByExpression(line, self.presolving_time_inf_expr, Key.SolvingTime)
+            self.addData(Key.SolverStatus, Key.SolverStatusCodes.Infeasible)
         elif line.startswith("presolving detected unbounded or infeasible problem"):
             self.extractByExpression(line, self.presolving_time_unb_inf_expr, PRESOLVE_TIME_NAME)
+            self.extractByExpression(line, self.presolving_time_unb_inf_expr, Key.SolvingTime)
+            self.addData(Key.SolverStatus, Key.SolverStatusCodes.InfOrUnbounded)
         elif line.startswith("presolving detected unbounded problem"):
             self.extractByExpression(line, self.presolving_time_unb_expr, PRESOLVE_TIME_NAME)
+            self.extractByExpression(line, self.presolving_time_unb_expr, Key.SolvingTime)
+            self.addData(Key.SolverStatus, Key.SolverStatusCodes.Unbounded)
+        elif line.startswith("Solution passed validation"):
+            self.addData(Key.SolverStatus, Key.SolverStatusCodes.Optimal)
+        elif line.startswith("time limit reached in presolving") or line.startswith("solving interrupted after"):
+            self.addData(Key.SolverStatus, Key.SolverStatusCodes.TimeLimit)
+
+        # extract solving for Solvers (SAT4J and RoundingSAT)
+        elif line.startswith("c Total wall clock time (in seconds):"):
+            self.extractByExpression(line, self.solving_time_sat4j_expr, SOLVER_SOLVING_TIME)
+            self.addData(Key.SolvingTime,
+                         float(self.getData(SOLVER_SOLVING_TIME)) + float(self.getData(PRESOLVE_TIME_NAME)))
+        elif line.startswith("c cpu time"):
+            self.extractByExpression(line, self.solving_time_rounding_sat_expr, SOLVER_SOLVING_TIME)
+            self.addData(Key.SolvingTime,
+                 float(self.getData(SOLVER_SOLVING_TIME)) + float(self.getData(PRESOLVE_TIME_NAME)))
+        elif line.startswith("s UNSATISFIABLE"):
+            self.addData(Key.SolverStatus, Key.SolverStatusCodes.Infeasible)
+        elif line.startswith("s SATISFIABLE") or line.startswith("s OPTIMUM FOUND"):
+            self.addData(Key.SolverStatus, Key.SolverStatusCodes.Optimal)
+        elif line.startswith("s TIMELIMIT"):
+            self.addData(Key.SolverStatus, Key.SolverStatusCodes.TimeLimit)
+        elif line.startswith("s UNKNOWN") and self.getData(Key.SolverStatus) == -1:
+                self.addData(Key.SolverStatus, Key.SolverStatusCodes.TimeLimit)
 
         self.extractByExpression(line, self.rows_expr, ROWS_NAME)
         self.extractByExpression(line, self.columns_expr, COLUMNS_NAME)

@@ -116,12 +116,14 @@ class ParallelRowDetection : public PresolveMethod<REAL>
    {
       this->setName( "parallelrows" );
       this->setTiming( PresolverTiming::kMedium );
+      this->setArgument( ArgumentType::kRedundant );
    }
 
    PresolveStatus
    execute( const Problem<REAL>& problem,
-            const ProblemUpdate<REAL>& problemUpdate, const Num<REAL>& num,
-            Reductions<REAL>& reductions, const Timer& timer) override;
+            const ProblemUpdate<REAL>& problemUpdate,
+            const Num<REAL>& num, Reductions<REAL>& reductions,
+            const Timer& timer, int& reason_of_infeasibility) override;
 };
 
 #ifdef PAPILO_USE_EXTERN_TEMPLATES
@@ -276,9 +278,8 @@ template <typename REAL>
 PresolveStatus
 ParallelRowDetection<REAL>::execute( const Problem<REAL>& problem,
                                      const ProblemUpdate<REAL>& problemUpdate,
-                                     const Num<REAL>& num,
-                                     Reductions<REAL>& reductions, const Timer& timer )
-{
+                                     const Num<REAL>& num, Reductions<REAL>& reductions,
+                                     const Timer& timer, int& reason_of_infeasibility){
    const auto& constMatrix = problem.getConstraintMatrix();
    const auto& lhs_values = constMatrix.getLeftHandSides();
    const auto& rhs_values = constMatrix.getRightHandSides();
@@ -405,6 +406,7 @@ ParallelRowDetection<REAL>::execute( const Problem<REAL>& problem,
                   swap( new_adjusted_lhs, new_adjusted_rhs );
                   swap( scaled_lhs_inf, scaled_rhs_inf );
                   swap( lhs_infinity, rhs_infinity );
+                  swap( row_with_best_lhs_value, row_with_best_rhs_value );
                }
 
                remaining_row = parallel_row;
@@ -467,6 +469,7 @@ ParallelRowDetection<REAL>::execute( const Problem<REAL>& problem,
          if( parallel_row != remaining_row )
             reductions.lockRow( parallel_row );
       }
+      reductions.parallel_remaining_row( remaining_row );
       if( lhs_infinity != rflags[remaining_row].test( RowFlag::kLhsInf ) ||
           lhs_value != lhs_values[remaining_row] )
       {

@@ -100,6 +100,7 @@ class MpsParser
          obj_vec[i.first] = i.second;
 
       problem.setObjective( std::move( obj_vec ), parser.objoffset );
+
       problem.setConstraintMatrix(
           SparseStorage<REAL>{ std::move( parser.entries ), parser.nCols,
                                parser.nRows, true },
@@ -111,6 +112,15 @@ class MpsParser
       problem.setVariableNames( std::move( parser.colnames ) );
       problem.setName( std::move( filename ) );
       problem.setConstraintNames( std::move( parser.rownames ) );
+
+      problem.set_problem_type( ProblemFlag::kMixedInteger );
+      if(problem.getNumIntegralCols() == 0 )
+         problem.set_problem_type( ProblemFlag::kLinear );
+      if(problem.getNumContinuousCols() == 0 )
+      {
+         //TODO check if PseudoBoolean
+         problem.set_problem_type( ProblemFlag::kInteger );
+      }
 
       problem.setInputTolerance(
           REAL{ pow( typename RealParseType<REAL>::type{ 10 },

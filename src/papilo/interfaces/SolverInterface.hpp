@@ -38,7 +38,8 @@ namespace papilo
 enum class SolverType : int
 {
    LP,
-   MIP
+   MIP,
+   PseudoBoolean
 };
 
 enum class SolverStatus : int
@@ -116,8 +117,11 @@ class SolverInterface
    virtual void
    setVerbosity( VerbosityLevel verbosity ) = 0;
 
+   virtual void
+   setRowScalingFactor( Vec<int> scaling_factor ) {}
+
    virtual bool
-   getSolution( Solution<REAL>& sol ) = 0;
+   getSolution( Solution<REAL>& sol, PostsolveStorage<REAL>& postsolve ) = 0;
 
    virtual bool
    getSolution( const Components& components, int component,

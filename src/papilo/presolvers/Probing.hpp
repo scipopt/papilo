@@ -62,6 +62,7 @@ class Probing : public PresolveMethod<REAL>
       this->setType( PresolverType::kIntegralCols );
    }
 
+
    void
    compress( const Vec<int>& rowmap, const Vec<int>& colmap ) override
    {
@@ -113,12 +114,14 @@ class Probing : public PresolveMethod<REAL>
 
    PresolveStatus
    execute( const Problem<REAL>& problem,
-            const ProblemUpdate<REAL>& problemUpdate, const Num<REAL>& num,
-            Reductions<REAL>& reductions, const Timer& timer ) override;
+            const ProblemUpdate<REAL>& problemUpdate,
+            const Num<REAL>& num, Reductions<REAL>& reductions,
+            const Timer& timer, int& reason_of_infeasibility) override;
 
    bool
    isBinaryVariable( REAL upper_bound, REAL lower_bound, int column_size,
                      const Flags<ColFlag>& colFlag ) const;
+
 
    void
    set_max_badge_size( int val);
@@ -136,7 +139,7 @@ PresolveStatus
 Probing<REAL>::execute( const Problem<REAL>& problem,
                         const ProblemUpdate<REAL>& problemUpdate,
                         const Num<REAL>& num, Reductions<REAL>& reductions,
-                        const Timer& timer)
+                        const Timer& timer, int& reason_of_infeasibility)
 {
    if( problem.getNumIntegralCols() == 0 )
       return PresolveStatus::kUnchanged;
@@ -350,6 +353,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
    boundChanges.reserve( ncols );
 
    std::atomic_bool infeasible{ false };
+   std::atomic_int infeasible_variable {-1};
 
    // use tbb combinable so that each thread will copy the activities and
    // bounds at most once
@@ -416,6 +420,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
                    if( globalInfeasible )
                    {
                       infeasible.store( true, std::memory_order_relaxed );
+                      infeasible_variable.store(col);
                       break;
                    }
                 }
@@ -431,7 +436,10 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
          return PresolveStatus::kUnchanged;
 
       if( infeasible.load( std::memory_order_relaxed ) )
+      {
+         reason_of_infeasibility = infeasible_variable.load(std::memory_order_relaxed);
          return PresolveStatus::kInfeasible;
+      }
 
       int64_t amountofwork = 0;
       int nfixings = 0;
@@ -463,8 +471,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
             {
                // found new bound change
                boundChanges.emplace_back( boundChg );
-               boundPos[2 * boundChg.col + boundChg.upper] =
-                   boundChanges.size();
+               boundPos[2 * boundChg.col + boundChg.upper] = boundChanges.size();
 
                // check if column is now fixed
                if( ( boundChg.upper &&
@@ -478,9 +485,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
             else
             {
                // already changed that bound
-               ProbingBoundChg<REAL>& otherBoundChg =
-                   boundChanges[boundPos[2 * boundChg.col + boundChg.upper] -
-                                1];
+               ProbingBoundChg<REAL>& otherBoundChg = boundChanges[boundPos[2 * boundChg.col + boundChg.upper] - 1];
 
                if( boundChg.upper && boundChg.bound < otherBoundChg.bound )
                {
@@ -490,6 +495,13 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
                   // check if column is now fixed
                   if( boundChg.bound == lower_bounds[boundChg.col] )
                      ++nfixings;
+
+                  if(problemUpdate.getPresolveOptions().verification_with_VeriPB)
+                  {
+                     if(boundChg.probing_col == -1 )
+                        otherBoundChg.probing_col = -1;
+                  }
+
                }
                else if( !boundChg.upper &&
                         boundChg.bound > otherBoundChg.bound )
@@ -555,9 +567,18 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
       for( const ProbingBoundChg<REAL>& boundChg : boundChanges )
       {
          if( boundChg.upper )
+         {
+            if(problemUpdate.getPresolveOptions().verification_with_VeriPB && boundChg.probing_col!= -1)
+               reductions.reason_probing_upper_bound_change(boundChg.probing_col, boundChg.col);
             reductions.changeColUB( boundChg.col, boundChg.bound );
+         }
          else
+         {
+            if(problemUpdate.getPresolveOptions().verification_with_VeriPB && boundChg.probing_col!= -1)
+               reductions.reason_probing_lower_bound_change(boundChg.probing_col, boundChg.col);
             reductions.changeColLB( boundChg.col, boundChg.bound );
+
+         }
       }
 
       result = PresolveStatus::kReduced;
