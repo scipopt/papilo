@@ -3,9 +3,6 @@
 @section RNNEXT PaPILO NEXT
 ***************************
 
-Features
---------
-
 Performance improvements
 ------------------------
 - Symmetries: For binary problems ParallelCols adds symmetry-breaking constraints to avoid introducing non-binary integer variables via parameter
@@ -26,15 +23,6 @@ Interface changes
 
 ### Data structures
 
-Unit tests
-----------
-
-Testing
--------
-
-Build system
-------------
-
 Fixed bugs
 ----------
 - SimpleProbing: avoid unstable replacements of columns with small ranges
@@ -44,10 +32,11 @@ Miscellaneous
 -------------
 - Ortools: PaPILO parses the dual solution and the reduced costs from ortools
 - HiGHS: PaPILO supports HiGHS version 1.3+
-- VeriPB: prints VeriPB parseable verification certificate for pseudoboolean problem in the log (experimental)
+- VeriPB: prints VeriPB 2.0 parseable certificate for pseudo-Boolean problems in the log
 - OPB-Format: PaPILO can now parse files in linear opb format
 - RoundingSat https://gitlab.com/MIAOresearch/software/roundingsat is available as PseudoBoolean solver
 - make testcluster script extended by SKIP_PRESOLVE and SOLVE_EXECUTABLE to solve the reduced/original problem
+- make testcluster script extended to verify PaPILO certificates (experimental only)
 
 @section RN212 PaPILO 2.1.4
 ***************************
