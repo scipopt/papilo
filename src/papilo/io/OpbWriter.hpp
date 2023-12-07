@@ -265,7 +265,7 @@ struct OpbWriter
    static long
    cast_to_long( const REAL& x )
    {
-      return (long) floor( REAL( x + REAL( 0.5 ) ) );
+      return (long) ( REAL( x + REAL( 0.5 ) ) );
    }
 };
 
