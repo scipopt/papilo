@@ -1003,15 +1003,10 @@ Presolve<REAL>::run_presolvers( const Problem<REAL>& problem,
       {
          results[i] =
              presolvers[i]->run( problem, probUpdate, num, reductions[i], timer, cause );
+         assert( cause != -1 || results[i] != PresolveStatus::kInfeasible || presolvers[i]->getName() != "probing");
          apply_result_sequential( i, probUpdate, run_sequential );
          if( results[i] == PresolveStatus::kInfeasible )
-         {
-            if( presolvers[i]->getName() == "probing" )
-            {
-               assert( cause != -1 );
-            }
             return;
-         }
          if( problem.getNRows() == 0 || problem.getNCols() == 0 )
             return;
       }
