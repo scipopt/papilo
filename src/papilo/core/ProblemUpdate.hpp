@@ -349,7 +349,7 @@ class ProblemUpdate
    }
 
    bool
-   isColBetterForSubstitution( int col1, int col2 ) const
+   check_sparsification_condition_on_substitution( int col1, int col2 ) const
    {
       int col1size = problem.getColSizes()[col1];
       int col2size = problem.getColSizes()[col2];
@@ -2237,6 +2237,11 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
             const int* colindices = colvec.getIndices();
             const int nbrelevantrows = colvec.getLength();
 
+            const auto rowvec =
+                  constraintMatrix.getRowCoefficients( equalityrow );
+            const int row_length = rowvec.getLength();
+            const int* row_indices = rowvec.getIndices();
+
             postsolve.storeSubstitution( col, equalityrow, problem );
 
             assert(
@@ -2259,16 +2264,11 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
             msg.detailed( "\n" );
 
             // update col states
-            const auto rowvec =
-                constraintMatrix.getRowCoefficients( equalityrow );
-            const int length = rowvec.getLength();
-            const int* indices = rowvec.getIndices();
-
             msg.detailed( "modified columns: " );
-            for( int j = 0; j < length; ++j )
+            for( int j = 0; j < row_length; ++j )
             {
-               msg.detailed( "{},", indices[j] );
-               setColState( indices[j], State::kModified );
+               msg.detailed( "{},", row_indices[j] );
+               setColState( row_indices[j], State::kModified );
             }
             msg.detailed( "\n" );
 
@@ -2282,7 +2282,7 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
                 problem.getRowActivities(), singletonRows, singletonColumns,
                 emptyColumns, stats.nrounds );
 
-            stats.ncoefchgs += length * nbrelevantrows;
+            stats.ncoefchgs += row_length * nbrelevantrows;
 
             assert( constraintMatrix.getRowSizes()[equalityrow] == -1 );
             assert( constraintMatrix.getRowCoefficients( equalityrow )

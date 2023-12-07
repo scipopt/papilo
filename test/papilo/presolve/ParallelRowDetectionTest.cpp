@@ -1279,7 +1279,7 @@ int cause = -1;
    pb.setColNameAll( columnNames );
    pb.setProblemName( "matrix with parallel inequalities (0 and 2)" );
    Problem<double> problem = pb.build();
-   int i = firstRowEquation ? i = 0 : i = 2;
+   int i = firstRowEquation ? 0 : 2;
    problem.getConstraintMatrix().modifyLeftHandSide( i, num, rhs[i] );
    return problem;
 }

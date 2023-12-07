@@ -63,8 +63,8 @@ class PrimalDualSolValidation
    {
       bool failure = false;
 
-      const Vec<REAL> ub = problem.getUpperBounds();
-      const Vec<REAL> lb = problem.getLowerBounds();
+      const Vec<REAL>& ub = problem.getUpperBounds();
+      const Vec<REAL>& lb = problem.getLowerBounds();
 
       for( int col = 0; col < problem.getNCols(); col++ )
       {
@@ -92,8 +92,8 @@ class PrimalDualSolValidation
    checkPrimalConstraintAndUpdateSlack( Solution<REAL>& solution,
                                         const Problem<REAL>& problem ) const
    {
-      const Vec<REAL> rhs = problem.getConstraintMatrix().getRightHandSides();
-      const Vec<REAL> lhs = problem.getConstraintMatrix().getLeftHandSides();
+      const Vec<REAL>& rhs = problem.getConstraintMatrix().getRightHandSides();
+      const Vec<REAL>& lhs = problem.getConstraintMatrix().getLeftHandSides();
 
       if(solution.type == SolutionType::kPrimalDual)
       {
