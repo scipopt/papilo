@@ -15,7 +15,7 @@ delc 3 ;  ; begin
     pol 6 2 +
 end
 * update objective
-obju +1 ~x2 +1 x3 +1 x4 ;
+obju +1 x3 +1 x4 1;
 *delete constraints (1) and (2)
 delc 1 ; x1 -> 1 ;
 delc 2 ; x1 -> 0 ;
@@ -27,11 +27,11 @@ delc 4 ; ; begin
 end
 
 * Dual Fix
-* x5 has no uplocks and can be fixed to 1
-red +1 x5 >= 1 ; x5 -> 1
+* x2 has no uplocks and can be fixed to 1
+red +1 x2 >= 1 ; x2 -> 1
 core id -1
 * update new constraints with x5 = 1
-pol 6 ~x5 +
+pol 6 ~x2 +
 core id -1
 delc 6 ; ; begin
     pol 13 12 +
