@@ -590,12 +590,9 @@ Presolve<REAL>::apply( Problem<REAL>& problem, bool store_dual_postsolve )
          probUpdate.check_and_compress();
       }
 
-      //TODO: refactor symmetries
       if(probUpdate.getProblem().getNCols() > 0)
       {
-         double time = 0;
-         int index_parallel_col = -1;
-         for( int i = 0; i < presolvers.size(); ++i )
+         for( unsigned int i = 0; i < presolvers.size(); ++i )
          {
             auto res = presolvers[i]->run_symmetries(
                 problem, probUpdate, num, reductions[i], timer );

@@ -1037,7 +1037,6 @@ setupParallelRowWithTwoParallelEquations( double rhs_first_row,
 {
    Num<double> num{};
    double time = 0.0;
-int cause = -1;
    Timer t{ time };
    Vec<double> coefficients{ 1.0, 1.0, 1.0 };
    Vec<double> upperBounds{ 10.0, 10.0, 10.0 };
@@ -1085,7 +1084,6 @@ setupParallelRowWithMultipleParallelRows()
 {
    Num<double> num{};
    double time = 0.0;
-int cause = -1;
    Timer t{ time };
    Vec<double> coefficients{ 1.0, 1.0, 1.0 };
    Vec<double> upperBounds{ 10.0, 10.0, 10.0 };
@@ -1138,7 +1136,6 @@ setupParallelRowWithMultipleParallelInequalities( double coeff )
 {
    Num<double> num{};
    double time = 0.0;
-int cause = -1;
    Timer t{ time };
    Vec<double> coefficients{ 1.0, 1.0 };
    Vec<double> upperBounds{ 10.0, 10.0 };
@@ -1233,7 +1230,6 @@ setupProblemParallelRowWithMixed( bool firstRowEquation, double lhsIneq,
 {
    Num<double> num{};
    double time = 0.0;
-int cause = -1;
    Timer t{ time };
    Vec<double> coefficients{ 1.0, 1.0, 1.0 };
    Vec<double> upperBounds{ 10.0, 10.0, 10.0 };
@@ -1291,7 +1287,6 @@ setupProblemParallelRowWithInfinity( bool firstRowRhsInfinity, double lhs,
 {
    Num<double> num{};
    double time = 0.0;
-int cause = -1;
    Timer t{ time };
    Vec<double> coefficients{ 1.0, 1.0, 1.0 };
    Vec<double> upperBounds{ 10.0, 10.0, 10.0 };

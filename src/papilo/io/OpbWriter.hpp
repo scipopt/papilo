@@ -55,12 +55,10 @@ struct OpbWriter
               const Num<REAL>& num)
    {
       const ConstraintMatrix<REAL>& matrix = prob.getConstraintMatrix();
-      const Vec<std::string>& consnames = prob.getConstraintNames();
       const Vec<std::string>& varnames = prob.getVariableNames();
       const Vec<REAL>& lhs = matrix.getLeftHandSides();
       const Vec<REAL>& rhs = matrix.getRightHandSides();
       const Objective<REAL>& obj = prob.getObjective();
-      const Vec<ColFlags>& col_flags = prob.getColFlags();
       const Vec<RowFlags>& row_flags = prob.getRowFlags();
       const Vec<Symmetry>& sym = prob.getSymmetries().symmetries;
 
@@ -155,7 +153,6 @@ struct OpbWriter
                break;
             scale_necessary = !num.isIntegral(vector.getValues()[j]);
          }
-         char type;
          if( row_flags[row].test( RowFlag::kEquation ) ||
              !row_flags[row].test( RowFlag::kLhsInf ) )
          {
