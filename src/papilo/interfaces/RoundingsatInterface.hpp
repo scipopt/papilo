@@ -129,7 +129,7 @@ class RoundingsatInterface : public SolverInterface<REAL>
          }
       }
       //TODO: test symmetries to problem
-      for( int symmetry_index = 0; symmetry_index < problem.getSymmetries().symmetries.size(); ++symmetry_index )
+      for( size_t symmetry_index = 0; symmetry_index < problem.getSymmetries().symmetries.size(); ++symmetry_index )
       {
          assert( problem.test_problem_type(ProblemFlag::kBinary) );
          input->reset();
@@ -416,7 +416,8 @@ class RoundingsatFactory : public SolverFactory<REAL>
       auto satsolver = std::unique_ptr<SolverInterface<REAL>>(
           new RoundingsatInterface<REAL>() );
 
-      return std::move( satsolver );
+      auto res = std::move( satsolver );
+      return res;
    }
 
    virtual void

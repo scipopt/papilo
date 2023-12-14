@@ -124,7 +124,7 @@ class GurobiInterface : public SolverInterface<REAL>
          model.update();
       }
 
-      for( int i = 0; i < symmetries.size(); ++i )
+      for( unsigned int i = 0; i < symmetries.size(); ++i )
       {
          GRBLinExpr grbLinExpr = 0;
          auto& symmetry = symmetries[i];
@@ -368,7 +368,7 @@ class GurobiInterface : public SolverInterface<REAL>
    {
       const int* colset = components.getComponentsCols( component );
       assert( components.getComponentsNumCols( component ) ==
-              sol.primal.size() );
+              static_cast<int>(sol.primal.size()) );
 
       for( std::size_t i = 0; i < sol.primal.size(); ++i )
          solbuffer.primal[colset[i]] = sol.primal[i];
