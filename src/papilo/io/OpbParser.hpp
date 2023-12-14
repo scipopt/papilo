@@ -89,7 +89,7 @@ class OpbParser
 
       assert( parser.nnz >= 0 );
 
-      assert(parser.coeffobj.size() == parser.nCols);
+      assert(static_cast<int>(parser.coeffobj.size()) == parser.nCols);
 
       Vec<REAL> obj_vec( size_t( parser.nCols ), REAL{ 0.0 } );
 
@@ -221,8 +221,8 @@ OpbParser<REAL>::parse( boost::iostreams::filtering_istream& file )
    }
 
    assert( row_type.size() == unsigned( nRows ) );
-   assert( nCols == colname2idx.size() );
-   assert( nRows == rowname2idx.size() );
+   assert( nCols == static_cast<int>(colname2idx.size()) );
+   assert( nRows == static_cast<int>(rowname2idx.size()) );
 
    return true;
 }
@@ -383,12 +383,11 @@ OpbParser<REAL>::parseObjective( std::string& line )
          return ParseKey::kFail;
       }
 
-      auto iterator = colname2idx.find( var );
       if( negated )
          objoffset += coef;
 
       coeffobj.push_back( { nCols, negated ? -coef: coef } );
-      assert(iterator == colname2idx.end());
+      assert(colname2idx.find( var ) == colname2idx.end());
       add_binary_variable( var);
    }
    return ParseKey::kNone;

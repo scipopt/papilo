@@ -186,10 +186,10 @@ compute_row_and_column_permutation( const Problem<double>& prob, bool verbose )
    };
 
    int iters = 0;
-   size_t lastncols = -1;
+   int lastncols = -1;
    HashMap<uint64_t, size_t> distinct_hashes( ncols );
 
-   size_t lastnrows = -1;
+   int lastnrows = -1;
    HashMap<uint64_t, size_t> distinct_row_hashes( nrows );
 
    Vec<int>& colperm = retval.second;
@@ -202,8 +202,8 @@ compute_row_and_column_permutation( const Problem<double>& prob, bool verbose )
    for( int i = 0; i < nrows; ++i )
       rowperm[i] = i;
 
-   size_t nrows2 = nrows;
-   size_t ncols2 = ncols;
+   int nrows2 = nrows;
+   int ncols2 = ncols;
 
    while( nrows2 != 0 )
    {
@@ -236,7 +236,7 @@ compute_row_and_column_permutation( const Problem<double>& prob, bool verbose )
 #endif
       distinct_row_hashes.clear();
 
-      for( size_t i = 0; i < nrows2; ++i )
+      for( int i = 0; i < nrows2; ++i )
          distinct_row_hashes[rowhashes[rowperm[i]]] += 1;
 
       pdqsort( rowperm.begin(), rowperm.begin() + nrows2, [&]( int a, int b ) {
@@ -259,7 +259,7 @@ compute_row_and_column_permutation( const Problem<double>& prob, bool verbose )
          nrows2 += partitionsize;
       }
 
-      for( size_t i = nrows2; i < lastnrows; ++i )
+      for( int i = nrows2; i < lastnrows; ++i )
       {
          rowhashes[rowperm[i]] = i;
       }
@@ -303,7 +303,7 @@ compute_row_and_column_permutation( const Problem<double>& prob, bool verbose )
 #endif
       distinct_hashes.clear();
 
-      for( size_t i = 0; i < ncols2; ++i )
+      for( int i = 0; i < ncols2; ++i )
          distinct_hashes[colhashes[colperm[i]]] += 1;
 
       pdqsort( colperm.begin(), colperm.begin() + ncols2, [&]( int a, int b ) {
@@ -324,7 +324,7 @@ compute_row_and_column_permutation( const Problem<double>& prob, bool verbose )
          ncols2 += partitionsize;
       }
 
-      for( size_t i = ncols2; i < lastncols; ++i )
+      for( int i = ncols2; i < lastncols; ++i )
       {
          colhashes[colperm[i]] = i;
       }
@@ -850,7 +850,7 @@ compute_instancehash( const Problem<double>& prob )
          nrows2 += partitionsize;
       }
 
-      for( size_t i = nrows2; i < lastnrows; ++i )
+      for( int i = nrows2; i < lastnrows; ++i )
       {
          rowhashes[rowperm[i]] = i;
       }
@@ -917,10 +917,8 @@ compute_instancehash( const Problem<double>& prob )
          ncols2 += partitionsize;
       }
 
-      for( size_t i = ncols2; i < lastncols; ++i )
-      {
+      for( int i = ncols2; i < lastncols; ++i )
          colhashes[colperm[i]] = i;
-      }
 
       ++iters;
    }

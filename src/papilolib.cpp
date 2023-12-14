@@ -28,71 +28,71 @@
 #include <cstdlib>
 #include <new>
 
-static void*
-malloc_default_cb( size_t size, void* )
-{
-   return std::malloc( size );
-}
-
-static void
-free_default_cb( void* ptr, void* )
-{
-   std::free( ptr );
-}
-
-static void* alloc_usrdata = nullptr;
-static void* ( *malloccb )( size_t size, void* usrptr ) = malloc_default_cb;
-static void ( *freecb )( void* ptr, void* usrptr ) = free_default_cb;
-
-template <class T>
-struct CallbackAllocator
-{
-   typedef T value_type;
-
-   CallbackAllocator() noexcept {}
-
-   template <class U>
-   CallbackAllocator( const CallbackAllocator<U>& ) noexcept
-   {
-   }
-   template <class U>
-   bool
-   operator==( const CallbackAllocator<U>& ) const noexcept
-   {
-      return true;
-   }
-   template <class U>
-   bool
-   operator!=( const CallbackAllocator<U>& ) const noexcept
-   {
-      return false;
-   }
-
-   T*
-   allocate( const size_t n ) const
-   {
-      if( n == 0 )
-      {
-         return nullptr;
-      }
-      if( n > static_cast<size_t>( -1 ) / sizeof( T ) )
-      {
-         throw std::bad_array_new_length();
-      }
-      void* const pv = malloccb( n * sizeof( T ), alloc_usrdata );
-      if( !pv )
-      {
-         throw std::bad_alloc();
-      }
-      return static_cast<T*>( pv );
-   }
-
-   void
-   deallocate( T* const p, size_t ) const noexcept
-   {
-      freecb( p, alloc_usrdata );
-   }
-};
+//static void*
+//malloc_default_cb( size_t size, void* )
+//{
+//   return std::malloc( size );
+//}
+//
+//static void
+//free_default_cb( void* ptr, void* )
+//{
+//   std::free( ptr );
+//}
+//
+//static void* alloc_usrdata = nullptr;
+//static void* ( *malloccb )( size_t size, void* usrptr ) = malloc_default_cb;
+//static void ( *freecb )( void* ptr, void* usrptr ) = free_default_cb;
+//
+//template <class T>
+//struct CallbackAllocator
+//{
+//   typedef T value_type;
+//
+//   CallbackAllocator() noexcept {}
+//
+//   template <class U>
+//   CallbackAllocator( const CallbackAllocator<U>& ) noexcept
+//   {
+//   }
+//   template <class U>
+//   bool
+//   operator==( const CallbackAllocator<U>& ) const noexcept
+//   {
+//      return true;
+//   }
+//   template <class U>
+//   bool
+//   operator!=( const CallbackAllocator<U>& ) const noexcept
+//   {
+//      return false;
+//   }
+//
+//   T*
+//   allocate( const size_t n ) const
+//   {
+//      if( n == 0 )
+//      {
+//         return nullptr;
+//      }
+//      if( n > static_cast<size_t>( -1 ) / sizeof( T ) )
+//      {
+//         throw std::bad_array_new_length();
+//      }
+//      void* const pv = malloccb( n * sizeof( T ), alloc_usrdata );
+//      if( !pv )
+//      {
+//         throw std::bad_alloc();
+//      }
+//      return static_cast<T*>( pv );
+//   }
+//
+//   void
+//   deallocate( T* const p, size_t ) const noexcept
+//   {
+//      freecb( p, alloc_usrdata );
+//   }
+//};
 
 #include "papilo/misc/Alloc.hpp"
 using namespace papilo;
@@ -516,7 +516,7 @@ class MessageStream : public std::ostream
 
  public:
    MessageStream( const Message& msg )
-       : messageStreambuf( msg ), std::ostream( &messageStreambuf )
+       : std::ostream( &messageStreambuf ), messageStreambuf( msg )
    {
    }
 };

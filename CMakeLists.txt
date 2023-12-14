@@ -21,6 +21,7 @@ if(MSVC)
 endif()
 
 include(GNUInstallDirs)
+#add_definitions ("-Wall")
 
 # path to e.g. findGMP module
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/Modules/)
@@ -126,6 +127,7 @@ target_include_directories(papilo INTERFACE
 
 target_include_directories(papilo SYSTEM INTERFACE ${Boost_INCLUDE_DIRS})
 
+
 option(TBB "should TBB be linked if found" ON)
 
 if (TBB)
@@ -175,11 +177,10 @@ write_basic_package_version_file(
 if(MSVC)
    target_compile_definitions(papilo INTERFACE BOOST_ALL_NO_LIB)
    target_compile_options(papilo INTERFACE /bigobj)
-   target_compile_options(papilo
-      INTERFACE ${TBB_CXX_STD_FLAG})
+   target_compile_options(papilo INTERFACE ${TBB_CXX_STD_FLAG})
 else()
-   target_compile_options(papilo
-      INTERFACE ${TBB_CXX_STD_FLAG} -Wno-shadow)
+   #TODO: configure warning level https://stackoverflow.com/questions/2368811/how-to-set-warning-level-in-cmake
+   target_compile_options(papilo INTERFACE ${TBB_CXX_STD_FLAG} -Wno-shadow -Wall -Werror)
 endif()
 
 if(LUSOL)

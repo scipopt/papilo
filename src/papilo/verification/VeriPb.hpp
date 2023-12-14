@@ -69,7 +69,7 @@ class VeriPb : public CertificateInterface<REAL>
    Num<REAL> num;
    std::ofstream proof_out;
 
-   int propagation_option = 0;
+   int propagation_option;
    int status = 0; // 1 = solved, -1 = infeasible -2 = finished;
 
    Objective<REAL> stored_objective;
@@ -128,7 +128,7 @@ class VeriPb : public CertificateInterface<REAL>
    }
 
    VeriPb( const Problem<REAL>& _problem, const Num<REAL>& _num, PresolveOptions options ) :
-         num( _num ), substitutions( {}), propagation_option(options.veripb_propagation_option)
+         num( _num ), propagation_option(options.veripb_propagation_option), substitutions( {})
    {
       rhs_row_mapping.reserve( _problem.getNRows() );
       lhs_row_mapping.reserve( _problem.getNRows() );
@@ -136,7 +136,7 @@ class VeriPb : public CertificateInterface<REAL>
       stored_objective = Objective<REAL>(_problem.getObjective());
       auto coefficients = stored_objective.coefficients;
 
-      for( unsigned int i = 0; i < _problem.getNRows(); ++i )
+      for( int i = 0; i < _problem.getNRows(); ++i )
       {
          scale_factor.push_back( 1 );
          if( !_problem.getRowFlags()[i].test( RowFlag::kLhsInf ) )
@@ -154,7 +154,7 @@ class VeriPb : public CertificateInterface<REAL>
          else
             rhs_row_mapping.push_back( UNKNOWN );
       }
-      for( unsigned int i = 0; i < _problem.getNCols(); ++i )
+      for( int i = 0; i < _problem.getNCols(); ++i )
       {
          if( coefficients[i] != 0 )
          {
@@ -168,7 +168,7 @@ class VeriPb : public CertificateInterface<REAL>
       }
 
       assert( rhs_row_mapping.size() == lhs_row_mapping.size() );
-      assert( rhs_row_mapping.size() == _problem.getNRows() );
+      assert( static_cast<int>(rhs_row_mapping.size()) == _problem.getNRows() );
 
       auto problem_name = _problem.getName();
       int length = problem_name.length();
@@ -294,6 +294,8 @@ class VeriPb : public CertificateInterface<REAL>
                            var_mapping );
             break;
          }
+         proof_out << RUP << "1 " << NEGATED << names[orig_col] << " >= 1 ;\n";
+         break;
       case ArgumentType::kPrimal:
          if( stored_dominated_col == orig_col)
          {
@@ -390,7 +392,6 @@ class VeriPb : public CertificateInterface<REAL>
          {
             next_constraint_id++;
             assert( rhs_row_mapping[row] != UNKNOWN );
-            int cons = cons_id_fixing;
             if( row_value > 0 )
                proof_out << POL << rhs_row_mapping[row] << " "
                          << names[orig_col] << " " << abs( row_value )
@@ -457,6 +458,12 @@ class VeriPb : public CertificateInterface<REAL>
                            var_mapping );
             break;
          }
+         else
+         {
+            proof_out << RUP << "1 " << names[orig_col]
+                      << " >= " << cast_to_long( val ) << " ;\n";
+            break;
+         }
       case ArgumentType::kPrimal:
          if( stored_dominating_col == orig_col)
          {
@@ -514,7 +521,6 @@ class VeriPb : public CertificateInterface<REAL>
          {
             next_constraint_id++;
             assert( lhs_row_mapping[row] != UNKNOWN );
-            int cons = cons_id_fixing;
             if( row_value > 0 )
                proof_out << POL << lhs_row_mapping[row] << " " << NEGATED
                          << names[orig_col] << " " << abs( row_value )
@@ -1823,8 +1829,8 @@ class VeriPb : public CertificateInterface<REAL>
       assert(substitute_factor != 0);
       const String name = currentProblem.getVariableNames()[var_mapping[col]];
 #if VERIPB_VERSION >= 2
-      int implied_constraint_lhs;
-      int implied_constraint_rhs;
+      int implied_constraint_lhs = -1;
+      int implied_constraint_rhs = -1;
       if( row_implying_lb != UNKNOWN || row_implying_ub != UNKNOWN)
       {
          if( substitute_factor > 0)
@@ -1968,17 +1974,16 @@ class VeriPb : public CertificateInterface<REAL>
 
             if( row_implying_ub != UNKNOWN && substitute_factor > 0)
             {
-               REAL coeff_ub = get_coeff_in_col_vec( row_implying_ub, col_vec );
-               int contradiction = coeff_ub > 0 ? rhs_row_mapping[row_implying_ub]: lhs_row_mapping[row_implying_ub];
-               assert(contradiction != UNKNOWN);
+
+               assert( (get_coeff_in_col_vec( row_implying_ub, col_vec ) >0  && rhs_row_mapping[row_implying_ub] != UNKNOWN)
+                       || (lhs_row_mapping[row_implying_ub] != UNKNOWN));
                proof_out << DELETE_CONS << implied_constraint_lhs << " ; ; begin\n\t" << POL << rhs_row_mapping[row_implying_ub] << " -1 +\nend\n";
                next_constraint_id += 2;
             }
             else if ( row_implying_lb != UNKNOWN && substitute_factor < 0)
             {
-               REAL coeff_lb = get_coeff_in_col_vec( row_implying_lb, col_vec );
-               int contradiction = coeff_lb > 0 ? lhs_row_mapping[row_implying_lb]: rhs_row_mapping[row_implying_lb];
-               assert(contradiction != UNKNOWN);
+               assert( (get_coeff_in_col_vec( row_implying_lb, col_vec ) >0  && lhs_row_mapping[row_implying_ub] != UNKNOWN)
+                       || (rhs_row_mapping[row_implying_ub] != UNKNOWN));
                proof_out << DELETE_CONS << implied_constraint_lhs << " ; ; begin\n\t" << POL << rhs_row_mapping[row_implying_lb] << " -1 +\nend\n";
                next_constraint_id += 2;
             }
@@ -2104,7 +2109,7 @@ class VeriPb : public CertificateInterface<REAL>
          proof_out << "sol";
 #endif
       next_constraint_id++;
-      for( int i = 0; i < orig_solution.primal.size(); i++ )
+      for( unsigned int i = 0; i < orig_solution.primal.size(); i++ )
       {
          assert( orig_solution.primal[i] == 0 || orig_solution.primal[i] == 1 );
          proof_out << " ";
@@ -2240,12 +2245,10 @@ class VeriPb : public CertificateInterface<REAL>
           [this, &colmapping, full]()
           {
              REAL count = 0;
-             int length = stored_objective.coefficients.size();
              for(auto v: stored_objective.coefficients)
                 count += v;
              compress_vector( colmapping, stored_objective.coefficients );
              REAL count2 = 0;
-             int length2 = stored_objective.coefficients.size();
              for(auto v: stored_objective.coefficients)
                 count2 += v;
              if( full )
@@ -2456,7 +2459,6 @@ class VeriPb : public CertificateInterface<REAL>
             continue;
          }
          REAL factor = col_vec.getValues()[i] * abs(scale_factor[row]);
-         auto data = matrix.getRowCoefficients( row );
          if( num.isIntegral( factor / substitute_factor ) )
          {
             int val = cast_to_long( factor / substitute_factor );

@@ -163,7 +163,7 @@ struct SolWriter
 
       int rowSize = (int) rowBasis.size();
       assert(colBasis.size() == col_names.size());
-      assert( rowSize == row_names.size());
+      assert( rowSize == static_cast<int>(row_names.size()));
 
 
       out.push( file );

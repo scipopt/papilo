@@ -40,14 +40,14 @@ struct ProbingBoundChg
    REAL bound;
    unsigned int col : 31;
    unsigned int upper : 1;
-   unsigned int probing_col : 32;
+   int probing_col : 32;
 
    ProbingBoundChg( bool upper_, int col_, REAL bound_, int probing_col_ )
    {
       this->upper = upper_ ? 1 : 0;
       this->col = static_cast<unsigned int>( col_ );
       this->bound = bound_;
-      this->probing_col = static_cast<unsigned int>( probing_col_ );
+      this->probing_col = ( probing_col_ );
    }
 };
 

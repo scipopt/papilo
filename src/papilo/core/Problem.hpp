@@ -100,7 +100,7 @@ class Problem
       assert( lhs_values.size() == rhs_values.size() );
       assert( lhs_values.size() == row_flags.size() );
       assert( ( transposed ? cons_matrix.getNCols()
-                           : cons_matrix.getNRows() ) == row_flags.size() );
+                           : cons_matrix.getNRows() ) == static_cast<int>(row_flags.size()) );
 
       auto cons_matrix_other = cons_matrix.getTranspose();
       if( transposed )

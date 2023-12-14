@@ -133,7 +133,7 @@ class ScipInterface : public SolverInterface<REAL>
          SCIP_CALL( SCIPreleaseCons( scip, &cons ) );
       }
 
-      for( int i = 0; i < symmetries.size(); ++i )
+      for( unsigned int i = 0; i < symmetries.size(); ++i )
       {
          assert(problem.test_problem_type( ProblemFlag::kBinary));
          SCIP_CONS* cons;
@@ -191,7 +191,6 @@ class ScipInterface : public SolverInterface<REAL>
       const auto& lhs_values = consMatrix.getLeftHandSides();
       const auto& rhs_values = consMatrix.getRightHandSides();
       const auto& rflags = problem.getRowFlags();
-      const auto& symmetries = problem.getSymmetries().symmetries;
 
       SCIP_CALL( SCIPcreateProbBasic( scip, problem.getName().c_str() ) );
 
@@ -475,7 +474,7 @@ class ScipInterface : public SolverInterface<REAL>
          SCIP_Bool success;
 
          const int* colset = components.getComponentsCols( component );
-         assert( components.getComponentsNumCols( component ) == vars.size() );
+         assert( components.getComponentsNumCols( component ) == static_cast<int>(vars.size()) );
 
          SCIP_CALL_ABORT(
              SCIPcreateFiniteSolCopy( scip, &finitesol, sol, &success ) );
@@ -654,8 +653,8 @@ class ScipFactory : public SolverFactory<REAL>
                     scipsetup_usrdata );
 
       scip->setVerbosity( verbosity );
-
-      return std::move( scip );
+      auto res = std::move( scip );
+      return res;
    }
 
    virtual void

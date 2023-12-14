@@ -259,7 +259,7 @@ class DependentRows
                 std::remove( colmapping.begin(), colmapping.end(), -1 ),
                 colmapping.end() );
 
-            assert( colmapping.size() == luparm[10] );
+            assert( static_cast<int>(colmapping.size()) == luparm[10] );
 
             return;
          }
