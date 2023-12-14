@@ -59,8 +59,6 @@ class HighsInterface : public SolverInterface<REAL>
    {
       int ncols = problem.getNCols();
       int nrows = problem.getNRows();
-      const Vec<String>& varNames = problem.getVariableNames();
-      const Vec<String>& consNames = problem.getConstraintNames();
       const VariableDomains<REAL>& domains = problem.getVariableDomains();
       const Objective<REAL>& obj = problem.getObjective();
       const ConstraintMatrix<REAL>& consMatrix = problem.getConstraintMatrix();
@@ -162,8 +160,6 @@ class HighsInterface : public SolverInterface<REAL>
           const Vec<int>& col_maps, const Components& components,
           const ComponentInfo& component ) override
    {
-      const Vec<String>& varNames = problem.getVariableNames();
-      const Vec<String>& consNames = problem.getConstraintNames();
       const VariableDomains<REAL>& domains = problem.getVariableDomains();
       const Objective<REAL>& obj = problem.getObjective();
       const auto& consMatrix = problem.getConstraintMatrix();
@@ -343,7 +339,7 @@ class HighsInterface : public SolverInterface<REAL>
       int numcols = solver.getNumCol();
       int numrows = solver.getNumRow();
 
-      if( highsSol.col_value.size() != numcols )
+      if( static_cast<int>(highsSol.col_value.size()) != numcols )
          return false;
 
       // get primal values
@@ -355,8 +351,8 @@ class HighsInterface : public SolverInterface<REAL>
       if( sol.type == SolutionType::kPrimal )
          return true;
 
-      if( highsSol.col_dual.size() != numcols ||
-          highsSol.row_dual.size() != numrows )
+      if( static_cast<int>(highsSol.col_dual.size()) != numcols ||
+          static_cast<int>(highsSol.row_dual.size()) != numrows )
       {
          sol.type = SolutionType::kPrimal;
          return true;
@@ -389,7 +385,7 @@ class HighsInterface : public SolverInterface<REAL>
       int numcols = solver.getNumCols();
       int numrows = solver.getNumRows();
       const HighsSolution& highsSol = solver.getSolution();
-      if( highsSol.col_value.size() != numcols )
+      if( static_cast<int>(highsSol.col_value.size()) != numcols )
          return false;
 
       assert( components.getComponentsNumCols( component ) == numcols );
@@ -401,8 +397,8 @@ class HighsInterface : public SolverInterface<REAL>
       if( sol.type == SolutionType::kPrimal )
          return true;
 
-      if( highsSol.col_dual.size() != numcols ||
-          highsSol.row_dual.size() != numrows )
+      if( static_cast<int>(highsSol.col_dual.size()) != numcols ||
+          static_cast<int>(highsSol.row_dual.size()) != numrows )
       {
          sol.type = SolutionType::kPrimal;
          return true;

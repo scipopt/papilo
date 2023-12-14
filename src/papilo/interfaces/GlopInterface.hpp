@@ -133,12 +133,9 @@ class GlopInterface : public SolverInterface<REAL>
       const int* rowset = components.getComponentsRows( component.componentid );
 
       const Vec<String>& varNames = problem.getVariableNames();
-      const Vec<String>& rowNames = problem.getConstraintNames();
       const VariableDomains<REAL>& domains = problem.getVariableDomains();
-      const Vec<REAL>& obj = problem.getObjective().coefficients;
       const Vec<REAL>& rhs = problem.getConstraintMatrix().getRightHandSides();
       const Vec<REAL>& lhs = problem.getConstraintMatrix().getLeftHandSides();
-      const auto consMatrix = problem.getConstraintMatrix();
       auto coefficients = problem.getObjective().coefficients;
       auto& row_flags = problem.getRowFlags();
 
@@ -298,7 +295,7 @@ class GlopInterface : public SolverInterface<REAL>
    {
       const int* colset = components.getComponentsCols( component );
 
-      for( std::size_t i = 0; i < n_cols; ++i )
+      for( int i = 0; i < n_cols; ++i )
       {
          solbuffer.primal[colset[i]] = variables[i]->solution_value();
          solbuffer.reducedCosts[colset[i]] = variables[i]->reduced_cost();
@@ -349,7 +346,8 @@ class GlopFactory : public SolverFactory<REAL>
    newSolver( VerbosityLevel verbosity ) const
    {
       auto glop = std::unique_ptr<SolverInterface<REAL>>( solver );
-      return std::move( glop );
+      auto res = std::move( glop );
+      return res;
    }
 
    virtual void
