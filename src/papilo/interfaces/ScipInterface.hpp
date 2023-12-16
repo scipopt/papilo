@@ -136,7 +136,7 @@ class ScipInterface : public SolverInterface<REAL>
       {
          assert(problem.test_problem_type( ProblemFlag::kBinary));
          SCIP_CONS* cons;
-         SCIP_Real lhs;
+         SCIP_Real lhs = -SCIPinfinity( scip ) ;
          SCIP_Real rhs = SCIPinfinity( scip ) ;
          auto  symmetry = symmetries[i];
 
