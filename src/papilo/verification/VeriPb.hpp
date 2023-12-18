@@ -424,10 +424,8 @@ class VeriPb : public CertificateInterface<REAL>
       const auto obj_coeff = cast_to_long(stored_objective.coefficients[col]);
       assert( obj_coeff == problem.getObjective().coefficients[col] );
       if( obj_coeff != 0)
-      {
          proof_out << OBJECTIVE_DIFF << (-obj_coeff ) << " " << names[orig_col] << ";\n";
-         stored_objective.coefficients[col] = -std::numeric_limits<REAL>::infinity();
-      }
+      stored_objective.coefficients[col] = -std::numeric_limits<REAL>::infinity();
 #endif
    }
 
@@ -589,8 +587,8 @@ class VeriPb : public CertificateInterface<REAL>
       {
          proof_out << OBJECTIVE_DIFF << (-obj_coeff ) << " " << names[orig_col] << " " << cast_to_long(obj_coeff * val)<< " ;\n";
          stored_objective.offset += obj_coeff * val;
-         stored_objective.coefficients[col] = std::numeric_limits<REAL>::infinity();
       }
+      stored_objective.coefficients[col] = std::numeric_limits<REAL>::infinity();
 #endif
    }
 
