@@ -308,6 +308,19 @@ if (TARGET papilo-executable)
             "d"
             )
 
+
+    set(instances_OPB
+            "IP/air01.opb\;6796"
+            "IP/air02.opb\;7810"
+            "IP/air03.opb\;340160"
+            "IP/air06.opb\;49649"
+            "IP/bm23.opb\;34"
+            "IP/cracpb1.opb\;22199"
+            "IP/enigma.opb\;0"
+            "IP/lseu.opb\;1120"
+            "IP/pipex.opb\;788263000"
+    )
+
     # add a test to build the SCIP binary that all further tests depend on
     add_test(NAME papilo-build
             COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target papilo-executable
@@ -372,6 +385,8 @@ if (TARGET papilo-executable)
         add_instancetests(instances_MIP numtypes "default.set")
     elseif(PAPILO_HAVE_GUROBI)
         add_instancetests(instances_gurobi_MIP double_numtypes "default.set")
+    elseif(PAPILO_HAVE_ROUNDINGSAT)
+        add_instancetests(instances_OPB double_numtypes "default.set")
     endif()
     # comparing the objective value for LP instances and check if dual postsolve works (with/out basis calculation)
     if(PAPILO_HAVE_SOPLEX OR PAPILO_HAVE_HIGHS)
