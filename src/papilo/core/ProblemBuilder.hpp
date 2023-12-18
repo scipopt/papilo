@@ -380,6 +380,8 @@ class ProblemBuilder
              matrix.getLeftHandSides()[i] == matrix.getRightHandSides()[i] )
             matrix.getRowFlags()[i].set(RowFlag::kEquation);
       }
+      if(problem.getNumIntegralCols() == 0)
+         problem.set_problem_type(ProblemFlag::kLinear);
 
       return problem;
    }
