@@ -537,7 +537,7 @@ class SoplexFactory : public SolverFactory<REAL>
       // set verbosity again in case the setup function altered it
       soplex->setVerbosity( verbosity );
 
-      return std::move( soplex );
+      return soplex;
    }
 
    virtual void
