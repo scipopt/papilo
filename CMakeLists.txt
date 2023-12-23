@@ -180,7 +180,7 @@ if(MSVC)
    target_compile_options(papilo INTERFACE ${TBB_CXX_STD_FLAG})
 else()
    #TODO: configure warning level https://stackoverflow.com/questions/2368811/how-to-set-warning-level-in-cmake
-   target_compile_options(papilo INTERFACE ${TBB_CXX_STD_FLAG} -Wno-shadow -Wall -Werror)
+   target_compile_options(papilo INTERFACE ${TBB_CXX_STD_FLAG} -Wno-shadow -Wall)
 endif()
 
 if(LUSOL)
