@@ -50,7 +50,7 @@ static const char* const DELETE_CONS = "delc ";
 #else
 static const char* const DELETE_CONS = "del id ";
 #endif
-static const char* const OBJECTIVE = "obju ";
+static const char* const OBJECTIVE_DIFF = "obju diff ";
 static const char* const POL = "pol ";
 static const char* const RUP = "rup ";
 static const char* const RED = "red ";
@@ -199,9 +199,6 @@ class VeriPb : public CertificateInterface<REAL>
       proof_out << " [GitHash: " << PAPILO_GITHASH << " ]";
 #endif
       proof_out << "\n";
-
-      proof_out << COMMENT
-                << "Be aware that this is currently an experimental feature\n";
       proof_out << "f " << next_constraint_id << "\n";
 #if VERIPB_VERSION == 1
       if(!verification_possible)
@@ -424,13 +421,11 @@ class VeriPb : public CertificateInterface<REAL>
       }
 
 #if VERIPB_VERSION == 2
-      assert( stored_objective.coefficients[col] == problem.getObjective().coefficients[col] );
-      if(stored_objective.coefficients[col] != 0)
-      {
-         stored_objective.coefficients[col] = -std::numeric_limits<REAL>::infinity();
-         print_objective( names, var_mapping, problem.getNCols() );
-         proof_out << "\n";
-      }
+      const auto obj_coeff = cast_to_long(stored_objective.coefficients[col]);
+      assert( obj_coeff == problem.getObjective().coefficients[col] );
+      if( obj_coeff != 0)
+         proof_out << OBJECTIVE_DIFF << (-obj_coeff ) << " " << names[orig_col] << ";\n";
+      stored_objective.coefficients[col] = -std::numeric_limits<REAL>::infinity();
 #endif
    }
 
@@ -586,14 +581,14 @@ class VeriPb : public CertificateInterface<REAL>
          }
       }
 #if VERIPB_VERSION >= 2
-      assert( stored_objective.coefficients[col] == problem.getObjective().coefficients[col] );
-      if( stored_objective.coefficients[col] != 0)
+      const auto obj_coeff = cast_to_long(stored_objective.coefficients[col]);
+      assert( obj_coeff == problem.getObjective().coefficients[col] );
+      if( obj_coeff != 0)
       {
-         stored_objective.offset += stored_objective.coefficients[col] * val;
-         stored_objective.coefficients[col] = std::numeric_limits<REAL>::infinity();
-         print_objective( names, var_mapping, problem.getNCols() );
-         proof_out << "\n";
+         proof_out << OBJECTIVE_DIFF << (-obj_coeff ) << " " << names[orig_col] << " " << cast_to_long(obj_coeff * val)<< " ;\n";
+         stored_objective.offset += obj_coeff * val;
       }
+      stored_objective.coefficients[col] = std::numeric_limits<REAL>::infinity();
 #endif
    }
 
@@ -608,8 +603,8 @@ class VeriPb : public CertificateInterface<REAL>
       next_constraint_id++;
       stored_dominating_col = var_mapping[dominating_column];
       stored_dominated_col = var_mapping[dominated_column];
-      auto name_dominating = names[stored_dominating_col];
-      auto name_dominated = names[stored_dominated_col];
+      const auto name_dominating = names[stored_dominating_col];
+      const auto name_dominated = names[stored_dominated_col];
       proof_out << RED << "1 " << name_dominating << " +1 " << NEGATED
                 << name_dominated << " >= 1 ; " << name_dominating << " -> "
                 << name_dominated << " " << name_dominated << " -> "
@@ -620,7 +615,7 @@ class VeriPb : public CertificateInterface<REAL>
       proof_out << "\n";
    }
 
-   virtual void
+   void
    add_probing_reasoning( bool is_upper, int causing_col, int col,
                           const Vec<String>& names,
                           const Vec<int>& var_mapping) override
@@ -1688,7 +1683,13 @@ class VeriPb : public CertificateInterface<REAL>
          apply_substitution_to_objective(col, equality, offset);
          if(old_obj_coeff != 0)
          {
-            print_objective( names, var_mapping, currentProblem.getNCols() );
+            proof_out << OBJECTIVE_DIFF ;
+            for( int i=0 ; i < 2; i++)
+               if(indices[i] == col)
+                  proof_out << cast_to_long( -old_obj_coeff ) << " " << names[var_mapping[indices[i]]] << " ";
+               else
+                  proof_out << cast_to_long(-old_obj_coeff * values[0]/values[1]) << " " << names[var_mapping[indices[i]]] << " ";
+            proof_out << cast_to_long(offset * old_obj_coeff * values[0]/values[1]) << ";";
             if ( abs(old_obj_coeff) != 1 )
             {
                proof_out << " ; begin\n\tproofgoal #1\n\t\t" << POL;
@@ -1696,12 +1697,12 @@ class VeriPb : public CertificateInterface<REAL>
                   proof_out << first_constraint_id << " " << cast_to_long( abs( old_obj_coeff ) ) << " * " << " -1 " << cast_to_long( abs( substitute_factor ) ) << " * +";
                else
                   proof_out << second_constraint_id << " " << cast_to_long( abs( old_obj_coeff ) ) << " * " << " -1 " << cast_to_long( abs( substitute_factor ) ) << " * +";
-               proof_out << "\nend -1\n\tproofgoal #2\n\t\t" << POL;
+               proof_out << "\t\nend -1\n\tproofgoal #2\n\t\t" << POL;
                if(old_obj_coeff/ substitute_factor > 0 )
                   proof_out << first_constraint_id << " " << cast_to_long( abs( old_obj_coeff ) ) << " * " << " -1 " << cast_to_long( abs( substitute_factor ) ) << " * +";
                else
                   proof_out << second_constraint_id << " " << cast_to_long( abs( old_obj_coeff ) ) << " * " << " -1 " << cast_to_long( abs( substitute_factor ) ) << " * +";
-               proof_out << "\nend -1\nend";
+               proof_out << "\t\nend -1\nend";
                next_constraint_id += 4;
             }
             proof_out << "\n";
@@ -1750,23 +1751,30 @@ class VeriPb : public CertificateInterface<REAL>
          return;
       }
 #endif
-      REAL substitute_factor = 0;
-      for( int i = 0; i < col_vec.getLength(); i++ )
-      {
-         if( col_vec.getIndices()[i] == row )
-         {
-            substitute_factor =
-                col_vec.getValues()[i] * scale_factor[row];
-            break;
-         }
-      }
+      REAL substitute_factor = get_coeff_in_col_vec(row, col_vec);
+
       const String name = currentProblem.getVariableNames()[var_mapping[col]];
       assert(col_vec.getLength() == 1);
       apply_substitution_to_objective(col, row_data, matrix.getLeftHandSides()[row]);
       if( old_obj_coeff != 0)
       {
-         print_objective( currentProblem.getVariableNames(), var_mapping,
-                          currentProblem.getNCols() );
+         proof_out << OBJECTIVE_DIFF << cast_to_long( -old_obj_coeff ) << " " << name << " ";
+         REAL factor = old_obj_coeff / substitute_factor;
+         REAL offset = currentProblem.getConstraintMatrix().getRightHandSides()[row];
+         for(int i=0; i<row_data.getLength(); i++)
+         {
+            int index = row_data.getIndices()[i];
+            if( index == col || stored_objective.coefficients[index]  == -INFINITY )
+               continue;
+            if(stored_objective.coefficients[index]  == INFINITY)
+            {
+               offset -= row_data.getValues()[i];
+               continue;
+            }
+            proof_out  << cast_to_long( -factor * row_data.getValues()[i] ) << " " << currentProblem.getVariableNames()[var_mapping[index]] << " ";
+         }
+         proof_out << cast_to_long(offset * factor) << ";";
+
          if( abs(old_obj_coeff) != 1)
          {
             proof_out << " ; begin\n\tproofgoal #1\n\t\t" << POL;
@@ -1877,8 +1885,22 @@ class VeriPb : public CertificateInterface<REAL>
          apply_substitution_to_objective(col, row_data, matrix.getLeftHandSides()[substituted_row]);
          if( old_obj_coeff != 0)
          {
-            print_objective( currentProblem.getVariableNames(), var_mapping,
-                             currentProblem.getNCols() );
+            proof_out << OBJECTIVE_DIFF << cast_to_long( -old_obj_coeff ) << " " << name << " ";
+            REAL factor = old_obj_coeff / substitute_factor;
+            REAL offset = currentProblem.getConstraintMatrix().getRightHandSides()[substituted_row];
+            for( int i = 0; i < row_data.getLength(); i++ )
+            {
+               int index = row_data.getIndices()[i];
+               if( index == col || stored_objective.coefficients[index]  == -INFINITY  )
+                  continue;
+               if(stored_objective.coefficients[index]  == INFINITY)
+               {
+                  offset -= row_data.getValues()[i];
+                  continue;
+               }
+               proof_out  << cast_to_long(( -factor ) * row_data.getValues()[i] ) << " " << currentProblem.getVariableNames()[var_mapping[index]] << " ";
+            }
+            proof_out << cast_to_long( offset * factor) << ";";
             if( abs(old_obj_coeff) != 1)
             {
                proof_out << " ; begin\n\tproofgoal #1\n\t\t" << POL;
@@ -2286,16 +2308,9 @@ class VeriPb : public CertificateInterface<REAL>
    get_coeff_in_col_vec( int substituted_row,
                        const SparseVectorView<REAL>& col_vec )
    {
-      REAL substitute_factor;
       for( int i = 0; i < col_vec.getLength(); i++ )
-      {
          if( col_vec.getIndices()[i] == substituted_row )
-         {
-            substitute_factor =
-                col_vec.getValues()[i] * scale_factor[substituted_row];
-            return substitute_factor;
-         }
-      }
+            return col_vec.getValues()[i] * scale_factor[substituted_row];
       assert(false);
       return 0;
    };
@@ -2364,41 +2379,15 @@ class VeriPb : public CertificateInterface<REAL>
       stored_objective.coefficients[sub_col] = 0;
    }
 
+
+
+#endif
+
    long
    cast_to_long( const REAL& x )
    {
       return (long) floor( REAL( x + REAL( 0.5 ) ) );
    }
-
-   void
-   print_objective( const Vec<String>& names, const Vec<int>& var_mapping,
-                    int ncols )
-   {
-      if(!is_optimization_problem)
-         return;
-      auto objective_coefficients = stored_objective.coefficients;
-      StableSum<REAL> sum{};
-      proof_out << OBJECTIVE;
-      for( int col = 0; col < ncols; ++col )
-      {
-         if (stored_objective.coefficients[col]  == -INFINITY || stored_objective.coefficients[col]  == INFINITY)
-            continue;
-         REAL obj = objective_coefficients[col];
-         if( obj == 0 )
-            continue;
-         proof_out << abs( cast_to_long( obj )) << " ";
-         if( obj < 0)
-         {
-            proof_out << NEGATED;
-            sum.add(-abs(obj));
-         }
-         proof_out << names[var_mapping[col]]+ " ";
-      }
-      sum.add(stored_objective.offset);
-      proof_out << " " << cast_to_long( sum.get() );
-      proof_out << ";";
-   }
-#endif
 
 #if VERIPB_VERSION == 1
    void
