@@ -311,9 +311,9 @@ class SparseStorage
       if( i != rowranges[row].end )
       {
          indbuffer.insert( indbuffer.end(), &columns[i],
-                           &columns[rowranges[row].end] );
+                           &columns.data()[rowranges[row].end] );
          valbuffer.insert( valbuffer.end(), &values[i],
-                           &values[rowranges[row].end] );
+                           &values.data()[rowranges[row].end] );
       }
       else
       {
