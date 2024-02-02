@@ -152,7 +152,7 @@ class HighsInterface : public SolverInterface<REAL>
          start += collen;
       }
 
-      solver.passModel( std::move( model ) );
+      solver.passModel( model );
    }
 
    void
