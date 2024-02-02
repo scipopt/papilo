@@ -3,6 +3,9 @@
 @section RNNEXT PaPILO NEXT
 ***************************
 
+@section RN212 PaPILO 2.2.0
+***************************
+
 Performance improvements
 ------------------------
 - Symmetries: For binary problems ParallelCols adds symmetry-breaking constraints to avoid introducing non-binary integer variables via parameter
