@@ -32,6 +32,8 @@ Build system
 Fixed bugs
 ----------
 
+- DualInfer: add percentage of bound change as stop criterium for dual-propagation
+
 @section RN212 PaPILO 2.2.0
 ***************************
 

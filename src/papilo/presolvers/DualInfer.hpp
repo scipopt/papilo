@@ -345,7 +345,8 @@ DualInfer<REAL>::execute( const Problem<REAL>& problem,
          }
 
          // reject too small bound changes
-         if( !oldboundinf && newbound - oldbound <= +1000 * num.getFeasTol() )
+         if( !oldboundinf && (num.isFeasEq((newbound - oldbound) / 1000, 0) ||
+                ( oldbound != 0 && num.isFeasEq( ( newbound - oldbound ) / oldbound / 1000, 0 ) ) ) )
             return;
 
          dualColFlags[dualCol].unset( ColFlag::kLbInf );
@@ -388,7 +389,8 @@ DualInfer<REAL>::execute( const Problem<REAL>& problem,
          }
 
          // reject too small bound changes
-         if( !oldboundinf && newbound - oldbound >= -1000 * num.getFeasTol() )
+         if( !oldboundinf && (num.isFeasEq((newbound - oldbound) / 1000, 0) ||
+               ( oldbound != 0 && num.isFeasEq( ( newbound - oldbound ) / oldbound / 1000, 0 ) ) ) )
             return;
 
          dualColFlags[dualCol].unset( ColFlag::kUbInf );
