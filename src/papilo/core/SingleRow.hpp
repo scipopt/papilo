@@ -662,10 +662,23 @@ propagate_row( const Num<REAL>& num, int row, const REAL* rowvals, const int* co
             }
             REAL diff = rhs - minresact;
             REAL new_lb;
-            if(num.isEq(diff, 0))
-               new_lb = 0;
-            else
+            if(domainFlags[col].test(ColFlag::kIntegral))
+            {
                new_lb = diff / val;
+               REAL floored = num.epsFloor(new_lb);
+               if(num.isGE(rhs, floored * val + minresact))
+                  new_lb = floored;
+               else
+                  new_lb= num.epsCeil(new_lb);
+               assert(num.isGE(rhs, new_lb * val + minresact));
+            }
+            else
+            {
+               if( num.isEq( diff, 0 ) )
+                  new_lb = 0;
+               else
+                  new_lb = diff / val;
+            }
             if( domainFlags[col].test( ColFlag::kLbInf ) || new_lb > lb )
                boundchange( BoundChange::kLower, col, new_lb, row );
          }
@@ -685,10 +698,23 @@ propagate_row( const Num<REAL>& num, int row, const REAL* rowvals, const int* co
             }
             REAL diff = rhs - minresact;
             REAL new_ub;
-            if(num.isEq(diff, 0))
-               new_ub = 0;
-            else
+            if(domainFlags[col].test(ColFlag::kIntegral))
+            {
                new_ub = diff / val;
+               REAL ceiled = num.epsCeil(new_ub);
+               if(num.isGE(rhs, ceiled * val + minresact))
+                  new_ub = ceiled;
+               else
+                  new_ub= num.epsFloor(new_ub);
+               assert(num.isGE(rhs, new_ub * val + minresact));
+            }
+            else
+            {
+               if( num.isEq( diff, 0 ) )
+                  new_ub = 0;
+               else
+                  new_ub = diff / val;
+            }
             if( domainFlags[col].test( ColFlag::kUbInf ) || new_ub < ub )
                boundchange( BoundChange::kUpper, col, new_ub, row );
          }
@@ -730,12 +756,26 @@ propagate_row( const Num<REAL>& num, int row, const REAL* rowvals, const int* co
             }
             REAL diff = lhs - maxresact;
             REAL new_ub;
-            if(num.isEq(diff, 0))
-               new_ub = 0;
-            else
+            if(domainFlags[col].test(ColFlag::kIntegral))
+            {
                new_ub = diff / val;
+               REAL ceiled = num.epsCeil(new_ub);
+               if(num.isLE(lhs, ceiled * val + maxresact ))
+                  new_ub = ceiled;
+               else
+                  new_ub= num.epsFloor(new_ub);
+               assert(num.isLE(lhs, new_ub * val + maxresact));
+            }
+            else
+            {
+               if( num.isEq( diff, 0 ) )
+                  new_ub = 0;
+               else
+                  new_ub = diff / val;
+            }
             if( domainFlags[col].test( ColFlag::kUbInf ) || new_ub < ub )
                boundchange( BoundChange::kUpper, col, new_ub, row );
+
          }
          else
          {
@@ -754,10 +794,23 @@ propagate_row( const Num<REAL>& num, int row, const REAL* rowvals, const int* co
 
             REAL diff = lhs - maxresact;
             REAL new_lb;
-            if(num.isEq(diff, 0))
-               new_lb = 0;
-            else
+            if(domainFlags[col].test(ColFlag::kIntegral))
+            {
                new_lb = diff / val;
+               REAL floored = num.epsFloor(new_lb);
+               if(num.isLE(lhs, floored * val + maxresact))
+                  new_lb = floored;
+               else
+                  new_lb= num.epsCeil(new_lb);
+               assert(num.isLE(lhs, new_lb * val + maxresact));
+            }
+            else
+            {
+               if( num.isEq( diff, 0 ) )
+                  new_lb = 0;
+               else
+                  new_lb = diff / val;
+            }
             if( domainFlags[col].test( ColFlag::kLbInf ) || new_lb > lb )
                boundchange( BoundChange::kLower, col, new_lb, row );
          }
