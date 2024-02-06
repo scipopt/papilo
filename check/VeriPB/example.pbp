@@ -1,21 +1,37 @@
 pseudo-Boolean proof version 2.0
 f 3
-* Substitution of implied free variables x_1:
+
+
+* Example to certify substituting an implied free variables x_1 and dual-fixing variable x_2:
+
+* In VeriPB every constraint gets an ID and equalities are split into two separated constraints (1/2):
+*   - Objective: min 1 x1 1 x2 0
+*   - ConstraintId 001: 1 x1 1 x2 1 ~x3 1 ~x4 >= 3
+*   - ConstraintId 002: 1 ~x1 1 ~x2 1 x3 1 x4 >= 1
+*   - ConstraintId 003: 1 ~x1 1 x5 >= 1
+* we use these IDs to reference them.
+
+
 * x_1 is an implied variable by constraint (1/2) (3).
 * Hence (1) and (2) can be used to substitute it
-* First remove x1 from (1) and (2)
+
+* First remove x1 from constraints (1) and (2) to obtain (4) and (5)
 pol 1 ~x1 + ;
 core id -1
+* generates   ConstraintId 004: 1 x2 1 ~x3 1 ~x4 >= 2
 pol 2 x1 + ;
 core id -1
-* remove x1 from the  constraint (3) and delete constraint (3)
+* generates   ConstraintId 005: 1 ~x2 1 x3 1 x4 >= 0
+
+* remove x1 from the  constraint (3) and replaces the constraint (3) with the newly created (6)
 pol 3 1 +
 core id -1
+* generates   ConstraintId 006: 1 x2 1 ~x3 1 ~x4 1 x5 >= 3
 delc 3 ;  ; begin
     pol 6 2 +
 end
 * update objective
-obju +1 x3 +1 x4 1;
+obju new +1 x3 +1 x4 1;
 *delete constraints (1) and (2)
 delc 1 ; x1 -> 1 ;
 delc 2 ; x1 -> 0 ;
@@ -27,11 +43,13 @@ delc 4 ; ; begin
 end
 
 * Dual Fix
-* x2 has no uplocks and can be fixed to 1
+* x2 has no uplocks and can be fixed to 1 -> generates Constraint (12)
 red +1 x2 >= 1 ; x2 -> 1
+* generates   ConstraintId 012: 1 x2 >= 1
 core id -1
-* update new constraints with x5 = 1
+* update all constraints with x2 = 1
 pol 6 ~x2 +
+* generates   ConstraintId 013: 1 ~x3 1 ~x4 1 x5 >= 2
 core id -1
 delc 6 ; ; begin
     pol 13 12 +
