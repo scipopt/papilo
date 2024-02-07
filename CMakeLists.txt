@@ -9,6 +9,9 @@ project(papilo VERSION ${PAPILO_VERSION_MAJOR}.${PAPILO_VERSION_MINOR}.${PAPILO_
 set(BOOST_MIN_VERSION 1.65)
 set(CMAKE_CXX_STANDARD 14)
 set(CXX_STANDARD_REQUIRED ON)
+
+SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+
 # set(CMAKE_CXX_EXTENSIONS OFF) # use -std=c++... instead of -std=gnu++...
 # required for gcc if set(CMAKE_CXX_EXTENSIONS OFF) is used
 # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fext-numeric-literals")
