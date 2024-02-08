@@ -32,7 +32,6 @@ Build system
 Fixed bugs
 ----------
 
-- DualInfer: add percentage of bound change as stop criterium for dual-propagation
 
 @section RN212 PaPILO 2.2.0
 ***************************
@@ -61,6 +60,8 @@ Fixed bugs
 ----------
 - SimpleProbing: avoid unstable replacements of columns with small ranges
 - if PaPILO solves the problem a backend solver is no longer called
+- DualInfer: add percentage of bound change as stop criterium for dual-propagation
+- CMake: Libs are available when installing with CMake
 
 Miscellaneous
 -------------
