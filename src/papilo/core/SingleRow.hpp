@@ -674,10 +674,8 @@ propagate_row( const Num<REAL>& num, int row, const REAL* rowvals, const int* co
             }
             else
             {
-               if( num.isEq( diff, 0 ) )
-                  new_lb = 0;
-               else
-                  new_lb = diff / val;
+               new_lb = diff / val;
+               assert( num.isGE( lb, new_lb ) || num.isGE(rhs, new_lb * val + minresact));
             }
             if( domainFlags[col].test( ColFlag::kLbInf ) || new_lb > lb )
                boundchange( BoundChange::kLower, col, new_lb, row );
@@ -707,13 +705,12 @@ propagate_row( const Num<REAL>& num, int row, const REAL* rowvals, const int* co
                else
                   new_ub= num.epsFloor(new_ub);
                assert(num.isGE(rhs, new_ub * val + minresact));
+
             }
             else
             {
-               if( num.isEq( diff, 0 ) )
-                  new_ub = 0;
-               else
-                  new_ub = diff / val;
+               new_ub = diff / val;
+               assert( num.isLE( ub, new_ub ) || num.isGE(rhs, new_ub * val + minresact));
             }
             if( domainFlags[col].test( ColFlag::kUbInf ) || new_ub < ub )
                boundchange( BoundChange::kUpper, col, new_ub, row );
@@ -768,10 +765,8 @@ propagate_row( const Num<REAL>& num, int row, const REAL* rowvals, const int* co
             }
             else
             {
-               if( num.isEq( diff, 0 ) )
-                  new_ub = 0;
-               else
-                  new_ub = diff / val;
+               new_ub = diff / val;
+               assert( num.isLE( ub, new_ub ) || num.isLE(lhs, new_ub * val + maxresact));
             }
             if( domainFlags[col].test( ColFlag::kUbInf ) || new_ub < ub )
                boundchange( BoundChange::kUpper, col, new_ub, row );
@@ -806,10 +801,8 @@ propagate_row( const Num<REAL>& num, int row, const REAL* rowvals, const int* co
             }
             else
             {
-               if( num.isEq( diff, 0 ) )
-                  new_lb = 0;
-               else
-                  new_lb = diff / val;
+               new_lb = diff / val;
+               assert( num.isGE( lb, new_lb ) || num.isLE( lhs, new_lb * val + maxresact ) );
             }
             if( domainFlags[col].test( ColFlag::kLbInf ) || new_lb > lb )
                boundchange( BoundChange::kLower, col, new_lb, row );
