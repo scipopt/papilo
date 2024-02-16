@@ -31,6 +31,7 @@ Build system
 
 Fixed bugs
 ----------
+- Propagation: avoid numerical difficulties
 
 
 @section RN212 PaPILO 2.2.0
