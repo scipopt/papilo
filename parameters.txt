@@ -73,6 +73,9 @@ presolve.dualreds = 2
 # abort factor of weighted number of reductions for presolving LPs  [Numerical: [0,1]]
 presolve.lpabortfac = 0.01
 
+# defines the maximum presolving rounds (-1 deactivated)
+presolve.maxrounds = -1 :
+
 # minimum absolute coefficient value allowed in matrix, before it is set to zero  [Numerical: [0,0.10000000000000001]]
 presolve.minabscoeff = 1e-10
 
@@ -164,7 +167,7 @@ veripb.verify_propagation = 0
 bound_tightening_offset = 0.0001
 
 # PaPILO resumes with the next higher complexity class if the last n rounds only consisted of bound changes (-1 deactivated) [Integer: [-1,2147483647]]
- max_consecutive_rounds_of_only_bound_changes = 500
+max_consecutive_rounds_of_only_bound_changes = 500
 
 # should ParallelCols search for symmetries at the end (for example for binary problems where merging columns does not work)
 parallelcols.symmetries_enabled = 0

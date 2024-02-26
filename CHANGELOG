@@ -18,6 +18,8 @@ Interface changes
 
 ### New parameters with default values
 
+presolve.maxrounds = -1 : defines the maximum presolving rounds (-1 deactivated)
+
 ### Data structures
 
 Unit tests
