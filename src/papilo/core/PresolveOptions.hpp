@@ -233,14 +233,14 @@ struct PresolveOptions
       paramSet.addParameter(
           "max_consecutive_rounds_of_only_bound_changes",
            "PaPILO resumes with the next higher complexity class if the last n rounds only consisted of bound changes (-1 deactivated) [Integer: [-1,2147483647]]",
-          max_consecutive_rounds_of_only_bound_changes );
+          max_consecutive_rounds_of_only_bound_changes, -1 );
       paramSet.addParameter(
-          "presolve.max_rounds", "defines the maximum presolving rounds (-1 deactivated)",
-          max_rounds, -1.0, std::numeric_limits<int>::max() );
+          "presolve.maxrounds", "maximal number of rounds (-1: unlimited, 0: cleanup)",
+          maxrounds, -1 );
       paramSet.addParameter(
           "veripb.verify_propagation",
           "how to log the proof of verification? 0: reverse unit propagation, 1: Addition in polish notation",
-          veripb_propagation_option, 0.0, 1.0 );
+          veripb_propagation_option, 0, 1 );
    }
 
    bool
