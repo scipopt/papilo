@@ -73,8 +73,8 @@ presolve.dualreds = 2
 # abort factor of weighted number of reductions for presolving LPs  [Numerical: [0,1]]
 presolve.lpabortfac = 0.01
 
-# defines the maximum presolving rounds (-1 deactivated)
-presolve.maxrounds = -1 :
+# maximal number of rounds (-1: unlimited, 0: cleanup) [Integer: [-1,2147483647]]
+presolve.maxrounds = -1
 
 # minimum absolute coefficient value allowed in matrix, before it is set to zero  [Numerical: [0,0.10000000000000001]]
 presolve.minabscoeff = 1e-10
