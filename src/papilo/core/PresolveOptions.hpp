@@ -70,7 +70,7 @@ struct PresolveOptions
 
    int max_consecutive_rounds_of_only_bound_changes = 500;
 
-   int max_rounds = -1;
+   int maxrounds = -1;
 
    int threads = 0;
 
