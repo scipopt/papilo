@@ -281,6 +281,13 @@ struct OptionsInfo
          }
          break;
       case Command::kPostsolve:
+#ifndef PAPILO_SERIALIZATION_AVAILABLE
+         fmt::print(
+             "{} requires Boost serialization package that is currently not provided\n",
+             commandString );
+         return;
+         return;
+#endif
          if( postsolve_archive_file.empty() || reduced_solution_file.empty() )
          {
             fmt::print(

@@ -28,6 +28,7 @@ Testing
 
 Build system
 ------------
+- header only works now as intended (Boost Serialization)
 
 Fixed bugs
 ----------
