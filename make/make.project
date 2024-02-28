@@ -48,7 +48,7 @@ SLURMACCOUNT    =       default
 
 # set PAPILO version here for external projects
 # use underscore to make it compatible with def.h
-VERSION	=	2.2.1
+VERSION	=	2.3.0
 
 ## compiling and linking parameters
 #VERBOSE		=	false
