@@ -576,6 +576,15 @@ ParallelColDetection<REAL>::execute( const Problem<REAL>& problem,
        col.get(), col.get() + ncols,
        [&]( int a, int b )
        {
+          if( cflags[a].test( ColFlag::kInactive ) && cflags[b].test( ColFlag::kInactive ) )
+             return a < b;
+          if( cflags[a].test( ColFlag::kInactive ) )
+             return true;
+          if( cflags[b].test( ColFlag::kInactive ) )
+             return false;
+          assert(constMatrix.getColumnCoefficients( a ).getLength() > 0);
+          assert(constMatrix.getColumnCoefficients( b ).getLength() > 0);
+
           if( supportid[a] < supportid[b] ||
               ( supportid[a] == supportid[b] && coefhash[a] < coefhash[b] ) )
              return true;
@@ -588,6 +597,7 @@ ParallelColDetection<REAL>::execute( const Problem<REAL>& problem,
           bool flag_b_integer = cflags[b].test( ColFlag::kIntegral );
           if( flag_a_integer != flag_b_integer )
              return !flag_a_integer;
+
           return // sort by scale factor
               abs( obj[a] ) < abs( obj[b] ) ||
               // sort by scale factor if obj is zero
