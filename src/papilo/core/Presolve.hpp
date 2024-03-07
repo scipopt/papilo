@@ -570,6 +570,11 @@ Presolve<REAL>::apply( Problem<REAL>& problem, bool store_dual_postsolve )
                                  last_rounds_stats, was_executed_sequential );
          if( is_status_infeasible_or_unbounded( result.status ) )
             return result;
+         if( presolveOptions.maxrounds != -1 && presolveOptions.maxrounds <= stats.nrounds )
+         {
+            msg.info("Maximum round {} reached. Finishing...\n", presolveOptions.maxrounds);
+            round_to_evaluate = Delegator::kAbort;
+         }
          last_rounds_stats = stats;
 
       } while( round_to_evaluate != Delegator::kAbort );
