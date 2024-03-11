@@ -127,7 +127,7 @@ ConstraintPropagation<REAL>::execute( const Problem<REAL>& problem,
                // if the upper bound is reached, or reached within tolerances
                // and the change of feasibility is also within tolerances fix to
                // the upper bound
-               if( bnddist <= 0 || ( bnddist <= num.getFeasTol() &&
+               if( bnddist <= 0 || ( bnddist <= num.getEpsilon() &&
                                      consMatrix.getMaxFeasChange(
                                          col, bnddist ) <= num.getFeasTol() ) )
                {
@@ -183,7 +183,7 @@ ConstraintPropagation<REAL>::execute( const Problem<REAL>& problem,
                // if the lower bound is reached, or reached within tolerances
                // and the change of feasibility is also within tolerances fix to
                // the lower bound
-               if( bnddist <= 0 || ( bnddist <= num.getFeasTol() &&
+               if( bnddist <= 0 || ( bnddist <= num.getEpsilon() &&
                                      consMatrix.getMaxFeasChange(
                                          col, bnddist ) <= num.getFeasTol() ) )
                {
@@ -292,10 +292,8 @@ ConstraintPropagation<REAL>::execute( const Problem<REAL>& problem,
                          // if the upper bound is reached, or reached within
                          // tolerances and the change of feasibility is also
                          // within tolerances fix to the upper bound
-                         if( bnddist <= 0 ||
-                             ( bnddist <= num.getFeasTol() &&
-                               consMatrix.getMaxFeasChange( col, bnddist ) <=
-                                   num.getFeasTol() ) )
+                         if( bnddist <= 0 || ( bnddist <= num.getEpsilon() &&
+                               consMatrix.getMaxFeasChange( col, bnddist ) <= num.getFeasTol() ) )
                          {
                             stored_reductions[j].fixCol(
                                 col, domains.upper_bounds[col], row );
@@ -355,7 +353,7 @@ ConstraintPropagation<REAL>::execute( const Problem<REAL>& problem,
                          // tolerances and the change of feasibility is also
                          // within tolerances fix to the lower bound
                          if( bnddist <= 0 ||
-                             ( bnddist <= num.getFeasTol() &&
+                             ( bnddist <= num.getEpsilon() &&
                                consMatrix.getMaxFeasChange( col, bnddist ) <=
                                    num.getFeasTol() ) )
                          {
