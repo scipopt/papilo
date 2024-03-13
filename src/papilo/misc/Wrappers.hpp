@@ -601,6 +601,7 @@ template <typename REAL>
 void
 postsolve( const OptionsInfo& opts )
 {
+#ifdef PAPILO_SERIALIZATION_AVAILABLE
    PostsolveStorage<REAL> ps;
    std::ifstream inArchiveFile( opts.postsolve_archive_file,
                                 std::ios_base::binary );
@@ -674,6 +675,7 @@ postsolve( const OptionsInfo& opts )
 
 
    }
+#endif
    }
 
 } // namespace papilo
