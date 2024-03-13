@@ -66,7 +66,9 @@ using Quad = boost::multiprecision::cpp_bin_float_quad;
 #ifdef PAPILO_HAVE_GMP
 #include <boost/multiprecision/cpp_bin_float.hpp>
 #include <boost/multiprecision/gmp.hpp>
+#ifdef PAPILO_SERIALIZATION_AVAILABLE
 #include <boost/serialization/nvp.hpp>
+#endif
 
 // unfortunately the multiprecision gmp types do not provide an overload for
 // serialization
