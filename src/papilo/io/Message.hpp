@@ -77,6 +77,7 @@ class Message
 #endif
          format_str, { fmt::make_format_args( std::forward<Args>( args )... ) } );
       std::size_t size = buf.size();
+
       if( write != nullptr )
       {
          buf.push_back( '\0' );
