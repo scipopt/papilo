@@ -409,7 +409,6 @@ class ScipInterface : public SolverInterface<REAL>
          return;
       case SCIP_STATUS_OPTIMAL:
          this->status = SolverStatus::kOptimal;
-
       }
    }
 
