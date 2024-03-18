@@ -440,9 +440,6 @@ install(FILES
      ${PROJECT_SOURCE_DIR}/src/papilo/external/fmt/printf.h
      ${PROJECT_SOURCE_DIR}/src/papilo/external/fmt/ranges.h
      ${PROJECT_SOURCE_DIR}/src/papilo/external/fmt/xchar.h
-     ${PROJECT_SOURCE_DIR}/src/papilo/external/fmt/format.cc
-     ${PROJECT_SOURCE_DIR}/src/papilo/external/fmt/fmt.cc
-     ${PROJECT_SOURCE_DIR}/src/papilo/external/fmt/os.cc
  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/papilo/external/fmt)
 
 install(FILES
