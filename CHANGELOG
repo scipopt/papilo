@@ -89,9 +89,6 @@ Fixed bugs
 - DualInfer: ensure the primal problem is bounded before changing constraints to equalities
 - Substitutions: if applying substitutions lead to small or huge coefficients leading to numerical troubles in the process
 
-Miscellaneous
--------------
-
 @section RN212 PaPILO 2.1.3
 ***************************
 
