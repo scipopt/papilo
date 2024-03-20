@@ -318,6 +318,7 @@ presolve_and_solve(
       if( !opts.postsolve_archive_file.empty() )
       {
 
+#ifdef PAPILO_SERIALIZATION_AVAILABLE
          Timer t( writetime );
          std::ofstream ofs( opts.postsolve_archive_file,
                             std::ios_base::binary );
@@ -327,6 +328,9 @@ presolve_and_solve(
          oa << result.postsolve;
          fmt::print( "postsolve archive written to {} in {:.3f} seconds\n\n",
                      opts.postsolve_archive_file, t.getTime() );
+#else
+         fmt::print( "writing to potsolve archive is not possible without Boost Serialization!\n");
+#endif
       }
 
       if( opts.command == Command::kPresolve || problem.getNCols() == 0 )
@@ -597,6 +601,7 @@ template <typename REAL>
 void
 postsolve( const OptionsInfo& opts )
 {
+#ifdef PAPILO_SERIALIZATION_AVAILABLE
    PostsolveStorage<REAL> ps;
    std::ifstream inArchiveFile( opts.postsolve_archive_file,
                                 std::ios_base::binary );
@@ -670,6 +675,7 @@ postsolve( const OptionsInfo& opts )
 
 
    }
+#endif
    }
 
 } // namespace papilo
