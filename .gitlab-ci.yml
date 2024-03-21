@@ -1,0 +1,34 @@
+variables:
+  PAPILO_VERSION: 2.2.1
+
+stages:
+  - build
+  - test
+
+.cmake:
+  stage: build
+  image:
+    name: gcc:10
+  tags:
+    - compile
+  before_script:
+    - apt-get update
+    - apt-get install -y cmake libboost1.74-dev libtbb-dev libblas-dev
+  script:
+    - mkdir -p $CI_PROJECT_DIR/builds/papilo
+    - cd $CI_PROJECT_DIR/builds/papilo
+    - export CFLAGS="-Werror"
+    - export CXXFLAGS="-Werror"
+    - cmake $CI_PROJECT_DIR -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE:-Release} -DBLA_STATIC=ON
+    - make -j
+    - ctest -j 8 --output-on-failure
+
+"cmake release":
+  extends: .cmake
+  variables:
+    CMAKE_BUILD_TYPE: Release
+
+"cmake debug":
+  extends: .cmake
+  variables:
+    CMAKE_BUILD_TYPE: Debug
