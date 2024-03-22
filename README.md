@@ -388,8 +388,6 @@ When PaPILO is used as a header-based library then only section 3 of LGPLv3 is r
 
 Modifications of PaPILO itself, however, must be distributed under LGPLv3.
 
-For other licensing options we refer to https://scipopt.org/, where PaPILO can be obtained as part of the SCIP Optimization Suite.
-
 # Contributors
 
 [Ambros Gleixner](https://www.zib.de/members/gleixner) ([@ambros-gleixner](https://github.com/ambros-gleixner)) &mdash; project head
