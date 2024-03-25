@@ -68,11 +68,14 @@ class Message
    print( VerbosityLevel level, fmt::string_view format_str,
           Args... args ) const
    {
-      fmt::basic_memory_buffer<char, fmt::inline_buffer_size, Allocator<char>>
-          buf;
+      fmt::basic_memory_buffer<char> buf;
       fmt::vformat_to(
-          buf, format_str,
-          { fmt::make_format_args( std::forward<Args>( args )... ) } );
+#if FMT_VERSION >= 70000
+         std::back_inserter(buf),
+#else
+         buf,
+#endif
+         format_str, { fmt::make_format_args( std::forward<Args>( args )... ) } );
       std::size_t size = buf.size();
 
       if( write != nullptr )

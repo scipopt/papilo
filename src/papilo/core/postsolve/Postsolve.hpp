@@ -44,6 +44,7 @@
 
 #include <fstream>
 
+#ifdef PAPILO_SERIALIZATION_AVAILABLE
 #include <boost/archive/text_iarchive.hpp>
 #include <boost/archive/text_oarchive.hpp>
 #include <boost/archive/tmpdir.hpp>
@@ -51,6 +52,7 @@
 #include <boost/serialization/list.hpp>
 #include <boost/serialization/utility.hpp>
 #include <boost/serialization/vector.hpp>
+#endif
 
 namespace papilo
 {
