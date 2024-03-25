@@ -49,13 +49,17 @@ option(GUROBI "should gurobi solver be linked" OFF)
 if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Release)
 endif()
-find_package(Boost ${BOOST_MIN_VERSION} OPTIONAL_COMPONENTS program_options)
+find_package(Boost ${BOOST_MIN_VERSION} OPTIONAL_COMPONENTS program_options serialization)
 
 if(Boost_PROGRAM_OPTIONS_FOUND)
    set(PAPILO_COMMAND_LINE_AVAILABLE 1)
 else()
    message("WARNING: Boost program_options not found-> PaPILO can only used as library!")
    set(PAPILO_COMMAND_LINE_AVAILABLE 0)
+endif()
+
+if(Boost_SERIALIZATION_FOUND)
+   set(PAPILO_SERIALIZATION_AVAILABLE 1)
 endif()
 
 if(GMP)
@@ -88,7 +92,6 @@ endif()
 
 if(GLOP)
    find_package(GLOP REQUIRED)
-   set(CMAKE_CXX_STANDARD 17)
 endif()
 
 find_program(GIT git)
@@ -431,15 +434,14 @@ install(FILES
      ${PROJECT_SOURCE_DIR}/src/papilo/external/fmt/color.h
      ${PROJECT_SOURCE_DIR}/src/papilo/external/fmt/compile.h
      ${PROJECT_SOURCE_DIR}/src/papilo/external/fmt/core.h
-     ${PROJECT_SOURCE_DIR}/src/papilo/external/fmt/format.h
      ${PROJECT_SOURCE_DIR}/src/papilo/external/fmt/format-inl.h
+     ${PROJECT_SOURCE_DIR}/src/papilo/external/fmt/format.h
      ${PROJECT_SOURCE_DIR}/src/papilo/external/fmt/locale.h
+     ${PROJECT_SOURCE_DIR}/src/papilo/external/fmt/os.h
      ${PROJECT_SOURCE_DIR}/src/papilo/external/fmt/ostream.h
      ${PROJECT_SOURCE_DIR}/src/papilo/external/fmt/posix.h
      ${PROJECT_SOURCE_DIR}/src/papilo/external/fmt/printf.h
      ${PROJECT_SOURCE_DIR}/src/papilo/external/fmt/ranges.h
-     ${PROJECT_SOURCE_DIR}/src/papilo/external/fmt/format.cc
-     ${PROJECT_SOURCE_DIR}/src/papilo/external/fmt/posix.cc
  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/papilo/external/fmt)
 
 install(FILES

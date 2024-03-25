@@ -30,12 +30,16 @@ Testing
 
 Build system
 ------------
+- header only works now as intended (Boost Serialization)
 
 Fixed bugs
 ----------
 - Propagation: avoid numerical difficulties
 - ParallelColDetection: avoid segfault by handling already fixed variables separately during sorting
 
+Miscellaneous
+-------------
+- update version of fmt from 6.1.2 to 7.1.3 due to deprecation
 
 @section RN212 PaPILO 2.2.0
 ***************************

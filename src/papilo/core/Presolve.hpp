@@ -30,9 +30,6 @@
 #include <memory>
 #include <utility>
 
-#include <boost/archive/text_iarchive.hpp>
-#include <boost/archive/text_oarchive.hpp>
-
 #include "papilo/core/PresolveMethod.hpp"
 #include "papilo/core/PresolveOptions.hpp"
 #include "papilo/core/Problem.hpp"
