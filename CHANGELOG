@@ -37,7 +37,7 @@ Fixed bugs
 
 Miscellaneous
 -------------
-- update version of fmt from 6.1.2 to 8.1.1 due to deprecation
+- update version of fmt from 6.1.2 to 7.1.3 due to deprecation
 
 @section RN212 PaPILO 2.2.0
 ***************************
