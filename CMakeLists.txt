@@ -92,7 +92,6 @@ endif()
 
 if(GLOP)
    find_package(GLOP REQUIRED)
-   set(CMAKE_CXX_STANDARD 17)
 endif()
 
 find_program(GIT git)
@@ -431,19 +430,18 @@ install(FILES
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/papilo/presolvers)
 
 install(FILES
-     ${PROJECT_SOURCE_DIR}/src/papilo/external/fmt/args.h
      ${PROJECT_SOURCE_DIR}/src/papilo/external/fmt/chrono.h
      ${PROJECT_SOURCE_DIR}/src/papilo/external/fmt/color.h
      ${PROJECT_SOURCE_DIR}/src/papilo/external/fmt/compile.h
      ${PROJECT_SOURCE_DIR}/src/papilo/external/fmt/core.h
-     ${PROJECT_SOURCE_DIR}/src/papilo/external/fmt/format.h
      ${PROJECT_SOURCE_DIR}/src/papilo/external/fmt/format-inl.h
+     ${PROJECT_SOURCE_DIR}/src/papilo/external/fmt/format.h
      ${PROJECT_SOURCE_DIR}/src/papilo/external/fmt/locale.h
      ${PROJECT_SOURCE_DIR}/src/papilo/external/fmt/os.h
      ${PROJECT_SOURCE_DIR}/src/papilo/external/fmt/ostream.h
+     ${PROJECT_SOURCE_DIR}/src/papilo/external/fmt/posix.h
      ${PROJECT_SOURCE_DIR}/src/papilo/external/fmt/printf.h
      ${PROJECT_SOURCE_DIR}/src/papilo/external/fmt/ranges.h
-     ${PROJECT_SOURCE_DIR}/src/papilo/external/fmt/xchar.h
  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/papilo/external/fmt)
 
 install(FILES
