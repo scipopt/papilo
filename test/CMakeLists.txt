@@ -186,6 +186,7 @@ set(unit_tests
         "simple-substitution-failed-path-for-2-int"
         "simple-substitution-2-negative-integer"
         "simple-substitution-feasible-gcd"
+        "simple-substitution-non-coprime"
         "simple-substitution-violated-gcd"
 
         #Simplify Inequality

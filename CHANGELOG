@@ -34,6 +34,7 @@ Fixed bugs
 ----------
 - Propagation: avoid numerical difficulties
 - ParallelColDetection: avoid segfault by handling already fixed variables separately during sorting
+- SimpleSubstitution: ensure coprime-ness of coefficients for infeasible detection for linear diphantine equations
 
 Miscellaneous
 -------------

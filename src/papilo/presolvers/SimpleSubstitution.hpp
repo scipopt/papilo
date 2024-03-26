@@ -245,11 +245,17 @@ SimpleSubstitution<REAL>::perform_simple_substitution_step(
             static_cast<int64_t>( abs( vals[subst] ) ) );
          if( !num.isIntegral( rhs / res.gcd ) )
             return PresolveStatus::kInfeasible;
-         else if( !isConstraintsFeasibleWithGivenBounds(
-               num, lower_bounds, upper_bounds, vals, rhs, subst, stay, res ) )
-            return PresolveStatus::kInfeasible;
          else
-            return PresolveStatus::kUnchanged;
+         {
+            REAL normalized_rhs = rhs/ res.gcd;
+            REAL normalized_vals[] = { vals[0] / res.gcd, vals[1]/ res.gcd };
+            res.gcd = 1;
+            if( !isConstraintsFeasibleWithGivenBounds(
+                    num, lower_bounds, upper_bounds, normalized_vals, normalized_rhs, subst, stay, res ) )
+               return PresolveStatus::kInfeasible;
+            else
+               return PresolveStatus::kUnchanged;
+         }
       }
       // problem is infeasible if gcd (i.e. vals[subst]) is not divisor of
       // rhs
@@ -342,15 +348,16 @@ SimpleSubstitution<REAL>::isConstraintsFeasibleWithGivenBounds(
     const Vec<REAL>& upper_bounds, const REAL* vals, REAL rhs, int subst,
     int stay, const boost::integer::euclidean_result_t<int64_t>& res ) const
 {
+   assert( res.gcd == 1 );
    int res_x = vals[stay] < 0 ? res.x * -1 : res.x;
    int res_y = vals[subst] < 0 ? res.y * -1 : res.y;
 
    REAL initial_solution_for_x = res_x * rhs;
    REAL initial_solution_for_y = res_y * rhs;
-   REAL factor = (int)(initial_solution_for_y * res.gcd / vals[stay]);
+   REAL factor = (int)(initial_solution_for_y / vals[stay]);
 
-   REAL s = initial_solution_for_x + factor / res.gcd * vals[subst];
-   REAL t = initial_solution_for_y - factor / res.gcd * vals[stay];
+   REAL s = initial_solution_for_x + factor * vals[subst];
+   REAL t = initial_solution_for_y - factor * vals[stay];
 
    REAL ub_sol_y = ( t - lower_bounds[subst] ) / vals[stay];
    REAL lb_sol_y = ( t - upper_bounds[subst] ) / vals[stay];

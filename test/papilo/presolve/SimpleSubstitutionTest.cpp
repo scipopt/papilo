@@ -33,7 +33,7 @@ setupProblemWithSimpleSubstitution( uint8_t is_x_integer, uint8_t is_y_integer,
                                     double a_y );
 
 Problem<double>
-setupProblemWithInfeasibleBounds( double x, double y, double rhs, double coef1,
+setupSimpleEquations( double obj_x, double obj_y, double rhs, double coef1,
                                   double coef2, double lb1, double ub1,
                                   double lb2, double ub2 );
 
@@ -44,7 +44,7 @@ Problem<double>
 setupProblemWithSimpleSubstitutionFeasibleGcd();
 
 PresolveStatus
-check_gcd_result_with_expectation(double x, double y, double rhs, double coef1,
+check_gcd_result_with_expectation(double obj_x, double obj_y, double rhs, double coef1,
                                    double coef2, double lb1, double ub1, double lb2, double ub2 );
 
 TEST_CASE( "simple-substitution-happy-path-for-2-int", "[presolve]" )
@@ -254,6 +254,13 @@ TEST_CASE( "simple-substitution-feasible-gcd", "[presolve]" )
                 8.0, 3.0, 37.0, 3.0, -8.0, 0.0, 7.0, -5.0, 0.0 ) == PresolveStatus::kUnchanged );
 }
 
+TEST_CASE( "simple-substitution-non-coprime", "[presolve]" )
+{
+   // -128x - 1000 y = -2000 with x in {0,1} y in {0,1,2} -> solution x = 0, y = 2
+   REQUIRE( check_gcd_result_with_expectation(
+                0.0, 0.0, -2000.0, -128.0, -1000.0, 0.0, 1.0, 0.0, 2.0 ) == PresolveStatus::kUnchanged );
+}
+
 TEST_CASE( "simple-substitution-violated-gcd", "[presolve]" )
 {
    // -3x - 8y = 37 with x,y in {-5,0}
@@ -324,7 +331,7 @@ TEST_CASE( "should_return_infeasible_if_gcd_of_coeff_is_in_rhs", "[presolve]" )
 }
 
 PresolveStatus
-check_gcd_result_with_expectation( double x, double y, double rhs, double coef1,
+check_gcd_result_with_expectation( double obj_x, double obj_y, double rhs, double coef1,
                                   double coef2, double lb1, double ub1,
                                   double lb2, double ub2 )
 {
@@ -333,8 +340,8 @@ check_gcd_result_with_expectation( double x, double y, double rhs, double coef1,
    int cause = -1;
    Timer t{ time };
    Num<double> num{};
-   Problem<double> problem = setupProblemWithInfeasibleBounds(
-       x, y, rhs, coef1, coef2, lb1, ub1, lb2, ub2 );
+   Problem<double> problem = setupSimpleEquations( obj_x, obj_y, rhs, coef1,
+                                                   coef2, lb1, ub1, lb2, ub2 );
    Statistics statistics{};
    PresolveOptions presolveOptions{};
    presolveOptions.dualreds = 0;
@@ -351,12 +358,12 @@ check_gcd_result_with_expectation( double x, double y, double rhs, double coef1,
 }
 
 Problem<double>
-setupProblemWithInfeasibleBounds( double x, double y, double rhs, double coef1,
+setupSimpleEquations( double obj_x, double obj_y, double rhs, double coef1,
                                   double coef2, double lb1, double ub1,
                                   double lb2, double ub2 )
 {
    Num<double> num{};
-   Vec<double> coefficients{ x, y };
+   Vec<double> coefficients{ obj_x, obj_y };
    Vec<double> upperBounds{ ub1, ub2 };
    Vec<double> lowerBounds{ lb1, lb2 };
    Vec<uint8_t> isIntegral{ 1, 1 };
@@ -370,9 +377,9 @@ setupProblemWithInfeasibleBounds( double x, double y, double rhs, double coef1,
    };
 
    ProblemBuilder<double> pb;
-   pb.reserve( entries.size(), rowNames.size(), columnNames.size() );
-   pb.setNumRows( rowNames.size() );
-   pb.setNumCols( columnNames.size() );
+   pb.reserve( (int) entries.size(), (int) rowNames.size(), (int) columnNames.size() );
+   pb.setNumRows( (int) rowNames.size() );
+   pb.setNumCols( (int) columnNames.size() );
    pb.setColUbAll( upperBounds );
    pb.setColLbAll( lowerBounds );
    pb.setObjAll( coefficients );
@@ -445,9 +452,9 @@ setupProblemWithSimpleSubstitutionInfeasibleGcd()
    };
 
    ProblemBuilder<double> pb;
-   pb.reserve( entries.size(), rowNames.size(), columnNames.size() );
-   pb.setNumRows( rowNames.size() );
-   pb.setNumCols( columnNames.size() );
+   pb.reserve( (int) entries.size(), (int) rowNames.size(), (int) columnNames.size() );
+   pb.setNumRows( (int) rowNames.size() );
+   pb.setNumCols( (int) columnNames.size() );
    pb.setColUbAll( upperBounds );
    pb.setColLbAll( lowerBounds );
    pb.setObjAll( coefficients );
@@ -482,9 +489,9 @@ setupProblemWithSimpleSubstitutionFeasibleGcd()
    };
 
    ProblemBuilder<double> pb;
-   pb.reserve( entries.size(), rowNames.size(), columnNames.size() );
-   pb.setNumRows( rowNames.size() );
-   pb.setNumCols( columnNames.size() );
+   pb.reserve( (int) entries.size(), (int) rowNames.size(), (int) columnNames.size() );
+   pb.setNumRows( (int) rowNames.size() );
+   pb.setNumCols( (int) columnNames.size() );
    pb.setColUbAll( upperBounds );
    pb.setColLbAll( lowerBounds );
    pb.setObjAll( coefficients );
