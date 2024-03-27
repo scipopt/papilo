@@ -29,6 +29,7 @@ Testing
 Build system
 ------------
 - header only works now as intended (Boost Serialization)
+- disable building convMPS and duplicates
 
 Fixed bugs
 ----------
