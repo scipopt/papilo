@@ -86,10 +86,10 @@ if(Boost_IOSTREAMS_FOUND)
 endif()
 
 if(Boost_IOSTREAMS_FOUND AND Boost_SERIALIZATION_FOUND AND Boost_PROGRAM_OPTIONS_FOUND)
-   add_executable(duplicates  ${CMAKE_CURRENT_LIST_DIR}/../src/duplicates.cpp)
-   set_target_properties(duplicates PROPERTIES OUTPUT_NAME duplicates RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin" )
-   target_link_libraries(duplicates papilo-core ${Boost_LIBRARIES})
-   target_compile_definitions(duplicates PRIVATE PAPILO_USE_EXTERN_TEMPLATES PAPILO_MPS_WRITER)
+#   add_executable(duplicates  ${CMAKE_CURRENT_LIST_DIR}/../src/duplicates.cpp)
+#   set_target_properties(duplicates PROPERTIES OUTPUT_NAME duplicates RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin" )
+#   target_link_libraries(duplicates papilo-core ${Boost_LIBRARIES})
+#   target_compile_definitions(duplicates PRIVATE PAPILO_USE_EXTERN_TEMPLATES PAPILO_MPS_WRITER)
 
    if(ROUNDINGSAT_DIR)
       set(
@@ -154,9 +154,9 @@ if(Boost_IOSTREAMS_FOUND AND Boost_SERIALIZATION_FOUND AND Boost_PROGRAM_OPTIONS
    target_link_libraries(papilo-executable papilo-core ${SOPLEX_LIBRARIES} ${SCIP_LIBRARIES} ${HIGHS_LIBRARIES} ${Boost_LIBRARIES} ${GUROBI_LIBRARIES})
    target_compile_definitions(papilo-executable PRIVATE PAPILO_USE_EXTERN_TEMPLATES PAPILO_MPS_WRITER)
 
-   add_executable(convMPS EXCLUDE_FROM_ALL ${CMAKE_CURRENT_LIST_DIR}/../src/convMPS.cpp)
-   set_target_properties(convMPS PROPERTIES OUTPUT_NAME convMPS RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
-   target_link_libraries(convMPS papilo-core ${Boost_LIBRARIES})
+#   add_executable(convMPS EXCLUDE_FROM_ALL ${CMAKE_CURRENT_LIST_DIR}/../src/convMPS.cpp)
+#   set_target_properties(convMPS PROPERTIES OUTPUT_NAME convMPS RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+#   target_link_libraries(convMPS papilo-core ${Boost_LIBRARIES})
 else()
    message(WARNING "Executable of PaPILO is not built because Boost iostreams, serialization or program options is missing")
 endif()
