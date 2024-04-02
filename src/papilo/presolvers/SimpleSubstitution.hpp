@@ -334,7 +334,7 @@ SimpleSubstitution<REAL>::perform_simple_substitution_step(
 
 /**
  * check if the aggregated variable y of the equation a1 x1 + a2 x2 = b is within its bounds.
- * 1. generate a solution for s a1 + t a2 = gcd(a1,a2)
+ * 1. generate a solution (s, t) for s a1 + t a2 = gcd(a1, a2)
  * 2. substitute variable x1 = -a2 y + s and x2 = a1 y + t
  * 3. check bounds of y
  *
