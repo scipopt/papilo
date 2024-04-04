@@ -369,8 +369,8 @@ SimpleSubstitution<REAL>::isConstraintsFeasibleWithGivenBounds(
       std::swap( ub_sol_x, lb_sol_x );
 
    return num.isFeasLE(
-               num.epsCeil( num.max( lb_sol_x, lb_sol_y ),
-               num.epsFloor( num.min( ub_sol_x, ub_sol_y ) ))
+               num.epsCeil( num.max( lb_sol_x, lb_sol_y )),
+               num.epsFloor( num.min( ub_sol_x, ub_sol_y ))
                );
 }
 
