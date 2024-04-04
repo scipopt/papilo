@@ -259,6 +259,8 @@ TEST_CASE( "simple-substitution-non-coprime", "[presolve]" )
    // -128x - 1000 y = -2000 with x in {0,1} y in {0,1,2} -> solution x = 0, y = 2
    REQUIRE( check_gcd_result_with_expectation(
                 0.0, 0.0, -2000.0, -128.0, -1000.0, 0.0, 1.0, 0.0, 2.0 ) == PresolveStatus::kUnchanged );
+   REQUIRE( check_gcd_result_with_expectation(
+                0.0, 0.0, +2000.0, +128.0, +1000.0, 0.0, 1.0, 0.0, 2.0 ) == PresolveStatus::kUnchanged );
 }
 
 TEST_CASE( "simple-substitution-violated-gcd", "[presolve]" )
