@@ -368,8 +368,10 @@ SimpleSubstitution<REAL>::isConstraintsFeasibleWithGivenBounds(
    if( vals[subst] < 0 )
       std::swap( ub_sol_x, lb_sol_x );
 
-   return num.isFeasLE( num.epsCeil( lb_sol_y ), num.epsFloor( ub_sol_y ) ) &&
-          num.isFeasLE( num.epsCeil( lb_sol_x ), num.epsFloor( ub_sol_x ) );
+   return num.isFeasLE(
+               num.epsCeil( num.max( lb_sol_x, lb_sol_y ),
+               num.epsFloor( num.min( ub_sol_x, ub_sol_y ) ))
+               );
 }
 
 } // namespace papilo
