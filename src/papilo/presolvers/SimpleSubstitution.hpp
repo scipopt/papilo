@@ -243,11 +243,11 @@ SimpleSubstitution<REAL>::perform_simple_substitution_step(
          auto res = boost::integer::extended_euclidean(
             static_cast<int64_t>( abs( vals[stay] ) ),
             static_cast<int64_t>( abs( vals[subst] ) ) );
-         if( !num.isIntegral( rhs / res.gcd ) )
+         REAL normalized_rhs = rhs/ res.gcd;
+         if( !num.isIntegral( normalized_rhs ) )
             return PresolveStatus::kInfeasible;
          else
          {
-            REAL normalized_rhs = rhs/ res.gcd;
             REAL normalized_vals[] = { vals[0] / res.gcd, vals[1]/ res.gcd };
             res.gcd = 1;
             if( !isConstraintsFeasibleWithGivenBounds(
