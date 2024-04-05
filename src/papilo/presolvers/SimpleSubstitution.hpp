@@ -248,7 +248,7 @@ SimpleSubstitution<REAL>::perform_simple_substitution_step(
             return PresolveStatus::kInfeasible;
          else
          {
-            REAL normalized_vals[] = { vals[0] / res.gcd, vals[1]/ res.gcd };
+            REAL normalized_vals[2] = { vals[0] / res.gcd, vals[1] / res.gcd };
             res.gcd = 1;
             if( !isConstraintsFeasibleWithGivenBounds(
                     num, lower_bounds, upper_bounds, normalized_vals, normalized_rhs, subst, stay, res ) )
