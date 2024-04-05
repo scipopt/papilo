@@ -349,8 +349,8 @@ SimpleSubstitution<REAL>::isConstraintsFeasibleWithGivenBounds(
     int stay, const boost::integer::euclidean_result_t<int64_t>& res ) const
 {
    assert( res.gcd == 1 );
-   int res_x = vals[stay] < 0 ? res.x * -1 : res.x;
-   int res_y = vals[subst] < 0 ? res.y * -1 : res.y;
+   int res_x = vals[stay] < 0 ? -res.x : res.x;
+   int res_y = vals[subst] < 0 ? -res.y : res.y;
 
    REAL s = res_x * rhs;
    REAL t = res_y * rhs;
