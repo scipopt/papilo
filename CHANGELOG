@@ -39,6 +39,7 @@ Fixed bugs
 Miscellaneous
 -------------
 - update version of fmt from 6.1.2 to 7.1.3 due to deprecation
+- MPS-Parser can not parse numerically exactly
 
 @section RN212 PaPILO 2.2.0
 ***************************

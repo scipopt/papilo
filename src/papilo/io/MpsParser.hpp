@@ -60,26 +60,10 @@
 namespace papilo
 {
 
-template <typename REAL, bool isfptype = num_traits<REAL>::is_floating_point>
-struct RealParseType
-{
-   using type = double;
-};
-
-template <typename REAL>
-struct RealParseType<REAL, true>
-{
-   using type = REAL;
-};
-
 /// Parser for mps files in fixed and free format
 template <typename REAL>
 class MpsParser
 {
-   static_assert(
-       num_traits<typename RealParseType<REAL>::type>::is_floating_point,
-       "the parse type must be a floating point type" );
-
  public:
    static boost::optional<Problem<REAL>>
    loadProblem( const std::string& filename )
@@ -121,10 +105,6 @@ class MpsParser
          problem.set_problem_type( ProblemFlag::kInteger );
       }
 
-      problem.setInputTolerance(
-          REAL{ pow( typename RealParseType<REAL>::type{ 10 },
-                     -std::numeric_limits<
-                         typename RealParseType<REAL>::type>::digits10 ) } );
       return problem;
    }
 
@@ -212,6 +192,12 @@ class MpsParser
 
    ParseKey
    parseBounds( boost::iostreams::filtering_istream& file );
+
+   std::pair<bool, REAL>
+   read_number( const std::string& s );
+
+   REAL
+   pow( int base, int exponent );
 };
 
 template <typename REAL>
@@ -390,13 +376,19 @@ MpsParser<REAL>::parseCols( boost::iostreams::filtering_istream& file,
          assert( -1 == rowidx );
    };
 
-   auto addtuple = [&rowidx, &ncols,
-                    this]( typename RealParseType<REAL>::type coeff ) {
+   auto addtuple = [&rowidx, &ncols, this]( std::string sval) {
+      auto result = read_number(sval);
+      if(result.first)
+      {
+         fmt::print("could not parse {}\n", sval);
+         exit(0);
+      }
+      REAL coeff = result.second;
       if( rowidx >= 0 )
          entries.push_back(
-             std::make_tuple( ncols - 1, rowidx, REAL{ coeff } ) );
+             std::make_tuple( ncols - 1, rowidx, coeff ) );
       else
-         coeffobj.push_back( std::make_pair( ncols - 1, REAL{ coeff } ) );
+         coeffobj.push_back( std::make_pair( ncols - 1,  coeff ) );
    };
 
    while( getline( file, strline ) )
@@ -491,8 +483,7 @@ MpsParser<REAL>::parseCols( boost::iostreams::filtering_istream& file,
       if( !qi::phrase_parse(
               it, strline.end(),
               +( qi::lexeme[qi::as_string[+qi::graph][( parsename )]] >>
-                 qi::real_parser<typename RealParseType<REAL>::type>()[(
-                     addtuple )] ),
+                 qi::as_string[+(qi::xdigit | qi::punct) ][(addtuple )] ),
               ascii::space ) )
          return ParseKey::kFail;
    }
@@ -532,8 +523,14 @@ MpsParser<REAL>::parseRanges( boost::iostreams::filtering_istream& file )
          assert( rowidx >= 0 && rowidx < nRows );
       };
 
-      auto addrange = [&rowidx,
-                       this]( typename RealParseType<REAL>::type val ) {
+      auto addrange = [&rowidx, this]( std::string sval ) {
+         auto result = read_number(sval);
+         if(result.first)
+         {
+            fmt::print("could not parse {}\n", sval);
+            exit(0);
+         }
+         REAL val = result.second;
          assert( size_t( rowidx ) < rowrhs.size() );
 
          if( row_type[rowidx] == BoundType::kGE )
@@ -569,8 +566,7 @@ MpsParser<REAL>::parseRanges( boost::iostreams::filtering_istream& file )
       if( !qi::phrase_parse(
               it, strline.end(),
               +( qi::lexeme[qi::as_string[+qi::graph][( parsename )]] >>
-                 qi::real_parser<typename RealParseType<REAL>::type>()[(
-                     addrange )] ),
+                 qi::as_string[+(qi::xdigit | qi::punct)][( addrange )] ),
               ascii::space ) )
          return ParseKey::kFail;
 
@@ -578,8 +574,7 @@ MpsParser<REAL>::parseRanges( boost::iostreams::filtering_istream& file )
       qi::phrase_parse(
           it, strline.end(),
           +( qi::lexeme[qi::as_string[+qi::graph][( parsename )]] >>
-             qi::real_parser<typename RealParseType<REAL>::type>()[(
-                 addrange )] ),
+             qi::as_string[+(qi::xdigit | qi::punct)][( addrange )] ),
           ascii::space );
    }
 
@@ -618,7 +613,14 @@ MpsParser<REAL>::parseRhs( boost::iostreams::filtering_istream& file )
          assert( rowidx < nRows );
       };
 
-      auto addrhs = [&rowidx, this]( typename RealParseType<REAL>::type val ) {
+      auto addrhs = [&rowidx, this]( std::string sval ) {
+         auto result = read_number(sval);
+         if(result.first)
+         {
+            fmt::print("could not parse {}\n", sval);
+            exit(0);
+         }
+         REAL val = result.second;
          if( rowidx == -1 )
          {
             objoffset = -REAL{ val };
@@ -650,8 +652,7 @@ MpsParser<REAL>::parseRhs( boost::iostreams::filtering_istream& file )
       if( !qi::phrase_parse(
               it, strline.end(),
               +( qi::lexeme[qi::as_string[+qi::graph][( parsename )]] >>
-                 qi::real_parser<typename RealParseType<REAL>::type>()[(
-                     addrhs )] ),
+                 qi::as_string[+(qi::xdigit | qi::punct)][( addrhs )] ),
               ascii::space ) )
          return ParseKey::kFail;
    }
@@ -739,8 +740,7 @@ MpsParser<REAL>::parseBounds( boost::iostreams::filtering_istream& file )
       }
 
       // parse over next word
-      qi::phrase_parse( it, strline.end(), qi::lexeme[+qi::graph],
-                        ascii::space );
+      qi::phrase_parse( it, strline.end(), qi::lexeme[+qi::graph], ascii::space );
 
       int colidx;
 
@@ -780,38 +780,46 @@ MpsParser<REAL>::parseBounds( boost::iostreams::filtering_istream& file )
          continue;
       }
 
+      auto adddomains = [&ub_is_default, &lb_is_default, &colidx, &islb, &isub, &isintegral, this]
+          ( std::string sval )
+      {
+         auto result = read_number(sval);
+         if(result.first)
+         {
+            fmt::print("could not parse {}\n", sval);
+            exit(0);
+         }
+         REAL val = result.second;
+         if( islb )
+         {
+            lb4cols[colidx] = REAL{ val };
+            lb_is_default[colidx] = false;
+            col_flags[colidx].unset( ColFlag::kLbInf );
+         }
+         if( isub )
+         {
+            ub4cols[colidx] = REAL{ val };
+            ub_is_default[colidx] = false;
+            col_flags[colidx].unset( ColFlag::kUbInf );
+         }
+
+         if( isintegral )
+            col_flags[colidx].set( ColFlag::kIntegral );
+
+         if( col_flags[colidx].test( ColFlag::kIntegral ) )
+         {
+            col_flags[colidx].set( ColFlag::kIntegral );
+            if( !islb && lb_is_default[colidx] )
+               lb4cols[colidx] = REAL{ 0.0 };
+            if( !isub && ub_is_default[colidx] )
+               col_flags[colidx].set( ColFlag::kUbInf );
+         }
+      };
+
       if( !qi::phrase_parse(
               it, strline.end(),
               +( qi::lexeme[qi::as_string[+qi::graph][( parsename )]] >>
-                 qi::real_parser<typename RealParseType<REAL>::type>()[(
-                     [&ub_is_default, &lb_is_default, &colidx, &islb, &isub,
-                      &isintegral,
-                      this]( typename RealParseType<REAL>::type val ) {
-                        if( islb )
-                        {
-                           lb4cols[colidx] = REAL{ val };
-                           lb_is_default[colidx] = false;
-                           col_flags[colidx].unset( ColFlag::kLbInf );
-                        }
-                        if( isub )
-                        {
-                           ub4cols[colidx] = REAL{ val };
-                           ub_is_default[colidx] = false;
-                           col_flags[colidx].unset( ColFlag::kUbInf );
-                        }
-
-                        if( isintegral )
-                           col_flags[colidx].set( ColFlag::kIntegral );
-
-                        if( col_flags[colidx].test( ColFlag::kIntegral ) )
-                        {
-                           col_flags[colidx].set( ColFlag::kIntegral );
-                           if( !islb && lb_is_default[colidx] )
-                              lb4cols[colidx] = REAL{ 0.0 };
-                           if( !isub && ub_is_default[colidx] )
-                              col_flags[colidx].set( ColFlag::kUbInf );
-                        }
-                     } )] ),
+                 qi::as_string[+(qi::xdigit | qi::punct)][ (adddomains) ] ),
               ascii::space ) )
          return ParseKey::kFail;
    }
@@ -843,6 +851,75 @@ MpsParser<REAL>::parseFile( const std::string& filename )
 
    return parse( in );
 }
+
+template <typename REAL>
+REAL
+MpsParser<REAL>::pow(int base, int exponent)
+{
+   REAL answer = 1;
+   for(int i = 0; i < exponent; i++)
+      answer *= 10;
+   return answer;
+}
+
+template <typename REAL>
+std::pair<bool, REAL>
+MpsParser<REAL>::read_number(const std::string& s) {
+   bool failed = false;
+   REAL answer = 0;
+   bool negated = false;
+   bool dot = false;
+   bool exponent = false;
+   int exp = 0;
+   bool exp_negated = false;
+   int digits_after_dot = 0;
+   for (char c : s) {
+      if ('0' <= c && c <= '9') {
+         int digit = c - '0';
+         if(exponent)
+         {
+            exp *= 10;
+            exp += digit;
+         }
+         else if( !dot )
+         {
+            answer *= 10;
+            answer += digit;
+         }
+         else
+         {
+            digits_after_dot++;
+            answer += digit /  pow( 10, digits_after_dot );
+         }
+      }
+      else if (c == '.' && !dot)
+      {
+         assert(digits_after_dot == 0);
+         assert(!exponent);
+         dot = true;
+      }
+      else if (c == '-' && ((exponent && !exp_negated) || !negated))
+      {
+         if(exponent)
+            exp_negated = true;
+         else
+            negated = true;
+      }
+      else if (c == 'E' && !exponent)
+         exponent = true;
+      else
+      {
+         failed = true;
+         assert(false);
+      }
+   }
+   if( !exp_negated )
+      answer *= pow( 10,  exp );
+   else
+      answer /= pow( 10,  exp );
+   return {failed, negated ? -answer : answer};
+}
+
 
 template <typename REAL>
 bool
