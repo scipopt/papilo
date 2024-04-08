@@ -248,6 +248,7 @@ SimpleSubstitution<REAL>::perform_simple_substitution_step(
             return PresolveStatus::kInfeasible;
          else
          {
+            normalized_rhs = num.round(normalized_rhs);
             REAL normalized_vals[2] = { vals[0] / res.gcd, vals[1] / res.gcd };
             res.gcd = 1;
             if( !isConstraintsFeasibleWithGivenBounds(
