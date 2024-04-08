@@ -241,8 +241,8 @@ SimpleSubstitution<REAL>::perform_simple_substitution_step(
          if( !num.isIntegral( vals[stay] ) || !num.isIntegral( vals[subst] ) )
             return PresolveStatus::kUnchanged;
          auto res = boost::integer::extended_euclidean(
-            static_cast<int64_t>( abs( vals[stay] ) ),
-            static_cast<int64_t>( abs( vals[subst] ) ) );
+            static_cast<int64_t>( num.round(abs( vals[stay] )) ),
+            static_cast<int64_t>( num.round(abs( vals[subst] )) ) );
          REAL normalized_rhs = rhs / res.gcd;
          if( !num.isIntegral( normalized_rhs ) )
             return PresolveStatus::kInfeasible;
