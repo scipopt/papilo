@@ -244,8 +244,7 @@ SimpleSubstitution<REAL>::perform_simple_substitution_step(
          REAL normalized_vals[2] = { num.round( vals[0] ), num.round( vals[1] ) };
 
          // skip if overflowing
-         if( abs( vals[0] ) != static_cast<int64_t>( abs( normalized_vals[0] ) ) ||
-             abs( vals[1] ) != static_cast<int64_t>( abs( normalized_vals[1] ) ) )
+         if( std::max( abs( normalized_vals[0] ), abs( normalized_vals[1] ) ) > std::numeric_limits<int64_t>::max() )
             return PresolveStatus::kUnchanged;
          auto res = boost::integer::extended_euclidean(
             static_cast<int64_t>( abs( normalized_vals[stay] ) ),
