@@ -109,8 +109,6 @@ class OpbParser
       problem.set_problem_type( ProblemFlag::kInteger );
       problem.set_problem_type( ProblemFlag::kBinary );
 
-      problem.setInputTolerance( REAL{ 0.0000000001} );
-
       return problem;
    }
 
