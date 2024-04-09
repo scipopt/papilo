@@ -483,7 +483,7 @@ MpsParser<REAL>::parseCols( boost::iostreams::filtering_istream& file,
       if( !qi::phrase_parse(
               it, strline.end(),
               +( qi::lexeme[qi::as_string[+qi::graph][( parsename )]] >>
-                 qi::as_string[+(qi::xdigit | qi::punct) ][(addtuple )] ),
+                 qi::as_string[+(qi::digit | qi::punct) ][(addtuple )] ),
               ascii::space ) )
          return ParseKey::kFail;
    }
@@ -566,7 +566,7 @@ MpsParser<REAL>::parseRanges( boost::iostreams::filtering_istream& file )
       if( !qi::phrase_parse(
               it, strline.end(),
               +( qi::lexeme[qi::as_string[+qi::graph][( parsename )]] >>
-                 qi::as_string[+(qi::xdigit | qi::punct)][( addrange )] ),
+                 qi::as_string[+(qi::digit | qi::punct)][( addrange )] ),
               ascii::space ) )
          return ParseKey::kFail;
 
@@ -574,7 +574,7 @@ MpsParser<REAL>::parseRanges( boost::iostreams::filtering_istream& file )
       qi::phrase_parse(
           it, strline.end(),
           +( qi::lexeme[qi::as_string[+qi::graph][( parsename )]] >>
-             qi::as_string[+(qi::xdigit | qi::punct)][( addrange )] ),
+             qi::as_string[+(qi::digit | qi::punct)][( addrange )] ),
           ascii::space );
    }
 
@@ -652,7 +652,7 @@ MpsParser<REAL>::parseRhs( boost::iostreams::filtering_istream& file )
       if( !qi::phrase_parse(
               it, strline.end(),
               +( qi::lexeme[qi::as_string[+qi::graph][( parsename )]] >>
-                 qi::as_string[+(qi::xdigit | qi::punct)][( addrhs )] ),
+                 qi::as_string[+(qi::digit | qi::punct)][( addrhs )] ),
               ascii::space ) )
          return ParseKey::kFail;
    }
@@ -819,7 +819,7 @@ MpsParser<REAL>::parseBounds( boost::iostreams::filtering_istream& file )
       if( !qi::phrase_parse(
               it, strline.end(),
               +( qi::lexeme[qi::as_string[+qi::graph][( parsename )]] >>
-                 qi::as_string[+(qi::xdigit | qi::punct)][ (adddomains) ] ),
+                 qi::as_string[+(qi::digit | qi::punct)][ (adddomains) ] ),
               ascii::space ) )
          return ParseKey::kFail;
    }
