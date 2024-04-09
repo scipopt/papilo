@@ -368,7 +368,7 @@ SimpleSubstitution<REAL>::isConstraintsFeasibleWithGivenBounds(
 
    assert( (int) s == s );
    assert( (int) t == t );
-   assert(s * vals[stay] + vals[subst] * t == rhs);
+   assert( s * vals[stay] + t * vals[subst] == rhs );
 
    REAL ub_sol_y = ( t - lower_bounds[subst] ) / vals[stay];
    REAL lb_sol_y = ( t - upper_bounds[subst] ) / vals[stay];
