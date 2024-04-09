@@ -919,6 +919,9 @@ MpsParser<REAL>::read_number(const std::string& s) {
          else
             negated = true;
       }
+      else if (c == '+' && ((exponent && !exp_negated) || !negated))
+      {
+      }
       else if( ( c == 'E' || c == 'e' ) && !exponent )
          exponent = true;
       else
