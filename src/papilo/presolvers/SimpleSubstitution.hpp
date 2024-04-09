@@ -240,16 +240,30 @@ SimpleSubstitution<REAL>::perform_simple_substitution_step(
       {
          if( !num.isIntegral( vals[stay] ) || !num.isIntegral( vals[subst] ) )
             return PresolveStatus::kUnchanged;
+
+         REAL normalized_vals[2] = { num.round( vals[0] ), num.round( vals[1] ) };
+
+         // skip if overflowing
+         if( std::max( abs( normalized_vals[0] ), abs( normalized_vals[1] ) ) > std::numeric_limits<int64_t>::max() )
+            return PresolveStatus::kUnchanged;
          auto res = boost::integer::extended_euclidean(
-            static_cast<int64_t>( abs( vals[stay] ) ),
-            static_cast<int64_t>( abs( vals[subst] ) ) );
-         if( !num.isIntegral( rhs / res.gcd ) )
-            return PresolveStatus::kInfeasible;
-         else if( !isConstraintsFeasibleWithGivenBounds(
-               num, lower_bounds, upper_bounds, vals, rhs, subst, stay, res ) )
+            static_cast<int64_t>( abs( normalized_vals[stay] ) ),
+            static_cast<int64_t>( abs( normalized_vals[subst] ) ) );
+         REAL normalized_rhs = rhs / res.gcd;
+         if( !num.isIntegral( normalized_rhs ) )
             return PresolveStatus::kInfeasible;
          else
-            return PresolveStatus::kUnchanged;
+         {
+            normalized_rhs = num.round(normalized_rhs);
+            normalized_vals[0] /= res.gcd;
+            normalized_vals[1] /= res.gcd;
+            res.gcd = 1;
+            if( !isConstraintsFeasibleWithGivenBounds(
+                    num, lower_bounds, upper_bounds, normalized_vals, normalized_rhs, subst, stay, res ) )
+               return PresolveStatus::kInfeasible;
+            else
+               return PresolveStatus::kUnchanged;
+         }
       }
       // problem is infeasible if gcd (i.e. vals[subst]) is not divisor of
       // rhs
@@ -327,8 +341,8 @@ SimpleSubstitution<REAL>::perform_simple_substitution_step(
 }
 
 /**
- * check if the aggregated variable y of the equation a2x1 + a2x2 = b is within its bounds.
- * 1. generate a solution for s a1 + t a2 = gcd(a1,a2)
+ * check if the aggregated variable y of the equation a1 x1 + a2 x2 = b is within its bounds.
+ * 1. generate a solution (s, t) for s a1 + t a2 = gcd(a1, a2)
  * 2. substitute variable x1 = -a2 y + s and x2 = a1 y + t
  * 3. check bounds of y
  *
@@ -342,15 +356,15 @@ SimpleSubstitution<REAL>::isConstraintsFeasibleWithGivenBounds(
     const Vec<REAL>& upper_bounds, const REAL* vals, REAL rhs, int subst,
     int stay, const boost::integer::euclidean_result_t<int64_t>& res ) const
 {
-   int res_x = vals[stay] < 0 ? res.x * -1 : res.x;
-   int res_y = vals[subst] < 0 ? res.y * -1 : res.y;
+   assert( num.isIntegral( vals[0] ) );
+   assert( num.isIntegral( vals[1] ) );
+   assert( res.gcd == 1 );
+   REAL s = res.x * (vals[stay] < 0 ? -rhs : rhs);
+   REAL t = res.y * (vals[subst] < 0 ? -rhs : rhs);
 
-   REAL initial_solution_for_x = res_x * rhs;
-   REAL initial_solution_for_y = res_y * rhs;
-   REAL factor = (int)(initial_solution_for_y * res.gcd / vals[stay]);
-
-   REAL s = initial_solution_for_x + factor / res.gcd * vals[subst];
-   REAL t = initial_solution_for_y - factor / res.gcd * vals[stay];
+   assert( num.isIntegral( s ) );
+   assert( num.isIntegral( t ) );
+   assert( s * vals[stay] + t * vals[subst] == rhs );
 
    REAL ub_sol_y = ( t - lower_bounds[subst] ) / vals[stay];
    REAL lb_sol_y = ( t - upper_bounds[subst] ) / vals[stay];
@@ -361,8 +375,10 @@ SimpleSubstitution<REAL>::isConstraintsFeasibleWithGivenBounds(
    if( vals[subst] < 0 )
       std::swap( ub_sol_x, lb_sol_x );
 
-   return num.isFeasLE( num.epsCeil( lb_sol_y ), num.epsFloor( ub_sol_y ) ) &&
-          num.isFeasLE( num.epsCeil( lb_sol_x ), num.epsFloor( ub_sol_x ) );
+   return num.isFeasLE(
+               num.epsCeil( num.max( lb_sol_x, lb_sol_y ) ),
+               num.epsFloor( num.min( ub_sol_x, ub_sol_y ) )
+               );
 }
 
 } // namespace papilo
