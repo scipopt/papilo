@@ -359,11 +359,8 @@ SimpleSubstitution<REAL>::isConstraintsFeasibleWithGivenBounds(
    assert( num.isIntegral( vals[0] ) );
    assert( num.isIntegral( vals[1] ) );
    assert( res.gcd == 1 );
-   int res_x = vals[stay] < 0 ? -res.x : res.x;
-   int res_y = vals[subst] < 0 ? -res.y : res.y;
-
-   REAL s = res_x * rhs;
-   REAL t = res_y * rhs;
+   REAL s = res.x * (vals[stay] < 0 ? -rhs : rhs);
+   REAL t = res.y * (vals[subst] < 0 ? -rhs : rhs);
 
    assert( num.isIntegral( s ) );
    assert( num.isIntegral( t ) );
