@@ -480,7 +480,9 @@ MpsParser<REAL>::parseCols( boost::iostreams::filtering_istream& file,
 
       assert( ncols > 0 );
 
-      if( strline.find("E+") != std::string::npos || strline.find("E-") != std::string::npos )
+      if( strline.find("E+") != std::string::npos || strline.find("E-") != std::string::npos ||
+          strline.find("e+") != std::string::npos || strline.find("e-") != std::string::npos
+          )
       {
          std::istringstream is(strline);
          std::vector<std::string> tokens;
@@ -581,7 +583,8 @@ MpsParser<REAL>::parseRanges( boost::iostreams::filtering_istream& file )
          }
       };
 
-      if( strline.find("E+") != std::string::npos || strline.find("E-") != std::string::npos )
+      if( strline.find("E+") != std::string::npos || strline.find("E-") != std::string::npos ||
+         strline.find("e+") != std::string::npos || strline.find("e-") != std::string::npos )
       {
          std::istringstream is(strline);
          std::vector<std::string> tokens;
@@ -684,7 +687,8 @@ MpsParser<REAL>::parseRhs( boost::iostreams::filtering_istream& file )
          }
       };
 
-      if( strline.find("E+") != std::string::npos || strline.find("E-") != std::string::npos )
+      if( strline.find("E+") != std::string::npos || strline.find("E-") != std::string::npos ||
+          strline.find("e+") != std::string::npos || strline.find("e-") != std::string::npos )
       {
          std::istringstream is(strline);
          std::vector<std::string> tokens;
@@ -877,7 +881,8 @@ MpsParser<REAL>::parseBounds( boost::iostreams::filtering_istream& file )
          }
       };
 
-      if( strline.find("E+") != std::string::npos || strline.find("E-") != std::string::npos )
+      if( strline.find("E+") != std::string::npos || strline.find("E-") != std::string::npos ||
+          strline.find("e+") != std::string::npos || strline.find("e-") != std::string::npos )
       {
          std::istringstream is(strline);
          std::vector<std::string> tokens;
