@@ -240,16 +240,24 @@ SimpleSubstitution<REAL>::perform_simple_substitution_step(
       {
          if( !num.isIntegral( vals[stay] ) || !num.isIntegral( vals[subst] ) )
             return PresolveStatus::kUnchanged;
+
+         REAL normalized_vals[2] = { num.round( vals[0] ), num.round( vals[1] ) };
+
+         // skip if overflowing
+         if( abs( vals[0] ) != static_cast<int64_t>( abs( normalized_vals[0] ) ) ||
+             abs( vals[1] ) != static_cast<int64_t>( abs( normalized_vals[1] ) ) )
+            return PresolveStatus::kUnchanged;
          auto res = boost::integer::extended_euclidean(
-            static_cast<int64_t>( num.round(abs( vals[stay] )) ),
-            static_cast<int64_t>( num.round(abs( vals[subst] )) ) );
+            static_cast<int64_t>( abs( normalized_vals[stay] ) ),
+            static_cast<int64_t>( abs( normalized_vals[subst] ) ) );
          REAL normalized_rhs = rhs / res.gcd;
          if( !num.isIntegral( normalized_rhs ) )
             return PresolveStatus::kInfeasible;
          else
          {
             normalized_rhs = num.round(normalized_rhs);
-            REAL normalized_vals[2] = { vals[0] / res.gcd, vals[1] / res.gcd };
+            normalized_vals[0] /= res.gcd;
+            normalized_vals[1] /= res.gcd;
             res.gcd = 1;
             if( !isConstraintsFeasibleWithGivenBounds(
                     num, lower_bounds, upper_bounds, normalized_vals, normalized_rhs, subst, stay, res ) )
