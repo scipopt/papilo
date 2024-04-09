@@ -480,6 +480,25 @@ MpsParser<REAL>::parseCols( boost::iostreams::filtering_istream& file,
 
       assert( ncols > 0 );
 
+      if( strline.find("E+") != std::string::npos || strline.find("E-") != std::string::npos )
+      {
+         std::istringstream is(strline);
+         std::vector<std::string> tokens;
+         std::string tmp;
+         while (is >> tmp)
+            tokens.push_back(tmp);
+         if(tokens.size() != 3 && tokens.size() != 5)
+            return ParseKey::kFail;
+         parsename(tokens[1]);
+         addtuple(tokens[2]);
+         if( tokens.size() == 5)
+         {
+            parsename(tokens[1]);
+            addtuple(tokens[2]);
+         }
+         continue;
+      }
+
       if( !qi::phrase_parse(
               it, strline.end(),
               +( qi::lexeme[qi::as_string[+qi::graph][( parsename )]] >>
@@ -562,6 +581,28 @@ MpsParser<REAL>::parseRanges( boost::iostreams::filtering_istream& file )
          }
       };
 
+      if( strline.find("E+") != std::string::npos || strline.find("E-") != std::string::npos )
+      {
+         std::istringstream is(strline);
+         std::vector<std::string> tokens;
+         std::string tmp;
+         while (is >> tmp)
+            tokens.push_back(tmp);
+         if(tokens.size() != 3 && tokens.size() != 5)
+            return ParseKey::kFail;
+         parsename(tokens[1]);
+         addrange(tokens[2]);
+         if( tokens.size() == 5)
+         {
+            parsename(tokens[1]);
+            addrange(tokens[2]);
+         }
+
+         continue;
+      }
+
+
+
       // compulsory part
       if( !qi::phrase_parse(
               it, strline.end(),
@@ -642,6 +683,26 @@ MpsParser<REAL>::parseRhs( boost::iostreams::filtering_istream& file )
             row_flags[rowidx].unset( RowFlag::kLhsInf );
          }
       };
+
+      if( strline.find("E+") != std::string::npos || strline.find("E-") != std::string::npos )
+      {
+         std::istringstream is(strline);
+         std::vector<std::string> tokens;
+         std::string tmp;
+         while (is >> tmp)
+            tokens.push_back(tmp);
+         if(tokens.size() != 3 && tokens.size() != 5)
+            return ParseKey::kFail;
+         parsename(tokens[1]);
+         addrhs(tokens[2]);
+         if( tokens.size() == 5)
+         {
+            parsename(tokens[1]);
+            addrhs(tokens[2]);
+         }
+
+         continue;
+      }
 
       // Documentation Link to qi:
       // https://www.boost.org/doc/libs/1_66_0/libs/spirit/doc/html/spirit/qi/tutorials/warming_up.html
@@ -815,6 +876,27 @@ MpsParser<REAL>::parseBounds( boost::iostreams::filtering_istream& file )
                col_flags[colidx].set( ColFlag::kUbInf );
          }
       };
+
+      if( strline.find("E+") != std::string::npos || strline.find("E-") != std::string::npos )
+      {
+         std::istringstream is(strline);
+         std::vector<std::string> tokens;
+         std::string tmp;
+         while (is >> tmp)
+            tokens.push_back(tmp);
+         if(tokens.size() != 3 && tokens.size() != 5)
+            return ParseKey::kFail;
+         parsename(tokens[1]);
+         adddomains(tokens[2]);
+         if( tokens.size() == 5)
+         {
+            parsename(tokens[1]);
+            adddomains(tokens[2]);
+         }
+
+         continue;
+      }
+
 
       if( !qi::phrase_parse(
               it, strline.end(),
