@@ -1,34 +1,57 @@
 variables:
   PAPILO_VERSION: 2.2.1
+  SOPLEX_REVISION: release-700
+  SCIP_REVISION: v900
 
 stages:
-  - build
   - test
 
-.cmake:
-  stage: build
+.ctest:
+  stage: test
   image:
     name: gcc:10
   tags:
     - compile
   before_script:
     - apt-get update
-    - apt-get install -y cmake libboost1.74-dev libtbb-dev libblas-dev
+    - apt-get install -y cmake libboost1.74-dev libtbb-dev libblas-dev gfortran
   script:
+    # clone, build and install soplex
+    - git clone https://github.com/scipopt/soplex.git ${CI_PROJECT_DIR}/soplex
+    - cd ${CI_PROJECT_DIR}/soplex && git checkout ${SOPLEX_REVISION}
+    - mkdir -p $CI_PROJECT_DIR/soplex/build
+    - cd $CI_PROJECT_DIR/soplex/build
+    - cmake .. -DCMAKE_BUILD_TYPE=Release
+    - make -j && make install
+
+    # clone, build and install scip
+    - git clone https://github.com/scipopt/scip.git ${CI_PROJECT_DIR}/scip
+    - cd ${CI_PROJECT_DIR}/scip && git checkout ${SCIP_REVISION}
+    - mkdir -p $CI_PROJECT_DIR/scip/build
+    - cd $CI_PROJECT_DIR/scip/build
+    - cmake .. -DCMAKE_BUILD_TYPE=Release -DZIMPL=off -DREADLINE=off -DGMP=off -DPAPILO=off -DIPOPT=off
+    - make -j && make install
+
+    # build and test papilo
     - mkdir -p $CI_PROJECT_DIR/builds/papilo
     - cd $CI_PROJECT_DIR/builds/papilo
     - export CFLAGS="-Werror"
     - export CXXFLAGS="-Werror"
-    - cmake $CI_PROJECT_DIR -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE:-Release} -DBLA_STATIC=ON
-    - make -j
-    - ctest -j 8 --output-on-failure
+    - cmake $CI_PROJECT_DIR ${CMAKE_FLAGS} -DBLA_STATIC=ON
+    - make -j6
+    - ctest -j --output-on-failure
 
-"cmake release":
-  extends: .cmake
+"ctest release":
+  extends: .ctest
   variables:
-    CMAKE_BUILD_TYPE: Release
+    CMAKE_FLAGS: "-DCMAKE_BUILD_TYPE=Release"
 
-"cmake debug":
-  extends: .cmake
+"ctest release notbb":
+  extends: .ctest
   variables:
-    CMAKE_BUILD_TYPE: Debug
+    CMAKE_FLAGS: "-DCMAKE_BUILD_TYPE=Release -DTBB=off"
+
+"ctest debug":
+  extends: .ctest
+  variables:
+    CMAKE_FLAGS: "-DCMAKE_BUILD_TYPE=Debug"
