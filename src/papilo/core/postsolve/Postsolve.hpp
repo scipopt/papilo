@@ -950,9 +950,9 @@ Postsolve<REAL>::apply_var_bound_change_forced_by_column_in_original_solution(
 
    const REAL reduced_costs = originalSolution.reducedCosts[col];
    bool changes_neg_reduced_costs =
-       ! isLowerBound && num.isLT( reduced_costs, 0 );
+       ! isLowerBound && num.isFeasLT( reduced_costs, 0 );
    bool changes_pos_reduced_costs =
-       isLowerBound && num.isGT( reduced_costs, 0 );
+       isLowerBound && num.isFeasGT( reduced_costs, 0 );
 
    int variables_removed_from_basis = 0;
 
