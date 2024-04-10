@@ -960,7 +960,7 @@ Postsolve<REAL>::apply_var_bound_change_forced_by_column_in_original_solution(
    if( num.isFeasEq( new_value, originalSolution.primal[col] ) &&
        ( changes_neg_reduced_costs || changes_pos_reduced_costs ) )
    {
-      assert( ! num.isZero( reduced_costs ) );
+      assert( ! num.isFeasZero( reduced_costs ) );
       SavedRow<REAL> saved_row{
           num, i, types, start, indices, values, originalSolution.primal };
       int row = saved_row.getRow();
