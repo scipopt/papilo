@@ -14,7 +14,7 @@ stages:
     - compile
   before_script:
     - apt-get update
-    - apt-get install -y cmake libboost1.74-dev libtbb-dev libblas-dev gfortran
+    - apt-get install -y cmake libboost-all-dev libtbb-dev libblas-dev gfortran
   script:
     # clone, build and install soplex
     - git clone https://github.com/scipopt/soplex.git ${CI_PROJECT_DIR}/soplex
