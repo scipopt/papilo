@@ -43,10 +43,10 @@ Build system
 Fixed bugs
 ----------
 
+- DualFix: handle dual-postsolving of fixed to infinity variable correctly if constraints in which the variable appears are marked redundant by other transactions
 - Propagation: avoid numerical difficulties
 - ParallelColDetection: avoid segfault by handling already fixed variables separately during sorting
 - SimpleSubstitution: ensure coprime-ness of coefficients for infeasible detection for linear diphantine equations
-- DualFix: handle postsolving of fixed to infinity variable correctly in some rare edge cases
 
 Miscellaneous
 -------------

@@ -485,21 +485,24 @@ PostsolveStorage<REAL>::storeFixedInfCol(
 
    // rows in which the dual-fixed variable can already be redundant prior to applying the dualfixing to infinity
    // to ignore those constraint which look at the history
-   Vec<int> non_red {};
+   Vec<int> non_redundant_constraints{};
    for( int type = types.size() - 2;
         type > static_cast<int>(types.size()) - row_coefficients.getLength() - 2; type-- )
    {
-      if( types[type] != ReductionType::kRedundantRow )
+      if( types[type] == ReductionType::kRedundantRow )
+         non_redundant_constraints.push_back( indices[indices.size() - ( types.size() - type )] );
+      else
          break;
-      non_red.push_back( indices[indices.size() - ( types.size() - type )] );
    }
 
-   assert( (int) non_red.size() <= row_coefficients.getLength());
-   indices.push_back( (int) non_red.size() );
+   assert( (int)non_redundant_constraints.size() <= row_coefficients.getLength());
+   indices.push_back( (int)non_redundant_constraints.size() );
    values.push_back( bound );
 
    for( int row = 0; row < row_coefficients.getLength(); row++ )
-      if(std::find(non_red.begin(), non_red.end(), origrow_mapping[row_indices[row]]) != non_red.end())
+      if(std::find( non_redundant_constraints.begin(),
+                     non_redundant_constraints.end(), origrow_mapping[row_indices[row]]) !=
+          non_redundant_constraints.end())
          push_back_row( row_indices[row], currentProblem );
 
    finishStorage();
