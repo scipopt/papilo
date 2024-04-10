@@ -864,7 +864,7 @@ Postsolve<REAL>::apply_row_bound_change_to_original_solution(
          {
             if( isLhs )
             {
-               if( factor < 0)
+               if( factor < 0 )
                   originalSolution.rowBasisStatus[deleted_row] =
                       VarBasisStatus::ON_UPPER;
                else
