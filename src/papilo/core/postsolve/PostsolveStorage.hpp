@@ -487,7 +487,7 @@ PostsolveStorage<REAL>::storeFixedInfCol(
    // to ignore those constraint which look at the history
    Vec<int> non_red {};
    for( int type = types.size() - 2;
-        type >= static_cast<int>(types.size()) - row_coefficients.getLength() - 2; type-- )
+        type > static_cast<int>(types.size()) - row_coefficients.getLength() - 2; type-- )
    {
       if( types[type] != ReductionType::kRedundantRow )
          break;
