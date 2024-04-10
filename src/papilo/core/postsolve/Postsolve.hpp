@@ -904,9 +904,9 @@ Postsolve<REAL>::apply_row_bound_change_to_original_solution(
                }
                else
                {
-                  if(originalSolution.rowBasisStatus[ row ] == VarBasisStatus::ON_LOWER)
+                  if( originalSolution.rowBasisStatus[ row ] == VarBasisStatus::ON_LOWER )
                      originalSolution.rowBasisStatus[ deleted_row ] = VarBasisStatus::ON_UPPER;
-                  else if(originalSolution.rowBasisStatus[ row ] == VarBasisStatus::ON_UPPER)
+                  else if( originalSolution.rowBasisStatus[ row ] == VarBasisStatus::ON_UPPER )
                      originalSolution.rowBasisStatus[ deleted_row ] = VarBasisStatus::ON_LOWER;
                }
                originalSolution.rowBasisStatus[row] = VarBasisStatus::BASIC;
