@@ -14,8 +14,15 @@ stages:
     - compile
   before_script:
     - apt-get update
-    - apt-get install -y cmake libboost-all-dev libtbb-dev libblas-dev gfortran
+    - apt-get install -y cmake libtbb-dev libblas-dev
   script:
+    # download, build and install boost
+    - wget https://boostorg.jfrog.io/artifactory/main/release/${BOOST_VERSION}/source/boost_$(echo ${BOOST_VERSION} | tr . _).tar.gz
+    - tar -xzf boost_$(echo ${BOOST_VERSION} | tr . _).tar.gz
+    - cd boost_$(echo ${BOOST_VERSION} | tr . _)
+    - ./bootstrap.sh --with-libraries=program_options,serialization,iostreams
+    - ./b2 -j6 install
+
     # clone, build and install soplex
     - git clone https://github.com/scipopt/soplex.git ${CI_PROJECT_DIR}/soplex
     - cd ${CI_PROJECT_DIR}/soplex && git checkout ${SOPLEX_REVISION}
@@ -45,13 +52,16 @@ stages:
   extends: .ctest
   variables:
     CMAKE_FLAGS: "-DCMAKE_BUILD_TYPE=Release"
+    BOOST_VERSION: 1.65.0
 
 "ctest release notbb":
   extends: .ctest
   variables:
     CMAKE_FLAGS: "-DCMAKE_BUILD_TYPE=Release -DTBB=off"
+    BOOST_VERSION: 1.65.0
 
 "ctest debug":
   extends: .ctest
   variables:
     CMAKE_FLAGS: "-DCMAKE_BUILD_TYPE=Debug"
+    BOOST_VERSION: 1.65.0
