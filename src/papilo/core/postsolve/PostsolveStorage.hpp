@@ -479,15 +479,28 @@ PostsolveStorage<REAL>::storeFixedInfCol(
    indices.push_back( origcol_mapping[col] );
    values.push_back( val );
 
-   const auto& coefficients =
+   const auto& row_coefficients =
        currentProblem.getConstraintMatrix().getColumnCoefficients( col );
-   const int* row_indices = coefficients.getIndices();
+   const int* row_indices = row_coefficients.getIndices();
 
-   indices.push_back( coefficients.getLength() );
+   // rows in which the dual-fixed variable can already be redundant prior to applying the dualfixing to infinity
+   // to ignore those constraint which look at the history
+   Vec<int> non_red {};
+   for( int type = types.size() - 2;
+        type >= static_cast<int>(types.size()) - row_coefficients.getLength() - 2; type-- )
+   {
+      if( types[type] != ReductionType::kRedundantRow )
+         break;
+      non_red.push_back( indices[indices.size() - ( types.size() - type )] );
+   }
+
+   assert( (int) non_red.size() <= row_coefficients.getLength());
+   indices.push_back( (int) non_red.size() );
    values.push_back( bound );
 
-   for( int i = 0; i < coefficients.getLength(); i++ )
-      push_back_row( row_indices[i], currentProblem );
+   for( int row = 0; row < row_coefficients.getLength(); row++ )
+      if(std::find(non_red.begin(), non_red.end(), origrow_mapping[row_indices[row]]) != non_red.end())
+         push_back_row( row_indices[row], currentProblem );
 
    finishStorage();
 }
