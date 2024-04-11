@@ -489,20 +489,20 @@ PostsolveStorage<REAL>::storeFixedInfCol(
    // to identify look at the top of the postsolve stack at the last n-1 entries with n amount of initially redundant rows
    Vec<int> non_redundant_constraints{};
    for( int type = types.size() - 2;
-        type >= types.size() - row_coefficients.getLength() - 1; --type )
+        type >= types.size() - (unsigned int) (row_coefficients.getLength() - 1); --type )
    {
       if( types[type] == ReductionType::kRedundantRow )
       {
          int row_index_of_stack = indices[indices.size() - ( types.size() - type )];
-         bool stop = true;
+         bool row_is_part_of_the_column = false;
          //check if the row actually is listed in the rowvec of the col
          for(int i = 0; i < row_coefficients.getLength(); i++)
             if( row_indices[i] == row_index_of_stack )
             {
-               stop = false;
+               row_is_part_of_the_column = true;
                break;
             }
-         if( stop )
+         if( !row_is_part_of_the_column )
             break;
          non_redundant_constraints.push_back( row_index_of_stack );
       }
