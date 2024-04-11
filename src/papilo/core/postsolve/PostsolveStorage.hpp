@@ -487,7 +487,7 @@ PostsolveStorage<REAL>::storeFixedInfCol(
    // fixing a column to infinity leads to deleting all rows in which it appears
    // store them if they were not yet redundant (made redundant by another reductions)
    // to identify look at the top of the postsolve stack at the last n-1 entries with n amount of initially redundant rows
-   Vec<int> non_redundant_constraints{};
+   Vec<int> cons_marked_redundant_by_this_transaction{};
    for( int type = types.size() - 2;
         (unsigned int) type >= types.size() - row_coefficients.getLength() - 1; --type )
    {
@@ -504,20 +504,20 @@ PostsolveStorage<REAL>::storeFixedInfCol(
             }
          if( !row_is_part_of_the_column )
             break;
-         non_redundant_constraints.push_back( row_index_of_stack );
+         cons_marked_redundant_by_this_transaction.push_back( row_index_of_stack );
       }
       else
          break;
    }
 
-   assert( (int)non_redundant_constraints.size() <= row_coefficients.getLength());
-   indices.push_back( (int)non_redundant_constraints.size() );
+   assert( (int)cons_marked_redundant_by_this_transaction.size() <= row_coefficients.getLength());
+   indices.push_back( (int)cons_marked_redundant_by_this_transaction.size() );
    values.push_back( bound );
 
    for( int row = 0; row < row_coefficients.getLength(); row++ )
-      if(std::find( non_redundant_constraints.begin(),
-                     non_redundant_constraints.end(), origrow_mapping[row_indices[row]]) !=
-          non_redundant_constraints.end())
+      if(std::find( cons_marked_redundant_by_this_transaction.begin(),
+                     cons_marked_redundant_by_this_transaction.end(), origrow_mapping[row_indices[row]]) !=
+          cons_marked_redundant_by_this_transaction.end())
          push_back_row( row_indices[row], currentProblem );
 
    finishStorage();
