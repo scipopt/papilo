@@ -570,7 +570,7 @@ Postsolve<REAL>::apply_fix_infinity_variable_in_original_solution(
    int* row_indices = new int[number_rows];
    REAL* col_coefficents = new REAL[number_rows];
 
-   if(number_rows == 0 && bound == std::numeric_limits<int64_t>::max())
+   if( number_rows == 0 && bound == std::numeric_limits<int64_t>::max() )
       solution = 0;
 
    if( isNegativeInfinity )
