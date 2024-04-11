@@ -489,7 +489,7 @@ PostsolveStorage<REAL>::storeFixedInfCol(
    // to identify look at the top of the postsolve stack at the last n-1 entries with n amount of initially redundant rows
    Vec<int> non_redundant_constraints{};
    for( int type = types.size() - 2;
-        type >= types.size() - (unsigned int) (row_coefficients.getLength() - 1); --type )
+        (unsigned int) type >= types.size() - row_coefficients.getLength() - 1; --type )
    {
       if( types[type] == ReductionType::kRedundantRow )
       {
