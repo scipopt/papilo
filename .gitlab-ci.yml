@@ -90,6 +90,14 @@ stages:
     - make -j6
     - make install
 
+    # clone, build and install soplex
+    - git clone https://github.com/scipopt/soplex.git ${CI_PROJECT_DIR}/soplex
+    - cd ${CI_PROJECT_DIR}/soplex && git checkout ${SOPLEX_REVISION}
+    - mkdir $CI_PROJECT_DIR/soplex-build
+    - cd $CI_PROJECT_DIR/soplex-build
+    - cmake $CI_PROJECT_DIR/soplex -DCMAKE_BUILD_TYPE=Release
+    - make -j && make install
+
     # clone, build and install scip
     - git clone https://github.com/scipopt/scip.git ${CI_PROJECT_DIR}/scip
     - cd ${CI_PROJECT_DIR}/scip && git checkout ${SCIP_REVISION}
@@ -97,6 +105,7 @@ stages:
     - cd $CI_PROJECT_DIR/scip-build
     - cmake $CI_PROJECT_DIR/scip ${CMAKE_FLAGS} -DZIMPL=off -DREADLINE=off -DGMP=off -DIPOPT=off -DLPS=none
     - make -j && make install
+    - export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
     - ctest -j --output-on-failure
 
 "scip build debug":
