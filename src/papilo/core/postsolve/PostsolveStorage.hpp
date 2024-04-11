@@ -484,14 +484,28 @@ PostsolveStorage<REAL>::storeFixedInfCol(
        currentProblem.getConstraintMatrix().getColumnCoefficients( col );
    const int* row_indices = row_coefficients.getIndices();
 
-   // rows in which the dual-fixed variable can already be redundant prior to applying the dualfixing to infinity
-   // to ignore those constraint which look at the history
+   // fixing a column to infinity leads to deleting all rows in which it appears
+   // store them if they were not yet redundant (made redundant by another reductions)
+   // to identify look at the top of the postsolve stack at the last n-1 entries with n amount of initially redundant rows
    Vec<int> non_redundant_constraints{};
    for( int type = types.size() - 2;
-        type > static_cast<int>(types.size()) - row_coefficients.getLength() - 2; type-- )
+        type >= types.size() - row_coefficients.getLength() - 1; --type )
    {
       if( types[type] == ReductionType::kRedundantRow )
-         non_redundant_constraints.push_back( indices[indices.size() - ( types.size() - type )] );
+      {
+         int row_index_of_stack = indices[indices.size() - ( types.size() - type )];
+         bool stop = true;
+         //check if the row actually is listed in the rowvec of the col
+         for(int i = 0; i < row_coefficients.getLength(); i++)
+            if( row_indices[i] == row_index_of_stack )
+            {
+               stop = false;
+               break;
+            }
+         if( stop )
+            break;
+         non_redundant_constraints.push_back( row_index_of_stack );
+      }
       else
          break;
    }
