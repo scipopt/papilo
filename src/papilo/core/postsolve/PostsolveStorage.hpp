@@ -167,7 +167,7 @@ class PostsolveStorage
 
    void
    storeFixedInfCol( int col, REAL val, REAL bound,
-                      const Problem<REAL>& currentProblem );
+                      const Problem<REAL>& currentProblem, int top_of_current_postsolve_stack );
 
    void
    storeSubstitution( int col, int row, const Problem<REAL>& currentProblem );
@@ -474,7 +474,7 @@ PostsolveStorage<REAL>::storeFixedCol( int col, REAL val,
 template <typename REAL>
 void
 PostsolveStorage<REAL>::storeFixedInfCol(
-    int col, REAL val, REAL bound, const Problem<REAL>& currentProblem )
+    int col, REAL val, REAL bound, const Problem<REAL>& currentProblem, int top_of_current_postsolve_stack )
 {
    types.push_back( ReductionType::kFixedInfCol );
    indices.push_back( origcol_mapping[col] );
@@ -484,33 +484,24 @@ PostsolveStorage<REAL>::storeFixedInfCol(
        currentProblem.getConstraintMatrix().getColumnCoefficients( col );
    const int* row_indices = row_coefficients.getIndices();
 
+   assert( (unsigned int) (top_of_current_postsolve_stack + row_coefficients.getLength()) <= types.size());
+
    // fixing a column to infinity leads to deleting all rows in which it appears
    // store them if they were not yet redundant (made redundant by another reductions)
-   // to identify look at the top of the postsolve stack at the last n-1 entries with n amount of initially redundant rows
+   // to identify look at the top of the postsolve stack of which transactions where added since the transaction started
    Vec<int> cons_marked_redundant_by_this_transaction{};
-   for( int type = types.size() - 2;
-        (unsigned int) type >= types.size() - row_coefficients.getLength() - 1; --type )
+   for( int type = top_of_current_postsolve_stack; (unsigned int) type < types.size() ; type++ )
    {
       if( types[type] == ReductionType::kRedundantRow )
       {
          int row_index_of_stack = indices[indices.size() - ( types.size() - type )];
-         bool row_is_part_of_the_column = false;
-         //check if the row actually is listed in the rowvec of the col
-         for(int i = 0; i < row_coefficients.getLength(); i++)
-            if( row_indices[i] == row_index_of_stack )
-            {
-               row_is_part_of_the_column = true;
-               break;
-            }
-         if( !row_is_part_of_the_column )
-            break;
          cons_marked_redundant_by_this_transaction.push_back( row_index_of_stack );
       }
       else
          break;
    }
 
-   assert( (int)cons_marked_redundant_by_this_transaction.size() <= row_coefficients.getLength());
+   assert( (int)cons_marked_redundant_by_this_transaction.size() <= row_coefficients.getLength() );
    indices.push_back( (int)cons_marked_redundant_by_this_transaction.size() );
    values.push_back( bound );
 
