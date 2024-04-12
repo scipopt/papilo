@@ -103,7 +103,7 @@ stages:
     - cd ${CI_PROJECT_DIR}/scip && git checkout ${SCIP_REVISION}
     - mkdir -p $CI_PROJECT_DIR/scip-build
     - cd $CI_PROJECT_DIR/scip-build
-    - cmake $CI_PROJECT_DIR/scip ${CMAKE_FLAGS} -DZIMPL=off -DREADLINE=off -DGMP=off -DIPOPT=off -DLPS=none
+    - cmake $CI_PROJECT_DIR/scip ${CMAKE_FLAGS} -DZIMPL=off -DREADLINE=off -DGMP=off -DIPOPT=off
     - make -j && make install
     - export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
     - ctest -j --output-on-failure
