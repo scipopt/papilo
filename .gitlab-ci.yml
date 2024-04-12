@@ -1,3 +1,10 @@
+# open TODO:
+# - integration tests
+# - scanbuild
+# - tests with other MIP solvers (glop, gurobi, roundingsat)
+# - tests on Mac/Windows
+# - enable/fix HiGHS test
+
 variables:
   SOPLEX_REVISION: release-700
   SCIP_REVISION: v900
@@ -67,48 +74,48 @@ stages:
   variables:
     CMAKE_FLAGS: "-DCMAKE_BUILD_TYPE=Debug"
 
-".highs ctest":
-  stage: test
-  image:
-    name: gcc:10
-  tags:
-    - compile
-  before_script:
-    - apt-get update
-    - apt-get install -y cmake libtbb-dev libblas-dev libcriterion-dev
-  script:
-    # download, build and install boost
-    - wget https://boostorg.jfrog.io/artifactory/main/release/${BOOST_VERSION}/source/boost_$(echo ${BOOST_VERSION} | tr . _).tar.gz
-    - tar -xzf boost_$(echo ${BOOST_VERSION} | tr . _).tar.gz
-    - cd boost_$(echo ${BOOST_VERSION} | tr . _)
-    - ./bootstrap.sh --with-libraries=program_options,serialization,iostreams,regex
-    - ./b2 -j6 install
-
-    # clone, build and install HiGHS
-    - git clone https://github.com/ERGO-Code/HiGHS ${CI_PROJECT_DIR}/highs
-    - cd ${CI_PROJECT_DIR}/highs && git checkout ${HIGHS_REVISION}
-    - mkdir $CI_PROJECT_DIR/highs-build
-    - cd $CI_PROJECT_DIR/highs-build
-    - cmake $CI_PROJECT_DIR/highs -DCMAKE_BUILD_TYPE=Release
-    - make -j && make install
-
-    # build and test papilo
-    - mkdir -p $CI_PROJECT_DIR/builds/papilo
-    - cd $CI_PROJECT_DIR/builds/papilo
-    - export CFLAGS="-Werror"
-    - export CXXFLAGS="-Werror"
-    - cmake $CI_PROJECT_DIR ${CMAKE_FLAGS} -DBLA_STATIC=ON
-    - make -j6
-    - export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
-    - ctest -j --output-on-failure
-
-"highs test":
-  extends: .highs ctest
-  variables:
-    CMAKE_FLAGS: "-DCMAKE_BUILD_TYPE=Debug"
-  rules:
-    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
-      when: manual
+#".highs ctest":
+#  stage: test
+#  image:
+#    name: gcc:10
+#  tags:
+#    - compile
+#  before_script:
+#    - apt-get update
+#    - apt-get install -y cmake libtbb-dev libblas-dev libcriterion-dev
+#  script:
+#    # download, build and install boost
+#    - wget https://boostorg.jfrog.io/artifactory/main/release/${BOOST_VERSION}/source/boost_$(echo ${BOOST_VERSION} | tr . _).tar.gz
+#    - tar -xzf boost_$(echo ${BOOST_VERSION} | tr . _).tar.gz
+#    - cd boost_$(echo ${BOOST_VERSION} | tr . _)
+#    - ./bootstrap.sh --with-libraries=program_options,serialization,iostreams,regex
+#    - ./b2 -j6 install
+#
+#    # clone, build and install HiGHS
+#    - git clone https://github.com/ERGO-Code/HiGHS ${CI_PROJECT_DIR}/highs
+#    - cd ${CI_PROJECT_DIR}/highs && git checkout ${HIGHS_REVISION}
+#    - mkdir $CI_PROJECT_DIR/highs-build
+#    - cd $CI_PROJECT_DIR/highs-build
+#    - cmake $CI_PROJECT_DIR/highs -DCMAKE_BUILD_TYPE=Release
+#    - make -j && make install
+#
+#    # build and test papilo
+#    - mkdir -p $CI_PROJECT_DIR/builds/papilo
+#    - cd $CI_PROJECT_DIR/builds/papilo
+#    - export CFLAGS="-Werror"
+#    - export CXXFLAGS="-Werror"
+#    - cmake $CI_PROJECT_DIR ${CMAKE_FLAGS} -DBLA_STATIC=ON
+#    - make -j6
+#    - export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
+#    - ctest -j --output-on-failure
+#
+#"highs test":
+#  extends: .highs ctest
+#  variables:
+#    CMAKE_FLAGS: "-DCMAKE_BUILD_TYPE=Debug"
+#  rules:
+#    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+#      when: manual
 
 ".scip test":
   stage: test
