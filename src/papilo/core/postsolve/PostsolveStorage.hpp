@@ -484,7 +484,7 @@ PostsolveStorage<REAL>::storeFixedInfCol(
        currentProblem.getConstraintMatrix().getColumnCoefficients( col );
    const int* row_indices = row_coefficients.getIndices();
 
-   assert( (unsigned int)(top_of_current_postsolve_stack + row_coefficients.getLength()) <= types.size() );
+   assert( (unsigned int)(top_of_current_postsolve_stack + row_coefficients.getLength()) + 1 >= types.size() );
 
    // fixing a column to infinity leads to deleting all rows in which it appears
    // store them if they were not yet redundant (made redundant by another reductions)
