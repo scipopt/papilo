@@ -864,7 +864,7 @@ Postsolve<REAL>::apply_row_bound_change_to_original_solution(
          {
             if( isLhs )
             {
-               if( num.isLT( factor, 0 ) )
+               if( factor < 0 )
                   originalSolution.rowBasisStatus[deleted_row] =
                       VarBasisStatus::ON_UPPER;
                else
@@ -874,7 +874,7 @@ Postsolve<REAL>::apply_row_bound_change_to_original_solution(
             }
             else
             {
-               if( num.isLT( factor, 0 ) )
+               if( factor < 0 )
                   originalSolution.rowBasisStatus[deleted_row] =
                       VarBasisStatus::ON_LOWER;
                else
@@ -897,8 +897,18 @@ Postsolve<REAL>::apply_row_bound_change_to_original_solution(
             }
             else
             {
-               originalSolution.rowBasisStatus[deleted_row] =
-                   originalSolution.rowBasisStatus[row];
+               if( factor > 0)
+               {
+                  originalSolution.rowBasisStatus[ deleted_row ] =
+                        originalSolution.rowBasisStatus[ row ];
+               }
+               else
+               {
+                  if( originalSolution.rowBasisStatus[ row ] == VarBasisStatus::ON_LOWER )
+                     originalSolution.rowBasisStatus[ deleted_row ] = VarBasisStatus::ON_UPPER;
+                  else if( originalSolution.rowBasisStatus[ row ] == VarBasisStatus::ON_UPPER )
+                     originalSolution.rowBasisStatus[ deleted_row ] = VarBasisStatus::ON_LOWER;
+               }
                originalSolution.rowBasisStatus[row] = VarBasisStatus::BASIC;
             }
          }
