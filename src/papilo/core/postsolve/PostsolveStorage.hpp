@@ -490,7 +490,7 @@ PostsolveStorage<REAL>::storeFixedInfCol(
    // store them if they were not yet redundant (made redundant by another reductions)
    // to identify look at the top of the postsolve stack of which transactions where added since the transaction started
    Vec<int> cons_marked_redundant_by_this_transaction{};
-   for( int type = top_of_current_postsolve_stack; (unsigned int) type < types.size() ; type++ )
+   for( unsigned int type = top_of_current_postsolve_stack; type < types.size(); ++type )
    {
       if( types[type] == ReductionType::kRedundantRow )
          cons_marked_redundant_by_this_transaction.push_back( indices[indices.size() - ( types.size() - type )] );
