@@ -505,11 +505,14 @@ PostsolveStorage<REAL>::storeFixedInfCol(
    indices.push_back( (int)cons_marked_redundant_by_this_transaction.size() );
    values.push_back( bound );
 
-   for( int row = 0; row < row_coefficients.getLength(); row++ )
-      if(std::find( cons_marked_redundant_by_this_transaction.begin(),
-                     cons_marked_redundant_by_this_transaction.end(), origrow_mapping[row_indices[row]]) !=
-          cons_marked_redundant_by_this_transaction.end())
+   for( int row = 0; row < row_coefficients.getLength(); ++row )
+   {
+      if( std::find( cons_marked_redundant_by_this_transaction.begin(),
+                     cons_marked_redundant_by_this_transaction.end(),
+                     origrow_mapping[row_indices[row]] )
+         != cons_marked_redundant_by_this_transaction.end() )
          push_back_row( row_indices[row], currentProblem );
+   }
 
    finishStorage();
 }
