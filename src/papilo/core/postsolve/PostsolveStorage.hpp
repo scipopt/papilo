@@ -493,10 +493,7 @@ PostsolveStorage<REAL>::storeFixedInfCol(
    for( int type = top_of_current_postsolve_stack; (unsigned int) type < types.size() ; type++ )
    {
       if( types[type] == ReductionType::kRedundantRow )
-      {
-         int row_index_of_stack = indices[indices.size() - ( types.size() - type )];
-         cons_marked_redundant_by_this_transaction.push_back( row_index_of_stack );
-      }
+         cons_marked_redundant_by_this_transaction.push_back( indices[indices.size() - ( types.size() - type )] );
       else
          break;
    }
