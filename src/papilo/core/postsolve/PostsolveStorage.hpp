@@ -502,7 +502,7 @@ PostsolveStorage<REAL>::storeFixedInfCol(
    }
 
    assert( (int)cons_marked_redundant_by_this_transaction.size() <= row_coefficients.getLength() );
-   indices.push_back( (int)cons_marked_redundant_by_this_transaction.size() );
+   indices.push_back( cons_marked_redundant_by_this_transaction.size() );
    values.push_back( bound );
 
    for( int row = 0; row < row_coefficients.getLength(); ++row )
