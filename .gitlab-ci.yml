@@ -103,7 +103,7 @@ stages:
     - ctest -j --output-on-failure
 
 "highs test":
-  extends: .highs test
+  extends: .highs ctest
   variables:
     CMAKE_FLAGS: "-DCMAKE_BUILD_TYPE=Debug"
   rules:
