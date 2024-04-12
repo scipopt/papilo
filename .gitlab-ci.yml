@@ -1,7 +1,7 @@
 variables:
   SOPLEX_REVISION: release-700
   SCIP_REVISION: v900
-  HIGHS_REVISION: v900
+  HIGHS_REVISION: v1.6.0
   BOOST_VERSION: 1.65.0
 
 stages:
