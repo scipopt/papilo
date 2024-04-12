@@ -12,6 +12,8 @@ stages:
     name: gcc:10
   tags:
     - compile
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
   before_script:
     - apt-get update
     - apt-get install -y cmake libtbb-dev libblas-dev
@@ -64,7 +66,7 @@ stages:
   variables:
     CMAKE_FLAGS: "-DCMAKE_BUILD_TYPE=Debug"
 
-".scip build":
+".scip test":
   stage: test
   image:
     name: gcc:10
@@ -108,7 +110,10 @@ stages:
     - export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
     - ctest -j --output-on-failure
 
-"scip build debug":
-  extends: .scip build
+"scip test":
+  extends: .scip test
   variables:
     CMAKE_FLAGS: "-DCMAKE_BUILD_TYPE=Debug"
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      when: manual
