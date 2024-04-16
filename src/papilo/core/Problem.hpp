@@ -562,7 +562,7 @@ class Problem
       return mappings;
    }
 
-   /// sets the tolerance of the input format
+   ///@Deprecated
    void
    setInputTolerance( REAL inputTolerance_ )
    {
@@ -750,6 +750,7 @@ class Problem
 
  private:
    String name;
+   //@Deprecated
    REAL inputTolerance{ 0 };
    Objective<REAL> objective;
    ProblemFlags problem_flags;

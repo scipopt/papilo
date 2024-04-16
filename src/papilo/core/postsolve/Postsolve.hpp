@@ -872,7 +872,7 @@ Postsolve<REAL>::apply_row_bound_change_to_original_solution(
          {
             if( isLhs )
             {
-               if( num.isLT( factor, 0 ) )
+               if( factor < 0 )
                   originalSolution.rowBasisStatus[deleted_row] =
                       VarBasisStatus::ON_UPPER;
                else
@@ -882,7 +882,7 @@ Postsolve<REAL>::apply_row_bound_change_to_original_solution(
             }
             else
             {
-               if( num.isLT( factor, 0 ) )
+               if( factor < 0 )
                   originalSolution.rowBasisStatus[deleted_row] =
                       VarBasisStatus::ON_LOWER;
                else
@@ -905,8 +905,18 @@ Postsolve<REAL>::apply_row_bound_change_to_original_solution(
             }
             else
             {
-               originalSolution.rowBasisStatus[deleted_row] =
-                   originalSolution.rowBasisStatus[row];
+               if( factor > 0)
+               {
+                  originalSolution.rowBasisStatus[ deleted_row ] =
+                        originalSolution.rowBasisStatus[ row ];
+               }
+               else
+               {
+                  if( originalSolution.rowBasisStatus[ row ] == VarBasisStatus::ON_LOWER )
+                     originalSolution.rowBasisStatus[ deleted_row ] = VarBasisStatus::ON_UPPER;
+                  else if( originalSolution.rowBasisStatus[ row ] == VarBasisStatus::ON_UPPER )
+                     originalSolution.rowBasisStatus[ deleted_row ] = VarBasisStatus::ON_LOWER;
+               }
                originalSolution.rowBasisStatus[row] = VarBasisStatus::BASIC;
             }
          }
@@ -958,9 +968,9 @@ Postsolve<REAL>::apply_var_bound_change_forced_by_column_in_original_solution(
 
    const REAL reduced_costs = originalSolution.reducedCosts[col];
    bool changes_neg_reduced_costs =
-       ! isLowerBound && num.isLT( reduced_costs, 0 );
+       ! isLowerBound && num.isFeasLT( reduced_costs, 0 );
    bool changes_pos_reduced_costs =
-       isLowerBound && num.isGT( reduced_costs, 0 );
+       isLowerBound && num.isFeasGT( reduced_costs, 0 );
 
    int variables_removed_from_basis = 0;
 
@@ -968,7 +978,7 @@ Postsolve<REAL>::apply_var_bound_change_forced_by_column_in_original_solution(
    if( num.isFeasEq( new_value, originalSolution.primal[col] ) &&
        ( changes_neg_reduced_costs || changes_pos_reduced_costs ) )
    {
-      assert( ! num.isZero( reduced_costs ) );
+      assert( ! num.isFeasZero( reduced_costs ) );
       SavedRow<REAL> saved_row{
           num, i, types, start, indices, values, originalSolution.primal };
       int row = saved_row.getRow();

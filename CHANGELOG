@@ -47,12 +47,14 @@ Fixed bugs
 - Propagation: avoid numerical difficulties
 - ParallelColDetection: avoid segfault by handling already fixed variables separately during sorting
 - ParallelColDetection: mark deleted parallel columns as modified to avoid problems when scanning conflicts during the application of the transactions
+- ParallelRowDetection: in dual-postsolving flip bound status of non-basic variable for negative factor
 - SimpleSubstitution: ensure coprime-ness of coefficients for infeasible detection for linear diphantine equations
 
 Miscellaneous
 -------------
 
 - update version of fmt from 6.1.2 to 7.1.3 due to deprecation
+- MPS-Parser parses files numerically exactly if rational arithmetic is used
 
 
 @section RN212 PaPILO 2.2.0
