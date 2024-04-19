@@ -97,14 +97,14 @@ stages:
     - mkdir $CI_PROJECT_DIR/highs-build
     - cd $CI_PROJECT_DIR/highs-build
     - cmake $CI_PROJECT_DIR/highs -DCMAKE_BUILD_TYPE=Release
-    - make -j && make install
+    - make -j
 
     # build and test papilo
     - mkdir -p $CI_PROJECT_DIR/builds/papilo
     - cd $CI_PROJECT_DIR/builds/papilo
     - export CFLAGS="-Werror"
     - export CXXFLAGS="-Werror"
-    - cmake $CI_PROJECT_DIR ${CMAKE_FLAGS} -DBLA_STATIC=ON
+    - cmake $CI_PROJECT_DIR ${CMAKE_FLAGS} -DBLA_STATIC=ON -DHIGHS_DIR=$CI_PROJECT_DIR/highs-build
     - make -j6
     - export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
     - ctest -j --output-on-failure
