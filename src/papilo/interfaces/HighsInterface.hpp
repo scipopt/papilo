@@ -458,7 +458,7 @@ class HighsFactory : public SolverFactory<REAL>
 
       highs->setVerbosity( verbosity );
 
-      return std::move( highs );
+      return highs;
    }
 
    virtual void
