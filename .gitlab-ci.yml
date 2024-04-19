@@ -97,7 +97,7 @@ stages:
     - mkdir $CI_PROJECT_DIR/highs-build
     - cd $CI_PROJECT_DIR/highs-build
     - cmake $CI_PROJECT_DIR/highs -DCMAKE_BUILD_TYPE=Release
-    - make -j
+    - make -j && make install
 
     # build and test papilo
     - mkdir -p $CI_PROJECT_DIR/builds/papilo
