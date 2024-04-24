@@ -49,6 +49,7 @@ Fixed bugs
 - ParallelRowDetection: in dual-postsolving flip bound status of non-basic variable for negative factor
 - Propagation: avoid numerical difficulties
 - SimpleSubstitution: ensure coprime-ness of coefficients for infeasible detection for linear diphantine equations
+- Stuffing: store row to allow correct dual-postsolving
 
 Miscellaneous
 -------------
