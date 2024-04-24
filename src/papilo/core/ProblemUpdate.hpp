@@ -178,7 +178,7 @@ class ProblemUpdate
    fixCol( int col, REAL val, ArgumentType argument = ArgumentType::kPrimal );
 
    PresolveStatus
-   fixColInfinity( int col, REAL val, int top_of_current_postsolve_stack );
+   fixColInfinity( int col, REAL val );
 
    PresolveStatus
    changeLB( int col, REAL val, ArgumentType argument = ArgumentType::kPrimal );
@@ -658,7 +658,7 @@ ProblemUpdate<REAL>::fixCol( int col, REAL val, ArgumentType argument )
 
 template <typename REAL>
 PresolveStatus
-ProblemUpdate<REAL>::fixColInfinity( int col, REAL val, int top_of_current_postsolve_stack )
+ProblemUpdate<REAL>::fixColInfinity( int col, REAL val )
 {
    Vec<REAL>& lbs = problem.getLowerBounds();
    Vec<REAL>& ubs = problem.getUpperBounds();
@@ -679,13 +679,13 @@ ProblemUpdate<REAL>::fixColInfinity( int col, REAL val, int top_of_current_posts
    {
       assert(cflags[col].test( ColFlag::kLbInf ));
       REAL ub = cflags[col].test( ColFlag::kUbInf )? (double) std::numeric_limits<int64_t>::max() :ubs[col];
-      postsolve.storeFixedInfCol( col, -1, ub, problem, top_of_current_postsolve_stack );
+      postsolve.storeFixedInfCol( col, -1, ub, problem );
    }
    if( val == 1 )
    {
       assert(cflags[col].test( ColFlag::kUbInf ));
       REAL lb = cflags[col].test( ColFlag::kLbInf )? (double) std::numeric_limits<int64_t>::max() :lbs[col];
-      postsolve.storeFixedInfCol( col, 1, lb, problem, top_of_current_postsolve_stack );
+      postsolve.storeFixedInfCol( col, 1, lb, problem );
    }
 
    return PresolveStatus::kReduced;
@@ -2094,7 +2094,7 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
    print_detailed( first, last );
 
    certificate_interface->start_transaction();
-   int top_of_current_postsolve_stack = postsolve.types.size();
+
    for( auto iter = first; iter < last; ++iter )
    {
       const auto& reduction = *iter;
@@ -2138,7 +2138,7 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
          }
          case ColReduction::FIXED_INFINITY:
          {
-            if( fixColInfinity( reduction.col, reduction.newval, top_of_current_postsolve_stack ) ==
+            if( fixColInfinity( reduction.col, reduction.newval ) ==
                 PresolveStatus::kInfeasible )
                return ApplyResult::kInfeasible;
             break;

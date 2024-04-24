@@ -167,7 +167,7 @@ class PostsolveStorage
 
    void
    storeFixedInfCol( int col, REAL val, REAL bound,
-                      const Problem<REAL>& currentProblem, int top_of_current_postsolve_stack );
+                      const Problem<REAL>& currentProblem );
 
    void
    storeSubstitution( int col, int row, const Problem<REAL>& currentProblem );
@@ -474,42 +474,21 @@ PostsolveStorage<REAL>::storeFixedCol( int col, REAL val,
 template <typename REAL>
 void
 PostsolveStorage<REAL>::storeFixedInfCol(
-    int col, REAL val, REAL bound, const Problem<REAL>& currentProblem, int top_of_current_postsolve_stack )
+    int col, REAL val, REAL bound, const Problem<REAL>& currentProblem )
 {
    types.push_back( ReductionType::kFixedInfCol );
    indices.push_back( origcol_mapping[col] );
    values.push_back( val );
 
-   const auto& row_coefficients =
+   const auto& coefficients =
        currentProblem.getConstraintMatrix().getColumnCoefficients( col );
-   const int* row_indices = row_coefficients.getIndices();
+   const int* row_indices = coefficients.getIndices();
 
-   assert( (unsigned int)(top_of_current_postsolve_stack + row_coefficients.getLength()) + 1 >= types.size() );
-
-   // fixing a column to infinity leads to deleting all rows in which it appears
-   // store them if they were not yet redundant (made redundant by another reductions)
-   // to identify look at the top of the postsolve stack of which transactions where added since the transaction started
-   Vec<int> cons_marked_redundant_by_this_transaction{};
-   for( unsigned int type = top_of_current_postsolve_stack; type < types.size(); ++type )
-   {
-      if( types[type] == ReductionType::kRedundantRow )
-         cons_marked_redundant_by_this_transaction.push_back( indices[indices.size() - ( types.size() - type )] );
-      else
-         break;
-   }
-
-   assert( cons_marked_redundant_by_this_transaction.size() <= (unsigned int)row_coefficients.getLength() );
-   indices.push_back( cons_marked_redundant_by_this_transaction.size() );
+   indices.push_back( coefficients.getLength() );
    values.push_back( bound );
 
-   for( int row = 0; row < row_coefficients.getLength(); ++row )
-   {
-      if( std::find( cons_marked_redundant_by_this_transaction.begin(),
-                     cons_marked_redundant_by_this_transaction.end(),
-                     origrow_mapping[row_indices[row]] )
-         != cons_marked_redundant_by_this_transaction.end() )
-         push_back_row( row_indices[row], currentProblem );
-   }
+   for( int i = 0; i < coefficients.getLength(); i++ )
+      push_back_row( row_indices[i], currentProblem );
 
    finishStorage();
 }
