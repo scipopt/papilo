@@ -480,8 +480,7 @@ PostsolveStorage<REAL>::storeFixedInfCol(
    indices.push_back( origcol_mapping[col] );
    values.push_back( val );
 
-   const auto& coefficients =
-       currentProblem.getConstraintMatrix().getColumnCoefficients( col );
+   const auto& coefficients = currentProblem.getConstraintMatrix().getColumnCoefficients( col );
    const int* row_indices = coefficients.getIndices();
 
    indices.push_back( coefficients.getLength() );
