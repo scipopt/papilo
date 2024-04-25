@@ -269,7 +269,7 @@ DualFix<REAL>::perform_dual_fix_step(
       {
          TransactionGuard<REAL> guard{ reductions };
          reductions.lockCol( i );
-         for( int row = 0; row < collen; row++)
+         for( int row = 0; row < collen; ++row )
             reductions.lockRow( rowinds[row] );
          reductions.fixColNegativeInfinity( i, collen, rowinds );
          return PresolveStatus::kReduced;
