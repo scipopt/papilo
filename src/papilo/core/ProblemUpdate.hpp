@@ -2138,8 +2138,7 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
          }
          case ColReduction::FIXED_INFINITY:
          {
-            if( fixColInfinity( reduction.col, reduction.newval ) ==
-                PresolveStatus::kInfeasible )
+            if( fixColInfinity( reduction.col, reduction.newval ) == PresolveStatus::kInfeasible )
                return ApplyResult::kInfeasible;
             break;
          }
