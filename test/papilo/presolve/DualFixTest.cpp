@@ -334,7 +334,7 @@ int cause = -1;
       REQUIRE( reductions.getReduction( 1 + i ).newval == 0 );
    }
 
-   for( int i = 0; i < 3; i++ )
+   for( int i = 0; i < 3; ++i )
    {
       REQUIRE( reductions.getReduction( 4 + i ).col ==
                papilo::RowReduction::REDUNDANT );
