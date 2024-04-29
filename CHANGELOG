@@ -1,38 +1,7 @@
 @page RN Release notes for PAPILO NEXT
 
-@section RNNEXT PaPILO NEXT
+@section RN221 PaPILO 2.2.1
 ***************************
-
-Features
---------
-
-
-Performance improvements
-------------------------
-
-
-Interface changes
------------------
-
-### New API functions
-
-
-### Changed parameters
-
-
-### New parameters with default values
-
-
-### Data structures
-
-
-Unit tests
-----------
-
-
-Testing
--------
-
 
 Build system
 ------------
@@ -58,7 +27,7 @@ Miscellaneous
 - MPS-Parser parses files numerically exactly if rational arithmetic is used
 
 
-@section RN212 PaPILO 2.2.0
+@section RN220 PaPILO 2.2.0
 ***************************
 
 Performance improvements
@@ -107,7 +76,7 @@ Miscellaneous
 - make testcluster script extended to verify PaPILO certificates (experimental only)
 
 
-@section RN212 PaPILO 2.1.4
+@section RN214 PaPILO 2.1.4
 ***************************
 
 Fixed bugs
@@ -120,7 +89,7 @@ Fixed bugs
 - Substitutions: if applying substitutions lead to small or huge coefficients leading to numerical troubles in the process
 
 
-@section RN212 PaPILO 2.1.3
+@section RN213 PaPILO 2.1.3
 ***************************
 
 Interface changes
