@@ -329,7 +329,8 @@ int cause = -1;
 
    for( int i = 0; i < 3; i++ )
    {
-      REQUIRE( reductions.getReduction( 1 + i ).col == papilo::RowReduction::LOCKED );
+      REQUIRE( reductions.getReduction( 1 + i ).col ==
+               papilo::RowReduction::LOCKED );
       REQUIRE( reductions.getReduction( 1 + i ).row == i );
       REQUIRE( reductions.getReduction( 1 + i ).newval == 0 );
    }
