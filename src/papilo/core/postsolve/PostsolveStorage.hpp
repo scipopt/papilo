@@ -62,17 +62,18 @@ class PostsolveStorage
    /// problem
    Vec<int> origrow_mapping;
 
-   // set to full for development of postsolve,
-   // later will not be default value
-   // PostsolveType postsolveType = PostsolveType::kFull;
    PostsolveType postsolveType = PostsolveType::kPrimal;
 
-   //types contains the ReductionTypes
+   /**
+    * Data is stored in types, indices and values.
+    * For example Reduction::UB; 0; 4 represents fixing the upperbound of col0 to 4
+    * To reduce the number of vectors and hence speedup there is only one vector and
+    * start indicates by saving the start index where the information of the Reduction type begins
+    * Note:
+    * - row/cols can be modified multiple times and hence indices is not unique.
+    * - indices does not only contain indices. For storing a row it maybe contain if rhs/lhs is infinity or the number of non-zero entries
+    */
    Vec<ReductionType> types;
-
-   // indices/values can be considered as Vec<Vec<int/REAL>>
-   // To reduce the number of vectors and hence speedup there is only one vector and
-   // start indicates by saving the start index where the information of the Reduction type begins
    Vec<int> indices;
    Vec<REAL> values;
 
@@ -479,8 +480,7 @@ PostsolveStorage<REAL>::storeFixedInfCol(
    indices.push_back( origcol_mapping[col] );
    values.push_back( val );
 
-   const auto& coefficients =
-       currentProblem.getConstraintMatrix().getColumnCoefficients( col );
+   const auto& coefficients = currentProblem.getConstraintMatrix().getColumnCoefficients( col );
    const int* row_indices = coefficients.getIndices();
 
    indices.push_back( coefficients.getLength() );

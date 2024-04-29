@@ -2094,6 +2094,7 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
    print_detailed( first, last );
 
    certificate_interface->start_transaction();
+
    for( auto iter = first; iter < last; ++iter )
    {
       const auto& reduction = *iter;
@@ -2137,8 +2138,7 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
          }
          case ColReduction::FIXED_INFINITY:
          {
-            if( fixColInfinity( reduction.col, reduction.newval ) ==
-                PresolveStatus::kInfeasible )
+            if( fixColInfinity( reduction.col, reduction.newval ) == PresolveStatus::kInfeasible )
                return ApplyResult::kInfeasible;
             break;
          }
@@ -3134,6 +3134,7 @@ ProblemUpdate<REAL>::merge_parallel_columns(
    ubs[col1] = 0;
    cflags[col1].unset( ColFlag::kLbUseless, ColFlag::kUbUseless );
    cflags[col1].set( ColFlag::kSubstituted );
+   setColState( col1, State::kModified );
    deleted_cols.push_back( col1 );
 
    // the domains of column 2 are now set column 2 bounds are set to
