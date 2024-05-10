@@ -415,12 +415,7 @@ Presolve<REAL>::apply( Problem<REAL>& problem, bool store_dual_postsolve )
       Vec<RowFlags>& rflags = constraintMatrix.getRowFlags();
       const Vec<int>& rowsize = constraintMatrix.getRowSizes();
 
-      msg.info( "\nstarting presolve of problem {}:\n", problem.getName() );
-      msg.info( "  rows:     {}\n", problem.getNRows() );
-      msg.info( "  columns:  {}\n", problem.getNCols() );
-      msg.info( "  int. columns:  {}\n", problem.getNumIntegralCols() );
-      msg.info( "  cont. columns:  {}\n", problem.getNumContinuousCols() );
-      msg.info( "  nonzeros: {}\n\n", problem.getConstraintMatrix().getNnz() );
+
 
       PresolveResult<REAL> result;
 
@@ -443,10 +438,11 @@ Presolve<REAL>::apply( Problem<REAL>& problem, bool store_dual_postsolve )
          {
             msg.error(
                 "Please turn off the presolvers substitution and sparsify and "
-                "componentsdetection to use dual postsolving\n" );
-            return result;
+                "componentsdetection to use dual-postsolving\n" );
+            msg.error("Continuing without dual-presolve\n");
          }
       }
+
       if(presolveOptions.verification_with_VeriPB &&
           problem.test_problem_type( ProblemFlag::kBinary ))
       {
@@ -454,6 +450,13 @@ Presolve<REAL>::apply( Problem<REAL>& problem, bool store_dual_postsolve )
              new VeriPb<REAL>{ problem, num, presolveOptions } );
          certificate_interface->print_header();
       }
+
+      msg.info( "\nstarting presolve of problem {} with dual-postsolve {}activated\n", problem.getName(), result.postsolve.postsolveType == PostsolveType::kFull?"":"de-" );
+      msg.info( "  rows:     {}\n", problem.getNRows() );
+      msg.info( "  columns:  {}\n", problem.getNCols() );
+      msg.info( "  int. columns:  {}\n", problem.getNumIntegralCols() );
+      msg.info( "  cont. columns:  {}\n", problem.getNumContinuousCols() );
+      msg.info( "  nonzeros: {}\n\n", problem.getConstraintMatrix().getNnz() );
 
       result.status = PresolveStatus::kUnchanged;
 
