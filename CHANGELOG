@@ -1,5 +1,45 @@
 @page RN Release notes for PAPILO NEXT
 
+Features
+--------
+
+
+Performance improvements
+------------------------
+
+
+Interface changes
+-----------------
+
+### New API functions
+
+
+### Changed parameters
+
+
+### New parameters with default values
+
+
+### Data structures
+
+
+Unit tests
+----------
+
+
+Testing
+-------
+
+
+Build system
+------------
+
+Fixed bugs
+----------
+
+Miscellaneous
+-------------
+
 @section RN221 PaPILO 2.2.1
 ***************************
 
