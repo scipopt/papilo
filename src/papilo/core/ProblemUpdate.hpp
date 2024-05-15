@@ -2108,6 +2108,8 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
          matrix_buffer.addEntry( reduction.row, reduction.col,
                                  reduction.newval );
 
+         stats.matrix_modified_directly_by_presolvers = true;
+
          auto& next_reduction = *(iter+1);
          bool next_matrix_change = (iter+1 < last) && next_reduction.row >= 0 && next_reduction.col >= 0;
          certificate_interface->change_matrix_entry(
