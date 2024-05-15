@@ -88,6 +88,7 @@ stages:
     - apt-get update
     - apt-get install -y cmake libtbb-dev libblas-dev
     - apt-get install -y clang clang-tools
+    - sudo apt-get install -y libquadmath0
   script:
     # download, build and install boost
     - wget https://boostorg.jfrog.io/artifactory/main/release/${BOOST_VERSION}/source/boost_$(echo ${BOOST_VERSION} | tr . _).tar.gz
