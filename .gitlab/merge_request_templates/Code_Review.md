@@ -12,11 +12,10 @@
 
 ### Additional Testing (depending on the changes)
 
-* [ ] PaPILO with Boost version 1.78 passes `jenkin rerun boost78`
-* [ ] Supported integrated solver (besides SCIP and SoPlex) pass `jenkins rerun build_with_{gurobi,glop}`). _highs currently disabled_
+* [ ] Supported integrated solver (besides SCIP and SoPlex) pass `jenkins rerun build_with_{gurobi,glop,highs}`). 
 * [ ] PaPILO without TBB is build `jenkins rerun build_no_TBB`
 
 ### Does this merge request introduce an API change? :warning:
 
-* [ ] No, **or** as far as possible, the code ensures backwards compatibility.
-* [ ] No, **or** the `PAPILO_MINOR_VERSION` or `PAPILO_MAJOR_VERSION` is updated **AND** `SCIP` and `SoPlex` can handle these changes.
+* [ ] No, **or** as far as possible, the code ensures backwards compatibility to `SCIP` and `SoPlex`.
+* [ ] No, **or** the `PAPILO_MINOR_VERSION` or `PAPILO_MAJOR_VERSION` is updated.
