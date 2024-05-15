@@ -88,7 +88,14 @@ stages:
     - apt-get install -y cmake libtbb-dev libblas-dev
     - apt-get install -y clang clang-tools
   script:
-    # build and test papilo
+    # download, build and install boost
+    - wget https://boostorg.jfrog.io/artifactory/main/release/${BOOST_VERSION}/source/boost_$(echo ${BOOST_VERSION} | tr . _).tar.gz
+    - tar -xzf boost_$(echo ${BOOST_VERSION} | tr . _).tar.gz
+    - cd boost_$(echo ${BOOST_VERSION} | tr . _)
+    - ./bootstrap.sh --with-libraries=program_options,serialization,iostreams,regex
+    - ./b2 -j6 install
+
+    # scan-build papilo
     - mkdir -p $CI_PROJECT_DIR/builds/papilo
     - cd $CI_PROJECT_DIR/builds/papilo
     - export CFLAGS="-Werror"
