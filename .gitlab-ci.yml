@@ -95,7 +95,7 @@ stages:
     - scan-build -o $CI_PROJECT/clangScanBuildReports make -j6
 
 "scan-build release":
-  extends: .ctest
+  extends: .scan-build
   variables:
     CMAKE_FLAGS: "-DCMAKE_BUILD_TYPE=Debug"
 
