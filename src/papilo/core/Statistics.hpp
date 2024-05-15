@@ -59,7 +59,8 @@ struct Statistics
        : presolvetime( 0.0 ), ntsxapplied( 0 ), ntsxconflicts( 0 ),
          nboundchgs( 0 ), nsidechgs( 0 ), ncoefchgs( 0 ), nrounds( 0 ),
          ndeletedcols( 0 ), ndeletedrows( 0 ),
-         consecutive_rounds_of_only_boundchanges( 0 ), single_matrix_coefficient_changes(0)
+         consecutive_rounds_of_only_boundchanges( 0 ),
+         single_matrix_coefficient_changes( 0 )
    {
    }
 };
