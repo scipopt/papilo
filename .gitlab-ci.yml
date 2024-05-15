@@ -171,6 +171,7 @@ stages:
     - ./b2 -j6 install
 
     # clone, build and install RoundingSAT
+    # TODO: clone not possible user credentials required
     - git clone https://gitlab.com/MIAOresearch/software/roundingsat.got ${CI_PROJECT_DIR}/roundingsat
     - cd ${CI_PROJECT_DIR}/roundingsat && git checkout ${ROUNDINGSAT_REVISION}
     - mkdir $CI_PROJECT_DIR/roundingsat-build
