@@ -86,8 +86,7 @@ stages:
   before_script:
     - apt-get update
     - apt-get install -y cmake libtbb-dev libblas-dev
-    - apt-get install clang
-    - apt-get install clang-tools
+    - apt-get install -y clang clang-tools
   script:
     # build and test papilo
     - mkdir -p $CI_PROJECT_DIR/builds/papilo
