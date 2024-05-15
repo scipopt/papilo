@@ -17,5 +17,5 @@
 
 ### Does this merge request introduce an API change? :warning:
 
-* [ ] No, **or** as far as possible, the code ensures backwards compatibility for `SCIP` and `SoPlex`.
+* [ ] No, **or** as far as possible, the code ensures backwards compatibility to `SCIP` and `SoPlex`.
 * [ ] No, **or** the `PAPILO_MINOR_VERSION` or `PAPILO_MAJOR_VERSION` is updated.
