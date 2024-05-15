@@ -38,7 +38,7 @@ struct Statistics
    int ndeletedcols;
    int ndeletedrows;
    int consecutive_rounds_of_only_boundchanges;
-   /// did presolvers modify the matrix (substitutions are excluded)
+   // variable substitutions and constraint deletions are excluded
    int single_matrix_coefficient_changes;
 
    Statistics( double _presolvetime, int _ntsxapplied, int _ntsxconflicts,
