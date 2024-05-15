@@ -26,7 +26,7 @@ presolve.maxrounds = -1 : maximal number of rounds (-1: unlimited, 0: cleanup)
 
 ### Data structures
 
-Statistics have a integer variable single_matrix_coefficient_changes (does not include deletion of constraints nor substitutions)
+- statistics have an additional integer variable single_matrix_coefficient_changes to count the coefficient changes apart from variable substitutions and constraint deletions
 
 Unit tests
 ----------
