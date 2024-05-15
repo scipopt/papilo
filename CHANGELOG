@@ -22,7 +22,7 @@ Interface changes
 
 ### New parameters with default values
 
-presolve.maxrounds = -1 : maximal number of rounds (-1: unlimited, 0: cleanup)
+- presolve.maxrounds = -1 : maximal number of rounds (-1: unlimited, 0: cleanup)
 
 ### Data structures
 
