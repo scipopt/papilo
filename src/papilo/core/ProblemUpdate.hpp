@@ -2108,7 +2108,7 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
          matrix_buffer.addEntry( reduction.row, reduction.col,
                                  reduction.newval );
 
-         stats.matrix_modified_directly_by_presolvers = true;
+         stats.matrix_modifications_directly_by_presolvers++;
 
          auto& next_reduction = *(iter+1);
          bool next_matrix_change = (iter+1 < last) && next_reduction.row >= 0 && next_reduction.col >= 0;
