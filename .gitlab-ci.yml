@@ -79,7 +79,10 @@ stages:
   stage: test
   image:
     name: gcc:10
-  tags: compile
+  tags:
+    - compile
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
   before_script:
     - apt-get update
     - apt-get install -y cmake libtbb-dev libblas-dev
