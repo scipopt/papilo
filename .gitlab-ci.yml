@@ -1,6 +1,6 @@
 # open TODO:
 # - integration tests
-# - scanbuild
+# - scan-build does not fail though fatal error appear
 # - tests with other MIP solvers (glop, gurobi, roundingsat)
 # - tests on Mac/Windows
 # - enable/fix HiGHS test
@@ -102,7 +102,7 @@ stages:
     - cd $CI_PROJECT_DIR/builds/papilo
     - export CFLAGS="-Werror"
     - export CXXFLAGS="-Werror"
-    - scan-build -o $CI_PROJECT/clangScanBuildReports cmake $CI_PROJECT_DIR ${CMAKE_FLAGS} -DBLA_STATIC=ON -DHIGHS_DIR=$CI_PROJECT_DIR/highs-build
+    - scan-build -o $CI_PROJECT/clangScanBuildReports cmake $CI_PROJECT_DIR ${CMAKE_FLAGS} -DBLA_STATIC=ON
     - scan-build -o $CI_PROJECT/clangScanBuildReports make -j6
 
 "scan-build release":
@@ -183,7 +183,7 @@ stages:
     - cd $CI_PROJECT_DIR/builds/papilo
     - export CFLAGS="-Werror"
     - export CXXFLAGS="-Werror"
-    - cmake $CI_PROJECT_DIR ${CMAKE_FLAGS} -DBLA_STATIC=ON -DHIGHS_DIR=$CI_PROJECT_DIR/roundingsat
+    - cmake $CI_PROJECT_DIR ${CMAKE_FLAGS} -DBLA_STATIC=ON -DROUNDINGSAT_DIR=$CI_PROJECT_DIR/roundingsat
     - make -j6
     - export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
     - ctest -j --output-on-failure
