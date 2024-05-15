@@ -175,7 +175,7 @@ stages:
     - cd ${CI_PROJECT_DIR}/roundingsat && git checkout ${ROUNDINGSAT_REVISION}
     - mkdir $CI_PROJECT_DIR/roundingsat-build
     - cd $CI_PROJECT_DIR/roundingsat-build
-    - cmake $CI_PROJECT_DIR/roundingsat -DCMAKE_BUILD_TYPE=Release
+    - cmake $CI_PROJECT_DIR/roundingsat $CI_PROJECT_DIR  -DCMAKE_BUILD_TYPE=Release
     - make -j && make install
 
     # build and test papilo
