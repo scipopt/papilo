@@ -273,7 +273,10 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
          sumcols.add( -side );
 
          assert( colCoef != 0.0 );
-         originalSolution.primal[col] = ( -sumcols.get() ) / colCoef;
+         if( num.isEq( sumcols.get(), 0 ) )
+            originalSolution.primal[col] = 0;
+         else
+            originalSolution.primal[col] = ( -sumcols.get() ) / colCoef;
          break;
       }
       case ReductionType::kSubstitutedColWithDual:
@@ -714,7 +717,10 @@ Postsolve<REAL>::apply_substituted_column_to_original_solution(
    }
    sumcols.add( -lhs );
    assert( colCoef != 0.0 );
-   originalSolution.primal[col] = ( -sumcols.get() ) / colCoef;
+   if( num.isEq( sumcols.get(), 0) )
+      originalSolution.primal[col] = 0;
+   else
+      originalSolution.primal[col] = ( -sumcols.get() ) / colCoef;
 
    assert( ( originalSolution.type == SolutionType::kPrimalDual &&
              values[first + 3 + row_length] > 0 ) ||

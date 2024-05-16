@@ -37,6 +37,8 @@ Build system
 Fixed bugs
 ----------
 
+- Postsolve: round primal solution values close to zero when substituting
+
 Miscellaneous
 -------------
 
