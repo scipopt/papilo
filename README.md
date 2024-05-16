@@ -16,6 +16,7 @@ Further, a Julia wrapper is available [here](https://github.com/scipopt/PaPILO.j
 *Note:* The original instance of this repository is hosted at  [git.zib.de](https://git.zib.de) and a read-only mirror is
 available at [github.com/scipopt/papilo](https://github.com/scipopt/papilo).
 
+
 # Dependencies
 
 External dependencies that need to be installed by the user are the Intel TBB >= 2020, or TBB from oneAPI runtime library and boost >= 1.65 headers.
@@ -96,6 +97,9 @@ If PaPILO was linked to a suitable solver, then the above can also be achieved b
 papilo solve -f problem.mps -l problem.sol
 ```
 This will presolve the problem, pass the reduced problem to a solver, and subsequently transform back the optimal solution returned by the solver and write it to problem.sol.
+
+> For the format of the solution and basis files please refer to Format.md
+
 
 # Using PaPILO as a library
 
