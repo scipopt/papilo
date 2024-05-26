@@ -13,20 +13,24 @@ Interface changes
 
 ### New API functions
 
-
 ### Changed parameters
 
 
 ### New parameters with default values
 
 - presolve.maxrounds = -1 : maximal number of rounds (-1: unlimited, 0: cleanup)
+- introduce Pre-processor variable PAPILO_API_VERSION to indicate API changes
+
 
 ### Data structures
 
 - statistics have an additional integer variable single_matrix_coefficient_changes to count the coefficient changes apart from variable substitutions and constraint deletions
+- add PostsolveStatus to namespace papilo (PAPILO_API_VERSION 1)
 
 Unit tests
 ----------
+
+- statistics have an additional integer variable single_matrix_coefficient_changes to count the coefficient changes apart from variable substitutions and constraint deletions
 
 
 Testing
