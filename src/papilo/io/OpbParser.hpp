@@ -71,9 +71,6 @@ namespace papilo
 template <typename REAL>
 class OpbParser
 {
-   static_assert(
-       num_traits<typename RealParseType<REAL>::type>::is_floating_point,
-       "the parse type must be a floating point type" );
 
  public:
    static boost::optional<Problem<REAL>>
@@ -112,10 +109,6 @@ class OpbParser
       problem.set_problem_type( ProblemFlag::kInteger );
       problem.set_problem_type( ProblemFlag::kBinary );
 
-      problem.setInputTolerance(
-          REAL{ pow( typename RealParseType<REAL>::type{ 10 },
-                     -std::numeric_limits<
-                         typename RealParseType<REAL>::type>::digits10 ) } );
       return problem;
    }
 

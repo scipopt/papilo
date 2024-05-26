@@ -630,9 +630,9 @@ SingletonStuffing<REAL>::execute( const Problem<REAL>& problem,
             const REAL& coeff = penaltyvars[k].second;
 
             if( coeff < 0 )
-               reductions.fixCol( col, lower_bounds[col] );
+               reductions.fixCol( col, lower_bounds[col], row );
             else
-               reductions.fixCol( col, upper_bounds[col] );
+               reductions.fixCol( col, upper_bounds[col], row );
 
             ++k;
          }

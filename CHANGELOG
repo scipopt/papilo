@@ -1,8 +1,5 @@
 @page RN Release notes for PAPILO NEXT
 
-@section RNNEXT PaPILO NEXT
-***************************
-
 Features
 --------
 
@@ -39,6 +36,20 @@ Testing
 Build system
 ------------
 
+Fixed bugs
+----------
+
+- Postsolve: round primal solution values close to zero when substituting
+
+Miscellaneous
+-------------
+
+@section RN221 PaPILO 2.2.1
+***************************
+
+Build system
+------------
+
 - header only works now as intended (Boost Serialization)
 - add compile option -ffp-contract=off or /fp:precise to enhance reproducibility across different systems
 - disable building convMPS and duplicates
@@ -46,17 +57,22 @@ Build system
 Fixed bugs
 ----------
 
-- Propagation: avoid numerical difficulties
+- DualFix: lock rows if variables are dual-fixed to infinity to avoid conflict when dual-postsolving
 - ParallelColDetection: avoid segfault by handling already fixed variables separately during sorting
+- ParallelColDetection: mark deleted parallel columns as modified to avoid problems when scanning conflicts during the application of the transactions
+- ParallelRowDetection: in dual-postsolving flip bound status of non-basic variable for negative factor
+- Propagation: avoid numerical difficulties
 - SimpleSubstitution: ensure coprime-ness of coefficients for infeasible detection for linear diphantine equations
+- Stuffing: store row to allow correct dual-postsolving
 
 Miscellaneous
 -------------
 
 - update version of fmt from 6.1.2 to 7.1.3 due to deprecation
+- MPS-Parser parses files numerically exactly if rational arithmetic is used
 
 
-@section RN212 PaPILO 2.2.0
+@section RN220 PaPILO 2.2.0
 ***************************
 
 Performance improvements
@@ -105,7 +121,7 @@ Miscellaneous
 - make testcluster script extended to verify PaPILO certificates (experimental only)
 
 
-@section RN212 PaPILO 2.1.4
+@section RN214 PaPILO 2.1.4
 ***************************
 
 Fixed bugs
@@ -118,7 +134,7 @@ Fixed bugs
 - Substitutions: if applying substitutions lead to small or huge coefficients leading to numerical troubles in the process
 
 
-@section RN212 PaPILO 2.1.3
+@section RN213 PaPILO 2.1.3
 ***************************
 
 Interface changes

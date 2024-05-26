@@ -244,6 +244,10 @@ presolve_and_solve(
             return ResultStatus::kError;
          }
       }
+      else
+      {
+         store_dual = true;
+      }
 
       auto result = presolve.apply( problem, store_dual );
 

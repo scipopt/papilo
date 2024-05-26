@@ -139,7 +139,7 @@ load( Archive& ar,
 #else
 #include <boost/multiprecision/cpp_bin_float.hpp>
 #include <boost/multiprecision/cpp_int.hpp>
-#if PAPILO_SERIALIZATION_AVAILABLE
+#ifdef PAPILO_SERIALIZATION_AVAILABLE
 #include <boost/serialization/nvp.hpp>
 #endif
 namespace papilo

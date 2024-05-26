@@ -330,18 +330,26 @@ int cause = -1;
    for( int i = 0; i < 3; i++ )
    {
       REQUIRE( reductions.getReduction( 1 + i ).col ==
-               papilo::RowReduction::REDUNDANT );
+               papilo::RowReduction::LOCKED );
       REQUIRE( reductions.getReduction( 1 + i ).row == i );
       REQUIRE( reductions.getReduction( 1 + i ).newval == 0 );
    }
 
-   REQUIRE( reductions.getReduction( 4 ).col == 0 );
-   REQUIRE( reductions.getReduction( 4 ).row ==
+   for( int i = 0; i < 3; ++i )
+   {
+      REQUIRE( reductions.getReduction( 4 + i ).col ==
+               papilo::RowReduction::REDUNDANT );
+      REQUIRE( reductions.getReduction( 4 + i ).row == i );
+      REQUIRE( reductions.getReduction( 4 + i ).newval == 0 );
+   }
+
+   REQUIRE( reductions.getReduction( 7 ).col == 0 );
+   REQUIRE( reductions.getReduction( 7 ).row ==
             papilo::ColReduction::FIXED_INFINITY );
-   REQUIRE( reductions.getReduction( 4 ).newval == -1 );
+   REQUIRE( reductions.getReduction( 7 ).newval == -1 );
 
    REQUIRE( reductions.getTransactions()[0].start == 0 );
-   REQUIRE( reductions.getTransactions()[0].end == 5 );
+   REQUIRE( reductions.getTransactions()[0].end == 8 );
 }
 
 Problem<double>

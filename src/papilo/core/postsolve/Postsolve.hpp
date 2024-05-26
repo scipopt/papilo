@@ -273,7 +273,10 @@ Postsolve<REAL>::undo( const Solution<REAL>& reducedSolution,
          sumcols.add( -side );
 
          assert( colCoef != 0.0 );
-         originalSolution.primal[col] = ( -sumcols.get() ) / colCoef;
+         if( num.isEq( sumcols.get(), 0 ) )
+            originalSolution.primal[col] = 0;
+         else
+            originalSolution.primal[col] = ( -sumcols.get() ) / colCoef;
          break;
       }
       case ReductionType::kSubstitutedColWithDual:
@@ -569,6 +572,10 @@ Postsolve<REAL>::apply_fix_infinity_variable_in_original_solution(
    bool isNegativeInfinity = values[first] < 0;
    int* row_indices = new int[number_rows];
    REAL* col_coefficents = new REAL[number_rows];
+
+   if( number_rows == 0 && bound == std::numeric_limits<int64_t>::max() )
+      solution = 0;
+
    if( isNegativeInfinity )
    {
       while( row_counter < number_rows )
@@ -658,16 +665,20 @@ Postsolve<REAL>::apply_fix_infinity_variable_in_original_solution(
          sum.add( -col_coefficents[k] * originalSolution.dual[row_indices[k]] );
       originalSolution.reducedCosts[col] = sum.get();
 
+      bool is_bound_infinity = bound == std::numeric_limits<int64_t>::max();
+
       // store the bounds of the variable
       if( isNegativeInfinity )
-         stored_bounds.set_bounds_of_variable( col, true, false, 0, bound );
+         stored_bounds.set_bounds_of_variable( col, true, is_bound_infinity, 0, bound );
       else
-         stored_bounds.set_bounds_of_variable( col, false, true, bound, 0 );
+         stored_bounds.set_bounds_of_variable( col, is_bound_infinity, true, bound, 0 );
 
       // set the basis depending on the status
       if( originalSolution.basisAvailabe )
       {
-         if( num.isEq( solution, bound ) )
+         if( number_rows == 0 && bound == std::numeric_limits<int64_t>::max() )
+            originalSolution.varBasisStatus[col] = VarBasisStatus::ZERO;
+         else if( num.isEq( solution, bound ) )
             if( isNegativeInfinity )
                originalSolution.varBasisStatus[col] = VarBasisStatus::ON_UPPER;
             else
@@ -706,7 +717,10 @@ Postsolve<REAL>::apply_substituted_column_to_original_solution(
    }
    sumcols.add( -lhs );
    assert( colCoef != 0.0 );
-   originalSolution.primal[col] = ( -sumcols.get() ) / colCoef;
+   if( num.isEq( sumcols.get(), 0) )
+      originalSolution.primal[col] = 0;
+   else
+      originalSolution.primal[col] = ( -sumcols.get() ) / colCoef;
 
    assert( ( originalSolution.type == SolutionType::kPrimalDual &&
              values[first + 3 + row_length] > 0 ) ||
@@ -864,7 +878,7 @@ Postsolve<REAL>::apply_row_bound_change_to_original_solution(
          {
             if( isLhs )
             {
-               if( num.isLT( factor, 0 ) )
+               if( factor < 0 )
                   originalSolution.rowBasisStatus[deleted_row] =
                       VarBasisStatus::ON_UPPER;
                else
@@ -874,7 +888,7 @@ Postsolve<REAL>::apply_row_bound_change_to_original_solution(
             }
             else
             {
-               if( num.isLT( factor, 0 ) )
+               if( factor < 0 )
                   originalSolution.rowBasisStatus[deleted_row] =
                       VarBasisStatus::ON_LOWER;
                else
@@ -897,8 +911,18 @@ Postsolve<REAL>::apply_row_bound_change_to_original_solution(
             }
             else
             {
-               originalSolution.rowBasisStatus[deleted_row] =
-                   originalSolution.rowBasisStatus[row];
+               if( factor > 0)
+               {
+                  originalSolution.rowBasisStatus[ deleted_row ] =
+                        originalSolution.rowBasisStatus[ row ];
+               }
+               else
+               {
+                  if( originalSolution.rowBasisStatus[ row ] == VarBasisStatus::ON_LOWER )
+                     originalSolution.rowBasisStatus[ deleted_row ] = VarBasisStatus::ON_UPPER;
+                  else if( originalSolution.rowBasisStatus[ row ] == VarBasisStatus::ON_UPPER )
+                     originalSolution.rowBasisStatus[ deleted_row ] = VarBasisStatus::ON_LOWER;
+               }
                originalSolution.rowBasisStatus[row] = VarBasisStatus::BASIC;
             }
          }
@@ -950,9 +974,9 @@ Postsolve<REAL>::apply_var_bound_change_forced_by_column_in_original_solution(
 
    const REAL reduced_costs = originalSolution.reducedCosts[col];
    bool changes_neg_reduced_costs =
-       ! isLowerBound && num.isLT( reduced_costs, 0 );
+       ! isLowerBound && num.isFeasLT( reduced_costs, 0 );
    bool changes_pos_reduced_costs =
-       isLowerBound && num.isGT( reduced_costs, 0 );
+       isLowerBound && num.isFeasGT( reduced_costs, 0 );
 
    int variables_removed_from_basis = 0;
 
@@ -960,7 +984,7 @@ Postsolve<REAL>::apply_var_bound_change_forced_by_column_in_original_solution(
    if( num.isFeasEq( new_value, originalSolution.primal[col] ) &&
        ( changes_neg_reduced_costs || changes_pos_reduced_costs ) )
    {
-      assert( ! num.isZero( reduced_costs ) );
+      assert( ! num.isFeasZero( reduced_costs ) );
       SavedRow<REAL> saved_row{
           num, i, types, start, indices, values, originalSolution.primal };
       int row = saved_row.getRow();
