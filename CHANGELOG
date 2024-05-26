@@ -13,15 +13,17 @@ Interface changes
 
 ### New API functions
 
-
 ### Changed parameters
 
 
 ### New parameters with default values
 
+- introduce Pre-processor variable PAPILO_API_VERSION to indicate API changes
+
 
 ### Data structures
 
+- add PostsolveStatus to namespace papilo
 
 Unit tests
 ----------
