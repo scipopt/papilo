@@ -49,6 +49,22 @@ class SingletonCols : public PresolveMethod<REAL>
             const ProblemUpdate<REAL>& problemUpdate,
             const Num<REAL>& num, Reductions<REAL>& reductions,
             const Timer& timer, int& reason_of_infeasibility) override;
+
+ private:
+   /**
+       * if substituting a non-implied singleton variable scaling should be applied to the constraint to
+       * avoid numerical difficulties since remaining constraint can be violated by a small margin translating to greater error
+       * in the variable bound.
+       * This scaling affects dual-postsolve in which it is currently not considered and therefore then disabled.
+    */
+   REAL
+   scale_and_shift( bool is_primal, REAL side, REAL var_bound, REAL val )
+   {
+      if( is_primal )
+         return side / abs( val ) - ( val > 0 ? var_bound : -var_bound );
+      return side - var_bound * val;
+   };
+
 };
 
 #ifdef PAPILO_USE_EXTERN_TEMPLATES
@@ -79,6 +95,8 @@ SingletonCols<REAL>::execute( const Problem<REAL>& problem,
    const auto& obj = problem.getObjective().coefficients;
 
    PresolveStatus result = PresolveStatus::kUnchanged;
+
+   bool is_primal = problemUpdate.getPostsolveType() == PostsolveType::kPrimal;
 
    auto handleEquation = [&]( int col, bool lowerboundImplied, bool ubimplied,
                               const REAL& val, int row, bool impliedeq,
@@ -134,61 +152,90 @@ SingletonCols<REAL>::execute( const Problem<REAL>& problem,
             if( num.isLE(upper_bounds[col], 0) && !cflags[col].test( ColFlag::kUbInf ) )
             {
 
+               REAL scaled_lhs = scale_and_shift( is_primal, side, lower_bounds[col], val );
                if( lowerboundImplied )
                   reductions.changeRowLHSInf( row );
-               else if( !num.isZero(lower_bounds[col]) )
-                  reductions.changeRowLHS( row,
-                                           side - lower_bounds[col] * val );
+               else if( (!is_primal && !num.isZero( lower_bounds[col] )) || (is_primal && scaled_lhs != lhs_values[row]) )
+                  reductions.changeRowLHS( row, scaled_lhs );
+               else if ( is_primal && !num.isEq( abs(val), 1 ) )
+                  reductions.changeRowLHS( row, scaled_lhs );
+
+               REAL scaled_rhs = scale_and_shift( is_primal, side, upper_bounds[col], val );
                if( ubimplied )
                   reductions.changeRowRHSInf( row );
-               else if( !num.isZero(upper_bounds[col]) )
-                  reductions.changeRowRHS( row,
-                                           side - upper_bounds[col] * val );
+               else if( (!is_primal && !num.isZero( upper_bounds[col] )) || (is_primal && scaled_rhs != rhs_values[row]) )
+                  reductions.changeRowRHS( row, scaled_rhs );
+               else if ( is_primal && !num.isEq( abs(val), 1 ) )
+                  reductions.changeRowRHS( row, scaled_rhs );
             }
             else
             {
+               REAL scaled_rhs = scale_and_shift( is_primal, side, upper_bounds[col], val );
                if( ubimplied )
                   reductions.changeRowRHSInf( row );
-               else if( !num.isZero(upper_bounds[col]) )
-                  reductions.changeRowRHS( row,
-                                           side - upper_bounds[col] * val );
+               else if( (!is_primal && !num.isZero( upper_bounds[col] )) || (is_primal && scaled_rhs != rhs_values[row]) )
+                  reductions.changeRowRHS( row, scaled_rhs );
+               else if ( is_primal && !num.isEq( abs(val), 1 ) )
+                  reductions.changeRowRHS( row, scaled_rhs );
+
+               REAL scaled_lhs = scale_and_shift( is_primal, side, lower_bounds[col], val );
                if( lowerboundImplied )
                   reductions.changeRowLHSInf( row );
-               else if( !num.isZero(lower_bounds[col]) )
-                  reductions.changeRowLHS( row,
-                                           side - lower_bounds[col] * val );
+               else if( (!is_primal && !num.isZero( lower_bounds[col] )) || (is_primal && scaled_lhs != lhs_values[row]) )
+                  reductions.changeRowLHS( row, scaled_lhs );
+               else if ( is_primal && !num.isEq( abs(val), 1 ) )
+                   reductions.changeRowLHS( row, scaled_lhs );
+               
             }
          }
          else
          {
             if( num.isLE(upper_bounds[col], 0) && !cflags[col].test( ColFlag::kUbInf ) )
             {
+               REAL scaled_rhs = scale_and_shift( is_primal, side, lower_bounds[col], val );
                if( lowerboundImplied )
                   reductions.changeRowRHSInf( row );
-               else if( !num.isZero(lower_bounds[col]))
-                  reductions.changeRowRHS( row,
-                                           side - lower_bounds[col] * val );
+               else if( (!is_primal && !num.isZero( lower_bounds[col] )) || (is_primal && scaled_rhs != rhs_values[row]) )
+                  reductions.changeRowRHS( row, scaled_rhs );
+               else if ( is_primal && !num.isEq( abs(val), 1 ) )
+                  reductions.changeRowRHS( row, scaled_rhs );
 
+               REAL scaled_lhs = scale_and_shift( is_primal, side, upper_bounds[col], val );
                if( ubimplied )
                   reductions.changeRowLHSInf( row );
-               else if( !num.isZero(upper_bounds[col]) )
-                  reductions.changeRowLHS( row,
-                                           side - upper_bounds[col] * val );
+               else if( (!is_primal && !num.isZero( upper_bounds[col] )) || (is_primal && scaled_lhs != lhs_values[row]) )
+                  reductions.changeRowLHS( row, scaled_lhs );
+               else if ( is_primal && !num.isEq( abs(val), 1 ) )
+                  reductions.changeRowLHS( row, scaled_lhs );
             }
             else
             {
+               REAL scaled_lhs = scale_and_shift( is_primal, side, upper_bounds[col], val );
                if( ubimplied )
                   reductions.changeRowLHSInf( row );
-               else if( !num.isZero(upper_bounds[col])  )
-                  reductions.changeRowLHS( row,
-                                           side - upper_bounds[col] * val );
+               else if( (!is_primal && !num.isZero( upper_bounds[col] )) || (is_primal && scaled_lhs != lhs_values[row]) )
+                  reductions.changeRowLHS( row, scaled_lhs );
+               else if ( is_primal && !num.isEq( abs(val), 1 ) )
+                  reductions.changeRowLHS( row, scaled_lhs );
 
+               REAL scaled_rhs = scale_and_shift( is_primal, side, lower_bounds[col], val );
                if( lowerboundImplied )
                   reductions.changeRowRHSInf( row );
+               else if( (!is_primal && !num.isZero( lower_bounds[col] )) || (is_primal && scaled_rhs != rhs_values[row]) )
+                  reductions.changeRowRHS( row, scaled_rhs );
+               else if ( is_primal && !num.isEq( abs(val), 1 ) )
+                  reductions.changeRowRHS( row, scaled_rhs );
+            }
+         }
 
-               else if( !num.isZero(lower_bounds[col]) )
-                  reductions.changeRowRHS( row,
-                                           side - lower_bounds[col] * val );
+         if( !num.isEq( 1, abs( val ) ) && is_primal )
+         {
+            auto rowdata = constMatrix.getRowCoefficients( row );
+            for( int i = 0; i < rowdata.getLength(); i++ )
+            {
+               int col_index = rowdata.getIndices()[i];
+               if( col_index != col )
+                  reductions.changeMatrixEntry( row, col_index, rowdata.getValues()[i] / abs(val) );
             }
          }
       }
