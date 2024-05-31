@@ -169,6 +169,10 @@ class ProblemUpdate
       this->postponeSubstitutions = value;
    }
 
+   PostsolveType getPostsolveType() const
+   {
+      return postsolve.postsolveType;
+   }
 
    void
    update_activity( ActivityChange actChange, int rowid,

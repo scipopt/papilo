@@ -1764,9 +1764,9 @@ class VeriPb : public CertificateInterface<REAL>
          for(int i=0; i<row_data.getLength(); i++)
          {
             int index = row_data.getIndices()[i];
-            if( index == col || stored_objective.coefficients[index]  == -INFINITY )
+            if( index == col || stored_objective.coefficients[index]  == -std::numeric_limits<REAL>::infinity() )
                continue;
-            if(stored_objective.coefficients[index]  == INFINITY)
+            if(stored_objective.coefficients[index]  == std::numeric_limits<REAL>::infinity())
             {
                offset -= row_data.getValues()[i];
                continue;
@@ -1891,9 +1891,9 @@ class VeriPb : public CertificateInterface<REAL>
             for( int i = 0; i < row_data.getLength(); i++ )
             {
                int index = row_data.getIndices()[i];
-               if( index == col || stored_objective.coefficients[index]  == -INFINITY  )
+               if( index == col || stored_objective.coefficients[index]  == -std::numeric_limits<REAL>::infinity()  )
                   continue;
-               if(stored_objective.coefficients[index]  == INFINITY)
+               if(stored_objective.coefficients[index]  == std::numeric_limits<REAL>::infinity())
                {
                   offset -= row_data.getValues()[i];
                   continue;
@@ -2366,9 +2366,9 @@ class VeriPb : public CertificateInterface<REAL>
          }
       for(int i=0; i<equality.getLength(); i++)
       {
-         if( indices[i] == sub_col || stored_objective.coefficients[indices[i]]  == -INFINITY)
+         if( indices[i] == sub_col || stored_objective.coefficients[indices[i]]  == -std::numeric_limits<REAL>::infinity())
             continue;
-         if( stored_objective.coefficients[indices[i]]  == INFINITY )
+         if( stored_objective.coefficients[indices[i]]  == std::numeric_limits<REAL>::infinity() )
          {
             stored_objective.offset -= factor * values[i];
             continue;
