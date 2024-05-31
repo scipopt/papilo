@@ -38,6 +38,7 @@ Fixed bugs
 ----------
 
 - Postsolve: round primal solution values close to zero when substituting
+- VeriPB: encode INFINITY differently tp prevent SIGSEV if executed in Rational
 
 Miscellaneous
 -------------
