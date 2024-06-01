@@ -6,7 +6,7 @@
 # - enable/fix HiGHS test
 
 variables:
-  SOPLEX_REVISION: bugfix-v70
+  SOPLEX_REVISION: bugfix-70
   SCIP_REVISION: master
   BOOST_VERSION: 1.70.0
   HIGHS_REVISION: v1.6.0
@@ -110,7 +110,6 @@ stages:
   variables:
     CMAKE_FLAGS: "-DCMAKE_BUILD_TYPE=Debug"
 
-
 ".soplex integration test":
   stage: test
   image:
@@ -151,7 +150,6 @@ stages:
     CMAKE_FLAGS: "-DCMAKE_BUILD_TYPE=Debug"
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
-
 
 ".scip integration test":
   stage: test
