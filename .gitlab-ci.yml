@@ -307,7 +307,7 @@ stages:
   before_script:
     - apt-get update
     - apt-get install -y cmake libtbb-dev libblas-dev libcriterion-dev
-      sudo apt install -y build-essential lsb-release
+    - apt-get install -y build-essential lsb-release
   script:
     # download, build and install boost
     - wget https://boostorg.jfrog.io/artifactory/main/release/${BOOST_VERSION}/source/boost_$(echo ${BOOST_VERSION} | tr . _).tar.gz
