@@ -384,5 +384,5 @@ stages:
     CMAKE_FLAGS: "-DCMAKE_BUILD_TYPE=Debug"
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
-      when: manual
+      when: never
 
