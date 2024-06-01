@@ -317,7 +317,6 @@ stages:
     - ./b2 -j6 install
 
     # clone, build and install ortools
-    - # clone, build and install scip
     - git clone https://github.com/google/or-tools.git ${CI_PROJECT_DIR}/or-tools
     - cd ${CI_PROJECT_DIR}/or-tools && git checkout ${OR_TOOLS_REVISION}
     - mkdir -p $CI_PROJECT_DIR/or-tools-build
