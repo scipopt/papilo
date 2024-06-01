@@ -192,7 +192,7 @@ stages:
     - cd ${CI_PROJECT_DIR}/scip && git checkout ${SCIP_REVISION}
     - mkdir -p $CI_PROJECT_DIR/scip-build
     - cd $CI_PROJECT_DIR/scip-build
-    - cmake $CI_PROJECT_DIR/scip ${CMAKE_FLAGS} -DPAPILO_DIR=CI_PROJECT_DIR/builds/papilo -DZIMPL=off -DREADLINE=off -DGMP=off -DIPOPT=off
+    - cmake $CI_PROJECT_DIR/scip ${CMAKE_FLAGS} -DPAPILO_DIR=$CI_PROJECT_DIR/builds/papilo -DZIMPL=off -DREADLINE=off -DGMP=off -DIPOPT=off
     - make -j && make install
 
 
@@ -243,7 +243,7 @@ stages:
     - cd ${CI_PROJECT_DIR}/scip && git checkout ${SCIP_REVISION}
     - mkdir -p $CI_PROJECT_DIR/scip-build
     - cd $CI_PROJECT_DIR/scip-build
-    - cmake $CI_PROJECT_DIR/scip ${CMAKE_FLAGS} -DPAPILO_DIR=CI_PROJECT_DIR/builds/papilo -DZIMPL=off -DREADLINE=off -DGMP=off -DIPOPT=off
+    - cmake $CI_PROJECT_DIR/scip ${CMAKE_FLAGS} -DPAPILO_DIR=$CI_PROJECT_DIR/builds/papilo -DZIMPL=off -DREADLINE=off -DGMP=off -DIPOPT=off
     - make -j && make install
 
     #run ctests
