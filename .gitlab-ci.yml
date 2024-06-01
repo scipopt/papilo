@@ -1,15 +1,14 @@
 # open TODO:
-# - integration tests
 # - scan-build does not fail though fatal error appear
-# - tests with other MIP solvers (glop, gurobi, roundingsat)
+# - tests with other MIP solvers (ortools, gurobi, roundingsat)
 # - tests on Mac/Windows
-# - enable/fix HiGHS test
 
 variables:
   SOPLEX_REVISION: bugfix-70
   SCIP_REVISION: master
   BOOST_VERSION: 1.70.0
   HIGHS_REVISION: v1.6.0
+  OR_TOOLS_REVISION: v9.10
   ROUNDINGSAT_REVISION: master
 
 stages:
@@ -293,6 +292,51 @@ stages:
 
 "highs test":
   extends: .highs ctest
+  variables:
+    CMAKE_FLAGS: "-DCMAKE_BUILD_TYPE=Debug"
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      when: manual
+
+".ortools ctest":
+  stage: test
+  image:
+    name: gcc:10
+  tags:
+    - compile
+  before_script:
+    - apt-get update
+    - apt-get install -y cmake libtbb-dev libblas-dev libcriterion-dev
+      sudo apt install -y build-essential lsb-release
+  script:
+    # download, build and install boost
+    - wget https://boostorg.jfrog.io/artifactory/main/release/${BOOST_VERSION}/source/boost_$(echo ${BOOST_VERSION} | tr . _).tar.gz
+    - tar -xzf boost_$(echo ${BOOST_VERSION} | tr . _).tar.gz
+    - cd boost_$(echo ${BOOST_VERSION} | tr . _)
+    - ./bootstrap.sh --with-libraries=program_options,serialization,iostreams,regex
+    - ./b2 -j6 install
+
+    # clone, build and install ortools
+    - # clone, build and install scip
+    - git clone https://github.com/google/or-tools.git ${CI_PROJECT_DIR}/or-tools
+    - cd ${CI_PROJECT_DIR}/or-tools && git checkout ${OR_TOOLS_REVISION}
+    - mkdir -p $CI_PROJECT_DIR/or-tools-build
+    - cd $CI_PROJECT_DIR/or-tools-build
+    - cmake $CI_PROJECT_DIR/or-tools
+    - make -j && make install
+
+    # build and test papilo
+    - mkdir -p $CI_PROJECT_DIR/builds/papilo
+    - cd $CI_PROJECT_DIR/builds/papilo
+    - export CFLAGS="-Werror"
+    - export CXXFLAGS="-Werror"
+    - cmake $CI_PROJECT_DIR ${CMAKE_FLAGS} -DBLA_STATIC=ON -DGLOP=on
+    - make -j6
+    - export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
+    - ctest -j --output-on-failure
+
+"ortools test":
+  extends: .ortools ctest
   variables:
     CMAKE_FLAGS: "-DCMAKE_BUILD_TYPE=Debug"
   rules:
