@@ -6,11 +6,11 @@
 # - enable/fix HiGHS test
 
 variables:
-  SOPLEX_REVISION: release-700
-  SCIP_REVISION: v900
+  SOPLEX_REVISION: bugfix-v70
+  SCIP_REVISION: master
+  BOOST_VERSION: 1.70.0
   HIGHS_REVISION: v1.6.0
   ROUNDINGSAT_REVISION: master
-  BOOST_VERSION: 1.65.0
 
 stages:
   - test
@@ -142,7 +142,7 @@ stages:
     - cd ${CI_PROJECT_DIR}/soplex && git checkout ${SOPLEX_REVISION}
     - mkdir $CI_PROJECT_DIR/soplex-build
     - cd $CI_PROJECT_DIR/soplex-build
-    - cmake $CI_PROJECT_DIR/soplex -DCMAKE_BUILD_TYPE=Release -DPAPILO_DIR=$CI_PROJECT_DIR/builds/papilo
+    - cmake $CI_PROJECT_DIR/soplex -DCMAKE_BUILD_TYPE=Release -DPAPILO_DIR=$CI_PROJECT_DIR/builds/papilo -DPAPILO=on
     - make -j && make install
 
 "soplex integration test":
