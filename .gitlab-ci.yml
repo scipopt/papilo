@@ -146,7 +146,7 @@ stages:
     - make -j && make install
 
 "soplex integration test":
-  extends: .scip ctest
+  extends: .soplex integration test
   variables:
     CMAKE_FLAGS: "-DCMAKE_BUILD_TYPE=Debug"
   rules:
@@ -197,7 +197,7 @@ stages:
 
 
 "scip integration test":
-  extends: .scip ctest
+  extends: .scip integration test
   variables:
     CMAKE_FLAGS: "-DCMAKE_BUILD_TYPE=Debug"
   rules:
