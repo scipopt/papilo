@@ -1,0 +1,242 @@
+# open TODO:
+# - integration tests
+# - scan-build does not fail though fatal error appear
+# - tests with other MIP solvers (glop, gurobi, roundingsat)
+# - tests on Mac/Windows
+# - enable/fix HiGHS test
+
+variables:
+  SOPLEX_REVISION: release-700
+  SCIP_REVISION: v900
+  HIGHS_REVISION: v1.6.0
+  ROUNDINGSAT_REVISION: master
+  BOOST_VERSION: 1.65.0
+
+stages:
+  - test
+
+.ctest:
+  stage: test
+  image:
+    name: gcc:10
+  tags:
+    - compile
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+  before_script:
+    - apt-get update
+    - apt-get install -y cmake libtbb-dev libblas-dev
+
+  script:
+    # download, build and install boost
+    - wget https://boostorg.jfrog.io/artifactory/main/release/${BOOST_VERSION}/source/boost_$(echo ${BOOST_VERSION} | tr . _).tar.gz
+    - tar -xzf boost_$(echo ${BOOST_VERSION} | tr . _).tar.gz
+    - cd boost_$(echo ${BOOST_VERSION} | tr . _)
+    - ./bootstrap.sh --with-libraries=program_options,serialization,iostreams,regex
+    - ./b2 -j6 install
+
+    # clone, build and install soplex
+    - git clone https://github.com/scipopt/soplex.git ${CI_PROJECT_DIR}/soplex
+    - cd ${CI_PROJECT_DIR}/soplex && git checkout ${SOPLEX_REVISION}
+    - mkdir $CI_PROJECT_DIR/soplex-build
+    - cd $CI_PROJECT_DIR/soplex-build
+    - cmake $CI_PROJECT_DIR/soplex -DCMAKE_BUILD_TYPE=Release
+    - make -j && make install
+
+    # clone, build and install scip
+    - git clone https://github.com/scipopt/scip.git ${CI_PROJECT_DIR}/scip
+    - cd ${CI_PROJECT_DIR}/scip && git checkout ${SCIP_REVISION}
+    - mkdir -p $CI_PROJECT_DIR/scip-build
+    - cd $CI_PROJECT_DIR/scip-build
+    - cmake $CI_PROJECT_DIR/scip -DCMAKE_BUILD_TYPE=Release -DZIMPL=off -DREADLINE=off -DGMP=off -DPAPILO=off -DIPOPT=off
+    - make -j && make install
+
+    # build and test papilo
+    - mkdir -p $CI_PROJECT_DIR/builds/papilo
+    - cd $CI_PROJECT_DIR/builds/papilo
+    - export CFLAGS="-Werror"
+    - export CXXFLAGS="-Werror"
+    - cmake $CI_PROJECT_DIR ${CMAKE_FLAGS} -DBLA_STATIC=ON
+    - make -j6
+    - export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
+    - ctest -j --output-on-failure
+
+"ctest release":
+  extends: .ctest
+  variables:
+    CMAKE_FLAGS: "-DCMAKE_BUILD_TYPE=Release"
+
+"ctest release notbb":
+  extends: .ctest
+  variables:
+    CMAKE_FLAGS: "-DCMAKE_BUILD_TYPE=Release -DTBB=off"
+
+"ctest debug":
+  extends: .ctest
+  variables:
+    CMAKE_FLAGS: "-DCMAKE_BUILD_TYPE=Debug"
+
+".scan-build":
+  stage: test
+  image:
+    name: gcc:10
+  tags:
+    - compile
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+  before_script:
+    - apt-get update
+    - apt-get install -y cmake libtbb-dev libblas-dev
+    - apt-get install -y clang clang-tools
+    - apt-get install -y libquadmath0
+  script:
+    # download, build and install boost
+    - wget https://boostorg.jfrog.io/artifactory/main/release/${BOOST_VERSION}/source/boost_$(echo ${BOOST_VERSION} | tr . _).tar.gz
+    - tar -xzf boost_$(echo ${BOOST_VERSION} | tr . _).tar.gz
+    - cd boost_$(echo ${BOOST_VERSION} | tr . _)
+    - ./bootstrap.sh --with-libraries=program_options,serialization,iostreams,regex
+    - ./b2 -j6 install
+
+    # scan-build papilo
+    - mkdir -p $CI_PROJECT_DIR/builds/papilo
+    - cd $CI_PROJECT_DIR/builds/papilo
+    - export CFLAGS="-Werror"
+    - export CXXFLAGS="-Werror"
+    - scan-build -o $CI_PROJECT/clangScanBuildReports cmake $CI_PROJECT_DIR ${CMAKE_FLAGS} -DBLA_STATIC=ON
+    - scan-build -o $CI_PROJECT/clangScanBuildReports make -j6
+
+"scan-build release":
+  extends: .scan-build
+  variables:
+    CMAKE_FLAGS: "-DCMAKE_BUILD_TYPE=Debug"
+
+".highs ctest":
+  stage: test
+  image:
+    name: gcc:10
+  tags:
+    - compile
+  before_script:
+    - apt-get update
+    - apt-get install -y cmake libtbb-dev libblas-dev libcriterion-dev
+  script:
+    # download, build and install boost
+    - wget https://boostorg.jfrog.io/artifactory/main/release/${BOOST_VERSION}/source/boost_$(echo ${BOOST_VERSION} | tr . _).tar.gz
+    - tar -xzf boost_$(echo ${BOOST_VERSION} | tr . _).tar.gz
+    - cd boost_$(echo ${BOOST_VERSION} | tr . _)
+    - ./bootstrap.sh --with-libraries=program_options,serialization,iostreams,regex
+    - ./b2 -j6 install
+
+    # clone, build and install HiGHS
+    - git clone https://github.com/ERGO-Code/HiGHS ${CI_PROJECT_DIR}/highs
+    - cd ${CI_PROJECT_DIR}/highs && git checkout ${HIGHS_REVISION}
+    - mkdir highs-build
+    - cd highs-build
+    - cmake .. -DCMAKE_BUILD_TYPE=Release
+    - make -j
+
+    # build and test papilo
+    - mkdir -p $CI_PROJECT_DIR/builds/papilo
+    - cd $CI_PROJECT_DIR/builds/papilo
+    - export CFLAGS="-Werror"
+    - export CXXFLAGS="-Werror"
+    - cmake $CI_PROJECT_DIR ${CMAKE_FLAGS} -DBLA_STATIC=ON -DHIGHS_DIR=$CI_PROJECT_DIR/highs/
+    - make -j6
+    - export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
+    - ctest -j --output-on-failure
+
+"highs test":
+  extends: .highs ctest
+  variables:
+    CMAKE_FLAGS: "-DCMAKE_BUILD_TYPE=Debug"
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      when: manual
+
+".roundingsat ctest":
+  stage: test
+  image:
+    name: gcc:10
+  tags:
+    - compile
+  before_script:
+    - apt-get update
+    - apt-get install -y cmake libtbb-dev libblas-dev libcriterion-dev
+  script:
+    # download, build and install boost
+    - wget https://boostorg.jfrog.io/artifactory/main/release/${BOOST_VERSION}/source/boost_$(echo ${BOOST_VERSION} | tr . _).tar.gz
+    - tar -xzf boost_$(echo ${BOOST_VERSION} | tr . _).tar.gz
+    - cd boost_$(echo ${BOOST_VERSION} | tr . _)
+    - ./bootstrap.sh --with-libraries=program_options,serialization,iostreams,regex
+    - ./b2 -j6 install
+
+    # clone, build and install RoundingSAT
+    # TODO: clone not possible user credentials required
+    - git clone https://gitlab.com/MIAOresearch/software/roundingsat.got ${CI_PROJECT_DIR}/roundingsat
+    - cd ${CI_PROJECT_DIR}/roundingsat && git checkout ${ROUNDINGSAT_REVISION}
+    - mkdir $CI_PROJECT_DIR/roundingsat-build
+    - cd $CI_PROJECT_DIR/roundingsat-build
+    - cmake $CI_PROJECT_DIR/roundingsat $CI_PROJECT_DIR  -DCMAKE_BUILD_TYPE=Release
+    - make -j && make install
+
+    # build and test papilo
+    - mkdir -p $CI_PROJECT_DIR/builds/papilo
+    - cd $CI_PROJECT_DIR/builds/papilo
+    - export CFLAGS="-Werror"
+    - export CXXFLAGS="-Werror"
+    - cmake $CI_PROJECT_DIR ${CMAKE_FLAGS} -DBLA_STATIC=ON -DROUNDINGSAT_DIR=$CI_PROJECT_DIR/roundingsat
+    - make -j6
+    - export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
+    - ctest -j --output-on-failure
+
+"roundingsat test":
+  extends: .roundingsat ctest
+  variables:
+    CMAKE_FLAGS: "-DCMAKE_BUILD_TYPE=Debug"
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      when: manual
+
+".scip test":
+  stage: test
+  image:
+    name: gcc:10
+  tags:
+    - compile
+  before_script:
+    - apt-get update
+    - apt-get install -y cmake libtbb-dev libblas-dev libcriterion-dev
+  script:
+    # download, build and install boost
+    - wget https://boostorg.jfrog.io/artifactory/main/release/${BOOST_VERSION}/source/boost_$(echo ${BOOST_VERSION} | tr . _).tar.gz
+    - tar -xzf boost_$(echo ${BOOST_VERSION} | tr . _).tar.gz
+    - cd boost_$(echo ${BOOST_VERSION} | tr . _)
+    - ./bootstrap.sh --with-libraries=program_options,serialization,iostreams,regex
+    - ./b2 -j6 install
+
+    # clone, build and install soplex
+    - git clone https://github.com/scipopt/soplex.git ${CI_PROJECT_DIR}/soplex
+    - cd ${CI_PROJECT_DIR}/soplex && git checkout ${SOPLEX_REVISION}
+    - mkdir $CI_PROJECT_DIR/soplex-build
+    - cd $CI_PROJECT_DIR/soplex-build
+    - cmake $CI_PROJECT_DIR/soplex -DCMAKE_BUILD_TYPE=Release
+    - make -j && make install
+
+    # clone, build and install scip
+    - git clone https://github.com/scipopt/scip.git ${CI_PROJECT_DIR}/scip
+    - cd ${CI_PROJECT_DIR}/scip && git checkout ${SCIP_REVISION}
+    - mkdir -p $CI_PROJECT_DIR/scip-build
+    - cd $CI_PROJECT_DIR/scip-build
+    - cmake $CI_PROJECT_DIR/scip ${CMAKE_FLAGS} -DZIMPL=off -DREADLINE=off -DGMP=off -DIPOPT=off
+    - make -j && make install
+    - export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
+    - ctest -j --output-on-failure
+
+"scip test":
+  extends: .scip test
+  variables:
+    CMAKE_FLAGS: "-DCMAKE_BUILD_TYPE=Debug"
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      when: manual
+

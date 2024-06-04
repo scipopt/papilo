@@ -72,6 +72,7 @@ class VeriPb : public CertificateInterface<REAL>
    int status = 0; // 1 = solved, -1 = infeasible -2 = finished;
 
    Objective<REAL> stored_objective;
+   Vec<int> fixed_variables;
 
 
    /// mapping constraint from PaPILO to constraint ids from PaPILO to VeriPb
@@ -132,6 +133,7 @@ class VeriPb : public CertificateInterface<REAL>
       rhs_row_mapping.reserve( _problem.getNRows() );
       lhs_row_mapping.reserve( _problem.getNRows() );
       scale_factor.reserve( _problem.getNRows() );
+      fixed_variables.reserve( _problem.getNCols() );
       stored_objective = Objective<REAL>(_problem.getObjective());
       auto coefficients = stored_objective.coefficients;
 
@@ -421,11 +423,12 @@ class VeriPb : public CertificateInterface<REAL>
       }
 
 #if VERIPB_VERSION == 2
+      assert( stored_objective.coefficients[col] == problem.getObjective().coefficients[col] );
       const auto obj_coeff = cast_to_long(stored_objective.coefficients[col]);
-      assert( obj_coeff == problem.getObjective().coefficients[col] );
       if( obj_coeff != 0)
          proof_out << OBJECTIVE_DIFF << (-obj_coeff ) << " " << names[orig_col] << ";\n";
-      stored_objective.coefficients[col] = -std::numeric_limits<REAL>::infinity();
+      stored_objective.coefficients[col] = 0;
+      fixed_variables[col] = -1;
 #endif
    }
 
@@ -588,7 +591,8 @@ class VeriPb : public CertificateInterface<REAL>
          proof_out << OBJECTIVE_DIFF << (-obj_coeff ) << " " << names[orig_col] << " " << cast_to_long(obj_coeff * val)<< " ;\n";
          stored_objective.offset += obj_coeff * val;
       }
-      stored_objective.coefficients[col] = std::numeric_limits<REAL>::infinity();
+      stored_objective.coefficients[col] = 0;
+      fixed_variables[col] = 1;
 #endif
    }
 
@@ -1764,9 +1768,9 @@ class VeriPb : public CertificateInterface<REAL>
          for(int i=0; i<row_data.getLength(); i++)
          {
             int index = row_data.getIndices()[i];
-            if( index == col || stored_objective.coefficients[index]  == -std::numeric_limits<REAL>::infinity() )
+            if( index == col || fixed_variables[index]  == -1 )
                continue;
-            if(stored_objective.coefficients[index]  == std::numeric_limits<REAL>::infinity())
+            if(fixed_variables[index]  == 1)
             {
                offset -= row_data.getValues()[i];
                continue;
@@ -1891,9 +1895,9 @@ class VeriPb : public CertificateInterface<REAL>
             for( int i = 0; i < row_data.getLength(); i++ )
             {
                int index = row_data.getIndices()[i];
-               if( index == col || stored_objective.coefficients[index]  == -std::numeric_limits<REAL>::infinity()  )
+               if( index == col || fixed_variables[index]  == -1  )
                   continue;
-               if(stored_objective.coefficients[index]  == std::numeric_limits<REAL>::infinity())
+               if(fixed_variables[index]  == 1)
                {
                   offset -= row_data.getValues()[i];
                   continue;
@@ -2274,6 +2278,8 @@ class VeriPb : public CertificateInterface<REAL>
                 count2 += v;
              if( full )
                 stored_objective.coefficients.shrink_to_fit();
+             if( full )
+                fixed_variables.shrink_to_fit();
           },
           [this, &rowmapping, full]()
           {
@@ -2366,9 +2372,9 @@ class VeriPb : public CertificateInterface<REAL>
          }
       for(int i=0; i<equality.getLength(); i++)
       {
-         if( indices[i] == sub_col || stored_objective.coefficients[indices[i]]  == -std::numeric_limits<REAL>::infinity())
+         if( indices[i] == sub_col || fixed_variables[indices[i]]  == -1)
             continue;
-         if( stored_objective.coefficients[indices[i]]  == std::numeric_limits<REAL>::infinity() )
+         if( fixed_variables[indices[i]]  == 1 )
          {
             stored_objective.offset -= factor * values[i];
             continue;
