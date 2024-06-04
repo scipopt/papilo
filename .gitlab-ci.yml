@@ -333,14 +333,14 @@ stages:
 #    - make -j6
 #    - export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
 #    - ctest -j --output-on-failure
-
-"ortools test":
-  extends: .ortools ctest
-  variables:
-    CMAKE_FLAGS: "-DCMAKE_BUILD_TYPE=Debug"
-  rules:
-    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
-      when: manual
+#
+#"ortools test":
+#  extends: .ortools ctest
+#  variables:
+#    CMAKE_FLAGS: "-DCMAKE_BUILD_TYPE=Debug"
+#  rules:
+#    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+#      when: manual
 
 ".roundingsat ctest":
   stage: test
