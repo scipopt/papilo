@@ -23,6 +23,8 @@
 #ifndef _PAPILO_CORE_POSTSOLVE_STATUS_HPP_
 #define _PAPILO_CORE_POSTSOLVE_STATUS_HPP_
 
+namespace papilo
+{
 
 /// possible types of post solving
 enum class PostsolveStatus : int
@@ -30,5 +32,7 @@ enum class PostsolveStatus : int
    kOk = 0,
    kFailed = 1
 };
+
+}
 
 #endif
