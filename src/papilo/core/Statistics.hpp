@@ -44,7 +44,7 @@ struct Statistics
    Statistics( double _presolvetime, int _ntsxapplied, int _ntsxconflicts,
                int _nboundchgs, int _nsidechgs, int _ncoefchgs, int _nrounds,
                int _ndeletedcols, int _ndeletedrows, int _consecutive_rounds_of_only_boundchanges,
-               int _single_matrix_coefficient_changes
+               int _single_matrix_coefficient_changes = 0
                    )
        : presolvetime( _presolvetime ), ntsxapplied( _ntsxapplied ),
          ntsxconflicts( _ntsxconflicts ), nboundchgs( _nboundchgs ),

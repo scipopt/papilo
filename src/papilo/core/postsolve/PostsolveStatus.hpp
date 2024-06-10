@@ -35,4 +35,7 @@ enum class PostsolveStatus : int
 
 }
 
+/// @deprecated Use papilo::PostsolveStatus instead.
+using PostsolveStatus = papilo::PostsolveStatus;
+
 #endif
