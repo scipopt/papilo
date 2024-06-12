@@ -57,7 +57,7 @@ Known issues
 ------------
 
 - SingletonCols: normalize if substituting constraint in the objective (when dual-postsolve is active)
-
+- VeriPB: in Rational mode using infinity to encode fixed variables can lead to wrong calculations
 
 
 @section RN221 PaPILO 2.2.1
