@@ -30,8 +30,6 @@ Interface changes
 Unit tests
 ----------
 
-- statistics have an additional integer variable single_matrix_coefficient_changes to count the coefficient changes apart from variable substitutions and constraint deletions
-
 
 Testing
 -------
