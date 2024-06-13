@@ -2435,7 +2435,6 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
                                        ColFlag::kSubstituted ) )
                {
                   assert( cflags[col2].test( ColFlag::kFixed ) );
-                  assert( abs(factor) < std::numeric_limits<REAL>::infinity() );
                   if( fixCol( col1, factor * lbs[col2] + offset ) ==
                       PresolveStatus::kInfeasible )
                      return ApplyResult::kInfeasible;
