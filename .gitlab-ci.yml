@@ -361,12 +361,11 @@ stages:
 
     # clone, build and install RoundingSAT
     # TODO: clone not possible user credentials required
-    - wget https://gitlab.com/MIAOresearch/software/roundingsat/-/archive/master/roundingsat-master.tar.gz
-    - tar -xf roundingsat-master.tar.gz
-    - cd ${CI_PROJECT_DIR}/roundingsat-master
+    - git clone https://gitlab.com/MIAOresearch/software/roundingsat.got ${CI_PROJECT_DIR}/roundingsat
+    - cd ${CI_PROJECT_DIR}/roundingsat && git checkout ${ROUNDINGSAT_REVISION}
     - mkdir $CI_PROJECT_DIR/roundingsat-build
     - cd $CI_PROJECT_DIR/roundingsat-build
-    - cmake $CI_PROJECT_DIR/roundingsat-master $CI_PROJECT_DIR  -DCMAKE_BUILD_TYPE=Release
+    - cmake $CI_PROJECT_DIR/roundingsat $CI_PROJECT_DIR  -DCMAKE_BUILD_TYPE=Release
     - make -j && make install
 
     # build and test papilo
@@ -374,7 +373,7 @@ stages:
     - cd $CI_PROJECT_DIR/builds/papilo
     - export CFLAGS="-Werror"
     - export CXXFLAGS="-Werror"
-    - cmake $CI_PROJECT_DIR ${CMAKE_FLAGS} -DBLA_STATIC=ON -DROUNDINGSAT_DIR=$CI_PROJECT_DIR/roundingsat-master
+    - cmake $CI_PROJECT_DIR ${CMAKE_FLAGS} -DBLA_STATIC=ON -DROUNDINGSAT_DIR=$CI_PROJECT_DIR/roundingsat
     - make -j6
     - export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
     - ctest -j --output-on-failure
