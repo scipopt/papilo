@@ -41,6 +41,8 @@ Fixed bugs
 - SingletonCols: normalize if substituting constraint in the objective (primal-postsolve only)
 - Postsolve: round primal solution values close to zero when substituting
 - VeriPB: encode fixed variables in a separate array to avoid problems with casting infinity
+- VeriPB: cast numbers to long to avoid printing .00000 in the certificate
+- VeriPB: when updating the rhs/lhs of parallel cols distinguish the case factor greater or less than 0
 
 
 Miscellaneous
