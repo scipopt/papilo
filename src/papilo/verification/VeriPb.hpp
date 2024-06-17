@@ -2671,7 +2671,7 @@ class VeriPb : public CertificateInterface<REAL>
             counter_cand_row++;
          }
          else if( col_index_eq > col_index_cand )
-            col_index_cand++;
+            counter_cand_row++;
          else
          {
             REAL val_eq = data_eq_row.getValues()[counter_eq_row];

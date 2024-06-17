@@ -2251,13 +2251,15 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
                REAL val = 0;
                for( int i = 0; i< row_length; i++ )
                   if( rowvec.getIndices()[i] == col )
+                  {
                      val = rowvec.getValues()[i];
+                     break;
+                  }
                assert(val != 0);
                if( !num.isIntegral(problem.getObjective().coefficients[col]/val) )
                {
                   msg.detailed( "canceled due to integrality\n" );
-                  msg.info( "canceled due to integrality\n" );
-//                  return ApplyResult::kRejected;
+                  return ApplyResult::kRejected;
                }
             }
 
