@@ -40,7 +40,7 @@ Fixed bugs
 
 - SingletonCols: normalize if substituting constraint in the objective (primal-postsolve only)
 - Postsolve: round primal solution values close to zero when substituting
-- VeriPB: encode INFINITY differently tp prevent SIGSEV if executed in Rational
+- VeriPB: encode fixed variables in a separate array to avoid problems with casting infinity
 
 
 Miscellaneous
@@ -51,7 +51,6 @@ Known issues
 ------------
 
 - SingletonCols: normalize if substituting constraint in the objective (when dual-postsolve is active)
-
 
 
 @section RN221 PaPILO 2.2.1
