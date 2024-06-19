@@ -1,55 +1,26 @@
-@page RN Release notes for PAPILO NEXT
+@page RN23 Release notes for PAPILO 2.3
 
-Features
---------
-
-
-Performance improvements
-------------------------
-
+@section RN230 PaPILO 2.3.0
 
 Interface changes
 -----------------
 
-### New API functions
-
-### Changed parameters
-
-
 ### New parameters with default values
 
 - presolve.maxrounds = -1 : maximal number of rounds (-1: unlimited, 0: cleanup)
-- introduce Pre-processor variable PAPILO_API_VERSION to indicate API changes
-
+- introduced preprocessor variable PAPILO_API_VERSION to indicate API changes
 
 ### Data structures
 
 - statistics have an additional integer variable single_matrix_coefficient_changes to count the coefficient changes apart from variable substitutions and constraint deletions
 - add PostsolveStatus to namespace papilo (PAPILO_API_VERSION 1)
 
-Unit tests
-----------
-
-
-Testing
--------
-
-
-Build system
-------------
-
-
 Fixed bugs
 ----------
 
 - SingletonCols: normalize if substituting constraint in the objective (primal-postsolve only)
 - Postsolve: round primal solution values close to zero when substituting
-- VeriPB: encode INFINITY differently tp prevent SIGSEV if executed in Rational
-
-
-Miscellaneous
--------------
-
+- VeriPB: encode INFINITY differently to prevent SIGSEGV if executed in Rational
 
 Known issues
 ------------
@@ -57,6 +28,7 @@ Known issues
 - SingletonCols: normalize if substituting constraint in the objective (when dual-postsolve is active)
 - VeriPB: in Rational mode using infinity to encode fixed variables can lead to wrong calculations
 
+@page RN22 Release notes for PAPILO 2.2
 
 @section RN221 PaPILO 2.2.1
 ***************************
@@ -134,6 +106,8 @@ Miscellaneous
 - make testcluster script extended by SKIP_PRESOLVE and SOLVE_EXECUTABLE to solve the reduced/original problem
 - make testcluster script extended to verify PaPILO certificates (experimental only)
 
+
+@page RN21 Release notes for PAPILO 2.1
 
 @section RN214 PaPILO 2.1.4
 ***************************
