@@ -931,7 +931,7 @@ class VeriPb : public CertificateInterface<REAL>
                lhs_row_mapping[row] = next_constraint_id;
 #if VERIPB_VERSION >= 2
                int used_row = lhs_row_mapping[parallel_row];
-               proof_out << " ; ; begin\n\t" << POL << used_row << " " << factor <<" * -1 + \nend -1";
+               proof_out << " ; ; begin\n\t" << POL << used_row << " " << cast_to_long(factor) <<" * -1 + \nend -1";
                next_constraint_id += 2;
 #endif
                proof_out << "\n";
@@ -971,15 +971,19 @@ class VeriPb : public CertificateInterface<REAL>
             if( lhs_row_mapping[row] != UNKNOWN && is_not_integral )
             {
                next_constraint_id++;
-               proof_out << POL << lhs_row_mapping[row] << " " << abs( factor_parallel ) << " *\n";
+               proof_out << POL << lhs_row_mapping[row] << " " << cast_to_long( abs( factor_parallel ) ) << " *\n";
 #if VERIPB_VERSION >= 2
                proof_out << MOVE_LAST_CONS_TO_CORE;
 #endif
                proof_out << DELETE_CONS << lhs_row_mapping[row];
                lhs_row_mapping[row] = next_constraint_id;
 #if VERIPB_VERSION >= 2
-               int used_row = rhs_row_mapping[parallel_row];
-               proof_out << " ; ; begin\n\t" << POL << used_row << " " << (int) abs( factor ) <<" * -1 + \nend -1";
+               int used_row;
+               if( factor > 0)
+                  used_row = rhs_row_mapping[row];
+               else
+                  used_row = lhs_row_mapping[row];
+               proof_out << " ; ; begin\n\t" << POL << used_row  <<" -1 " << cast_to_long (abs( factor_parallel )) << " * + \nend -1";
                next_constraint_id += 2;
 #endif
                proof_out << "\n";
@@ -1064,8 +1068,7 @@ class VeriPb : public CertificateInterface<REAL>
                factor = factor_row;
             }
             next_constraint_id++;
-            proof_out << POL << lhs_row_mapping[parallel_row] << " " << (int) factor
-                      << " *\n";
+            proof_out << POL << lhs_row_mapping[parallel_row] << " " << (int) factor << " *\n";
             proof_out << MOVE_LAST_CONS_TO_CORE;
             if( lhs_row_mapping[row] != UNKNOWN )
             {
@@ -1075,7 +1078,7 @@ class VeriPb : public CertificateInterface<REAL>
                int used_row = lhs_row_mapping[parallel_row];
                if( factor < 0)
                   used_row = rhs_row_mapping[parallel_row];
-               proof_out << " ; ; begin\n" << POL << used_row << " " << factor <<" * -1 + \nend -1";
+               proof_out << " ; ; begin\n" << POL << used_row << " " << cast_to_long( factor ) <<" * -1 + \nend -1";
                next_constraint_id += 2;
 #endif
                proof_out << "\n";
@@ -1097,7 +1100,7 @@ class VeriPb : public CertificateInterface<REAL>
                int used_row = rhs_row_mapping[parallel_row];
                if( factor < 0)
                   used_row = lhs_row_mapping[parallel_row];
-               proof_out << " ; ; begin\n" << POL << used_row << " " << factor <<" * -1 + \nend -1";
+               proof_out << " ; ; begin\n" << POL << used_row << " " << cast_to_long( factor ) <<" * -1 + \nend -1";
                next_constraint_id += 2;
 #endif
                proof_out << "\n";
@@ -2668,7 +2671,7 @@ class VeriPb : public CertificateInterface<REAL>
             counter_cand_row++;
          }
          else if( col_index_eq > col_index_cand )
-            col_index_cand++;
+            counter_cand_row++;
          else
          {
             REAL val_eq = data_eq_row.getValues()[counter_eq_row];

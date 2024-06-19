@@ -2245,6 +2245,24 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
             const int row_length = rowvec.getLength();
             const int* row_indices = rowvec.getIndices();
 
+
+            if( presolveOptions.verification_with_VeriPB )
+            {
+               REAL val = 0;
+               for( int i = 0; i< row_length; i++ )
+                  if( rowvec.getIndices()[i] == col )
+                  {
+                     val = rowvec.getValues()[i];
+                     break;
+                  }
+               assert(val != 0);
+               if( !num.isIntegral(problem.getObjective().coefficients[col]/val) )
+               {
+                  msg.detailed( "canceled due to integrality\n" );
+                  return ApplyResult::kRejected;
+               }
+            }
+
             postsolve.storeSubstitution( col, equalityrow, problem );
 
             assert(
