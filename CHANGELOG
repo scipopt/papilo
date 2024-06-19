@@ -21,6 +21,11 @@ Fixed bugs
 - SingletonCols: normalize if substituting constraint in the objective (primal-postsolve only)
 - Postsolve: round primal solution values close to zero when substituting
 - VeriPB: encode INFINITY differently to prevent SIGSEGV if executed in Rational
+- VeriPB: encode fixed variables in a separate array to avoid problems with casting infinity
+- VeriPB: ensure that numbers are casted to integers when writing in the certificates
+- VeriPB: when updating the rhs/lhs of parallel cols distinguish the case factor greater or less than 0
+- VeriPB: fix bug leading to endless loop when reconstructing the fractional numbers during sparsify
+
 
 Known issues
 ------------
