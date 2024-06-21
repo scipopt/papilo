@@ -1,3 +1,53 @@
+@page RN Release notes for PAPILO NEXT
+
+Features
+--------
+
+
+Performance improvements
+------------------------
+
+
+Interface changes
+-----------------
+
+### New API functions
+
+### Changed parameters
+
+
+### New parameters with default values
+
+
+### Data structures
+
+
+Unit tests
+----------
+
+
+Testing
+-------
+
+
+Build system
+------------
+
+
+Fixed bugs
+----------
+
+
+Miscellaneous
+-------------
+
+
+Known issues
+------------
+
+- SingletonCols: normalize if substituting constraint in the objective (when dual-postsolve is active)
+
+
 @page RN23 Release notes for PAPILO 2.3
 
 @section RN230 PaPILO 2.3.0
