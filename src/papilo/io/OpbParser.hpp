@@ -154,9 +154,6 @@ class OpbParser
 
    void
    add_binary_variable( const String& name );
-
-   boost::multiprecision::cpp_int
-   read_number( const std::string& s );
 };
 
 template <typename REAL>
@@ -274,11 +271,18 @@ OpbParser<REAL>::parseRows( std::string& line )
          return ParseKey::kFail;
       }
 
+   std::pair<bool, REAL> result;
    for( int counter = 0; counter < (long long)tokens.size(); counter += 2 )
    {
       std::string s_coef = tokens[counter];
       std::string var = tokens[counter + 1];
-      REAL coef = REAL{ read_number( s_coef )};
+      result = parse_number<REAL>( s_coef );
+      if( result.first )
+      {
+         fmt::print("Could not parse coefficient {}\n", s_coef);
+         return ParseKey::kFail;
+      }
+      REAL coef = result.second;
       bool negated = false;
       if( !var.empty() && var[0] == '~' )
       {
@@ -305,7 +309,13 @@ OpbParser<REAL>::parseRows( std::string& line )
       entries.push_back( { nRows, col, negated ? -coef : coef } );
       nnz++;
    }
-   REAL rhs = REAL{read_number(line_rhs)};
+   result = parse_number<REAL>( line_rhs );
+   if( result.first )
+   {
+      fmt::print("Could not parse side {}\n", line_rhs);
+      return ParseKey::kFail;
+   }
+   REAL rhs = result.second;
 
    if( row_type[row_type.size() - 1] == BoundType::kEq )
    {
@@ -356,12 +366,18 @@ OpbParser<REAL>::parseObjective( std::string& line )
       }
 
    REAL offset = 0;
+   std::pair<bool, REAL> result;
    for( int counter = 0; counter < (long long)tokens.size(); counter += 2 )
    {
       std::string s_coef = tokens[counter];
       std::string var = tokens[counter + 1];
-      boost::multiprecision::cpp_int anInt = read_number( s_coef );
-      REAL coef = REAL{ anInt };
+      result = parse_number<REAL>( s_coef );
+      if( result.first )
+      {
+         fmt::print("Could not parse objective {}\n", s_coef);
+         return ParseKey::kFail;
+      }
+      REAL coef = result.second;
       bool negated = false;
       if( !var.empty() && var[0] == '~' )
       {
@@ -399,22 +415,6 @@ OpbParser<REAL>::add_binary_variable( const String& name )
    flags.unset( ColFlag::kLbInf );
    col_flags.push_back( flags );
    nCols++;
-}
-
-template <typename REAL>
-boost::multiprecision::cpp_int
-OpbParser<REAL>::read_number(const std::string& s) {
-   boost::multiprecision::cpp_int answer = 0;
-   bool negated = false;
-   for (char c : s) {
-      if ('0' <= c && c <= '9') {
-         answer *= 10;
-         answer += c - '0';
-      }
-      else if (c == '-')
-         negated = true;
-   }
-   return negated ? -answer : answer;
 }
 
 } // namespace papilo

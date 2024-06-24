@@ -74,6 +74,7 @@ using Quad = boost::multiprecision::cpp_bin_float_quad;
 // serialization
 namespace papilo
 {
+using Integral = boost::multiprecision::mpz_int;
 using Rational = boost::multiprecision::mpq_rational;
 using Float100 = boost::multiprecision::mpf_float_100;
 using Float500 = boost::multiprecision::mpf_float_500;
@@ -144,6 +145,7 @@ load( Archive& ar,
 #endif
 namespace papilo
 {
+using Integral = boost::multiprecision::cpp_int;
 using Rational = boost::multiprecision::cpp_rational;
 using Float100 =
     boost::multiprecision::number<boost::multiprecision::cpp_bin_float<100>>;
