@@ -37,6 +37,7 @@ Build system
 Fixed bugs
 ----------
 
+- handle floating point numbers precisely in parsers and writers
 
 Miscellaneous
 -------------

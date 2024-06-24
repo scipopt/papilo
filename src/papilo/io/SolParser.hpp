@@ -24,8 +24,8 @@
 #define _PAPILO_IO_SOL_PARSER_HPP_
 
 #include "papilo/misc/Hash.hpp"
-#include "papilo/misc/String.hpp"
 #include "papilo/misc/Vec.hpp"
+#include "papilo/misc/Num.hpp"
 #include <algorithm>
 #include <boost/algorithm/string.hpp>
 #include <fstream>
@@ -76,6 +76,7 @@ struct SolParser
 
       skip_header( colnames, in, strline );
 
+      std::pair<bool, REAL> result;
       do
       {
          auto tokens = split( strline.c_str() );
@@ -85,7 +86,13 @@ struct SolParser
          if( it != nameToCol.end() )
          {
             assert( tokens.size() > 1 );
-            solution_vector[it->second] = std::stod( tokens[1] );
+            result = parse_number<REAL>( tokens[1] );
+            if( result.first )
+            {
+               fmt::print("Could not parse solution {}\n", tokens[1]);
+               return false;
+            }
+            solution_vector[it->second] = result.second;
          }
          else if(strline.empty()){}
          else

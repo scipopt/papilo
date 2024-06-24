@@ -192,12 +192,6 @@ class MpsParser
 
    ParseKey
    parseBounds( boost::iostreams::filtering_istream& file );
-
-   std::pair<bool, REAL>
-   read_number( const std::string& s );
-
-   REAL
-   pow( int base, int exponent );
 };
 
 template <typename REAL>
@@ -377,10 +371,10 @@ MpsParser<REAL>::parseCols( boost::iostreams::filtering_istream& file,
    };
 
    auto addtuple = [&rowidx, &ncols, this]( std::string sval) {
-      auto result = read_number(sval);
-      if(result.first)
+      auto result = parse_number<REAL>( sval );
+      if( result.first )
       {
-         fmt::print("could not parse {}\n", sval);
+         fmt::print("Could not parse coefficient {}\n", sval);
          exit(0);
       }
       REAL coeff = result.second;
@@ -532,10 +526,10 @@ MpsParser<REAL>::parseRanges( boost::iostreams::filtering_istream& file )
       };
 
       auto addrange = [&rowidx, this]( std::string sval ) {
-         auto result = read_number(sval);
-         if(result.first)
+         auto result = parse_number<REAL>( sval );
+         if( result.first )
          {
-            fmt::print("could not parse {}\n", sval);
+            fmt::print("Could not parse range {}\n", sval);
             exit(0);
          }
          REAL val = result.second;
@@ -622,10 +616,10 @@ MpsParser<REAL>::parseRhs( boost::iostreams::filtering_istream& file )
       };
 
       auto addrhs = [&rowidx, this]( std::string sval ) {
-         auto result = read_number(sval);
-         if(result.first)
+         auto result = parse_number<REAL>( sval );
+         if( result.first )
          {
-            fmt::print("could not parse {}\n", sval);
+            fmt::print("Could not parse side {}\n", sval);
             exit(0);
          }
          REAL val = result.second;
@@ -793,10 +787,10 @@ MpsParser<REAL>::parseBounds( boost::iostreams::filtering_istream& file )
       auto adddomains = [&ub_is_default, &lb_is_default, &colidx, &islb, &isub, &isintegral, this]
           ( std::string sval )
       {
-         auto result = read_number(sval);
-         if(result.first)
+         auto result = parse_number<REAL>( sval );
+         if( result.first )
          {
-            fmt::print("could not parse {}\n", sval);
+            fmt::print("Could not parse bound {}\n", sval);
             exit(0);
          }
          REAL val = result.second;
@@ -865,78 +859,6 @@ MpsParser<REAL>::parseFile( const std::string& filename )
 
    return parse( in );
 }
-
-template <typename REAL>
-REAL
-MpsParser<REAL>::pow(int base, int exponent)
-{
-   REAL answer = 1;
-   for(int i = 0; i < exponent; i++)
-      answer *= 10;
-   return answer;
-}
-
-template <typename REAL>
-std::pair<bool, REAL>
-MpsParser<REAL>::read_number(const std::string& s) {
-   bool failed = false;
-   REAL answer = 0;
-   bool negated = false;
-   bool dot = false;
-   bool exponent = false;
-   int exp = 0;
-   bool exp_negated = false;
-   int digits_after_dot = 0;
-   for (char c : s) {
-      if ('0' <= c && c <= '9') {
-         int digit = c - '0';
-         if(exponent)
-         {
-            exp *= 10;
-            exp += digit;
-         }
-         else if( !dot )
-         {
-            answer *= 10;
-            answer += digit;
-         }
-         else
-         {
-            digits_after_dot++;
-            answer += digit /  pow( 10, digits_after_dot );
-         }
-      }
-      else if (c == '.' && !dot)
-      {
-         assert(digits_after_dot == 0);
-         assert(!exponent);
-         dot = true;
-      }
-      else if (c == '-' && ((exponent && !exp_negated) || !negated))
-      {
-         if(exponent)
-            exp_negated = true;
-         else
-            negated = true;
-      }
-      else if (c == '+' && ((exponent && !exp_negated) || !negated))
-      {
-      }
-      else if( ( c == 'E' || c == 'e' ) && !exponent )
-         exponent = true;
-      else
-      {
-         failed = true;
-         assert(false);
-      }
-   }
-   if( !exp_negated )
-      answer *= pow( 10,  exp );
-   else
-      answer /= pow( 10,  exp );
-   return {failed, negated ? -answer : answer};
-}
-
 
 template <typename REAL>
 bool

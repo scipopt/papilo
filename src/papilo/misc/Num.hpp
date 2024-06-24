@@ -23,11 +23,8 @@
 #ifndef _PAPILO_MISC_NUM_HPP_
 #define _PAPILO_MISC_NUM_HPP_
 
-#include "papilo/misc/ParameterSet.hpp"
-#include <cmath>
-#include <cstdint>
-#include <limits>
-#include <utility>
+#include "papilo/misc/MultiPrecision.hpp"
+#include "papilo/misc/String.hpp"
 
 namespace papilo
 {
@@ -191,7 +188,6 @@ class Num
    {
       return floor( REAL( x + REAL( 0.5 ) ) );
    }
-
 
    template <typename R1, typename R2>
    bool
@@ -529,9 +525,9 @@ class Num
    void
    serialize( Archive& ar, const unsigned int version )
    {
-      ar& epsilon;
-      ar& feastol;
-      ar& hugeval;
+      ar & epsilon;
+      ar & feastol;
+      ar & hugeval;
    }
 
  private:
@@ -539,6 +535,138 @@ class Num
    REAL feastol;
    REAL hugeval;
 };
+
+/**
+ *
+ * @tparam REAL
+ * @param s
+ * @return boolean value is true if parsing failed, if not REAL contains the parsed number
+ */
+template <typename REAL>
+std::pair<bool, REAL>
+parse_number( const String& s )
+{
+   REAL number;
+   try
+   {
+      std::stringstream string_stream;
+      string_stream.str( s );
+      string_stream >> number;
+      if( !string_stream.fail() && string_stream.eof() )
+         return { false, number };
+   }
+   catch( boost::wrapexcept<std::runtime_error> const& ) { }
+
+   bool failure = false;
+   Integral numerator = 0;
+   Integral denominator = 1;
+   unsigned exponent = 0;
+   unsigned phase = 0;
+   bool num_negated = false;
+   bool exp_negated = false;
+   for( char c : s )
+   {
+      int digit = '0' <= c && c <= '9' ? c - '0' : -1;
+      switch( phase )
+      {
+      // number sign
+      case 0:
+         ++phase;
+         if( c == '+' )
+            break;
+         else if( c == '-' )
+         {
+            num_negated = true;
+            break;
+         }
+      // before delimiter
+      case 1:
+         if( digit >= 0 )
+         {
+            numerator *= 10;
+            numerator += digit;
+            break;
+         }
+         else
+         {
+            ++phase;
+            if( num_traits<REAL>::is_rational )
+            {
+               if( c == '.' )
+                  break;
+            }
+            else
+            {
+               if( c == '/' )
+               {
+                  denominator = 0;
+                  break;
+               }
+            }
+         }
+      // after delimiter
+      case 2:
+         if( digit >= 0 )
+         {
+            if( num_traits<REAL>::is_rational )
+            {
+               numerator *= 10;
+               numerator += digit;
+               denominator *= 10;
+            }
+            else
+            {
+               denominator *= 10;
+               denominator += digit;
+            }
+         }
+         else if( ( c == 'e' || c == 'E' ) && num_traits<REAL>::is_rational )
+            ++phase;
+         else
+            failure = true;
+         break;
+      // exponent sign
+      case 3:
+         ++phase;
+         if( c == '+' )
+            break;
+         else if( c == '-' )
+         {
+            exp_negated = true;
+            break;
+         }
+      // exponent value
+      case 4:
+         if( digit >= 0 )
+         {
+            exponent *= 10;
+            exponent += digit;
+            break;
+         }
+         else
+            ++phase;
+      default:
+         failure = true;
+         break;
+      }
+      if( failure )
+         break;
+   }
+   if( denominator == 0 )
+   {
+      denominator = 1;
+      failure = true;
+   }
+   if( num_negated )
+      numerator *= -1;
+   if( exp_negated )
+      denominator *= boost::multiprecision::pow( Integral( 10 ), exponent );
+   else
+      numerator *= boost::multiprecision::pow( Integral( 10 ), exponent );
+   number = REAL( Rational( numerator, denominator ) );
+
+   return { failure, number };
+}
 
 } // namespace papilo
 
