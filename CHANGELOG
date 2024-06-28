@@ -37,6 +37,8 @@ Build system
 Fixed bugs
 ----------
 
+- Input and Output: handle floating point numbers precisely in parsers and writers
+- SimpleSubstitution: correct feasibility tolerances on euclidean coprime substitutions
 
 Miscellaneous
 -------------
