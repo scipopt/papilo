@@ -249,12 +249,12 @@ SimpleSubstitution<REAL>::perform_simple_substitution_step(
          auto res = boost::integer::extended_euclidean(
             static_cast<int64_t>( abs( normalized_vals[stay] ) ),
             static_cast<int64_t>( abs( normalized_vals[subst] ) ) );
-         REAL normalized_rhs = rhs / res.gcd;
-         if( !num.isIntegral( normalized_rhs ) )
+         REAL normalized_rhs = num.round( rhs / res.gcd );
+         // problem is infeasible if gcd (i.e. res.gcd) is not divisor of rhs
+         if( !num.isFeasEq( rhs, normalized_rhs * res.gcd ) )
             return PresolveStatus::kInfeasible;
          else
          {
-            normalized_rhs = num.round(normalized_rhs);
             normalized_vals[0] /= res.gcd;
             normalized_vals[1] /= res.gcd;
             res.gcd = 1;
@@ -265,9 +265,8 @@ SimpleSubstitution<REAL>::perform_simple_substitution_step(
                return PresolveStatus::kUnchanged;
          }
       }
-      // problem is infeasible if gcd (i.e. vals[subst]) is not divisor of
-      // rhs
-      if( !num.isFeasIntegral( rhs / vals[subst] ) )
+      // problem is infeasible if gcd (i.e. vals[subst]) is not divisor of rhs
+      if( !num.isFeasEq( rhs, num.round( rhs / vals[subst] ) * vals[subst] ) )
          return PresolveStatus::kInfeasible;
    }
    else
@@ -356,15 +355,14 @@ SimpleSubstitution<REAL>::isConstraintsFeasibleWithGivenBounds(
     const Vec<REAL>& upper_bounds, const REAL* vals, REAL rhs, int subst,
     int stay, const boost::integer::euclidean_result_t<int64_t>& res ) const
 {
-   assert( num.isIntegral( vals[0] ) );
-   assert( num.isIntegral( vals[1] ) );
-   assert( res.gcd == 1 );
+   assert( num.round( vals[0] ) == vals[0] );
+   assert( num.round( vals[1] ) == vals[1] );
+   assert( num.round( rhs ) == rhs );
+   assert( abs( vals[stay] ) * res.x + abs( vals[subst] ) * res.y == 1 );
    REAL s = res.x * (vals[stay] < 0 ? -rhs : rhs);
    REAL t = res.y * (vals[subst] < 0 ? -rhs : rhs);
-
-   assert( num.isIntegral( s ) );
-   assert( num.isIntegral( t ) );
-   assert( s * vals[stay] + t * vals[subst] == rhs );
+   assert( num.round( s ) == s );
+   assert( num.round( t ) == t );
 
    REAL ub_sol_y = ( t - lower_bounds[subst] ) / vals[stay];
    REAL lb_sol_y = ( t - upper_bounds[subst] ) / vals[stay];
