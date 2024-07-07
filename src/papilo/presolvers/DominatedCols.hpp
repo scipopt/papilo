@@ -346,9 +346,9 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
    };
 
 #ifdef PAPILO_TBB
-   tbb::concurrent_vector<DomcolReduction> domcolreductions;
+   Vec<tbb::concurrent_vector<DomcolReduction>> domcolreductions(ncols);
 #else
-   Vec<DomcolReduction> domcolreductions;
+   Vec<Vec<DomcolReduction>> domcolreductions(ncols);
 #endif
 
 #ifdef PAPILO_TBB
@@ -480,7 +480,7 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
 
                 if( to_lb || to_ub )
                 {
-                   domcolreductions.push_back( DomcolReduction{
+                   domcolreductions[col].push_back( DomcolReduction{
                        unbounded_col, col, implrowlock,
                        to_lb ? BoundChange::kUpper : BoundChange::kLower } );
                 }
@@ -490,59 +490,70 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
        } );
 #endif
 
-   if( !domcolreductions.empty() )
+   for( int i = 0; i < (int) domcolreductions.size(); ++i )
    {
-      result = PresolveStatus::kReduced;
-      // sort reductions by the smallest col in the domcol reduction, so that
-      // parallel ones are adjacent
-      pdqsort( domcolreductions.begin(), domcolreductions.end(),
-               []( const DomcolReduction& a, const DomcolReduction& b ) {
-                  bool smaller_first_a = a.col1 < a.col2;
-                  bool smaller_first_b = b.col1 < b.col2;
-                  int smaller_row_a = smaller_first_a ? a.col1 : a.col2;
-                  int smaller_row_b = smaller_first_b ? b.col1 : b.col2;
-                  if( smaller_row_a != smaller_row_b )
-                     return smaller_row_a < smaller_row_b;
-                  return ( ( !smaller_first_a ) ? a.col1 : a.col2 ) <
-                         ( ( !smaller_first_b ) ? b.col1 : b.col2 );
+      pdqsort( domcolreductions[i].begin(), domcolreductions[i].end(),
+               []( const DomcolReduction& a, const DomcolReduction& b )
+               {
+                  return a.implrowlock < b.implrowlock || ( a.implrowlock == b.implrowlock && a.col1 < b.col1 );
                } );
+   }
 
-      for( int i = 0; i < (int) domcolreductions.size(); i++ )
-      {
-         // check if consecutively reductions are equal
-         const DomcolReduction dr = domcolreductions[i];
-         if( i < (int) domcolreductions.size() - 1 )
-         {
-            const DomcolReduction dr2 = domcolreductions[i + 1];
-            if( dr2.col1 == dr.col2 && dr.col1 == dr2.col2 )
+   pdqsort( domcolreductions.begin(), domcolreductions.end(),
+#ifdef PAPILO_TBB
+            []( const tbb::concurrent_vector<DomcolReduction>& a, const tbb::concurrent_vector<DomcolReduction>& b )
+#else
+            []( const Vec<DomcolReduction>& a, const Vec<DomcolReduction>& b )
+#endif
             {
-               if( dr.implrowlock > 0 )
-                  continue;
-               i++;
+               if( a.empty() )
+                  return false;
+               if( b.empty() )
+                  return true;
+               return a[0].implrowlock < b[0].implrowlock || ( a[0].implrowlock == b[0].implrowlock && a[0].col2 < b[0].col2 );
+            } );
+
+   Vec<int> domcol(ncols, -1);
+
+   for( int i = 0; i < (int) domcolreductions.size(); ++i )
+   {
+      if( domcolreductions[i].empty() )
+         break;
+      int source = domcolreductions[i][0].col2;
+      int j = 0;
+      while( j < (int) domcolreductions[i].size() )
+      {
+         int sink = domcolreductions[i][j].col1;
+         int k = sink;
+         while( k != -1 && k != source )
+            k = domcol[k];
+         if( k == -1 )
+         {
+            result = PresolveStatus::kReduced;
+            domcol[source] = sink;
+            TransactionGuard<REAL> tg{ reductions };
+            reductions.lockCol( domcolreductions[i][j].col1 );
+            reductions.lockColBounds( domcolreductions[i][j].col1 );
+            reductions.lockCol( domcolreductions[i][j].col2 );
+            reductions.lockColBounds( domcolreductions[i][j].col2 );
+            if( domcolreductions[i][j].implrowlock >= 0 )
+               reductions.lockRow( domcolreductions[i][j].implrowlock );
+            // upper bound is changed to lower bound
+            if( domcolreductions[i][j].boundchg == BoundChange::kUpper )
+            {
+               reductions.dominance(domcolreductions[i][j].col2, domcolreductions[i][j].col1);
+               reductions.fixCol( domcolreductions[i][j].col2, lbValues[domcolreductions[i][j].col2], domcolreductions[i][j].implrowlock );
             }
+            // lower bound is changed to upper bound
+            else
+            {
+               reductions.dominance(domcolreductions[i][j].col1, domcolreductions[i][j].col2);
+               reductions.fixCol( domcolreductions[i][j].col2, ubValues[domcolreductions[i][j].col2], domcolreductions[i][j].implrowlock );
+            }
+            break;
          }
-         TransactionGuard<REAL> tg{ reductions };
-         reductions.lockCol( dr.col1 );
-         reductions.lockColBounds( dr.col1 );
-         reductions.lockCol( dr.col2 );
-         reductions.lockColBounds( dr.col2 );
-         if( dr.implrowlock >= 0 )
-            reductions.lockRow( dr.implrowlock );
-
-         // upper bound is changed to lower bound
-         if( dr.boundchg == BoundChange::kUpper )
-         {
-            reductions.dominance(dr.col2, dr.col1);
-            reductions.fixCol( dr.col2, lbValues[dr.col2], dr.implrowlock );
-         }
-         // lower bound is changed to upper bound
-         else
-         {
-            reductions.dominance(dr.col1, dr.col2);
-            reductions.fixCol( dr.col2, ubValues[dr.col2], dr.implrowlock );
-         }
+         ++j;
       }
-
    }
 
    return result;
