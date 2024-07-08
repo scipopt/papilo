@@ -247,6 +247,7 @@ OpbParser<REAL>::parseRows( std::string& line )
       row_flags.push_back( flags );
       line_rhs = line.substr( pos + 2 );
    }
+   boost::trim(line_rhs);
    line = line.substr(0, pos);
    assert( pos != std::string::npos );
    assert( line.find( "<=" ) == std::string::npos );
