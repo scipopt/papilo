@@ -555,7 +555,7 @@ parse_number( const String& s )
       if( !string_stream.fail() && string_stream.eof() )
          return { false, number };
    }
-   catch( boost::wrapexcept<std::runtime_error> const& ) { }
+   catch( ... ) { }
 
    bool failure = false;
    Integral numerator = 0;
