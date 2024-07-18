@@ -54,6 +54,7 @@
 #include "tbb/blocked_range.h"
 #include "tbb/combinable.h"
 #include "tbb/concurrent_hash_map.h"
+#include "tbb/concurrent_unordered_set.h"
 #include "tbb/concurrent_vector.h"
 #include "tbb/parallel_for.h"
 #include "tbb/parallel_invoke.h"
