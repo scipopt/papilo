@@ -141,6 +141,7 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
    Vec<int> unboundedcols;
 #endif
    unboundedcols.reserve( ncols );
+   Vec<int> domcolsequence(ncols);
 
    // compute signatures and implied bound information of all columns in
    // parallel
@@ -148,9 +149,9 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
    tbb::parallel_for(
        tbb::blocked_range<int>( 0, ncols ),
        [&]( const tbb::blocked_range<int>& r ) {
-          for( int col = r.begin(); col != r.end(); ++col )
+          for( int col = r.begin(); col < r.end(); ++col )
 #else
-   for( int col = 0; col != ncols; ++col )
+   for( int col = 0; col < ncols; ++col )
 #endif
           {
              auto colvec = consMatrix.getColumnCoefficients( col );
@@ -158,12 +159,14 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
              const int* colrows = colvec.getIndices();
              const REAL* colvals = colvec.getValues();
 
+             domcolsequence[col] = col;
+
              if( cflags[col].test( ColFlag::kLbInf ) )
                 colinfo[col].lbfree = -1;
              if( cflags[col].test( ColFlag::kUbInf ) )
                 colinfo[col].ubfree = -1;
 
-             for( int j = 0; j != collen; ++j )
+             for( int j = 0; j < collen; ++j )
              {
                 int row = colrows[j];
                 if( colinfo[col].ubfree == 0 &&
@@ -345,12 +348,19 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
       return true;
    };
 
+   auto cmp = []( const DomcolReduction& a, const DomcolReduction& b )
+              {
+                 return a.implrowlock < b.implrowlock || ( a.implrowlock == b.implrowlock
+                       && ( ( a.boundchg == BoundChange::kUpper && b.boundchg == BoundChange::kLower ) || ( a.boundchg == b.boundchg
+                       && a.col1 < b.col1 ) ) );
+              };
+
 #ifdef PAPILO_TBB
    tbb::concurrent_unordered_set<int> bestrows;
-   Vec<tbb::concurrent_vector<DomcolReduction>> domcolreductions(ncols);
+   Vec<tbb::concurrent_set<DomcolReduction, decltype(cmp)>> domcolreductions(ncols, tbb::concurrent_set<DomcolReduction, decltype(cmp)>(cmp));
 #else
    HashSet<int> bestrows;
-   Vec<Vec<DomcolReduction>> domcolreductions(ncols);
+   Vec<Set<DomcolReduction, decltype(cmp)>> domcolreductions(ncols, Set<DomcolReduction, decltype(cmp)>(cmp));
 #endif
 
 #ifdef PAPILO_TBB
@@ -358,7 +368,7 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
    tbb::parallel_for(
        tbb::blocked_range<int>( 0, (int) unboundedcols.size() ),
        [&]( const tbb::blocked_range<int>& r ) {
-          for( int k = r.begin(); k != r.end(); ++k )
+          for( int k = r.begin(); k < r.end(); ++k )
 #else
    for( int k = 0; k < (int) unboundedcols.size(); ++k )
 #endif
@@ -491,7 +501,7 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
 
                    if( to_lb || to_ub )
                    {
-                      domcolreductions[col].push_back( DomcolReduction{ unbounded_col, col,
+                      domcolreductions[col].emplace( DomcolReduction{ unbounded_col, col,
                             implrowlock, to_lb ? BoundChange::kUpper : BoundChange::kLower } );
                       success = true;
                    }
@@ -505,42 +515,29 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
        } );
 #endif
 
-   for( int i = 0; i < (int) domcolreductions.size(); ++i )
-   {
-      pdqsort( domcolreductions[i].begin(), domcolreductions[i].end(),
-               []( const DomcolReduction& a, const DomcolReduction& b )
-               {
-                  return a.implrowlock < b.implrowlock || ( a.implrowlock == b.implrowlock && a.col1 < b.col1 );
-               } );
-   }
-
-   pdqsort( domcolreductions.begin(), domcolreductions.end(),
-#ifdef PAPILO_TBB
-            []( const tbb::concurrent_vector<DomcolReduction>& a, const tbb::concurrent_vector<DomcolReduction>& b )
-#else
-            []( const Vec<DomcolReduction>& a, const Vec<DomcolReduction>& b )
-#endif
+   pdqsort( domcolsequence.begin(), domcolsequence.end(),
+            [&]( const int& a, const int& b )
             {
-               if( a.empty() )
+               if( domcolreductions[a].empty() )
                   return false;
-               if( b.empty() )
+               if( domcolreductions[b].empty() )
                   return true;
-               return a[0].implrowlock < b[0].implrowlock || ( a[0].implrowlock == b[0].implrowlock && a[0].col2 < b[0].col2 );
+               return domcolreductions[a].cbegin()->implrowlock < domcolreductions[b].cbegin()->implrowlock || ( domcolreductions[a].cbegin()->implrowlock == domcolreductions[b].cbegin()->implrowlock
+                     && ( ( domcolreductions[a].cbegin()->boundchg == BoundChange::kUpper && domcolreductions[b].cbegin()->boundchg == BoundChange::kLower ) || ( domcolreductions[a].cbegin()->boundchg == domcolreductions[b].cbegin()->boundchg
+                     && domcolreductions[a].cbegin()->col2 < domcolreductions[b].cbegin()->col2 ) ) );
             } );
 
    Vec<int> domcol(ncols, -1);
 
-   for( int i = 0; i < (int) domcolreductions.size(); ++i )
+   for( int i = 0; i < (int) domcolsequence.size(); ++i )
    {
-      if( domcolreductions[i].empty() )
+      if( domcolreductions[domcolsequence[i]].empty() )
          break;
-      int source = domcolreductions[i][0].col2;
-      int j = 0;
-      while( j < (int) domcolreductions[i].size() )
+      auto domcoliter = domcolreductions[domcolsequence[i]].begin();
+      int source = domcoliter->col2;
+      while( domcoliter != domcolreductions[domcolsequence[i]].end() )
       {
-         int sink = domcolreductions[i][j].col1;
-         if( j >= 1 && sink == domcolreductions[i][j-1].col1 )
-            continue;
+         int sink = domcoliter->col1;
          int k = sink;
          while( k != -1 && k != source )
             k = domcol[k];
@@ -549,27 +546,27 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
             result = PresolveStatus::kReduced;
             domcol[source] = sink;
             TransactionGuard<REAL> tg{ reductions };
-            reductions.lockCol( domcolreductions[i][j].col1 );
-            reductions.lockColBounds( domcolreductions[i][j].col1 );
-            reductions.lockCol( domcolreductions[i][j].col2 );
-            reductions.lockColBounds( domcolreductions[i][j].col2 );
-            if( domcolreductions[i][j].implrowlock >= 0 )
-               reductions.lockRow( domcolreductions[i][j].implrowlock );
+            reductions.lockCol( domcoliter->col1 );
+            reductions.lockColBounds( domcoliter->col1 );
+            reductions.lockCol( domcoliter->col2 );
+            reductions.lockColBounds( domcoliter->col2 );
+            if( domcoliter->implrowlock >= 0 )
+               reductions.lockRow( domcoliter->implrowlock );
             // upper bound is changed to lower bound
-            if( domcolreductions[i][j].boundchg == BoundChange::kUpper )
+            if( domcoliter->boundchg == BoundChange::kUpper )
             {
-               reductions.dominance(domcolreductions[i][j].col2, domcolreductions[i][j].col1);
-               reductions.fixCol( domcolreductions[i][j].col2, lbValues[domcolreductions[i][j].col2], domcolreductions[i][j].implrowlock );
+               reductions.dominance(domcoliter->col2, domcoliter->col1);
+               reductions.fixCol( domcoliter->col2, lbValues[domcoliter->col2], domcoliter->implrowlock );
             }
             // lower bound is changed to upper bound
             else
             {
-               reductions.dominance(domcolreductions[i][j].col1, domcolreductions[i][j].col2);
-               reductions.fixCol( domcolreductions[i][j].col2, ubValues[domcolreductions[i][j].col2], domcolreductions[i][j].implrowlock );
+               reductions.dominance(domcoliter->col1, domcoliter->col2);
+               reductions.fixCol( domcoliter->col2, ubValues[domcoliter->col2], domcoliter->implrowlock );
             }
             break;
          }
-         ++j;
+         ++domcoliter;
       }
    }
 
