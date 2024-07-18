@@ -373,27 +373,17 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
              int collen = colvec.getLength();
              const int* colrows = colvec.getIndices();
              const REAL* colvals = colvec.getValues();
-             int scale;
-
-             // determine the scale of the dominating column depending on
-             // whether the upper or lower bound is free
-             if( ubfree != 0 )
-                scale = 1;
-             else
-                scale = -1;
-
              int bestrow = -1;
              int bestrowsize = std::numeric_limits<int>::max();
 
              for( int i = 0; i < collen; ++i )
              {
                 int row = colrows[i];
-                if( ( !rflags[row].test( RowFlag::kLhsInf, RowFlag::kRhsInf ) ||
-                      ( !rflags[row].test( RowFlag::kRhsInf ) &&
-                        scale * colvals[i] > 0 ) ||
-                      ( !rflags[row].test( RowFlag::kLhsInf ) &&
-                        scale * colvals[i] < 0 ) ) &&
-                    rowsize[row] < bestrowsize )
+                if( rowsize[row] < bestrowsize
+                      && ( ( ubfree != 0
+                      && !rflags[row].test( colvals[i] > 0 ? RowFlag::kRhsInf : RowFlag::kLhsInf ) )
+                      || ( lbfree != 0
+                      && !rflags[row].test( colvals[i] > 0 ? RowFlag::kLhsInf : RowFlag::kRhsInf ) ) ) )
                 {
                    bestrow = row;
                    bestrowsize = rowsize[row];
@@ -421,21 +411,26 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
                 collen = colvec.getLength();
                 colrows = colvec.getIndices();
                 colvals = colvec.getValues();
+                int scale;
                 int implrowlock;
 
                 // determine the scale of the dominating column depending on
                 // whether the upper or lower bound is free, and remember which
                 // row needs to be locked to protect the implied bound (if any)
-                if( ubfree != 0 )
+                if( ubfree != 0
+                      && !rflags[bestrow].test( rowvals[i] > 0 ? RowFlag::kRhsInf : RowFlag::kLhsInf ) )
                 {
                    scale = 1;
                    implrowlock = ubfree > 0 ? colrows[ubfree - 1] : -1;
                 }
-                else
+                else if( lbfree != 0
+                      && !rflags[bestrow].test( rowvals[i] > 0 ? RowFlag::kLhsInf : RowFlag::kRhsInf ) )
                 {
                    scale = -1;
                    implrowlock = lbfree > 0 ? colrows[lbfree - 1] : -1;
                 }
+                else
+                   continue;
 
                 REAL scaled_val = rowvals[i] * scale;
                 REAL scaled_obj = obj[unbounded_col] * scale;
