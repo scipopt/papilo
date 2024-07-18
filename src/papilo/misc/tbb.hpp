@@ -55,7 +55,6 @@
 #include "tbb/combinable.h"
 #include "tbb/concurrent_vector.h"
 #include "tbb/concurrent_unordered_set.h"
-#include "tbb/concurrent_set.h"
 #include "tbb/parallel_for.h"
 #include "tbb/parallel_invoke.h"
 #include "tbb/partitioner.h"

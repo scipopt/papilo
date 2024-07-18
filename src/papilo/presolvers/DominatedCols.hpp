@@ -95,6 +95,20 @@ class DominatedCols : public PresolveMethod<REAL>
       int col2;
       int implrowlock;
       BoundChange boundchg;
+
+      inline bool operator==( const DomcolReduction& y ) const
+      {
+         return implrowlock == y.implrowlock && boundchg == y.boundchg
+               && col1 == y.col1 && col2 == y.col2;
+      }
+
+      struct hash
+      {
+         inline size_t operator()( const DomcolReduction& x ) const
+         {
+            return x.col1;
+         }
+      };
    };
 
    PresolveStatus
@@ -141,7 +155,6 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
    Vec<int> unboundedcols;
 #endif
    unboundedcols.reserve( ncols );
-   Vec<int> domcolsequence(ncols);
 
    // compute signatures and implied bound information of all columns in
    // parallel
@@ -158,8 +171,6 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
              int collen = colvec.getLength();
              const int* colrows = colvec.getIndices();
              const REAL* colvals = colvec.getValues();
-
-             domcolsequence[col] = col;
 
              if( cflags[col].test( ColFlag::kLbInf ) )
                 colinfo[col].lbfree = -1;
@@ -348,19 +359,12 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
       return true;
    };
 
-   auto cmp = []( const DomcolReduction& a, const DomcolReduction& b )
-              {
-                 return a.implrowlock < b.implrowlock || ( a.implrowlock == b.implrowlock
-                       && ( ( a.boundchg == BoundChange::kUpper && b.boundchg == BoundChange::kLower ) || ( a.boundchg == b.boundchg
-                       && a.col1 < b.col1 ) ) );
-              };
-
 #ifdef PAPILO_TBB
    tbb::concurrent_unordered_set<int> bestrows;
-   Vec<tbb::concurrent_set<DomcolReduction, decltype(cmp)>> domcolreductions(ncols, tbb::concurrent_set<DomcolReduction, decltype(cmp)>(cmp));
+   Vec<tbb::concurrent_unordered_set<DomcolReduction, typename DomcolReduction::hash>> domcolreductionsets(ncols);
 #else
    HashSet<int> bestrows;
-   Vec<Set<DomcolReduction, decltype(cmp)>> domcolreductions(ncols, Set<DomcolReduction, decltype(cmp)>(cmp));
+   Vec<HashSet<DomcolReduction, typename DomcolReduction::hash>> domcolreductionsets(ncols);
 #endif
 
 #ifdef PAPILO_TBB
@@ -501,7 +505,7 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
 
                    if( to_lb || to_ub )
                    {
-                      domcolreductions[col].emplace( DomcolReduction{ unbounded_col, col,
+                      domcolreductionsets[col].emplace( DomcolReduction{ unbounded_col, col,
                             implrowlock, to_lb ? BoundChange::kUpper : BoundChange::kLower } );
                       success = true;
                    }
@@ -515,27 +519,62 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
        } );
 #endif
 
-   pdqsort( domcolsequence.begin(), domcolsequence.end(),
-            [&]( const int& a, const int& b )
+   bestrows.clear();
+
+#ifdef PAPILO_TBB
+   tbb::concurrent_vector<Vec<DomcolReduction>> domcolreductions;
+#else
+   Vec<Vec<DomcolReduction>> domcolreductions;
+#endif
+
+#ifdef PAPILO_TBB
+   tbb::parallel_for(
+       tbb::blocked_range<int>( 0, (int) domcolreductionsets.size() ),
+       [&]( const tbb::blocked_range<int>& r ) {
+          for( int k = r.begin(); k < r.end(); ++k )
+#else
+   for( int k = 0; k < (int) domcolreductionsets.size(); ++k )
+#endif
+          {
+            if( domcolreductionsets[k].empty() )
+               continue;
+
+             Vec<DomcolReduction> domcolreduction(domcolreductionsets[k].begin(), domcolreductionsets[k].end());
+             domcolreductionsets[k].clear();
+
+             pdqsort( domcolreduction.begin(), domcolreduction.end(),
+                      []( const DomcolReduction& a, const DomcolReduction& b )
+                      {
+                         return a.implrowlock < b.implrowlock || ( a.implrowlock == b.implrowlock
+                               && ( ( a.boundchg == BoundChange::kUpper && b.boundchg == BoundChange::kLower ) || ( a.boundchg == b.boundchg
+                               && a.col1 < b.col1 ) ) );
+                      } );
+
+             domcolreductions.emplace_back(std::move(domcolreduction));
+          }
+#ifdef PAPILO_TBB
+       } );
+#endif
+
+   domcolreductionsets.clear();
+
+   pdqsort( domcolreductions.begin(), domcolreductions.end(),
+            []( const Vec<DomcolReduction>& a, const Vec<DomcolReduction>& b )
             {
-               if( domcolreductions[a].empty() )
-                  return false;
-               if( domcolreductions[b].empty() )
-                  return true;
-               return domcolreductions[a].cbegin()->implrowlock < domcolreductions[b].cbegin()->implrowlock || ( domcolreductions[a].cbegin()->implrowlock == domcolreductions[b].cbegin()->implrowlock
-                     && ( ( domcolreductions[a].cbegin()->boundchg == BoundChange::kUpper && domcolreductions[b].cbegin()->boundchg == BoundChange::kLower ) || ( domcolreductions[a].cbegin()->boundchg == domcolreductions[b].cbegin()->boundchg
-                     && domcolreductions[a].cbegin()->col2 < domcolreductions[b].cbegin()->col2 ) ) );
+               return a.cbegin()->implrowlock < b.cbegin()->implrowlock || ( a.cbegin()->implrowlock == b.cbegin()->implrowlock
+                     && ( ( a.cbegin()->boundchg == BoundChange::kUpper && b.cbegin()->boundchg == BoundChange::kLower ) || ( a.cbegin()->boundchg == b.cbegin()->boundchg
+                     && a.cbegin()->col2 < b.cbegin()->col2 ) ) );
             } );
 
    Vec<int> domcol(ncols, -1);
 
-   for( int i = 0; i < (int) domcolsequence.size(); ++i )
+   for( int i = 0; i < (int) domcolreductions.size(); ++i )
    {
-      if( domcolreductions[domcolsequence[i]].empty() )
+      if( domcolreductions[i].empty() )
          break;
-      auto domcoliter = domcolreductions[domcolsequence[i]].begin();
+      auto domcoliter = domcolreductions[i].begin();
       int source = domcoliter->col2;
-      while( domcoliter != domcolreductions[domcolsequence[i]].end() )
+      while( domcoliter != domcolreductions[i].end() )
       {
          int sink = domcoliter->col1;
          int k = sink;
