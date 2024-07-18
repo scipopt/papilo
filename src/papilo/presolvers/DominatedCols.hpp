@@ -557,6 +557,7 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
 #endif
 
    domcolreductionsets.clear();
+   domcolreductionsets.shrink_to_fit();
 
    pdqsort( domcolreductions.begin(), domcolreductions.end(),
             []( const Vec<DomcolReduction>& a, const Vec<DomcolReduction>& b )
