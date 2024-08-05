@@ -1089,12 +1089,6 @@ Presolve<REAL>::evaluate_and_apply( const Timer& timer, Problem<REAL>& problem,
                                     const Statistics& oldstats,
                                     bool run_sequential )
 {
-   if( round_to_evaluate == Delegator::kFast )
-   {
-      probUpdate.clearChangeInfo();
-      lastRoundReduced = false;
-   }
-
    result.status = evaluateResults();
    switch( result.status )
    {
