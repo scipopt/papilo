@@ -626,17 +626,7 @@ propagate_row( const Num<REAL>& num, int row, const REAL* rowvals, const int* co
                const Vec<REAL>& upper_bounds, const Vec<ColFlags>& domainFlags,
                BOUNDCHANGE&& boundchange )
 {
-
-   bool adj_rhs = false;
-   if( activity.ninfmin == 1 && activity.ninfmax == 0 &&
-       rflags.test( RowFlag::kRhsInf ) )
-   {
-      adj_rhs = true;
-      rhs = activity.max;
-   }
-
-   if( ( !rflags.test( RowFlag::kRhsInf ) && activity.ninfmin <= 1 ) ||
-       adj_rhs )
+   if( !rflags.test( RowFlag::kRhsInf ) && activity.ninfmin <= 1 && ( activity.ninfmax >= 1 || num.isGT(activity.max, rhs) ) )
    {
       for( int j = 0; j < rowlen; ++j )
       {
@@ -646,7 +636,7 @@ propagate_row( const Num<REAL>& num, int row, const REAL* rowvals, const int* co
          REAL minresact = activity.min;
          REAL val = rowvals[j];
 
-         if( val < REAL{ 0.0 } )
+         if( val < 0 )
          {
             if( activity.ninfmin == 1 )
             {
@@ -661,13 +651,11 @@ propagate_row( const Num<REAL>& num, int row, const REAL* rowvals, const int* co
                minresact -= val * ub;
             }
             REAL new_lb = (rhs - minresact) / val;
-            if( domainFlags[col].test(ColFlag::kIntegral) )
+            if( domainFlags[col].test( ColFlag::kIntegral ) )
             {
-               REAL floored = num.epsFloor(new_lb);
-               if( num.isGE(rhs, floored * val + minresact) )
-                  new_lb = floored;
-               else
-                  new_lb = num.epsCeil(new_lb);
+               new_lb = floor(new_lb);
+               if( num.isLT(rhs, new_lb * val + minresact) )
+                  new_lb += 1;
             }
             if( domainFlags[col].test( ColFlag::kLbInf ) || new_lb > lb )
                boundchange( BoundChange::kLower, col, new_lb, row );
@@ -687,13 +675,11 @@ propagate_row( const Num<REAL>& num, int row, const REAL* rowvals, const int* co
                minresact -= val * lb;
             }
             REAL new_ub = (rhs - minresact) / val;
-            if( domainFlags[col].test(ColFlag::kIntegral) )
+            if( domainFlags[col].test( ColFlag::kIntegral ) )
             {
-               REAL ceiled = num.epsCeil(new_ub);
-               if( num.isGE(rhs, ceiled * val + minresact) )
-                  new_ub = ceiled;
-               else
-                  new_ub = num.epsFloor(new_ub);
+               new_ub = ceil(new_ub);
+               if( num.isLT(rhs, new_ub * val + minresact) )
+                  new_ub -= 1;
             }
             if( domainFlags[col].test( ColFlag::kUbInf ) || new_ub < ub )
                boundchange( BoundChange::kUpper, col, new_ub, row );
@@ -701,16 +687,7 @@ propagate_row( const Num<REAL>& num, int row, const REAL* rowvals, const int* co
       }
    }
 
-   bool adj_lhs = false;
-   if( activity.ninfmax == 1 && activity.ninfmin == 0 &&
-       rflags.test( RowFlag::kLhsInf ) )
-   {
-      adj_lhs = true;
-      lhs = activity.min;
-   }
-
-   if( ( !rflags.test( RowFlag::kLhsInf ) && activity.ninfmax <= 1 ) ||
-       adj_lhs )
+   if( !rflags.test( RowFlag::kLhsInf ) && activity.ninfmax <= 1 && ( activity.ninfmin >= 1 || num.isLT(activity.min, lhs) ) )
    {
       for( int j = 0; j < rowlen; ++j )
       {
@@ -720,7 +697,7 @@ propagate_row( const Num<REAL>& num, int row, const REAL* rowvals, const int* co
          REAL maxresact = activity.max;
          REAL val = rowvals[j];
 
-         if( val < REAL{ 0.0 } )
+         if( val < 0 )
          {
             if( activity.ninfmax == 1 )
             {
@@ -735,17 +712,14 @@ propagate_row( const Num<REAL>& num, int row, const REAL* rowvals, const int* co
                maxresact -= val * lb;
             }
             REAL new_ub = (lhs - maxresact) / val;
-            if( domainFlags[col].test(ColFlag::kIntegral) )
+            if( domainFlags[col].test( ColFlag::kIntegral ) )
             {
-               REAL ceiled = num.epsCeil(new_ub);
-               if( num.isLE(lhs, ceiled * val + maxresact) )
-                  new_ub = ceiled;
-               else
-                  new_ub = num.epsFloor(new_ub);
+               new_ub = ceil(new_ub);
+               if( num.isGT(lhs, new_ub * val + maxresact) )
+                  new_ub -= 1;
             }
             if( domainFlags[col].test( ColFlag::kUbInf ) || new_ub < ub )
                boundchange( BoundChange::kUpper, col, new_ub, row );
-
          }
          else
          {
@@ -762,13 +736,11 @@ propagate_row( const Num<REAL>& num, int row, const REAL* rowvals, const int* co
                maxresact -= val * ub;
             }
             REAL new_lb = (lhs - maxresact) / val;
-            if( domainFlags[col].test(ColFlag::kIntegral) )
+            if( domainFlags[col].test( ColFlag::kIntegral ) )
             {
-               REAL floored = num.epsFloor(new_lb);
-               if( num.isLE(lhs, floored * val + maxresact) )
-                  new_lb = floored;
-               else
-                  new_lb = num.epsCeil(new_lb);
+               new_lb = floor(new_lb);
+               if( num.isGT(lhs, new_lb * val + maxresact) )
+                  new_lb += 1;
             }
             if( domainFlags[col].test( ColFlag::kLbInf ) || new_lb > lb )
                boundchange( BoundChange::kLower, col, new_lb, row );
