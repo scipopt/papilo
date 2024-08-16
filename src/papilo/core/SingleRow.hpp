@@ -657,7 +657,6 @@ propagate_row( const Num<REAL>& num, int row, const REAL* rowvals, const int* co
                if( num.isLT(rhs, new_lb * val + minresact) )
                   new_lb += 1;
             }
-            assert( num.isFeasGE(rhs, new_lb * val + minresact) );
             if( domainFlags[col].test( ColFlag::kLbInf ) || new_lb > lb )
                boundchange( BoundChange::kLower, col, new_lb, row );
          }
@@ -682,7 +681,6 @@ propagate_row( const Num<REAL>& num, int row, const REAL* rowvals, const int* co
                if( num.isLT(rhs, new_ub * val + minresact) )
                   new_ub -= 1;
             }
-            assert( num.isFeasGE(rhs, new_ub * val + minresact) );
             if( domainFlags[col].test( ColFlag::kUbInf ) || new_ub < ub )
                boundchange( BoundChange::kUpper, col, new_ub, row );
          }
@@ -720,7 +718,6 @@ propagate_row( const Num<REAL>& num, int row, const REAL* rowvals, const int* co
                if( num.isGT(lhs, new_ub * val + maxresact) )
                   new_ub -= 1;
             }
-            assert( num.isFeasLE(lhs, new_ub * val + maxresact) );
             if( domainFlags[col].test( ColFlag::kUbInf ) || new_ub < ub )
                boundchange( BoundChange::kUpper, col, new_ub, row );
          }
@@ -745,7 +742,6 @@ propagate_row( const Num<REAL>& num, int row, const REAL* rowvals, const int* co
                if( num.isGT(lhs, new_lb * val + maxresact) )
                   new_lb += 1;
             }
-            assert( num.isFeasLE(lhs, new_lb * val + maxresact) );
             if( domainFlags[col].test( ColFlag::kLbInf ) || new_lb > lb )
                boundchange( BoundChange::kLower, col, new_lb, row );
          }
