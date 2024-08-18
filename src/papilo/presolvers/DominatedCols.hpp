@@ -388,7 +388,7 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
              int bestrowsize = std::numeric_limits<int>::max();
              int bestrowlock = std::numeric_limits<int>::max();
              int bestrow = -1;
-             int bestscale;
+             int bestscale = 0;
              int row;
 
              for( int i = 0; i < collen; ++i )
