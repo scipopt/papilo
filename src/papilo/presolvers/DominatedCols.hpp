@@ -368,11 +368,11 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
 #ifdef PAPILO_TBB
    // scan unbounded columns if they dominate other columns
    tbb::parallel_for(
-       tbb::blocked_range<int>( 0, (int) unboundedcols.size() ),
+       tbb::blocked_range<int>( 0, (int)unboundedcols.size() ),
        [&]( const tbb::blocked_range<int>& r ) {
           for( int k = r.begin(); k < r.end(); ++k )
 #else
-   for( int k = 0; k < (int) unboundedcols.size(); ++k )
+   for( int k = 0; k < (int)unboundedcols.size(); ++k )
 #endif
           {
              int unbounded_col = unboundedcols[k];
@@ -434,7 +434,7 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
              const int* rowcols = rowvec.getIndices();
              const REAL* rowvals = rowvec.getValues();
 
-             for( int j = 0; j < rowlen; ++j )
+             for( int j = rowlen - 1; j >= 0; --j )
              {
                 int col = rowcols[j];
 
@@ -512,15 +512,15 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
 
 #ifdef PAPILO_TBB
    tbb::parallel_for(
-       tbb::blocked_range<int>( 0, (int) domcolreductionsets.size() ),
+       tbb::blocked_range<int>( 0, (int)domcolreductionsets.size() ),
        [&]( const tbb::blocked_range<int>& r ) {
           for( int k = r.begin(); k < r.end(); ++k )
 #else
-   for( int k = 0; k < (int) domcolreductionsets.size(); ++k )
+   for( int k = 0; k < (int)domcolreductionsets.size(); ++k )
 #endif
           {
-            if( domcolreductionsets[k].empty() )
-               continue;
+             if( domcolreductionsets[k].empty() )
+                continue;
 
              Vec<DomcolReduction> domcolreduction(domcolreductionsets[k].begin(), domcolreductionsets[k].end());
              domcolreductionsets[k].clear();
@@ -529,8 +529,7 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
                       []( const DomcolReduction& a, const DomcolReduction& b )
                       {
                          return a.implrowlock < b.implrowlock || ( a.implrowlock == b.implrowlock
-                               && ( ( a.boundchg == BoundChange::kUpper && b.boundchg == BoundChange::kLower ) || ( a.boundchg == b.boundchg
-                               && a.col1 < b.col1 ) ) );
+                               && a.col1 < b.col1 );
                       } );
 
              domcolreductions.emplace_back(std::move(domcolreduction));
@@ -546,13 +545,12 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
             []( const Vec<DomcolReduction>& a, const Vec<DomcolReduction>& b )
             {
                return a.cbegin()->implrowlock < b.cbegin()->implrowlock || ( a.cbegin()->implrowlock == b.cbegin()->implrowlock
-                     && ( ( a.cbegin()->boundchg == BoundChange::kUpper && b.cbegin()->boundchg == BoundChange::kLower ) || ( a.cbegin()->boundchg == b.cbegin()->boundchg
-                     && a.cbegin()->col2 < b.cbegin()->col2 ) ) );
+                     && a.cbegin()->col2 > b.cbegin()->col2 );
             } );
 
    Vec<int> domcol(ncols, -1);
 
-   for( int i = 0; i < (int) domcolreductions.size(); ++i )
+   for( int i = 0; i < (int)domcolreductions.size(); ++i )
    {
       if( domcolreductions[i].empty() )
          break;
