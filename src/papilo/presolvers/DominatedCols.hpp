@@ -95,20 +95,6 @@ class DominatedCols : public PresolveMethod<REAL>
       int col2;
       int implrowlock;
       BoundChange boundchg;
-
-      inline bool operator==( const DomcolReduction& y ) const
-      {
-         return implrowlock == y.implrowlock && boundchg == y.boundchg
-               && col1 == y.col1 && col2 == y.col2;
-      }
-
-      struct hash
-      {
-         inline size_t operator()( const DomcolReduction& x ) const
-         {
-            return x.col1;
-         }
-      };
    };
 
    PresolveStatus
@@ -360,9 +346,9 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
    };
 
 #ifdef PAPILO_TBB
-   Vec<tbb::concurrent_unordered_set<DomcolReduction, typename DomcolReduction::hash>> domcolreductionsets(ncols);
+   Vec<tbb::concurrent_vector<DomcolReduction>> domcolreductions(ncols);
 #else
-   Vec<HashSet<DomcolReduction, typename DomcolReduction::hash>> domcolreductionsets(ncols);
+   Vec<Vec<DomcolReduction>> domcolreductions(ncols);
 #endif
 
 #ifdef PAPILO_TBB
@@ -506,7 +492,7 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
 
                 if( to_lb || to_ub )
                 {
-                   domcolreductionsets[col].emplace( DomcolReduction{ unbounded_col, col,
+                   domcolreductions[col].emplace_back( DomcolReduction{ unbounded_col, col,
                          bestrowlock, to_lb ? BoundChange::kUpper : BoundChange::kLower } );
                 }
              }
@@ -515,45 +501,41 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
        } );
 #endif
 
-#ifdef PAPILO_TBB
-   tbb::concurrent_vector<Vec<DomcolReduction>> domcolreductions;
-#else
-   Vec<Vec<DomcolReduction>> domcolreductions;
-#endif
+   int ndomcolreductions = 0;
+
+   for( int i = 0; i < (int)domcolreductions.size(); ++i )
+      if( !domcolreductions[i].empty() )
+         domcolreductions[ndomcolreductions++] = std::move(domcolreductions[i]);
+
+   domcolreductions.resize(ndomcolreductions);
+   domcolreductions.shrink_to_fit();
 
 #ifdef PAPILO_TBB
    tbb::parallel_for(
-       tbb::blocked_range<int>( 0, (int)domcolreductionsets.size() ),
+       tbb::blocked_range<int>( 0, (int)domcolreductions.size() ),
        [&]( const tbb::blocked_range<int>& r ) {
           for( int k = r.begin(); k < r.end(); ++k )
 #else
-   for( int k = 0; k < (int)domcolreductionsets.size(); ++k )
+   for( int k = 0; k < (int)domcolreductions.size(); ++k )
 #endif
           {
-             if( domcolreductionsets[k].empty() )
-                continue;
-
-             Vec<DomcolReduction> domcolreduction(domcolreductionsets[k].begin(), domcolreductionsets[k].end());
-             domcolreductionsets[k].clear();
-
-             pdqsort( domcolreduction.begin(), domcolreduction.end(),
+             pdqsort( domcolreductions[k].begin(), domcolreductions[k].end(),
                       []( const DomcolReduction& a, const DomcolReduction& b )
                       {
                          return a.implrowlock < b.implrowlock || ( a.implrowlock == b.implrowlock
                                && a.col1 < b.col1 );
                       } );
-
-             domcolreductions.emplace_back(std::move(domcolreduction));
           }
 #ifdef PAPILO_TBB
        } );
 #endif
 
-   domcolreductionsets.clear();
-   domcolreductionsets.shrink_to_fit();
-
    pdqsort( domcolreductions.begin(), domcolreductions.end(),
+#ifdef PAPILO_TBB
+            []( const tbb::concurrent_vector<DomcolReduction>& a, const tbb::concurrent_vector<DomcolReduction>& b )
+#else
             []( const Vec<DomcolReduction>& a, const Vec<DomcolReduction>& b )
+#endif
             {
                return a.cbegin()->implrowlock < b.cbegin()->implrowlock || ( a.cbegin()->implrowlock == b.cbegin()->implrowlock
                      && a.cbegin()->col2 > b.cbegin()->col2 );
