@@ -127,6 +127,7 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
    const auto& activities = problem.getRowActivities();
    const auto& rowsize = consMatrix.getRowSizes();
    const int ncols = problem.getNCols();
+   const int nrows = problem.getNRows();
 
    PresolveStatus result = PresolveStatus::kUnchanged;
 
@@ -347,18 +348,24 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
 
 #ifdef PAPILO_TBB
    Vec<tbb::concurrent_vector<DomcolReduction>> domcolreductions(ncols);
+   std::atomic<int> nsuccesses(0);
 #else
    Vec<Vec<DomcolReduction>> domcolreductions(ncols);
+   int nsuccesses = 0;
 #endif
 
+   // process unbounded columns until number of rows are successful to bound memory demand
+   for( int start = 0, stopp; start < (int)unboundedcols.size() && nsuccesses < nrows; start = stopp )
+   {
+      stopp = std::min(start + 2 * nrows, (int)unboundedcols.size());
 #ifdef PAPILO_TBB
    // scan unbounded columns if they dominate other columns
    tbb::parallel_for(
-       tbb::blocked_range<int>( 0, (int)unboundedcols.size() ),
+       tbb::blocked_range<int>( start, stopp ),
        [&]( const tbb::blocked_range<int>& r ) {
           for( int k = r.begin(); k < r.end(); ++k )
 #else
-   for( int k = 0; k < (int)unboundedcols.size(); ++k )
+   for( int k = start; k < stopp; ++k )
 #endif
           {
              int unbounded_col = unboundedcols[k];
@@ -430,6 +437,7 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
              auto rowvec = consMatrix.getRowCoefficients( row );
              const int* rowcols = rowvec.getIndices();
              const REAL* rowvals = rowvec.getValues();
+             bool success = false;
 
              for( int j = bestrowsize - 1; j >= 0; --j )
              {
@@ -494,12 +502,17 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
                 {
                    domcolreductions[col].emplace_back( DomcolReduction{ unbounded_col, col,
                          bestrowlock, to_lb ? BoundChange::kUpper : BoundChange::kLower } );
+                   success = true;
                 }
              }
+
+             if( success )
+                ++nsuccesses;
           }
 #ifdef PAPILO_TBB
        } );
 #endif
+   }
 
    int ndomcolreductions = 0;
 
