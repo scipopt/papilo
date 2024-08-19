@@ -501,15 +501,6 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
        } );
 #endif
 
-   int ndomcolreductions = 0;
-
-   for( int i = 0; i < (int)domcolreductions.size(); ++i )
-      if( !domcolreductions[i].empty() )
-         domcolreductions[ndomcolreductions++] = std::move(domcolreductions[i]);
-
-   domcolreductions.resize(ndomcolreductions);
-   domcolreductions.shrink_to_fit();
-
 #ifdef PAPILO_TBB
    tbb::parallel_for(
        tbb::blocked_range<int>( 0, (int)domcolreductions.size() ),
@@ -537,6 +528,10 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
             []( const Vec<DomcolReduction>& a, const Vec<DomcolReduction>& b )
 #endif
             {
+               if( a.empty() )
+                  return false;
+               if( b.empty() )
+                  return true;
                return a.cbegin()->implrowlock < b.cbegin()->implrowlock || ( a.cbegin()->implrowlock == b.cbegin()->implrowlock
                      && a.cbegin()->col2 > b.cbegin()->col2 );
             } );
@@ -547,6 +542,8 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
 
    for( int i = 0; i < (int)domcolreductions.size(); ++i )
    {
+      if( domcolreductions[i].empty() )
+         break;
       int source = domcolreductions[i][0].col2;
       int j;
       for( j = 0; j < (int)domcolreductions[i].size(); ++j )
