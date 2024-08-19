@@ -560,45 +560,80 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
             } );
 
    Vec<int> domcol(ncols, -1);
+   Vec<int> nchildren(ncols, 0);
+   Vec<int> leafs(0);
 
    for( int i = 0; i < (int)domcolreductions.size(); ++i )
    {
-      if( domcolreductions[i].empty() )
-         break;
-      auto domcoliter = domcolreductions[i].begin();
-      int source = domcoliter->col2;
-      while( domcoliter != domcolreductions[i].end() )
+      int source = domcolreductions[i][0].col2;
+      int j;
+      for( j = 0; j < (int)domcolreductions[i].size(); ++j )
       {
-         int sink = domcoliter->col1;
-         int k = sink;
-         while( k != -1 && k != source )
-            k = domcol[k];
-         if( k == -1 )
+         int sink = domcolreductions[i][j].col1;
+         int node = sink;
+         while( domcol[node] != -1 )
+            node = domcolreductions[domcol[node]][0].col1;
+         if( node != source )
          {
-            result = PresolveStatus::kReduced;
-            domcol[source] = sink;
-            TransactionGuard<REAL> tg{ reductions };
-            reductions.lockCol( domcoliter->col1 );
-            reductions.lockColBounds( domcoliter->col1 );
-            reductions.lockCol( domcoliter->col2 );
-            reductions.lockColBounds( domcoliter->col2 );
-            if( domcoliter->implrowlock >= 0 )
-               reductions.lockRow( domcoliter->implrowlock );
-            // upper bound is changed to lower bound
-            if( domcoliter->boundchg == BoundChange::kUpper )
+            domcol[source] = i;
+            if( nchildren[sink] >= 1 || domcol[sink] == -1 )
             {
-               reductions.dominance(domcoliter->col2, domcoliter->col1);
-               reductions.fixCol( domcoliter->col2, lbValues[domcoliter->col2], domcoliter->implrowlock );
+               if( nchildren[source] == 0 )
+               {
+                  nchildren[source] = -leafs.size();
+                  leafs.push_back(source);
+               }
+               ++nchildren[sink];
             }
-            // lower bound is changed to upper bound
             else
             {
-               reductions.dominance(domcoliter->col1, domcoliter->col2);
-               reductions.fixCol( domcoliter->col2, ubValues[domcoliter->col2], domcoliter->implrowlock );
+               if( nchildren[source] == 0 )
+               {
+                  nchildren[source] = nchildren[sink];
+                  leafs[-nchildren[source]] = source;
+               }
+               nchildren[sink] = 1;
             }
             break;
          }
-         ++domcoliter;
+      }
+      if( j < (int)domcolreductions[i].size() )
+         domcolreductions[i] = { std::move(domcolreductions[i][j]) };
+      else
+         domcolreductions[i].clear();
+      domcolreductions[i].shrink_to_fit();
+   }
+
+   leafs.shrink_to_fit();
+
+   for( auto& node : leafs )
+   {
+      while( nchildren[node] <= 0 && domcol[node] != -1 )
+      {
+         const DomcolReduction& reduction = domcolreductions[domcol[node]][0];
+         domcol[node] = -1;
+         result = PresolveStatus::kReduced;
+         TransactionGuard<REAL> tg{ reductions };
+         reductions.lockCol( reduction.col1 );
+         reductions.lockColBounds( reduction.col1 );
+         reductions.lockCol( reduction.col2 );
+         reductions.lockColBounds( reduction.col2 );
+         if( reduction.implrowlock >= 0 )
+            reductions.lockRow( reduction.implrowlock );
+         // upper bound is changed to lower bound
+         if( reduction.boundchg == BoundChange::kUpper )
+         {
+            reductions.dominance(reduction.col2, reduction.col1);
+            reductions.fixCol( reduction.col2, lbValues[reduction.col2], reduction.implrowlock );
+         }
+         // lower bound is changed to upper bound
+         else
+         {
+            reductions.dominance(reduction.col1, reduction.col2);
+            reductions.fixCol( reduction.col2, ubValues[reduction.col2], reduction.implrowlock );
+         }
+         node = reduction.col1;
+         --nchildren[node];
       }
    }
 
