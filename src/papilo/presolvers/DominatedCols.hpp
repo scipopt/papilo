@@ -130,11 +130,6 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
    const int nrows = problem.getNRows();
 
    PresolveStatus result = PresolveStatus::kUnchanged;
-
-   // do not call dominated column presolver too often, since it can be
-   // expensive
-   this->skipRounds( this->getNCalls() );
-
    Vec<ColInfo> colinfo( ncols );
 #ifdef PAPILO_TBB
    tbb::concurrent_vector<int> unboundedcols;
@@ -354,8 +349,10 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
    int nsuccesses = 0;
 #endif
 
+   int start = 0;
+
    // process unbounded columns until number of rows are successful to bound memory demand
-   for( int start = 0, stopp; start < (int)unboundedcols.size() && nsuccesses < nrows; start = stopp )
+   for( int stopp; start < (int)unboundedcols.size() && nsuccesses < nrows; start = stopp )
    {
       stopp = std::min(start + 2 * nrows, (int)unboundedcols.size());
 #ifdef PAPILO_TBB
@@ -513,6 +510,10 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
        } );
 #endif
    }
+
+   // skip dominated column presolver in the next rounds if all unbounded columns are considered
+   if( start == (int)unboundedcols.size() )
+      this->skipRounds( this->getNCalls() );
 
    int ndomcolreductions = 0;
 
