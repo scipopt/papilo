@@ -504,8 +504,13 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
    int ndomcolreductions = 0;
 
    for( int i = 0; i < (int)domcolreductions.size(); ++i )
+   {
       if( !domcolreductions[i].empty() )
-         domcolreductions[ndomcolreductions++] = std::move(domcolreductions[i]);
+      {
+         domcolreductions[ndomcolreductions] = std::move(domcolreductions[i]);
+         ++ndomcolreductions;
+      }
+   }
 
    domcolreductions.resize(ndomcolreductions);
    domcolreductions.shrink_to_fit();
