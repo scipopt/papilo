@@ -510,37 +510,6 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
    domcolreductions.resize(ndomcolreductions);
    domcolreductions.shrink_to_fit();
 
-#ifdef PAPILO_TBB
-   tbb::parallel_for(
-       tbb::blocked_range<int>( 0, (int)domcolreductions.size() ),
-       [&]( const tbb::blocked_range<int>& r ) {
-          for( int k = r.begin(); k < r.end(); ++k )
-#else
-   for( int k = 0; k < (int)domcolreductions.size(); ++k )
-#endif
-          {
-             pdqsort( domcolreductions[k].begin(), domcolreductions[k].end(),
-                      []( const DomcolReduction& a, const DomcolReduction& b )
-                      {
-                         return a.implrowlock < b.implrowlock || ( a.implrowlock == b.implrowlock
-                               && a.col1 < b.col1 );
-                      } );
-          }
-#ifdef PAPILO_TBB
-       } );
-#endif
-
-   pdqsort( domcolreductions.begin(), domcolreductions.end(),
-#ifdef PAPILO_TBB
-            []( const tbb::concurrent_vector<DomcolReduction>& a, const tbb::concurrent_vector<DomcolReduction>& b )
-#else
-            []( const Vec<DomcolReduction>& a, const Vec<DomcolReduction>& b )
-#endif
-            {
-               return a.cbegin()->implrowlock < b.cbegin()->implrowlock || ( a.cbegin()->implrowlock == b.cbegin()->implrowlock
-                     && a.cbegin()->col2 > b.cbegin()->col2 );
-            } );
-
    Vec<int> domcol(ncols, -1);
    Vec<int> nchildren(ncols, 0);
    Vec<int> leafs(0);
