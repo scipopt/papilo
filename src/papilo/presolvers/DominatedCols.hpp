@@ -507,7 +507,8 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
    {
       if( !domcolreductions[i].empty() )
       {
-         domcolreductions[ndomcolreductions] = std::move(domcolreductions[i]);
+         if( i != ndomcolreductions )
+            domcolreductions[ndomcolreductions] = std::move(domcolreductions[i]);
          ++ndomcolreductions;
       }
    }
@@ -586,7 +587,8 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
       }
       if( j < (int)domcolreductions[i].size() )
       {
-         domcolreductions[i][0] = std::move(domcolreductions[i][j]);
+         if( j != 0 )
+            domcolreductions[i][0] = std::move(domcolreductions[i][j]);
          domcolreductions[i].resize(1);
       }
       else
