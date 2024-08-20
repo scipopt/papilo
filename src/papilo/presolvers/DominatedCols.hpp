@@ -116,6 +116,13 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
                               const ProblemUpdate<REAL>& problemUpdate,
                               const Num<REAL>& num, Reductions<REAL>& reductions,
                               const Timer& timer, int& reason_of_infeasibility){
+   PresolveStatus result = PresolveStatus::kUnchanged;
+   const int ncols = problem.getNCols();
+   const int nrows = problem.getNRows();
+
+   if( ncols <= 1 || nrows == 0 )
+      return result;
+
    const auto& obj = problem.getObjective().coefficients;
    const auto& consMatrix = problem.getConstraintMatrix();
    const auto& lbValues = problem.getLowerBounds();
@@ -126,16 +133,14 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
    const auto& cflags = problem.getColFlags();
    const auto& activities = problem.getRowActivities();
    const auto& rowsize = consMatrix.getRowSizes();
-   const int ncols = problem.getNCols();
-   const int nrows = problem.getNRows();
-
-   PresolveStatus result = PresolveStatus::kUnchanged;
    Vec<ColInfo> colinfo( ncols );
+
 #ifdef PAPILO_TBB
    tbb::concurrent_vector<int> unboundedcols;
 #else
    Vec<int> unboundedcols;
 #endif
+
    unboundedcols.reserve( ncols );
 
    // compute signatures and implied bound information of all columns in
@@ -343,18 +348,18 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
 
 #ifdef PAPILO_TBB
    Vec<tbb::concurrent_vector<DomcolReduction>> domcolreductions(ncols);
-   std::atomic<int> nsuccesses(0);
+   std::atomic<int> ndomcols(0);
 #else
    Vec<Vec<DomcolReduction>> domcolreductions(ncols);
-   int nsuccesses = 0;
+   int ndomcols = 0;
 #endif
 
    int start = 0;
 
-   // process unbounded columns until number of rows are successful to bound memory demand
-   for( int stopp; start < (int)unboundedcols.size() && nsuccesses < nrows; start = stopp )
+   // process unbounded columns until number of columns dominate to bound memory demand
+   for( int stopp; start < (int)unboundedcols.size() && ndomcols < ncols; start = stopp )
    {
-      stopp = std::min(start + 2 * nrows, (int)unboundedcols.size());
+      stopp = std::min(start + nrows, (int)unboundedcols.size());
 #ifdef PAPILO_TBB
    // scan unbounded columns if they dominate other columns
    tbb::parallel_for(
@@ -434,7 +439,6 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
              auto rowvec = consMatrix.getRowCoefficients( row );
              const int* rowcols = rowvec.getIndices();
              const REAL* rowvals = rowvec.getValues();
-             bool success = false;
 
              for( int j = bestrowsize - 1; j >= 0; --j )
              {
@@ -499,12 +503,9 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
                 {
                    domcolreductions[col].emplace_back( DomcolReduction{ unbounded_col, col,
                          bestrowlock, to_lb ? BoundChange::kUpper : BoundChange::kLower } );
-                   success = true;
+                   ++ndomcols;
                 }
              }
-
-             if( success )
-                ++nsuccesses;
           }
 #ifdef PAPILO_TBB
        } );
