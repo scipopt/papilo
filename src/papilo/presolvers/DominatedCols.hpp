@@ -593,6 +593,7 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
    domcols.shrink_to_fit();
    leaves.shrink_to_fit();
 
+   // add reductions in topological order
    for( auto& node : leaves )
    {
       while( nchildren[node] <= 0 && domcol[node] >= 0 )
