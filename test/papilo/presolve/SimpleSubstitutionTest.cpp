@@ -282,7 +282,7 @@ TEST_CASE( "example_10_1_in_constraint_integer_programming", "[presolve]" )
 }
 
 
-TEST_CASE( "should_return_feasible_if_gcd_of_coeff_is_in_rhs", "[presolve]" )
+TEST_CASE( "simple-substitution-should_return_feasible_if_gcd_of_coeff_is_in_rhs", "[presolve]" )
 {
    Message msg {};
       double time = 0.0;
@@ -307,7 +307,7 @@ TEST_CASE( "should_return_feasible_if_gcd_of_coeff_is_in_rhs", "[presolve]" )
    REQUIRE( presolveStatus == PresolveStatus::kUnchanged );
 }
 
-TEST_CASE( "should_return_infeasible_if_gcd_of_coeff_is_in_rhs", "[presolve]" )
+TEST_CASE( "simple-substitution-should_return_infeasible_if_gcd_of_coeff_is_in_rhs", "[presolve]" )
 {
    Message msg {};
       double time = 0.0;

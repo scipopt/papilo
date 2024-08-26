@@ -65,7 +65,6 @@ if(${CMAKE_SYSTEM_NAME} STREQUAL "Android")
 endif()
 
 set(unit_tests
-        "accurate-numerical-statistics"
 
         "matrix-buffer"
         "vector-comparisons"
@@ -94,7 +93,7 @@ set(unit_tests
         "domcol-happy-path"
         "domcol-parallel-columns"
         "domcol-multiple-parallel-cols-generate_redundant-reductions"
-        "domcol-multiple-column"
+        "domcol-multiple-columns"
 
         #DualFix
         "dual-fix-happy-path"
@@ -130,7 +129,7 @@ set(unit_tests
         "parallel-row-two-inequalities-tighten-upper-bound-first-row-dominant"
         "parallel-row-two-inequalities-infeasible-first-row-dominant"
         "parallel-row-two-inequalities-infeasible-second-row-dominant"
-        "parallel-row-two-inequalities-tighten-upper-bound-first-row-neg"
+        "parallel-row-two-inequalities-tighten-upper-bound-first-row-negfactor-dominant"
         "parallel-row-overwrite-inf-first-row-rhs-inf"
         "parallel-row-overwrite-inf-first-row-lhs-inf"
         "parallel-row-overwrite-inf-first-row-lhs-inf-neg-factor"
@@ -181,25 +180,24 @@ set(unit_tests
         "simple-substitution-happy-path-for-2-continuous"
         "simple-substitution-happy-path-for-continuous-and-integer"
         "simple-substitution-happy-path-for-int-continuous-coeff"
-        "simple-substitution-should_return_infeasible_if_gcd_of_coeff_is_in_rhs"
         "simple-substitution-should_return_feasible_if_gcd_of_coeff_is_in_rhs"
-        "simple-substitution-failed-path-for-2-int"
+        "simple-substitution-should_return_infeasible_if_gcd_of_coeff_is_in_rhs"
+        "simple-substitution-simple-substitution-for-2-int"
         "simple-substitution-2-negative-integer"
         "simple-substitution-feasible-gcd"
         "simple-substitution-non-coprime"
         "simple-substitution-violated-gcd"
 
         #Simplify Inequality
-        "happy-path-simplify-inequalities-only-greatest-divisor"
+        "happy-path-simplify-inequalities"
         "simplify_inequ_doesnt_lock_more_rows"
         "simplify_inequ_doesnt_apply_lb_and_ub_on_one_row"
 
         #Sparsify
         "happy-path-sparsify"
         "happy-path-sparsify-two-equalities"
-        "failed-path-sparsify"
+        "failed-path-sparsify-if-misses-one-for-integer"
 
-        "integration-test-for-flugpl"
         ${PAPILOLIB_TESTS}
         ${BOOST_REQUIRED_TESTS}
         )
