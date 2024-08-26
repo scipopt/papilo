@@ -65,27 +65,31 @@ TEST_CASE( "happy-path-simplify-inequalities", "[presolve]" )
 
    REQUIRE( presolveStatus == PresolveStatus::kReduced );
 
-   REQUIRE( reductions.getReductions().size() == 5 );
+   REQUIRE( reductions.getReductions().size() == 6 );
 
    REQUIRE( reductions.getReduction( 0 ).newval == 0 );
    REQUIRE( reductions.getReduction( 0 ).row == 0 );
    REQUIRE( reductions.getReduction( 0 ).col == RowReduction::LOCKED );
 
-   REQUIRE( reductions.getReduction( 1 ).newval == 0 );
+   REQUIRE( reductions.getReduction( 1 ).newval == 15 );
    REQUIRE( reductions.getReduction( 1 ).row == 0 );
-   REQUIRE( reductions.getReduction( 1 ).col == 2 );
+   REQUIRE( reductions.getReduction( 1 ).col == RowReduction::CERTIFICATE_RHS_GCD );
 
    REQUIRE( reductions.getReduction( 2 ).newval == 0 );
    REQUIRE( reductions.getReduction( 2 ).row == 0 );
-   REQUIRE( reductions.getReduction( 2 ).col == 3 );
+   REQUIRE( reductions.getReduction( 2 ).col == 2 );
 
    REQUIRE( reductions.getReduction( 3 ).newval == 0 );
    REQUIRE( reductions.getReduction( 3 ).row == 0 );
-   REQUIRE( reductions.getReduction( 3 ).col == 4 );
+   REQUIRE( reductions.getReduction( 3 ).col == 3 );
 
-   REQUIRE( reductions.getReduction( 4 ).newval == 15 );
+   REQUIRE( reductions.getReduction( 4 ).newval == 0 );
    REQUIRE( reductions.getReduction( 4 ).row == 0 );
-   REQUIRE( reductions.getReduction( 4 ).col == RowReduction::RHS );
+   REQUIRE( reductions.getReduction( 4 ).col == 4 );
+
+   REQUIRE( reductions.getReduction( 5 ).newval == 15 );
+   REQUIRE( reductions.getReduction( 5 ).row == 0 );
+   REQUIRE( reductions.getReduction( 5 ).col == RowReduction::RHS );
 
 }
 
