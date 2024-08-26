@@ -314,19 +314,23 @@ class ProblemUpdate
    {
       if( stats.nrounds == 0 )
       {
-         last_changed_activities.clear();
+         const auto& rflags = problem.getRowFlags();
+         const auto& lhs_values = problem.getConstraintMatrix().getLeftHandSides();
+         const auto& rhs_values = problem.getConstraintMatrix().getRightHandSides();
 
-         const Vec<RowFlags>& rflags = problem.getRowFlags();
+         last_changed_activities.clear();
 
          for( int r = 0; r != problem.getNRows(); ++r )
          {
             if( rflags[r].test( RowFlag::kRedundant ) )
                continue;
 
-            RowActivity<REAL>& activity = problem.getRowActivities()[r];
-            if( activity.ninfmin == 0 || activity.ninfmax == 0 ||
-                  ( activity.ninfmax == 1 && !rflags[r].test( RowFlag::kLhsInf ) ) ||
-                  ( activity.ninfmin == 1 && !rflags[r].test( RowFlag::kRhsInf ) ) )
+            const auto& activity = problem.getRowActivities()[r];
+
+            if( ( !rflags[r].test( RowFlag::kLhsInf )
+                  && ( activity.ninfmin >= 1 || num.isLT(activity.min, lhs_values[r]) ) )
+             || ( !rflags[r].test( RowFlag::kRhsInf )
+                  && ( activity.ninfmax >= 1 || num.isGT(activity.max, rhs_values[r]) ) ) )
                last_changed_activities.push_back( r );
          }
       }
