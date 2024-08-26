@@ -195,36 +195,36 @@ TEST_CASE( "domcol-multiple-columns", "[presolve]" )
    REQUIRE( presolveStatus == PresolveStatus::kReduced );
    REQUIRE( reductions.size() == 24 );
 
-   Vec<int> dominating_cols = { 0, 0, 1 };
-   Vec<int> dominated_cols = { 1, 2, 2 };
+   Vec<int> dominated_cols = { 0, 0, 1 };
+   Vec<int> dominating_cols = { 1, 2, 2 };
    for( int i = 0; i < 24; i = i + 8 )
    {
       REQUIRE( reductions.getReduction( i ).row == ColReduction::LOCKED );
-      REQUIRE( reductions.getReduction( i ).col == dominating_cols[i / 8] );
+      REQUIRE( reductions.getReduction( i ).col == dominated_cols[i / 8] );
 
       REQUIRE( reductions.getReduction( i + 1 ).row ==
                ColReduction::BOUNDS_LOCKED );
-      REQUIRE( reductions.getReduction( i + 1 ).col == dominating_cols[i / 8] );
+      REQUIRE( reductions.getReduction( i + 1 ).col == dominated_cols[i / 8] );
 
       REQUIRE( reductions.getReduction( i + 2 ).row == ColReduction::LOCKED );
-      REQUIRE( reductions.getReduction( i + 2 ).col == dominated_cols[i / 8] );
+      REQUIRE( reductions.getReduction( i + 2 ).col == dominating_cols[i / 8] );
 
       REQUIRE( reductions.getReduction( i + 3 ).row ==
                ColReduction::BOUNDS_LOCKED );
-      REQUIRE( reductions.getReduction( i + 3 ).col == dominated_cols[i / 8] );
+      REQUIRE( reductions.getReduction( i + 3 ).col == dominating_cols[i / 8] );
 
       REQUIRE( reductions.getReduction( i + 4 ).row == 0 );
       REQUIRE( reductions.getReduction( i + 4 ).col == RowReduction::LOCKED );
 
       REQUIRE( reductions.getReduction( i + 5 ).row == ColReduction::CERTIFICATE_DOMINANCE );
-      REQUIRE( reductions.getReduction( i + 5 ).col == dominated_cols[i / 8] );
-      REQUIRE( reductions.getReduction( i + 5 ).newval == dominating_cols[i / 8] );
+      REQUIRE( reductions.getReduction( i + 5 ).col == dominating_cols[i / 8] );
+      REQUIRE( reductions.getReduction( i + 5 ).newval == dominated_cols[i / 8] );
 
       REQUIRE( reductions.getReduction( i + 6 ).row == 0 );
       REQUIRE( reductions.getReduction( i + 6 ).col == RowReduction::SAVE_ROW );
 
       REQUIRE( reductions.getReduction( i + 7 ).row == ColReduction::FIXED );
-      REQUIRE( reductions.getReduction( i + 7 ).col == dominated_cols[i / 8] );
+      REQUIRE( reductions.getReduction( i + 7 ).col == dominating_cols[i / 8] );
       REQUIRE( reductions.getReduction( i + 7 ).newval == 0 );
    }
 }
