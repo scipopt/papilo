@@ -99,7 +99,7 @@ class PresolveMethod
       execTime = 0.0;
       enabled = true;
       delayed = false;
-      symmetries_active = false;
+      symmetries_active = true;
       skip = 0;
       nconsecutiveUnsuccessCall = 0;
    }
