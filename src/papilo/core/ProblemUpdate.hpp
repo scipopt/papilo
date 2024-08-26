@@ -76,7 +76,8 @@ class ProblemUpdate
    Vec<int> deleted_cols;
    Vec<int> redundant_rows;
 
-   Vec<int> changed_activities;
+   Vec<int> last_changed_activities;
+   Vec<int> current_changed_activities;
    Vec<int> singletonRows;
    Vec<int> singletonColumns;
    Vec<int> emptyColumns;
@@ -311,7 +312,28 @@ class ProblemUpdate
    void
    clearChangeInfo()
    {
-      changed_activities.clear();
+      if( stats.nrounds == 0 )
+      {
+         last_changed_activities.clear();
+
+         const Vec<RowFlags>& rflags = problem.getRowFlags();
+
+         for( int r = 0; r != problem.getNRows(); ++r )
+         {
+            if( rflags[r].test( RowFlag::kRedundant ) )
+               continue;
+
+            RowActivity<REAL>& activity = problem.getRowActivities()[r];
+            if( activity.ninfmin == 0 || activity.ninfmax == 0 ||
+                  ( activity.ninfmax == 1 && !rflags[r].test( RowFlag::kLhsInf ) ) ||
+                  ( activity.ninfmin == 1 && !rflags[r].test( RowFlag::kRhsInf ) ) )
+               last_changed_activities.push_back( r );
+         }
+      }
+      else
+         swap(last_changed_activities, current_changed_activities);
+
+      current_changed_activities.clear();
       firstNewSingletonCol = singletonColumns.size();
    }
 
@@ -324,7 +346,7 @@ class ProblemUpdate
    const Vec<int>&
    getChangedActivities() const
    {
-      return changed_activities;
+      return last_changed_activities;
    }
 
    const Vec<int>&
@@ -551,9 +573,11 @@ ProblemUpdate<REAL>::update_activity( ActivityChange actChange, int rowid,
        problem.getConstraintMatrix().isRowRedundant( rowid ) )
       return;
 
-   activity.lastchange = stats.nrounds;
+   if( activity.lastchange != stats.nrounds - 1 )
+      last_changed_activities.push_back( rowid );
 
-   changed_activities.push_back( rowid );
+   activity.lastchange = stats.nrounds;
+   current_changed_activities.push_back( rowid );
 }
 
 template <typename REAL>
@@ -923,10 +947,16 @@ ProblemUpdate<REAL>::compress( bool full )
           postsolve.compress( mappings.first, mappings.second, full );
        },
        [this, &mappings, full]() {
-          // update row index sets
-          compress_index_vector( mappings.first, changed_activities );
+          // update last row index sets
+          compress_index_vector( mappings.first, last_changed_activities );
           if( full )
-             changed_activities.shrink_to_fit();
+             last_changed_activities.shrink_to_fit();
+       },
+       [this, &mappings, full]() {
+          // update current row index sets
+          compress_index_vector( mappings.first, current_changed_activities );
+          if( full )
+             current_changed_activities.shrink_to_fit();
        },
        [this, &mappings, full]() {
           compress_index_vector( mappings.first, singletonRows );
@@ -962,7 +992,8 @@ ProblemUpdate<REAL>::compress( bool full )
    compress_index_vector( mappings.second, random_col_perm );
    postsolve.compress( mappings.first, mappings.second, full );
    certificate_interface->compress( mappings.first, mappings.second, full );
-   compress_index_vector( mappings.first, changed_activities );
+   compress_index_vector( mappings.first, last_changed_activities );
+   compress_index_vector( mappings.first, current_changed_activities );
    compress_index_vector( mappings.first, singletonRows );
    compress_index_vector( mappings.second, emptyColumns );
    int numNewSingletonCols =
@@ -976,7 +1007,8 @@ ProblemUpdate<REAL>::compress( bool full )
    {
       random_row_perm.shrink_to_fit();
       random_col_perm.shrink_to_fit();
-      changed_activities.shrink_to_fit();
+      last_changed_activities.shrink_to_fit();
+      current_changed_activities.shrink_to_fit();
       singletonRows.shrink_to_fit();
       emptyColumns.shrink_to_fit();
       singletonColumns.shrink_to_fit();
@@ -1000,7 +1032,7 @@ ProblemUpdate<REAL>::checkChangedActivities()
    const Vec<REAL>& rhs = consmatrix.getRightHandSides();
 
    PresolveStatus status = PresolveStatus::kUnchanged;
-   for( int r : changed_activities )
+   for( int r : current_changed_activities )
    {
       if( rflags[r].test( RowFlag::kRedundant ) )
          continue;
@@ -1109,13 +1141,14 @@ ProblemUpdate<REAL>::flush( bool reset_changed_activities )
 
    if( reset_changed_activities )
    {
-      auto iter =
-          std::remove_if( changed_activities.begin(), changed_activities.end(),
-                          [&rflags]( int row ) {
-                             return rflags[row].test( RowFlag::kRedundant );
-                          } );
-
-      changed_activities.erase( iter, changed_activities.end() );
+      last_changed_activities.erase( std::remove_if( last_changed_activities.begin(), last_changed_activities.end(),
+            [&rflags]( int row ) {
+               return rflags[row].test( RowFlag::kRedundant );
+            } ), last_changed_activities.end() );
+      current_changed_activities.erase( std::remove_if( current_changed_activities.begin(), current_changed_activities.end(),
+            [&rflags]( int row ) {
+               return rflags[row].test( RowFlag::kRedundant );
+            } ), current_changed_activities.end() );
    }
 
    // remove constants of fixed columns
@@ -1658,23 +1691,8 @@ ProblemUpdate<REAL>::trivialPresolve()
        status == PresolveStatus::kUnbndOrInfeas )
       return status;
 
-   changed_activities.clear();
-
-   const Vec<RowFlags>& rflags = problem.getRowFlags();
-
-   for( int r = 0; r != problem.getNRows(); ++r )
-   {
-      if( rflags[r].test( RowFlag::kRedundant ) )
-         continue;
-
-      RowActivity<REAL>& activity = problem.getRowActivities()[r];
-      if( activity.ninfmin == 0 || activity.ninfmax == 0 ||
-          ( activity.ninfmax == 1 && !rflags[r].test( RowFlag::kLhsInf ) ) ||
-          ( activity.ninfmin == 1 && !rflags[r].test( RowFlag::kRhsInf ) ) )
-         changed_activities.push_back( r );
-   }
-
    flush( true );
+   clearChangeInfo();
 
    return status;
 }
@@ -2301,7 +2319,7 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
             // make the changes in the constraint matrix
             constraintMatrix.aggregate(
                 num, col, rowvec, eqRHS, problem.getVariableDomains(),
-                intbuffer, realbuffer, tripletbuffer, changed_activities,
+                intbuffer, realbuffer, tripletbuffer, last_changed_activities,
                 problem.getRowActivities(), singletonRows, singletonColumns,
                 emptyColumns, stats.nrounds );
 
@@ -2564,7 +2582,7 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
                // perform changes in matrix and side
                constraintMatrix.aggregate(
                    num, col1, equalityLHS, offset, problem.getVariableDomains(),
-                   intbuffer, realbuffer, tripletbuffer, changed_activities,
+                   intbuffer, realbuffer, tripletbuffer, last_changed_activities,
                    problem.getRowActivities(), singletonRows, singletonColumns,
                    emptyColumns, stats.nrounds );
 
@@ -2876,7 +2894,7 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
 
                int canceled = constraintMatrix.sparsify(
                    num, eqrow, scale, candrow, intbuffer, realbuffer,
-                   problem.getVariableDomains(), changed_activities,
+                   problem.getVariableDomains(), last_changed_activities,
                    problem.getRowActivities(), singletonRows, singletonColumns,
                    emptyColumns, stats.nrounds );
 

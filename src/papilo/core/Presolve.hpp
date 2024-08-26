@@ -291,6 +291,7 @@ class Presolve
 
    Vec<std::pair<int, int>> presolverStats;
    bool lastRoundReduced{};
+   bool currentRoundReduced{};
    int nunsuccessful{};
    bool rundelayed{};
 
@@ -525,6 +526,8 @@ Presolve<REAL>::apply( Problem<REAL>& problem, bool store_dual_postsolve )
       round_to_evaluate = Delegator::kFast;
 
       finishRound( probUpdate );
+      lastRoundReduced = true;
+      currentRoundReduced = false;
       ++stats.nrounds;
 
       nunsuccessful = 0;
@@ -1318,6 +1321,8 @@ Presolve<REAL>::handle_case_exceeded( Delegator& next_round )
             p->setDelayed( false );
          rundelayed = true;
       }
+      lastRoundReduced = currentRoundReduced;
+      currentRoundReduced = false;
       ++stats.nrounds;
       return Delegator::kFast;
    }
@@ -1371,8 +1376,8 @@ Presolve<REAL>::increase_round_if_last_run_was_not_successfull(
    {
       if( are_applied_tsx_negligible( problem, probUpdate, roundStats ) )
       {
-         lastRoundReduced =
-             lastRoundReduced || roundStats.nsidechgs > 0 ||
+         currentRoundReduced =
+             currentRoundReduced || roundStats.nsidechgs > 0 ||
              roundStats.nboundchgs > 0 || roundStats.ndeletedcols > 0 ||
              roundStats.ndeletedrows > 0 || roundStats.ncoefchgs > 0;
          next_round = increase_delegator( round_to_evaluate );
@@ -1380,9 +1385,10 @@ Presolve<REAL>::increase_round_if_last_run_was_not_successfull(
       else
       {
          printRoundStats( false, get_round_type( round_to_evaluate ) );
-         lastRoundReduced = true;
          next_round = Delegator::kFast;
          nunsuccessful = 0;
+         lastRoundReduced = true;
+         currentRoundReduced = false;
          ++stats.nrounds;
       }
    }
