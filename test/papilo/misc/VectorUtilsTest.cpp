@@ -21,7 +21,7 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 #include "papilo/misc/VectorUtils.hpp"
-#include "papilo/external/catch/catch.hpp"
+#include "papilo/external/catch/catch_amalgamated.hpp"
 
 using namespace papilo;
 

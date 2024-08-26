@@ -21,7 +21,7 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 #include "papilo/presolvers/SingletonStuffing.hpp"
-#include "papilo/external/catch/catch.hpp"
+#include "papilo/external/catch/catch_amalgamated.hpp"
 #include "papilo/core/PresolveMethod.hpp"
 #include "papilo/core/Problem.hpp"
 #include "papilo/core/ProblemBuilder.hpp"

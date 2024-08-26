@@ -21,7 +21,7 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 #include "papilo/core/SparseStorage.hpp"
-#include "papilo/external/catch/catch.hpp"
+#include "papilo/external/catch/catch_amalgamated.hpp"
 #include "papilo/misc/compress_vector.hpp"
 
 papilo::SparseStorage<double>
@@ -85,7 +85,7 @@ TEST_CASE( "sparse storage can be created from triplets", "[core]" )
          REQUIRE( rowColumns[4] == 8 );
          break;
       default:
-         REQUIRE_FALSE( "case default should not be reached" );
+         REQUIRE( false );
       }
    }
 }
@@ -152,7 +152,7 @@ TEST_CASE( "sparse matrix can be compressed", "[core]" )
          REQUIRE( rowColumns[4] == 7 );
          break;
       default:
-         REQUIRE_FALSE( "case default should not be reached" );
+         REQUIRE( false );
       }
    }
 }
@@ -226,7 +226,7 @@ TEST_CASE(
          REQUIRE( columnRows[0] == 4 );
          break;
       default:
-         REQUIRE_FALSE( "case default should not be reached" );
+         REQUIRE( false );
       }
    }
 }
@@ -303,7 +303,7 @@ TEST_CASE( "transposed sparse matrix can be compressed", "[core]" )
          REQUIRE( colRows[0] == 3 );
          break;
       default:
-         REQUIRE_FALSE( "case default should not be reached" );
+         REQUIRE( false );
       }
    }
 }
