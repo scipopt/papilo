@@ -300,7 +300,6 @@ stages:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
       when: manual
 
-
 #".ortools ctest":
 #  stage: test
 #  image:
