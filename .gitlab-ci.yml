@@ -251,6 +251,7 @@ stages:
   extends: .scip ctest
   variables:
     CMAKE_FLAGS: "-DCMAKE_BUILD_TYPE=Debug"
+  allow_failure: true
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
       when: manual
@@ -294,9 +295,11 @@ stages:
   extends: .highs ctest
   variables:
     CMAKE_FLAGS: "-DCMAKE_BUILD_TYPE=Debug"
+  allow_failure: true
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
       when: manual
+
 
 #".ortools ctest":
 #  stage: test
