@@ -96,9 +96,10 @@ class PresolveMethod
       argument = ArgumentType::kPrimal;
       type = PresolverType::kAllCols;
       timing = PresolverTiming::kExhaustive;
-      delayed = false;
       execTime = 0.0;
       enabled = true;
+      delayed = false;
+      symmetries_active = true;
       skip = 0;
       nconsecutiveUnsuccessCall = 0;
    }
@@ -271,8 +272,9 @@ class PresolveMethod
    run_symmetries( const Problem<REAL>& problem, const ProblemUpdate<REAL>& problemUpdate,
                     const Num<REAL>& num, Reductions<REAL>& reductions, const Timer& timer )
    {
+      if( !enabled || !symmetries_active )
+         return PresolveStatus::kUnchanged;
 
-      ncalls++;
 #ifdef PAPILO_TBB
       auto start = tbb::tick_count::now();
 #else
@@ -290,23 +292,7 @@ class PresolveMethod
                                 end- start ).count()/1000;
 #endif
 
-      switch( result )
-      {
-      case PresolveStatus::kUnbounded:
-      case PresolveStatus::kUnbndOrInfeas:
-      case PresolveStatus::kInfeasible:
-         assert( false );
-         break;
-      case PresolveStatus::kReduced:
-         ++nsuccessCall;
-         nconsecutiveUnsuccessCall = 0;
-         break;
-      case PresolveStatus::kUnchanged:
-         ++nconsecutiveUnsuccessCall;
-         break;
-      }
       return result;
-
    }
 
 
@@ -447,6 +433,7 @@ class PresolveMethod
    double execTime;
    bool enabled;
    bool delayed;
+   bool symmetries_active;
    PresolverTiming timing;
    PresolverType type;
    unsigned int ncalls;

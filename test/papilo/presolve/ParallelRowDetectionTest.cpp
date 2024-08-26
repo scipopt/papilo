@@ -571,8 +571,7 @@ int cause = -1;
    REQUIRE( presolveStatus == PresolveStatus::kInfeasible );
 }
 
-TEST_CASE( "parallel-row-two-inequalities-tighten-upper-bound-first-row-neg"
-           "factor-dominant",
+TEST_CASE( "parallel-row-two-inequalities-tighten-upper-bound-first-row-negfactor-dominant",
            "[presolve]" )
 {
    Num<double> num{};
@@ -849,7 +848,7 @@ int cause = -1;
    REQUIRE( presolveStatus == PresolveStatus::kInfeasible );
 }
 
-TEST_CASE( "parallel-row-best-bound-is-used-for-rhs", "[presolve]" )
+TEST_CASE( "parallel-row-best-bound-is-used-for-rhs-coeff", "[presolve]" )
 {
    Num<double> num{};
    double time = 0.0;

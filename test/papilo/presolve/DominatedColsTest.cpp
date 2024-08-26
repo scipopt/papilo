@@ -200,18 +200,18 @@ TEST_CASE( "domcol-multiple-columns", "[presolve]" )
    for( int i = 0; i < 24; i = i + 8 )
    {
       REQUIRE( reductions.getReduction( i ).row == ColReduction::LOCKED );
-      REQUIRE( reductions.getReduction( i ).col == dominating_cols[i / 8] );
+      REQUIRE( reductions.getReduction( i ).col == dominated_cols[i / 8] );
 
       REQUIRE( reductions.getReduction( i + 1 ).row ==
                ColReduction::BOUNDS_LOCKED );
-      REQUIRE( reductions.getReduction( i + 1 ).col == dominating_cols[i / 8] );
+      REQUIRE( reductions.getReduction( i + 1 ).col == dominated_cols[i / 8] );
 
       REQUIRE( reductions.getReduction( i + 2 ).row == ColReduction::LOCKED );
-      REQUIRE( reductions.getReduction( i + 2 ).col == dominated_cols[i / 8] );
+      REQUIRE( reductions.getReduction( i + 2 ).col == dominating_cols[i / 8] );
 
       REQUIRE( reductions.getReduction( i + 3 ).row ==
                ColReduction::BOUNDS_LOCKED );
-      REQUIRE( reductions.getReduction( i + 3 ).col == dominated_cols[i / 8] );
+      REQUIRE( reductions.getReduction( i + 3 ).col == dominating_cols[i / 8] );
 
       REQUIRE( reductions.getReduction( i + 4 ).row == 0 );
       REQUIRE( reductions.getReduction( i + 4 ).col == RowReduction::LOCKED );
@@ -224,7 +224,7 @@ TEST_CASE( "domcol-multiple-columns", "[presolve]" )
       REQUIRE( reductions.getReduction( i + 6 ).col == RowReduction::SAVE_ROW );
 
       REQUIRE( reductions.getReduction( i + 7 ).row == ColReduction::FIXED );
-      REQUIRE( reductions.getReduction( i + 7 ).col == dominated_cols[i / 8] );
+      REQUIRE( reductions.getReduction( i + 7 ).col == dominating_cols[i / 8] );
       REQUIRE( reductions.getReduction( i + 7 ).newval == 0 );
    }
 }

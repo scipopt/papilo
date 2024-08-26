@@ -197,7 +197,7 @@ TEST_CASE( "simple-different-int-coeff", "[presolve]" )
    }
 }
 
-TEST_CASE( "simple-different-int-coeff.pt2", "[presolve]" )
+TEST_CASE( "simple-different-int-coeff-pt2", "[presolve]" )
 {
    Message msg{};
    double time = 0.0;
@@ -224,7 +224,7 @@ TEST_CASE( "simple-different-int-coeff.pt2", "[presolve]" )
 
    Vec<double> factors = { 1, 1, -1 };
    Vec<double> offset = { 0, 0, 1 };
-   Vec<double> columns = { 0, 1, 3 };
+   Vec<double> columns = { 0, 1, 2 };
 
    for( int i = 0; i < 3; ++i )
    {
@@ -232,7 +232,7 @@ TEST_CASE( "simple-different-int-coeff.pt2", "[presolve]" )
       REQUIRE( reductions.getReduction( 2 * i ).row == ColReduction::REPLACE );
       REQUIRE( reductions.getReduction( 2 * i ).newval == factors[i] );
 
-      REQUIRE( reductions.getReduction( 2 * i + 1 ).col == 2 );
+      REQUIRE( reductions.getReduction( 2 * i + 1 ).col == 3 );
       REQUIRE( reductions.getReduction( 2 * i + 1 ).row ==
                papilo::ColReduction::NONE );
       REQUIRE( reductions.getReduction( 2 * i + 1 ).newval == offset[i] );
