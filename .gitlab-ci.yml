@@ -58,7 +58,7 @@ stages:
     - cmake $CI_PROJECT_DIR ${CMAKE_FLAGS} -DBLA_STATIC=ON
     - make -j6
     - export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
-    - ctest -j --output-on-failure
+    - ctest --output-on-failure -j8
 
 "ctest release":
   extends: .ctest
@@ -245,7 +245,7 @@ stages:
 
     #run ctests
     - export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
-    - ctest -j --output-on-failure
+    - ctest --output-on-failure -j8
 
 "scip test":
   extends: .scip ctest
@@ -289,7 +289,7 @@ stages:
     - cmake $CI_PROJECT_DIR ${CMAKE_FLAGS} -DBLA_STATIC=ON -DHIGHS_DIR=$CI_PROJECT_DIR/highs/
     - make -j6
     - export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
-    - ctest -j --output-on-failure
+    - ctest --output-on-failure -j8
 
 "highs test":
   extends: .highs ctest
@@ -334,7 +334,7 @@ stages:
 #    - cmake $CI_PROJECT_DIR ${CMAKE_FLAGS} -DBLA_STATIC=ON -DGLOP=on
 #    - make -j6
 #    - export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
-#    - ctest -j --output-on-failure
+#    - ctest --output-on-failure -j8
 #
 #"ortools test":
 #  extends: .ortools ctest
@@ -378,7 +378,7 @@ stages:
     - cmake $CI_PROJECT_DIR ${CMAKE_FLAGS} -DBLA_STATIC=ON -DROUNDINGSAT_DIR=$CI_PROJECT_DIR/roundingsat
     - make -j6
     - export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
-    - ctest -j --output-on-failure
+    - ctest --output-on-failure -j8
 
 "roundingsat test":
   extends: .roundingsat ctest
