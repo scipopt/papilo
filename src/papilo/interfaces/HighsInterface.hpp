@@ -326,7 +326,7 @@ class HighsInterface : public SolverInterface<REAL>
    getDualBound() override
    {
       //      TODO: implement
-      return inf;
+      return 0;
    }
 
    bool
