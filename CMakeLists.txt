@@ -51,7 +51,7 @@ else()
 endif()
 
 option(TBB "should TBB be linked if found" ON)
-option(TBB_DOWNLOAD "should TBB be downloaded if found" OFF)
+option(TBB_DOWNLOAD "should TBB be downloaded" OFF)
 option(INSTALL_TBB "should the TBB library be installed" OFF)
 
 option(HIGHS "should HiGHS LP solver be linked if found" ON)
