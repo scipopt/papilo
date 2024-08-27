@@ -32,6 +32,7 @@ Build system
 ------------
 
 - fixed build against HiGHS 1.7.2
+- TBB is now longer download automatically. To enable the download set TBB_DOWNLOAD to on
 
 Fixed bugs
 ----------
