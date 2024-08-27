@@ -22,10 +22,11 @@ available at [github.com/scipopt/papilo](https://github.com/scipopt/papilo).
 External dependencies that need to be installed by the user are the Intel TBB >= 2020, or TBB from oneAPI runtime library and boost >= 1.65 headers.
 The executable additionally requires some of the boost runtime libraries that are not required when PaPILO is used as
 a library.
-Under the folder external/ there are additional packages that are directly included within PaPILO and have a
+Under the folder `external/` there are additional packages that are directly included within PaPILO and have a
 liberal open-source license.
 
-If TBB is not found, then PaPILO tries to compile a static version. However this may fail on some systems currently and it is strongly recommended to install an Intel TBB runtime library.
+If TBB is not found, then the current builds fails. The user has then the option to either enable the automatic download by adding `-DTBB_DOWNLOAD` to the cmake command or to disable it by adding `-DTBB=off` instead.
+However, it is strongly recommended to install an Intel TBB runtime library since it improves the runtime drastically.
 
 # Building
 
@@ -40,7 +41,7 @@ cmake ..
 make
 ```
 
-Building PaPILO with SCIP, Gurobi, OrTools or SOPLEX works also with the standard cmake workflow:
+Building PaPILO with SCIP, HiGHS, SoPlex or OrTools works also with the standard cmake workflow:
 ```
 mkdir build
 cd build
@@ -74,7 +75,7 @@ Assuming a problem instance is stored in the file `problem.mps` the following ca
 ```
 papilo presolve -f problem.mps -r reduced.mps -v reduced.postsolve
 ```
-_Not all presolver are able to dual-postsolve the dual solution (and the reduced costs and the basis information). Please use the settings file lp_presolvers_with*_basis.set._
+_Not all presolver are able to dual-postsolve the dual solution (and the reduced costs and the basis information). Please use the settings file lp_presolvers_with_basis.set._
 
 Now we can use the reduced problem `reduced.mps` to obtain a solution
 using any solver or from any other source to the file `reduced.sol`.
@@ -368,11 +369,17 @@ Note that the options all have default values. Executing a plain make test will 
 # References and how to cite
 
 Any publication for which PaPILO is used must include an acknowledgement and a reference to the following article:
-> PaPILO: A Parallel Presolving Library for Integer and Linear Programming with Multiprecision Support
->
-> Gleixner, Ambros and Gottwald, Leona and Hoen, Alexander
->
-> available at https://arxiv.org/abs/2206.10709
+```` 
+@article{GGHpapilo,
+author    = {Ambros Gleixner and Leona Gottwald and Alexander Hoen},
+publisher = {INFORMS Journal on Computing},
+title     = {{PaPILO}: A Parallel Presolving Library for Integer and Linear Programming with Multiprecision Support},
+year      = {2023},
+journal   = {INFORMS Journal on Computing},
+doi       = {10.1287/ijoc.2022.0171.cd},
+url =       {https://github.com/INFORMSJoC/2022.0171},
+}
+````
 
 Most of the presolve methods implemented in PaPILO are described in the paper "Presolve Reductions in Mixed Integer Programming" by Achterberg et al.
 which is available under https://opus4.kobv.de/opus4-zib/files/6037/Presolve.pdf.
@@ -398,9 +405,6 @@ Modifications of PaPILO itself, however, must be distributed under LGPLv3.
 
 [Alexander Hoen](https://www.zib.de/members/hoen)  ([@alexhoen](https://github.com/alexhoen)) &mdash; main developer
 
-[Julian Manns](https://www.zib.de/members/manns)  () &mdash; build system
-
-
 
 #### Former Contributors
 
@@ -411,6 +415,8 @@ Ivet Galabova ([@galabovaa](https://github.com/galabovaa)) &mdash; initial draft
 [Katrin Halbig](https://www.datascience.nat.fau.eu/research/groups/amio/members/katrin-halbig/) ([@khalbig](https://github.com/khalbig)) &mdash; presolver for GCD based reductions on inequalities (SimplifyIneq), strengthening in DualFix
 
 Gabriel Kressin ([@GabrielKP](https://github.com/GabrielKP)) &mdash; numerical statistics, testing
+
+[Julian Manns](https://www.zib.de/members/manns)  ([@ju-manns](https://github.com/ju-manns))  &mdash; build system
 
 Anass Meskini &mdash; general development and contributions to substitution presolver in terms of internship
 

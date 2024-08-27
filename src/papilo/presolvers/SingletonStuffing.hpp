@@ -48,6 +48,21 @@ class SingletonStuffing : public PresolveMethod<REAL>
             const ProblemUpdate<REAL>& problemUpdate,
             const Num<REAL>& num, Reductions<REAL>& reductions,
             const Timer& timer, int& reason_of_infeasibility) override;
+
+ private:
+   /**
+       * if substituting a non-implied singleton variable scaling should be applied to the constraint to
+       * avoid numerical difficulties since remaining constraint can be violated by a small margin translating to greater error
+       * in the variable bound.
+       * This scaling affects dual-postsolve in which it is currently not considered and therefore then disabled.
+    */
+   REAL
+   scale_and_shift( bool is_primal, REAL side, REAL var_bound, REAL val )
+   {
+      if( is_primal )
+         return side / abs( val ) - ( val > 0 ? var_bound : -var_bound );
+      return side - var_bound * val;
+   };
 };
 
 #ifdef PAPILO_USE_EXTERN_TEMPLATES
@@ -82,6 +97,8 @@ SingletonStuffing<REAL>::execute( const Problem<REAL>& problem,
    PresolveStatus result = PresolveStatus::kUnchanged;
    Vec<int> rowsWithPenaltySingletons;
    Vec<uint8_t> penaltyVarCount( nrows );
+
+   bool is_primal = problemUpdate.getPostsolveType() == PostsolveType::kPrimal;
 
    auto handleEquation = [&]( int col, bool lbimplied, bool ubimplied,
                               const REAL& val, int row, bool impliedeq,
@@ -125,6 +142,9 @@ SingletonStuffing<REAL>::execute( const Problem<REAL>& problem,
       }
       else
       {
+         REAL scaled_lhs = side;
+         REAL scaled_rhs = side;
+
          assert( lbimplied || !cflags[col].test( ColFlag::kLbInf ) );
          assert( ubimplied || !cflags[col].test( ColFlag::kUbInf ) );
 
@@ -134,30 +154,55 @@ SingletonStuffing<REAL>::execute( const Problem<REAL>& problem,
 
          if( val < 0 )
          {
-            // set the Bound first to infinity to avoid infeasiblty during bounds changes
             if( lbimplied )
                reductions.changeRowLHSInf( row );
+            else
+               scaled_lhs = scale_and_shift( is_primal, side, lower_bounds[col], val );
+
             if( ubimplied )
                reductions.changeRowRHSInf( row );
-
-            if( !lbimplied  && lower_bounds[col] != 0 )
-               reductions.changeRowLHS( row, side - lower_bounds[col] * val );
-            if(!ubimplied  &&  upper_bounds[col] != 0 )
-               reductions.changeRowRHS( row, side - upper_bounds[col] * val );
-
+            else
+               scaled_rhs = scale_and_shift( is_primal, side, upper_bounds[col], val );
          }
          else
          {
-            // set the Bound first to infinity to avoid infeasiblty during bounds changes
-            if( lbimplied )
-               reductions.changeRowRHSInf( row );
             if( ubimplied )
                reductions.changeRowLHSInf( row );
+            else
+               scaled_lhs = scale_and_shift( is_primal, side, upper_bounds[col], val );
 
-            if( !lbimplied  && lower_bounds[col] != 0 )
-               reductions.changeRowRHS( row, side - lower_bounds[col] * val );
-            if( !ubimplied  && upper_bounds[col] != 0 )
-               reductions.changeRowLHS( row, side - upper_bounds[col] * val );
+            if( lbimplied )
+               reductions.changeRowRHSInf( row );
+            else
+               scaled_rhs = scale_and_shift( is_primal, side, lower_bounds[col], val );
+         }
+
+         // avoid temporary infeasibility
+         if( scaled_lhs > side )
+         {
+            if( scaled_rhs != side )
+               reductions.changeRowRHS( row, scaled_rhs );
+
+            reductions.changeRowLHS( row, scaled_lhs );
+         }
+         else
+         {
+            if( scaled_lhs < side )
+               reductions.changeRowLHS( row, scaled_lhs );
+
+            if( scaled_rhs != side )
+               reductions.changeRowRHS( row, scaled_rhs );
+         }
+
+         if( is_primal && abs( val ) != 1 )
+         {
+            auto rowdata = constMatrix.getRowCoefficients( row );
+            for( int i = 0; i < rowdata.getLength(); i++ )
+            {
+               int col_index = rowdata.getIndices()[i];
+               if( col_index != col )
+                  reductions.changeMatrixEntry( row, col_index, rowdata.getValues()[i] / abs(val) );
+            }
          }
       }
    };

@@ -49,10 +49,14 @@ if(MSVC)
 else()
    option(LUSOL "should LUSOL package be enabled" ON)
 endif()
+
+option(TBB "should TBB be linked if found" ON)
+option(TBB_DOWNLOAD "should TBB be downloaded" OFF)
+option(INSTALL_TBB "should the TBB library be installed" OFF)
+
 option(HIGHS "should HiGHS LP solver be linked if found" ON)
 option(SOPLEX "should SoPlex LP solver be linked if found" ON)
 option(SCIP "should SCIP solver be linked if found" ON)
-option(INSTALL_TBB "should the TBB library be installed" OFF)
 option(GUROBI "should gurobi solver be linked" OFF)
 
 # make 'Release' the default build type
@@ -143,25 +147,28 @@ target_include_directories(papilo INTERFACE
 
 target_include_directories(papilo SYSTEM INTERFACE ${Boost_INCLUDE_DIRS})
 
-
-option(TBB "should TBB be linked if found" ON)
-
 if (TBB)
    set(PAPILO_TBB on)
    # on windows we don't want to build tbb
    if(WIN32)
       find_package(TBB 2018 COMPONENTS tbb tbbmalloc REQUIRED)
    else()
-      # Utilities to automatically download missing dependencies
-      include(cmake/Dependencies.cmake)
-
-      find_or_download_package(
-         NAME TBB
-         VERSION 2018
-        URL https://github.com/oneapi-src/oneTBB/archive/refs/tags/v2021.4.0.tar.gz
-         COMPONENTS tbb tbbmalloc
-         URL_HASH SHA256=021796c7845e155e616f5ecda16daa606ebb4c6f90b996e5c08aebab7a8d3de3
-         CONFIGURE_ARGS -DTBB_TEST=OFF -DTBB_EXAMPLES=OFF -DTBB4PY_BUILD=OFF)
+      if (TBB_DOWNLOAD)
+         # Utilities to automatically download missing dependencies
+         include(cmake/Dependencies.cmake)
+         find_or_download_package(
+            NAME TBB
+            VERSION 2018
+            URL https://github.com/oneapi-src/oneTBB/archive/refs/tags/v2021.13.0.tar.gz
+            COMPONENTS tbb tbbmalloc
+            URL_HASH SHA256=3ad5dd08954b39d113dc5b3f8a8dc6dc1fd5250032b7c491eb07aed5c94133e1
+            CONFIGURE_ARGS -DTBB_TEST=OFF -DTBB_EXAMPLES=OFF -DTBB4PY_BUILD=OFF)
+      else ()
+         find_package(TBB 2018 COMPONENTS tbb tbbmalloc REQUIRED)
+         if( NOT TBB_FOUND)
+            message(FATAL_ERROR "TBB was not found. Please enable auto-download of TBB (-DTBB_DOWNLOAD=on) or disable TBB (-DTBB=off).")
+         endif ()
+      endif ()
    endif()
 
    target_link_libraries(papilo
