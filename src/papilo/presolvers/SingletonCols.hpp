@@ -64,7 +64,6 @@ class SingletonCols : public PresolveMethod<REAL>
          return side / abs( val ) - ( val > 0 ? var_bound : -var_bound );
       return side - var_bound * val;
    };
-
 };
 
 #ifdef PAPILO_USE_EXTERN_TEMPLATES
@@ -98,7 +97,7 @@ SingletonCols<REAL>::execute( const Problem<REAL>& problem,
 
    bool is_primal = problemUpdate.getPostsolveType() == PostsolveType::kPrimal;
 
-   auto handleEquation = [&]( int col, bool lowerboundImplied, bool ubimplied,
+   auto handleEquation = [&]( int col, bool lbimplied, bool ubimplied,
                               const REAL& val, int row, bool impliedeq,
                               const REAL& side ) {
       if( !impliedeq && rowSizes[row] <= 1 )
@@ -133,7 +132,7 @@ SingletonCols<REAL>::execute( const Problem<REAL>& problem,
       reductions.substituteColInObjective( col, row );
 
       // now check if the equation is redundant or needs to be modified
-      if( lowerboundImplied && ubimplied )
+      if( lbimplied && ubimplied )
       {
          // implied free -> just remove the equation completely
          reductions.markRowRedundant( row );
@@ -143,7 +142,7 @@ SingletonCols<REAL>::execute( const Problem<REAL>& problem,
          REAL scaled_lhs = side;
          REAL scaled_rhs = side;
 
-         assert( lowerboundImplied || !cflags[col].test( ColFlag::kLbInf ) );
+         assert( lbimplied || !cflags[col].test( ColFlag::kLbInf ) );
          assert( ubimplied || !cflags[col].test( ColFlag::kUbInf ) );
 
          // implied free only for one bound -> modify equation to be an
@@ -152,7 +151,7 @@ SingletonCols<REAL>::execute( const Problem<REAL>& problem,
 
          if( val < 0 )
          {
-            if( lowerboundImplied )
+            if( lbimplied )
                reductions.changeRowLHSInf( row );
             else
                scaled_lhs = scale_and_shift( is_primal, side, lower_bounds[col], val );
@@ -169,7 +168,7 @@ SingletonCols<REAL>::execute( const Problem<REAL>& problem,
             else
                scaled_lhs = scale_and_shift( is_primal, side, upper_bounds[col], val );
 
-            if( lowerboundImplied )
+            if( lbimplied )
                reductions.changeRowRHSInf( row );
             else
                scaled_rhs = scale_and_shift( is_primal, side, lower_bounds[col], val );
@@ -234,12 +233,12 @@ SingletonCols<REAL>::execute( const Problem<REAL>& problem,
          // constraint. Otherwise, it is equivalent to implied free variable
          // substitution.
 
-         bool lowerboundImplied =
+         bool lbimplied =
              row_implies_LB( num, lhs_values[row], rhs_values[row], rflags[row],
                              activities[row], val, lower_bounds[col],
                              upper_bounds[col], cflags[col] );
 
-         if( !lowerboundImplied &&
+         if( !lbimplied &&
              !problemUpdate.getPresolveOptions().removeslackvars )
             continue;
 
@@ -250,7 +249,7 @@ SingletonCols<REAL>::execute( const Problem<REAL>& problem,
 
          if( !ubimplied &&
              ( !problemUpdate.getPresolveOptions().removeslackvars ||
-               ( !lowerboundImplied && !num.isZero(obj[col]) ) ) )
+               ( !lbimplied && !num.isZero(obj[col]) ) ) )
             continue;
 
          if( cflags[col].test( ColFlag::kIntegral ) )
@@ -277,8 +276,7 @@ SingletonCols<REAL>::execute( const Problem<REAL>& problem,
                continue;
          }
 
-         handleEquation( col, lowerboundImplied, ubimplied, val, row, false,
-                         rhs_values[row] );
+         handleEquation( col, lbimplied, ubimplied, val, row, false, rhs_values[row] );
 
          continue;
       }
@@ -360,7 +358,7 @@ SingletonCols<REAL>::execute( const Problem<REAL>& problem,
          REAL duallb = obj[col] / val;
          REAL dualub = duallb;
 
-         bool lowerboundImplied =
+         bool lbimplied =
              row_implies_LB( num, lhs_values[row], rhs_values[row], rflags[row],
                              activities[row], val, lower_bounds[col],
                              upper_bounds[col], cflags[col] );
@@ -369,12 +367,12 @@ SingletonCols<REAL>::execute( const Problem<REAL>& problem,
                              activities[row], val, lower_bounds[col],
                              upper_bounds[col], cflags[col] );
 
-         if( lowerboundImplied && ubimplied )
+         if( lbimplied && ubimplied )
          {
             duallbinf = false;
             dualubinf = false;
          }
-         else if( lowerboundImplied )
+         else if( lbimplied )
          {
             if( num.isGT(val, 0) )
                duallbinf = false;
@@ -399,14 +397,14 @@ SingletonCols<REAL>::execute( const Problem<REAL>& problem,
 
             // check again if row implies more bounds with new right hand
             // side
-            if( !lowerboundImplied )
+            if( !lbimplied )
             {
-               lowerboundImplied = row_implies_LB(
+               lbimplied = row_implies_LB(
                    num, lhs_values[row], lhs_values[row], RowFlag::kEquation,
                    activities[row], val, lower_bounds[col], upper_bounds[col],
                    cflags[col] );
 
-               if( !lowerboundImplied &&
+               if( !lbimplied &&
                    !problemUpdate.getPresolveOptions().removeslackvars )
                   removevar = false;
             }
@@ -420,15 +418,12 @@ SingletonCols<REAL>::execute( const Problem<REAL>& problem,
 
                if( !ubimplied &&
                    ( !problemUpdate.getPresolveOptions().removeslackvars ||
-                     ( !lowerboundImplied && !num.isZero(obj[col]) ) ) )
+                     ( !lbimplied && !num.isZero(obj[col]) ) ) )
                   removevar = false;
             }
 
             if( removevar )
-            {
-               handleEquation( col, lowerboundImplied, ubimplied, val, row,
-                               true, lhs_values[row] );
-            }
+               handleEquation( col, lbimplied, ubimplied, val, row, true, lhs_values[row] );
             else
             {
                // if the variable should not be removed, then just apply the
@@ -450,14 +445,14 @@ SingletonCols<REAL>::execute( const Problem<REAL>& problem,
                     rhs_values[row] != lhs_values[row] );
 
             // check again if row implies more bounds with new left hand side
-            if( !lowerboundImplied )
+            if( !lbimplied )
             {
-               lowerboundImplied = row_implies_LB(
+               lbimplied = row_implies_LB(
                    num, rhs_values[row], rhs_values[row], RowFlag::kEquation,
                    activities[row], val, lower_bounds[col], upper_bounds[col],
                    cflags[col] );
 
-               if( !lowerboundImplied &&
+               if( !lbimplied &&
                    !problemUpdate.getPresolveOptions().removeslackvars )
                   removevar = false;
             }
@@ -471,15 +466,12 @@ SingletonCols<REAL>::execute( const Problem<REAL>& problem,
 
                if( !ubimplied &&
                    ( !problemUpdate.getPresolveOptions().removeslackvars ||
-                     ( !lowerboundImplied && !num.isZero(obj[col]) ) ) )
+                     ( !lbimplied && !num.isZero(obj[col]) ) ) )
                   removevar = false;
             }
 
             if( removevar )
-            {
-               handleEquation( col, lowerboundImplied, ubimplied, val, row,
-                               true, rhs_values[row] );
-            }
+               handleEquation( col, lbimplied, ubimplied, val, row, true, rhs_values[row] );
             else
             {
                // if the variable should not be removed, then just apply the

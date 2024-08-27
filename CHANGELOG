@@ -42,6 +42,7 @@ Fixed bugs
 - SimpleSubstitution: correct feasibility tolerances on euclidean coprime substitutions
 - SingleRow: eliminate computational overhead in row propagation
 - SingletonCols: order effective side changes to avoid invalid infeasibility
+- SingletonStuffing: normalize and order sides to avoid invalid infeasibility
 
 Miscellaneous
 -------------
