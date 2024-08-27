@@ -7,7 +7,7 @@ variables:
   SOPLEX_REVISION: bugfix-70
   SCIP_REVISION: master
   BOOST_VERSION: 1.70.0
-  HIGHS_REVISION: v1.6.0
+  HIGHS_REVISION: v1.7.0
   OR_TOOLS_REVISION: v9.10
   ROUNDINGSAT_REVISION: master
 
@@ -278,15 +278,16 @@ stages:
     - cd ${CI_PROJECT_DIR}/highs && git checkout ${HIGHS_REVISION}
     - mkdir highs-build
     - cd highs-build
-    - cmake .. -DCMAKE_BUILD_TYPE=Release
+    - cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${CI_PROJECT_DIR}/highs-install
     - make -j
+    - make install
 
     # build and test papilo
     - mkdir -p $CI_PROJECT_DIR/builds/papilo
     - cd $CI_PROJECT_DIR/builds/papilo
     - export CFLAGS="-Werror"
     - export CXXFLAGS="-Werror"
-    - cmake $CI_PROJECT_DIR ${CMAKE_FLAGS} -DBLA_STATIC=ON -DHIGHS_DIR=$CI_PROJECT_DIR/highs/
+    - cmake $CI_PROJECT_DIR ${CMAKE_FLAGS} -DBLA_STATIC=ON -DHIGHS_DIR=$CI_PROJECT_DIR/highs-install/lib/cmake/highs/
     - make -j6
     - export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
     - ctest --output-on-failure -j8

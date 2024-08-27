@@ -325,11 +325,8 @@ class HighsInterface : public SolverInterface<REAL>
    REAL
    getDualBound() override
    {
-
-      //      TODO:
-      //      if( this->status == SolverStatus::kOptimal )
-      //         return -inf;
-      return solver.getHighsInfo().mip_dual_bound;
+      //      TODO: implement
+      return 0;
    }
 
    bool
