@@ -140,6 +140,9 @@ SingletonCols<REAL>::execute( const Problem<REAL>& problem,
       }
       else
       {
+         REAL scaled_lhs = side;
+         REAL scaled_rhs = side;
+
          assert( lowerboundImplied || !cflags[col].test( ColFlag::kLbInf ) );
          assert( ubimplied || !cflags[col].test( ColFlag::kUbInf ) );
 
@@ -147,88 +150,49 @@ SingletonCols<REAL>::execute( const Problem<REAL>& problem,
          // inequality and remove the columns coefficient
          reductions.changeMatrixEntry( row, col, 0 );
 
-         if( num.isLT(val, 0) )
+         if( val < 0 )
          {
-            if( num.isLE(upper_bounds[col], 0) && !cflags[col].test( ColFlag::kUbInf ) )
-            {
-
-               REAL scaled_lhs = scale_and_shift( is_primal, side, lower_bounds[col], val );
-               if( lowerboundImplied )
-                  reductions.changeRowLHSInf( row );
-               else if( (!is_primal && !num.isZero( lower_bounds[col] )) || (is_primal && scaled_lhs != lhs_values[row]) )
-                  reductions.changeRowLHS( row, scaled_lhs );
-               else if ( is_primal && !num.isEq( abs(val), 1 ) )
-                  reductions.changeRowLHS( row, scaled_lhs );
-
-               REAL scaled_rhs = scale_and_shift( is_primal, side, upper_bounds[col], val );
-               if( ubimplied )
-                  reductions.changeRowRHSInf( row );
-               else if( (!is_primal && !num.isZero( upper_bounds[col] )) || (is_primal && scaled_rhs != rhs_values[row]) )
-                  reductions.changeRowRHS( row, scaled_rhs );
-               else if ( is_primal && !num.isEq( abs(val), 1 ) )
-                  reductions.changeRowRHS( row, scaled_rhs );
-            }
+            if( lowerboundImplied )
+               reductions.changeRowLHSInf( row );
             else
-            {
-               REAL scaled_rhs = scale_and_shift( is_primal, side, upper_bounds[col], val );
-               if( ubimplied )
-                  reductions.changeRowRHSInf( row );
-               else if( (!is_primal && !num.isZero( upper_bounds[col] )) || (is_primal && scaled_rhs != rhs_values[row]) )
-                  reductions.changeRowRHS( row, scaled_rhs );
-               else if ( is_primal && !num.isEq( abs(val), 1 ) )
-                  reductions.changeRowRHS( row, scaled_rhs );
+               scaled_lhs = scale_and_shift( is_primal, side, lower_bounds[col], val );
 
-               REAL scaled_lhs = scale_and_shift( is_primal, side, lower_bounds[col], val );
-               if( lowerboundImplied )
-                  reductions.changeRowLHSInf( row );
-               else if( (!is_primal && !num.isZero( lower_bounds[col] )) || (is_primal && scaled_lhs != lhs_values[row]) )
-                  reductions.changeRowLHS( row, scaled_lhs );
-               else if ( is_primal && !num.isEq( abs(val), 1 ) )
-                   reductions.changeRowLHS( row, scaled_lhs );
-               
-            }
+            if( ubimplied )
+               reductions.changeRowRHSInf( row );
+            else
+               scaled_rhs = scale_and_shift( is_primal, side, upper_bounds[col], val );
          }
          else
          {
-            if( num.isLE(upper_bounds[col], 0) && !cflags[col].test( ColFlag::kUbInf ) )
-            {
-               REAL scaled_rhs = scale_and_shift( is_primal, side, lower_bounds[col], val );
-               if( lowerboundImplied )
-                  reductions.changeRowRHSInf( row );
-               else if( (!is_primal && !num.isZero( lower_bounds[col] )) || (is_primal && scaled_rhs != rhs_values[row]) )
-                  reductions.changeRowRHS( row, scaled_rhs );
-               else if ( is_primal && !num.isEq( abs(val), 1 ) )
-                  reductions.changeRowRHS( row, scaled_rhs );
-
-               REAL scaled_lhs = scale_and_shift( is_primal, side, upper_bounds[col], val );
-               if( ubimplied )
-                  reductions.changeRowLHSInf( row );
-               else if( (!is_primal && !num.isZero( upper_bounds[col] )) || (is_primal && scaled_lhs != lhs_values[row]) )
-                  reductions.changeRowLHS( row, scaled_lhs );
-               else if ( is_primal && !num.isEq( abs(val), 1 ) )
-                  reductions.changeRowLHS( row, scaled_lhs );
-            }
+            if( ubimplied )
+               reductions.changeRowLHSInf( row );
             else
-            {
-               REAL scaled_lhs = scale_and_shift( is_primal, side, upper_bounds[col], val );
-               if( ubimplied )
-                  reductions.changeRowLHSInf( row );
-               else if( (!is_primal && !num.isZero( upper_bounds[col] )) || (is_primal && scaled_lhs != lhs_values[row]) )
-                  reductions.changeRowLHS( row, scaled_lhs );
-               else if ( is_primal && !num.isEq( abs(val), 1 ) )
-                  reductions.changeRowLHS( row, scaled_lhs );
+               scaled_lhs = scale_and_shift( is_primal, side, upper_bounds[col], val );
 
-               REAL scaled_rhs = scale_and_shift( is_primal, side, lower_bounds[col], val );
-               if( lowerboundImplied )
-                  reductions.changeRowRHSInf( row );
-               else if( (!is_primal && !num.isZero( lower_bounds[col] )) || (is_primal && scaled_rhs != rhs_values[row]) )
-                  reductions.changeRowRHS( row, scaled_rhs );
-               else if ( is_primal && !num.isEq( abs(val), 1 ) )
-                  reductions.changeRowRHS( row, scaled_rhs );
-            }
+            if( lowerboundImplied )
+               reductions.changeRowRHSInf( row );
+            else
+               scaled_rhs = scale_and_shift( is_primal, side, lower_bounds[col], val );
          }
 
-         if( !num.isEq( 1, abs( val ) ) && is_primal )
+         // avoid temporary infeasibility
+         if( scaled_lhs > side )
+         {
+            if( scaled_rhs != side )
+               reductions.changeRowRHS( row, scaled_rhs );
+
+            reductions.changeRowLHS( row, scaled_lhs );
+         }
+         else
+         {
+            if( scaled_lhs < side )
+               reductions.changeRowLHS( row, scaled_lhs );
+
+            if( scaled_rhs != side )
+               reductions.changeRowRHS( row, scaled_rhs );
+         }
+
+         if( is_primal && abs( val ) != 1 )
          {
             auto rowdata = constMatrix.getRowCoefficients( row );
             for( int i = 0; i < rowdata.getLength(); i++ )

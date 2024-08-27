@@ -41,6 +41,7 @@ Fixed bugs
 - PresolveMethod: avoid counting calls of symmetry extensions additionally
 - SimpleSubstitution: correct feasibility tolerances on euclidean coprime substitutions
 - SingleRow: eliminate computational overhead in row propagation
+- SingletonCols: order effective side changes to avoid invalid infeasibility
 
 Miscellaneous
 -------------
