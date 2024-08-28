@@ -1547,6 +1547,7 @@ ProblemUpdate<REAL>::trivialRowPresolve()
          switch( st )
          {
          case RowStatus::kRedundant:
+            markRowRedundant( row );
             break;
          case RowStatus::kRedundantLhs:
             postsolve.storeRowBoundChange(

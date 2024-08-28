@@ -39,11 +39,12 @@ Fixed bugs
 
 - Input and Output: handle floating point numbers precisely in parsers and writers
 - OPB-Parser: handle additional whitespaces
-- PresolveMethod: avoid counting calls of symmetry extensions additionally
+- Probing: eliminate computational overhead in row propagation
 - SimpleSubstitution: correct feasibility tolerances on euclidean coprime substitutions
-- SingleRow: eliminate computational overhead in row propagation
 - SingletonCols: order effective side changes to avoid invalid infeasibility
 - SingletonStuffing: normalize and order sides to avoid invalid infeasibility
+- Statistics: avoid counting calls of symmetry extensions additionally
+- Trivial: mark activity redundancy in trivial row presolving
 
 Miscellaneous
 -------------
