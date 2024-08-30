@@ -101,7 +101,7 @@ class Probing : public PresolveMethod<REAL>
 
       paramSet.addParameter( "probing.maxbadgesize",
                              "maximal number of probing candidates probed in "
-                             "a single badge of candidates",
+                             "a single badge of candidates (-1, 0: unlimited)",
                              max_badge_size, DEFAULT_MAX_BADGE_SIZE );
 
       paramSet.addParameter(
