@@ -106,6 +106,9 @@ probing.maxinitialbadgesize = 1000
 # minimum number of probing candidates probed in a single badge of candidates  [Integer: [1,2147483647]]
 probing.minbadgesize = 10
 
+# maximal number of probing candidates probed in a single badge of candidates (-1, 0: unlimited)  [Integer: [-1,2147483647]]
+probing.maxbadgesize = -1
+
 # minimum fraction of domain that needs to be reduced for continuous variables to accept a bound change in probing  [Numerical: [0,1]]
 probing.mincontdomred = 0.29999999999999999
 
