@@ -1696,7 +1696,6 @@ ProblemUpdate<REAL>::trivialPresolve()
       return status;
 
    flush( true );
-   clearChangeInfo();
 
    return status;
 }
