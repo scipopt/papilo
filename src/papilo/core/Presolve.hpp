@@ -546,9 +546,6 @@ Presolve<REAL>::apply( Problem<REAL>& problem, bool store_dual_postsolve )
 
             lastRoundReduced = currentRoundReduced;
             currentRoundReduced = false;
-            probUpdate.clearChangeInfo();
-            probUpdate.clearStates();
-            probUpdate.check_and_compress();
             ++stats.nrounds;
          }
 
