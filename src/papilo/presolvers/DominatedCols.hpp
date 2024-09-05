@@ -117,13 +117,12 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
                               const Num<REAL>& num, Reductions<REAL>& reductions,
                               const Timer& timer, int& reason_of_infeasibility){
    const int ncols = problem.getNCols();
-   const int nrows = problem.getNRows();
 
    // do not call dominated column presolver too often, since it can be
    // expensive
    this->skipRounds( this->getNCalls() );
 
-   if( ncols <= 1 || nrows == 0 )
+   if( ncols <= 1 )
       return PresolveStatus::kUnchanged;
 
    const auto& obj = problem.getObjective().coefficients;
@@ -136,6 +135,7 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
    const auto& cflags = problem.getColFlags();
    const auto& activities = problem.getRowActivities();
    const auto& rowsize = consMatrix.getRowSizes();
+   const int nrows = problem.getNRows();
    Vec<ColInfo> colinfo( ncols );
 
 #ifdef PAPILO_TBB
@@ -370,6 +370,8 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
    Vec<Vec<DomcolReduction>> domcolsbuffers(0);
    int ndomcols = 0;
    int start = 0;
+
+   assert(nrows >= 1);
 
    // repeat finding and filtering dominations to bound memory demand
    while( ndomcols < ndomcolsbound && start < (int)unboundedcols.size() )
