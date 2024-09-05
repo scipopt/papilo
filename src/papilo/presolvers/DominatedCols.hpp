@@ -352,7 +352,7 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
    Vec<int> domcol(ncols, -1);
    Vec<int> nchildren(ncols, 0);
    Vec<int> leaves(0);
-   int ndomcolsbound = ncols;
+   unsigned int ndomcolsbound = ncols;
 
    for( int col = 0; col < ncols; ++col )
    {
@@ -376,7 +376,7 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
    // repeat finding and filtering dominations to bound memory demand
    while( ndomcols < ndomcolsbound && start < (int)unboundedcols.size() )
    {
-      int ndomcolsbuffers = 0;
+      unsigned int ndomcolsbuffers = 0;
       int base = start;
       int stopp;
 
@@ -386,7 +386,7 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
          stopp = std::min(start + nrows, (int)unboundedcols.size());
          ndomcolsbuffers = stopp - base;
 
-         if( (int)domcolsbuffers.size() < ndomcolsbuffers )
+         if( domcolsbuffers.size() < ndomcolsbuffers )
             domcolsbuffers.resize(ndomcolsbuffers);
 
 #ifdef PAPILO_TBB
@@ -537,7 +537,7 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
        } );
 #endif
 
-         for( int i = start - base; i < ndomcolsbuffers; ++i )
+         for( unsigned int i = start - base; i < ndomcolsbuffers; ++i )
             ndomcols += domcolsbuffers[i].size();
 
          start = stopp;
@@ -569,7 +569,7 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
                {
                   if( nchildren[source] == 0 )
                   {
-                     nchildren[source] = -leaves.size();
+                     nchildren[source] = - (int) leaves.size();
                      leaves.push_back(source);
                   }
                   ++nchildren[sink];
