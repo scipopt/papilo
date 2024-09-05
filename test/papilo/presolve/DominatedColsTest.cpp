@@ -371,7 +371,7 @@ setupMatrixForDominatedColsMultipleParallel()
 Problem<double>
 setupMatrixForMultipleDominatedCols()
 {
-   // column of x is dominated by column of y is dominated by column of z
+   // x is dominated by y and y is dominated by z
    // min -3x -2y -1z
    // a: 2x + 3y + 4z <= 6
    // b:       y + 3z <= 1
