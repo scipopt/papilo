@@ -363,12 +363,12 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
       }
    }
 
-   if( ndomcolsbound >= ncols )
+   if( (int) ndomcolsbound >= ncols )
       ndomcolsbound = ncols - 1;
 
    Vec<DomcolReduction> domcols(0);
    Vec<Vec<DomcolReduction>> domcolsbuffers(0);
-   int ndomcols = 0;
+   unsigned int ndomcols = 0;
    int start = 0;
 
    assert(nrows >= 1);
@@ -381,7 +381,7 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
       int stopp;
 
       // find dominations until number of columns is reached
-      while( ndomcols < ncols && start < (int)unboundedcols.size() )
+      while( (int) ndomcols < ncols && start < (int)unboundedcols.size() )
       {
          stopp = std::min(start + nrows, (int)unboundedcols.size());
          ndomcolsbuffers = stopp - base;
@@ -548,11 +548,11 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
       // filter dominations avoiding cyclic conflicts
       do
       {
-         for( int i = 0; i < ndomcolsbuffers; ++i )
+         for( unsigned int i = 0; i < ndomcolsbuffers; ++i )
          {
             if( domcolsbuffers[i].empty() || ( !lock && domcolsbuffers[i][0].implrowlock != -1 ) )
                continue;
-            for( int j = 0; j < (int)domcolsbuffers[i].size(); ++j )
+            for( unsigned int j = 0; j < domcolsbuffers[i].size(); ++j )
             {
                int source = domcolsbuffers[i][j].col2;
                if( domcol[source] != -1 )
