@@ -368,14 +368,18 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
 
    Vec<DomcolReduction> domcols(0);
    Vec<Vec<DomcolReduction>> domcolsbuffers(0);
+   int ndomcols = 0;
+   int start = 0;
 
    // repeat finding and filtering dominations to bound memory demand
-   for( int ndomcols = 0, start = 0; ndomcols < ndomcolsbound && start < (int)unboundedcols.size(); ndomcols = domcols.size() )
+   while( ndomcols < ndomcolsbound && start < (int)unboundedcols.size() )
    {
       int ndomcolsbuffers = 0;
+      int base = start;
+      int stopp;
 
       // find dominations until number of columns is reached
-      for( int base = start, stopp; ndomcols < ncols && start < (int)unboundedcols.size(); start = stopp )
+      while( ndomcols < ncols && start < (int)unboundedcols.size() )
       {
          stopp = std::min(start + nrows, (int)unboundedcols.size());
          ndomcolsbuffers = stopp - base;
@@ -533,6 +537,8 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
 
          for( int i = start - base; i < ndomcolsbuffers; ++i )
             ndomcols += domcolsbuffers[i].size();
+
+         start = stopp;
       }
 
       bool lock = false;
@@ -581,6 +587,8 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
          lock = !lock;
       }
       while(lock);
+
+      ndomcols = domcols.size();
    }
 
    domcolsbuffers.clear();
