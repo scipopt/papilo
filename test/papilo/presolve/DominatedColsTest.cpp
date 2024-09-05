@@ -232,7 +232,7 @@ TEST_CASE( "domcol-multiple-columns", "[presolve]" )
 Problem<double>
 setupMatrixForDominatedCols()
 {
-   // column of x is dominated by column of y
+   // x is dominated by y
    // min -2x -y -2z
    // a: 2x + 3y +  z <= 6
    // b:       y + 3z <= 1
