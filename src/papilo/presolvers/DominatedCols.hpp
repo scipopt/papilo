@@ -116,7 +116,7 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
                               const ProblemUpdate<REAL>& problemUpdate,
                               const Num<REAL>& num, Reductions<REAL>& reductions,
                               const Timer& timer, int& reason_of_infeasibility){
-   const int ncols = problem.getNCols();
+   const unsigned int ncols = problem.getNCols();
 
    // do not call dominated column presolver too often, since it can be
    // expensive
@@ -135,7 +135,7 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
    const auto& cflags = problem.getColFlags();
    const auto& activities = problem.getRowActivities();
    const auto& rowsize = consMatrix.getRowSizes();
-   const int nrows = problem.getNRows();
+   const unsigned int nrows = problem.getNRows();
    Vec<ColInfo> colinfo( ncols );
 
 #ifdef PAPILO_TBB
@@ -363,30 +363,30 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
       }
    }
 
-   if( (int) ndomcolsbound >= ncols )
+   if( ndomcolsbound >= ncols )
       ndomcolsbound = ncols - 1;
 
    Vec<DomcolReduction> domcols(0);
    Vec<Vec<DomcolReduction>> domcolsbuffers(0);
    unsigned int ndomcols = 0;
-   int start = 0;
+   unsigned int start = 0;
 
    assert(nrows >= 1);
 
    // repeat finding and filtering dominations to bound memory demand
-   while( ndomcols < ndomcolsbound && start < (int)unboundedcols.size() )
+   while( ndomcols < ndomcolsbound && start < unboundedcols.size() )
    {
-      unsigned int ndomcolsbuffers = 0;
-      int base = start;
-      int stopp;
+      int ndomcolsbuffers = 0;
+      unsigned int base = start;
+      unsigned int stopp;
 
       // find dominations until number of columns is reached
-      while( (int) ndomcols < ncols && start < (int)unboundedcols.size() )
+      while( ndomcols < ncols && start < unboundedcols.size() )
       {
-         stopp = std::min(start + nrows, (int)unboundedcols.size());
+         stopp = std::min(start + nrows, unboundedcols.size());
          ndomcolsbuffers = stopp - base;
 
-         if( domcolsbuffers.size() < ndomcolsbuffers )
+         if( (int)domcolsbuffers.size() < ndomcolsbuffers )
             domcolsbuffers.resize(ndomcolsbuffers);
 
 #ifdef PAPILO_TBB
@@ -396,7 +396,7 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
        [&]( const tbb::blocked_range<int>& r ) {
           for( int k = r.begin(); k < r.end(); ++k )
 #else
-   for( int k = start; k < stopp; ++k )
+   for( int k = start; k < (int)stopp; ++k )
 #endif
           {
              int unbounded_col = unboundedcols[k];
@@ -537,7 +537,7 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
        } );
 #endif
 
-         for( unsigned int i = start - base; i < ndomcolsbuffers; ++i )
+         for( int i = start - base; i < ndomcolsbuffers; ++i )
             ndomcols += domcolsbuffers[i].size();
 
          start = stopp;
@@ -548,11 +548,11 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
       // filter dominations avoiding cyclic conflicts
       do
       {
-         for( unsigned int i = 0; i < ndomcolsbuffers; ++i )
+         for( int i = 0; i < ndomcolsbuffers; ++i )
          {
             if( domcolsbuffers[i].empty() || ( !lock && domcolsbuffers[i][0].implrowlock != -1 ) )
                continue;
-            for( unsigned int j = 0; j < domcolsbuffers[i].size(); ++j )
+            for( int j = 0; j < (int)domcolsbuffers[i].size(); ++j )
             {
                int source = domcolsbuffers[i][j].col2;
                if( domcol[source] != -1 )
@@ -569,7 +569,7 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
                {
                   if( nchildren[source] == 0 )
                   {
-                     nchildren[source] = - (int) leaves.size();
+                     nchildren[source] = -leaves.size();
                      leaves.push_back(source);
                   }
                   ++nchildren[sink];
