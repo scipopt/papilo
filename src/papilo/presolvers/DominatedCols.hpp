@@ -116,7 +116,7 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
                               const ProblemUpdate<REAL>& problemUpdate,
                               const Num<REAL>& num, Reductions<REAL>& reductions,
                               const Timer& timer, int& reason_of_infeasibility){
-   const unsigned int ncols = problem.getNCols();
+   const size_t ncols = problem.getNCols();
 
    // do not call dominated column presolver too often, since it can be
    // expensive
@@ -135,7 +135,7 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
    const auto& cflags = problem.getColFlags();
    const auto& activities = problem.getRowActivities();
    const auto& rowsize = consMatrix.getRowSizes();
-   const unsigned int nrows = problem.getNRows();
+   const size_t nrows = problem.getNRows();
    Vec<ColInfo> colinfo( ncols );
 
 #ifdef PAPILO_TBB
@@ -352,7 +352,7 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
    Vec<int> domcol(ncols, -1);
    Vec<int> nchildren(ncols, 0);
    Vec<int> leaves(0);
-   unsigned int ndomcolsbound = ncols;
+   size_t ndomcolsbound = ncols;
 
    for( int col = 0; col < (int)ncols; ++col )
    {
@@ -368,8 +368,8 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
 
    Vec<DomcolReduction> domcols(0);
    Vec<Vec<DomcolReduction>> domcolsbuffers(0);
-   unsigned int ndomcols = 0;
-   unsigned int start = 0;
+   size_t ndomcols = 0;
+   size_t start = 0;
 
    assert(nrows >= 1);
 
@@ -377,8 +377,8 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
    while( ndomcols < ndomcolsbound && start < unboundedcols.size() )
    {
       int ndomcolsbuffers = 0;
-      unsigned int base = start;
-      unsigned int stopp;
+      size_t base = start;
+      size_t stopp;
 
       // find dominations until number of columns is reached
       while( ndomcols < ncols && start < unboundedcols.size() )
