@@ -167,7 +167,7 @@ TEST_CASE( "domcol-multiple-parallel-cols-generate_redundant-reductions", "[pres
        presolvingMethod.execute( problem, problemUpdate, num, reductions, t, cause);
 
    REQUIRE( presolveStatus == PresolveStatus::kReduced );
-   REQUIRE( reductions.getTransactions().size() >= 2 );
+   REQUIRE( reductions.getTransactions().size() == 2 );
 }
 
 TEST_CASE( "domcol-multiple-columns", "[presolve]" )
@@ -193,11 +193,11 @@ TEST_CASE( "domcol-multiple-columns", "[presolve]" )
        presolvingMethod.execute( problem, problemUpdate, num, reductions, t, cause );
 
    REQUIRE( presolveStatus == PresolveStatus::kReduced );
-   REQUIRE( reductions.size() >= 16 );
+   REQUIRE( reductions.size() == 16 );
 
-   Vec<int> dominated_cols = { 0, 0, 1 };
-   Vec<int> dominating_cols = { 2, 1, 2 };
-   for( int i = 0; i < (int)reductions.size(); i += 8 )
+   Vec<int> dominated_cols = { 0, 0 };
+   Vec<int> dominating_cols = { 2, 1 };
+   for( int i = 0; i < 16; i += 8 )
    {
       REQUIRE( reductions.getReduction( i ).row == ColReduction::LOCKED );
       REQUIRE( reductions.getReduction( i ).col == dominated_cols[i / 8] );
