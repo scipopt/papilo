@@ -154,7 +154,7 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
        [&]( const tbb::blocked_range<int>& r ) {
           for( int col = r.begin(); col < r.end(); ++col )
 #else
-   for( int col = 0; col < ncols; ++col )
+   for( int col = 0; col < (int)ncols; ++col )
 #endif
           {
              auto colvec = consMatrix.getColumnCoefficients( col );
@@ -354,7 +354,7 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
    Vec<int> leaves(0);
    unsigned int ndomcolsbound = ncols;
 
-   for( int col = 0; col < ncols; ++col )
+   for( int col = 0; col < (int)ncols; ++col )
    {
       if( cflags[col].test( ColFlag::kLbInf ) && cflags[col].test( ColFlag::kUbInf ) )
       {
