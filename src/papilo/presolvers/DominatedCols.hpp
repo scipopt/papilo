@@ -363,6 +363,9 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
       }
    }
 
+   assert(ncols > 1);
+   assert(nrows >= 1);
+
    if( ndomcolsbound >= ncols )
       ndomcolsbound = ncols - 1;
 
@@ -370,8 +373,6 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
    Vec<Vec<DomcolReduction>> domcolsbuffers(0);
    size_t ndomcols = 0;
    size_t start = 0;
-
-   assert(nrows >= 1);
 
    // repeat finding and filtering dominations to bound memory demand
    while( ndomcols < ndomcolsbound && start < unboundedcols.size() )
