@@ -443,6 +443,8 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
                    scale = -1;
                 }
 
+                assert(rowsize[row] >= 1);
+
                 if( scale == 0 || ( bestrowsize == rowsize[row] && bestrowlock <= rowlock ) )
                    continue;
 
