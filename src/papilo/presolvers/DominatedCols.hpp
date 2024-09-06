@@ -118,6 +118,7 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
                               const Timer& timer, int& reason_of_infeasibility){
    const size_t ncols = problem.getNCols();
 
+   //TODO: Reduce skips by one to rerun initially
    // do not call dominated column presolver too often, since it can be
    // expensive
    this->skipRounds( this->getNCalls() );
