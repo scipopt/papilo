@@ -4,7 +4,7 @@
 # - tests on Mac/Windows
 
 variables:
-  SOPLEX_REVISION: bugfix-70
+  SOPLEX_REVISION: bugfix-71
   SCIP_REVISION: master
   BOOST_VERSION: 1.70.0
   HIGHS_REVISION: v1.7.0
