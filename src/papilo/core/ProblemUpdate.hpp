@@ -76,7 +76,9 @@ class ProblemUpdate
    Vec<int> deleted_cols;
    Vec<int> redundant_rows;
 
+   /* activities changed in the last round or (if in sequential mode) earlier in this round */
    Vec<int> last_changed_activities;
+   /* activities changed in this round */
    Vec<int> current_changed_activities;
    Vec<int> singletonRows;
    Vec<int> singletonColumns;
