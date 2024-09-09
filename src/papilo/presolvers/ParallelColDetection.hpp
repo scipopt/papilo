@@ -188,70 +188,14 @@ ParallelColDetection<REAL>::findParallelCols(
    const Vec<REAL>& lbs = domains.lower_bounds;
    const Vec<REAL>& ubs = domains.upper_bounds;
 
-   auto checkDomainsForHoles = [&]( int col1, int col2, const REAL& scale2 ) {
-      // test whether we need to check that the domain of the merged
-      // column has no holes
-      assert( cflags[col1].test( ColFlag::kIntegral ) );
-      assert( cflags[col2].test( ColFlag::kIntegral ) );
-      assert( !cflags[col1].test( ColFlag::kLbInf, ColFlag::kUbInf ) );
-      assert( !cflags[col2].test( ColFlag::kLbInf, ColFlag::kUbInf ) );
+   auto checkDomainForHoles = [&]( int col, const REAL& scale )
+   {
+      assert( cflags[col].test( ColFlag::kIntegral ) );
+      assert( !cflags[col].test( ColFlag::kLbInf, ColFlag::kUbInf ) );
+      assert( num.isIntegral(scale) );
 
-      // compute the domains of the merged column
-      REAL mergeval = lbs[col2];
-      REAL mergeub = ubs[col2];
-
-      if( scale2 < 0 )
-      {
-         mergeval += scale2 * ubs[col1];
-         mergeub += scale2 * lbs[col1];
-      }
-      else
-      {
-         mergeval += scale2 * lbs[col1];
-         mergeub += scale2 * ubs[col1];
-      }
-
-      // scan domain of new variable for holes:
-      // test every value in domain of column 1 if it allows to
-      // find a value in the domain of column 2 to constitute the
-      // value the all values in the domain of the merged column.
-      // If no such value is found the columns cannot be merged
-      bool foundHole = false;
-      while( num.isLE( mergeval, mergeub ) )
-      {
-         // initialize col1val with the lower bound of column 1
-         REAL col1val = lbs[col1];
-
-         // test if col1val + scale2 * col2val = mergeval implies a
-         // value for col2val that is within the domain of column 2.
-         // If that is the case we can stop and increase mergeval by
-         // 1, otherwise we found a hole If that check failed for
-         // the current col1val we increase it by 1 the upper bound
-         // of column 1 is reached
-         foundHole = true;
-         while( num.isLE( col1val, ubs[col1] ) )
-         {
-            REAL col2val = mergeval - col1val * scale2;
-
-            if( num.isIntegral( col2val ) && num.isGE( col2val, lbs[col2] ) &&
-                num.isLE( col2val, ubs[col2] ) )
-            {
-               foundHole = false;
-               break;
-            }
-
-            col1val += 1;
-         }
-
-         // if a hole was found we can stop
-         if( foundHole )
-            break;
-
-         // test next value in domain
-         mergeval += 1;
-      }
-
-      return foundHole;
+      // there are holes iff the range of the unit column does not cover the scale
+      return num.isLT(ubs[col] - lbs[col], abs(scale) - 1);
    };
 
    if( constMatrix.getColumnCoefficients( bucket[0] ).getLength() <= 1 )
@@ -327,7 +271,7 @@ ParallelColDetection<REAL>::findParallelCols(
 
             if( num.isIntegral(scale)
                   && check_parallelity( num, obj, col2, length, coefs2, col1, coefs1 )
-                  && !checkDomainsForHoles( col2, col1, scale )
+                  && !checkDomainForHoles( col1, scale )
 //                  && !symmetries.contains_symmetry( col2, col1 )
                   )
             {
@@ -427,7 +371,7 @@ ParallelColDetection<REAL>::findParallelCols(
 
             if( num.isIntegral(scale)
                   && check_parallelity( num, obj, col2, length, coefs2, col1, coefs1 )
-                  && !checkDomainsForHoles( col2, col1, scale )
+                  && !checkDomainForHoles( col1, scale )
 //                  && !symmetries.contains_symmetry( col2, col1 )
                   )
             {
