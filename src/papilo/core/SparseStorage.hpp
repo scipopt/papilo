@@ -524,57 +524,6 @@ SparseStorage<REAL>::SparseStorage( int nRows_in, int nCols_in, int nnz_in,
 }
 
 template <typename REAL>
-SparseStorage<REAL>::SparseStorage( REAL* values_in, int* rowstart_in,
-                                    int* columns_in, int nRows_in, int nCols_in,
-                                    int nnz_in, double spareRatio_in,
-                                    int minInterRowSpace_in )
-    : nRows( nRows_in ), nCols( nCols_in ), nnz( nnz_in ),
-      spareRatio( spareRatio_in ), minInterRowSpace( minInterRowSpace_in )
-{
-   assert( nRows_in >= 0 && nnz_in >= 0 && spareRatio >= 1.0 );
-   assert( rowstart_in );
-
-   // compute length of new storage
-   nAlloc = computeNAlloc();
-
-   columns.resize( nAlloc );
-   values.resize( nAlloc );
-   rowranges.resize( nRows + 1 );
-
-   // build storage
-   int shift = 0;
-   for( int r = 0; r < nRows; r++ )
-   {
-      rowranges[r].start = rowstart_in[r] + shift;
-
-      for( int j = rowstart_in[r]; j < rowstart_in[r + 1]; j++ )
-      {
-         if( values_in[j] != REAL{ 0.0 } )
-         {
-            assert( j + shift >= 0 );
-
-            values[j + shift] = values_in[j];
-            columns[j + shift] = columns_in[j];
-         }
-         else
-         {
-            shift--;
-         }
-      }
-
-      rowranges[r].end = rowstart_in[r + 1] + shift;
-      const int rowsize = rowranges[r].end - rowranges[r].start;
-      const int rowalloc = computeRowAlloc( rowsize );
-      shift += rowalloc - rowsize;
-   }
-
-   assert( nRows == 0 );
-
-   rowranges[nRows].start = rowstart_in[nRows] + shift;
-   rowranges[nRows].end = rowranges[nRows].start;
-}
-
-template <typename REAL>
 SparseStorage<REAL>
 SparseStorage<REAL>::getTranspose() const
 {
