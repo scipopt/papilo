@@ -1139,18 +1139,21 @@ Postsolve<REAL>::apply_parallel_col_to_original_solution(
       assert( !( col2boundFlags & IS_LBINF ) );
       assert( !( col2boundFlags & IS_UBINF ) );
       assert( col2boundFlags & IS_INTEGRAL );
+      assert( num.isIntegral(col2scale) );
 
-      col1val = col1lb;
+      col1val = num.max(col1lb, num.min(col1ub, 0));
+      col2val = solval - col2scale * col1val;
 
-      while( num.isFeasLE( col1val, col1ub ) )
+      // recompute feasible values next to the closest bound
+      if( num.isFeasLT( col2val, col2lb ) )
       {
-         col2val = solval - col1val * col2scale;
-
-         if( num.isFeasIntegral( col2val ) && num.isFeasGE( col2val, col2lb ) &&
-             num.isFeasLE( col2val, col2ub ) )
-            break;
-
-         col1val += 1;
+         col1val = num.round((1 - abs(num.round(col2scale)) + 2 * (solval - col2lb)) / (2 * col2scale));
+         col2val = solval - col2scale * col1val;
+      }
+      else if( num.isFeasGT( col2val, col2ub ) )
+      {
+         col1val = num.round((abs(num.round(col2scale)) - 1 + 2 * (solval - col2ub)) / (2 * col2scale));
+         col2val = solval - col2scale * col1val;
       }
    }
    else
