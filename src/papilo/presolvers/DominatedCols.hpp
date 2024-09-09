@@ -116,6 +116,16 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
                               const ProblemUpdate<REAL>& problemUpdate,
                               const Num<REAL>& num, Reductions<REAL>& reductions,
                               const Timer& timer, int& reason_of_infeasibility){
+   const size_t ncols = problem.getNCols();
+
+   //TODO: Reduce skips by one to rerun initially
+   // do not call dominated column presolver too often, since it can be
+   // expensive
+   this->skipRounds( this->getNCalls() );
+
+   if( ncols <= 1 )
+      return PresolveStatus::kUnchanged;
+
    const auto& obj = problem.getObjective().coefficients;
    const auto& consMatrix = problem.getConstraintMatrix();
    const auto& lbValues = problem.getLowerBounds();
@@ -126,20 +136,15 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
    const auto& cflags = problem.getColFlags();
    const auto& activities = problem.getRowActivities();
    const auto& rowsize = consMatrix.getRowSizes();
-   const int ncols = problem.getNCols();
-
-   PresolveStatus result = PresolveStatus::kUnchanged;
-
-   // do not call dominated column presolver too often, since it can be
-   // expensive
-   this->skipRounds( this->getNCalls() );
-
+   const size_t nrows = problem.getNRows();
    Vec<ColInfo> colinfo( ncols );
+
 #ifdef PAPILO_TBB
    tbb::concurrent_vector<int> unboundedcols;
 #else
    Vec<int> unboundedcols;
 #endif
+
    unboundedcols.reserve( ncols );
 
    // compute signatures and implied bound information of all columns in
@@ -148,9 +153,9 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
    tbb::parallel_for(
        tbb::blocked_range<int>( 0, ncols ),
        [&]( const tbb::blocked_range<int>& r ) {
-          for( int col = r.begin(); col != r.end(); ++col )
+          for( int col = r.begin(); col < r.end(); ++col )
 #else
-   for( int col = 0; col != ncols; ++col )
+   for( int col = 0; col < (int)ncols; ++col )
 #endif
           {
              auto colvec = consMatrix.getColumnCoefficients( col );
@@ -163,7 +168,7 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
              if( cflags[col].test( ColFlag::kUbInf ) )
                 colinfo[col].ubfree = -1;
 
-             for( int j = 0; j != collen; ++j )
+             for( int j = 0; j < collen; ++j )
              {
                 int row = colrows[j];
                 if( colinfo[col].ubfree == 0 &&
@@ -345,144 +350,190 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
       return true;
    };
 
-#ifdef PAPILO_TBB
-   tbb::concurrent_vector<DomcolReduction> domcolreductions;
-#else
-   Vec<DomcolReduction> domcolreductions;
-#endif
+   Vec<int> domcol(ncols, -1);
+   Vec<int> nchildren(ncols, 0);
+   Vec<int> leaves(0);
+   size_t ndomcolsbound = ncols;
+
+   for( int col = 0; col < (int)ncols; ++col )
+   {
+      if( cflags[col].test( ColFlag::kLbInf ) && cflags[col].test( ColFlag::kUbInf ) )
+      {
+         domcol[col] = -2;
+         --ndomcolsbound;
+      }
+   }
+
+   assert(ncols > 1);
+   assert(nrows >= 1);
+
+   if( ndomcolsbound >= ncols )
+      ndomcolsbound = ncols - 1;
+
+   Vec<DomcolReduction> domcols(0);
+   Vec<Vec<DomcolReduction>> domcolsbuffers(0);
+   size_t ndomcols = 0;
+   size_t start = 0;
+
+   // repeat finding and filtering dominations to bound memory demand
+   while( ndomcols < ndomcolsbound && start < unboundedcols.size() )
+   {
+      int ndomcolsbuffers = 0;
+      size_t base = start;
+      size_t stopp;
+
+      // find dominations until number of columns is reached
+      while( ndomcols < ncols && start < unboundedcols.size() )
+      {
+         stopp = std::min(start + nrows, unboundedcols.size());
+         ndomcolsbuffers = stopp - base;
+
+         if( (int)domcolsbuffers.size() < ndomcolsbuffers )
+            domcolsbuffers.resize(ndomcolsbuffers);
 
 #ifdef PAPILO_TBB
    // scan unbounded columns if they dominate other columns
    tbb::parallel_for(
-       tbb::blocked_range<int>( 0, (int) unboundedcols.size() ),
+       tbb::blocked_range<int>( start, stopp ),
        [&]( const tbb::blocked_range<int>& r ) {
-          for( int k = r.begin(); k != r.end(); ++k )
+          for( int k = r.begin(); k < r.end(); ++k )
 #else
-   for( int k = 0; k < (int) unboundedcols.size(); ++k )
+   for( int k = start; k < (int)stopp; ++k )
 #endif
           {
              int unbounded_col = unboundedcols[k];
              int lbfree = colinfo[unbounded_col].lbfree;
              int ubfree = colinfo[unbounded_col].ubfree;
-
              assert( lbfree != 0 || ubfree != 0 );
-
              auto colvec = consMatrix.getColumnCoefficients( unbounded_col );
              int collen = colvec.getLength();
              const int* colrows = colvec.getIndices();
              const REAL* colvals = colvec.getValues();
-             int scale;
-             int implrowlock;
-
-             // determine the scale of the dominating column depending on
-             // whether the upper or lower bound is free, and remember which
-             // row needs to be locked to protect the implied bound (if any)
-             if( ubfree != 0 )
-             {
-                scale = 1;
-                implrowlock = ubfree > 0 ? colrows[ubfree - 1] : -1;
-             }
-             else if( lbfree != 0 )
-             {
-                scale = -1;
-                implrowlock = lbfree > 0 ? colrows[lbfree - 1] : -1;
-             }
-             else
-                continue;
-
-             int bestrow = -1;
+             int lbrowlock = lbfree > 0 ? colrows[lbfree - 1] : -1;
+             int ubrowlock = ubfree > 0 ? colrows[ubfree - 1] : -1;
              int bestrowsize = std::numeric_limits<int>::max();
+             int bestrowlock = std::numeric_limits<int>::max();
+             int bestrow = -1;
+             int bestscale = 0;
+             int row;
 
-             for( int j = 0; j < collen; ++j )
+             for( int i = 0; i < collen; ++i )
              {
-                int row = colrows[j];
-                if( ( !rflags[row].test( RowFlag::kLhsInf, RowFlag::kRhsInf ) ||
-                      ( !rflags[row].test( RowFlag::kRhsInf ) &&
-                        scale * colvals[j] > 0 ) ||
-                      ( !rflags[row].test( RowFlag::kLhsInf ) &&
-                        scale * colvals[j] < 0 ) ) &&
-                    rowsize[row] < bestrowsize )
+                row = colrows[i];
+
+                if( bestrowsize < rowsize[row] )
+                   continue;
+
+                // determine the scale of the dominating column depending on
+                // whether the upper or lower bound is free, and remember which
+                // row needs to be locked to protect the implied bound (if any)
+                int rowlock = std::numeric_limits<int>::max();
+                int scale = 0;
+
+                if( ubfree != 0 && rowlock > ubrowlock
+                      && !rflags[row].test( colvals[i] < 0 ? RowFlag::kLhsInf : RowFlag::kRhsInf ) )
                 {
-                   bestrow = j;
-                   bestrowsize = rowsize[row];
+                   rowlock = ubrowlock;
+                   scale = 1;
                 }
+
+                if( lbfree != 0 && rowlock > lbrowlock
+                      && !rflags[row].test( colvals[i] < 0 ? RowFlag::kRhsInf : RowFlag::kLhsInf ) )
+                {
+                   rowlock = lbrowlock;
+                   scale = -1;
+                }
+
+                assert(rowsize[row] >= 1);
+
+                if( scale == 0 || ( bestrowsize == rowsize[row] && bestrowlock <= rowlock ) )
+                   continue;
+
+                if( rowsize[row] == 1 )
+                {
+                   bestrow = -1;
+                   break;
+                }
+                else
+                   bestrow = i;
+
+                bestrowsize = rowsize[row];
+                bestrowlock = rowlock;
+                bestscale = scale;
              }
 
-             if( bestrow == -1 || bestrowsize <= 1 )
+             if( bestrow == -1 )
                 continue;
 
-             auto candrowvec =
-                 consMatrix.getRowCoefficients( colrows[bestrow] );
-             REAL scaled_val = colvals[bestrow] * scale;
-             REAL scaled_obj = obj[unbounded_col] * scale;
-             bestrow = colrows[bestrow];
-             int rowlen = candrowvec.getLength();
-             const int* rowcols = candrowvec.getIndices();
-             const REAL* rowvals = candrowvec.getValues();
+             row = colrows[bestrow];
 
-             for( int j = 0; j != rowlen; ++j )
+             REAL scaled_val = colvals[bestrow] * bestscale;
+             REAL scaled_obj = obj[unbounded_col] * bestscale;
+             auto rowvec = consMatrix.getRowCoefficients( row );
+             const int* rowcols = rowvec.getIndices();
+             const REAL* rowvals = rowvec.getValues();
+
+             for( int j = bestrowsize - 1; j >= 0; --j )
              {
                 int col = rowcols[j];
-                if( col == unbounded_col || ( cflags[unbounded_col].test( ColFlag::kIntegral ) &&
-                                  !cflags[col].test( ColFlag::kIntegral ) ) )
+
+                if( domcol[col] != -1 || col == unbounded_col
+                      || ( cflags[unbounded_col].test( ColFlag::kIntegral )
+                      && !cflags[col].test( ColFlag::kIntegral ) ) )
                    continue;
 
                 bool to_lb = false;
                 bool to_ub = false;
 
-                if( !rflags[bestrow].test( RowFlag::kLhsInf,
+                if( !rflags[row].test( RowFlag::kLhsInf,
                                            RowFlag::kRhsInf ) )
                 {
                    if( !cflags[col].test( ColFlag::kLbInf ) &&
                        num.isEq( scaled_val, rowvals[j] ) &&
                        num.isLE( scaled_obj, obj[col] ) &&
-                       checkDominance( unbounded_col, col, scale, 1 ) )
+                       checkDominance( unbounded_col, col, bestscale, 1 ) )
                       to_lb = true;
-
-                   if( !cflags[col].test( ColFlag::kUbInf ) &&
+                   else if( !cflags[col].test( ColFlag::kUbInf ) &&
                        num.isEq( scaled_val, -rowvals[j] ) &&
                        num.isLE( scaled_obj, -obj[col] ) &&
-                       checkDominance( unbounded_col, col, scale, -1 ) )
+                       checkDominance( unbounded_col, col, bestscale, -1 ) )
                       to_ub = true;
                 }
-                else if( rflags[bestrow].test( RowFlag::kLhsInf ) )
+                else if( rflags[row].test( RowFlag::kLhsInf ) )
                 {
                    assert( scaled_val > 0 &&
-                           !rflags[bestrow].test( RowFlag::kRhsInf ) );
+                           !rflags[row].test( RowFlag::kRhsInf ) );
                    if( !cflags[col].test( ColFlag::kLbInf ) &&
                        num.isLE( scaled_val, rowvals[j] ) &&
                        num.isLE( scaled_obj, obj[col] ) &&
-                       checkDominance( unbounded_col, col, scale, 1 ) )
+                       checkDominance( unbounded_col, col, bestscale, 1 ) )
                       to_lb = true;
-
-                   if( !cflags[col].test( ColFlag::kUbInf ) &&
+                   else if( !cflags[col].test( ColFlag::kUbInf ) &&
                        num.isLE( scaled_val, -rowvals[j] ) &&
                        num.isLE( scaled_obj, -obj[col] ) &&
-                       checkDominance( unbounded_col, col, scale, -1 ) )
+                       checkDominance( unbounded_col, col, bestscale, -1 ) )
                       to_ub = true;
                 }
                 else
                 {
                    assert( scaled_val < 0 &&
-                           rflags[bestrow].test( RowFlag::kRhsInf ) );
+                           rflags[row].test( RowFlag::kRhsInf ) );
                    if( !cflags[col].test( ColFlag::kLbInf ) &&
                        num.isGE( scaled_val, rowvals[j] ) &&
                        num.isLE( scaled_obj, obj[col] ) &&
-                       checkDominance( unbounded_col, col, scale, 1 ) )
+                       checkDominance( unbounded_col, col, bestscale, 1 ) )
                       to_lb = true;
-
-                   if( !cflags[col].test( ColFlag::kUbInf ) &&
+                   else if( !cflags[col].test( ColFlag::kUbInf ) &&
                        num.isGE( scaled_val, -rowvals[j] ) &&
                        num.isLE( scaled_obj, -obj[col] ) &&
-                       checkDominance( unbounded_col, col, scale, -1 ) )
+                       checkDominance( unbounded_col, col, bestscale, -1 ) )
                       to_ub = true;
                 }
 
                 if( to_lb || to_ub )
                 {
-                   domcolreductions.push_back( DomcolReduction{
-                       unbounded_col, col, implrowlock,
-                       to_lb ? BoundChange::kUpper : BoundChange::kLower } );
+                   domcolsbuffers[k - base].emplace_back( DomcolReduction{ unbounded_col, col,
+                         bestrowlock, to_lb ? BoundChange::kUpper : BoundChange::kLower } );
                 }
              }
           }
@@ -490,62 +541,99 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
        } );
 #endif
 
-   if( !domcolreductions.empty() )
-   {
-      result = PresolveStatus::kReduced;
-      // sort reductions by the smallest col in the domcol reduction, so that
-      // parallel ones are adjacent
-      pdqsort( domcolreductions.begin(), domcolreductions.end(),
-               []( const DomcolReduction& a, const DomcolReduction& b ) {
-                  bool smaller_first_a = a.col1 < a.col2;
-                  bool smaller_first_b = b.col1 < b.col2;
-                  int smaller_row_a = smaller_first_a ? a.col1 : a.col2;
-                  int smaller_row_b = smaller_first_b ? b.col1 : b.col2;
-                  if( smaller_row_a != smaller_row_b )
-                     return smaller_row_a < smaller_row_b;
-                  return ( ( !smaller_first_a ) ? a.col1 : a.col2 ) <
-                         ( ( !smaller_first_b ) ? b.col1 : b.col2 );
-               } );
+         for( int i = start - base; i < ndomcolsbuffers; ++i )
+            ndomcols += domcolsbuffers[i].size();
 
-      for( int i = 0; i < (int) domcolreductions.size(); i++ )
+         start = stopp;
+      }
+
+      bool lock = false;
+
+      // filter dominations avoiding cyclic conflicts
+      do
       {
-         // check if consecutively reductions are equal
-         const DomcolReduction dr = domcolreductions[i];
-         if( i < (int) domcolreductions.size() - 1 )
+         for( int i = 0; i < ndomcolsbuffers; ++i )
          {
-            const DomcolReduction dr2 = domcolreductions[i + 1];
-            if( dr2.col1 == dr.col2 && dr.col1 == dr2.col2 )
+            if( domcolsbuffers[i].empty() || ( !lock && domcolsbuffers[i][0].implrowlock != -1 ) )
+               continue;
+            for( int j = 0; j < (int)domcolsbuffers[i].size(); ++j )
             {
-               if( dr.implrowlock > 0 )
+               int source = domcolsbuffers[i][j].col2;
+               if( domcol[source] != -1 )
                   continue;
-               i++;
+               int sink = domcolsbuffers[i][j].col1;
+               int node = sink;
+               while( domcol[node] >= 0 )
+                  node = domcols[domcol[node]].col1;
+               if( node == source )
+                  continue;
+               domcol[source] = domcols.size();
+               domcols.emplace_back(std::move(domcolsbuffers[i][j]));
+               if( nchildren[sink] >= 1 || domcol[sink] <= -1 )
+               {
+                  if( nchildren[source] == 0 )
+                  {
+                     nchildren[source] = -leaves.size();
+                     leaves.push_back(source);
+                  }
+                  ++nchildren[sink];
+               }
+               else
+               {
+                  if( nchildren[source] == 0 )
+                  {
+                     nchildren[source] = nchildren[sink];
+                     leaves[-nchildren[source]] = source;
+                  }
+                  nchildren[sink] = 1;
+               }
             }
+            domcolsbuffers[i].clear();
          }
-         TransactionGuard<REAL> tg{ reductions };
-         reductions.lockCol( dr.col1 );
-         reductions.lockColBounds( dr.col1 );
-         reductions.lockCol( dr.col2 );
-         reductions.lockColBounds( dr.col2 );
-         if( dr.implrowlock >= 0 )
-            reductions.lockRow( dr.implrowlock );
+         lock = !lock;
+      }
+      while(lock);
 
+      ndomcols = domcols.size();
+   }
+
+   domcolsbuffers.clear();
+   domcolsbuffers.shrink_to_fit();
+   domcols.shrink_to_fit();
+   leaves.shrink_to_fit();
+
+   // add reductions in topological order
+   for( auto& node : leaves )
+   {
+      while( nchildren[node] <= 0 && domcol[node] >= 0 )
+      {
+         const DomcolReduction& reduction = domcols[domcol[node]];
+         domcol[node] = -1;
+         node = reduction.col1;
+         --nchildren[node];
+         TransactionGuard<REAL> tg{ reductions };
+         reductions.lockCol( reduction.col1 );
+         reductions.lockColBounds( reduction.col1 );
+         reductions.lockCol( reduction.col2 );
+         reductions.lockColBounds( reduction.col2 );
+         if( reduction.implrowlock >= 0 )
+            reductions.lockRow( reduction.implrowlock );
          // upper bound is changed to lower bound
-         if( dr.boundchg == BoundChange::kUpper )
+         if( reduction.boundchg == BoundChange::kUpper )
          {
-            reductions.dominance(dr.col2, dr.col1);
-            reductions.fixCol( dr.col2, lbValues[dr.col2], dr.implrowlock );
+            reductions.dominance(reduction.col2, reduction.col1);
+            reductions.fixCol( reduction.col2, lbValues[reduction.col2], reduction.implrowlock );
          }
          // lower bound is changed to upper bound
          else
          {
-            reductions.dominance(dr.col1, dr.col2);
-            reductions.fixCol( dr.col2, ubValues[dr.col2], dr.implrowlock );
+            reductions.dominance(reduction.col1, reduction.col2);
+            reductions.fixCol( reduction.col2, ubValues[reduction.col2], reduction.implrowlock );
          }
       }
-
    }
 
-   return result;
+   return domcols.empty() ? PresolveStatus::kUnchanged : PresolveStatus::kReduced;
 }
 
 
