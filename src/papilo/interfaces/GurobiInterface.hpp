@@ -77,10 +77,10 @@ class GurobiInterface : public SolverInterface<REAL>
 
          double lb = domains.flags[i].test( ColFlag::kLbInf )
                          ? -GRB_INFINITY
-                         : domains.lower_bounds[i];
+                         : (double) domains.lower_bounds[i];
          double ub = domains.flags[i].test( ColFlag::kUbInf )
                          ? GRB_INFINITY
-                         : domains.upper_bounds[i];
+                         : (double) domains.upper_bounds[i];
 
          char type;
          if( domains.flags[i].test( ColFlag::kIntegral ) )
@@ -209,10 +209,10 @@ class GurobiInterface : public SolverInterface<REAL>
 
          double lb = domains.flags[col].test( ColFlag::kLbInf )
                          ? -GRB_INFINITY
-                         : domains.lower_bounds[col];
+                         : (double) domains.lower_bounds[col];
          double ub = domains.flags[col].test( ColFlag::kUbInf )
                          ? GRB_INFINITY
-                         : domains.upper_bounds[col];
+                         : (double) domains.upper_bounds[col];
 
          char type;
          if( domains.flags[col].test( ColFlag::kIntegral ) )
