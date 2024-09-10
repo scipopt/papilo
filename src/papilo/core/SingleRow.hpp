@@ -736,12 +736,10 @@ propagate_row( const Num<REAL>& num, int row, const REAL* rowvals, const int* co
                maxresact -= val * ub;
             }
             REAL new_lb = (lhs - maxresact) / val;
-            if( num.isEq( new_lb, lb ) )
-               break;
             if( domainFlags[col].test( ColFlag::kIntegral ) )
             {
                new_lb = floor(new_lb);
-               if( num.isGT(lhs, new_lb * val + maxresact) )
+               if( num.isFeasGT(lhs, new_lb * val + maxresact) )
                   new_lb += 1;
             }
             if( domainFlags[col].test( ColFlag::kLbInf ) || new_lb > lb )
