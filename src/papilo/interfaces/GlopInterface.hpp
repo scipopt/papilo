@@ -96,8 +96,8 @@ class GlopInterface : public SolverInterface<REAL>
       for( int i = 0; i < problem.getNRows(); i++ )
       {
          auto data = problem.getConstraintMatrix().getRowCoefficients( i );
-         double l = row_flags[i].test( RowFlag::kLhsInf ) ? -infinity : lhs[i];
-         double r = row_flags[i].test( RowFlag::kRhsInf ) ? infinity : rhs[i];
+         double l = row_flags[i].test( RowFlag::kLhsInf ) ? -infinity : (double) lhs[i];
+         double r = row_flags[i].test( RowFlag::kRhsInf ) ? infinity : (double) rhs[i];
 
          MPConstraint* const con = solver->MakeRowConstraint( l, r );
          for( int j = 0; j < data.getLength(); j++ )
@@ -155,10 +155,10 @@ class GlopInterface : public SolverInterface<REAL>
          int col = colset[j];
          double lb = domains.flags[col].test( ColFlag::kLbInf )
                          ? -infinity
-                         : domains.lower_bounds[col];
+                         : (double) domains.lower_bounds[col];
          double ub = domains.flags[col].test( ColFlag::kUbInf )
                          ? infinity
-                         : domains.upper_bounds[col];
+                         : (double) domains.upper_bounds[col];
          variables[col] = solver->MakeNumVar( lb, ub, varNames[origColMap[col]] );
          objective->SetCoefficient( variables[col], (double)coefficients[col] );
       }
@@ -168,13 +168,13 @@ class GlopInterface : public SolverInterface<REAL>
       {
          int row = rowset[i];
          auto data = problem.getConstraintMatrix().getRowCoefficients( row );
-         double l = row_flags[row].test( RowFlag::kLhsInf ) ? -infinity : lhs[row];
-         double r = row_flags[row].test( RowFlag::kRhsInf ) ? infinity : rhs[row];
+         double l = row_flags[row].test( RowFlag::kLhsInf ) ? -infinity : (double) lhs[row];
+         double r = row_flags[row].test( RowFlag::kRhsInf ) ? infinity : (double) rhs[row];
 
          MPConstraint* const con = solver->MakeRowConstraint( l, r );
          for( int j = 0; j < data.getLength(); j++ )
          {
-            double coeff = data.getValues()[j];
+            double coeff = (double) data.getValues()[j];
             int index = components.getColComponentIdx( data.getIndices()[j]);
             con->SetCoefficient( variables[index], coeff );
          }
