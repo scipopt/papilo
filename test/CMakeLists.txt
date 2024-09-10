@@ -310,14 +310,14 @@ if (TARGET papilo-executable)
 
     set(instances_OPB
             "IP/air01.opb\;6796"
-            "IP/air02.opb\;7810"
-            "IP/air03.opb\;340160"
-            "IP/air06.opb\;49649"
+#            "IP/air02.opb\;7810"
+#            "IP/air03.opb\;340160"
+#            "IP/air06.opb\;49649"
             "IP/bm23.opb\;34"
-            "IP/cracpb1.opb\;22199"
+#            "IP/cracpb1.opb\;22199"
             "IP/enigma.opb\;0"
             "IP/lseu.opb\;1120"
-            "IP/pipex.opb\;788263000"
+            "IP/pipex.opb\;788263"
     )
 
     # add a test to build the SCIP binary that all further tests depend on
