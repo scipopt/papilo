@@ -712,12 +712,10 @@ propagate_row( const Num<REAL>& num, int row, const REAL* rowvals, const int* co
                maxresact -= val * lb;
             }
             REAL new_ub = (lhs - maxresact) / val;
-            if( num.isEq( new_ub, ub ) )
-               break;
             if( domainFlags[col].test( ColFlag::kIntegral ) )
             {
                new_ub = ceil(new_ub);
-               if( num.isGT(lhs, new_ub * val + maxresact) )
+               if( num.isFeasGT(lhs, new_ub * val + maxresact) )
                   new_ub -= 1;
             }
             if( domainFlags[col].test( ColFlag::kUbInf ) || new_ub < ub )
