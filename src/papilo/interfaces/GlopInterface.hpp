@@ -102,7 +102,7 @@ class GlopInterface : public SolverInterface<REAL>
          MPConstraint* const con = solver->MakeRowConstraint( l, r );
          for( int j = 0; j < data.getLength(); j++ )
          {
-            double coeff = data.getValues()[j];
+            double coeff = (double) data.getValues()[j];
             int index = data.getIndices()[j];
             con->SetCoefficient( variables[index], coeff );
          }
