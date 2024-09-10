@@ -140,12 +140,10 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
    Vec<ColInfo> colinfo( ncols );
 
 #ifdef PAPILO_TBB
-   tbb::concurrent_vector<int> unboundedcols;
+   std::atomic<int> nunboundedcols { };
 #else
-   Vec<int> unboundedcols;
+   int nunboundedcols = 0;
 #endif
-
-   unboundedcols.reserve( ncols );
 
    // compute signatures and implied bound information of all columns in
    // parallel
@@ -214,11 +212,24 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
              }
 
              if( colinfo[col].lbfree != 0 || colinfo[col].ubfree != 0 )
-                unboundedcols.push_back( col );
+                ++nunboundedcols;
           }
 #ifdef PAPILO_TBB
        } );
 #endif
+
+   Vec<int> unboundedcols(nunboundedcols);
+
+   nunboundedcols = 0;
+
+   for( int col = 0; nunboundedcols < (int)unboundedcols.size(); ++col )
+   {
+      if( colinfo[col].lbfree != 0 || colinfo[col].ubfree != 0 )
+      {
+         unboundedcols[nunboundedcols] = col;
+         ++nunboundedcols;
+      }
+   }
 
    auto checkDominance = [&]( int col1, int col2, int scal1, int scal2 ) {
       assert( !cflags[col1].test( ColFlag::kIntegral ) ||
