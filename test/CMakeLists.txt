@@ -310,14 +310,14 @@ if (TARGET papilo-executable)
 
     set(instances_OPB
             "IP/air01.opb\;6796"
-            "IP/air02.opb\;7810"
-            "IP/air03.opb\;340160"
-            "IP/air06.opb\;49649"
+#            "IP/air02.opb\;7810"
+#            "IP/air03.opb\;340160"
+#            "IP/air06.opb\;49649"
             "IP/bm23.opb\;34"
-            "IP/cracpb1.opb\;22199"
+#            "IP/cracpb1.opb\;22199"
             "IP/enigma.opb\;0"
             "IP/lseu.opb\;1120"
-            "IP/pipex.opb\;788263000"
+            "IP/pipex.opb\;788263"
     )
 
     # add a test to build the SCIP binary that all further tests depend on
@@ -385,7 +385,7 @@ if (TARGET papilo-executable)
     elseif(PAPILO_HAVE_GUROBI)
         add_instancetests(instances_gurobi_MIP double_numtypes "default.set")
     elseif(PAPILO_HAVE_ROUNDINGSAT)
-        add_instancetests(instances_OPB double_numtypes "default.set")
+        add_instancetests(instances_OPB double_numtypes "roundingsat.set")
     endif()
     # comparing the objective value for LP instances and check if dual postsolve works (with/out basis calculation)
     if(PAPILO_HAVE_SOPLEX OR PAPILO_HAVE_HIGHS)

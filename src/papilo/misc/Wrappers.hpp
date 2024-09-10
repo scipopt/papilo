@@ -227,11 +227,6 @@ presolve_and_solve(
          else if( presolve.getSATSolverFactory() &&
                   problem.test_problem_type(ProblemFlag::kBinary) )
          {
-            if( !presolve.getPresolveOptions().verification_with_VeriPB )
-            {
-               fmt::print( "please activate VeriPB to provide row scaling for SAT Solvers\n" );
-               return ResultStatus::kError;
-            }
             solver = presolve.getSATSolverFactory()->newSolver(
                 presolve.getVerbosityLevel() );
          }
