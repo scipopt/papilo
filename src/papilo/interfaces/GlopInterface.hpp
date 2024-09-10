@@ -82,10 +82,10 @@ class GlopInterface : public SolverInterface<REAL>
       {
          double lb = domains.flags[i].test( ColFlag::kLbInf )
                          ? -infinity
-                         : domains.lower_bounds[i];
+                         : (double) domains.lower_bounds[i];
          double ub = domains.flags[i].test( ColFlag::kUbInf )
                          ? infinity
-                         : domains.upper_bounds[i];
+                         : (double) domains.upper_bounds[i];
          variables.push_back(solver->MakeNumVar( lb, ub, varNames[origColMap[i]]));
          objective->SetCoefficient( variables[i], (double)coefficients[i] );
       }
