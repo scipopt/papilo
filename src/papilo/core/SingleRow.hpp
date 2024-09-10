@@ -675,12 +675,10 @@ propagate_row( const Num<REAL>& num, int row, const REAL* rowvals, const int* co
                minresact -= val * lb;
             }
             REAL new_ub = (rhs - minresact) / val;
-            if( num.isEq( new_ub, ub ) )
-               break;
             if( domainFlags[col].test( ColFlag::kIntegral ) )
             {
                new_ub = ceil(new_ub);
-               if( num.isLT(rhs, new_ub * val + minresact) )
+               if( num.isFeasLT(rhs, new_ub * val + minresact) )
                   new_ub -= 1;
             }
             if( domainFlags[col].test( ColFlag::kUbInf ) || new_ub < ub )
