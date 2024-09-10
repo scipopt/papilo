@@ -1,0 +1,4 @@
+doubletoneq.enabled = 0
+parallelcols.enabled = 0
+substitution.enabled = 0
+sparsify.enabled = 0
