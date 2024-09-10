@@ -49,6 +49,13 @@ Fixed bugs
 - Statistics: avoid counting calls of symmetry extensions additionally
 - Trivial: mark activity redundancy in trivial row presolving
 
+
+Build system
+------------
+
+- added check whether linking of libatomic is necessary and possible to make std::atomic available
+
+
 Miscellaneous
 -------------
 
