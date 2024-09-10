@@ -651,12 +651,10 @@ propagate_row( const Num<REAL>& num, int row, const REAL* rowvals, const int* co
                minresact -= val * ub;
             }
             REAL new_lb = (rhs - minresact) / val;
-            if( num.isEq( new_lb, lb ) )
-               break;
             if( domainFlags[col].test( ColFlag::kIntegral ) )
             {
                new_lb = floor(new_lb);
-               if( num.isLT(rhs, new_lb * val + minresact) )
+               if( num.isFeasLT(rhs, new_lb * val + minresact) )
                   new_lb += 1;
             }
             if( domainFlags[col].test( ColFlag::kLbInf ) || new_lb > lb )
