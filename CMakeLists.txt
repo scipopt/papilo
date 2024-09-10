@@ -184,10 +184,7 @@ find_package(Threads REQUIRED)
 target_link_libraries(papilo
         INTERFACE ${Quadmath_IMPORTED_TARGET} ${GMP_LIBRARIES} ${GLOP_LIBRARIES})
 
-# on raspberry pi, we need to link libatomic, as libtbbmalloc_proxy depends on it
-if((CMAKE_HOST_SYSTEM_PROCESSOR STREQUAL "armv7l") AND (CMAKE_SYSTEM_NAME STREQUAL "Linux"))
-    target_link_libraries(papilo INTERFACE atomic)
-endif()
+include(cmake/StdAtomic.cmake)
 
 include(CMakePackageConfigHelpers)
 
