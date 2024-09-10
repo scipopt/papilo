@@ -654,7 +654,7 @@ propagate_row( const Num<REAL>& num, int row, const REAL* rowvals, const int* co
             if( domainFlags[col].test( ColFlag::kIntegral ) )
             {
                new_lb = floor(new_lb);
-               if( num.isLT(rhs, new_lb * val + minresact) )
+               if( num.isFeasLT(rhs, new_lb * val + minresact) )
                   new_lb += 1;
             }
             if( domainFlags[col].test( ColFlag::kLbInf ) || new_lb > lb )
@@ -678,7 +678,7 @@ propagate_row( const Num<REAL>& num, int row, const REAL* rowvals, const int* co
             if( domainFlags[col].test( ColFlag::kIntegral ) )
             {
                new_ub = ceil(new_ub);
-               if( num.isLT(rhs, new_ub * val + minresact) )
+               if( num.isFeasLT(rhs, new_ub * val + minresact) )
                   new_ub -= 1;
             }
             if( domainFlags[col].test( ColFlag::kUbInf ) || new_ub < ub )
@@ -715,7 +715,7 @@ propagate_row( const Num<REAL>& num, int row, const REAL* rowvals, const int* co
             if( domainFlags[col].test( ColFlag::kIntegral ) )
             {
                new_ub = ceil(new_ub);
-               if( num.isGT(lhs, new_ub * val + maxresact) )
+               if( num.isFeasGT(lhs, new_ub * val + maxresact) )
                   new_ub -= 1;
             }
             if( domainFlags[col].test( ColFlag::kUbInf ) || new_ub < ub )
@@ -739,7 +739,7 @@ propagate_row( const Num<REAL>& num, int row, const REAL* rowvals, const int* co
             if( domainFlags[col].test( ColFlag::kIntegral ) )
             {
                new_lb = floor(new_lb);
-               if( num.isGT(lhs, new_lb * val + maxresact) )
+               if( num.isFeasGT(lhs, new_lb * val + maxresact) )
                   new_lb += 1;
             }
             if( domainFlags[col].test( ColFlag::kLbInf ) || new_lb > lb )
