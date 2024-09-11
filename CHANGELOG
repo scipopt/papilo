@@ -42,8 +42,8 @@ Fixed bugs
 - OPB-Parser: handle additional whitespaces
 - ParallelColDetection: only merge integral parallel columns for integral column scale
 - ParallelColDetection: reduce complexity of hole detection for integral parallel columns
-- Propagation: handle constraint propagation more carefully by applying feasibility instead of epsilon tolerance
 - Probing: eliminate computational overhead in row propagation
+- Propagation: handle constraint propagation more carefully by applying feasibility instead of epsilon tolerance
 - SimpleSubstitution: correct feasibility tolerances on euclidean coprime substitutions
 - SingletonCols: order effective side changes to avoid invalid infeasibility
 - SingletonStuffing: normalize and order sides to avoid invalid infeasibility
