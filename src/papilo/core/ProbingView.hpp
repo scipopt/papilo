@@ -764,6 +764,10 @@ ProbingView<REAL>::propagateDomains()
 
                    REAL mindomred = isint ? minintdomred : mincontdomred;
 
+                   // Boundchanges on unbounded variables [lb, inf) or (-inf, ub]
+                   // are ignored since their fixing will probably not lead to
+                   // additional fixings nor infeasibility
+                   // but will trigger a huge sequence of bound changes
                    if( probing_domain_flags[colid].test(
                            ColFlag::kLbUseless ) ||
                        ( finiteDomain && delta > 0 &&
@@ -802,6 +806,10 @@ ProbingView<REAL>::propagateDomains()
 
                    REAL mindomred = isint ? minintdomred : mincontdomred;
 
+                   // Boundchanges on unbounded variables [lb, inf) or (-inf, ub]
+                   // are ignored since their fixing will probably not lead to
+                   // additional fixings nor infeasibility
+                   // but will trigger a huge sequence of bound changes
                    if( probing_domain_flags[colid].test(
                            ColFlag::kUbUseless ) ||
                        ( finiteDomain && delta > 0 &&
