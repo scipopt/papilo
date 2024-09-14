@@ -1,4 +1,6 @@
-@page RN Release notes for PAPILO NEXT
+@page RN24 Release notes for PAPILO 2.4
+
+@section RN240 PaPILO 2.4.0
 
 Features
 --------
@@ -31,8 +33,33 @@ Testing
 Build system
 ------------
 
-- fixed build against HiGHS 1.7.2
-- TBB is now longer download automatically. To enable the download set TBB_DOWNLOAD to on
+
+Fixed bugs
+----------
+
+
+Miscellaneous
+-------------
+
+
+Known issues
+------------
+
+
+@page RN23 Release notes for PAPILO 2.3
+
+@section RN232 PaPILO 2.3.2
+
+Fixed bugs
+----------
+
+Build system
+------------
+
+Known issues
+------------
+
+@section RN231 PaPILO 2.3.1
 
 Fixed bugs
 ----------
@@ -50,24 +77,17 @@ Fixed bugs
 - Statistics: avoid counting calls of symmetry extensions additionally
 - Trivial: mark activity redundancy in trivial row presolving
 
-
 Build system
 ------------
 
+- fixed build against HiGHS 1.7.2
+- TBB is now no longer download automatically; to enable the download, set option TBB_DOWNLOAD to on
 - added check whether linking of libatomic is necessary and possible to make std::atomic available
-
-
-Miscellaneous
--------------
-
 
 Known issues
 ------------
 
 - SingletonCols: normalize if substituting constraint in the objective (when dual-postsolve is active)
-
-
-@page RN23 Release notes for PAPILO 2.3
 
 @section RN230 PaPILO 2.3.0
 
