@@ -1352,7 +1352,7 @@ Presolve<REAL>::are_applied_tsx_negligible( const Problem<REAL>& problem,
   case Delegator::kExceeded:
       assert(false);
    }
-   
+
    if( roundStats.ndeletedcols == 0 && roundStats.ndeletedrows == 0 &&
        roundStats.ncoefchgs == 0 && presolveOptions.max_consecutive_rounds_of_only_bound_changes >= 0 )
    {
