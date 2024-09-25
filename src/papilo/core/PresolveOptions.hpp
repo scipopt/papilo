@@ -92,7 +92,7 @@ struct PresolveOptions
 
    double abortfacmedium = 8e-4;
 
-   double abortfacexhaustive = 8e-4;
+   double abortfac = 8e-4;
 
    double bound_tightening_offset = 0.0001;
 
@@ -112,7 +112,7 @@ struct PresolveOptions
 
    double lpabortfacmedium = 1e-2;
 
-   double lpabortfacexhaustive = 1e-2;
+   double lpabortfac = 1e-2;
 
    double markowitz_tolerance = 0.01;
 
@@ -160,9 +160,9 @@ struct PresolveOptions
           "abort factor of weighted number of reductions for medium presolving LPs",
           lpabortfacmedium, 0.0, 1.0 );
       paramSet.addParameter(
-          "presolve.lpabortfacexhaustive",
+          "presolve.lpabortfac",
           "abort factor of weighted number of reductions for exhaustive presolving LPs",
-          lpabortfacexhaustive, 0.0, 1.0 );
+          lpabortfac, 0.0, 1.0 );
       paramSet.addParameter(
           "substitution.maxfillin",
           "maximum estimated fillin for variable substitutions",
