@@ -81,6 +81,10 @@ struct PresolveOptions
    unsigned int randomseed = 0;
 
 
+   double abortfacfast = 8e-4;
+
+   double abortfacmedium = 8e-4;
+
    double abortfac = 8e-4;
 
    double bound_tightening_offset = 0.0001;
@@ -92,6 +96,10 @@ struct PresolveOptions
    double feastol = 1e-6;
 
    double hugeval = 1e8;
+
+   double lpabortfacfast = 1e-2;
+
+   double lpabortfacmedium = 1e-2;
 
    double lpabortfac = 1e-2;
 
@@ -117,12 +125,28 @@ struct PresolveOptions
           "markowitz tolerance value for allowing a substitution",
           markowitz_tolerance, 0.0, 1.0 );
       paramSet.addParameter(
+          "presolve.abortfacfast",
+          "abort factor of weighted number of reductions for fast presolving",
+          abortfacfast, 0.0, 1.0 );
+      paramSet.addParameter(
+          "presolve.abortfacmedium",
+          "abort factor of weighted number of reductions for medium presolving",
+          abortfacmedium, 0.0, 1.0 );
+      paramSet.addParameter(
           "presolve.abortfac",
-          "abort factor of weighted number of reductions for presolving",
+          "abort factor of weighted number of reductions for exhaustive presolving",
           abortfac, 0.0, 1.0 );
       paramSet.addParameter(
+          "presolve.lpabortfacfast",
+          "abort factor of weighted number of reductions for fast presolving LPs",
+          lpabortfacfast, 0.0, 1.0 );
+      paramSet.addParameter(
+          "presolve.lpabortfacmedium",
+          "abort factor of weighted number of reductions for medium presolving LPs",
+          lpabortfacmedium, 0.0, 1.0 );
+      paramSet.addParameter(
           "presolve.lpabortfac",
-          "abort factor of weighted number of reductions for presolving LPs",
+          "abort factor of weighted number of reductions for exhaustive presolving LPs",
           lpabortfac, 0.0, 1.0 );
       paramSet.addParameter(
           "substitution.maxfillin",

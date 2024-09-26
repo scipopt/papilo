@@ -52,7 +52,13 @@ parallelcols.enabled = 1
 # is presolver parallelrows enabled  [Boolean: {0,1}]
 parallelrows.enabled = 1
 
-# abort factor of weighted number of reductions for presolving  [Numerical: [0,1]]
+# abort factor of weighted number of reductions for fast presolving  [Numerical: [0,1]]
+presolve.abortfacfast = 0.00080000000000000004
+
+# abort factor of weighted number of reductions for medium presolving  [Numerical: [0,1]]
+presolve.abortfacmedium = 0.00080000000000000004
+
+# abort factor of weighted number of reductions for exhaustive presolving  [Numerical: [0,1]]
 presolve.abortfac = 0.00080000000000000004
 
 # relax bounds of implied free variables after presolving  [Boolean: {0,1}]
@@ -70,7 +76,13 @@ presolve.detectlindep = 1
 # 0: disable dual reductions, 1: allow dual reductions that never cut off optimal solutions, 2: allow all dual reductions  [Integer: [0,2]]
 presolve.dualreds = 2
 
-# abort factor of weighted number of reductions for presolving LPs  [Numerical: [0,1]]
+# abort factor of weighted number of reductions for fast presolving LPs  [Numerical: [0,1]]
+presolve.lpabortfacfast = 0.01
+
+# abort factor of weighted number of reductions for medium presolving LPs  [Numerical: [0,1]]
+presolve.lpabortfacmedium = 0.01
+
+# abort factor of weighted number of reductions for exhaustive presolving LPs  [Numerical: [0,1]]
 presolve.lpabortfac = 0.01
 
 # maximal number of rounds (-1: unlimited, 0: cleanup) [Integer: [-1,2147483647]]
