@@ -1731,7 +1731,7 @@ ProblemUpdate<REAL>::removeSingletonRow( int row )
                {
                   REAL fixed_val = lhs / val;
                   if( num.isZero( lhs ) )
-                  fixed_val = 0.0;
+                     fixed_val = 0.0;
                   postsolve.storeSavedRow( row, rowvec, lhs, rhs, rflags[row] );
                   status = changeUB( col, fixed_val );
                }
@@ -1740,7 +1740,7 @@ ProblemUpdate<REAL>::removeSingletonRow( int row )
                {
                   REAL fixed_val = rhs / val;
                   if( num.isZero( rhs ) )
-                  fixed_val = 0.0;
+                     fixed_val = 0.0;
                   postsolve.storeSavedRow( row, rowvec, lhs, rhs, rflags[row] );
                   status = changeLB( col, fixed_val );
                }
@@ -1752,7 +1752,7 @@ ProblemUpdate<REAL>::removeSingletonRow( int row )
                {
                   REAL fixed_val = lhs / val;
                   if( num.isZero( lhs ) )
-                  fixed_val = 0.0;
+                     fixed_val = 0.0;
                   postsolve.storeSavedRow( row, rowvec, lhs, rhs, rflags[row] );
                   status = changeLB( col, fixed_val );
                }
@@ -1761,7 +1761,7 @@ ProblemUpdate<REAL>::removeSingletonRow( int row )
                {
                   REAL fixed_val = rhs / val;
                   if( num.isZero( rhs ) )
-                  fixed_val = 0.0;
+                     fixed_val = 0.0;
                   postsolve.storeSavedRow( row, rowvec, lhs, rhs, rflags[row] );
                   status = changeUB( col, fixed_val );
                }
