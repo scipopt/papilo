@@ -404,8 +404,8 @@ class ProblemBuilder
              !rowFlag.test( RowFlag::kLhsInf ) && ( num.isGT(0, coeff) && 
              num.isGT(coeff, matrix.getLeftHandSides()[i]) && 
              num.isGT(matrix.getLeftHandSides()[i],coeff + mincoeff) ) ) ) )
-            clique = false;
-            break;
+               clique = false;
+               break;
          }
          if( clique )
             matrix.getRowFlags()[i].set(RowFlag::kClique); 
