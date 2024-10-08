@@ -30,10 +30,13 @@ namespace papilo
 #include "papilo/core/Problem.hpp"
 #include "papilo/misc/String.hpp"
 #include "papilo/misc/Vec.hpp"
+#include "papilo/misc/Num.hpp"
 
 template <typename REAL>
 class ProblemBuilder
 {
+ private:
+   Num<REAL> num;
  public:
    /// Sets the number of columns to the given value. The information of columns
    /// that already exist is kept, new columns are continuous and fixed to zero.
@@ -382,24 +385,25 @@ class ProblemBuilder
 
          bool clique = true;
          auto rowvec = matrix.getRowCoefficients( i );
-         double mincoeff = 0;
-         double maxcoeff = 0;
+         REAL mincoeff = 0;
+         REAL maxcoeff = 0;
          for( int j =0; j < rowvec.getLength(); ++j )
          {
             int col = rowvec.getIndices()[j];
-            double coeff = rowvec.getValues()[j];
-            double lb = domains.lower_bounds[col];
-            double ub = domains.upper_bounds[col];
-            if( coeff <= mincoeff ) 
+            REAL coeff = rowvec.getValues()[j];
+            REAL lb = domains.lower_bounds[col];
+            REAL ub = domains.upper_bounds[col];
+            if( num.isGT(mincoeff, coeff) ) 
                mincoeff = coeff;
-            if( coeff >= maxcoeff ) 
+            if( num.isGT(coeff, maxcoeff) ) 
                maxcoeff = coeff;
-            if( !(rowFlag.test( RowFlag::kIntegral) && lb == 0.0 &&
-             ub == 1.0 && ( !rowFlag.test( RowFlag::kRhsInf ) && 
-             ( coeff >= 0.0 && coeff <=  matrix.getRightHandSides()[i] && 
-             coeff + mincoeff >= matrix.getRightHandSides()[i]) || 
-             !rowFlag.test( RowFlag::kLhsInf ) && ( coeff <= 0.0 && coeff >= matrix.getLeftHandSides()[i] && 
-             coeff + mincoeff <= matrix.getLeftHandSides()[i] ) ) ) )
+            if( !(rowFlag.test( RowFlag::kIntegral) && num.isEq(lb, 0) &&
+             num.isEq(ub, 0) && ( !rowFlag.test( RowFlag::kRhsInf ) && 
+             ( num.isGT(coeff, 0) && num.isGT(matrix.getRightHandSides()[i], coeff) && 
+             num.isGT(coeff + mincoeff, matrix.getRightHandSides()[i]) )|| 
+             !rowFlag.test( RowFlag::kLhsInf ) && ( num.isGT(0, coeff) && 
+             num.isGT(coeff, matrix.getLeftHandSides()[i]) && 
+             num.isGT(matrix.getLeftHandSides()[i],coeff + mincoeff) ) ) ) )
             clique = false;
             break;
          }
