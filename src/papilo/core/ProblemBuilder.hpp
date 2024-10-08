@@ -379,6 +379,32 @@ class ProblemBuilder
              !rowFlag.test( RowFlag::kLhsInf ) &&
              matrix.getLeftHandSides()[i] == matrix.getRightHandSides()[i] )
             matrix.getRowFlags()[i].set(RowFlag::kEquation);
+
+         bool clique = true;
+         auto rowvec = matrix.getRowCoefficients( i );
+         double mincoeff = 0;
+         double maxcoeff = 0;
+         for( int j =0; j < rowvec.getLength(); ++j )
+         {
+            int col = rowvec.getIndices()[j];
+            double coeff = rowvec.getValues()[j];
+            double lb = domains.lower_bounds[col];
+            double ub = domains.upper_bounds[col];
+            if( coeff <= mincoeff ) 
+               mincoeff = coeff;
+            if( coeff >= maxcoeff ) 
+               maxcoeff = coeff;
+            if( !(rowFlag.test( RowFlag::kIntegral) && lb == 0.0 &&
+             ub == 1.0 && ( !rowFlag.test( RowFlag::kRhsInf ) && 
+             ( coeff >= 0.0 && coeff <=  matrix.getRightHandSides()[i] && 
+             coeff + mincoeff >= matrix.getRightHandSides()[i]) || 
+             !rowFlag.test( RowFlag::kLhsInf ) && ( coeff <= 0.0 && coeff >= matrix.getLeftHandSides()[i] && 
+             coeff + mincoeff <= matrix.getLeftHandSides()[i] ) ) ) )
+            clique = false;
+            break;
+         }
+         if( clique )
+            matrix.getRowFlags()[i].set(RowFlag::kClique); 
       }
       if(problem.getNumIntegralCols() == 0)
          problem.set_problem_type(ProblemFlag::kLinear);
