@@ -394,9 +394,13 @@ class ProblemBuilder
             REAL lb = domains.lower_bounds[col];
             REAL ub = domains.upper_bounds[col];
             if( num.isGT(mincoeff, coeff) ) 
+            {
                mincoeff = coeff;
+            }
             if( num.isGT(coeff, maxcoeff) ) 
+            {
                maxcoeff = coeff;
+            }
             if( !(rowFlag.test( RowFlag::kIntegral) && num.isEq(lb, 0) &&
              num.isEq(ub, 1) && ( !rowFlag.test( RowFlag::kRhsInf ) && 
              ( num.isGT(coeff, 0) && num.isGT(matrix.getRightHandSides()[i], coeff) && 
@@ -404,11 +408,15 @@ class ProblemBuilder
              !rowFlag.test( RowFlag::kLhsInf ) && ( num.isGT(0, coeff) && 
              num.isGT(coeff, matrix.getLeftHandSides()[i]) && 
              num.isGT(matrix.getLeftHandSides()[i],coeff + mincoeff) ) ) ) )
+            {
                clique = false;
                break;
+            }
          }
          if( clique )
+         {
             matrix.getRowFlags()[i].set(RowFlag::kClique); 
+         }
       }
       if(problem.getNumIntegralCols() == 0)
          problem.set_problem_type(ProblemFlag::kLinear);
