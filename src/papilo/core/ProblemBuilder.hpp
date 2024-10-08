@@ -398,7 +398,7 @@ class ProblemBuilder
             if( num.isGT(coeff, maxcoeff) ) 
                maxcoeff = coeff;
             if( !(rowFlag.test( RowFlag::kIntegral) && num.isEq(lb, 0) &&
-             num.isEq(ub, 0) && ( !rowFlag.test( RowFlag::kRhsInf ) && 
+             num.isEq(ub, 1) && ( !rowFlag.test( RowFlag::kRhsInf ) && 
              ( num.isGT(coeff, 0) && num.isGT(matrix.getRightHandSides()[i], coeff) && 
              num.isGT(coeff + mincoeff, matrix.getRightHandSides()[i]) )|| 
              !rowFlag.test( RowFlag::kLhsInf ) && ( num.isGT(0, coeff) && 
