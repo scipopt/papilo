@@ -1693,7 +1693,9 @@ ProblemUpdate<REAL>::trivialPresolve()
    }
 
    status = checkChangedActivities();
-   if( is_status_infeasible_or_unbounded( status ) )
+   if( status == PresolveStatus::kUnbndOrInfeas ||
+       status == PresolveStatus::kUnbounded ||
+       status == PresolveStatus::kInfeasible )
       return status;
 
    flush( true );
