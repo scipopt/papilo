@@ -5,6 +5,8 @@
 Fixed bugs
 ----------
 
+- All fast presolvers: maintain changed activities of current and last round to avoid missing reductions
+
 Build system
 ------------
 

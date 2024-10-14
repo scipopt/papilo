@@ -242,6 +242,7 @@ stages:
     - cd $CI_PROJECT_DIR/scip-build
     - cmake $CI_PROJECT_DIR/scip ${CMAKE_FLAGS} -DPAPILO_DIR=$CI_PROJECT_DIR/builds/papilo -DZIMPL=off -DREADLINE=off -DGMP=off -DIPOPT=off
     - make -j && make install
+    - bin/scip -v
 
     #run ctests
     - export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
