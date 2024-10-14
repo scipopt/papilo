@@ -28,15 +28,16 @@ namespace papilo
 
 #include "papilo/core/MatrixBuffer.hpp"
 #include "papilo/core/Problem.hpp"
+#include "papilo/misc/Num.hpp"
 #include "papilo/misc/String.hpp"
 #include "papilo/misc/Vec.hpp"
-#include "papilo/misc/Num.hpp"
 
 template <typename REAL>
 class ProblemBuilder
 {
  private:
    Num<REAL> num;
+
  public:
    /// Sets the number of columns to the given value. The information of columns
    /// that already exist is kept, new columns are continuous and fixed to zero.
@@ -113,7 +114,7 @@ class ProblemBuilder
    setObjAll( Vec<REAL> values )
    {
       assert( values.size() == obj.coefficients.size() );
-      for( int c = 0; c < (int) values.size(); ++c )
+      for( int c = 0; c < (int)values.size(); ++c )
          obj.coefficients[c] = std::move( values[c] );
    }
 
@@ -137,7 +138,7 @@ class ProblemBuilder
    setColLbInfAll( Vec<uint8_t> isInfinite )
    {
       assert( domains.flags.size() == isInfinite.size() );
-      for( int c = 0; c < (int) isInfinite.size(); ++c )
+      for( int c = 0; c < (int)isInfinite.size(); ++c )
          setColLbInf( c, isInfinite[c] );
    }
 
@@ -154,7 +155,7 @@ class ProblemBuilder
    setColUbInfAll( Vec<uint8_t> isInfinite )
    {
       assert( domains.flags.size() == isInfinite.size() );
-      for( int c = 0; c < (int) isInfinite.size(); ++c )
+      for( int c = 0; c < (int)isInfinite.size(); ++c )
          setColUbInf( c, isInfinite[c] );
    }
 
@@ -168,9 +169,8 @@ class ProblemBuilder
    setColLbAll( Vec<REAL> lbs )
    {
       assert( lbs.size() == domains.lower_bounds.size() );
-      for( int c = 0; c < (int) lbs.size(); ++c )
-         domains.lower_bounds[c] = std::move( lbs[c
-         ] );
+      for( int c = 0; c < (int)lbs.size(); ++c )
+         domains.lower_bounds[c] = std::move( lbs[c] );
    }
 
    void
@@ -183,7 +183,7 @@ class ProblemBuilder
    setColUbAll( Vec<REAL> ubs )
    {
       assert( ubs.size() == domains.upper_bounds.size() );
-      for( int c = 0; c < (int) ubs.size(); ++c )
+      for( int c = 0; c < (int)ubs.size(); ++c )
          domains.upper_bounds[c] = std::move( ubs[c] );
    }
 
@@ -209,7 +209,7 @@ class ProblemBuilder
    setColIntegralAll( Vec<uint8_t> isIntegral )
    {
       assert( isIntegral.size() == domains.flags.size() );
-      for( int c = 0; c < (int) isIntegral.size(); ++c )
+      for( int c = 0; c < (int)isIntegral.size(); ++c )
          setColIntegral( c, isIntegral[c] );
    }
 
@@ -226,7 +226,7 @@ class ProblemBuilder
    setRowLhsInfAll( Vec<uint8_t> isInfinite )
    {
       assert( isInfinite.size() == rflags.size() );
-      for( int r = 0; r < (int) isInfinite.size(); ++r )
+      for( int r = 0; r < (int)isInfinite.size(); ++r )
          setRowLhsInf( r, isInfinite[r] );
    }
 
@@ -243,7 +243,7 @@ class ProblemBuilder
    setRowRhsInfAll( Vec<uint8_t> isInfinite )
    {
       assert( isInfinite.size() == rflags.size() );
-      for( int r = 0; r < (int) isInfinite.size(); ++r )
+      for( int r = 0; r < (int)isInfinite.size(); ++r )
          setRowRhsInf( r, isInfinite[r] );
    }
 
@@ -257,7 +257,7 @@ class ProblemBuilder
    setRowLhsAll( Vec<REAL> lhsvals )
    {
       assert( lhsvals.size() == lhs.size() );
-      for( int r = 0; r < (int) lhsvals.size(); ++r )
+      for( int r = 0; r < (int)lhsvals.size(); ++r )
          lhs[r] = std::move( lhsvals[r] );
    }
 
@@ -271,7 +271,7 @@ class ProblemBuilder
    setRowRhsAll( Vec<REAL> rhsvals )
    {
       assert( rhsvals.size() == rhs.size() );
-      for( int r = 0; r < (int) rhsvals.size(); ++r )
+      for( int r = 0; r < (int)rhsvals.size(); ++r )
          rhs[r] = std::move( rhsvals[r] );
    }
 
@@ -315,7 +315,7 @@ class ProblemBuilder
    setRowNameAll( Vec<Str> names )
    {
       assert( rownames.size() == names.size() );
-      for( int r = 0; r < (int) names.size(); ++r )
+      for( int r = 0; r < (int)names.size(); ++r )
          rownames[r] = String( names[r] );
    }
 
@@ -331,7 +331,7 @@ class ProblemBuilder
    setColNameAll( Vec<Str> names )
    {
       assert( colnames.size() == names.size() );
-      for( int c = 0; c < (int) names.size(); ++c )
+      for( int c = 0; c < (int)names.size(); ++c )
          colnames[c] = String( names[c] );
    }
 
@@ -376,50 +376,112 @@ class ProblemBuilder
       problem.setVariableNames( std::move( colnames ) );
       problem.setConstraintNames( std::move( rownames ) );
       ConstraintMatrix<REAL>& matrix = problem.getConstraintMatrix();
-      for(int i=0; i< problem.getNRows(); i++){
-         RowFlags rowFlag = matrix.getRowFlags()[i];
-         if( !rowFlag.test( RowFlag::kRhsInf ) &&
-             !rowFlag.test( RowFlag::kLhsInf ) &&
-             matrix.getLeftHandSides()[i] == matrix.getRightHandSides()[i] )
-            matrix.getRowFlags()[i].set(RowFlag::kEquation);
 
-         bool clique = true;
-         auto rowvec = matrix.getRowCoefficients( i );
-         REAL mincoeff = 0;
-         REAL maxcoeff = 0;
-         for( int j =0; j < rowvec.getLength(); ++j )
-         {
-            int col = rowvec.getIndices()[j];
-            REAL coeff = rowvec.getValues()[j];
-            REAL lb = domains.lower_bounds[col];
-            REAL ub = domains.upper_bounds[col];
-            if( num.isGT(mincoeff, coeff) ) 
-            {
-               mincoeff = coeff;
-            }
-            if( num.isGT(coeff, maxcoeff) ) 
-            {
-               maxcoeff = coeff;
-            }
-            if( !(rowFlag.test( RowFlag::kIntegral) && num.isEq(lb, 0) &&
-             num.isEq(ub, 1) && ( ( !rowFlag.test( RowFlag::kRhsInf ) && (
-             ( num.isGT(coeff, 0) && num.isGT(matrix.getRightHandSides()[i], coeff) && 
-             num.isGT(coeff + mincoeff, matrix.getRightHandSides()[i]) ) ) ) || 
-             ( !rowFlag.test( RowFlag::kLhsInf ) && ( num.isGT(0, coeff) && 
-             num.isGT(coeff, matrix.getLeftHandSides()[i]) && 
-             num.isGT(matrix.getLeftHandSides()[i],coeff + mincoeff) ) ) ) ) )
-            {
-               clique = false;
-               break;
-            }
-         }
-         if( clique )
-         {
-            matrix.getRowFlags()[i].set(RowFlag::kClique); 
-         }
-      }
-      if(problem.getNumIntegralCols() == 0)
-         problem.set_problem_type(ProblemFlag::kLinear);
+#ifdef PAPILO_TBB
+      tbb::parallel_for(
+          tbb::blocked_range<int>( 0, problem.getNRows() ),
+          [&]( const tbb::blocked_range<int>& r )
+          {
+             for( int i = r.begin(); i != r.end(); ++i )
+#else
+      for( int i = 0; i < problem.getNRows(); i++ )
+#endif
+             {
+                RowFlags rowFlag = matrix.getRowFlags()[i];
+                if( !rowFlag.test( RowFlag::kRhsInf ) &&
+                    !rowFlag.test( RowFlag::kLhsInf ) &&
+                    matrix.getLeftHandSides()[i] ==
+                        matrix.getRightHandSides()[i] )
+                   matrix.getRowFlags()[i].set( RowFlag::kEquation );
+
+                bool rhsClique = true;
+                if( rowFlag.test( RowFlag::kRhsInf ) )
+                {
+                   rhsClique = false;
+                }
+                bool lhsClique = true;
+                if( rowFlag.test( RowFlag::kLhsInf ) )
+                {
+                   lhsClique = false;
+                }
+                auto rowvec = matrix.getRowCoefficients( i );
+                REAL minvalue = std::numeric_limits<double>::infinity();
+                REAL maxvalue = -std::numeric_limits<double>::infinity();
+                for( int j = 0; j < rowvec.getLength(); ++j )
+                {
+                   int col = rowvec.getIndices()[j];
+                   if( !domains.flags[col].test( ColFlag::kIntegral ) )
+                   {
+                      rhsClique = false;
+                      lhsClique = false;
+                      break;
+                   }
+                   REAL coeff = rowvec.getValues()[j];
+                   REAL lb = domains.lower_bounds[col];
+                   REAL ub = domains.upper_bounds[col];
+                   if( rhsClique &&
+                       ( ( num.isEq( 0, lb ) && num.isLT( 0, coeff ) ) ||
+                         ( num.isEq( 0, ub ) && num.isGT( 0, coeff ) ) ) )
+                   {
+                      lhsClique = false;
+                      if( !( num.isGT( minvalue + abs( coeff ),
+                                       matrix.getRightHandSides()[i] ) &&
+                             num.isLT( abs( coeff ),
+                                       matrix.getRightHandSides()[i] ) ) )
+                      {
+                         rhsClique = false;
+                      }
+                      else
+                      {
+                         if( num.isLT( abs( coeff ), minvalue ) )
+                         {
+                            minvalue = abs( coeff );
+                         }
+                      }
+                   }
+                   else if( lhsClique &&
+                            ( ( num.isEq( 0, ub ) && num.isLT( 0, coeff ) ) ||
+                              ( num.isEq( 0, lb ) && num.isGT( 0, coeff ) ) ) )
+                   {
+                      rhsClique = false;
+                      if( !( num.isLT( maxvalue - abs( coeff ),
+                                       matrix.getLeftHandSides()[i] ) &&
+                             num.isGT( -abs( coeff ),
+                                       matrix.getLeftHandSides()[i] ) ) )
+                      {
+                         lhsClique = false;
+                      }
+                      else
+                      {
+                         if( num.isGT( -abs( coeff ), maxvalue ) )
+                         {
+                            maxvalue = -abs( coeff );
+                         }
+                      }
+                   }
+                   else
+                   {
+                      lhsClique = false;
+                      rhsClique = false;
+                      matrix.getRowFlags()[i].unset( RowFlag::kClique );
+                      break;
+                   }
+                   if( !( lhsClique || rhsClique ) )
+                   {
+                      matrix.getRowFlags()[i].unset( RowFlag::kClique );
+                      break;
+                   }
+                }
+                if( ( lhsClique || rhsClique ) )
+                {
+                   matrix.getRowFlags()[i].set( RowFlag::kClique );
+                }
+             }
+#ifdef PAPILO_TBB
+          } );
+#endif
+      if( problem.getNumIntegralCols() == 0 )
+         problem.set_problem_type( ProblemFlag::kLinear );
 
       return problem;
    }
