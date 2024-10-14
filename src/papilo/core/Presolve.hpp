@@ -291,6 +291,7 @@ class Presolve
 
    Vec<std::pair<int, int>> presolverStats;
    bool lastRoundReduced{};
+   bool currentRoundReduced{};
    int nunsuccessful{};
    bool rundelayed{};
 
@@ -495,9 +496,6 @@ Presolve<REAL>::apply( Problem<REAL>& problem, bool store_dual_postsolve )
 
       reductions.resize( presolvers.size() );
       results.resize( presolvers.size() );
-
-      round_to_evaluate = Delegator::kFast;
-
       presolverStats.resize( presolvers.size(), std::pair<int, int>( 0, 0 ) );
 
       ProblemUpdate<REAL> probUpdate( problem, result.postsolve, stats,
@@ -513,21 +511,7 @@ Presolve<REAL>::apply( Problem<REAL>& problem, bool store_dual_postsolve )
          }
       }
 
-      result.status = probUpdate.trivialPresolve();
-
-      if( result.status == PresolveStatus::kInfeasible ||
-          result.status == PresolveStatus::kUnbndOrInfeas ||
-          result.status == PresolveStatus::kUnbounded )
-      {
-         probUpdate.getCertificateInterface()->infeasible();
-         return result;
-      }
-      printRoundStats( false, "Trivial" );
       round_to_evaluate = Delegator::kFast;
-
-      finishRound( probUpdate );
-      ++stats.nrounds;
-
       nunsuccessful = 0;
       rundelayed = true;
       for( int i = 0; i < npresolvers; ++i )
@@ -542,11 +526,34 @@ Presolve<REAL>::apply( Problem<REAL>& problem, bool store_dual_postsolve )
       Statistics last_rounds_stats = stats;
       do
       {
-         bool was_executed_sequential = false;
-         // if problem is trivial abort here
-         if( probUpdate.getNActiveCols() == 0 ||
-             probUpdate.getNActiveRows() == 0 )
+         if( round_to_evaluate == Delegator::kFast )
+         {
+            if( presolveOptions.maxrounds != -1 && presolveOptions.maxrounds <= stats.nrounds )
+            {
+               msg.info("Maximum round {} reached. Finishing...\n", presolveOptions.maxrounds);
+               round_to_evaluate = Delegator::kAbort;
+            }
+
+            result.status = probUpdate.trivialPresolve();
+
+            if( stats.nrounds == 0 )
+               printRoundStats( false, "Trivial" );
+
+            if( is_status_infeasible_or_unbounded( result.status ) )
+               return result;
+
+            if( probUpdate.getNActiveCols() == 0 || probUpdate.getNActiveRows() == 0 )
+               round_to_evaluate = Delegator::kAbort;
+
+            lastRoundReduced = currentRoundReduced;
+            currentRoundReduced = false;
+            ++stats.nrounds;
+         }
+
+         if( round_to_evaluate == Delegator::kAbort )
             break;
+
+         bool was_executed_sequential = false;
 
          switch( round_to_evaluate )
          {
@@ -566,34 +573,15 @@ Presolve<REAL>::apply( Problem<REAL>& problem, bool store_dual_postsolve )
             assert( false );
          }
 
-         result.status =
-             evaluate_and_apply( timer, problem, result, probUpdate,
-                                 last_rounds_stats, was_executed_sequential );
+         result.status = evaluate_and_apply( timer, problem, result, probUpdate,last_rounds_stats,
+               was_executed_sequential );
+
          if( is_status_infeasible_or_unbounded( result.status ) )
             return result;
-         if( presolveOptions.maxrounds != -1 && presolveOptions.maxrounds <= stats.nrounds )
-         {
-            msg.info("Maximum round {} reached. Finishing...\n", presolveOptions.maxrounds);
-            round_to_evaluate = Delegator::kAbort;
-         }
+
          last_rounds_stats = stats;
-
-      } while( round_to_evaluate != Delegator::kAbort );
-
-      if( stats.ntsxapplied > 0 || stats.nboundchgs > 0 ||
-          stats.ncoefchgs > 0 || stats.ndeletedcols > 0 ||
-          stats.ndeletedrows > 0 || stats.nsidechgs > 0 )
-      {
-         result.status = probUpdate.trivialPresolve();
-
-         if( result.status == PresolveStatus::kInfeasible ||
-             result.status == PresolveStatus::kUnbndOrInfeas ||
-             result.status == PresolveStatus::kUnbounded )
-            return result;
-
-         probUpdate.clearStates();
-         probUpdate.check_and_compress();
       }
+      while( true );
 
       if(probUpdate.getProblem().getNCols() > 0)
       {
@@ -1012,14 +1000,6 @@ Presolve<REAL>::run_presolvers( const Problem<REAL>& problem,
          if( problem.getNRows() == 0 || problem.getNCols() == 0 )
             return;
       }
-      PresolveStatus status = probUpdate.trivialPresolve();
-      if( is_status_infeasible_or_unbounded( status ) )
-      {
-         results[presolver_2_run.first] = status;
-         return;
-      }
-      probUpdate.clearStates();
-      probUpdate.check_and_compress();
    }
 #ifdef PAPILO_TBB
    else
@@ -1090,12 +1070,6 @@ Presolve<REAL>::evaluate_and_apply( const Timer& timer, Problem<REAL>& problem,
                                     const Statistics& oldstats,
                                     bool run_sequential )
 {
-   if( round_to_evaluate == Delegator::kFast )
-   {
-      probUpdate.clearChangeInfo();
-      lastRoundReduced = false;
-   }
-
    result.status = evaluateResults();
    switch( result.status )
    {
@@ -1325,7 +1299,6 @@ Presolve<REAL>::handle_case_exceeded( Delegator& next_round )
             p->setDelayed( false );
          rundelayed = true;
       }
-      ++stats.nrounds;
       return Delegator::kFast;
    }
    printRoundStats( !lastRoundReduced, get_round_type( next_round ) );
@@ -1399,8 +1372,8 @@ Presolve<REAL>::increase_round_if_last_run_was_not_successfull(
    {
       if( are_applied_tsx_negligible( problem, probUpdate, roundStats, round_to_evaluate ) )
       {
-         lastRoundReduced =
-             lastRoundReduced || roundStats.nsidechgs > 0 ||
+         currentRoundReduced =
+             currentRoundReduced || roundStats.nsidechgs > 0 ||
              roundStats.nboundchgs > 0 || roundStats.ndeletedcols > 0 ||
              roundStats.ndeletedrows > 0 || roundStats.ncoefchgs > 0;
          next_round = increase_delegator( round_to_evaluate );
@@ -1408,10 +1381,9 @@ Presolve<REAL>::increase_round_if_last_run_was_not_successfull(
       else
       {
          printRoundStats( false, get_round_type( round_to_evaluate ) );
-         lastRoundReduced = true;
-         next_round = Delegator::kFast;
          nunsuccessful = 0;
-         ++stats.nrounds;
+         currentRoundReduced = true;
+         next_round = Delegator::kFast;
       }
    }
    else
