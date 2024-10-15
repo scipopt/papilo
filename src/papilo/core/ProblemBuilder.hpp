@@ -396,14 +396,14 @@ class ProblemBuilder
 
                 bool rhsClique = true;
                 if( rowFlag.test( RowFlag::kRhsInf ) )
-                {
+
                    rhsClique = false;
-                }
+
                 bool lhsClique = true;
                 if( rowFlag.test( RowFlag::kLhsInf ) )
-                {
+
                    lhsClique = false;
-                }
+
                 auto rowvec = matrix.getRowCoefficients( i );
                 REAL minvalue = std::numeric_limits<double>::infinity();
                 REAL maxvalue = -std::numeric_limits<double>::infinity();
@@ -428,15 +428,11 @@ class ProblemBuilder
                                        matrix.getRightHandSides()[i] ) &&
                              num.isLT( abs( coeff ),
                                        matrix.getRightHandSides()[i] ) ) )
-                      {
                          rhsClique = false;
-                      }
                       else
                       {
                          if( num.isLT( abs( coeff ), minvalue ) )
-                         {
                             minvalue = abs( coeff );
-                         }
                       }
                    }
                    else if( lhsClique &&
@@ -448,15 +444,11 @@ class ProblemBuilder
                                        matrix.getLeftHandSides()[i] ) &&
                              num.isGT( -abs( coeff ),
                                        matrix.getLeftHandSides()[i] ) ) )
-                      {
                          lhsClique = false;
-                      }
                       else
                       {
                          if( num.isGT( -abs( coeff ), maxvalue ) )
-                         {
                             maxvalue = -abs( coeff );
-                         }
                       }
                    }
                    else
@@ -473,9 +465,7 @@ class ProblemBuilder
                    }
                 }
                 if( ( lhsClique || rhsClique ) )
-                {
                    matrix.getRowFlags()[i].set( RowFlag::kClique );
-                }
              }
 #ifdef PAPILO_TBB
           } );
