@@ -396,14 +396,10 @@ class ProblemBuilder
 
                 bool rhsClique = true;
                 if( rowFlag.test( RowFlag::kRhsInf ) )
-
                    rhsClique = false;
-
                 bool lhsClique = true;
                 if( rowFlag.test( RowFlag::kLhsInf ) )
-
                    lhsClique = false;
-
                 auto rowvec = matrix.getRowCoefficients( i );
                 REAL minvalue = std::numeric_limits<double>::infinity();
                 REAL maxvalue = -std::numeric_limits<double>::infinity();
