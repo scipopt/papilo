@@ -48,7 +48,6 @@ SLURMACCOUNT    =       default
 
 # set PAPILO version here for external projects
 VERSION	=	2.3.2
-API_VERSION = 1
 
 ## compiling and linking parameters
 #VERBOSE		=	false
