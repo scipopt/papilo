@@ -78,13 +78,13 @@ TEST_CASE( "clique-row-flag-detection", "[core]" )
    Num<double> num{};
    Message msg{};
    Problem<double> problem = setupProblemWIthCliques();
-   REQUIRE( !problem.getRowFlags()[0].test( RowFlag::kClique ) );
+   REQUIRE( problem.getRowFlags()[0].test( RowFlag::kClique ) );
    REQUIRE( !problem.getRowFlags()[1].test( RowFlag::kClique ) );
-   REQUIRE( !problem.getRowFlags()[2].test( RowFlag::kClique ) );
-   REQUIRE( !problem.getRowFlags()[3].test( RowFlag::kClique ) );
+   REQUIRE( problem.getRowFlags()[2].test( RowFlag::kClique ) );
+   REQUIRE( problem.getRowFlags()[3].test( RowFlag::kClique ) );
    REQUIRE( !problem.getRowFlags()[4].test( RowFlag::kClique ) );
    REQUIRE( !problem.getRowFlags()[5].test( RowFlag::kClique ) );
-   REQUIRE( !problem.getRowFlags()[6].test( RowFlag::kClique ) );
+   REQUIRE( problem.getRowFlags()[6].test( RowFlag::kClique ) );
    REQUIRE( !problem.getRowFlags()[7].test( RowFlag::kClique ) );
 }
 
@@ -190,7 +190,7 @@ setupProblemWIthCliques()
        // Third Row is a Clique
        std::tuple<int, int, double>{ 3, 0, 1.5 },
        std::tuple<int, int, double>{ 3, 1, 2.0 },
-       std::tuple<int, int, double>{ 3, 3, -1.0 },
+       std::tuple<int, int, double>{ 3, 3, 1.0 },
        // Fourth row is a clique
        std::tuple<int, int, double>{ 4, 0, 2.0 },
        std::tuple<int, int, double>{ 4, 1, 1.0 },
@@ -200,13 +200,13 @@ setupProblemWIthCliques()
        std::tuple<int, int, double>{ 5, 1, 0.5 },
        std::tuple<int, int, double>{ 5, 4, -1.0 },
        // Sixth Row is not a Clique
-       std::tuple<int, int, double>{ 5, 0, -5.0 },
-       std::tuple<int, int, double>{ 5, 2, 6.0 },
-       std::tuple<int, int, double>{ 5, 5, 5.5 },
+       std::tuple<int, int, double>{ 6, 0, -5.0 },
+       std::tuple<int, int, double>{ 6, 2, 6.0 },
+       std::tuple<int, int, double>{ 6, 5, 5.5 },
        // Seventh Row is a Clique
-       std::tuple<int, int, double>{ 5, 0, -5.0 },
-       std::tuple<int, int, double>{ 5, 2, 6.0 },
-       std::tuple<int, int, double>{ 5, 5, 5.0 },
+       std::tuple<int, int, double>{ 7, 0, -5.0 },
+       std::tuple<int, int, double>{ 7, 2, 6.0 },
+       std::tuple<int, int, double>{ 7, 5, 5.0 },
        // Eigth Row is not a Clique
    };
 
