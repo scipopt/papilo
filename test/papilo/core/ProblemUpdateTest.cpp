@@ -58,6 +58,7 @@ TEST_CASE( "trivial-presolve-singleton-row-pt-2", "[core]" )
 {
    Num<double> num{};
    Problem<double> problem = setupProblemPresolveSingletonRowFixed();
+   Message msg{};
    Statistics statistics{};
    PresolveOptions presolveOptions{};
    PostsolveStorage<double> postsolve =
@@ -65,25 +66,65 @@ TEST_CASE( "trivial-presolve-singleton-row-pt-2", "[core]" )
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
    problemUpdate.trivialPresolve();
-
    REQUIRE( problem.getUpperBounds()[2] == 1 );
    REQUIRE( problem.getLowerBounds()[2] == 1 );
    REQUIRE( problem.getRowFlags()[1].test( RowFlag::kRedundant ) );
    REQUIRE( problemUpdate.getSingletonCols().size() == 2 );
 }
 
-TEST_CASE( "clique-row-flag-detection", "[core]" )
+TEST_CASE( "clique-row-flag-detection1", "[core]" )
 {
    Num<double> num{};
-   Message msg{};
    Problem<double> problem = setupProblemWIthCliques();
    REQUIRE( problem.getRowFlags()[0].test( RowFlag::kClique ) );
+}
+
+TEST_CASE( "clique-row-flag-detection2", "[core]" )
+{
+   Num<double> num{};
+   Problem<double> problem = setupProblemWIthCliques();
    REQUIRE( !problem.getRowFlags()[1].test( RowFlag::kClique ) );
+}
+
+TEST_CASE( "clique-row-flag-detection3", "[core]" )
+{
+   Num<double> num{};
+   Problem<double> problem = setupProblemWIthCliques();
    REQUIRE( problem.getRowFlags()[2].test( RowFlag::kClique ) );
+}
+
+TEST_CASE( "clique-row-flag-detection4", "[core]" )
+{
+   Num<double> num{};
+   Problem<double> problem = setupProblemWIthCliques();
    REQUIRE( problem.getRowFlags()[3].test( RowFlag::kClique ) );
+}
+
+TEST_CASE( "clique-row-flag-detection5", "[core]" )
+{
+   Num<double> num{};
+   Problem<double> problem = setupProblemWIthCliques();
    REQUIRE( !problem.getRowFlags()[4].test( RowFlag::kClique ) );
+}
+
+TEST_CASE( "clique-row-flag-detection6", "[core]" )
+{
+   Num<double> num{};
+   Problem<double> problem = setupProblemWIthCliques();
    REQUIRE( !problem.getRowFlags()[5].test( RowFlag::kClique ) );
+}
+
+TEST_CASE( "clique-row-flag-detection7", "[core]" )
+{
+   Num<double> num{};
+   Problem<double> problem = setupProblemWIthCliques();
    REQUIRE( problem.getRowFlags()[6].test( RowFlag::kClique ) );
+}
+
+TEST_CASE( "clique-row-flag-detection8", "[core]" )
+{
+   Num<double> num{};
+   Problem<double> problem = setupProblemWIthCliques();
    REQUIRE( !problem.getRowFlags()[7].test( RowFlag::kClique ) );
 }
 
