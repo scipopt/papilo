@@ -79,6 +79,7 @@ set(unit_tests
         #ProblemUpdate
         "trivial-presolve-singleton-row"
         "trivial-presolve-singleton-row-pt-2"
+        "clique-row-flag-detection"
 
         "problem-comparisons"
 
