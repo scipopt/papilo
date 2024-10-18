@@ -57,7 +57,6 @@ TEST_CASE( "trivial-presolve-singleton-row", "[core]" )
 TEST_CASE( "trivial-presolve-singleton-row-pt-2", "[core]" )
 {
    Num<double> num{};
-   Message msg{};
    Problem<double> problem = setupProblemPresolveSingletonRowFixed();
    Statistics statistics{};
    PresolveOptions presolveOptions{};
