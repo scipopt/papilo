@@ -422,7 +422,7 @@ class ProblemBuilder
                       lhsClique = false;
                       if( !( num.isGT( minvalue + abs( coeff ),
                                        matrix.getRightHandSides()[i] ) &&
-                             num.isLT( abs( coeff ),
+                             num.isLE( abs( coeff ),
                                        matrix.getRightHandSides()[i] ) ) )
                          rhsClique = false;
                       else
@@ -438,7 +438,7 @@ class ProblemBuilder
                       rhsClique = false;
                       if( !( num.isLT( maxvalue - abs( coeff ),
                                        matrix.getLeftHandSides()[i] ) &&
-                             num.isGT( -abs( coeff ),
+                             num.isGE( -abs( coeff ),
                                        matrix.getLeftHandSides()[i] ) ) )
                          lhsClique = false;
                       else
