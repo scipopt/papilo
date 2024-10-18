@@ -34,6 +34,9 @@ setupProblemPresolveSingletonRow();
 Problem<double>
 setupProblemPresolveSingletonRowFixed();
 
+Problem<double>
+setupProblemWIthCliques();
+
 TEST_CASE( "trivial-presolve-singleton-row", "[core]" )
 {
    Num<double> num{};
@@ -67,6 +70,26 @@ TEST_CASE( "trivial-presolve-singleton-row-pt-2", "[core]" )
    REQUIRE( problem.getLowerBounds()[2] == 1 );
    REQUIRE( problem.getRowFlags()[1].test( RowFlag::kRedundant ) );
    REQUIRE( problemUpdate.getSingletonCols().size() == 2 );
+}
+
+TEST_CASE( "clique-row-flag-detection", "[core]")
+{
+    Num<double> num{};
+    Message msg{};
+    Problem<double> problem = setupProblemWIthCliques();
+    Statistics statistics{};
+    PresolveOptions presolveOptions{};
+    PostsolveStorage<double> postsolve =
+        PostsolveStorage<double>( problem, num, presolveOptions );
+
+    REQUIRE( problem.getRowFlags()[0].test( RowFlag::kClique) );
+    REQUIRE( !problem.getRowFlags()[1].test( RowFlag::kClique) );
+    REQUIRE( problem.getRowFlags()[2].test( RowFlag::kClique) );
+    REQUIRE( problem.getRowFlags()[3].test( RowFlag::kClique) );
+    REQUIRE( !problem.getRowFlags()[4].test( RowFlag::kClique) );
+    REQUIRE( !problem.getRowFlags()[5].test( RowFlag::kClique) );
+    REQUIRE( problem.getRowFlags()[6].test( RowFlag::kClique) );
+    REQUIRE( !problem.getRowFlags()[7].test( RowFlag::kClique) );
 }
 
 Problem<double>
@@ -139,4 +162,71 @@ setupProblemPresolveSingletonRowFixed()
    problem.getConstraintMatrix().modifyLeftHandSide( 1,num, rhs[1] );
    return problem;
 }
+
+Problem<double>
+setupProblemWIthCliques()
+{
+   Num<double> num{};
+   const Vec<double> coefficients{ 1.0, 1.0, -1.0, 1.0, 1.0, -1.0 };
+   Vec<std::string> rowNames{ "A1", "A2", "A3", "A4", "A5", "A6", "A7", "A8" };
+   Vec<std::string> columnNames{ "x", "y", "z", "a", "b", "c" };
+   const Vec<double> rhs{ 1.0, 2.0, 2.0, 2.0, 1.0, 1.0, 1.0, 1.0 };
+   const Vec<double> lhs{ -10.0, -10.0, -10.0, -10.0, -10.0, -10.0, -10.0, -10.0 };
+   const Vec<double> upperBounds{ 1.0, 1.0, 0.0, 5.0, 1.0, 0.0 };
+   const Vec<double> lowerBounds{ 0.0, 0.0, -1.0, 0.0, 0.0, -5.0 };
+   Vec<uint8_t> integral = Vec<uint8_t>{ 1, 1, 1, 1, 0, 1 };
+
+   Vec<std::tuple<int, int, double>> entries{
+       std::tuple<int, int, double>{ 0, 0, 1.0 },
+       std::tuple<int, int, double>{ 0, 1, 1.0 },
+       std::tuple<int, int, double>{ 0, 2, -1.0 },
+       // First Row is a Clique
+       std::tuple<int, int, double>{ 1, 0, 1.0 },
+       std::tuple<int, int, double>{ 1, 1, 1.0 }, 
+       std::tuple<int, int, double>{ 1, 2, -1.0 },
+       // Second Row is not a Clique
+       std::tuple<int, int, double>{ 2, 0, 1.0 },
+       std::tuple<int, int, double>{ 2, 1, 2.0 }, 
+       std::tuple<int, int, double>{ 2, 2, -1.5 },
+       // Third Row is a Clique
+       std::tuple<int, int, double>{ 3, 0, 1.5 },
+       std::tuple<int, int, double>{ 3, 1, 2.0 }, 
+       std::tuple<int, int, double>{ 3, 3, -1.0 },
+       // Fourth row is a clique
+       std::tuple<int, int, double>{ 4, 0, 2.0 },
+       std::tuple<int, int, double>{ 4, 1, 1.0 }, 
+       std::tuple<int, int, double>{ 4, 2, -1.0 },
+       // Fifth Row is not a Clique
+       std::tuple<int, int, double>{ 5, 0, 1.0 },
+       std::tuple<int, int, double>{ 5, 1, 0.5 }, 
+       std::tuple<int, int, double>{ 5, 4, -1.0 },
+       // Sixth Row is not a Clique
+       std::tuple<int, int, double>{ 5, 0, -5.0 },
+       std::tuple<int, int, double>{ 5, 2, 6.0 }, 
+       std::tuple<int, int, double>{ 5, 5, 5.5 },
+       // Seventh Row is a Clique
+       std::tuple<int, int, double>{ 5, 0, -5.0 },
+       std::tuple<int, int, double>{ 5, 2, 6.0 }, 
+       std::tuple<int, int, double>{ 5, 5, 5.0 },
+       // Eigth Row is not a Clique
+       };
+
+   ProblemBuilder<double> pb;
+   pb.reserve( (int) entries.size(), (int) rowNames.size(), (int) columnNames.size() );
+   pb.setNumRows( (int) rowNames.size() );
+   pb.setNumCols( (int) columnNames.size() );
+   pb.setColUbAll( upperBounds );
+   pb.setColLbAll( lowerBounds );
+   pb.setObjAll( coefficients );
+   pb.setObjOffset( 0.0 );
+   pb.setColIntegralAll( integral );
+   pb.setRowRhsAll( rhs );
+   pb.setRowLhsAll( lhs );
+   pb.addEntryAll( entries );
+   pb.setColNameAll( columnNames );
+   pb.setProblemName( "matrix for cliques" );
+   Problem<double> problem = pb.build();
+   return problem;
+}
+
 } // namespace papilo
