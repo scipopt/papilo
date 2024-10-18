@@ -78,14 +78,14 @@ TEST_CASE( "clique-row-flag-detection", "[core]" )
    Num<double> num{};
    Message msg{};
    Problem<double> problem = setupProblemWIthCliques();
-   REQUIRE( problem.getRowFlags()[0].test( RowFlag::kClique ) );
-   //REQUIRE( !problem.getRowFlags()[1].test( RowFlag::kClique ) );
-   //REQUIRE( problem.getRowFlags()[2].test( RowFlag::kClique ) );
-   //REQUIRE( problem.getRowFlags()[3].test( RowFlag::kClique ) );
-   //REQUIRE( !problem.getRowFlags()[4].test( RowFlag::kClique ) );
-   //REQUIRE( !problem.getRowFlags()[5].test( RowFlag::kClique ) );
-   //REQUIRE( problem.getRowFlags()[6].test( RowFlag::kClique ) );
-   //REQUIRE( !problem.getRowFlags()[7].test( RowFlag::kClique ) );
+   REQUIRE( !problem.getRowFlags()[0].test( RowFlag::kClique ) );
+   REQUIRE( !problem.getRowFlags()[1].test( RowFlag::kClique ) );
+   REQUIRE( !problem.getRowFlags()[2].test( RowFlag::kClique ) );
+   REQUIRE( !problem.getRowFlags()[3].test( RowFlag::kClique ) );
+   REQUIRE( !problem.getRowFlags()[4].test( RowFlag::kClique ) );
+   REQUIRE( !problem.getRowFlags()[5].test( RowFlag::kClique ) );
+   REQUIRE( !problem.getRowFlags()[6].test( RowFlag::kClique ) );
+   REQUIRE( !problem.getRowFlags()[7].test( RowFlag::kClique ) );
 }
 
 Problem<double>
