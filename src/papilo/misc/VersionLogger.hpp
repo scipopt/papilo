@@ -33,7 +33,6 @@
 #include "papilo/misc/OptionsParser.hpp"
 #ifdef PAPILO_TBB
 #include "papilo/misc/tbb.hpp"
-#include "tbb/version.h"
 #endif
 
 #ifdef PAPILO_HAVE_SOPLEX
@@ -131,7 +130,7 @@ print_header()
                BOOST_VERSION_NUMBER_MAJOR( BOOST_VERSION ) );
 #endif
 #ifdef PAPILO_TBB
-   fmt::print( "  TBB      {}  \t Thread building block https://github.com/oneapi-src/oneTBB developed by Intel\n", TBB_VERSION_STRING);
+   fmt::print( "  TBB      {}.{}  \t Thread building block https://github.com/oneapi-src/oneTBB developed by Intel\n", TBB_VERSION_MAJOR, TBB_VERSION_MINOR);
 #endif
 #ifdef PAPILO_HAVE_GMP
    fmt::print( "  GMP      {}  \t GNU Multiple Precision Arithmetic Library "
