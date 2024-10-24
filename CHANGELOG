@@ -10,6 +10,8 @@ Fixed bugs
 Build system
 ------------
 
+- Revised the CMake configuration to export its dependencies.
+
 Known issues
 ------------
 
