@@ -402,13 +402,12 @@ find_library(TBB_LIBRARY_DEBUG
         PATHS ${TBB_LIB_SEARCH_PATH})
 make_library_set(TBB_LIBRARY)
 
-findpkg_finish(TBB tbb)
-
 #if we haven't found TBB no point on going any further
 if (NOT TBB_FOUND)
     return()
 endif ()
 
+findpkg_finish(TBB tbb)
 #=============================================================================
 # Look for TBB's malloc package
 set(TBB_MALLOC_LIBRARY_NAMES tbbmalloc)
