@@ -74,29 +74,25 @@ FixContinuous<REAL>::execute( const Problem<REAL>& problem,
    const int ncols = consMatrix.getNCols();
 
    PresolveStatus result = PresolveStatus::kUnchanged;
-   if( num.getFeasTol() == REAL{ 0 } )
+
+   if( num.getEpsilon() == 0 )
       return result;
 
    for( int i = 0; i < ncols; ++i )
    {
-      // dont fix removed or empty columns, integral columns, columns with
-      // infinity bounds, columns that are already fixed, and columns whose
-      // bounds are more than epsilon apart
-      if( cflags[i].test( ColFlag::kUnbounded, ColFlag::kIntegral,
-                          ColFlag::kInactive ) ||
-          ( ubs[i] - lbs[i] ) > num.getFeasTol() )
+      // do not fix columns which are inactive, unbounded, integral,
+      // or have feasibly distinct bounds
+      if( cflags[i].test( ColFlag::kInactive, ColFlag::kUnbounded, ColFlag::kIntegral )
+          || num.isFeasLT( lbs[i], ubs[i] ) )
          continue;
 
       assert( consMatrix.getColSizes()[i] >= 0 );
-      assert( lbs[i] != ubs[i] );
-
-      auto colvec = consMatrix.getColumnCoefficients( i );
-      REAL maxabsval = num.max( colvec.getMaxAbsValue(), 1 );
-      maxabsval = num.max( abs( objective.coefficients[i] ), maxabsval );
+      assert( lbs[i] < ubs[i] );
 
       // if the change in activity due to fixing this column is at most
       // epsilon in every row we can fix it
-      if( ( ubs[i] - lbs[i] ) * maxabsval <= num.getFeasTol() )
+      if( num.isLE( (ubs[i] - lbs[i]) * num.max( abs( objective.coefficients[i] ),
+         consMatrix.getColumnCoefficients( i ).getMaxAbsValue() ), 0 ) )
       {
          REAL fixval;
 
