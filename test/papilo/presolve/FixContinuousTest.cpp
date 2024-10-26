@@ -38,7 +38,7 @@ TEST_CASE( "happy-path-presolve-fix-continuous", "[presolve]" )
    Timer t{time};
    Num<double> num{};
    Message msg{};
-   Problem<double> problem = setupProblemForTest( num.getFeasTol() / 4 );
+   Problem<double> problem = setupProblemForTest( num.getEpsilon() / 4 );
    Statistics statistics{};
    PresolveOptions presolveOptions{};
    PostsolveStorage<double> postsolve =
@@ -68,7 +68,7 @@ TEST_CASE( "happy-path-no-presolve-fix-continuous", "[presolve]" )
    Timer t{time};
    Num<double> num{};
    Message msg{};
-   Problem<double> problem = setupProblemForTest( num.getFeasTol() );
+   Problem<double> problem = setupProblemForTest( num.getEpsilon() );
    Statistics statistics{};
    PresolveOptions presolveOptions{};
    PostsolveStorage<double> postsolve =
