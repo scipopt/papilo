@@ -318,7 +318,7 @@ DualInfer<REAL>::execute( const Problem<REAL>& problem,
             REAL bnddist = dualUB[dualCol] - newbound;
 
             // bound exceeded by more then feastol means infeasible
-            if( bnddist < -num.getFeasTol() )
+            if( num.isLT( bnddist, 0 ) )
             {
                result = PresolveStatus::kUnbndOrInfeas;
                return;

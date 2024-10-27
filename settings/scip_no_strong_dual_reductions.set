@@ -7,3 +7,6 @@ substitution.binarieswithints = 0
 substitution.maxfillin = 3
 probing.maxbadgesize = 15000
 numerics.useabsfeas = 0
+presolve.dualreds = 1
+# TODO: use default feasibility
+numerics.feastol = 9.9999999999999995e-05

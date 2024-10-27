@@ -344,7 +344,7 @@ DualFix<REAL>::perform_dual_fix_step(
          // if possible, but increase the bound slightly
          if( skip_variable_tightening  && ! cflags[i].test( ColFlag::kUbInf ) )
             return PresolveStatus::kUnchanged;
-         bool skip_performing = false;
+         bool skip = false;
          bool new_ub_init = false;
          REAL new_ub = REAL(0);
          int best_row = -1;
@@ -366,7 +366,7 @@ DualFix<REAL>::perform_dual_fix_step(
                {
                   check_row( activities[row].ninfmax, activities[row].max,
                              rhs[row], values[j], lbs[i],
-                             cflags[i].test( ColFlag::kLbInf ), skip_performing,
+                             cflags[i].test( ColFlag::kLbInf ), skip,
                              cand_bound );
                }
                else
@@ -379,7 +379,7 @@ DualFix<REAL>::perform_dual_fix_step(
                {
                   check_row( activities[row].ninfmin, activities[row].min,
                              lhs[row], values[j], lbs[i],
-                             cflags[i].test( ColFlag::kLbInf ), skip_performing,
+                             cflags[i].test( ColFlag::kLbInf ), skip,
                              cand_bound );
                }
                else
@@ -387,7 +387,7 @@ DualFix<REAL>::perform_dual_fix_step(
                   continue;
             }
 
-            if( skip_performing )
+            if( skip )
                break;
 
             // Only if variable is greater than or equal to new_UB, all rows
@@ -405,17 +405,16 @@ DualFix<REAL>::perform_dual_fix_step(
                // check if bound is already equal or worse than current bound
                // and abort in that case
                if( ( !cflags[i].test( ColFlag::kUbInf ) &&
-                     num.isGE( new_ub, ubs[i] ) ) ||
-                   new_ub >= num.getHugeVal() )
+                     num.isGE( new_ub, ubs[i] ) ) || num.isHugeVal( new_ub ) )
                {
-                  skip_performing = true;
+                  skip = true;
                   break;
                }
             }
          }
 
          // set new upper bound
-         if( !skip_performing && new_ub_init && !num.isHugeVal( new_ub ) )
+         if( !skip && new_ub_init && !num.isHugeVal( new_ub ) )
          {
             assert( cflags[i].test( ColFlag::kUbInf ) || new_ub < ubs[i] );
 
@@ -459,7 +458,7 @@ DualFix<REAL>::perform_dual_fix_step(
          // if possible, but increase the bound slightly
          if( skip_variable_tightening  && ! cflags[i].test( ColFlag::kLbInf ) )
             return PresolveStatus::kUnchanged;
-         bool skip_ = false;
+         bool skip = false;
          bool new_lb_init = false;
          REAL new_lb = REAL(0);
          int best_row = -1;
@@ -481,7 +480,7 @@ DualFix<REAL>::perform_dual_fix_step(
                {
                   check_row( activities[row].ninfmax, activities[row].max,
                              rhs[row], values[j], ubs[i],
-                             cflags[i].test( ColFlag::kUbInf ), skip_,
+                             cflags[i].test( ColFlag::kUbInf ), skip,
                              cand_bound );
                }
                else
@@ -494,7 +493,7 @@ DualFix<REAL>::perform_dual_fix_step(
                {
                   check_row( activities[row].ninfmin, activities[row].min,
                              lhs[row], values[j], ubs[i],
-                             cflags[i].test( ColFlag::kUbInf ), skip_,
+                             cflags[i].test( ColFlag::kUbInf ), skip,
                              cand_bound );
                }
                else
@@ -502,7 +501,7 @@ DualFix<REAL>::perform_dual_fix_step(
                   continue;
             }
 
-            if( skip_ )
+            if( skip )
                break;
 
             // Only if variable is less than or equal to new_LB, all rows in
@@ -519,17 +518,16 @@ DualFix<REAL>::perform_dual_fix_step(
                // check if bound is already equal or worse than current bound
                // and abort in that case
                if( ( !cflags[i].test( ColFlag::kLbInf ) &&
-                     num.isLE( new_lb, lbs[i] ) ) ||
-                   new_lb <= -num.getHugeVal() )
+                     num.isLE( new_lb, lbs[i] ) ) || num.isHugeVal( new_lb ) )
                {
-                  skip_ = true;
+                  skip = true;
                   break;
                }
             }
          }
 
          // set new lower bound
-         if( !skip_ && new_lb_init && !num.isHugeVal( new_lb ) )
+         if( !skip && new_lb_init && !num.isHugeVal( new_lb ) )
          {
             assert( cflags[i].test( ColFlag::kLbInf ) || new_lb > lbs[i] );
 

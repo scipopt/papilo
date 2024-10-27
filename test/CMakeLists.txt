@@ -447,7 +447,7 @@ if (TARGET papilo-executable AND EXISTS "${PROJECT_SOURCE_DIR}/${filename_for_so
 
     foreach (instance ${instances})
         validate_solution(${instance}, "no_strong_dual_reductions.set")
-#        validate_solution(${instance}, "scip_no_strong_dual_reductions.set")
+        validate_solution(${instance}, "scip_no_strong_dual_reductions.set")
     endforeach (instance)
 
 

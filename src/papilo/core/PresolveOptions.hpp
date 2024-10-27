@@ -33,6 +33,8 @@ struct PresolveOptions
 {
    bool apply_results_immediately_if_run_sequentially = true;
 
+   bool useabsfeas = true;
+
    bool boundrelax = false;
 
    bool calculate_basis_for_dual = true;
@@ -193,6 +195,9 @@ struct PresolveOptions
                              "absolute bound value that is considered too huge "
                              "for activitity based calculations",
                              hugeval, 0.0 );
+      paramSet.addParameter( "numerics.useabsfeas",
+                             "is an absolute tolerance used for feasibility checks",
+                             useabsfeas );
       paramSet.addParameter(
           "presolve.weakenlpvarbounds",
           "weaken bounds obtained by constraint propagation by this factor of "

@@ -46,6 +46,9 @@ numerics.feastol = 9.9999999999999995e-07
 # absolute bound value that is considered too huge for activitity based calculations  [Numerical: [0,1.7976931348623157e+308]]
 numerics.hugeval = 100000000
 
+# is an absolute tolerance used for feasibility checks  [Boolean: {0,1}]
+numerics.useabsfeas = 1
+
 # is presolver parallelcols enabled  [Boolean: {0,1}]
 parallelcols.enabled = 1
 

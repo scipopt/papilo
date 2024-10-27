@@ -178,7 +178,7 @@ class Num
  public:
    Num()
        : epsilon( REAL{ 1e-9 } ), feastol( REAL{ 1e-6 } ),
-         hugeval( REAL{ 1e8 } )
+         hugeval( REAL{ 1e8 } ), useabsfeas( true )
    {
    }
 
@@ -200,7 +200,7 @@ class Num
    bool
    isFeasEq( const R1& a, const R2& b ) const
    {
-      return abs( a - b ) <= feastol;
+      return useabsfeas ? isFeasAbsEq(a, b) : isFeasRelEq(a, b);
    }
 
    template <typename R1, typename R2>
@@ -214,7 +214,7 @@ class Num
    bool
    isFeasGE( const R1& a, const R2& b ) const
    {
-      return a - b >= -feastol;
+      return useabsfeas ? isFeasAbsGE(a, b) : isFeasRelGE(a, b);
    }
 
    template <typename R1, typename R2>
@@ -228,7 +228,7 @@ class Num
    bool
    isFeasLE( const R1& a, const R2& b ) const
    {
-      return a - b <= feastol;
+      return useabsfeas ? isFeasAbsLE(a, b) : isFeasRelLE( a, b);
    }
 
    template <typename R1, typename R2>
@@ -242,7 +242,7 @@ class Num
    bool
    isFeasGT( const R1& a, const R2& b ) const
    {
-      return a - b > feastol;
+      return useabsfeas ? isFeasAbsGT(a, b) : isFeasRelGT(a, b);
    }
 
    template <typename R1, typename R2>
@@ -256,7 +256,7 @@ class Num
    bool
    isFeasLT( const R1& a, const R2& b ) const
    {
-      return a - b < -feastol;
+      return useabsfeas ? isFeasAbsLT(a, b) : isFeasRelLT(a, b);
    }
 
    template <typename R1, typename R2>
@@ -289,6 +289,13 @@ class Num
 
    template <typename R1, typename R2>
    bool
+   isFeasAbsEq( const R1& a, const R2& b ) const
+   {
+      return abs( a - b ) <= feastol;
+   }
+
+   template <typename R1, typename R2>
+   bool
    isFeasRelEq( const R1& a, const R2& b ) const
    {
       return abs( relDiff( a, b ) ) <= feastol;
@@ -299,6 +306,13 @@ class Num
    isRelGE( const R1& a, const R2& b ) const
    {
       return relDiff( a, b ) >= -epsilon;
+   }
+
+   template <typename R1, typename R2>
+   bool
+   isFeasAbsGE( const R1& a, const R2& b ) const
+   {
+      return a - b >= -feastol;
    }
 
    template <typename R1, typename R2>
@@ -317,6 +331,13 @@ class Num
 
    template <typename R1, typename R2>
    bool
+   isFeasAbsLE( const R1& a, const R2& b ) const
+   {
+      return a - b <= feastol;
+   }
+
+   template <typename R1, typename R2>
+   bool
    isFeasRelLE( const R1& a, const R2& b ) const
    {
       return relDiff( a, b ) <= feastol;
@@ -331,6 +352,13 @@ class Num
 
    template <typename R1, typename R2>
    bool
+   isFeasAbsGT( const R1& a, const R2& b ) const
+   {
+      return a - b > feastol;
+   }
+
+   template <typename R1, typename R2>
+   bool
    isFeasRelGT( const R1& a, const R2& b ) const
    {
       return relDiff( a, b ) > feastol;
@@ -341,6 +369,13 @@ class Num
    isRelLT( const R1& a, const R2& b ) const
    {
       return relDiff( a, b ) < -epsilon;
+   }
+
+   template <typename R1, typename R2>
+   bool
+   isFeasAbsLT( const R1& a, const R2& b ) const
+   {
+      return a - b < -feastol;
    }
 
    template <typename R1, typename R2>
@@ -521,6 +556,12 @@ class Num
       this->hugeval = value;
    }
 
+   void
+   setUseAbsFeas( bool value )
+   {
+      this->useabsfeas = value;
+   }
+
    template <typename Archive>
    void
    serialize( Archive& ar, const unsigned int version )
@@ -528,12 +569,14 @@ class Num
       ar & epsilon;
       ar & feastol;
       ar & hugeval;
+      ar & useabsfeas;
    }
 
  private:
    REAL epsilon;
    REAL feastol;
    REAL hugeval;
+   bool useabsfeas;
 };
 
 /**

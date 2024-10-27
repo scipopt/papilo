@@ -76,8 +76,7 @@ ConstraintPropagation<REAL>::execute( const Problem<REAL>& problem,
    // small amount above the feasibility tolerance
    const REAL weaken_bounds =
        problem.getNumIntegralCols() == 0
-           ? REAL(problemUpdate.getPresolveOptions().weakenlpvarbounds) *
-                   num.getFeasTol()
+           ? REAL(problemUpdate.getPresolveOptions().weakenlpvarbounds) * num.getFeasTol()
            : REAL{ 0.0 };
 
    // calculating the basis for variable tightening (not fixings) may lead in
@@ -118,7 +117,7 @@ ConstraintPropagation<REAL>::execute( const Problem<REAL>& problem,
                REAL bnddist = domains.upper_bounds[col] - val;
 
                // bound exceeded by more then feastol means infeasible
-               if( bnddist < -num.getFeasTol() )
+               if( num.isFeasLT( bnddist, 0 ) )
                {
                   result = PresolveStatus::kInfeasible;
                   return;
@@ -127,9 +126,8 @@ ConstraintPropagation<REAL>::execute( const Problem<REAL>& problem,
                // if the upper bound is reached, or reached within tolerances
                // and the change of feasibility is also within tolerances fix to
                // the upper bound
-               if( bnddist <= 0 || ( bnddist <= num.getEpsilon() &&
-                                     consMatrix.getMaxFeasChange(
-                                         col, bnddist ) <= num.getFeasTol() ) )
+               if( bnddist <= 0
+                   || ( num.isLE( bnddist, 0 ) && num.isFeasLE( consMatrix.getMaxFeasChange( col, bnddist ), 0 ) ) )
                {
                   reductions.fixCol( col, domains.upper_bounds[col], row );
                   result = PresolveStatus::kReduced;
@@ -138,8 +136,8 @@ ConstraintPropagation<REAL>::execute( const Problem<REAL>& problem,
             }
 
             val -= weaken_bounds;
-            if( domains.flags[col].test( ColFlag::kLbInf ) ||
-                val - domains.lower_bounds[col] > +1000 * num.getFeasTol() )
+            if( domains.flags[col].test( ColFlag::kLbInf )
+                || num.isFeasGT( (val - domains.lower_bounds[col]) / 1000, 0 ) )
             {
                if(!skip_variable_tightening)
                {
@@ -174,7 +172,7 @@ ConstraintPropagation<REAL>::execute( const Problem<REAL>& problem,
                REAL bnddist = val - domains.lower_bounds[col];
 
                // bound exceeded by more then feastol means infeasible
-               if( bnddist < -num.getFeasTol() )
+               if( num.isFeasLT( bnddist, 0 ) )
                {
                   result = PresolveStatus::kInfeasible;
                   return;
@@ -183,9 +181,8 @@ ConstraintPropagation<REAL>::execute( const Problem<REAL>& problem,
                // if the lower bound is reached, or reached within tolerances
                // and the change of feasibility is also within tolerances fix to
                // the lower bound
-               if( bnddist <= 0 || ( bnddist <= num.getEpsilon() &&
-                                     consMatrix.getMaxFeasChange(
-                                         col, bnddist ) <= num.getFeasTol() ) )
+               if( bnddist <= 0
+                   || ( num.isLE( bnddist, 0 ) && num.isFeasLE( consMatrix.getMaxFeasChange( col, bnddist ), 0 ) ) )
                {
                   reductions.fixCol( col, domains.lower_bounds[col], row );
                   result = PresolveStatus::kReduced;
@@ -194,8 +191,8 @@ ConstraintPropagation<REAL>::execute( const Problem<REAL>& problem,
             }
 
             val += weaken_bounds;
-            if( domains.flags[col].test( ColFlag::kUbInf ) ||
-                val - domains.upper_bounds[col] < -1000 * num.getFeasTol() )
+            if( domains.flags[col].test( ColFlag::kUbInf )
+                || num.isFeasLT( (val - domains.upper_bounds[col]) / 1000, 0 ) )
             {
                if(!skip_variable_tightening)
                {
@@ -283,7 +280,7 @@ ConstraintPropagation<REAL>::execute( const Problem<REAL>& problem,
                          REAL bnddist = domains.upper_bounds[col] - val;
 
                          // bound exceeded by more then feastol means infeasible
-                         if( bnddist < -num.getFeasTol() )
+                         if( num.isFeasLT( bnddist, 0 ) )
                          {
                             local_status = PresolveStatus::kInfeasible;
                             return;
@@ -292,8 +289,8 @@ ConstraintPropagation<REAL>::execute( const Problem<REAL>& problem,
                          // if the upper bound is reached, or reached within
                          // tolerances and the change of feasibility is also
                          // within tolerances fix to the upper bound
-                         if( bnddist <= 0 || ( bnddist <= num.getEpsilon() &&
-                               consMatrix.getMaxFeasChange( col, bnddist ) <= num.getFeasTol() ) )
+                         if( bnddist <= 0
+                             || ( num.isLE( bnddist, 0 ) && num.isFeasLE( consMatrix.getMaxFeasChange( col, bnddist ), 0 ) ) )
                          {
                             stored_reductions[j].fixCol(
                                 col, domains.upper_bounds[col], row );
@@ -303,9 +300,8 @@ ConstraintPropagation<REAL>::execute( const Problem<REAL>& problem,
                       }
 
                       val -= weaken_bounds;
-                      if( domains.flags[col].test( ColFlag::kLbInf ) ||
-                          val - domains.lower_bounds[col] >
-                              +1000 * num.getFeasTol() )
+                      if( domains.flags[col].test( ColFlag::kLbInf )
+                          || num.isFeasGT( (val - domains.lower_bounds[col]) / 1000, 0 ) )
                       {
                          if( !skip_variable_tightening )
                          {
@@ -343,7 +339,7 @@ ConstraintPropagation<REAL>::execute( const Problem<REAL>& problem,
                          REAL bnddist = val - domains.lower_bounds[col];
 
                          // bound exceeded by more then feastol means infeasible
-                         if( bnddist < -num.getFeasTol() )
+                         if( num.isFeasLT( bnddist, 0 ) )
                          {
                             local_status = PresolveStatus::kInfeasible;
                             return;
@@ -352,10 +348,8 @@ ConstraintPropagation<REAL>::execute( const Problem<REAL>& problem,
                          // if the lower bound is reached, or reached within
                          // tolerances and the change of feasibility is also
                          // within tolerances fix to the lower bound
-                         if( bnddist <= 0 ||
-                             ( bnddist <= num.getEpsilon() &&
-                               consMatrix.getMaxFeasChange( col, bnddist ) <=
-                                   num.getFeasTol() ) )
+                         if( bnddist <= 0
+                             || ( num.isLE( bnddist, 0 ) && num.isFeasLE( consMatrix.getMaxFeasChange( col, bnddist ), 0 ) ) )
                          {
                             stored_reductions[j].fixCol(
                                 col, domains.lower_bounds[col], row );
@@ -365,9 +359,8 @@ ConstraintPropagation<REAL>::execute( const Problem<REAL>& problem,
                       }
 
                       val += weaken_bounds;
-                      if( domains.flags[col].test( ColFlag::kUbInf ) ||
-                          val - domains.upper_bounds[col] <
-                              -1000 * num.getFeasTol() )
+                      if( domains.flags[col].test( ColFlag::kUbInf )
+                          || num.isFeasLT( (val - domains.upper_bounds[col]) / 1000, 0 ) )
                       {
                          if( !skip_variable_tightening )
                          {

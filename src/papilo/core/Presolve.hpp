@@ -409,6 +409,7 @@ Presolve<REAL>::apply( Problem<REAL>& problem, bool store_dual_postsolve )
       num.setFeasTol( REAL{ presolveOptions.feastol } );
       num.setEpsilon( REAL{ presolveOptions.epsilon } );
       num.setHugeVal( REAL{ presolveOptions.hugeval } );
+      num.setUseAbsFeas( presolveOptions.useabsfeas );
 
       Timer timer( stats.presolvetime );
 
