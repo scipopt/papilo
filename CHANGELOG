@@ -7,6 +7,7 @@ Fixed bugs
 
 - All fast presolvers: maintain changed activities of current and last round to avoid missing reductions
 - FixContinuous: only fix column whose contribution deviates by at most epsilon in every row
+- Components: identify fixing a component to an optimal solution as strong dual reduction
 
 Build system
 ------------
