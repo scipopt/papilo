@@ -747,18 +747,14 @@ Presolve<REAL>::apply( Problem<REAL>& problem, bool store_dual_postsolve )
                          nremoved, nnewfreevars );
          }
 
-         bool detectComponents = presolveOptions.componentsmaxint != -1;
-
-         if( !lpSolverFactory && problem.getNumContinuousCols() != 0 )
-            detectComponents = false;
-
-         if( !(mipSolverFactory || satSolverFactory) && problem.getNumIntegralCols() != 0 )
-            detectComponents = false;
-
-         if( problem.getNCols() == 0 )
-            detectComponents = false;
-
-         if( detectComponents  && probUpdate.getNActiveCols() > 0 )
+         // detect disconnected components
+         if( presolveOptions.componentsmaxint != -1
+            && presolveOptions.dualreds == 2
+            && probUpdate.getNActiveCols() >= 1
+            && ( mipSolverFactory != nullptr
+               || ( ( lpSolverFactory != nullptr || problem.getNumContinuousCols() == 0 )
+                  //TODO: support SAT solver
+                  && ( /* satSolverFactory != nullptr || */ problem.getNumIntegralCols() == 0 ) ) ) )
          {
             assert( problem.getNCols() != 0 && problem.getNRows() != 0 );
             Components components;
@@ -804,7 +800,8 @@ Presolve<REAL>::apply( Problem<REAL>& problem, bool store_dual_postsolve )
 
 #endif
                       {
-                         if( compInfo[i].nintegral == 0 )
+                         if( lpSolverFactory != nullptr
+                            && compInfo[i].nintegral == 0 )
                          {
                             std::unique_ptr<SolverInterface<REAL>> solver =
                                 lpSolverFactory->newSolver(
@@ -838,10 +835,16 @@ Presolve<REAL>::apply( Problem<REAL>& problem, bool store_dual_postsolve )
                                       true;
                             }
                          }
-                         else if( compInfo[i].nintegral <=
-                                  presolveOptions.componentsmaxint )
+                         //TODO: call SAT solver
+                         // else if( satSolverFactory != nullptr
+                         //    && compInfo[i].ncontinuous == 0
+                         //    && compInfo[i].nintegral <= presolveOptions.componentsmaxint
+                         //    && <pure binary component>
+                         // {
+                         // }
+                         else if( mipSolverFactory != nullptr
+                            && compInfo[i].nintegral <= presolveOptions.componentsmaxint )
                          {
-                            //TODO: add satsolverfactory
                             std::unique_ptr<SolverInterface<REAL>> solver =
                                 mipSolverFactory->newSolver(
                                     VerbosityLevel::kQuiet );
