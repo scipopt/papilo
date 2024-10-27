@@ -15,6 +15,7 @@ Interface changes
 
 ### New API functions
 
+
 ### Changed parameters
 
 - presolve.abortfac = 0.00080000000000000004: abort factor of weighted number of reductions for exhaustive presolving
@@ -22,9 +23,9 @@ Interface changes
 
 ### New parameters with default values
 
+- numerics.useabsfeas = 1: is an absolute tolerance used for feasibility checks
 - presolve.abortfacfast = 0.00080000000000000004: abort factor of weighted number of reductions for fast presolving
 - presolve.abortfacmedium = 0.00080000000000000004: abort factor of weighted number of reductions for medium presolving
-
 - presolve.lpabortfacfast = 0.01: abort factor of weighted number of reductions for fast presolving LPs
 - presolve.lpabortfacmedium = 0.01: abort factor of weighted number of reductions for medium presolving LPs
 
