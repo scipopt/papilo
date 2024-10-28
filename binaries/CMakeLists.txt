@@ -1,3 +1,6 @@
+# Note: This file is included from papilo/CMakeLists.txt and scipoptsuite/CMakeLists.
+#       All variables it relies on must be supplied by both these files.
+
 include(GenerateExportHeader)
 
 if(SCIP)
@@ -70,6 +73,9 @@ else()
    message(STATUS "Finding ROUNDINGSAT - not found")
    set(PAPILO_HAVE_ROUNDINGSAT 0)
 endif()
+
+# Search again since we cannot rely on papilo/CMakeLists.txt having searched for Boost already.
+find_package(Boost ${BOOST_MIN_VERSION} OPTIONAL_COMPONENTS iostreams program_options serialization)
 
 include_directories(${SCIP_INCLUDE_DIRS} ${SOPLEX_INCLUDE_DIRS} ${CMAKE_CURRENT_BINARY_DIR})
 
