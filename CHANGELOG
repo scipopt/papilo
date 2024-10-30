@@ -71,6 +71,7 @@ Build system
 ------------
 
 - update FindTBB
+- Revised the CMake configuration to export its dependencies.
 
 Known issues
 ------------

@@ -63,17 +63,23 @@ option(GUROBI "should gurobi solver be linked" OFF)
 if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Release)
 endif()
-find_package(Boost ${BOOST_MIN_VERSION} OPTIONAL_COMPONENTS program_options serialization)
+find_package(Boost ${BOOST_MIN_VERSION} OPTIONAL_COMPONENTS iostreams program_options serialization)
 
+if(Boost_IOSTREAMS_FOUND)
+   set(PAPILO_HAVE_BOOST_IOSTREAMS 1)
+else()
+   set(PAPILO_HAVE_BOOST_IOSTREAMS 0)
+endif()
 if(Boost_PROGRAM_OPTIONS_FOUND)
    set(PAPILO_COMMAND_LINE_AVAILABLE 1)
 else()
-   message("WARNING: Boost program_options not found-> PaPILO can only used as library!")
    set(PAPILO_COMMAND_LINE_AVAILABLE 0)
 endif()
-
 if(Boost_SERIALIZATION_FOUND)
    set(PAPILO_SERIALIZATION_AVAILABLE 1)
+endif()
+if(NOT Boost_IOSTREAMS_FOUND OR NOT Boost_PROGRAM_OPTIONS_FOUND OR NOT Boost_SERIALIZATION_FOUND)
+    message("WARNING: Boost iostreams, program_options or serialization not found. PaPILO can only be used as a library!")
 endif()
 
 if(GMP)
@@ -93,11 +99,9 @@ if(QUADMATH)
 endif()
 if(Quadmath_FOUND)
    set(PAPILO_HAVE_FLOAT128 1)
-   set(Quadmath_IMPORTED_TARGET Quadmath::quadmath)
 else()
    set(PAPILO_HAVE_FLOAT128 0)
    set(Quadmath_INCLUDE_DIRS "")
-   set(Quadmath_IMPORTED_TARGET "")
 endif()
 
 if(GUROBI)
@@ -144,8 +148,21 @@ target_include_directories(papilo INTERFACE
    ${Quadmath_INCLUDE_DIRS}
    ${ROUNDINGSAT_INCLUDE_DIRS})
 
+#target_include_directories(papilo SYSTEM INTERFACE ${Boost_INCLUDE_DIRS})
+if(PAPILO_HAVE_BOOST_IOSTREAMS)
+    target_link_libraries(papilo INTERFACE Boost::iostreams)
+endif()
+if(PAPILO_COMMAND_LINE_AVAILABLE)
+    target_link_libraries(papilo INTERFACE Boost::program_options)
+endif()
+if(PAPILO_SERIALIZATION_AVAILABLE)
+    target_link_libraries(papilo INTERFACE Boost::serialization)
+endif()
+if(Quadmath_FOUND)
+    target_link_libraries(papilo INTERFACE Quadmath::quadmath)
+endif()
 
-target_include_directories(papilo SYSTEM INTERFACE ${Boost_INCLUDE_DIRS})
+
 
 if (TBB)
    set(PAPILO_TBB on)
@@ -164,11 +181,11 @@ if (TBB)
             URL_HASH SHA256=3ad5dd08954b39d113dc5b3f8a8dc6dc1fd5250032b7c491eb07aed5c94133e1
             CONFIGURE_ARGS -DTBB_TEST=OFF -DTBB_EXAMPLES=OFF -DTBB4PY_BUILD=OFF)
       else ()
-         find_package(TBB 2018 COMPONENTS tbb tbbmalloc REQUIRED)
+         find_package(TBB 2018 COMPONENTS tbb tbbmalloc)
       endif ()
-      if( NOT TBB_FOUND)
-         message(FATAL_ERROR "TBB was not found. Please enable auto-download (Linux or Mac) of TBB (-DTBB_DOWNLOAD=on) or disable TBB (-DTBB=off).")
-      else()
+      if (NOT TBB_FOUND)
+         message(FATAL_ERROR "TBB was not found. Please specify its location (-DTBB_DIR=...), enable auto-download of TBB (-DTBB_DOWNLOAD=on) or disable TBB (-DTBB=off).")
+      else ()
          message(STATUS "Found TBB: ${TBB_DIR}")
       endif ()
    endif()
@@ -184,7 +201,7 @@ find_package(Threads REQUIRED)
 
 
 target_link_libraries(papilo
-        INTERFACE ${Quadmath_IMPORTED_TARGET} ${GMP_LIBRARIES} ${GLOP_LIBRARIES})
+        INTERFACE ${GMP_LIBRARIES} ${GLOP_LIBRARIES})
 
 include(cmake/StdAtomic.cmake)
 
@@ -485,6 +502,11 @@ set(QUADMATH_MODULE_PATH "\${CMAKE_CURRENT_LIST_DIR}")
 set(TBB_MODULE_PATH "\${CMAKE_CURRENT_LIST_DIR}")
 configure_file(${PROJECT_SOURCE_DIR}/papilo-config.cmake.in
     "${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/papilo-config.cmake" @ONLY)
+
+if(PAPILO_HAVE_GMP)
+   install(FILES ${PROJECT_SOURCE_DIR}/cmake/Modules/FindGMP.cmake
+      DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/papilo)
+endif()
 
 if(PAPILO_HAVE_FLOAT128)
    install(FILES ${PROJECT_SOURCE_DIR}/cmake/Modules/FindQuadmath.cmake
