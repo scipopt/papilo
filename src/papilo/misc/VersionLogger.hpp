@@ -130,8 +130,7 @@ print_header()
                BOOST_VERSION_NUMBER_MAJOR( BOOST_VERSION ) );
 #endif
 #ifdef PAPILO_TBB
-   // TODO: TBB is missing not able to retrieve version
-   fmt::print( "  TBB            \t Thread building block https://github.com/oneapi-src/oneTBB developed by Intel\n");
+   fmt::print( "  TBB      {}.{}  \t Thread building block https://github.com/oneapi-src/oneTBB developed by Intel\n", TBB_VERSION_MAJOR, TBB_VERSION_MINOR);
 #endif
 #ifdef PAPILO_HAVE_GMP
    fmt::print( "  GMP      {}  \t GNU Multiple Precision Arithmetic Library "
@@ -139,7 +138,7 @@ print_header()
                GMP_VERSION );
 #endif
 #ifdef PAPILO_HAVE_HIGHS
-   fmt::print( "  HiGHS   {}.{}.{} \t high performance software "
+   fmt::print( "  HiGHS    {}.{}.{} \t high performance software "
                "for linear optimization (https://www.maths.ed.ac.uk/hall/HiGHS/) [GitHash: {}]\n" , HIGHS_VERSION_MAJOR, HIGHS_VERSION_MINOR, HIGHS_VERSION_PATCH,
                HIGHS_GITHASH);
 #endif
