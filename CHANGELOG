@@ -2,79 +2,37 @@
 
 @section RN240 PaPILO 2.4.0
 
-Features
---------
-
-
-Performance improvements
-------------------------
-
-
 Interface changes
 -----------------
-
-### New API functions
-
 
 ### Changed parameters
 
 - presolve.abortfac = 0.00080000000000000004: abort factor of weighted number of reductions for exhaustive presolving
-- presolve.lpabortfac = 0.01: abort factor of weighted number of reductions for exhaustive presolving LPs
+- presolve.lpabortfac = 0.01: abort factor of weighted number of reductions for exhaustive LP presolving
 
 ### New parameters with default values
 
-- numerics.useabsfeas = 1: is an absolute tolerance used for feasibility checks
+- numerics.useabsfeas = 1: whether to use an absolute tolerance for feasibility checks
 - presolve.abortfacfast = 0.00080000000000000004: abort factor of weighted number of reductions for fast presolving
 - presolve.abortfacmedium = 0.00080000000000000004: abort factor of weighted number of reductions for medium presolving
-- presolve.lpabortfacfast = 0.01: abort factor of weighted number of reductions for fast presolving LPs
-- presolve.lpabortfacmedium = 0.01: abort factor of weighted number of reductions for medium presolving LPs
-
-### Data structures
-
-
-Unit tests
-----------
-
-
-Testing
--------
-
+- presolve.lpabortfacfast = 0.01: abort factor of weighted number of reductions for fast LP presolving
+- presolve.lpabortfacmedium = 0.01: abort factor of weighted number of reductions for medium LP presolving
 
 Build system
 ------------
 
+- updated FindTBB
+- revised the CMake configuration to export the PaPILO dependencies (papilo-config.cmake)
+
 
 Fixed bugs
 ----------
 
-
-Miscellaneous
--------------
-
-
-Known issues
-------------
-
-
-@page RN23 Release notes for PAPILO 2.3
-
-@section RN232 PaPILO 2.3.2
-
-Fixed bugs
-----------
-
-- All fast presolvers: maintain changed activities of current and last round to avoid missing reductions
-- FixContinuous: only fix column whose contribution deviates by at most epsilon in every row
+- all fast presolvers: maintain changed activities of current and last round to avoid missing reductions
+- FixContinuous: only fix column which contribution deviates by at most epsilon in every row
 - Components: identify fixing a component to an optimal solution as strong dual reduction
 
-Build system
-------------
-
-- update FindTBB
-- Revised the CMake configuration to export its dependencies.
-
-Known issues
-------------
+@page RN23 Release notes for PAPILO 2.3
 
 @section RN231 PaPILO 2.3.1
 
