@@ -118,7 +118,7 @@ print_header()
                PAPILO_VERSION_MAJOR, PAPILO_VERSION_MINOR, PAPILO_VERSION_PATCH,
                mode, solvers );
 #endif
-   fmt::print( "Copyright (C) 2020-2023 Zuse Institute Berlin (ZIB)\n" );
+   fmt::print( "Copyright (C) 2020-2024 Zuse Institute Berlin (ZIB)\n" );
    fmt::print( "\n" );
 
    fmt::print( "External libraries: \n" );
