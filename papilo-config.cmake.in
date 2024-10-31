@@ -63,6 +63,9 @@ if(PAPILO_SERIALIZATION_AVAILABLE)
 endif()
 if(BOOST_COMPONENTS AND PAPILO_FOUND)
     if((NOT Boost_PROGRAM_OPTIONS_FOUND AND PAPILO_COMMAND_LINE_AVAILABLE) OR (NOT Boost_SERIALIZATION_FOUND AND PAPILO_SERIALIZATION_AVAILABLE) OR (NOT Boost_IOSTREAMS_FOUND AND PAPILO_HAVE_BOOST_IOSTREAMS))
+        # trigger a full Boost check
+        # this is a workaround for cmake 3.12, where find_dependency() decided to do nothing because Boost_FOUND was set, even though, mysteriously, Boost_IOSTREAMS_FOUND was not set
+        unset(Boost_FOUND)
         find_dependency(Boost @BOOST_MIN_VERSION@ COMPONENTS ${BOOST_COMPONENTS})
     endif()
     if(NOT Boost_IOSTREAMS_FOUND AND PAPILO_HAVE_BOOST_IOSTREAMS)
