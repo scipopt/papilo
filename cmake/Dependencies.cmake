@@ -55,7 +55,7 @@ endfunction()
 # Try to find a package or downloads it at configure time.
 #
 # Use FetchContent to download a package if it was not found and build it inside the build tree.
-function(find_or_download_package)
+macro(find_or_download_package)
     set(options)
     set(oneValueArgs NAME URL URL_HASH VERSION)
     set(multiValueArgs COMPONENTS CONFIGURE_ARGS)
@@ -102,4 +102,4 @@ function(find_or_download_package)
             endif()
         endif()
     endif()
-endfunction()
+endmacro()
