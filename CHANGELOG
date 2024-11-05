@@ -12,6 +12,9 @@ Interface changes
 Build system
 ------------
 
+- FindBoost is not longer support by CMake 3.30 with CMP0167, which is now enforced for versions 3.30+.
+  Note that BOOST_ROOT is no longer support and Boost_DIR should link to Boost's cmake config.
+
 Fixed bugs
 ----------
 
