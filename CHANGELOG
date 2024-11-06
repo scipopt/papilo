@@ -1,3 +1,21 @@
+@page RN25 Release notes for PAPILO 2.5
+
+@section RN250 PaPILO 2.5.0
+
+Interface changes
+-----------------
+
+### Changed parameters
+
+### New parameters with default values
+
+Build system
+------------
+
+Fixed bugs
+----------
+
+
 @page RN24 Release notes for PAPILO 2.4
 
 @section RN241 PaPILO 2.4.1
