@@ -400,6 +400,12 @@ Presolve<REAL>::apply( Problem<REAL>& problem, bool store_dual_postsolve )
    tbb::task_arena arena( presolveOptions.threads == 0
                               ? tbb::task_arena::automatic
                               : presolveOptions.threads );
+#else
+   if( presolveOptions.threads != 1 )
+   {
+      msg.info("PaPILO is build without TBB, setting number of threads to 1.");
+      presolveOptions.threads = 1;
+   }
 #endif
 
 #ifdef PAPILO_TBB
