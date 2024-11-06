@@ -7,6 +7,11 @@ set(PAPILO_API_VERSION 3)
 
 project(papilo VERSION ${PAPILO_VERSION_MAJOR}.${PAPILO_VERSION_MINOR}.${PAPILO_VERSION_PATCH}.0)
 
+# FindBoost is removed in version cmake 3.30
+if(POLICY CMP0167)
+    cmake_policy(SET CMP0167 NEW)
+endif()
+
 set(BOOST_MIN_VERSION 1.65)
 set(CMAKE_CXX_STANDARD 14)
 set(CXX_STANDARD_REQUIRED ON)
