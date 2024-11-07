@@ -466,6 +466,15 @@ Presolve<REAL>::apply( Problem<REAL>& problem, bool store_dual_postsolve )
       msg.info( "  int. columns:  {}\n", problem.getNumIntegralCols() );
       msg.info( "  cont. columns:  {}\n", problem.getNumContinuousCols() );
       msg.info( "  nonzeros: {}\n\n", problem.getConstraintMatrix().getNnz() );
+      ConstraintMatrix<REAL>& matrix = problem.getConstraintMatrix();
+      int nCliques = 0;
+      for( int i = 0; i < problem.getNRows(); i++ )
+      {
+         RowFlags rowFlag = matrix.getRowFlags()[i];
+         if (rowFlag.test( RowFlag::kClique))
+            nCliques++;
+      }
+      msg.info( "\nNumber of Cliques: {}\n", nCliques);
 
       result.status = PresolveStatus::kUnchanged;
 
@@ -1507,6 +1516,15 @@ Presolve<REAL>::logStatus( ProblemUpdate<REAL>& problem_update,
    if( problem.test_problem_type( ProblemFlag::kBinary ) )
       msg.info( "  found symmetries: {}\n",
                 problem.getSymmetries().symmetries.size() );
+   ConstraintMatrix<REAL>& matrix = problem.getConstraintMatrix();
+   int nCliques = 0;
+   for( int i = 0; i < problem.getNRows(); i++ )
+   {
+      RowFlags rowFlag = matrix.getRowFlags()[i];
+      if (rowFlag.test( RowFlag::kClique))
+         nCliques++;
+   }
+   msg.info( "\nNumber of Cliques: {}\n", nCliques);
 
 }
 
