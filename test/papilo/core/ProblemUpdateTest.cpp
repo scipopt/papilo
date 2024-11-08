@@ -76,7 +76,8 @@ TEST_CASE( "clique-row-flag-detection1", "[core]" )
 {
    Num<double> num{};
    Problem<double> problem = setupProblemWIthCliques();
-   REQUIRE( problem.getRowFlags()[0].test( RowFlag::kClique ) );
+   REQUIRE( !problem.getRowFlags()[0].test( RowFlag::kClique ) );
+   REQUIRE( problem.getRowFlags()[0].test( RowFlag::kSOS1 ) );
 }
 
 TEST_CASE( "clique-row-flag-detection2", "[core]" )
@@ -84,20 +85,23 @@ TEST_CASE( "clique-row-flag-detection2", "[core]" )
    Num<double> num{};
    Problem<double> problem = setupProblemWIthCliques();
    REQUIRE( !problem.getRowFlags()[1].test( RowFlag::kClique ) );
+   REQUIRE( !problem.getRowFlags()[1].test( RowFlag::kSOS1 ) );
 }
 
 TEST_CASE( "clique-row-flag-detection3", "[core]" )
 {
    Num<double> num{};
    Problem<double> problem = setupProblemWIthCliques();
-   REQUIRE( problem.getRowFlags()[2].test( RowFlag::kClique ) );
+   REQUIRE( !problem.getRowFlags()[2].test( RowFlag::kClique ) );
+   REQUIRE( problem.getRowFlags()[2].test( RowFlag::kSOS1 ) );
 }
 
 TEST_CASE( "clique-row-flag-detection4", "[core]" )
 {
    Num<double> num{};
    Problem<double> problem = setupProblemWIthCliques();
-   REQUIRE( problem.getRowFlags()[3].test( RowFlag::kClique ) );
+   REQUIRE( !problem.getRowFlags()[3].test( RowFlag::kClique ) );
+   REQUIRE( problem.getRowFlags()[3].test( RowFlag::kSOS1 ) );
 }
 
 TEST_CASE( "clique-row-flag-detection5", "[core]" )
@@ -105,6 +109,7 @@ TEST_CASE( "clique-row-flag-detection5", "[core]" )
    Num<double> num{};
    Problem<double> problem = setupProblemWIthCliques();
    REQUIRE( !problem.getRowFlags()[4].test( RowFlag::kClique ) );
+   REQUIRE( !problem.getRowFlags()[4].test( RowFlag::kSOS1 ) );
 }
 
 TEST_CASE( "clique-row-flag-detection6", "[core]" )
@@ -112,13 +117,15 @@ TEST_CASE( "clique-row-flag-detection6", "[core]" )
    Num<double> num{};
    Problem<double> problem = setupProblemWIthCliques();
    REQUIRE( !problem.getRowFlags()[5].test( RowFlag::kClique ) );
+   REQUIRE( !problem.getRowFlags()[5].test( RowFlag::kSOS1 ) );
 }
 
 TEST_CASE( "clique-row-flag-detection7", "[core]" )
 {
    Num<double> num{};
    Problem<double> problem = setupProblemWIthCliques();
-   REQUIRE( problem.getRowFlags()[6].test( RowFlag::kClique ) );
+   REQUIRE( !problem.getRowFlags()[6].test( RowFlag::kClique ) );
+   REQUIRE( problem.getRowFlags()[6].test( RowFlag::kSOS1 ) );
 }
 
 TEST_CASE( "clique-row-flag-detection8", "[core]" )
@@ -126,6 +133,15 @@ TEST_CASE( "clique-row-flag-detection8", "[core]" )
    Num<double> num{};
    Problem<double> problem = setupProblemWIthCliques();
    REQUIRE( !problem.getRowFlags()[7].test( RowFlag::kClique ) );
+   REQUIRE( !problem.getRowFlags()[7].test( RowFlag::kSOS1 ) );
+}
+
+TEST_CASE( "clique-row-flag-detection9", "[core]" )
+{
+   Num<double> num{};
+   Problem<double> problem = setupProblemWIthCliques();
+   // REQUIRE( problem.getRowFlags()[8].test( RowFlag::kClique ) );
+   // REQUIRE( !problem.getRowFlags()[8].test( RowFlag::kSOS1 ) );
 }
 
 Problem<double>
@@ -206,48 +222,53 @@ setupProblemWIthCliques()
 {
    Num<double> num{};
    const Vec<double> coefficients{ 1.0, 1.0, -1.0, 1.0, 1.0, -1.0 };
-   Vec<std::string> rowNames{ "A1", "A2", "A3", "A4", "A5", "A6", "A7", "A8" };
-   Vec<std::string> columnNames{ "x", "y", "z", "a", "b", "c" };
-   const Vec<double> rhs{ 1.0, 2.0, 2.0, 2.0, 1.0, 1.0, 1.0, 1.0 };
-   const Vec<double> lhs{ -10.0, -10.0, -10.0, -10.0,
+   Vec<std::string> rowNames{ "A1", "A2", "A3", "A4", "A5",
+                              "A6", "A7", "A8", "A9" };
+   Vec<std::string> columnNames{ "x", "y", "z", "a", "b", "c", "d" };
+   const Vec<double> rhs{ 1.0, 2.0, 2.0, 2.0, 1.0, 1.0, 1.0, 1.0, 1.0 };
+   const Vec<double> lhs{ -10.0, -10.0, -10.0, -10.0, -10.0,
                           -10.0, -10.0, -10.0, -10.0 };
-   const Vec<double> upperBounds{ 1.0, 1.0, 0.0, 5.0, 1.0, 0.0 };
-   const Vec<double> lowerBounds{ 0.0, 0.0, -1.0, 0.0, 0.0, -5.0 };
-   Vec<uint8_t> integral = Vec<uint8_t>{ 1, 1, 1, 1, 0, 1 };
+   const Vec<double> upperBounds{ 1.0, 1.0, 0.0, 5.0, 1.0, 0.0, 1.0 };
+   const Vec<double> lowerBounds{ 0.0, 0.0, -1.0, 0.0, 0.0, -5.0, 0.0 };
+   Vec<uint8_t> integral = Vec<uint8_t>{ 1, 1, 1, 1, 0, 1, 1 };
 
    Vec<std::tuple<int, int, double>> entries{
        std::tuple<int, int, double>{ 0, 0, 1.0 },
        std::tuple<int, int, double>{ 0, 1, 1.0 },
        std::tuple<int, int, double>{ 0, 2, -1.0 },
-       // First Row is a Clique
+       // First Row is a SOS1, but not a Clique
        std::tuple<int, int, double>{ 1, 0, 1.0 },
        std::tuple<int, int, double>{ 1, 1, 1.0 },
        std::tuple<int, int, double>{ 1, 2, -1.0 },
-       // Second Row is not a Clique
+       // Second Row is not a Clique, not SOS1
        std::tuple<int, int, double>{ 2, 0, 1.0 },
        std::tuple<int, int, double>{ 2, 1, 2.0 },
        std::tuple<int, int, double>{ 2, 2, -1.5 },
-       // Third Row is a Clique
+       // Third Row is a SOS1, but no Clique
        std::tuple<int, int, double>{ 3, 0, 1.5 },
        std::tuple<int, int, double>{ 3, 1, 2.0 },
        std::tuple<int, int, double>{ 3, 3, 1.0 },
-       // Fourth row is a clique
+       // Fourth row is a SOS1 but no clique
        std::tuple<int, int, double>{ 4, 0, 2.0 },
        std::tuple<int, int, double>{ 4, 1, 1.0 },
        std::tuple<int, int, double>{ 4, 2, -1.0 },
-       // Fifth Row is not a Clique
+       // Fifth Row is not a Clique, no SOS1
        std::tuple<int, int, double>{ 5, 0, 1.0 },
        std::tuple<int, int, double>{ 5, 1, 0.5 },
        std::tuple<int, int, double>{ 5, 4, -1.0 },
-       // Sixth Row is not a Clique
+       // Sixth Row is not a Clique, no SOS1
        std::tuple<int, int, double>{ 6, 0, -5.0 },
        std::tuple<int, int, double>{ 6, 2, 6.0 },
        std::tuple<int, int, double>{ 6, 5, 5.5 },
-       // Seventh Row is a Clique
+       // Seventh Row is not a Clique, but a SOS1
        std::tuple<int, int, double>{ 7, 0, -5.0 },
        std::tuple<int, int, double>{ 7, 2, 6.0 },
        std::tuple<int, int, double>{ 7, 5, 5.0 },
-       // Eigth Row is not a Clique
+       // Eigth Row is not a Clique, no SOS1
+       std::tuple<int, int, double>{ 7, 0, 1.0 },
+       std::tuple<int, int, double>{ 7, 1, 1.0 },
+       std::tuple<int, int, double>{ 7, 6, 1.0 },
+       // Ninth Row is a clique, no SOS1
    };
 
    ProblemBuilder<double> pb;

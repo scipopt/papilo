@@ -27,6 +27,7 @@
 #include "papilo/core/ConstraintMatrix.hpp"
 #include "papilo/core/Objective.hpp"
 #include "papilo/core/Problem.hpp"
+#include "papilo/core/ProblemBuilder.hpp"
 #include "papilo/core/VariableDomains.hpp"
 #include "papilo/external/pdqsort/pdqsort.h"
 #include "papilo/io/BoundType.hpp"
@@ -85,7 +86,7 @@ class OpbParser
 
       assert( parser.nnz >= 0 );
 
-      assert(static_cast<int>(parser.coeffobj.size()) == parser.nCols);
+      assert( static_cast<int>( parser.coeffobj.size() ) == parser.nCols );
 
       Vec<REAL> obj_vec( size_t( parser.nCols ), REAL{ 0.0 } );
 
@@ -108,6 +109,27 @@ class OpbParser
       problem.set_problem_type( ProblemFlag::kMixedInteger );
       problem.set_problem_type( ProblemFlag::kInteger );
       problem.set_problem_type( ProblemFlag::kBinary );
+      ConstraintMatrix<REAL>& matrix = problem.getConstraintMatrix();
+#ifdef PAPILO_TBB
+      tbb::parallel_for(
+          tbb::blocked_range<int>( 0, problem.getNRows() ),
+          [&]( const tbb::blocked_range<int>& r )
+          {
+             for( int i = r.begin(); i != r.end(); ++i )
+#else
+      for( int i = 0; i < problem.getNRows(); i++ )
+#endif
+             {
+                std::pair<bool, bool> cliqueResult = problem.is_clique_or_sos1(
+                    std::move( matrix ), std::move( i ) );
+                if( cliqueResult.first && cliqueResult.second )
+                   matrix.getRowFlags()[i].set( RowFlag::kSOS1 );
+                else if( cliqueResult.first )
+                   matrix.getRowFlags()[i].set( RowFlag::kClique );
+             }
+#ifdef PAPILO_TBB
+          } );
+#endif
 
       return problem;
    }
@@ -193,9 +215,10 @@ OpbParser<REAL>::parse( boost::iostreams::filtering_istream& file )
 
       if( strline[0] == '*' || strline.empty() )
          continue;
-      for (char& c : strline)
-         if (c == ';') c = ' ';
-      if( strline.substr(0, 4) == "min:" )
+      for( char& c : strline )
+         if( c == ';' )
+            c = ' ';
+      if( strline.substr( 0, 4 ) == "min:" )
       {
          auto type = parseObjective( strline );
          if( type == ParseKey::kFail )
@@ -210,8 +233,8 @@ OpbParser<REAL>::parse( boost::iostreams::filtering_istream& file )
    }
 
    assert( row_type.size() == unsigned( nRows ) );
-   assert( nCols == static_cast<int>(colname2idx.size()) );
-   assert( nRows == static_cast<int>(rowname2idx.size()) );
+   assert( nCols == static_cast<int>( colname2idx.size() ) );
+   assert( nRows == static_cast<int>( rowname2idx.size() ) );
 
    return true;
 }
@@ -223,7 +246,7 @@ OpbParser<REAL>::parseRows( std::string& line )
    rownames.push_back( std::to_string( nRows ) );
    rowname2idx.insert( { std::to_string( nRows ), nRows } );
 
-   unsigned long pos = line.find(">=");
+   unsigned long pos = line.find( ">=" );
    std::string line_rhs;
    REAL offset = 0;
    if( pos == std::string::npos )
@@ -236,7 +259,6 @@ OpbParser<REAL>::parseRows( std::string& line )
       flags.set( RowFlag::kEquation );
       row_flags.push_back( flags );
       line_rhs = line.substr( pos + 1 );
-
    }
    else
    {
@@ -247,25 +269,25 @@ OpbParser<REAL>::parseRows( std::string& line )
       row_flags.push_back( flags );
       line_rhs = line.substr( pos + 2 );
    }
-   boost::trim(line_rhs);
-   line = line.substr(0, pos);
+   boost::trim( line_rhs );
+   line = line.substr( 0, pos );
    assert( pos != std::string::npos );
    assert( line.find( "<=" ) == std::string::npos );
 
-   std::istringstream is(line);
+   std::istringstream is( line );
    std::vector<std::string> tokens;
    std::string tmp;
-   while (is >> tmp)
-      tokens.push_back(tmp);
+   while( is >> tmp )
+      tokens.push_back( tmp );
 
-   if (tokens.size() % 2 != 0)
+   if( tokens.size() % 2 != 0 )
    {
       fmt::print(
           "PaPILO does not support non-linear pseudo-boolean equations\n" );
       return ParseKey::kFail;
    }
-   for (int i = 0; i < (long long)tokens.size(); i += 2)
-      if (find(tokens[i].begin(), tokens[i].end(), 'x') != tokens[i].end())
+   for( int i = 0; i < (long long)tokens.size(); i += 2 )
+      if( find( tokens[i].begin(), tokens[i].end(), 'x' ) != tokens[i].end() )
       {
          fmt::print(
              "PaPILO does not support non-linear pseudo-boolean equations\n" );
@@ -280,7 +302,7 @@ OpbParser<REAL>::parseRows( std::string& line )
       result = parse_number<REAL>( s_coef );
       if( result.first )
       {
-         fmt::print("Could not parse coefficient {}\n", s_coef);
+         fmt::print( "Could not parse coefficient {}\n", s_coef );
          return ParseKey::kFail;
       }
       REAL coef = result.second;
@@ -313,7 +335,7 @@ OpbParser<REAL>::parseRows( std::string& line )
    result = parse_number<REAL>( line_rhs );
    if( result.first )
    {
-      fmt::print("Could not parse side {}\n", line_rhs);
+      fmt::print( "Could not parse side {}\n", line_rhs );
       return ParseKey::kFail;
    }
    REAL rhs = result.second;
@@ -342,24 +364,24 @@ template <typename REAL>
 ParseKey
 OpbParser<REAL>::parseObjective( std::string& line )
 {
-   assert(line.substr(0, 4) == "min:");
+   assert( line.substr( 0, 4 ) == "min:" );
 
    line = line.substr( 4 );
 
-   std::istringstream is(line);
+   std::istringstream is( line );
    std::vector<std::string> tokens;
    std::string tmp;
-   while (is >> tmp)
-      tokens.push_back(tmp);
+   while( is >> tmp )
+      tokens.push_back( tmp );
 
-   if (tokens.size() % 2 != 0)
+   if( tokens.size() % 2 != 0 )
    {
       fmt::print(
           "PaPILO does not support non-linear pseudo-boolean equations\n" );
       return ParseKey::kFail;
    }
-   for (int i = 0; i < (long long)tokens.size(); i += 2)
-      if (find(tokens[i].begin(), tokens[i].end(), 'x') != tokens[i].end())
+   for( int i = 0; i < (long long)tokens.size(); i += 2 )
+      if( find( tokens[i].begin(), tokens[i].end(), 'x' ) != tokens[i].end() )
       {
          fmt::print(
              "PaPILO does not support non-linear pseudo-boolean equations\n" );
@@ -375,7 +397,7 @@ OpbParser<REAL>::parseObjective( std::string& line )
       result = parse_number<REAL>( s_coef );
       if( result.first )
       {
-         fmt::print("Could not parse objective {}\n", s_coef);
+         fmt::print( "Could not parse objective {}\n", s_coef );
          return ParseKey::kFail;
       }
       REAL coef = result.second;
@@ -395,9 +417,9 @@ OpbParser<REAL>::parseObjective( std::string& line )
       if( negated )
          objoffset += coef;
 
-      coeffobj.push_back( { nCols, negated ? -coef: coef } );
-      assert(colname2idx.find( var ) == colname2idx.end());
-      add_binary_variable( var);
+      coeffobj.push_back( { nCols, negated ? -coef : coef } );
+      assert( colname2idx.find( var ) == colname2idx.end() );
+      add_binary_variable( var );
    }
    return ParseKey::kNone;
 }

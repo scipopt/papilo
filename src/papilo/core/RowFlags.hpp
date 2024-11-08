@@ -36,6 +36,7 @@ enum class RowFlag : uint8_t
    kIntegral = 1 << 3,
    kRedundant = 1 << 4,
    kClique = 1 << 5,
+   kSOS1 = 1 << 6,
 };
 
 using RowFlags = Flags<RowFlag>;
