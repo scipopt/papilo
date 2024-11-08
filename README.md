@@ -54,10 +54,15 @@ To install into your system, run `sudo make install`.
 To install PaPILO into a folder, add `-DCMAKE_INSTALL_PREFIX=/path/to/install/dir/` to the cmake call and run `make install` after the build.
 
 If you use a relative path to SCIP, then the reference point is the location of the `CMakeLists.txt`.
-If you want to build PaPILO with a provided Boost version please add one of these option to the cmake command:
+If you want to build PaPILO with a provided Boost version please specify its location:
+For CMake >= 3.30
 ```
--DBOOST_ROOT=../boost_1_72_0
--DBOOST_INCLUDEDIR=../boost_1_72_0/include
+-DBoost_DIR=PATH_TO_BOOST/lib/cmake/Boost-<BOOST_VERSION>
+```
+and for CMake < 3.30
+```
+-DBOOST_ROOT=PATH_TO_BOOST
+-DBOOST_INCLUDEDIR=PATH_TO_BOOST/include
 ```
 
 Solvers that are found in the system are automatically linked to the executable.
