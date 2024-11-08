@@ -394,7 +394,7 @@ class ProblemBuilder
                         matrix.getRightHandSides()[i] )
                    matrix.getRowFlags()[i].set( RowFlag::kEquation );
                 std::pair<bool, bool> cliqueResult =
-                    is_clique_or_sos1( std::move(matrix), std::move(i) );
+                    is_clique_or_sos1( matrix, i );
                 if( cliqueResult.first && cliqueResult.second )
                    matrix.getRowFlags()[i].set( RowFlag::kSOS1 );
                 else if( cliqueResult.first )

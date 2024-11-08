@@ -116,7 +116,7 @@ class MpsParser
 #endif
              {
                 std::pair<bool, bool> cliqueResult = problem.is_clique_or_sos1(
-                    std::move( matrix ), std::move( i ) );
+                    matrix, i );
                 if( cliqueResult.first && cliqueResult.second )
                    matrix.getRowFlags()[i].set( RowFlag::kSOS1 );
                 else if( cliqueResult.first )
