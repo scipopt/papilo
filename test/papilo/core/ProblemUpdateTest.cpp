@@ -221,7 +221,7 @@ Problem<double>
 setupProblemWIthCliques()
 {
    Num<double> num{};
-   const Vec<double> coefficients{ 1.0, 1.0, -1.0, 1.0, 1.0, -1.0 };
+   const Vec<double> coefficients{ 1.0, 1.0, -1.0, 1.0, 1.0, -1.0, 1.0 };
    Vec<std::string> rowNames{ "A1", "A2", "A3", "A4", "A5",
                               "A6", "A7", "A8", "A9" };
    Vec<std::string> columnNames{ "x", "y", "z", "a", "b", "c", "d" };
