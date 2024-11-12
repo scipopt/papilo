@@ -26,17 +26,17 @@
 #include "papilo/Config.hpp"
 #include "papilo/core/ConstraintMatrix.hpp"
 #include "papilo/core/Objective.hpp"
-#include "papilo/core/ProblemFlag.hpp"
 #include "papilo/core/SingleRow.hpp"
-#include "papilo/core/SymmetryStorage.hpp"
 #include "papilo/core/VariableDomains.hpp"
 #include "papilo/io/Message.hpp"
 #include "papilo/misc/MultiPrecision.hpp"
-#include "papilo/misc/Num.hpp"
 #include "papilo/misc/StableSum.hpp"
 #include "papilo/misc/String.hpp"
+#include "papilo/core/SymmetryStorage.hpp"
 #include "papilo/misc/Vec.hpp"
 #include "papilo/misc/fmt.hpp"
+#include "papilo/core/ProblemFlag.hpp"
+#include "papilo/misc/Num.hpp"
 #ifdef PAPILO_TBB
 #include "papilo/misc/tbb.hpp"
 #endif
@@ -54,8 +54,8 @@ struct Locks
    void
    serialize( Archive& ar, const unsigned int version )
    {
-      ar & up;
-      ar & down;
+      ar& up;
+      ar& down;
    }
 };
 
@@ -81,13 +81,13 @@ class Problem
    }
 
    void
-   set_problem_type( ProblemFlag flag )
+   set_problem_type( ProblemFlag flag)
    {
       problem_flags.set( flag );
    }
 
    bool
-   test_problem_type( const ProblemFlag flag ) const
+   test_problem_type( const ProblemFlag flag) const
    {
       return problem_flags.test( flag );
    }
@@ -100,9 +100,8 @@ class Problem
    {
       assert( lhs_values.size() == rhs_values.size() );
       assert( lhs_values.size() == row_flags.size() );
-      assert(
-          ( transposed ? cons_matrix.getNCols() : cons_matrix.getNRows() ) ==
-          static_cast<int>( row_flags.size() ) );
+      assert( ( transposed ? cons_matrix.getNCols()
+                           : cons_matrix.getNRows() ) == static_cast<int>(row_flags.size()) );
 
       auto cons_matrix_other = cons_matrix.getTranspose();
       if( transposed )
@@ -454,7 +453,6 @@ class Problem
             return outputPair;
          }
       }
-
       std::pair<bool, bool> outputPair;
       outputPair.first = true;
       outputPair.second = SOS1;
@@ -471,7 +469,7 @@ class Problem
                          REAL& boundviolation, REAL& rowviolation,
                          REAL& intviolation ) const
    {
-      if( (int)sol.size() != getNCols() )
+      if( (int) sol.size() != getNCols() )
          return false;
 
       boundviolation = 0;
@@ -541,8 +539,8 @@ class Problem
 
          REAL activity = activitySum.get();
 
-         if( !rflags[i].test( RowFlag::kRhsInf ) &&
-             num.isFeasGT( activity, rhs[i] ) )
+         if( !rflags[i].test( RowFlag::kRhsInf )
+             && num.isFeasGT( activity, rhs[i] ) )
          {
             Message::debug( this,
                             "the activity {} of constraint {}  "
@@ -551,8 +549,8 @@ class Problem
             rowviolation = num.max( rowviolation, activity - rhs[i] );
          }
 
-         if( !rflags[i].test( RowFlag::kLhsInf ) &&
-             num.isFeasLT( activity, rhs[i] ) )
+         if( !rflags[i].test( RowFlag::kLhsInf )
+             && num.isFeasLT( activity, rhs[i] ) )
          {
             Message::debug( this,
                             "the activity {} of constraint {}  "
@@ -569,7 +567,7 @@ class Problem
    REAL
    computeSolObjective( const Vec<REAL>& sol ) const
    {
-      assert( (int)sol.size() == getNCols() );
+      assert( (int) sol.size() == getNCols() );
 
       StableSum<REAL> obj( objective.offset );
       for( int i = 0; i < getNCols(); ++i )
@@ -609,18 +607,18 @@ class Problem
       // update information about columns that is stored by index
 #ifdef PAPILO_TBB
       tbb::parallel_invoke(
-          [this, &mappings, full]()
-          {
+          [this, &mappings, full]() {
              compress_vector( mappings.second, objective.coefficients );
              if( full )
                 objective.coefficients.shrink_to_fit();
           },
-          [this, &mappings, full]()
-          { variableDomains.compress( mappings.second, full ); },
-          [this, &mappings, full]()
-          { symmetries.compress( mappings.second, full ); },
-          [this, &mappings, full]()
-          {
+          [this, &mappings, full]() {
+             variableDomains.compress( mappings.second, full );
+          },
+          [this, &mappings, full]() {
+             symmetries.compress( mappings.second, full );
+          },
+          [this, &mappings, full]() {
              // compress row activities
              // recomputeAllActivities();
              if( rowActivities.size() != 0 )
@@ -662,8 +660,7 @@ class Problem
 #ifdef PAPILO_TBB
       tbb::parallel_for(
           tbb::blocked_range<int>( 0, getNRows() ),
-          [this]( const tbb::blocked_range<int>& r )
-          {
+          [this]( const tbb::blocked_range<int>& r ) {
              for( int row = r.begin(); row < r.end(); ++row )
 #else
       for( int row = 0; row < getNRows(); ++row )
@@ -690,8 +687,7 @@ class Problem
 #ifdef PAPILO_TBB
       tbb::parallel_for(
           tbb::blocked_range<int>( 0, getNCols() ),
-          [this]( const tbb::blocked_range<int>& c )
-          {
+          [this]( const tbb::blocked_range<int>& c ) {
              for( int col = c.begin(); col != c.end(); ++col )
 #else
       for( int col = 0; col < getNCols(); ++col )
@@ -813,24 +809,24 @@ class Problem
    void
    serialize( Archive& ar, const unsigned int version )
    {
-      ar & name;
-      ar & inputTolerance;
-      ar & objective;
-      ar & problem_flags;
+      ar& name;
+      ar& inputTolerance;
+      ar& objective;
+      ar& problem_flags;
 
-      ar & constraintMatrix;
-      ar & variableDomains;
-      ar & ncontinuous;
-      ar & nintegers;
+      ar& constraintMatrix;
+      ar& variableDomains;
+      ar& ncontinuous;
+      ar& nintegers;
 
-      ar & variableNames;
-      ar & constraintNames;
-      ar & rowActivities;
+      ar& variableNames;
+      ar& constraintNames;
+      ar& rowActivities;
 
-      ar & locks;
+      ar& locks;
 
-      // TODO:
-      //      ar& symmetries;
+      //TODO:
+//      ar& symmetries;
    }
 
  private:

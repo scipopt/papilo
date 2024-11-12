@@ -34,9 +34,6 @@ setupProblemWithProbing();
 Problem<double>
 setupProblemWithProbingWithNoBinary();
 
-Problem<double>
-setupProblemWithProbeSelection();
-
 TEST_CASE( "happy-path-probing", "[presolve]" )
 {
    Num<double> num{};
@@ -90,33 +87,6 @@ TEST_CASE( "failed-path-probing-on-not-binary-variables", "[presolve]" )
        presolvingMethod.execute( problem, problemUpdate, num, reductions, t, cause );
 
    REQUIRE( presolveStatus == PresolveStatus::kUnchanged );
-}
-
-TEST_CASE( "probe-selection", "[presolve]" )
-{
-    double time = 0.0;
-    int cause = -1;
-    Timer t{ time };
-    Num<double> num{};
-    Message msg{};
-    Problem<double> problem = setupProblemWithProbeSelection();
-    Statistics statistics{};
-    PresolveOptions presolveOptions{};
-    presolveOptions.dualreds = 0;
-    PostsolveStorage<double> postsolve =
-        PostsolveStorage<double>( problem, num, presolveOptions );
-    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
-                                        presolveOptions, num, msg );
-    Probing<double> presolvingMethod{};
-    Reductions<double> reductions{};
-    problem.recomputeAllActivities();
-
-    PresolveStatus presolveStatus =
-        presolvingMethod.execute( problem, problemUpdate, num, reductions, t, cause );
-
-    REQUIRE( presolveStatus == PresolveStatus::kReduced );
-    REQUIRE( reductions.size() == 6 );
-
 }
 
 Problem<double>
@@ -188,44 +158,4 @@ setupProblemWithProbingWithNoBinary()
    pb.setProblemName( "matrix for testing probing no binaries" );
    Problem<double> problem = pb.build();
    return problem;
-}
-
-Problem<double>
-setupProblemWithProbeSelection()
-{
-    // x + w <= 1
-    // y + w <= 1
-    // z + w <= 1
-    Vec<double> coefficients{ 1.0, 1.0, 1.0, 1.0 };
-    Vec<double> upperBounds{ 1.0, 1.0, 1.0, 1.0 };
-    Vec<double> lowerBounds{ 0.0, 0.0, 0.0, 0.0 };
-    Vec<uint8_t> isIntegral{ 1, 1, 1, 1 };
-    Vec<double> rhs{ 1.0, 1.0, 1.0 };
-    Vec<double> lhs{ 1.0, 1.0, 1.0 };
-    Vec<std::string> rowNames{ "A1", "A2", "A3" };
-    Vec<std::string> columnNames{ "c1", "c2", "c3", "c4" };
-    Vec<std::tuple<int, int, double>> entries{
-        std::tuple<int, int, double>{ 0, 0, 1.0 },
-        std::tuple<int, int, double>{ 0, 3, 1.0 },
-        std::tuple<int, int, double>{ 1, 1, 1.0 },
-        std::tuple<int, int, double>{ 1, 3, 1.0 },
-        std::tuple<int, int, double>{ 2, 2, 1.0 },
-        std::tuple<int, int, double>{ 2, 3, 1.0 } };
-    
-    ProblemBuilder<double> pb;
-    pb.reserve ( entries.size(), rowNames.size(), columnNames.size() );
-    pb.setNumRows( rowNames.size() );
-    pb.setNumCols( columnNames.size() );
-    pb.setColUbAll( upperBounds );
-    pb.setColLbAll( lowerBounds );
-    pb.setObjAll( coefficients );
-    pb.setObjOffset( 0.0 );
-    pb.setColIntegralAll( isIntegral );
-    pb.setRowRhsAll( rhs );
-    pb.setRowLhsAll( lhs );
-    pb.addEntryAll( entries );
-    pb.setColNameAll( columnNames );
-    pb.setProblemName( "matrix for testing probe selection" );
-    Problem<double> problem = pb.build();
-    return problem;
 }

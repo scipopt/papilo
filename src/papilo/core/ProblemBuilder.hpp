@@ -28,9 +28,9 @@ namespace papilo
 
 #include "papilo/core/MatrixBuffer.hpp"
 #include "papilo/core/Problem.hpp"
-#include "papilo/misc/Num.hpp"
 #include "papilo/misc/String.hpp"
 #include "papilo/misc/Vec.hpp"
+#include "papilo/misc/Num.hpp"
 
 template <typename REAL>
 class ProblemBuilder
@@ -114,7 +114,7 @@ class ProblemBuilder
    setObjAll( Vec<REAL> values )
    {
       assert( values.size() == obj.coefficients.size() );
-      for( int c = 0; c < (int)values.size(); ++c )
+      for( int c = 0; c < (int) values.size(); ++c )
          obj.coefficients[c] = std::move( values[c] );
    }
 
@@ -138,7 +138,7 @@ class ProblemBuilder
    setColLbInfAll( Vec<uint8_t> isInfinite )
    {
       assert( domains.flags.size() == isInfinite.size() );
-      for( int c = 0; c < (int)isInfinite.size(); ++c )
+      for( int c = 0; c < (int) isInfinite.size(); ++c )
          setColLbInf( c, isInfinite[c] );
    }
 
@@ -155,7 +155,7 @@ class ProblemBuilder
    setColUbInfAll( Vec<uint8_t> isInfinite )
    {
       assert( domains.flags.size() == isInfinite.size() );
-      for( int c = 0; c < (int)isInfinite.size(); ++c )
+      for( int c = 0; c < (int) isInfinite.size(); ++c )
          setColUbInf( c, isInfinite[c] );
    }
 
@@ -169,8 +169,9 @@ class ProblemBuilder
    setColLbAll( Vec<REAL> lbs )
    {
       assert( lbs.size() == domains.lower_bounds.size() );
-      for( int c = 0; c < (int)lbs.size(); ++c )
-         domains.lower_bounds[c] = std::move( lbs[c] );
+      for( int c = 0; c < (int) lbs.size(); ++c )
+         domains.lower_bounds[c] = std::move( lbs[c
+         ] );
    }
 
    void
@@ -183,7 +184,7 @@ class ProblemBuilder
    setColUbAll( Vec<REAL> ubs )
    {
       assert( ubs.size() == domains.upper_bounds.size() );
-      for( int c = 0; c < (int)ubs.size(); ++c )
+      for( int c = 0; c < (int) ubs.size(); ++c )
          domains.upper_bounds[c] = std::move( ubs[c] );
    }
 
@@ -209,7 +210,7 @@ class ProblemBuilder
    setColIntegralAll( Vec<uint8_t> isIntegral )
    {
       assert( isIntegral.size() == domains.flags.size() );
-      for( int c = 0; c < (int)isIntegral.size(); ++c )
+      for( int c = 0; c < (int) isIntegral.size(); ++c )
          setColIntegral( c, isIntegral[c] );
    }
 
@@ -226,7 +227,7 @@ class ProblemBuilder
    setRowLhsInfAll( Vec<uint8_t> isInfinite )
    {
       assert( isInfinite.size() == rflags.size() );
-      for( int r = 0; r < (int)isInfinite.size(); ++r )
+      for( int r = 0; r < (int) isInfinite.size(); ++r )
          setRowLhsInf( r, isInfinite[r] );
    }
 
@@ -243,7 +244,7 @@ class ProblemBuilder
    setRowRhsInfAll( Vec<uint8_t> isInfinite )
    {
       assert( isInfinite.size() == rflags.size() );
-      for( int r = 0; r < (int)isInfinite.size(); ++r )
+      for( int r = 0; r < (int) isInfinite.size(); ++r )
          setRowRhsInf( r, isInfinite[r] );
    }
 
@@ -257,7 +258,7 @@ class ProblemBuilder
    setRowLhsAll( Vec<REAL> lhsvals )
    {
       assert( lhsvals.size() == lhs.size() );
-      for( int r = 0; r < (int)lhsvals.size(); ++r )
+      for( int r = 0; r < (int) lhsvals.size(); ++r )
          lhs[r] = std::move( lhsvals[r] );
    }
 
@@ -271,7 +272,7 @@ class ProblemBuilder
    setRowRhsAll( Vec<REAL> rhsvals )
    {
       assert( rhsvals.size() == rhs.size() );
-      for( int r = 0; r < (int)rhsvals.size(); ++r )
+      for( int r = 0; r < (int) rhsvals.size(); ++r )
          rhs[r] = std::move( rhsvals[r] );
    }
 
@@ -315,7 +316,7 @@ class ProblemBuilder
    setRowNameAll( Vec<Str> names )
    {
       assert( rownames.size() == names.size() );
-      for( int r = 0; r < (int)names.size(); ++r )
+      for( int r = 0; r < (int) names.size(); ++r )
          rownames[r] = String( names[r] );
    }
 
@@ -331,7 +332,7 @@ class ProblemBuilder
    setColNameAll( Vec<Str> names )
    {
       assert( colnames.size() == names.size() );
-      for( int c = 0; c < (int)names.size(); ++c )
+      for( int c = 0; c < (int) names.size(); ++c )
          colnames[c] = String( names[c] );
    }
 
@@ -375,8 +376,7 @@ class ProblemBuilder
       problem.setVariableDomains( std::move( domains ) );
       problem.setVariableNames( std::move( colnames ) );
       problem.setConstraintNames( std::move( rownames ) );
-      ConstraintMatrix<REAL>& matrix = problem.getConstraintMatrix();
-
+      ConstraintMatrix<REAL>& matrix = problem.getConstraintMatrix(); 
 #ifdef PAPILO_TBB
       tbb::parallel_for(
           tbb::blocked_range<int>( 0, problem.getNRows() ),
@@ -489,6 +489,7 @@ class ProblemBuilder
       outputPair.second = SOS1;
       return outputPair;
    }
+
 
  private:
    MatrixBuffer<REAL> matrix_buffer;
