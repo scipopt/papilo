@@ -99,7 +99,7 @@ class Presolve
       addPresolveMethod( uptr( new CoefficientStrengthening<REAL>() ) );
       addPresolveMethod( uptr( new ConstraintPropagation<REAL>() ) );
 
-      // medium presolvers
+      //medium presolvers
       addPresolveMethod( uptr( new FixContinuous<REAL>() ) );
       addPresolveMethod( uptr( new SimpleProbing<REAL>() ) );
       addPresolveMethod( uptr( new ParallelRowDetection<REAL>() ) );
@@ -109,7 +109,7 @@ class Presolve
       addPresolveMethod( uptr( new SimplifyInequalities<REAL>() ) );
       addPresolveMethod( uptr( new SimpleSubstitution<REAL>() ) );
 
-      // exhaustive presolvers
+      //exhaustive presolvers
       addPresolveMethod( uptr( new ImplIntDetection<REAL>() ) );
       addPresolveMethod( uptr( new DominatedCols<REAL>() ) );
       addPresolveMethod( uptr( new DualInfer<REAL> ) );
@@ -134,7 +134,7 @@ class Presolve
    Vec<int>&
    getRowScalingFactors()
    {
-      assert( presolveOptions.verification_with_VeriPB );
+      assert(presolveOptions.verification_with_VeriPB);
       return row_scaling;
    }
 
@@ -330,9 +330,9 @@ class Presolve
 
    bool
    are_applied_tsx_negligible( const Problem<REAL>& problem,
-                               const ProblemUpdate<REAL>& probUpdate,
-                               const Statistics& roundStats,
-                               Delegator delegator );
+                             const ProblemUpdate<REAL>& probUpdate,
+                             const Statistics& roundStats,
+                             Delegator delegator ) ;
 
    Delegator
    increase_delegator( Delegator delegator );
@@ -360,14 +360,13 @@ class Presolve
 
    void
    apply_result_sequential( int index_presolver,
-                            ProblemUpdate<REAL>& probUpdate,
-                            bool& run_sequential );
+                             ProblemUpdate<REAL>& probUpdate,
+                             bool& run_sequential );
 
    void
    run_presolvers( const Problem<REAL>& problem,
                    const std::pair<int, int>& presolver_2_run,
-                   ProblemUpdate<REAL>& probUpdate, bool& run_sequential,
-                   const Timer& timer );
+                   ProblemUpdate<REAL>& probUpdate, bool& run_sequential, const Timer& timer );
 
    bool
    is_status_infeasible_or_unbounded( const PresolveStatus& status ) const;
@@ -390,8 +389,7 @@ extern template class Presolve<Rational>;
  *
  * @tparam REAL: computational accuracy template
  * @param problem: the problem to be presolved
- * @param store_dual_postsolve: should dual postsolve reductions stored in the
- * postsolve stack
+ * @param store_dual_postsolve: should dual postsolve reductions stored in the postsolve stack
  * @return: presolved problem and PresolveResult contains postsolve information
  */
 template <typename REAL>
@@ -411,9 +409,7 @@ Presolve<REAL>::apply( Problem<REAL>& problem, bool store_dual_postsolve )
 #endif
 
 #ifdef PAPILO_TBB
-   return arena.execute(
-       [this, &problem, store_dual_postsolve]()
-       {
+   return arena.execute( [this, &problem, store_dual_postsolve]() {
 #endif
       stats = Statistics();
       num.setFeasTol( REAL{ presolveOptions.feastol } );
@@ -421,385 +417,361 @@ Presolve<REAL>::apply( Problem<REAL>& problem, bool store_dual_postsolve )
       num.setHugeVal( REAL{ presolveOptions.hugeval } );
       num.setUseAbsFeas( presolveOptions.useabsfeas );
 
-          Timer timer( stats.presolvetime );
+      Timer timer( stats.presolvetime );
 
-          ConstraintMatrix<REAL>& constraintMatrix =
-              problem.getConstraintMatrix();
-          Vec<REAL>& rhsVals = constraintMatrix.getRightHandSides();
-          Vec<RowFlags>& rflags = constraintMatrix.getRowFlags();
-          const Vec<int>& rowsize = constraintMatrix.getRowSizes();
+      ConstraintMatrix<REAL>& constraintMatrix = problem.getConstraintMatrix();
+      Vec<REAL>& rhsVals = constraintMatrix.getRightHandSides();
+      Vec<RowFlags>& rflags = constraintMatrix.getRowFlags();
+      const Vec<int>& rowsize = constraintMatrix.getRowSizes();
 
-          PresolveResult<REAL> result;
 
-          result.postsolve =
-              PostsolveStorage<REAL>( problem, num, presolveOptions );
+
+      PresolveResult<REAL> result;
+
+      result.postsolve =
+          PostsolveStorage<REAL>( problem, num, presolveOptions );
 
 #ifndef PAPILO_TBB
-          if( presolveOptions.threads != 1 )
-             msg.warn( "PaPILO without TBB can only use one thread. Number of "
-                       "threads is set to 1\n" );
-          presolveOptions.threads = 1;
+      if( presolveOptions.threads != 1 )
+         msg.warn( "PaPILO without TBB can only use one thread. Number of "
+                   "threads is set to 1\n" );
+      presolveOptions.threads = 1;
 #endif
 
-          if( store_dual_postsolve &&
-              problem.test_problem_type( ProblemFlag::kLinear ) )
-          {
-             if( presolveOptions.componentsmaxint == -1 &&
-                 presolveOptions.detectlindep == 0 &&
-                 are_only_dual_postsolve_presolvers_enabled() )
-                result.postsolve.postsolveType = PostsolveType::kFull;
-             else
-             {
-                msg.error( "Please turn off the presolvers substitution and "
-                           "sparsify and "
-                           "componentsdetection to use dual-postsolving\n" );
-                msg.error( "Continuing without dual-presolve\n" );
-             }
-          }
+      if( store_dual_postsolve && problem.test_problem_type(ProblemFlag::kLinear) )
+      {
+         if( presolveOptions.componentsmaxint == -1 && presolveOptions.detectlindep == 0 &&
+             are_only_dual_postsolve_presolvers_enabled())
+            result.postsolve.postsolveType = PostsolveType::kFull;
+         else
+         {
+            msg.error(
+                "Please turn off the presolvers substitution and sparsify and "
+                "componentsdetection to use dual-postsolving\n" );
+            msg.error("Continuing without dual-presolve\n");
+         }
+      }
 
-          if( presolveOptions.verification_with_VeriPB &&
-              problem.test_problem_type( ProblemFlag::kBinary ) )
-          {
-             certificate_interface =
-                 std::unique_ptr<CertificateInterface<REAL>>(
-                     new VeriPb<REAL>{ problem, num, presolveOptions } );
-             certificate_interface->print_header();
-          }
+      if(presolveOptions.verification_with_VeriPB &&
+          problem.test_problem_type( ProblemFlag::kBinary ))
+      {
+         certificate_interface = std::unique_ptr<CertificateInterface<REAL>>(
+             new VeriPb<REAL>{ problem, num, presolveOptions } );
+         certificate_interface->print_header();
+      }
 
-          msg.info( "\nstarting presolve of problem {} with dual-postsolve "
-                    "{}activated\n",
-                    problem.getName(),
-                    result.postsolve.postsolveType == PostsolveType::kFull
-                        ? ""
-                        : "de-" );
-          msg.info( "  rows:     {}\n", problem.getNRows() );
-          msg.info( "  columns:  {}\n", problem.getNCols() );
-          msg.info( "  int. columns:  {}\n", problem.getNumIntegralCols() );
-          msg.info( "  cont. columns:  {}\n", problem.getNumContinuousCols() );
-          msg.info( "  nonzeros: {}\n\n",
-                    problem.getConstraintMatrix().getNnz() );
-          ConstraintMatrix<REAL>& matrix = problem.getConstraintMatrix();
-          int nCliques = 0;
-          for( int i = 0; i < problem.getNRows(); i++ )
-          {
-             RowFlags rowFlag = matrix.getRowFlags()[i];
-             if( rowFlag.test( RowFlag::kClique ) )
-                nCliques++;
-          }
-          msg.info( "\nNumber of Cliques: {}\n", nCliques );
-          int nSOS = 0;
-          for( int i = 0; i < problem.getNRows(); i++ )
-          {
-             RowFlags rowFlag = matrix.getRowFlags()[i];
-             if( rowFlag.test( RowFlag::kSOS1 ) )
-                nSOS++;
-          }
-          msg.info( "\nNumber of SOS1 constraints: {}\n", nSOS );
+      msg.info( "\nstarting presolve of problem {} with dual-postsolve {}activated\n", problem.getName(), result.postsolve.postsolveType == PostsolveType::kFull?"":"de-" );
+      msg.info( "  rows:     {}\n", problem.getNRows() );
+      msg.info( "  columns:  {}\n", problem.getNCols() );
+      msg.info( "  int. columns:  {}\n", problem.getNumIntegralCols() );
+      msg.info( "  cont. columns:  {}\n", problem.getNumContinuousCols() );
+      msg.info( "  nonzeros: {}\n", problem.getConstraintMatrix().getNnz() );
+      ConstraintMatrix<REAL>& matrix = problem.getConstraintMatrix();
+      int nCliques = 0;
+      for( int i = 0; i < problem.getNRows(); i++ )
+      {
+         RowFlags rowFlag = matrix.getRowFlags()[i];
+         if( rowFlag.test( RowFlag::kClique ) )
+            nCliques++;
+      }
+      msg.info( "\nNumber of Cliques: {}\n", nCliques );
+      int nSOS = 0;
+      for( int i = 0; i < problem.getNRows(); i++ )
+      {
+         RowFlags rowFlag = matrix.getRowFlags()[i];
+         if( rowFlag.test( RowFlag::kSOS1 ) )
+            nSOS++;
+      }
+      msg.info( "\nNumber of SOS1 constraints: {}\n\n", nSOS );
 
-          result.status = PresolveStatus::kUnchanged;
 
-          std::stable_sort( presolvers.begin(), presolvers.end(),
-                            []( const std::unique_ptr<PresolveMethod<REAL>>& a,
-                                const std::unique_ptr<PresolveMethod<REAL>>& b )
-                            {
-                               return static_cast<int>( a->getTiming() ) <
-                                      static_cast<int>( b->getTiming() );
-                            } );
+      result.status = PresolveStatus::kUnchanged;
 
-          std::pair<int, int> fastPresolvers;
-          std::pair<int, int> mediumPresolvers;
-          std::pair<int, int> exhaustivePresolvers;
+      std::stable_sort( presolvers.begin(), presolvers.end(),
+                        []( const std::unique_ptr<PresolveMethod<REAL>>& a,
+                            const std::unique_ptr<PresolveMethod<REAL>>& b ) {
+                           return static_cast<int>( a->getTiming() ) <
+                                  static_cast<int>( b->getTiming() );
+                        } );
 
-          int npresolvers = static_cast<int>( presolvers.size() );
+      std::pair<int, int> fastPresolvers;
+      std::pair<int, int> mediumPresolvers;
+      std::pair<int, int> exhaustivePresolvers;
 
-          fastPresolvers.first = fastPresolvers.second = 0;
-          while( fastPresolvers.second < npresolvers &&
-                 presolvers[fastPresolvers.second]->getTiming() ==
-                     PresolverTiming::kFast )
-             ++fastPresolvers.second;
+      int npresolvers = static_cast<int>( presolvers.size() );
 
-          mediumPresolvers.first = mediumPresolvers.second =
-              fastPresolvers.second;
-          while( mediumPresolvers.second < npresolvers &&
-                 presolvers[mediumPresolvers.second]->getTiming() ==
-                     PresolverTiming::kMedium )
-             ++mediumPresolvers.second;
+      fastPresolvers.first = fastPresolvers.second = 0;
+      while( fastPresolvers.second < npresolvers &&
+             presolvers[fastPresolvers.second]->getTiming() ==
+                 PresolverTiming::kFast )
+         ++fastPresolvers.second;
 
-          exhaustivePresolvers.first = exhaustivePresolvers.second =
-              mediumPresolvers.second;
-          while( exhaustivePresolvers.second < npresolvers &&
-                 presolvers[exhaustivePresolvers.second]->getTiming() ==
-                     PresolverTiming::kExhaustive )
-             ++exhaustivePresolvers.second;
+      mediumPresolvers.first = mediumPresolvers.second = fastPresolvers.second;
+      while( mediumPresolvers.second < npresolvers &&
+             presolvers[mediumPresolvers.second]->getTiming() ==
+                 PresolverTiming::kMedium )
+         ++mediumPresolvers.second;
 
-          reductions.resize( presolvers.size() );
-          results.resize( presolvers.size() );
-          presolverStats.resize( presolvers.size(),
-                                 std::pair<int, int>( 0, 0 ) );
+      exhaustivePresolvers.first = exhaustivePresolvers.second =
+          mediumPresolvers.second;
+      while( exhaustivePresolvers.second < npresolvers &&
+             presolvers[exhaustivePresolvers.second]->getTiming() ==
+                 PresolverTiming::kExhaustive )
+         ++exhaustivePresolvers.second;
 
-          ProblemUpdate<REAL> probUpdate( problem, result.postsolve, stats,
-                                          presolveOptions, num, msg,
-                                          certificate_interface );
+      reductions.resize( presolvers.size() );
+      results.resize( presolvers.size() );
+      presolverStats.resize( presolvers.size(), std::pair<int, int>( 0, 0 ) );
 
-          for( int i = 0; i != npresolvers; ++i )
-          {
-             if( presolvers[i]->isEnabled() )
-             {
-                if( presolvers[i]->initialize( problem, presolveOptions ) )
-                   probUpdate.observeCompress( presolvers[i].get() );
-             }
-          }
+      ProblemUpdate<REAL> probUpdate( problem, result.postsolve, stats,
+                                      presolveOptions, num, msg, certificate_interface
+      );
 
-          round_to_evaluate = Delegator::kFast;
-          nunsuccessful = 0;
-          rundelayed = true;
-          for( int i = 0; i < npresolvers; ++i )
-          {
-             if( presolvers[i]->isEnabled() && presolvers[i]->isDelayed() )
-             {
-                rundelayed = false;
-                break;
-             }
-          }
+      for( int i = 0; i != npresolvers; ++i )
+      {
+         if( presolvers[i]->isEnabled() )
+         {
+            if( presolvers[i]->initialize( problem, presolveOptions ) )
+               probUpdate.observeCompress( presolvers[i].get() );
+         }
+      }
 
-          Statistics last_rounds_stats = stats;
-          do
-          {
-             if( round_to_evaluate == Delegator::kFast )
-             {
-                if( presolveOptions.maxrounds != -1 &&
-                    presolveOptions.maxrounds <= stats.nrounds )
-                {
-                   msg.info( "Maximum round {} reached. Finishing...\n",
-                             presolveOptions.maxrounds );
-                   round_to_evaluate = Delegator::kAbort;
-                }
+      round_to_evaluate = Delegator::kFast;
+      nunsuccessful = 0;
+      rundelayed = true;
+      for( int i = 0; i < npresolvers; ++i )
+      {
+         if( presolvers[i]->isEnabled() && presolvers[i]->isDelayed() )
+         {
+            rundelayed = false;
+            break;
+         }
+      }
 
-                result.status = probUpdate.trivialPresolve();
+      Statistics last_rounds_stats = stats;
+      do
+      {
+         if( round_to_evaluate == Delegator::kFast )
+         {
+            if( presolveOptions.maxrounds != -1 && presolveOptions.maxrounds <= stats.nrounds )
+            {
+               msg.info("Maximum round {} reached. Finishing...\n", presolveOptions.maxrounds);
+               round_to_evaluate = Delegator::kAbort;
+            }
 
-                if( stats.nrounds == 0 )
-                   printRoundStats( false, "Trivial" );
+            result.status = probUpdate.trivialPresolve();
 
-                if( is_status_infeasible_or_unbounded( result.status ) )
-                   return result;
+            if( stats.nrounds == 0 )
+               printRoundStats( false, "Trivial" );
 
-                if( probUpdate.getNActiveCols() == 0 ||
-                    probUpdate.getNActiveRows() == 0 )
-                   round_to_evaluate = Delegator::kAbort;
+            if( is_status_infeasible_or_unbounded( result.status ) )
+               return result;
 
-                lastRoundReduced = currentRoundReduced;
-                currentRoundReduced = false;
-                ++stats.nrounds;
-             }
+            if( probUpdate.getNActiveCols() == 0 || probUpdate.getNActiveRows() == 0 )
+               round_to_evaluate = Delegator::kAbort;
 
-             if( round_to_evaluate == Delegator::kAbort )
-                break;
+            lastRoundReduced = currentRoundReduced;
+            currentRoundReduced = false;
+            ++stats.nrounds;
+         }
 
-             bool was_executed_sequential = false;
+         if( round_to_evaluate == Delegator::kAbort )
+            break;
 
-             switch( round_to_evaluate )
-             {
-             case Delegator::kFast:
-                run_presolvers( problem, fastPresolvers, probUpdate,
-                                was_executed_sequential, timer );
-                break;
-             case Delegator::kMedium:
-                run_presolvers( problem, mediumPresolvers, probUpdate,
-                                was_executed_sequential, timer );
-                break;
-             case Delegator::kExhaustive:
-                run_presolvers( problem, exhaustivePresolvers, probUpdate,
-                                was_executed_sequential, timer );
-                break;
-             default:
-                assert( false );
-             }
+         bool was_executed_sequential = false;
 
-             result.status = evaluate_and_apply( timer, problem, result,
-                                                 probUpdate, last_rounds_stats,
-                                                 was_executed_sequential );
+         switch( round_to_evaluate )
+         {
+         case Delegator::kFast:
+            run_presolvers( problem, fastPresolvers, probUpdate,
+                            was_executed_sequential, timer );
+            break;
+         case Delegator::kMedium:
+            run_presolvers( problem, mediumPresolvers, probUpdate,
+                            was_executed_sequential, timer );
+            break;
+         case Delegator::kExhaustive:
+            run_presolvers( problem, exhaustivePresolvers, probUpdate,
+                            was_executed_sequential, timer );
+            break;
+         default:
+            assert( false );
+         }
 
-             if( is_status_infeasible_or_unbounded( result.status ) )
-                return result;
+         result.status = evaluate_and_apply( timer, problem, result, probUpdate,last_rounds_stats,
+               was_executed_sequential );
 
-             last_rounds_stats = stats;
-          } while( true );
+         if( is_status_infeasible_or_unbounded( result.status ) )
+            return result;
 
-          if( probUpdate.getProblem().getNCols() > 0 )
-          {
-             for( unsigned int i = 0; i < presolvers.size(); ++i )
-             {
-                auto res = presolvers[i]->run_symmetries(
-                    problem, probUpdate, num, reductions[i], timer );
-                if( res == PresolveStatus::kUnchanged )
-                   continue;
-                if( problem.getSymmetries().symmetries.size() > 0 )
-                {
-                   fmt::print( "Currently only 1 presolver can search for "
-                               "symmetries. Skipping symmetries...\n" );
-                   continue;
-                }
-                presolverStats[i].first +=
-                    reductions[i].getTransactions().size();
-                presolverStats[i].second +=
-                    reductions[i].getTransactions().size();
-                for( Reduction<REAL> red : reductions[i].getReductions() )
-                {
-                   assert( red.row == ColReduction::PARALLEL ||
-                           red.row == ColReduction::LOCKED );
-                   if( red.row == ColReduction::LOCKED )
-                      continue;
-                   probUpdate.applySymmetry( red );
-                }
-                probUpdate.clearStates();
-                reductions[i].clear();
-             }
-          }
+         last_rounds_stats = stats;
+      }
+      while( true );
 
-          printPresolversStats();
+      if(probUpdate.getProblem().getNCols() > 0)
+      {
+         for( unsigned int i = 0; i < presolvers.size(); ++i )
+         {
+            auto res = presolvers[i]->run_symmetries(
+                problem, probUpdate, num, reductions[i], timer );
+            if( res == PresolveStatus::kUnchanged)
+               continue;
+            if(problem.getSymmetries().symmetries.size() > 0)
+            {
+               fmt::print("Currently only 1 presolver can search for symmetries. Skipping symmetries...\n");
+               continue;
+            }
+            presolverStats[i].first += reductions[i].getTransactions().size();
+            presolverStats[i].second += reductions[i].getTransactions().size();
+            for(Reduction<REAL> red: reductions[i].getReductions())
+            {
+               assert(red.row == ColReduction::PARALLEL || red.row == ColReduction::LOCKED);
+               if(red.row == ColReduction::LOCKED)
+                  continue;
+               probUpdate.applySymmetry( red );
+            }
+            probUpdate.clearStates();
+            reductions[i].clear();
+         }
+      }
 
-          if( DependentRows<REAL>::Enabled &&
-              ( presolveOptions.detectlindep == 2 ||
-                ( problem.getNumIntegralCols() == 0 &&
-                  presolveOptions.detectlindep == 1 ) ) )
-          {
-             ConstraintMatrix<REAL>& consMatrix = problem.getConstraintMatrix();
-             Vec<int> equations;
+      printPresolversStats();
 
-             equations.reserve( problem.getNRows() );
-             size_t eqnnz = 0;
+      if( DependentRows<REAL>::Enabled &&
+          ( presolveOptions.detectlindep == 2 ||
+            ( problem.getNumIntegralCols() == 0 &&
+              presolveOptions.detectlindep == 1 ) ) )
+      {
+         ConstraintMatrix<REAL>& consMatrix = problem.getConstraintMatrix();
+         Vec<int> equations;
 
-             for( int i = 0; i != problem.getNRows(); ++i )
-             {
-                if( rflags[i].test( RowFlag::kRedundant ) ||
-                    !rflags[i].test( RowFlag::kEquation ) )
-                   continue;
+         equations.reserve( problem.getNRows() );
+         size_t eqnnz = 0;
 
-                equations.push_back( i );
-                eqnnz += rowsize[i] + 1;
-             }
+         for( int i = 0; i != problem.getNRows(); ++i )
+         {
+            if( rflags[i].test( RowFlag::kRedundant ) ||
+                !rflags[i].test( RowFlag::kEquation ) )
+               continue;
 
-             if( !equations.empty() )
-             {
-                DependentRows<REAL> depRows( equations.size(),
-                                             problem.getNCols(), eqnnz );
+            equations.push_back( i );
+            eqnnz += rowsize[i] + 1;
+         }
 
-                for( size_t i = 0; i != equations.size(); ++i )
-                   depRows.addRow(
-                       i, consMatrix.getRowCoefficients( equations[i] ),
-                       REAL( rhsVals[equations[i]] ) );
+         if( !equations.empty() )
+         {
+            DependentRows<REAL> depRows( equations.size(), problem.getNCols(),
+                                         eqnnz );
 
-                Vec<int> dependentEqs;
-                double factorTime = 0.0;
-                msg.info(
-                    "found {} equations, checking for linear dependency\n",
-                    equations.size() );
-                {
-                   Timer t{ factorTime };
-                   dependentEqs = depRows.getDependentRows( msg, num );
-                }
-                msg.info( "{} equations are redundant, factorization took {} "
-                          "seconds\n",
-                          dependentEqs.size(), factorTime );
+            for( size_t i = 0; i != equations.size(); ++i )
+               depRows.addRow( i, consMatrix.getRowCoefficients( equations[i] ),
+                               REAL( rhsVals[equations[i]] ) );
 
-                if( !dependentEqs.empty() )
-                {
-                   for( int dependentEq : dependentEqs )
-                   {
-                      probUpdate.markRowRedundant( equations[dependentEq] );
-                   }
-                   probUpdate.flush( true );
-                }
-             }
+            Vec<int> dependentEqs;
+            double factorTime = 0.0;
+            msg.info( "found {} equations, checking for linear dependency\n",
+                      equations.size() );
+            {
+               Timer t{ factorTime };
+               dependentEqs = depRows.getDependentRows( msg, num );
+            }
+            msg.info( "{} equations are redundant, factorization took {} "
+                      "seconds\n",
+                      dependentEqs.size(), factorTime );
 
-             if( presolveOptions.dualreds == 2 )
-             {
-                Vec<int> freeCols;
-                freeCols.reserve( problem.getNCols() );
-                size_t freeColNnz = 0;
+            if( !dependentEqs.empty() )
+            {
+               for( int dependentEq : dependentEqs )
+               {
+                  probUpdate.markRowRedundant( equations[dependentEq] );
+               }
+               probUpdate.flush( true );
+            }
+         }
 
-                const Vec<ColFlags>& cflags = problem.getColFlags();
-                const Vec<int>& colsize = problem.getColSizes();
-                const Vec<REAL>& obj = problem.getObjective().coefficients;
+         if( presolveOptions.dualreds == 2 )
+         {
+            Vec<int> freeCols;
+            freeCols.reserve( problem.getNCols() );
+            size_t freeColNnz = 0;
 
-                for( int col = 0; col != problem.getNCols(); ++col )
-                {
-                   if( cflags[col].test( ColFlag::kInactive,
-                                         ColFlag::kIntegral ) ||
-                       !cflags[col].test( ColFlag::kLbInf ) ||
-                       !cflags[col].test( ColFlag::kUbInf ) )
-                      continue;
+            const Vec<ColFlags>& cflags = problem.getColFlags();
+            const Vec<int>& colsize = problem.getColSizes();
+            const Vec<REAL>& obj = problem.getObjective().coefficients;
 
-                   freeCols.push_back( col );
-                   freeColNnz += colsize[col] + 1;
-                }
+            for( int col = 0; col != problem.getNCols(); ++col )
+            {
+               if( cflags[col].test( ColFlag::kInactive, ColFlag::kIntegral ) ||
+                   !cflags[col].test( ColFlag::kLbInf ) ||
+                   !cflags[col].test( ColFlag::kUbInf ) )
+                  continue;
 
-                if( !freeCols.empty() )
-                {
-                   DependentRows<REAL> depRows(
-                       freeCols.size(), problem.getNRows(), freeColNnz );
+               freeCols.push_back( col );
+               freeColNnz += colsize[col] + 1;
+            }
 
-                   for( size_t i = 0; i != freeCols.size(); ++i )
-                      depRows.addRow(
-                          i, consMatrix.getColumnCoefficients( freeCols[i] ),
-                          obj[freeCols[i]] );
+            if( !freeCols.empty() )
+            {
+               DependentRows<REAL> depRows( freeCols.size(), problem.getNRows(),
+                                            freeColNnz );
 
-                   Vec<int> dependentFreeCols;
-                   double factorTime = 0.0;
-                   msg.info( "found {} free columns, checking for linear "
-                             "dependency\n",
-                             freeCols.size(), freeColNnz );
+               for( size_t i = 0; i != freeCols.size(); ++i )
+                  depRows.addRow(
+                      i, consMatrix.getColumnCoefficients( freeCols[i] ),
+                      obj[freeCols[i]] );
 
-                   {
-                      Timer t{ factorTime };
-                      dependentFreeCols = depRows.getDependentRows( msg, num );
-                   }
+               Vec<int> dependentFreeCols;
+               double factorTime = 0.0;
+               msg.info(
+                   "found {} free columns, checking for linear dependency\n",
+                   freeCols.size(), freeColNnz );
 
-                   msg.info(
-                       "{} free columns are redundant, factorization took {} "
-                       "seconds\n",
-                       dependentFreeCols.size(), factorTime );
+               {
+                  Timer t{ factorTime };
+                  dependentFreeCols = depRows.getDependentRows( msg, num );
+               }
 
-                   if( !dependentFreeCols.empty() )
-                   {
-                      for( int dependentFreeCol : dependentFreeCols )
-                         probUpdate.fixCol( freeCols[dependentFreeCol], 0 );
+               msg.info( "{} free columns are redundant, factorization took {} "
+                         "seconds\n",
+                         dependentFreeCols.size(), factorTime );
 
-                      probUpdate.flush( true );
-                   }
-                }
-             }
-          }
+               if( !dependentFreeCols.empty() )
+               {
+                  for( int dependentFreeCol : dependentFreeCols )
+                     probUpdate.fixCol( freeCols[dependentFreeCol], 0 );
 
-          // finally compress problem fully and release excess storage even if
-          // problem was not reduced
-          probUpdate.compress( true );
-          probUpdate.getCertificateInterface()->symmetries(
-              problem.getSymmetries(), problem.getVariableNames(),
-              result.postsolve.origcol_mapping );
-          probUpdate.getCertificateInterface()->flush();
-          row_scaling =
-              probUpdate.getCertificateInterface()->getRowScalingFactor();
+                  probUpdate.flush( true );
+               }
+            }
+         }
+      }
 
-          // check whether problem was reduced
-          if( stats.ntsxapplied > 0 || stats.nboundchgs > 0 ||
-              stats.ncoefchgs > 0 || stats.ndeletedcols > 0 ||
-              stats.ndeletedrows > 0 || stats.nsidechgs > 0 )
-          {
-             if( presolveOptions.boundrelax &&
-                 problem.getNumIntegralCols() == 0 )
-             {
-                int nremoved;
-                int nnewfreevars;
+      // finally compress problem fully and release excess storage even if
+      // problem was not reduced
+      probUpdate.compress( true );
+      probUpdate.getCertificateInterface()->symmetries(
+          problem.getSymmetries(), problem.getVariableNames(),
+          result.postsolve.origcol_mapping );
+      probUpdate.getCertificateInterface()->flush();
+      row_scaling = probUpdate.getCertificateInterface()->getRowScalingFactor();
 
-                std::tie( nremoved, nnewfreevars ) =
-                    probUpdate.removeRedundantBounds();
-                if( nremoved != 0 )
-                   msg.info(
-                       "removed {} redundant column bounds, got {} new free "
-                       "variables\n",
-                       nremoved, nnewfreevars );
-             }
+      // check whether problem was reduced
+      if( stats.ntsxapplied > 0 || stats.nboundchgs > 0 ||
+          stats.ncoefchgs > 0 || stats.ndeletedcols > 0 ||
+          stats.ndeletedrows > 0 || stats.nsidechgs > 0 )
+      {
+         if( presolveOptions.boundrelax && problem.getNumIntegralCols() == 0 )
+         {
+            int nremoved;
+            int nnewfreevars;
+
+            std::tie( nremoved, nnewfreevars ) =
+                probUpdate.removeRedundantBounds();
+            if( nremoved != 0 )
+               msg.info( "removed {} redundant column bounds, got {} new free "
+                         "variables\n",
+                         nremoved, nnewfreevars );
+         }
 
          // detect disconnected components
          if( presolveOptions.componentsmaxint != -1
@@ -813,74 +785,72 @@ Presolve<REAL>::apply( Problem<REAL>& problem, bool store_dual_postsolve )
             assert( problem.getNCols() != 0 && problem.getNRows() != 0 );
             Components components;
 
-                int ncomponents = components.detectComponents( problem );
+            int ncomponents = components.detectComponents( problem );
 
-                if( ncomponents > 1 )
-                {
-                   const Vec<ComponentInfo>& compInfo =
-                       components.getComponentInfo();
+            if( ncomponents > 1 )
+            {
+               const Vec<ComponentInfo>& compInfo =
+                   components.getComponentInfo();
 
-                   msg.info( "found {} disconnected components\n",
-                             ncomponents );
-                   msg.info(
-                       "largest component has {} cols ({} int., {} cont.) and "
-                       "{} nonzeros\n",
-                       compInfo[ncomponents - 1].nintegral +
-                           compInfo[ncomponents - 1].ncontinuous,
-                       compInfo[ncomponents - 1].nintegral,
+               msg.info( "found {} disconnected components\n", ncomponents );
+               msg.info(
+                   "largest component has {} cols ({} int., {} cont.) and "
+                   "{} nonzeros\n",
+                   compInfo[ncomponents - 1].nintegral +
                        compInfo[ncomponents - 1].ncontinuous,
-                       compInfo[ncomponents - 1].nnonz );
+                   compInfo[ncomponents - 1].nintegral,
+                   compInfo[ncomponents - 1].ncontinuous,
+                   compInfo[ncomponents - 1].nnonz );
 
-                   Solution<REAL> solution;
-                   solution.primal.resize( problem.getNCols() );
-                   Vec<uint8_t> componentSolved( ncomponents );
+               Solution<REAL> solution;
+               solution.primal.resize( problem.getNCols() );
+               Vec<uint8_t> componentSolved( ncomponents );
 
-                   if( result.postsolve.postsolveType == PostsolveType::kFull )
-                   {
-                      solution.type = SolutionType::kPrimalDual;
-                      solution.reducedCosts.resize( problem.getNCols() );
-                      solution.dual.resize( problem.getNRows() );
-                      solution.varBasisStatus.resize( problem.getNCols() );
-                   }
+               if( result.postsolve.postsolveType == PostsolveType::kFull )
+               {
+                  solution.type = SolutionType::kPrimalDual;
+                  solution.reducedCosts.resize( problem.getNCols() );
+                  solution.dual.resize( problem.getNRows() );
+                  solution.varBasisStatus.resize( problem.getNCols() );
+               }
 
 #ifdef PAPILO_TBB
-                   tbb::parallel_for(
-                       tbb::blocked_range<int>( 0, ncomponents - 1 ),
-                       [this, &components, &solution, &problem, &result,
-                        &compInfo, &componentSolved,
-                        &timer]( const tbb::blocked_range<int>& r )
-                       {
-                          for( int i = r.begin(); i != r.end(); ++i )
+               tbb::parallel_for(
+                   tbb::blocked_range<int>( 0, ncomponents - 1 ),
+                   [this, &components, &solution, &problem, &result, &compInfo,
+                    &componentSolved,
+                    &timer]( const tbb::blocked_range<int>& r ) {
+                      for( int i = r.begin(); i != r.end(); ++i )
 #else
-            for( int i = 0; i < ncomponents - 1; ++i )
+               for( int i = 0; i < ncomponents - 1; ++i )
 
 #endif
-                          {
-                             if( lpSolverFactory != nullptr
+                      {
+                         if( lpSolverFactory != nullptr
                             && compInfo[i].nintegral == 0 )
                          {
                             std::unique_ptr<SolverInterface<REAL>> solver =
                                 lpSolverFactory->newSolver(
                                     VerbosityLevel::kQuiet );
 
-                                solver->setUp( problem,
-                                               result.postsolve.origrow_mapping,
-                                               result.postsolve.origcol_mapping,
-                                               components, compInfo[i] );
+                            solver->setUp( problem,
+                                           result.postsolve.origrow_mapping,
+                                           result.postsolve.origcol_mapping,
+                                           components, compInfo[i] );
 
-                                if( presolveOptions.tlim !=
-                                    std::numeric_limits<double>::max() )
-                                {
-                                   double tlim =
-                                       presolveOptions.tlim - timer.getTime();
-                                   if( tlim <= 0 )
-                                      break;
-                                   solver->setTimeLimit( tlim );
-                                }
+                            if( presolveOptions.tlim !=
+                                std::numeric_limits<double>::max() )
+                            {
+                               double tlim =
+                                   presolveOptions.tlim - timer.getTime();
+                               if( tlim <= 0 )
+                                  break;
+                               solver->setTimeLimit( tlim );
+                            }
 
-                                solver->solve();
+                            solver->solve();
 
-                                SolverStatus status = solver->getStatus();
+                            SolverStatus status = solver->getStatus();
 
                             if( status == SolverStatus::kOptimal )
                             {
@@ -905,135 +875,130 @@ Presolve<REAL>::apply( Problem<REAL>& problem, bool store_dual_postsolve )
                                 mipSolverFactory->newSolver(
                                     VerbosityLevel::kQuiet );
 
-                                solver->setGapLimit( 0 );
-                                solver->setNodeLimit(
-                                    problem.getConstraintMatrix().getNnz() /
-                                    std::max( compInfo[i].nnonz, 1 ) );
+                            solver->setGapLimit( 0 );
+                            solver->setNodeLimit(
+                                problem.getConstraintMatrix().getNnz() /
+                                std::max( compInfo[i].nnonz, 1 ) );
 
-                                solver->setUp( problem,
-                                               result.postsolve.origrow_mapping,
-                                               result.postsolve.origcol_mapping,
-                                               components, compInfo[i] );
+                            solver->setUp( problem,
+                                           result.postsolve.origrow_mapping,
+                                           result.postsolve.origcol_mapping,
+                                           components, compInfo[i] );
 
-                                if( presolveOptions.tlim !=
-                                    std::numeric_limits<double>::max() )
-                                {
-                                   double tlim =
-                                       presolveOptions.tlim - timer.getTime();
-                                   if( tlim <= 0 )
-                                      break;
-                                   solver->setTimeLimit( tlim );
-                                }
+                            if( presolveOptions.tlim !=
+                                std::numeric_limits<double>::max() )
+                            {
+                               double tlim =
+                                   presolveOptions.tlim - timer.getTime();
+                               if( tlim <= 0 )
+                                  break;
+                               solver->setTimeLimit( tlim );
+                            }
 
-                                solver->solve();
+                            solver->solve();
 
-                                SolverStatus status = solver->getStatus();
+                            SolverStatus status = solver->getStatus();
 
-                                if( status == SolverStatus::kOptimal )
-                                {
-                                   if( solver->getSolution(
-                                           components, compInfo[i].componentid,
-                                           solution ) )
-                                      componentSolved[compInfo[i].componentid] =
-                                          true;
-                                }
-                             }
-                          }
-#ifdef PAPILO_TBB
-                       },
-                       tbb::simple_partitioner() );
-#endif
-
-                   int nsolved = 0;
-
-                   int oldndelcols = stats.ndeletedcols;
-                   int oldndelrows = stats.ndeletedrows;
-
-                   auto& lbs = problem.getLowerBounds();
-                   auto& ubs = problem.getUpperBounds();
-                   for( int i = 0; i != ncomponents; ++i )
-                   {
-                      if( componentSolved[i] )
-                      {
-                         ++nsolved;
-
-                         const int* compcols =
-                             components.getComponentsCols( i );
-                         int numcompcols = components.getComponentsNumCols( i );
-
-                         for( int j = 0; j != numcompcols; ++j )
-                         {
-                            const int col = compcols[j];
-                            lbs[compcols[j]] = solution.primal[col];
-                            ubs[compcols[j]] = solution.primal[col];
-                            probUpdate.markColFixed( col );
-                            if( result.postsolve.postsolveType ==
-                                PostsolveType::kFull )
-                               result.postsolve.storeDualValue(
-                                   true, col, solution.reducedCosts[col] );
-                         }
-
-                         const int* comprows =
-                             components.getComponentsRows( i );
-                         int numcomprows = components.getComponentsNumRows( i );
-
-                         for( int j = 0; j != numcomprows; ++j )
-                         {
-                            probUpdate.markRowRedundant( comprows[j] );
+                            if( status == SolverStatus::kOptimal )
+                            {
+                               if( solver->getSolution( components,
+                                                        compInfo[i].componentid,
+                                                        solution ) )
+                                  componentSolved[compInfo[i].componentid] =
+                                      true;
+                            }
                          }
                       }
-                   }
-
-                   if( nsolved != 0 )
-                   {
-                      if( probUpdate.flush( true ) ==
-                          PresolveStatus::kInfeasible )
-                         assert( false );
-
-                      probUpdate.compress();
-
-                      msg.info( "solved {} components: {} cols fixed, {} rows "
-                                "deleted\n",
-                                nsolved, stats.ndeletedcols - oldndelcols,
-                                stats.ndeletedrows - oldndelrows );
-                   }
-                }
-             }
-
-             logStatus( probUpdate, result.postsolve );
-             result.status = PresolveStatus::kReduced;
-             // TODO:
-             //         if( presolveOptions.verification_with_VeriPB &&
-             //             problem.test_problem_type( ProblemFlag::kBinary ) )
-             //            satSolverFactory->
-
-             if( result.postsolve.postsolveType == PostsolveType::kFull )
-             {
-                auto& coefficients = problem.getObjective().coefficients;
-                auto& col_lower = problem.getLowerBounds();
-                auto& col_upper = problem.getUpperBounds();
-                auto& row_lhs =
-                    problem.getConstraintMatrix().getLeftHandSides();
-                auto& row_rhs =
-                    problem.getConstraintMatrix().getRightHandSides();
-                auto& row_flags = problem.getRowFlags();
-                auto& col_flags = problem.getColFlags();
-
-                result.postsolve.storeReducedBoundsAndCost(
-                    col_lower, col_upper, row_lhs, row_rhs, coefficients,
-                    row_flags, col_flags );
-             }
-
-             return result;
-          }
-
-          logStatus( probUpdate, result.postsolve );
-
-          // problem was not changed
-          result.status = PresolveStatus::kUnchanged;
-          return result;
 #ifdef PAPILO_TBB
-       } );
+                   }
+                   ,tbb::simple_partitioner() );
+#endif
+
+               int nsolved = 0;
+
+               int oldndelcols = stats.ndeletedcols;
+               int oldndelrows = stats.ndeletedrows;
+
+               auto& lbs = problem.getLowerBounds();
+               auto& ubs = problem.getUpperBounds();
+               for( int i = 0; i != ncomponents; ++i )
+               {
+                  if( componentSolved[i] )
+                  {
+                     ++nsolved;
+
+                     const int* compcols = components.getComponentsCols( i );
+                     int numcompcols = components.getComponentsNumCols( i );
+
+                     for( int j = 0; j != numcompcols; ++j )
+                     {
+                        const int col = compcols[j];
+                        lbs[compcols[j]] = solution.primal[col];
+                        ubs[compcols[j]] = solution.primal[col];
+                        probUpdate.markColFixed( col );
+                        if( result.postsolve.postsolveType ==
+                            PostsolveType::kFull )
+                           result.postsolve.storeDualValue(
+                               true, col, solution.reducedCosts[col] );
+                     }
+
+                     const int* comprows = components.getComponentsRows( i );
+                     int numcomprows = components.getComponentsNumRows( i );
+
+                     for( int j = 0; j != numcomprows; ++j )
+                     {
+                        probUpdate.markRowRedundant( comprows[j] );
+                     }
+                  }
+               }
+
+               if( nsolved != 0 )
+               {
+                  if( probUpdate.flush( true ) == PresolveStatus::kInfeasible )
+                     assert( false );
+
+                  probUpdate.compress();
+
+                  msg.info( "solved {} components: {} cols fixed, {} rows "
+                            "deleted\n",
+                            nsolved, stats.ndeletedcols - oldndelcols,
+                            stats.ndeletedrows - oldndelrows );
+               }
+            }
+         }
+
+         logStatus( probUpdate, result.postsolve );
+         result.status = PresolveStatus::kReduced;
+         //TODO:
+//         if( presolveOptions.verification_with_VeriPB &&
+//             problem.test_problem_type( ProblemFlag::kBinary ) )
+//            satSolverFactory->
+
+         if( result.postsolve.postsolveType == PostsolveType::kFull )
+         {
+            auto& coefficients = problem.getObjective().coefficients;
+            auto& col_lower = problem.getLowerBounds();
+            auto& col_upper = problem.getUpperBounds();
+            auto& row_lhs = problem.getConstraintMatrix().getLeftHandSides();
+            auto& row_rhs = problem.getConstraintMatrix().getRightHandSides();
+            auto& row_flags = problem.getRowFlags();
+            auto& col_flags = problem.getColFlags();
+
+            result.postsolve.storeReducedBoundsAndCost(
+                col_lower, col_upper, row_lhs, row_rhs, coefficients, row_flags,
+                col_flags );
+         }
+
+         return result;
+      }
+
+      logStatus( probUpdate, result.postsolve );
+
+      // problem was not changed
+      result.status = PresolveStatus::kUnchanged;
+      return result;
+#ifdef PAPILO_TBB
+   } );
 #endif
 }
 
@@ -1045,7 +1010,7 @@ Presolve<REAL>::run_presolvers( const Problem<REAL>& problem,
                                 bool& run_sequential, const Timer& timer )
 {
 #ifndef PAPILO_TBB
-   assert( presolveOptions.runs_sequential() == true );
+   assert(presolveOptions.runs_sequential() == true);
 #endif
    if( presolveOptions.runs_sequential() &&
        presolveOptions.apply_results_immediately_if_run_sequentially )
@@ -1054,10 +1019,9 @@ Presolve<REAL>::run_presolvers( const Problem<REAL>& problem,
       probUpdate.setPostponeSubstitutions( false );
       for( int i = presolver_2_run.first; i != presolver_2_run.second; ++i )
       {
-         results[i] = presolvers[i]->run( problem, probUpdate, num,
-                                          reductions[i], timer, cause );
-         assert( cause != -1 || results[i] != PresolveStatus::kInfeasible ||
-                 presolvers[i]->getName() != "probing" );
+         results[i] =
+             presolvers[i]->run( problem, probUpdate, num, reductions[i], timer, cause );
+         assert( cause != -1 || results[i] != PresolveStatus::kInfeasible || presolvers[i]->getName() != "probing");
          apply_result_sequential( i, probUpdate, run_sequential );
          if( results[i] == PresolveStatus::kInfeasible )
             return;
@@ -1072,18 +1036,15 @@ Presolve<REAL>::run_presolvers( const Problem<REAL>& problem,
       tbb::parallel_for(
           tbb::blocked_range<int>( presolver_2_run.first,
                                    presolver_2_run.second ),
-          [&]( const tbb::blocked_range<int>& r )
-          {
+          [&]( const tbb::blocked_range<int>& r ) {
              for( int i = r.begin(); i != r.end(); ++i )
              {
                 results[i] = presolvers[i]->run( problem, probUpdate, num,
                                                  reductions[i], timer, cause );
-                if( results[i] == PresolveStatus::kInfeasible &&
-                    presolvers[i]->getName() == "probing" )
+                if(results[i] == PresolveStatus::kInfeasible && presolvers[i]->getName() == "probing")
                 {
-                   assert( cause != -1 );
-                   probUpdate.getCertificateInterface()->setInfeasibleCause(
-                       cause );
+                   assert(cause != -1);
+                   probUpdate.getCertificateInterface()->setInfeasibleCause(cause);
                 }
              }
           },
@@ -1095,8 +1056,8 @@ Presolve<REAL>::run_presolvers( const Problem<REAL>& problem,
 template <typename REAL>
 void
 Presolve<REAL>::apply_result_sequential( int index_presolver,
-                                         ProblemUpdate<REAL>& probUpdate,
-                                         bool& run_sequential )
+                                          ProblemUpdate<REAL>& probUpdate,
+                                          bool& run_sequential )
 {
    run_sequential = true;
    apply_reduction_of_solver( probUpdate, index_presolver );
@@ -1145,8 +1106,7 @@ Presolve<REAL>::evaluate_and_apply( const Timer& timer, Problem<REAL>& problem,
       printPresolversStats();
       return result.status;
    case PresolveStatus::kInfeasible:
-      probUpdate.log_infeasiblity_in_certificate(
-          result.postsolve.origcol_mapping, problem.getVariableNames() );
+      probUpdate.log_infeasiblity_in_certificate(result.postsolve.origcol_mapping, problem.getVariableNames());
       printPresolversStats();
       return result.status;
    case PresolveStatus::kUnchanged:
@@ -1183,6 +1143,7 @@ Presolve<REAL>::is_status_infeasible_or_unbounded(
           status == PresolveStatus::kUnbounded ||
           status == PresolveStatus::kInfeasible;
 }
+
 
 template <typename REAL>
 PresolveStatus
@@ -1256,8 +1217,7 @@ Presolve<REAL>::applyReductions( int p, const Reductions<REAL>& reductions_,
 
       for( ; k != start; ++k )
       {
-         result = probUpdate.applyTransaction( &reds[k], &reds.data()[k + 1],
-                                               argument );
+         result = probUpdate.applyTransaction( &reds[k], &reds.data()[k + 1], argument );
          if( result == ApplyResult::kApplied )
             ++stats.ntsxapplied;
          else if( result == ApplyResult::kRejected )
@@ -1270,8 +1230,7 @@ Presolve<REAL>::applyReductions( int p, const Reductions<REAL>& reductions_,
          ++nbtsxTotal;
       }
 
-      result = probUpdate.applyTransaction( &reds[start], &reds.data()[end],
-                                            argument );
+      result = probUpdate.applyTransaction( &reds[start], &reds.data()[end], argument );
       if( result == ApplyResult::kApplied )
          ++stats.ntsxapplied;
       else if( result == ApplyResult::kRejected )
@@ -1287,8 +1246,7 @@ Presolve<REAL>::applyReductions( int p, const Reductions<REAL>& reductions_,
 
    for( ; k != static_cast<int>( reds.size() ); ++k )
    {
-      result = probUpdate.applyTransaction( &reds[k], &reds.data()[k + 1],
-                                            argument );
+      result = probUpdate.applyTransaction( &reds[k], &reds.data()[k + 1], argument );
       if( result == ApplyResult::kApplied )
          ++stats.ntsxapplied;
       else if( result == ApplyResult::kRejected )
@@ -1310,7 +1268,7 @@ Presolve<REAL>::applyPostponed( ProblemUpdate<REAL>& probUpdate )
 {
    probUpdate.setPostponeSubstitutions( false );
 
-   for( int presolver = 0; presolver != (int)presolvers.size(); ++presolver )
+   for( int presolver = 0; presolver != (int) presolvers.size(); ++presolver )
    {
       int first = postponedReductionToPresolver[presolver];
       int last = postponedReductionToPresolver[presolver + 1];
@@ -1321,8 +1279,8 @@ Presolve<REAL>::applyPostponed( ProblemUpdate<REAL>& probUpdate )
       {
          const auto& ptrpair = postponedReductions[i];
 
-         ApplyResult r = probUpdate.applyTransaction(
-             ptrpair.first, ptrpair.second, ArgumentType::kPrimal );
+         ApplyResult r =
+             probUpdate.applyTransaction( ptrpair.first, ptrpair.second, ArgumentType::kPrimal );
          if( r == ApplyResult::kApplied )
          {
             ++stats.ntsxapplied;
@@ -1385,27 +1343,28 @@ Presolve<REAL>::is_time_exceeded( const Timer& presolvetimer ) const
 
 template <typename REAL>
 bool
-Presolve<REAL>::are_applied_tsx_negligible(
-    const Problem<REAL>& problem, const ProblemUpdate<REAL>& probUpdate,
-    const Statistics& roundStats, Delegator delegator )
+Presolve<REAL>::are_applied_tsx_negligible( const Problem<REAL>& problem,
+                                          const ProblemUpdate<REAL>& probUpdate,
+                                          const Statistics& roundStats,
+                                          Delegator delegator )
 {
    double abort_factor = 0;
-   switch( delegator )
+   switch ( delegator )
    {
    case Delegator::kFast:
       abort_factor = problem.getNumIntegralCols() == 0
-                         ? presolveOptions.lpabortfacfast
-                         : presolveOptions.abortfacfast;
+                             ? presolveOptions.lpabortfacfast
+                             : presolveOptions.abortfacfast;
       break;
    case Delegator::kMedium:
       abort_factor = problem.getNumIntegralCols() == 0
-                         ? presolveOptions.lpabortfacmedium
-                         : presolveOptions.abortfacmedium;
+                             ? presolveOptions.lpabortfacmedium
+                             : presolveOptions.abortfacmedium;
       break;
    case Delegator::kExhaustive:
       abort_factor = problem.getNumIntegralCols() == 0
-                         ? presolveOptions.lpabortfac
-                         : presolveOptions.abortfac;
+                             ? presolveOptions.lpabortfac
+                             : presolveOptions.abortfac;
       break;
   case Delegator::kAbort:
   case Delegator::kExceeded:
@@ -1413,12 +1372,10 @@ Presolve<REAL>::are_applied_tsx_negligible(
    }
 
    if( roundStats.ndeletedcols == 0 && roundStats.ndeletedrows == 0 &&
-       roundStats.ncoefchgs == 0 &&
-       presolveOptions.max_consecutive_rounds_of_only_bound_changes >= 0 )
+       roundStats.ncoefchgs == 0 && presolveOptions.max_consecutive_rounds_of_only_bound_changes >= 0 )
    {
       ++stats.consecutive_rounds_of_only_boundchanges;
-      if( stats.consecutive_rounds_of_only_boundchanges >
-          presolveOptions.max_consecutive_rounds_of_only_bound_changes )
+      if (stats.consecutive_rounds_of_only_boundchanges > presolveOptions.max_consecutive_rounds_of_only_bound_changes)
          return true;
    }
    else
@@ -1441,8 +1398,7 @@ Presolve<REAL>::increase_round_if_last_run_was_not_successfull(
    Delegator next_round;
    if( !unchanged )
    {
-      if( are_applied_tsx_negligible( problem, probUpdate, roundStats,
-                                      round_to_evaluate ) )
+      if( are_applied_tsx_negligible( problem, probUpdate, roundStats, round_to_evaluate ) )
       {
          currentRoundReduced =
              currentRoundReduced || roundStats.nsidechgs > 0 ||
@@ -1534,12 +1490,11 @@ Presolve<REAL>::printPresolversStats()
 
 template <typename REAL>
 void
-Presolve<REAL>::logStatus(
-    ProblemUpdate<REAL>& problem_update,
-    const PostsolveStorage<REAL>& postsolveStorage ) const
+Presolve<REAL>::logStatus( ProblemUpdate<REAL>& problem_update,
+                           const PostsolveStorage<REAL>& postsolveStorage ) const
 {
    Problem<REAL>& problem = problem_update.getProblem();
-   if( problem.getNCols() == 0 )
+   if( problem.getNCols() == 0)
    {
       // the primal dual can be disabled therefore calculate only primal for obj
       Solution<REAL> solution{};
@@ -1551,15 +1506,14 @@ Presolve<REAL>::logStatus(
       postsolve.undo( empty_sol, solution, postsolveStorage );
       const Problem<REAL>& origprob = postsolveStorage.getOriginalProblem();
       REAL origobj = origprob.computeSolObjective( solution.primal );
-      msg.info( "problem is solved [optimal solution found] [objective value: "
-                "{} (double precision)]\n",
-                (double)origobj );
-      problem_update.getCertificateInterface()->log_solution(
-          solution, problem.getVariableNames(), origobj );
+      msg.info(
+          "problem is solved [optimal solution found] [objective value: {} (double precision)]\n",
+          (double) origobj );
+      problem_update.getCertificateInterface()->log_solution( solution, problem.getVariableNames(), origobj );
    }
    else
       problem_update.getCertificateInterface()->end_proof();
-   if( msg.getVerbosityLevel() == VerbosityLevel::kQuiet )
+   if(msg.getVerbosityLevel() == VerbosityLevel::kQuiet)
       return;
    msg.info( "reduced problem:\n" );
    msg.info( "  reduced rows:     {}\n", problem.getNRows() );
@@ -1571,6 +1525,7 @@ Presolve<REAL>::logStatus(
    if( problem.test_problem_type( ProblemFlag::kBinary ) )
       msg.info( "  found symmetries: {}\n",
                 problem.getSymmetries().symmetries.size() );
+
    ConstraintMatrix<REAL>& matrix = problem.getConstraintMatrix();
    int nCliques = 0;
    for( int i = 0; i < problem.getNRows(); i++ )
@@ -1614,7 +1569,7 @@ template <typename REAL>
 bool
 Presolve<REAL>::are_only_dual_postsolve_presolvers_enabled()
 {
-   for( int i = 0; i < (int)presolvers.size(); i++ )
+   for( int i = 0; i < (int) presolvers.size(); i++ )
    {
       if( presolvers[i]->isEnabled() )
       {

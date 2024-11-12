@@ -24,7 +24,6 @@
 #include "papilo/core/Problem.hpp"
 #include "papilo/core/ProblemBuilder.hpp"
 #include "papilo/core/Reductions.hpp"
-#include "papilo/external/catch/catch.hpp"
 #include "papilo/presolvers/ImplIntDetection.hpp"
 
 namespace papilo
@@ -57,8 +56,8 @@ TEST_CASE( "trivial-presolve-singleton-row", "[core]" )
 TEST_CASE( "trivial-presolve-singleton-row-pt-2", "[core]" )
 {
    Num<double> num{};
-   Problem<double> problem = setupProblemPresolveSingletonRowFixed();
    Message msg{};
+   Problem<double> problem = setupProblemPresolveSingletonRowFixed();
    Statistics statistics{};
    PresolveOptions presolveOptions{};
    PostsolveStorage<double> postsolve =
@@ -66,6 +65,7 @@ TEST_CASE( "trivial-presolve-singleton-row-pt-2", "[core]" )
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
    problemUpdate.trivialPresolve();
+
    REQUIRE( problem.getUpperBounds()[2] == 1 );
    REQUIRE( problem.getLowerBounds()[2] == 1 );
    REQUIRE( problem.getRowFlags()[1].test( RowFlag::kRedundant ) );
@@ -163,10 +163,9 @@ setupProblemPresolveSingletonRow()
        std::tuple<int, int, double>{ 1, 2, 1.0 } };
 
    ProblemBuilder<double> pb;
-   pb.reserve( (int)entries.size(), (int)rowNames.size(),
-               (int)columnNames.size() );
-   pb.setNumRows( (int)rowNames.size() );
-   pb.setNumCols( (int)columnNames.size() );
+   pb.reserve( (int) entries.size(), (int)  rowNames.size(), (int) columnNames.size() );
+   pb.setNumRows( (int) rowNames.size() );
+   pb.setNumCols( (int) columnNames.size() );
    pb.setColUbAll( upperBounds );
    pb.setColLbAll( lowerBounds );
    pb.setObjAll( coefficients );
@@ -199,10 +198,9 @@ setupProblemPresolveSingletonRowFixed()
        std::tuple<int, int, double>{ 1, 2, 1.0 } };
 
    ProblemBuilder<double> pb;
-   pb.reserve( (int)entries.size(), (int)rowNames.size(),
-               (int)columnNames.size() );
-   pb.setNumRows( (int)rowNames.size() );
-   pb.setNumCols( (int)columnNames.size() );
+   pb.reserve( (int) entries.size(), (int) rowNames.size(), (int) columnNames.size() );
+   pb.setNumRows( (int) rowNames.size() );
+   pb.setNumCols( (int) columnNames.size() );
    pb.setColUbAll( upperBounds );
    pb.setColLbAll( lowerBounds );
    pb.setObjAll( coefficients );
@@ -213,10 +211,9 @@ setupProblemPresolveSingletonRowFixed()
    pb.setColNameAll( columnNames );
    pb.setProblemName( "matrix for singleton row fixed" );
    Problem<double> problem = pb.build();
-   problem.getConstraintMatrix().modifyLeftHandSide( 1, num, rhs[1] );
+   problem.getConstraintMatrix().modifyLeftHandSide( 1,num, rhs[1] );
    return problem;
 }
-
 Problem<double>
 setupProblemWIthCliques()
 {
@@ -289,5 +286,4 @@ setupProblemWIthCliques()
    Problem<double> problem = pb.build();
    return problem;
 }
-
 } // namespace papilo

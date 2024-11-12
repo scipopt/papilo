@@ -27,7 +27,6 @@
 #include "papilo/core/ConstraintMatrix.hpp"
 #include "papilo/core/Objective.hpp"
 #include "papilo/core/Problem.hpp"
-#include "papilo/core/ProblemBuilder.hpp"
 #include "papilo/core/VariableDomains.hpp"
 #include "papilo/external/pdqsort/pdqsort.h"
 #include "papilo/io/BoundType.hpp"
@@ -97,11 +96,11 @@ class MpsParser
       problem.setConstraintNames( std::move( parser.rownames ) );
 
       problem.set_problem_type( ProblemFlag::kMixedInteger );
-      if( problem.getNumIntegralCols() == 0 )
+      if(problem.getNumIntegralCols() == 0 )
          problem.set_problem_type( ProblemFlag::kLinear );
-      if( problem.getNumContinuousCols() == 0 )
+      if(problem.getNumContinuousCols() == 0 )
       {
-         // TODO check if PseudoBoolean
+         //TODO check if PseudoBoolean
          problem.set_problem_type( ProblemFlag::kInteger );
       }
       ConstraintMatrix<REAL>& matrix = problem.getConstraintMatrix();
@@ -378,8 +377,7 @@ MpsParser<REAL>::parseCols( boost::iostreams::filtering_istream& file,
    int colstart = 0;
    bool integral_cols = false;
 
-   auto parsename = [&rowidx, this]( std::string name )
-   {
+   auto parsename = [&rowidx, this]( std::string name ) {
       auto mit = rowname2idx.find( name );
 
       assert( mit != rowname2idx.end() );
@@ -391,19 +389,19 @@ MpsParser<REAL>::parseCols( boost::iostreams::filtering_istream& file,
          assert( -1 == rowidx );
    };
 
-   auto addtuple = [&rowidx, &ncols, this]( std::string sval )
-   {
+   auto addtuple = [&rowidx, &ncols, this]( std::string sval) {
       auto result = parse_number<REAL>( sval );
       if( result.first )
       {
-         fmt::print( "Could not parse coefficient {}\n", sval );
-         exit( 0 );
+         fmt::print("Could not parse coefficient {}\n", sval);
+         exit(0);
       }
       REAL coeff = result.second;
       if( rowidx >= 0 )
-         entries.push_back( std::make_tuple( ncols - 1, rowidx, coeff ) );
+         entries.push_back(
+             std::make_tuple( ncols - 1, rowidx, coeff ) );
       else
-         coeffobj.push_back( std::make_pair( ncols - 1, coeff ) );
+         coeffobj.push_back( std::make_pair( ncols - 1,  coeff ) );
    };
 
    while( getline( file, strline ) )
@@ -417,8 +415,9 @@ MpsParser<REAL>::parseCols( boost::iostreams::filtering_istream& file,
       {
          if( ncols > 1 )
             pdqsort( entries.begin() + colstart, entries.end(),
-                     []( Triplet<REAL> a, Triplet<REAL> b )
-                     { return std::get<1>( b ) > std::get<1>( a ); } );
+                     []( Triplet<REAL> a, Triplet<REAL> b ) {
+                        return std::get<1>( b ) > std::get<1>( a );
+                     } );
 
          return key;
       }
@@ -485,8 +484,9 @@ MpsParser<REAL>::parseCols( boost::iostreams::filtering_istream& file,
 
          if( ncols > 1 )
             pdqsort( entries.begin() + colstart, entries.end(),
-                     []( Triplet<REAL> a, Triplet<REAL> b )
-                     { return std::get<1>( b ) > std::get<1>( a ); } );
+                     []( Triplet<REAL> a, Triplet<REAL> b ) {
+                        return std::get<1>( b ) > std::get<1>( a );
+                     } );
 
          colstart = entries.size();
       }
@@ -535,8 +535,7 @@ MpsParser<REAL>::parseRanges( boost::iostreams::filtering_istream& file )
 
       int rowidx;
 
-      auto parsename = [&rowidx, this]( std::string name )
-      {
+      auto parsename = [&rowidx, this]( std::string name ) {
          auto mit = rowname2idx.find( name );
 
          assert( mit != rowname2idx.end() );
@@ -545,13 +544,12 @@ MpsParser<REAL>::parseRanges( boost::iostreams::filtering_istream& file )
          assert( rowidx >= 0 && rowidx < nRows );
       };
 
-      auto addrange = [&rowidx, this]( std::string sval )
-      {
+      auto addrange = [&rowidx, this]( std::string sval ) {
          auto result = parse_number<REAL>( sval );
          if( result.first )
          {
-            fmt::print( "Could not parse range {}\n", sval );
-            exit( 0 );
+            fmt::print("Could not parse range {}\n", sval);
+            exit(0);
          }
          REAL val = result.second;
          assert( size_t( rowidx ) < rowrhs.size() );
@@ -559,18 +557,18 @@ MpsParser<REAL>::parseRanges( boost::iostreams::filtering_istream& file )
          if( row_type[rowidx] == BoundType::kGE )
          {
             row_flags[rowidx].unset( RowFlag::kRhsInf );
-            rowrhs[rowidx] = rowlhs[rowidx] + REAL( abs( val ) );
+            rowrhs[rowidx] = rowlhs[rowidx] + REAL(abs( val ));
          }
          else if( row_type[rowidx] == BoundType::kLE )
          {
             row_flags[rowidx].unset( RowFlag::kLhsInf );
-            rowlhs[rowidx] = rowrhs[rowidx] - REAL( abs( val ) );
+            rowlhs[rowidx] = rowrhs[rowidx] - REAL(abs( val ));
          }
          else
          {
             assert( row_type[rowidx] == BoundType::kEq );
             assert( rowrhs[rowidx] == rowlhs[rowidx] );
-            assert( row_flags[rowidx].test( RowFlag::kEquation ) );
+            assert( row_flags[rowidx].test(RowFlag::kEquation) );
 
             if( val > REAL{ 0.0 } )
             {
@@ -626,8 +624,7 @@ MpsParser<REAL>::parseRhs( boost::iostreams::filtering_istream& file )
 
       int rowidx;
 
-      auto parsename = [&rowidx, this]( std::string name )
-      {
+      auto parsename = [&rowidx, this]( std::string name ) {
          auto mit = rowname2idx.find( name );
 
          assert( mit != rowname2idx.end() );
@@ -637,13 +634,12 @@ MpsParser<REAL>::parseRhs( boost::iostreams::filtering_istream& file )
          assert( rowidx < nRows );
       };
 
-      auto addrhs = [&rowidx, this]( std::string sval )
-      {
+      auto addrhs = [&rowidx, this]( std::string sval ) {
          auto result = parse_number<REAL>( sval );
          if( result.first )
          {
-            fmt::print( "Could not parse side {}\n", sval );
-            exit( 0 );
+            fmt::print("Could not parse side {}\n", sval);
+            exit(0);
          }
          REAL val = result.second;
          if( rowidx == -1 )
@@ -760,21 +756,18 @@ MpsParser<REAL>::parseBounds( boost::iostreams::filtering_istream& file )
       else
       {
          if( word_ref == "INDICATORS" )
-            std::cerr << "PaPILO does not support INDICATORS in the MPS file!!"
-                      << std::endl;
+            std::cerr << "PaPILO does not support INDICATORS in the MPS file!!"<< std::endl;
          else
             std::cerr << "unknown bound type " << word_ref << std::endl;
          return ParseKey::kFail;
       }
 
       // parse over next word
-      qi::phrase_parse( it, strline.end(), qi::lexeme[+qi::graph],
-                        ascii::space );
+      qi::phrase_parse( it, strline.end(), qi::lexeme[+qi::graph], ascii::space );
 
       int colidx;
 
-      auto parsename = [&colidx, this]( std::string name )
-      {
+      auto parsename = [&colidx, this]( std::string name ) {
          auto mit = colname2idx.find( name );
          assert( mit != colname2idx.end() );
          colidx = mit->second;
@@ -810,14 +803,14 @@ MpsParser<REAL>::parseBounds( boost::iostreams::filtering_istream& file )
          continue;
       }
 
-      auto adddomains = [&ub_is_default, &lb_is_default, &colidx, &islb, &isub,
-                         &isintegral, this]( std::string sval )
+      auto adddomains = [&ub_is_default, &lb_is_default, &colidx, &islb, &isub, &isintegral, this]
+          ( std::string sval )
       {
          auto result = parse_number<REAL>( sval );
          if( result.first )
          {
-            fmt::print( "Could not parse bound {}\n", sval );
-            exit( 0 );
+            fmt::print("Could not parse bound {}\n", sval);
+            exit(0);
          }
          REAL val = result.second;
          if( islb )
@@ -855,6 +848,7 @@ MpsParser<REAL>::parseBounds( boost::iostreams::filtering_istream& file )
          return ParseKey::kFail;
       parsename( tokens[2] );
       adddomains( tokens[3] );
+
    }
 
    return ParseKey::kFail;
