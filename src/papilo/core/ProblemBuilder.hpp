@@ -428,8 +428,8 @@ class ProblemBuilder
          return outputPair;
       }
       auto rowvec = matrix.getRowCoefficients( row );
-      REAL minvalue = std::numeric_limits<double>::infinity();
-      REAL maxvalue = -std::numeric_limits<double>::infinity();
+      REAL minvalue = std::numeric_limits<REAL>::infinity();
+      REAL maxvalue = -std::numeric_limits<REAL>::infinity();
       for( int j = 0; j < rowvec.getLength(); ++j )
       {
          int col = rowvec.getIndices()[j];
