@@ -394,7 +394,7 @@ class ProblemBuilder
                         matrix.getRightHandSides()[i] )
                    matrix.getRowFlags()[i].set( RowFlag::kEquation );
                 std::pair<bool, bool> cliqueResult =
-                    is_clique_or_sos1( matrix, i );
+                    is_clique_or_sos1( matrix, i, num );
                 if( cliqueResult.first && cliqueResult.second )
                    matrix.getRowFlags()[i].set( RowFlag::kSOS1 );
                 else if( cliqueResult.first )
@@ -410,7 +410,7 @@ class ProblemBuilder
    }
 
    std::pair<bool, bool>
-   is_clique_or_sos1( const ConstraintMatrix<REAL>& matrix, int row )
+   is_clique_or_sos1( const ConstraintMatrix<REAL>& matrix, int row, const Num<REAL>& num )
    {
       RowFlags rowFlag = matrix.getRowFlags()[row];
       bool rhsClique = true;
@@ -421,12 +421,7 @@ class ProblemBuilder
       if( rowFlag.test( RowFlag::kLhsInf ) )
          lhsClique = false;
       if( !lhsClique && !rhsClique )
-      {
-         std::pair<bool, bool> outputPair;
-         outputPair.first = false;
-         outputPair.second = false;
-         return outputPair;
-      }
+         return {false, false};
       auto rowvec = matrix.getRowCoefficients( row );
       REAL minvalue = std::numeric_limits<REAL>::infinity();
       REAL maxvalue = -std::numeric_limits<REAL>::infinity();
@@ -434,12 +429,7 @@ class ProblemBuilder
       {
          int col = rowvec.getIndices()[j];
          if( !domains.flags[col].test( ColFlag::kIntegral ) )
-         {
-            std::pair<bool, bool> outputPair;
-            outputPair.first = false;
-            outputPair.second = false;
-            return outputPair;
-         }
+            return {false, false};
          REAL coeff = rowvec.getValues()[j];
          REAL lb = domains.lower_bounds[col];
          REAL ub = domains.upper_bounds[col];
@@ -469,25 +459,11 @@ class ProblemBuilder
                maxvalue = -abs( coeff );
          }
          else
-         {
-            std::pair<bool, bool> outputPair;
-            outputPair.first = false;
-            outputPair.second = false;
-            return outputPair;
-         }
+            return {false, false};
          if( !lhsClique && !rhsClique )
-         {
-            std::pair<bool, bool> outputPair;
-            outputPair.first = false;
-            outputPair.second = false;
-            return outputPair;
-         }
+            return {false, false};
       }
-
-      std::pair<bool, bool> outputPair;
-      outputPair.first = true;
-      outputPair.second = SOS1;
-      return outputPair;
+      return {true, SOS1};
    }
 
 

@@ -108,28 +108,6 @@ class OpbParser
       problem.set_problem_type( ProblemFlag::kMixedInteger );
       problem.set_problem_type( ProblemFlag::kInteger );
       problem.set_problem_type( ProblemFlag::kBinary );
-      ConstraintMatrix<REAL>& matrix = problem.getConstraintMatrix();
-#ifdef PAPILO_TBB
-      tbb::parallel_for(
-          tbb::blocked_range<int>( 0, problem.getNRows() ),
-          [&]( const tbb::blocked_range<int>& r )
-          {
-             for( int i = r.begin(); i != r.end(); ++i )
-#else
-      for( int i = 0; i < problem.getNRows(); i++ )
-#endif
-             {
-                std::pair<bool, bool> cliqueResult = problem.is_clique_or_sos1(
-                    matrix, i );
-                if( cliqueResult.first && cliqueResult.second )
-                   matrix.getRowFlags()[i].set( RowFlag::kSOS1 );
-                else if( cliqueResult.first )
-                   matrix.getRowFlags()[i].set( RowFlag::kClique );
-             }
-#ifdef PAPILO_TBB
-          } );
-#endif
-
       return problem;
    }
 
