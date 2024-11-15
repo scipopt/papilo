@@ -181,9 +181,9 @@ if (TBB)
          find_or_download_package(
             NAME TBB
             VERSION 2018
-            URL https://github.com/oneapi-src/oneTBB/archive/refs/tags/v2021.13.0.tar.gz
+            URL https://github.com/oneapi-src/oneTBB/archive/refs/tags/v2022.0.0.tar.gz
             COMPONENTS tbb tbbmalloc
-            URL_HASH SHA256=3ad5dd08954b39d113dc5b3f8a8dc6dc1fd5250032b7c491eb07aed5c94133e1
+            URL_HASH SHA256=e8e89c9c345415b17b30a2db3095ba9d47647611662073f7fbf54ad48b7f3c2a
             CONFIGURE_ARGS -DTBB_TEST=OFF -DTBB_EXAMPLES=OFF -DTBB4PY_BUILD=OFF)
       else ()
          find_package(TBB 2018 COMPONENTS tbb tbbmalloc)
