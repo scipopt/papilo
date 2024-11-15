@@ -183,7 +183,7 @@ if (TBB)
             VERSION 2018
             URL https://github.com/oneapi-src/oneTBB/archive/refs/tags/v2022.0.0.tar.gz
             COMPONENTS tbb tbbmalloc
-            URL_HASH SHA256=1b669eb357dd90f3135f27e3c9a78683c6ecc74edf2799f7cb7df92a5423cb76
+            URL_HASH SHA256=e8e89c9c345415b17b30a2db3095ba9d47647611662073f7fbf54ad48b7f3c2a
             CONFIGURE_ARGS -DTBB_TEST=OFF -DTBB_EXAMPLES=OFF -DTBB4PY_BUILD=OFF)
       else ()
          find_package(TBB 2018 COMPONENTS tbb tbbmalloc)
