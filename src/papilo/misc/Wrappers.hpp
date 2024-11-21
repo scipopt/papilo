@@ -248,11 +248,6 @@ presolve_and_solve(
 
       if( !opts.optimal_solution_file.empty() )
       {
-         if( presolve.getPresolveOptions().dualreds != 0 )
-         {
-            fmt::print( "**WARNING: Enabling dual reductions might cut of "
-                        "feasible or optimal solution\n" );
-         }
          Validation<REAL>::validateProblem( problem, result.postsolve,
                                             opts.optimal_solution_file,
                                             result.status );

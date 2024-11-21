@@ -28,6 +28,8 @@ Fixed bugs
 Build system
 ------------
 
+- improved search for dependencies when another tool uses papilo-config.cmake.
+
 @section RN240 PaPILO 2.4.0
 
 Interface changes
