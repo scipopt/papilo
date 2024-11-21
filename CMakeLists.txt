@@ -61,10 +61,11 @@ option(TBB "should TBB be linked if found" ON)
 option(TBB_DOWNLOAD "should TBB be downloaded" OFF)
 option(INSTALL_TBB "should the TBB library be installed" OFF)
 
-option(HIGHS "should HiGHS LP solver be linked if found" ON)
-option(SOPLEX "should SoPlex LP solver be linked if found" ON)
-option(SCIP "should SCIP solver be linked if found" ON)
+option(SOPLEX "should SoPlex LP solver be linked if found" OFF)
+option(SCIP "should SCIP solver be linked if found" OFF)
+option(HIGHS "should HiGHS LP solver be linked if found" OFF)
 option(GUROBI "should gurobi solver be linked" OFF)
+option(GLOP "should ortools solver be linked" OFF)
 
 # Make 'Release' the default build type.
 if(NOT CMAKE_BUILD_TYPE)

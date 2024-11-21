@@ -8,7 +8,8 @@ Fixed bugs
 Build system
 ------------
 
-- improved search for dependencies when another tool uses papilo-config.cmake.
+- improved search for dependencies when another tool uses papilo-config.cmake
+- disable default solvers and require linking when enabled
 
 @section RN240 PaPILO 2.4.0
 
