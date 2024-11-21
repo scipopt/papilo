@@ -409,13 +409,28 @@ if(BUILD_POSTSOLVE_TESTS)
         )
 endif()
 
+
+# solution quality is poor: current has on MIPLIB-Solutions 0744b8aedcc9d96c05b80f4c04119fb9b250e1f2
+#check/IP/miplib2017-benchmark/glass4.mps.gz\,solutions/glass4/1/glass4.sol
+#check/IP/miplib2017-benchmark/neos-1122047.mps.gz\,solutions/neos-1122047/1/neos-1122047.sol
+#check/IP/miplib2017-benchmark/tr12-30.mps.gz\,solutions/tr12-30/1/tr12-30.sol
+#check/IP/miplib2017-benchmark/roll3000.mps.gz\,solutions/roll3000/1/roll3000.sol
+#check/IP/miplib2017-benchmark/cbs-cta.mps.gz\,solutions/cbs-cta/1/cbs-cta.sol.gz
+#check/IP/miplib2017-benchmark/dano3_3.mps.gz\,solutions/dano3_3/1/dano3_3.sol.gz
+#check/IP/miplib2017-benchmark/istanbul-no-cutoff.mps.gz\,solutions/istanbul-no-cutoff/1/istanbul-no-cutoff.sol.gz
+#check/IP/miplib2017-benchmark/milo-v12-6-r2-40-1.mps.gz\,solutions/milo-v12-6-r2-40-1/1/milo-v12-6-r2-40-1.sol.gz
+#check/IP/miplib2017-benchmark/momentum1.mps.gz\,solutions/momentum1/2/momentum1.sol.gz
+#check/IP/miplib2017-benchmark/swath1.mps.gz\,solutions/swath1/1/swath1.sol.gz
+#check/IP/miplib2017-benchmark/swath3.mps.gz\,solutions/swath3/1/swath3.sol.gz
+#check/IP/miplib2017/k16x240b.mps.gz\,solutions/k16x240b/1/k16x240b.sol.gz
+
 set(filename_for_solutions "solutions.test")
 # the following code block checks if a solution is contained in a reduced problem.
 # The input for solutions.test file can be done via a file with the following format:
 # PATH_TO_MPS_FILE_1,PATH_TO_SOL_FILE_1
 # PATH_TO_MPS_FILE_2,PATH_TO_SOL_FILE_2
 # ...
-if (TARGET papilo-executable AND EXISTS "${PROJECT_SOURCE_DIR}/${filename_for_solutions}")
+if (INTEGRATION_TEST AND TARGET papilo-executable AND EXISTS "${PROJECT_SOURCE_DIR}/${filename_for_solutions}")
 
     FILE(READ "${PROJECT_SOURCE_DIR}/${filename_for_solutions}" content)
     string(REPLACE "\n" ";" instances ${content})
@@ -430,19 +445,22 @@ if (TARGET papilo-executable AND EXISTS "${PROJECT_SOURCE_DIR}/${filename_for_so
     #solution is still contained after presolving
     macro(validate_solution instance settings)
         split_solution(${instance})
-        MESSAGE("${path}")
         file(TO_NATIVE_PATH "${path}" instance_file)
         file(TO_NATIVE_PATH "${path_solution}" solution_file)
         file(TO_NATIVE_PATH "${PROJECT_SOURCE_DIR}/settings/${settings}" settings_file)
-        #TODO find better testname -> solution file can be occur multiple times
-        add_test(NAME validate-solution-${settings}-${solution_file}
-                COMMAND $<TARGET_FILE:papilo-executable> presolve -f ${instance_file} -b ${solution_file} -p ${settings_file}
-                )
-        set_tests_properties(validate-solution-${settings}-${solution_file}
-                PROPERTIES
-                PASS_REGULAR_EXPRESSION "validation: SUCCESS\n"
-                DEPENDS papilo-build
-                )
+        if(EXISTS "${PROJECT_SOURCE_DIR}/${instance_file}" AND EXISTS ${PROJECT_SOURCE_DIR}/${solution_file})
+            MESSAGE(STATUS "integration test add for instance: ${path}")
+            add_test(NAME validate-solution-${settings}-${solution_file}
+                    COMMAND $<TARGET_FILE:papilo-executable> presolve -f ${PROJECT_SOURCE_DIR}/${instance_file} -b ${PROJECT_SOURCE_DIR}/${solution_file} -p ${settings_file}
+                    )
+            set_tests_properties(validate-solution-${settings}-${solution_file}
+                    PROPERTIES
+                    PASS_REGULAR_EXPRESSION "validation: SUCCESS\n"
+                    DEPENDS papilo-build
+                    )
+        else ()
+            message(WARNING "instance or solution file does not exist")
+        endif ()
     endmacro(validate_solution)
 
     foreach (instance ${instances})
