@@ -131,6 +131,7 @@ highs-setup:
       - ${CI_PROJECT_DIR}/installs
     expire_in: 1 minute
   when: manual
+  allow_failure: true
   script:
     - mkdir -p ${SETUP_DIR}
     - export CFLAGS=""
@@ -213,7 +214,7 @@ highs-setup:
 "ctest_highs":
   extends: .ctest
   needs: [ boost-setup, highs-setup ]
-  when: manual
+  allow_failure: true
   variables:
     CMAKE_FLAGS: "-DHIGHS=on"
 
