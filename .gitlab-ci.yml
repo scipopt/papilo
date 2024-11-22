@@ -15,7 +15,6 @@ variables:
   INSTALL_DIR: ${CI_PROJECT_DIR}/../installs
 
   # source directories
-  PAPILO_DIR: ${SETUP_DIR}/papilo
   BOOST_DIR: ${SETUP_DIR}/boost
   SOPLEX_DIR: ${SETUP_DIR}/soplex
   SCIP_DIR: ${SETUP_DIR}/scip
@@ -79,10 +78,6 @@ papilo-setup:
       - ${CI_PROJECT_DIR}/installs
     expire_in: 1 minute
   script:
-    - mkdir -p ${SETUP_DIR}
-    - export CFLAGS=""
-    - export CXXFLAGS=""
-    - mkdir ${PAPILO_DIR}
     - cmake ${CI_PROJECT_DIR} -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}
     - make -j8 install
     - ctest --output-on-failure -j8
