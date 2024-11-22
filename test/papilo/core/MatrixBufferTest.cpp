@@ -21,7 +21,7 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 #include "papilo/core/MatrixBuffer.hpp"
-#include "papilo/external/catch/catch.hpp"
+#include "papilo/external/catch/catch_amalgamated.hpp"
 #include "papilo/misc/fmt.hpp"
 
 using namespace papilo;

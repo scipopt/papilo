@@ -21,7 +21,7 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 #include "papilolib.h"
-#include "papilo/external/catch/catch.hpp"
+#include "papilo/external/catch/catch_amalgamated.hpp"
 #include "papilo/misc/fmt.hpp"
 
 TEST_CASE( "papilolib", "[C-API]" )
@@ -441,8 +441,8 @@ TEST_CASE( "papilolib", "[C-API]" )
    PAPILO_SOLVING_INFO* result = papilo_solver_start( solver );
 
    REQUIRE( result->solve_result == PAPILO_SOLVE_RESULT_OPTIMAL );
-   REQUIRE( result->bestsol_obj == Approx( 796648.4375 ) );
-   REQUIRE( result->dualbound == Approx( 796648.4375 ) );
+   REQUIRE( result->bestsol_obj == Catch::Approx( 796648.4375 ) );
+   REQUIRE( result->dualbound == Catch::Approx( 796648.4375 ) );
    REQUIRE( result->bestsol_intviol >= 0.0 );
    REQUIRE( result->bestsol_boundviol >= 0.0 );
    REQUIRE( result->bestsol_consviol >= 0.0 );
@@ -454,9 +454,9 @@ TEST_CASE( "papilolib", "[C-API]" )
    REQUIRE( sol != nullptr );
 
    double objval = 0;
-   for( int i = 0; i < nvars; ++i )
+   for( unsigned int i = 0; i < nvars; ++i )
       objval += obj[i] * sol[i];
-   REQUIRE( objval == Approx( 796648.4375 ) );
+   REQUIRE( objval == Catch::Approx( 796648.4375 ) );
 
    papilo_solver_free( solver );
 }
