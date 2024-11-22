@@ -424,6 +424,7 @@ endif()
 #check/IP/miplib2017-benchmark/swath3.mps.gz\,solutions/swath3/1/swath3.sol.gz
 #check/IP/miplib2017/k16x240b.mps.gz\,solutions/k16x240b/1/k16x240b.sol.gz
 #check/IP/miplib2017-benchmark/neos-4387871-tavua.mps.gz\,solutions/neos-4387871-tavua/1/neos-4387871-tavua.sol.gz
+#check/IP/miplib2017-benchmark/momentum1.mps.gz\,solutions/momentum1/1/momentum1.sol.gz
 
 
 set(filename_for_solutions "solutions.test")
