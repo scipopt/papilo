@@ -1,392 +1,274 @@
-# open TODO:
-# - scan-build does not fail though fatal error appear
-# - tests with other MIP solvers (ortools, gurobi, roundingsat)
-# - tests on Mac/Windows
+
+#### constants ####
 
 variables:
-  SOPLEX_REVISION: bugfix-71
-  SCIP_REVISION: master
-  BOOST_VERSION: 1.70.0
+  # dependency versions
+  BOOST_VERSION: 1.80.0
+  SOPLEX_REVISION: release-712
+  SCIP_REVISION: v920
   HIGHS_REVISION: v1.7.0
   OR_TOOLS_REVISION: v9.10
-  ROUNDINGSAT_REVISION: master
+
+  # project directories
+  SETUP_DIR: ${CI_PROJECT_DIR}/setups
+  BUILD_DIR: ${CI_PROJECT_DIR}/builds
+  INSTALL_DIR: ${CI_PROJECT_DIR}/../installs
+
+  # source directories
+  PAPILO_DIR: ${SETUP_DIR}/papilo
+  BOOST_DIR: ${SETUP_DIR}/boost
+  SOPLEX_DIR: ${SETUP_DIR}/soplex
+  SCIP_DIR: ${SETUP_DIR}/scip
+  HIGHS_DIR: ${SETUP_DIR}/highs
+  ROUNDINGSAT_DIR: ${SETUP_DIR}/roundingsat
+
+#### stages ####
 
 stages:
+  - setup
   - test
+  - integrate
 
-.ctest:
-  stage: test
+#### setups ####
+
+.common:
+  rules:
+    - if: $CI_MERGE_REQUEST_TITLE =~ /^Draft:/
+      when: manual
+    - if: $CI_MERGE_REQUEST_ID
   image:
     name: gcc:10
+  # required to pick a reasonable runner
   tags:
     - compile
-  rules:
-    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
   before_script:
     - apt-get update
-    - apt-get install -y cmake libtbb-dev libblas-dev
-
-  script:
-    # download, build and install boost
-    - wget https://boostorg.jfrog.io/artifactory/main/release/${BOOST_VERSION}/source/boost_$(echo ${BOOST_VERSION} | tr . _).tar.gz
-    - tar -xzf boost_$(echo ${BOOST_VERSION} | tr . _).tar.gz
-    - cd boost_$(echo ${BOOST_VERSION} | tr . _)
-    - ./bootstrap.sh --with-libraries=program_options,serialization,iostreams,regex
-    - ./b2 -j6 install
-
-    # clone, build and install soplex
-    - git clone https://github.com/scipopt/soplex.git ${CI_PROJECT_DIR}/soplex
-    - cd ${CI_PROJECT_DIR}/soplex && git checkout ${SOPLEX_REVISION}
-    - mkdir $CI_PROJECT_DIR/soplex-build
-    - cd $CI_PROJECT_DIR/soplex-build
-    - cmake $CI_PROJECT_DIR/soplex -DCMAKE_BUILD_TYPE=Release
-    - make -j && make install
-
-    # clone, build and install scip
-    - git clone https://github.com/scipopt/scip.git ${CI_PROJECT_DIR}/scip
-    - cd ${CI_PROJECT_DIR}/scip && git checkout ${SCIP_REVISION}
-    - mkdir -p $CI_PROJECT_DIR/scip-build
-    - cd $CI_PROJECT_DIR/scip-build
-    - cmake $CI_PROJECT_DIR/scip -DCMAKE_BUILD_TYPE=Release -DZIMPL=off -DREADLINE=off -DGMP=off -DPAPILO=off -DIPOPT=off
-    - make -j && make install
-
-    # build and test papilo
-    - mkdir -p $CI_PROJECT_DIR/builds/papilo
-    - cd $CI_PROJECT_DIR/builds/papilo
+    - apt-get install -y cmake libtbb-dev libmpfr-dev libcriterion-dev
     - export CFLAGS="-Werror"
     - export CXXFLAGS="-Werror"
-    - cmake $CI_PROJECT_DIR ${CMAKE_FLAGS} -DBLA_STATIC=ON
-    - make -j6
-    - export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
+    - export LD_LIBRARY_PATH=${INSTALL_DIR}/lib:${LD_LIBRARY_PATH}
+    - export CMAKE_PREFIX_PATH=${INSTALL_DIR}
+    - mkdir -p ${CI_PROJECT_DIR}/installs
+    - mv ${CI_PROJECT_DIR}/installs ${INSTALL_DIR}
+  after_script:
+    - mv ${INSTALL_DIR} ${CI_PROJECT_DIR}/installs
+
+boost-setup:
+  extends: .common
+  stage: setup
+  artifacts:
+    paths:
+      - ${CI_PROJECT_DIR}/installs
+    expire_in: 1 minute
+  script:
+    - mkdir -p ${BOOST_DIR}
+    - export CFLAGS=""
+    - export CXXFLAGS=""
+    - wget https://boostorg.jfrog.io/artifactory/main/release/${BOOST_VERSION}/source/boost_$(echo ${BOOST_VERSION} | tr . _).tar.gz -O ${BOOST_DIR}.tar.gz
+    - tar -xzf ${BOOST_DIR}.tar.gz -C ${BOOST_DIR} --strip-components=1
+    - cd ${BOOST_DIR}
+    - ./bootstrap.sh --prefix=${INSTALL_DIR} --with-libraries=program_options,serialization,iostreams,regex
+    - ./b2 --prefix=${INSTALL_DIR} -j8 install
+
+papilo-setup:
+  extends: .common
+  stage: setup
+  needs: [ boost-setup ]
+  artifacts:
+    paths:
+      - ${CI_PROJECT_DIR}/installs
+    expire_in: 1 minute
+  script:
+    - mkdir -p ${SETUP_DIR}
+    - export CFLAGS=""
+    - export CXXFLAGS=""
+    - mkdir ${PAPILO_DIR}
+    - cmake ${CI_PROJECT_DIR} -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}
+    - make -j8 install
     - ctest --output-on-failure -j8
 
-"ctest release":
+soplex-setup:
+  extends: .common
+  stage: setup
+  artifacts:
+    paths:
+      - ${CI_PROJECT_DIR}/installs
+    expire_in: 1 minute
+  script:
+    - mkdir -p ${SETUP_DIR}
+    - export CFLAGS=""
+    - export CXXFLAGS=""
+    - git clone https://github.com/scipopt/soplex.git ${SOPLEX_DIR}
+    - cd ${SOPLEX_DIR}
+    - git checkout ${SOPLEX_REVISION}
+    - cmake . -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR} -DPAPILO=off
+    - make -j8 install
+
+scip-setup:
+  extends: .common
+  stage: setup
+  needs: [ soplex-setup ]
+  artifacts:
+    paths:
+      - ${CI_PROJECT_DIR}/installs
+    expire_in: 1 minute
+  script:
+    - mkdir -p ${SETUP_DIR}
+    - export CFLAGS=""
+    - export CXXFLAGS=""
+    - git clone https://github.com/scipopt/scip.git ${SCIP_DIR}
+    - mkdir ${SCIP_DIR}/build
+    - cd ${SCIP_DIR}/build
+    - git checkout ${SCIP_REVISION}
+    - cmake .. -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR} -DLPS=spx -DREADLINE=off -DZIMPL=off -DIPOPT=off -DPAPILO=off
+    - make -j8 install
+
+highs-setup:
+  extends: .common
+  stage: setup
+  artifacts:
+    paths:
+      - ${CI_PROJECT_DIR}/installs
+    expire_in: 1 minute
+  when: manual
+  script:
+    - mkdir -p ${SETUP_DIR}
+    - export CFLAGS=""
+    - export CXXFLAGS=""
+    - git clone https://github.com/ERGO-Code/HiGHS ${HIGHS_DIR}
+    - mkdir ${HIGHS_DIR}/build
+    - cd ${HIGHS_DIR}/build
+    - git checkout ${HIGHS_REVISION}
+    - cmake .. -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}
+    - make -j8 install
+
+#### defining tests ####
+
+".scan-build":
+  extends: .common
+  stage: test
+  script:
+    - apt-get install -y clang clang-tools
+    - mkdir -p ${BUILD_DIR}/${CI_JOB_NAME}
+    - mkdir -p ${BUILD_DIR}/${CI_JOB_NAME}/build
+    - cd ${BUILD_DIR}/${CI_JOB_NAME}/build
+    - scan-build -o $CI_PROJECT/clangScanBuildReports cmake $CI_PROJECT_DIR -DCMAKE_BUILD_TYPE=Debug ${CMAKE_FLAGS}
+    - scan-build -o $CI_PROJECT/clangScanBuildReports make -j6
+
+".ctest":
+  extends: .common
+  stage: test
+  script:
+    - mkdir -p ${BUILD_DIR}/${CI_JOB_NAME}
+    - cd ${BUILD_DIR}/${CI_JOB_NAME}
+    - cmake ${CI_PROJECT_DIR} -DCMAKE_BUILD_TYPE=Debug ${CMAKE_FLAGS}
+    - make -j8
+    - ctest --output-on-failure -j8
+
+".integration":
+  extends: .common
+  stage: integrate
+  when: manual
+  script:
+    - mkdir -p ${BUILD_DIR}/${CI_JOB_NAME}
+    - git clone ${SOLVER_REPOSITORY} ${BUILD_DIR}/${CI_JOB_NAME}
+    - mkdir ${BUILD_DIR}/${CI_JOB_NAME}/build
+    - cd ${BUILD_DIR}/${CI_JOB_NAME}/build
+    - cmake .. -DCMAKE_BUILD_TYPE=Debug ${CMAKE_FLAGS}
+    - make -j8
+    - ctest --output-on-failure -j8
+
+#### applying tests ####
+
+"scan-build":
+  extends: .scan-build
+  needs: [ boost-setup ]
+  variables:
+    CMAKE_FLAGS: ""
+
+"ctest_release":
   extends: .ctest
+  needs: [ boost-setup ]
   variables:
     CMAKE_FLAGS: "-DCMAKE_BUILD_TYPE=Release"
 
-"ctest release notbb":
+"ctest_no_tbb":
   extends: .ctest
+  needs: [ boost-setup ]
   variables:
-    CMAKE_FLAGS: "-DCMAKE_BUILD_TYPE=Release -DTBB=off"
+    CMAKE_FLAGS: "-DTBB=off"
 
-"ctest debug":
+"ctest_soplex":
   extends: .ctest
+  needs: [ boost-setup, soplex-setup ]
   variables:
-    CMAKE_FLAGS: "-DCMAKE_BUILD_TYPE=Debug"
+    CMAKE_FLAGS: "-DSOPLEX=on"
 
-".scan-build":
-  stage: test
-  image:
-    name: gcc:10
-  tags:
-    - compile
-  rules:
-    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
-  before_script:
-    - apt-get update
-    - apt-get install -y cmake libtbb-dev libblas-dev
-    - apt-get install -y clang clang-tools
-    - apt-get install -y libquadmath0
-  script:
-    # download, build and install boost
-    - wget https://boostorg.jfrog.io/artifactory/main/release/${BOOST_VERSION}/source/boost_$(echo ${BOOST_VERSION} | tr . _).tar.gz
-    - tar -xzf boost_$(echo ${BOOST_VERSION} | tr . _).tar.gz
-    - cd boost_$(echo ${BOOST_VERSION} | tr . _)
-    - ./bootstrap.sh --with-libraries=program_options,serialization,iostreams,regex
-    - ./b2 -j6 install
-
-    # scan-build papilo
-    - mkdir -p $CI_PROJECT_DIR/builds/papilo
-    - cd $CI_PROJECT_DIR/builds/papilo
-    - export CFLAGS="-Werror"
-    - export CXXFLAGS="-Werror"
-    - scan-build -o $CI_PROJECT/clangScanBuildReports cmake $CI_PROJECT_DIR ${CMAKE_FLAGS} -DBLA_STATIC=ON
-    - scan-build -o $CI_PROJECT/clangScanBuildReports make -j6
-
-"scan-build release":
-  extends: .scan-build
+"ctest_scip":
+  extends: .ctest
+  needs: [ boost-setup, scip-setup ]
   variables:
-    CMAKE_FLAGS: "-DCMAKE_BUILD_TYPE=Debug"
+    CMAKE_FLAGS: "-DSCIP=on"
 
-".soplex integration test":
-  stage: test
-  image:
-    name: gcc:10
-  tags:
-    - compile
-  before_script:
-    - apt-get update
-    - apt-get install -y cmake libtbb-dev libblas-dev libcriterion-dev
-  script:
-    # download, build and install boost
-    - wget https://boostorg.jfrog.io/artifactory/main/release/${BOOST_VERSION}/source/boost_$(echo ${BOOST_VERSION} | tr . _).tar.gz
-    - tar -xzf boost_$(echo ${BOOST_VERSION} | tr . _).tar.gz
-    - cd boost_$(echo ${BOOST_VERSION} | tr . _)
-    - ./bootstrap.sh --with-libraries=program_options,serialization,iostreams,regex
-    - ./b2 -j6 install
-
-    # build papilo
-    - mkdir -p $CI_PROJECT_DIR/builds/papilo
-    - cd $CI_PROJECT_DIR/builds/papilo
-    - export CFLAGS="-Werror"
-    - export CXXFLAGS="-Werror"
-    - cmake $CI_PROJECT_DIR ${CMAKE_FLAGS} -DBLA_STATIC=ON
-    - make -j6
-    - export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
-
-    # clone, build and install soplex
-    - git clone https://github.com/scipopt/soplex.git ${CI_PROJECT_DIR}/soplex
-    - cd ${CI_PROJECT_DIR}/soplex && git checkout ${SOPLEX_REVISION}
-    - mkdir $CI_PROJECT_DIR/soplex-build
-    - cd $CI_PROJECT_DIR/soplex-build
-    - cmake $CI_PROJECT_DIR/soplex -DCMAKE_BUILD_TYPE=Release -DPAPILO_DIR=$CI_PROJECT_DIR/builds/papilo -DPAPILO=on
-    - make -j && make install
-
-"soplex integration test":
-  extends: .soplex integration test
+"ctest_highs":
+  extends: .ctest
+  needs: [ boost-setup, highs-setup ]
+  when: manual
   variables:
-    CMAKE_FLAGS: "-DCMAKE_BUILD_TYPE=Debug"
-  rules:
-    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    CMAKE_FLAGS: "-DHIGHS=on"
 
-".scip integration test":
-  stage: test
-  image:
-    name: gcc:10
-  tags:
-    - compile
-  before_script:
-    - apt-get update
-    - apt-get install -y cmake libtbb-dev libblas-dev libcriterion-dev
-  script:
-    # download, build and install boost
-    - wget https://boostorg.jfrog.io/artifactory/main/release/${BOOST_VERSION}/source/boost_$(echo ${BOOST_VERSION} | tr . _).tar.gz
-    - tar -xzf boost_$(echo ${BOOST_VERSION} | tr . _).tar.gz
-    - cd boost_$(echo ${BOOST_VERSION} | tr . _)
-    - ./bootstrap.sh --with-libraries=program_options,serialization,iostreams,regex
-    - ./b2 -j6 install
-
-    # clone, build and install soplex
-    - git clone https://github.com/scipopt/soplex.git ${CI_PROJECT_DIR}/soplex
-    - cd ${CI_PROJECT_DIR}/soplex && git checkout ${SOPLEX_REVISION}
-    - mkdir $CI_PROJECT_DIR/soplex-build
-    - cd $CI_PROJECT_DIR/soplex-build
-    - cmake $CI_PROJECT_DIR/soplex -DCMAKE_BUILD_TYPE=Release
-    - make -j && make install
-
-    # build papilo
-    - mkdir -p $CI_PROJECT_DIR/builds/papilo
-    - cd $CI_PROJECT_DIR/builds/papilo
-    - export CFLAGS="-Werror"
-    - export CXXFLAGS="-Werror"
-    - cmake $CI_PROJECT_DIR ${CMAKE_FLAGS} -DBLA_STATIC=ON
-    - make -j6
-    - export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
-
-    # clone, build and install scip
-    - git clone https://github.com/scipopt/scip.git ${CI_PROJECT_DIR}/scip
-    - cd ${CI_PROJECT_DIR}/scip && git checkout ${SCIP_REVISION}
-    - mkdir -p $CI_PROJECT_DIR/scip-build
-    - cd $CI_PROJECT_DIR/scip-build
-    - cmake $CI_PROJECT_DIR/scip ${CMAKE_FLAGS} -DPAPILO_DIR=$CI_PROJECT_DIR/builds/papilo -DZIMPL=off -DREADLINE=off -DGMP=off -DIPOPT=off
-    - make -j && make install
-
-
-"scip integration test":
-  extends: .scip integration test
+"soplex_integration":
+  extends: .integration
+  needs: [ papilo-setup ]
+  allow_failure: false
   variables:
-    CMAKE_FLAGS: "-DCMAKE_BUILD_TYPE=Debug"
-  rules:
-    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    SOLVER_REPOSITORY: "https://github.com/scipopt/soplex.git"
+    CMAKE_FLAGS: "-DPAPILO=on"
 
-
-".scip ctest":
-  stage: test
-  image:
-    name: gcc:10
-  tags:
-    - compile
-  before_script:
-    - apt-get update
-    - apt-get install -y cmake libtbb-dev libblas-dev libcriterion-dev
-  script:
-    # download, build and install boost
-    - wget https://boostorg.jfrog.io/artifactory/main/release/${BOOST_VERSION}/source/boost_$(echo ${BOOST_VERSION} | tr . _).tar.gz
-    - tar -xzf boost_$(echo ${BOOST_VERSION} | tr . _).tar.gz
-    - cd boost_$(echo ${BOOST_VERSION} | tr . _)
-    - ./bootstrap.sh --with-libraries=program_options,serialization,iostreams,regex
-    - ./b2 -j6 install
-
-    # clone, build and install soplex
-    - git clone https://github.com/scipopt/soplex.git ${CI_PROJECT_DIR}/soplex
-    - cd ${CI_PROJECT_DIR}/soplex && git checkout ${SOPLEX_REVISION}
-    - mkdir $CI_PROJECT_DIR/soplex-build
-    - cd $CI_PROJECT_DIR/soplex-build
-    - cmake $CI_PROJECT_DIR/soplex -DCMAKE_BUILD_TYPE=Release
-    - make -j && make install
-
-    # build papilo
-    - mkdir -p $CI_PROJECT_DIR/builds/papilo
-    - cd $CI_PROJECT_DIR/builds/papilo
-    - export CFLAGS="-Werror"
-    - export CXXFLAGS="-Werror"
-    - cmake $CI_PROJECT_DIR ${CMAKE_FLAGS} -DBLA_STATIC=ON
-    - make -j6
-    - export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
-
-    # clone, build and install scip
-    - git clone https://github.com/scipopt/scip.git ${CI_PROJECT_DIR}/scip
-    - cd ${CI_PROJECT_DIR}/scip && git checkout ${SCIP_REVISION}
-    - mkdir -p $CI_PROJECT_DIR/scip-build
-    - cd $CI_PROJECT_DIR/scip-build
-    - cmake $CI_PROJECT_DIR/scip ${CMAKE_FLAGS} -DPAPILO_DIR=$CI_PROJECT_DIR/builds/papilo -DZIMPL=off -DREADLINE=off -DGMP=off -DIPOPT=off
-    - make -j && make install
-    - bin/scip -v
-
-    #run ctests
-    - export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
-    - ctest --output-on-failure -j8
-
-"scip test":
-  extends: .scip ctest
-  variables:
-    CMAKE_FLAGS: "-DCMAKE_BUILD_TYPE=Debug"
+"scip_integration":
+  extends: .integration
+  needs: [ papilo-setup, soplex-setup ]
+  # only for unittest-lpi-change
   allow_failure: true
-  rules:
-    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
-      when: manual
-
-".highs ctest":
-  stage: test
-  image:
-    name: gcc:10
-  tags:
-    - compile
-  before_script:
-    - apt-get update
-    - apt-get install -y cmake libtbb-dev libblas-dev libcriterion-dev
-  script:
-    # download, build and install boost
-    - wget https://boostorg.jfrog.io/artifactory/main/release/${BOOST_VERSION}/source/boost_$(echo ${BOOST_VERSION} | tr . _).tar.gz
-    - tar -xzf boost_$(echo ${BOOST_VERSION} | tr . _).tar.gz
-    - cd boost_$(echo ${BOOST_VERSION} | tr . _)
-    - ./bootstrap.sh --with-libraries=program_options,serialization,iostreams,regex
-    - ./b2 -j6 install
-
-    # clone, build and install HiGHS
-    - git clone https://github.com/ERGO-Code/HiGHS ${CI_PROJECT_DIR}/highs
-    - cd ${CI_PROJECT_DIR}/highs && git checkout ${HIGHS_REVISION}
-    - mkdir highs-build
-    - cd highs-build
-    - cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${CI_PROJECT_DIR}/highs-install
-    - make -j
-    - make install
-
-    # build and test papilo
-    - mkdir -p $CI_PROJECT_DIR/builds/papilo
-    - cd $CI_PROJECT_DIR/builds/papilo
-    - export CFLAGS="-Werror"
-    - export CXXFLAGS="-Werror"
-    - cmake $CI_PROJECT_DIR ${CMAKE_FLAGS} -DBLA_STATIC=ON -DHIGHS_DIR=$CI_PROJECT_DIR/highs-install/lib/cmake/highs/
-    - make -j6
-    - export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
-    - ctest --output-on-failure -j8
-
-"highs test":
-  extends: .highs ctest
   variables:
-    CMAKE_FLAGS: "-DCMAKE_BUILD_TYPE=Debug"
-  allow_failure: true
-  rules:
-    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
-      when: manual
+    SOLVER_REPOSITORY: "https://github.com/scipopt/scip.git"
+    CMAKE_FLAGS: "-DLPS=spx -DREADLINE=off -DZIMPL=off -DIPOPT=off -DPAPILO=on"
 
-#".ortools ctest":
+##############################################
+# TODOs: add tests and integrations of RoundingSAT/ORTools
+##############################################
+
+#".ctest_ortools":
+#  extends: .common
 #  stage: test
-#  image:
-#    name: gcc:10
-#  tags:
-#    - compile
-#  before_script:
-#    - apt-get update
-#    - apt-get install -y cmake libtbb-dev libblas-dev libcriterion-dev
-#    - apt-get install -y build-essential lsb-release
+#  #build papilo in debug mode and link ortools and then run ctests
 #  script:
-#    # download, build and install boost
-#    - wget https://boostorg.jfrog.io/artifactory/main/release/${BOOST_VERSION}/source/boost_$(echo ${BOOST_VERSION} | tr . _).tar.gz
-#    - tar -xzf boost_$(echo ${BOOST_VERSION} | tr . _).tar.gz
-#    - cd boost_$(echo ${BOOST_VERSION} | tr . _)
-#    - ./bootstrap.sh --with-libraries=program_options,serialization,iostreams,regex
-#    - ./b2 -j6 install
-#
-#    # clone, build and install ortools
-#    - git clone https://github.com/google/or-tools.git ${CI_PROJECT_DIR}/or-tools
-#    - cd ${CI_PROJECT_DIR}/or-tools && git checkout ${OR_TOOLS_REVISION}
-#    - mkdir -p $CI_PROJECT_DIR/or-tools-build
-#    - cd $CI_PROJECT_DIR/or-tools-build
-#    - cmake $CI_PROJECT_DIR/or-tools
-#    - make -j && make install
-#
-#    # build and test papilo
-#    - mkdir -p $CI_PROJECT_DIR/builds/papilo
-#    - cd $CI_PROJECT_DIR/builds/papilo
-#    - export CFLAGS="-Werror"
-#    - export CXXFLAGS="-Werror"
-#    - cmake $CI_PROJECT_DIR ${CMAKE_FLAGS} -DBLA_STATIC=ON -DGLOP=on
-#    - make -j6
-#    - export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
-#    - ctest --output-on-failure -j8
-#
-#"ortools test":
-#  extends: .ortools ctest
+#    # currently requires Cmake 3.20 but only 3.18 is installed
+#    - mkdir -p ${BUILD_DIR}/${CI_JOB_NAME}
+#    - git clone https://github.com/google/or-tools.git ${BUILD_DIR}/${CI_JOB_NAME}/ortools
+#    - cd ${BUILD_DIR}/${CI_JOB_NAME}/ortools
+#    - git checkout ${ORTOOLS_REVISION}
+#    - cmake -S. -Bbuild -DBUILD_DEPS:BOOL=ON
+#    - cmake --build build
+#"ctest_ortools":
+#  extends: .ctest_ortools
+#  needs: [ boost-setup, scip-setup ]
+#  when: manual
 #  variables:
-#    CMAKE_FLAGS: "-DCMAKE_BUILD_TYPE=Debug"
-#  rules:
-#    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
-#      when: manual
-
-".roundingsat ctest":
-  stage: test
-  image:
-    name: gcc:10
-  tags:
-    - compile
-  before_script:
-    - apt-get update
-    - apt-get install -y cmake libtbb-dev libblas-dev libcriterion-dev
-  script:
-    # download, build and install boost
-    - wget https://boostorg.jfrog.io/artifactory/main/release/${BOOST_VERSION}/source/boost_$(echo ${BOOST_VERSION} | tr . _).tar.gz
-    - tar -xzf boost_$(echo ${BOOST_VERSION} | tr . _).tar.gz
-    - cd boost_$(echo ${BOOST_VERSION} | tr . _)
-    - ./bootstrap.sh --with-libraries=program_options,serialization,iostreams,regex
-    - ./b2 -j6 install
-
-    # clone, build and install RoundingSAT
-    # TODO: clone not possible user credentials required
-    - git clone https://gitlab.com/MIAOresearch/software/roundingsat.got ${CI_PROJECT_DIR}/roundingsat
-    - cd ${CI_PROJECT_DIR}/roundingsat && git checkout ${ROUNDINGSAT_REVISION}
-    - mkdir $CI_PROJECT_DIR/roundingsat-build
-    - cd $CI_PROJECT_DIR/roundingsat-build
-    - cmake $CI_PROJECT_DIR/roundingsat $CI_PROJECT_DIR  -DCMAKE_BUILD_TYPE=Release
-    - make -j && make install
-
-    # build and test papilo
-    - mkdir -p $CI_PROJECT_DIR/builds/papilo
-    - cd $CI_PROJECT_DIR/builds/papilo
-    - export CFLAGS="-Werror"
-    - export CXXFLAGS="-Werror"
-    - cmake $CI_PROJECT_DIR ${CMAKE_FLAGS} -DBLA_STATIC=ON -DROUNDINGSAT_DIR=$CI_PROJECT_DIR/roundingsat
-    - make -j6
-    - export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
-    - ctest --output-on-failure -j8
-
-"roundingsat test":
-  extends: .roundingsat ctest
-  variables:
-    CMAKE_FLAGS: "-DCMAKE_BUILD_TYPE=Debug"
-  rules:
-    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
-      when: never
-
+#    CMAKE_FLAGS: "-DSCIP=on"
+#
+#"roundingsat-setup":
+#  extends: .common
+#  stage: test
+#  needs: [ boost-setup ]
+#  when: manual
+#  script:
+#    - mkdir -p ${ROUNDINGSAT_DIR}
+#    - export CFLAGS=""
+#    - export CXXFLAGS=""
+#    - wget https://gitlab.com/MIAOresearch/software/roundingsat/-/archive/master/roundingsat-master.tar.gz -P ${CI_PROJECT_DIR}
+#    - tar -xf ${CI_PROJECT_DIR}/roundingsat-master.tar.gz -C ${ROUNDINGSAT_DIR} --strip-components=1
+#    - cd ${ROUNDINGSAT_DIR}
+#    - cmake . -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}
+#    - make -j8 install
+#    #build papilo in debug mode and link roundingsat and then run ctests

@@ -66,15 +66,18 @@ option(TBB "should TBB be linked if found" ON)
 option(TBB_DOWNLOAD "should TBB be downloaded" OFF)
 option(INSTALL_TBB "should the TBB library be installed" OFF)
 
-option(HIGHS "should HiGHS LP solver be linked if found" ON)
-option(SOPLEX "should SoPlex LP solver be linked if found" ON)
-option(SCIP "should SCIP solver be linked if found" ON)
+option(SOPLEX "should SoPlex LP solver be linked if found" OFF)
+option(SCIP "should SCIP solver be linked if found" OFF)
+option(HIGHS "should HiGHS LP solver be linked if found" OFF)
 option(GUROBI "should gurobi solver be linked" OFF)
+option(GLOP "should ortools solver be linked" OFF)
 
 # Make 'Release' the default build type.
 if(NOT CMAKE_BUILD_TYPE)
    set(CMAKE_BUILD_TYPE Release)
 endif()
+
+message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 
 # Search for Boost: headers are required and the other components are needed for the binaries.
 find_package(Boost ${BOOST_MIN_VERSION} REQUIRED OPTIONAL_COMPONENTS iostreams program_options serialization)
