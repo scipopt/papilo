@@ -22,4 +22,5 @@
 
 #define CATCH_CONFIG_MAIN
 
-#include "papilo/external/catch/catch.hpp"
+#include "papilo/external/catch/catch_amalgamated.hpp"
+#include "papilo/external/catch/catch_amalgamated.cpp"
