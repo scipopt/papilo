@@ -67,6 +67,8 @@ option(HIGHS "should HiGHS LP solver be linked if found" OFF)
 option(GUROBI "should gurobi solver be linked" OFF)
 option(GLOP "should ortools solver be linked" OFF)
 
+option(BUILD_TESTING "should tests be enabled and build" ON)
+
 # Make 'Release' the default build type.
 if(NOT CMAKE_BUILD_TYPE)
    set(CMAKE_BUILD_TYPE Release)
@@ -368,8 +370,10 @@ configure_file("${PROJECT_SOURCE_DIR}/src/papilo/CMakeConfig.hpp.in"
 
 # Add tests and include the subdirectory.
 # TODO: Does this avoid PAPILO tests if included from scipoptsuite?!
-enable_testing()
-add_subdirectory(${PROJECT_SOURCE_DIR}/test)
+if(BUILD_TESTING)
+   enable_testing()
+   add_subdirectory(${PROJECT_SOURCE_DIR}/test)
+endif()
 
 # Install the header files of PAPILO.
 install(FILES
