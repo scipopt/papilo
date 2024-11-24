@@ -38,7 +38,6 @@ else()
    set(PAPILO_HAVE_GLOP 0)
 endif()
 
-
 if(SOPLEX)
    find_package(SOPLEX REQUIRED)
 endif()
