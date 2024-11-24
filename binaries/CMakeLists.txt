@@ -4,7 +4,7 @@
 include(GenerateExportHeader)
 
 if(SCIP)
-   find_package(SCIP REQUIRED)
+   find_package(SCIP)
 endif()
 if(SCIP_FOUND)
    message(STATUS "Found SCIP: ${SCIP_INCLUDE_DIRS}")
@@ -40,7 +40,7 @@ endif()
 
 
 if(SOPLEX)
-   find_package(SOPLEX REQUIRED)
+   find_package(SOPLEX)
 endif()
 if(SOPLEX_FOUND)
    message(STATUS "Found SOPLEX: ${SOPLEX_INCLUDE_DIRS}")

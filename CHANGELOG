@@ -9,7 +9,6 @@ Build system
 ------------
 
 - improved search for dependencies when another tool uses papilo-config.cmake
-- disable default solvers and require linking when enabled
 - upgrade the unit testing framework catch from 2.13.8 to 3.7
 
 @section RN240 PaPILO 2.4.0
