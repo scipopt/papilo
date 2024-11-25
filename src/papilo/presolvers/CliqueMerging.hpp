@@ -73,23 +73,23 @@ extern template class CliqueMerging<Rational>;
 
 template <typename REAL>
 std::vector<std::vector<int>>
-CliqueMerging<REAL>::maxClique( std::vector<std::vector<int>> Neighbourhoods, std::vector<std::vector<int>> maximalCLiques, 
+CliqueMerging<REAL>::maxClique( std::vector<std::vector<int>> Neighbourhoods, std::vector<std::vector<int>> maximalCliques, 
     std::vector<int> OldClique, std::vector<int> Neighbourhood,
     int miniteration, int size, int n ){
     if( Neighbourhood.size() == 0)
     {
-        maximalCLiques.push_back( OldClique );
+        maximalCliques.push_back( OldClique );
     }
     else if( miniteration < n ) // && Neighbourhood.size() + OldClique.size() >= size )
     {
-        std::vector<std::vector<int>> maximalCliques1 = maxClique( Neighbourhoods, maximalCLiques, OldClique, Neighbourhood, miniteration + 1, size, n );
+        std::vector<std::vector<int>> maximalCliques1 = maxClique( Neighbourhoods, maximalCliques, OldClique, Neighbourhood, miniteration + 1, size, n );
         std::vector<std::vector<int>> maximalCliques2 = {};
         if( std::find( OldClique.begin(), OldClique.end(), miniteration ) == OldClique.end() 
          && std::find( Neighbourhood.begin(), Neighbourhood.end(), miniteration ) != Neighbourhood.end() )
         {
             OldClique.push_back( miniteration );
             for( int vertex = 0; vertex < Neighbourhood.size(); ++vertex ){
-                if( std::find( Neighbourhoods[miniteration].begin, Neighbourhoods[miniteration].end(), Neighbourhood[vertex] ) 
+                if( std::find( Neighbourhoods[miniteration].begin(), Neighbourhoods[miniteration].end(), Neighbourhood[vertex] ) 
                 == Neighbourhoods[miniteration].end())
                 {
                     Neighbourhood.erase(Neighbourhood.begin() + vertex);
@@ -106,7 +106,7 @@ CliqueMerging<REAL>::maxClique( std::vector<std::vector<int>> Neighbourhoods, st
         }
         maximalCliques = maximalCliques1;
     }
-    return(maximalCliques)
+    return(maximalCliques);
 }
 
 template <typename REAL>
@@ -120,7 +120,7 @@ CliqueMerging<REAL>::execute( const Problem<REAL>& problem,
 
     std::vector<RowFlags> rowFlags = matrix.getRowFlags();
 
-    const int nrows = consMatrix.getNRows();
+    const int nrows = matrix.getNRows();
 
     PresolveStatus result = PresolveStatus::kUnchanged;
 
@@ -128,10 +128,11 @@ CliqueMerging<REAL>::execute( const Problem<REAL>& problem,
 
     for( int row = 0; row < nrows; ++row )
     {
-        if( rowFlags[row].test( RowFlag::kClique ) && problem.is_clique_or_sos1(
-                    matrix, row, num ) == {true, false})
+        std::pair<bool, bool> cliqueCheck = problem.is_clique_or_sos1(
+                    matrix, row, num );
+        if( rowFlags[row].test( RowFlag::kClique ) && cliqueCheck.first & !cliqueCheck.second)
         {
-            Cliques.push_back(row)
+            Cliques.push_back(row);
         }
     }
 
@@ -164,8 +165,11 @@ CliqueMerging<REAL>::execute( const Problem<REAL>& problem,
         }
     }
 
-    bool completedCliques[nCliques];
-    completedCliques.fill(false);
+    std::vector<bool> completedCliques;
+    for( int i = 0; i < nCliques; ++i )
+    {
+        completedCliques.push_back(false);
+    }
 
     for( int clique = 0; clique < nCliques; ++clique )
     {
@@ -176,12 +180,23 @@ CliqueMerging<REAL>::execute( const Problem<REAL>& problem,
         std::vector<int> OldClique;
         auto rowvec = matrix.getRowCoefficients(Cliques[clique]);
         auto indices = rowvec.getIndices();
+        int lengthOfRow = rowvec.getLength();
+        bool isContained;
         OldClique.push_back( std::distance(Vertices.begin(), std::find( Vertices.begin(), Vertices.end(), indices[0]) ));
         std::vector<int> Neighbourhood = Neighbourhoods[std::distance(Vertices.begin(), std::find( Vertices.begin(), Vertices.end(), indices[0]))];
 
         for( int i = 0; i < Neighbourhood.size(); ++i )
         {
-            if( std::find(indices.begin(), indices.end(), Vertices[Neighbourhood[i]]) != indices.end() )
+            isContained = false;
+            for( int ind = 0; ind < lengthOfRow; ++ind )
+            {
+                if( Vertices[Neighbourhood[i]] == indices[ind] )
+                {
+                    isContained = true;
+                    break;
+                }
+            }
+            if( isContained )
             {
                 Neighbourhood.erase(Neighbourhood.begin() + i);
                 i -= 1;
@@ -210,7 +225,7 @@ CliqueMerging<REAL>::execute( const Problem<REAL>& problem,
 
         std::vector<int> maxCoveredCliques = {clique};
         auto rowvector = matrix.getRowCoefficients(Cliques[clique]);
-        auto indices = rowvector.getIndices();
+        indices = rowvector.getIndices();
         std::vector<int> bestNewClique = indices;
         for( int newClique = 0; newClique < maximalCliques.size(); ++newClique )
         {
