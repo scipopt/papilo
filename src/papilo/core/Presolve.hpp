@@ -40,6 +40,7 @@
 #include "papilo/misc/tbb.hpp"
 #endif
 #include "papilo/misc/Vec.hpp"
+#include "papilo/presolvers/CliqueMerging.hpp"
 #include "papilo/presolvers/CoefficientStrengthening.hpp"
 #include "papilo/presolvers/ConstraintPropagation.hpp"
 #include "papilo/presolvers/DominatedCols.hpp"
@@ -116,6 +117,7 @@ class Presolve
       addPresolveMethod( uptr( new Probing<REAL>() ) );
       addPresolveMethod( uptr( new Substitution<REAL>() ) );
       addPresolveMethod( uptr( new Sparsify<REAL>() ) );
+      addPresolveMethod( uptr( new CliqueMerging<REAL>() ) );
    }
 
    ParameterSet
