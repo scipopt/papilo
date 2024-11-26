@@ -88,10 +88,6 @@ struct PresolveOptions
 
    double abortfacmedium = 8e-4;
 
-   double abortfacfast = 8e-4;
-
-   double abortfacmedium = 8e-4;
-
    double abortfac = 8e-4;
 
    double bound_tightening_offset = 0.0001;
@@ -103,10 +99,6 @@ struct PresolveOptions
    double feastol = 1e-6;
 
    double hugeval = 1e8;
-
-   double lpabortfacfast = 1e-2;
-
-   double lpabortfacmedium = 1e-2;
 
    double lpabortfacfast = 1e-2;
 
@@ -151,10 +143,6 @@ struct PresolveOptions
           "presolve.lpabortfacfast",
           "abort factor of weighted number of reductions for fast presolving LPs",
           lpabortfacfast, 0.0, 1.0 );
-      paramSet.addParameter(
-          "presolve.lpabortfacmedium",
-          "abort factor of weighted number of reductions for medium presolving LPs",
-          lpabortfacmedium, 0.0, 1.0 );
       paramSet.addParameter(
           "presolve.lpabortfacmedium",
           "abort factor of weighted number of reductions for medium presolving LPs",
