@@ -88,7 +88,7 @@ CliqueMerging<REAL>::maxClique( std::vector<std::vector<int>> Neighbourhoods, st
          && std::find( Neighbourhood.begin(), Neighbourhood.end(), miniteration ) != Neighbourhood.end() )
         {
             OldClique.push_back( miniteration );
-            for( int vertex = 0; vertex < Neighbourhood.size(); ++vertex ){
+            for( int vertex = 0; vertex < Neighbourhood.end() - Neighbourhood.begin(); ++vertex ){
                 if( std::find( Neighbourhoods[miniteration].begin(), Neighbourhoods[miniteration].end(), Neighbourhood[vertex] ) 
                 == Neighbourhoods[miniteration].end())
                 {
@@ -98,7 +98,7 @@ CliqueMerging<REAL>::maxClique( std::vector<std::vector<int>> Neighbourhoods, st
             }
             maximalCliques2 = maxClique( Neighbourhoods, maximalCliques, OldClique, Neighbourhood, miniteration + 1, size, n );
         }
-        for( int maxClique = 0; maxClique < maximalCliques2.size(); ++ maxClique ){
+        for( int maxClique = 0; maxClique < maximalCliques2.end() - maximalCliques2.begin(); ++ maxClique ){
             if( std::find( maximalCliques1.begin(), maximalCliques1.end(), maximalCliques2[maxClique]) == maximalCliques1.end() )
             {
                 maximalCliques1.push_back(maximalCliques2[maxClique]);
@@ -185,7 +185,7 @@ CliqueMerging<REAL>::execute( const Problem<REAL>& problem,
         OldClique.push_back( std::distance(Vertices.begin(), std::find( Vertices.begin(), Vertices.end(), indices[0]) ));
         std::vector<int> Neighbourhood = Neighbourhoods[std::distance(Vertices.begin(), std::find( Vertices.begin(), Vertices.end(), indices[0]))];
 
-        for( int i = 0; i < Neighbourhood.size(); ++i )
+        for( int i = 0; i < Neighbourhood.end() - Neighbourhood.begin(); ++i )
         {
             isContained = false;
             for( int ind = 0; ind < lengthOfRow; ++ind )
@@ -207,7 +207,7 @@ CliqueMerging<REAL>::execute( const Problem<REAL>& problem,
         {
             int vertex = std::distance(Vertices.begin(), std::find( Vertices.begin(), Vertices.end(), indices[v]));
             OldClique.push_back(vertex);
-            for( int w = 0; w < Neighbourhood.size(); ++w )
+            for( int w = 0; w < Neighbourhood.end() - Neighbourhood.begin(); ++w )
             {
                 if( std::find(Neighbourhoods[vertex].begin(), Neighbourhoods[vertex].end(), Neighbourhood[w]) == Neighbourhoods[vertex].end() )
                 {
@@ -226,8 +226,12 @@ CliqueMerging<REAL>::execute( const Problem<REAL>& problem,
         std::vector<int> maxCoveredCliques = {clique};
         auto rowvector = matrix.getRowCoefficients(Cliques[clique]);
         indices = rowvector.getIndices();
-        std::vector<int> bestNewClique = indices;
-        for( int newClique = 0; newClique < maximalCliques.size(); ++newClique )
+        std::vector<int> bestNewClique;
+        for( int i = 0; i < rowvector.getLength(); ++i )
+        {
+            bestNewClique.push_back(indices[i]);
+        }
+        for( int newClique = 0; newClique < maximalCliques.end() - maximalCliques.begin(); ++newClique )
         {
             std::vector<int> coveredCliques;
             for( int potCovClique = 0; potCovClique < nCliques; ++potCovClique )
@@ -264,7 +268,7 @@ CliqueMerging<REAL>::execute( const Problem<REAL>& problem,
             reductions.changeRowLHS( Cliques[maxCoveredCliques[0]], -std::numeric_limits<REAL>::infinity() );
             rowFlags[Cliques[maxCoveredCliques[0]]].set( RowFlag::kLhsInf);
             rowFlags[Cliques[maxCoveredCliques[0]]].unset( RowFlag::kRhsInf);
-            for( int entryOfNewClique = 0; entryOfNewClique < bestNewClique.size(); ++entryOfNewClique )
+            for( int entryOfNewClique = 0; entryOfNewClique < bestNewClique.end() - bestNewClique.begin(); ++entryOfNewClique )
             {
                 reductions.lockColBounds( bestNewClique[entryOfNewClique] );
                 if( problem.getLowerBounds()[bestNewClique[entryOfNewClique]] == 0 )
@@ -276,7 +280,7 @@ CliqueMerging<REAL>::execute( const Problem<REAL>& problem,
                     reductions.changeMatrixEntry( Cliques[maxCoveredCliques[0]], bestNewClique[entryOfNewClique], -1 );
                 }
             }
-            for( int replacedClique = 1; replacedClique < maxCoveredCliques.size(); ++replacedClique )
+            for( int replacedClique = 1; replacedClique < maxCoveredCliques.end() - maxCoveredCliques.begin(); ++replacedClique )
             {
                 completedCliques[maxCoveredCliques[replacedClique]] = true;
                 reductions.lockRow( Cliques[maxCoveredCliques[replacedClique]] );
