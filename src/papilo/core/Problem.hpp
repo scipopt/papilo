@@ -379,7 +379,7 @@ class Problem
    }
 
    std::pair<bool, bool>
-   is_clique_or_sos1( const ConstraintMatrix<REAL>& matrix, int row, const Num<REAL>& num )
+   is_clique_or_sos1( const ConstraintMatrix<REAL>& matrix, int row, const Num<REAL>& num ) const
    {
       RowFlags rowFlag = matrix.getRowFlags()[row];
       bool rhsClique = true;
