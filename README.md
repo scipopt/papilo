@@ -64,6 +64,9 @@ Solvers that are found in the system are automatically linked to the executable.
 Additionally one can specify the locations of solvers, e.g. with `-DSCIP_DIR=<location of scip-config.cmake>`, to allow
 PaPILO to find them in non-standard locations.
 
+When tests are not necessary or fail to build, then use `-DBUILD_TESTING=OFF` to turn these off.
+Currently, there are problems when compiling the tests with MSVS 2022.
+
 # Usage of the binary
 
 The PaPILO binary provides a list of all available functionality when the help flag `-h` or `--help` is specified.
