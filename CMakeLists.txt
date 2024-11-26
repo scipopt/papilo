@@ -490,25 +490,24 @@ if((DEFINED Boost_VERSION) AND (Boost_VERSION VERSION_LESS 107000))
 endif()
 
 install(FILES
-     ${PROJECT_SOURCE_DIR}/src/papilo/presolvers/CoefficientStrengthening.hpp
-     ${PROJECT_SOURCE_DIR}/src/papilo/presolvers/ConstraintPropagation.hpp
-     ${PROJECT_SOURCE_DIR}/src/papilo/presolvers/DominatedCols.hpp
-     ${PROJECT_SOURCE_DIR}/src/papilo/presolvers/DualFix.hpp
-     ${PROJECT_SOURCE_DIR}/src/papilo/presolvers/DualInfer.hpp
-     ${PROJECT_SOURCE_DIR}/src/papilo/presolvers/FixContinuous.hpp
-     ${PROJECT_SOURCE_DIR}/src/papilo/presolvers/FreeVarSubstitution.hpp
-     ${PROJECT_SOURCE_DIR}/src/papilo/presolvers/ImplIntDetection.hpp
-     ${PROJECT_SOURCE_DIR}/src/papilo/presolvers/ParallelColDetection.hpp
-     ${PROJECT_SOURCE_DIR}/src/papilo/presolvers/ParallelRowDetection.hpp
-     ${PROJECT_SOURCE_DIR}/src/papilo/presolvers/Probing.hpp
-     ${PROJECT_SOURCE_DIR}/src/papilo/presolvers/SimpleProbing.hpp
-     ${PROJECT_SOURCE_DIR}/src/papilo/presolvers/SimpleSubstitution.hpp
-     ${PROJECT_SOURCE_DIR}/src/papilo/presolvers/SimplifyInequalities.hpp
-     ${PROJECT_SOURCE_DIR}/src/papilo/presolvers/SingletonCols.hpp
-     ${PROJECT_SOURCE_DIR}/src/papilo/presolvers/SingletonStuffing.hpp
-     ${PROJECT_SOURCE_DIR}/src/papilo/presolvers/Sparsify.hpp
-     ${PROJECT_SOURCE_DIR}/src/papilo/presolvers/CliqueMerging.hpp
-  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/papilo/presolvers)
+   ${PROJECT_SOURCE_DIR}/src/papilo/presolvers/CoefficientStrengthening.hpp
+   ${PROJECT_SOURCE_DIR}/src/papilo/presolvers/ConstraintPropagation.hpp
+   ${PROJECT_SOURCE_DIR}/src/papilo/presolvers/DominatedCols.hpp
+   ${PROJECT_SOURCE_DIR}/src/papilo/presolvers/DualFix.hpp
+   ${PROJECT_SOURCE_DIR}/src/papilo/presolvers/DualInfer.hpp
+   ${PROJECT_SOURCE_DIR}/src/papilo/presolvers/FixContinuous.hpp
+   ${PROJECT_SOURCE_DIR}/src/papilo/presolvers/FreeVarSubstitution.hpp
+   ${PROJECT_SOURCE_DIR}/src/papilo/presolvers/ImplIntDetection.hpp
+   ${PROJECT_SOURCE_DIR}/src/papilo/presolvers/ParallelColDetection.hpp
+   ${PROJECT_SOURCE_DIR}/src/papilo/presolvers/ParallelRowDetection.hpp
+   ${PROJECT_SOURCE_DIR}/src/papilo/presolvers/Probing.hpp
+   ${PROJECT_SOURCE_DIR}/src/papilo/presolvers/SimpleProbing.hpp
+   ${PROJECT_SOURCE_DIR}/src/papilo/presolvers/SimpleSubstitution.hpp
+   ${PROJECT_SOURCE_DIR}/src/papilo/presolvers/SimplifyInequalities.hpp
+   ${PROJECT_SOURCE_DIR}/src/papilo/presolvers/SingletonCols.hpp
+   ${PROJECT_SOURCE_DIR}/src/papilo/presolvers/SingletonStuffing.hpp
+   ${PROJECT_SOURCE_DIR}/src/papilo/presolvers/Sparsify.hpp
+   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/papilo/presolvers)
 
 install(FILES
    ${PROJECT_SOURCE_DIR}/src/papilo/external/fmt/chrono.h
