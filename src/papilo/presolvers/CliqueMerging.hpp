@@ -44,18 +44,36 @@ class CliqueMerging : public PresolveMethod<REAL>
       this->setTiming( PresolverTiming::kExhaustive );
       this->setType( PresolverType::kIntegralCols );
    }
-   
+
    PresolveStatus
    execute( const Problem<REAL>& problem,
             const ProblemUpdate<REAL>& problemUpdate, const Num<REAL>& num,
             Reductions<REAL>& reductions, const Timer& timer,
             int& reason_of_infeasibility ) override;
 
-   std::vector<std::vector<int>>
-   maxClique( std::vector<std::vector<int>> Neighbourhoods,
-              std::vector<std::vector<int>> maximalCLiques,
-              std::vector<int> OldClique, std::vector<int> Neighbourhood,
-              int miniteration, int size, int n );
+   void
+   greedyClique( std::vector<int> newClique,
+               const std::vector<int> Cliques,
+               const ConstraintMatrix<REAL>& matrix,
+               const int cliqueRow );
+
+   int
+   getNeighbour( const ConstraintMatrix<REAL>& matrix, 
+               int col, int neighbournumber );
+
+   int
+   getNeighbourhoodSize( const ConstraintMatrix<REAL>& matrix, 
+                        int col);
+
+   bool
+   isNeighbour( const ConstraintMatrix<REAL>& matrix, 
+               int u, int v );
+
+   bool
+   isCovered( const ConstraintMatrix<REAL>& matrix, 
+            const int row, const Vec<int> newClique, 
+            const int clique);
+
 };
 
 #ifdef PAPILO_USE_EXTERN_TEMPLATES
@@ -65,59 +83,160 @@ extern template class CliqueMerging<Rational>;
 #endif
 
 template <typename REAL>
-std::vector<std::vector<int>>
-CliqueMerging<REAL>::maxClique( std::vector<std::vector<int>> Neighbourhoods,
-                                std::vector<std::vector<int>> maximalCliques,
-                                std::vector<int> OldClique,
-                                std::vector<int> Neighbourhood,
-                                int miniteration, int size, int n )
+int
+CliqueMerging<REAL>::getNeighbour( const ConstraintMatrix<REAL>& matrix, 
+                                    int col, int neighbournumber )
 {
-   if( Neighbourhood.size() == 0 )
+   const auto colvec = matrix.getColumnCoefficients( col );
+   const int* inds = colvec.getIndices();
+   const std::vector<RowFlags> rowFlags = matrix.getRowFlags();
+   int neighbour = -1;
+   for( int i = 0; i < colvec.getLength(); ++i )
    {
-      maximalCliques.push_back( OldClique );
-   }
-   else if( miniteration <
-            n ) // && Neighbourhood.size() + OldClique.size() >= size )
-   {
-      std::vector<std::vector<int>> maximalCliques1 =
-          maxClique( Neighbourhoods, maximalCliques, OldClique, Neighbourhood,
-                     miniteration + 1, size, n );
-      std::vector<std::vector<int>> maximalCliques2 = {};
-      if( std::find( OldClique.begin(), OldClique.end(), miniteration ) ==
-              OldClique.end() &&
-          std::find( Neighbourhood.begin(), Neighbourhood.end(),
-                     miniteration ) != Neighbourhood.end() )
+      if( rowFlags[inds[i]].test( RowFlag::kClique ))
       {
-         OldClique.push_back( miniteration );
-         for( int vertex = 0;
-              vertex < Neighbourhood.end() - Neighbourhood.begin(); ++vertex )
+         neighbour = inds[i];
+         neighbournumber -= 1;
+      }
+      if( neighbournumber == -1 )
+         break;
+   }
+   assert( neighbour >= 0);
+   return( neighbour );
+}
+
+template <typename REAL>
+int
+CliqueMerging<REAL>::getNeighbourhoodSize( const ConstraintMatrix<REAL>& matrix, 
+                                    int col)
+{
+   const auto colvec = matrix.getColumnCoefficients( col );
+   const int* inds = colvec.getIndices();
+   const std::vector<RowFlags> rowFlags = matrix.getRowFlags();
+   int neighbournumber = 0;
+   for( int i = 0; i < colvec.getLength(); ++i )
+   {
+      if( rowFlags[inds[i]].test( RowFlag::kClique ))
+      {
+         neighbournumber += 1;
+      }
+   }
+   return( neighbournumber );
+}
+
+template <typename REAL>
+bool
+CliqueMerging<REAL>::isNeighbour( const ConstraintMatrix<REAL>& matrix, 
+                                    int u, int v )
+{
+   const auto colvecu = matrix.getColumnCoefficients( u );
+   const auto colvecv = matrix.getColumnCoefficients( v );
+   const int* indu = colvecu.getIndices();
+   const int* indv = colvecv.getIndices();
+   const int lv = colvecv.getLength();
+   std::vector<RowFlags> rowFlags = matrix.getRowFlags();
+   int j = 0;
+   for( int i = 0; i < colvecu.getLength(); ++i )
+   {
+      while( indv[j] < indu[i] && j < lv )
+      {
+         j += 1;
+      }
+      if( j == lv)
+         break;
+      if( rowFlags[indu[i]].test( RowFlag::kClique ) && indv[j] == indu[i] )
+         return( true );
+   }
+   return( false );
+}
+            
+template <typename REAL>
+void
+CliqueMerging<REAL>::greedyClique( std::vector<int> newClique,
+                                const std::vector<int> Cliques,
+                                const ConstraintMatrix<REAL>& matrix,
+                                const int cliqueRow )
+{
+   const auto rowvec = matrix.getRowCoefficients( cliqueRow );
+   const auto indices = rowvec.getIndices();
+   const int neighlength = getNeighbourhoodSize( matrix, indices[0] );
+   for( int i = 0; i < neighlength; ++i )
+   {
+      int potNeighbour = getNeighbour( matrix, indices[0], i );
+      bool isIn = true;
+      bool alreadyIn = false;
+      for( int j = 0; j < rowvec.getLength(); ++j )
+      {
+         if( indices[j] == potNeighbour )
          {
-            if( std::find( Neighbourhoods[miniteration].begin(),
-                           Neighbourhoods[miniteration].end(),
-                           Neighbourhood[vertex] ) ==
-                Neighbourhoods[miniteration].end() )
+            alreadyIn = true;
+            break;
+         }
+      }
+      if( alreadyIn )
+         continue;
+      for( int j = 0; j < rowvec.getLength(); ++j )
+      {
+         if( !isNeighbour( matrix, indices[j], potNeighbour) )
+         {
+            isIn = false;
+            break;
+         }
+      }
+      if( isIn )
+      {
+         for( int j = 0; j < newClique.size(); ++j )
+         {
+            if( !isNeighbour( matrix, newClique[j], potNeighbour) )
             {
-               Neighbourhood.erase( Neighbourhood.begin() + vertex );
-               vertex -= 1;
+               isIn = false;
+               break;
             }
          }
-         maximalCliques2 =
-             maxClique( Neighbourhoods, maximalCliques, OldClique,
-                        Neighbourhood, miniteration + 1, size, n );
       }
-      for( int maxClique = 0;
-           maxClique < maximalCliques2.end() - maximalCliques2.begin();
-           ++maxClique )
-      {
-         if( std::find( maximalCliques1.begin(), maximalCliques1.end(),
-                        maximalCliques2[maxClique] ) == maximalCliques1.end() )
-         {
-            maximalCliques1.push_back( maximalCliques2[maxClique] );
-         }
-      }
-      maximalCliques = maximalCliques1;
+      if( isIn )
+         newClique.push_back(potNeighbour);
    }
-   return ( maximalCliques );
+}
+
+template <typename REAL>
+bool
+CliqueMerging<REAL>::isCovered( const ConstraintMatrix<REAL>& matrix, 
+         const int row, const Vec<int> newClique, 
+         const int clique)
+{
+   const auto rowvec1 = matrix.getRowCoefficients( clique );
+   const auto indices1 = rowvec1.getIndices();
+   const auto rowvec2 = matrix.getRowCoefficients( row );
+   const auto indices2 = rowvec2.getIndices();
+   int i1 = 0;
+   int i3 = 0;
+   const int l1 = rowvec1.getLength();
+   const int l3 = newClique.size();
+   const int l2 = rowvec2.getLength();
+   for( int i2 = 0; i2 < l2; ++i2 )
+   {
+      while( i1 < l1 )
+      {
+         if( indices1[i1] >= indices2[i2] )
+            break;
+         i1 += 1;
+      }
+      while( i3 < l3 )
+      {
+         if( newClique[i3] >= indices2[i2] )
+            break;
+         i3 += 1;
+      }
+      if( ( i1 == l1 && i3 == l3 ) )
+         return( false );
+      if( i1 < l1 && i3 < l3 )
+      {
+         if( newClique[i3] > indices2[i2] && indices1[i1] > indices2[i2] )
+            return( false );
+      }
+   }
+   return( true );
 }
 
 template <typename REAL>
@@ -137,204 +256,68 @@ CliqueMerging<REAL>::execute( const Problem<REAL>& problem,
 
    PresolveStatus result = PresolveStatus::kUnchanged;
 
-   std::vector<int> Cliques;
+   Vec<int> Cliques;
 
    for( int row = 0; row < nrows; ++row )
    {
       std::pair<bool, bool> cliqueCheck =
           problem.is_clique_or_sos1( matrix, row, num );
-      if( rowFlags[row].test( RowFlag::kClique ) &&
-          cliqueCheck.first & !cliqueCheck.second )
+      if( cliqueCheck.first & !cliqueCheck.second )
       {
          Cliques.push_back( row );
       }
    }
 
-   std::vector<int> Vertices;
-   std::vector<std::vector<int>> Neighbourhoods;
-
-   int nCliques = Cliques.size();
-
-   for( int clique = 0; clique < nCliques; ++clique )
+   Vec<bool> completedCliques(Cliques.size(), false);
+   for( int clique = 0; clique < Cliques.size(); ++clique )
    {
-      auto rowvec = matrix.getRowCoefficients( clique );
-      auto indices = rowvec.getIndices();
-      for( int v = 0; v < rowvec.getLength(); ++v )
-      {
-         int posOfv = std::distance(
-             Vertices.begin(),
-             std::find( Vertices.begin(), Vertices.end(), indices[v] ) );
-         if( posOfv == std::distance( Vertices.begin(), Vertices.end() ) )
-         {
-            Vertices.push_back( indices[v] );
-            Neighbourhoods.push_back( {} );
-         }
-         for( int w = 0; w < v; ++w )
-         {
-            int posOfw = std::distance(
-                Vertices.begin(),
-                std::find( Vertices.begin(), Vertices.end(), indices[w] ) );
-            if( std::find( Neighbourhoods[posOfv].begin(),
-                           Neighbourhoods[posOfv].end(),
-                           posOfw ) == Vertices.end() )
-            {
-               Neighbourhoods[posOfv].push_back( posOfw );
-               Neighbourhoods[posOfw].push_back( posOfv );
-            }
-         }
-      }
-   }
-
-   std::vector<bool> completedCliques;
-   for( int i = 0; i < nCliques; ++i )
-   {
-      completedCliques.push_back( false );
-   }
-
-   for( int clique = 0; clique < nCliques; ++clique )
-   {
-      if( completedCliques[clique] )
+      if( completedCliques[clique])
          continue;
+      Vec<int> newClique;
 
-      std::vector<std::vector<int>> maximalCliques = {};
-      std::vector<int> OldClique;
-      auto rowvec = matrix.getRowCoefficients( Cliques[clique] );
-      auto indices = rowvec.getIndices();
-      int lengthOfRow = rowvec.getLength();
-      bool isContained;
-      OldClique.push_back( std::distance(
-          Vertices.begin(),
-          std::find( Vertices.begin(), Vertices.end(), indices[0] ) ) );
-      std::vector<int> Neighbourhood = Neighbourhoods[std::distance(
-          Vertices.begin(),
-          std::find( Vertices.begin(), Vertices.end(), indices[0] ) )];
+      greedyClique( newClique, Cliques, matrix, Cliques[clique] );
 
-      for( int i = 0; i < Neighbourhood.end() - Neighbourhood.begin(); ++i )
+      Vec<int> coveredCliques;
+      for( int cl = 0; cl < Cliques.size(); ++cl )
       {
-         isContained = false;
-         for( int ind = 0; ind < lengthOfRow; ++ind )
-         {
-            if( Vertices[Neighbourhood[i]] == indices[ind] )
-            {
-               isContained = true;
-               break;
-            }
-         }
-         if( isContained )
-         {
-            Neighbourhood.erase( Neighbourhood.begin() + i );
-            i -= 1;
-         }
+         if( cl != clique && isCovered( matrix, Cliques[cl], newClique, Cliques[clique] ) )
+            coveredCliques.push_back( cl );
       }
-
-      for( int v = 1; v < rowvec.getLength(); ++v )
+      if( coveredCliques.size() > 0 )
       {
-         int vertex = std::distance(
-             Vertices.begin(),
-             std::find( Vertices.begin(), Vertices.end(), indices[v] ) );
-         OldClique.push_back( vertex );
-         for( int w = 0; w < Neighbourhood.end() - Neighbourhood.begin(); ++w )
-         {
-            if( std::find( Neighbourhoods[vertex].begin(),
-                           Neighbourhoods[vertex].end(),
-                           Neighbourhood[w] ) == Neighbourhoods[vertex].end() )
-            {
-               Neighbourhood.erase( Neighbourhood.begin() + w );
-               w -= 1;
-            }
-         }
-      }
-
-      int miniteration = 0;
-      int size = OldClique.size();
-      int n = Vertices.size();
-      maximalCliques = maxClique( Neighbourhoods, maximalCliques, OldClique,
-                                  Neighbourhood, miniteration, size, n );
-
-      std::vector<int> maxCoveredCliques = { clique };
-      auto rowvector = matrix.getRowCoefficients( Cliques[clique] );
-      indices = rowvector.getIndices();
-      std::vector<int> bestNewClique;
-      for( int i = 0; i < rowvector.getLength(); ++i )
-      {
-         bestNewClique.push_back( indices[i] );
-      }
-      for( int newClique = 0;
-           newClique < maximalCliques.end() - maximalCliques.begin();
-           ++newClique )
-      {
-         std::vector<int> coveredCliques;
-         for( int potCovClique = 0; potCovClique < nCliques; ++potCovClique )
-         {
-            if( completedCliques[potCovClique] )
-               continue;
-            bool covered = true;
-            auto rowvec = matrix.getRowCoefficients( Cliques[potCovClique] );
-            auto indices = rowvec.getIndices();
-            for( int col = 0; col < rowvec.getLength(); ++col )
-            {
-               int vertex =
-                   std::distance( Vertices.begin(),
-                                  std::find( Vertices.begin(), Vertices.end(),
-                                             indices[col] ) );
-               if( std::find( maximalCliques[newClique].begin(),
-                              maximalCliques[newClique].end(),
-                              vertex ) == maximalCliques[newClique].end() )
-               {
-                  covered = false;
-                  break;
-               }
-            }
-            if( covered )
-               coveredCliques.push_back( potCovClique );
-         }
-         if( coveredCliques.size() > maxCoveredCliques.size() )
-         {
-            maxCoveredCliques = coveredCliques;
-            bestNewClique = maximalCliques[newClique];
-         }
-      }
-      if( maxCoveredCliques.size() > 1 )
-      {
-         TransactionGuard<REAL> tg{ reductions };
          result = PresolveStatus::kReduced;
-         reductions.lockRow( Cliques[maxCoveredCliques[0]] );
-         reductions.changeRowRHS( Cliques[maxCoveredCliques[0]], 1 );
-         reductions.changeRowLHS( Cliques[maxCoveredCliques[0]],
-                                  -std::numeric_limits<REAL>::infinity() );
-         rowFlags[Cliques[maxCoveredCliques[0]]].set( RowFlag::kLhsInf );
-         rowFlags[Cliques[maxCoveredCliques[0]]].unset( RowFlag::kRhsInf );
-         for( int entryOfNewClique = 0;
-              entryOfNewClique < bestNewClique.end() - bestNewClique.begin();
-              ++entryOfNewClique )
+         TransactionGuard<REAL> tg{ reductions };
+         reductions.lockRow(Cliques[clique]);
+         for( int i = 0; i < coveredCliques.size(); ++i )
          {
-            reductions.lockColBounds( bestNewClique[entryOfNewClique] );
-            if( problem.getLowerBounds()[bestNewClique[entryOfNewClique]] == 0 )
-            {
-               reductions.changeMatrixEntry( Cliques[maxCoveredCliques[0]],
-                                             bestNewClique[entryOfNewClique],
-                                             1 );
-            }
-            else
-            {
-               reductions.changeMatrixEntry( Cliques[maxCoveredCliques[0]],
-                                             bestNewClique[entryOfNewClique],
-                                             -1 );
-            }
+            reductions.lockRow(Cliques[coveredCliques[i]]);
+            completedCliques[coveredCliques[i]] = true;
          }
-         for( int replacedClique = 1;
-              replacedClique <
-              maxCoveredCliques.end() - maxCoveredCliques.begin();
-              ++replacedClique )
+         for( int i = 0; i < newClique.size(); ++i )
          {
-            completedCliques[maxCoveredCliques[replacedClique]] = true;
-            reductions.lockRow( Cliques[maxCoveredCliques[replacedClique]] );
-            reductions.markRowRedundant(
-                Cliques[maxCoveredCliques[replacedClique]] );
+            reductions.lockColBounds( newClique[i] );
+         }
+         auto rowvec = matrix.getRowCoefficients( Cliques[clique] );
+         auto indices = rowvec.getIndices();
+         auto val = rowvec.getValues()[0];
+         for( int i = 0; i < rowvec.getLength(); ++i )
+         {
+            reductions.lockColBounds( indices[i] );
+         }
+         for( int i = 0; i < coveredCliques.size(); ++i )
+         {
+            reductions.markRowRedundant(Cliques[coveredCliques[i]]);
+         }
+         auto lb = problem.getLowerBounds();
+         auto ub = problem.getUpperBounds();
+         for( int i = 0; i < newClique.size(); ++i )
+         {
+            reductions.changeMatrixEntry( Cliques[clique], newClique[i], val * ( ub[indices[0]] - lb[indices[0]] )
+                                       * ( ub[newClique[i]] - lb[newClique[i]] ) );
          }
       }
    }
-   return result;
+   return( result );
 }
 
 } // namespace papilo
