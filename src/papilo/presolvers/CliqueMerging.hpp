@@ -185,7 +185,7 @@ CliqueMerging<REAL>::greedyClique( std::vector<int> newClique,
       }
       if( isIn )
       {
-         for( int j = 0; j < newClique.size(); ++j )
+         for( int j = 0; j < newClique.end() - newClique.begin(); ++j )
          {
             if( !isNeighbour( matrix, newClique[j], potNeighbour) )
             {
@@ -212,7 +212,7 @@ CliqueMerging<REAL>::isCovered( const ConstraintMatrix<REAL>& matrix,
    int i1 = 0;
    int i3 = 0;
    const int l1 = rowvec1.getLength();
-   const int l3 = newClique.size();
+   const int l3 = newClique.end() - newClique.begin();
    const int l2 = rowvec2.getLength();
    for( int i2 = 0; i2 < l2; ++i2 )
    {
@@ -268,8 +268,8 @@ CliqueMerging<REAL>::execute( const Problem<REAL>& problem,
       }
    }
 
-   Vec<bool> completedCliques(Cliques.size(), false);
-   for( int clique = 0; clique < Cliques.size(); ++clique )
+   Vec<bool> completedCliques(Cliques.end() - Cliques.begin(), false);
+   for( int clique = 0; clique < Cliques.end() - Cliques.begin(); ++clique )
    {
       if( completedCliques[clique])
          continue;
@@ -278,22 +278,22 @@ CliqueMerging<REAL>::execute( const Problem<REAL>& problem,
       greedyClique( newClique, Cliques, matrix, Cliques[clique] );
 
       Vec<int> coveredCliques;
-      for( int cl = 0; cl < Cliques.size(); ++cl )
+      for( int cl = 0; cl < Cliques.end()- Cliques.begin(); ++cl )
       {
          if( cl != clique && isCovered( matrix, Cliques[cl], newClique, Cliques[clique] ) )
             coveredCliques.push_back( cl );
       }
-      if( coveredCliques.size() > 0 )
+      if( coveredCliques.end() - coveredCliques.begin() > 0 )
       {
          result = PresolveStatus::kReduced;
          TransactionGuard<REAL> tg{ reductions };
          reductions.lockRow(Cliques[clique]);
-         for( int i = 0; i < coveredCliques.size(); ++i )
+         for( int i = 0; i < coveredCliques.end() - coveredCliques.begin(); ++i )
          {
             reductions.lockRow(Cliques[coveredCliques[i]]);
             completedCliques[coveredCliques[i]] = true;
          }
-         for( int i = 0; i < newClique.size(); ++i )
+         for( int i = 0; i < newClique.end() - newClique.begin(); ++i )
          {
             reductions.lockColBounds( newClique[i] );
          }
@@ -304,13 +304,13 @@ CliqueMerging<REAL>::execute( const Problem<REAL>& problem,
          {
             reductions.lockColBounds( indices[i] );
          }
-         for( int i = 0; i < coveredCliques.size(); ++i )
+         for( int i = 0; i < coveredCliques.end() - coveredCliques.begin(); ++i )
          {
             reductions.markRowRedundant(Cliques[coveredCliques[i]]);
          }
          auto lb = problem.getLowerBounds();
          auto ub = problem.getUpperBounds();
-         for( int i = 0; i < newClique.size(); ++i )
+         for( int i = 0; i < newClique.end() - newClique.begin(); ++i )
          {
             reductions.changeMatrixEntry( Cliques[clique], newClique[i], val * ( ub[indices[0]] - lb[indices[0]] )
                                        * ( ub[newClique[i]] - lb[newClique[i]] ) );
