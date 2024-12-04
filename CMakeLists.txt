@@ -507,6 +507,7 @@ install(FILES
    ${PROJECT_SOURCE_DIR}/src/papilo/presolvers/SingletonCols.hpp
    ${PROJECT_SOURCE_DIR}/src/papilo/presolvers/SingletonStuffing.hpp
    ${PROJECT_SOURCE_DIR}/src/papilo/presolvers/Sparsify.hpp
+   ${PROJECT_SOURCE_DIR}/src/papilo/presolvers/CliqueMerging.hpp
    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/papilo/presolvers)
 
 install(FILES
