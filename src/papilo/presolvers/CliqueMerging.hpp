@@ -27,6 +27,7 @@
 #include "papilo/core/Problem.hpp"
 #include "papilo/core/ProblemUpdate.hpp"
 #include <vector>
+#include <algorithm>
 #ifdef PAPILO_TBB
 #include "papilo/misc/tbb.hpp"
 #endif
@@ -51,14 +52,12 @@ class CliqueMerging : public PresolveMethod<REAL>
             Reductions<REAL>& reductions, const Timer& timer,
             int& reason_of_infeasibility ) override;
 
-   void
-   greedyClique( std::vector<int> newClique,
-               const std::vector<int> Cliques,
-               const ConstraintMatrix<REAL>& matrix,
+   Vec<int>
+   greedyClique( const ConstraintMatrix<REAL>& matrix,
                const int cliqueRow );
 
    int
-   getNeighbour( const ConstraintMatrix<REAL>& matrix, 
+   getNeighbour( const ConstraintMatrix<REAL>& matrix,
                int col, int neighbournumber );
 
    int
@@ -84,22 +83,33 @@ extern template class CliqueMerging<Rational>;
 
 template <typename REAL>
 int
-CliqueMerging<REAL>::getNeighbour( const ConstraintMatrix<REAL>& matrix, 
+CliqueMerging<REAL>::getNeighbour( const ConstraintMatrix<REAL>& matrix,
                                     int col, int neighbournumber )
 {
    const auto colvec = matrix.getColumnCoefficients( col );
-   const int* inds = colvec.getIndices();
+   const int* colinds = colvec.getIndices();
    const std::vector<RowFlags> rowFlags = matrix.getRowFlags();
    int neighbour = -1;
+   int neighboursskipped = 0;
    for( int i = 0; i < colvec.getLength(); ++i )
    {
-      if( rowFlags[inds[i]].test( RowFlag::kClique ))
+      if( !rowFlags[colinds[i]].test(RowFlag::kClique) )
+         continue;
+      auto rowvec = matrix.getRowCoefficients( colinds[i] );
+      if( neighbournumber - neighboursskipped >= rowvec.getLength() - 1 )
       {
-         neighbour = inds[i];
-         neighbournumber -= 1;
+         neighboursskipped += rowvec.getLength() - 1;
+         continue;
       }
-      if( neighbournumber == -1 )
+      else
+      {
+         const auto rowinds = rowvec.getIndices();
+         if( rowinds[neighbournumber - neighboursskipped] >= col )
+            neighbour = rowinds[neighbournumber - neighboursskipped + 1];
+         else
+            neighbour = rowinds[neighbournumber - neighboursskipped];
          break;
+      }
    }
    assert( neighbour >= 0);
    return( neighbour );
@@ -118,7 +128,8 @@ CliqueMerging<REAL>::getNeighbourhoodSize( const ConstraintMatrix<REAL>& matrix,
    {
       if( rowFlags[inds[i]].test( RowFlag::kClique ))
       {
-         neighbournumber += 1;
+         const auto rowvec = matrix.getRowCoefficients(inds[i]);
+         neighbournumber += rowvec.getLength() - 1;
       }
    }
    return( neighbournumber );
@@ -151,12 +162,11 @@ CliqueMerging<REAL>::isNeighbour( const ConstraintMatrix<REAL>& matrix,
 }
             
 template <typename REAL>
-void
-CliqueMerging<REAL>::greedyClique( std::vector<int> newClique,
-                                const std::vector<int> Cliques,
-                                const ConstraintMatrix<REAL>& matrix,
+Vec<int>
+CliqueMerging<REAL>::greedyClique( const ConstraintMatrix<REAL>& matrix,
                                 const int cliqueRow )
 {
+   Vec<int> newClique;
    const auto rowvec = matrix.getRowCoefficients( cliqueRow );
    const auto indices = rowvec.getIndices();
    const int neighlength = getNeighbourhoodSize( matrix, indices[0] );
@@ -168,6 +178,14 @@ CliqueMerging<REAL>::greedyClique( std::vector<int> newClique,
       for( int j = 0; j < rowvec.getLength(); ++j )
       {
          if( indices[j] == potNeighbour )
+         {
+            alreadyIn = true;
+            break;
+         }
+      }
+      for( int j = 0; j < newClique.end() - newClique.begin(); ++j )
+      {
+         if( newClique[j] == potNeighbour )
          {
             alreadyIn = true;
             break;
@@ -195,8 +213,12 @@ CliqueMerging<REAL>::greedyClique( std::vector<int> newClique,
          }
       }
       if( isIn )
+      {
          newClique.push_back(potNeighbour);
+      }
    }
+   std::sort(newClique.begin(), newClique.end());
+   return( newClique );
 }
 
 template <typename REAL>
@@ -235,6 +257,17 @@ CliqueMerging<REAL>::isCovered( const ConstraintMatrix<REAL>& matrix,
          if( newClique[i3] > indices2[i2] && indices1[i1] > indices2[i2] )
             return( false );
       }
+      else if ( i1 < l1 )
+      {
+         if( indices1[i1] > indices2[i2] )
+            return( false );
+      }
+      else
+      {
+         if( newClique[i3] > indices2[i2] )
+            return( false );
+      }
+      
    }
    return( true );
 }
@@ -273,9 +306,7 @@ CliqueMerging<REAL>::execute( const Problem<REAL>& problem,
    {
       if( completedCliques[clique])
          continue;
-      Vec<int> newClique;
-
-      greedyClique( newClique, Cliques, matrix, Cliques[clique] );
+      Vec<int> newClique = greedyClique( matrix, Cliques[clique] );
 
       Vec<int> coveredCliques;
       for( int cl = 0; cl < Cliques.end()- Cliques.begin(); ++cl )
@@ -313,7 +344,7 @@ CliqueMerging<REAL>::execute( const Problem<REAL>& problem,
          for( int i = 0; i < newClique.end() - newClique.begin(); ++i )
          {
             reductions.changeMatrixEntry( Cliques[clique], newClique[i], val * ( ub[indices[0]] - lb[indices[0]] )
-                                       * ( ub[newClique[i]] - lb[newClique[i]] ) );
+                                      * ( ub[newClique[i]] - lb[newClique[i]] ) );
          }
       }
    }
