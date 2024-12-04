@@ -5,6 +5,8 @@
 Fixed bugs
 ----------
 
+- SparseStorage: Determine end pointers without behind last accesses
+
 Build system
 ------------
 
