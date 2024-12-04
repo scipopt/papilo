@@ -309,10 +309,10 @@ class SparseStorage
 
       if( i != rowranges[row].end )
       {
-         indbuffer.insert( indbuffer.end(), &columns[i],
-                           &columns.data()[rowranges[row].end] );
-         valbuffer.insert( valbuffer.end(), &values[i],
-                           &values.data()[rowranges[row].end] );
+         indbuffer.insert( indbuffer.end(), columns.data() + i,
+                           columns.data() + rowranges[row].end );
+         valbuffer.insert( valbuffer.end(), values.data() + i,
+                           values.data() + rowranges[row].end );
       }
       else
       {
@@ -339,8 +339,8 @@ class SparseStorage
       nnz = nnz - rowranges[row].end + rowranges[row].start + newsize;
 
       // copy over values from buffer
-      std::copy_n( valbuffer.data(), newsize, &values[rowranges[row].start] );
-      std::memcpy( &columns[rowranges[row].start], indbuffer.data(),
+      std::copy_n( valbuffer.data(), newsize, values.data() + rowranges[row].start );
+      std::memcpy( columns.data() + rowranges[row].start, indbuffer.data(),
                    sizeof( int ) * newsize );
 
       rowranges[row].end = rowranges[row].start + newsize;
@@ -642,12 +642,10 @@ SparseStorage<REAL>::compress( const Vec<int>& rowsize, const Vec<int>& colsize,
                // move values and columns
                assert( start >= offset );
 
-               const auto values_ptr = values.data();
-               const auto columns_ptr = columns.data();
-               std::move( &values_ptr[start], &values_ptr[end],
-                          &values_ptr[start - offset] );
-               std::move( &columns_ptr[start], &columns_ptr[end],
-                          &columns_ptr[start - offset] );
+               std::move( values.data() + start, values.data() + end,
+                          values.data() + start - offset );
+               std::move( columns.data() + start, columns.data() + end,
+                          columns.data() + start - offset );
 
                rowranges[rowcount].start -= offset;
                rowranges[rowcount].end -= offset;
@@ -806,43 +804,41 @@ SparseStorage<REAL>::shiftRows( const int* rowinds, int ninds,
                // space
             } while( rowranges[l].start == rowranges[l - 1].end );
 
-            REAL* valsout = &values[rowranges[l].start - lastshiftleft];
-            int* colsout = &columns[rowranges[l].start - lastshiftleft];
+            REAL* valsout = values.data() + rowranges[l].start - lastshiftleft;
+            int* colsout = columns.data() + rowranges[l].start - lastshiftleft;
 
-            assert( rowranges[l - 1].end <=
-                    rowranges[l].start - lastshiftleft );
+            assert( rowranges[l - 1].end <= rowranges[l].start - lastshiftleft );
 
             while( l <= row )
             {
-               int shift = &values[rowranges[l].start] - valsout;
-
+               int shift = values.data() + rowranges[l].start - valsout;
 #ifndef NDEBUG
                Vec<REAL> tmpvals;
                Vec<int> tmpinds;
-               tmpvals.insert( tmpvals.end(), &values[rowranges[l].start],
-                               &values[rowranges[l].end] );
-               tmpinds.insert( tmpinds.end(), &columns[rowranges[l].start],
-                               &columns[rowranges[l].end] );
+               tmpvals.insert( tmpvals.end(), values.data() + rowranges[l].start,
+                               values.data() + rowranges[l].end );
+               tmpinds.insert( tmpinds.end(), columns.data() + rowranges[l].start,
+                               columns.data() + rowranges[l].end );
 #endif
                if( rowranges[l].start != rowranges[l].end )
                {
-                  valsout = std::move( &values[rowranges[l].start],
-                                       &values[rowranges[l].end], valsout );
-                  colsout = std::move( &columns[rowranges[l].start],
-                                       &columns[rowranges[l].end], colsout );
+                  valsout = std::move( values.data() + rowranges[l].start,
+                                       values.data() + rowranges[l].end, valsout );
+                  colsout = std::move( columns.data() + rowranges[l].start,
+                                       columns.data() + rowranges[l].end, colsout );
                }
 
                rowranges[l].start -= shift;
                rowranges[l].end -= shift;
-               assert( &columns[rowranges[l].end] == colsout );
-               assert( &values[rowranges[l].end] == valsout );
+               assert( values.data() + rowranges[l].end == valsout );
+               assert( columns.data() + rowranges[l].end == colsout );
                assert( rowranges[l - 1].end <= rowranges[l].start );
                assert( rowranges[l].end - rowranges[l].start ==
                        (int) tmpvals.size() );
                assert( std::equal( tmpvals.begin(), tmpvals.end(),
-                                   &values[rowranges[l].start] ) );
+                                   values.data() + rowranges[l].start ) );
                assert( std::equal( tmpinds.begin(), tmpinds.end(),
-                                   &columns[rowranges[l].start] ) );
+                                   columns.data() + rowranges[l].start ) );
                ++l;
             }
          }
@@ -856,45 +852,41 @@ SparseStorage<REAL>::shiftRows( const int* rowinds, int ninds,
                // space
             } while( rowranges[r].end == rowranges[r + 1].start );
 
-            REAL* valsout = &values[rowranges[r].end + lastshiftright];
-            int* colsout = &columns[rowranges[r].end + lastshiftright];
+            REAL* valsout = values.data() + rowranges[r].end + lastshiftright;
+            int* colsout = columns.data() + rowranges[r].end + lastshiftright;
 
-            assert( rowranges[r + 1].start >=
-                    rowranges[r].end + lastshiftright );
+            assert( rowranges[r + 1].start >= rowranges[r].end + lastshiftright );
 
             while( r > row )
             {
-               int shift = valsout - &values[rowranges[r].end];
-
+               int shift = valsout - values.data() - rowranges[r].end;
 #ifndef NDEBUG
                Vec<REAL> tmpvals;
                Vec<int> tmpinds;
-               tmpvals.insert( tmpvals.end(), &values[rowranges[r].start],
-                               &values[rowranges[r].end] );
-               tmpinds.insert( tmpinds.end(), &columns[rowranges[r].start],
-                               &columns[rowranges[r].end] );
+               tmpvals.insert( tmpvals.end(), values.data() + rowranges[r].start,
+                               values.data() + rowranges[r].end );
+               tmpinds.insert( tmpinds.end(), columns.data() + rowranges[r].start,
+                               columns.data() + rowranges[r].end );
 #endif
                if( rowranges[r].start != rowranges[r].end )
                {
-                  valsout =
-                      std::move_backward( &values[rowranges[r].start],
-                                          &values[rowranges[r].end], valsout );
-                  colsout =
-                      std::move_backward( &columns[rowranges[r].start],
-                                          &columns[rowranges[r].end], colsout );
+                  valsout = std::move_backward( values.data() + rowranges[r].start,
+                                                values.data() + rowranges[r].end, valsout );
+                  colsout = std::move_backward( columns.data() + rowranges[r].start,
+                                                columns.data() + rowranges[r].end, colsout );
                }
 
                rowranges[r].start += shift;
                rowranges[r].end += shift;
-               assert( &columns[rowranges[r].start] == colsout );
-               assert( &values[rowranges[r].start] == valsout );
+               assert( values.data() + rowranges[r].start == valsout );
+               assert( columns.data() + rowranges[r].start == colsout );
                assert( rowranges[r + 1].start >= rowranges[r].end );
                assert( rowranges[r].end - rowranges[r].start ==
                        (int) tmpvals.size() );
                assert( std::equal( tmpvals.begin(), tmpvals.end(),
-                                   &values[rowranges[r].start] ) );
+                                   values.data() + rowranges[r].start ) );
                assert( std::equal( tmpinds.begin(), tmpinds.end(),
-                                   &columns[rowranges[r].start] ) );
+                                   columns.data() + rowranges[r].start ) );
                --r;
             }
          }
