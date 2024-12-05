@@ -112,7 +112,7 @@ CliqueMerging<REAL>::getNeighbour( const ConstraintMatrix<REAL>& matrix,
       }
    }
    assert( neighbour >= 0);
-   return( neighbour );
+   return neighbour ;
 }
 
 template <typename REAL>
@@ -132,7 +132,7 @@ CliqueMerging<REAL>::getNeighbourhoodSize( const ConstraintMatrix<REAL>& matrix,
          neighbournumber += rowvec.getLength() - 1;
       }
    }
-   return( neighbournumber );
+   return neighbournumber ;
 }
 
 template <typename REAL>
@@ -297,6 +297,7 @@ CliqueMerging<REAL>::execute( const Problem<REAL>& problem,
           problem.is_clique_or_sos1( matrix, row, num );
       if( cliqueCheck.first & !cliqueCheck.second )
       {
+         assert( matrix.getRowCoefficients(row).getLength() != 0);
          Cliques.push_back( row );
       }
    }
@@ -307,7 +308,6 @@ CliqueMerging<REAL>::execute( const Problem<REAL>& problem,
       if( completedCliques[clique])
          continue;
       Vec<int> newClique = greedyClique( matrix, Cliques[clique] );
-
       Vec<int> coveredCliques;
       for( int cl = 0; cl < Cliques.end()- Cliques.begin(); ++cl )
       {
@@ -316,6 +316,37 @@ CliqueMerging<REAL>::execute( const Problem<REAL>& problem,
       }
       if( coveredCliques.end() - coveredCliques.begin() > 0 )
       {
+         auto rowvec = matrix.getRowCoefficients( Cliques[clique] );
+         auto indices = rowvec.getIndices();
+         auto val = rowvec.getValues()[0];
+         Vec<int> newVertices;
+         for( int cl = 0; cl < coveredCliques.end() - coveredCliques.begin(); ++cl )
+         {
+            auto rowvector = matrix.getRowCoefficients( Cliques[coveredCliques[cl]] );
+            auto rowindex = rowvector.getIndices();
+            for( int vertex = 0; vertex < rowvector.getLength(); ++vertex )
+            {
+               bool vertexIn = false;
+               for( int node = 0; node < rowvec.getLength(); ++node )
+               {
+                  if( indices[node] == rowindex[vertex] )
+                  {
+                     vertexIn = true;
+                     break;
+                  }
+               }
+               for( int node = 0; node < newVertices.end() - newVertices.begin(); ++ node )
+               {
+                  if( vertexIn || newVertices[node] == rowindex[vertex] )
+                  {
+                     vertexIn = true;
+                     break;
+                  }
+               }
+               if( !vertexIn )
+                  newVertices.push_back(rowindex[vertex]);
+            }
+         }
          result = PresolveStatus::kReduced;
          TransactionGuard<REAL> tg{ reductions };
          reductions.lockRow(Cliques[clique]);
@@ -324,16 +355,26 @@ CliqueMerging<REAL>::execute( const Problem<REAL>& problem,
             reductions.lockRow(Cliques[coveredCliques[i]]);
             completedCliques[coveredCliques[i]] = true;
          }
-         for( int i = 0; i < newClique.end() - newClique.begin(); ++i )
+        for( int i = 0; i < Cliques.end() - Cliques.begin(); ++i)
+        {
+         reductions.lockRow(Cliques[i]);
+         auto r = matrix.getRowCoefficients( Cliques[i] );
+         auto indi = r.getIndices();
+         for( int j = 0; j < r.getLength(); ++j )
          {
-            reductions.lockColBounds( newClique[i] );
+            reductions.lockCol(indi[j]);
+            reductions.lockColBounds(indi[j]);
          }
-         auto rowvec = matrix.getRowCoefficients( Cliques[clique] );
-         auto indices = rowvec.getIndices();
-         auto val = rowvec.getValues()[0];
+        }
+         for( int i = 0; i < newVertices.end() - newVertices.begin(); ++i )
+         {
+            reductions.lockColBounds( newVertices[i] );
+            reductions.lockCol( newVertices[i] );
+         }
          for( int i = 0; i < rowvec.getLength(); ++i )
          {
             reductions.lockColBounds( indices[i] );
+            reductions.lockCol( indices[i] );
          }
          for( int i = 0; i < coveredCliques.end() - coveredCliques.begin(); ++i )
          {
@@ -341,14 +382,28 @@ CliqueMerging<REAL>::execute( const Problem<REAL>& problem,
          }
          auto lb = problem.getLowerBounds();
          auto ub = problem.getUpperBounds();
-         for( int i = 0; i < newClique.end() - newClique.begin(); ++i )
+         for( int i = 0; i < newVertices.end() - newVertices.begin(); ++i )
          {
-            reductions.changeMatrixEntry( Cliques[clique], newClique[i], val * ( ub[indices[0]] - lb[indices[0]] )
-                                      * ( ub[newClique[i]] - lb[newClique[i]] ) );
+            assert( num.isFeasGT(val * ( ub[indices[0]] - lb[indices[0]] )
+                                      * ( ub[newVertices[i]] - lb[newVertices[i]] ),0.0) || num.isFeasLT( val * ( ub[indices[0]] - lb[indices[0]] )
+                                      * ( ub[newVertices[i]] - lb[newVertices[i]] ), 0.0) );
+            assert( !num.isEq(0.0,val * ( ub[indices[0]] - lb[indices[0]] )
+                                      * ( ub[newVertices[i]] - lb[newVertices[i]] )));
+            auto rv = matrix.getRowCoefficients( Cliques[i] );
+            auto vl = rv.getValues();
+            auto inc = rv.getIndices();
+            for( int x = 0; x < rv.getLength(); ++x )
+            {
+               assert( inc[x] != newVertices[i] );
+               assert( vl[x] == 1.0 || vl[x] == -1.0 );
+            }
+            reductions.changeMatrixEntry( Cliques[clique], newVertices[i], val * ( ub[indices[0]] - lb[indices[0]] )
+                                      * ( ub[newVertices[i]] - lb[newVertices[i]] ) );
          }
+         return result ;
       }
    }
-   return( result );
+   return result ;
 }
 
 } // namespace papilo
