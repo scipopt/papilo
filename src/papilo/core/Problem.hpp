@@ -392,6 +392,8 @@ class Problem
       if( !lhsClique && !rhsClique )
          return {false, false};
       auto rowvec = matrix.getRowCoefficients( row );
+      if( rowvec.getLength() == 0)
+         return {false, false};
       REAL minvalue = std::numeric_limits<REAL>::infinity();
       REAL maxvalue = -std::numeric_limits<REAL>::infinity();
       for( int j = 0; j < rowvec.getLength(); ++j )
