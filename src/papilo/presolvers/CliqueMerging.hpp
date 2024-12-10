@@ -318,7 +318,7 @@ CliqueMerging<REAL>::execute( const Problem<REAL>& problem,
                      {
                         shareClique = true;
                         break;
-                     }/*
+                     }
                     assert(s[index1] == *i && s[index2] == *j && va[index1] == 1.0 && va[index2] == 1.0 && matrix.getRightHandSides()[c] == 1.0);
                     assert(ub[*i] == 1.0 && ub[*j] == 1.0 && lb[*i] == 0.0  );
                     assert(lb[*j] == 0.0 );
