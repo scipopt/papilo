@@ -59,7 +59,6 @@ TEST_CASE( "clique-merging-basic", "[presolve]" )
         Cliques.push_back(i);
         REQUIRE( rowFlags[i].test(RowFlag::kClique) );
     }
-    /*
     int col = 0;
     int neighbournumber = 1;
     int neigh = presolvingMethod.getNeighbour( matrix, col, neighbournumber );
