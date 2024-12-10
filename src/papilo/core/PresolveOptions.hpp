@@ -24,6 +24,7 @@
 #define _PAPILO_CORE_PRESOLVE_OPTIONS_HPP_
 
 #include "papilo/misc/ParameterSet.hpp"
+#include "papilo/Config.hpp"
 #include <type_traits>
 
 namespace papilo
