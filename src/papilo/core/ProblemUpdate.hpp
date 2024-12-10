@@ -2137,9 +2137,27 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
 
          postsolve.storeCoefficientChange( reduction.row, reduction.col,
                                            reduction.newval );
-         matrix_buffer.addEntry( reduction.row, reduction.col,
-                                 reduction.newval );
          ++stats.single_matrix_coefficient_changes;
+
+         bool contains  = false;
+         auto data = constraintMatrix.getRowCoefficients(reduction.row);
+         for( int i = 0; i < data.getLength(); i++)
+            if(data.getIndices()[i] == reduction.col)
+            {
+               contains = true;
+               break;
+            }
+//         assert(contains);
+         if(contains)
+            matrix_buffer.addEntry( reduction.row, reduction.col, reduction.newval );
+         else
+         {
+            constraintMatrix.replace_coefficient(
+                num, reduction.row, reduction.col, reduction.newval,problem.getVariableDomains(),intbuffer,
+                realbuffer, tripletbuffer, last_changed_activities,
+                problem.getRowActivities(), singletonRows, singletonColumns,
+                emptyColumns, stats.nrounds );
+         }
 
          auto& next_reduction = *(iter+1);
          bool next_matrix_change = (iter+1 < last) && next_reduction.row >= 0 && next_reduction.col >= 0;
