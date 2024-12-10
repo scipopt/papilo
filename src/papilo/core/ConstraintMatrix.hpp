@@ -552,6 +552,16 @@ class ConstraintMatrix
               Vec<RowActivity<REAL>>& activities, Vec<int>& singletonRows,
               Vec<int>& singletonCols, Vec<int>& emptyCols, int presolveround );
 
+   void
+   replace_coefficient( const Num<REAL>& num, int row, int col, REAL val,
+                        const VariableDomains<REAL>& domains,
+                        Vec<int>& indbuffer, Vec<REAL>& valbuffer,
+                        Vec<Triplet<REAL>>& tripletbuffer,
+                        Vec<int>& changedActivities,
+                        Vec<RowActivity<REAL>>& activities,
+                        Vec<int>& singletonRows, Vec<int>& singletonCols,
+                        Vec<int>& emptyCols, int presolveround );
+
    const SparseStorage<REAL>&
    getMatrixTranspose() const
    {
@@ -1272,7 +1282,92 @@ ConstraintMatrix<REAL>::sparsify(
    return ncancel;
 }
 
+
+
+
 template <typename REAL>
+void
+ConstraintMatrix<REAL>::replace_coefficient(
+    const Num<REAL>& num, int row, int col, REAL val,
+    const VariableDomains<REAL>& domains, Vec<int>& indbuffer,
+    Vec<REAL>& valbuffer, Vec<Triplet<REAL>>& tripletbuffer,
+    Vec<int>& changedActivities, Vec<RowActivity<REAL>>& activities,
+    Vec<int>& singletonRows, Vec<int>& singletonCols, Vec<int>& emptyCols,
+    int presolveround )
+{
+   auto updateActivity = [presolveround, &changedActivities, &domains,
+                          &activities, &tripletbuffer, this, num](
+                             int row, int col, REAL oldval, REAL newval ) {
+      if( oldval == newval )
+         return;
+
+      auto activityChange = [row, presolveround, &changedActivities](
+                                ActivityChange actChange,
+                                RowActivity<REAL>& activity ) {
+         if( activity.lastchange == presolveround )
+            return;
+
+         if( actChange == ActivityChange::kMin && activity.ninfmin > 1 )
+            return;
+
+         if( actChange == ActivityChange::kMax && activity.ninfmax > 1 )
+            return;
+
+         activity.lastchange = presolveround;
+         changedActivities.push_back( row );
+      };
+
+      tripletbuffer.emplace_back( col, row, newval );
+
+      const SparseVectorView<REAL>& rowVec = getRowCoefficients( row );
+      update_activity_after_coeffchange(
+          domains.lower_bounds[col], domains.upper_bounds[col],
+          domains.flags[col], oldval, newval, activities[row],
+          rowVec.getLength(), rowVec.getIndices(), rowVec.getValues(), domains,
+          num, activityChange );
+   };
+
+   auto mergeVal = [&]( const REAL& oldval, const REAL& newval )
+   { return newval; };
+
+   int newsize = cons_matrix.changeRow(
+       row, int{ 0 }, int{ 1 }, [&]( int k )
+       { return col; }, [&]( int k ) { return val; },
+       mergeVal, updateActivity, valbuffer, indbuffer );
+   rowsize[row] = newsize;
+   if( !tripletbuffer.empty() )
+   {
+      pdqsort( tripletbuffer.begin(), tripletbuffer.end() );
+
+      auto handleCol = [&]( int col, int start, int end ) {
+         int newsize = cons_matrix_transp.changeRow(
+             col, start, end,
+             [&]( int k ) { return std::get<1>( tripletbuffer[k] ); },
+             [&]( int k ) { return std::get<2>( tripletbuffer[k] ); },
+             []( const REAL& oldval, const REAL& newval ) { return newval; },
+             []( int, int, REAL, REAL ) {}, valbuffer, indbuffer );
+         colsize[col] = newsize;
+      };
+
+      int start = 0;
+      int currcol = std::get<0>( tripletbuffer[0] );
+      int nchgs = tripletbuffer.size();
+      for( int i = 1; i != nchgs; ++i )
+      {
+         if( std::get<0>( tripletbuffer[i] ) != currcol )
+         {
+            handleCol( currcol, start, i );
+            currcol = std::get<0>( tripletbuffer[i] );
+            start = i;
+         }
+      }
+      handleCol( currcol, start, nchgs );
+      tripletbuffer.clear();
+   }
+
+}
+
+    template <typename REAL>
 void
 ConstraintMatrix<REAL>::aggregate(
     const Num<REAL>& num, int substituted_col, SparseVectorView<REAL> equalityLHS,
