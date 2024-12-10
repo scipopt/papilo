@@ -89,17 +89,13 @@ CliqueMerging<REAL>::greedyClique(
       newClique.emplace( indices[vertexIndex] );
    }
    std::set<int> Neighbourhood = Neighbourhoodlists.at( *newClique.begin() );
-   for( std::set<int>::iterator vertexIndex = Neighbourhood.begin();
-        vertexIndex != Neighbourhood.end(); ++vertexIndex )
+   for(int potentialNewVertex : Neighbourhood)
    {
-      int potentialNewVertex = *vertexIndex;
       if( newClique.find( potentialNewVertex ) != newClique.end() )
          continue;
       bool isIn = true;
-      for( std::set<int>::iterator otherMemberIndex = newClique.begin();
-           otherMemberIndex != newClique.end(); ++otherMemberIndex )
+      for(int otherMember : newClique)
       {
-         int otherMember = *otherMemberIndex;
          if( Edges.find( std::pair<int, int>{ potentialNewVertex,
                                               otherMember } ) == Edges.end() )
          {
