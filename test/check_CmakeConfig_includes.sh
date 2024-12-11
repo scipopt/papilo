@@ -7,8 +7,6 @@ expression=$2
 FILES_WITH_EXPRESSION="$(grep -ilR $expression "$path"/src)"
 FILES_WITH_IMPORT_CONFIG="$(grep -ilR "papilo/Config.hpp" "$path"/src)"
 
-echo "$FILES_WITH_IMPORT_CONFIG"
-
 for FILE_WITHEXPRESSION in ${FILES_WITH_EXPRESSION[@]}; do
   echo "$FILE_WITHEXPRESSION"
   found=false
