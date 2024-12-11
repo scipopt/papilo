@@ -28,6 +28,7 @@
 #include "papilo/core/ProblemUpdate.hpp"
 #include "papilo/external/pdqsort/pdqsort.h"
 #include <boost/integer/common_factor.hpp>
+#include "papilo/Config.hpp"
 
 namespace papilo
 {

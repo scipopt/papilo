@@ -26,6 +26,7 @@
 #include "papilo/core/PresolveMethod.hpp"
 #include "papilo/core/Problem.hpp"
 #include "papilo/core/ProblemUpdate.hpp"
+#include "papilo/Config.hpp"
 
 namespace papilo
 {

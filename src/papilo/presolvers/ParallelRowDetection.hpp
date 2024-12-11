@@ -31,6 +31,7 @@
 #include "papilo/misc/tbb.hpp"
 #endif
 #include "papilo/external/pdqsort/pdqsort.h"
+#include "papilo/Config.hpp"
 
 namespace papilo
 {

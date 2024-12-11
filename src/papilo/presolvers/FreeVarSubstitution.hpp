@@ -30,6 +30,7 @@
 #include "papilo/misc/fmt.hpp"
 #include "papilo/external/pdqsort/pdqsort.h"
 #include <boost/dynamic_bitset.hpp>
+#include "papilo/Config.hpp"
 
 namespace papilo
 {

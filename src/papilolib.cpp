@@ -113,6 +113,7 @@ struct AllocatorTraits<T>
 #include "papilo/interfaces/ScipInterface.hpp"
 #include "papilo/interfaces/SoplexInterface.hpp"
 #include "papilo/misc/MultiPrecision.hpp"
+#include "papilo/Config.hpp"
 #ifdef PAPILO_TBB
 #include "papilo/misc/tbb.hpp"
 #endif

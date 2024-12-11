@@ -27,6 +27,7 @@
 #include "papilo/core/Problem.hpp"
 #include "papilo/core/ProblemUpdate.hpp"
 #include "papilo/core/SingleRow.hpp"
+#include "papilo/Config.hpp"
 
 namespace papilo
 {

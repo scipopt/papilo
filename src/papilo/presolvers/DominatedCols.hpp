@@ -29,6 +29,7 @@
 #include "papilo/core/SingleRow.hpp"
 #include "papilo/misc/Hash.hpp"
 #include "papilo/misc/Signature.hpp"
+#include "papilo/Config.hpp"
 #ifdef PAPILO_TBB
 #include "papilo/misc/tbb.hpp"
 #endif

@@ -43,6 +43,7 @@
 #include "papilo/misc/ParameterSet.hpp"
 #include "papilo/misc/Timer.hpp"
 #include "papilo/misc/Vec.hpp"
+#include "papilo/Config.hpp"
 #ifdef PAPILO_TBB
 #include "papilo/misc/tbb.hpp"
 #endif

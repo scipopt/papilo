@@ -38,6 +38,7 @@
 #endif
 #include <atomic>
 #include <boost/functional/hash.hpp>
+#include "papilo/Config.hpp"
 
 namespace papilo
 {

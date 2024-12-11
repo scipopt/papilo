@@ -28,6 +28,7 @@
 #include "papilo/core/ProblemUpdate.hpp"
 #include "papilo/misc/Num.hpp"
 #include "papilo/misc/fmt.hpp"
+#include "papilo/Config.hpp"
 
 namespace papilo
 {

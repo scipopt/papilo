@@ -23,6 +23,7 @@
 #ifndef _PAPILO_CORE_PRESOLVE_METHOD_HPP_
 #define _PAPILO_CORE_PRESOLVE_METHOD_HPP_
 
+#include "papilo/Config.hpp"
 #include "papilo/core/PresolveOptions.hpp"
 #include "papilo/core/ConstraintMatrix.hpp"
 #include "papilo/core/Reductions.hpp"

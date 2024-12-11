@@ -38,6 +38,7 @@
 #include "papilo/misc/Num.hpp"
 #include "papilo/verification/EmptyCertificate.hpp"
 #include "papilo/verification/VeriPb.hpp"
+#include "papilo/Config.hpp"
 #include <cstdint>
 #include <random>
 

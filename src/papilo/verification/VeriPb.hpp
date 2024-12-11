@@ -29,6 +29,7 @@
 #define VERIPB_VERSION 2
 
 #include "papilo/core/Problem.hpp"
+#include "papilo/Config.hpp"
 #include "papilo/misc/Hash.hpp"
 #include "papilo/misc/Num.hpp"
 #include "papilo/misc/Vec.hpp"
