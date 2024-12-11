@@ -27,6 +27,7 @@
 #include "papilo/Config.hpp"
 #ifdef PAPILO_COMMAND_LINE_AVAILABLE
 #include <boost/program_options.hpp>
+#include <boost/none.hpp>
 #endif
 #include <fstream>
 #include <initializer_list>
