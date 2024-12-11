@@ -27,12 +27,12 @@
 #include "papilo/Config.hpp"
 #ifdef PAPILO_COMMAND_LINE_AVAILABLE
 #include <boost/program_options.hpp>
+#endif
 #include <fstream>
 #include <initializer_list>
 #include <string>
 #include <utility>
 #include <vector>
-#endif
 
 namespace papilo
 {
