@@ -21,20 +21,11 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 #include "papilo/Config.hpp"
-#include "papilo/core/ConstraintMatrix.hpp"
 #include "papilo/core/Objective.hpp"
-#include "papilo/core/Presolve.hpp"
-#include "papilo/core/VariableDomains.hpp"
-#include "papilo/io/MpsParser.hpp"
-#include "papilo/io/MpsWriter.hpp"
-#include "papilo/io/SolParser.hpp"
 #include "papilo/misc/MultiPrecision.hpp"
 #include "papilo/misc/OptionsParser.hpp"
 #include "papilo/misc/VersionLogger.hpp"
 #include "papilo/misc/Wrappers.hpp"
-#ifdef PAPILO_TBB
-#include "papilo/misc/tbb.hpp"
-#endif
 
 #include <boost/program_options.hpp>
 #include <cassert>

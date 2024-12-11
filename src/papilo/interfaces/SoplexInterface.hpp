@@ -23,15 +23,14 @@
 #ifndef _PAPILO_INTERFACES_SOPLEX_INTERFACE_HPP_
 #define _PAPILO_INTERFACES_SOPLEX_INTERFACE_HPP_
 
+#include "papilo/core/Problem.hpp"
+#include "papilo/interfaces/SolverInterface.hpp"
 #include "papilo/misc/String.hpp"
 #include "papilo/misc/Vec.hpp"
+#include "soplex.h"
 #include <cassert>
 #include <stdexcept>
 #include <type_traits>
-
-#include "papilo/core/Problem.hpp"
-#include "papilo/interfaces/SolverInterface.hpp"
-#include "soplex.h"
 
 namespace papilo
 {

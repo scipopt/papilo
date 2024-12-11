@@ -23,9 +23,9 @@
 #ifndef _PAPILO_IO_PARSER_HPP_
 #define _PAPILO_IO_PARSER_HPP_
 
+#include "papilo/Config.hpp"
 #include "papilo/io/MpsParser.hpp"
 #include "papilo/io/OpbParser.hpp"
-
 #ifdef PAPILO_USE_BOOST_IOSTREAMS_WITH_BZIP2
 #include <boost/iostreams/filter/bzip2.hpp>
 #endif

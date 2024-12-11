@@ -23,7 +23,7 @@
 #ifndef _PAPILO_CORE_POSTSOLVE_SERVICE_HPP_
 #define _PAPILO_CORE_POSTSOLVE_SERVICE_HPP_
 
-#include "SavedRow.hpp"
+#include "papilo/Config.hpp"
 #include "papilo/core/Problem.hpp"
 #include "papilo/core/ProblemUpdate.hpp"
 #include "papilo/core/postsolve/BoundStorage.hpp"
@@ -31,6 +31,7 @@
 #include "papilo/core/postsolve/PostsolveStorage.hpp"
 #include "papilo/core/postsolve/PostsolveType.hpp"
 #include "papilo/core/postsolve/ReductionType.hpp"
+#include "papilo/core/postsolve/SavedRow.hpp"
 #include "papilo/misc/MultiPrecision.hpp"
 #include "papilo/misc/Num.hpp"
 #include "papilo/misc/PrimalDualSolValidation.hpp"

@@ -23,9 +23,10 @@
 #ifndef _PAPILO_IO_SOL_PARSER_HPP_
 #define _PAPILO_IO_SOL_PARSER_HPP_
 
+#include "papilo/Config.hpp"
 #include "papilo/misc/Hash.hpp"
-#include "papilo/misc/Vec.hpp"
 #include "papilo/misc/Num.hpp"
+#include "papilo/misc/Vec.hpp"
 #include <algorithm>
 #include <boost/algorithm/string.hpp>
 #include <fstream>

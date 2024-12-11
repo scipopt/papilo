@@ -22,6 +22,7 @@
 
 #ifndef _PAPILO_MISC_TIMER_HPP_
 #define _PAPILO_MISC_TIMER_HPP_
+#include "papilo/Config.hpp"
 
 #ifdef PAPILO_TBB
 #include "papilo/misc/tbb.hpp"

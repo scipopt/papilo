@@ -23,16 +23,17 @@
 #ifndef _PAPILO_CORE_PRESOLVE_METHOD_HPP_
 #define _PAPILO_CORE_PRESOLVE_METHOD_HPP_
 
-#include "papilo/core/PresolveOptions.hpp"
+#include "papilo/Config.hpp"
 #include "papilo/core/ConstraintMatrix.hpp"
+#include "papilo/core/PresolveOptions.hpp"
 #include "papilo/core/Reductions.hpp"
 #include "papilo/core/RowFlags.hpp"
 #include "papilo/core/VariableDomains.hpp"
 #include "papilo/io/Message.hpp"
 #include "papilo/misc/Num.hpp"
+#include "papilo/misc/Timer.hpp"
 #include "papilo/misc/Vec.hpp"
 #include "papilo/misc/fmt.hpp"
-#include "papilo/misc/Timer.hpp"
 #ifdef PAPILO_TBB
 #include "papilo/misc/tbb.hpp"
 #else

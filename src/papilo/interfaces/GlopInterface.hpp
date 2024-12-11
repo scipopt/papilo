@@ -23,14 +23,13 @@
 #ifndef _PAPILO_INTERFACES_GLOP_INTERFACE_HPP_
 #define _PAPILO_INTERFACES_GLOP_INTERFACE_HPP_
 
-#include "papilo/misc/Vec.hpp"
-#include <cassert>
-#include <stdexcept>
-
 #include "ortools/linear_solver/linear_solver.h"
 #include "papilo/core/Problem.hpp"
 #include "papilo/core/Solution.hpp"
 #include "papilo/interfaces/SolverInterface.hpp"
+#include "papilo/misc/Vec.hpp"
+#include <cassert>
+#include <stdexcept>
 
 namespace papilo
 {

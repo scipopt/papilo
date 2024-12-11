@@ -25,7 +25,7 @@
 
 #define UNUSED(expr) do { (void)(expr); } while (0)
 
-
+#include "papilo/Config.hpp"
 #include "papilo/core/MatrixBuffer.hpp"
 #include "papilo/core/Objective.hpp"
 #include "papilo/core/PresolveMethod.hpp"

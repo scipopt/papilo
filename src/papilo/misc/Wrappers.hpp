@@ -23,11 +23,12 @@
 #ifndef _PAPILO_MISC_WRAPPERS_HPP_
 #define _PAPILO_MISC_WRAPPERS_HPP_
 
+#include "papilo/Config.hpp"
 #include "papilo/core/Presolve.hpp"
 #include "papilo/core/postsolve/Postsolve.hpp"
-#include "papilo/io/Parser.hpp"
 #include "papilo/io/MpsWriter.hpp"
 #include "papilo/io/OpbWriter.hpp"
+#include "papilo/io/Parser.hpp"
 #include "papilo/io/SolParser.hpp"
 #include "papilo/io/SolWriter.hpp"
 #include "papilo/misc/NumericalStatistics.hpp"
