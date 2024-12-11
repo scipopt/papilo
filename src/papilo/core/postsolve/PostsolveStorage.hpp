@@ -23,6 +23,7 @@
 #ifndef _PAPILO_CORE_POSTSOLVE_LISTENER_HPP_
 #define _PAPILO_CORE_POSTSOLVE_LISTENER_HPP_
 
+#include "papilo/Config.hpp"
 #include "papilo/core/Problem.hpp"
 #include "papilo/core/postsolve/PostsolveType.hpp"
 #include "papilo/core/postsolve/ReductionType.hpp"
@@ -33,7 +34,6 @@
 #include "papilo/misc/Vec.hpp"
 #include "papilo/misc/compress_vector.hpp"
 #include "papilo/misc/fmt.hpp"
-#include "papilo/Config.hpp"
 #ifdef PAPILO_TBB
 #include "papilo/misc/tbb.hpp"
 #endif

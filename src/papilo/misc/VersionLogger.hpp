@@ -23,6 +23,7 @@
 #ifndef _PAPILO_MISC_VERSION_LOGGER_HPP_
 #define _PAPILO_MISC_VERSION_LOGGER_HPP_
 
+#include "papilo/Config.hpp"
 #include "papilo/core/Presolve.hpp"
 #include "papilo/core/postsolve/Postsolve.hpp"
 #include "papilo/io/MpsParser.hpp"
@@ -31,7 +32,6 @@
 #include "papilo/io/SolWriter.hpp"
 #include "papilo/misc/NumericalStatistics.hpp"
 #include "papilo/misc/OptionsParser.hpp"
-#include "papilo/Config.hpp"
 #ifdef PAPILO_TBB
 #include "papilo/misc/tbb.hpp"
 #endif

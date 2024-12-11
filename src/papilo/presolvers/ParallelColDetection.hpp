@@ -23,15 +23,15 @@
 #ifndef _PAPILO_PARALLEL_COL_DETECTION_HPP_
 #define _PAPILO_PARALLEL_COL_DETECTION_HPP_
 
+#include "papilo/Config.hpp"
 #include "papilo/core/PresolveMethod.hpp"
 #include "papilo/core/Problem.hpp"
 #include "papilo/core/ProblemUpdate.hpp"
+#include "papilo/external/pdqsort/pdqsort.h"
 #include "papilo/misc/Hash.hpp"
-#include "papilo/Config.hpp"
 #ifdef PAPILO_TBB
 #include "papilo/misc/tbb.hpp"
 #endif
-#include "papilo/external/pdqsort/pdqsort.h"
 
 namespace papilo
 {

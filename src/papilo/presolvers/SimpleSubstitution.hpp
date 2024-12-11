@@ -23,19 +23,18 @@
 #ifndef _PAPILO_PRESOLVERS_SIMPLE_FREEVAR_HPP_
 #define _PAPILO_PRESOLVERS_SIMPLE_FREEVAR_HPP_
 
+#include "papilo/Config.hpp"
 #include "papilo/core/PresolveMethod.hpp"
 #include "papilo/core/Problem.hpp"
 #include "papilo/core/ProblemUpdate.hpp"
 #include "papilo/misc/Num.hpp"
 #include "papilo/misc/fmt.hpp"
-#include "papilo/Config.hpp"
 #if BOOST_VERSION >= 107000
-   #include <boost/integer/extended_euclidean.hpp>
+#include <boost/integer/extended_euclidean.hpp>
 #else
-   // use a copy to enable also older boost versions
-   #include "papilo/misc/extended_euclidean.hpp"
+// use a copy to enable also older boost versions
+#include "papilo/misc/extended_euclidean.hpp"
 #endif
-
 
 // TODO: before this presolver starts feasibility needs to be checked
 // TODO: -> maybe do the simple check before? that means inf <= b <= sup

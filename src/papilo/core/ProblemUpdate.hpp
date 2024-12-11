@@ -24,6 +24,7 @@
 #define _PAPILO_CORE_PROBLEM_UPDATE_HPP_
 
 #include "boost/random.hpp"
+#include "papilo/Config.hpp"
 #include "papilo/core/MatrixBuffer.hpp"
 #include "papilo/core/PresolveMethod.hpp"
 #include "papilo/core/PresolveOptions.hpp"
@@ -38,7 +39,6 @@
 #include "papilo/misc/Num.hpp"
 #include "papilo/verification/EmptyCertificate.hpp"
 #include "papilo/verification/VeriPb.hpp"
-#include "papilo/Config.hpp"
 #include <cstdint>
 #include <random>
 

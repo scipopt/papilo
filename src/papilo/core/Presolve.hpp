@@ -23,13 +23,7 @@
 #ifndef _PAPILO_CORE_PRESOLVE_HPP_
 #define _PAPILO_CORE_PRESOLVE_HPP_
 
-#include <algorithm>
-#include <cctype>
-#include <fstream>
-#include <initializer_list>
-#include <memory>
-#include <utility>
-
+#include "papilo/Config.hpp"
 #include "papilo/core/PresolveMethod.hpp"
 #include "papilo/core/PresolveOptions.hpp"
 #include "papilo/core/Problem.hpp"
@@ -42,12 +36,10 @@
 #include "papilo/misc/DependentRows.hpp"
 #include "papilo/misc/ParameterSet.hpp"
 #include "papilo/misc/Timer.hpp"
-#include "papilo/misc/Vec.hpp"
-#include "papilo/Config.hpp"
 #ifdef PAPILO_TBB
 #include "papilo/misc/tbb.hpp"
 #endif
-#include "papilo/verification/VeriPb.hpp"
+#include "papilo/misc/Vec.hpp"
 #include "papilo/presolvers/CoefficientStrengthening.hpp"
 #include "papilo/presolvers/ConstraintPropagation.hpp"
 #include "papilo/presolvers/DominatedCols.hpp"
@@ -65,6 +57,13 @@
 #include "papilo/presolvers/SingletonCols.hpp"
 #include "papilo/presolvers/SingletonStuffing.hpp"
 #include "papilo/presolvers/Sparsify.hpp"
+#include "papilo/verification/VeriPb.hpp"
+#include <algorithm>
+#include <cctype>
+#include <fstream>
+#include <initializer_list>
+#include <memory>
+#include <utility>
 
 namespace papilo
 {

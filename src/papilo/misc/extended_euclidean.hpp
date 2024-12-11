@@ -6,11 +6,11 @@
  */
 #ifndef BOOST_INTEGER_EXTENDED_EUCLIDEAN_HPP
 #define BOOST_INTEGER_EXTENDED_EUCLIDEAN_HPP
+#include <boost/core/enable_if.hpp>
+#include <boost/core/swap.hpp>
+#include <boost/throw_exception.hpp>
 #include <limits>
 #include <stdexcept>
-#include <boost/throw_exception.hpp>
-#include <boost/core/swap.hpp>
-#include <boost/core/enable_if.hpp>
 
 namespace boost { namespace integer {
 

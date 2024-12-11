@@ -23,11 +23,11 @@
 #ifndef _PAPILO_PRESOLVERS_SIMPLE_PROBING_HPP_
 #define _PAPILO_PRESOLVERS_SIMPLE_PROBING_HPP_
 
+#include "papilo/Config.hpp"
 #include "papilo/core/PresolveMethod.hpp"
 #include "papilo/core/Problem.hpp"
 #include "papilo/core/ProblemUpdate.hpp"
 #include "papilo/io/Message.hpp"
-#include "papilo/Config.hpp"
 
 namespace papilo
 {

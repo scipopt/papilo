@@ -23,14 +23,14 @@
 #ifndef _PAPILO_PRESOLVERS_FREEVAR_HPP_
 #define _PAPILO_PRESOLVERS_FREEVAR_HPP_
 
+#include "papilo/Config.hpp"
 #include "papilo/core/PresolveMethod.hpp"
 #include "papilo/core/Problem.hpp"
 #include "papilo/core/ProblemUpdate.hpp"
+#include "papilo/external/pdqsort/pdqsort.h"
 #include "papilo/misc/Num.hpp"
 #include "papilo/misc/fmt.hpp"
-#include "papilo/external/pdqsort/pdqsort.h"
 #include <boost/dynamic_bitset.hpp>
-#include "papilo/Config.hpp"
 
 namespace papilo
 {

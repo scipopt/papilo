@@ -23,11 +23,11 @@
 #ifndef _PAPILO_MISC_OPTIONS_PARSER_HPP_
 #define _PAPILO_MISC_OPTIONS_PARSER_HPP_
 
-#include "papilo/misc/fmt.hpp"
 #include "papilo/Config.hpp"
+#include "papilo/misc/fmt.hpp"
 #ifdef PAPILO_COMMAND_LINE_AVAILABLE
-#include <boost/program_options.hpp>
 #include <boost/none.hpp>
+#include <boost/program_options.hpp>
 #endif
 #include <fstream>
 #include <initializer_list>

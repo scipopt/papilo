@@ -23,6 +23,7 @@
 #ifndef _PAPILO_PRESOLVERS_PROBING_HPP_
 #define _PAPILO_PRESOLVERS_PROBING_HPP_
 
+#include "papilo/Config.hpp"
 #include "papilo/core/PresolveMethod.hpp"
 #include "papilo/core/ProbingView.hpp"
 #include "papilo/core/Problem.hpp"
@@ -33,12 +34,11 @@
 #include "papilo/misc/Vec.hpp"
 #include "papilo/misc/compress_vector.hpp"
 #include "papilo/misc/fmt.hpp"
+#include <atomic>
+#include <boost/functional/hash.hpp>
 #ifdef PAPILO_TBB
 #include "papilo/misc/tbb.hpp"
 #endif
-#include <atomic>
-#include <boost/functional/hash.hpp>
-#include "papilo/Config.hpp"
 
 namespace papilo
 {
