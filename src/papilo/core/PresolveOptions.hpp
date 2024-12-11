@@ -23,8 +23,8 @@
 #ifndef _PAPILO_CORE_PRESOLVE_OPTIONS_HPP_
 #define _PAPILO_CORE_PRESOLVE_OPTIONS_HPP_
 
-#include "papilo/misc/ParameterSet.hpp"
 #include "papilo/Config.hpp"
+#include "papilo/misc/ParameterSet.hpp"
 #include <type_traits>
 
 namespace papilo

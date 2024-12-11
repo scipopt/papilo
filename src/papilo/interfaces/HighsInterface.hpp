@@ -23,15 +23,14 @@
 #ifndef _PAPILO_INTERFACES_HIGHS_INTERFACE_HPP_
 #define _PAPILO_INTERFACES_HIGHS_INTERFACE_HPP_
 
+#include "Highs.h"
+#include "papilo/core/Problem.hpp"
+#include "papilo/interfaces/SolverInterface.hpp"
 #include "papilo/misc/String.hpp"
 #include "papilo/misc/Vec.hpp"
 #include <cassert>
 #include <stdexcept>
 #include <type_traits>
-
-#include "Highs.h"
-#include "papilo/core/Problem.hpp"
-#include "papilo/interfaces/SolverInterface.hpp"
 
 namespace papilo
 {

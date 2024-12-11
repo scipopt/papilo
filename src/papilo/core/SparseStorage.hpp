@@ -23,9 +23,9 @@
 #ifndef _PAPILO_CORE_SPARSE_STORAGE_HPP_
 #define _PAPILO_CORE_SPARSE_STORAGE_HPP_
 
+#include "papilo/external/pdqsort/pdqsort.h"
 #include "papilo/misc/MultiPrecision.hpp"
 #include "papilo/misc/Vec.hpp"
-#include "papilo/external/pdqsort/pdqsort.h"
 #include <algorithm>
 #include <cassert>
 #include <cstdint>

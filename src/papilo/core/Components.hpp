@@ -24,9 +24,9 @@
 #define _PAPILO_CORE_COMPONENTS_HPP_
 
 #include "papilo/core/Problem.hpp"
+#include "papilo/external/pdqsort/pdqsort.h"
 #include "papilo/misc/Hash.hpp"
 #include "papilo/misc/Vec.hpp"
-#include "papilo/external/pdqsort/pdqsort.h"
 #include <boost/pending/disjoint_sets.hpp>
 
 namespace papilo

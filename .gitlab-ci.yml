@@ -99,6 +99,22 @@ soplex-setup:
     - cmake . -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR} -DPAPILO=off
     - make -j8 install
 
+check-cmakeconfig-includes:
+  extends: .common
+  stage: setup
+  script:
+    - /bin/bash test/check_CmakeConfig_includes.sh ${CI_PROJECT_DIR} PAPILO_HAVE_FLOAT128
+    - /bin/bash test/check_CmakeConfig_includes.sh ${CI_PROJECT_DIR} PAPILO_HAVE_GMP
+    - /bin/bash test/check_CmakeConfig_includes.sh ${CI_PROJECT_DIR} PAPILO_COMMAND_LINE_AVAILABLE
+    - /bin/bash test/check_CmakeConfig_includes.sh ${CI_PROJECT_DIR} PAPILO_SERIALIZATION_AVAILABLE
+    - /bin/bash test/check_CmakeConfig_includes.sh ${CI_PROJECT_DIR} PAPILO_HAVE_LUSOL
+    - /bin/bash test/check_CmakeConfig_includes.sh ${CI_PROJECT_DIR} PAPILO_USE_STANDARD_HASHMAP
+    - /bin/bash test/check_CmakeConfig_includes.sh ${CI_PROJECT_DIR} PAPILO_USE_BOOST_IOSTREAMS_WITH_ZLIB
+    - /bin/bash test/check_CmakeConfig_includes.sh ${CI_PROJECT_DIR} PAPILO_USE_BOOST_IOSTREAMS_WITH_BZIP2
+    - /bin/bash test/check_CmakeConfig_includes.sh ${CI_PROJECT_DIR} PAPILO_GITHASH_AVAILABLE
+    - /bin/bash test/check_CmakeConfig_includes.sh ${CI_PROJECT_DIR} BOOST_FOUND
+    - /bin/bash test/check_CmakeConfig_includes.sh ${CI_PROJECT_DIR} PAPILO_TBB
+
 scip-setup:
   extends: .common
   stage: setup

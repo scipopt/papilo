@@ -23,7 +23,6 @@
 #ifndef _PAPILO_IO_MPS_PARSER_HPP_
 #define _PAPILO_IO_MPS_PARSER_HPP_
 
-#include "BoundType.hpp"
 #include "papilo/Config.hpp"
 #include "papilo/core/ConstraintMatrix.hpp"
 #include "papilo/core/Objective.hpp"

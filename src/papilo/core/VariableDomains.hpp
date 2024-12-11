@@ -23,6 +23,7 @@
 #ifndef _PAPILO_CORE_VARIABLE_DOMAINS_HPP_
 #define _PAPILO_CORE_VARIABLE_DOMAINS_HPP_
 
+#include "papilo/Config.hpp"
 #include "papilo/misc/Flags.hpp"
 #include "papilo/misc/MultiPrecision.hpp"
 #include "papilo/misc/Vec.hpp"

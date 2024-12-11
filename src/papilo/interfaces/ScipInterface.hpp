@@ -25,16 +25,14 @@
 
 #define UNUSED(expr) do { (void)(expr); } while (0)
 
-#include "papilo/misc/Vec.hpp"
-#include <cassert>
-#include <stdexcept>
-
 #include "papilo/core/Problem.hpp"
 #include "papilo/interfaces/SolverInterface.hpp"
+#include "papilo/misc/Vec.hpp"
 #include "scip/cons_linear.h"
 #include "scip/scip.h"
-
 #include "scip/struct_paramset.h"
+#include <cassert>
+#include <stdexcept>
 
 namespace papilo
 {
