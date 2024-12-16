@@ -33,6 +33,7 @@
 #ifdef PAPILO_TBB
 #include "papilo/misc/tbb.hpp"
 #endif
+#include "papilo/Config.hpp"
 
 namespace papilo
 {
@@ -164,7 +165,10 @@ CliqueMerging<REAL>::execute( const Problem<REAL>& problem,
    const int nrows = matrix.getNRows();
 
    PresolveStatus result = PresolveStatus::kUnchanged;
-
+   /*
+   if( problem.test_problem_type( ProblemFlag::kDidCliqueMerging ))
+      return result;
+   */
    Vec<int> Cliques;
 
    std::set<std::pair<int, int>> Edges;
@@ -218,6 +222,8 @@ CliqueMerging<REAL>::execute( const Problem<REAL>& problem,
       {
          rowFlags[row].unset( RowFlag::kClique );
       }
+      if( Edges.size() > 100000)
+         break;
    }
 
    Vec<bool> completedCliques( Cliques.end() - Cliques.begin(), false );
@@ -389,6 +395,7 @@ newVertices[vertexIndex]);
          }
       }
    }
+   //problem.set_problem_type( ProblemFlag::kDidCliqueMerging );
    return result;
 }
 
