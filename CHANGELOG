@@ -9,6 +9,14 @@ Interface changes
 
 ### New parameters with default values
 
+
+Data Structure:
+------------
+
+- Postsolve: The event "FixedColInf" contains now also the information if the opposing bound is infinite.
+    Note that Postsolving is no longer backwards compatible. (PAPILO_API_VERSION 4)
+    The PostsolveStack for this entry is changed from (ind = [col,...], val=[bound,...]) to (ind = [col,is_inf, ...], val=[0,bound,...])
+
 Build system
 ------------
 
