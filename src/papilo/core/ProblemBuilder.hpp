@@ -31,6 +31,7 @@ namespace papilo
 #include "papilo/misc/String.hpp"
 #include "papilo/misc/Vec.hpp"
 #include "papilo/misc/Num.hpp"
+#include "papilo/Config.hpp"
 
 template <typename REAL>
 class ProblemBuilder
