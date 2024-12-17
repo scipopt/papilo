@@ -677,7 +677,7 @@ Postsolve<REAL>::apply_fix_infinity_variable_in_original_solution(
       // set the basis depending on the status
       if( originalSolution.basisAvailabe )
       {
-         if( number_rows == 0 && bound == is_bound_infinity )
+         if( number_rows == 0 && bound == std::numeric_limits<int64_t>::max() )
             originalSolution.varBasisStatus[col] = VarBasisStatus::ZERO;
          else if( num.isEq( solution, bound ) )
             if( isNegativeInfinity )
