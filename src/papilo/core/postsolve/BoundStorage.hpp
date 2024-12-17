@@ -41,8 +41,8 @@ class BoundStorage
    Vec<int> row_infinity_rhs;
 
  public:
-      Vec<int> col_infinity_lower;
-      Vec<int> col_infinity_upper;
+      Vec<bool> col_infinity_lower;
+      Vec<bool> col_infinity_upper;
       Vec<REAL> col_lower;
       Vec<REAL> col_upper;
 

@@ -108,10 +108,10 @@ CoefficientStrengthening<REAL>::execute( const Problem<REAL>& problem,
    {
       Vec<Reductions<REAL>> stored_reductions( changedActivities.size() );
       tbb::parallel_for(
-          tbb::blocked_range<int>( 0, changedActivities.size() ),
-          [&]( const tbb::blocked_range<int>& r ) {
+          tbb::blocked_range<unsigned int>( 0, changedActivities.size() ),
+          [&]( const tbb::blocked_range<unsigned int>& r ) {
             Vec<std::pair<REAL, int>> integerCoefficients;
-             for( int j = r.begin(); j < r.end(); ++j )
+             for( unsigned int j = r.begin(); j < r.end(); ++j )
              {
                 if( perform_coefficient_tightening(
                         num, domains, activities, changedActivities[j],

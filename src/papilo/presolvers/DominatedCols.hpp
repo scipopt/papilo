@@ -150,9 +150,9 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
    // parallel
 #ifdef PAPILO_TBB
    tbb::parallel_for(
-       tbb::blocked_range<int>( 0, ncols ),
-       [&]( const tbb::blocked_range<int>& r ) {
-          for( int col = r.begin(); col < r.end(); ++col )
+       tbb::blocked_range<unsigned int>( 0, ncols ),
+       [&]( const tbb::blocked_range<unsigned int>& r ) {
+          for( unsigned int col = r.begin(); col < r.end(); ++col )
 #else
    for( int col = 0; col < (int)ncols; ++col )
 #endif
@@ -391,8 +391,8 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
    while( ndomcols < ndomcolsbound && start < unboundedcols.size() )
    {
       int ndomcolsbuffers = 0;
-      size_t base = start;
-      size_t stopp;
+      unsigned int base = start;
+      unsigned int stopp;
 
       // find dominations until number of columns is reached
       while( ndomcols < ncols && start < unboundedcols.size() )
@@ -406,9 +406,9 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
 #ifdef PAPILO_TBB
    // scan unbounded columns if they dominate other columns
    tbb::parallel_for(
-       tbb::blocked_range<int>( start, stopp ),
-       [&]( const tbb::blocked_range<int>& r ) {
-          for( int k = r.begin(); k < r.end(); ++k )
+       tbb::blocked_range<unsigned int>( start, stopp ),
+       [&]( const tbb::blocked_range<unsigned int>& r ) {
+          for( unsigned int k = r.begin(); k < r.end(); ++k )
 #else
    for( int k = start; k < (int)stopp; ++k )
 #endif

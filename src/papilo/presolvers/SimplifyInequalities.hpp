@@ -145,8 +145,8 @@ SimplifyInequalities<REAL>::computeGreatestCommonDivisor( REAL val1, REAL val2,
       return boost::gcd( static_cast<int64_t>( val1 ),
                          static_cast<int64_t>( val2 ) );
 #else
-      return boost::integer::gcd( static_cast<int64_t>( val1 ),
-                                  static_cast<int64_t>( val2 ) );
+      return REAL(boost::integer::gcd( static_cast<int64_t>( val1 ),
+                                  static_cast<int64_t>( val2 ) ));
 #endif
    }
 
