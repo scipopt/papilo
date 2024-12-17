@@ -253,9 +253,9 @@ ConstraintPropagation<REAL>::execute( const Problem<REAL>& problem,
       Vec<Reductions<REAL>> stored_reductions( changedactivities.size() );
       bool infeasible = false;
       tbb::parallel_for(
-          tbb::blocked_range<int>( 0, changedactivities.size() ),
-          [&]( const tbb::blocked_range<int>& r ) {
-             for( int j = r.begin(); j < r.end(); ++j )
+          tbb::blocked_range<unsigned int>( 0, changedactivities.size() ),
+          [&]( const tbb::blocked_range<unsigned int>& r ) {
+             for( unsigned int j = r.begin(); j < r.end(); ++j )
              {
                 PresolveStatus local_status = PresolveStatus::kUnchanged;
 
