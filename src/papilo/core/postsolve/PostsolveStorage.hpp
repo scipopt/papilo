@@ -167,7 +167,7 @@ class PostsolveStorage
                    REAL lhs, REAL rhs, const RowFlags& flags );
 
    void
-   storeFixedInfCol( int col, REAL val, REAL bound,
+   storeFixedInfCol( int col, REAL val, REAL bound, bool bound_infinity,
                       const Problem<REAL>& currentProblem );
 
    void
@@ -474,8 +474,8 @@ PostsolveStorage<REAL>::storeFixedCol( int col, REAL val,
 
 template <typename REAL>
 void
-PostsolveStorage<REAL>::storeFixedInfCol(
-    int col, REAL val, REAL bound, const Problem<REAL>& currentProblem )
+PostsolveStorage<REAL>::storeFixedInfCol( int col, REAL val, REAL bound,
+                                          bool bound_infinity, const Problem<REAL>& currentProblem )
 {
    types.push_back( ReductionType::kFixedInfCol );
    indices.push_back( origcol_mapping[col] );
@@ -485,6 +485,8 @@ PostsolveStorage<REAL>::storeFixedInfCol(
    const int* row_indices = coefficients.getIndices();
 
    indices.push_back( coefficients.getLength() );
+   values.push_back( 0 );
+   indices.push_back( bound_infinity ? 1 : 0 );
    values.push_back( bound );
 
    for( int i = 0; i < coefficients.getLength(); i++ )

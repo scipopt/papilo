@@ -713,14 +713,12 @@ ProblemUpdate<REAL>::fixColInfinity( int col, REAL val )
    if( val == -1 )
    {
       assert(cflags[col].test( ColFlag::kLbInf ));
-      REAL ub = cflags[col].test( ColFlag::kUbInf )? (double) std::numeric_limits<int64_t>::max() :ubs[col];
-      postsolve.storeFixedInfCol( col, -1, ub, problem );
+      postsolve.storeFixedInfCol( col, -1, ubs[col], cflags[col].test( ColFlag::kUbInf ), problem );
    }
    if( val == 1 )
    {
       assert(cflags[col].test( ColFlag::kUbInf ));
-      REAL lb = cflags[col].test( ColFlag::kLbInf )? (double) std::numeric_limits<int64_t>::max() :lbs[col];
-      postsolve.storeFixedInfCol( col, 1, lb, problem );
+      postsolve.storeFixedInfCol( col, 1, lbs[col], cflags[col].test( ColFlag::kLbInf ), problem );
    }
 
    return PresolveStatus::kReduced;
