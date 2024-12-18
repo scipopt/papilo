@@ -16,7 +16,6 @@ Further, a Julia wrapper is available [here](https://github.com/scipopt/PaPILO.j
 *Note:* The original instance of this repository is hosted at  [git.zib.de](https://git.zib.de) and a read-only mirror is
 available at [github.com/scipopt/papilo](https://github.com/scipopt/papilo).
 
-
 # Dependencies
 
 External dependencies that need to be installed by the user are the Intel TBB >= 2020, or TBB from oneAPI runtime library and boost >= 1.65 headers.
@@ -27,6 +26,10 @@ liberal open-source license.
 
 If TBB is not found, then the current builds fails. The user has then the option to either enable the automatic download by adding `-DTBB_DOWNLOAD` to the cmake command or to disable it by adding `-DTBB=off` instead.
 However, it is strongly recommended to install an Intel TBB runtime library since it improves the runtime drastically.
+
+We test PaPILO on some Debian, Ubuntu, macOS, and Windows system.
+While Papilo is likely to build and run on a wide variety of systems, compatibility is not guaranteed and support is limited.
+
 
 # Building
 
