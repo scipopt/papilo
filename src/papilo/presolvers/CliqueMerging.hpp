@@ -275,11 +275,11 @@ CliqueMerging<REAL>::execute( const Problem<REAL>& problem,
              reductions.lockColBounds( newVertices[i] );
           }*/
 //         Message::info( this, "\nCovered Cliques:\n" );
-         std::cout << "\nCovered Cliques:\n";
+         //std::cout << "\nCovered Cliques:\n";
          for( int row = 0; row < coveredCliques.end() - coveredCliques.begin();
               ++row )
          {
-            std::cout << coveredCliques[row];
+            //std::cout << coveredCliques[row];
             reductions.markRowRedundant( Cliques[coveredCliques[row]] );
             completedCliques[coveredCliques[row]] = true;
          }
