@@ -361,8 +361,8 @@ class ProblemBuilder
    {
       Problem<REAL> problem;
 
-      int nRows = lhs.size();
-      int nColumns = obj.coefficients.size();
+      int nRows = lhs.end() - lhs.begin();
+      int nColumns = obj.coefficients.end() - obj.coefficients.begin() ;
 
       problem.setName( std::move( probname ) );
 

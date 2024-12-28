@@ -366,7 +366,7 @@ class Reductions
    unsigned int
    size()
    {
-      return reductions.size();
+      return reductions.end() - reductions.begin();
    }
 
    void
