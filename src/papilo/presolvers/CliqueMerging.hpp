@@ -265,7 +265,7 @@ CliqueMerging<REAL>::execute( const Problem<REAL>& problem,
          return result;
       } );
 #endif
-      if( cliqueInd > 10000 )
+      if( cliqueInd > 1000 )
          break;
       if( std::find(completedCliques.begin(), completedCliques.end(), clique) != completedCliques.end() )
          continue;
