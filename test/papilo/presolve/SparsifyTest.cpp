@@ -359,7 +359,7 @@ setupProblemForSparsifyWithOneMiss( uint8_t binary )
    ProblemBuilder<double> pb;
    pb.reserve( entries.size(), rowNames.size(), columnNames.size() );
    pb.setNumRows( rowNames.size() );
-   pb.setNumCols( columnNames.size() );
+   pb.setNumCols( columnNames.end() - columnNames.begin() );
    pb.setColUbAll( upperBounds );
    pb.setColLbAll( lowerBounds );
    pb.setColIntegralAll( integral );
@@ -395,9 +395,9 @@ setupProblemForSparsifyWithContinuousVariableMissTwo()
    };
 
    ProblemBuilder<double> pb;
-   pb.reserve( entries.size(), rowNames.size(), columnNames.size() );
-   pb.setNumRows( rowNames.size() );
-   pb.setNumCols( columnNames.size() );
+   pb.reserve( entries.end() - entries.begin(), rowNames.end() - rowNames.begin(), columnNames.end() - columnNames.begin() );
+   pb.setNumRows( rowNames.end() - rowNames.begin() );
+   pb.setNumCols( columnNames.end() - columnNames.begin() );
    pb.setColUbAll( upperBounds );
    pb.setColLbAll( lowerBounds );
    pb.setObjAll( coefficients );

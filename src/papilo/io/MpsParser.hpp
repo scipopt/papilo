@@ -467,7 +467,7 @@ MpsParser<REAL>::parseCols( boost::iostreams::filtering_istream& file,
                         return std::get<1>( b ) > std::get<1>( a );
                      } );
 
-         colstart = entries.size();
+         colstart = entries.end() - entries.begin();
       }
 
       assert( ncols > 0 );

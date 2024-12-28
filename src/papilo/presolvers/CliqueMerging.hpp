@@ -45,7 +45,7 @@ class CliqueMerging : public PresolveMethod<REAL>
    CliqueMerging() : PresolveMethod<REAL>()
    {
       this->setName( "cliquemerging" );
-      this->setTiming( PresolverTiming::kExhaustive );
+      this->setTiming( PresolverTiming::kMedium );
       this->setType( PresolverType::kIntegralCols );
    }
 
@@ -177,14 +177,20 @@ CliqueMerging<REAL>::execute( const Problem<REAL>& problem,
 
    std::set<int> Vertices;
 
-   for( int row = 0; row < nrows; ++row )
+   int startingRow = (nrows % 5)* std::floor(nrows / 5);
+   int row = 0;
+   row += startingRow;
+   for( int rowiter = startingRow; rowiter < nrows + startingRow; ++rowiter )
    {
+      if( rowiter == nrows)
+         row = 0;
       const auto cliqueRow = matrix.getRowCoefficients( row );
       const auto cliqueIndices = cliqueRow.getIndices();
 
       std::tuple<bool, bool, bool> cliqueCheck =
           problem.is_clique_equation_or_sos1( matrix, row, num );
-      if( std::get<0>( cliqueCheck ) & !std::get<1>( cliqueCheck ) &&
+      if( !matrix.isRowRedundant( row ) &&
+         std::get<0>( cliqueCheck ) & !std::get<1>( cliqueCheck ) &&
           !std::get<2>( cliqueCheck ) && cliqueRow.getLength() < 100 )
       { /*
          std::cout << "\nClique: ";
@@ -224,16 +230,44 @@ CliqueMerging<REAL>::execute( const Problem<REAL>& problem,
       }
       if( Edges.size() > 100000)
          break;
+      row ++;
    }
+   /*
+   std::cout << "\nNumber of Cliques: ";
+   std::cout << Cliques.size();
+   std::cout << "\nNumber of Edges: ";
+   std::cout << Edges.size();
+   std::cout << "\nNumber of Vertices: ";
+   std::cout << Vertices.size();*/
+#ifdef PAPILO_TBB
+   tbb::combinable<Vec<int>> completedCliquesComb;
+#else   
+   Vec<int> completedCliques;
+#endif
 
-   Vec<bool> completedCliques( Cliques.end() - Cliques.begin(), false );
-
-   for( int cliqueInd = 0; cliqueInd < Cliques.end() - Cliques.begin();
+#ifdef PAPILO_TBB
+   tbb::combinable<Vec<std::pair<Vec<int>,Vec<int>>>> reductionResults;
+   tbb::parallel_for(
+       tbb::blocked_range<int>( 0, Cliques.end() - Cliques.begin() ),
+       [&]( const tbb::blocked_range<int>& r )
+       {
+          for( int cliqueInd = r.begin(); cliqueInd != r.end(); ++cliqueInd )
+#else
+   for( int cliqueInd = 0; cliqueInd < Cliques.end() - Cliques.begin() ;
         ++cliqueInd )
-   {
+#endif
+      {
       int clique = Cliques[cliqueInd];
-
-      if( completedCliques[cliqueInd] )
+#ifdef PAPILO_TBB
+      Vec<int> completedCliques = completedCliquesComb.combine( [](const Vec<int>& a, const Vec<int>& b) {
+         std::vector<int> result = a;
+         result.insert(result.end(), b.begin(), b.end() );
+         return result;
+      } );
+#endif
+      if( cliqueInd > 10000 )
+         break;
+      if( std::find(completedCliques.begin(), completedCliques.end(), clique) != completedCliques.end() )
          continue;
 
       std::pair<std::set<int>, Vec<int>> resultOfSearch =
@@ -243,15 +277,30 @@ CliqueMerging<REAL>::execute( const Problem<REAL>& problem,
 
       Vec<int> newVertices = resultOfSearch.second;
 
+#ifdef PAPILO_TBB
+      std::pair<Vec<int>,Vec<int>> reductionResult;
+      reductionResult.first = newVertices ;
+      reductionResult.first.push_back( clique );
+#endif
+
       Vec<int> coveredCliques;
       for( int cl = 0; cl < Cliques.end() - Cliques.begin(); ++cl )
       {
          if( cl != cliqueInd && isCovered( matrix, Cliques[cl], newClique ) )
+            {
             coveredCliques.push_back( cl );
+            completedCliques.push_back( Cliques[cl] );
+            }
       }
+#ifdef PAPILO_TBB
+      reductionResult.second = coveredCliques;
+#endif
       if( coveredCliques.end() - coveredCliques.begin() > 0 &&
           newVertices.end() - newVertices.begin() > 0 )
       {
+#ifdef PAPILO_TBB
+         reductionResults.local().push_back( reductionResult );
+#else
          result = PresolveStatus::kReduced;
          TransactionGuard<REAL> tg{ reductions };
          for( int cl = 0; cl < Cliques.end() - Cliques.begin(); ++cl )
@@ -281,7 +330,6 @@ CliqueMerging<REAL>::execute( const Problem<REAL>& problem,
          {
             //std::cout << coveredCliques[row];
             reductions.markRowRedundant( Cliques[coveredCliques[row]] );
-            completedCliques[coveredCliques[row]] = true;
          }
          auto rowVector = matrix.getRowCoefficients( clique );
          auto rowValues = rowVector.getValues();
@@ -393,8 +441,49 @@ assert(matrix.getRowCoefficients( clique ).getIndices()[i] !=
 newVertices[vertexIndex]);
 }*/
          }
+#endif
       }
    }
+#ifdef PAPILO_TBB
+   });
+   Vec<std::pair<Vec<int>,Vec<int>>> reductionResultsComb = reductionResults.combine( 
+      [](const Vec<std::pair<Vec<int>,Vec<int>>>& a, const Vec<std::pair<Vec<int>,Vec<int>>>& b) {
+      Vec<std::pair<Vec<int>,Vec<int>>> result = a;
+      result.insert(result.end(), b.begin(), b.end() );
+      return result;
+   } );
+   for( int reductionIndex = 0; reductionIndex < reductionResultsComb.end() - reductionResultsComb.begin(); ++ reductionIndex )
+   {
+      result = PresolveStatus::kReduced;
+      TransactionGuard<REAL> tg{ reductions };
+      for( int cl = 0; cl < Cliques.end() - Cliques.begin(); ++cl )
+         reductions.lockRow( Cliques[cl] );
+      for( auto i = Vertices.begin(); i != Vertices.end(); ++i )
+         {
+         reductions.lockCol( *i );
+         reductions.lockColBounds( *i );
+         }
+      Vec<int> covCliques = reductionResultsComb[reductionIndex].second;
+      int clique = reductionResultsComb[reductionIndex].first[-1];
+      Vec<int> newVertices = reductionResultsComb[reductionIndex].first;
+      for( int row = 0; row < covCliques.end() - covCliques.begin();
+              ++row )
+         reductions.markRowRedundant( Cliques[covCliques[row]] );
+      auto rowVector = matrix.getRowCoefficients( clique );
+      auto rowValues = rowVector.getValues();
+      auto rowInds = rowVector.getIndices();
+      auto val = rowValues[0] * ( ub[rowInds[0]] - abs( lb[rowInds[0]] ) );
+      for( int vertexIndex = 0;
+              vertexIndex < newVertices.end() - newVertices.begin() - 1;
+              ++vertexIndex )
+         { 
+         reductions.changeMatrixEntry(
+             clique, newVertices[vertexIndex],
+             val * ( ub[newVertices[vertexIndex]] -
+                     lb[newVertices[vertexIndex]] ) ); 
+         }
+   }
+#endif
    //problem.set_problem_type( ProblemFlag::kDidCliqueMerging );
    return result;
 }

@@ -418,7 +418,7 @@ Sparsify<REAL>::execute( const Problem<REAL>& problem,
    int nreductions = 0;
 #ifdef PAPILO_TBB
    sparsifyData.combine_each( [&]( const SparsifyData& localData ) {
-      nreductions += localData.reductionBuffer.size();
+      nreductions += localData.reductionBuffer.end() - localData.reductionBuffer.begin();
    } );
 #else
    nreductions = s.reductionBuffer.size();

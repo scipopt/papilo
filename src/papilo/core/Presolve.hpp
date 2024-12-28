@@ -113,7 +113,7 @@ class Presolve
       //exhaustive presolvers
       addPresolveMethod( uptr( new ImplIntDetection<REAL>() ) );
       addPresolveMethod( uptr( new DominatedCols<REAL>() ) );
-      addPresolveMethod( uptr( new DualInfer<REAL> ) );
+      addPresolveMethod( uptr( new DualInfer<REAL>() ) );
       addPresolveMethod( uptr( new Probing<REAL>() ) );
       addPresolveMethod( uptr( new Substitution<REAL>() ) );
       addPresolveMethod( uptr( new Sparsify<REAL>() ) );
