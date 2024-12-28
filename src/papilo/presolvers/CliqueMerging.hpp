@@ -176,14 +176,16 @@ CliqueMerging<REAL>::execute( const Problem<REAL>& problem,
    std::map<int, std::set<int>> Neighbourlists;
 
    std::set<int> Vertices;
-
+   /*
    int startingRow = (nrows % 5)* std::floor(nrows / 5);
    int row = 0;
    row += startingRow;
    for( int rowiter = startingRow; rowiter < nrows + startingRow; ++rowiter )
    {
       if( rowiter == nrows)
-         row = 0;
+         row = 0;*/
+   for( int row = 0; row < nrows; ++row )
+      {
       const auto cliqueRow = matrix.getRowCoefficients( row );
       const auto cliqueIndices = cliqueRow.getIndices();
 
@@ -230,7 +232,7 @@ CliqueMerging<REAL>::execute( const Problem<REAL>& problem,
       }
       if( Edges.size() > 100000)
          break;
-      row ++;
+      //row ++;
    }
    /*
    std::cout << "\nNumber of Cliques: ";
