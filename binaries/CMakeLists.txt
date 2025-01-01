@@ -73,6 +73,17 @@ else()
    set(PAPILO_HAVE_ROUNDINGSAT 0)
 endif()
 
+# Enable the Fortran language support when the clusol target is included.
+# Even though this was done in the papilo CMake to create the target, it must be
+# done here as well, since the language support is restricted to the calling directory
+# and subdirectories, and since the papilo/binaries CMake can be called from a
+# CMake which doesn't have Fortran language enabled, Fortran might not be enabled here yet.
+if(TARGET clusol)
+   include(CheckLanguage)
+   check_language(Fortran)
+   enable_language(Fortran)
+endif()
+
 # Search again since we cannot rely on papilo/CMakeLists.txt having searched for Boost already.
 find_package(Boost ${BOOST_MIN_VERSION} OPTIONAL_COMPONENTS iostreams program_options serialization)
 
