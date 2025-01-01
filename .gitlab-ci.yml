@@ -63,7 +63,7 @@ boost-setup:
     - mkdir -p ${BOOST_DIR}
     - export CFLAGS=""
     - export CXXFLAGS=""
-    - wget https://boostorg.jfrog.io/artifactory/main/release/${BOOST_VERSION}/source/boost_$(echo ${BOOST_VERSION} | tr . _).tar.gz -O ${BOOST_DIR}.tar.gz
+    - wget https://archives.boost.io/release/${BOOST_VERSION}/source/boost_$(echo ${BOOST_VERSION} | tr . _).tar.gz -O ${BOOST_DIR}.tar.gz
     - tar -xzf ${BOOST_DIR}.tar.gz -C ${BOOST_DIR} --strip-components=1
     - cd ${BOOST_DIR}
     - ./bootstrap.sh --prefix=${INSTALL_DIR} --with-libraries=program_options,serialization,iostreams,regex
