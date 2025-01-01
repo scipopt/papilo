@@ -446,4 +446,16 @@ class PresolveMethod
 
 } // namespace papilo
 
+// for MSVS 2022, the handling of operator<< for papilo::PresolveStatus fails
+// instead, one gets some cryptic compiling error
+// this adds an specific implementation as a workaround
+#ifdef _MSC_VER
+inline
+std::ostream& operator<<(std::ostream& os, const papilo::PresolveStatus& p)
+{
+   os << (int)p;
+   return os;
+}
+#endif
+
 #endif

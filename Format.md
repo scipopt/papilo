@@ -47,24 +47,23 @@ Note that PaPILO will include the leading `=obj=` row in both resulting dual sol
 
 # `.bas` file format
 
-Similar to the solution format PaPILO uses the basis-format (.bas) used also in [SoPlex](https://github.com/scipopt/soplex).
+Similar to the solution format, PaPILO uses the basis format (.bas) used also in [SoPlex](https://github.com/scipopt/soplex).
 For the use with PaPILO it:
-* is a tab-separated file, (basically a TSV with the extension `.bas`), containing up to three columns
-* the first column identifies the status of the variable/row pair
-  * `UL` variable (second-column) is at the upper-bound (no row should be present) 
-  * `LL` variable (second-column) is at the lower-bound (no row should be present)
-  * `XL` variable (second-column) is in the basis and row is at the lower-bound
-  * `UL` variable (second-column) is in the basis and row is at the upper-bound
-- makes use of the same variable and constraint names as an initially supplied `.mps` file
-- if variable does not appear in the solution file are either on the lower bound or free variable with value 
-
+* is a tab-separated file, (basically a TSV with the extension `.bas`), each line containing up to three entries
+* the first entry identifies the status, the following entries may describe a column-row pair
+  * `LL` column is at the lower bound (no row should be present)
+  * `UL` column is at the upper bound (no row should be present)
+  * `XL` column is in the basis and row is at the left hand side
+  * `XU` column is in the basis and row is at the right hand side
+- makes use of the same column and row names as the previously supplied `.mps` file
+- if a column does not appear in the basis file, it is considered non-basic at its lower bound if existent, or at value zero if free
 
 ### Example
 
 ```txt
 NAME  soplex.bas
  UL x6
- XL x8
+ XL x8 c1
  UL x13
 ```
-
+Only column x8 is basic determined by the left hand side of row c1, the columns x6 and x13 are at their upper bounds, and all remaining columns are at their lower bounds or zero.

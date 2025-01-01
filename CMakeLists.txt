@@ -72,7 +72,7 @@ option(HIGHS "should HiGHS LP solver be linked" OFF)
 option(GLOP "should ortools solver be linked" OFF)
 option(GUROBI "should gurobi solver be linked" OFF)
 
-option(BUILD_TESTING "should tests be enabled and build" ON)
+option(BUILD_TESTING "should tests be enabled and built" ON)
 
 # Make 'Release' the default build type.
 if(NOT CMAKE_BUILD_TYPE)
