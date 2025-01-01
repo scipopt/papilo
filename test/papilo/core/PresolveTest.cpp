@@ -21,11 +21,11 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 #include "papilo/core/Presolve.hpp"
-#include "papilo/external/catch/catch_amalgamated.hpp"
 #include "papilo/core/Problem.hpp"
 #include "papilo/core/ProblemBuilder.hpp"
 #include "papilo/core/Reductions.hpp"
 #include "papilo/presolvers/ImplIntDetection.hpp"
+#include "papilo/external/catch/catch_amalgamated.hpp"
 
 using namespace papilo;
 
