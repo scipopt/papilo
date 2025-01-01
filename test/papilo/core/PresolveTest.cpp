@@ -25,6 +25,21 @@
 #include "papilo/core/ProblemBuilder.hpp"
 #include "papilo/core/Reductions.hpp"
 #include "papilo/presolvers/ImplIntDetection.hpp"
+
+// for MSVS 2022, the recognition that there is no operator<< for std::vector fails
+// instead, one gets some cryptic (well, it's C++) compiling error
+// so this adds an implementation for operator<< (currently needed in PresolveTest only)
+// need to come before include of catch
+#ifdef _MSC_VER
+template <typename T>
+std::ostream& operator<<(std::ostream& os, const std::vector<T>& v)
+{
+   for( auto& e: v )
+     os << e;
+   return os;
+}
+#endif
+
 #include "papilo/external/catch/catch_amalgamated.hpp"
 
 using namespace papilo;
