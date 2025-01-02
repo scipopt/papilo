@@ -70,18 +70,6 @@ isIntegral()
    return papilo::Vec<uint8_t>{ 1, 1, 1, 1 };
 }
 
-papilo::Vec<double>
-rhs()
-{
-   return papilo::Vec<double>{ 2.0, 1.0 };
-}
-
-papilo::Vec<double>
-lhs()
-{
-   return papilo::Vec<double>{ rhs()[0], rhs()[1] };
-}
-
 std::vector<int>
 row_sizes()
 {
@@ -142,11 +130,12 @@ TEST_CASE( "happy-path-replace-variable", "[core]" )
    std::vector<int> expected_rowsizes{ 2, 2 };
 
    REQUIRE( problem.getObjective().coefficients == expected_objective );
-   REQUIRE( problem.getConstraintMatrix().getColSizes() == expected_colsizes );
-   REQUIRE( problem.getConstraintMatrix().getRightHandSides() == rhs() );
-   REQUIRE( problem.getConstraintMatrix().getLeftHandSides() == lhs() );
-
    REQUIRE( problem.getNRows() == 2 );
+   REQUIRE( problem.getConstraintMatrix().getColSizes() == expected_colsizes );
+   REQUIRE( problem.getConstraintMatrix().getRightHandSides()[0] == 2 );
+   REQUIRE( problem.getConstraintMatrix().getRightHandSides()[1] == 1 );
+   REQUIRE( problem.getConstraintMatrix().getLeftHandSides()[0] == 2 );
+   REQUIRE( problem.getConstraintMatrix().getRightHandSides()[1] == 1 );
    REQUIRE( !isRow( problem, papilo::RowFlag::kRedundant, 0 ) );
    REQUIRE( problem.getColFlags()[0].test( papilo::ColFlag::kSubstituted ) );
 
@@ -283,14 +272,14 @@ setupProblemWithMultiplePresolvingOptions()
    pb.setObjAll( coefficients() );
    pb.setObjOffset( 0.0 );
    pb.setColIntegralAll( isIntegral() );
-   pb.setRowRhsAll( rhs() );
-   pb.setRowLhsAll( lhs() );
+   pb.setRowRhsAll( { 2, 1 } );
+   pb.setRowLhsAll( { 2, 1 } );
    pb.addEntryAll( entries );
    pb.setColNameAll( columnNames );
    pb.setProblemName( "matrix for testing with multiple options" );
    Problem<double> problem = pb.build();
-   problem.getConstraintMatrix().modifyLeftHandSide( 0, num, lhs()[0] );
-   problem.getConstraintMatrix().modifyLeftHandSide( 1, num, lhs()[1] );
+   problem.getConstraintMatrix().modifyLeftHandSide( 0, num, 2 );
+   problem.getConstraintMatrix().modifyLeftHandSide( 1, num, 1 );
    return problem;
 }
 
