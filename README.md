@@ -73,7 +73,6 @@ Additionally one can specify the locations of solvers, e.g. with `-DSCIP_DIR=<lo
 PaPILO to find them in non-standard locations.
 
 When tests are not necessary or fail to build, then use `-DBUILD_TESTING=OFF` to turn these off.
-Currently, there are problems when compiling the tests with MSVS 2022.
 
 # Usage of the binary
 
