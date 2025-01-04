@@ -81,9 +81,9 @@ CliqueMerging<REAL>::greedyClique(
 {
    std::set<int> newClique;
    Vec<int> newVertices;
-   assert(clique >= 0 );
+   assert( clique >= 0 );
    assert( clique < matrix.getNRows() );
-   assert(clique >= 0 );
+   assert( clique >= 0 );
    assert( clique < matrix.getNRows() );
    const auto rowvec = matrix.getRowCoefficients( clique );
    const auto indices = rowvec.getIndices();
@@ -93,12 +93,12 @@ CliqueMerging<REAL>::greedyClique(
       newClique.emplace( indices[vertexIndex] );
    }
    std::set<int> Neighbourhood = Neighbourhoodlists.at( *newClique.begin() );
-   for(int potentialNewVertex : Neighbourhood)
+   for( int potentialNewVertex : Neighbourhood )
    {
       if( newClique.find( potentialNewVertex ) != newClique.end() )
          continue;
       bool isIn = true;
-      for(int otherMember : newClique)
+      for( int otherMember : newClique )
       {
          if( Edges.find( std::pair<int, int>{ potentialNewVertex,
                                               otherMember } ) == Edges.end() )
@@ -118,7 +118,7 @@ CliqueMerging<REAL>::greedyClique(
    output.second = newVertices;
    for( int i = 0; i < rowvec.getLength(); ++i )
    {
-      for( int j = 0; j < newVertices.end() - newVertices.begin(); ++j)
+      for( int j = 0; j < newVertices.end() - newVertices.begin(); ++j )
       {
          if( indices[i] == newVertices[j] )
          {
@@ -158,7 +158,6 @@ CliqueMerging<REAL>::execute( const Problem<REAL>& problem,
 {
    const auto& matrix = problem.getConstraintMatrix();
 
-
    const auto lb = problem.getLowerBounds();
 
    const auto ub = problem.getUpperBounds();
@@ -178,7 +177,7 @@ CliqueMerging<REAL>::execute( const Problem<REAL>& problem,
    std::set<int> Vertices;
 
    for( int row = 0; row < nrows; ++row )
-      {
+   {
       assert( row >= 0 );
       assert( row < matrix.getNRows() );
       const auto cliqueRow = matrix.getRowCoefficients( row );
@@ -187,13 +186,13 @@ CliqueMerging<REAL>::execute( const Problem<REAL>& problem,
       std::tuple<bool, bool, bool> cliqueCheck =
           problem.is_clique_equation_or_sos1( matrix, row, num );
       if( !matrix.isRowRedundant( row ) &&
-         std::get<0>( cliqueCheck ) & !std::get<1>( cliqueCheck ) &&
+          std::get<0>( cliqueCheck ) & !std::get<1>( cliqueCheck ) &&
           !std::get<2>( cliqueCheck ) && cliqueRow.getLength() < 100 )
-      { 
+      {
          Cliques.push_back( row );
          rowFlags[row].set( RowFlag::kClique );
          for( int col = 0; col < cliqueRow.getLength(); ++col )
-         { 
+         {
             int vertex = cliqueIndices[col];
             Vertices.emplace( vertex );
             if( Neighbourlists.find( vertex ) == Neighbourlists.end() )
@@ -215,19 +214,20 @@ CliqueMerging<REAL>::execute( const Problem<REAL>& problem,
       {
          rowFlags[row].unset( RowFlag::kClique );
       }
-      if( Edges.size() > 100000)
+      if( Edges.size() > 100000 )
          break;
    }
 
    Vec<int> completedCliques;
 
-   for( int cliqueInd = 0; cliqueInd < Cliques.end() - Cliques.begin() ;
+   for( int cliqueInd = 0; cliqueInd < Cliques.end() - Cliques.begin();
         ++cliqueInd )
-      {
+   {
       int clique = Cliques[cliqueInd];
       if( cliqueInd > 1000 )
          break;
-      if( std::find(completedCliques.begin(), completedCliques.end(), clique) != completedCliques.end() )
+      if( std::find( completedCliques.begin(), completedCliques.end(),
+                     clique ) != completedCliques.end() )
          continue;
 
       const std::pair<std::set<int>, Vec<int>> resultOfSearch =
@@ -241,33 +241,37 @@ CliqueMerging<REAL>::execute( const Problem<REAL>& problem,
       for( int cl = 0; cl < Cliques.end() - Cliques.begin(); ++cl )
       {
          if( cl != cliqueInd && isCovered( matrix, Cliques[cl], newClique ) )
-            {
+         {
             coveredCliques.push_back( cl );
             completedCliques.push_back( Cliques[cl] );
-            }
+         }
       }
 
       if( coveredCliques.end() - coveredCliques.begin() > 0 )
       {
          result = PresolveStatus::kReduced;
          TransactionGuard<REAL> tg{ reductions };
-        for( int covRow = 0; covRow < coveredCliques.end() - coveredCliques.begin(); ++covRow )
-        {
-         reductions.lockRow( Cliques[coveredCliques[covRow]]);
-        }
-        reductions.lockRow( clique );
-          for( std::set<int>::iterator vertexIndex = newClique.begin();
-          vertexIndex != newClique.end(); ++vertexIndex )
-          {
-             reductions.lockCol( *vertexIndex );
-             reductions.lockColBounds( *vertexIndex );
-          }
+         for( int covRow = 0;
+              covRow < coveredCliques.end() - coveredCliques.begin(); ++covRow )
+         {
+            reductions.lockRow( Cliques[coveredCliques[covRow]] );
+         }
+         reductions.lockRow( clique );
+         std::cout << "\nLocked Cols: ";
+         for( std::set<int>::iterator vertexIndex = newClique.begin();
+              vertexIndex != newClique.end(); ++vertexIndex )
+         {
+            reductions.lockCol( *vertexIndex );
+            reductions.lockColBounds( *vertexIndex );
+            std::cout << *vertexIndex;
+            std::cout << " ";
+         }
          for( int row = 0; row < coveredCliques.end() - coveredCliques.begin();
               ++row )
          {
             reductions.markRowRedundant( Cliques[coveredCliques[row]] );
          }
-         assert(clique >= 0 );
+         assert( clique >= 0 );
          assert( clique < matrix.getNRows() );
          auto rowVector = matrix.getRowCoefficients( clique );
          auto rowValues = rowVector.getValues();
@@ -276,12 +280,47 @@ CliqueMerging<REAL>::execute( const Problem<REAL>& problem,
          for( int vertexIndex = 0;
               vertexIndex < newVertices.end() - newVertices.begin();
               ++vertexIndex )
-         { 
+         {
             reductions.changeMatrixEntry(
                 clique, newVertices[vertexIndex],
                 val * ( ub[newVertices[vertexIndex]] -
-                        lb[newVertices[vertexIndex]] ) ); 
+                        lb[newVertices[vertexIndex]] ) );
+            assert( !num.isEq( val * ( ub[newVertices[vertexIndex]] -
+                                       lb[newVertices[vertexIndex]] ),
+                               0.0 ) );
          }
+
+         std::cout << "\nMain clique: ";
+         std::cout << clique;
+         std::cout << "\nVertices: ";
+         for( int i = 0; i < rowVector.getLength(); ++i )
+         {
+            std::cout << rowInds[i];
+            std::cout << " ";
+         }
+         std::cout << "\nNew Vertices: ";
+         for( int i = 0; i < newVertices.end() - newVertices.begin(); ++i )
+         {
+            std::cout << newVertices[i];
+            std::cout << " ";
+         }
+         std::cout << "\nCovered Cliques: ";
+         for( int i = 0; i < coveredCliques.end() - coveredCliques.begin();
+              ++i )
+         {
+            std::cout << "\nClique: ";
+            std::cout << Cliques[coveredCliques[i]];
+            auto rv = matrix.getRowCoefficients( Cliques[coveredCliques[i]] );
+            auto ri = rv.getIndices();
+            std::cout << "\n";
+            for( int j = 0; j < rv.getLength(); ++j )
+            {
+               std::cout << ri[j];
+               std::cout << " ";
+            }
+         }
+
+         return result;
       }
    }
    return result;
