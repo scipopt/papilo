@@ -20,7 +20,8 @@ Data Structure:
 Build system
 ------------
 
-- For cmake >= 3.30 CMP0167 is enforced and BOOST_ROOT no longer supported, please use Boost_DIR instead with these cmake versions.
+- for cmake >= 3.30 CMP0167 is enforced and BOOST_ROOT no longer supported, please use Boost_DIR instead with these cmake versions
+- disable default solvers and require linking when enabled
 
 Fixed bugs
 ----------
