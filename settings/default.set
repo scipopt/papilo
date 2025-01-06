@@ -17,4 +17,6 @@
 #sparsify.enabled = 0
 #substitution.enabled = 0
 
+presolve.threads = 0
+
 #message.verbosity = 4
