@@ -1291,7 +1291,7 @@ ConstraintMatrix<REAL>::change_coefficient(
 {
    auto updateActivity = [presolveround, &changedActivities, &domains,
                           &activities, this, num](
-                             int row, int col, REAL oldval, REAL newval ) {
+                             int row, int col, REaAL oldval, REAL newval ) {
       assert( oldval != newval );
 
       auto activityChange = [row, presolveround, &changedActivities](
@@ -1320,6 +1320,12 @@ ConstraintMatrix<REAL>::change_coefficient(
 
    auto mergeVal = [&]( const REAL& oldval, const REAL& newval )
    { return newval; };
+
+   if(cons_matrix.rowranges[row].end + 1 == cons_matrix.rowranges[row+1].start)
+   {
+      fmt::print("did not add col {} to clique {}\n", col, row);
+      return;
+   }
 
    int newsize = cons_matrix.changeRow(
        row, int{ 0 }, int{ 1 },
