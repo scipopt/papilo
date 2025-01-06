@@ -324,8 +324,7 @@ CliqueMerging<REAL>::execute( const Problem<REAL>& problem,
          return result;*/
       }
    }
-   CliqueMerging().setEnabled( false );
-   CliqueMerging().setDelayed( true );
+   this->setEnabled( false );
    return result;
 }
 
