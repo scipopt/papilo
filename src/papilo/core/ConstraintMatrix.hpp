@@ -1291,7 +1291,7 @@ ConstraintMatrix<REAL>::change_coefficient(
 {
    auto updateActivity = [presolveround, &changedActivities, &domains,
                           &activities, this, num](
-                             int row, int col, REaAL oldval, REAL newval ) {
+                             int row, int col, REAL oldval, REAL newval ) {
       assert( oldval != newval );
 
       auto activityChange = [row, presolveround, &changedActivities](
