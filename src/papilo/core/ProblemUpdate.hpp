@@ -2152,11 +2152,13 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
             matrix_buffer.addEntry( reduction.row, reduction.col, reduction.newval );
          else
          {
-            constraintMatrix.change_coefficient(
+            bool successful = constraintMatrix.change_coefficient(
                 num, reduction.row, reduction.col, reduction.newval,
                 problem.getVariableDomains(), intbuffer, realbuffer,
                 last_changed_activities, problem.getRowActivities(),
                 stats.nrounds );
+            if( !successful )
+               return ApplyResult::kRejected ;
          }
 
          auto& next_reduction = *(iter+1);

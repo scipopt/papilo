@@ -552,7 +552,7 @@ class ConstraintMatrix
               Vec<RowActivity<REAL>>& activities, Vec<int>& singletonRows,
               Vec<int>& singletonCols, Vec<int>& emptyCols, int presolveround );
 
-   void
+   bool
    change_coefficient( const Num<REAL>& num, int row, int col, REAL val,
        const VariableDomains<REAL>& domains, Vec<int>& indbuffer,
        Vec<REAL>& valbuffer, Vec<int>& changedActivities,
@@ -1282,7 +1282,7 @@ ConstraintMatrix<REAL>::sparsify(
 
 
 template <typename REAL>
-void
+bool
 ConstraintMatrix<REAL>::change_coefficient(
     const Num<REAL>& num, int row, int col, REAL val,
     const VariableDomains<REAL>& domains, Vec<int>& indbuffer,
@@ -1324,7 +1324,12 @@ ConstraintMatrix<REAL>::change_coefficient(
    if(cons_matrix.rowranges[row].end + 1 == cons_matrix.rowranges[row+1].start)
    {
       fmt::print("did not add col {} to clique {}\n", col, row);
-      return;
+      return false;
+   }
+   if(cons_matrix_transp.rowranges[col].end + 1 == cons_matrix_transp.rowranges[col+1].start)
+   {
+      fmt::print("did not add col {} to clique {}\n", col, row);
+      return false;
    }
 
    int newsize = cons_matrix.changeRow(
@@ -1340,6 +1345,7 @@ ConstraintMatrix<REAL>::change_coefficient(
              []( const REAL& oldval, const REAL& newval ) { return newval; },
              []( int, int, REAL, REAL ) {}, valbuffer, indbuffer );
    colsize[col] = newsize;
+   return true;
 
 }
 

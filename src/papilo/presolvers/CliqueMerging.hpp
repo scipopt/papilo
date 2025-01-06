@@ -57,13 +57,13 @@ class CliqueMerging : public PresolveMethod<REAL>
 
    std::pair<std::set<int>, Vec<int>>
    greedyClique( const ConstraintMatrix<REAL>& matrix,
-                 const std::set<std::pair<int, int>> Edges,
-                 const std::map<int, std::set<int>> Neighbourhoodlists,
+                 const std::set<std::pair<int, int>>& Edges,
+                 const std::map<int, std::set<int>>& Neighbourhoodlists,
                  const int clique );
 
    bool
    isCovered( const ConstraintMatrix<REAL>& matrix, const int row,
-              const std::set<int> newClique );
+              const std::set<int>& newClique );
 };
 
 #ifdef PAPILO_USE_EXTERN_TEMPLATES
@@ -76,8 +76,8 @@ template <typename REAL>
 std::pair<std::set<int>, Vec<int>>
 CliqueMerging<REAL>::greedyClique(
     const ConstraintMatrix<REAL>& matrix,
-    const std::set<std::pair<int, int>> Edges,
-    const std::map<int, std::set<int>> Neighbourhoodlists, const int clique )
+    const std::set<std::pair<int, int>>& Edges,
+    const std::map<int, std::set<int>>& Neighbourhoodlists, const int clique )
 {
    std::set<int> newClique;
    Vec<int> newVertices;
@@ -133,7 +133,7 @@ CliqueMerging<REAL>::greedyClique(
 template <typename REAL>
 bool
 CliqueMerging<REAL>::isCovered( const ConstraintMatrix<REAL>& matrix,
-                                const int row, const std::set<int> newClique )
+                                const int row, const std::set<int>& newClique )
 {
    assert( row >= 0 );
    assert( row < matrix.getNRows() );
@@ -257,19 +257,15 @@ CliqueMerging<REAL>::execute( const Problem<REAL>& problem,
             reductions.lockRow( Cliques[coveredCliques[covRow]] );
          }
          reductions.lockRow( clique );
-         std::cout << "\nLocked Cols: ";
+         /*
+         std::cout << "\nLocked Cols: "; */
          for( std::set<int>::iterator vertexIndex = newClique.begin();
               vertexIndex != newClique.end(); ++vertexIndex )
          {
             reductions.lockCol( *vertexIndex );
-            reductions.lockColBounds( *vertexIndex );
+            reductions.lockColBounds( *vertexIndex );/*
             std::cout << *vertexIndex;
-            std::cout << " ";
-         }
-         for( int row = 0; row < coveredCliques.end() - coveredCliques.begin();
-              ++row )
-         {
-            reductions.markRowRedundant( Cliques[coveredCliques[row]] );
+            std::cout << " ";*/
          }
          assert( clique >= 0 );
          assert( clique < matrix.getNRows() );
@@ -289,7 +285,12 @@ CliqueMerging<REAL>::execute( const Problem<REAL>& problem,
                                        lb[newVertices[vertexIndex]] ),
                                0.0 ) );
          }
-
+         for( int row = 0; row < coveredCliques.end() - coveredCliques.begin();
+              ++row )
+         {
+            reductions.markRowRedundant( Cliques[coveredCliques[row]] );
+         }
+         /*
          std::cout << "\nMain clique: ";
          std::cout << clique;
          std::cout << "\nVertices: ";
@@ -320,7 +321,7 @@ CliqueMerging<REAL>::execute( const Problem<REAL>& problem,
             }
          }
 
-         return result;
+         return result;*/
       }
    }
    return result;
