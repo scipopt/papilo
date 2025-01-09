@@ -26,6 +26,7 @@
 #include "papilo/core/PresolveMethod.hpp"
 #include "papilo/core/Problem.hpp"
 #include "papilo/core/ProblemUpdate.hpp"
+#include "papilo/external/pdqsort/pdqsort.h"
 #include <algorithm>
 #include <map>
 #include <set>
@@ -374,6 +375,7 @@ CliqueMerging<REAL>::execute( const Problem<REAL>& problem,
       result.insert(result.end(), b.begin(), b.end() );
       return result;
    } );
+   pdqsort(reductionResultsComb.begin(), reductionResultsComb.end());
    for( int reductionIndex = 0; reductionIndex < reductionResultsComb.end() - reductionResultsComb.begin(); ++ reductionIndex )
    {
       result = PresolveStatus::kReduced;
