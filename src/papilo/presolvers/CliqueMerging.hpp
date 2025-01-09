@@ -376,13 +376,14 @@ CliqueMerging<REAL>::execute( const Problem<REAL>& problem,
       return result;
    } );
    pdqsort(reductionResultsComb.begin(), reductionResultsComb.end());
+   int totalreductionsize = reductionResultsComb.end() - reductionResultsComb.begin();
    for( int reductionsize = reductionResultsComb.end() - reductionResultsComb.begin(); reductionsize > 0; reductionsize /= 2 )
    {
       for( int transactionindex = 0; transactionindex * reductionsize < reductionResultsComb.end() - reductionResultsComb.begin(); ++transactionindex )
       {
          result = PresolveStatus::kReduced;
          TransactionGuard<REAL> tg{ reductions };
-         for( int reductionindex = 0; reductionindex < reductionsize; ++reductionindex )
+         for( int reductionindex = transactionindex * reductionsize; reductionindex < std::min((transactionindex+1)* reductionsize,totalreductionsize); ++reductionindex )
          {
             Vec<int> covCliques = reductionResultsComb[reductionindex].second;
             int clique = reductionResultsComb[reductionindex].first.back();
@@ -405,7 +406,7 @@ CliqueMerging<REAL>::execute( const Problem<REAL>& problem,
             }
             reductions.lockRow( clique );
          }
-         for( int reductionindex = 0; reductionindex < reductionsize; ++reductionindex )
+         for( int reductionindex = transactionindex * reductionsize; reductionindex < std::min((transactionindex+1)* reductionsize,totalreductionsize); ++reductionindex )
          {
             int clique = reductionResultsComb[reductionindex].first.back();
             Vec<int> newVertices = reductionResultsComb[reductionindex].first;
@@ -423,7 +424,7 @@ CliqueMerging<REAL>::execute( const Problem<REAL>& problem,
                            lb[newVertices[vertexIndex]] ) );
                }
          }
-         for( int reductionindex = 0; reductionindex < reductionsize; ++reductionindex )
+         for( int reductionindex = transactionindex * reductionsize; reductionindex < std::min((transactionindex+1)* reductionsize,totalreductionsize); ++reductionindex )
          {
             Vec<int> covCliques = reductionResultsComb[reductionindex].second;
             for( int row = 0; row < covCliques.end() - covCliques.begin();
