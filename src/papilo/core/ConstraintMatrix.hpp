@@ -1323,12 +1323,12 @@ ConstraintMatrix<REAL>::change_coefficient(
 
    if(cons_matrix.rowranges[row].end + 1 == cons_matrix.rowranges[row+1].start)
    {
-      fmt::print("did not add col {} to clique {}\n", col, row);
+      //fmt::print("did not add col {} to clique {}\n", col, row);
       return false;
    }
    if(cons_matrix_transp.rowranges[col].end + 1 == cons_matrix_transp.rowranges[col+1].start)
    {
-      fmt::print("did not add col {} to clique {}\n", col, row);
+      //fmt::print("did not add col {} to clique {}\n", col, row);
       return false;
    }
 
