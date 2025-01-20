@@ -1458,8 +1458,6 @@ ConstraintMatrix<REAL>::aggregate(
 
       REAL eqscale = eqbasescale * freecolcoef[i];
 
-      assert(cons_matrix.rowranges[row].end + equalitylen >= cons_matrix.rowranges[row+1].start);
-
       int newsize = cons_matrix.changeRow(
           row, int{ 0 }, equalitylen,
           [&]( int k ) { return equalityindices[k]; },
