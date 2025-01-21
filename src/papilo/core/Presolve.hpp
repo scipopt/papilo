@@ -109,6 +109,7 @@ class Presolve
       addPresolveMethod( uptr( new DualFix<REAL>() ) );
       addPresolveMethod( uptr( new SimplifyInequalities<REAL>() ) );
       addPresolveMethod( uptr( new SimpleSubstitution<REAL>() ) );
+      addPresolveMethod( uptr( new CliqueMerging<REAL>() ) );
 
       //exhaustive presolvers
       addPresolveMethod( uptr( new ImplIntDetection<REAL>() ) );
@@ -117,7 +118,6 @@ class Presolve
       addPresolveMethod( uptr( new Probing<REAL>() ) );
       addPresolveMethod( uptr( new Substitution<REAL>() ) );
       addPresolveMethod( uptr( new Sparsify<REAL>() ) );
-      addPresolveMethod( uptr( new CliqueMerging<REAL>() ) );
    }
 
    ParameterSet
