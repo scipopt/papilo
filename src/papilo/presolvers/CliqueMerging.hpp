@@ -205,8 +205,8 @@ CliqueMerging<REAL>::execute( const Problem<REAL>& problem,
             for( int otherCol = 0; otherCol < col; ++otherCol )
             {
                int otherVertex = cliqueIndices[otherCol];
-               Edges.emplace( std::pair<int, int>{ otherVertex, vertex } );
-               Edges.emplace( std::pair<int, int>{ vertex, otherVertex } );
+               Edges.emplace( { otherVertex, vertex } );
+               Edges.emplace( { vertex, otherVertex } );
                Neighbourlists[vertex].emplace( otherVertex );
                Neighbourlists[otherVertex].emplace( vertex );
             }
