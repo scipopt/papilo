@@ -161,7 +161,7 @@ CliqueMerging<REAL>::execute( const Problem<REAL>& problem,
    PresolveStatus result = PresolveStatus::kUnchanged;
 
    Vec<int> Cliques;
-   Cliques.reserve(PresolveOptions.maxedgescliquemergingsequential);
+   Cliques.reserve(problemUpdate.getPresolveOptions().maxedgescliquemergingsequential);
 
    std::set<std::pair<int, int>> edges;
 
@@ -180,7 +180,7 @@ CliqueMerging<REAL>::execute( const Problem<REAL>& problem,
           problem.is_clique_equation_or_sos1( matrix, row, num );
       if( !matrix.isRowRedundant( row ) &&
           std::get<0>( cliqueCheck ) & !std::get<1>( cliqueCheck ) &&
-          !std::get<2>( cliqueCheck ) && cliqueRow.getLength() < PresolveOptions.maxcliquesize )
+          !std::get<2>( cliqueCheck ) && cliqueRow.getLength() < problemUpdate.getPresolveOptions().maxcliquesize )
       {
          Cliques.push_back( row );
          rowFlags[row].set( RowFlag::kClique );
@@ -208,9 +208,9 @@ CliqueMerging<REAL>::execute( const Problem<REAL>& problem,
          rowFlags[row].unset( RowFlag::kClique );
       }
 #ifdef PAPILO_TBB
-      if( edges.size() > PresolveOptions.maxedgescliquemergingparallel )
+      if( edges.size() > problemUpdate.getPresolveOptions().maxedgescliquemergingparallel )
 #else
-      if( edges.size() > PresolveOptions.maxedgescliquemergingsequential )
+      if( edges.size() > problemUpdate.getPresolveOptions().maxedgescliquemergingsequential )
 #endif
          break;
    }
@@ -241,7 +241,7 @@ CliqueMerging<REAL>::execute( const Problem<REAL>& problem,
       } );
 #endif
       int clique = Cliques[cliqueInd];
-      if( cliqueInd > PresolveOptions.maxgreedycliquecalls )
+      if( cliqueInd > problemUpdate.getPresolveOptions().maxgreedycliquecalls )
          break;
       if( std::find( completedCliques.begin(), completedCliques.end(),
                      clique ) != completedCliques.end() )
