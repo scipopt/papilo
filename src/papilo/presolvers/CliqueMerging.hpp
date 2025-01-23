@@ -81,7 +81,6 @@ CliqueMerging<REAL>::greedyClique(
 {
    std::set<int> newClique;
    Vec<int> newVertices;
-   newClique.reserve(300);
    newVertices.reserve(200);
    assert( clique >= 0 );
    assert( clique < matrix.getNRows() );
@@ -163,13 +162,10 @@ CliqueMerging<REAL>::execute( const Problem<REAL>& problem,
    Cliques.reserve(100000);
 
    std::set<std::pair<int, int>> edges;
-   edges.reserve(1000000);
 
    std::map<int, std::set<int>> neighbourLists;
-   Neighbourhoodlists.reserve(2000000);
 
    std::set<int> Vertices;
-   Vertices.reserve(500000);
 
    for( int row = 0; row < nrows; ++row )
    {
@@ -292,15 +288,11 @@ CliqueMerging<REAL>::execute( const Problem<REAL>& problem,
             reductions.lockRow( Cliques[coveredCliques[covRow]] );
          }
          reductions.lockRow( clique );
-         /*
-         std::cout << "\nLocked Cols: "; */
          for( std::set<int>::iterator vertexIndex = newClique.begin();
               vertexIndex != newClique.end(); ++vertexIndex )
          {
             reductions.lockCol( *vertexIndex );
-            reductions.lockColBounds( *vertexIndex );/*
-            std::cout << *vertexIndex;
-            std::cout << " ";*/
+            reductions.lockColBounds( *vertexIndex );
          }
          assert( clique >= 0 );
          assert( clique < matrix.getNRows() );
