@@ -208,9 +208,9 @@ CliqueMerging<REAL>::execute( const Problem<REAL>& problem,
          rowFlags[row].unset( RowFlag::kClique );
       }
 #ifdef PAPILO_TBB
-      if( edges.size() > problemUpdate.getPresolveOptions().maxedgescliquemergingparallel )
+      if( edges.size() > static_cast<long unsigned int>(problemUpdate.getPresolveOptions().maxedgescliquemergingparallel) )
 #else
-      if( edges.size() > problemUpdate.getPresolveOptions().maxedgescliquemergingsequential )
+      if( edges.size() > static_cast<long unsigned int>(problemUpdate.getPresolveOptions().maxedgescliquemergingsequential) )
 #endif
          break;
    }
