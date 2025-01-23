@@ -34,7 +34,6 @@
 #ifdef PAPILO_TBB
 #include "papilo/misc/tbb.hpp"
 #endif
-#include "papilo/Config.hpp"
 
 namespace papilo
 {
@@ -58,12 +57,12 @@ class CliqueMerging : public PresolveMethod<REAL>
 
    std::pair<std::set<int>, Vec<int>>
    greedyClique( const ConstraintMatrix<REAL>& matrix,
-                 const std::set<std::pair<int, int>>& Edges,
+                 const std::set<std::pair<int, int>>& edges,
                  const std::map<int, std::set<int>>& Neighbourhoodlists,
-                 const int clique );
+                 int clique );
 
    bool
-   isCovered( const ConstraintMatrix<REAL>& matrix, const int row,
+   isCovered( const ConstraintMatrix<REAL>& matrix, int row,
               const std::set<int>& newClique );
 };
 
@@ -77,11 +76,13 @@ template <typename REAL>
 std::pair<std::set<int>, Vec<int>>
 CliqueMerging<REAL>::greedyClique(
     const ConstraintMatrix<REAL>& matrix,
-    const std::set<std::pair<int, int>>& Edges,
-    const std::map<int, std::set<int>>& Neighbourhoodlists, const int clique )
+    const std::set<std::pair<int, int>>& edges,
+    const std::map<int, std::set<int>>& Neighbourhoodlists, int clique )
 {
    std::set<int> newClique;
    Vec<int> newVertices;
+   newClique.reserve(300);
+   newVertices.reserve(200);
    assert( clique >= 0 );
    assert( clique < matrix.getNRows() );
    assert( clique >= 0 );
@@ -101,8 +102,8 @@ CliqueMerging<REAL>::greedyClique(
       bool isIn = true;
       for( int otherMember : newClique )
       {
-         if( Edges.find( std::pair<int, int>{ potentialNewVertex,
-                                              otherMember } ) == Edges.end() )
+         if( edges.find( std::pair<int, int>{ potentialNewVertex,
+                                              otherMember } ) == edges.end() )
          {
             isIn = false;
             break;
@@ -117,24 +118,13 @@ CliqueMerging<REAL>::greedyClique(
    std::pair<std::set<int>, Vec<int>> output;
    output.first = newClique;
    output.second = newVertices;
-   for( int i = 0; i < rowvec.getLength(); ++i )
-   {
-      for( int j = 0; j < newVertices.end() - newVertices.begin(); ++j )
-      {
-         if( indices[i] == newVertices[j] )
-         {
-            assert( false );
-            std::cout << "FEHLER in greedy Clique";
-         }
-      }
-   }
    return output;
 }
 
 template <typename REAL>
 bool
 CliqueMerging<REAL>::isCovered( const ConstraintMatrix<REAL>& matrix,
-                                const int row, const std::set<int>& newClique )
+                                int row, const std::set<int>& newClique )
 {
    assert( row >= 0 );
    assert( row < matrix.getNRows() );
@@ -157,7 +147,6 @@ CliqueMerging<REAL>::execute( const Problem<REAL>& problem,
                               Reductions<REAL>& reductions, const Timer& timer,
                               int& reason_of_infeasibility )
 {
-   //std::cout << "\nStarting Cliquemerging\n";
    const auto& matrix = problem.getConstraintMatrix();
 
    const auto lb = problem.getLowerBounds();
@@ -171,12 +160,16 @@ CliqueMerging<REAL>::execute( const Problem<REAL>& problem,
    PresolveStatus result = PresolveStatus::kUnchanged;
 
    Vec<int> Cliques;
+   Cliques.reserve(100000);
 
-   std::set<std::pair<int, int>> Edges;
+   std::set<std::pair<int, int>> edges;
+   edges.reserve(1000000);
 
-   std::map<int, std::set<int>> Neighbourlists;
+   std::map<int, std::set<int>> neighbourLists;
+   Neighbourhoodlists.reserve(2000000);
 
    std::set<int> Vertices;
+   Vertices.reserve(500000);
 
    for( int row = 0; row < nrows; ++row )
    {
@@ -197,18 +190,18 @@ CliqueMerging<REAL>::execute( const Problem<REAL>& problem,
          {
             int vertex = cliqueIndices[col];
             Vertices.emplace( vertex );
-            if( Neighbourlists.find( vertex ) == Neighbourlists.end() )
+            if( neighbourLists.find( vertex ) == neighbourLists.end() )
             {
                std::set<int> neighOfCol;
-               Neighbourlists.emplace( vertex, neighOfCol );
+               neighbourLists.emplace( vertex, neighOfCol );
             }
             for( int otherCol = 0; otherCol < col; ++otherCol )
             {
                int otherVertex = cliqueIndices[otherCol];
-               Edges.emplace( { otherVertex, vertex } );
-               Edges.emplace( { vertex, otherVertex } );
-               Neighbourlists[vertex].emplace( otherVertex );
-               Neighbourlists[otherVertex].emplace( vertex );
+               edges.emplace( std::pair<int, int>{ otherVertex, vertex } );
+               edges.emplace( std::pair<int, int>{ vertex, otherVertex } );
+               neighbourLists[vertex].emplace( otherVertex );
+               neighbourLists[otherVertex].emplace( vertex );
             }
          }
       }
@@ -217,9 +210,9 @@ CliqueMerging<REAL>::execute( const Problem<REAL>& problem,
          rowFlags[row].unset( RowFlag::kClique );
       }
 #ifdef PAPILO_TBB
-      if( Edges.size() > 1000000 )
+      if( edges.size() > 1000000 )
 #else
-      if( Edges.size() > 100000 )
+      if( edges.size() > 100000 )
 #endif
          break;
    }
@@ -257,7 +250,7 @@ CliqueMerging<REAL>::execute( const Problem<REAL>& problem,
          continue;
 
       const std::pair<std::set<int>, Vec<int>> resultOfSearch =
-          greedyClique( matrix, Edges, Neighbourlists, clique );
+          greedyClique( matrix, edges, neighbourLists, clique );
 
       const std::set<int> newClique = resultOfSearch.first;
 
