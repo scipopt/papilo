@@ -23,6 +23,7 @@
 #ifndef _PAPILO_PRESOLVERS_CliqueMerging_HPP_
 #define _PAPILO_PRESOLVERS_CliqueMerging_HPP_
 
+#include "papilo/Config.hpp"
 #include "papilo/core/PresolveMethod.hpp"
 #include "papilo/core/PresolveOptions.hpp"
 #include "papilo/core/Problem.hpp"
