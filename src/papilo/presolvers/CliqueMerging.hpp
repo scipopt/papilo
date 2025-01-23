@@ -325,38 +325,6 @@ CliqueMerging<REAL>::execute( const Problem<REAL>& problem,
          {
             reductions.markRowRedundant( Cliques[coveredCliques[row]] );
          }
-         /*
-         std::cout << "\nMain clique: ";
-         std::cout << clique;
-         std::cout << "\nVertices: ";
-         for( int i = 0; i < rowVector.getLength(); ++i )
-         {
-            std::cout << rowInds[i];
-            std::cout << " ";
-         }
-         std::cout << "\nNew Vertices: ";
-         for( int i = 0; i < newVertices.end() - newVertices.begin(); ++i )
-         {
-            std::cout << newVertices[i];
-            std::cout << " ";
-         }
-         std::cout << "\nCovered Cliques: ";
-         for( int i = 0; i < coveredCliques.end() - coveredCliques.begin();
-              ++i )
-         {
-            std::cout << "\nClique: ";
-            std::cout << Cliques[coveredCliques[i]];
-            auto rv = matrix.getRowCoefficients( Cliques[coveredCliques[i]] );
-            auto ri = rv.getIndices();
-            std::cout << "\n";
-            for( int j = 0; j < rv.getLength(); ++j )
-            {
-               std::cout << ri[j];
-               std::cout << " ";
-            }
-         }
-
-         return result;*/
 #endif
       }
    }
@@ -425,93 +393,7 @@ CliqueMerging<REAL>::execute( const Problem<REAL>& problem,
                {reductions.markRowRedundant( Cliques[covCliques[row]] );}
          }
       }
-   }/*
-   for( int reductionIndex = 0; reductionIndex < reductionResultsComb.end() - reductionResultsComb.begin(); ++ reductionIndex )
-   {
-      result = PresolveStatus::kReduced;
-      TransactionGuard<REAL> tg{ reductions };
-      Vec<int> covCliques = reductionResultsComb[reductionIndex].second;
-      int clique = reductionResultsComb[reductionIndex].first.back();
-      Vec<int> newVertices = reductionResultsComb[reductionIndex].first;
-      auto cliqueRow = matrix.getRowCoefficients( clique );
-      auto cliqueIndices = cliqueRow.getIndices();
-      for( int cliqueIndex = 0; cliqueIndex < cliqueRow.getLength(); ++cliqueIndex )
-      {
-         reductions.lockCol( cliqueIndices[cliqueIndex] );
-         reductions.lockColBounds( cliqueIndices[cliqueIndex] );
-      }
-      for( int vertexIndex = 0; vertexIndex < newVertices.end() - newVertices.begin() - 1; ++vertexIndex )
-      {
-         reductions.lockCol( newVertices[vertexIndex] );
-         reductions.lockColBounds( newVertices[vertexIndex] );
-      }
-      for( int rowIndex = 0; rowIndex < covCliques.end() - covCliques.begin(); ++rowIndex )
-      {
-         reductions.lockRow( Cliques[covCliques[rowIndex]] );
-      }
-      reductions.lockRow( clique );
-      assert(clique >= 0 );
-      assert( clique < matrix.getNRows() );
-      auto rowVector = matrix.getRowCoefficients( clique );
-      auto rowValues = rowVector.getValues();
-      auto rowInds = rowVector.getIndices();
-      auto val = rowValues[0] * ( ub[rowInds[0]] - abs( lb[rowInds[0]] ) );
-      for( int vertexIndex = 0;
-              vertexIndex < newVertices.end() - newVertices.begin() - 1;
-              ++vertexIndex )
-         { 
-         reductions.changeMatrixEntry(
-             clique, newVertices[vertexIndex],
-             val * ( ub[newVertices[vertexIndex]] -
-                     lb[newVertices[vertexIndex]] ) );
-         }
-      for( int row = 0; row < covCliques.end() - covCliques.begin();
-        ++row )
-      {reductions.markRowRedundant( Cliques[covCliques[row]] );}
-   */
-   /*
-   std::cout << "\nNew Clique: ";
-   std::cout << "\n With Number: ";
-   std::cout << clique;
-   std::cout << "\n";
-      for( int i = 0; i < newVertices.end() - newVertices.begin() - 1; ++i )
-      {
-         std::cout << " ";
-         std::cout << newVertices[i];
-         std::cout << " ";
-      }
-      auto rei = matrix.getRowCoefficients( clique );
-      auto indiz = rei.getIndices();
-      for( int i = 0; i < rei.getLength(); ++i )
-      {
-         std::cout << " ";
-         std::cout << indiz[i];
-         std::cout << " ";
-      }
-      std::cout << "\nNumber of new Vertices: ";
-      std::cout << newVertices.end() - newVertices.begin() - 1;
-      std::cout << "\nCovers this many Cliques: ";
-      std::cout << covCliques.end() - covCliques.begin();
-      std::cout << "\nCovers the following Cliques:";
-      for( int i = 0; i < covCliques.end() - covCliques.begin(); ++i )
-      {
-         std::cout << "\nClique number ";
-         std::cout << Cliques[covCliques[i]];
-         std::cout << "\nLength of this Clique: ";
-         auto reihe = matrix.getRowCoefficients(Cliques[covCliques[i]]);
-         auto indize = reihe.getIndices();
-         std::cout << reihe.getLength();
-         std::cout << "\n";
-         for( int j = 0; j < reihe.getLength(); ++j )
-         {
-            std::cout << " ";
-            std::cout << indize[j];
-            std::cout << " ";
-         }
-      }
-
-
-   }*/
+   }
 #endif
    this->setEnabled( false );
    return result;
