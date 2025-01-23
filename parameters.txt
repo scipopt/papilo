@@ -189,3 +189,15 @@ max_consecutive_rounds_of_only_bound_changes = 500
 
 # should ParallelCols search for symmetries at the end (for example for binary problems where merging columns does not work)
 parallelcols.symmetries_enabled = 0
+
+# Maximal number of edges in the graph constructed for parallel clique merging [Integer: [1,2147483647]]
+maxedgescliquemergingparallel = 1000000;
+
+# Maximal number of edges in the graph constructed for sequential clique merging [Integer: [1,2147483647]]
+int maxedgescliquemergingsequential = 100000;
+
+# Maximal size of cliques considered for clique merging [Integer: [1,2147483647]]
+int maxcliquesize = 100;
+
+# Maximal number of function calls for greedy clique in a single thread in clique merging [Integer: [1,2147483647]]
+int maxgreedycliquecalls = 10000; 
