@@ -81,6 +81,14 @@ struct PresolveOptions
 
    int veripb_propagation_option = 0;
 
+   int maxedgescliquemergingparallel = 1000000;
+
+   int maxedgescliquemergingsequential = 100000;
+
+   int maxcliquesize = 100;
+
+   int maxgreedycliquecalls = 10000; 
+
    unsigned int randomseed = 0;
 
 
@@ -271,6 +279,22 @@ struct PresolveOptions
           "veripb.verify_propagation",
           "how to log the proof of verification? 0: reverse unit propagation, 1: Addition in polish notation",
           veripb_propagation_option, 0, 1 );
+      paramSet.addParameter(
+           "maxedgescliquemergingparallel",
+           "Maximal number of edges in the graph constructed for parallel clique merging",
+           maxedgescliquemergingparallel, -1);
+      paramSet.addParameter(
+           "maxedgescliquemergingsequential",
+           "Maximal number of edges in the graph constructed for sequential clique merging",
+           maxedgescliquemergingsequential, -1);
+      paramSet.addParameter(
+           "maxcliquesize",
+           "Maximal size of cliques considered for clique merging",
+           maxcliquesize, -1);
+      paramSet.addParameter(
+           "maxgreedycliquecalls",
+           "Maximal number of calls of the function greedy clique per thread in clique merging",
+           maxgreedycliquecalls, -1);
    }
 
    bool

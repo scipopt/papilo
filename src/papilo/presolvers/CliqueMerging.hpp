@@ -23,7 +23,9 @@
 #ifndef _PAPILO_PRESOLVERS_CliqueMerging_HPP_
 #define _PAPILO_PRESOLVERS_CliqueMerging_HPP_
 
+#include "papilo/Config.hpp"
 #include "papilo/core/PresolveMethod.hpp"
+#include "papilo/core/PresolveOptions.hpp"
 #include "papilo/core/Problem.hpp"
 #include "papilo/core/ProblemUpdate.hpp"
 #include "papilo/external/pdqsort/pdqsort.h"
@@ -159,7 +161,7 @@ CliqueMerging<REAL>::execute( const Problem<REAL>& problem,
    PresolveStatus result = PresolveStatus::kUnchanged;
 
    Vec<int> Cliques;
-   Cliques.reserve(100000);
+   Cliques.reserve(problemUpdate.getPresolveOptions().maxedgescliquemergingsequential);
 
    std::set<std::pair<int, int>> edges;
 
@@ -178,7 +180,7 @@ CliqueMerging<REAL>::execute( const Problem<REAL>& problem,
           problem.is_clique_equation_or_sos1( matrix, row, num );
       if( !matrix.isRowRedundant( row ) &&
           std::get<0>( cliqueCheck ) & !std::get<1>( cliqueCheck ) &&
-          !std::get<2>( cliqueCheck ) && cliqueRow.getLength() < 100 )
+          !std::get<2>( cliqueCheck ) && cliqueRow.getLength() < problemUpdate.getPresolveOptions().maxcliquesize )
       {
          Cliques.push_back( row );
          rowFlags[row].set( RowFlag::kClique );
@@ -206,9 +208,9 @@ CliqueMerging<REAL>::execute( const Problem<REAL>& problem,
          rowFlags[row].unset( RowFlag::kClique );
       }
 #ifdef PAPILO_TBB
-      if( edges.size() > 1000000 )
+      if( edges.size() > static_cast<long unsigned int>(problemUpdate.getPresolveOptions().maxedgescliquemergingparallel) )
 #else
-      if( edges.size() > 100000 )
+      if( edges.size() > static_cast<long unsigned int>(problemUpdate.getPresolveOptions().maxedgescliquemergingsequential) )
 #endif
          break;
    }
@@ -239,7 +241,7 @@ CliqueMerging<REAL>::execute( const Problem<REAL>& problem,
       } );
 #endif
       int clique = Cliques[cliqueInd];
-      if( cliqueInd > 10000 )
+      if( cliqueInd > problemUpdate.getPresolveOptions().maxgreedycliquecalls )
          break;
       if( std::find( completedCliques.begin(), completedCliques.end(),
                      clique ) != completedCliques.end() )
