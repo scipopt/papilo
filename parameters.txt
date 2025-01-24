@@ -201,3 +201,6 @@ int maxcliquesize = 100;
 
 # Maximal number of function calls for greedy clique in a single thread in clique merging [Integer: [1,2147483647]]
 int maxgreedycliquecalls = 10000; 
+
+# Is presolver clique merging enabled [Boolean: {0,1}]
+cliquemerging.enabled = 1
