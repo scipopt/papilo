@@ -1,3 +1,14 @@
+# libpapilo: Distribute PaPILO as binary package
+
+This is a fork of [scipopt/papilo](https://github.com/scipopt/papilo) for binary packaging with LGPLv3.
+
+- [ ] DEB file for Ubuntu
+- [ ] RPM file for RHEL and others
+
+↓ Original README ↓
+
+----------------
+
 # PaPILO &mdash; Parallel Presolve for Integer and Linear Optimization
 
 PaPILO, a C++14-based software package, provides parallel presolve routines for (mixed integer) linear programming problems. The routines
