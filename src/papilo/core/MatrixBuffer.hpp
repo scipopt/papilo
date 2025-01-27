@@ -241,7 +241,7 @@ struct MatrixBuffer
    void
    addEntry( int row, int col, const REAL& val )
    {
-      int n = entries.end() - entries.begin();
+      int n = entries.size();
       entries.emplace_back( row, col, val );
 
       this->template link<true>( n );
@@ -405,7 +405,7 @@ struct MatrixBuffer
    int
    getNnz() const
    {
-      return entries.end() - entries.begin() - 1;
+      return entries.size() - 1;
    }
 
    SparseStorage<REAL>

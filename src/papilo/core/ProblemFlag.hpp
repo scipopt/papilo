@@ -34,7 +34,6 @@ enum class ProblemFlag : uint8_t
    kInteger = 1 << 1,
    kLinear = 1 << 2,
    kBinary = 1 << 3,
-   kDidCliqueMerging = 1 << 4,
 };
 
 using ProblemFlags = Flags<ProblemFlag>;

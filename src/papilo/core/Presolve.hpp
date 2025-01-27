@@ -466,7 +466,7 @@ Presolve<REAL>::apply( Problem<REAL>& problem, bool store_dual_postsolve )
       msg.info( "  columns:  {}\n", problem.getNCols() );
       msg.info( "  int. columns:  {}\n", problem.getNumIntegralCols() );
       msg.info( "  cont. columns:  {}\n", problem.getNumContinuousCols() );
-      msg.info( "  nonzeros: {}\n", problem.getConstraintMatrix().getNnz() );
+      msg.info( "  nonzeros: {}\n\n", problem.getConstraintMatrix().getNnz() );
 
 
       result.status = PresolveStatus::kUnchanged;
@@ -1354,7 +1354,6 @@ Presolve<REAL>::are_applied_tsx_negligible( const Problem<REAL>& problem,
   case Delegator::kExceeded:
       assert(false);
    }
-
    if( roundStats.ndeletedcols == 0 && roundStats.ndeletedrows == 0 &&
        roundStats.ncoefchgs == 0 && presolveOptions.max_consecutive_rounds_of_only_bound_changes >= 0 )
    {

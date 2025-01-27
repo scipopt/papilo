@@ -26,6 +26,10 @@
 #include "papilo/core/Problem.hpp"
 #include "papilo/core/ProblemBuilder.hpp"
 
+#include <map>
+#include <set>
+#include <vector>
+
 using namespace papilo;
 
 Problem<double>
@@ -33,9 +37,8 @@ setupMatrixForCliqueMerging();
 
 TEST_CASE( "clique-merging-basic", "[presolve]" )
 {
-    
-   double time = 0.0;
    int cause = -1;
+   double time = 0.0;
    Timer t{time};
    Num<double> num{};
    Message msg{};
@@ -54,94 +57,77 @@ TEST_CASE( "clique-merging-basic", "[presolve]" )
     Vec<int> noClique;
     Vec<int> Cliques;
     const auto& matrix = problem.getConstraintMatrix();
-    const std::vector<RowFlags> rowFlags = matrix.getRowFlags();/*
-    for( int i = 0; i < 6; ++i ){
-        Cliques.push_back(i);
-        REQUIRE( rowFlags[i].test(RowFlag::kClique) );
-    }
-    int col = 0;
-    int neighbournumber = 1;
-    int neigh = presolvingMethod.getNeighbour( matrix, col, neighbournumber );
-    REQUIRE( neigh == 2 );
-    
-    int clique = 0;
-    newClique = presolvingMethod.greedyClique( matrix, Cliques[clique] );
-    REQUIRE( newClique.size() == 1 );
-    REQUIRE( presolvingMethod.greedyClique( matrix, 3 ).size() == 0 );
-    REQUIRE( presolvingMethod.greedyClique( matrix, 4 ).size() == 0 );
-    REQUIRE( presolvingMethod.greedyClique( matrix, 5 ).size() == 0 );
-    REQUIRE( presolvingMethod.greedyClique( matrix, 1 ).size() == 1 );
-    REQUIRE( presolvingMethod.greedyClique( matrix, 2 ).size() == 1 );
-
-    int neighnumber = presolvingMethod.getNeighbourhoodSize(matrix, col);
-    REQUIRE( neighnumber == 2);
-    REQUIRE( presolvingMethod.getNeighbourhoodSize(matrix, 3) == 3 );
-    REQUIRE( presolvingMethod.getNeighbourhoodSize(matrix, 0) == 2 );
-    REQUIRE( presolvingMethod.isNeighbour(matrix, 0, 2));
-    REQUIRE( !presolvingMethod.isNeighbour(matrix, 0, 3));
-    REQUIRE( presolvingMethod.isCovered( matrix, 1, newClique, 0));
-    REQUIRE( !presolvingMethod.isCovered( matrix, 3, newClique, 0));
-
-    REQUIRE( !presolvingMethod.isCovered( matrix, 1, noClique, 0));
-    REQUIRE( !presolvingMethod.isCovered( matrix, 2, noClique, 0));
-    REQUIRE( !presolvingMethod.isCovered( matrix, 4, noClique, 0));
-    REQUIRE( !presolvingMethod.isCovered( matrix, 5, noClique, 0));
-    REQUIRE( !presolvingMethod.isCovered( matrix, 3, noClique, 0));
-
-    REQUIRE( !presolvingMethod.isCovered( matrix, 0, noClique, 1));
-    REQUIRE( !presolvingMethod.isCovered( matrix, 2, noClique, 1));
-    REQUIRE( !presolvingMethod.isCovered( matrix, 1, noClique, 2));
-    REQUIRE( !presolvingMethod.isCovered( matrix, 4, noClique, 1));
-    REQUIRE( !presolvingMethod.isCovered( matrix, 5, noClique, 1));
-    REQUIRE( !presolvingMethod.isCovered( matrix, 3, noClique, 1));
-    for( int i = 0; i < 6; ++i )
-    {
-        for( int j = 0; j < 6; ++j )
-        {
-            if( i == j )
-            {
-                //REQUIRE( presolvingMethod.isCovered( matrix, i, noClique, j));
-            }
-            else
-            {
-                //REQUIRE( !presolvingMethod.isCovered( matrix, i, noClique, j));
-            }
-        }
-    }*/
-    
+    const std::vector<RowFlags> rowFlags = matrix.getRowFlags();
    PresolveStatus presolveStatus =
        presolvingMethod.execute( problem, problemUpdate, num, reductions, t, cause);
 
    REQUIRE( presolveStatus == PresolveStatus::kReduced );
-   //REQUIRE( reductions.size() == 9 );
-   /*
-    REQUIRE( reductions.getReduction( 0 ).row == 0 );
-    REQUIRE( reductions.getReduction( 0 ).col == RowReduction::LOCKED );
+    bool correctness1 = false;
+    bool correctness2 = false;
+    for( unsigned int red = 0; red < reductions.size(); ++ red )
+    {
+        if( reductions.getReduction(red).row ==  1 && reductions.getReduction(red).col == RowReduction::REDUNDANT )
+        {
+            correctness1 = true;
+        }
+        if( reductions.getReduction(red).row ==  1 && reductions.getReduction(red).col == RowReduction::REDUNDANT )
+        {
+            correctness2 = true;
+        }
+    }
+    REQUIRE( correctness1 );
+    REQUIRE( correctness2 );
+}
 
-    REQUIRE( reductions.getReduction( 1 ).row == 1 );
-    REQUIRE( reductions.getReduction( 1 ).col == RowReduction::LOCKED );
 
-    REQUIRE( reductions.getReduction( 2 ).row == 2 );
-    REQUIRE( reductions.getReduction( 2 ).col == RowReduction::LOCKED );
+TEST_CASE( "clique-merging-functions", "[presolve]" )
+{   
+    double time = 0.0;
+   Timer t{time};
+   Num<double> num{};
+   Message msg{};
+   Problem<double> problem = setupMatrixForCliqueMerging();
+   Statistics statistics{};
+   PresolveOptions presolveOptions{};
+   PostsolveStorage<double> postsolve =
+       PostsolveStorage<double>( problem, num, presolveOptions );
+   ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
+                                        presolveOptions, num, msg );
 
-    REQUIRE( reductions.getReduction( 3 ).row == ColReduction::BOUNDS_LOCKED );
-    REQUIRE( reductions.getReduction( 3 ).col == 2 );
+   CliqueMerging<double> presolvingMethod{};
 
-    REQUIRE( reductions.getReduction( 4 ).row == ColReduction::BOUNDS_LOCKED );
-    REQUIRE( reductions.getReduction( 4 ).col == 0 );
+    Vec<int> newClique;
+    Vec<int> noClique;
+    Vec<int> Cliques;
+    const auto& matrix = problem.getConstraintMatrix();
+    const std::vector<RowFlags> rowFlags = matrix.getRowFlags();
+   
+    std::set<int> imaginaryclique1 = {0,1,2,3,4};
+    std::set<int> imaginaryclique2 = {1,2};
+    REQUIRE( presolvingMethod.isCovered( matrix, 0, imaginaryclique1 ) );
+    REQUIRE( !presolvingMethod.isCovered( matrix, 0, imaginaryclique2 ) );
 
-    REQUIRE( reductions.getReduction( 5 ).row == ColReduction::BOUNDS_LOCKED );
-    REQUIRE( reductions.getReduction( 5 ).col == 1 );
-
-    REQUIRE( reductions.getReduction( 6 ).row == 1 );
-    REQUIRE( reductions.getReduction( 6 ).col == RowReduction::REDUNDANT );
-
-    REQUIRE( reductions.getReduction( 7 ).row == 2 );
-    REQUIRE( reductions.getReduction( 7 ).col == RowReduction::REDUNDANT );
-
-    REQUIRE( reductions.getReduction( 8 ).row == 0 );
-    REQUIRE( reductions.getReduction( 8 ).col == 2 );
-    REQUIRE( reductions.getReduction( 8 ).newval == 1.0 );*/
+    std::set<std::pair<int, int>> edges = {{0,1},{1,0},{0,2},{2,0},{1,2},{2,1}};
+    std::map<int, std::set<int>> Neighbourhoodlists;
+    std::set<int> r1 = {1,2};
+    std::set<int> r2 = {0,2};
+    std::set<int> r3 = {0,1};
+    Neighbourhoodlists.emplace(0, r1);
+    Neighbourhoodlists.emplace(1, r2);
+    Neighbourhoodlists.emplace(2, r3);
+    auto result = presolvingMethod.greedyClique( matrix, edges,
+    Neighbourhoodlists, 0 );
+    std::set<int> r4 = {0,1,2};
+    std::vector<int> r5 = {2};
+    std::pair<std::set<int>,std::vector<int>> expectedresult = {r4,r5};
+    REQUIRE( result == expectedresult );
+    
+   REQUIRE( problem.is_clique( problem.getConstraintMatrix(), 1,  num) );
+   REQUIRE( problem.is_clique( problem.getConstraintMatrix(), 2,  num) );
+   REQUIRE( problem.is_clique( problem.getConstraintMatrix(), 3,  num) );
+   REQUIRE( problem.is_clique( problem.getConstraintMatrix(), 0,  num) );
+   REQUIRE( problem.is_clique( problem.getConstraintMatrix(), 4,  num) );
+   REQUIRE( problem.is_clique( problem.getConstraintMatrix(), 5,  num) );
 }
 
 Problem<double>

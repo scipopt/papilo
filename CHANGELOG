@@ -7,14 +7,14 @@ Interface changes
 
 ### Changed parameters
 
-Added the following parameters for clique merging:
--maxedgescliquemergingparallel = 1000000: Maximal number of edges in the graph constructed for parallel clique merging
--maxedgescliquemergingsequential = 100000: Maximal number of edges in the graph constructed for sequential clique merging
--maxcliquesize = 100: Maximal size of cliques considered for clique merging [Integer: [1,2147483647]]
-maxgreedycliquecalls = 10000: Maximal number of function calls for greedy clique in a single thread in clique merging 
 
 ### New parameters with default values
 
+Added the following parameters for clique merging:
+-cliquemerging.maxedgesparallel = 1000000: Maximal number of edges in the graph constructed for parallel clique merging
+-cliquemerging.maxedgessequential = 100000: Maximal number of edges in the graph constructed for sequential clique merging
+-cliquemerging.maxcliquesize = 100: Maximal size of cliques considered for clique merging [Integer: [1,2147483647]]
+-cliquemerging.maxgreedycalls = 10000: Maximal number of function calls for greedy clique in a single thread in clique merging 
 
 Data Structure:
 ------------

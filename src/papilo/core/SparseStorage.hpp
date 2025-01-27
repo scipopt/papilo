@@ -430,7 +430,7 @@ SparseStorage<REAL>::SparseStorage( Vec<Triplet<REAL>> entries, int nRows_in,
    if( !sorted )
       pdqsort( entries.begin(), entries.end() );
 
-   nnz = entries.end() - entries.begin();
+   nnz = entries.size();
    nAlloc = computeNAlloc();
 
    rowranges.resize( nRows + 1 );

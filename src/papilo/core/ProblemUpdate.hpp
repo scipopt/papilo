@@ -2147,7 +2147,6 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
                contains = true;
                break;
             }
-//         assert(contains);
          if(contains)
             matrix_buffer.addEntry( reduction.row, reduction.col, reduction.newval );
          else

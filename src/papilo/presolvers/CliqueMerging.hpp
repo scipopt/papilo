@@ -20,8 +20,8 @@
 /*                                                                           */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef _PAPILO_PRESOLVERS_CliqueMerging_HPP_
-#define _PAPILO_PRESOLVERS_CliqueMerging_HPP_
+#ifndef _PAPILO_PRESOLVERS_CLIQUE_MERGING_HPP_
+#define _PAPILO_PRESOLVERS_CLIQUE_MERGING_HPP_
 
 #include "papilo/Config.hpp"
 #include "papilo/core/PresolveMethod.hpp"
@@ -43,16 +43,43 @@ namespace papilo
 template <typename REAL>
 class CliqueMerging : public PresolveMethod<REAL>
 {
-/*Clique Merging works with cliques; constraints with binary variables, such that one binary variable being one 
-implies all others in the row being zero. We then construct a graph with every binary in a clique being represented
-by a vertex, and each implication by an edge. We then seek to enlarge the already given cliques with a greedy clique
-algorithm, if the enlarged clique then covers other cliques, they can be marked redundant.*/
+/* Clique Merging works with cliques; constraints with binary variables, such that one binary variable being one 
+ * implies all others in the row being zero. We then construct a graph with every binary in a clique being represented
+ * by a vertex, and each implication by an edge. We then seek to enlarge the already given cliques with a greedy clique
+ * algorithm, if the enlarged clique then covers other cliques, they can be marked redundant.
+ */
+
+   int maxedgesparallel;
+   int maxedgessequential;
+   int maxcliquesize;
+   int maxgreedycalls;
+
  public:
    CliqueMerging() : PresolveMethod<REAL>()
    {
       this->setName( "cliquemerging" );
       this->setTiming( PresolverTiming::kMedium );
       this->setType( PresolverType::kIntegralCols );
+   }
+
+   void
+   addPresolverParams( ParameterSet& paramSet ) override
+   {
+      paramSet.addParameter( "cliquemerging.maxedgesparallel",
+                             "maximum number of edges when executed in parallel",
+                             maxedgesparallel, 1000000, 1.0);
+
+      paramSet.addParameter( "cliquemerging.maxedgessequential",
+                             "maximum number of edges when executed sequentially ",
+                             maxedgessequential, 100000, 1.0);
+
+      paramSet.addParameter( "cliquemerging.maxcliquesize",
+                             "maximal size of cliques considered for clique merging",
+                              maxcliquesize, 100, 1.0);
+
+      paramSet.addParameter( "cliquemerging.maxgreedycalls",
+                             "maximum number of greedy clique calls in a single thread",
+                             maxgreedycalls, 10000, 1.0);
    }
 
    PresolveStatus
@@ -70,6 +97,10 @@ algorithm, if the enlarged clique then covers other cliques, they can be marked 
    bool
    isCovered( const ConstraintMatrix<REAL>& matrix, int row,
               const std::set<int>& newClique );
+   
+   void
+   setParameters( int maxEdgesParallel, int maxEdgesSequential,
+                  int maxCliqueSize, int maxGreedyCalls );
 };
 
 #ifdef PAPILO_USE_EXTERN_TEMPLATES
@@ -87,7 +118,7 @@ CliqueMerging<REAL>::greedyClique(
 {
    std::set<int> newClique;
    Vec<int> newVertices;
-   newVertices.reserve(200);
+   newVertices.reserve(2* maxcliquesize );
    assert( clique >= 0 );
    assert( clique < matrix.getNRows() );
    assert( clique >= 0 );
@@ -118,6 +149,10 @@ CliqueMerging<REAL>::greedyClique(
       {
          newClique.emplace( potentialNewVertex );
          newVertices.emplace_back( potentialNewVertex );
+         if( newVertices.end() - newVertices.begin() >= 2*maxcliquesize )
+         {
+            break;
+         }
       }
    }
    std::pair<std::set<int>, Vec<int>> output;
@@ -145,6 +180,17 @@ CliqueMerging<REAL>::isCovered( const ConstraintMatrix<REAL>& matrix,
 }
 
 template <typename REAL>
+void
+CliqueMerging<REAL>::setParameters( int maxEdgesParallel, int maxEdgesSequential,
+                                    int maxCliqueSize, int maxGreedyCalls )
+{
+   maxedgesparallel = maxEdgesParallel;
+   maxedgessequential = maxEdgesSequential;
+   maxcliquesize = maxCliqueSize;
+   maxgreedycalls = maxGreedyCalls;
+}
+
+template <typename REAL>
 PresolveStatus
 CliqueMerging<REAL>::execute( const Problem<REAL>& problem,
                               const ProblemUpdate<REAL>& problemUpdate,
@@ -165,7 +211,7 @@ CliqueMerging<REAL>::execute( const Problem<REAL>& problem,
    PresolveStatus result = PresolveStatus::kUnchanged;
 
    Vec<int> Cliques;
-   Cliques.reserve(problemUpdate.getPresolveOptions().maxedgescliquemergingsequential);
+   Cliques.reserve(maxedgesparallel);
 
    std::set<std::pair<int, int>> edges;
 
@@ -183,7 +229,7 @@ CliqueMerging<REAL>::execute( const Problem<REAL>& problem,
       bool cliqueCheck =
           problem.is_clique( matrix, row, num );
       if( !matrix.isRowRedundant( row ) &&
-          cliqueCheck && cliqueRow.getLength() < problemUpdate.getPresolveOptions().maxcliquesize )
+          cliqueCheck && cliqueRow.getLength() < maxcliquesize )
       {
          Cliques.push_back( row );
          rowFlags[row].set( RowFlag::kClique );
@@ -211,9 +257,9 @@ CliqueMerging<REAL>::execute( const Problem<REAL>& problem,
          rowFlags[row].unset( RowFlag::kClique );
       }
 #ifdef PAPILO_TBB
-      if( edges.size() > static_cast<long unsigned int>(problemUpdate.getPresolveOptions().maxedgescliquemergingparallel) )
+      if( edges.size() > static_cast<long unsigned int>(maxedgesparallel) )
 #else
-      if( edges.size() > static_cast<long unsigned int>(problemUpdate.getPresolveOptions().maxedgescliquemergingsequential) )
+      if( edges.size() > static_cast<long unsigned int>(maxedgessequential) )
 #endif
          break;
    }
@@ -244,7 +290,7 @@ CliqueMerging<REAL>::execute( const Problem<REAL>& problem,
       } );
 #endif
       int clique = Cliques[cliqueInd];
-      if( cliqueInd > problemUpdate.getPresolveOptions().maxgreedycliquecalls )
+      if( cliqueInd > maxgreedycalls )
          break;
       if( std::find( completedCliques.begin(), completedCliques.end(),
                      clique ) != completedCliques.end() )

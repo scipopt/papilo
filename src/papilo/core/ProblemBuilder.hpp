@@ -30,14 +30,11 @@ namespace papilo
 #include "papilo/core/Problem.hpp"
 #include "papilo/misc/String.hpp"
 #include "papilo/misc/Vec.hpp"
-#include "papilo/misc/Num.hpp"
 #include "papilo/Config.hpp"
 
 template <typename REAL>
 class ProblemBuilder
 {
- private:
-   Num<REAL> num;
 
  public:
    /// Sets the number of columns to the given value. The information of columns
@@ -361,8 +358,8 @@ class ProblemBuilder
    {
       Problem<REAL> problem;
 
-      int nRows = lhs.end() - lhs.begin();
-      int nColumns = obj.coefficients.end() - obj.coefficients.begin() ;
+      int nRows = lhs.size();
+      int nColumns = obj.coefficients.size();
 
       problem.setName( std::move( probname ) );
 

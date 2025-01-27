@@ -191,31 +191,16 @@ max_consecutive_rounds_of_only_bound_changes = 500
 parallelcols.symmetries_enabled = 0
 
 # Maximal number of edges in the graph constructed for parallel clique merging [Integer: [1,2147483647]]
-maxedgescliquemergingparallel = 1000000;
+cliquemerging.maxedgesparallel = 1000000
 
 # Maximal number of edges in the graph constructed for sequential clique merging [Integer: [1,2147483647]]
-int maxedgescliquemergingsequential = 100000;
+cliquemerging.maxedgessequential = 100000
 
 # Maximal size of cliques considered for clique merging [Integer: [1,2147483647]]
-int maxcliquesize = 100;
+cliquemerging.maxcliquesize = 100
 
 # Maximal number of function calls for greedy clique in a single thread in clique merging [Integer: [1,2147483647]]
-int maxgreedycliquecalls = 10000; 
-
-# Is presolver clique merging enabled [Boolean: {0,1}]
-cliquemerging.enabled = 1
-
-# Maximal number of edges in the graph constructed for parallel clique merging [Integer: [1,2147483647]]
-maxedgescliquemergingparallel = 1000000;
-
-# Maximal number of edges in the graph constructed for sequential clique merging [Integer: [1,2147483647]]
-int maxedgescliquemergingsequential = 100000;
-
-# Maximal size of cliques considered for clique merging [Integer: [1,2147483647]]
-int maxcliquesize = 100;
-
-# Maximal number of function calls for greedy clique in a single thread in clique merging [Integer: [1,2147483647]]
-int maxgreedycliquecalls = 10000; 
+cliquemerging.maxgreedycalls = 10000
 
 # Is presolver clique merging enabled [Boolean: {0,1}]
 cliquemerging.enabled = 1

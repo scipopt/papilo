@@ -26,16 +26,16 @@
 #include "papilo/Config.hpp"
 #include "papilo/core/ConstraintMatrix.hpp"
 #include "papilo/core/Objective.hpp"
+#include "papilo/core/ProblemFlag.hpp"
 #include "papilo/core/SingleRow.hpp"
+#include "papilo/core/SymmetryStorage.hpp"
 #include "papilo/core/VariableDomains.hpp"
 #include "papilo/io/Message.hpp"
 #include "papilo/misc/MultiPrecision.hpp"
 #include "papilo/misc/StableSum.hpp"
 #include "papilo/misc/String.hpp"
-#include "papilo/core/SymmetryStorage.hpp"
 #include "papilo/misc/Vec.hpp"
 #include "papilo/misc/fmt.hpp"
-#include "papilo/core/ProblemFlag.hpp"
 #ifdef PAPILO_TBB
 #include "papilo/misc/tbb.hpp"
 #endif
@@ -432,7 +432,7 @@ class Problem
          }
          else
             return false;
-         if( !lhsClique && !rhsClique || SOS1 )
+         if( ( !lhsClique && !rhsClique ) || SOS1 )
             return false;
       }
       if( (rhsClique && num.isGT(matrix.getLeftHandSides()[row],0.0)) || (lhsClique && num.isLT(matrix.getRightHandSides()[row],0.0)) )
