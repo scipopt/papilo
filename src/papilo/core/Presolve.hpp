@@ -424,27 +424,6 @@ Presolve<REAL>::apply( Problem<REAL>& problem, bool store_dual_postsolve )
       ConstraintMatrix<REAL>& constraintMatrix = problem.getConstraintMatrix();
       Vec<REAL>& rhsVals = constraintMatrix.getRightHandSides();
       Vec<RowFlags>& rflags = constraintMatrix.getRowFlags();
-      const Vec<int>& rowsize = constraintMatrix.getRowSizes();/*
-#ifdef PAPILO_TBB
-      tbb::parallel_for(
-          tbb::blocked_range<int>( 0, problem.getNRows() ),
-          [&]( const tbb::blocked_range<int>& r )
-          {
-             for( int i = r.begin(); i != r.end(); ++i )
-#else
-      for( int i = 0; i < problem.getNRows(); i++ )
-#endif
-             {
-                std::pair<bool, bool> cliqueResult = problem.is_clique_or_sos1(
-                    constraintMatrix, i, num );
-                if( cliqueResult.first && cliqueResult.second )
-                   constraintMatrix.getRowFlags()[i].set( RowFlag::kSOS1 );
-                else if( cliqueResult.first )
-                   constraintMatrix.getRowFlags()[i].set( RowFlag::kClique );
-             }
-#ifdef PAPILO_TBB
-          } );
-#endif */
 
 
       PresolveResult<REAL> result;
@@ -488,22 +467,6 @@ Presolve<REAL>::apply( Problem<REAL>& problem, bool store_dual_postsolve )
       msg.info( "  cont. columns:  {}\n", problem.getNumContinuousCols() );
       msg.info( "  nonzeros: {}\n", problem.getConstraintMatrix().getNnz() );
       ConstraintMatrix<REAL>& matrix = problem.getConstraintMatrix();
-      int nCliques = 0;
-      for( int i = 0; i < problem.getNRows(); i++ )
-      {
-         RowFlags rowFlag = matrix.getRowFlags()[i];
-         if( rowFlag.test( RowFlag::kClique ) )
-            nCliques++;
-      }
-      msg.info( "\nNumber of Cliques: {}\n", nCliques );
-      int nSOS = 0;
-      for( int i = 0; i < problem.getNRows(); i++ )
-      {
-         RowFlags rowFlag = matrix.getRowFlags()[i];
-         if( rowFlag.test( RowFlag::kSOS1 ) )
-            nSOS++;
-      }
-      msg.info( "\nNumber of SOS1 constraints: {}\n\n", nSOS );
 
 
       result.status = PresolveStatus::kUnchanged;
@@ -1547,23 +1510,6 @@ Presolve<REAL>::logStatus( ProblemUpdate<REAL>& problem_update,
       msg.info( "  found symmetries: {}\n",
                 problem.getSymmetries().symmetries.size() );
 
-   ConstraintMatrix<REAL>& matrix = problem.getConstraintMatrix();
-   int nCliques = 0;
-   for( int i = 0; i < problem.getNRows(); i++ )
-   {
-      RowFlags rowFlag = matrix.getRowFlags()[i];
-      if( rowFlag.test( RowFlag::kClique ) )
-         nCliques++;
-   }
-   msg.info( "\nNumber of Cliques: {}\n", nCliques );
-   int nSOS = 0;
-   for( int i = 0; i < problem.getNRows(); i++ )
-   {
-      RowFlags rowFlag = matrix.getRowFlags()[i];
-      if( rowFlag.test( RowFlag::kSOS1 ) )
-         nSOS++;
-   }
-   msg.info( "\nNumber of SOS1 constraints: {}\n", nSOS );
 }
 
 template <typename REAL>

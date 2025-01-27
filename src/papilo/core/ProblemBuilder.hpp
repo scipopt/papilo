@@ -393,13 +393,7 @@ class ProblemBuilder
                     !rowFlag.test( RowFlag::kLhsInf ) &&
                     matrix.getLeftHandSides()[i] ==
                         matrix.getRightHandSides()[i] )
-                   matrix.getRowFlags()[i].set( RowFlag::kEquation );/*
-                std::pair<bool, bool> cliqueResult =
-                    is_clique_or_sos1( matrix, i, num );
-                if( cliqueResult.first && cliqueResult.second )
-                   matrix.getRowFlags()[i].set( RowFlag::kSOS1 );
-                else if( cliqueResult.first )
-                   matrix.getRowFlags()[i].set( RowFlag::kClique );*/
+                   matrix.getRowFlags()[i].set( RowFlag::kEquation );
              }
 #ifdef PAPILO_TBB
           } );
