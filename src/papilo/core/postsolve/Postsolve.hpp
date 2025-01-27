@@ -574,7 +574,9 @@ Postsolve<REAL>::apply_fix_infinity_variable_in_original_solution(
    int* row_indices = new int[number_rows];
    REAL* col_coefficents = new REAL[number_rows];
 
-   if( number_rows == 0 && bound == std::numeric_limits<int64_t>::max() )
+   bool is_bound_infinity = bound == REAL(std::numeric_limits<int64_t>::max());
+
+   if( number_rows == 0 && is_bound_infinity )
       solution = 0;
 
    if( isNegativeInfinity )
@@ -666,8 +668,6 @@ Postsolve<REAL>::apply_fix_infinity_variable_in_original_solution(
          sum.add( -col_coefficents[k] * originalSolution.dual[row_indices[k]] );
       originalSolution.reducedCosts[col] = sum.get();
 
-      bool is_bound_infinity = bound == std::numeric_limits<int64_t>::max();
-
       // store the bounds of the variable
       if( isNegativeInfinity )
          stored_bounds.set_bounds_of_variable( col, true, is_bound_infinity, 0, bound );
@@ -677,7 +677,7 @@ Postsolve<REAL>::apply_fix_infinity_variable_in_original_solution(
       // set the basis depending on the status
       if( originalSolution.basisAvailabe )
       {
-         if( number_rows == 0 && bound == std::numeric_limits<int64_t>::max() )
+         if( number_rows == 0 && is_bound_infinity )
             originalSolution.varBasisStatus[col] = VarBasisStatus::ZERO;
          else if( num.isEq( solution, bound ) )
             if( isNegativeInfinity )
