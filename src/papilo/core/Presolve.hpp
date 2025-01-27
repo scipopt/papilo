@@ -424,6 +424,7 @@ Presolve<REAL>::apply( Problem<REAL>& problem, bool store_dual_postsolve )
       ConstraintMatrix<REAL>& constraintMatrix = problem.getConstraintMatrix();
       Vec<REAL>& rhsVals = constraintMatrix.getRightHandSides();
       Vec<RowFlags>& rflags = constraintMatrix.getRowFlags();
+      const Vec<int>& rowsize = constraintMatrix.getRowSizes();
 
 
       PresolveResult<REAL> result;
@@ -466,7 +467,6 @@ Presolve<REAL>::apply( Problem<REAL>& problem, bool store_dual_postsolve )
       msg.info( "  int. columns:  {}\n", problem.getNumIntegralCols() );
       msg.info( "  cont. columns:  {}\n", problem.getNumContinuousCols() );
       msg.info( "  nonzeros: {}\n", problem.getConstraintMatrix().getNnz() );
-      ConstraintMatrix<REAL>& matrix = problem.getConstraintMatrix();
 
 
       result.status = PresolveStatus::kUnchanged;
