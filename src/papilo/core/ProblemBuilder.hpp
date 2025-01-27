@@ -403,63 +403,6 @@ class ProblemBuilder
 
       return problem;
    }
-/*
-   std::pair<bool, bool>
-   is_clique_or_sos1( const ConstraintMatrix<REAL>& matrix, int row, const Num<REAL>& num )
-   {
-      RowFlags rowFlag = matrix.getRowFlags()[row];
-      bool rhsClique = true;
-      bool lhsClique = true;
-      bool SOS1 = false;
-      if( rowFlag.test( RowFlag::kRhsInf ) )
-         rhsClique = false;
-      if( rowFlag.test( RowFlag::kLhsInf ) )
-         lhsClique = false;
-      if( !lhsClique && !rhsClique )
-         return {false, false};
-      auto rowvec = matrix.getRowCoefficients( row );
-      REAL minvalue = std::numeric_limits<REAL>::infinity();
-      REAL maxvalue = -std::numeric_limits<REAL>::infinity();
-      for( int j = 0; j < rowvec.getLength(); ++j )
-      {
-         int col = rowvec.getIndices()[j];
-         if( !domains.flags[col].test( ColFlag::kIntegral ) )
-            return {false, false};
-         REAL coeff = rowvec.getValues()[j];
-         REAL lb = domains.lower_bounds[col];
-         REAL ub = domains.upper_bounds[col];
-         if( !num.isEq( ub, 1 ) )
-            SOS1 = true;
-         if( rhsClique && ( ( num.isEq( 0, lb ) && num.isLT( 0, coeff ) ) ||
-                            ( num.isEq( 0, ub ) && num.isGT( 0, coeff ) ) ) )
-         {
-            lhsClique = false;
-            if( !( num.isGT( minvalue + abs( coeff ),
-                             matrix.getRightHandSides()[row] ) &&
-                   num.isLE( abs( coeff ), matrix.getRightHandSides()[row] ) ) )
-               rhsClique = false;
-            else if( num.isLT( abs( coeff ), minvalue ) )
-               minvalue = abs( coeff );
-         }
-         else if( lhsClique &&
-                  ( ( num.isEq( 0, ub ) && num.isLT( 0, coeff ) ) ||
-                    ( num.isEq( 0, lb ) && num.isGT( 0, coeff ) ) ) )
-         {
-            rhsClique = false;
-            if( !( num.isLT( maxvalue - abs( coeff ),
-                             matrix.getLeftHandSides()[row] ) &&
-                   num.isGE( -abs( coeff ), matrix.getLeftHandSides()[row] ) ) )
-               lhsClique = false;
-            else if( num.isGT( -abs( coeff ), maxvalue ) )
-               maxvalue = -abs( coeff );
-         }
-         else
-            return {false, false};
-         if( !lhsClique && !rhsClique )
-            return {false, false};
-      }
-      return {true, SOS1};
-   }*/
 
 
  private:

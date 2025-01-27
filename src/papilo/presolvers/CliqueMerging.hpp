@@ -43,6 +43,10 @@ namespace papilo
 template <typename REAL>
 class CliqueMerging : public PresolveMethod<REAL>
 {
+/*Clique Merging works with cliques; constraints with binary variables, such that one binary variable being one 
+implies all others in the row being zero. We then construct a graph with every binary in a clique being represented
+by a vertex, and each implication by an edge. We then seek to enlarge the already given cliques with a greedy clique
+algorithm, if the enlarged clique then covers other cliques, they can be marked redundant.*/
  public:
    CliqueMerging() : PresolveMethod<REAL>()
    {
@@ -176,11 +180,10 @@ CliqueMerging<REAL>::execute( const Problem<REAL>& problem,
       const auto cliqueRow = matrix.getRowCoefficients( row );
       const auto cliqueIndices = cliqueRow.getIndices();
 
-      std::tuple<bool, bool, bool> cliqueCheck =
-          problem.is_clique_equation_or_sos1( matrix, row, num );
+      bool cliqueCheck =
+          problem.is_clique( matrix, row, num );
       if( !matrix.isRowRedundant( row ) &&
-          std::get<0>( cliqueCheck ) & !std::get<1>( cliqueCheck ) &&
-          !std::get<2>( cliqueCheck ) && cliqueRow.getLength() < problemUpdate.getPresolveOptions().maxcliquesize )
+          cliqueCheck && cliqueRow.getLength() < problemUpdate.getPresolveOptions().maxcliquesize )
       {
          Cliques.push_back( row );
          rowFlags[row].set( RowFlag::kClique );

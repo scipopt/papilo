@@ -378,8 +378,8 @@ class Problem
       return symmetries;
    }
 
-   std::tuple<bool, bool, bool>
-   is_clique_equation_or_sos1( const ConstraintMatrix<REAL>& matrix, int row, const Num<REAL>& num ) const
+   bool
+   is_clique( const ConstraintMatrix<REAL>& matrix, int row, const Num<REAL>& num ) const
    {
       RowFlags rowFlag = matrix.getRowFlags()[row];
       bool rhsClique = true;
@@ -391,17 +391,17 @@ class Problem
       if( rowFlag.test( RowFlag::kLhsInf ) )
          lhsClique = false;
       if( !lhsClique && !rhsClique )
-         return {false, false, false};
+         return false;
       auto rowvec = matrix.getRowCoefficients( row );
       if( rowvec.getLength() <= 1 || rowFlag.test( RowFlag::kRedundant ))
-         return {false, false, false};
+         return false;
       REAL minvalue = std::numeric_limits<REAL>::infinity();
       REAL maxvalue = -std::numeric_limits<REAL>::infinity();
       for( int j = 0; j < rowvec.getLength(); ++j )
       {
          int col = rowvec.getIndices()[j];
          if( !variableDomains.flags[col].test( ColFlag::kIntegral ) )
-            return {false, false, false};
+            return false;
          REAL coeff = rowvec.getValues()[j];
          REAL lb = variableDomains.lower_bounds[col];
          REAL ub = variableDomains.upper_bounds[col];
@@ -431,13 +431,13 @@ class Problem
                maxvalue = -abs( coeff );
          }
          else
-            return {false, false, false};
-         if( !lhsClique && !rhsClique )
-            return {false, false, false};
+            return false;
+         if( !lhsClique && !rhsClique || SOS1 )
+            return false;
       }
       if( (rhsClique && num.isGT(matrix.getLeftHandSides()[row],0.0)) || (lhsClique && num.isLT(matrix.getRightHandSides()[row],0.0)) )
          equation = true;
-      return {true, equation, SOS1};
+      return !equation && !SOS1 ;
    }
 
    /// substitute a variable in the objective using an equality constraint

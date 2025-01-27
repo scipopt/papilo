@@ -415,8 +415,6 @@ Modifications of PaPILO itself, however, must be distributed under LGPLv3.
 
 [Alexander Hoen](https://www.zib.de/members/hoen)  ([@alexhoen](https://github.com/alexhoen)) &mdash; main developer
 
-[Jacob von Holly-Ponientzietz](https://www.zib.de/members/vonholly-ponientzietz) ([@JacobvonHolly-Ponientzietz
-](https://github.com/JacobvonHolly-Ponientzietz)) &mdash; 
 
 #### Former Contributors
 
@@ -435,3 +433,5 @@ Anass Meskini &mdash; general development and contributions to substitution pres
 [Daniel Rehfeldt](https://www.zib.de/members/rehfeldt) ([@dRehfeldt](https://github.com/dRehfeldt)) &mdash; core data structures and MPS parsing
 
 [Franziska Schlösser](https://www.zib.de/members/schloesser)  ([@fschloesser](https://github.com/fschloesser)) &mdash; build system
+
+[Jacob von Holly-Ponientzietz](https://www.zib.de/members/vonholly-ponientzietz) ([@JacobvonHolly-Ponientzietz](https://github.com/JacobvonHolly-Ponientzietz)) &mdash; Clique Merging
