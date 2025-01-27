@@ -18,7 +18,6 @@
 #substitution.enabled = 0
 #cliquemerging.enabled = 0
 
-presolve.threads = 0
 
 presolve.threads = 0
 
