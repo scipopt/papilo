@@ -4,7 +4,7 @@
 /*               This file is part of the program and library                */
 /*    PaPILO --- Parallel Presolve for Integer and Linear Optimization       */
 /*                                                                           */
-/* Copyright (C) 2020-2024 Zuse Institute Berlin (ZIB)                       */
+/* Copyright (C) 2020-2025 Zuse Institute Berlin (ZIB)                       */
 /*                                                                           */
 /* This program is free software: you can redistribute it and/or modify      */
 /* it under the terms of the GNU Lesser General Public License as published  */
