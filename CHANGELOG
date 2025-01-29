@@ -40,8 +40,8 @@ Build system
 ------------
 
 - improved search for dependencies when another tool uses papilo-config.cmake
-- upgrade the unit testing framework catch from 2.13.8 to 3.7
-- compile the binary with gfortran when clusol is used
+- updated the unit testing framework catch from 2.13.8 to 3.7.0
+- link the executable via the Fortran compiler when clusol is used
 
 @section RN240 PaPILO 2.4.0
 

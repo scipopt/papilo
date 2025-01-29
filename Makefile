@@ -3,7 +3,7 @@
 #*                  This file is part of the program and library             *
 #*         SCIP --- Solving Constraint Integer Programs                      *
 #*                                                                           *
-#*    Copyright (C) 2002-2023 Zuse Institute Berlin (ZIB)                    *
+#*    Copyright (C) 2002-2025 Zuse Institute Berlin (ZIB)                    *
 #*                                                                           *
 #*  SCIP is distributed under the terms of the ZIB Academic License.         *
 #*                                                                           *
