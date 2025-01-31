@@ -139,10 +139,10 @@ setupMatrixForCliqueMerging()
    Vec<double> lowerBounds{ 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 };
    Vec<uint8_t> isIntegral{ 1, 1, 1, 1, 1, 1 };
 
-   Vec<double> rhs{ 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 };
-   Vec<std::string> rowNames{ "A", "B", "C", "D", "E", "F" };
-   Vec<uint8_t> lhsInfinity{ 1, 1, 1, 1, 1, 1 };
-   Vec<uint8_t> rhsInfinity{ 0, 0, 0, 0, 0, 0 };
+   Vec<double> rhs{ 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 };
+   Vec<std::string> rowNames{ "A", "B", "C", "D", "E", "F", "G" };
+   Vec<uint8_t> lhsInfinity{ 1, 1, 1, 1, 1, 1, 1 };
+   Vec<uint8_t> rhsInfinity{ 0, 0, 0, 0, 0, 0, 0 };
    Vec<std::tuple<int, int, double>> entries{
        std::tuple<int, int, double>{ 0, 0, 1.0 },
        std::tuple<int, int, double>{ 0, 1, 1.0 },
@@ -161,6 +161,12 @@ setupMatrixForCliqueMerging()
 
        std::tuple<int, int, double>{ 5, 3, 1.0 },
        std::tuple<int, int, double>{ 5, 2, 1.0 },
+
+       std::tuple<int, int, double>{ 6, 0, 1.0 },
+       std::tuple<int, int, double>{ 6, 1, 1.0 },
+       std::tuple<int, int, double>{ 6, 2, 1.0 },
+       std::tuple<int, int, double>{ 6, 3, 1.0 },
+
    };
 
    ProblemBuilder<double> pb;
