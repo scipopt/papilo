@@ -209,7 +209,7 @@ set(unit_tests
         "failed-path-sparsify-if-misses-one-for-integer"
 
         #CliqueMerging
-        #"clique-merging-basic"
+        "clique-merging-basic"
         "clique-merging-functions"
 
         ${PAPILOLIB_TESTS}

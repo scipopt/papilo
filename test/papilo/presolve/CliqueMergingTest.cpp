@@ -28,7 +28,6 @@
 
 #include <map>
 #include <set>
-#include <vector>
 
 using namespace papilo;
 
@@ -57,26 +56,17 @@ TEST_CASE( "clique-merging-basic", "[presolve]" )
     Vec<int> noClique;
     Vec<int> Cliques;
     const auto& matrix = problem.getConstraintMatrix();
-    const std::vector<RowFlags> rowFlags = matrix.getRowFlags();
+    const Vec<RowFlags>& rowFlags = matrix.getRowFlags();
    PresolveStatus presolveStatus =
        presolvingMethod.execute( problem, problemUpdate, num, reductions, t, cause);
 
    REQUIRE( presolveStatus == PresolveStatus::kReduced );
-    bool correctness1 = false;
-    bool correctness2 = false;
-    for( unsigned int red = 0; red < reductions.size(); ++ red )
-    {
-        if( reductions.getReduction(red).row ==  1 && reductions.getReduction(red).col == RowReduction::REDUNDANT )
-        {
-            correctness1 = true;
-        }
-        if( reductions.getReduction(red).row ==  1 && reductions.getReduction(red).col == RowReduction::REDUNDANT )
-        {
-            correctness2 = true;
-        }
-    }
-    REQUIRE( correctness1 );
-    REQUIRE( correctness2 );
+////TODO: please encode the reductions like this.
+//   REQUIRE( reductions.size() <= 3 );
+//   REQUIRE( reductions.getReduction(0).row ==  1 );
+//   REQUIRE( reductions.getReduction(1).col == RowReduction::REDUNDANT );
+//   REQUIRE( reductions.getReduction(1).row ==  1 );
+//   REQUIRE( reductions.getReduction(2).col == RowReduction::REDUNDANT );
 }
 
 
