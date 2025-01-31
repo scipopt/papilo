@@ -198,6 +198,7 @@ CliqueMerging<REAL>::execute( const Problem<REAL>& problem,
                               Reductions<REAL>& reductions, const Timer& timer,
                               int& reason_of_infeasibility )
 {
+   std::cout << "\nTEST; STARTING CLIQUEMERGE\n";
    const auto& matrix = problem.getConstraintMatrix();
 
    const auto lb = problem.getLowerBounds();
