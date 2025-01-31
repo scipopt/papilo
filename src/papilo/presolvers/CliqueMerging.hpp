@@ -30,7 +30,7 @@
 #include "papilo/core/ProblemUpdate.hpp"
 #include "papilo/external/pdqsort/pdqsort.h"
 #include <algorithm>
-#include <map>
+#include <unordered_map>
 #include <set>
 #include <vector>
 #ifdef PAPILO_TBB
@@ -91,7 +91,7 @@ class CliqueMerging : public PresolveMethod<REAL>
    std::pair<std::set<int>, Vec<int>>
    greedyClique( const ConstraintMatrix<REAL>& matrix,
                  const std::set<std::pair<int, int>>& edges,
-                 const std::map<int, std::set<int>>& Neighbourhoodlists,
+                 const std::unordered_map<int, std::set<int>>& Neighbourhoodlists,
                  int clique );
 
    bool
@@ -114,7 +114,7 @@ std::pair<std::set<int>, Vec<int>>
 CliqueMerging<REAL>::greedyClique(
     const ConstraintMatrix<REAL>& matrix,
     const std::set<std::pair<int, int>>& edges,
-    const std::map<int, std::set<int>>& Neighbourhoodlists, int clique )
+    const std::unordered_map<int, std::set<int>>& Neighbourhoodlists, int clique )
 {
    std::set<int> newClique;
    Vec<int> newVertices;
@@ -215,7 +215,7 @@ CliqueMerging<REAL>::execute( const Problem<REAL>& problem,
 
    std::set<std::pair<int, int>> edges;
 
-   std::map<int, std::set<int>> neighbourLists;
+   std::unordered_map<int, std::set<int>> neighbourLists;
 
    std::set<int> Vertices;
 
@@ -240,7 +240,7 @@ CliqueMerging<REAL>::execute( const Problem<REAL>& problem,
             if( neighbourLists.find( vertex ) == neighbourLists.end() )
             {
                std::set<int> neighOfCol;
-               neighbourLists.emplace( vertex, neighOfCol );
+               neighbourLists[vertex] = neighOfCol ;
             }
             for( int otherCol = 0; otherCol < col; ++otherCol )
             {
