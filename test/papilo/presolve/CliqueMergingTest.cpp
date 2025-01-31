@@ -26,7 +26,7 @@
 #include "papilo/core/Problem.hpp"
 #include "papilo/core/ProblemBuilder.hpp"
 
-#include <map>
+#include <unordered_map>
 #include <set>
 
 using namespace papilo;
@@ -56,7 +56,6 @@ TEST_CASE( "clique-merging-basic", "[presolve]" )
     Vec<int> noClique;
     Vec<int> Cliques;
     const auto& matrix = problem.getConstraintMatrix();
-    const Vec<RowFlags>& rowFlags = matrix.getRowFlags();
    PresolveStatus presolveStatus =
        presolvingMethod.execute( problem, problemUpdate, num, reductions, t, cause);
 
@@ -98,13 +97,13 @@ TEST_CASE( "clique-merging-functions", "[presolve]" )
     REQUIRE( !presolvingMethod.isCovered( matrix, 0, imaginaryclique2 ) );
 
     std::set<std::pair<int, int>> edges = {{0,1},{1,0},{0,2},{2,0},{1,2},{2,1}};
-    std::map<int, std::set<int>> Neighbourhoodlists;
+    std::unordered_map<int, std::set<int>> Neighbourhoodlists;
     std::set<int> r1 = {1,2};
     std::set<int> r2 = {0,2};
     std::set<int> r3 = {0,1};
-    Neighbourhoodlists.emplace(0, r1);
-    Neighbourhoodlists.emplace(1, r2);
-    Neighbourhoodlists.emplace(2, r3);
+    Neighbourhoodlists[0] = r1;
+    Neighbourhoodlists[1] = r2;
+    Neighbourhoodlists[2] = r3;
     auto result = presolvingMethod.greedyClique( matrix, edges,
     Neighbourhoodlists, 0 );
     std::set<int> r4 = {0,1,2};
