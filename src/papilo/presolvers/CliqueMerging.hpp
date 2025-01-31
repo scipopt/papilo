@@ -237,6 +237,10 @@ CliqueMerging<REAL>::execute( const Problem<REAL>& problem,
 
       bool cliqueCheck =
           problem.is_clique( matrix, row, num );
+      std::cout << "\nTHis Row is CLique?: ";
+      std::cout << row;
+      std::cout << " ";
+      std::cout << cliqueCheck;
       if( !matrix.isRowRedundant( row ) &&
           cliqueCheck && cliqueRow.getLength() < maxcliquesize )
       {
