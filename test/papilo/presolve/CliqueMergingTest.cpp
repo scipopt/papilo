@@ -56,6 +56,7 @@ TEST_CASE( "clique-merging-basic", "[presolve]" )
     Vec<int> noClique;
     Vec<int> Cliques;
     //const auto& matrix = problem.getConstraintMatrix();
+    presolvingMethod.setParameters( 1000000, 100000, 100, 10000 );
    PresolveStatus presolveStatus =
        presolvingMethod.execute( problem, problemUpdate, num, reductions, t, cause);
 
