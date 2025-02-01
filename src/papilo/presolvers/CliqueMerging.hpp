@@ -49,10 +49,10 @@ class CliqueMerging : public PresolveMethod<REAL>
  * algorithm, if the enlarged clique then covers other cliques, they can be marked redundant.
  */
 
-   int maxedgesparallel;
-   int maxedgessequential;
-   int maxcliquesize;
-   int maxgreedycalls;
+   int maxedgesparallel = 1000000;
+   int maxedgessequential = 100000;
+   int maxcliquesize = 100;
+   int maxgreedycalls = 10000;
 
  public:
    CliqueMerging() : PresolveMethod<REAL>()
