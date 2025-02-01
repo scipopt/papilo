@@ -115,9 +115,9 @@ CliqueMerging<REAL>::greedyClique(
     const ConstraintMatrix<REAL>& matrix,
     const std::set<std::pair<int, int>>& edges,
     const std::unordered_map<int, std::set<int>>& Neighbourhoodlists, int clique )
-{
+{/*
    std::cout << "\nStarting Greedy Clique: " ;
-   std::cout << clique ;
+   std::cout << clique ;*/
    std::set<int> newClique;
    Vec<int> newVertices;
    newVertices.reserve(2* maxcliquesize );
@@ -160,12 +160,12 @@ CliqueMerging<REAL>::greedyClique(
    std::pair<std::set<int>, Vec<int>> output;
    output.first = newClique;
    output.second = newVertices;
-   std::cout << "\n Output of greedy Clique: ";
+   /*std::cout << "\n Output of greedy Clique: ";
    for(int i = 0; i < newVertices.end() - newVertices.begin(); ++i )
    {
       std::cout << newVertices[i];
       std::cout << " ";
-   }
+   }*/
    return output;
 }
 
@@ -207,6 +207,14 @@ CliqueMerging<REAL>::execute( const Problem<REAL>& problem,
                               int& reason_of_infeasibility )
 {
    std::cout << "\nTEST; STARTING CLIQUEMERGE\n";
+   std::Cout << "With Parameters: ";
+   std::Cout << maxedgesparallel;
+   std::Cout << " ";
+   std::Cout << maxedgessequential;
+   std::Cout << " ";
+   std::Cout << maxcliquesize;
+   std::Cout << " ";
+   std::Cout << maxgreedycalls;
    const auto& matrix = problem.getConstraintMatrix();
 
    const auto lb = problem.getLowerBounds();
@@ -236,11 +244,11 @@ CliqueMerging<REAL>::execute( const Problem<REAL>& problem,
       const auto cliqueIndices = cliqueRow.getIndices();
 
       bool cliqueCheck =
-          problem.is_clique( matrix, row, num );
+          problem.is_clique( matrix, row, num );/*
       std::cout << "\nTHis Row is CLique?: ";
       std::cout << row;
       std::cout << " ";
-      std::cout << cliqueCheck;
+      std::cout << cliqueCheck;*/
       if( !matrix.isRowRedundant( row ) &&
           cliqueCheck && cliqueRow.getLength() < maxcliquesize )
       {
@@ -260,10 +268,10 @@ CliqueMerging<REAL>::execute( const Problem<REAL>& problem,
                int otherVertex = cliqueIndices[otherCol];
                edges.emplace( std::pair<int, int>{ otherVertex, vertex } );
                edges.emplace( std::pair<int, int>{ vertex, otherVertex } );
-               std::cout << "\nAdded Edge: ";
+               /*std::cout << "\nAdded Edge: ";
                std::cout << vertex ;
                std::cout << " ";
-               std::cout << otherVertex ;
+               std::cout << otherVertex ;*/
                neighbourLists[vertex].emplace( otherVertex );
                neighbourLists[otherVertex].emplace( vertex );
             }
@@ -332,9 +340,9 @@ CliqueMerging<REAL>::execute( const Problem<REAL>& problem,
          if( cl != cliqueInd && isCovered( matrix, Cliques[cl], newClique ) )
          {
             coveredCliques.push_back( cl );
-            completedCliques.push_back( Cliques[cl] );
+            completedCliques.push_back( Cliques[cl] );/*
             std::cout << "\nCLique covered: ";
-            std::cout << Cliques[cl];
+            std::cout << Cliques[cl];*/
          }
       }
 
