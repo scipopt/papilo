@@ -207,14 +207,14 @@ CliqueMerging<REAL>::execute( const Problem<REAL>& problem,
                               int& reason_of_infeasibility )
 {
    std::cout << "\nTEST; STARTING CLIQUEMERGE\n";
-   std::Cout << "With Parameters: ";
-   std::Cout << maxedgesparallel;
-   std::Cout << " ";
-   std::Cout << maxedgessequential;
-   std::Cout << " ";
-   std::Cout << maxcliquesize;
-   std::Cout << " ";
-   std::Cout << maxgreedycalls;
+   std::cout << "With Parameters: ";
+   std::cout << maxedgesparallel;
+   std::cout << " ";
+   std::cout << maxedgessequential;
+   std::cout << " ";
+   std::cout << maxcliquesize;
+   std::cout << " ";
+   std::cout << maxgreedycalls;
    const auto& matrix = problem.getConstraintMatrix();
 
    const auto lb = problem.getLowerBounds();
@@ -288,9 +288,9 @@ CliqueMerging<REAL>::execute( const Problem<REAL>& problem,
 #endif
          break;
    }
-   std::Cout << "\nNumber of CLiques: ";
-   std::Cout << Cliques.size();
-   std::Cout << "\n";
+   std::cout << "\nNumber of CLiques: ";
+   std::cout << Cliques.size();
+   std::cout << "\n";
 
 #ifdef PAPILO_TBB
    tbb::combinable<Vec<int>> completedCliquesComb;
