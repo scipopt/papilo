@@ -35,7 +35,10 @@ Problem<double>
 setupMatrixForCliqueMerging();
 
 TEST_CASE( "clique-merging-basic", "[presolve]" )
-{/*
+{
+    
+   CliqueMerging<double> presolvingMethod{};
+    /*
    int cause = -1;
    double time = 0.0;
    Timer t{time};
@@ -49,7 +52,6 @@ TEST_CASE( "clique-merging-basic", "[presolve]" )
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
 
-   CliqueMerging<double> presolvingMethod{};
    Reductions<double> reductions{};
 
     Vec<int> newClique;
