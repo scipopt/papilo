@@ -288,6 +288,9 @@ CliqueMerging<REAL>::execute( const Problem<REAL>& problem,
 #endif
          break;
    }
+   std::Cout << "\nNumber of CLiques: ";
+   std::Cout << Cliques.size();
+   std::Cout << "\n";
 
 #ifdef PAPILO_TBB
    tbb::combinable<Vec<int>> completedCliquesComb;
