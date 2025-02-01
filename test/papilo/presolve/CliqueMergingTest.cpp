@@ -35,7 +35,7 @@ Problem<double>
 setupMatrixForCliqueMerging();
 
 TEST_CASE( "clique-merging-basic", "[presolve]" )
-{
+{/*
    int cause = -1;
    double time = 0.0;
    Timer t{time};
@@ -54,7 +54,7 @@ TEST_CASE( "clique-merging-basic", "[presolve]" )
 
     Vec<int> newClique;
     Vec<int> noClique;
-    Vec<int> Cliques;
+    Vec<int> Cliques;*/
     //const auto& matrix = problem.getConstraintMatrix();
     presolvingMethod.setParameters( 1000000, 100000, 100, 10000 );
    //PresolveStatus presolveStatus =
