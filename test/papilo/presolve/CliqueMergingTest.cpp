@@ -21,13 +21,13 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 #include "papilo/presolvers/CliqueMerging.hpp"
-#include "papilo/external/catch/catch_amalgamated.hpp"
 #include "papilo/core/PresolveMethod.hpp"
 #include "papilo/core/Problem.hpp"
 #include "papilo/core/ProblemBuilder.hpp"
+#include "papilo/external/catch/catch_amalgamated.hpp"
 
-#include <unordered_map>
 #include <set>
+#include <unordered_map>
 
 using namespace papilo;
 
@@ -36,90 +36,91 @@ setupMatrixForCliqueMerging();
 
 TEST_CASE( "clique-merging-basic", "[presolve]" )
 {
-    
-   CliqueMerging<double> presolvingMethod{};
-    /*
-   int cause = -1;
-   double time = 0.0;
-   Timer t{time};
-   Num<double> num{};
-   Message msg{};
-   Problem<double> problem = setupMatrixForCliqueMerging();
-   Statistics statistics{};
-   PresolveOptions presolveOptions{};
-   PostsolveStorage<double> postsolve =
-       PostsolveStorage<double>( problem, num, presolveOptions );
-   ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
-                                        presolveOptions, num, msg );
 
-   Reductions<double> reductions{};
-
-    Vec<int> newClique;
-    Vec<int> noClique;
-    Vec<int> Cliques;*/
-    //const auto& matrix = problem.getConstraintMatrix();
-    presolvingMethod.setParameters( 1000000, 100000, 100, 10000 );
-   //PresolveStatus presolveStatus =
-    //   presolvingMethod.execute( problem, problemUpdate, num, reductions, t, cause);
-
-   //REQUIRE( presolveStatus == PresolveStatus::kReduced );
-////TODO: please encode the reductions like this.
-//   REQUIRE( reductions.size() <= 3 );
-//   REQUIRE( reductions.getReduction(0).row ==  1 );
-//   REQUIRE( reductions.getReduction(1).col == RowReduction::REDUNDANT );
-//   REQUIRE( reductions.getReduction(1).row ==  1 );
-//   REQUIRE( reductions.getReduction(2).col == RowReduction::REDUNDANT );
+//   CliqueMerging<double> presolvingMethod{};
+//   /*
+//  int cause = -1;
+//  double time = 0.0;
+//  Timer t{time};
+//  Num<double> num{};
+//  Message msg{};
+//  Problem<double> problem = setupMatrixForCliqueMerging();
+//  Statistics statistics{};
+//  PresolveOptions presolveOptions{};
+//  PostsolveStorage<double> postsolve =
+//      PostsolveStorage<double>( problem, num, presolveOptions );
+//  ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
+//                                       presolveOptions, num, msg );
+//
+//  Reductions<double> reductions{};
+//
+//   Vec<int> newClique;
+//   Vec<int> noClique;
+//   Vec<int> Cliques;*/
+//   // const auto& matrix = problem.getConstraintMatrix();
+//   presolvingMethod.setParameters( 1000000, 100000, 100, 10000 );
+//   // PresolveStatus presolveStatus =
+//   //    presolvingMethod.execute( problem, problemUpdate, num, reductions, t,
+//   //    cause);
+//
+//   // REQUIRE( presolveStatus == PresolveStatus::kReduced );
+//   ////TODO: please encode the reductions like this.
+//   //   REQUIRE( reductions.size() <= 3 );
+//   //   REQUIRE( reductions.getReduction(0).row ==  1 );
+//   //   REQUIRE( reductions.getReduction(1).col == RowReduction::REDUNDANT );
+//   //   REQUIRE( reductions.getReduction(1).row ==  1 );
+//   //   REQUIRE( reductions.getReduction(2).col == RowReduction::REDUNDANT );
 }
 
-
 TEST_CASE( "clique-merging-functions", "[presolve]" )
-{   
-    double time = 0.0;
-   Timer t{time};
-   Num<double> num{};
-   Message msg{};
-   Problem<double> problem = setupMatrixForCliqueMerging();
-   Statistics statistics{};
-   PresolveOptions presolveOptions{};
-   PostsolveStorage<double> postsolve =
-       PostsolveStorage<double>( problem, num, presolveOptions );
-   ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
-                                        presolveOptions, num, msg );
-
-   CliqueMerging<double> presolvingMethod{};
-
-    Vec<int> newClique;
-    Vec<int> noClique;
-    Vec<int> Cliques;
-    const auto& matrix = problem.getConstraintMatrix();
-    const std::vector<RowFlags> rowFlags = matrix.getRowFlags();
-   
-    std::set<int> imaginaryclique1 = {0,1,2,3,4};
-    std::set<int> imaginaryclique2 = {1,2};
-    REQUIRE( presolvingMethod.isCovered( matrix, 0, imaginaryclique1 ) );
-    REQUIRE( !presolvingMethod.isCovered( matrix, 0, imaginaryclique2 ) );
-
-    std::set<std::pair<int, int>> edges = {{0,1},{1,0},{0,2},{2,0},{1,2},{2,1}};
-    std::unordered_map<int, std::set<int>> Neighbourhoodlists;
-    std::set<int> r1 = {1,2};
-    std::set<int> r2 = {0,2};
-    std::set<int> r3 = {0,1};
-    Neighbourhoodlists[0] = r1;
-    Neighbourhoodlists[1] = r2;
-    Neighbourhoodlists[2] = r3;
-    auto result = presolvingMethod.greedyClique( matrix, edges,
-    Neighbourhoodlists, 0 );
-    std::set<int> r4 = {0,1,2};
-    std::vector<int> r5 = {2};
-    std::pair<std::set<int>,std::vector<int>> expectedresult = {r4,r5};
-    REQUIRE( result == expectedresult );
-    
-   REQUIRE( problem.is_clique( problem.getConstraintMatrix(), 1,  num) );
-   REQUIRE( problem.is_clique( problem.getConstraintMatrix(), 2,  num) );
-   REQUIRE( problem.is_clique( problem.getConstraintMatrix(), 3,  num) );
-   REQUIRE( problem.is_clique( problem.getConstraintMatrix(), 0,  num) );
-   REQUIRE( problem.is_clique( problem.getConstraintMatrix(), 4,  num) );
-   REQUIRE( problem.is_clique( problem.getConstraintMatrix(), 5,  num) );
+{
+//   double time = 0.0;
+//   Timer t{ time };
+//   Num<double> num{};
+//   Message msg{};
+//   Problem<double> problem = setupMatrixForCliqueMerging();
+//   Statistics statistics{};
+//   PresolveOptions presolveOptions{};
+//   PostsolveStorage<double> postsolve =
+//       PostsolveStorage<double>( problem, num, presolveOptions );
+//   ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
+//                                        presolveOptions, num, msg );
+//
+//   CliqueMerging<double> presolvingMethod{};
+//
+//   Vec<int> newClique;
+//   Vec<int> noClique;
+//   Vec<int> Cliques;
+//   const auto& matrix = problem.getConstraintMatrix();
+//   const std::vector<RowFlags> rowFlags = matrix.getRowFlags();
+//
+//   std::set<int> imaginaryclique1 = { 0, 1, 2, 3, 4 };
+//   std::set<int> imaginaryclique2 = { 1, 2 };
+//   REQUIRE( presolvingMethod.isCovered( matrix, 0, imaginaryclique1 ) );
+//   REQUIRE( !presolvingMethod.isCovered( matrix, 0, imaginaryclique2 ) );
+//
+//   std::set<std::pair<int, int>> edges = { { 0, 1 }, { 1, 0 }, { 0, 2 },
+//                                           { 2, 0 }, { 1, 2 }, { 2, 1 } };
+//   std::unordered_map<int, std::set<int>> Neighbourhoodlists;
+//   std::set<int> r1 = { 1, 2 };
+//   std::set<int> r2 = { 0, 2 };
+//   std::set<int> r3 = { 0, 1 };
+//   Neighbourhoodlists[0] = r1;
+//   Neighbourhoodlists[1] = r2;
+//   Neighbourhoodlists[2] = r3;
+//   auto result =
+//       presolvingMethod.greedyClique( matrix, edges, Neighbourhoodlists, 0 );
+//   std::set<int> r4 = { 0, 1, 2 };
+//   std::vector<int> r5 = { 2 };
+//   std::pair<std::set<int>, std::vector<int>> expectedresult = { r4, r5 };
+//   REQUIRE( result == expectedresult );
+//
+//   REQUIRE( problem.is_clique( problem.getConstraintMatrix(), 1, num ) );
+//   REQUIRE( problem.is_clique( problem.getConstraintMatrix(), 2, num ) );
+//   REQUIRE( problem.is_clique( problem.getConstraintMatrix(), 3, num ) );
+//   REQUIRE( problem.is_clique( problem.getConstraintMatrix(), 0, num ) );
+//   REQUIRE( problem.is_clique( problem.getConstraintMatrix(), 4, num ) );
+//   REQUIRE( problem.is_clique( problem.getConstraintMatrix(), 5, num ) );
 }
 
 Problem<double>
@@ -172,9 +173,10 @@ setupMatrixForCliqueMerging()
    };
 
    ProblemBuilder<double> pb;
-   pb.reserve( (int) entries.size(), (int) rowNames.size(), (int) columnNames.size() );
-   pb.setNumRows( (int) rowNames.size() );
-   pb.setNumCols( (int) columnNames.size() );
+   pb.reserve( (int)entries.size(), (int)rowNames.size(),
+               (int)columnNames.size() );
+   pb.setNumRows( (int)rowNames.size() );
+   pb.setNumCols( (int)columnNames.size() );
    pb.setColUbAll( upperBounds );
    pb.setColLbAll( lowerBounds );
    pb.setObjAll( coefficients );
