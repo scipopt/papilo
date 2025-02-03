@@ -112,15 +112,15 @@ TEST_CASE( "clique-merging-basic", "[presolve]" )
     REQUIRE( reductions.getReduction(7).row == ColReduction::BOUNDS_LOCKED );
     REQUIRE( reductions.getReduction(7).col == 1 );
 #endif
-    REQUIRE( reductions.getReduction(8).row == 1 );
+    REQUIRE( reductions.getReduction(8).row == 0 );
     REQUIRE( reductions.getReduction(8).col == RowReduction::LOCKED );
-    REQUIRE( reductions.getReduction(9).row == 2 );
+    REQUIRE( reductions.getReduction(9).row == 1 );
     REQUIRE( reductions.getReduction(9).col == RowReduction::LOCKED );
-    REQUIRE( reductions.getReduction(10).row == 5 );
+    REQUIRE( reductions.getReduction(10).row == 2 );
     REQUIRE( reductions.getReduction(10).col == RowReduction::LOCKED );
-    REQUIRE( reductions.getReduction(11).row == 6 );
+    REQUIRE( reductions.getReduction(11).row == 5 );
     REQUIRE( reductions.getReduction(11).col == RowReduction::LOCKED );
-    REQUIRE( reductions.getReduction(11).row == 0 );
+    REQUIRE( reductions.getReduction(11).row == 6 );
     REQUIRE( reductions.getReduction(11).col == RowReduction::LOCKED );
     REQUIRE( reductions.getReduction(13).row == 1 );
     REQUIRE( reductions.getReduction(13).col == RowReduction::REDUNDANT );
