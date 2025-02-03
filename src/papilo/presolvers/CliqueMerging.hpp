@@ -337,18 +337,18 @@ CliqueMerging<REAL>::execute( const Problem<REAL>& problem,
 
          result = PresolveStatus::kReduced;
          TransactionGuard<REAL> tg{ reductions };
-         for( int covRow = 0;
-              covRow < coveredCliques.end() - coveredCliques.begin(); ++covRow )
-         {
-            reductions.lockRow( Cliques[coveredCliques[covRow]] );
-         }
-         reductions.lockRow( clique );
          for( std::set<int>::iterator vertexIndex = newClique.begin();
               vertexIndex != newClique.end(); ++vertexIndex )
          {
             reductions.lockCol( *vertexIndex );
             reductions.lockColBounds( *vertexIndex );
          }
+         for( int covRow = 0;
+              covRow < coveredCliques.end() - coveredCliques.begin(); ++covRow )
+         {
+            reductions.lockRow( Cliques[coveredCliques[covRow]] );
+         }
+         reductions.lockRow( clique );
          assert( clique >= 0 );
          assert( clique < matrix.getNRows() );
          auto rowVector = matrix.getRowCoefficients( clique );

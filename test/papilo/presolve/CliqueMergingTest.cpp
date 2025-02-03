@@ -59,14 +59,41 @@ TEST_CASE( "clique-merging-basic", "[presolve]" )
        problem, problemUpdate, { }, reductions, t, cause );
 
    REQUIRE( status == PresolveStatus::kReduced );
-#ifdef PAPILO_TBB
     REQUIRE( reductions.size() <= 22 );
-    REQUIRE( reductions.getReduction(0).row == ColReduction::LockCol );
+    REQUIRE( reductions.getReduction(0).row == ColReduction::LOCKED );
     REQUIRE( reductions.getReduction(0).col == 0 );
-#else 
-    REQUIRE( reductions.size() <= 22 );
-    REQUIRE( reductions.getReduction(0).row == ColReduction::LockCol );
-    REQUIRE( reductions.getReduction(0).col == 0 );
+    REQUIRE( reductions.getReduction(1).row == ColReduction::BOUNDS_LOCKED );
+    REQUIRE( reductions.getReduction(1).col == 0 );
+    REQUIRE( reductions.getReduction(2).row == ColReduction::LOCKED );
+    REQUIRE( reductions.getReduction(2).col == 1 );
+    REQUIRE( reductions.getReduction(3).row == ColReduction::BOUNDS_LOCKED );
+    REQUIRE( reductions.getReduction(3).col == 1 );
+    REQUIRE( reductions.getReduction(4).row == ColReduction::LOCKED );
+    REQUIRE( reductions.getReduction(4).col == 2 );
+    REQUIRE( reductions.getReduction(5).row == ColReduction::BOUNDS_LOCKED );
+    REQUIRE( reductions.getReduction(5).col == 2 );
+    REQUIRE( reductions.getReduction(6).row == ColReduction::LOCKED );
+    REQUIRE( reductions.getReduction(6).col == 3 );
+    REQUIRE( reductions.getReduction(7).row == ColReduction::BOUNDS_LOCKED );
+    REQUIRE( reductions.getReduction(7).col == 3 );
+    REQUIRE( reductions.getReduction(8).row == 1 );
+    REQUIRE( reductions.getReduction(8).col == RowReduction::LOCKED );
+    REQUIRE( reductions.getReduction(9).row == 2 );
+    REQUIRE( reductions.getReduction(9).col == RowReduction::LOCKED );
+    REQUIRE( reductions.getReduction(10).row == 5 );
+    REQUIRE( reductions.getReduction(10).col == RowReduction::LOCKED );
+    REQUIRE( reductions.getReduction(11).row == 6 );
+    REQUIRE( reductions.getReduction(11).col == RowReduction::LOCKED );
+    REQUIRE( reductions.getReduction(11).row == 0 );
+    REQUIRE( reductions.getReduction(11).col == RowReduction::LOCKED );
+    REQUIRE( reductions.getReduction(13).row == 1 );
+    REQUIRE( reductions.getReduction(13).col == RowReduction::REDUNDANT );
+    REQUIRE( reductions.getReduction(14).row == 2 );
+    REQUIRE( reductions.getReduction(14).col == RowReduction::REDUNDANT );
+    REQUIRE( reductions.getReduction(15).row == 5 );
+    REQUIRE( reductions.getReduction(15).col == RowReduction::REDUNDANT );
+    REQUIRE( reductions.getReduction(16).row == 6 );
+    REQUIRE( reductions.getReduction(16).col == RowReduction::REDUNDANT );
 
 
 //First Lock Col, Lock Colbounds of each index that already exists.
@@ -75,6 +102,8 @@ TEST_CASE( "clique-merging-basic", "[presolve]" )
 // then lock row of original clique
 // then change row
 // then mark rows redundant
+//row 0, with indices 0, 1 is original clique, indices 2,3 get added.
+//Then rows 1,2 5, 6 are covered
    ////TODO: please encode the reductions like this.
    //   REQUIRE( reductions.size() <= 3 );
    //   REQUIRE( reductions.getReduction(0).row ==  1 );
