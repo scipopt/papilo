@@ -201,8 +201,7 @@ CliqueMerging<REAL>::execute( const Problem<REAL>& problem,
                               int& reason_of_infeasibility )
 { 
    PresolveStatus result = PresolveStatus::kUnchanged;
-   
-   /*
+
    const auto& matrix = problem.getConstraintMatrix();
 
    const auto lb = problem.getLowerBounds();
@@ -442,7 +441,7 @@ CliqueMerging<REAL>::execute( const Problem<REAL>& problem,
    }
 #endif
    this->setEnabled( false );
-   */
+   
    return result;
 }
 

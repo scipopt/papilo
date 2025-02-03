@@ -58,8 +58,7 @@ TEST_CASE( "clique-merging-basic", "[presolve]" )
    PresolveStatus status = presolvingMethod.execute(
        problem, problemUpdate, { }, reductions, t, cause );
 
-   REQUIRE( status == PresolveStatus::kUnchanged);
-   // REQUIRE( presolveStatus == PresolveStatus::kReduced );
+   REQUIRE( status == PresolveStatus::kReduced );
    ////TODO: please encode the reductions like this.
    //   REQUIRE( reductions.size() <= 3 );
    //   REQUIRE( reductions.getReduction(0).row ==  1 );
