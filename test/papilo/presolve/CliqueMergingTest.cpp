@@ -41,8 +41,6 @@ TEST_CASE( "clique-merging-basic", "[presolve]" )
 
    double time = 0.0;
    Timer t{ time };
-   Num<double> num{};
-   Message msg{};
    Problem<double> problem = setupMatrixForCliqueMerging();
    Statistics statistics{};
    PresolveOptions presolveOptions{};
@@ -74,15 +72,13 @@ TEST_CASE( "clique-merging-functions", "[presolve]" )
 {
    double time = 0.0;
    Timer t{ time };
-   Num<double> num{};
-   Message msg{};
    Problem<double> problem = setupMatrixForCliqueMerging();
    Statistics statistics{};
    PresolveOptions presolveOptions{};
    PostsolveStorage<double> postsolve =
-       PostsolveStorage<double>( problem, num, presolveOptions );
+       PostsolveStorage<double>( problem, { }, presolveOptions );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
-                                        presolveOptions, num, msg );
+                                        presolveOptions, { }, { } );
 
    CliqueMerging<double> presolvingMethod{};
 
