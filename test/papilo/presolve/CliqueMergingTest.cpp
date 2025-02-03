@@ -60,6 +60,7 @@ TEST_CASE( "clique-merging-basic", "[presolve]" )
 
    REQUIRE( status == PresolveStatus::kReduced );
     REQUIRE( reductions.size() <= 300 );
+#ifdef PAPILO_TBB
     REQUIRE( reductions.getReduction(0).row == ColReduction::LOCKED );
     REQUIRE( reductions.getReduction(0).col == 0 );
     REQUIRE( reductions.getReduction(1).row == ColReduction::BOUNDS_LOCKED );
@@ -76,6 +77,24 @@ TEST_CASE( "clique-merging-basic", "[presolve]" )
     REQUIRE( reductions.getReduction(6).col == 3 );
     REQUIRE( reductions.getReduction(7).row == ColReduction::BOUNDS_LOCKED );
     REQUIRE( reductions.getReduction(7).col == 3 );
+#else
+    REQUIRE( reductions.getReduction(0).row == ColReduction::LOCKED );
+    REQUIRE( reductions.getReduction(0).col == 2 );
+    REQUIRE( reductions.getReduction(1).row == ColReduction::BOUNDS_LOCKED );
+    REQUIRE( reductions.getReduction(1).col == 2 );
+    REQUIRE( reductions.getReduction(2).row == ColReduction::LOCKED );
+    REQUIRE( reductions.getReduction(2).col == 3 );
+    REQUIRE( reductions.getReduction(3).row == ColReduction::BOUNDS_LOCKED );
+    REQUIRE( reductions.getReduction(3).col == 3 );
+    REQUIRE( reductions.getReduction(4).row == ColReduction::LOCKED );
+    REQUIRE( reductions.getReduction(4).col == 0 );
+    REQUIRE( reductions.getReduction(5).row == ColReduction::BOUNDS_LOCKED );
+    REQUIRE( reductions.getReduction(5).col == 0 );
+    REQUIRE( reductions.getReduction(6).row == ColReduction::LOCKED );
+    REQUIRE( reductions.getReduction(6).col == 1 );
+    REQUIRE( reductions.getReduction(7).row == ColReduction::BOUNDS_LOCKED );
+    REQUIRE( reductions.getReduction(7).col == 1 );
+#endif
     REQUIRE( reductions.getReduction(8).row == 1 );
     REQUIRE( reductions.getReduction(8).col == RowReduction::LOCKED );
     REQUIRE( reductions.getReduction(9).row == 2 );
