@@ -63,6 +63,18 @@ TEST_CASE( "clique-merging-basic", "[presolve]" )
     REQUIRE( reductions.size() <= 22 );
     REQUIRE( reductions.getReduction(0).row == ColReduction::LockCol );
     REQUIRE( reductions.getReduction(0).col == 0 );
+#else 
+    REQUIRE( reductions.size() <= 22 );
+    REQUIRE( reductions.getReduction(0).row == ColReduction::LockCol );
+    REQUIRE( reductions.getReduction(0).col == 0 );
+
+
+//First Lock Col, Lock Colbounds of each index that already exists.
+//Then Lock col, lock col bounds of all new vertices
+// then lock row of all covered cliques
+// then lock row of original clique
+// then change row
+// then mark rows redundant
    ////TODO: please encode the reductions like this.
    //   REQUIRE( reductions.size() <= 3 );
    //   REQUIRE( reductions.getReduction(0).row ==  1 );
