@@ -56,7 +56,7 @@ TEST_CASE( "clique-merging-basic", "[presolve]" )
    presolvingMethod.setParameters( 1000000, 100000, 100, 10000 );
    int cause = -1;
    PresolveStatus status = presolvingMethod.execute(
-       problem, problemUpdate, num, reductions, t, cause );
+       problem, problemUpdate, { }, reductions, t, cause );
 
    REQUIRE( status == PresolveStatus::kUnchanged);
    // REQUIRE( presolveStatus == PresolveStatus::kReduced );
