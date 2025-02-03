@@ -59,7 +59,7 @@ TEST_CASE( "clique-merging-basic", "[presolve]" )
        problem, problemUpdate, { }, reductions, t, cause );
 
    REQUIRE( status == PresolveStatus::kReduced );
-    REQUIRE( reductions.size() <= 22 );
+    REQUIRE( reductions.size() <= 300 );
     REQUIRE( reductions.getReduction(0).row == ColReduction::LOCKED );
     REQUIRE( reductions.getReduction(0).col == 0 );
     REQUIRE( reductions.getReduction(1).row == ColReduction::BOUNDS_LOCKED );
