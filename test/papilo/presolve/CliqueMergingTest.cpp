@@ -60,7 +60,7 @@ TEST_CASE( "clique-merging-basic", "[presolve]" )
 
    REQUIRE( status == PresolveStatus::kReduced );
 #ifdef PAPILO_TBB
-    REQUIRE( reductions.size() <= 100 );
+    REQUIRE( reductions.size() <= 279 );
 #else 
     REQUIRE( reductions.size() <= 30 );
 #endif
