@@ -63,6 +63,7 @@ TEST_CASE( "clique-merging-basic", "[presolve]" )
     REQUIRE( reductions.size() <= 100 );
 #else 
     REQUIRE( reductions.size() <= 30 );
+#endif
 #ifdef PAPILO_TBB
 /*
     REQUIRE( reductions.getReduction(0).row == ColReduction::LOCKED );
