@@ -88,12 +88,14 @@ class CliqueMerging : public PresolveMethod<REAL>
             Reductions<REAL>& reductions, const Timer& timer,
             int& reason_of_infeasibility ) override;
 
+   private
    std::pair<std::set<int>, Vec<int>>
    greedyClique( const ConstraintMatrix<REAL>& matrix,
                  const std::set<std::pair<int, int>>& edges,
                  const std::unordered_map<int, std::set<int>>& Neighbourhoodlists,
                  int clique );
 
+   private
    bool
    isCovered( const ConstraintMatrix<REAL>& matrix, int row,
               const std::set<int>& newClique );

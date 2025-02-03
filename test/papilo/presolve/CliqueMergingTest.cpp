@@ -59,6 +59,10 @@ TEST_CASE( "clique-merging-basic", "[presolve]" )
        problem, problemUpdate, { }, reductions, t, cause );
 
    REQUIRE( status == PresolveStatus::kReduced );
+#ifdef PAPILO_TBB
+    REQUIRE( reductions.size() <= 22 );
+    REQUIRE( reductions.getReduction(0).row == ColReduction::LockCol );
+    REQUIRE( reductions.getReduction(0).col == 0 );
    ////TODO: please encode the reductions like this.
    //   REQUIRE( reductions.size() <= 3 );
    //   REQUIRE( reductions.getReduction(0).row ==  1 );
@@ -131,6 +135,7 @@ setupMatrixForCliqueMerging()
    // D: a + b <= 1
    // E: a + c <= 1
    // F: a + z <= 1
+   // G: x + y + z + a <= 1
 
    Vec<std::string> columnNames{ "x", "y", "z", "a", "b", "c" };
 
