@@ -33,6 +33,8 @@ using namespace papilo;
 
 Problem<double>
 setupSmallMatrixForCliqueMerging();
+
+Problem<double>
 setupSmallerMatrixForCliqueMerging();
 
 TEST_CASE( "clique-merging-basic", "[presolve]" )
