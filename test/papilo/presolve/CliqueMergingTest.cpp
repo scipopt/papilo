@@ -58,12 +58,12 @@ TEST_CASE( "clique-merging-basic", "[presolve]" )
    PresolveStatus status = presolvingMethod.execute(
        problem, problemUpdate, { }, reductions, t, cause );
 
-        for( int i = 0; (unsigned int)i < reductions.size(); ++i)
+    for( int i = 0; (unsigned int)i < reductions.size(); ++i)
     {
         std::cout << "\n";
-        std::cout << reductions.getReduction(11).row;
+        std::cout << reductions.getReduction(i).row;
         std::cout << " ";
-        std::cout << reductions.getReduction(11).col;
+        std::cout << reductions.getReduction(i).col;
     }
 
    REQUIRE( status == PresolveStatus::kReduced );
@@ -146,9 +146,9 @@ TEST_CASE( "clique-merging-cover", "[presolve]" )
         for( int i = 0; (unsigned int)i < reductions.size(); ++i)
     {
         std::cout << "\n";
-        std::cout << reductions.getReduction(11).row;
+        std::cout << reductions.getReduction(i).row;
         std::cout << " ";
-        std::cout << reductions.getReduction(11).col;
+        std::cout << reductions.getReduction(i).col;
     }
 
    REQUIRE( status == PresolveStatus::kReduced );
@@ -239,10 +239,10 @@ setupSmallerMatrixForCliqueMerging()
    Vec<double> lowerBounds{ 0.0, 0.0, 0.0 };
    Vec<uint8_t> isIntegral{ 1, 1, 1 };
 
-   Vec<double> rhs{ 1.0, 1.0, 1.0 };
+   Vec<double> rhs{ 1.0, 1.0 };
    Vec<std::string> rowNames{ "A", "B" };
-   Vec<uint8_t> lhsInfinity{ 1, 1, 1 };
-   Vec<uint8_t> rhsInfinity{ 0, 0, 0 };
+   Vec<uint8_t> lhsInfinity{ 1, 1 };
+   Vec<uint8_t> rhsInfinity{ 0, 0 };
    Vec<std::tuple<int, int, double>> entries{
        std::tuple<int, int, double>{ 0, 0, 1.0 },
        std::tuple<int, int, double>{ 0, 1, 1.0 },
