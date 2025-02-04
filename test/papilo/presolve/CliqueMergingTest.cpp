@@ -58,8 +58,7 @@ TEST_CASE( "clique-merging-basic", "[presolve]" )
    PresolveStatus status = presolvingMethod.execute(
        problem, problemUpdate, { }, reductions, t, cause );
 
-
-    for( int i = 0; i < reductions.end() - reductions.begin(); ++i)
+        for( int i = 0; (unsigned int)i < reductions.size(); ++i)
     {
         std::cout << "\n";
         std::cout << reductions.getReduction(11).row;
@@ -144,7 +143,7 @@ TEST_CASE( "clique-merging-cover", "[presolve]" )
    PresolveStatus status = presolvingMethod.execute(
        problem, problemUpdate, { }, reductions, t, cause );
 
-        for( int i = 0; i < reductions.end() - reductions.begin(); ++i)
+        for( int i = 0; (unsigned int)i < reductions.size(); ++i)
     {
         std::cout << "\n";
         std::cout << reductions.getReduction(11).row;
