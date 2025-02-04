@@ -410,6 +410,8 @@ Modifications of PaPILO itself, however, must be distributed under LGPLv3.
 
 [Alexander Hoen](https://www.zib.de/members/hoen)  ([@alexhoen](https://github.com/alexhoen)) &mdash; main developer
 
+[Dominik Kamp](https://www.wm.uni-bayreuth.de/de/team/kamp_dominik/index.php)  ([@DominikKamp](https://github.com/DominikKamp)) &mdash; developer
+
 
 #### Former Contributors
 
