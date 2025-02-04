@@ -32,7 +32,8 @@
 using namespace papilo;
 
 Problem<double>
-setupMatrixForCliqueMerging();
+setupSmallMatrixForCliqueMerging();
+setupSmallerMatrixForCliqueMerging();
 
 TEST_CASE( "clique-merging-basic", "[presolve]" )
 {
@@ -64,6 +65,30 @@ TEST_CASE( "clique-merging-basic", "[presolve]" )
     REQUIRE( reductions.size() <= 20 );
     REQUIRE( reductions.size() <= 15 );
     REQUIRE( reductions.size() <= 12 );
+    REQUIRE( reductions.getReductions(0).row == ColReduction::LOCKED );
+    REQUIRE( reductions.getReductions(0).col == 0 );
+    REQUIRE( reductions.getReductions(1).row == ColReduction::BOUNDS_LOCKED );
+    REQUIRE( reductions.getReductions(1).col == 0 );
+    REQUIRE( reductions.getReductions(2).row == ColReduction::LOCKED );
+    REQUIRE( reductions.getReductions(2).col == 1 );
+    REQUIRE( reductions.getReductions(3).row == ColReduction::BOUNDS_LOCKED );
+    REQUIRE( reductions.getReductions(3).col == 1 );
+    REQUIRE( reductions.getReductions(4).row == ColReduction::LOCKED );
+    REQUIRE( reductions.getReductions(4).col == 2 );
+    REQUIRE( reductions.getReductions(5).row == ColReduction::BOUNDS_LOCKED );
+    REQUIRE( reductions.getReductions(5).col == 2 );
+    REQUIRE( reductions.getReductions(6).row == 0 );
+    REQUIRE( reductions.getReductions(6).col == RowReduction::LOCKED );
+    REQUIRE( reductions.getReductions(7).row == 1 );
+    REQUIRE( reductions.getReductions(7).col == RowReduction::LOCKED );
+    REQUIRE( reductions.getReductions(8).row == 2 );
+    REQUIRE( reductions.getReductions(8).col == RowReduction::LOCKED );
+    REQUIRE( reductions.getReductions(9).row == 0 );
+    REQUIRE( reductions.getReductions(9).col == RowReduction::REDUNDANT );
+    REQUIRE( reductions.getReductions(10).row == 1 );
+    REQUIRE( reductions.getReductions(10).col == RowReduction::REDUNDANT );
+    REQUIRE( reductions.getReductions(11).row == 2 );
+    REQUIRE( reductions.getReductions(11).col == RowReduction::REDUNDANT );
 #else 
     REQUIRE( reductions.size() <= 100 );
     REQUIRE( reductions.size() <= 50 );
@@ -72,6 +97,31 @@ TEST_CASE( "clique-merging-basic", "[presolve]" )
     REQUIRE( reductions.size() <= 20 );
     REQUIRE( reductions.size() <= 15 );
     REQUIRE( reductions.size() <= 12 );
+    REQUIRE( reductions.getReductions(0).row == ColReduction::LOCKED );
+    REQUIRE( reductions.getReductions(0).col == 0 );
+    REQUIRE( reductions.getReductions(1).row == ColReduction::BOUNDS_LOCKED );
+    REQUIRE( reductions.getReductions(1).col == 0 );
+    REQUIRE( reductions.getReductions(2).row == ColReduction::LOCKED );
+    REQUIRE( reductions.getReductions(2).col == 1 );
+    REQUIRE( reductions.getReductions(3).row == ColReduction::BOUNDS_LOCKED );
+    REQUIRE( reductions.getReductions(3).col == 1 );
+    REQUIRE( reductions.getReductions(4).row == ColReduction::LOCKED );
+    REQUIRE( reductions.getReductions(4).col == 2 );
+    REQUIRE( reductions.getReductions(5).row == ColReduction::BOUNDS_LOCKED );
+    REQUIRE( reductions.getReductions(5).col == 2 );
+    REQUIRE( reductions.getReductions(6).row == 0 );
+    REQUIRE( reductions.getReductions(6).col == RowReduction::LOCKED );
+    REQUIRE( reductions.getReductions(7).row == 1 );
+    REQUIRE( reductions.getReductions(7).col == RowReduction::LOCKED );
+    REQUIRE( reductions.getReductions(8).row == 2 );
+    REQUIRE( reductions.getReductions(8).col == RowReduction::LOCKED );
+    REQUIRE( reductions.getReductions(9).row == 0 );
+    REQUIRE( reductions.getReductions(9).col == RowReduction::REDUNDANT );
+    REQUIRE( reductions.getReductions(10).row == 1 );
+    REQUIRE( reductions.getReductions(10).col == RowReduction::REDUNDANT );
+    REQUIRE( reductions.getReductions(11).row == 2 );
+    REQUIRE( reductions.getReductions(11).col == RowReduction::REDUNDANT );
+    
 #endif
 }
 
