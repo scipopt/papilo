@@ -210,7 +210,7 @@ set(unit_tests
 
         #CliqueMerging
         "clique-merging-basic"
-        "clique-merging-functions"
+        "clique-merging-cover"
 
         ${PAPILOLIB_TESTS}
         ${BOOST_REQUIRED_TESTS}

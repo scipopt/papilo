@@ -75,8 +75,49 @@ TEST_CASE( "clique-merging-basic", "[presolve]" )
 #endif
 }
 
+TEST_CASE( "clique-merging-cover", "[presolve]" )
+{
+
+   CliqueMerging<double> presolvingMethod{};
+
+   double time = 0.0;
+   Timer t{ time };
+   Problem<double> problem = setupSmallerMatrixForCliqueMerging();
+   Statistics statistics{};
+   PresolveOptions presolveOptions{};
+   PostsolveStorage<double> postsolve =
+       PostsolveStorage<double>( problem, {}, presolveOptions );
+   ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
+                                        presolveOptions, {}, {} );
+
+   Reductions<double> reductions{};
+   presolvingMethod.setParameters( 1000000, 100000, 100, 10000 );
+   int cause = -1;
+   PresolveStatus status = presolvingMethod.execute(
+       problem, problemUpdate, { }, reductions, t, cause );
+
+   REQUIRE( status == PresolveStatus::kReduced );
+#ifdef PAPILO_TBB
+    REQUIRE( reductions.size() <= 100 );
+    REQUIRE( reductions.size() <= 50 );
+    REQUIRE( reductions.size() <= 30 );
+    REQUIRE( reductions.size() <= 25 );
+    REQUIRE( reductions.size() <= 20 );
+    REQUIRE( reductions.size() <= 15 );
+    REQUIRE( reductions.size() <= 12 );
+#else 
+    REQUIRE( reductions.size() <= 100 );
+    REQUIRE( reductions.size() <= 50 );
+    REQUIRE( reductions.size() <= 30 );
+    REQUIRE( reductions.size() <= 25 );
+    REQUIRE( reductions.size() <= 20 );
+    REQUIRE( reductions.size() <= 15 );
+    REQUIRE( reductions.size() <= 12 );
+#endif
+}
+
 Problem<double>
-setupSmallMatrixForCliqueMerging1()
+setupSmallMatrixForCliqueMerging()
 {
    // Clique x, y, z
    // min -x -y -z
@@ -122,6 +163,55 @@ setupSmallMatrixForCliqueMerging1()
    pb.addEntryAll( entries );
    pb.setColNameAll( columnNames );
    pb.setProblemName( "small matrix for testing Clique Merging" );
+   Problem<double> problem = pb.build();
+   return problem;
+}
+
+Problem<double>
+setupSmallerMatrixForCliqueMerging()
+{
+   // Clique x, y, z
+   // min -x -y -z
+   // A: x + y <= 1
+   // B: x + z <= 1
+   // C: y + z <= 1
+
+   Vec<std::string> columnNames{ "x", "y", "z" };
+
+   Vec<double> coefficients{ -1.0, -1.0, -1.0 };
+   Vec<double> upperBounds{ 1.0, 1.0, 1.0 };
+   Vec<double> lowerBounds{ 0.0, 0.0, 0.0 };
+   Vec<uint8_t> isIntegral{ 1, 1, 1 };
+
+   Vec<double> rhs{ 1.0, 1.0, 1.0 };
+   Vec<std::string> rowNames{ "A", "B" };
+   Vec<uint8_t> lhsInfinity{ 1, 1, 1 };
+   Vec<uint8_t> rhsInfinity{ 0, 0, 0 };
+   Vec<std::tuple<int, int, double>> entries{
+       std::tuple<int, int, double>{ 0, 0, 1.0 },
+       std::tuple<int, int, double>{ 0, 1, 1.0 },
+       std::tuple<int, int, double>{ 0, 2, 1.0 },
+
+       std::tuple<int, int, double>{ 1, 0, 1.0 },
+       std::tuple<int, int, double>{ 1, 1, 1.0 },
+   };
+
+   ProblemBuilder<double> pb;
+   pb.reserve( (int)entries.size(), (int)rowNames.size(),
+               (int)columnNames.size() );
+   pb.setNumRows( (int)rowNames.size() );
+   pb.setNumCols( (int)columnNames.size() );
+   pb.setColUbAll( upperBounds );
+   pb.setColLbAll( lowerBounds );
+   pb.setObjAll( coefficients );
+   pb.setObjOffset( 0.0 );
+   pb.setColIntegralAll( isIntegral );
+   pb.setRowRhsAll( rhs );
+   pb.setRowLhsInfAll( lhsInfinity );
+   pb.setRowRhsInfAll( rhsInfinity );
+   pb.addEntryAll( entries );
+   pb.setColNameAll( columnNames );
+   pb.setProblemName( "smaller matrix for testing Clique Merging" );
    Problem<double> problem = pb.build();
    return problem;
 }
