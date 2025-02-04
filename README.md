@@ -417,6 +417,8 @@ Modifications of PaPILO itself, however, must be distributed under LGPLv3.
 
 [Jacob von Holly-Ponientzietz](https://www.zib.de/members/vonholly-ponientzietz) ([@JacobvonHolly-Ponientzietz](https://github.com/JacobvonHolly-Ponientzietz)) &mdash; Clique Merging
 
+[Dominik Kamp](https://www.wm.uni-bayreuth.de/de/team/kamp_dominik/index.php)  ([@DominikKamp](https://github.com/DominikKamp)) &mdash; developer
+
 
 #### Former Contributors
 
