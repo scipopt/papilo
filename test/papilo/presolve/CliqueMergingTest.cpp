@@ -68,7 +68,54 @@ TEST_CASE( "clique-merging-basic", "[presolve]" )
 
    REQUIRE( status == PresolveStatus::kReduced );
 #ifdef PAPILO_TBB
+    //large number of reductions due to the grouping of transactions into O(nlog(n)) by the clique merging presolver
     REQUIRE( reductions.size() == 72 );
+    
+    REQUIRE( reductions.getReduction(0).row == ColReduction::LOCKED );
+    REQUIRE( reductions.getReduction(0).col == 1 );
+
+    REQUIRE( reductions.getReduction(1).row == ColReduction::BOUNDS_LOCKED );
+    REQUIRE( reductions.getReduction(1).col == 1 );
+    
+    REQUIRE( reductions.getReduction(2).row == ColReduction::LOCKED );
+    REQUIRE( reductions.getReduction(2).col == 2 );
+
+    REQUIRE( reductions.getReduction(3).row == ColReduction::BOUNDS_LOCKED );
+    REQUIRE( reductions.getReduction(3).col == 2 );
+    
+    REQUIRE( reductions.getReduction(4).row == ColReduction::LOCKED );
+    REQUIRE( reductions.getReduction(4).col == 0 );
+
+    REQUIRE( reductions.getReduction(5).row == ColReduction::BOUNDS_LOCKED );
+    REQUIRE( reductions.getReduction(5).col == 0 );
+
+    REQUIRE( reductions.getReduction(6).row == 0 );
+    REQUIRE( reductions.getReduction(6).col == RowReduction::LOCKED );
+    
+    REQUIRE( reductions.getReduction(7).row == 1 );
+    REQUIRE( reductions.getReduction(7).col == RowReduction::LOCKED );
+    
+    REQUIRE( reductions.getReduction(8).row == 2 );
+    REQUIRE( reductions.getReduction(8).col == RowReduction::LOCKED );
+        
+    REQUIRE( reductions.getReduction(9).row == ColReduction::LOCKED );
+    REQUIRE( reductions.getReduction(9).col == 0 );
+
+    REQUIRE( reductions.getReduction(10).row == ColReduction::BOUNDS_LOCKED );
+    REQUIRE( reductions.getReduction(10).col == 0 );
+    
+    REQUIRE( reductions.getReduction(11).row == ColReduction::LOCKED );
+    REQUIRE( reductions.getReduction(11).col == 2 );
+
+    REQUIRE( reductions.getReduction(12).row == ColReduction::BOUNDS_LOCKED );
+    REQUIRE( reductions.getReduction(12).col == 2 );
+    
+    REQUIRE( reductions.getReduction(13).row == ColReduction::LOCKED );
+    REQUIRE( reductions.getReduction(13).col == 1 );
+
+    REQUIRE( reductions.getReduction(14).row == ColReduction::BOUNDS_LOCKED );
+    REQUIRE( reductions.getReduction(14).col == 1 );
+    
 #else 
     REQUIRE( reductions.size() == 12 );
     
@@ -141,7 +188,51 @@ TEST_CASE( "clique-merging-cover", "[presolve]" )
 
    REQUIRE( status == PresolveStatus::kReduced );
 #ifdef PAPILO_TBB
+    //large number of reductions due to the grouping of transactions into O(nlog(n)) by the clique merging presolver
     REQUIRE( reductions.size() == 38 );
+
+    REQUIRE( reductions.getReduction(0).row == ColReduction::LOCKED );
+    REQUIRE( reductions.getReduction(0).col == 0 );
+
+    REQUIRE( reductions.getReduction(1).row == ColReduction::BOUNDS_LOCKED );
+    REQUIRE( reductions.getReduction(1).col == 0 );
+
+    REQUIRE( reductions.getReduction(2).row == ColReduction::LOCKED );
+    REQUIRE( reductions.getReduction(2).col == 1 );
+
+    REQUIRE( reductions.getReduction(3).row == ColReduction::BOUNDS_LOCKED );
+    REQUIRE( reductions.getReduction(3).col == 1 );
+
+    REQUIRE( reductions.getReduction(4).row == ColReduction::LOCKED );
+    REQUIRE( reductions.getReduction(4).col == 2 );
+
+    REQUIRE( reductions.getReduction(5).row == ColReduction::BOUNDS_LOCKED );
+    REQUIRE( reductions.getReduction(5).col == 2 );
+
+    REQUIRE( reductions.getReduction(6).row == 1 );
+    REQUIRE( reductions.getReduction(6).col == RowReduction::LOCKED );
+
+    REQUIRE( reductions.getReduction(7).row == 0 );
+    REQUIRE( reductions.getReduction(7).col == RowReduction::LOCKED );
+
+    REQUIRE( reductions.getReduction(8).row == ColReduction::LOCKED );
+    REQUIRE( reductions.getReduction(8).col == 0 );
+
+    REQUIRE( reductions.getReduction(9).row == ColReduction::BOUNDS_LOCKED );
+    REQUIRE( reductions.getReduction(9).col == 0 );
+
+    REQUIRE( reductions.getReduction(10).row == ColReduction::LOCKED );
+    REQUIRE( reductions.getReduction(10).col == 1 );
+
+    REQUIRE( reductions.getReduction(11).row == ColReduction::BOUNDS_LOCKED );
+    REQUIRE( reductions.getReduction(11).col == 1 );
+
+    REQUIRE( reductions.getReduction(12).row == ColReduction::LOCKED );
+    REQUIRE( reductions.getReduction(12).col == 2 );
+
+    REQUIRE( reductions.getReduction(13).row == ColReduction::BOUNDS_LOCKED );
+    REQUIRE( reductions.getReduction(13).col == 2 );
+
 #else
     REQUIRE( reductions.size() == 9 );
     
