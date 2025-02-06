@@ -14,6 +14,8 @@ Interface changes
 -cliquemerging.maxedgessequential = 100000: Maximal number of edges in the graph constructed for sequential clique merging
 -cliquemerging.maxcliquesize = 100: Maximal size of cliques considered for clique merging [Integer: [1,2147483647]]
 -cliquemerging.maxgreedycalls = 10000: Maximal number of function calls for greedy clique in a single thread in clique merging 
+-cliquemerging.enabled = 1: Is clique merging enabled
+
 
 Data Structure:
 ------------
