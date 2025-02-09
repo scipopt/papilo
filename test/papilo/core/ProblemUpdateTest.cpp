@@ -128,13 +128,6 @@ TEST_CASE( "clique-row-flag-detection8", "[core]" )
    REQUIRE( !problem.getRowFlags()[7].test( RowFlag::kClique ) );
 }
 
-TEST_CASE( "clique-row-flag-detection9", "[core]" )
-{
-   Num<double> num{};
-   Problem<double> problem = setupProblemWIthCliques();
-   // REQUIRE( problem.getRowFlags()[8].test( RowFlag::kClique ) );
-   //REQUIRE( problem.is_clique( problem.getConstraintMatrix(), 8,  num) )
-}
 
 Problem<double>
 setupProblemPresolveSingletonRow()
