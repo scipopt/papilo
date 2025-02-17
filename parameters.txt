@@ -203,4 +203,4 @@ cliquemerging.maxcliquesize = 100
 cliquemerging.maxgreedycalls = 10000
 
 # Is presolver clique merging enabled [Boolean: {0,1}]
-cliquemerging.enabled = 1
+cliquemerging.enabled = 0
