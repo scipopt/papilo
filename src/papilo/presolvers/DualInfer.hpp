@@ -180,7 +180,7 @@ DualInfer<REAL>::execute( const Problem<REAL>& problem,
       if( consMatrix.isRowRedundant( i ) )
          continue;
 
-      //assert( consMatrix.getRowSizes()[i] > 0 );
+      assert( consMatrix.getRowSizes()[i] > 0 );
 
       if( !rflags[i].test( RowFlag::kRhsInf ) )
          dualColFlags[i].set( ColFlag::kLbInf );
