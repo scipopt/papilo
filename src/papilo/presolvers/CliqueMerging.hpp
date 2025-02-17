@@ -60,7 +60,7 @@ class CliqueMerging : public PresolveMethod<REAL>
       this->setName( "cliquemerging" );
       this->setTiming( PresolverTiming::kMedium );
       this->setType( PresolverType::kIntegralCols );
-      this->setEnabled(false);
+      this->setEnabled(true);
    }
 
    void
