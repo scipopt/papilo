@@ -4,8 +4,8 @@
 variables:
   # dependency versions
   BOOST_VERSION: 1.80.0
-  SOPLEX_REVISION: release-712
-  SCIP_REVISION: v920
+  SOPLEX_REVISION: release-713
+  SCIP_REVISION: v921
   HIGHS_REVISION: v1.7.0
   OR_TOOLS_REVISION: v9.10
 
