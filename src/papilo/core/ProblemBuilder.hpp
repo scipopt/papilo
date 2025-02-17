@@ -194,20 +194,20 @@ class ProblemBuilder
    }
 
    void
+   setColIntegralAll( Vec<uint8_t> isIntegral )
+   {
+      assert( isIntegral.size() == domains.flags.size() );
+      for( int c = 0; c < (int)isIntegral.size(); ++c )
+         setColIntegral( c, isIntegral[c] );
+   }
+
+   void
    setColImplInt( int col, bool isImplInt )
    {
       if( isImplInt )
          domains.flags[col].set( ColFlag::kImplInt );
       else
          domains.flags[col].unset( ColFlag::kImplInt );
-   }
-
-   void
-   setColIntegralAll( Vec<uint8_t> isIntegral )
-   {
-      assert( isIntegral.size() == domains.flags.size() );
-      for( int c = 0; c < (int) isIntegral.size(); ++c )
-         setColIntegral( c, isIntegral[c] );
    }
 
    void
@@ -223,7 +223,7 @@ class ProblemBuilder
    setRowLhsInfAll( Vec<uint8_t> isInfinite )
    {
       assert( isInfinite.size() == rflags.size() );
-      for( int r = 0; r < (int) isInfinite.size(); ++r )
+      for( int r = 0; r < (int)isInfinite.size(); ++r )
          setRowLhsInf( r, isInfinite[r] );
    }
 

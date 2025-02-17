@@ -103,14 +103,14 @@ class SoplexInterface : public SolverInterface<REAL>
 
       for( int i = 0; i < ncols; ++i )
       {
-         assert( !domains.flags[i].test( ColFlag::kInactive ) );
-
+         assert(!domains.flags[i].test( ColFlag::kInactive ));
          Real lb = domains.flags[i].test( ColFlag::kLbInf )
                        ? -infinity
                        : Real( domains.lower_bounds[i] );
          Real ub = domains.flags[i].test( ColFlag::kUbInf )
                        ? infinity
                        : Real( domains.upper_bounds[i] );
+         assert(lb < ub);
 
          auto colvec = consMatrix.getColumnCoefficients( i );
 
@@ -181,16 +181,15 @@ class SoplexInterface : public SolverInterface<REAL>
       for( int i = 0; i != numcols; ++i )
       {
          int col = colset[i];
-
-         assert( components.getColComponentIdx( col ) == i );
-         assert( !domains.flags[col].test( ColFlag::kInactive ) );
-
+         assert(components.getColComponentIdx( col ) == i);
+         assert(!domains.flags[col].test( ColFlag::kInactive ));
          Real lb = domains.flags[col].test( ColFlag::kLbInf )
                        ? -infinity
                        : Real( domains.lower_bounds[col] );
          Real ub = domains.flags[col].test( ColFlag::kUbInf )
                        ? infinity
                        : Real( domains.upper_bounds[col] );
+         assert(lb < ub);
 
          auto colvec = consMatrix.getColumnCoefficients( col );
 

@@ -5,6 +5,10 @@
 Fixed bugs
 ----------
 
+- SCIP: Provide implied integrality when setting up component problem
+- Highs: Enforce integrality of enforced binary and integer variables
+- Gurobi: Declare implied integral variable with binary bounds binary
+
 Build system
 ------------
 
