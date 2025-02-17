@@ -1,4 +1,5 @@
 presolve.threads = 1
+numerics.useabsfeas = 0
 parallelcols.enabled = 0
 sparsify.enabled = 0
 presolve.removeslackvars = 0
@@ -7,4 +8,3 @@ substitution.binarieswithints = 0
 substitution.maxfillin = 3
 probing.maxbadgesize = 15000
 cliquemerging.enabled = 0
-numerics.useabsfeas = 0
