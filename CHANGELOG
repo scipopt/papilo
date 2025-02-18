@@ -5,6 +5,10 @@
 Interface changes
 -----------------
 
+### New API functions
+
+- ProblemBuilder: setColImplIntAll() to set all implied integrality flags at once
+
 ### Changed parameters
 
 ### New parameters with default values

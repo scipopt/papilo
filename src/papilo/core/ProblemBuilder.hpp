@@ -211,6 +211,14 @@ class ProblemBuilder
    }
 
    void
+   setColImplIntAll( Vec<uint8_t> isImplInt )
+   {
+      assert( isImplInt.size() == domains.flags.size() );
+      for( int c = 0; c < (int)isImplInt.size(); ++c )
+         setColImplInt( c, isImplInt[c] );
+   }
+
+   void
    setRowLhsInf( int row, bool isInfinite )
    {
       if( isInfinite )
