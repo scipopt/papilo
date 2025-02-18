@@ -84,12 +84,25 @@ class ScipInterface : public SolverInterface<REAL>
             else
                vartype = SCIP_VARTYPE_INTEGER;
          }
+#if SCIP_APIVERSION >= 135
+         else
+            vartype = SCIP_VARTYPE_CONTINUOUS;
+         SCIP_IMPLINTTYPE impltype;
+         if( domains.flags[i].test( ColFlag::kImplInt ) )
+            impltype = SCIP_IMPLINTTYPE_WEAK;
+         else
+            impltype = SCIP_IMPLINTTYPE_NONE;
+         SCIP_CALL( SCIPcreateVarImpl(scip, &var, varNames[origColMap[i]].c_str(), lb, ub,
+               SCIP_Real(obj.coefficients[i]), vartype, impltype,
+               TRUE, FALSE, NULL, NULL, NULL, NULL, NULL) );
+#else
          else if( domains.flags[i].test( ColFlag::kImplInt ) )
             vartype = SCIP_VARTYPE_IMPLINT;
          else
             vartype = SCIP_VARTYPE_CONTINUOUS;
          SCIP_CALL( SCIPcreateVarBasic(scip, &var, varNames[origColMap[i]].c_str(), lb, ub,
                SCIP_Real(obj.coefficients[i]), vartype) );
+#endif
          vars[i] = var;
          SCIP_CALL( SCIPaddVar(scip, var) );
          SCIP_CALL( SCIPreleaseVar(scip, &var) );
@@ -210,12 +223,25 @@ class ScipInterface : public SolverInterface<REAL>
             else
                vartype = SCIP_VARTYPE_INTEGER;
          }
+#if SCIP_APIVERSION >= 135
+         else
+            vartype = SCIP_VARTYPE_CONTINUOUS;
+         SCIP_IMPLINTTYPE impltype;
+         if( domains.flags[col].test( ColFlag::kImplInt ) )
+            impltype = SCIP_IMPLINTTYPE_WEAK;
+         else
+            impltype = SCIP_IMPLINTTYPE_NONE;
+         SCIP_CALL( SCIPcreateVarImpl(scip, &var, varNames[origColMap[col]].c_str(), lb, ub,
+               SCIP_Real(obj.coefficients[col]), vartype, impltype,
+               TRUE, FALSE, NULL, NULL, NULL, NULL, NULL) );
+#else
          else if( domains.flags[col].test( ColFlag::kImplInt ) )
             vartype = SCIP_VARTYPE_IMPLINT;
          else
             vartype = SCIP_VARTYPE_CONTINUOUS;
          SCIP_CALL( SCIPcreateVarBasic(scip, &var, varNames[origColMap[col]].c_str(), lb, ub,
                SCIP_Real(obj.coefficients[col]), vartype) );
+#endif
          vars[i] = var;
          SCIP_CALL( SCIPaddVar(scip, var) );
          SCIP_CALL( SCIPreleaseVar(scip, &var) );
