@@ -67,35 +67,45 @@ class ScipInterface : public SolverInterface<REAL>
 
       for( int i = 0; i < ncols; ++i )
       {
+         assert(!domains.flags[i].test( ColFlag::kInactive ));
          SCIP_VAR* var;
-         assert( !domains.flags[i].test( ColFlag::kInactive ) );
-
          SCIP_Real lb = domains.flags[i].test( ColFlag::kLbInf )
-                            ? -SCIPinfinity( scip )
-                            : SCIP_Real( domains.lower_bounds[i] );
+                            ? -SCIPinfinity(scip)
+                            : SCIP_Real(domains.lower_bounds[i]);
          SCIP_Real ub = domains.flags[i].test( ColFlag::kUbInf )
-                            ? SCIPinfinity( scip )
-                            : SCIP_Real( domains.upper_bounds[i] );
-         SCIP_VARTYPE type;
+                            ? SCIPinfinity(scip)
+                            : SCIP_Real(domains.upper_bounds[i]);
+         assert(lb < ub);
+         SCIP_VARTYPE vartype;
          if( domains.flags[i].test( ColFlag::kIntegral ) )
          {
-            if( lb == REAL{ 0 } && ub == REAL{ 1 } )
-               type = SCIP_VARTYPE_BINARY;
+            if( lb >= 0 && ub <= 1 )
+               vartype = SCIP_VARTYPE_BINARY;
             else
-               type = SCIP_VARTYPE_INTEGER;
+               vartype = SCIP_VARTYPE_INTEGER;
          }
-         else if( domains.flags[i].test( ColFlag::kImplInt ) )
-            type = SCIP_VARTYPE_IMPLINT;
+#if SCIP_APIVERSION >= 135
          else
-            type = SCIP_VARTYPE_CONTINUOUS;
-
-         SCIP_CALL( SCIPcreateVarBasic(
-             scip, &var, varNames[origColMap[i]].c_str(), lb, ub,
-             SCIP_Real( obj.coefficients[i] ), type ) );
-         SCIP_CALL( SCIPaddVar( scip, var ) );
+            vartype = SCIP_VARTYPE_CONTINUOUS;
+         SCIP_IMPLINTTYPE impltype;
+         if( domains.flags[i].test( ColFlag::kImplInt ) )
+            impltype = SCIP_IMPLINTTYPE_WEAK;
+         else
+            impltype = SCIP_IMPLINTTYPE_NONE;
+         SCIP_CALL( SCIPcreateVarImpl(scip, &var, varNames[origColMap[i]].c_str(), lb, ub,
+               SCIP_Real(obj.coefficients[i]), vartype, impltype,
+               TRUE, FALSE, NULL, NULL, NULL, NULL, NULL) );
+#else
+         else if( domains.flags[i].test( ColFlag::kImplInt ) )
+            vartype = SCIP_VARTYPE_IMPLINT;
+         else
+            vartype = SCIP_VARTYPE_CONTINUOUS;
+         SCIP_CALL( SCIPcreateVarBasic(scip, &var, varNames[origColMap[i]].c_str(), lb, ub,
+               SCIP_Real(obj.coefficients[i]), vartype) );
+#endif
          vars[i] = var;
-
-         SCIP_CALL( SCIPreleaseVar( scip, &var ) );
+         SCIP_CALL( SCIPaddVar(scip, var) );
+         SCIP_CALL( SCIPreleaseVar(scip, &var) );
       }
 
       Vec<SCIP_VAR*> consvars;
@@ -196,33 +206,45 @@ class ScipInterface : public SolverInterface<REAL>
       for( int i = 0; i < ncols; ++i )
       {
          int col = colset[i];
+         assert(!domains.flags[col].test( ColFlag::kInactive ));
          SCIP_VAR* var;
-         assert( !domains.flags[col].test( ColFlag::kInactive ) );
-
          SCIP_Real lb = domains.flags[col].test( ColFlag::kLbInf )
-                            ? -SCIPinfinity( scip )
-                            : SCIP_Real( domains.lower_bounds[col] );
+                            ? -SCIPinfinity(scip)
+                            : SCIP_Real(domains.lower_bounds[col]);
          SCIP_Real ub = domains.flags[col].test( ColFlag::kUbInf )
-                            ? SCIPinfinity( scip )
-                            : SCIP_Real( domains.upper_bounds[col] );
-         SCIP_VARTYPE type;
+                            ? SCIPinfinity(scip)
+                            : SCIP_Real(domains.upper_bounds[col]);
+         assert(lb < ub);
+         SCIP_VARTYPE vartype;
          if( domains.flags[col].test( ColFlag::kIntegral ) )
          {
-            if( lb == REAL{ 0 } && ub == REAL{ 1 } )
-               type = SCIP_VARTYPE_BINARY;
+            if( lb >= 0 && ub <= 1 )
+               vartype = SCIP_VARTYPE_BINARY;
             else
-               type = SCIP_VARTYPE_INTEGER;
+               vartype = SCIP_VARTYPE_INTEGER;
          }
+#if SCIP_APIVERSION >= 135
          else
-            type = SCIP_VARTYPE_CONTINUOUS;
-
-         SCIP_CALL( SCIPcreateVarBasic(
-             scip, &var, varNames[origColMap[col]].c_str(), lb, ub,
-             SCIP_Real( obj.coefficients[col] ), type ) );
-         SCIP_CALL( SCIPaddVar( scip, var ) );
+            vartype = SCIP_VARTYPE_CONTINUOUS;
+         SCIP_IMPLINTTYPE impltype;
+         if( domains.flags[col].test( ColFlag::kImplInt ) )
+            impltype = SCIP_IMPLINTTYPE_WEAK;
+         else
+            impltype = SCIP_IMPLINTTYPE_NONE;
+         SCIP_CALL( SCIPcreateVarImpl(scip, &var, varNames[origColMap[col]].c_str(), lb, ub,
+               SCIP_Real(obj.coefficients[col]), vartype, impltype,
+               TRUE, FALSE, NULL, NULL, NULL, NULL, NULL) );
+#else
+         else if( domains.flags[col].test( ColFlag::kImplInt ) )
+            vartype = SCIP_VARTYPE_IMPLINT;
+         else
+            vartype = SCIP_VARTYPE_CONTINUOUS;
+         SCIP_CALL( SCIPcreateVarBasic(scip, &var, varNames[origColMap[col]].c_str(), lb, ub,
+               SCIP_Real(obj.coefficients[col]), vartype) );
+#endif
          vars[i] = var;
-
-         SCIP_CALL( SCIPreleaseVar( scip, &var ) );
+         SCIP_CALL( SCIPaddVar(scip, var) );
+         SCIP_CALL( SCIPreleaseVar(scip, &var) );
       }
 
       Vec<SCIP_VAR*> consvars;
