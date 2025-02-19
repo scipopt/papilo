@@ -552,6 +552,12 @@ class ConstraintMatrix
               Vec<RowActivity<REAL>>& activities, Vec<int>& singletonRows,
               Vec<int>& singletonCols, Vec<int>& emptyCols, int presolveround );
 
+   bool
+   change_coefficient( const Num<REAL>& num, int row, int col, REAL val,
+       const VariableDomains<REAL>& domains, Vec<int>& indbuffer,
+       Vec<REAL>& valbuffer, Vec<int>& changedActivities,
+       Vec<RowActivity<REAL>>& activities, int presolveround );
+
    const SparseStorage<REAL>&
    getMatrixTranspose() const
    {
@@ -1272,7 +1278,78 @@ ConstraintMatrix<REAL>::sparsify(
    return ncancel;
 }
 
+
+
+
 template <typename REAL>
+bool
+ConstraintMatrix<REAL>::change_coefficient(
+    const Num<REAL>& num, int row, int col, REAL val,
+    const VariableDomains<REAL>& domains, Vec<int>& indbuffer,
+    Vec<REAL>& valbuffer, Vec<int>& changedActivities,
+    Vec<RowActivity<REAL>>& activities, int presolveround )
+{
+   auto updateActivity = [presolveround, &changedActivities, &domains,
+                          &activities, this, num](
+                             int row, int col, REAL oldval, REAL newval ) {
+      assert( oldval != newval );
+
+      auto activityChange = [row, presolveround, &changedActivities](
+                                ActivityChange actChange,
+                                RowActivity<REAL>& activity ) {
+         if( activity.lastchange == presolveround )
+            return;
+
+         if( actChange == ActivityChange::kMin && activity.ninfmin > 1 )
+            return;
+
+         if( actChange == ActivityChange::kMax && activity.ninfmax > 1 )
+            return;
+
+         activity.lastchange = presolveround;
+         changedActivities.push_back( row );
+      };
+
+      const SparseVectorView<REAL>& rowVec = getRowCoefficients( row );
+      update_activity_after_coeffchange(
+          domains.lower_bounds[col], domains.upper_bounds[col],
+          domains.flags[col], oldval, newval, activities[row],
+          rowVec.getLength(), rowVec.getIndices(), rowVec.getValues(), domains,
+          num, activityChange );
+   };
+
+   auto mergeVal = [&]( const REAL& oldval, const REAL& newval )
+   { return newval; };
+
+   if(cons_matrix.rowranges[row].end + 1 == cons_matrix.rowranges[row+1].start)
+   {
+      //fmt::print("did not add col {} to clique {}\n", col, row);
+      return false;
+   }
+   if(cons_matrix_transp.rowranges[col].end + 1 == cons_matrix_transp.rowranges[col+1].start)
+   {
+      //fmt::print("did not add col {} to clique {}\n", col, row);
+      return false;
+   }
+
+   int newsize = cons_matrix.changeRow(
+       row, int{ 0 }, int{ 1 },
+       [&]( int k ) { return col; },
+       [&]( int k ) { return val; },
+       mergeVal, updateActivity, valbuffer, indbuffer );
+   rowsize[row] = newsize;
+   newsize = cons_matrix_transp.changeRow(
+             col, int{0}, int{1},
+             [&]( int k ) { return row; },
+             [&]( int k ) { return val; },
+             []( const REAL& oldval, const REAL& newval ) { return newval; },
+             []( int, int, REAL, REAL ) {}, valbuffer, indbuffer );
+   colsize[col] = newsize;
+   return true;
+
+}
+
+    template <typename REAL>
 void
 ConstraintMatrix<REAL>::aggregate(
     const Num<REAL>& num, int substituted_col, SparseVectorView<REAL> equalityLHS,

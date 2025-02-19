@@ -55,6 +55,7 @@ add_executable(unit_test TestMain.cpp
         papilo/presolve/SimpleSubstitutionTest.cpp
         papilo/presolve/SimplifyInequalitiesTest.cpp
         papilo/presolve/SparsifyTest.cpp
+        papilo/presolve/CliqueMergingTest.cpp
 
         ${BOOST_REQUIRED_TEST_FILES}
         ${PAPILOLIB_TEST_FILE})
@@ -79,6 +80,14 @@ set(unit_tests
         #ProblemUpdate
         "trivial-presolve-singleton-row"
         "trivial-presolve-singleton-row-pt-2"
+        "clique-row-flag-detection1"
+        "clique-row-flag-detection2"
+        "clique-row-flag-detection3"
+        "clique-row-flag-detection4"
+        "clique-row-flag-detection5"
+        "clique-row-flag-detection6"
+        "clique-row-flag-detection7"
+        "clique-row-flag-detection8"
 
         "problem-comparisons"
 
@@ -197,6 +206,10 @@ set(unit_tests
         "happy-path-sparsify"
         "happy-path-sparsify-two-equalities"
         "failed-path-sparsify-if-misses-one-for-integer"
+
+        #CliqueMerging
+        "clique-merging-basic"
+        "clique-merging-cover"
 
         ${PAPILOLIB_TESTS}
         ${BOOST_REQUIRED_TESTS}

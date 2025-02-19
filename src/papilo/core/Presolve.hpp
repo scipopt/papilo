@@ -40,6 +40,7 @@
 #include "papilo/misc/tbb.hpp"
 #endif
 #include "papilo/misc/Vec.hpp"
+#include "papilo/presolvers/CliqueMerging.hpp"
 #include "papilo/presolvers/CoefficientStrengthening.hpp"
 #include "papilo/presolvers/ConstraintPropagation.hpp"
 #include "papilo/presolvers/DominatedCols.hpp"
@@ -108,11 +109,12 @@ class Presolve
       addPresolveMethod( uptr( new DualFix<REAL>() ) );
       addPresolveMethod( uptr( new SimplifyInequalities<REAL>() ) );
       addPresolveMethod( uptr( new SimpleSubstitution<REAL>() ) );
+      addPresolveMethod( uptr( new CliqueMerging<REAL>() ) );
 
       //exhaustive presolvers
       addPresolveMethod( uptr( new ImplIntDetection<REAL>() ) );
       addPresolveMethod( uptr( new DominatedCols<REAL>() ) );
-      addPresolveMethod( uptr( new DualInfer<REAL> ) );
+      addPresolveMethod( uptr( new DualInfer<REAL>() ) );
       addPresolveMethod( uptr( new Probing<REAL>() ) );
       addPresolveMethod( uptr( new Substitution<REAL>() ) );
       addPresolveMethod( uptr( new Sparsify<REAL>() ) );
@@ -425,7 +427,6 @@ Presolve<REAL>::apply( Problem<REAL>& problem, bool store_dual_postsolve )
       const Vec<int>& rowsize = constraintMatrix.getRowSizes();
 
 
-
       PresolveResult<REAL> result;
 
       result.postsolve =
@@ -466,6 +467,7 @@ Presolve<REAL>::apply( Problem<REAL>& problem, bool store_dual_postsolve )
       msg.info( "  int. columns:  {}\n", problem.getNumIntegralCols() );
       msg.info( "  cont. columns:  {}\n", problem.getNumContinuousCols() );
       msg.info( "  nonzeros: {}\n\n", problem.getConstraintMatrix().getNnz() );
+
 
       result.status = PresolveStatus::kUnchanged;
 
@@ -1352,7 +1354,6 @@ Presolve<REAL>::are_applied_tsx_negligible( const Problem<REAL>& problem,
   case Delegator::kExceeded:
       assert(false);
    }
-   
    if( roundStats.ndeletedcols == 0 && roundStats.ndeletedrows == 0 &&
        roundStats.ncoefchgs == 0 && presolveOptions.max_consecutive_rounds_of_only_bound_changes >= 0 )
    {

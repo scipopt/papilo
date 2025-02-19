@@ -103,7 +103,6 @@ class MpsParser
          //TODO check if PseudoBoolean
          problem.set_problem_type( ProblemFlag::kInteger );
       }
-
       return problem;
    }
 

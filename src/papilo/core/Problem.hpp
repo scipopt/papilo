@@ -378,6 +378,67 @@ class Problem
       return symmetries;
    }
 
+   bool
+   is_clique( const ConstraintMatrix<REAL>& matrix, int row, const Num<REAL>& num ) const
+   {
+      RowFlags rowFlag = matrix.getRowFlags()[row];
+      bool rhsClique = true;
+      bool lhsClique = true;
+      bool SOS1 = false;
+      bool equation = false;
+      if( rowFlag.test( RowFlag::kRhsInf ) )
+         rhsClique = false;
+      if( rowFlag.test( RowFlag::kLhsInf ) )
+         lhsClique = false;
+      if( !lhsClique && !rhsClique )
+         return false;
+      auto rowvec = matrix.getRowCoefficients( row );
+      if( rowvec.getLength() <= 1 || rowFlag.test( RowFlag::kRedundant ))
+         return false;
+      REAL minvalue = std::numeric_limits<REAL>::infinity();
+      REAL maxvalue = -std::numeric_limits<REAL>::infinity();
+      for( int j = 0; j < rowvec.getLength(); ++j )
+      {
+         int col = rowvec.getIndices()[j];
+         if( !variableDomains.flags[col].test( ColFlag::kIntegral ) )
+            return false;
+         REAL coeff = rowvec.getValues()[j];
+         REAL lb = variableDomains.lower_bounds[col];
+         REAL ub = variableDomains.upper_bounds[col];
+         if( !num.isEq( ub, 1 ) )
+            SOS1 = true;
+         if( rhsClique && ( ( num.isEq( 0, lb ) && num.isLT( 0, coeff ) ) ||
+                            ( num.isEq( 0, ub ) && num.isGT( 0, coeff ) ) ) )
+         {
+            lhsClique = false;
+            if( !( num.isGT( minvalue + abs( coeff ),
+                             matrix.getRightHandSides()[row] ) &&
+                   num.isLE( abs( coeff ), matrix.getRightHandSides()[row] ) ) )
+               rhsClique = false;
+            else if( num.isLT( abs( coeff ), minvalue ) )
+               minvalue = abs( coeff );
+         }
+         else if( lhsClique &&
+                  ( ( num.isEq( 0, ub ) && num.isLT( 0, coeff ) ) ||
+                    ( num.isEq( 0, lb ) && num.isGT( 0, coeff ) ) ) )
+         {
+            rhsClique = false;
+            if( !( num.isLT( maxvalue - abs( coeff ),
+                             matrix.getLeftHandSides()[row] ) &&
+                   num.isGE( -abs( coeff ), matrix.getLeftHandSides()[row] ) ) )
+               lhsClique = false;
+            else if( num.isGT( -abs( coeff ), maxvalue ) )
+               maxvalue = -abs( coeff );
+         }
+         else
+            return false;
+         if( ( !lhsClique && !rhsClique ) || SOS1 )
+            return false;
+      }
+      if( (rhsClique && num.isGT(matrix.getLeftHandSides()[row],0.0)) || (lhsClique && num.isLT(matrix.getRightHandSides()[row],0.0)) )
+         equation = true;
+      return !equation && !SOS1 ;
+   }
 
    /// substitute a variable in the objective using an equality constraint
    /// given by a row index
@@ -759,6 +820,7 @@ class Problem
    VariableDomains<REAL> variableDomains;
    int ncontinuous;
    int nintegers;
+   VariableDomains<REAL> domains;
 
    Vec<String> variableNames;
    Vec<String> constraintNames;

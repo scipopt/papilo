@@ -108,7 +108,6 @@ class OpbParser
       problem.set_problem_type( ProblemFlag::kMixedInteger );
       problem.set_problem_type( ProblemFlag::kInteger );
       problem.set_problem_type( ProblemFlag::kBinary );
-
       return problem;
    }
 

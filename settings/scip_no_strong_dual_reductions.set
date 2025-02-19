@@ -7,4 +7,5 @@ presolve.detectlindep = 0
 substitution.binarieswithints = 0
 substitution.maxfillin = 3
 probing.maxbadgesize = 15000
+cliquemerging.enabled = 0
 presolve.dualreds = 1

@@ -30,10 +30,12 @@ namespace papilo
 #include "papilo/core/Problem.hpp"
 #include "papilo/misc/String.hpp"
 #include "papilo/misc/Vec.hpp"
+#include "papilo/Config.hpp"
 
 template <typename REAL>
 class ProblemBuilder
 {
+
  public:
    /// Sets the number of columns to the given value. The information of columns
    /// that already exist is kept, new columns are continuous and fixed to zero.
@@ -380,19 +382,33 @@ class ProblemBuilder
       problem.setVariableDomains( std::move( domains ) );
       problem.setVariableNames( std::move( colnames ) );
       problem.setConstraintNames( std::move( rownames ) );
-      ConstraintMatrix<REAL>& matrix = problem.getConstraintMatrix();
-      for(int i=0; i< problem.getNRows(); i++){
-         RowFlags rowFlag = matrix.getRowFlags()[i];
-         if( !rowFlag.test( RowFlag::kRhsInf ) &&
-             !rowFlag.test( RowFlag::kLhsInf ) &&
-             matrix.getLeftHandSides()[i] == matrix.getRightHandSides()[i] )
-            matrix.getRowFlags()[i].set(RowFlag::kEquation);
-      }
-      if(problem.getNumIntegralCols() == 0)
-         problem.set_problem_type(ProblemFlag::kLinear);
+      ConstraintMatrix<REAL>& matrix = problem.getConstraintMatrix(); 
+#ifdef PAPILO_TBB
+      tbb::parallel_for(
+          tbb::blocked_range<int>( 0, problem.getNRows() ),
+          [&]( const tbb::blocked_range<int>& r )
+          {
+             for( int i = r.begin(); i != r.end(); ++i )
+#else
+      for( int i = 0; i < problem.getNRows(); i++ )
+#endif
+             {
+                RowFlags rowFlag = matrix.getRowFlags()[i];
+                if( !rowFlag.test( RowFlag::kRhsInf ) &&
+                    !rowFlag.test( RowFlag::kLhsInf ) &&
+                    matrix.getLeftHandSides()[i] ==
+                        matrix.getRightHandSides()[i] )
+                   matrix.getRowFlags()[i].set( RowFlag::kEquation );
+             }
+#ifdef PAPILO_TBB
+          } );
+#endif
+      if( problem.getNumIntegralCols() == 0 )
+         problem.set_problem_type( ProblemFlag::kLinear );
 
       return problem;
    }
+
 
  private:
    MatrixBuffer<REAL> matrix_buffer;

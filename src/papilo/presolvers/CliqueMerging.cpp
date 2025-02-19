@@ -20,26 +20,13 @@
 /*                                                                           */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef _PAPILO_CORE_ROW_FLAGS_HPP_
-#define _PAPILO_CORE_ROW_FLAGS_HPP_
-
-#include "papilo/misc/Flags.hpp"
+#include "papilo/presolvers/CliqueMerging.hpp"
 
 namespace papilo
 {
 
-enum class RowFlag : uint8_t
-{
-   kLhsInf = 1 << 0,
-   kRhsInf = 1 << 1,
-   kEquation = 1 << 2,
-   kIntegral = 1 << 3,
-   kRedundant = 1 << 4,
-   kClique = 1 << 5,
-};
-
-using RowFlags = Flags<RowFlag>;
+template class CliqueMerging<double>;
+template class CliqueMerging<Quad>;
+template class CliqueMerging<Rational>;
 
 } // namespace papilo
-
-#endif
