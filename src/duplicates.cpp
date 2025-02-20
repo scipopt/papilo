@@ -344,7 +344,7 @@ compute_row_and_column_permutation( const Problem<double>& prob, bool verbose )
 /// Returns True if variables in given permutation have same attributes
 static bool
 check_cols( const Problem<double>& prob1, const Problem<double>& prob2,
-            Vec<int> perm1, const Vec<int> perm2 )
+            const Vec<int>& perm1, const Vec<int>& perm2 )
 {
    assert( perm1.size() == perm2.size() );
    int ncols = perm1.size();

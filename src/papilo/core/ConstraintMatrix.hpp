@@ -545,12 +545,13 @@ class ConstraintMatrix
    /// @param equalityRHS the left hand side of the equality such that sum{
    /// a_j*x_i } = equalityRHS
    void
-   aggregate( const Num<REAL>& num, int substituted_col, SparseVectorView<REAL> equalityLHS,
-              REAL equalityRHS, const VariableDomains<REAL>& domains,
-              Vec<int>& indbuffer, Vec<REAL>& valbuffer,
-              Vec<Triplet<REAL>>& tripletbuffer, Vec<int>& changedActivities,
-              Vec<RowActivity<REAL>>& activities, Vec<int>& singletonRows,
-              Vec<int>& singletonCols, Vec<int>& emptyCols, int presolveround );
+   aggregate( const Num<REAL>& num, int substituted_col,
+              const SparseVectorView<REAL>& equalityLHS, REAL equalityRHS,
+              const VariableDomains<REAL>& domains, Vec<int>& indbuffer,
+              Vec<REAL>& valbuffer, Vec<Triplet<REAL>>& tripletbuffer,
+              Vec<int>& changedActivities, Vec<RowActivity<REAL>>& activities,
+              Vec<int>& singletonRows, Vec<int>& singletonCols,
+              Vec<int>& emptyCols, int presolveround );
 
    const SparseStorage<REAL>&
    getMatrixTranspose() const
@@ -1275,8 +1276,9 @@ ConstraintMatrix<REAL>::sparsify(
 template <typename REAL>
 void
 ConstraintMatrix<REAL>::aggregate(
-    const Num<REAL>& num, int substituted_col, SparseVectorView<REAL> equalityLHS,
-    REAL equalityRHS, const VariableDomains<REAL>& domains, Vec<int>& indbuffer,
+    const Num<REAL>& num, int substituted_col,
+    const SparseVectorView<REAL>& equalityLHS, REAL equalityRHS,
+    const VariableDomains<REAL>& domains, Vec<int>& indbuffer,
     Vec<REAL>& valbuffer, Vec<Triplet<REAL>>& tripletbuffer,
     Vec<int>& changedActivities, Vec<RowActivity<REAL>>& activities,
     Vec<int>& singletonRows, Vec<int>& singletonCols, Vec<int>& emptyCols,
