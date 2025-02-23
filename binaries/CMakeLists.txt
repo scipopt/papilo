@@ -4,7 +4,7 @@
 include(GenerateExportHeader)
 
 if(SCIP)
-   find_package(SCIP)
+   find_package(SCIP CONFIG HINTS ${SCIP_DIR})
 endif()
 if(SCIP_FOUND)
    message(STATUS "Found SCIP: ${SCIP_INCLUDE_DIRS}")
