@@ -12,7 +12,7 @@ Fixed bugs
 Build system
 ------------
 
-- CMake: Use CONFIG mode for SoPlex, HiGHS and SCIP for the PaPILO libraries
+- use CMake CONFIG mode for linking SoPlex, SCIP, and HiGHS
 
 Miscellaneous
 -------------
