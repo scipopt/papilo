@@ -4,7 +4,7 @@
 include(GenerateExportHeader)
 
 if(SCIP)
-   find_package(SCIP REQUIRED)
+   find_package(SCIP REQUIRED CONFIG HINTS ${SCIP_DIR})
 endif()
 if(SCIP_FOUND)
    message(STATUS "Found SCIP: ${SCIP_INCLUDE_DIRS}")
@@ -50,7 +50,7 @@ else()
 endif()
 
 if(HIGHS)
-   find_package(HIGHS CONFIG REQUIRED HINTS ${HIGHS_DIR})
+   find_package(HIGHS REQUIRED CONFIG HINTS ${HIGHS_DIR})
 endif()
 if(HIGHS_FOUND)
    message(STATUS "Found HIGHS: ${HIGHS_INCLUDE_DIRS}")
