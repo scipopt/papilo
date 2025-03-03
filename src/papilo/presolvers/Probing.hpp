@@ -165,7 +165,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
       if( problem.is_clique( consMatrix, row, num ) )
       {
          auto rowvec = consMatrix.getRowCoefficients( row );
-         auto rowinds = rowvec.getindices();
+         auto rowinds = rowvec.getIndices();
          for( int ind = 0; ind != rowvec.getLength(); ++ind )
          {
             clique_vars.insert( rowinds[ind] );
