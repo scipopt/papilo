@@ -440,10 +440,9 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
                       assert( !probingView.isInfeasible() );
                       probingView.setProbingColumn( col, false );
                       probingView.propagateDomains();
-
-                      bool globalInfeasible = probingView.analyzeImplications();
-                      probingView.reset();
                    }
+                   bool globalInfeasible = probingView.analyzeImplications();
+                   probingView.reset();
 
                    ++nprobed[col];
 
