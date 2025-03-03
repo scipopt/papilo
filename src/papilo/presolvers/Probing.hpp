@@ -38,6 +38,7 @@
 #include "papilo/misc/fmt.hpp"
 #include <atomic>
 #include <boost/functional/hash.hpp>
+#include <set>
 #ifdef PAPILO_TBB
 #include "papilo/misc/tbb.hpp"
 #endif
