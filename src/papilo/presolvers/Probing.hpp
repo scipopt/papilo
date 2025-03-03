@@ -162,7 +162,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
 
    for( int row = 0; row != nrows; ++row )
    {
-      if( Problem.is_clique( consMatrix, row, num ) )
+      if( problem.is_clique( consMatrix, row, num ) )
       {
          auto rowvec = consMatrix.getRowCoefficients( row );
          auto rowinds = rowvec.getindices();
