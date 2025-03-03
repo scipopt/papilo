@@ -64,7 +64,6 @@ class Probing : public PresolveMethod<REAL>
       this->setType( PresolverType::kIntegralCols );
    }
 
-
    void
    compress( const Vec<int>& rowmap, const Vec<int>& colmap ) override
    {
@@ -116,18 +115,16 @@ class Probing : public PresolveMethod<REAL>
 
    PresolveStatus
    execute( const Problem<REAL>& problem,
-            const ProblemUpdate<REAL>& problemUpdate,
-            const Num<REAL>& num, Reductions<REAL>& reductions,
-            const Timer& timer, int& reason_of_infeasibility) override;
+            const ProblemUpdate<REAL>& problemUpdate, const Num<REAL>& num,
+            Reductions<REAL>& reductions, const Timer& timer,
+            int& reason_of_infeasibility ) override;
 
    bool
    isBinaryVariable( REAL upper_bound, REAL lower_bound, int column_size,
                      const Flags<ColFlag>& colFlag ) const;
 
-
    void
-   set_max_badge_size( int val);
-
+   set_max_badge_size( int val );
 };
 
 #ifdef PAPILO_USE_EXTERN_TEMPLATES
@@ -141,7 +138,7 @@ PresolveStatus
 Probing<REAL>::execute( const Problem<REAL>& problem,
                         const ProblemUpdate<REAL>& problemUpdate,
                         const Num<REAL>& num, Reductions<REAL>& reductions,
-                        const Timer& timer, int& reason_of_infeasibility)
+                        const Timer& timer, int& reason_of_infeasibility )
 {
    if( problem.getNumIntegralCols() == 0 )
       return PresolveStatus::kUnchanged;
@@ -160,14 +157,40 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
    const Vec<int>& colsize = consMatrix.getColSizes();
    const auto& colperm = problemUpdate.getRandomColPerm();
 
+   const int nrows = problem.getNRows();
+   std::set<int> clique_vars;
+
+   for( int row = 0; row != nrows; ++row )
+   {
+      if( Problem.is_clique( consMatrix, row, num ) )
+      {
+         auto rowvec = consMatrix.getRowCoefficients( row );
+         auto rowinds = rowvec.getindices();
+         for( int ind = 0; ind != rowvec.getLength(); ++ind )
+         {
+            clique_vars.insert( rowinds[ind] );
+         }
+      }
+   }
+
    Vec<int> probing_cands;
    probing_cands.reserve( ncols );
+   Vec<bool> clique_cands;
+   clique_cands.reserve( ncols );
 
    for( int i = 0; i != ncols; ++i )
    {
       if( isBinaryVariable( upper_bounds[i], lower_bounds[i], colsize[i],
                             cflags[i] ) )
+      {
          probing_cands.push_back( i );
+         if( clique_vars.count( i ) )
+            clique_cands.push_back( true );
+         else
+            clique_cands.push_back( false );
+      }
+      else
+         clique_cands.push_back( false );
    }
 
    if( probing_cands.empty() )
@@ -232,9 +255,8 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
              pdqsort( binary_variables_in_row.begin(),
                       binary_variables_in_row.end(),
                       []( const std::pair<REAL, int>& a,
-                          const std::pair<REAL, int>& b ) {
-                         return abs( a.first ) > abs( b.first );
-                      } );
+                          const std::pair<REAL, int>& b )
+                      { return abs( a.first ) > abs( b.first ); } );
 
              for( int i = 0; i < nbinvarsrow; ++i )
              {
@@ -280,11 +302,12 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
           }
 
 #ifdef PAPILO_TBB
-       });
+       } );
 #endif
 
    pdqsort( probing_cands.begin(), probing_cands.end(),
-            [this, &probing_scores, &colsize, &colperm]( int col1, int col2 ) {
+            [this, &probing_scores, &colsize, &colperm]( int col1, int col2 )
+            {
                std::pair<double, double> s1;
                std::pair<double, double> s2;
                if( nprobed[col2] == 0 && probing_scores[col2] > 0 )
@@ -355,16 +378,18 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
    boundChanges.reserve( ncols );
 
    std::atomic_bool infeasible{ false };
-   std::atomic_int infeasible_variable {-1};
+   std::atomic_int infeasible_variable{ -1 };
 
    // use tbb combinable so that each thread will copy the activities and
    // bounds at most once
 #ifdef PAPILO_TBB
-   tbb::combinable<ProbingView<REAL>> probing_views( [this, &problem, &num]() {
-      ProbingView<REAL> probingView( problem, num );
-      probingView.setMinContDomRed( mincontdomred );
-      return probingView;
-   } );
+   tbb::combinable<ProbingView<REAL>> probing_views(
+       [this, &problem, &num]()
+       {
+          ProbingView<REAL> probingView( problem, num );
+          probingView.setMinContDomRed( mincontdomred );
+          return probingView;
+       } );
 #else
    ProbingView<REAL> probingView( problem, num );
    probingView.setMinContDomRed( mincontdomred );
@@ -373,10 +398,10 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
    do
    {
       Message::debug( this, "probing candidates {} to {}\n",
-                      current_badge_start,
-                      current_badge_end );
+                      current_badge_start, current_badge_end );
 
-      auto propagate_variables = [&]( int start, int end) {
+      auto propagate_variables = [&]( int start, int end )
+      {
 #ifdef PAPILO_TBB
          tbb::parallel_for(
              tbb::blocked_range<int>( start, end ),
@@ -394,9 +419,9 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
                       break;
                    const int col = probing_cands[i];
 
-                   assert( cflags[col].test( ColFlag::kIntegral ) &&
-                               (lower_bounds[col] == 0 ||
-                           upper_bounds[col] == 1 ));
+                   assert(
+                       cflags[col].test( ColFlag::kIntegral ) &&
+                       ( lower_bounds[col] == 0 || upper_bounds[col] == 1 ) );
 
                    if( infeasible.load( std::memory_order_relaxed ) )
                       break;
@@ -407,22 +432,25 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
                    probingView.storeImplications();
                    probingView.reset();
 
-                   if( infeasible.load( std::memory_order_relaxed ) )
-                      break;
+                   if( !clique_cands[col] )
+                   {
+                      if( infeasible.load( std::memory_order_relaxed ) )
+                         break;
 
-                   assert( !probingView.isInfeasible() );
-                   probingView.setProbingColumn( col, false );
-                   probingView.propagateDomains();
+                      assert( !probingView.isInfeasible() );
+                      probingView.setProbingColumn( col, false );
+                      probingView.propagateDomains();
 
-                   bool globalInfeasible = probingView.analyzeImplications();
-                   probingView.reset();
+                      bool globalInfeasible = probingView.analyzeImplications();
+                      probingView.reset();
+                   }
 
                    ++nprobed[col];
 
                    if( globalInfeasible )
                    {
                       infeasible.store( true, std::memory_order_relaxed );
-                      infeasible_variable.store(col);
+                      infeasible_variable.store( col );
                       break;
                    }
                 }
@@ -439,7 +467,8 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
 
       if( infeasible.load( std::memory_order_relaxed ) )
       {
-         reason_of_infeasibility = infeasible_variable.load(std::memory_order_relaxed);
+         reason_of_infeasibility =
+             infeasible_variable.load( std::memory_order_relaxed );
          return PresolveStatus::kInfeasible;
       }
 
@@ -449,84 +478,90 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
       int nsubstitutions = -substitutions.size();
 
 #ifdef PAPILO_TBB
-      probing_views.combine_each( [&]( ProbingView<REAL>& probingView ) {
+      probing_views.combine_each(
+          [&]( ProbingView<REAL>& probingView )
+          {
 #endif
-         const auto& probingBoundChgs = probingView.getProbingBoundChanges();
-         const auto& probingSubstitutions =
-             probingView.getProbingSubstitutions();
+             const auto& probingBoundChgs =
+                 probingView.getProbingBoundChanges();
+             const auto& probingSubstitutions =
+                 probingView.getProbingSubstitutions();
 
-         amountofwork += probingView.getAmountOfWork();
+             amountofwork += probingView.getAmountOfWork();
 
-         for( const ProbingSubstitution<REAL>& subst : probingSubstitutions )
-         {
-            auto insres = substitutionsPos.emplace(
-                std::make_pair( subst.col1, subst.col2 ),
-                substitutions.size() );
+             for( const ProbingSubstitution<REAL>& subst :
+                  probingSubstitutions )
+             {
+                auto insres = substitutionsPos.emplace(
+                    std::make_pair( subst.col1, subst.col2 ),
+                    substitutions.size() );
 
-            if( insres.second )
-               substitutions.push_back( subst );
-         }
+                if( insres.second )
+                   substitutions.push_back( subst );
+             }
 
-         for( const ProbingBoundChg<REAL>& boundChg : probingBoundChgs )
-         {
-            if( boundPos[2 * boundChg.col + boundChg.upper] == 0 )
-            {
-               // found new bound change
-               boundChanges.emplace_back( boundChg );
-               boundPos[2 * boundChg.col + boundChg.upper] = boundChanges.size();
+             for( const ProbingBoundChg<REAL>& boundChg : probingBoundChgs )
+             {
+                if( boundPos[2 * boundChg.col + boundChg.upper] == 0 )
+                {
+                   // found new bound change
+                   boundChanges.emplace_back( boundChg );
+                   boundPos[2 * boundChg.col + boundChg.upper] =
+                       boundChanges.size();
 
-               // check if column is now fixed
-               if( ( boundChg.upper &&
-                     boundChg.bound == lower_bounds[boundChg.col] ) ||
-                   ( !boundChg.upper &&
-                     boundChg.bound == upper_bounds[boundChg.col] ) )
-                  ++nfixings;
-               else
-                  ++nboundchgs;
-            }
-            else
-            {
-               // already changed that bound
-               ProbingBoundChg<REAL>& otherBoundChg = boundChanges[boundPos[2 * boundChg.col + boundChg.upper] - 1];
+                   // check if column is now fixed
+                   if( ( boundChg.upper &&
+                         boundChg.bound == lower_bounds[boundChg.col] ) ||
+                       ( !boundChg.upper &&
+                         boundChg.bound == upper_bounds[boundChg.col] ) )
+                      ++nfixings;
+                   else
+                      ++nboundchgs;
+                }
+                else
+                {
+                   // already changed that bound
+                   ProbingBoundChg<REAL>& otherBoundChg = boundChanges
+                       [boundPos[2 * boundChg.col + boundChg.upper] - 1];
 
-               if( boundChg.upper && boundChg.bound < otherBoundChg.bound )
-               {
-                  // new upper bound change is tighter
-                  otherBoundChg.bound = boundChg.bound;
+                   if( boundChg.upper && boundChg.bound < otherBoundChg.bound )
+                   {
+                      // new upper bound change is tighter
+                      otherBoundChg.bound = boundChg.bound;
 
-                  // check if column is now fixed
-                  if( boundChg.bound == lower_bounds[boundChg.col] )
-                     ++nfixings;
+                      // check if column is now fixed
+                      if( boundChg.bound == lower_bounds[boundChg.col] )
+                         ++nfixings;
 
-                  if(problemUpdate.getPresolveOptions().verification_with_VeriPB)
-                  {
-                     if(boundChg.probing_col == -1 )
-                        otherBoundChg.probing_col = -1;
-                  }
+                      if( problemUpdate.getPresolveOptions()
+                              .verification_with_VeriPB )
+                      {
+                         if( boundChg.probing_col == -1 )
+                            otherBoundChg.probing_col = -1;
+                      }
+                   }
+                   else if( !boundChg.upper &&
+                            boundChg.bound > otherBoundChg.bound )
+                   {
+                      // new lower bound change is tighter
+                      otherBoundChg.bound = boundChg.bound;
 
-               }
-               else if( !boundChg.upper &&
-                        boundChg.bound > otherBoundChg.bound )
-               {
-                  // new lower bound change is tighter
-                  otherBoundChg.bound = boundChg.bound;
+                      // check if column is now fixed
+                      if( boundChg.bound == upper_bounds[boundChg.col] )
+                         ++nfixings;
+                   }
 
-                  // check if column is now fixed
-                  if( boundChg.bound == upper_bounds[boundChg.col] )
-                     ++nfixings;
-               }
+                   // do only count fixings in this case for two reasons:
+                   // 1) the number of bound changes depends on the order and
+                   // would make probing non deterministic 2) the boundchange
+                   // was already counted in previous rounds and will only be
+                   // added once
+                }
+             }
 
-               // do only count fixings in this case for two reasons:
-               // 1) the number of bound changes depends on the order and
-               // would make probing non deterministic 2) the boundchange was
-               // already counted in previous rounds and will only be added
-               // once
-            }
-         }
-
-         probingView.clearResults();
+             probingView.clearResults();
 #ifdef PAPILO_TBB
-      } );
+          } );
 #endif
       nsubstitutions += substitutions.size();
       current_badge_start = current_badge_end;
@@ -550,7 +585,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
 
       badge_size = static_cast<int>(
           ceil( badge_size * static_cast<double>( working_limit + extrawork ) /
-                (double) amountofwork ) );
+                (double)amountofwork ) );
       badge_size = std::min( nprobingcands - current_badge_start, badge_size );
       if( max_badge_size > 0 )
          badge_size = std::min( max_badge_size, badge_size );
@@ -558,7 +593,8 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
 
       abort = n_useless >= consMatrix.getNnz() * 2 || working_limit < 0 ||
               current_badge_start == current_badge_end ||
-              PresolveMethod<REAL>::is_time_exceeded(timer, problemUpdate.getPresolveOptions().tlim );
+              PresolveMethod<REAL>::is_time_exceeded(
+                  timer, problemUpdate.getPresolveOptions().tlim );
    } while( !abort );
 
    PresolveStatus result = PresolveStatus::kUnchanged;
@@ -570,16 +606,19 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
       {
          if( boundChg.upper )
          {
-            if(problemUpdate.getPresolveOptions().verification_with_VeriPB && boundChg.probing_col!= -1)
-               reductions.reason_probing_upper_bound_change(boundChg.probing_col, boundChg.col);
+            if( problemUpdate.getPresolveOptions().verification_with_VeriPB &&
+                boundChg.probing_col != -1 )
+               reductions.reason_probing_upper_bound_change(
+                   boundChg.probing_col, boundChg.col );
             reductions.changeColUB( boundChg.col, boundChg.bound );
          }
          else
          {
-            if(problemUpdate.getPresolveOptions().verification_with_VeriPB && boundChg.probing_col!= -1)
-               reductions.reason_probing_lower_bound_change(boundChg.probing_col, boundChg.col);
+            if( problemUpdate.getPresolveOptions().verification_with_VeriPB &&
+                boundChg.probing_col != -1 )
+               reductions.reason_probing_lower_bound_change(
+                   boundChg.probing_col, boundChg.col );
             reductions.changeColLB( boundChg.col, boundChg.bound );
-
          }
       }
 
@@ -590,7 +629,8 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
    {
       pdqsort( substitutions.begin(), substitutions.end(),
                []( const ProbingSubstitution<REAL>& a,
-                   const ProbingSubstitution<REAL>& b ) {
+                   const ProbingSubstitution<REAL>& b )
+               {
                   return std::make_pair( a.col1, a.col2 ) >
                          std::make_pair( b.col1, b.col2 );
                } );
@@ -627,11 +667,10 @@ Probing<REAL>::isBinaryVariable( REAL upper_bound, REAL lower_bound,
 
 template <typename REAL>
 void
-Probing<REAL>::set_max_badge_size( int val)
+Probing<REAL>::set_max_badge_size( int val )
 {
    max_badge_size = val;
 }
-
 
 } // namespace papilo
 
