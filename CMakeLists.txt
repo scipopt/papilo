@@ -317,6 +317,7 @@ endif()
 add_library(papilo-core STATIC
    src/papilo/core/VariableDomains.cpp
    src/papilo/core/SparseStorage.cpp
+   src/papilo/core/CliqueProbingView.cpp
    src/papilo/core/ConstraintMatrix.cpp
    src/papilo/core/ProblemUpdate.cpp
    src/papilo/core/Presolve.cpp
