@@ -26,6 +26,7 @@
 #define _PAPILO_PRESOLVERS_PROBING_HPP_
 
 #include "papilo/Config.hpp"
+#include "papilo/CliqueProbingView.hpp"
 #include "papilo/core/PresolveMethod.hpp"
 #include "papilo/core/ProbingView.hpp"
 #include "papilo/core/Problem.hpp"
@@ -159,25 +160,14 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
    const auto& colperm = problemUpdate.getRandomColPerm();
 
    const int nrows = problem.getNRows();
-   std::set<int> clique_vars;
+   Vec<std::pair<int,int> cliques;
+   cliques.reserve( nrows );
 
    for( int row = 0; row != nrows; ++row )
    {
       if( problem.is_clique( consMatrix, row, num ) )
-      {
-         auto rowvec = consMatrix.getRowCoefficients( row );
-         auto rowinds = rowvec.getIndices();
-         for( int ind = 0; ind != rowvec.getLength(); ++ind )
-         {
-            clique_vars.insert( rowinds[ind] );
-         }
-      }
+         cliques.emplace_back( row, 0 );
    }
-
-   Vec<int> probing_cands;
-   probing_cands.reserve( ncols );
-   Vec<bool> clique_cands;
-   clique_cands.reserve( ncols );
 
    for( int i = 0; i != ncols; ++i )
    {
@@ -306,17 +296,67 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
        } );
 #endif
 
+#ifdef PAPILO_TBB
+   tbb::parallel_for(
+   tbb::blocked_range<int>( 0, Cliques.end() - Cliques.begin() ),
+   [&]( const tbb::blocked_range<int>& r ) {
+   for( int clique = r.begin(); clique != r.end(); ++clique )
+   #else      
+   for( int clique = 0; clique < Cliques.end() - Cliques.begin(); ++clique )
+   #endif
+   {
+      auto rowvec = matrix.getRowCoefficients( cliques[clique] );
+      auto rowinds = rowvec.getIndices();
+      for( int ind = 0; ind < rowvec.getLength(); ++ind )
+      {
+         Cliques[clique].second += probing_scores[rowinds[ind]];
+      }
+   }
+#ifdef PAPILO_TBB
+   } );
+#endif
+
+   pdqsort( cliques.begin(), cliques.end(), 
+   []( const std::pair<int,int>& clique1, const std::pair<int,int>& clique2 )
+   {
+      return clique1.second > clique2.second;
+   } );
+
+   Vec<bool> probedCliqueVars(ncols, false);
+   Vec<int> probingCliques;
+   probingCliques.reserve( cliques.end() - cliques.begin() );
+   for( int clique = 0; clique < Cliques.end() - Cliques.begin(); ++clique )
+   {
+      auto rowvec = matrix.getRowCoefficients( cliques[clique] );
+      auto rowinds = rowvec.getIndices();
+      int covered = 0;
+      for( int ind = 0; ind + covered < rowvec.getLength(); ++ind )
+      {
+         if( probedCliqueVars[rowinds[ind]] )
+            covered += 1
+      }
+      if( 2 * covered <= rowvec.getLength() )
+      {
+         probingCliques.emplace_back( cliques[clique].first );
+         for( int ind = 0; < rowvec.getLength(); ++ind )
+         {
+            probedCliqueVars[rowinds[ind]] = true;
+            probing_scores[rowinds[ind]] = -2;
+         }
+      }
+   }
+
    pdqsort( probing_cands.begin(), probing_cands.end(),
             [this, &probing_scores, &colsize, &colperm]( int col1, int col2 )
             {
                std::pair<double, double> s1;
                std::pair<double, double> s2;
-               if( nprobed[col2] == 0 && probing_scores[col2] > 0 )
+               if( nprobed[col2] == 0 && probing_scores[col2] != 0 )
                   s2.first = probing_scores[col2] /
                              static_cast<double>( colsize[col2] );
                else
                   s2.first = 0;
-               if( nprobed[col1] == 0 && probing_scores[col1] > 0 )
+               if( nprobed[col1] == 0 && probing_scores[col1] != 0 )
                   s1.first = probing_scores[col1] /
                              static_cast<double>( colsize[col1] );
                else
@@ -330,6 +370,208 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
                      static_cast<double>( 1 + nprobed[col2] * colsize[col2] ) );
                return s1 > s2 || ( s1 == s2 && colperm[col1] < colperm[col2] );
             } );
+   
+   int clique_cutoff_ub = probing_cands.back();
+   int clique_cutoff_lb = probing_cands.begin();
+   if( probing_scores[probingcands[clique_cutoff_ub]] < 0 )
+   {
+      while (clique_cutoff_ub != clique_cutoff_lb + 1 )
+      {
+         if( probing_scores[probing_cands[ ( clique_cutoff_ub + clique_cutoff_lb ) / 2 + 1 ]] >= 0 )
+         {
+            clique_cutoff_lb = ( clique_cutoff_ub + clique_cutoff_lb ) / 2;
+         }
+         else if( probing_scores[probing_cands[ ( clique_cutoff_ub + clique_cutoff_lb ) / 2 ]] < 0 )
+         {
+            clique_cutoff_ub = ( clique_cutoff_ub + clique_cutoff_lb ) / 2;
+         }
+      }
+      probing_cands.resize(clique_cutoff_lb);
+   }
+
+#ifdef PAPILO_TBB
+   tbb::combinable<CliqueProbingView<REAL>> clique_probing_views(
+       [this, &problem, &num]()
+       {
+          CliqueProbingView<REAL> cliqueProbingView( problem, num );
+          cliqueProbingView.setMinContDomRed( mincontdomred );
+          return cliqueProbingView;
+       } );
+#else
+   CliqueProbingView<REAL> cliqueProbingView( problem, num );
+   cliqueProbingView.setMinContDomRed( mincontdomred );
+#endif
+   auto propagate_variables = [&]( 0, probingCliques.end() - probingCliques.begin() )
+   {
+#ifdef PAPILO_TBB
+      tbb::parallel_for( tbb::blocked_range<int>( 0, probingCliques.end() - probingCliques.begin() ),
+      [&]( const tbb::blocked_range<int>& r )
+      {
+         CliqueProbingView<REAL>& cliqueProbingView = clique_probing_views.local();
+         for( int i = r.begin(); i != r.end(); ++i )
+#else
+         for( int i = probingCliques.begin(); i < probingCliques.end(); ++i )
+#endif
+         {
+            int clique = probingCliques[i];
+            auto cliquevec = matrix.getRowCoefficients( clique );
+            auto cliqueind = cliquevec.getIndices();
+            auto cliquelen = cliquevec.getLength();
+            cliqueProbingView.probeClique(clique, cliqueind, cliquelen);
+            bool globalInfeasible = cliqueProbingView.analyzeImplications();
+            if( globalInfeasible )
+                   {
+                      infeasible.store( true, std::memory_order_relaxed );
+                      infeasible_variable.store( col );
+                      break;
+                   }
+            cliqueProbingView.resetClique();
+         }
+#ifdef PAPILO_TBB
+      } );
+#endif
+   }
+
+#ifdef PAPILO_TBB
+   clique_probing_views.combine_each(
+   [&]( CliqueProbingView<REAL>& cliqueProbingView )
+   {
+#endif
+             const auto& cliqueProbingBoundChgs =
+                 cliqueProbingView.getProbingBoundChanges();
+             const auto& cliqueProbingSubstitutions =
+                 cliqueProbingView.getProbingSubstitutions();
+
+             //amountofwork += cliqueProbingView.getAmountOfWork();
+
+             for( const CliqueProbingSubstitution<REAL>& subst :
+                  cliqueProbingSubstitutions )
+             {
+                auto insres = substitutionsPos.emplace(
+                    std::make_pair( subst.col1, subst.col2 ),
+                    substitutions.size() );
+
+                if( insres.second )
+                   substitutions.push_back( subst );
+             }
+
+             for( const CliqueProbingBoundChg<REAL>& boundChg : probingBoundChgs )
+             {
+                if( boundPos[2 * boundChg.col + boundChg.upper] == 0 )
+                {
+                   // found new bound change
+                   boundChanges.emplace_back( boundChg );
+                   boundPos[2 * boundChg.col + boundChg.upper] =
+                       boundChanges.size();
+
+                   // check if column is now fixed
+                   if( ( boundChg.upper &&
+                         boundChg.bound == lower_bounds[boundChg.col] ) ||
+                       ( !boundChg.upper &&
+                         boundChg.bound == upper_bounds[boundChg.col] ) )
+                      ++nfixings;
+                   else
+                      ++nboundchgs;
+                }
+                else
+                {
+                   // already changed that bound
+                   ProbingBoundChg<REAL>& otherBoundChg = boundChanges
+                       [boundPos[2 * boundChg.col + boundChg.upper] - 1];
+
+                   if( boundChg.upper && boundChg.bound < otherBoundChg.bound )
+                   {
+                      // new upper bound change is tighter
+                      otherBoundChg.bound = boundChg.bound;
+
+                      // check if column is now fixed
+                      if( boundChg.bound == lower_bounds[boundChg.col] )
+                         ++nfixings;
+
+                      if( problemUpdate.getPresolveOptions()
+                              .verification_with_VeriPB )
+                      {
+                         if( boundChg.probing_col == -1 )
+                            otherBoundChg.probing_col = -1;
+                      }
+                   }
+                   else if( !boundChg.upper &&
+                            boundChg.bound > otherBoundChg.bound )
+                   {
+                      // new lower bound change is tighter
+                      otherBoundChg.bound = boundChg.bound;
+
+                      // check if column is now fixed
+                      if( boundChg.bound == upper_bounds[boundChg.col] )
+                         ++nfixings;
+                   }
+
+                   // do only count fixings in this case for two reasons:
+                   // 1) the number of bound changes depends on the order and
+                   // would make probing non deterministic 2) the boundchange
+                   // was already counted in previous rounds and will only be
+                   // added once
+                }
+             }
+             cliqueProbingView.clearResults();
+#ifdef PAPILO_TBB
+          } );
+#endif
+PresolveStatus result = PresolveStatus::kUnchanged;
+
+if( !boundChanges.empty() )
+{
+
+   for( const ProbingBoundChg<REAL>& boundChg : probingBoundChanges )
+   {
+      if( boundChg.upper )
+      {
+         if( problemUpdate.getPresolveOptions().verification_with_VeriPB &&
+             boundChg.probing_col != -1 )
+            reductions.reason_probing_upper_bound_change(
+                boundChg.probing_col, boundChg.col );
+         reductions.changeColUB( boundChg.col, boundChg.bound );
+      }
+      else
+      {
+         if( problemUpdate.getPresolveOptions().verification_with_VeriPB &&
+             boundChg.probing_col != -1 )
+            reductions.reason_probing_lower_bound_change(
+                boundChg.probing_col, boundChg.col );
+         reductions.changeColLB( boundChg.col, boundChg.bound );
+      }
+   }
+
+   result = PresolveStatus::kReduced;
+}
+
+if( !substitutions.empty() )
+{
+   pdqsort( substitutions.begin(), substitutions.end(),
+            []( const CliqueProbingSubstitution<REAL>& a,
+                const CliqueProbingSubstitution<REAL>& b )
+            {
+               return std::make_pair( a.col1, a.col2 ) >
+                      std::make_pair( b.col1, b.col2 );
+            } );
+
+   int lastsubstcol = -1;
+
+   for( const CliqueProbingSubstitution<REAL>& subst : substitutions )
+   {
+      if( subst.col1 == lastsubstcol )
+         continue;
+
+      lastsubstcol = subst.col1;
+
+      reductions.replaceCol( subst.col1, subst.col2, subst.col2scale,
+                             subst.col2const );
+   }
+
+   result = PresolveStatus::kReduced;
+}
+
+}
 
    const Vec<int>& rowsize = consMatrix.getRowSizes();
 
@@ -433,16 +675,14 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
                    probingView.storeImplications();
                    probingView.reset();
 
-                   if( !clique_cands[col] )
-                   {
-                      if( infeasible.load( std::memory_order_relaxed ) )
-                         break;
+                   if( infeasible.load( std::memory_order_relaxed ) )
+                      break;
 
-                      assert( !probingView.isInfeasible() );
-                      probingView.setProbingColumn( col, false );
-                      probingView.propagateDomains();
-                   }
-                   bool globalInfeasible = probingView.analyzeImplications();
+                   assert( !probingView.isInfeasible() );
+                   probingView.setProbingColumn( col, false );
+                   probingView.propagateDomains();
+
+                   globalInfeasible = probingView.analyzeImplications();
                    probingView.reset();
 
                    ++nprobed[col];
@@ -596,8 +836,6 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
               PresolveMethod<REAL>::is_time_exceeded(
                   timer, problemUpdate.getPresolveOptions().tlim );
    } while( !abort );
-
-   PresolveStatus result = PresolveStatus::kUnchanged;
 
    if( !boundChanges.empty() )
    {
