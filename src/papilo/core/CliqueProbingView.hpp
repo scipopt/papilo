@@ -91,7 +91,7 @@ class CliqueProbingView
    bool
    probeClique( int clique, int* ind, int len)
    {  
-      probing_clique = clique;
+      probingClique = clique;
       cliqueind = ind;
       cliquelen = len;
       changed_clique_lbs_vals = problem.getLowerBounds();
@@ -100,7 +100,8 @@ class CliqueProbingView
       {
         changed_clique_lbs.push_back(col);
         changed_clique_ubs.push_back(col);
-        if( problem.getColFlags()[col].test( ColFlag::kBinary ))
+        if( problem.getColFlags()[col].test( ColFlag::kIntegral ) && problem.getLowerBounds()[col] == 0.0
+            && problem.getUpperBounds()[col] == 1.0 )
             binary_inds.push_back( col );
       }
       for( int ind = binary_inds.begin() ; ind != binary_inds.end(); ++ind )
@@ -321,7 +322,7 @@ class CliqueProbingView
    // datastructures for storing result of probing on one value
    Vec<ProbingBoundChg<REAL>> otherValueImplications;
    bool otherValueInfeasible;
-   Vec<bool> infeasibleAssignments
+   Vec<bool> infeasibleAssignments;
 
    // results of probing and statistics
    Vec<ProbingBoundChg<REAL>> boundChanges;
