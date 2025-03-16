@@ -47,7 +47,7 @@ struct ProbingBoundChg
       this->upper = upper_ ? 1 : 0;
       this->col = static_cast<unsigned int>( col_ );
       this->bound = bound_;
-      this->probing_clique = ( probing_col_ );
+      this->probing_clique = ( probing_clique_ );
    }
 };
 
