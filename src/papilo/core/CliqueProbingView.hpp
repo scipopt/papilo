@@ -183,10 +183,6 @@ class CliqueProbingView
    void
    resetClique()
    {
-    clique_lbs.clear();
-    clique_ubs.clear();
-    clique_lbs_val.clear();
-    clique_ubs_val.clear();
     changed_clique_lbs.clear();
     changed_clique_ubs.clear();
     changed_clique_lbs_vals.clear();
