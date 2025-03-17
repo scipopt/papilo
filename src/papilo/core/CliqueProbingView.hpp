@@ -128,7 +128,7 @@ class CliqueProbingView
         {
          continue;
         }
-        for( auto ind = changed_clique_lbs.begin(); ind != changed_clique_lbs.end(); std::advance(ind,1) )
+        for( std::list<int>::iterator ind = changed_clique_lbs.begin(); ind != changed_clique_lbs.end(); std::advance(ind,1) )
         {
             if( changed_lbs[*ind] == problem.getLowerBounds()[*ind] )
             {
@@ -138,7 +138,7 @@ class CliqueProbingView
             else if ( changed_lbs[*ind] > changed_clique_lbs_vals[*ind] )
                 changed_clique_lbs_vals[*ind] = changed_lbs[*ind];
         }
-        for( auto ind = changed_clique_ubs.begin(); ind != changed_clique_ubs.end(); std::advance(ind,1) )
+        for( std::list<int>::iterator ind = changed_clique_ubs.begin(); ind != changed_clique_ubs.end(); std::advance(ind,1) )
         {
             if( changed_ubs[*ind] == problem.getUpperBounds()[*ind] )
             {
