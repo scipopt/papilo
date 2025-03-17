@@ -104,7 +104,7 @@ class CliqueProbingView
             && problem.getUpperBounds()[col] == 1.0 )
             binary_inds.push_back( col );
       }
-      for( int ind = binary_inds.begin() ; ind != binary_inds.end(); ++ind )
+      for( int ind = binary_inds.begin() ; ind != binary_inds.size(); ++ind )
       {
         lb_no_implications.push_back( std::pair<int,int> {0,-1} );
         ub_no_implications.push_back( std::pair<int,int> {0,-1} );
@@ -115,7 +115,7 @@ class CliqueProbingView
         setProbingColumn(i);
         propagateDomains();
         bool fixed = false;
-        for( int col = changed_lbs.begin(); col != changed_lbs.end(); ++col )
+        for( int col = changed_lbs.begin(); col != changed_lbs.size(); ++col )
         {
             if( num.isGT(changed_lbs[col], changed_ubs[col]))
             {
@@ -148,7 +148,7 @@ class CliqueProbingView
             else if ( changed_ubs[*ind] > changed_clique_ubs_vals[*ind] )
                 changed_clique_ubs_vals[*ind] = changed_ubs[*ind];
         }
-        for( int ind = binary_inds.begin(); ind != binary_inds.end(); ++ind )
+        for( int ind = binary_inds.begin(); ind != binary_inds.size(); ++ind )
         {
             if( num.isEq(1.0, changed_lbs[binary_inds[ind]]) )
             {

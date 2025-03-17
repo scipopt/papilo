@@ -26,7 +26,7 @@
 #define _PAPILO_PRESOLVERS_PROBING_HPP_
 
 #include "papilo/Config.hpp"
-#include "papilo/CliqueProbingView.hpp"
+#include "papilo/core/CliqueProbingView.hpp"
 #include "papilo/core/PresolveMethod.hpp"
 #include "papilo/core/ProbingView.hpp"
 #include "papilo/core/Problem.hpp"
