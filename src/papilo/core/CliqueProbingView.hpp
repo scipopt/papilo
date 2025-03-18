@@ -104,7 +104,7 @@ class CliqueProbingView
             && problem.getUpperBounds()[col] == 1.0 )
             binary_inds.push_back( col );
       }
-      for( int ind = binary_inds.begin() ; ind != binary_inds.size(); ++ind )
+      for( int ind = 0 ; ind != binary_inds.size(); ++ind )
       {
         lb_no_implications.push_back( std::pair<int,int> {0,-1} );
         ub_no_implications.push_back( std::pair<int,int> {0,-1} );
@@ -115,7 +115,7 @@ class CliqueProbingView
         setProbingColumn(i);
         propagateDomains();
         bool fixed = false;
-        for( int col = changed_lbs.begin(); col != changed_lbs.size(); ++col )
+        for( int col = 0; col != changed_lbs.size(); ++col )
         {
             if( num.isGT(changed_lbs[col], changed_ubs[col]))
             {
@@ -148,7 +148,7 @@ class CliqueProbingView
             else if ( changed_ubs[*ind] > changed_clique_ubs_vals[*ind] )
                 changed_clique_ubs_vals[*ind] = changed_ubs[*ind];
         }
-        for( int ind = binary_inds.begin(); ind != binary_inds.size(); ++ind )
+        for( int ind = 0; ind != binary_inds.size(); ++ind )
         {
             if( num.isEq(1.0, changed_lbs[binary_inds[ind]]) )
             {
@@ -163,7 +163,7 @@ class CliqueProbingView
         }
         reset();
       }
-      return( fix_to_zero.size() == cliquelen );
+      return( fix_to_zero.end() - fix_to_zero.begin() == cliquelen );
    }
 
    void
@@ -175,7 +175,7 @@ class CliqueProbingView
       changeLb( probingCol, 1.0 );
       for( int i = 0; i < cliquelen; ++i )
       {
-        if( i = col )
+        if( i == col )
             continue;
         changeUb( cliqueind[i], 0.0 );
       }
@@ -634,9 +634,9 @@ CliqueProbingView<REAL>::analyzeImplications()
    const auto& orig_lbs = problem.getLowerBounds();
    const Vec<ColFlags>& orig_domain_flags = problem.getColFlags();
 
-   if( fix_to_zero.end() - fix_to_zero.begin() = cliquelen )
+   if( fix_to_zero.end() - fix_to_zero.begin() == cliquelen )
       return true;
-   for( int ind = fix_to_zero.begin(); ind < fix_to_zero.size(); ++ind )
+   for( int ind = 0; ind < fix_to_zero.end() - fix_to_zero.begin(); ++ind )
    {
       
       boundChanges.emplace_back(
@@ -649,22 +649,22 @@ CliqueProbingView<REAL>::analyzeImplications()
          ProbingBoundChg<REAL>( false, *col, changed_clique_lbs_vals[*col], cliqueind[0] ) );
    }
 
-   for( std::list<int>::iterator col = changed_clique_ubs.begin(); col != changed_clique_ubs.end(); std::advance(ind,1) )
+   for( std::list<int>::iterator col = changed_clique_ubs.begin(); col != changed_clique_ubs.end(); std::advance(col,1) )
    {
       boundChanges.emplace_back(
          ProbingBoundChg<REAL>( true, *col, changed_clique_ubs_vals[*col], cliqueind[0] ) );
    }
 
-   for( int ind = binary_inds.begin(); ind < binary_inds.size(); ++ind )
+   for( int ind = 0; ind < binary_inds.end() - binary_inds.begin(); ++ind )
    {
-      if( lb_no_implications[ind].first == cliquelen - 1 - fix_to_zero.end() + fix_to_zero.begin() 
+      if( lb_no_implications[ind].first == cliquelen - 1 - fix_to_zero.size() 
           && ub_no_implications[ind].first == 1 )
       {
          substitutions.emplace_back(
             ProbingSubstitution<REAL>( binary_inds[ind], 1.0, ub_no_implications[ind].second, 0.0 ) );
          continue;
       }
-      if( ub_no_implications[ind].first == cliquelen - 1 - fix_to_zero.end() + fix_to_zero.begin() 
+      if( ub_no_implications[ind].first == cliquelen - 1 - fix_to_zero.size() 
           && lb_no_implications[ind].first == 1 )
       {
          substitutions.emplace_back(
