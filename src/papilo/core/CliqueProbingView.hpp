@@ -634,22 +634,22 @@ CliqueProbingView<REAL>::analyzeImplications()
    const auto& orig_lbs = problem.getLowerBounds();
    const Vec<ColFlags>& orig_domain_flags = problem.getColFlags();
 
-   if( fixed_to_zero.end() - fixed_to_zero.begin() = cliquelen )
+   if( fix_to_zero.end() - fix_to_zero.begin() = cliquelen )
       return true;
-   for( int ind = fixed_to_zero.begin(); ind != fixed_to_zero.end(); ++ind )
+   for( int ind = fix_to_zero.begin(); ind != fix_to_zero.end(); ++ind )
    {
       
       boundChanges.emplace_back(
-         ProbingBoundChg<REAL>( true, fixed_to_zero[ind], 0.0, -1 ) );
+         ProbingBoundChg<REAL>( true, fix_to_zero[ind], 0.0, -1 ) );
    }
 
-   for( int col = changed_clique_lbs.begin(); col != changed_clique_lbs.end(); std::advance(col,1) )
+   for( std::list<int>::iterator col = changed_clique_lbs.begin(); col != changed_clique_lbs.end(); std::advance(col,1) )
    {
       boundChanges.emplace_back(
          ProbingBoundChg<REAL>( false, changed_clique_lbs[col], changed_clique_lbs_vals[*col], cliqueind[0] ) );
    }
 
-   for( int col = changed_clique_ubs.begin(); col != changed_clique_ubs.end(); std::advance(ind,1) )
+   for( std::list<int>::iterator col = changed_clique_ubs.begin(); col != changed_clique_ubs.end(); std::advance(ind,1) )
    {
       boundChanges.emplace_back(
          ProbingBoundChg<REAL>( true, changed_clique_ubs[col], changed_clique_ubs_vals[*col], cliqueind[0] ) );
@@ -657,14 +657,14 @@ CliqueProbingView<REAL>::analyzeImplications()
 
    for( int ind = binary_inds.begin(); ind != binary_inds.end(); ++ind )
    {
-      if( lb_no_implications[ind].first == cliquelen - 1 - fixed_to_zero.end() + fixed_to_zero.begin() 
+      if( lb_no_implications[ind].first == cliquelen - 1 - fix_to_zero.end() + fix_to_zero.begin() 
           && ub_no_implications[ind].first == 1 )
       {
          substitutions.emplace_back(
             ProbingSubstitution<REAL>( binary_inds[ind], 1.0, ub_no_implications[ind].second, 0.0 ) );
          continue;
       }
-      if( ub_no_implications[ind].first == cliquelen - 1 - fixed_to_zero.end() + fixed_to_zero.begin() 
+      if( ub_no_implications[ind].first == cliquelen - 1 - fix_to_zero.end() + fix_to_zero.begin() 
           && lb_no_implications[ind].first == 1 )
       {
          substitutions.emplace_back(
