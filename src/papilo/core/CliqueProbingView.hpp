@@ -104,7 +104,7 @@ class CliqueProbingView
             && problem.getUpperBounds()[col] == 1.0 )
             binary_inds.push_back( col );
       }
-      for( int ind = 0 ; ind != static_cast<int>(.size()); ++ind )
+      for( int ind = 0 ; ind != static_cast<int>(binary_inds.size()); ++ind )
       {
         lb_no_implications.push_back( std::pair<int,int> {0,-1} );
         ub_no_implications.push_back( std::pair<int,int> {0,-1} );

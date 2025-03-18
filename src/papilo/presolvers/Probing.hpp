@@ -160,8 +160,10 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
    const auto& colperm = problemUpdate.getRandomColPerm();
 
    const int nrows = problem.getNRows();
-   Vec<std::pair<int,int> cliques;
+   Vec<std::pair<int,int>> cliques;
    cliques.reserve( nrows );
+   Vec<int> probing_cands;
+   probing_cands.reserve( ncols );
 
    for( int row = 0; row != nrows; ++row )
    {
