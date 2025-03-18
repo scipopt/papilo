@@ -442,15 +442,16 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
    int nboundchgs = 0;
    int nsubstitutions = -substitutions.size();
 
+   const auto& cliqueProbingBoundChgs =
+      cliqueProbingView.getProbingBoundChanges();
+   const auto& cliqueProbingSubstitutions =
+      cliqueProbingView.getProbingSubstitutions();
+
 #ifdef PAPILO_TBB
    clique_probing_views.combine_each(
    [&]( CliqueProbingView<REAL>& cliqueProbingView )
    {
 #endif
-             const auto& cliqueProbingBoundChgs =
-                 cliqueProbingView.getProbingBoundChanges();
-             const auto& cliqueProbingSubstitutions =
-                 cliqueProbingView.getProbingSubstitutions();
 
              //amountofwork += cliqueProbingView.getAmountOfWork();
 
@@ -681,7 +682,7 @@ if( !substitutions.empty() )
                    probingView.setProbingColumn( col, false );
                    probingView.propagateDomains();
 
-                   globalInfeasible = probingView.analyzeImplications();
+                   bool globalInfeasible = probingView.analyzeImplications();
                    probingView.reset();
 
                    ++nprobed[col];
