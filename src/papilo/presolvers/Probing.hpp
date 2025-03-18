@@ -532,7 +532,7 @@ PresolveStatus result = PresolveStatus::kUnchanged;
 if( !boundChanges.empty() )
 {
 
-   for( const CliqueProbingBoundChg<REAL>& boundChg : cliqueProbingBoundChanges )
+   for( const CliqueProbingBoundChg<REAL>& boundChg : cliqueProbingBoundChgs )
    {
       if( boundChg.upper )
       {
@@ -579,8 +579,6 @@ if( !substitutions.empty() )
    }
 
    result = PresolveStatus::kReduced;
-}
-
 }
    
    const Vec<int>& rowsize = consMatrix.getRowSizes();
