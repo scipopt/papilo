@@ -436,6 +436,11 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
 #endif
    };
    probing_cands.resize(clique_cutoff_lb);
+   
+   int64_t amountofwork = 0;
+   int nfixings = 0;
+   int nboundchgs = 0;
+   int nsubstitutions = -substitutions.size();
 
 #ifdef PAPILO_TBB
    clique_probing_views.combine_each(
@@ -460,7 +465,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
                    substitutions.push_back( subst );
              }
 
-             for( const CliqueProbingBoundChg<REAL>& boundChg : probingBoundChgs )
+             for( const CliqueProbingBoundChg<REAL>& boundChg : cliqueProbingBoundChgs )
              {
                 if( boundPos[2 * boundChg.col + boundChg.upper] == 0 )
                 {
@@ -527,7 +532,7 @@ PresolveStatus result = PresolveStatus::kUnchanged;
 if( !boundChanges.empty() )
 {
 
-   for( const ProbingBoundChg<REAL>& boundChg : probingBoundChanges )
+   for( const CliqueProbingBoundChg<REAL>& boundChg : cliqueProbingBoundChanges )
    {
       if( boundChg.upper )
       {
@@ -577,7 +582,7 @@ if( !substitutions.empty() )
 }
 
 }
-
+   
    const Vec<int>& rowsize = consMatrix.getRowSizes();
 
    int current_badge_start = 0;
@@ -707,11 +712,6 @@ if( !substitutions.empty() )
              infeasible_variable.load( std::memory_order_relaxed );
          return PresolveStatus::kInfeasible;
       }
-
-      int64_t amountofwork = 0;
-      int nfixings = 0;
-      int nboundchgs = 0;
-      int nsubstitutions = -substitutions.size();
 
 #ifdef PAPILO_TBB
       probing_views.combine_each(
