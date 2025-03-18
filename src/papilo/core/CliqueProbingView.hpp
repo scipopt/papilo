@@ -163,7 +163,7 @@ class CliqueProbingView
         }
         reset();
       }
-      return( fix_to_zero.size() == cliquelen )
+      return( fix_to_zero.size() == cliquelen );
    }
 
    void
