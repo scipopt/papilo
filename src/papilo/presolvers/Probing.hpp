@@ -410,7 +410,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
          CliqueProbingView<REAL>& cliqueProbingView = clique_probing_views.local();
          for( int i = r.begin(); i != r.end(); ++i )
 #else
-         for( int i = probingCliques.begin(); i < probingCliques.end(); ++i )
+         for( int i = probingCliques.begin(); i < probingCliques.size(); ++i )
 #endif
          {
             int clique = probingCliques[i];
