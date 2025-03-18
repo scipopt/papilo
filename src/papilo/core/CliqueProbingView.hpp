@@ -646,13 +646,13 @@ CliqueProbingView<REAL>::analyzeImplications()
    for( std::list<int>::iterator col = changed_clique_lbs.begin(); col != changed_clique_lbs.end(); std::advance(col,1) )
    {
       boundChanges.emplace_back(
-         ProbingBoundChg<REAL>( false, changed_clique_lbs[col], changed_clique_lbs_vals[*col], cliqueind[0] ) );
+         ProbingBoundChg<REAL>( false, *col, changed_clique_lbs_vals[*col], cliqueind[0] ) );
    }
 
    for( std::list<int>::iterator col = changed_clique_ubs.begin(); col != changed_clique_ubs.end(); std::advance(ind,1) )
    {
       boundChanges.emplace_back(
-         ProbingBoundChg<REAL>( true, changed_clique_ubs[col], changed_clique_ubs_vals[*col], cliqueind[0] ) );
+         ProbingBoundChg<REAL>( true, *col, changed_clique_ubs_vals[*col], cliqueind[0] ) );
    }
 
    for( int ind = binary_inds.begin(); ind < binary_inds.size(); ++ind )
