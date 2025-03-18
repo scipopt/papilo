@@ -356,7 +356,7 @@ CliqueProbingView<REAL>::CliqueProbingView( const Problem<REAL>& problem_,
 
 template <typename REAL>
 void
-ProbingView<REAL>::reset()
+CliqueProbingView<REAL>::reset()
 {
    const Vec<int>& rowsize = problem.getConstraintMatrix().getRowSizes();
 
