@@ -175,15 +175,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
    {
       if( isBinaryVariable( upper_bounds[i], lower_bounds[i], colsize[i],
                             cflags[i] ) )
-      {
          probing_cands.push_back( i );
-         if( clique_vars.count( i ) )
-            clique_cands.push_back( true );
-         else
-            clique_cands.push_back( false );
-      }
-      else
-         clique_cands.push_back( false );
    }
 
    if( probing_cands.empty() )
@@ -300,18 +292,18 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
 
 #ifdef PAPILO_TBB
    tbb::parallel_for(
-   tbb::blocked_range<int>( 0, Cliques.end() - Cliques.begin() ),
+   tbb::blocked_range<int>( 0, cliques.end() - cliques.begin() ),
    [&]( const tbb::blocked_range<int>& r ) {
    for( int clique = r.begin(); clique != r.end(); ++clique )
    #else      
-   for( int clique = 0; clique < Cliques.end() - Cliques.begin(); ++clique )
+   for( int clique = 0; clique < cliques.end() - cliques.begin(); ++clique )
    #endif
    {
-      auto rowvec = matrix.getRowCoefficients( cliques[clique] );
+      auto rowvec = consMatrix.getRowCoefficients( cliques[clique] );
       auto rowinds = rowvec.getIndices();
       for( int ind = 0; ind < rowvec.getLength(); ++ind )
       {
-         Cliques[clique].second += probing_scores[rowinds[ind]];
+         cliques[clique].second += probing_scores[rowinds[ind]];
       }
    }
 #ifdef PAPILO_TBB
@@ -329,18 +321,18 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
    probingCliques.reserve( cliques.end() - cliques.begin() );
    for( int clique = 0; clique < Cliques.end() - Cliques.begin(); ++clique )
    {
-      auto rowvec = matrix.getRowCoefficients( cliques[clique] );
+      auto rowvec = consMatrix.getRowCoefficients( cliques[clique] );
       auto rowinds = rowvec.getIndices();
       int covered = 0;
       for( int ind = 0; ind + covered < rowvec.getLength(); ++ind )
       {
          if( probedCliqueVars[rowinds[ind]] )
-            covered += 1
+            covered += 1;
       }
       if( 2 * covered <= rowvec.getLength() )
       {
          probingCliques.emplace_back( cliques[clique].first );
-         for( int ind = 0; < rowvec.getLength(); ++ind )
+         for( int ind = 0; ind < rowvec.getLength(); ++ind )
          {
             probedCliqueVars[rowinds[ind]] = true;
             probing_scores[rowinds[ind]] = -2;
@@ -375,7 +367,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
    
    int clique_cutoff_ub = probing_cands.back();
    int clique_cutoff_lb = probing_cands.begin();
-   if( probing_scores[probingcands[clique_cutoff_ub]] < 0 )
+   if( probing_scores[probing_cands[clique_cutoff_ub]] < 0 )
    {
       while (clique_cutoff_ub != clique_cutoff_lb + 1 )
       {
@@ -390,6 +382,8 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
       }
       probing_cands.resize(clique_cutoff_lb);
    }
+   
+   std::atomic_bool infeasible{ false };
 
 #ifdef PAPILO_TBB
    tbb::combinable<CliqueProbingView<REAL>> clique_probing_views(
@@ -403,7 +397,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
    CliqueProbingView<REAL> cliqueProbingView( problem, num );
    cliqueProbingView.setMinContDomRed( mincontdomred );
 #endif
-   auto propagate_variables = [&]( 0, probingCliques.end() - probingCliques.begin() )
+   auto propagate_variables = [&]( int st = 0, int en = probingCliques.end() - probingCliques.begin() )
    {
 #ifdef PAPILO_TBB
       tbb::parallel_for( tbb::blocked_range<int>( 0, probingCliques.end() - probingCliques.begin() ),
@@ -416,7 +410,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
 #endif
          {
             int clique = probingCliques[i];
-            auto cliquevec = matrix.getRowCoefficients( clique );
+            auto cliquevec = consMatrix.getRowCoefficients( clique );
             auto cliqueind = cliquevec.getIndices();
             auto cliquelen = cliquevec.getLength();
             cliqueProbingView.probeClique(clique, cliqueind, cliquelen);
@@ -424,7 +418,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
             if( globalInfeasible )
                    {
                       infeasible.store( true, std::memory_order_relaxed );
-                      infeasible_variable.store( col );
+                      infeasible_variable.store( cliqueind[0] );
                       break;
                    }
             cliqueProbingView.resetClique();
@@ -432,7 +426,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
 #ifdef PAPILO_TBB
       } );
 #endif
-   }
+   };
 
 #ifdef PAPILO_TBB
    clique_probing_views.combine_each(
@@ -622,7 +616,6 @@ if( !substitutions.empty() )
    Vec<ProbingBoundChg<REAL>> boundChanges;
    boundChanges.reserve( ncols );
 
-   std::atomic_bool infeasible{ false };
    std::atomic_int infeasible_variable{ -1 };
 
    // use tbb combinable so that each thread will copy the activities and
