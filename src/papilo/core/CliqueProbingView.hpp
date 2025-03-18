@@ -40,14 +40,14 @@ struct ProbingBoundChg
    REAL bound;
    unsigned int col : 31;
    unsigned int upper : 1;
-   int probing_clique : 32;
+   int probing_col : 32;
 
-   ProbingBoundChg( bool upper_, int col_, REAL bound_, int probing_clique_ )
+   ProbingBoundChg( bool upper_, int col_, REAL bound_, int probing_col_ )
    {
       this->upper = upper_ ? 1 : 0;
       this->col = static_cast<unsigned int>( col_ );
       this->bound = bound_;
-      this->probing_clique = ( probing_clique_ );
+      this->probing_col = ( probing_col_ );
    }
 };
 
@@ -423,12 +423,12 @@ CliqueProbingView<REAL>::reset()
    next_prop_activities.clear();
    infeasible = false;
    probingCol = -1;
-   probingclique = -1;
+   probingClique = -1;
 }
 
 template <typename REAL>
 void
-ProbingView<REAL>::activityChanged( ActivityChange actchange, int rowid,
+CliqueProbingView<REAL>::activityChanged( ActivityChange actchange, int rowid,
                                     RowActivity<REAL>& activity )
 {
    const auto& consMatrix = problem.getConstraintMatrix();
@@ -508,7 +508,7 @@ ProbingView<REAL>::activityChanged( ActivityChange actchange, int rowid,
 
 template <typename REAL>
 void
-ProbingView<REAL>::changeLb( int col, REAL newlb )
+CliqueProbingView<REAL>::changeLb( int col, REAL newlb )
 {
    const auto& consMatrix = problem.getConstraintMatrix();
    auto colvec = consMatrix.getColumnCoefficients( col );
@@ -550,7 +550,7 @@ ProbingView<REAL>::changeLb( int col, REAL newlb )
 
 template <typename REAL>
 void
-ProbingView<REAL>::changeUb( int col, REAL newub )
+CliqueProbingView<REAL>::changeUb( int col, REAL newub )
 {
    const auto& consMatrix = problem.getConstraintMatrix();
    auto colvec = consMatrix.getColumnCoefficients( col );
@@ -592,7 +592,7 @@ ProbingView<REAL>::changeUb( int col, REAL newub )
 
 template <typename REAL>
 void
-ProbingView<REAL>::storeImplications()
+CliqueProbingView<REAL>::storeImplications()
 {
    otherValueInfeasible = isInfeasible();
 
@@ -628,7 +628,7 @@ ProbingView<REAL>::storeImplications()
 
 template <typename REAL>
 bool
-ProbingView<REAL>::analyzeImplications()
+CliqueProbingView<REAL>::analyzeImplications()
 {
    const auto& orig_ubs = problem.getUpperBounds();
    const auto& orig_lbs = problem.getLowerBounds();
@@ -646,13 +646,13 @@ ProbingView<REAL>::analyzeImplications()
    for( int col = changed_clique_lbs.begin(); col != changed_clique_lbs.end(); std::advance(col,1) )
    {
       boundChanges.emplace_back(
-         ProbingBoundChg<REAL>( false, changed_clique_lbs[col], changed_clique_lbs_vals[*col], probing_clique ) );
+         ProbingBoundChg<REAL>( false, changed_clique_lbs[col], changed_clique_lbs_vals[*col], cliqueind[0] ) );
    }
 
    for( int col = changed_clique_ubs.begin(); col != changed_clique_ubs.end(); std::advance(ind,1) )
    {
       boundChanges.emplace_back(
-         ProbingBoundChg<REAL>( true, changed_clique_ubs[col], changed_clique_ubs_vals[*col], probing_clique ) );
+         ProbingBoundChg<REAL>( true, changed_clique_ubs[col], changed_clique_ubs_vals[*col], cliqueind[0] ) );
    }
 
    for( int ind = binary_inds.begin(); ind != binary_inds.end(); ++ind )
@@ -676,7 +676,7 @@ ProbingView<REAL>::analyzeImplications()
 
 template <typename REAL>
 void
-ProbingView<REAL>::propagateDomains()
+CliqueProbingView<REAL>::propagateDomains()
 {
    const auto& consMatrix = problem.getConstraintMatrix();
    const auto& lhs = consMatrix.getLeftHandSides();
