@@ -319,7 +319,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
    Vec<bool> probedCliqueVars(ncols, false);
    Vec<int> probingCliques;
    probingCliques.reserve( cliques.end() - cliques.begin() );
-   for( int clique = 0; clique < Cliques.end() - Cliques.begin(); ++clique )
+   for( int clique = 0; clique < cliques.end() - cliques.begin(); ++clique )
    {
       auto rowvec = consMatrix.getRowCoefficients( cliques[clique] );
       auto rowinds = rowvec.getIndices();
@@ -380,10 +380,16 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
             clique_cutoff_ub = ( clique_cutoff_ub + clique_cutoff_lb ) / 2;
          }
       }
-      probing_cands.resize(clique_cutoff_lb);
    }
    
    std::atomic_bool infeasible{ false };
+   std::atomic_int infeasible_variable{ -1 };
+   HashMap<std::pair<int, int>, int, boost::hash<std::pair<int, int>>>
+   substitutionsPos;
+   Vec<ProbingSubstitution<REAL>> substitutions;
+   Vec<int> boundPos( size_t( 2 * ncols ), 0 );
+   Vec<ProbingBoundChg<REAL>> boundChanges;
+   boundChanges.reserve( ncols );
 
 #ifdef PAPILO_TBB
    tbb::combinable<CliqueProbingView<REAL>> clique_probing_views(
@@ -397,7 +403,9 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
    CliqueProbingView<REAL> cliqueProbingView( problem, num );
    cliqueProbingView.setMinContDomRed( mincontdomred );
 #endif
-   auto propagate_variables = [&]( int st = 0, int en = probingCliques.end() - probingCliques.begin() )
+   int cliquevarsstart = clique_cutoff_lb;
+   int cliquevarsend = static_cast<int>(probing_cands.size());
+   auto propagate_variables = [&]( int cliquevarsstart, int cliquevarsend )
    {
 #ifdef PAPILO_TBB
       tbb::parallel_for( tbb::blocked_range<int>( 0, probingCliques.end() - probingCliques.begin() ),
@@ -427,6 +435,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
       } );
 #endif
    };
+   probing_cands.resize(clique_cutoff_lb);
 
 #ifdef PAPILO_TBB
    clique_probing_views.combine_each(
@@ -609,14 +618,6 @@ if( !substitutions.empty() )
    int n_useless = 0;
    bool abort = false;
 
-   HashMap<std::pair<int, int>, int, boost::hash<std::pair<int, int>>>
-       substitutionsPos;
-   Vec<ProbingSubstitution<REAL>> substitutions;
-   Vec<int> boundPos( size_t( 2 * ncols ), 0 );
-   Vec<ProbingBoundChg<REAL>> boundChanges;
-   boundChanges.reserve( ncols );
-
-   std::atomic_int infeasible_variable{ -1 };
 
    // use tbb combinable so that each thread will copy the activities and
    // bounds at most once
