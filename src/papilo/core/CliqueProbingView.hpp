@@ -329,13 +329,13 @@ class CliqueProbingView
 };
 
 #ifdef PAPILO_USE_EXTERN_TEMPLATES
-extern template class ProbingView<double>;
-extern template class ProbingView<Quad>;
-extern template class ProbingView<Rational>;
+extern template class CliqueProbingView<double>;
+extern template class CliqueProbingView<Quad>;
+extern template class CliqueProbingView<Rational>;
 #endif
 
 template <typename REAL>
-ProbingView<REAL>::ProbingView( const Problem<REAL>& problem_,
+CliqueProbingView<REAL>::CliqueProbingView( const Problem<REAL>& problem_,
                                 const Num<REAL>& num_ )
     : problem( problem_ ), num( num_ ),
       probing_lower_bounds( problem_.getLowerBounds() ),
