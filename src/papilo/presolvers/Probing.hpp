@@ -473,7 +473,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
                 {
                    // found new bound change
                    cliqueBoundChanges.emplace_back( boundChg );
-                   boundPos[2 * boundChg.col + boundChg.upper] =
+                   cliqueBoundPos[2 * boundChg.col + boundChg.upper] =
                        cliqueBoundChanges.size();
 
                    // check if column is now fixed
@@ -489,7 +489,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
                 {
                    // already changed that bound
                    CliqueProbingBoundChg<REAL>& cliqueOtherBoundChg = cliqueBoundChanges
-                       [boundPos[2 * boundChg.col + boundChg.upper] - 1];
+                       [cliqueBoundPos[2 * boundChg.col + boundChg.upper] - 1];
 
                    if( boundChg.upper && boundChg.bound < cliqueOtherBoundChg.bound )
                    {
@@ -569,7 +569,7 @@ if( !cliquesubstitutions.empty() )
 
    int lastsubstcol = -1;
 
-   for( const CliqueProbingSubstitution<REAL>& subst : substitutions )
+   for( const CliqueProbingSubstitution<REAL>& subst : cliquesubstitutions )
    {
       if( subst.col1 == lastsubstcol )
          continue;
