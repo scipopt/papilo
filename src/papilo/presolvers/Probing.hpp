@@ -435,7 +435,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
       } );
 #endif
    };
-   propagate_variables( current_badge_start, current_badge_end );
+   propagate_variables( cliquevarsstart, cliquevarsend );
    probing_cands.resize(clique_cutoff_lb);
    
    int64_t amountofwork = 0;
