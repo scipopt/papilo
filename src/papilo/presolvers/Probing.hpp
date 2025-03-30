@@ -387,7 +387,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
    HashMap<std::pair<int, int>, int, boost::hash<std::pair<int, int>>>
    cliqueSubstitutionsPos;
    Vec<CliqueProbingSubstitution<REAL>> cliquesubstitutions;
-   Vec<int> boundPos( size_t( 2 * ncols ), 0 );
+   Vec<int> cliqueBoundPos( size_t( 2 * ncols ), 0 );
    Vec<CliqueProbingBoundChg<REAL>> cliqueBoundChanges;
    cliqueBoundChanges.reserve( ncols );
 
@@ -435,6 +435,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
       } );
 #endif
    };
+   propagate_variables( current_badge_start, current_badge_end );
    probing_cands.resize(clique_cutoff_lb);
    
    int64_t amountofwork = 0;
@@ -556,7 +557,7 @@ if( !cliqueBoundChanges.empty() )
    result = PresolveStatus::kReduced;
 }
 
-if( !substitutions.empty() )
+if( !cliquesubstitutions.empty() )
 {
    pdqsort( substitutions.begin(), substitutions.end(),
             []( const CliqueProbingSubstitution<REAL>& a,
