@@ -385,11 +385,11 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
    std::atomic_bool infeasible{ false };
    std::atomic_int infeasible_variable{ -1 };
    HashMap<std::pair<int, int>, int, boost::hash<std::pair<int, int>>>
-   substitutionsPos;
-   Vec<ProbingSubstitution<REAL>> substitutions;
+   cliquesubstitutionsPos;
+   Vec<CliqueProbingSubstitution<REAL>> cliquesubstitutions;
    Vec<int> boundPos( size_t( 2 * ncols ), 0 );
-   Vec<ProbingBoundChg<REAL>> boundChanges;
-   boundChanges.reserve( ncols );
+   Vec<CliqueProbingBoundChg<REAL>> cliqueBoundChanges;
+   cliqueboundChanges.reserve( ncols );
 
 #ifdef PAPILO_TBB
    tbb::combinable<CliqueProbingView<REAL>> clique_probing_views(
@@ -414,7 +414,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
          CliqueProbingView<REAL>& cliqueProbingView = clique_probing_views.local();
          for( int i = r.begin(); i != r.end(); ++i )
 #else
-         for( int i = 0; i < probingCliques.size(); ++i )
+         for( int i = 0; i < static_cast<int>(probingCliques.size()); ++i )
 #endif
          {
             int clique = probingCliques[i];
@@ -460,10 +460,10 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
              {
                 auto insres = substitutionsPos.emplace(
                     std::make_pair( subst.col1, subst.col2 ),
-                    substitutions.size() );
+                    cliquesubstitutions.size() );
 
                 if( insres.second )
-                   substitutions.push_back( subst );
+                   cliquesubstitutions.push_back( subst );
              }
 
              for( const CliqueProbingBoundChg<REAL>& boundChg : cliqueProbingBoundChgs )
@@ -471,7 +471,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
                 if( boundPos[2 * boundChg.col + boundChg.upper] == 0 )
                 {
                    // found new bound change
-                   boundChanges.emplace_back( boundChg );
+                   cliqueBoundChanges.emplace_back( boundChg );
                    boundPos[2 * boundChg.col + boundChg.upper] =
                        boundChanges.size();
 
@@ -487,13 +487,13 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
                 else
                 {
                    // already changed that bound
-                   ProbingBoundChg<REAL>& otherBoundChg = boundChanges
+                   CliqueProbingBoundChg<REAL>& cliqueOtherBoundChg = cliqueBoundChanges
                        [boundPos[2 * boundChg.col + boundChg.upper] - 1];
 
-                   if( boundChg.upper && boundChg.bound < otherBoundChg.bound )
+                   if( boundChg.upper && boundChg.bound < cliqueOtherBoundChg.bound )
                    {
                       // new upper bound change is tighter
-                      otherBoundChg.bound = boundChg.bound;
+                      cliqueOtherBoundChg.bound = boundChg.bound;
 
                       // check if column is now fixed
                       if( boundChg.bound == lower_bounds[boundChg.col] )
@@ -503,14 +503,14 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
                               .verification_with_VeriPB )
                       {
                          if( boundChg.probing_col == -1 )
-                            otherBoundChg.probing_col = -1;
+                            cliqueOtherBoundChg.probing_col = -1;
                       }
                    }
                    else if( !boundChg.upper &&
-                            boundChg.bound > otherBoundChg.bound )
+                            boundChg.bound > cliqueOtherBoundChg.bound )
                    {
                       // new lower bound change is tighter
-                      otherBoundChg.bound = boundChg.bound;
+                      cliqueOtherBoundChg.bound = boundChg.bound;
 
                       // check if column is now fixed
                       if( boundChg.bound == upper_bounds[boundChg.col] )
