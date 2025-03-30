@@ -89,7 +89,7 @@ class CliqueProbingView
    reset();
 
    bool
-   probeClique( int clique, int* ind, int len)
+   probeClique( const int clique, const int* ind, const int len)
    {  
       probingClique = clique;
       cliqueind = ind;

@@ -299,7 +299,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
    for( int clique = 0; clique < cliques.end() - cliques.begin(); ++clique )
    #endif
    {
-      auto rowvec = consMatrix.getRowCoefficients( cliques[clique] );
+      auto rowvec = consMatrix.getRowCoefficients( cliques[clique].first );
       auto rowinds = rowvec.getIndices();
       for( int ind = 0; ind < rowvec.getLength(); ++ind )
       {
@@ -321,7 +321,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
    probingCliques.reserve( cliques.end() - cliques.begin() );
    for( int clique = 0; clique < cliques.end() - cliques.begin(); ++clique )
    {
-      auto rowvec = consMatrix.getRowCoefficients( cliques[clique] );
+      auto rowvec = consMatrix.getRowCoefficients( cliques[clique].first );
       auto rowinds = rowvec.getIndices();
       int covered = 0;
       for( int ind = 0; ind + covered < rowvec.getLength(); ++ind )
@@ -366,7 +366,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
             } );
    
    int clique_cutoff_ub = probing_cands.back();
-   int clique_cutoff_lb = probing_cands.begin();
+   int clique_cutoff_lb = 0;
    if( probing_scores[probing_cands[clique_cutoff_ub]] < 0 )
    {
       while (clique_cutoff_ub != clique_cutoff_lb + 1 )
@@ -414,7 +414,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
          CliqueProbingView<REAL>& cliqueProbingView = clique_probing_views.local();
          for( int i = r.begin(); i != r.end(); ++i )
 #else
-         for( int i = probingCliques.begin(); i < probingCliques.size(); ++i )
+         for( int i = 0; i < probingCliques.size(); ++i )
 #endif
          {
             int clique = probingCliques[i];
