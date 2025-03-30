@@ -385,11 +385,11 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
    std::atomic_bool infeasible{ false };
    std::atomic_int infeasible_variable{ -1 };
    HashMap<std::pair<int, int>, int, boost::hash<std::pair<int, int>>>
-   cliquesubstitutionsPos;
+   cliqueSubstitutionsPos;
    Vec<CliqueProbingSubstitution<REAL>> cliquesubstitutions;
    Vec<int> boundPos( size_t( 2 * ncols ), 0 );
    Vec<CliqueProbingBoundChg<REAL>> cliqueBoundChanges;
-   cliqueboundChanges.reserve( ncols );
+   cliqueBoundChanges.reserve( ncols );
 
 #ifdef PAPILO_TBB
    tbb::combinable<CliqueProbingView<REAL>> clique_probing_views(
@@ -440,7 +440,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
    int64_t amountofwork = 0;
    int nfixings = 0;
    int nboundchgs = 0;
-   int nsubstitutions = -substitutions.size();
+   int nsubstitutions = -cliquesubstitutions.size();
 
    const auto& cliqueProbingBoundChgs =
       cliqueProbingView.getProbingBoundChanges();
@@ -458,7 +458,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
              for( const CliqueProbingSubstitution<REAL>& subst :
                   cliqueProbingSubstitutions )
              {
-                auto insres = substitutionsPos.emplace(
+                auto insres = cliqueSubstitutionsPos.emplace(
                     std::make_pair( subst.col1, subst.col2 ),
                     cliquesubstitutions.size() );
 
@@ -473,7 +473,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
                    // found new bound change
                    cliqueBoundChanges.emplace_back( boundChg );
                    boundPos[2 * boundChg.col + boundChg.upper] =
-                       boundChanges.size();
+                       cliqueBoundChanges.size();
 
                    // check if column is now fixed
                    if( ( boundChg.upper &&
@@ -530,7 +530,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
 #endif
 PresolveStatus result = PresolveStatus::kUnchanged;
 
-if( !boundChanges.empty() )
+if( !cliqueBoundChanges.empty() )
 {
 
    for( const CliqueProbingBoundChg<REAL>& boundChg : cliqueProbingBoundChgs )
@@ -621,6 +621,13 @@ if( !substitutions.empty() )
    int current_badge_end = current_badge_start + badge_size;
    int n_useless = 0;
    bool abort = false;
+
+   HashMap<std::pair<int, int>, int, boost::hash<std::pair<int, int>>>
+   substitutionsPos;
+   Vec<ProbingSubstitution<REAL>> substitutions;
+   Vec<int> boundPos( size_t( 2 * ncols ), 0 );
+   Vec<ProbingBoundChg<REAL>> boundChanges;
+   boundChanges.reserve( ncols );
 
 
    // use tbb combinable so that each thread will copy the activities and

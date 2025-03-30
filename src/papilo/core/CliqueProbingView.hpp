@@ -91,9 +91,9 @@ class CliqueProbingView
    bool
    probeClique( const int clique, const int* ind, const int len)
    {  
-      probingClique = const_cast<int>(clique);
+      probingClique = clique;
       cliqueind = const_cast<int*>(ind);
-      cliquelen = const_cast<int>(len);
+      cliquelen = len;
       changed_clique_lbs_vals = problem.getLowerBounds();
       changed_clique_ubs_vals = problem.getUpperBounds();
       for( int col = 0; col < changed_clique_lbs_vals.end() - changed_clique_lbs_vals.begin(); ++col )
