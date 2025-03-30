@@ -443,16 +443,18 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
    int nboundchgs = 0;
    int nsubstitutions = -cliquesubstitutions.size();
 
-   const auto& cliqueProbingBoundChgs =
-      cliqueProbingView.getProbingBoundChanges();
-   const auto& cliqueProbingSubstitutions =
-      cliqueProbingView.getProbingSubstitutions();
 
 #ifdef PAPILO_TBB
    clique_probing_views.combine_each(
    [&]( CliqueProbingView<REAL>& cliqueProbingView )
    {
 #endif
+
+      
+            const auto& cliqueProbingBoundChgs =
+               cliqueProbingView.getProbingBoundChanges();
+            const auto& cliqueProbingSubstitutions =
+               cliqueProbingView.getProbingSubstitutions();
 
              //amountofwork += cliqueProbingView.getAmountOfWork();
 
