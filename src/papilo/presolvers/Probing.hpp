@@ -469,7 +469,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
 
              for( const CliqueProbingBoundChg<REAL>& boundChg : cliqueProbingBoundChgs )
              {
-                if( boundPos[2 * boundChg.col + boundChg.upper] == 0 )
+                if( cliqueBoundPos[2 * boundChg.col + boundChg.upper] == 0 )
                 {
                    // found new bound change
                    cliqueBoundChanges.emplace_back( boundChg );
@@ -559,7 +559,7 @@ if( !cliqueBoundChanges.empty() )
 
 if( !cliquesubstitutions.empty() )
 {
-   pdqsort( substitutions.begin(), substitutions.end(),
+   pdqsort( cliquesubstitutions.begin(), cliquesubstitutions.end(),
             []( const CliqueProbingSubstitution<REAL>& a,
                 const CliqueProbingSubstitution<REAL>& b )
             {
