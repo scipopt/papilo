@@ -533,15 +533,11 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
 #endif
 PresolveStatus result = PresolveStatus::kUnchanged;
 
-const auto& cliqueProbingBoundChgs =
- cliqueProbingView.getProbingBoundChanges();
-const auto& cliqueProbingSubstitutions =
- cliqueProbingView.getProbingSubstitutions();
 
 if( !cliqueBoundChanges.empty() )
 {
 
-   for( const CliqueProbingBoundChg<REAL>& boundChg : cliqueProbingBoundChgs )
+   for( const CliqueProbingBoundChg<REAL>& boundChg : cliqueBoundChanges )
    {
       if( boundChg.upper )
       {
