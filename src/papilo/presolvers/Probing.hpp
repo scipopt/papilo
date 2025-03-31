@@ -471,6 +471,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
             const auto& cliqueProbingSubstitutions =
                cliqueProbingView.getProbingSubstitutions();
 
+               std::cout<<"test1\n";
              //amountofwork += cliqueProbingView.getAmountOfWork();
 
              for( const CliqueProbingSubstitution<REAL>& subst :
@@ -483,7 +484,8 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
                 if( insres.second )
                    cliquesubstitutions.push_back( subst );
              }
-
+             
+             std::cout<<"test2\n";
              for( const CliqueProbingBoundChg<REAL>& boundChg : cliqueProbingBoundChgs )
              {
                 if( cliqueBoundPos[2 * boundChg.col + boundChg.upper] == 0 )
@@ -542,6 +544,8 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
                    // added once
                 }
              }
+             
+             std::cout<<"test3\n";
              cliqueProbingView.clearResults();
 #ifdef PAPILO_TBB
           } );
