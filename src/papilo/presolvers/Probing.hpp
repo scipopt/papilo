@@ -465,9 +465,12 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
    {
 #endif
 
-      
+            
+         std::cout<<"test0\n";
             const auto& cliqueProbingBoundChgs =
                cliqueProbingView.getProbingBoundChanges();
+               
+               std::cout<<"test0.5\n";
             const auto& cliqueProbingSubstitutions =
                cliqueProbingView.getProbingSubstitutions();
 

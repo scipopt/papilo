@@ -241,12 +241,16 @@ class CliqueProbingView
    const Vec<CliqueProbingBoundChg<REAL>>&
    getProbingBoundChanges() const
    {
+      
+      std::cout<<"getcprbc\n";
       return boundChanges;
    }
 
    const Vec<CliqueProbingSubstitution<REAL>>&
    getProbingSubstitutions() const
    {
+      
+      std::cout<<"getcprsu\n";
       return substitutions;
    }
 
