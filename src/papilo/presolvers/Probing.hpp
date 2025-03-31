@@ -416,9 +416,9 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
    CliqueProbingView<REAL> cliqueProbingView( problem, num );
    cliqueProbingView.setMinContDomRed( mincontdomred );
 #endif
-   //int cliquevarsstart = clique_cutoff_lb;
-   //int cliquevarsend = static_cast<int>(probing_cands.size());
-   auto propagate_variables = [&]( 0, probingCliques.end() - probingCliques.begin() )
+   int cliquevarsstart = 0;
+   int cliquevarsend = static_cast<int>(probingCliques.size());
+   auto propagate_variables = [&]( int cliquevarsstart, int cliquevarsend )
    {
 #ifdef PAPILO_TBB
       tbb::parallel_for( tbb::blocked_range<int>( 0, probingCliques.end() - probingCliques.begin() ),
@@ -454,7 +454,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
    };
    
    std::cout<< "Finished clique Probing\n";
-   propagate_variables( 0, probingCliques.end() - probingCliques.begin() );
+   propagate_variables( cliquevarsstart, cliquevarsend );
    
    std::cout<<"propagated\n";
    probing_cands.resize(clique_cutoff_lb);
