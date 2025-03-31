@@ -548,6 +548,8 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
 #endif
 PresolveStatus result = PresolveStatus::kUnchanged;
 
+std::cout<<"Combined\n";
+
 
 if( !cliqueBoundChanges.empty() )
 {
@@ -575,6 +577,8 @@ if( !cliqueBoundChanges.empty() )
    result = PresolveStatus::kReduced;
 }
 
+std::cout<<"Boundchanges\n";
+
 if( !cliquesubstitutions.empty() )
 {
    pdqsort( cliquesubstitutions.begin(), cliquesubstitutions.end(),
@@ -600,6 +604,9 @@ if( !cliquesubstitutions.empty() )
 
    result = PresolveStatus::kReduced;
 }
+
+
+std::cout<<"subs\n";
    
    const Vec<int>& rowsize = consMatrix.getRowSizes();
 
