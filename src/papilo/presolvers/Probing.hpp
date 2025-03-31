@@ -144,7 +144,6 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
 {
 
    std::cout<< "Starting Probing method";
-   return PresolveStatus::kUnchanged;
    if( problem.getNumIntegralCols() == 0 )
       return PresolveStatus::kUnchanged;
 
