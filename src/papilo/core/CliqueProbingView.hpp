@@ -176,9 +176,9 @@ class CliqueProbingView
         typename std::list<std::pair<int,REAL>>::iterator ind = changed_clique_lbs_inds_vals.begin(); 
          while( ind != changed_clique_lbs_inds_vals.end() )
          {
-            if( num.isLT( changed_lbs[*(ind).first], *(ind).second ) )
-               *(ind).second = changed_lbs[*(ind).first];
-            if( num.isEq(changed_lbs[*(ind).first], problem.getLowerBounds()[*(ind).first] ) )
+            if( num.isLT( changed_lbs[(*ind).first], (*ind).second ) )
+               (*ind).second = changed_lbs[(*ind).first];
+            if( num.isEq(changed_lbs[(*ind).first], problem.getLowerBounds()[(*ind).first] ) )
                ind = changed_clique_lbs_inds_vals.erase();
             else
                std::advance(ind, 1);
@@ -186,9 +186,9 @@ class CliqueProbingView
          ind = changed_clique_ubs_inds_vals.begin(); 
          while( ind != changed_clique_ubs_inds_vals.end() )
          {
-            if( num.isGT( changed_ubs[*(ind).first], *(ind).second ) )
-               *(ind).second = changed_ubs[*(ind).first];
-            if( num.isEq(changed_ubs[*(ind).first], problem.getUpperBounds()[*(ind).first] ) )
+            if( num.isGT( changed_ubs[(*ind).first], (*ind).second ) )
+               (*ind).second = changed_ubs[(*ind).first];
+            if( num.isEq(changed_ubs[(*ind).first], problem.getUpperBounds()[(*ind).first] ) )
                ind = changed_clique_ubs_inds_vals.erase();
             else
                std::advance(ind, 1);
@@ -737,13 +737,13 @@ CliqueProbingView<REAL>::analyzeImplications()
    col != changed_clique_lbs_inds_vals.end(); std::advance(col,1) )
    {
       boundChanges.emplace_back(
-         CliqueProbingBoundChg<REAL>( false, *(col).first, *(col).second, cliqueind[0] ) );
+         CliqueProbingBoundChg<REAL>( false, (*col).first, (*col).second, cliqueind[0] ) );
    }
    for( typename std::list<std::pair<int,REAL>>::iterator col = changed_clique_ubs_inds_vals.begin(); 
    col != changed_clique_ubs_inds_vals.end(); std::advance(col,1) )
    {
       boundChanges.emplace_back(
-         CliqueProbingBoundChg<REAL>( true, *(col).first, *(col).second, cliqueind[0] ) );
+         CliqueProbingBoundChg<REAL>( true, (*col).first, (*col).second, cliqueind[0] ) );
    }
 
    for( int ind = 0; ind < binary_inds.end() - binary_inds.begin(); ++ind )
