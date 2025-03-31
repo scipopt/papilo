@@ -142,6 +142,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
                         const Num<REAL>& num, Reductions<REAL>& reductions,
                         const Timer& timer, int& reason_of_infeasibility )
 {
+   std::cout<< "Starting Probing method";
    if( problem.getNumIntegralCols() == 0 )
       return PresolveStatus::kUnchanged;
 
@@ -177,6 +178,8 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
                             cflags[i] ) )
          probing_cands.push_back( i );
    }
+   
+   std::cout<< "initialized";
 
    if( probing_cands.empty() )
       return PresolveStatus::kUnchanged;
@@ -315,6 +318,8 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
    {
       return clique1.second > clique2.second;
    } );
+   
+   std::cout<< "Sorted cliques";
 
    Vec<bool> probedCliqueVars(ncols, false);
    Vec<int> probingCliques;
@@ -339,6 +344,9 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
          }
       }
    }
+
+   
+   std::cout<< "Selected cliques";
 
    pdqsort( probing_cands.begin(), probing_cands.end(),
             [this, &probing_scores, &colsize, &colperm]( int col1, int col2 )
@@ -381,6 +389,9 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
          }
       }
    }
+
+   
+   std::cout<< "Computed cutoff";
    
    std::atomic_bool infeasible{ false };
    std::atomic_int infeasible_variable{ -1 };
