@@ -137,6 +137,13 @@ class CliqueProbingView
         for( std::list<int>::iterator ind = changed_clique_lbs.begin(); ind != changed_clique_lbs.end(); std::advance(ind,1) )
         {
          std::cout<< "test1\n";
+         std::cout<< *ind;
+         std::cout<< "\n";
+         std::cout<<changed_lbs[*ind];
+         std::cout<< "\n";
+         std::cout<<problem.getLowerBounds()[*ind];
+         std::cout<< "\n";
+         std::cout<<changed_clique_lbs_vals[*ind];
             if( changed_lbs[*ind] == problem.getLowerBounds()[*ind] )
             {
                std::cout<< "test2\n";
