@@ -132,9 +132,9 @@ class CliqueProbingView
                break;
             }
         }*/
-        if( isInfeasible(); )
+        if( isInfeasible() )
         {
-            fix_to_zero.push_back(col);
+            fix_to_zero.push_back(probingCol);
             fixed = true;
             break;
         }
@@ -162,18 +162,18 @@ class CliqueProbingView
             {
                if( num.isGT(changed_lbs[var], problem.getLowerBounds()[var]) )
                {
-                  changed_clique_lbs_inds_vals.push_back({var, changed_lbs[var]})
+                  changed_clique_lbs_inds_vals.push_back({var, changed_lbs[var]});
                }
                if( num.isLT(changed_ubs[var], problem.getUpperBounds()[var]) )
                {
-                  changed_clique_ubs_inds_vals.push_back({var, changed_ubs[var]})
+                  changed_clique_ubs_inds_vals.push_back({var, changed_ubs[var]});
                }
             }
             initbounds = true;
             continue;
         }
         std::cout<< "Changing Bounds\n";
-        std::list<int>::iterator ind = changed_clique_lbs_inds_vals.begin(); 
+        std::list<std::pair<int,REAL>>::iterator ind = changed_clique_lbs_inds_vals.begin(); 
          while( ind != changed_clique_lbs_inds_vals.end() )
          {
             if( num.isLT( changed_lbs[*ind.first], *ind.second ) )
@@ -733,13 +733,13 @@ CliqueProbingView<REAL>::analyzeImplications()
          CliqueProbingBoundChg<REAL>( true, *col, changed_clique_ubs_vals[*col], cliqueind[0] ) );
    }
    */
-   for( std::list<int>::iterator col = changed_clique_lbs_inds_vals.begin(); 
+   for( std::list<std::pair<int,REAL>>::iterator col = changed_clique_lbs_inds_vals.begin(); 
    col != changed_clique_lbs_inds_vals.end(); std::advance(col,1) )
    {
       boundChanges.emplace_back(
          CliqueProbingBoundChg<REAL>( false, *col.first, *col.second, cliqueind[0] ) );
    }
-   for( std::list<int>::iterator col = changed_clique_ubs_inds_vals.begin(); 
+   for( std::list<std::pair<int,REAL>>::iterator col = changed_clique_ubs_inds_vals.begin(); 
    col != changed_clique_ubs_inds_vals.end(); std::advance(col,1) )
    {
       boundChanges.emplace_back(
