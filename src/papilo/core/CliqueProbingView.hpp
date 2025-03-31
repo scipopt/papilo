@@ -132,8 +132,7 @@ class CliqueProbingView
         {
             if( changed_lbs[*ind] == problem.getLowerBounds()[*ind] )
             {
-                changed_clique_lbs.erase(ind);
-                std::advance(ind,-1);
+                ind = changed_clique_lbs.erase(ind);
             }
             else if ( changed_lbs[*ind] > changed_clique_lbs_vals[*ind] )
                 changed_clique_lbs_vals[*ind] = changed_lbs[*ind];
