@@ -416,10 +416,10 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
    CliqueProbingView<REAL> cliqueProbingView( problem, num );
    cliqueProbingView.setMinContDomRed( mincontdomred );
 #endif
-   /*int cliquevarsstart = clique_cutoff_lb;
+   int cliquevarsstart = clique_cutoff_lb;
    int cliquevarsend = static_cast<int>(probing_cands.size());
    auto propagate_variables = [&]( int cliquevarsstart, int cliquevarsend )
-   {*/
+   {
 #ifdef PAPILO_TBB
       tbb::parallel_for( tbb::blocked_range<int>( 0, probingCliques.end() - probingCliques.begin() ),
       [&]( const tbb::blocked_range<int>& r )
@@ -434,8 +434,11 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
             auto cliquevec = consMatrix.getRowCoefficients( clique );
             auto cliqueind = cliquevec.getIndices();
             auto cliquelen = cliquevec.getLength();
+            std::cout<<"Probing Clique\n";
             cliqueProbingView.probeClique(clique, cliqueind, cliquelen);
+            std::cout<<"Probed Clique\n";
             bool globalInfeasible = cliqueProbingView.analyzeImplications();
+            std::cout<<"Analyzed\n"; 
             if( globalInfeasible )
                    {
                       infeasible.store( true, std::memory_order_relaxed );
@@ -450,7 +453,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
    //};
    
    std::cout<< "Finished clique Probing\n";
-   //propagate_variables( cliquevarsstart, cliquevarsend );
+   propagate_variables( cliquevarsstart, cliquevarsend );
    
    std::cout<<"propagated\n";
    probing_cands.resize(clique_cutoff_lb);
