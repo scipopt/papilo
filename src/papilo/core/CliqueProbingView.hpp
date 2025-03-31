@@ -136,22 +136,28 @@ class CliqueProbingView
         std::cout<< "Changing Bounds\n";
         for( std::list<int>::iterator ind = changed_clique_lbs.begin(); ind != changed_clique_lbs.end(); std::advance(ind,1) )
         {
+         std::cout<< "test1\n";
             if( changed_lbs[*ind] == problem.getLowerBounds()[*ind] )
             {
+               std::cout<< "test2\n";
                 ind = changed_clique_lbs.erase(ind);
             }
             else if ( changed_lbs[*ind] > changed_clique_lbs_vals[*ind] )
                 changed_clique_lbs_vals[*ind] = changed_lbs[*ind];
+            std::cout<< "test3\n";
         }
         for( std::list<int>::iterator ind = changed_clique_ubs.begin(); ind != changed_clique_ubs.end(); std::advance(ind,1) )
         {
+         std::cout<< "test4\n";
             if( changed_ubs[*ind] == problem.getUpperBounds()[*ind] )
             {
+               std::cout<< "test5\n";
                 changed_clique_ubs.erase(ind);
                 std::advance(ind,-1);
             }
             else if ( changed_ubs[*ind] > changed_clique_ubs_vals[*ind] )
                 changed_clique_ubs_vals[*ind] = changed_ubs[*ind];
+                std::cout<< "test6\n";
         }
         std::cout<< "Changing imps\n";
         for( int ind = 0; ind != static_cast<int>(binary_inds.size()); ++ind )
