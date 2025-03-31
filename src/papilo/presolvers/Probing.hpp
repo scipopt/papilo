@@ -143,7 +143,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
                         const Timer& timer, int& reason_of_infeasibility )
 {
 
-   std::cout<< "Starting Probing method";
+   std::cout<< "Starting Probing method\n";
    if( problem.getNumIntegralCols() == 0 )
       return PresolveStatus::kUnchanged;
 
@@ -180,7 +180,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
          probing_cands.push_back( i );
    }
    
-   std::cout<< "initialized";
+   std::cout<< "initialized\n";
 
    if( probing_cands.empty() )
       return PresolveStatus::kUnchanged;
@@ -320,7 +320,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
       return clique1.second > clique2.second;
    } );
    
-   std::cout<< "Sorted cliques";
+   std::cout<< "Sorted cliques\n";
 
    Vec<bool> probedCliqueVars(ncols, false);
    Vec<int> probingCliques;
@@ -347,7 +347,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
    }
 
    
-   std::cout<< "Selected cliques";
+   std::cout<< "Selected cliques\n";
 
    pdqsort( probing_cands.begin(), probing_cands.end(),
             [this, &probing_scores, &colsize, &colperm]( int col1, int col2 )
@@ -392,7 +392,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
    }
 
    
-   std::cout<< "Computed cutoff";
+   std::cout<< "Computed cutoff\n";
    
    std::atomic_bool infeasible{ false };
    std::atomic_int infeasible_variable{ -1 };
@@ -402,7 +402,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
    Vec<int> cliqueBoundPos( size_t( 2 * ncols ), 0 );
    Vec<CliqueProbingBoundChg<REAL>> cliqueBoundChanges;
    cliqueBoundChanges.reserve( ncols );
-   std::cout<< "Starting clique Probing";
+   std::cout<< "Starting clique Probing\n";
 
 #ifdef PAPILO_TBB
    tbb::combinable<CliqueProbingView<REAL>> clique_probing_views(
@@ -449,7 +449,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
 #endif
    };
    
-   std::cout<< "Finished clique Probing";
+   std::cout<< "Finished clique Probing\n";
    propagate_variables( cliquevarsstart, cliquevarsend );
    probing_cands.resize(clique_cutoff_lb);
    
