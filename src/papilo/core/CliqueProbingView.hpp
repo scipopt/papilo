@@ -173,7 +173,7 @@ class CliqueProbingView
             continue;
         }
         std::cout<< "Changing Bounds\n";
-        std::list<std::pair<int,REAL>>::iterator ind = changed_clique_lbs_inds_vals.begin(); 
+        typename std::list<std::pair<int,REAL>>::iterator ind = changed_clique_lbs_inds_vals.begin(); 
          while( ind != changed_clique_lbs_inds_vals.end() )
          {
             if( num.isLT( changed_lbs[*ind.first], *ind.second ) )
@@ -733,13 +733,13 @@ CliqueProbingView<REAL>::analyzeImplications()
          CliqueProbingBoundChg<REAL>( true, *col, changed_clique_ubs_vals[*col], cliqueind[0] ) );
    }
    */
-   for( std::list<std::pair<int,REAL>>::iterator col = changed_clique_lbs_inds_vals.begin(); 
+   for( typename std::list<std::pair<int,REAL>>::iterator col = changed_clique_lbs_inds_vals.begin(); 
    col != changed_clique_lbs_inds_vals.end(); std::advance(col,1) )
    {
       boundChanges.emplace_back(
          CliqueProbingBoundChg<REAL>( false, *col.first, *col.second, cliqueind[0] ) );
    }
-   for( std::list<std::pair<int,REAL>>::iterator col = changed_clique_ubs_inds_vals.begin(); 
+   for( typename std::list<std::pair<int,REAL>>::iterator col = changed_clique_ubs_inds_vals.begin(); 
    col != changed_clique_ubs_inds_vals.end(); std::advance(col,1) )
    {
       boundChanges.emplace_back(
