@@ -390,6 +390,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
    Vec<int> cliqueBoundPos( size_t( 2 * ncols ), 0 );
    Vec<CliqueProbingBoundChg<REAL>> cliqueBoundChanges;
    cliqueBoundChanges.reserve( ncols );
+   std::cout<< "Starting clique Probing";
 
 #ifdef PAPILO_TBB
    tbb::combinable<CliqueProbingView<REAL>> clique_probing_views(
@@ -435,6 +436,8 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
       } );
 #endif
    };
+   
+   std::cout<< "Finished clique Probing";
    propagate_variables( cliquevarsstart, cliquevarsend );
    probing_cands.resize(clique_cutoff_lb);
    

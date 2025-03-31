@@ -91,6 +91,8 @@ class CliqueProbingView
    bool
    probeClique( const int clique, const int* ind, const int len)
    {  
+      
+      std::cout<< "Probing Clique";
       probingClique = clique;
       cliqueind = const_cast<int*>(ind);
       cliquelen = len;
