@@ -142,6 +142,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
                         const Num<REAL>& num, Reductions<REAL>& reductions,
                         const Timer& timer, int& reason_of_infeasibility )
 {
+   return PresolveStatus::kUnchanged;
    std::cout<< "Starting Probing method";
    if( problem.getNumIntegralCols() == 0 )
       return PresolveStatus::kUnchanged;
