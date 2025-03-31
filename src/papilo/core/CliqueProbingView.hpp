@@ -179,7 +179,7 @@ class CliqueProbingView
             if( num.isLT( changed_lbs[(*ind).first], (*ind).second ) )
                (*ind).second = changed_lbs[(*ind).first];
             if( num.isEq(changed_lbs[(*ind).first], problem.getLowerBounds()[(*ind).first] ) )
-               ind = changed_clique_lbs_inds_vals.erase();
+               ind = changed_clique_lbs_inds_vals.erase(ind);
             else
                std::advance(ind, 1);
          }
@@ -189,7 +189,7 @@ class CliqueProbingView
             if( num.isGT( changed_ubs[(*ind).first], (*ind).second ) )
                (*ind).second = changed_ubs[(*ind).first];
             if( num.isEq(changed_ubs[(*ind).first], problem.getUpperBounds()[(*ind).first] ) )
-               ind = changed_clique_ubs_inds_vals.erase();
+               ind = changed_clique_ubs_inds_vals.erase(ind);
             else
                std::advance(ind, 1);
          }
