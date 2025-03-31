@@ -654,6 +654,8 @@ std::cout<<"subs\n";
          break;
    }
 
+   std::cout<<"subs finished\n";
+
    badge_size = std::max( std::min( nprobingcands, minbadgesize ), badge_size );
 
    int current_badge_end = current_badge_start + badge_size;
