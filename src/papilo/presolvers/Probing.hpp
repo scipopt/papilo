@@ -451,8 +451,11 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
    
    std::cout<< "Finished clique Probing\n";
    propagate_variables( cliquevarsstart, cliquevarsend );
+   
+   std::cout<<"propagated\n";
    probing_cands.resize(clique_cutoff_lb);
    
+   std::cout<<"resized\n";
    int64_t amountofwork = 0;
    int nfixings = 0;
    int nboundchgs = 0;
