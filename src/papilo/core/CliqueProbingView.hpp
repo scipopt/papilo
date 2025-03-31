@@ -89,13 +89,15 @@ class CliqueProbingView
    reset();
 
    bool
-   probeClique( const int clique, const int* ind, const int len)
+   probeClique( const int clique, const int*& ind, const int len, const Vec<int>& binary_inds)
    {  
       
       std::cout<< "Probing Clique\n";
       probingClique = clique;
       cliqueind = const_cast<int*>(ind);
       cliquelen = len;
+      bool initbounds = false;
+      /*
       changed_clique_lbs_vals = problem.getLowerBounds();
       changed_clique_ubs_vals = problem.getUpperBounds();
       for( int col = 0; col < changed_clique_lbs_vals.end() - changed_clique_lbs_vals.begin(); ++col )
@@ -105,7 +107,7 @@ class CliqueProbingView
         if( problem.getColFlags()[col].test( ColFlag::kIntegral ) && problem.getLowerBounds()[col] == 0.0
             && problem.getUpperBounds()[col] == 1.0 )
             binary_inds.push_back( col );
-      }
+      }*/
       for( int ind = 0 ; ind != static_cast<int>(binary_inds.size()); ++ind )
       {
         lb_no_implications.push_back( std::pair<int,int> {0,-1} );
@@ -120,6 +122,7 @@ class CliqueProbingView
         propagateDomains();
       std::cout<< "Propagated\n";
         bool fixed = false;
+        /*
         for( int col = 0; col != static_cast<int>(changed_lbs.size()); ++col )
         {
             if( num.isGT(changed_lbs[col], changed_ubs[col]))
@@ -128,12 +131,69 @@ class CliqueProbingView
                fixed = true;
                break;
             }
+        }*/
+        if( isInfeasible(); )
+        {
+            fix_to_zero.push_back(col);
+            fixed = true;
+            break;
         }
         if( fixed )
         {
          continue;
         }
+        std::cout<< "Changing imps\n";
+        for( int ind = 0; ind != static_cast<int>(binary_inds.size()); ++ind )
+        {
+            if( num.isEq(1.0, changed_lbs[binary_inds[ind]]) )
+            {
+                lb_no_implications[ind].first += 1;
+                lb_no_implications[ind].second = probingCol;
+            }
+            if( num.isEq(0.0, changed_ubs[binary_inds[ind]]) )
+            {
+                ub_no_implications[ind].first += 1;
+                ub_no_implications[ind].second = probingCol;
+            }
+        }
+        if( initbounds == false )
+        {
+            for( int var = 0; var != static_cast<int>(changed_lbs.size()); ++var )
+            {
+               if( num.isGT(changed_lbs[var], problem.getLowerBounds()[var]) )
+               {
+                  changed_clique_lbs_inds_vals.push_back({var, changed_lbs[var]})
+               }
+               if( num.isLT(changed_ubs[var], problem.getUpperBounds()[var]) )
+               {
+                  changed_clique_ubs_inds_vals.push_back({var, changed_ubs[var]})
+               }
+            }
+            initbounds = true;
+            continue;
+        }
         std::cout<< "Changing Bounds\n";
+        std::list<int>::iterator ind = changed_clique_lbs_inds_vals.begin(); 
+         while( ind != changed_clique_lbs_inds_vals.end() )
+         {
+            if( num.isLT( changed_lbs[*ind.first], *ind.second ) )
+               *ind.second = changed_lbs[*ind.first];
+            if( num.isEq(changed_lbs[*ind.first], problem.getLowerBounds()[*ind.first] ) )
+               ind = changed_clique_lbs_inds_vals.erase()
+            else
+               std::advance(ind, 1);
+         }
+         ind = changed_clique_ubs_inds_vals.begin(); 
+         while( ind != changed_clique_ubs_inds_vals.end() )
+         {
+            if( num.isGT( changed_ubs[*ind.first], *ind.second ) )
+               *ind.second = changed_ubs[*ind.first];
+            if( num.isEq(changed_ubs[*ind.first], problem.getUpperBounds()[*ind.first] ) )
+               ind = changed_clique_ubs_inds_vals.erase()
+            else
+               std::advance(ind, 1);
+         }
+        /*
         for( std::list<int>::iterator ind = changed_clique_lbs.begin(); ind != changed_clique_lbs.end(); std::advance(ind,1) )
         {
          std::cout<< "test1\n";
@@ -166,20 +226,7 @@ class CliqueProbingView
                 changed_clique_ubs_vals[*ind] = changed_ubs[*ind];
                 std::cout<< "test6\n";
         }
-        std::cout<< "Changing imps\n";
-        for( int ind = 0; ind != static_cast<int>(binary_inds.size()); ++ind )
-        {
-            if( num.isEq(1.0, changed_lbs[binary_inds[ind]]) )
-            {
-                lb_no_implications[ind].first += 1;
-                lb_no_implications[ind].second = probingCol;
-            }
-            if( num.isEq(0.0, changed_ubs[binary_inds[ind]]) )
-            {
-                ub_no_implications[ind].first += 1;
-                ub_no_implications[ind].second = probingCol;
-            }
-        }
+                */
         reset();
       }
       return( fix_to_zero.end() - fix_to_zero.begin() == cliquelen );
@@ -202,11 +249,13 @@ class CliqueProbingView
 
    void
    resetClique()
-   {
+   {/*
     changed_clique_lbs.clear();
     changed_clique_ubs.clear();
     changed_clique_lbs_vals.clear();
-    changed_clique_ubs_vals.clear();
+    changed_clique_ubs_vals.clear();*/
+    changed_clique_lbs_inds_vals.clear();
+    changed_clique_lbs_inds_vals.clear();
     binary_inds.clear();
     lb_no_implications.clear();
     ub_no_implications.clear();
@@ -319,10 +368,16 @@ class CliqueProbingView
    Vec<REAL> probing_upper_bounds;
    Vec<ColFlags> probing_domain_flags;
    Vec<RowActivity<REAL>> probing_activities;
+
+   /*
    std::list<int> changed_clique_lbs;
    std::list<int> changed_clique_ubs;
    Vec<REAL> changed_clique_lbs_vals;
    Vec<REAL> changed_clique_ubs_vals;
+   */
+   std::list<std::pair<int,REAL>> changed_clique_lbs_inds_vals;
+   std::list<std::pair<int,REAL>> changed_clique_ubs_inds_vals;
+
    Vec<int> binary_inds;
    Vec<std::pair<int,int>> lb_no_implications;
    Vec<std::pair<int,int>> ub_no_implications;
@@ -665,7 +720,7 @@ CliqueProbingView<REAL>::analyzeImplications()
       boundChanges.emplace_back(
          CliqueProbingBoundChg<REAL>( true, fix_to_zero[ind], 0.0, -1 ) );
    }
-
+   /*
    for( std::list<int>::iterator col = changed_clique_lbs.begin(); col != changed_clique_lbs.end(); std::advance(col,1) )
    {
       boundChanges.emplace_back(
@@ -676,6 +731,19 @@ CliqueProbingView<REAL>::analyzeImplications()
    {
       boundChanges.emplace_back(
          CliqueProbingBoundChg<REAL>( true, *col, changed_clique_ubs_vals[*col], cliqueind[0] ) );
+   }
+   */
+   for( std::list<int>::iterator col = changed_clique_lbs_inds_vals.begin(); 
+   col != changed_clique_lbs_inds_vals.end(); std::advance(col,1) )
+   {
+      boundChanges.emplace_back(
+         CliqueProbingBoundChg<REAL>( false, *col.first, *col.second, cliqueind[0] ) );
+   }
+   for( std::list<int>::iterator col = changed_clique_ubs_inds_vals.begin(); 
+   col != changed_clique_ubs_inds_vals.end(); std::advance(col,1) )
+   {
+      boundChanges.emplace_back(
+         CliqueProbingBoundChg<REAL>( true, *col.first, *col.second, cliqueind[0] ) );
    }
 
    for( int ind = 0; ind < binary_inds.end() - binary_inds.begin(); ++ind )

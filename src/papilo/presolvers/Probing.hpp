@@ -435,7 +435,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
             auto cliqueind = cliquevec.getIndices();
             auto cliquelen = cliquevec.getLength();
             std::cout<<"Probing Clique\n";
-            bool globalInfeasible = cliqueProbingView.probeClique(clique, cliqueind, cliquelen);
+            bool globalInfeasible = cliqueProbingView.probeClique(clique, cliqueind, cliquelen, probing_cands );
             std::cout<<"Probed Clique\n";
             if( !globalInfeasible )
                globalInfeasible = cliqueProbingView.analyzeImplications();
