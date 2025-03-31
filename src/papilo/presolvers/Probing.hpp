@@ -450,7 +450,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
 #ifdef PAPILO_TBB
       } );
 #endif
-   //};
+   };
    
    std::cout<< "Finished clique Probing\n";
    propagate_variables( cliquevarsstart, cliquevarsend );
@@ -469,9 +469,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
    clique_probing_views.combine_each(
    [&]( CliqueProbingView<REAL>& cliqueProbingView )
    {
-#endif
-
-            
+#endif            
          std::cout<<"test0\n";
             const auto& cliqueProbingBoundChgs =
                cliqueProbingView.getProbingBoundChanges();
