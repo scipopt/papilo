@@ -89,12 +89,12 @@ class CliqueProbingView
    reset();
 
    bool
-   probeClique( const int clique, const int*& ind, const int len, const Vec<int>& binary_inds)
+   probeClique( const int clique, const int*& indices, const int len, const Vec<int>& binary_inds)
    {  
       
       std::cout<< "Probing Clique\n";
       probingClique = clique;
-      cliqueind = const_cast<int*>(ind);
+      cliqueind = const_cast<int*>(indices);
       cliquelen = len;
       bool initbounds = false;
       for( int ind = 0 ; ind != static_cast<int>(binary_inds.size()); ++ind )
@@ -135,8 +135,10 @@ class CliqueProbingView
                 ub_no_implications[ind].second = probingCol;
             }
         }
+        std::cout<<"Changed imps\n";
         if( initbounds == false )
         {
+            std::cout<<"Initializing\n";
             for( int var = 0; var != static_cast<int>(changed_lbs.size()); ++var )
             {
                if( num.isGT(changed_lbs[var], problem.getLowerBounds()[var]) )
@@ -149,6 +151,7 @@ class CliqueProbingView
                }
             }
             initbounds = true;
+            std::cout<<"Initialized\n";
             continue;
         }
         std::cout<< "Changing Bounds\n";
