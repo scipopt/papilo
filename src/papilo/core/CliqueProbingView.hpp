@@ -124,13 +124,20 @@ class CliqueProbingView
         std::cout<< "Changing imps\n";
         for( int ind = 0; ind != static_cast<int>(binary_inds.size()); ++ind )
         {
+         assert( binary_inds.size() < ind );
+         assert( changed_lbs.size() < binary_inds[ind] );
             if( num.isEq(1.0, changed_lbs[binary_inds[ind]]) )
             {
+               assert( lb_no_implications.size() < ind );
                 lb_no_implications[ind].first += 1;
                 lb_no_implications[ind].second = probingCol;
             }
+            
+         assert( binary_inds.size() < ind );
+         assert( changed_ubs.size() < binary_inds[ind] );
             if( num.isEq(0.0, changed_ubs[binary_inds[ind]]) )
             {
+               assert( ub_no_implications.size() < ind );
                 ub_no_implications[ind].first += 1;
                 ub_no_implications[ind].second = probingCol;
             }
