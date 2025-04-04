@@ -226,6 +226,9 @@ class CliqueProbingView
     lb_no_implications.clear();
     ub_no_implications.clear();
     fix_to_zero.clear();
+    cliqueind.clear();
+    probingClique = -1;
+    cliquelen = -1;
    }
 
    void
@@ -351,7 +354,7 @@ class CliqueProbingView
    int probingCol;
    int probingClique;
    bool probingValue;
-   int* cliqueind;
+   Vec<int> cliqueind;
    int cliquelen;
 
    // datastructures for storing result of probing on one value
