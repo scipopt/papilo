@@ -101,7 +101,7 @@ class CliqueProbingView
       }
       cliquelen = len;
       bool initbounds = false;
-      std::cout <<"Initializing substitution counters. \n"
+      std::cout <<"Initializing substitution counters. \n";
       lb_no_implications.reserve( static_cast<int>(binary_inds.size()) );
       ub_no_implications.reserve( static_cast<int>(binary_inds.size()) );
       for( int ind = 0 ; ind != static_cast<int>(binary_inds.size()); ++ind )
@@ -116,16 +116,16 @@ class CliqueProbingView
          std::cout<< "\nSetting probing collumn: ";
          std::cout<< cliqueind[i];
         setProbingColumn(i);
-        std::cout<< "\nSet probing collumn."
-        std::cout<< "\nPropagating."
+        std::cout<< "\nSet probing collumn.";
+        std::cout<< "\nPropagating.";
         propagateDomains();
       std::cout<< "\nPropagated\n";
-      std::cout<< "Checking for infeasibility\n"
+      std::cout<< "Checking for infeasibility\n";
         if( isInfeasible() )
         {
             fix_to_zero.push_back(probingCol);
             fixed = true;
-            std::cout<< "1 is infeasible, added to fix_to_zero and skipped everything else.\n"
+            std::cout<< "1 is infeasible, added to fix_to_zero and skipped everything else.\n";
             continue;
         }
         std::cout<< "Changing imps\n";
