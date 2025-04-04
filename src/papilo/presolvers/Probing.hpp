@@ -435,6 +435,11 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
             auto cliqueind = cliquevec.getIndices();
             auto cliquelen = cliquevec.getLength();
             std::cout<<"Probing Clique\n";
+            for( int i = 0; i < cliquevec.getLength(); ++i )
+            {
+               std::cout<< cliqueind[i];
+               std::cout<< " ";
+            }
             bool globalInfeasible = cliqueProbingView.probeClique(clique, cliqueind, cliquelen, probing_cands );
             std::cout<<"Probed Clique\n";
             if( !globalInfeasible )
@@ -453,10 +458,9 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
 #endif
    };
    
-   std::cout<< "Finished clique Probing\n";
+
    propagate_variables( cliquevarsstart, cliquevarsend );
-   
-   std::cout<<"propagated\n";
+   std::cout<< "Finished clique Probing\n";
    probing_cands.resize(clique_cutoff_lb);
    
    std::cout<<"resized\n";

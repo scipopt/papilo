@@ -92,34 +92,41 @@ class CliqueProbingView
    probeClique( const int clique, const int*& indices, const int len, const Vec<int>& binary_inds)
    {  
       
-      std::cout<< "Probing Clique\n";
+      std::cout<< "Probing Clique: ";
       probingClique = clique;
-      cliqueind = const_cast<int*>(indices);
+      std::cout<< clique;
+      for( int ind = 0; ind < len; ++ind )
+      {
+         cliqueind.push_back( indices[ind] );
+      }
       cliquelen = len;
       bool initbounds = false;
+      std::cout <<"Initializing substitution counters. \n"
+      lb_no_implications.reserve( static_cast<int>(binary_inds.size()) );
+      ub_no_implications.reserve( static_cast<int>(binary_inds.size()) );
       for( int ind = 0 ; ind != static_cast<int>(binary_inds.size()); ++ind )
       {
         lb_no_implications.push_back( std::pair<int,int> {0,-1} );
         ub_no_implications.push_back( std::pair<int,int> {0,-1} );
       } 
-      std::cout<< "Initialized\n";
+      std::cout<< "Initialized substitution counters.\n";
 
       for( int i = 0; i < cliquelen; ++i )
       {
+         std::cout<< "\nSetting probing collumn: ";
+         std::cout<< cliqueind[i];
         setProbingColumn(i);
-      std::cout<< "Set Col\n";
+        std::cout<< "\nSet probing collumn."
+        std::cout<< "\nPropagating."
         propagateDomains();
-      std::cout<< "Propagated\n";
-        bool fixed = false;
+      std::cout<< "\nPropagated\n";
+      std::cout<< "Checking for infeasibility\n"
         if( isInfeasible() )
         {
             fix_to_zero.push_back(probingCol);
             fixed = true;
-            break;
-        }
-        if( fixed )
-        {
-         continue;
+            std::cout<< "1 is infeasible, added to fix_to_zero and skipped everything else.\n"
+            continue;
         }
         std::cout<< "Changing imps\n";
         for( int ind = 0; ind != static_cast<int>(binary_inds.size()); ++ind )
@@ -129,6 +136,9 @@ class CliqueProbingView
             if( num.isEq(1.0, changed_lbs[binary_inds[ind]]) )
             {
                assert( lb_no_implications.size() < ind );
+               std::cout<< "The following variable is fixed to 1 when the current one is 1: ";
+               std::cout<< binary_inds[ind];
+               std::cout<< "\n";
                 lb_no_implications[ind].first += 1;
                 lb_no_implications[ind].second = probingCol;
             }
@@ -137,6 +147,9 @@ class CliqueProbingView
          assert( changed_ubs.size() < binary_inds[ind] );
             if( num.isEq(0.0, changed_ubs[binary_inds[ind]]) )
             {
+               std::cout<< "The following variable is fixed to 0 when the current one is 1: ";
+               std::cout<< binary_inds[ind];
+               std::cout<< "\n";
                assert( ub_no_implications.size() < ind );
                 ub_no_implications[ind].first += 1;
                 ub_no_implications[ind].second = probingCol;
@@ -182,7 +195,10 @@ class CliqueProbingView
             else
                std::advance(ind, 1);
          }
+         std::cout<<"Changed bounds.\n";
+         std::cout<<"Resetting probing col:\n";
         reset();
+        std::cout<< "Reset probing col.\n";
       }
       return( fix_to_zero.end() - fix_to_zero.begin() == cliquelen );
    }
@@ -445,7 +461,6 @@ CliqueProbingView<REAL>::reset()
    next_prop_activities.clear();
    infeasible = false;
    probingCol = -1;
-   probingClique = -1;
 }
 
 template <typename REAL>
