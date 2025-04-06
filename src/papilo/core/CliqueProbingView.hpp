@@ -133,7 +133,6 @@ class CliqueProbingView
         std::cout<< "Changing imps\n";
         for( int ind = 0; ind != static_cast<int>(binary_inds.size()); ++ind )
         {
-         assert(false);
          assert( ind < static_cast<int>(binary_inds.size()) );
          assert( binary_inds[ind] < static_cast<int>(changed_lbs.size()) );
             if( num.isEq(1.0, changed_lbs[binary_inds[ind]]) )
