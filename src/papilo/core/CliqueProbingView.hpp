@@ -130,11 +130,11 @@ class CliqueProbingView
         std::cout<< "Changing imps\n";
         for( int ind = 0; ind != static_cast<int>(binary_inds.size()); ++ind )
         {
-         assert( binary_inds.size() < ind );
-         assert( changed_lbs.size() < binary_inds[ind] );
+         assert( static_cast<int>(binary_inds.size()) < ind );
+         assert( static_cast<int>(changed_lbs.size()) < binary_inds[ind] );
             if( num.isEq(1.0, changed_lbs[binary_inds[ind]]) )
             {
-               assert( lb_no_implications.size() < ind );
+               assert( static_cast<int>(lb_no_implications.size()) < ind );
                std::cout<< "The following variable is fixed to 1 when the current one is 1: ";
                std::cout<< binary_inds[ind];
                std::cout<< "\n";
@@ -142,14 +142,14 @@ class CliqueProbingView
                 lb_no_implications[ind].second = probingCol;
             }
             
-         assert( binary_inds.size() < ind );
-         assert( changed_ubs.size() < binary_inds[ind] );
+         assert( static_cast<int>(binary_inds.size()) < ind );
+         assert( static_cast<int>(changed_ubs.size()) < binary_inds[ind] );
             if( num.isEq(0.0, changed_ubs[binary_inds[ind]]) )
             {
                std::cout<< "The following variable is fixed to 0 when the current one is 1: ";
                std::cout<< binary_inds[ind];
                std::cout<< "\n";
-               assert( ub_no_implications.size() < ind );
+               assert( static_cast<int>(ub_no_implications.size()) < ind );
                 ub_no_implications[ind].first += 1;
                 ub_no_implications[ind].second = probingCol;
             }
