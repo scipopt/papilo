@@ -128,6 +128,7 @@ class CliqueProbingView
         {
             fix_to_zero.push_back(probingCol);
             std::cout<< "1 is infeasible, added to fix_to_zero and skipped everything else.\n";
+            reset();
             continue;
         }
         std::cout<< "Changing imps\n";
@@ -174,6 +175,7 @@ class CliqueProbingView
             }
             initbounds = true;
             std::cout<<"Initialized\n";
+            reset();
             continue;
         }
         std::cout<< "Changing Bounds\n";
