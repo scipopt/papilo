@@ -92,16 +92,19 @@ class CliqueProbingView
    probeClique( const int clique, const int*& indices, const int len, const Vec<int>& binary_inds)
    {  
       
-      std::cout<< "Probing Clique: ";
+      std::cout<< "\n\nProbing Clique: ";
       probingClique = clique;
       std::cout<< clique;
+      std::cout<< "\n";
       for( int ind = 0; ind < len; ++ind )
       {
          cliqueind.push_back( indices[ind] );
+         std::cout<<indices[ind];
+         std::cout<<" ";
       }
       cliquelen = len;
       bool initbounds = false;
-      std::cout <<"Initializing substitution counters. \n";
+      std::cout <<"\nInitializing substitution counters. \n";
       lb_no_implications.reserve( static_cast<int>(binary_inds.size()) );
       ub_no_implications.reserve( static_cast<int>(binary_inds.size()) );
       for( int ind = 0 ; ind != static_cast<int>(binary_inds.size()); ++ind )
@@ -135,7 +138,7 @@ class CliqueProbingView
          assert( binary_inds[ind] < static_cast<int>(changed_lbs.size()) );
             if( num.isEq(1.0, changed_lbs[binary_inds[ind]]) )
             {
-               assert( static_cast<int>(lb_no_implications.size()) < ind );
+               assert( ind < static_cast<int>(lb_no_implications.size()) );
                std::cout<< "The following variable is fixed to 1 when the current one is 1: ";
                std::cout<< binary_inds[ind];
                std::cout<< "\n";
@@ -150,7 +153,7 @@ class CliqueProbingView
                std::cout<< "The following variable is fixed to 0 when the current one is 1: ";
                std::cout<< binary_inds[ind];
                std::cout<< "\n";
-               assert( static_cast<int>(ub_no_implications.size()) < ind );
+               assert( ind < static_cast<int>(ub_no_implications.size()) );
                 ub_no_implications[ind].first += 1;
                 ub_no_implications[ind].second = probingCol;
             }
