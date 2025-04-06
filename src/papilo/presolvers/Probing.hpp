@@ -567,7 +567,9 @@ PresolveStatus result = PresolveStatus::kUnchanged;
 
 std::cout<<"Combined\n";
 
-
+bool boundchangers_enabled = true;
+if( boundchangers_enabled ) {
+std::cout<<"Boundchanges\n";
 if( !cliqueBoundChanges.empty() )
 {
 
@@ -592,10 +594,12 @@ if( !cliqueBoundChanges.empty() )
    }
 
    result = PresolveStatus::kReduced;
-}
+}}
 
-std::cout<<"Boundchanges\n";
-
+bool subs_enabled = false;
+if (subs_enabled) {
+std::cout<<"subs\n";
+   
 if( !cliquesubstitutions.empty() )
 {
    pdqsort( cliquesubstitutions.begin(), cliquesubstitutions.end(),
@@ -620,10 +624,9 @@ if( !cliquesubstitutions.empty() )
    }
 
    result = PresolveStatus::kReduced;
+}   std::cout<<"subs finished\n";
 }
-
-
-std::cout<<"subs\n";
+   return result ;
    
    const Vec<int>& rowsize = consMatrix.getRowSizes();
 
@@ -659,8 +662,6 @@ std::cout<<"subs\n";
          break;
    }
 
-   std::cout<<"subs finished\n";
-   return result;
 
    badge_size = std::max( std::min( nprobingcands, minbadgesize ), badge_size );
 
