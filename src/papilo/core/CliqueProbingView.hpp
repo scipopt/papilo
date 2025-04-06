@@ -130,8 +130,9 @@ class CliqueProbingView
         std::cout<< "Changing imps\n";
         for( int ind = 0; ind != static_cast<int>(binary_inds.size()); ++ind )
         {
-         assert( static_cast<int>(binary_inds.size()) < ind );
-         assert( static_cast<int>(changed_lbs.size()) < binary_inds[ind] );
+         assert(false);
+         assert( ind < static_cast<int>(binary_inds.size()) );
+         assert( binary_inds[ind] < static_cast<int>(changed_lbs.size()) );
             if( num.isEq(1.0, changed_lbs[binary_inds[ind]]) )
             {
                assert( static_cast<int>(lb_no_implications.size()) < ind );
@@ -142,8 +143,8 @@ class CliqueProbingView
                 lb_no_implications[ind].second = probingCol;
             }
             
-         assert( static_cast<int>(binary_inds.size()) < ind );
-         assert( static_cast<int>(changed_ubs.size()) < binary_inds[ind] );
+         assert( ind < static_cast<int>(binary_inds.size()) );
+         assert( binary_inds[ind] < static_cast<int>(changed_ubs.size()) );
             if( num.isEq(0.0, changed_ubs[binary_inds[ind]]) )
             {
                std::cout<< "The following variable is fixed to 0 when the current one is 1: ";
