@@ -134,8 +134,8 @@ class CliqueProbingView
         for( int ind = 0; ind != static_cast<int>(binary_inds.size()); ++ind )
         {
          assert( ind < static_cast<int>(binary_inds.size()) );
-         assert( binary_inds[ind] < static_cast<int>(changed_lbs.size()) );
-            if( num.isEq(1.0, changed_lbs[binary_inds[ind]]) )
+         assert( binary_inds[ind] < static_cast<int>(probing_lower_bounds.size()) );
+            if( num.isEq(1.0, probing_lower_bounds[binary_inds[ind]]) )
             {
                assert( ind < static_cast<int>(lb_no_implications.size()) );
                std::cout<< "The following variable is fixed to 1 when the current one is 1: ";
@@ -161,11 +161,11 @@ class CliqueProbingView
         if( initbounds == false )
         {
             std::cout<<"Initializing\n";
-            for( int var = 0; var != static_cast<int>(changed_lbs.size()); ++var )
+            for( int var = 0; var != static_cast<int>(probing_lower_bounds.size()); ++var )
             {
-               if( num.isGT(changed_lbs[var], problem.getLowerBounds()[var]) )
+               if( num.isGT(probing_lower_bounds[var], problem.getLowerBounds()[var]) )
                {
-                  changed_clique_lbs_inds_vals.push_back({var, changed_lbs[var]});
+                  changed_clique_lbs_inds_vals.push_back({var, probing_lower_bounds[var]});
                }
                if( num.isLT(changed_ubs[var], problem.getUpperBounds()[var]) )
                {
@@ -180,9 +180,9 @@ class CliqueProbingView
         typename std::list<std::pair<int,REAL>>::iterator ind = changed_clique_lbs_inds_vals.begin(); 
          while( ind != changed_clique_lbs_inds_vals.end() )
          {
-            if( num.isLT( changed_lbs[(*ind).first], (*ind).second ) )
-               (*ind).second = changed_lbs[(*ind).first];
-            if( num.isEq(changed_lbs[(*ind).first], problem.getLowerBounds()[(*ind).first] ) )
+            if( num.isLT( probing_lower_bounds[(*ind).first], (*ind).second ) )
+               (*ind).second = probing_lower_bounds[(*ind).first];
+            if( num.isEq(probing_lower_bounds[(*ind).first], problem.getLowerBounds()[(*ind).first] ) )
                ind = changed_clique_lbs_inds_vals.erase(ind);
             else
                std::advance(ind, 1);
@@ -190,9 +190,9 @@ class CliqueProbingView
          ind = changed_clique_ubs_inds_vals.begin(); 
          while( ind != changed_clique_ubs_inds_vals.end() )
          {
-            if( num.isGT( changed_ubs[(*ind).first], (*ind).second ) )
-               (*ind).second = changed_ubs[(*ind).first];
-            if( num.isEq(changed_ubs[(*ind).first], problem.getUpperBounds()[(*ind).first] ) )
+            if( num.isGT( probing_upper_bounds[(*ind).first], (*ind).second ) )
+               (*ind).second = probing_upper_bounds[(*ind).first];
+            if( num.isEq(probing_upper_bounds[(*ind).first], problem.getUpperBounds()[(*ind).first] ) )
                ind = changed_clique_ubs_inds_vals.erase(ind);
             else
                std::advance(ind, 1);
