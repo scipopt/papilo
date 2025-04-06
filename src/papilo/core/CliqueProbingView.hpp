@@ -139,9 +139,9 @@ class CliqueProbingView
             if( num.isEq(1.0, probing_lower_bounds[binary_inds[ind]]) )
             {
                assert( ind < static_cast<int>(lb_no_implications.size()) );
-               std::cout<< "The following variable is fixed to 1 when the current one is 1: ";
-               std::cout<< binary_inds[ind];
-               std::cout<< "\n";
+               //std::cout<< "The following variable is fixed to 1 when the current one is 1: ";
+               //std::cout<< binary_inds[ind];
+               //std::cout<< "\n";
                 lb_no_implications[ind].first += 1;
                 lb_no_implications[ind].second = probingCol;
             }
@@ -150,9 +150,9 @@ class CliqueProbingView
          assert( binary_inds[ind] < static_cast<int>(probing_upper_bounds.size()) );
             if( num.isEq(0.0, probing_upper_bounds[binary_inds[ind]]) )
             {
-               std::cout<< "The following variable is fixed to 0 when the current one is 1: ";
-               std::cout<< binary_inds[ind];
-               std::cout<< "\n";
+               //std::cout<< "The following variable is fixed to 0 when the current one is 1: ";
+               //std::cout<< binary_inds[ind];
+               //std::cout<< "\n";
                assert( ind < static_cast<int>(ub_no_implications.size()) );
                 ub_no_implications[ind].first += 1;
                 ub_no_implications[ind].second = probingCol;

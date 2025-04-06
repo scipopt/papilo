@@ -660,6 +660,7 @@ std::cout<<"subs\n";
    }
 
    std::cout<<"subs finished\n";
+   return result;
 
    badge_size = std::max( std::min( nprobingcands, minbadgesize ), badge_size );
 
