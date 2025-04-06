@@ -146,8 +146,8 @@ class CliqueProbingView
             }
             
          assert( ind < static_cast<int>(binary_inds.size()) );
-         assert( binary_inds[ind] < static_cast<int>(changed_ubs.size()) );
-            if( num.isEq(0.0, changed_ubs[binary_inds[ind]]) )
+         assert( binary_inds[ind] < static_cast<int>(probing_upper_bounds.size()) );
+            if( num.isEq(0.0, probing_upper_bounds[binary_inds[ind]]) )
             {
                std::cout<< "The following variable is fixed to 0 when the current one is 1: ";
                std::cout<< binary_inds[ind];
@@ -167,9 +167,9 @@ class CliqueProbingView
                {
                   changed_clique_lbs_inds_vals.push_back({var, probing_lower_bounds[var]});
                }
-               if( num.isLT(changed_ubs[var], problem.getUpperBounds()[var]) )
+               if( num.isLT(probing_upper_bounds[var], problem.getUpperBounds()[var]) )
                {
-                  changed_clique_ubs_inds_vals.push_back({var, changed_ubs[var]});
+                  changed_clique_ubs_inds_vals.push_back({var, probing_upper_bounds[var]});
                }
             }
             initbounds = true;
