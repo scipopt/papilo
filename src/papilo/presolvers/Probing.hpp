@@ -374,16 +374,16 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
                return s1 > s2 || ( s1 == s2 && colperm[col1] < colperm[col2] );
             } );
    
-   int clique_cutoff_ub = probing_cands.back();
+   int clique_cutoff_ub = static_cast<int>(probing_cands.size())-1;
    int clique_cutoff_lb = 0;
-   std::cout<<"\n";
+   /*std::cout<<"\n";
    std::cout<<clique_cutoff_ub;
    std::cout<<"\n";
    std::cout<<static_cast<int>(probing_cands.size());
-   std::cout<<"\n";
+   std::cout<<"\n";*/
    assert( clique_cutoff_ub < static_cast<int>(probing_cands.size()));
    assert( probing_cands[clique_cutoff_ub] < static_cast<int>(sizeof(probing_scores) / sizeof(probing_scores[0])));
-   if( probing_scores[probing_cands[clique_cutoff_ub]] < 0 )
+   if( clique_cutoff_ub != -1 && probing_scores[probing_cands[clique_cutoff_ub]] < 0 )
    {
       while (clique_cutoff_ub != clique_cutoff_lb + 1 )
       {
