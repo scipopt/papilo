@@ -37,6 +37,7 @@
 #include "papilo/misc/Vec.hpp"
 #include "papilo/misc/compress_vector.hpp"
 #include "papilo/misc/fmt.hpp"
+#include <algorithm>
 #include <atomic>
 #include <boost/functional/hash.hpp>
 #include <set>
@@ -325,7 +326,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
    Vec<bool> probedCliqueVars(ncols, false);
    Vec<int> probingCliques;
    probingCliques.reserve( cliques.end() - cliques.begin() );
-   for( int clique = 0; clique < std::min( cliques.end() - cliques.begin(),  maxprobedcliques); ++clique )
+   for( int clique = 0; clique < std::min( static_cast<int>(cliques.end() - cliques.begin()),  maxprobedcliques); ++clique )
    {
       auto rowvec = consMatrix.getRowCoefficients( cliques[clique].first );
       auto rowinds = rowvec.getIndices();
