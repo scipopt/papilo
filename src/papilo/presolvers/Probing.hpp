@@ -381,6 +381,11 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
    std::cout<<"\n";
    std::cout<<static_cast<int>(probing_cands.size());
    std::cout<<"\n";*/
+   std::cout<<"\n";
+   std::cout<<probing_cands[clique_cutoff_ub];
+   std::cout<<"\n";
+   std::cout<<static_cast<int>(sizeof(probing_scores) / sizeof(probing_scores[0]));
+   std::cout<<"\n";
    assert( clique_cutoff_ub < static_cast<int>(probing_cands.size()));
    assert( probing_cands[clique_cutoff_ub] < static_cast<int>(sizeof(probing_scores) / sizeof(probing_scores[0])));
    if( clique_cutoff_ub != -1 && probing_scores[probing_cands[clique_cutoff_ub]] < 0 )
