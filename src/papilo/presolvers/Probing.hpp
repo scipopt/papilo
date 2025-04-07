@@ -325,7 +325,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
    Vec<bool> probedCliqueVars(ncols, false);
    Vec<int> probingCliques;
    probingCliques.reserve( cliques.end() - cliques.begin() );
-   for( int clique = 0; clique < min( cliques.end() - cliques.begin(),  maxprobedcliques); ++clique )
+   for( int clique = 0; clique < std::min( cliques.end() - cliques.begin(),  maxprobedcliques); ++clique )
    {
       auto rowvec = consMatrix.getRowCoefficients( cliques[clique].first );
       auto rowinds = rowvec.getIndices();
