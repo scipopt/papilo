@@ -593,7 +593,7 @@ std::cout<<"Combined\n";
 bool boundchangers_enabled = true;
 if( boundchangers_enabled ) {
 std::cout<<"Boundchanges\n";
-if( !cliqueBoundChanges.empty() )
+if( !cliqueBoundChanges.empty() && false )
 {
 
    for( const CliqueProbingBoundChg<REAL>& boundChg : cliqueBoundChanges )
