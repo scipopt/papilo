@@ -377,7 +377,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
    int clique_cutoff_ub = probing_cands.back();
    int clique_cutoff_lb = 0;
    assert( clique_cutoff_ub < static_cast<int>(probing_cands.size()));
-   assert( probing_cands[clique_cutoff_ub] < static_cast<int>(probing_scores.size()));
+   assert( probing_cands[clique_cutoff_ub] < static_cast<int>(sizeof(probing_scores) / sizeof(probing_scores[0])));
    if( probing_scores[probing_cands[clique_cutoff_ub]] < 0 )
    {
       while (clique_cutoff_ub != clique_cutoff_lb + 1 )
