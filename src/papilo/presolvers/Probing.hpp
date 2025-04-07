@@ -623,7 +623,7 @@ bool subs_enabled = false;
 if (subs_enabled) {
 std::cout<<"subs\n";
    
-if( !cliquesubstitutions.empty() )
+if( !cliquesubstitutions.empty() && false )
 {
    pdqsort( cliquesubstitutions.begin(), cliquesubstitutions.end(),
             []( const CliqueProbingSubstitution<REAL>& a,
