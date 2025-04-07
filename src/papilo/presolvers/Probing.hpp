@@ -390,7 +390,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
    //assert( probing_cands[clique_cutoff_ub] < static_cast<int>(sizeof(probing_scores) / sizeof(probing_scores[0])));
    if( clique_cutoff_ub != -1 && probing_scores[probing_cands[clique_cutoff_ub]] < 0 )
    {
-      while (clique_cutoff_ub != clique_cutoff_lb + 1 )
+      while (clique_cutoff_ub - clique_cutoff_lb > 1 )
       {
          std::cout<< "\n";
          std::cout<<clique_cutoff_ub;
@@ -402,7 +402,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
             std::cout<<probing_scores[probing_cands[i]];
             std::cout<<"\n";
          }
-         if( probing_scores[probing_cands[ ( clique_cutoff_ub + clique_cutoff_lb ) / 2 + 1 ]] >= 0 )
+         if( probing_scores[probing_cands[ ( clique_cutoff_ub + clique_cutoff_lb ) / 2 ]] >= 0 )
          {
             clique_cutoff_lb = ( clique_cutoff_ub + clique_cutoff_lb ) / 2;
          }
