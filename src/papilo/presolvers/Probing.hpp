@@ -397,6 +397,11 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
          std::cout<< "\n";
          std::cout<<clique_cutoff_lb;
          std::cout<<"\n";
+         for( int i = clique_cutoff_lb; i <= clique_cutoff_ub ; ++i )
+         {
+            std::cout<<probing_scores[probing_cands[i]];
+            std::cout<<"\n";
+         }
          if( probing_scores[probing_cands[ ( clique_cutoff_ub + clique_cutoff_lb ) / 2 + 1 ]] >= 0 )
          {
             clique_cutoff_lb = ( clique_cutoff_ub + clique_cutoff_lb ) / 2;
