@@ -564,7 +564,7 @@ PresolveStatus result = PresolveStatus::kUnchanged;
 //msg.info("Combined\n");
 
 //msg.info("Boundchanges\n");
-if( !cliqueBoundChanges.empty() )
+if( !cliqueBoundChanges.empty() && false )
 {
 
    for( const CliqueProbingBoundChg<REAL>& boundChg : cliqueBoundChanges )
