@@ -610,9 +610,9 @@ if( !cliquesubstitutions.empty() )
          continue;
 
       lastsubstcol = subst.col1;
-
-      reductions.replaceCol( subst.col1, subst.col2, subst.col2scale,
-                             subst.col2const );
+      if(false)
+         reductions.replaceCol( subst.col1, subst.col2, subst.col2scale,
+                                subst.col2const );
    }
 
    result = PresolveStatus::kReduced;
