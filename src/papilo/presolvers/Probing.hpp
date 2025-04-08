@@ -655,7 +655,7 @@ if( !cliquesubstitutions.empty() )
 
    badge_size = std::max( std::min( nprobingcands, minbadgesize ), badge_size );
 
-   int current_badge_end = std::min(static_cast<int>(probing_cands.size()) - 1, current_badge_start + badge_size);
+   int current_badge_end = std::min(static_cast<int>(probing_cands.size()), current_badge_start + badge_size);
    int n_useless = 0;
    bool abort = false;
 
@@ -704,7 +704,8 @@ if( !cliquesubstitutions.empty() )
                    if( PresolveMethod<REAL>::is_time_exceeded(
                            timer, problemUpdate.getPresolveOptions().tlim ) )
                       break;
-                  assert(i >= 0 && i < static_cast<int>(probing_cands.size()));
+                  assert(i >= 0);
+                  assert(i < static_cast<int>(probing_cands.size()));
                    const int col = probing_cands[i];
 
                    assert(
@@ -744,6 +745,7 @@ if( !cliquesubstitutions.empty() )
 #endif
       };
 
+      assert(current_badge_end <= probing_cands.size());
       propagate_variables( current_badge_start, current_badge_end );
 
       if( PresolveMethod<REAL>::is_time_exceeded(
