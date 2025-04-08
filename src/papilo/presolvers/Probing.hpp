@@ -144,7 +144,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
                         const Timer& timer, int& reason_of_infeasibility )
 {
 
-   std::cout<< "Starting Probing method\n";
+   msg.info( "Starting Probing method\n");
    if( problem.getNumIntegralCols() == 0 )
       return PresolveStatus::kUnchanged;
 
@@ -181,7 +181,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
          probing_cands.push_back( i );
    }
    
-   std::cout<< "initialized\n";
+   msg.info( "initialized\n");
 
    if( probing_cands.empty() )
       return PresolveStatus::kUnchanged;
@@ -321,7 +321,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
       return clique1.second > clique2.second;
    } );
    
-   std::cout<< "Sorted cliques\n";
+   msg.info( "Sorted cliques\n");
    const int maxprobedcliques = 500;
    Vec<bool> probedCliqueVars(ncols, false);
    Vec<int> probingCliques;
@@ -348,7 +348,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
    }
 
    
-   std::cout<< "Selected cliques\n";
+   msg.info( "Selected cliques\n");
 
    pdqsort( probing_cands.begin(), probing_cands.end(),
             [this, &probing_scores, &colsize, &colperm]( int col1, int col2 )
@@ -377,32 +377,12 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
    
    int clique_cutoff_ub = static_cast<int>(probing_cands.size())-1;
    int clique_cutoff_lb = 0;
-   /*std::cout<<"\n";
-   std::cout<<clique_cutoff_ub;
-   std::cout<<"\n";
-   std::cout<<static_cast<int>(probing_cands.size());
-   std::cout<<"\n";
-   std::cout<<"\n";
-   std::cout<<probing_cands[clique_cutoff_ub];
-   std::cout<<"\n";
-   std::cout<<static_cast<int>(sizeof(probing_scores) / sizeof(probing_scores[0]));
-   std::cout<<"\n";*/
+
    assert( clique_cutoff_ub < static_cast<int>(probing_cands.size()));
-   //assert( probing_cands[clique_cutoff_ub] < static_cast<int>(sizeof(probing_scores) / sizeof(probing_scores[0])));
    if( clique_cutoff_ub != -1 && probing_scores[probing_cands[clique_cutoff_ub]] < 0 )
    {
       while (clique_cutoff_ub - clique_cutoff_lb > 1 )
       {
-         std::cout<< "\n";
-         std::cout<<clique_cutoff_ub;
-         std::cout<< "\n";
-         std::cout<<clique_cutoff_lb;
-         std::cout<<"\n";
-         for( int i = clique_cutoff_lb; i <= clique_cutoff_ub ; ++i )
-         {
-            std::cout<<probing_scores[probing_cands[i]];
-            std::cout<<"\n";
-         }
          if( probing_scores[probing_cands[ ( clique_cutoff_ub + clique_cutoff_lb ) / 2 ]] >= 0 )
          {
             clique_cutoff_lb = ( clique_cutoff_ub + clique_cutoff_lb ) / 2;
@@ -414,9 +394,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
       }
    }
 
-   
-   std::cout<< "Computed cutoff\n";
-   
+      
    std::atomic_bool infeasible{ false };
    std::atomic_int infeasible_variable{ -1 };
    HashMap<std::pair<int, int>, int, boost::hash<std::pair<int, int>>>
@@ -425,7 +403,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
    Vec<int> cliqueBoundPos( size_t( 2 * ncols ), 0 );
    Vec<CliqueProbingBoundChg<REAL>> cliqueBoundChanges;
    cliqueBoundChanges.reserve( ncols );
-   std::cout<< "Starting clique Probing\n";
+   msg.info( "Starting clique Probing\n");
 
 #ifdef PAPILO_TBB
    tbb::combinable<CliqueProbingView<REAL>> clique_probing_views(
@@ -457,17 +435,17 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
             auto cliquevec = consMatrix.getRowCoefficients( clique );
             auto cliqueind = cliquevec.getIndices();
             auto cliquelen = cliquevec.getLength();
-            std::cout<<"Probing Clique\n";
+            msg.info("Probing Clique\n");
             for( int i = 0; i < cliquevec.getLength(); ++i )
             {
-               std::cout<< cliqueind[i];
-               std::cout<< " ";
+               msg.info( cliqueind[i]);
+               msg.info( " ");
             }
             bool globalInfeasible = cliqueProbingView.probeClique(clique, cliqueind, cliquelen, probing_cands );
-            std::cout<<"Probed Clique\n";
+            msg.info("Probed Clique\n");
             if( !globalInfeasible )
                globalInfeasible = cliqueProbingView.analyzeImplications();
-            std::cout<<"Analyzed\n"; 
+            msg.info("Analyzed\n"); 
             if( globalInfeasible )
                    {
                       infeasible.store( true, std::memory_order_relaxed );
@@ -483,11 +461,11 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
    
 
    propagate_variables( cliquevarsstart, cliquevarsend );
-   std::cout<< "Finished clique Probing\n";
+   msg.info( "Finished clique Probing\n");
    probing_cands.resize(clique_cutoff_lb);
-   std::cout<< "\nCutting off this many variables: ";
-   std::cout<< static_cast<int>(probing_cands.size())-clique_cutoff_lb ;
-   std::cout<<"\nresized\n";
+   msg.info( "\nCutting off this many variables: ");
+   msg.info( static_cast<int>(probing_cands.size())-clique_cutoff_lb );
+   msg.info("\nresized\n");
    int64_t amountofwork = 0;
    int nfixings = 0;
    int nboundchgs = 0;
@@ -499,15 +477,12 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
    [&]( CliqueProbingView<REAL>& cliqueProbingView )
    {
 #endif            
-         std::cout<<"test0\n";
             const auto& cliqueProbingBoundChgs =
                cliqueProbingView.getProbingBoundChanges();
                
-               std::cout<<"test0.5\n";
             const auto& cliqueProbingSubstitutions =
                cliqueProbingView.getProbingSubstitutions();
 
-               std::cout<<"test1\n";
              //amountofwork += cliqueProbingView.getAmountOfWork();
 
              for( const CliqueProbingSubstitution<REAL>& subst :
@@ -521,7 +496,6 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
                    cliquesubstitutions.push_back( subst );
              }
              
-             std::cout<<"test2\n";
              for( const CliqueProbingBoundChg<REAL>& boundChg : cliqueProbingBoundChgs )
              {
                 if( cliqueBoundPos[2 * boundChg.col + boundChg.upper] == 0 )
@@ -581,19 +555,16 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
                 }
              }
              
-             std::cout<<"test3\n";
              cliqueProbingView.clearResults();
 #ifdef PAPILO_TBB
           } );
 #endif
 PresolveStatus result = PresolveStatus::kUnchanged;
 
-std::cout<<"Combined\n";
+msg.info("Combined\n");
 
-bool boundchangers_enabled = true;
-if( boundchangers_enabled ) {
-std::cout<<"Boundchanges\n";
-if( !cliqueBoundChanges.empty() && false )
+msg.info("Boundchanges\n");
+if( !cliqueBoundChanges.empty() )
 {
 
    for( const CliqueProbingBoundChg<REAL>& boundChg : cliqueBoundChanges )
@@ -617,11 +588,9 @@ if( !cliqueBoundChanges.empty() && false )
    }
 
    result = PresolveStatus::kReduced;
-}}
+}
 
-bool subs_enabled = false;
-if (subs_enabled) {
-std::cout<<"subs\n";
+msg.info("subs\n");
    
 if( !cliquesubstitutions.empty() )
 {
@@ -647,9 +616,7 @@ if( !cliquesubstitutions.empty() )
    }
 
    result = PresolveStatus::kReduced;
-}   std::cout<<"subs finished\n";
-}
-   return result ;
+}   msg.info("subs finished\n");
    
    const Vec<int>& rowsize = consMatrix.getRowSizes();
 
