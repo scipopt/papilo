@@ -144,7 +144,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
                         const Timer& timer, int& reason_of_infeasibility )
 {
 
-   msg.info( "Starting Probing method\n");
+   //msg.info( "Starting Probing method\n");
    if( problem.getNumIntegralCols() == 0 )
       return PresolveStatus::kUnchanged;
 
@@ -181,7 +181,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
          probing_cands.push_back( i );
    }
    
-   msg.info( "initialized\n");
+   //msg.info( "initialized\n");
 
    if( probing_cands.empty() )
       return PresolveStatus::kUnchanged;
@@ -321,7 +321,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
       return clique1.second > clique2.second;
    } );
    
-   msg.info( "Sorted cliques\n");
+   //msg.info( "Sorted cliques\n");
    const int maxprobedcliques = 500;
    Vec<bool> probedCliqueVars(ncols, false);
    Vec<int> probingCliques;
@@ -348,7 +348,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
    }
 
    
-   msg.info( "Selected cliques\n");
+   //msg.info( "Selected cliques\n");
 
    pdqsort( probing_cands.begin(), probing_cands.end(),
             [this, &probing_scores, &colsize, &colperm]( int col1, int col2 )
@@ -403,7 +403,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
    Vec<int> cliqueBoundPos( size_t( 2 * ncols ), 0 );
    Vec<CliqueProbingBoundChg<REAL>> cliqueBoundChanges;
    cliqueBoundChanges.reserve( ncols );
-   msg.info( "Starting clique Probing\n");
+   //msg.info( "Starting clique Probing\n");
 
 #ifdef PAPILO_TBB
    tbb::combinable<CliqueProbingView<REAL>> clique_probing_views(
@@ -435,17 +435,17 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
             auto cliquevec = consMatrix.getRowCoefficients( clique );
             auto cliqueind = cliquevec.getIndices();
             auto cliquelen = cliquevec.getLength();
-            msg.info("Probing Clique\n");
+            //msg.info("Probing Clique\n");
             for( int i = 0; i < cliquevec.getLength(); ++i )
             {
-               msg.info( cliqueind[i]);
-               msg.info( " ");
+               //msg.info( cliqueind[i]);
+               //msg.info( " ");
             }
             bool globalInfeasible = cliqueProbingView.probeClique(clique, cliqueind, cliquelen, probing_cands );
-            msg.info("Probed Clique\n");
+            //msg.info("Probed Clique\n");
             if( !globalInfeasible )
                globalInfeasible = cliqueProbingView.analyzeImplications();
-            msg.info("Analyzed\n"); 
+            //msg.info("Analyzed\n"); 
             if( globalInfeasible )
                    {
                       infeasible.store( true, std::memory_order_relaxed );
@@ -461,11 +461,11 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
    
 
    propagate_variables( cliquevarsstart, cliquevarsend );
-   msg.info( "Finished clique Probing\n");
+   //msg.info( "Finished clique Probing\n");
    probing_cands.resize(clique_cutoff_lb);
-   msg.info( "\nCutting off this many variables: ");
-   msg.info( static_cast<int>(probing_cands.size())-clique_cutoff_lb );
-   msg.info("\nresized\n");
+   //msg.info( "\nCutting off this many variables: ");
+   //msg.info( static_cast<int>(probing_cands.size())-clique_cutoff_lb );
+   //msg.info("\nresized\n");
    int64_t amountofwork = 0;
    int nfixings = 0;
    int nboundchgs = 0;
@@ -561,9 +561,9 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
 #endif
 PresolveStatus result = PresolveStatus::kUnchanged;
 
-msg.info("Combined\n");
+//msg.info("Combined\n");
 
-msg.info("Boundchanges\n");
+//msg.info("Boundchanges\n");
 if( !cliqueBoundChanges.empty() )
 {
 
@@ -590,7 +590,7 @@ if( !cliqueBoundChanges.empty() )
    result = PresolveStatus::kReduced;
 }
 
-msg.info("subs\n");
+//msg.info("subs\n");
    
 if( !cliquesubstitutions.empty() )
 {
@@ -616,7 +616,7 @@ if( !cliquesubstitutions.empty() )
    }
 
    result = PresolveStatus::kReduced;
-}   msg.info("subs finished\n");
+}   //msg.info("subs finished\n");
    
    const Vec<int>& rowsize = consMatrix.getRowSizes();
 

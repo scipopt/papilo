@@ -92,19 +92,19 @@ class CliqueProbingView
    probeClique( const int clique, const int*& indices, const int len, const Vec<int>& binary_inds)
    {  
       
-      msg.info( "\n\nProbing Clique: ");
+      //msg.info( "\n\nProbing Clique: ");
       probingClique = clique;
-      msg.info( clique);
-      msg.info( "\n");
+      //msg.info( clique);
+      //msg.info( "\n");
       for( int ind = 0; ind < len; ++ind )
       {
          cliqueind.push_back( indices[ind] );
-         msg.info(indices[ind]);
-         msg.info(" ");
+         //msg.info(indices[ind]);
+         //msg.info(" ");
       }
       cliquelen = len;
       bool initbounds = false;
-      msg.info("\nInitializing substitution counters. \n");
+      //msg.info("\nInitializing substitution counters. \n");
       lb_no_implications.reserve( static_cast<int>(binary_inds.size()) );
       ub_no_implications.reserve( static_cast<int>(binary_inds.size()) );
       for( int ind = 0 ; ind != static_cast<int>(binary_inds.size()); ++ind )
@@ -112,26 +112,26 @@ class CliqueProbingView
         lb_no_implications.push_back( std::pair<int,int> {0,-1} );
         ub_no_implications.push_back( std::pair<int,int> {0,-1} );
       } 
-      msg.info( "Initialized substitution counters.\n");
+      //msg.info( "Initialized substitution counters.\n");
 
       for( int i = 0; i < cliquelen; ++i )
       {
-         msg.info( "\nSetting probing collumn: ");
-         msg.info( cliqueind[i]);
+         //msg.info( "\nSetting probing collumn: ");
+         //msg.info( cliqueind[i]);
         setProbingColumn(i);
-        msg.info( "\nSet probing collumn.");
-        msg.info( "\nPropagating.");
+        //msg.info( "\nSet probing collumn.");
+        //msg.info( "\nPropagating.");
         propagateDomains();
-      msg.info( "\nPropagated\n");
-      msg.info( "Checking for infeasibility\n");
+      //msg.info( "\nPropagated\n");
+      //msg.info( "Checking for infeasibility\n");
         if( isInfeasible() )
         {
             fix_to_zero.push_back(probingCol);
-            msg.info( "1 is infeasible, added to fix_to_zero and skipped everything else.\n");
+            //msg.info( "1 is infeasible, added to fix_to_zero and skipped everything else.\n");
             reset();
             continue;
         }
-        msg.info( "Changing imps\n");
+        //msg.info( "Changing imps\n");
         for( int ind = 0; ind != static_cast<int>(binary_inds.size()); ++ind )
         {
          assert( ind < static_cast<int>(binary_inds.size()) );
@@ -152,10 +152,10 @@ class CliqueProbingView
                 ub_no_implications[ind].second = probingCol;
             }
         }
-        msg.info("Changed imps\n");
+        //msg.info("Changed imps\n");
         if( initbounds == false )
         {
-            msg.info("Initializing\n");
+            //msg.info("Initializing\n");
             for( int var = 0; var != static_cast<int>(probing_lower_bounds.size()); ++var )
             {
                if( num.isGT(probing_lower_bounds[var], problem.getLowerBounds()[var]) )
@@ -168,11 +168,11 @@ class CliqueProbingView
                }
             }
             initbounds = true;
-            msg.info("Initialized\n");
+            //msg.info("Initialized\n");
             reset();
             continue;
         }
-        msg.info( "Changing Bounds\n");
+        //msg.info( "Changing Bounds\n");
         typename std::list<std::pair<int,REAL>>::iterator ind = changed_clique_lbs_inds_vals.begin(); 
          while( ind != changed_clique_lbs_inds_vals.end() )
          {
@@ -193,10 +193,10 @@ class CliqueProbingView
             else
                std::advance(ind, 1);
          }
-         msg.info("Changed bounds.\n");
-         msg.info("Resetting probing col:\n");
+         //msg.info("Changed bounds.\n");
+         //msg.info("Resetting probing col:\n");
         reset();
-        msg.info( "Reset probing col.\n");
+        //msg.info( "Reset probing col.\n");
       }
       return( fix_to_zero.end() - fix_to_zero.begin() == cliquelen );
    }
@@ -667,7 +667,7 @@ CliqueProbingView<REAL>::analyzeImplications()
    //const auto& orig_ubs = problem.getUpperBounds();
    //const auto& orig_lbs = problem.getLowerBounds();
    //const Vec<ColFlags>& orig_domain_flags = problem.getColFlags();
-   msg.info( "Analyzing Implications\n");
+   //msg.info( "Analyzing Implications\n");
    if( fix_to_zero.end() - fix_to_zero.begin() == cliquelen )
       return true;
    for( int ind = 0; ind < fix_to_zero.end() - fix_to_zero.begin(); ++ind )
