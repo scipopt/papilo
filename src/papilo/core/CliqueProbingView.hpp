@@ -98,7 +98,7 @@ class CliqueProbingView
       //msg.info( "\n");
       for( int ind = 0; ind < len; ++ind )
       {
-         cliqueind.push_back( indices[ind] );
+         cliqueind.emplace_back( indices[ind] );
          //msg.info(indices[ind]);
          //msg.info(" ");
       }
@@ -109,8 +109,8 @@ class CliqueProbingView
       ub_implications.reserve( static_cast<int>(binary_inds.size()) );
       for( int ind = 0 ; ind != static_cast<int>(binary_inds.size()); ++ind )
       {
-        lb_implications.push_back( std::pair<int,int> {0,-1} );
-        ub_implications.push_back( std::pair<int,int> {0,-1} );
+        lb_implications.emplace_back( std::pair<int,int> {0,-1} );
+        ub_implications.empace_back( std::pair<int,int> {0,-1} );
       } 
       //msg.info( "Initialized substitution counters.\n");
 
@@ -126,7 +126,7 @@ class CliqueProbingView
       //msg.info( "Checking for infeasibility\n");
         if( isInfeasible() )
         {
-            fix_to_zero.push_back(probingCol);
+            fix_to_zero.emplace_back(probingCol);
             //msg.info( "1 is infeasible, added to fix_to_zero and skipped everything else.\n");
             reset();
             continue;
@@ -160,11 +160,11 @@ class CliqueProbingView
             {
                if( num.isGT(probing_lower_bounds[var], problem.getLowerBounds()[var]) )
                {
-                  changed_clique_lbs_inds_vals.push_back({var, probing_lower_bounds[var]});
+                  changed_clique_lbs_inds_vals.emplace_back({var, probing_lower_bounds[var]});
                }
                if( num.isLT(probing_upper_bounds[var], problem.getUpperBounds()[var]) )
                {
-                  changed_clique_ubs_inds_vals.push_back({var, probing_upper_bounds[var]});
+                  changed_clique_ubs_inds_vals.emplace_back({var, probing_upper_bounds[var]});
                }
             }
             initbounds = true;
