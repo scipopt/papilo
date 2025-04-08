@@ -704,6 +704,7 @@ if( !cliquesubstitutions.empty() )
                    if( PresolveMethod<REAL>::is_time_exceeded(
                            timer, problemUpdate.getPresolveOptions().tlim ) )
                       break;
+                  assert(i >= 0 && i < static_cast<int>(probing_cands.size()));
                    const int col = probing_cands[i];
 
                    assert(
