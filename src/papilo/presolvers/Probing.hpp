@@ -322,7 +322,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
    } );
    
    //msg.info( "Sorted cliques\n");
-   const int maxprobedcliques = 500;
+   const int maxprobedcliques = 50;
    Vec<bool> probedCliqueVars(ncols, false);
    Vec<int> probingCliques;
    probingCliques.reserve( cliques.end() - cliques.begin() );

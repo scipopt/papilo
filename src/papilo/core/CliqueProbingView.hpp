@@ -670,7 +670,7 @@ CliqueProbingView<REAL>::analyzeImplications()
    //msg.info( "Analyzing Implications\n");
    if( fix_to_zero.end() - fix_to_zero.begin() == cliquelen )
       return true;
-   for( int ind = 0; ind < fix_to_zero.end() - fix_to_zero.begin(); ++ind )
+   for( int ind = 0; ind < static_cast<int>(fix_to_zero.end() - fix_to_zero.begin()); ++ind )
    {
       
       boundChanges.emplace_back(
@@ -690,7 +690,7 @@ CliqueProbingView<REAL>::analyzeImplications()
          CliqueProbingBoundChg<REAL>( true, (*col).first, (*col).second, cliqueind[0] ) );
    }
 
-   for( int ind = 0; ind < binary_inds.end() - binary_inds.begin(); ++ind )
+   for( int ind = 0; ind < static_cast<int>(binary_inds.end() - binary_inds.begin()); ++ind )
    {
       if( lb_implications[ind].first == cliquelen - 1 - static_cast<int>(fix_to_zero.size()) 
           && ub_implications[ind].first == 1 )
