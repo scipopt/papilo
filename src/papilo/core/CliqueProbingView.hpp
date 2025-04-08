@@ -105,12 +105,12 @@ class CliqueProbingView
       cliquelen = len;
       bool initbounds = false;
       //msg.info("\nInitializing substitution counters. \n");
-      lb_no_implications.reserve( static_cast<int>(binary_inds.size()) );
-      ub_no_implications.reserve( static_cast<int>(binary_inds.size()) );
+      lb_implications.reserve( static_cast<int>(binary_inds.size()) );
+      ub_implications.reserve( static_cast<int>(binary_inds.size()) );
       for( int ind = 0 ; ind != static_cast<int>(binary_inds.size()); ++ind )
       {
-        lb_no_implications.push_back( std::pair<int,int> {0,-1} );
-        ub_no_implications.push_back( std::pair<int,int> {0,-1} );
+        lb_implications.push_back( std::pair<int,int> {0,-1} );
+        ub_implications.push_back( std::pair<int,int> {0,-1} );
       } 
       //msg.info( "Initialized substitution counters.\n");
 
@@ -138,18 +138,18 @@ class CliqueProbingView
          assert( binary_inds[ind] < static_cast<int>(probing_lower_bounds.size()) );
             if( num.isEq(1.0, probing_lower_bounds[binary_inds[ind]]) )
             {
-               assert( ind < static_cast<int>(lb_no_implications.size()) );
-                lb_no_implications[ind].first += 1;
-                lb_no_implications[ind].second = probingCol;
+               assert( ind < static_cast<int>(lb_implications.size()) );
+                lb_implications[ind].first += 1;
+                lb_implications[ind].second = probingCol;
             }
             
          assert( ind < static_cast<int>(binary_inds.size()) );
          assert( binary_inds[ind] < static_cast<int>(probing_upper_bounds.size()) );
             if( num.isEq(0.0, probing_upper_bounds[binary_inds[ind]]) )
             {
-               assert( ind < static_cast<int>(ub_no_implications.size()) );
-                ub_no_implications[ind].first += 1;
-                ub_no_implications[ind].second = probingCol;
+               assert( ind < static_cast<int>(ub_implications.size()) );
+                ub_implications[ind].first += 1;
+                ub_implications[ind].second = probingCol;
             }
         }
         //msg.info("Changed imps\n");
@@ -221,8 +221,8 @@ class CliqueProbingView
    {
     changed_clique_lbs_inds_vals.clear();
     changed_clique_lbs_inds_vals.clear();
-    lb_no_implications.clear();
-    ub_no_implications.clear();
+    lb_implications.clear();
+    ub_implications.clear();
     fix_to_zero.clear();
     cliqueind.clear();
     probingClique = -1;
@@ -336,8 +336,8 @@ class CliqueProbingView
    std::list<std::pair<int,REAL>> changed_clique_ubs_inds_vals;
 
    Vec<int> binary_inds;
-   Vec<std::pair<int,int>> lb_no_implications;
-   Vec<std::pair<int,int>> ub_no_implications;
+   Vec<std::pair<int,int>> lb_implications;
+   Vec<std::pair<int,int>> ub_implications;
    Vec<int> fix_to_zero;
 
    Vec<int> prop_activities;
@@ -692,18 +692,18 @@ CliqueProbingView<REAL>::analyzeImplications()
 
    for( int ind = 0; ind < binary_inds.end() - binary_inds.begin(); ++ind )
    {
-      if( lb_no_implications[ind].first == cliquelen - 1 - static_cast<int>(fix_to_zero.size()) 
-          && ub_no_implications[ind].first == 1 )
+      if( lb_implications[ind].first == cliquelen - 1 - static_cast<int>(fix_to_zero.size()) 
+          && ub_implications[ind].first == 1 )
       {
          substitutions.emplace_back(
-            CliqueProbingSubstitution<REAL>( binary_inds[ind], 1.0, ub_no_implications[ind].second, 0.0 ) );
+            CliqueProbingSubstitution<REAL>( binary_inds[ind], 1.0, ub_implications[ind].second, 0.0 ) );
          continue;
       }
-      if( ub_no_implications[ind].first == cliquelen - 1 - static_cast<int>(fix_to_zero.size()) 
-          && lb_no_implications[ind].first == 1 )
+      if( ub_implications[ind].first == cliquelen - 1 - static_cast<int>(fix_to_zero.size()) 
+          && lb_implications[ind].first == 1 )
       {
          substitutions.emplace_back(
-            CliqueProbingSubstitution<REAL>( binary_inds[ind], -1.0, lb_no_implications[ind].second, 1.0 ) );
+            CliqueProbingSubstitution<REAL>( binary_inds[ind], -1.0, lb_implications[ind].second, 1.0 ) );
       }
    }
    return false;
