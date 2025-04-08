@@ -655,7 +655,7 @@ if( !cliquesubstitutions.empty() )
 
    badge_size = std::max( std::min( nprobingcands, minbadgesize ), badge_size );
 
-   int current_badge_end = current_badge_start + badge_size;
+   int current_badge_end = std::min(static_cast<int>(probing_cands.size()) - 1, current_badge_start + badge_size);
    int n_useless = 0;
    bool abort = false;
 
