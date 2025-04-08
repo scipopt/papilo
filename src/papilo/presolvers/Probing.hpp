@@ -750,7 +750,7 @@ if( !cliquesubstitutions.empty() )
       assert(current_badge_start >= 0 );
       std::cout<<"\nProbing\n";
       std::cout<<current_badge_start;
-      std::cout<<"\n"
+      std::cout<<"\n";
       std::cout<<current_badge_start;
       propagate_variables( current_badge_start, current_badge_end);
 
