@@ -747,7 +747,8 @@ if( !cliquesubstitutions.empty() )
       };
 
       assert(current_badge_end <= static_cast<int>(probing_cands.size()));
-      propagate_variables( current_badge_start, std::min(static_cast<int>(probing_cands.size()),current_badge_end) );
+      assert(current_badge_start >= 0 );
+      propagate_variables( std::max(0, current_badge_start), std::min(static_cast<int>(probing_cands.size()),current_badge_end) );
 
       if( PresolveMethod<REAL>::is_time_exceeded(
               timer, problemUpdate.getPresolveOptions().tlim ) )
