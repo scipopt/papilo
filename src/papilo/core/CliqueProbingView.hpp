@@ -669,12 +669,17 @@ CliqueProbingView<REAL>::analyzeImplications()
    //const Vec<ColFlags>& orig_domain_flags = problem.getColFlags();
    //msg.info( "Analyzing Implications\n");
    if( fix_to_zero.end() - fix_to_zero.begin() == cliquelen )
+   {
+      std::cout<<"\nInfeasible.";
       return true;
+   }
    for( int ind = 0; ind < static_cast<int>(fix_to_zero.end() - fix_to_zero.begin()); ++ind )
    {
       
       boundChanges.emplace_back(
          CliqueProbingBoundChg<REAL>( true, fix_to_zero[ind], 0.0, -1 ) );
+         std::cout<<"\nFixed to zero: ";
+         std::cout<<fix_to_zero[ind];
    }
 
    for( typename std::list<std::pair<int,REAL>>::iterator col = changed_clique_lbs_inds_vals.begin(); 
@@ -682,12 +687,20 @@ CliqueProbingView<REAL>::analyzeImplications()
    {
       boundChanges.emplace_back(
          CliqueProbingBoundChg<REAL>( false, (*col).first, (*col).second, cliqueind[0] ) );
+         std::cout<<"\nLower Bound Change: ";
+         std::cout<<(*col).first;
+         std::cout<<" ";
+         std::cout<<(*col).second;
    }
    for( typename std::list<std::pair<int,REAL>>::iterator col = changed_clique_ubs_inds_vals.begin(); 
    col != changed_clique_ubs_inds_vals.end(); std::advance(col,1) )
    {
       boundChanges.emplace_back(
          CliqueProbingBoundChg<REAL>( true, (*col).first, (*col).second, cliqueind[0] ) );
+         std::cout<<"\nUpper Bound Change: ";
+         std::cout<<(*col).first;
+         std::cout<<" ";
+         std::cout<<(*col).second;
    }
 
    for( int ind = 0; ind < static_cast<int>(binary_inds.end() - binary_inds.begin()); ++ind )
@@ -697,13 +710,20 @@ CliqueProbingView<REAL>::analyzeImplications()
       {
          substitutions.emplace_back(
             CliqueProbingSubstitution<REAL>( binary_inds[ind], 1.0, ub_implications[ind].second, 0.0 ) );
-         continue;
+            std::cout<<"\nSubstitution: ";
+         std::cout<<binary_inds[ind];
+         std::cout<<" ";
+         std::cout<<ub_implications[ind].second;
       }
-      if( ub_implications[ind].first == cliquelen - 1 - static_cast<int>(fix_to_zero.size()) 
+      else if( ub_implications[ind].first == cliquelen - 1 - static_cast<int>(fix_to_zero.size()) 
           && lb_implications[ind].first == 1 )
       {
          substitutions.emplace_back(
             CliqueProbingSubstitution<REAL>( binary_inds[ind], -1.0, lb_implications[ind].second, 1.0 ) );
+            std::cout<<"\nSubstitution: ";
+         std::cout<<binary_inds[ind];
+         std::cout<<" ";
+         std::cout<<lb_implications[ind].second;
       }
    }
    return false;
