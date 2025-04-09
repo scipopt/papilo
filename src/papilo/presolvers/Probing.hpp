@@ -746,12 +746,13 @@ if( !cliquesubstitutions.empty() )
 #endif
       };
 
-      assert(current_badge_end <= static_cast<int>(probing_cands.size()));
-      assert(current_badge_start >= 0 );
       std::cout<<"\nProbing\n";
       std::cout<<current_badge_start;
       std::cout<<"\n";
-      std::cout<<current_badge_start;
+      std::cout<<current_badge_end;
+      
+      assert(current_badge_end <= static_cast<int>(probing_cands.size()));
+      assert(current_badge_start >= 0 );
       propagate_variables( current_badge_start, current_badge_end);
 
       if( PresolveMethod<REAL>::is_time_exceeded(
@@ -852,7 +853,7 @@ if( !cliquesubstitutions.empty() )
           } );
 #endif
       nsubstitutions += substitutions.size();
-      current_badge_start = std::max( 0, current_badge_end);
+      current_badge_start = current_badge_end;
 
       if( nfixings == 0 && nboundchgs == 0 && nsubstitutions == 0 )
          n_useless += amountofwork;
