@@ -655,7 +655,7 @@ if( !cliquesubstitutions.empty() )
 
    badge_size = std::max( std::min( nprobingcands, minbadgesize ), badge_size );
 
-   int current_badge_end = std::min(static_cast<int>(probing_cands.size()), current_badge_start + badge_size);
+   int current_badge_end = std::max( 0, std::min(static_cast<int>(probing_cands.size()), current_badge_start + badge_size));
    assert(current_badge_end <= static_cast<int>(probing_cands.size()));
    int n_useless = 0;
    bool abort = false;
@@ -752,7 +752,9 @@ if( !cliquesubstitutions.empty() )
       std::cout<<current_badge_end;
       
       assert(current_badge_end <= static_cast<int>(probing_cands.size()));
+      assert(current_badge_end >= 0);
       assert(current_badge_start >= 0 );
+      assert(current_badge_start <= current_badge_end );
       propagate_variables( current_badge_start, current_badge_end);
 
       if( PresolveMethod<REAL>::is_time_exceeded(
@@ -878,7 +880,7 @@ if( !cliquesubstitutions.empty() )
       badge_size = std::min( nprobingcands - current_badge_start, badge_size );
       if( max_badge_size > 0 )
          badge_size = std::min( max_badge_size, badge_size );
-      current_badge_end = current_badge_start + badge_size;
+      current_badge_end = std::max(current_badge_start + badge_size, 0);
 
       abort = n_useless >= consMatrix.getNnz() * 2 || working_limit < 0 ||
               current_badge_start == current_badge_end ||
