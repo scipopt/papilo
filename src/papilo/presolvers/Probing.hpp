@@ -852,7 +852,7 @@ if( !cliquesubstitutions.empty() )
           } );
 #endif
       nsubstitutions += substitutions.size();
-      current_badge_start = current_badge_end;
+      current_badge_start = std::max( 0, current_badge_end);
 
       if( nfixings == 0 && nboundchgs == 0 && nsubstitutions == 0 )
          n_useless += amountofwork;
