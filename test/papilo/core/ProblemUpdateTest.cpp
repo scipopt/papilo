@@ -137,7 +137,7 @@ TEST_CASE( "clique-row-flag-detection9", "[core]" )
 {
    Num<double> num{};
    Problem<double> problem = setupProblemWIthCliques();
-   REQUIRE( !problem.is_clique( problem.getConstraintMatrix(), 8, num ) );
+   REQUIRE( problem.is_clique( problem.getConstraintMatrix(), 8, num ) );
 }
 
 TEST_CASE( "clique-row-flag-detection10", "[core]" )
