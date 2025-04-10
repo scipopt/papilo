@@ -130,6 +130,48 @@ TEST_CASE( "clique-row-flag-detection8", "[core]" )
    REQUIRE( !problem.getRowFlags()[7].test( RowFlag::kClique ) );
 }
 
+TEST_CASE( "clique-row-flag-detection9", "[core]" )
+{
+   Num<double> num{};
+   Problem<double> problem = setupProblemWithProbing();
+   REQUIRE( !problem.getRowFlags()[0].test( RowFlag::kClique ) );
+}
+
+Problem<double>
+setupProblemWithProbing()
+{
+   // x + 2y<=1
+   // y + z + w <=1
+   Vec<double> coefficients{ 1.0, 1.0, 1.0, 1.0 };
+   Vec<double> upperBounds{ 1.0, 1.0, 1.0, 1.0 };
+   Vec<double> lowerBounds{ 0.0, 0.0, 0.0, 0.0 };
+   Vec<uint8_t> isIntegral{ 1, 1, 1, 1 };
+
+   Vec<double> rhs{ 1.0 };
+   Vec<std::string> rowNames{ "A1" };
+   Vec<std::string> columnNames{ "c1", "c2", "c3", "c4" };
+   Vec<std::tuple<int, int, double>> entries{
+       std::tuple<int, int, double>{ 0, 0, 1.0 },
+       std::tuple<int, int, double>{ 0, 1, 2.0 },
+   };
+
+   ProblemBuilder<double> pb;
+   pb.reserve( entries.size(), rowNames.size(), columnNames.size() );
+   pb.setNumRows( rowNames.size() );
+   pb.setNumCols( columnNames.size() );
+   pb.setColUbAll( upperBounds );
+   pb.setColLbAll( lowerBounds );
+   pb.setObjAll( coefficients );
+   pb.setObjOffset( 0.0 );
+   pb.setColIntegralAll( isIntegral );
+   pb.setRowRhsAll( rhs );
+   pb.addEntryAll( entries );
+   pb.setColNameAll( columnNames );
+   pb.setProblemName( "matrix for testing probing" );
+   Problem<double> problem = pb.build();
+   return problem;
+}
+
 
 Problem<double>
 setupProblemPresolveSingletonRow()
