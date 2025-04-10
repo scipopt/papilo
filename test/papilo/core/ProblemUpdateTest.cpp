@@ -81,63 +81,63 @@ TEST_CASE( "clique-row-flag-detection1", "[core]" )
 {
    Num<double> num{};
    Problem<double> problem = setupProblemWIthCliques();
-   REQUIRE( !problem.getRowFlags()[0].test( RowFlag::kClique ) );
+   REQUIRE( !problem.is_clique( problem.getConstraintMatrix(), 0, num )  );
 }
 
 TEST_CASE( "clique-row-flag-detection2", "[core]" )
 {
    Num<double> num{};
    Problem<double> problem = setupProblemWIthCliques();
-   REQUIRE( !problem.getRowFlags()[1].test( RowFlag::kClique ) );
+   REQUIRE( !problem.is_clique( problem.getConstraintMatrix(), 1, num ) );
 }
 
 TEST_CASE( "clique-row-flag-detection3", "[core]" )
 {
    Num<double> num{};
    Problem<double> problem = setupProblemWIthCliques();
-   REQUIRE( !problem.getRowFlags()[2].test( RowFlag::kClique ) );
+   REQUIRE( !problem.is_clique( problem.getConstraintMatrix(), 2, num ) );
 }
 
 TEST_CASE( "clique-row-flag-detection4", "[core]" )
 {
    Num<double> num{};
    Problem<double> problem = setupProblemWIthCliques();
-   REQUIRE( !problem.getRowFlags()[3].test( RowFlag::kClique ) );
+   REQUIRE( !problem.is_clique( problem.getConstraintMatrix(), 3, num ) );
 }
 
 TEST_CASE( "clique-row-flag-detection5", "[core]" )
 {
    Num<double> num{};
    Problem<double> problem = setupProblemWIthCliques();
-   REQUIRE( !problem.getRowFlags()[4].test( RowFlag::kClique ) );
+   REQUIRE( !problem.is_clique( problem.getConstraintMatrix(), 4, num ) );
 }
 
 TEST_CASE( "clique-row-flag-detection6", "[core]" )
 {
    Num<double> num{};
    Problem<double> problem = setupProblemWIthCliques();
-   REQUIRE( !problem.getRowFlags()[5].test( RowFlag::kClique ) );
+   REQUIRE( !problem.is_clique( problem.getConstraintMatrix(), 5, num ) );
 }
 
 TEST_CASE( "clique-row-flag-detection7", "[core]" )
 {
    Num<double> num{};
    Problem<double> problem = setupProblemWIthCliques();
-   REQUIRE( !problem.getRowFlags()[6].test( RowFlag::kClique ) );
+   REQUIRE( !problem.is_clique( problem.getConstraintMatrix(), 6, num ) );
 }
 
 TEST_CASE( "clique-row-flag-detection8", "[core]" )
 {
    Num<double> num{};
    Problem<double> problem = setupProblemWIthCliques();
-   REQUIRE( !problem.getRowFlags()[7].test( RowFlag::kClique ) );
+   REQUIRE( problem.is_clique( problem.getConstraintMatrix(), 7, num ) );
 }
 
 TEST_CASE( "clique-row-flag-detection9", "[core]" )
 {
    Num<double> num{};
    Problem<double> problem = setupProblemWithProbing();
-   REQUIRE( !problem.getRowFlags()[0].test( RowFlag::kClique ) );
+   REQUIRE( !problem.is_clique( problem.getConstraintMatrix(), 0, num ) );
 }
 
 Problem<double>
