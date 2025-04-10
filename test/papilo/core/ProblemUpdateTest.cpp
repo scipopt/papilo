@@ -39,6 +39,9 @@ setupProblemPresolveSingletonRowFixed();
 Problem<double>
 setupProblemWIthCliques();
 
+Problem<double>
+setupProblemWithProbing();
+
 TEST_CASE( "trivial-presolve-singleton-row", "[core]" )
 {
    Num<double> num{};
