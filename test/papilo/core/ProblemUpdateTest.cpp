@@ -130,10 +130,17 @@ TEST_CASE( "clique-row-flag-detection8", "[core]" )
 {
    Num<double> num{};
    Problem<double> problem = setupProblemWIthCliques();
-   REQUIRE( problem.is_clique( problem.getConstraintMatrix(), 7, num ) );
+   REQUIRE( !problem.is_clique( problem.getConstraintMatrix(), 7, num ) );
 }
 
 TEST_CASE( "clique-row-flag-detection9", "[core]" )
+{
+   Num<double> num{};
+   Problem<double> problem = setupProblemWIthCliques();
+   REQUIRE( !problem.is_clique( problem.getConstraintMatrix(), 8, num ) );
+}
+
+TEST_CASE( "clique-row-flag-detection10", "[core]" )
 {
    Num<double> num{};
    Problem<double> problem = setupProblemWithProbing();
@@ -294,9 +301,9 @@ setupProblemWIthCliques()
        std::tuple<int, int, double>{ 7, 2, 6.0 },
        std::tuple<int, int, double>{ 7, 5, 5.0 },
        // Eigth Row is not a Clique, no SOS1
-       std::tuple<int, int, double>{ 7, 0, 1.0 },
-       std::tuple<int, int, double>{ 7, 1, 1.0 },
-       std::tuple<int, int, double>{ 7, 6, 1.0 },
+       std::tuple<int, int, double>{ 8, 0, 1.0 },
+       std::tuple<int, int, double>{ 8, 1, 1.0 },
+       std::tuple<int, int, double>{ 8, 6, 1.0 },
        // Ninth Row is a clique, no SOS1
    };
 

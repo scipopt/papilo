@@ -89,6 +89,7 @@ set(unit_tests
         "clique-row-flag-detection7"
         "clique-row-flag-detection8"
         "clique-row-flag-detection9"
+        "clique-row-flag-detection10"
 
         "problem-comparisons"
 
