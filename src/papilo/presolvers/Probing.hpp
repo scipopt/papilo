@@ -173,7 +173,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
       if( problem.is_clique( consMatrix, row, num ) )
       {
          cliques.emplace_back( row, 0 );
-         std::cout<<"\nFound Clique\n";
+         //std::cout<<"\nFound Clique\n";
       }
    }
 
@@ -465,8 +465,8 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
 
    propagate_variables( cliquevarsstart, cliquevarsend );
    //msg.info( "Finished clique Probing\n");
-   std::cout<<("\nCutting off this many variables: ");
-   std::cout<<(static_cast<int>(probing_cands.size())-clique_cutoff_ub-1);
+   /*std::cout<<("\nCutting off this many variables: ");
+   std::cout<<(static_cast<int>(probing_cands.size())-clique_cutoff_ub-1);*/
    probing_cands.resize(clique_cutoff_ub+1);
    //msg.info( "\nCutting off this many variables: ");
    //msg.info( static_cast<int>(probing_cands.size())-clique_cutoff_lb );
@@ -751,10 +751,10 @@ if( !cliquesubstitutions.empty() )
 #endif
       };
 
-      std::cout<<"\nProbing\n";
+      /*std::cout<<"\nProbing\n";
       std::cout<<current_badge_start;
       std::cout<<"\n";
-      std::cout<<current_badge_end;
+      std::cout<<current_badge_end;*/
       
       assert(current_badge_end <= static_cast<int>(probing_cands.size()));
       assert(current_badge_end >= 0);
