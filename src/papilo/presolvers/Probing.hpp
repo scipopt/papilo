@@ -325,12 +325,13 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
    } );
    
    //msg.info( "Sorted cliques\n");
-   const int maxprobedcliques = max_badge_size / 4;
+   const int max_probed_cliques = 250;
+   const int max_probed_clique_vars = 1000;
    int cliquevars = 0;
    Vec<bool> probedCliqueVars(ncols, false);
    Vec<int> probingCliques;
    probingCliques.reserve( cliques.end() - cliques.begin() );
-   for( int clique = 0; clique < std::min( static_cast<int>(cliques.end() - cliques.begin()),  maxprobedcliques); ++clique )
+   for( int clique = 0; clique < std::min( static_cast<int>(cliques.end() - cliques.begin()),  max_probed_cliques); ++clique )
    {
       auto rowvec = consMatrix.getRowCoefficients( cliques[clique].first );
       auto rowinds = rowvec.getIndices();
@@ -353,7 +354,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
             }
          }
       }
-      if( cliquevars > maxinitialbadgesize)
+      if( cliquevars > max_probed_clique_vars)
       {
          break;
       }
