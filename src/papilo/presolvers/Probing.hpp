@@ -567,6 +567,16 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
 #endif
 PresolveStatus result = PresolveStatus::kUnchanged;
 
+std::cout<<"\n\nClique Probing on ";
+   std::cout<<static_cast<int>(probingCliques.size());
+   std::cout<<" Cliques with ";
+   std::cout<< ncliquevars;
+   std::cout<<" Variables led to ";
+   std::cout<<static_cast<int>(cliqueBoundChanges.size());
+   std::cout<<" Bound Changes and ";
+   std::cout<<static_cast<int>(cliquesubstitutions.size());
+   std::cout<<" Substitutions.\n";
+
 //msg.info("Combined\n");
 
 //msg.info("Boundchanges\n");
@@ -623,15 +633,6 @@ if( !cliquesubstitutions.empty() )
 
    result = PresolveStatus::kReduced;
 }   //msg.info("subs finished\n");
-   std::cout<<"\n\nClique Probing on ";
-   std::cout<<static_cast<int>(probingCliques.size());
-   std::cout<<" Cliques with ";
-   std::cout<< ncliquevars;
-   std::cout<<" Variables led to ";
-   std::cout<<static_cast<int>(cliqueBoundChanges.size());
-   std::cout<<" Bound Changes and ";
-   std::cout<<static_cast<int>(cliquesubstitutions.size());
-   std::cout<<" Substitutions.\n";
 
    const Vec<int>& rowsize = consMatrix.getRowSizes();
 
