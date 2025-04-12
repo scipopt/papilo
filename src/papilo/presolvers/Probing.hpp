@@ -171,7 +171,10 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
    for( int row = 0; row != nrows; ++row )
    {
       if( problem.is_clique( consMatrix, row, num ) )
+      {
          cliques.emplace_back( row, 0 );
+         std::cout<<"\nFound Clique\n"
+      }
    }
 
    for( int i = 0; i != ncols; ++i )
