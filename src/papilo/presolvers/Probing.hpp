@@ -325,7 +325,8 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
    } );
    
    //msg.info( "Sorted cliques\n");
-   const int maxprobedcliques = 50;
+   const int maxprobedcliques = max_badge_size / 4;
+   int cliquevars = 0;
    Vec<bool> probedCliqueVars(ncols, false);
    Vec<int> probingCliques;
    probingCliques.reserve( cliques.end() - cliques.begin() );
@@ -343,10 +344,18 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
       {
          probingCliques.emplace_back( cliques[clique].first );
          for( int ind = 0; ind < rowvec.getLength(); ++ind )
-         {
-            probedCliqueVars[rowinds[ind]] = true;
-            probing_scores[rowinds[ind]] = -2;
+         {  
+            if( !probedCliqueVars[rowinds[ind]] )
+            {
+               probedCliqueVars[rowinds[ind]] = true;
+               cliquevars += 1;
+               probing_scores[rowinds[ind]] = -2;
+            }
          }
+      }
+      if( cliquevars > maxinitialbadgesize)
+      {
+         break;
       }
    }
 
