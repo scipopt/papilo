@@ -386,14 +386,6 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
    {
       while (clique_cutoff_ub - clique_cutoff_lb > 1 )
       {  
-         std::cout<<"\n";
-         std::cout<<clique_cutoff_ub;
-         std::cout<<"\n";
-         std::cout<<probing_scores[probing_cands[clique_cutoff_ub]];
-         std::cout<<"\n";
-         std::cout<<clique_cutoff_lb;
-         std::cout<<"\n";
-         std::cout<<probing_scores[probing_cands[clique_cutoff_lb]];
          if( probing_scores[probing_cands[ ( clique_cutoff_ub + clique_cutoff_lb ) / 2 ]] >= 0 )
          {
             clique_cutoff_lb = ( clique_cutoff_ub + clique_cutoff_lb ) / 2;
@@ -402,15 +394,6 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
          {
             clique_cutoff_ub = ( clique_cutoff_ub + clique_cutoff_lb ) / 2;
          }
-         std::cout<<"\n";
-         std::cout<<clique_cutoff_ub;
-         std::cout<<"\n";
-         std::cout<<probing_scores[probing_cands[clique_cutoff_ub]];
-         std::cout<<"\n";
-         std::cout<<clique_cutoff_lb;
-         std::cout<<"\n";
-         std::cout<<probing_scores[probing_cands[clique_cutoff_lb]];
-         std::cout<<"\n";
       }
    }
 
@@ -483,8 +466,8 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
    propagate_variables( cliquevarsstart, cliquevarsend );
    //msg.info( "Finished clique Probing\n");
    std::cout<<("\nCutting off this many variables: ");
-   std::cout<<(static_cast<int>(probing_cands.size())-clique_cutoff_lb);
-   probing_cands.resize(clique_cutoff_lb);
+   std::cout<<(static_cast<int>(probing_cands.size())-clique_cutoff_ub+1);
+   probing_cands.resize(clique_cutoff_ub+1);
    //msg.info( "\nCutting off this many variables: ");
    //msg.info( static_cast<int>(probing_cands.size())-clique_cutoff_lb );
    //msg.info("\nresized\n");
