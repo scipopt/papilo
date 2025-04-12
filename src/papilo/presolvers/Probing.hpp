@@ -629,7 +629,7 @@ if( !cliquesubstitutions.empty() )
    std::cout<< ncliquevars;
    std::cout<<" Variables led to ";
    std::cout<<static_cast<int>(cliqueBoundChanges.size());
-   std::cout<<"Bound Changes and ";
+   std::cout<<" Bound Changes and ";
    std::cout<<static_cast<int>(cliquesubstitutions.size());
    std::cout<<" Substitutions.\n";
 
