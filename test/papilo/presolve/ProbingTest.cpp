@@ -36,6 +36,9 @@ setupProblemWithProbing();
 Problem<double>
 setupProblemWithProbingWithNoBinary();
 
+Problem<double>
+setupProblemWithCliqueProbing();
+
 TEST_CASE( "happy-path-probing", "[presolve]" )
 {
    Num<double> num{};
@@ -113,7 +116,7 @@ TEST_CASE( "clique-probing-1", "[presolve]" )
    PresolveStatus presolveStatus =
        presolvingMethod.execute( problem, problemUpdate, num, reductions, t, cause );
 
-    for( int i = 0; i < reductions.size(); ++i )
+    for( int i = 0; i < static_cast<int>(reductions.size()); ++i )
     {
         std::cout<<"\n";
         std::cout<<reductions.getReduction(i).col;
