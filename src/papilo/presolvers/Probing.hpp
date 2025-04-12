@@ -467,6 +467,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
    //msg.info( "Finished clique Probing\n");
    /*std::cout<<("\nCutting off this many variables: ");
    std::cout<<(static_cast<int>(probing_cands.size())-clique_cutoff_ub-1);*/
+   int ncliquevars = static_cast<int>(probing_cands.size())-clique_cutoff_ub-1;
    probing_cands.resize(clique_cutoff_ub+1);
    //msg.info( "\nCutting off this many variables: ");
    //msg.info( static_cast<int>(probing_cands.size())-clique_cutoff_lb );
@@ -622,7 +623,16 @@ if( !cliquesubstitutions.empty() )
 
    result = PresolveStatus::kReduced;
 }   //msg.info("subs finished\n");
-   
+   std::cout<<"\n\nClique Probing on ";
+   std::cout<<static_cast<int>(probingCliques.size());
+   std::cout<<" Cliques with ";
+   std::cout<< ncliquevars;
+   std::cout<<" Variables led to ";
+   std::cout<<static_cast<int>(cliqueBoundChanges.size());
+   std::cout<<"Bound Changes and ";
+   std::cout<<static_cast<int>(cliquesubstitutions.size());
+   std::cout<<" Substitutions.\n";
+
    const Vec<int>& rowsize = consMatrix.getRowSizes();
 
    int current_badge_start = 0;
