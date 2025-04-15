@@ -481,6 +481,9 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
    //msg.info( "\nCutting off this many variables: ");
    //msg.info( static_cast<int>(probing_cands.size())-clique_cutoff_lb );
    //msg.info("\nresized\n");
+   int ncliquefixings = 0;
+   int ncliqueboundchgs = 0;
+   int ncliquesubstitutions = -cliquesubstitutions.size();
 
 
 #ifdef PAPILO_TBB
@@ -521,9 +524,9 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
                          boundChg.bound == lower_bounds[boundChg.col] ) ||
                        ( !boundChg.upper &&
                          boundChg.bound == upper_bounds[boundChg.col] ) )
-                      ++nfixings;
+                      ++ncliquefixings;
                    else
-                      ++nboundchgs;
+                      ++ncliqueboundchgs;
                 }
                 else
                 {
@@ -538,7 +541,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
 
                       // check if column is now fixed
                       if( boundChg.bound == lower_bounds[boundChg.col] )
-                         ++nfixings;
+                         ++ncliquefixings;
 
                       if( problemUpdate.getPresolveOptions()
                               .verification_with_VeriPB )
@@ -555,7 +558,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
 
                       // check if column is now fixed
                       if( boundChg.bound == upper_bounds[boundChg.col] )
-                         ++nfixings;
+                         ++ncliquefixings;
                    }
 
                    // do only count fixings in this case for two reasons:
@@ -570,6 +573,8 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
 #ifdef PAPILO_TBB
           } );
 #endif
+ncliquesubstitutions += cliquesubstitutions.size();
+
 PresolveStatus result = PresolveStatus::kUnchanged;
 
 std::cout<<"\n\nClique Probing on ";
@@ -577,9 +582,15 @@ std::cout<<"\n\nClique Probing on ";
    std::cout<<" Cliques with ";
    std::cout<< ncliquevars;
    std::cout<<" Variables led to ";
+   std::cout<<ncliquefixings;
+   std::cout<<" fixings ";
    std::cout<<static_cast<int>(cliqueBoundChanges.size());
+   std::cout<<" ";
+   std::cout<<ncliqueboundchgs;
    std::cout<<" Bound Changes and ";
    std::cout<<static_cast<int>(cliquesubstitutions.size());
+   std::cout<<" ";
+   std::cout<<ncliquesubstitutions;
    std::cout<<" Substitutions.\n";
 
 //msg.info("Combined\n");
@@ -627,7 +638,7 @@ if( !cliquesubstitutions.empty() )
 
    for( const CliqueProbingSubstitution<REAL>& subst : cliquesubstitutions )
    {
-      std::cout<<"\nSubstitution!\n"
+      std::cout<<"\nSubstitution!\n";
       if( subst.col1 == lastsubstcol )
          continue;
 
