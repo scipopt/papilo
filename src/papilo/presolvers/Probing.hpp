@@ -325,13 +325,12 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
    } );
    
    //msg.info( "Sorted cliques\n");
-   const int max_probed_cliques = 10000;
-   const int max_probed_clique_vars = 100000;
+   const int max_probed_clique_vars = 2 * maxinitialbadgesize;
    int cliquevars = 0;
    Vec<bool> probedCliqueVars(ncols, false);
    Vec<int> probingCliques;
    probingCliques.reserve( cliques.end() - cliques.begin() );
-   for( int clique = 0; clique < std::min( static_cast<int>(cliques.end() - cliques.begin()),  max_probed_cliques); ++clique )
+   for( int clique = 0; clique < static_cast<int>(cliques.end() - cliques.begin()); ++clique )
    {
       auto rowvec = consMatrix.getRowCoefficients( cliques[clique].first );
       auto rowinds = rowvec.getIndices();
@@ -482,10 +481,6 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
    //msg.info( "\nCutting off this many variables: ");
    //msg.info( static_cast<int>(probing_cands.size())-clique_cutoff_lb );
    //msg.info("\nresized\n");
-   int64_t amountofwork = 0;
-   int nfixings = 0;
-   int nboundchgs = 0;
-   int nsubstitutions = -cliquesubstitutions.size();
 
 
 #ifdef PAPILO_TBB
@@ -632,6 +627,7 @@ if( !cliquesubstitutions.empty() )
 
    for( const CliqueProbingSubstitution<REAL>& subst : cliquesubstitutions )
    {
+      std::cout<<"\nSubstitution!\n"
       if( subst.col1 == lastsubstcol )
          continue;
 
@@ -692,7 +688,10 @@ if( !cliquesubstitutions.empty() )
    Vec<int> boundPos( size_t( 2 * ncols ), 0 );
    Vec<ProbingBoundChg<REAL>> boundChanges;
    boundChanges.reserve( ncols );
-
+   int64_t amountofwork = 0;
+   int nfixings = 0;
+   int nboundchgs = 0;
+   int nsubstitutions = -substitutions.size();
 
    // use tbb combinable so that each thread will copy the activities and
    // bounds at most once
