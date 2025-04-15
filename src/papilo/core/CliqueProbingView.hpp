@@ -710,10 +710,10 @@ CliqueProbingView<REAL>::analyzeImplications()
       {
          substitutions.emplace_back(
             CliqueProbingSubstitution<REAL>( binary_inds[ind], 1.0, ub_implications[ind].second, 0.0 ) );
-            /*std::cout<<"\nSubstitution: ";
+         std::cout<<"\nSubstitution: ";
          std::cout<<binary_inds[ind];
          std::cout<<" ";
-         std::cout<<ub_implications[ind].second;*/
+         std::cout<<ub_implications[ind].second;
       }
       else if( ub_implications[ind].first == cliquelen - 1 - static_cast<int>(fix_to_zero.size()) 
           && lb_implications[ind].first == 1 )
