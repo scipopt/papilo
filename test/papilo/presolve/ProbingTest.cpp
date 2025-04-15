@@ -39,6 +39,9 @@ setupProblemWithProbingWithNoBinary();
 Problem<double>
 setupProblemWithCliqueProbing();
 
+Problem<double>
+setupProblemWithCliqueProbingSubstitution();
+
 TEST_CASE( "happy-path-probing", "[presolve]" )
 {
    Num<double> num{};
@@ -140,6 +143,48 @@ TEST_CASE( "clique-probing-1", "[presolve]" )
    REQUIRE( reductions.getReduction( 2 ).col == 1 );
    REQUIRE( reductions.getReduction( 2 ).row == papilo::ColReduction::NONE );
    REQUIRE( reductions.getReduction( 2 ).newval == 0 );
+}
+
+
+TEST_CASE( "clique-probing-2", "[presolve]" )
+{
+   Num<double> num{};
+   double time = 0.0;
+   int cause = -1;
+   Timer t{ time };
+   Message msg{};
+   Problem<double> problem = setupProblemWithCliqueProbingSubstitution();
+   Statistics statistics{};
+   PresolveOptions presolveOptions{};
+   presolveOptions.dualreds = 0;
+   PostsolveStorage<double> postsolve =
+       PostsolveStorage<double>( problem, num, presolveOptions );
+   ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
+                                        presolveOptions, num, msg );
+   Probing<double> presolvingMethod{};
+   Reductions<double> reductions{};
+   problem.recomputeAllActivities();
+
+   PresolveStatus presolveStatus =
+       presolvingMethod.execute( problem, problemUpdate, num, reductions, t, cause );
+    std::cout<<"\nTESTRESULTS:\n";
+    for( int i = 0; i < static_cast<int>(reductions.size()); ++i )
+    {
+        std::cout<<"\n";
+        std::cout<<reductions.getReduction(i).col;
+        std::cout<<"\n";
+        std::cout<<reductions.getReduction(i).row;
+        std::cout<<"\n";
+        std::cout<<reductions.getReduction(i).newval;
+    }
+
+   REQUIRE( presolveStatus == PresolveStatus::kReduced );
+   REQUIRE( reductions.size() == 3 );
+
+   REQUIRE( reductions.getReduction( 0 ).col == 4 );
+   REQUIRE( reductions.getReduction( 0 ).row == papilo::ColReduction::REPLACE );
+   REQUIRE( reductions.getReduction( 0 ).newval == 1 );
+
 }
 
 Problem<double>
@@ -258,6 +303,65 @@ setupProblemWithCliqueProbing()
    pb.addEntryAll( entries );
    pb.setColNameAll( columnNames );
    pb.setProblemName( "matrix for testing clique probing" );
+   Problem<double> problem = pb.build();
+   return problem;
+}
+
+Problem<double>
+setupProblemWithCliqueProbingSubstitution()
+{
+   // x1 + x2 + x3 + x4 + x5 <= 1
+   // x1 - x6 = 0
+   // x2 + x7 = 1
+   // x3 - x10 = 0
+   // x4 - x8 = 0
+   // x5 + x9 = 1
+   Vec<double> coefficients{ 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 };
+   Vec<double> upperBounds{ 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 };
+   Vec<double> lowerBounds{ 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 };
+   Vec<uint8_t> isIntegral{ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
+
+   Vec<double> rhs{ 1.0, 0.0, 1.0, 0.0, 0.0, 1.0 };
+   Vec<double> lhs{ 0.0, 0.0, 1.0, 0.0, 0.0, 1.0 };
+   Vec<std::string> rowNames{ "A1", "A2", "A3", "A4", "A5", "A6" };
+   Vec<std::string> columnNames{ "c1", "c2", "c3", "c4", "c5", "c6", "c7", "c8", "c9", "c10" };
+   Vec<std::tuple<int, int, double>> entries{
+       std::tuple<int, int, double>{ 0, 0, 1.0 },
+       std::tuple<int, int, double>{ 0, 1, 1.0 },
+       std::tuple<int, int, double>{ 0, 2, 1.0 },
+       std::tuple<int, int, double>{ 0, 3, 1.0 },
+       std::tuple<int, int, double>{ 0, 4, 1.0 },
+
+       std::tuple<int, int, double>{ 1, 0, 1.0 },
+       std::tuple<int, int, double>{ 1, 5, -1.0 },
+
+       std::tuple<int, int, double>{ 2, 1, 1.0 },
+       std::tuple<int, int, double>{ 2, 6, 1.0 },
+
+       std::tuple<int, int, double>{ 3, 2, 1.0 },
+       std::tuple<int, int, double>{ 3, 9, -1.0 },
+
+       std::tuple<int, int, double>{ 4, 3, 1.0 },
+       std::tuple<int, int, double>{ 4, 7, -1.0 },
+
+       std::tuple<int, int, double>{ 5, 4, 1.0 },
+       std::tuple<int, int, double>{ 5, 8, 1.0 },
+   };
+
+   ProblemBuilder<double> pb;
+   pb.reserve( entries.size(), rowNames.size(), columnNames.size() );
+   pb.setNumRows( rowNames.size() );
+   pb.setNumCols( columnNames.size() );
+   pb.setColUbAll( upperBounds );
+   pb.setColLbAll( lowerBounds );
+   pb.setObjAll( coefficients );
+   pb.setObjOffset( 0.0 );
+   pb.setColIntegralAll( isIntegral );
+   pb.setRowRhsAll( rhs );
+   pb.setRowLhsAll( lhs );
+   pb.addEntryAll( entries );
+   pb.setColNameAll( columnNames );
+   pb.setProblemName( "matrix for testing clique probing substitutions" );
    Problem<double> problem = pb.build();
    return problem;
 }
