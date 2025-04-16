@@ -2,6 +2,11 @@
 
 @section RN250 PaPILO 3.0.0
 
+License changes
+---------------
+
+- The license of PaPILO has changed to the Apache License 2.0.
+
 Interface changes
 -----------------
 
