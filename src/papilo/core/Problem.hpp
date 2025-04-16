@@ -452,7 +452,6 @@ bool is_rhs_clique(const ConstraintMatrix<REAL>& matrix, int row, const Num<REAL
    if( rowvec.getLength() <= 1 || rowFlag.test( RowFlag::kRedundant ))
       return false;
    REAL minvalue = std::numeric_limits<REAL>::infinity();
-   REAL maxvalue = -std::numeric_limits<REAL>::infinity();
    for( int j = 0; j < rowvec.getLength(); ++j )
    {
       int col = rowvec.getIndices()[j];
