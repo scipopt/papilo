@@ -272,9 +272,6 @@ class CliqueProbingView
    void
    changeUb( int col, REAL newub );
 
-   void
-   storeImplications();
-
    bool
    analyzeImplications();
 
