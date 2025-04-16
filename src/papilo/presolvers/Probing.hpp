@@ -425,9 +425,11 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
           cliqueProbingView.setMinContDomRed( mincontdomred );
           return cliqueProbingView;
        } );
+   tbb::combinable<Vec<int>> change_to_equation;
 #else
    CliqueProbingView<REAL> cliqueProbingView( problem, num );
    cliqueProbingView.setMinContDomRed( mincontdomred );
+   Vec<int> change_to_equation;
 #endif
    int cliquevarsstart = 0;
    int cliquevarsend = static_cast<int>(probingCliques.size());
@@ -453,7 +455,10 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
                //msg.info( cliqueind[i]);
                //msg.info( " ");
             }
-            bool globalInfeasible = cliqueProbingView.probeClique(clique, cliqueind, cliquelen, probing_cands );
+            std::pair<bool,bool> cliqueProbingResult = cliqueProbingView.probeClique(clique, cliqueind, cliquelen, probing_cands ); 
+            bool globalInfeasible = cliqueProbingResult.first;
+            if( cliqueProbingResult.second )
+               fix_to_equation.local().emplace_back( clique );
             //msg.info("Probed Clique\n");
             if( !globalInfeasible )
                globalInfeasible = cliqueProbingView.analyzeImplications();
@@ -484,6 +489,30 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
    int ncliquefixings = 0;
    int ncliqueboundchgs = 0;
    int ncliquesubstitutions = -cliquesubstitutions.size();
+
+#ifdef PAPILO_TBB
+   Vec<int> fix_to_equation_comb = fix_to_equation.combine(
+      [](const Vec<int>& a, const Vec<int>& b) {
+      Vec<int> result = a;
+      result.insert(result.end(), b.begin(), b.end() );
+      return result;
+   } );
+   for( int i = 0; i < static_cast<int>(fix_to_equation_comb); ++i )
+   {
+      if( is_rhs_clique( matrix, fix_to_equation_comb[i], num ) )
+         reductions.change_row_lhs_parallel( fix_to_equation_comb[i],  rhs[fix_to_equation_comb[i]] );
+      else
+         reductions.change_row_rhs_parallel( fix_to_equation_comb[i],  lhs[fix_to_equation_comb[i]] );
+   }
+#else
+   for( int i = 0; i < static_cast<int>(fix_to_equation); ++i )
+   {
+      if( is_rhs_clique( matrix, fix_to_equation[i], num ) )
+         reductions.change_row_lhs_parallel( fix_to_equation[i],  rhs[fix_to_equation[i]] );
+      else
+         reductions.change_row_rhs_parallel( fix_to_equation[i],  lhs[fix_to_equation[i]] );
+}
+#endif
 
 
 #ifdef PAPILO_TBB

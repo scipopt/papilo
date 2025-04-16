@@ -88,7 +88,7 @@ class CliqueProbingView
    void
    reset();
 
-   bool
+   std::pair<bool,bool>
    probeClique( const int clique, const int*& indices, const int len, const Vec<int>& binary_inds)
    {  
       
@@ -113,6 +113,34 @@ class CliqueProbingView
         ub_implications.emplace_back( std::pair<int,int> {0,-1} );
       } 
       //msg.info( "Initialized substitution counters.\n");
+
+      for( int i = 0; i < cliquelen; ++i )
+      {
+         changeUb( cliqueind[i], 0.0 );  
+      }
+      probingCol = cliqueind[0];
+      cliqueEquation = false;
+      propagateDomains();
+      if( isInfeasible() )
+         cliqueEquation = true;
+      else
+      {
+         //msg.info("Initializing\n");
+         for( int var = 0; var != static_cast<int>(probing_lower_bounds.size()); ++var )
+         {
+            if( num.isGT(probing_lower_bounds[var], problem.getLowerBounds()[var]) )
+            {
+               changed_clique_lbs_inds_vals.emplace_back(std::pair<int,int>{var, probing_lower_bounds[var]});
+            }
+            if( num.isLT(probing_upper_bounds[var], problem.getUpperBounds()[var]) )
+            {
+               changed_clique_ubs_inds_vals.emplace_back(std::pair<int,int> {var, probing_upper_bounds[var]});
+            }
+         }
+         initbounds = true;
+         //msg.info("Initialized\n");
+      }
+      reset();
 
       for( int i = 0; i < cliquelen; ++i )
       {
@@ -198,7 +226,7 @@ class CliqueProbingView
         reset();
         //msg.info( "Reset probing col.\n");
       }
-      return( fix_to_zero.end() - fix_to_zero.begin() == cliquelen );
+      return { fix_to_zero.end() - fix_to_zero.begin() == cliquelen, cliqueEquation } ;
    }
 
    void
@@ -227,6 +255,7 @@ class CliqueProbingView
     cliqueind.clear();
     probingClique = -1;
     cliquelen = -1;
+    cliqueEquation = false;
    }
 
    void
@@ -350,6 +379,7 @@ class CliqueProbingView
    bool probingValue;
    Vec<int> cliqueind;
    int cliquelen;
+   bool cliqueEquation;
 
    // datastructures for storing result of probing on one value
    Vec<CliqueProbingBoundChg<REAL>> otherValueImplications;
@@ -668,7 +698,7 @@ CliqueProbingView<REAL>::analyzeImplications()
    //const auto& orig_lbs = problem.getLowerBounds();
    //const Vec<ColFlags>& orig_domain_flags = problem.getColFlags();
    //msg.info( "Analyzing Implications\n");
-   if( fix_to_zero.end() - fix_to_zero.begin() == cliquelen )
+   if( fix_to_zero.end() - fix_to_zero.begin() == cliquelen && cliqueEquation )
    {
       std::cout<<"\nInfeasible.";
       return true;
