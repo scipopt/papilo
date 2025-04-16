@@ -458,7 +458,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
             std::pair<bool,bool> cliqueProbingResult = cliqueProbingView.probeClique(clique, cliqueind, cliquelen, probing_cands ); 
             bool globalInfeasible = cliqueProbingResult.first;
             if( cliqueProbingResult.second )
-               fix_to_equation.local().emplace_back( clique );
+               change_to_equation.local().emplace_back( clique );
             //msg.info("Probed Clique\n");
             if( !globalInfeasible )
                globalInfeasible = cliqueProbingView.analyzeImplications();
@@ -491,26 +491,26 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
    int ncliquesubstitutions = -cliquesubstitutions.size();
 
 #ifdef PAPILO_TBB
-   Vec<int> fix_to_equation_comb = fix_to_equation.combine(
+   Vec<int> change_to_equation_comb = change_to_equation.combine(
       [](const Vec<int>& a, const Vec<int>& b) {
       Vec<int> result = a;
       result.insert(result.end(), b.begin(), b.end() );
       return result;
    } );
-   for( int i = 0; i < static_cast<int>(fix_to_equation_comb); ++i )
+   for( int i = 0; i < static_cast<int>(change_to_equation_comb); ++i )
    {
-      if( problem.is_rhs_clique( matrix, fix_to_equation_comb[i], num ) )
-         reductions.change_row_lhs_parallel( fix_to_equation_comb[i],  rhs[fix_to_equation_comb[i]] );
+      if( problem.is_rhs_clique( matrix, change_to_equation_comb[i], num ) )
+         reductions.change_row_lhs_parallel( change_to_equation_comb[i],  rhs[change_to_equation_comb[i]] );
       else
-         reductions.change_row_rhs_parallel( fix_to_equation_comb[i],  lhs[fix_to_equation_comb[i]] );
+         reductions.change_row_rhs_parallel( change_to_equation_comb[i],  lhs[change_to_equation_comb[i]] );
    }
 #else
-   for( int i = 0; i < static_cast<int>(fix_to_equation); ++i )
+   for( int i = 0; i < static_cast<int>(change_to_equation); ++i )
    {
-      if( problem.is_rhs_clique( matrix, fix_to_equation[i], num ) )
-         reductions.change_row_lhs_parallel( fix_to_equation[i],  rhs[fix_to_equation[i]] );
+      if( problem.is_rhs_clique( matrix, change_to_equation[i], num ) )
+         reductions.change_row_lhs_parallel( change_to_equation[i],  rhs[change_to_equation[i]] );
       else
-         reductions.change_row_rhs_parallel( fix_to_equation[i],  lhs[fix_to_equation[i]] );
+         reductions.change_row_rhs_parallel( change_to_equation[i],  lhs[change_to_equation[i]] );
 }
 #endif
 
