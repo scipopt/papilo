@@ -458,7 +458,13 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
             std::pair<bool,bool> cliqueProbingResult = cliqueProbingView.probeClique(clique, cliqueind, cliquelen, probing_cands ); 
             bool globalInfeasible = cliqueProbingResult.first;
             if( cliqueProbingResult.second )
+            {
+#ifdef PAPILO_TBB
                change_to_equation.local().emplace_back( clique );
+#else
+               change_to_equation.emplace_back( clique );
+#endif
+            }
             //msg.info("Probed Clique\n");
             if( !globalInfeasible )
                globalInfeasible = cliqueProbingView.analyzeImplications();
