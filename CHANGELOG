@@ -40,23 +40,28 @@ Fixed bugs
 
 @page RN24 Release notes for PAPILO 2.4
 
+@section RN243 PaPILO 2.4.3
+
+Fixed bugs
+----------
+
+Build system
+------------
+
+
 @section RN242 PaPILO 2.4.2
 
 Fixed bugs
 ----------
 
-- SCIP: Provide implied integrality when setting up component problem
-- Highs: Enforce integrality of enforced binary and integer variables
-- Gurobi: Declare implied integral variable with binary bounds binary
+- SCIP interface: Provide implied integrality when setting up component problem
+- HiGHS interface: Enforce integrality of variables that are marked as both integral and implicit integral
+- Gurobi interface: Declare implied integral variable with binary bounds to be binary
 
 Build system
 ------------
 
 - use CMake CONFIG mode for linking SoPlex, SCIP, and HiGHS
-
-Miscellaneous
--------------
-
 
 @section RN241 PaPILO 2.4.1
 
