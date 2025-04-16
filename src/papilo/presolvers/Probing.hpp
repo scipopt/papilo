@@ -473,6 +473,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
                    {
                       infeasible.store( true, std::memory_order_relaxed );
                       infeasible_variable.store( cliqueind[0] );
+                      std::cout<<"\nClique Probing detected infeasibility.\n";
                       break;
                    }
             cliqueProbingView.resetClique();
