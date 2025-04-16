@@ -446,7 +446,6 @@ bool is_rhs_clique(const ConstraintMatrix<REAL>& matrix, int row, const Num<REAL
 {
    RowFlags rowFlag = matrix.getRowFlags()[row];
    bool SOS1 = false;
-   bool equation = false;
    if( rowFlag.test( RowFlag::kRhsInf ) )
       return false;
    auto rowvec = matrix.getRowCoefficients( row );
