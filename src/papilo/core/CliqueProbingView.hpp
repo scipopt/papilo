@@ -122,7 +122,10 @@ class CliqueProbingView
       cliqueEquation = false;
       propagateDomains();
       if( isInfeasible() )
+      {
+         std::cout<<"\nDetected clique equation.\n";
          cliqueEquation = true;
+      }
       else
       {
          //msg.info("Initializing\n");
@@ -154,6 +157,7 @@ class CliqueProbingView
       //msg.info( "Checking for infeasibility\n");
         if( isInfeasible() )
         {
+            std::cout<<"\nInfeasible one assignment, fixing to zero.\n";
             fix_to_zero.emplace_back(probingCol);
             //msg.info( "1 is infeasible, added to fix_to_zero and skipped everything else.\n");
             reset();
@@ -280,7 +284,6 @@ class CliqueProbingView
    bool
    isInfeasible() const
    {
-      std::cout<<"\nInfeasibility due to propagationn\n";
       return infeasible;
    }
 
@@ -656,41 +659,6 @@ CliqueProbingView<REAL>::changeUb( int col, REAL newub )
        true );
 }
 
-template <typename REAL>
-void
-CliqueProbingView<REAL>::storeImplications()
-{
-   otherValueInfeasible = isInfeasible();
-
-   if( otherValueInfeasible )
-      return;
-
-   otherValueImplications.clear();
-   otherValueImplications.reserve( changed_lbs.size() + changed_ubs.size() -
-                                   1 );
-
-   for( int c : changed_lbs )
-   {
-      int col = c < 0 ? -c - 1 : c;
-
-      if( col == probingCol )
-         continue;
-
-      otherValueImplications.emplace_back(
-          CliqueProbingBoundChg<REAL>( false, col, probing_lower_bounds[col], -1 ) );
-   }
-
-   for( int c : changed_ubs )
-   {
-      int col = c < 0 ? -c - 1 : c;
-
-      if( col == probingCol )
-         continue;
-
-      otherValueImplications.emplace_back(
-          CliqueProbingBoundChg<REAL>( true, col, probing_upper_bounds[col], -1 ) );
-   }
-}
 
 template <typename REAL>
 bool
