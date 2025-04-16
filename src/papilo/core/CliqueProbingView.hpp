@@ -157,7 +157,7 @@ class CliqueProbingView
       //msg.info( "Checking for infeasibility\n");
         if( isInfeasible() )
         {
-            std::cout<<"\nInfeasible one assignment, fixing to zero.\n";
+            //std::cout<<"\nInfeasible one assignment, fixing to zero.\n";
             fix_to_zero.emplace_back(probingCol);
             //msg.info( "1 is infeasible, added to fix_to_zero and skipped everything else.\n");
             reset();
@@ -229,9 +229,9 @@ class CliqueProbingView
         reset();
         //msg.info( "Reset probing col.\n");
       }
-      if( fix_to_zero.end() - fix_to_zero.begin() == cliquelen )
+      if( fix_to_zero.end() - fix_to_zero.begin() == cliquelen && cliqueEquation )
          std::cout<<"\nInfeasibility due to zero fixings in probe Clique.\n";
-      return { fix_to_zero.end() - fix_to_zero.begin() == cliquelen, cliqueEquation } ;
+      return { fix_to_zero.end() - fix_to_zero.begin() == cliquelen && cliqueEquation, cliqueEquation } ;
    }
 
    void
