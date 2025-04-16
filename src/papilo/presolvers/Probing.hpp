@@ -507,17 +507,17 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
    for( int i = 0; i < static_cast<int>(change_to_equation_comb.size()); ++i )
    {
       if( problem.is_rhs_clique( consMatrix, change_to_equation_comb[i], num ) )
-         reductions.change_row_lhs_parallel( change_to_equation_comb[i],  rhs[change_to_equation_comb[i]] );
+         reductions.changeRowLHS( change_to_equation_comb[i],  rhs[change_to_equation_comb[i]] );
       else
-         reductions.change_row_rhs_parallel( change_to_equation_comb[i],  lhs[change_to_equation_comb[i]] );
+         reductions.changeRowRHS( change_to_equation_comb[i],  lhs[change_to_equation_comb[i]] );
    }
 #else
    for( int i = 0; i < static_cast<int>(change_to_equation.size()); ++i )
    {
       if( problem.is_rhs_clique( consMatrix, change_to_equation[i], num ) )
-         reductions.change_row_lhs_parallel( change_to_equation[i],  rhs[change_to_equation[i]] );
+         reductions.changeRowLHS( change_to_equation[i],  rhs[change_to_equation[i]] );
       else
-         reductions.change_row_rhs_parallel( change_to_equation[i],  lhs[change_to_equation[i]] );
+         reductions.changeRowRHS( change_to_equation[i],  lhs[change_to_equation[i]] );
 }
 #endif
 
