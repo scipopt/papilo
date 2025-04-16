@@ -624,7 +624,7 @@ std::cout<<"\n\nClique Probing on ";
 #else
    std::cout<<static_cast<int>(change_to_equation.size());
 #endif
-          std::cout<<" changed lhs/rhs, "
+   std::cout<<" changed lhs/rhs, ";
    std::cout<<static_cast<int>(cliqueBoundChanges.size());
    std::cout<<" ";
    std::cout<<ncliqueboundchgs;
