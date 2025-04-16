@@ -448,10 +448,6 @@ bool is_rhs_clique(const ConstraintMatrix<REAL>& matrix, int row, const Num<REAL
    bool SOS1 = false;
    bool equation = false;
    if( rowFlag.test( RowFlag::kRhsInf ) )
-      rhsClique = false;
-   if( rowFlag.test( RowFlag::kLhsInf ) )
-      lhsClique = false;
-   if( !lhsClique && !rhsClique )
       return false;
    auto rowvec = matrix.getRowCoefficients( row );
    if( rowvec.getLength() <= 1 || rowFlag.test( RowFlag::kRedundant ))
@@ -474,7 +470,7 @@ bool is_rhs_clique(const ConstraintMatrix<REAL>& matrix, int row, const Num<REAL
          if( !( num.isGT( minvalue + abs( coeff ),
                           matrix.getRightHandSides()[row] ) &&
                 num.isLE( abs( coeff ), matrix.getRightHandSides()[row] ) ) )
-            rhsClique = false;
+                return false;
          else if( num.isLT( abs( coeff ), minvalue ) )
             minvalue = abs( coeff );
       }
