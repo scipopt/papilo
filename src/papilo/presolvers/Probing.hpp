@@ -499,7 +499,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
    } );
    for( int i = 0; i < static_cast<int>(fix_to_equation_comb); ++i )
    {
-      if( is_rhs_clique( matrix, fix_to_equation_comb[i], num ) )
+      if( problem.is_rhs_clique( matrix, fix_to_equation_comb[i], num ) )
          reductions.change_row_lhs_parallel( fix_to_equation_comb[i],  rhs[fix_to_equation_comb[i]] );
       else
          reductions.change_row_rhs_parallel( fix_to_equation_comb[i],  lhs[fix_to_equation_comb[i]] );
@@ -507,7 +507,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
 #else
    for( int i = 0; i < static_cast<int>(fix_to_equation); ++i )
    {
-      if( is_rhs_clique( matrix, fix_to_equation[i], num ) )
+      if( problem.is_rhs_clique( matrix, fix_to_equation[i], num ) )
          reductions.change_row_lhs_parallel( fix_to_equation[i],  rhs[fix_to_equation[i]] );
       else
          reductions.change_row_rhs_parallel( fix_to_equation[i],  lhs[fix_to_equation[i]] );
