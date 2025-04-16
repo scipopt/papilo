@@ -162,22 +162,21 @@ class CliqueProbingView
         //msg.info( "Changing imps\n");
         for( int ind = 0; ind != static_cast<int>(binary_inds.size()); ++ind )
         {
-         assert( ind < static_cast<int>(binary_inds.size()) );
-         assert( binary_inds[ind] < static_cast<int>(probing_lower_bounds.size()) );
+            assert( ind < static_cast<int>(binary_inds.size()) );
+            assert( binary_inds[ind] < static_cast<int>(probing_lower_bounds.size()) );
             if( num.isEq(1.0, probing_lower_bounds[binary_inds[ind]]) )
             {
                assert( ind < static_cast<int>(lb_implications.size()) );
-                lb_implications[ind].first += 1;
-                lb_implications[ind].second = probingCol;
+               lb_implications[ind].first += 1;
+               lb_implications[ind].second = probingCol;
             }
-            
-         assert( ind < static_cast<int>(binary_inds.size()) );
-         assert( binary_inds[ind] < static_cast<int>(probing_upper_bounds.size()) );
+            assert( ind < static_cast<int>(binary_inds.size()) );
+            assert( binary_inds[ind] < static_cast<int>(probing_upper_bounds.size()) );
             if( num.isEq(0.0, probing_upper_bounds[binary_inds[ind]]) )
             {
                assert( ind < static_cast<int>(ub_implications.size()) );
-                ub_implications[ind].first += 1;
-                ub_implications[ind].second = probingCol;
+               ub_implications[ind].first += 1;                
+               ub_implications[ind].second = probingCol;
             }
         }
         //msg.info("Changed imps\n");
@@ -226,6 +225,8 @@ class CliqueProbingView
         reset();
         //msg.info( "Reset probing col.\n");
       }
+      if( fix_to_zero.end() - fix_to_zero.begin() == cliquelen )
+         std::cout<<"\nInfeasibility due to zero fixings in probe Clique.\n";
       return { fix_to_zero.end() - fix_to_zero.begin() == cliquelen, cliqueEquation } ;
    }
 
@@ -279,6 +280,7 @@ class CliqueProbingView
    bool
    isInfeasible() const
    {
+      std::cout<<"\nInfeasibility due to propagationn\n";
       return infeasible;
    }
 
@@ -700,7 +702,7 @@ CliqueProbingView<REAL>::analyzeImplications()
    //msg.info( "Analyzing Implications\n");
    if( fix_to_zero.end() - fix_to_zero.begin() == cliquelen && cliqueEquation )
    {
-      std::cout<<"\nInfeasible.";
+      std::cout<<"\nInfeasibility due to zero fixings.\n";
       return true;
    }
    for( int ind = 0; ind < static_cast<int>(fix_to_zero.end() - fix_to_zero.begin()); ++ind )
