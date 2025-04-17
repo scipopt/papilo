@@ -492,7 +492,6 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
    //msg.info( "Finished clique Probing\n");
    /*std::cout<<("\nCutting off this many variables: ");
    std::cout<<(static_cast<int>(probing_cands.size())-clique_cutoff_ub-1);*/
-   int ncliquevars = static_cast<int>(probing_cands.size())-clique_cutoff_ub-1;
    probing_cands.resize(clique_cutoff_ub+1);
    //msg.info( "\nCutting off this many variables: ");
    //msg.info( static_cast<int>(probing_cands.size())-clique_cutoff_lb );
@@ -620,7 +619,7 @@ PresolveStatus result = PresolveStatus::kUnchanged;
 std::cout<<"\n\nClique Probing on ";
    std::cout<<static_cast<int>(probingCliques.size());
    std::cout<<" Cliques with ";
-   std::cout<< ncliquevars;
+   std::cout<< cliquevars;
    std::cout<<" Variables led to ";
    std::cout<<ncliquefixings;
    std::cout<<" fixings, ";
