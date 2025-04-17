@@ -343,7 +343,10 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
       if( 2 * covered <= rowvec.getLength() )
       {
          probingCliques.emplace_back( cliques[clique].first );
-         for( int ind = 0; ind < rowvec.getLength(); ++ind )
+         std::cout<<"\nLength of Clique: ";
+         std::cout<<static_cast<int>(rowvec.getLength());
+         std::cout<<"\n";
+         for( int ind = 0; ind < static_cast<int>(rowvec.getLength()); ++ind )
          {  
             if( !probedCliqueVars[rowinds[ind]] )
             {
