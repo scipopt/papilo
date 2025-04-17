@@ -99,8 +99,8 @@ class CliqueProbingView
       for( int ind = 0; ind < len; ++ind )
       {
          cliqueind.emplace_back( indices[ind] );
-         std::cout(indices[ind]);
-         std::cout(" ");
+         std::cout<<(indices[ind]);
+         std::cout<<(" ");
       }
       cliquelen = len;
       bool initbounds = false;
@@ -126,7 +126,7 @@ class CliqueProbingView
       }
       else
       {
-         std::cout("Initializing\n");
+         std::cout<<("Initializing\n");
          for( int var = 0; var != static_cast<int>(probing_lower_bounds.size()); ++var )
          {
             if( num.isGT(probing_lower_bounds[var], problem.getLowerBounds()[var]) )
@@ -153,29 +153,29 @@ class CliqueProbingView
             }
          }
          initbounds = true;
-         std::cout("Initialized\n");
+         std::cout<<("Initialized\n");
       }
       reset();
 
       for( int i = 0; i < cliquelen; ++i )
       {
-         std::cout( "\nSetting probing collumn: ");
-         std::cout( cliqueind[i]);
+         std::cout<<( "\nSetting probing collumn: ");
+         std::cout<<( cliqueind[i]);
         setProbingColumn(i);
-        std::cout( "\nSet probing collumn.");
-        std::cout( "\nPropagating.");
+        std::cout<<( "\nSet probing collumn.");
+        std::cout<<( "\nPropagating.");
         propagateDomains();
-      std::cout( "\nPropagated\n");
-      std::cout( "Checking for infeasibility\n");
+      std::cout<<( "\nPropagated\n");
+      std::cout<<( "Checking for infeasibility\n");
         if( isInfeasible() )
         {
             std::cout"\nInfeasible one assignment, fixing to zero.\n";
             fix_to_zero.emplace_back(probingCol);
-            std::cout( "1 is infeasible, added to fix_to_zero and skipped everything else.\n");
+            std::cout<<( "1 is infeasible, added to fix_to_zero and skipped everything else.\n");
             reset();
             continue;
         }
-        std::cout( "Changing imps\n");
+        std::cout<<( "Changing imps\n");
         for( int ind = 0; ind != static_cast<int>(binary_inds.size()); ++ind )
         {
             assert( ind < static_cast<int>(binary_inds.size()) );
@@ -195,10 +195,10 @@ class CliqueProbingView
                ub_implications[ind].second = probingCol;
             }
         }
-        std::cout("Changed imps\n");
+        std::cout<<("Changed imps\n");
         if( initbounds == false )
         {
-            std::cout("Initializing\n");
+            std::cout<<("Initializing\n");
             for( int var = 0; var != static_cast<int>(probing_lower_bounds.size()); ++var )
             {
                if( num.isGT(probing_lower_bounds[var], problem.getLowerBounds()[var]) )
@@ -225,11 +225,11 @@ class CliqueProbingView
                }
             }
             initbounds = true;
-            std::cout("Initialized\n");
+            std::cout<<("Initialized\n");
             reset();
             continue;
         }
-        std::cout( "Changing Bounds\n");
+        std::cout<<( "Changing Bounds\n");
         typename std::list<std::pair<int,REAL>>::iterator ind = changed_clique_lbs_inds_vals.begin(); 
          while( ind != changed_clique_lbs_inds_vals.end() )
          {
@@ -286,10 +286,10 @@ class CliqueProbingView
             else
                std::advance(ind, 1);
          }
-         std::cout("Changed bounds.\n");
-         std::cout("Resetting probing col:\n");
+         std::cout<<("Changed bounds.\n");
+         std::cout<<("Resetting probing col:\n");
         reset();
-        std::cout( "Reset probing col.\n");
+        std::cout<<( "Reset probing col.\n");
       }
       if( fix_to_zero.end() - fix_to_zero.begin() == cliquelen && cliqueEquation )
          std::cout<<"\nInfeasibility due to zero fixings in probe Clique.\n";
@@ -726,7 +726,7 @@ CliqueProbingView<REAL>::analyzeImplications()
    //const auto& orig_ubs = problem.getUpperBounds();
    //const auto& orig_lbs = problem.getLowerBounds();
    //const Vec<ColFlags>& orig_domain_flags = problem.getColFlags();
-   std::cout( "Analyzing Implications\n");
+   std::cout<<( "Analyzing Implications\n");
    if( fix_to_zero.end() - fix_to_zero.begin() == cliquelen && cliqueEquation )
    {
       std::cout<<"\nInfeasibility due to zero fixings.\n";
