@@ -131,7 +131,7 @@ class CliqueProbingView
          {
             if( num.isGT(probing_lower_bounds[var], problem.getLowerBounds()[var]) )
             {
-               changed_clique_lbs_inds_vals.emplace_back(std::pair<int,int>{var, probing_lower_bounds[var]});
+               changed_clique_lbs_inds_vals.emplace_back(std::pair<int,REAL>{var, probing_lower_bounds[var]});
                std::cout<<"The lower bound of ";
                std::cout<<var;
                std::cout<<" can be changed after probing everything on zero: ";
@@ -142,7 +142,7 @@ class CliqueProbingView
             }
             if( num.isLT(probing_upper_bounds[var], problem.getUpperBounds()[var]) )
             {
-               changed_clique_ubs_inds_vals.emplace_back(std::pair<int,int> {var, probing_upper_bounds[var]});
+               changed_clique_ubs_inds_vals.emplace_back(std::pair<int,REAL> {var, probing_upper_bounds[var]});
                std::cout<<"The upper bound of ";
                std::cout<<var;
                std::cout<<" can be changed after probing everything on zero: ";
@@ -203,7 +203,7 @@ class CliqueProbingView
             {
                if( num.isGT(probing_lower_bounds[var], problem.getLowerBounds()[var]) )
                {
-                  changed_clique_lbs_inds_vals.emplace_back(std::pair<int,int>{var, probing_lower_bounds[var]});
+                  changed_clique_lbs_inds_vals.emplace_back(std::pair<int,REAL>{var, probing_lower_bounds[var]});
                   std::cout<<"The lower bound of ";
                   std::cout<<var;
                   std::cout<<" can be changed after probing the current variable on one: ";
@@ -214,7 +214,7 @@ class CliqueProbingView
                }
                if( num.isLT(probing_upper_bounds[var], problem.getUpperBounds()[var]) )
                {
-                  changed_clique_ubs_inds_vals.emplace_back(std::pair<int,int> {var, probing_upper_bounds[var]});
+                  changed_clique_ubs_inds_vals.emplace_back(std::pair<int,REAL> {var, probing_upper_bounds[var]});
                   std::cout<<"The upper bound of ";
                   std::cout<<var;
                   std::cout<<" can be changed after probing the current variable on one: ";
