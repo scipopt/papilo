@@ -312,6 +312,8 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
       for( int ind = 0; ind < rowvec.getLength(); ++ind )
       {
          cliques[clique].second += probing_scores[rowinds[ind]];
+         assert( isBinaryVariable( problem.getUpperBounds()[rowinds[ind]], problem.getLowerBounds()[rowinds[ind]], 
+         problem.getColSizes()[rowinds[ind]], problem.getColFlags()[rowinds[ind]]  ));
       }
    }
 #ifdef PAPILO_TBB
