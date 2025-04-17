@@ -169,7 +169,7 @@ class CliqueProbingView
       std::cout<<( "Checking for infeasibility\n");
         if( isInfeasible() )
         {
-            std::cout"\nInfeasible one assignment, fixing to zero.\n";
+            std::cout<<"\nInfeasible one assignment, fixing to zero.\n";
             fix_to_zero.emplace_back(probingCol);
             std::cout<<( "1 is infeasible, added to fix_to_zero and skipped everything else.\n");
             reset();
