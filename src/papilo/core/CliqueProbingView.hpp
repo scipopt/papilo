@@ -25,6 +25,7 @@
 
 #include "papilo/core/Problem.hpp"
 #include "papilo/core/SingleRow.hpp"
+#include "papilo/presolvers/Probing.hpp"
 #include "papilo/io/Message.hpp"
 #include "papilo/misc/MultiPrecision.hpp"
 #include "papilo/misc/Vec.hpp"
@@ -101,6 +102,8 @@ class CliqueProbingView
          cliqueind.emplace_back( indices[ind] );
          std::cout<<(indices[ind]);
          std::cout<<(" ");
+         assert(Probing.isBinaryVariable( problem.getUpperBounds()[indices[ind]], problem.getLowerBounds()[indices[ind]], 
+         problem.getColSizes()[indices[ind]], problem.getColFlags()[indices[ind]]  ));
       }
       cliquelen = len;
       bool initbounds = false;
