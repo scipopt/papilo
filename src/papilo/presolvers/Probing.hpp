@@ -1022,7 +1022,7 @@ if( !cliquesubstitutions.empty() )
 
       result = PresolveStatus::kReduced;
    }
-
+   this->setEnabled( false );
    return result;
 }
 
