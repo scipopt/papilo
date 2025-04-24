@@ -501,30 +501,30 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
    int ncliquefixings = 0;
    int ncliqueboundchgs = 0;
    int ncliquesubstitutions = -cliquesubstitutions.size();
-/*
+
 #ifdef PAPILO_TBB
    Vec<int> change_to_equation_comb = change_to_equation.combine(
       [](const Vec<int>& a, const Vec<int>& b) {
       Vec<int> result = a;
       result.insert(result.end(), b.begin(), b.end() );
       return result;
-   } );
+   } );/*
    for( int i = 0; i < static_cast<int>(change_to_equation_comb.size()); ++i )
    {
       if( problem.is_rhs_clique( consMatrix, change_to_equation_comb[i], num ) )
          reductions.changeRowLHS( change_to_equation_comb[i],  rhs[change_to_equation_comb[i]] );
       else
          reductions.changeRowRHS( change_to_equation_comb[i],  lhs[change_to_equation_comb[i]] );
-   }
-#else
+   }*/
+#else/*
    for( int i = 0; i < static_cast<int>(change_to_equation.size()); ++i )
    {
       if( problem.is_rhs_clique( consMatrix, change_to_equation[i], num ) )
          reductions.changeRowLHS( change_to_equation[i],  rhs[change_to_equation[i]] );
       else
          reductions.changeRowRHS( change_to_equation[i],  lhs[change_to_equation[i]] );
-}
-#endif*/
+}*/
+#endif
 
 
 #ifdef PAPILO_TBB
