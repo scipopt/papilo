@@ -751,9 +751,12 @@ CliqueProbingView<REAL>::analyzeImplications()
          std::cout<<" ";
          std::cout<<(*col).second;
          reset();
-         changeUb( (*col).first, 0.0 );
-         propagateDomains();
-         assert( probing_lower_bounds[(*col).first] >= (*col).second );
+         for( int ind = 0; ind < cliquelen; ++ind )
+         {
+            changeUb( cliqueind[ind], 0.0 );
+            propagateDomains();
+            assert( probing_lower_bounds[(*col).first] >= (*col).second );
+         }
    }
    for( typename std::list<std::pair<int,REAL>>::iterator col = changed_clique_ubs_inds_vals.begin(); 
    col != changed_clique_ubs_inds_vals.end(); std::advance(col,1) )
@@ -765,9 +768,12 @@ CliqueProbingView<REAL>::analyzeImplications()
          std::cout<<" ";
          std::cout<<(*col).second;
          reset();
-         changeUb( (*col).first, 0.0 );
-         propagateDomains();
-         assert( probing_upper_bounds[(*col).first] <= (*col).second );
+         for( int ind = 0; ind < cliquelen; ++ind )
+         {
+            changeUb( cliqueind[ind], 0.0 );
+            propagateDomains();
+            assert( probing_upper_bounds[(*col).first] <= (*col).second );
+         }
    }
 
    for( int ind = 0; ind < static_cast<int>(binary_inds.end() - binary_inds.begin()); ++ind )
