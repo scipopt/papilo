@@ -764,8 +764,11 @@ if( !cliquesubstitutions.empty() )
 #else
    ProbingView<REAL> probingView( problem, num );
    probingView.setMinContDomRed( mincontdomred );
-#endif
-
+   #endif
+   int clique = probingCliques[i];
+   auto cliquevec = consMatrix.getRowCoefficients( clique );
+   auto cliqueind = cliquevec.getIndices();
+   auto cliquelen = cliquevec.getLength();
    do
    {
       Message::debug( this, "probing candidates {} to {}\n",
@@ -790,7 +793,8 @@ if( !cliquesubstitutions.empty() )
                       break;
                   assert(i >= 0);
                   assert(i < static_cast<int>(probing_cands.size()));
-                   const int col = probing_cands[i];
+                   //const int col = probing_cands[i];
+                   const int col = cliqueind[i];
 
                    assert(
                        cflags[col].test( ColFlag::kIntegral ) &&
@@ -838,7 +842,8 @@ if( !cliquesubstitutions.empty() )
       assert(current_badge_end >= 0);
       assert(current_badge_start >= 0 );
       assert(current_badge_start <= current_badge_end );
-      propagate_variables( current_badge_start, current_badge_end);
+      //propagate_variables( current_badge_start, current_badge_end);
+      propagate_variables( 0, cliquelen);
 
       if( PresolveMethod<REAL>::is_time_exceeded(
               timer, problemUpdate.getPresolveOptions().tlim ) )
