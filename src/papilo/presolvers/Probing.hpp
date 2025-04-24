@@ -954,6 +954,13 @@ if( !cliquesubstitutions.empty() )
           this,
           "probing found: {} fixings, {} substitutions, {} bound changes\n",
           nfixings, nsubstitutions, nboundchgs );
+          std::cout<<"Normal probing found: ";
+          std::cout<< nfixings;
+          std::cout<< " fixings, ";
+          std::cout<< nsubstitutions;
+          std::cout<< " substitutions and ";
+          std::cout<< nboundchgs;
+          std::cout<< " bound changes.";
 
       int64_t extrawork =
           ( ( 0.1 * ( nfixings + nsubstitutions ) + 0.01 * nboundchgs ) *
