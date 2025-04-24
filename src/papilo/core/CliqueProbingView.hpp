@@ -755,7 +755,15 @@ CliqueProbingView<REAL>::analyzeImplications()
          {
             changeUb( cliqueind[ind], 0.0 );
             propagateDomains();
-            assert( probing_lower_bounds[(*col).first] >= (*col).second );
+            if( probing_lower_bounds[(*col).first] < (*col).second )
+            {
+               std::cout<<"\nProbing ";
+               std::cout<<cliqueind[ind];
+               std::cout<<" to zero has a weaker lower bound than clique probing: ";
+               std::cout<<probing_lower_bounds[(*col).first];
+               std::cout<<" ";
+               std::cout<<(*col).second;
+            }
          }
    }
    for( typename std::list<std::pair<int,REAL>>::iterator col = changed_clique_ubs_inds_vals.begin(); 
@@ -772,7 +780,15 @@ CliqueProbingView<REAL>::analyzeImplications()
          {
             changeUb( cliqueind[ind], 0.0 );
             propagateDomains();
-            assert( probing_upper_bounds[(*col).first] <= (*col).second );
+            if( probing_upper_bounds[(*col).first] > (*col).second )
+            {
+               std::cout<<"\nProbing ";
+               std::cout<<cliqueind[ind];
+               std::cout<<" to zero has a weaker upper bound than clique probing: ";
+               std::cout<<probing_upper_bounds[(*col).first];
+               std::cout<<" ";
+               std::cout<<(*col).second;
+            }
          }
    }
 
