@@ -501,7 +501,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
    int ncliquefixings = 0;
    int ncliqueboundchgs = 0;
    int ncliquesubstitutions = -cliquesubstitutions.size();
-
+/*
 #ifdef PAPILO_TBB
    Vec<int> change_to_equation_comb = change_to_equation.combine(
       [](const Vec<int>& a, const Vec<int>& b) {
@@ -524,7 +524,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
       else
          reductions.changeRowRHS( change_to_equation[i],  lhs[change_to_equation[i]] );
 }
-#endif
+#endif*/
 
 
 #ifdef PAPILO_TBB
@@ -641,7 +641,7 @@ std::cout<<"\n\nClique Probing on ";
    std::cout<<" Substitutions.\n";
 
 //msg.info("Combined\n");
-
+/*
 //msg.info("Boundchanges\n");
 if( !cliqueBoundChanges.empty() && false )
 {
@@ -697,7 +697,7 @@ if( !cliquesubstitutions.empty() )
 
    result = PresolveStatus::kReduced;
 }   //msg.info("subs finished\n");
-
+*/
    const Vec<int>& rowsize = consMatrix.getRowSizes();
 
    int current_badge_start = 0;
@@ -960,7 +960,7 @@ if( !cliquesubstitutions.empty() )
           std::cout<< nsubstitutions;
           std::cout<< " substitutions and ";
           std::cout<< nboundchgs;
-          std::cout<< " bound changes.";
+          std::cout<< " bound changes.\n";
 
       int64_t extrawork =
           ( ( 0.1 * ( nfixings + nsubstitutions ) + 0.01 * nboundchgs ) *
