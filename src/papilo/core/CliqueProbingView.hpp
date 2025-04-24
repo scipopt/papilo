@@ -750,9 +750,9 @@ CliqueProbingView<REAL>::analyzeImplications()
          std::cout<<(*col).first;
          std::cout<<" ";
          std::cout<<(*col).second;
-         reset();
          for( int ind = 0; ind < cliquelen; ++ind )
          {
+            reset();
             changeUb( cliqueind[ind], 0.0 );
             propagateDomains();
             if( probing_lower_bounds[(*col).first] < (*col).second )
@@ -764,6 +764,10 @@ CliqueProbingView<REAL>::analyzeImplications()
                std::cout<<" ";
                std::cout<<(*col).second;
             }
+            reset();
+            setProbingColumn(ind);
+            propagateDomains();
+            assert( num.isGE( probing_lower_bounds[(*col).first] (*col).second) );
          }
    }
    for( typename std::list<std::pair<int,REAL>>::iterator col = changed_clique_ubs_inds_vals.begin(); 
@@ -775,9 +779,9 @@ CliqueProbingView<REAL>::analyzeImplications()
          std::cout<<(*col).first;
          std::cout<<" ";
          std::cout<<(*col).second;
-         reset();
          for( int ind = 0; ind < cliquelen; ++ind )
          {
+            reset();
             changeUb( cliqueind[ind], 0.0 );
             propagateDomains();
             if( probing_upper_bounds[(*col).first] > (*col).second )
@@ -789,6 +793,10 @@ CliqueProbingView<REAL>::analyzeImplications()
                std::cout<<" ";
                std::cout<<(*col).second;
             }
+            reset();
+            setProbingColumn(ind);
+            propagateDomains();
+            assert( num.isLE( probing_upper_bounds[(*col).first] , (*col).second ));
          }
    }
 
