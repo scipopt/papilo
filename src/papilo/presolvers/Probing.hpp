@@ -765,10 +765,7 @@ if( !cliquesubstitutions.empty() )
    ProbingView<REAL> probingView( problem, num );
    probingView.setMinContDomRed( mincontdomred );
    #endif
-   int clique = probingCliques[0];
-   auto cliquevec = consMatrix.getRowCoefficients( clique );
-   auto cliqueind = cliquevec.getIndices();
-   auto cliquelen = cliquevec.getLength();
+   
    do
    {
       Message::debug( this, "probing candidates {} to {}\n",
