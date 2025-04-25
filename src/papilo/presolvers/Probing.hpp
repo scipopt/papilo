@@ -455,12 +455,19 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
             auto cliquevec = consMatrix.getRowCoefficients( clique );
             auto cliqueind = cliquevec.getIndices();
             auto cliquelen = cliquevec.getLength();
-            //msg.info("Probing Clique\n");
+            auto vals = rowvec.getValues();
+            std::cout<<"\nProbing Clique\n";
             for( int i = 0; i < cliquevec.getLength(); ++i )
             {
-               //msg.info( cliqueind[i]);
-               //msg.info( " ");
+               std::cout<< cliqueind[i];
+               std::cout<<" ";
+               std::cout<<vals[i];
+               std::cout<<" ";
             }
+            std::cout<<"\nLhs/Rhs: ";
+            std::cout<< lhs[clique];
+            std::cout<<" ";
+            std::cout<< rhs[clique];
             std::pair<bool,bool> cliqueProbingResult = cliqueProbingView.probeClique(clique, cliqueind, cliquelen, probing_cands ); 
             bool globalInfeasible = cliqueProbingResult.first;
             if( cliqueProbingResult.second )
@@ -765,7 +772,7 @@ if( !cliquesubstitutions.empty() )
    ProbingView<REAL> probingView( problem, num );
    probingView.setMinContDomRed( mincontdomred );
    #endif
-   
+
    do
    {
       Message::debug( this, "probing candidates {} to {}\n",

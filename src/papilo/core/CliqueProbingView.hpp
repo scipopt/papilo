@@ -157,6 +157,7 @@ class CliqueProbingView
 
       for( int i = 0; i < cliquelen; ++i )
       {
+         assert( probing_upper_bounds[cliqueind[i]] == 1.0 && probing_lower_bounds[cliqueind[i]] == 0.0 );
          std::cout<<( "\nSetting probing collumn: ");
          std::cout<<( cliqueind[i]);
         setProbingColumn(i);
@@ -763,7 +764,7 @@ CliqueProbingView<REAL>::analyzeImplications()
          assert( num.isGE( probing_lower_bounds[(*col).first], (*col).second) || isInfeasible() );
          for( int ind = 0; ind < cliquelen; ++ind )
          {
-            reset();
+            /*reset();
             changeUb( cliqueind[ind], 0.0 );
             propagateDomains();
             if( probing_lower_bounds[(*col).first] < (*col).second )
@@ -774,7 +775,7 @@ CliqueProbingView<REAL>::analyzeImplications()
                std::cout<<probing_lower_bounds[(*col).first];
                std::cout<<" ";
                std::cout<<(*col).second;
-            }
+            }*/
             reset();
             setProbingColumn(ind);
             propagateDomains();
@@ -796,7 +797,7 @@ CliqueProbingView<REAL>::analyzeImplications()
          assert( num.isLE( probing_upper_bounds[(*col).first], (*col).second) || isInfeasible() );
          for( int ind = 0; ind < cliquelen; ++ind )
          {
-            reset();
+            /*reset();
             changeUb( cliqueind[ind], 0.0 );
             propagateDomains();
             if( probing_upper_bounds[(*col).first] > (*col).second )
@@ -807,7 +808,7 @@ CliqueProbingView<REAL>::analyzeImplications()
                std::cout<<probing_upper_bounds[(*col).first];
                std::cout<<" ";
                std::cout<<(*col).second;
-            }
+            }*/
             reset();
             setProbingColumn(ind);
             propagateDomains();
