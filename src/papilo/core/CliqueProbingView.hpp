@@ -103,7 +103,7 @@ class CliqueProbingView
          std::cout<<(" ");
       }
       cliquelen = len;
-      assert(len == static_cast<int>(indices.size()));
+      assert(len == static_cast<int>(cliqueind.size()));
       bool initbounds = false;
       lb_implications.reserve( static_cast<int>(binary_inds.size()) );
       ub_implications.reserve( static_cast<int>(binary_inds.size()) );
