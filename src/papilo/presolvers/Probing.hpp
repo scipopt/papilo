@@ -538,7 +538,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
 #else
    for( int i = 0; i < static_cast<int>(change_to_equation.size()); ++i )
    {
-      auto cliquevec = consMatrix.getRowCoefficients( change_to_equation_comb[i] );
+      auto cliquevec = consMatrix.getRowCoefficients( change_to_equation[i] );
       auto cliquelen = cliquevec.getLength();
       auto vals = cliquevec.getValues();
       auto maxcoeff = vals[0];
