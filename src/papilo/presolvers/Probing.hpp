@@ -518,18 +518,42 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
    } );
    for( int i = 0; i < static_cast<int>(change_to_equation_comb.size()); ++i )
    {
+      auto cliquevec = consMatrix.getRowCoefficients( change_to_equation_comb[i] );
+      auto cliquelen = cliquevec.getLength();
+      auto vals = cliquevec.getValues();
+      auto maxcoeff = vals[0];
+      auto mincoeff = vals[0];
+      for( int j = 1; j < cliquelen; ++j )
+      {
+         if( num.isGT(vals[j], maxcoeff) )
+            maxcoeff = vals[j];
+         else if( num.isLT(vals[j], mincoeff) )
+            mincoeff = vals[j];
+      }
       if( problem.is_rhs_clique( consMatrix, change_to_equation_comb[i], num ) )
-         reductions.changeRowLHS( change_to_equation_comb[i],  rhs[change_to_equation_comb[i]] );
+         reductions.changeRowLHS( change_to_equation_comb[i],  mincoeff );
       else
-         reductions.changeRowRHS( change_to_equation_comb[i],  lhs[change_to_equation_comb[i]] );
+         reductions.changeRowRHS( change_to_equation_comb[i],  maxcoeff );
    }
 #else
    for( int i = 0; i < static_cast<int>(change_to_equation.size()); ++i )
    {
+      auto cliquevec = consMatrix.getRowCoefficients( change_to_equation_comb[i] );
+      auto cliquelen = cliquevec.getLength();
+      auto vals = cliquevec.getValues();
+      auto maxcoeff = vals[0];
+      auto mincoeff = vals[0];
+      for( int j = 1; j < cliquelen; ++j )
+      {
+         if( num.isGT(vals[j], maxcoeff) )
+            maxcoeff = vals[j];
+         else if( num.isLT(vals[j], mincoeff) )
+            mincoeff = vals[j];
+      }
       if( problem.is_rhs_clique( consMatrix, change_to_equation[i], num ) )
-         reductions.changeRowLHS( change_to_equation[i],  rhs[change_to_equation[i]] );
+         reductions.changeRowLHS( change_to_equation[i],  mincoeff );
       else
-         reductions.changeRowRHS( change_to_equation[i],  lhs[change_to_equation[i]] );
+         reductions.changeRowRHS( change_to_equation[i],  maxcoeff );
 }
 #endif
 
