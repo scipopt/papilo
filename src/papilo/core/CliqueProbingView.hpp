@@ -103,6 +103,7 @@ class CliqueProbingView
          std::cout<<(" ");
       }
       cliquelen = len;
+      assert(len == static_cast<int>(indices.size()));
       bool initbounds = false;
       lb_implications.reserve( static_cast<int>(binary_inds.size()) );
       ub_implications.reserve( static_cast<int>(binary_inds.size()) );
@@ -112,11 +113,8 @@ class CliqueProbingView
         ub_implications.emplace_back( std::pair<int,int> {0,-1} );
       } 
 
-      for( int i = 0; i < cliquelen; ++i )
-      {
-         changeUb( cliqueind[i], 0.0 );  
-      }
-      probingCol = cliqueind[0];
+      setProbingColumn(-1);
+
       cliqueEquation = false;
       propagateDomains();
       if( isInfeasible() )
@@ -299,15 +297,24 @@ class CliqueProbingView
    void
    setProbingColumn( int col )
    {
-      // remember probing column and probed value
-      probingCol = cliqueind[col];
-
-      changeLb( probingCol, 1.0 );
-      for( int i = 0; i < cliquelen; ++i )
+      if( col == -1 )
       {
-        if( i == col )
-            continue;
-        changeUb( cliqueind[i], 0.0 );
+         probingCol = cliqueind[0];
+         for( int i = 0; i < cliquelen; ++i )
+         {
+            changeUb( cliqueind[i], 0.0 );
+         }
+      }
+      else
+      {
+         probingCol = cliqueind[col];
+         changeLb( probingCol, 1.0 );
+         for( int i = 0; i < cliquelen; ++i )
+         {
+            if( i == col )
+               continue;
+            changeUb( cliqueind[i], 0.0 );
+         }
       }
    }
 
@@ -750,6 +757,10 @@ CliqueProbingView<REAL>::analyzeImplications()
          std::cout<<(*col).first;
          std::cout<<" ";
          std::cout<<(*col).second;
+         reset();
+         setProbingColumn(-1);
+         propagateDomains();
+         assert( num.isGE( probing_lower_bounds[(*col).first], (*col).second) );
          for( int ind = 0; ind < cliquelen; ++ind )
          {
             reset();
@@ -779,6 +790,10 @@ CliqueProbingView<REAL>::analyzeImplications()
          std::cout<<(*col).first;
          std::cout<<" ";
          std::cout<<(*col).second;
+         reset();
+         setProbingColumn(-1);
+         propagateDomains();
+         assert( num.isLE( probing_upper_bounds[(*col).first], (*col).second) );
          for( int ind = 0; ind < cliquelen; ++ind )
          {
             reset();

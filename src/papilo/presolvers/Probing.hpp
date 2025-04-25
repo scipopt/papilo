@@ -508,22 +508,22 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
       Vec<int> result = a;
       result.insert(result.end(), b.begin(), b.end() );
       return result;
-   } );/*
+   } );
    for( int i = 0; i < static_cast<int>(change_to_equation_comb.size()); ++i )
    {
       if( problem.is_rhs_clique( consMatrix, change_to_equation_comb[i], num ) )
          reductions.changeRowLHS( change_to_equation_comb[i],  rhs[change_to_equation_comb[i]] );
       else
          reductions.changeRowRHS( change_to_equation_comb[i],  lhs[change_to_equation_comb[i]] );
-   }*/
-#else/*
+   }
+#else
    for( int i = 0; i < static_cast<int>(change_to_equation.size()); ++i )
    {
       if( problem.is_rhs_clique( consMatrix, change_to_equation[i], num ) )
          reductions.changeRowLHS( change_to_equation[i],  rhs[change_to_equation[i]] );
       else
          reductions.changeRowRHS( change_to_equation[i],  lhs[change_to_equation[i]] );
-}*/
+}
 #endif
 
 
@@ -641,7 +641,7 @@ std::cout<<"\n\nClique Probing on ";
    std::cout<<" Substitutions.\n";
 
 //msg.info("Combined\n");
-/*
+
 //msg.info("Boundchanges\n");
 if( !cliqueBoundChanges.empty() && false )
 {
@@ -697,7 +697,7 @@ if( !cliquesubstitutions.empty() )
 
    result = PresolveStatus::kReduced;
 }   //msg.info("subs finished\n");
-*/
+
    const Vec<int>& rowsize = consMatrix.getRowSizes();
 
    int current_badge_start = 0;
@@ -793,8 +793,7 @@ if( !cliquesubstitutions.empty() )
                       break;
                   assert(i >= 0);
                   assert(i < static_cast<int>(probing_cands.size()));
-                   //const int col = probing_cands[i];
-                   const int col = cliqueind[i];
+                   const int col = probing_cands[i];
 
                    assert(
                        cflags[col].test( ColFlag::kIntegral ) &&
@@ -842,8 +841,8 @@ if( !cliquesubstitutions.empty() )
       assert(current_badge_end >= 0);
       assert(current_badge_start >= 0 );
       assert(current_badge_start <= current_badge_end );
-      //propagate_variables( current_badge_start, current_badge_end);
-      propagate_variables( 0, cliquelen);
+      propagate_variables( current_badge_start, current_badge_end);
+      //propagate_variables( 0, cliquelen);
 
       if( PresolveMethod<REAL>::is_time_exceeded(
               timer, problemUpdate.getPresolveOptions().tlim ) )
