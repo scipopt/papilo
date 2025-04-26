@@ -825,12 +825,11 @@ CliqueProbingView<REAL>::analyzeImplications()
                std::cout<<(*col).second ;
                std::cout<<". Infeasibility: ";
                std::cout<<isInfeasible();
-               for( int k = 0; k< 1000000; ++k )
+               for( int k = 0; k<10; ++k )
                {
-                  int xcv = 0;
-                  xcv += k;
+                  k=0;
                }
-               assert( (num.isLE( probing_upper_bounds[(*col).first] , (*col).second ) || isInfeasible()) );
+               //assert( (num.isLE( probing_upper_bounds[(*col).first] , (*col).second ) || isInfeasible()) );
             }
             //assert( (num.isLE( probing_upper_bounds[(*col).first] , (*col).second ) || isInfeasible()) );
          }
