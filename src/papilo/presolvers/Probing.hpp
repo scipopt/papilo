@@ -171,7 +171,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
 
    for( int row = 0; row != nrows; ++row )
    {
-      auto rowvec = consMatrix.getRowCoefficients()[row];
+      auto rowvec = consMatrix.getRowCoefficients( row );
       if( problem.is_clique( consMatrix, row, num ) && rowvec.getLength() < maxCliqueLength )
       {
          cliques.emplace_back( row, 0 );
