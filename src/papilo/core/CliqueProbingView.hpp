@@ -813,6 +813,19 @@ CliqueProbingView<REAL>::analyzeImplications()
             reset();
             setProbingColumn(ind);
             propagateDomains();
+            if( !( num.isLE( probing_upper_bounds[(*col).first] , (*col).second ) || isInfeasible() ) )
+            {
+               std::cout<<"\nERROR, unexpected bound change. Probing ";
+               std::cout<<cliqueind[ind];
+               std::cout<<" to one and the rest to zero causes upper bound ";
+               std::cout<<probing_upper_bounds[(*col).first];
+               std::cout<<" for ";
+               std::cout<< (*col).first;
+               std::cout<<" while original probing lower bound is: ";
+               std::cout<<(*col).second ;
+               std::cout<<". Infeasibility: ";
+               std::cout<<isInfeasible();
+            }
             assert( num.isLE( probing_upper_bounds[(*col).first] , (*col).second ) || isInfeasible() );
          }
    }
