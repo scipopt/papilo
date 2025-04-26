@@ -836,6 +836,7 @@ CliqueProbingView<REAL>::analyzeImplications()
                std::cout<<" while original probing lower bound is: ";
                std::cout<<(*col).second ;
                std::cout<<". Infeasibility: ";
+               std::cout<<isInfeasible();
                   k=0;
                }
                //assert( (num.isLE( probing_upper_bounds[(*col).first] , (*col).second ) || isInfeasible()) );
