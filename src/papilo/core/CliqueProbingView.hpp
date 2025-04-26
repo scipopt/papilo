@@ -322,6 +322,7 @@ class CliqueProbingView
    void
    resetClique()
    {
+      reset();
     changed_clique_lbs_inds_vals.clear();
     changed_clique_lbs_inds_vals.clear();
     lb_implications.clear();
