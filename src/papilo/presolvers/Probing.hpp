@@ -365,7 +365,6 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
       {
          break;
       }
-      break;
    }
 
    
