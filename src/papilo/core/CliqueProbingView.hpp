@@ -827,6 +827,15 @@ CliqueProbingView<REAL>::analyzeImplications()
                std::cout<<isInfeasible();
                for( int k = 0; k<10; ++k )
                {
+                  std::cout<<"\nERROR, unexpected bound change. Probing ";
+               std::cout<<cliqueind[ind];
+               std::cout<<" to one and the rest to zero causes upper bound ";
+               std::cout<<probing_upper_bounds[(*col).first];
+               std::cout<<" for ";
+               std::cout<< (*col).first;
+               std::cout<<" while original probing lower bound is: ";
+               std::cout<<(*col).second ;
+               std::cout<<". Infeasibility: ";
                   k=0;
                }
                //assert( (num.isLE( probing_upper_bounds[(*col).first] , (*col).second ) || isInfeasible()) );
