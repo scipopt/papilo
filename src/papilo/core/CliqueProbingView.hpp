@@ -157,6 +157,7 @@ class CliqueProbingView
 
       for( int i = 0; i < cliquelen; ++i )
       {
+         reset();
          assert( probing_upper_bounds[cliqueind[i]] == 1.0 && probing_lower_bounds[cliqueind[i]] == 0.0 );
          std::cout<<( "\nSetting probing collumn: ");
          std::cout<<( cliqueind[i]);
@@ -813,35 +814,7 @@ CliqueProbingView<REAL>::analyzeImplications()
             reset();
             setProbingColumn(ind);
             propagateDomains();
-            if( !( num.isLE( probing_upper_bounds[(*col).first] , (*col).second ) || isInfeasible() ) )
-            {
-               std::cout<<"\nERROR, unexpected bound change. Probing ";
-               std::cout<<cliqueind[ind];
-               std::cout<<" to one and the rest to zero causes upper bound ";
-               std::cout<<probing_upper_bounds[(*col).first];
-               std::cout<<" for ";
-               std::cout<< (*col).first;
-               std::cout<<" while original probing lower bound is: ";
-               std::cout<<(*col).second ;
-               std::cout<<". Infeasibility: ";
-               std::cout<<isInfeasible();
-               for( int k = 0; k<10; ++k )
-               {
-                  std::cout<<"\nERROR, unexpected bound change. Probing ";
-               std::cout<<cliqueind[ind];
-               std::cout<<" to one and the rest to zero causes upper bound ";
-               std::cout<<probing_upper_bounds[(*col).first];
-               std::cout<<" for ";
-               std::cout<< (*col).first;
-               std::cout<<" while original probing lower bound is: ";
-               std::cout<<(*col).second ;
-               std::cout<<". Infeasibility: ";
-               std::cout<<isInfeasible();
-                  k=0;
-               }
-               //assert( (num.isLE( probing_upper_bounds[(*col).first] , (*col).second ) || isInfeasible()) );
-            }
-            //assert( (num.isLE( probing_upper_bounds[(*col).first] , (*col).second ) || isInfeasible()) );
+            assert( (num.isLE( probing_upper_bounds[(*col).first] , (*col).second ) || isInfeasible()) );
          }
    }
 
