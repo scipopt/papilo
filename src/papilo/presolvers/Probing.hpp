@@ -167,10 +167,12 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
    cliques.reserve( nrows );
    Vec<int> probing_cands;
    probing_cands.reserve( ncols );
+   const int maxCliqueLength = 200;
 
    for( int row = 0; row != nrows; ++row )
    {
-      if( problem.is_clique( consMatrix, row, num ) )
+      auto rowvec = consMatrix.getRowVector()[row];
+      if( problem.is_clique( consMatrix, row, num ) && rowvec.getLength() < maxCliqueLength )
       {
          cliques.emplace_back( row, 0 );
          //std::cout<<"\nFound Clique\n";
@@ -315,6 +317,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
          assert( isBinaryVariable( problem.getUpperBounds()[rowinds[ind]], problem.getLowerBounds()[rowinds[ind]], 
          problem.getColSizes()[rowinds[ind]], problem.getColFlags()[rowinds[ind]]  ));
       }
+      cliques[clique].second = cliques[clique].second / rowvec.getLength();
    }
 #ifdef PAPILO_TBB
    } );
