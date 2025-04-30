@@ -781,8 +781,8 @@ CliqueProbingView<REAL>::analyzeImplications()
             reset();
             setProbingColumn(ind);
             propagateDomains();
-            assert( num.isGE( probing_lower_bounds[(*col).first], (*col).second) || isInfeasible() );*/
-         }
+            assert( num.isGE( probing_lower_bounds[(*col).first], (*col).second) || isInfeasible() );
+         }*/
    }
    for( typename std::list<std::pair<int,REAL>>::iterator col = changed_clique_ubs_inds_vals.begin(); 
    col != changed_clique_ubs_inds_vals.end(); std::advance(col,1) )
@@ -814,8 +814,8 @@ CliqueProbingView<REAL>::analyzeImplications()
             reset();
             setProbingColumn(ind);
             propagateDomains();
-            assert( (num.isLE( probing_upper_bounds[(*col).first] , (*col).second ) || isInfeasible()) );*/
-         }
+            assert( (num.isLE( probing_upper_bounds[(*col).first] , (*col).second ) || isInfeasible()) );
+         }*/
    }
 
    for( int ind = 0; ind < static_cast<int>(binary_inds.end() - binary_inds.begin()); ++ind )
