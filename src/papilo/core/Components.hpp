@@ -128,10 +128,10 @@ class Components
          if( ranges[r].end - ranges[r].start <= 1 )
             continue;
 
-         int firstcol = colinds[ranges[r].start];
+         int firstcol = djsets.find_set( colinds[ranges[r].start] );
 
          for( int i = ranges[r].start + 1; i != ranges[r].end; ++i )
-            djsets.link( firstcol, colinds[i] );
+            djsets.union_set( firstcol, colinds[i] );
       }
 
       HashMap<int, int> componentmap;
