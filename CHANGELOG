@@ -5,6 +5,8 @@
 Fixed bugs
 ----------
 
+- Components: Find set representatives before unifying components
+
 Build system
 ------------
 
