@@ -167,7 +167,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
    cliques.reserve( nrows );
    Vec<int> probing_cands;
    probing_cands.reserve( ncols );
-   const int maxCliqueLength = 200;
+   const int maxCliqueLength = 150;
 
    for( int row = 0; row != nrows; ++row )
    {
@@ -330,7 +330,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
    } );
    
    //msg.info( "Sorted cliques\n");
-   const int max_probed_clique_vars = 2 * maxinitialbadgesize;
+   const int max_probed_clique_vars = maxinitialbadgesize;
    int cliquevars = 0;
    Vec<bool> probedCliqueVars(ncols, false);
    Vec<int> probingCliques;
