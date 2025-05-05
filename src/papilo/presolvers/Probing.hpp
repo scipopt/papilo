@@ -174,7 +174,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
    for( int row = 0; row != nrows; ++row )
    {
       auto rowvec = consMatrix.getRowCoefficients( row );
-      auto cliquecheck = problem.is_clique_and_equation( consMatrix, row, num )
+      auto cliquecheck = problem.is_clique_and_equation( consMatrix, row, num );
       if( cliquecheck.first && rowvec.getLength() < maxCliqueLength )
       {
          cliques.emplace_back( row, 0 );
@@ -354,7 +354,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
       }
       if( 2 * covered <= rowvec.getLength() )
       {
-         probingCliques.emplace_back( {cliques[clique].first, cliqueEquations[clique]} );
+         probingCliques.emplace_back( cliques[clique].first, cliqueEquations[clique] );
          //std::cout<<"\nLength of Clique: ";
          //std::cout<<static_cast<int>(rowvec.getLength());
          //std::cout<<"\n";
