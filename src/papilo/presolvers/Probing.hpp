@@ -513,14 +513,6 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
          reductions.changeRowLHS( change_to_equation_comb[i],  mincoeff );
       else if( !num.isEq(consMatrix.getRightHandSides()[change_to_equation_comb[i]], maxcoeff) )
          reductions.changeRowRHS( change_to_equation_comb[i],  maxcoeff );
-      std::cout<<"\nChanging Sides from: ";
-      std::cout<<consMatrix.getLeftHandSides()[change_to_equation_comb[i]];
-      std::cout<<" ";
-      std::cout<<consMatrix.getRightHandSides()[change_to_equation_comb[i]];
-      std::cout<<" to: ";
-      std::cout<<mincoeff;
-      std::cout<<" ";
-      std::cout<<maxcoeff;
    }
 #else
    for( int i = 0; i < static_cast<int>(change_to_equation.size()); ++i )
@@ -542,14 +534,6 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
          reductions.changeRowLHS( change_to_equation[i],  mincoeff );
       else if( !num.isEq(consMatrix.getRightHandSides()[change_to_equation[i]], maxcoeff) )
          reductions.changeRowRHS( change_to_equation[i],  maxcoeff );
-      std::cout<<"\nChanging Sides from: ";
-      std::cout<<consMatrix.getLeftHandSides()[change_to_equation[i]];
-      std::cout<<" ";
-      std::cout<<consMatrix.getRightHandSides()[change_to_equation[i]];
-      std::cout<<" to: ";
-      std::cout<<mincoeff;
-      std::cout<<" ";
-      std::cout<<maxcoeff;
 }
 #endif
 
