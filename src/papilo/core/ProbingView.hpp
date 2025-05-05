@@ -671,14 +671,6 @@ ProbingView<REAL>::analyzeImplications()
          // add the corresponding substitution.
          substitutions.emplace_back(
              ProbingSubstitution<REAL>( col1, scale, col2, zerofixval ) );
-             std::cout<<"\nSubstitution: ";
-            std::cout<<col1;
-            std::cout<<" ";
-            std::cout<<col2;
-            std::cout<<" ";
-            std::cout<<scale;
-            std::cout<<" ";
-            std::cout<<zerofixval;
       }
       else if( boundChg.upper &&
                !probing_domain_flags[boundChg.col].test( ColFlag::kUbInf ) &&
