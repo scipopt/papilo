@@ -291,7 +291,7 @@ class CliqueProbingView
         reset();
         //std::cout<<( "Reset probing col.\n");
       }
-      if( fix_to_zero.end() - fix_to_zero.begin() == cliquelen && cliqueEquation )
+      //if( fix_to_zero.end() - fix_to_zero.begin() == cliquelen && cliqueEquation )
          //std::cout<<"\nInfeasibility due to zero fixings in probe Clique.\n";
       return { fix_to_zero.end() - fix_to_zero.begin() == cliquelen && cliqueEquation, cliqueEquation } ;
    }

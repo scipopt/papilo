@@ -457,7 +457,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
             auto cliquevec = consMatrix.getRowCoefficients( clique );
             auto cliqueind = cliquevec.getIndices();
             auto cliquelen = cliquevec.getLength();
-            auto vals = cliquevec.getValues();
+            //auto vals = cliquevec.getValues();
             //std::cout<<"\nProbing Clique\n";
             for( int i = 0; i < cliquevec.getLength(); ++i )
             {
