@@ -1341,6 +1341,10 @@ ProblemUpdate<REAL>::trivialColumnPresolve()
 
    PresolveStatus status = PresolveStatus::kUnchanged;
 
+   emptyColumns.clear();
+   singletonColumns.clear();
+   firstNewSingletonCol = 0;
+
    for( int col = 0; col < problem.getNCols(); ++col )
    {
       if( cflags[col].test( ColFlag::kInactive ) )
