@@ -92,15 +92,15 @@ class CliqueProbingView
    probeClique( const int clique, const int*& indices, const int len, const Vec<int>& binary_inds)
    {  
       
-      std::cout<<( "\n\nProbing Clique: ");
+      //std::cout<<( "\n\nProbing Clique: ");
       probingClique = clique;
-      std::cout<<( clique);
-      std::cout<<( "\n");
+      //std::cout<<( clique);
+      //std::cout<<( "\n");
       for( int ind = 0; ind < len; ++ind )
       {
          cliqueind.emplace_back( indices[ind] );
-         std::cout<<(indices[ind]);
-         std::cout<<(" ");
+         //std::cout<<(indices[ind]);
+         //std::cout<<(" ");
       }
       cliquelen = len;
       assert(len == static_cast<int>(cliqueind.size()));
@@ -119,39 +119,39 @@ class CliqueProbingView
       propagateDomains();
       if( isInfeasible() )
       {
-         std::cout<<"\nAll 0 infeasible, detected clique equation.\n";
+         //std::cout<<"\nAll 0 infeasible, detected clique equation.\n";
          cliqueEquation = true;
       }
       else
       {
-         std::cout<<("Initializing\n");
+         //std::cout<<("Initializing\n");
          for( int var = 0; var != static_cast<int>(probing_lower_bounds.size()); ++var )
          {
             if( num.isGT(probing_lower_bounds[var], problem.getLowerBounds()[var]) )
             {
                changed_clique_lbs_inds_vals.emplace_back(std::pair<int,REAL>{var, probing_lower_bounds[var]});
-               std::cout<<"The lower bound of ";
-               std::cout<<var;
-               std::cout<<" can be changed after probing everything on zero: ";
-               std::cout<< probing_lower_bounds[var];
-               std::cout<< " ";
-               std::cout<<problem.getLowerBounds()[var];
-               std::cout<<"\n";
+               //std::cout<<"The lower bound of ";
+               //std::cout<<var;
+               //std::cout<<" can be changed after probing everything on zero: ";
+               //std::cout<< probing_lower_bounds[var];
+               //std::cout<< " ";
+               //std::cout<<problem.getLowerBounds()[var];
+               //std::cout<<"\n";
             }
             if( num.isLT(probing_upper_bounds[var], problem.getUpperBounds()[var]) )
             {
                changed_clique_ubs_inds_vals.emplace_back(std::pair<int,REAL> {var, probing_upper_bounds[var]});
-               std::cout<<"The upper bound of ";
-               std::cout<<var;
-               std::cout<<" can be changed after probing everything on zero: ";
-               std::cout<< probing_upper_bounds[var];
-               std::cout<< " ";
-               std::cout<<problem.getUpperBounds()[var];
-               std::cout<<"\n";
+               //std::cout<<"The upper bound of ";
+               //std::cout<<var;
+               //std::cout<<" can be changed after probing everything on zero: ";
+               //std::cout<< probing_upper_bounds[var];
+               //std::cout<< " ";
+               //std::cout<<problem.getUpperBounds()[var];
+               //std::cout<<"\n";
             }
          }
          initbounds = true;
-         std::cout<<("Initialized\n");
+         //std::cout<<("Initialized\n");
       }
       reset();
 
@@ -159,23 +159,23 @@ class CliqueProbingView
       {
          reset();
          assert( probing_upper_bounds[cliqueind[i]] == 1.0 && probing_lower_bounds[cliqueind[i]] == 0.0 );
-         std::cout<<( "\nSetting probing collumn: ");
-         std::cout<<( cliqueind[i]);
+         //std::cout<<( "\nSetting probing collumn: ");
+         //std::cout<<( cliqueind[i]);
         setProbingColumn(i);
-        std::cout<<( "\nSet probing collumn.");
-        std::cout<<( "\nPropagating.");
+        //std::cout<<( "\nSet probing collumn.");
+        //std::cout<<( "\nPropagating.");
         propagateDomains();
-      std::cout<<( "\nPropagated\n");
-      std::cout<<( "Checking for infeasibility\n");
+      //std::cout<<( "\nPropagated\n");
+      //std::cout<<( "Checking for infeasibility\n");
         if( isInfeasible() )
         {
-            std::cout<<"\nInfeasible one assignment, fixing to zero.\n";
+            //std::cout<<"\nInfeasible one assignment, fixing to zero.\n";
             fix_to_zero.emplace_back(probingCol);
-            std::cout<<( "1 is infeasible, added to fix_to_zero and skipped everything else.\n");
+            //std::cout<<( "1 is infeasible, added to fix_to_zero and skipped everything else.\n");
             reset();
             continue;
         }
-        std::cout<<( "Changing imps\n");
+        //std::cout<<( "Changing imps\n");
         for( int ind = 0; ind != static_cast<int>(binary_inds.size()); ++ind )
         {
             assert( ind < static_cast<int>(binary_inds.size()) );
@@ -195,64 +195,64 @@ class CliqueProbingView
                ub_implications[ind].second = probingCol;
             }
         }
-        std::cout<<("Changed imps\n");
+        //std::cout<<("Changed imps\n");
         if( initbounds == false )
         {
-            std::cout<<("Initializing\n");
+            //std::cout<<("Initializing\n");
             for( int var = 0; var != static_cast<int>(probing_lower_bounds.size()); ++var )
             {
                if( num.isGT(probing_lower_bounds[var], problem.getLowerBounds()[var]) )
                {
                   changed_clique_lbs_inds_vals.emplace_back(std::pair<int,REAL>{var, probing_lower_bounds[var]});
-                  std::cout<<"The lower bound of ";
-                  std::cout<<var;
-                  std::cout<<" can be changed after probing the current variable on one: ";
-                  std::cout<< probing_lower_bounds[var];
-                  std::cout<< " ";
-                  std::cout<<problem.getLowerBounds()[var];
-                  std::cout<<"\n";
+                  //std::cout<<"The lower bound of ";
+                  //std::cout<<var;
+                  //std::cout<<" can be changed after probing the current variable on one: ";
+                  //std::cout<< probing_lower_bounds[var];
+                  //std::cout<< " ";
+                  //std::cout<<problem.getLowerBounds()[var];
+                  //std::cout<<"\n";
                }
                if( num.isLT(probing_upper_bounds[var], problem.getUpperBounds()[var]) )
                {
                   changed_clique_ubs_inds_vals.emplace_back(std::pair<int,REAL> {var, probing_upper_bounds[var]});
-                  std::cout<<"The upper bound of ";
-                  std::cout<<var;
-                  std::cout<<" can be changed after probing the current variable on one: ";
-                  std::cout<< probing_upper_bounds[var];
-                  std::cout<< " ";
-                  std::cout<<problem.getUpperBounds()[var];
-                  std::cout<<"\n";
+                  //std::cout<<"The upper bound of ";
+                  //std::cout<<var;
+                  //std::cout<<" can be changed after probing the current variable on one: ";
+                  //std::cout<< probing_upper_bounds[var];
+                  //std::cout<< " ";
+                  //std::cout<<problem.getUpperBounds()[var];
+                  //std::cout<<"\n";
                }
             }
             initbounds = true;
-            std::cout<<("Initialized\n");
+            //std::cout<<("Initialized\n");
             reset();
             continue;
         }
-        std::cout<<( "Changing Bounds\n");
+        //std::cout<<( "Changing Bounds\n");
         typename std::list<std::pair<int,REAL>>::iterator ind = changed_clique_lbs_inds_vals.begin(); 
          while( ind != changed_clique_lbs_inds_vals.end() )
          {
             if( num.isLT( probing_lower_bounds[(*ind).first], (*ind).second ) )
             {
-               std::cout<<"The probing lower bound of ";
-               std::cout<<(*ind).first;
-               std::cout<<" is weakend after probing the current variable on one: ";
-               std::cout<< probing_lower_bounds[(*ind).first];
-               std::cout<< " ";
-               std::cout<<(*ind).second;
-               std::cout<<"\n";
+               //std::cout<<"The probing lower bound of ";
+               //std::cout<<(*ind).first;
+               //std::cout<<" is weakend after probing the current variable on one: ";
+               //std::cout<< probing_lower_bounds[(*ind).first];
+               //std::cout<< " ";
+               //std::cout<<(*ind).second;
+               //std::cout<<"\n";
                (*ind).second = probing_lower_bounds[(*ind).first];
             }
             if( num.isLE(probing_lower_bounds[(*ind).first], problem.getLowerBounds()[(*ind).first] ) )
             {
-               std::cout<<"The probing lower bound of ";
-               std::cout<<(*ind).first;
-               std::cout<<" is deleted after probing the current variable on one: ";
-               std::cout<< probing_lower_bounds[(*ind).first];
-               std::cout<< " ";
-               std::cout<<problem.getLowerBounds()[(*ind).first];
-               std::cout<<"\n";
+               //std::cout<<"The probing lower bound of ";
+               //std::cout<<(*ind).first;
+               //std::cout<<" is deleted after probing the current variable on one: ";
+               //std::cout<< probing_lower_bounds[(*ind).first];
+               //std::cout<< " ";
+               //std::cout<<problem.getLowerBounds()[(*ind).first];
+               //std::cout<<"\n";
                ind = changed_clique_lbs_inds_vals.erase(ind);
             }
             else
@@ -263,36 +263,36 @@ class CliqueProbingView
          {
             if( num.isGT( probing_upper_bounds[(*ind).first], (*ind).second ) )
             {
-               std::cout<<"The probing upper bound of ";
-               std::cout<<(*ind).first;
-               std::cout<<" is weakend after probing the current variable on one: ";
-               std::cout<< probing_upper_bounds[(*ind).first];
-               std::cout<< " ";
-               std::cout<<(*ind).second;
-               std::cout<<"\n";
+               //std::cout<<"The probing upper bound of ";
+               //std::cout<<(*ind).first;
+               //std::cout<<" is weakend after probing the current variable on one: ";
+               //std::cout<< probing_upper_bounds[(*ind).first];
+               //std::cout<< " ";
+               //std::cout<<(*ind).second;
+               //std::cout<<"\n";
                (*ind).second = probing_upper_bounds[(*ind).first];
             }
             if( num.isGE(probing_upper_bounds[(*ind).first], problem.getUpperBounds()[(*ind).first] ) )
             {  
-               std::cout<<"The probing upper bound of ";
-               std::cout<<(*ind).first;
-               std::cout<<" is deleted after probing the current variable on one: ";
-               std::cout<< probing_upper_bounds[(*ind).first];
-               std::cout<< " ";
-               std::cout<<problem.getUpperBounds()[(*ind).first];
-               std::cout<<"\n";
+               //std::cout<<"The probing upper bound of ";
+               //std::cout<<(*ind).first;
+               //std::cout<<" is deleted after probing the current variable on one: ";
+               //std::cout<< probing_upper_bounds[(*ind).first];
+               //std::cout<< " ";
+               //std::cout<<problem.getUpperBounds()[(*ind).first];
+               //std::cout<<"\n";
                ind = changed_clique_ubs_inds_vals.erase(ind);
             }
             else
                std::advance(ind, 1);
          }
-         std::cout<<("Changed bounds.\n");
-         std::cout<<("Resetting probing col:\n");
+         //std::cout<<("Changed bounds.\n");
+         //std::cout<<("Resetting probing col:\n");
         reset();
-        std::cout<<( "Reset probing col.\n");
+        //std::cout<<( "Reset probing col.\n");
       }
       if( fix_to_zero.end() - fix_to_zero.begin() == cliquelen && cliqueEquation )
-         std::cout<<"\nInfeasibility due to zero fixings in probe Clique.\n";
+         //std::cout<<"\nInfeasibility due to zero fixings in probe Clique.\n";
       return { fix_to_zero.end() - fix_to_zero.begin() == cliquelen && cliqueEquation, cliqueEquation } ;
    }
 
@@ -736,10 +736,10 @@ CliqueProbingView<REAL>::analyzeImplications()
    //const auto& orig_ubs = problem.getUpperBounds();
    //const auto& orig_lbs = problem.getLowerBounds();
    //const Vec<ColFlags>& orig_domain_flags = problem.getColFlags();
-   std::cout<<( "Analyzing Implications\n");
+   //std::cout<<( "Analyzing Implications\n");
    if( fix_to_zero.end() - fix_to_zero.begin() == cliquelen && cliqueEquation )
    {
-      std::cout<<"\nInfeasibility due to zero fixings.\n";
+      //std::cout<<"\nInfeasibility due to zero fixings.\n";
       return true;
    }
    for( int ind = 0; ind < static_cast<int>(fix_to_zero.end() - fix_to_zero.begin()); ++ind )
@@ -747,8 +747,8 @@ CliqueProbingView<REAL>::analyzeImplications()
       
       boundChanges.emplace_back(
          CliqueProbingBoundChg<REAL>( true, fix_to_zero[ind], 0.0, -1 ) );
-         std::cout<<"\nFixed to zero: ";
-         std::cout<<fix_to_zero[ind];
+         //std::cout<<"\nFixed to zero: ";
+         //std::cout<<fix_to_zero[ind];
    }
 
    for( typename std::list<std::pair<int,REAL>>::iterator col = changed_clique_lbs_inds_vals.begin(); 
@@ -756,10 +756,10 @@ CliqueProbingView<REAL>::analyzeImplications()
    {
       boundChanges.emplace_back(
          CliqueProbingBoundChg<REAL>( false, (*col).first, (*col).second, cliqueind[0] ) );
-         std::cout<<"\nLower Bound Change: ";
-         std::cout<<(*col).first;
-         std::cout<<" ";
-         std::cout<<(*col).second;
+         //std::cout<<"\nLower Bound Change: ";
+         //std::cout<<(*col).first;
+         //std::cout<<" ";
+         //std::cout<<(*col).second;
          /*reset();
          setProbingColumn(-1);
          propagateDomains();
@@ -771,12 +771,12 @@ CliqueProbingView<REAL>::analyzeImplications()
             propagateDomains();
             if( probing_lower_bounds[(*col).first] < (*col).second )
             {
-               std::cout<<"\nProbing ";
-               std::cout<<cliqueind[ind];
-               std::cout<<" to zero has a weaker lower bound than clique probing: ";
-               std::cout<<probing_lower_bounds[(*col).first];
-               std::cout<<" ";
-               std::cout<<(*col).second;
+               //std::cout<<"\nProbing ";
+               //std::cout<<cliqueind[ind];
+               //std::cout<<" to zero has a weaker lower bound than clique probing: ";
+               //std::cout<<probing_lower_bounds[(*col).first];
+               //std::cout<<" ";
+               //std::cout<<(*col).second;
             }
             reset();
             setProbingColumn(ind);
@@ -789,10 +789,10 @@ CliqueProbingView<REAL>::analyzeImplications()
    {
       boundChanges.emplace_back(
          CliqueProbingBoundChg<REAL>( true, (*col).first, (*col).second, cliqueind[0] ) );
-         std::cout<<"\nUpper Bound Change: ";
-         std::cout<<(*col).first;
-         std::cout<<" ";
-         std::cout<<(*col).second;
+         //std::cout<<"\nUpper Bound Change: ";
+         //std::cout<<(*col).first;
+         //std::cout<<" ";
+         //std::cout<<(*col).second;
          /*reset();
          setProbingColumn(-1);
          propagateDomains();
@@ -804,12 +804,12 @@ CliqueProbingView<REAL>::analyzeImplications()
             propagateDomains();
             if( probing_upper_bounds[(*col).first] > (*col).second )
             {
-               std::cout<<"\nProbing ";
-               std::cout<<cliqueind[ind];
-               std::cout<<" to zero has a weaker upper bound than clique probing: ";
-               std::cout<<probing_upper_bounds[(*col).first];
-               std::cout<<" ";
-               std::cout<<(*col).second;
+               //std::cout<<"\nProbing ";
+               //std::cout<<cliqueind[ind];
+               //std::cout<<" to zero has a weaker upper bound than clique probing: ";
+               //std::cout<<probing_upper_bounds[(*col).first];
+               //std::cout<<" ";
+               //std::cout<<(*col).second;
             }
             reset();
             setProbingColumn(ind);
@@ -825,20 +825,20 @@ CliqueProbingView<REAL>::analyzeImplications()
       {
          substitutions.emplace_back(
             CliqueProbingSubstitution<REAL>( binary_inds[ind], 1.0, ub_implications[ind].second, 0.0 ) );
-         std::cout<<"\nSubstitution: ";
-         std::cout<<binary_inds[ind];
-         std::cout<<" ";
-         std::cout<<ub_implications[ind].second;
+         //std::cout<<"\nSubstitution: ";
+         //std::cout<<binary_inds[ind];
+         //std::cout<<" ";
+         //std::cout<<ub_implications[ind].second;
       }
       else if( ub_implications[ind].first == cliquelen - 1 - static_cast<int>(fix_to_zero.size()) 
           && lb_implications[ind].first == 1 )
       {
          substitutions.emplace_back(
             CliqueProbingSubstitution<REAL>( binary_inds[ind], -1.0, lb_implications[ind].second, 1.0 ) );
-            std::cout<<"\nSubstitution: ";
-         std::cout<<binary_inds[ind];
-         std::cout<<" ";
-         std::cout<<lb_implications[ind].second;
+            //std::cout<<"\nSubstitution: ";
+         //std::cout<<binary_inds[ind];
+         //std::cout<<" ";
+         //std::cout<<lb_implications[ind].second;
       }
    }
    return false;

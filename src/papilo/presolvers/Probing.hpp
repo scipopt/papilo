@@ -175,7 +175,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
       if( problem.is_clique( consMatrix, row, num ) && rowvec.getLength() < maxCliqueLength )
       {
          cliques.emplace_back( row, 0 );
-         //std::cout<<"\nFound Clique\n";
+         ////std::cout<<"\nFound Clique\n";
       }
    }
 
@@ -348,9 +348,9 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
       if( 2 * covered <= rowvec.getLength() )
       {
          probingCliques.emplace_back( cliques[clique].first );
-         std::cout<<"\nLength of Clique: ";
-         std::cout<<static_cast<int>(rowvec.getLength());
-         std::cout<<"\n";
+         //std::cout<<"\nLength of Clique: ";
+         //std::cout<<static_cast<int>(rowvec.getLength());
+         //std::cout<<"\n";
          for( int ind = 0; ind < static_cast<int>(rowvec.getLength()); ++ind )
          {  
             if( !probedCliqueVars[rowinds[ind]] )
@@ -458,18 +458,18 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
             auto cliqueind = cliquevec.getIndices();
             auto cliquelen = cliquevec.getLength();
             auto vals = cliquevec.getValues();
-            std::cout<<"\nProbing Clique\n";
+            //std::cout<<"\nProbing Clique\n";
             for( int i = 0; i < cliquevec.getLength(); ++i )
             {
-               std::cout<< cliqueind[i];
-               std::cout<<" ";
-               std::cout<<vals[i];
-               std::cout<<" ";
+               //std::cout<< cliqueind[i];
+               //std::cout<<" ";
+               //std::cout<<vals[i];
+               //std::cout<<" ";
             }
-            std::cout<<"\nLhs/Rhs: ";
-            std::cout<< lhs[clique];
-            std::cout<<" ";
-            std::cout<< rhs[clique];
+            //std::cout<<"\nLhs/Rhs: ";
+            //std::cout<< lhs[clique];
+            //std::cout<<" ";
+            //std::cout<< rhs[clique];
             std::pair<bool,bool> cliqueProbingResult = cliqueProbingView.probeClique(clique, cliqueind, cliquelen, probing_cands ); 
             bool globalInfeasible = cliqueProbingResult.first;
             if( cliqueProbingResult.second )
@@ -488,7 +488,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
                    {
                       infeasible.store( true, std::memory_order_relaxed );
                       infeasible_variable.store( cliqueind[0] );
-                      std::cout<<"\nClique Probing detected infeasibility.\n";
+                      //std::cout<<"\nClique Probing detected infeasibility.\n";
                       break;
                    }
             cliqueProbingView.resetClique();
@@ -501,8 +501,8 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
 
    propagate_variables( cliquevarsstart, cliquevarsend );
    //msg.info( "Finished clique Probing\n");
-   /*std::cout<<("\nCutting off this many variables: ");
-   std::cout<<(static_cast<int>(probing_cands.size())-clique_cutoff_ub-1);*/
+   /*//std::cout<<("\nCutting off this many variables: ");
+   //std::cout<<(static_cast<int>(probing_cands.size())-clique_cutoff_ub-1);*/
    probing_cands.resize(clique_cutoff_ub+1);
    //msg.info( "\nCutting off this many variables: ");
    //msg.info( static_cast<int>(probing_cands.size())-clique_cutoff_lb );
@@ -651,27 +651,27 @@ ncliquesubstitutions += cliquesubstitutions.size();
 
 PresolveStatus result = PresolveStatus::kUnchanged;
 
-std::cout<<"\n\nClique Probing on ";
-   std::cout<<static_cast<int>(probingCliques.size());
-   std::cout<<" Cliques with ";
-   std::cout<< cliquevars;
-   std::cout<<" Variables led to ";
-   std::cout<<ncliquefixings;
-   std::cout<<" fixings, ";
+//std::cout<<"\n\nClique Probing on ";
+   //std::cout<<static_cast<int>(probingCliques.size());
+   //std::cout<<" Cliques with ";
+   //std::cout<< cliquevars;
+   //std::cout<<" Variables led to ";
+   //std::cout<<ncliquefixings;
+   //std::cout<<" fixings, ";
 #ifdef PAPILO_TBB
-   std::cout<<static_cast<int>(change_to_equation_comb.size());
+   //std::cout<<static_cast<int>(change_to_equation_comb.size());
 #else
-   std::cout<<static_cast<int>(change_to_equation.size());
+   //std::cout<<static_cast<int>(change_to_equation.size());
 #endif
-   std::cout<<" changed lhs/rhs, ";
-   std::cout<<static_cast<int>(cliqueBoundChanges.size());
-   std::cout<<" ";
-   std::cout<<ncliqueboundchgs;
-   std::cout<<" Bound Changes and ";
-   std::cout<<static_cast<int>(cliquesubstitutions.size());
-   std::cout<<" ";
-   std::cout<<ncliquesubstitutions;
-   std::cout<<" Substitutions.\n";
+   //std::cout<<" changed lhs/rhs, ";
+   //std::cout<<static_cast<int>(cliqueBoundChanges.size());
+   //std::cout<<" ";
+   //std::cout<<ncliqueboundchgs;
+   //std::cout<<" Bound Changes and ";
+   //std::cout<<static_cast<int>(cliquesubstitutions.size());
+   //std::cout<<" ";
+   //std::cout<<ncliquesubstitutions;
+   //std::cout<<" Substitutions.\n";
 
 //msg.info("Combined\n");
 
@@ -718,7 +718,7 @@ if( !cliquesubstitutions.empty() )
 
    for( const CliqueProbingSubstitution<REAL>& subst : cliquesubstitutions )
    {
-      std::cout<<"\nSubstitution!\n";
+      //std::cout<<"\nSubstitution!\n";
       if( subst.col1 == lastsubstcol )
          continue;
 
@@ -862,10 +862,10 @@ if( !cliquesubstitutions.empty() )
 #endif
       };
 
-      /*std::cout<<"\nProbing\n";
-      std::cout<<current_badge_start;
-      std::cout<<"\n";
-      std::cout<<current_badge_end;*/
+      /*//std::cout<<"\nProbing\n";
+      //std::cout<<current_badge_start;
+      //std::cout<<"\n";
+      //std::cout<<current_badge_end;*/
       
       assert(current_badge_end <= static_cast<int>(probing_cands.size()));
       assert(current_badge_end >= 0);
@@ -983,13 +983,13 @@ if( !cliquesubstitutions.empty() )
           this,
           "probing found: {} fixings, {} substitutions, {} bound changes\n",
           nfixings, nsubstitutions, nboundchgs );
-          std::cout<<"Normal probing found: ";
-          std::cout<< nfixings;
-          std::cout<< " fixings, ";
-          std::cout<< nsubstitutions;
-          std::cout<< " substitutions and ";
-          std::cout<< nboundchgs;
-          std::cout<< " bound changes.\n";
+          //std::cout<<"Normal probing found: ";
+          //std::cout<< nfixings;
+          //std::cout<< " fixings, ";
+          //std::cout<< nsubstitutions;
+          //std::cout<< " substitutions and ";
+          //std::cout<< nboundchgs;
+          //std::cout<< " bound changes.\n";
 
       int64_t extrawork =
           ( ( 0.1 * ( nfixings + nsubstitutions ) + 0.01 * nboundchgs ) *
