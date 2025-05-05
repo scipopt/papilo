@@ -89,7 +89,7 @@ class CliqueProbingView
    reset();
 
    std::pair<bool,bool>
-   probeClique( const int clique, const int*& indices, const int len, const Vec<int>& binary_inds)
+   probeClique( const int clique, const int*& indices, const int len, const Vec<int>& binary_inds, bool equation )
    {  
       
       //std::cout<<( "\n\nProbing Clique: ");
@@ -112,48 +112,53 @@ class CliqueProbingView
         lb_implications.emplace_back( std::pair<int,int> {0,-1} );
         ub_implications.emplace_back( std::pair<int,int> {0,-1} );
       } 
-
-      setProbingColumn(-1);
-
-      cliqueEquation = false;
-      propagateDomains();
-      if( isInfeasible() )
+      equationBefore = equation;
+      if( !equation )
       {
-         //std::cout<<"\nAll 0 infeasible, detected clique equation.\n";
-         cliqueEquation = true;
+         setProbingColumn(-1);
+
+         cliqueEquation = false;
+         propagateDomains();
+         if( isInfeasible() )
+         {
+            //std::cout<<"\nAll 0 infeasible, detected clique equation.\n";
+            cliqueEquation = true;
+         }
+         else
+         {
+            //std::cout<<("Initializing\n");
+            for( int var = 0; var != static_cast<int>(probing_lower_bounds.size()); ++var )
+            {
+               if( num.isGT(probing_lower_bounds[var], problem.getLowerBounds()[var]) )
+               {
+                  changed_clique_lbs_inds_vals.emplace_back(std::pair<int,REAL>{var, probing_lower_bounds[var]});
+                  //std::cout<<"The lower bound of ";
+                  //std::cout<<var;
+                  //std::cout<<" can be changed after probing everything on zero: ";
+                  //std::cout<< probing_lower_bounds[var];
+                  //std::cout<< " ";
+                  //std::cout<<problem.getLowerBounds()[var];
+                  //std::cout<<"\n";
+               }
+               if( num.isLT(probing_upper_bounds[var], problem.getUpperBounds()[var]) )
+               {
+                  changed_clique_ubs_inds_vals.emplace_back(std::pair<int,REAL> {var, probing_upper_bounds[var]});
+                  //std::cout<<"The upper bound of ";
+                  //std::cout<<var;
+                  //std::cout<<" can be changed after probing everything on zero: ";
+                  //std::cout<< probing_upper_bounds[var];
+                  //std::cout<< " ";
+                  //std::cout<<problem.getUpperBounds()[var];
+                  //std::cout<<"\n";
+               }
+            }
+            initbounds = true;
+            //std::cout<<("Initialized\n");
+         }
+         reset();
       }
       else
-      {
-         //std::cout<<("Initializing\n");
-         for( int var = 0; var != static_cast<int>(probing_lower_bounds.size()); ++var )
-         {
-            if( num.isGT(probing_lower_bounds[var], problem.getLowerBounds()[var]) )
-            {
-               changed_clique_lbs_inds_vals.emplace_back(std::pair<int,REAL>{var, probing_lower_bounds[var]});
-               //std::cout<<"The lower bound of ";
-               //std::cout<<var;
-               //std::cout<<" can be changed after probing everything on zero: ";
-               //std::cout<< probing_lower_bounds[var];
-               //std::cout<< " ";
-               //std::cout<<problem.getLowerBounds()[var];
-               //std::cout<<"\n";
-            }
-            if( num.isLT(probing_upper_bounds[var], problem.getUpperBounds()[var]) )
-            {
-               changed_clique_ubs_inds_vals.emplace_back(std::pair<int,REAL> {var, probing_upper_bounds[var]});
-               //std::cout<<"The upper bound of ";
-               //std::cout<<var;
-               //std::cout<<" can be changed after probing everything on zero: ";
-               //std::cout<< probing_upper_bounds[var];
-               //std::cout<< " ";
-               //std::cout<<problem.getUpperBounds()[var];
-               //std::cout<<"\n";
-            }
-         }
-         initbounds = true;
-         //std::cout<<("Initialized\n");
-      }
-      reset();
+         cliqueEquation = true;
 
       for( int i = 0; i < cliquelen; ++i )
       {
@@ -293,7 +298,7 @@ class CliqueProbingView
       }
       //if( fix_to_zero.end() - fix_to_zero.begin() == cliquelen && cliqueEquation )
          //std::cout<<"\nInfeasibility due to zero fixings in probe Clique.\n";
-      return { fix_to_zero.end() - fix_to_zero.begin() == cliquelen && cliqueEquation, cliqueEquation } ;
+      return { fix_to_zero.end() - fix_to_zero.begin() == cliquelen && cliqueEquation, cliqueEquation && !equationBefore } ;
    }
 
    void
@@ -333,6 +338,7 @@ class CliqueProbingView
     probingClique = -1;
     cliquelen = -1;
     cliqueEquation = false;
+    equationBefore = false;
    }
 
    void
@@ -454,6 +460,7 @@ class CliqueProbingView
    Vec<int> cliqueind;
    int cliquelen;
    bool cliqueEquation;
+   bool equationBefore;
 
    // datastructures for storing result of probing on one value
    Vec<CliqueProbingBoundChg<REAL>> otherValueImplications;

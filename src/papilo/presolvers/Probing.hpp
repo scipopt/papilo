@@ -164,7 +164,9 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
 
    const int nrows = problem.getNRows();
    Vec<std::pair<int,int>> cliques;
+   Vec<bool> cliqueEquations;
    cliques.reserve( nrows );
+   cliqueEquations.reserve( nrows );
    Vec<int> probing_cands;
    probing_cands.reserve( ncols );
    const int maxCliqueLength = 150;
@@ -172,10 +174,15 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
    for( int row = 0; row != nrows; ++row )
    {
       auto rowvec = consMatrix.getRowCoefficients( row );
-      if( problem.is_clique( consMatrix, row, num ) && rowvec.getLength() < maxCliqueLength )
+      auto cliquecheck = problem.is_clique_and_equation( consMatrix, row, num )
+      if( cliquecheck.first && rowvec.getLength() < maxCliqueLength )
       {
          cliques.emplace_back( row, 0 );
          ////std::cout<<"\nFound Clique\n";
+         if( cliquecheck.second)
+            cliqueEquations.emplace_back( true );
+         else
+            cliqueEquations.emplace_back( false );
       }
    }
 
@@ -333,7 +340,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
    const int max_probed_clique_vars = maxinitialbadgesize;
    int cliquevars = 0;
    Vec<bool> probedCliqueVars(ncols, false);
-   Vec<int> probingCliques;
+   Vec<std::pair<int,bool>> probingCliques;
    probingCliques.reserve( cliques.end() - cliques.begin() );
    for( int clique = 0; clique < static_cast<int>(cliques.end() - cliques.begin()); ++clique )
    {
@@ -347,7 +354,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
       }
       if( 2 * covered <= rowvec.getLength() )
       {
-         probingCliques.emplace_back( cliques[clique].first );
+         probingCliques.emplace_back( {cliques[clique].first, cliqueEquations[clique]} );
          //std::cout<<"\nLength of Clique: ";
          //std::cout<<static_cast<int>(rowvec.getLength());
          //std::cout<<"\n";
@@ -453,24 +460,25 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
          for( int i = 0; i < static_cast<int>(probingCliques.size()); ++i )
 #endif
          {
-            int clique = probingCliques[i];
+            int clique = probingCliques[i].first;
             auto cliquevec = consMatrix.getRowCoefficients( clique );
             auto cliqueind = cliquevec.getIndices();
             auto cliquelen = cliquevec.getLength();
             //auto vals = cliquevec.getValues();
             //std::cout<<"\nProbing Clique\n";
-            for( int i = 0; i < cliquevec.getLength(); ++i )
+            /*for( int i = 0; i < cliquevec.getLength(); ++i )
             {
                //std::cout<< cliqueind[i];
                //std::cout<<" ";
                //std::cout<<vals[i];
                //std::cout<<" ";
-            }
+            }*/
             //std::cout<<"\nLhs/Rhs: ";
             //std::cout<< lhs[clique];
             //std::cout<<" ";
             //std::cout<< rhs[clique];
-            std::pair<bool,bool> cliqueProbingResult = cliqueProbingView.probeClique(clique, cliqueind, cliquelen, probing_cands ); 
+            std::pair<bool,bool> cliqueProbingResult = cliqueProbingView.probeClique(clique, cliqueind, cliquelen, 
+               probing_cands, probingCliques[i].second ); 
             bool globalInfeasible = cliqueProbingResult.first;
             if( cliqueProbingResult.second )
             {
