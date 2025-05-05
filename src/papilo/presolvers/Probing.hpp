@@ -508,9 +508,10 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
          else if( num.isLT(vals[j], mincoeff) )
             mincoeff = vals[j];
       }
-      if( problem.is_rhs_clique( consMatrix, change_to_equation_comb[i], num ) )
+      if( problem.is_rhs_clique( consMatrix, change_to_equation_comb[i], num ) 
+      && !num.isEq(consMatrix.getLeftHandSides()[change_to_equation_comb[i]], mincoeff) )
          reductions.changeRowLHS( change_to_equation_comb[i],  mincoeff );
-      else
+      else if( !num.isEq(consMatrix.getRightHandSides()[change_to_equation_comb[i]], maxcoeff) )
          reductions.changeRowRHS( change_to_equation_comb[i],  maxcoeff );
       std::cout<<"\nChanging Sides from: ";
       std::cout<<consMatrix.getLeftHandSides()[change_to_equation_comb[i]];
@@ -536,9 +537,10 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
          else if( num.isLT(vals[j], mincoeff) )
             mincoeff = vals[j];
       }
-      if( problem.is_rhs_clique( consMatrix, change_to_equation[i], num ) )
+      if( problem.is_rhs_clique( consMatrix, change_to_equation[i], num ) 
+      && !num.isEq(consMatrix.getLeftHandSides()[change_to_equation[i]], mincoeff) )
          reductions.changeRowLHS( change_to_equation[i],  mincoeff );
-      else
+      else if( !num.isEq(consMatrix.getRightHandSides()[change_to_equation[i]], maxcoeff) )
          reductions.changeRowRHS( change_to_equation[i],  maxcoeff );
       std::cout<<"\nChanging Sides from: ";
       std::cout<<consMatrix.getLeftHandSides()[change_to_equation[i]];
