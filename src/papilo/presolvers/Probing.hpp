@@ -515,7 +515,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
       std::cout<<"\nChanging Sides from: ";
       std::cout<<consMatrix.getLeftHandSides()[change_to_equation_comb[i]];
       std::cout<<" ";
-      std::cout<<consMatrix.getrightHandSides()[change_to_equation_comb[i]];
+      std::cout<<consMatrix.getRightHandSides()[change_to_equation_comb[i]];
       std::cout<<" to: ":
       std::cout<<mincoeff;
       std::cout<<" ";
@@ -543,7 +543,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
       std::cout<<"\nChanging Sides from: ";
       std::cout<<consMatrix.getLeftHandSides()[change_to_equation[i]];
       std::cout<<" ";
-      std::cout<<consMatrix.getrightHandSides()[change_to_equation[i]];
+      std::cout<<consMatrix.getRightHandSides()[change_to_equation[i]];
       std::cout<<" to: ":
       std::cout<<mincoeff;
       std::cout<<" ";
