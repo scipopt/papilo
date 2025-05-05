@@ -556,10 +556,6 @@ ProbingView<REAL>::analyzeImplications()
 
          boundChanges.emplace_back(
              ProbingBoundChg<REAL>( false, col, probing_lower_bounds[col], -1 ) );
-             std::cout<<"\nLower Bound Change: ";
-             std::cout<<col;
-             std::cout<<" ";
-             std::cout<<probing_lower_bounds[col];
       }
 
       for( int c : changed_ubs )
@@ -576,10 +572,6 @@ ProbingView<REAL>::analyzeImplications()
 
          boundChanges.emplace_back(
              ProbingBoundChg<REAL>( true, col, probing_upper_bounds[col], -1 ) );
-             std::cout<<"\nUpper Bound Change: ";
-             std::cout<<col;
-             std::cout<<" ";
-             std::cout<<probing_upper_bounds[col];
       }
 
       return false;
@@ -595,20 +587,12 @@ ProbingView<REAL>::analyzeImplications()
          // probing to 1 is infeasible, fix probing column to 0
          boundChanges.emplace_back(
              ProbingBoundChg<REAL>( true, probingCol, 0.0, -1 ) );
-             std::cout<<"\nUpper Bound Change: ";
-             std::cout<<probingCol;
-             std::cout<<" ";
-             std::cout<<"0.0";
       }
       else
       {
          // probing to 0 is infeasible, fix probing column to 1
          boundChanges.emplace_back(
              ProbingBoundChg<REAL>( false, probingCol, 1.0, -1 ) );
-             std::cout<<"\nLower Bound Change: ";
-             std::cout<<probingCol;
-             std::cout<<" ";
-             std::cout<<"1.0";
       }
    }
 
@@ -684,10 +668,6 @@ ProbingView<REAL>::analyzeImplications()
          REAL bound = num.max( boundChg.bound, probing_upper_bounds[boundChg.col] );
          boundChanges.emplace_back( ProbingBoundChg<REAL>(
              true, boundChg.col, bound, probingCol ) );
-             std::cout<<"\nUpper Bound Change: ";
-             std::cout<<boundChg.col;
-             std::cout<<" ";
-             std::cout<<bound;
       }
       else if( !boundChg.upper &&
                !probing_domain_flags[boundChg.col].test( ColFlag::kLbInf ) &&
@@ -700,10 +680,6 @@ ProbingView<REAL>::analyzeImplications()
          // lower bound is tightened in both probing branches
          REAL bound = num.min( boundChg.bound, probing_lower_bounds[boundChg.col] );
          boundChanges.emplace_back( ProbingBoundChg<REAL>(false, boundChg.col, bound, probingCol ) );
-         std::cout<<"\nLower Bound Change: ";
-         std::cout<<boundChg.col;
-         std::cout<<" ";
-         std::cout<<bound;
       }
    }
 
