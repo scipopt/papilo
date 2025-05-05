@@ -144,7 +144,6 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
                         const Timer& timer, int& reason_of_infeasibility )
 {
 
-   //msg.info( "Starting Probing method\n");
    if( problem.getNumIntegralCols() == 0 )
       return PresolveStatus::kUnchanged;
 
@@ -178,7 +177,6 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
       if( cliquecheck.first && rowvec.getLength() < maxCliqueLength )
       {
          cliques.emplace_back( row, 0 );
-         ////std::cout<<"\nFound Clique\n";
          if( cliquecheck.second)
             cliqueEquations.emplace_back( true );
          else
@@ -193,7 +191,6 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
          probing_cands.push_back( i );
    }
    
-   //msg.info( "initialized\n");
 
    if( probing_cands.empty() )
       return PresolveStatus::kUnchanged;
@@ -336,7 +333,6 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
       return clique1.second > clique2.second;
    } );
    
-   //msg.info( "Sorted cliques\n");
    const int max_probed_clique_vars = maxinitialbadgesize;
    int cliquevars = 0;
    Vec<bool> probedCliqueVars(ncols, false);
@@ -355,9 +351,6 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
       if( 2 * covered <= rowvec.getLength() )
       {
          probingCliques.emplace_back( cliques[clique].first, cliqueEquations[clique] );
-         //std::cout<<"\nLength of Clique: ";
-         //std::cout<<static_cast<int>(rowvec.getLength());
-         //std::cout<<"\n";
          for( int ind = 0; ind < static_cast<int>(rowvec.getLength()); ++ind )
          {  
             if( !probedCliqueVars[rowinds[ind]] )
@@ -375,8 +368,6 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
    }
 
    
-   //msg.info( "Selected cliques\n");
-
    pdqsort( probing_cands.begin(), probing_cands.end(),
             [this, &probing_scores, &colsize, &colperm]( int col1, int col2 )
             {
@@ -430,7 +421,6 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
    Vec<int> cliqueBoundPos( size_t( 2 * ncols ), 0 );
    Vec<CliqueProbingBoundChg<REAL>> cliqueBoundChanges;
    cliqueBoundChanges.reserve( ncols );
-   //msg.info( "Starting clique Probing\n");
 
 #ifdef PAPILO_TBB
    tbb::combinable<CliqueProbingView<REAL>> clique_probing_views(
@@ -464,19 +454,6 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
             auto cliquevec = consMatrix.getRowCoefficients( clique );
             auto cliqueind = cliquevec.getIndices();
             auto cliquelen = cliquevec.getLength();
-            //auto vals = cliquevec.getValues();
-            //std::cout<<"\nProbing Clique\n";
-            /*for( int i = 0; i < cliquevec.getLength(); ++i )
-            {
-               //std::cout<< cliqueind[i];
-               //std::cout<<" ";
-               //std::cout<<vals[i];
-               //std::cout<<" ";
-            }*/
-            //std::cout<<"\nLhs/Rhs: ";
-            //std::cout<< lhs[clique];
-            //std::cout<<" ";
-            //std::cout<< rhs[clique];
             std::pair<bool,bool> cliqueProbingResult = cliqueProbingView.probeClique(clique, cliqueind, cliquelen, 
                probing_cands, probingCliques[i].second ); 
             bool globalInfeasible = cliqueProbingResult.first;
@@ -488,15 +465,12 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
                change_to_equation.emplace_back( clique );
 #endif
             }
-            //msg.info("Probed Clique\n");
             if( !globalInfeasible )
                globalInfeasible = cliqueProbingView.analyzeImplications();
-            //msg.info("Analyzed\n"); 
             if( globalInfeasible )
                    {
                       infeasible.store( true, std::memory_order_relaxed );
                       infeasible_variable.store( cliqueind[0] );
-                      //std::cout<<"\nClique Probing detected infeasibility.\n";
                       break;
                    }
             cliqueProbingView.resetClique();
@@ -508,13 +482,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
    
 
    propagate_variables( cliquevarsstart, cliquevarsend );
-   //msg.info( "Finished clique Probing\n");
-   /*//std::cout<<("\nCutting off this many variables: ");
-   //std::cout<<(static_cast<int>(probing_cands.size())-clique_cutoff_ub-1);*/
    probing_cands.resize(clique_cutoff_ub+1);
-   //msg.info( "\nCutting off this many variables: ");
-   //msg.info( static_cast<int>(probing_cands.size())-clique_cutoff_lb );
-   //msg.info("\nresized\n");
    int ncliquefixings = 0;
    int ncliqueboundchgs = 0;
    int ncliquesubstitutions = -cliquesubstitutions.size();
@@ -658,32 +626,6 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
 ncliquesubstitutions += cliquesubstitutions.size();
 
 PresolveStatus result = PresolveStatus::kUnchanged;
-
-//std::cout<<"\n\nClique Probing on ";
-   //std::cout<<static_cast<int>(probingCliques.size());
-   //std::cout<<" Cliques with ";
-   //std::cout<< cliquevars;
-   //std::cout<<" Variables led to ";
-   //std::cout<<ncliquefixings;
-   //std::cout<<" fixings, ";
-#ifdef PAPILO_TBB
-   //std::cout<<static_cast<int>(change_to_equation_comb.size());
-#else
-   //std::cout<<static_cast<int>(change_to_equation.size());
-#endif
-   //std::cout<<" changed lhs/rhs, ";
-   //std::cout<<static_cast<int>(cliqueBoundChanges.size());
-   //std::cout<<" ";
-   //std::cout<<ncliqueboundchgs;
-   //std::cout<<" Bound Changes and ";
-   //std::cout<<static_cast<int>(cliquesubstitutions.size());
-   //std::cout<<" ";
-   //std::cout<<ncliquesubstitutions;
-   //std::cout<<" Substitutions.\n";
-
-//msg.info("Combined\n");
-
-//msg.info("Boundchanges\n");
 if( !cliqueBoundChanges.empty() && false )
 {
 
@@ -709,8 +651,6 @@ if( !cliqueBoundChanges.empty() && false )
 
    result = PresolveStatus::kReduced;
 }
-
-//msg.info("subs\n");
    
 if( !cliquesubstitutions.empty() )
 {
@@ -726,7 +666,6 @@ if( !cliquesubstitutions.empty() )
 
    for( const CliqueProbingSubstitution<REAL>& subst : cliquesubstitutions )
    {
-      //std::cout<<"\nSubstitution!\n";
       if( subst.col1 == lastsubstcol )
          continue;
 
@@ -737,8 +676,7 @@ if( !cliquesubstitutions.empty() )
    }
 
    result = PresolveStatus::kReduced;
-}   //msg.info("subs finished\n");
-
+}
    const Vec<int>& rowsize = consMatrix.getRowSizes();
 
    int current_badge_start = 0;
@@ -869,18 +807,12 @@ if( !cliquesubstitutions.empty() )
              } );
 #endif
       };
-
-      /*//std::cout<<"\nProbing\n";
-      //std::cout<<current_badge_start;
-      //std::cout<<"\n";
-      //std::cout<<current_badge_end;*/
       
       assert(current_badge_end <= static_cast<int>(probing_cands.size()));
       assert(current_badge_end >= 0);
       assert(current_badge_start >= 0 );
       assert(current_badge_start <= current_badge_end );
       propagate_variables( current_badge_start, current_badge_end);
-      //propagate_variables( 0, cliquelen);
 
       if( PresolveMethod<REAL>::is_time_exceeded(
               timer, problemUpdate.getPresolveOptions().tlim ) )
@@ -991,13 +923,6 @@ if( !cliquesubstitutions.empty() )
           this,
           "probing found: {} fixings, {} substitutions, {} bound changes\n",
           nfixings, nsubstitutions, nboundchgs );
-          //std::cout<<"Normal probing found: ";
-          //std::cout<< nfixings;
-          //std::cout<< " fixings, ";
-          //std::cout<< nsubstitutions;
-          //std::cout<< " substitutions and ";
-          //std::cout<< nboundchgs;
-          //std::cout<< " bound changes.\n";
 
       int64_t extrawork =
           ( ( 0.1 * ( nfixings + nsubstitutions ) + 0.01 * nboundchgs ) *
