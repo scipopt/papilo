@@ -628,6 +628,28 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
 ncliquesubstitutions += cliquesubstitutions.size();
 
 PresolveStatus result = PresolveStatus::kUnchanged;
+/std::cout<<"\n\nClique Probing on ";
+   std::cout<<static_cast<int>(probingCliques.size());
+   std::cout<<" Cliques with ";
+   std::cout<< cliquevars;
+   std::cout<<" Variables led to ";
+   std::cout<<ncliquefixings;
+   std::cout<<" fixings, ";
+#ifdef PAPILO_TBB
+   std::cout<<static_cast<int>(change_to_equation_comb.size());
+#else
+   std::cout<<static_cast<int>(change_to_equation.size());
+#endif
+   std::cout<<" changed lhs/rhs, ";
+   std::cout<<static_cast<int>(cliqueBoundChanges.size());
+   std::cout<<" ";
+   std::cout<<ncliqueboundchgs;
+   std::cout<<" Bound Changes and ";
+   std::cout<<static_cast<int>(cliquesubstitutions.size());
+   std::cout<<" ";
+   std::cout<<ncliquesubstitutions;
+   std::cout<<" Substitutions.\n";
+
 if( !cliqueBoundChanges.empty() && false )
 {
 
