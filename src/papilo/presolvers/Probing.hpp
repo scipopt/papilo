@@ -628,7 +628,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
 ncliquesubstitutions += cliquesubstitutions.size();
 
 PresolveStatus result = PresolveStatus::kUnchanged;
-/std::cout<<"\n\nClique Probing on ";
+   std::cout<<"\n\nClique Probing on ";
    std::cout<<static_cast<int>(probingCliques.size());
    std::cout<<" Cliques with ";
    std::cout<< cliquevars;
