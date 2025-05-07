@@ -454,10 +454,8 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
             auto cliquevec = consMatrix.getRowCoefficients( clique );
             auto cliqueind = cliquevec.getIndices();
             auto cliquelen = cliquevec.getLength();
-            if( !probingCliques[i].second )
+            if( probingCliques[i].second )
                continue;
-            else
-               std::cout<<"\nProbing Equality Clique.";
             std::pair<bool,bool> cliqueProbingResult = cliqueProbingView.probeClique(clique, cliqueind, cliquelen, 
                probing_cands, probingCliques[i].second ); 
             bool globalInfeasible = cliqueProbingResult.first;
