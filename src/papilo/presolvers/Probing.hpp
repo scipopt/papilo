@@ -178,9 +178,13 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
       {
          cliques.emplace_back( row, 0 );
          if( cliquecheck.second)
+         {
             cliqueEquations.emplace_back( true );
+         }
          else
+         {
             cliqueEquations.emplace_back( false );
+         }
       }
    }
 
