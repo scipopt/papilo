@@ -107,7 +107,11 @@ class CliqueProbingView
         ub_implications.emplace_back( std::pair<int,int> {0,-1} );
       } 
       equationBefore = equation;
-      if( !equation )
+      if( equation )
+      {
+         cliqueEquation = true;
+      }
+      else
       {
          setProbingColumn(-1);
 
@@ -134,8 +138,6 @@ class CliqueProbingView
          }
          reset();
       }
-      else
-         cliqueEquation = true;
 
       for( int i = 0; i < cliquelen; ++i )
       {

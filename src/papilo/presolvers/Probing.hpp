@@ -455,7 +455,15 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
             auto cliqueind = cliquevec.getIndices();
             auto cliquelen = cliquevec.getLength();
             if( probingCliques[i].second )
-               continue;
+            {
+               assert( problem.is_clique_and_equation( consMatrix, clique, num ).second 
+                && problem.is_clique_and_equation( consMatrix, clique, num ).first );
+            }
+            else
+            {
+               assert( !problem.is_clique_and_equation( consMatrix, clique, num ).second
+                && problem.is_clique_and_equation( consMatrix, clique, num ).first );
+            }
             std::pair<bool,bool> cliqueProbingResult = cliqueProbingView.probeClique(clique, cliqueind, cliquelen, 
                probing_cands, probingCliques[i].second ); 
             bool globalInfeasible = cliqueProbingResult.first;
