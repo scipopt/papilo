@@ -162,10 +162,8 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
    const auto& colperm = problemUpdate.getRandomColPerm();
 
    const int nrows = problem.getNRows();
-   Vec<std::pair<int,int>> cliques;
-   Vec<bool> cliqueEquations;
+   Vec<std::pair<int,std::pair<int,bool>>> cliques;
    cliques.reserve( nrows );
-   cliqueEquations.reserve( nrows );
    Vec<int> probing_cands;
    probing_cands.reserve( ncols );
    const int maxCliqueLength = 150;
@@ -176,15 +174,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
       auto cliquecheck = problem.is_clique_and_equation( consMatrix, row, num );
       if( cliquecheck.first && rowvec.getLength() < maxCliqueLength )
       {
-         cliques.emplace_back( row, 0 );
-         if( cliquecheck.second)
-         {
-            cliqueEquations.emplace_back( true );
-         }
-         else
-         {
-            cliqueEquations.emplace_back( false );
-         }
+         cliques.emplace_back( row, {0, cliquecheck.second} );
       }
    }
 
@@ -321,11 +311,11 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
       auto rowinds = rowvec.getIndices();
       for( int ind = 0; ind < rowvec.getLength(); ++ind )
       {
-         cliques[clique].second += probing_scores[rowinds[ind]];
+         cliques[clique].second.first += probing_scores[rowinds[ind]];
          assert( isBinaryVariable( problem.getUpperBounds()[rowinds[ind]], problem.getLowerBounds()[rowinds[ind]], 
          problem.getColSizes()[rowinds[ind]], problem.getColFlags()[rowinds[ind]]  ));
       }
-      cliques[clique].second = cliques[clique].second / rowvec.getLength();
+      cliques[clique].second.first = cliques[clique].second.first / rowvec.getLength();
    }
 #ifdef PAPILO_TBB
    } );
@@ -334,7 +324,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
    pdqsort( cliques.begin(), cliques.end(), 
    []( const std::pair<int,int>& clique1, const std::pair<int,int>& clique2 )
    {
-      return clique1.second > clique2.second;
+      return clique1.second.first > clique2.second.first;
    } );
    
    const int max_probed_clique_vars = maxinitialbadgesize;
@@ -354,8 +344,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
       }
       if( 2 * covered <= rowvec.getLength() )
       {
-         probingCliques.emplace_back( cliques[clique].first, cliqueEquations[clique] );
-         assert( cliqueEquations[clique] == problem.is_clique_and_equation( consMatrix, cliques[clique].first, num ).second );
+         probingCliques.emplace_back( cliques[clique].first, cliques[clique].second.second );
          for( int ind = 0; ind < static_cast<int>(rowvec.getLength()); ++ind )
          {  
             if( !probedCliqueVars[rowinds[ind]] )
