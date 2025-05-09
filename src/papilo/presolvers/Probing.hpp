@@ -322,7 +322,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
 #endif
 
    pdqsort( cliques.begin(), cliques.end(), 
-   []( const std::pair<int,int>& clique1, const std::pair<int,int>& clique2 )
+   []( const std::pair<int,std::pair<int,bool>>& clique1, const std::pair<int,std::pair<int,bool>>& clique2 )
    {
       return clique1.second.first > clique2.second.first;
    } );
