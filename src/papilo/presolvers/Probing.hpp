@@ -355,7 +355,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
       if( 2 * covered <= rowvec.getLength() )
       {
          probingCliques.emplace_back( cliques[clique].first, cliqueEquations[clique] );
-         assert( cliqueEquations[clique] == !problem.is_clique_and_equation( consMatrix, cliques[clique].first, num ).second );
+         assert( cliqueEquations[clique] == problem.is_clique_and_equation( consMatrix, cliques[clique].first, num ).second );
          for( int ind = 0; ind < static_cast<int>(rowvec.getLength()); ++ind )
          {  
             if( !probedCliqueVars[rowinds[ind]] )
