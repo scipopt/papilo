@@ -174,7 +174,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
       auto cliquecheck = problem.is_clique_and_equation( consMatrix, row, num );
       if( cliquecheck.first && rowvec.getLength() < maxCliqueLength )
       {
-         cliques.emplace_back( row, {0, cliquecheck.second} );
+         cliques.emplace_back( row, std::make_pair(0, cliquecheck.second) );
       }
    }
 
