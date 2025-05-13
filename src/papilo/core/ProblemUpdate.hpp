@@ -1704,7 +1704,6 @@ ProblemUpdate<REAL>::trivialPresolve()
       return status;
 
    flush( true );
-   clearChangeInfo();
    clearStates();
    check_and_compress();
 

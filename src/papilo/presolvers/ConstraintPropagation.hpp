@@ -217,7 +217,7 @@ ConstraintPropagation<REAL>::execute( const Problem<REAL>& problem,
       {
          auto rowvec = consMatrix.getRowCoefficients( row );
 
-         // in sequential mode no trivialPresolve is performed
+         // in sequential mode no intermediate trivial presolving is performed
          if( consMatrix.isRowRedundant( row ) )
             continue;
 
