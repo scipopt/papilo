@@ -115,10 +115,12 @@ TEST_CASE( "dual-fix-no-dual-substitution-for-lp", "[presolve]" )
        PostsolveStorage<double>( problem, num, presolveOptions );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
-
-   problemUpdate.trivialPresolve();
    papilo::DualFix<double> presolvingMethod{};
    Reductions<double> reductions{};
+
+   problem.recomputeAllActivities();
+   problemUpdate.trivialPresolve();
+   problemUpdate.clearChangeInfo();
 
    PresolveStatus presolveStatus =
        presolvingMethod.execute( problem, problemUpdate, num, reductions, t, cause);
@@ -141,10 +143,12 @@ int cause = -1;
        PostsolveStorage<double>( problem, num, presolveOptions );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
-
-   problemUpdate.trivialPresolve();
    papilo::DualFix<double> presolvingMethod{};
    Reductions<double> reductions{};
+
+   problem.recomputeAllActivities();
+   problemUpdate.trivialPresolve();
+   problemUpdate.clearChangeInfo();
 
    PresolveStatus presolveStatus =
        presolvingMethod.execute( problem, problemUpdate, num, reductions, t, cause);

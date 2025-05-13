@@ -52,6 +52,7 @@ Fixed bugs
 
 - Components: Find set representatives before unifying components
 - Stuffing: Clear singleton columns for unique stuffings
+- Trivial: Run trivial presolving in every round
 
 Build system
 ------------

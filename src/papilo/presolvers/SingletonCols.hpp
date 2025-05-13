@@ -226,7 +226,7 @@ SingletonCols<REAL>::execute( const Problem<REAL>& problem,
          assert( !rflags[row].test( RowFlag::kLhsInf, RowFlag::kRhsInf ) );
          assert( lhs_values[row] == rhs_values[row] );
 
-         // singleton rows are already check in trivial presolve
+         // singleton rows are checked in trivial presolving
          if( rowSizes[row] <= 1 )
             continue;
 
