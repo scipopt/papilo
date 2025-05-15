@@ -430,12 +430,10 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
    cliqueProbingView.setMinContDomRed( mincontdomred );
    Vec<int> change_to_equation;
 #endif
-   int cliquevarsstart = 0;
-   int cliquevarsend = static_cast<int>(probingCliques.size());
-   auto propagate_variables = [&]( int cliquevarsstart, int cliquevarsend )
+   auto propagate_variables = [&]( int cliquestart, int cliqueend )
    {
 #ifdef PAPILO_TBB
-      tbb::parallel_for( tbb::blocked_range<int>( 0, probingCliques.end() - probingCliques.begin() ),
+      tbb::parallel_for( tbb::blocked_range<int>( cliquestart, cliqueend ),
       [&]( const tbb::blocked_range<int>& r )
       {
          CliqueProbingView<REAL>& cliqueProbingView = clique_probing_views.local();
@@ -484,8 +482,32 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
 #endif
    };
    
+   propagate_variables( 0, std::min(3,static_cast<int>(probingCliques.end() - probingCliques.begin())) );
+   int initallyprobedcliquevars = 0;
+   for( int i = 0; i < std::min(3,static_cast<int>(probingCliques.end() - probingCliques.begin())); ++i )
+   {
+      int clique = probingCliques[i].first;
+      auto cliquevec = consMatrix.getRowCoefficients( clique );
+      auto cliquelen = cliquevec.getLength();
+      initallyprobedcliquevars += cliquelen
+   }
 
-   propagate_variables( cliquevarsstart, cliquevarsend );
+   const int cliquereductionfactor = 2;
+#ifdef PAPILO_TBB
+   int numinitialcliquereductions = 0;
+   clique_probing_views.combine_each([](CliqueProbingView<REAL>& clique_probing_view) {
+      numinitialcliquereductions += clique_probing_view.getNumSubstitutions() 
+      + clique_probing_view.getProbingBoundChanges().size();
+   });
+   if( !globalinfeasible && numinitialcliquereductions * cliquereductionfactor 
+       >= initallyprobedcliquevars)
+#else
+   if( !globalinfeasible && cliquereductionfactor*(cliqueProbingView.getNumSubstitutions() 
+      + cliqueProbingView.getProbingBoundChanges().size()) >= initallyprobedcliquevars )
+#endif
+      propagate_variables( std::min(3,static_cast<int>(probingCliques.end() - probingCliques.begin())), 
+                                     static_cast<int>(probingCliques.end() - probingCliques.begin()) );
+   
    probing_cands.resize(clique_cutoff_ub+1);
    int ncliquefixings = 0;
    int ncliqueboundchgs = 0;
