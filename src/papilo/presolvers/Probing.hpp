@@ -503,7 +503,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
        >= initallyprobedcliquevars)
 #else
    if( !infeasible && cliquereductionfactor*(cliqueProbingView.getNumSubstitutions() 
-      + cliqueProbingView.getProbingBoundChanges().size()) >= initallyprobedcliquevars )
+      + static_cast<int>(cliqueProbingView.getProbingBoundChanges().size())) >= initallyprobedcliquevars )
 #endif
       propagate_variables( std::min(3,static_cast<int>(probingCliques.end() - probingCliques.begin())), 
                                      static_cast<int>(probingCliques.end() - probingCliques.begin()) );
