@@ -489,20 +489,20 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
       int clique = probingCliques[i].first;
       auto cliquevec = consMatrix.getRowCoefficients( clique );
       auto cliquelen = cliquevec.getLength();
-      initallyprobedcliquevars += cliquelen
+      initallyprobedcliquevars += cliquelen;
    }
 
    const int cliquereductionfactor = 2;
 #ifdef PAPILO_TBB
    int numinitialcliquereductions = 0;
-   clique_probing_views.combine_each([](CliqueProbingView<REAL>& clique_probing_view) {
+   clique_probing_views.combine_each([&numinitialcliquereductions](CliqueProbingView<REAL>& clique_probing_view) {
       numinitialcliquereductions += clique_probing_view.getNumSubstitutions() 
       + clique_probing_view.getProbingBoundChanges().size();
    });
-   if( !globalinfeasible && numinitialcliquereductions * cliquereductionfactor 
+   if( !infeasible && numinitialcliquereductions * cliquereductionfactor 
        >= initallyprobedcliquevars)
 #else
-   if( !globalinfeasible && cliquereductionfactor*(cliqueProbingView.getNumSubstitutions() 
+   if( !infeasible && cliquereductionfactor*(cliqueProbingView.getNumSubstitutions() 
       + cliqueProbingView.getProbingBoundChanges().size()) >= initallyprobedcliquevars )
 #endif
       propagate_variables( std::min(3,static_cast<int>(probingCliques.end() - probingCliques.begin())), 
