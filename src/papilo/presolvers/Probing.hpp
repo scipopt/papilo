@@ -488,7 +488,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
    auto cliqueprobinstarttime = timer.getTime();
    
    const int initialbatchsize = 4;
-   const int cliquereductionfactor = 2;
+   const int cliquereductionfactor = 1;
    int probedcliquevars = 0;
    int batchsize = initialbatchsize;
    int batchstart = 0;
@@ -674,9 +674,9 @@ ncliquesubstitutions += cliquesubstitutions.size();
 
 PresolveStatus result = PresolveStatus::kUnchanged;
    std::cout<<"\n\nClique Probing on ";
-   std::cout<<static_cast<int>(probingCliques.size());
+   std::cout<<std::min(static_cast<int>(probingCliques.size()), batchend);
    std::cout<<" Cliques with ";
-   std::cout<< cliquevars;
+   std::cout<< probedcliquevars;
    std::cout<<" Variables led to ";
    std::cout<<ncliquefixings;
    std::cout<<" fixings, ";
