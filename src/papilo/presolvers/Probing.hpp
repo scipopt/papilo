@@ -487,32 +487,46 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
    std::cout<<" seconds";
    auto cliqueprobinstarttime = timer.getTime();
    
-   propagate_variables( 0, std::min(3,static_cast<int>(probingCliques.end() - probingCliques.begin())) );
-   int initallyprobedcliquevars = 0;
-   for( int i = 0; i < std::min(3,static_cast<int>(probingCliques.end() - probingCliques.begin())); ++i )
-   {
-      int clique = probingCliques[i].first;
-      auto cliquevec = consMatrix.getRowCoefficients( clique );
-      auto cliquelen = cliquevec.getLength();
-      initallyprobedcliquevars += cliquelen;
-   }
-
+   const int initialbatchsize = 4;
    const int cliquereductionfactor = 2;
+   int probedcliquevars = 0;
+   int batchsize = initialbatchsize;
+   int batchstart = 0;
+   int batchend = std::min(batchstart + batchsize, static_cast<int>(probingCliques.end() - probingCliques.begin()));
+
+   while( batchstart < static_cast<int>(probingCliques.end() - probingCliques.begin()) )
+   {
+      propagate_variables( batchstart, batchend );
+
+      for( int i = 0; i < std::min(3,static_cast<int>(probingCliques.end() - probingCliques.begin())); ++i )
+      {
+         int clique = probingCliques[i].first;
+         auto cliquevec = consMatrix.getRowCoefficients( clique );
+         auto cliquelen = cliquevec.getLength();
+         probedcliquevars += cliquelen;
+      }
+      int numcliquereductions = 0;
 #ifdef PAPILO_TBB
-   int numinitialcliquereductions = 0;
-   clique_probing_views.combine_each([&numinitialcliquereductions](CliqueProbingView<REAL>& clique_probing_view) {
-      numinitialcliquereductions += clique_probing_view.getNumSubstitutions() 
-      + clique_probing_view.getProbingBoundChanges().size();
-   });
-   if( !infeasible && numinitialcliquereductions * cliquereductionfactor 
-       >= initallyprobedcliquevars)
-#else
-   if( !infeasible && cliquereductionfactor*(cliqueProbingView.getNumSubstitutions() 
-      + static_cast<int>(cliqueProbingView.getProbingBoundChanges().size())) >= initallyprobedcliquevars )
-#endif
-      propagate_variables( std::min(3,static_cast<int>(probingCliques.end() - probingCliques.begin())), 
-                                     static_cast<int>(probingCliques.end() - probingCliques.begin()) );
+      clique_probing_views.combine_each([&numinitialcliquereductions](CliqueProbingView<REAL>& clique_probing_view) {
+         numcliquereductions += clique_probing_view.getNumSubstitutions() 
+         + clique_probing_view.getProbingBoundChanges().size();
+      });
+      if( infeasible || numcliquereductions * cliquereductionfactor 
+         >= probedcliquevars)
+   #else
+      if( infeasible || cliquereductionfactor*(cliqueProbingView.getNumSubstitutions() 
+         + static_cast<int>(cliqueProbingView.getProbingBoundChanges().size())) >= probedcliquevars )
+   #endif
+         break;
+      else
+      {
+         batchstart = batchend;
+         batchsize *= 2;
+         batchend = batchstart + batchsize;
+      }
+   }
    auto cliqueprobingtime = timer.getTime() - cliqueprobinstarttime;
+
    probing_cands.resize(clique_cutoff_ub+1);
    int ncliquefixings = 0;
    int ncliqueboundchgs = 0;
@@ -983,7 +997,9 @@ if( !cliquesubstitutions.empty() )
           this,
           "probing found: {} fixings, {} substitutions, {} bound changes\n",
           nfixings, nsubstitutions, nboundchgs );
-      std::cout<<"\nNormal probing found ";
+      std::cout<<"\nNormal probing on ";
+      std::cout<<badgesize;
+      std::cout<<" variables found ";
       std::cout<< nfixings;
       std::cout<<" fixings, ";
       std::cout<< nsubstitutions;
@@ -991,7 +1007,7 @@ if( !cliquesubstitutions.empty() )
       std::cout<< nboundchgs;
       std::cout<<" Boundchanges in ";
       std::cout<< probingtime;
-      std::cout<<" seconds.";
+      std::cout<<" seconds.\n";
 
       int64_t extrawork =
           ( ( 0.1 * ( nfixings + nsubstitutions ) + 0.01 * nboundchgs ) *
