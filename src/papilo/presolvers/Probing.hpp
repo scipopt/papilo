@@ -143,7 +143,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
                         const Num<REAL>& num, Reductions<REAL>& reductions,
                         const Timer& timer, int& reason_of_infeasibility )
 {
-
+   auto initstarttime = timer.getTime();
    if( problem.getNumIntegralCols() == 0 )
       return PresolveStatus::kUnchanged;
 
@@ -481,6 +481,11 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
       } );
 #endif
    };
+   auto inittime  = timer.getTime() - initstartime;
+   std::cout<<"\nProbing initialization took ";
+   std::cout<<inittime;
+   std::cout<<" seconds";
+   auto cliqueprobinstarttime = timer.getTime();
    
    propagate_variables( 0, std::min(3,static_cast<int>(probingCliques.end() - probingCliques.begin())) );
    int initallyprobedcliquevars = 0;
@@ -507,7 +512,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
 #endif
       propagate_variables( std::min(3,static_cast<int>(probingCliques.end() - probingCliques.begin())), 
                                      static_cast<int>(probingCliques.end() - probingCliques.begin()) );
-   
+   auto cliqueprobingtime = timer.getTime() - cliqueprobinstarttime;
    probing_cands.resize(clique_cutoff_ub+1);
    int ncliquefixings = 0;
    int ncliqueboundchgs = 0;
@@ -674,7 +679,10 @@ PresolveStatus result = PresolveStatus::kUnchanged;
    std::cout<<static_cast<int>(cliquesubstitutions.size());
    std::cout<<" ";
    std::cout<<ncliquesubstitutions;
-   std::cout<<" Substitutions.\n";
+   std::cout<<" Substitutions in \n";
+   std::cout<<cliqueprobingtime;
+   std::cout<<" seconds.";
+
 
 if( !cliqueBoundChanges.empty() && false )
 {
@@ -862,7 +870,9 @@ if( !cliquesubstitutions.empty() )
       assert(current_badge_end >= 0);
       assert(current_badge_start >= 0 );
       assert(current_badge_start <= current_badge_end );
+      auto probingstarttime = timer.getTime();
       propagate_variables( current_badge_start, current_badge_end);
+      auto probingtime = timer.getTime() - probingstarttime;
 
       if( PresolveMethod<REAL>::is_time_exceeded(
               timer, problemUpdate.getPresolveOptions().tlim ) )
@@ -973,6 +983,15 @@ if( !cliquesubstitutions.empty() )
           this,
           "probing found: {} fixings, {} substitutions, {} bound changes\n",
           nfixings, nsubstitutions, nboundchgs );
+      std::cout<<"\nNormal probing found ";
+      std::cout<< nfixings;
+      std::cout<<" fixings, ";
+      std::cout<< nsubstitutions;
+      std::cout<<" Substitutions and ";
+      std::cout<< nboundchgs;
+      std::cout<<" Boundchanges in ";
+      std::cout<< probingtime;
+      std::cout<<" seconds.";
 
       int64_t extrawork =
           ( ( 0.1 * ( nfixings + nsubstitutions ) + 0.01 * nboundchgs ) *
