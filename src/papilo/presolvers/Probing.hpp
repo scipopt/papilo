@@ -535,9 +535,9 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
             mincoeff = vals[j];
       }
       if( problem.is_rhs_clique( consMatrix, change_to_equation_comb[i], num ) 
-      && !num.isGT(consMatrix.getLeftHandSides()[change_to_equation_comb[i]], mincoeff) )
+      && !num.isLT(consMatrix.getLeftHandSides()[change_to_equation_comb[i]], mincoeff) )
          reductions.changeRowLHS( change_to_equation_comb[i],  mincoeff );
-      else if( !num.isLT(consMatrix.getRightHandSides()[change_to_equation_comb[i]], maxcoeff) )
+      else if( !num.isGT(consMatrix.getRightHandSides()[change_to_equation_comb[i]], maxcoeff) )
          reductions.changeRowRHS( change_to_equation_comb[i],  maxcoeff );
    }
 #else
@@ -556,9 +556,9 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
             mincoeff = vals[j];
       }
       if( problem.is_rhs_clique( consMatrix, change_to_equation[i], num ) 
-      && !num.isGT(consMatrix.getLeftHandSides()[change_to_equation[i]], mincoeff) )
+      && !num.isLT(consMatrix.getLeftHandSides()[change_to_equation[i]], mincoeff) )
          reductions.changeRowLHS( change_to_equation[i],  mincoeff );
-      else if( !num.isLT(consMatrix.getRightHandSides()[change_to_equation[i]], maxcoeff) )
+      else if( !num.isGT(consMatrix.getRightHandSides()[change_to_equation[i]], maxcoeff) )
          reductions.changeRowRHS( change_to_equation[i],  maxcoeff );
 }
 #endif
