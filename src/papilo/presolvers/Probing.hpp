@@ -481,7 +481,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
       } );
 #endif
    };
-   auto inittime  = timer.getTime() - initstartime;
+   auto inittime  = timer.getTime() - initstarttime;
    std::cout<<"\nProbing initialization took ";
    std::cout<<inittime;
    std::cout<<" seconds";
