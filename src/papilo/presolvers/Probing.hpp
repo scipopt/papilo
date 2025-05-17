@@ -505,8 +505,8 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
          auto cliquelen = cliquevec.getLength();
          probedcliquevars += cliquelen;
       }
-      int numcliquereductions = 0;
 #ifdef PAPILO_TBB
+      int numcliquereductions = 0;
       clique_probing_views.combine_each([&numinitialcliquereductions](CliqueProbingView<REAL>& clique_probing_view) {
          numcliquereductions += clique_probing_view.getNumSubstitutions() 
          + clique_probing_view.getProbingBoundChanges().size();
