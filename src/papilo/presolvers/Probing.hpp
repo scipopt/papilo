@@ -998,7 +998,7 @@ if( !cliquesubstitutions.empty() )
           "probing found: {} fixings, {} substitutions, {} bound changes\n",
           nfixings, nsubstitutions, nboundchgs );
       std::cout<<"\nNormal probing on ";
-      std::cout<<badgesize;
+      std::cout<<badge_size;
       std::cout<<" variables found ";
       std::cout<< nfixings;
       std::cout<<" fixings, ";
