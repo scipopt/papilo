@@ -170,6 +170,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
 
    for( int row = 0; row != nrows; ++row )
    {
+      assert( row >= 0 && row < nrows );
       auto rowvec = consMatrix.getRowCoefficients( row );
       auto cliquecheck = problem.is_clique_and_equation( consMatrix, row, num );
       if( cliquecheck.first && rowvec.getLength() < maxCliqueLength )
@@ -223,7 +224,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
                  ( activities[row].ninfmax != 0 ||
                    rowFlags[row].test( RowFlag::kLhsInf ) ) )
                 continue;
-
+             assert( row >= 0 && row < nrows );
              auto rowvec = consMatrix.getRowCoefficients( row );
              const int* colinds = rowvec.getIndices();
              const REAL* rowvals = rowvec.getValues();
@@ -307,6 +308,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
    for( int clique = 0; clique < cliques.end() - cliques.begin(); ++clique )
    #endif
    {
+      assert( cliques[clique].first >= 0 && cliques[clique].first < nrows );
       auto rowvec = consMatrix.getRowCoefficients( cliques[clique].first );
       auto rowinds = rowvec.getIndices();
       for( int ind = 0; ind < rowvec.getLength(); ++ind )
@@ -334,6 +336,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
    probingCliques.reserve( cliques.end() - cliques.begin() );
    for( int clique = 0; clique < static_cast<int>(cliques.end() - cliques.begin()); ++clique )
    {
+      assert( cliques[clique].first >= 0 && cliques[clique].first < nrows );
       auto rowvec = consMatrix.getRowCoefficients( cliques[clique].first );
       auto rowinds = rowvec.getIndices();
       int covered = 0;
@@ -443,6 +446,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
 #endif
          {
             int clique = probingCliques[i].first;
+            assert( clique >= 0 && clique < nrows );
             auto cliquevec = consMatrix.getRowCoefficients( clique );
             auto cliqueind = cliquevec.getIndices();
             auto cliquelen = cliquevec.getLength();
@@ -501,6 +505,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
       for( int i = 0; i < std::min(3,static_cast<int>(probingCliques.end() - probingCliques.begin())); ++i )
       {
          int clique = probingCliques[i].first;
+         assert( clique >= 0 && clique < nrows );
          auto cliquevec = consMatrix.getRowCoefficients( clique );
          auto cliquelen = cliquevec.getLength();
          probedcliquevars += cliquelen;
@@ -541,6 +546,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
    } );
    for( int i = 0; i < static_cast<int>(change_to_equation_comb.size()); ++i )
    {
+      assert( change_to_equation_comb[i] >= 0 && change_to_equation_comb[i] < nrows );
       auto cliquevec = consMatrix.getRowCoefficients( change_to_equation_comb[i] );
       auto cliquelen = cliquevec.getLength();
       auto vals = cliquevec.getValues();
@@ -562,6 +568,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
 #else
    for( int i = 0; i < static_cast<int>(change_to_equation.size()); ++i )
    {
+      assert( change_to_equation[i] >= 0 && change_to_equation[i] < nrows );
       auto cliquevec = consMatrix.getRowCoefficients( change_to_equation[i] );
       auto cliquelen = cliquevec.getLength();
       auto vals = cliquevec.getValues();
