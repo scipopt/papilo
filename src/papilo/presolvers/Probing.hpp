@@ -447,6 +447,9 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
 #endif
          {
             int clique = probingCliques[i].first;
+            std::cout<<"\nProbing Clique: ";
+            std::cout<<clique;
+            std::cout<<"\n";
             assert( clique >= 0 && clique < nrows );
             auto cliquevec = consMatrix.getRowCoefficients( clique );
             auto cliqueind = cliquevec.getIndices();
