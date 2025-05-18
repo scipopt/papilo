@@ -347,6 +347,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
       }
       if( 2 * covered <= rowvec.getLength() )
       {
+         assert( cliques[clique].first >= 0 && cliques[clique].first < nrows );
          probingCliques.emplace_back( cliques[clique].first, cliques[clique].second.second );
          for( int ind = 0; ind < static_cast<int>(rowvec.getLength()); ++ind )
          {  
