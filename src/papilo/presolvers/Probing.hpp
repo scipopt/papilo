@@ -498,6 +498,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
    int batchsize = initialbatchsize;
    int batchstart = 0;
    int batchend = std::min(batchstart + batchsize, static_cast<int>(probingCliques.end() - probingCliques.begin()));
+   bool successlasttime = true;
 
    while( batchstart < static_cast<int>(probingCliques.end() - probingCliques.begin()) )
    {
@@ -523,9 +524,19 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
       if( infeasible || cliquereductionfactor*(cliqueProbingView.getNumSubstitutions() 
          + static_cast<int>(cliqueProbingView.getProbingBoundChanges().size())) <= probedcliquevars )
 #endif
-         break;
+      {
+         if( !successlasttime )
+            break;
+         else
+         {
+            successlasttime = false;
+            batchstart = batchend;
+            batchend = batchstart + batchsize;
+         }
+      }
       else
       {
+         successlastime = true;
          batchstart = batchend;
          batchsize *= 2;
          batchend = batchstart + batchsize;
