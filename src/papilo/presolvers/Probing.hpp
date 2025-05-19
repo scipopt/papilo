@@ -542,6 +542,8 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
          batchend = batchstart + batchsize;
       }
    }
+   if( infeasible )
+      return PresolveStatus::kInfeasible;
    auto cliqueprobingtime = timer.getTime() - cliqueprobinstarttime;
 
    probing_cands.resize(clique_cutoff_ub+1);
