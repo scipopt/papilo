@@ -1131,6 +1131,8 @@ if( !cliquesubstitutions.empty() )
 
       result = PresolveStatus::kReduced;
    }
+   if( ncliquefixings + ncliqueboundchgs + ncliquesubstitutions > 0 )
+      assert(result == PresolveStatus::kReduced);
    return result;
 }
 
