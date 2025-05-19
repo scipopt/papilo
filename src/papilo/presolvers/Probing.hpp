@@ -424,6 +424,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
       std::cout<<"\n";
       std::cout<<probingCliques[i].first;
    }
+   std::cout<<"\n\n\n";
 
 #ifdef PAPILO_TBB
    tbb::combinable<CliqueProbingView<REAL>> clique_probing_views(
@@ -509,9 +510,9 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
 
    while( batchstart < static_cast<int>(probingCliques.end() - probingCliques.begin()) )
    {
-      propagate_variables( batchstart, batchend );
+      propagate_variables( batchstart, std::min(batchend, static_cast<int>(probingCliques.end() - probingCliques.begin())) );
 
-      for( int i = 0; i < std::min(3,static_cast<int>(probingCliques.end() - probingCliques.begin())); ++i )
+      for( int i = 0; i < std::min(batchend,static_cast<int>(probingCliques.end() - probingCliques.begin())); ++i )
       {
          int clique = probingCliques[i].first;
          assert( clique >= 0 && clique < nrows );
