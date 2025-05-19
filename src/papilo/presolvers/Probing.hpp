@@ -561,7 +561,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
             mincoeff = vals[j];
       }
       if( problem.is_rhs_clique( consMatrix, change_to_equation_comb[i], num ) 
-      && !num.isLT(consMatrix.getLeftHandSides()[change_to_equation_comb[i]], mincoeff) )
+      && num.isLT(consMatrix.getLeftHandSides()[change_to_equation_comb[i]], mincoeff) )
       {
          std::cout<<"\nLHS Change: ";
          std::cout<<consMatrix.getLeftHandSides()[change_to_equation_comb[i]];
@@ -570,7 +570,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
          assert( mincoeff != consMatrix.getLeftHandSides()[change_to_equation_comb[i]]);
          reductions.changeRowLHS( change_to_equation_comb[i],  mincoeff );
       }
-      else if( !num.isGT(consMatrix.getRightHandSides()[change_to_equation_comb[i]], maxcoeff) )
+      else if( num.isGT(consMatrix.getRightHandSides()[change_to_equation_comb[i]], maxcoeff) )
       {  
          std::cout<<"\nRHS Change: ";
          std::cout<<consMatrix.getRightHandSides()[change_to_equation_comb[i]];
@@ -597,7 +597,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
             mincoeff = vals[j];
       }
       if( problem.is_rhs_clique( consMatrix, change_to_equation[i], num ) 
-      && !num.isLT(consMatrix.getLeftHandSides()[change_to_equation[i]], mincoeff) )
+      && num.isLT(consMatrix.getLeftHandSides()[change_to_equation[i]], mincoeff) )
       {
          std::cout<<"\nLHS Change: ";
          std::cout<<consMatrix.getLeftHandSides()[change_to_equation[i]];
@@ -606,7 +606,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
          assert( mincoeff != consMatrix.getLeftHandSides()[change_to_equation[i]]);
          reductions.changeRowLHS( change_to_equation[i],  mincoeff );
       }
-      else if( !num.isGT(consMatrix.getRightHandSides()[change_to_equation[i]], maxcoeff) )
+      else if( num.isGT(consMatrix.getRightHandSides()[change_to_equation[i]], maxcoeff) )
       {  
          std::cout<<"\nRHS Change: ";
          std::cout<<consMatrix.getRightHandSides()[change_to_equation[i]];
