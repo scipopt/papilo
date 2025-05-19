@@ -937,7 +937,10 @@ if( !cliquesubstitutions.empty() )
 
       if( PresolveMethod<REAL>::is_time_exceeded(
               timer, problemUpdate.getPresolveOptions().tlim ) )
+      {
+         std::cout<<"\nTime limit of probing exceeded!";
          return PresolveStatus::kUnchanged;
+      }
 
       if( infeasible.load( std::memory_order_relaxed ) )
       {
