@@ -441,9 +441,9 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
       [&]( const tbb::blocked_range<int>& r )
       {
          CliqueProbingView<REAL>& cliqueProbingView = clique_probing_views.local();
-         for( int i = r.begin(); i != r.end(); ++i )
+         for( int i = r.begin(); i < r.end(); ++i )
 #else
-         for( int i = 0; i < static_cast<int>(probingCliques.size()); ++i )
+         for( int i = cliquestart; i < cliqueend; ++i )
 #endif
          {
             int clique = probingCliques[i].first;
