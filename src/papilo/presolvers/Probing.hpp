@@ -562,9 +562,23 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
       }
       if( problem.is_rhs_clique( consMatrix, change_to_equation_comb[i], num ) 
       && !num.isLT(consMatrix.getLeftHandSides()[change_to_equation_comb[i]], mincoeff) )
+      {
+         std::cout<<"\nLHS Change: ";
+         std::cout<<consMatrix.getLeftHandSides()[change_to_equation_comb[i]];
+         std::cout<<" ";
+         std::cout<<mincoeff;
+         assert( mincoeff != consMatrix.getLeftHandSides()[change_to_equation_comb[i]]);
          reductions.changeRowLHS( change_to_equation_comb[i],  mincoeff );
+      }
       else if( !num.isGT(consMatrix.getRightHandSides()[change_to_equation_comb[i]], maxcoeff) )
+      {  
+         std::cout<<"\nRHS Change: ";
+         std::cout<<consMatrix.getRightHandSides()[change_to_equation_comb[i]];
+         std::cout<<" ";
+         std::cout<<maxcoeff;
+         assert( maxcoeff != consMatrix.getRightHandSides()[change_to_equation_comb[i]]);
          reductions.changeRowRHS( change_to_equation_comb[i],  maxcoeff );
+      }
    }
 #else
    for( int i = 0; i < static_cast<int>(change_to_equation.size()); ++i )
@@ -584,9 +598,23 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
       }
       if( problem.is_rhs_clique( consMatrix, change_to_equation[i], num ) 
       && !num.isLT(consMatrix.getLeftHandSides()[change_to_equation[i]], mincoeff) )
+      {
+         std::cout<<"\nLHS Change: ";
+         std::cout<<consMatrix.getLeftHandSides()[change_to_equation[i]];
+         std::cout<<" ";
+         std::cout<<mincoeff;
+         assert( mincoeff != consMatrix.getLeftHandSides()[change_to_equation[i]]);
          reductions.changeRowLHS( change_to_equation[i],  mincoeff );
+      }
       else if( !num.isGT(consMatrix.getRightHandSides()[change_to_equation[i]], maxcoeff) )
+      {  
+         std::cout<<"\nRHS Change: ";
+         std::cout<<consMatrix.getRightHandSides()[change_to_equation[i]];
+         std::cout<<" ";
+         std::cout<<maxcoeff;
+         assert( maxcoeff != consMatrix.getRightHandSides()[change_to_equation[i]]);
          reductions.changeRowRHS( change_to_equation[i],  maxcoeff );
+      }
 }
 #endif
 
