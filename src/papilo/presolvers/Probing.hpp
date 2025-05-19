@@ -531,6 +531,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
          {
             successlasttime = false;
             batchstart = batchend;
+            batchsize /= 2;
             batchend = batchstart + batchsize;
          }
       }
