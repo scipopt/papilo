@@ -747,7 +747,7 @@ PresolveStatus result = PresolveStatus::kUnchanged;
    std::cout<<" seconds.";
 
 
-if( !cliqueBoundChanges.empty() && false )
+if( !cliqueBoundChanges.empty() )
 {
 
    for( const CliqueProbingBoundChg<REAL>& boundChg : cliqueBoundChanges )
@@ -1133,8 +1133,8 @@ if( !cliquesubstitutions.empty() )
 
       result = PresolveStatus::kReduced;
    }
-   if( ncliquefixings + ncliqueboundchgs + ncliquesubstitutions > 0 )
-      assert(result == PresolveStatus::kReduced);
+   assert( ncliquefixings + ncliqueboundchgs + ncliquesubstitutions == 0 
+      || result == PresolveStatus::kInfeasible || result == PresolveStatus::kReduced);
    return result;
 }
 
