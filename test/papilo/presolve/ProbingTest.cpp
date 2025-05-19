@@ -118,7 +118,7 @@ TEST_CASE( "clique-probing-1", "[presolve]" )
 
    PresolveStatus presolveStatus =
        presolvingMethod.execute( problem, problemUpdate, num, reductions, t, cause );
-    std::cout<<"\nTESTRESULTS:\n";
+    /*std::cout<<"\nTESTRESULTS:\n";
     for( int i = 0; i < static_cast<int>(reductions.size()); ++i )
     {
         std::cout<<"\n";
@@ -127,7 +127,7 @@ TEST_CASE( "clique-probing-1", "[presolve]" )
         std::cout<<reductions.getReduction(i).row;
         std::cout<<"\n";
         std::cout<<reductions.getReduction(i).newval;
-    }
+    }*/
 
    REQUIRE( presolveStatus == PresolveStatus::kReduced );
    REQUIRE( reductions.size() == 4 );
