@@ -492,7 +492,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
    std::cout<<" seconds";
    auto cliqueprobinstarttime = timer.getTime();
    
-   const int initialbatchsize = 4;
+   const int initialbatchsize = 2;
    const auto cliquereductionfactor = 1;
    int probedcliquevars = 0;
    int batchsize = initialbatchsize;
