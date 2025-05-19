@@ -419,12 +419,6 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
    Vec<int> cliqueBoundPos( size_t( 2 * ncols ), 0 );
    Vec<CliqueProbingBoundChg<REAL>> cliqueBoundChanges;
    cliqueBoundChanges.reserve( ncols );
-   for(int i = 0; i < static_cast<int>(probingCliques.size()); ++i )
-   {
-      std::cout<<"\n";
-      std::cout<<probingCliques[i].first;
-   }
-   std::cout<<"\n\n\n";
 
 #ifdef PAPILO_TBB
    tbb::combinable<CliqueProbingView<REAL>> clique_probing_views(
@@ -453,9 +447,6 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
 #endif
          {
             int clique = probingCliques[i].first;
-            std::cout<<"\nProbing Clique: ";
-            std::cout<<clique;
-            std::cout<<"\n";
             assert( clique >= 0 && clique < nrows );
             auto cliquevec = consMatrix.getRowCoefficients( clique );
             auto cliqueind = cliquevec.getIndices();
@@ -502,7 +493,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
    auto cliqueprobinstarttime = timer.getTime();
    
    const int initialbatchsize = 4;
-   const auto cliquereductionfactor = 0.5;
+   const auto cliquereductionfactor = 2;
    int probedcliquevars = 0;
    int batchsize = initialbatchsize;
    int batchstart = 0;
@@ -527,11 +518,11 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
          + clique_probing_view.getProbingBoundChanges().size();
       });
       if( infeasible || numcliquereductions * cliquereductionfactor 
-         >= probedcliquevars)
-   #else
+         <= probedcliquevars)
+#else
       if( infeasible || cliquereductionfactor*(cliqueProbingView.getNumSubstitutions() 
-         + static_cast<int>(cliqueProbingView.getProbingBoundChanges().size())) >= probedcliquevars )
-   #endif
+         + static_cast<int>(cliqueProbingView.getProbingBoundChanges().size())) <= probedcliquevars )
+#endif
          break;
       else
       {
