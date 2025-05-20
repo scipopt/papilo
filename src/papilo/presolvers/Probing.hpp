@@ -54,6 +54,7 @@ template <typename REAL>
 class Probing : public PresolveMethod<REAL>
 {
    Vec<int> nprobed;
+   Vec<int> nprobedcliques;
    int maxinitialbadgesize = 1000;
    int minbadgesize = 10;
    int max_badge_size = DEFAULT_MAX_BADGE_SIZE;
@@ -83,7 +84,9 @@ class Probing : public PresolveMethod<REAL>
                const PresolveOptions& presolveOptions ) override
    {
       nprobed.clear();
+      nprobedcliques.clear();
       nprobed.resize( problem.getNCols(), 0 );
+      nprobedcliques.resize( problem.getNRows(), 0 );
 
       Message::debug( this, "initialized nprobed vector to size {}\n",
                       nprobed.size() );
@@ -202,6 +205,10 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
       assert( static_cast<int>( nprobed.size() ) == ncols );
       assert( std::all_of( nprobed.begin(), nprobed.end(),
                            []( int n ) { return n == 0; } ) );
+   }
+   if( nprobedcliques.empty() )
+   {
+      nprobedcliques.resize( size_t( nrows ), 0 );
    }
 
 #ifdef PAPILO_TBB
@@ -326,7 +333,8 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
    pdqsort( cliques.begin(), cliques.end(), 
    []( const std::pair<int,std::pair<int,bool>>& clique1, const std::pair<int,std::pair<int,bool>>& clique2 )
    {
-      return clique1.second.first > clique2.second.first;
+      return clique1.second.first / ( nprobedcliques[clique1.first] + 1 )
+      > clique2.second.first / ( nprobedcliques[clique2.first] + 1 ) ;
    } );
    
    const int max_probed_clique_vars = maxinitialbadgesize;
@@ -451,6 +459,11 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
             auto cliquevec = consMatrix.getRowCoefficients( clique );
             auto cliqueind = cliquevec.getIndices();
             auto cliquelen = cliquevec.getLength();
+            for( int j = 0; j < cliquelen; ++j )
+            {
+               nprobed[cliqueind[j]] +=1;
+            }
+            nprobedcliques[clique] += 1;
             if( probingCliques[i].second )
             {
                assert( problem.is_clique_and_equation( consMatrix, clique, num ).second 
