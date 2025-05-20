@@ -324,7 +324,8 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
          assert( isBinaryVariable( problem.getUpperBounds()[rowinds[ind]], problem.getLowerBounds()[rowinds[ind]], 
          problem.getColSizes()[rowinds[ind]], problem.getColFlags()[rowinds[ind]]  ));
       }
-      cliques[clique].second.first = cliques[clique].second.first / rowvec.getLength();
+      cliques[clique].second.first = cliques[clique].second.first 
+      / ( rowvec.getLength() * ( nprobedcliques[cliques[clique].first] + 1 ) ) ;
    }
 #ifdef PAPILO_TBB
    } );
@@ -333,8 +334,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
    pdqsort( cliques.begin(), cliques.end(), 
    []( const std::pair<int,std::pair<int,bool>>& clique1, const std::pair<int,std::pair<int,bool>>& clique2 )
    {
-      return clique1.second.first / ( nprobedcliques[clique1.first] + 1 )
-      > clique2.second.first / ( nprobedcliques[clique2.first] + 1 ) ;
+      return clique1.second.first > clique2.second.first ;
    } );
    
    const int max_probed_clique_vars = maxinitialbadgesize;
