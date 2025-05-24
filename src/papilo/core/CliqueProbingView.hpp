@@ -141,7 +141,7 @@ class CliqueProbingView
       for( int i = 0; i < cliquelen; ++i )
       {
          if( cliquereductionfactor * ( static_cast<int>(changed_clique_lbs_inds_vals.size())
-             + changed_clique_ubs_inds_vals.size() ) < cliquelen )
+             + static_cast<int>(changed_clique_ubs_inds_vals.size()) ) < cliquelen )
          {
             fewreductions = true;
             return { false, cliqueEquation && !equationBefore } ;
