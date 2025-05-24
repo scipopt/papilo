@@ -91,6 +91,7 @@ class CliqueProbingView
    std::pair<bool,bool>
    probeClique( const int clique, const int*& indices, const int len, const Vec<int>& binary_inds, bool equation )
    {
+      fewreductions = false;
       probingClique = clique;
       for( int ind = 0; ind < len; ++ind )
       {
@@ -139,6 +140,12 @@ class CliqueProbingView
 
       for( int i = 0; i < cliquelen; ++i )
       {
+         if( cliquereductionfactor * changed_clique_lbs_inds_vals.size() 
+             < cliquelen )
+         {
+            fewreductions = true;
+            break;
+         }
          reset();
          assert( probing_upper_bounds[cliqueind[i]] == 1.0 );
          assert( probing_lower_bounds[cliqueind[i]] == 0.0 );
@@ -255,6 +262,7 @@ class CliqueProbingView
     cliquelen = -1;
     cliqueEquation = false;
     equationBefore = false;
+    fewreductions = false;
    }
 
    void
@@ -388,6 +396,9 @@ class CliqueProbingView
    Vec<CliqueProbingSubstitution<REAL>> substitutions;
 
    int64_t amountofwork;
+   
+   const auto cliquereductionfactor = 1;
+   bool fewreductions = false;
 };
 
 #ifdef PAPILO_USE_EXTERN_TEMPLATES
@@ -666,6 +677,8 @@ CliqueProbingView<REAL>::analyzeImplications()
       boundChanges.emplace_back(
          CliqueProbingBoundChg<REAL>( true, fix_to_zero[ind], 0.0, -1 ) );
    }
+   if( fewreductions )
+      return false;
 
    for( typename std::list<std::pair<int,REAL>>::iterator col = changed_clique_lbs_inds_vals.begin();
    col != changed_clique_lbs_inds_vals.end(); std::advance(col,1) )
