@@ -140,8 +140,8 @@ class CliqueProbingView
 
       for( int i = 0; i < cliquelen; ++i )
       {
-         if( cliquereductionfactor * changed_clique_lbs_inds_vals.size() 
-             < cliquelen )
+         if( cliquereductionfactor * static_cast<double>(changed_clique_lbs_inds_vals.size())
+             < static_cast<double>(cliquelen) )
          {
             fewreductions = true;
             break;
@@ -397,7 +397,7 @@ class CliqueProbingView
 
    int64_t amountofwork;
    
-   const auto cliquereductionfactor = 1;
+   const double cliquereductionfactor = 1.0;
    bool fewreductions = false;
 };
 
