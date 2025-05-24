@@ -732,8 +732,8 @@ PresolveStatus result = PresolveStatus::kUnchanged;
    std::cout<<"\n\nClique Probing on ";
    std::cout<<std::min(static_cast<int>(probingCliques.size()), batchend);
    std::cout<<" Cliques with ";
-   std::cout<< probedcliquevars;
-   std::cout<<" Variables led to ";
+   std::cout<< totalnumpropagations;
+   std::cout<<" probed Variables led to ";
    std::cout<<ncliquefixings;
    std::cout<<" fixings, ";
 #ifdef PAPILO_TBB
