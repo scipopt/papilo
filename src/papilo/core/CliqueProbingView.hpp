@@ -118,6 +118,7 @@ class CliqueProbingView
 
          cliqueEquation = false;
          propagateDomains();
+         numpropagations += 1;
          if( isInfeasible() )
             cliqueEquation = true;
          else
@@ -152,6 +153,7 @@ class CliqueProbingView
          assert( probing_lower_bounds[cliqueind[i]] == 0.0 );
          setProbingColumn( i );
          propagateDomains();
+         numpropagations += 1;
          if( isInfeasible() )
          {
             fix_to_zero.emplace_back( probingCol );
@@ -264,6 +266,7 @@ class CliqueProbingView
     cliqueEquation = false;
     equationBefore = false;
     fewreductions = false;
+    numpropagations = 0;
    }
 
    void
@@ -322,6 +325,12 @@ class CliqueProbingView
    getAmountOfWork() const
    {
       return amountofwork;
+   }
+
+   int
+   getNumPropagations()
+   {
+      return numpropagations;
    }
 
    const Vec<REAL>&
@@ -398,8 +407,9 @@ class CliqueProbingView
 
    int64_t amountofwork;
    
-   const int cliquereductionfactor = 3;
+   const int cliquereductionfactor = 1;
    bool fewreductions = false;
+   int numpropagations = 0;
 };
 
 #ifdef PAPILO_USE_EXTERN_TEMPLATES
@@ -420,6 +430,7 @@ CliqueProbingView<REAL>::CliqueProbingView( const Problem<REAL>& problem_,
    round = -2;
    infeasible = false;
    amountofwork = 0;
+   numpropagations = 0;
    probingCol = -1;
    probingClique = -1;
    probingValue = false;

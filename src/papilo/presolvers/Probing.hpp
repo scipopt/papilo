@@ -428,6 +428,8 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
    Vec<CliqueProbingBoundChg<REAL>> cliqueBoundChanges;
    cliqueBoundChanges.reserve( ncols );
 
+   int totalnumpropagations = 0;
+
 #ifdef PAPILO_TBB
    tbb::combinable<CliqueProbingView<REAL>> clique_probing_views(
        [this, &problem, &num]()
@@ -445,12 +447,14 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
    auto propagate_variables = [&]( int cliquestart, int cliqueend )
    {
 #ifdef PAPILO_TBB
+      tbb::enumerable_thread_specific<int> numpropagations(0);
       tbb::parallel_for( tbb::blocked_range<int>( cliquestart, cliqueend ),
       [&]( const tbb::blocked_range<int>& r )
       {
          CliqueProbingView<REAL>& cliqueProbingView = clique_probing_views.local();
          for( int i = r.begin(); i < r.end(); ++i )
 #else
+         int numpropagations = 0;
          for( int i = cliquestart; i < cliqueend; ++i )
 #endif
          {
@@ -464,16 +468,6 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
                nprobed[cliqueind[j]] +=1;
             }
             nprobedcliques[clique] += 1;
-            if( probingCliques[i].second )
-            {
-               assert( problem.is_clique_and_equation( consMatrix, clique, num ).second 
-                && problem.is_clique_and_equation( consMatrix, clique, num ).first );
-            }
-            else
-            {
-               assert( !problem.is_clique_and_equation( consMatrix, clique, num ).second
-                && problem.is_clique_and_equation( consMatrix, clique, num ).first );
-            }
             std::pair<bool,bool> cliqueProbingResult = cliqueProbingView.probeClique(clique, cliqueind, cliquelen, 
                probing_cands, probingCliques[i].second ); 
             bool globalInfeasible = cliqueProbingResult.first;
@@ -493,10 +487,17 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
                       infeasible_variable.store( cliqueind[0] );
                       break;
                    }
+#ifdef PAPILO_TBB
+            numpropagations.local() += cliqueProbingView.getNumPropagations();
+#else
+            numpropagations += cliqueProbingView.getNumPropagations();
             cliqueProbingView.resetClique();
          }
 #ifdef PAPILO_TBB
       } );
+   totalnumpropagations += std::accumulate(numpropagations.begin(), numpropagations.end(), 0);
+#else
+   totalnumpropagations += numpropagations;
 #endif
    };
    auto inittime  = timer.getTime() - initstarttime;
@@ -507,7 +508,6 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
    
    const int initialbatchsize = 2;
    const auto cliquereductionfactor = 1;
-   int probedcliquevars = 0;
    int batchsize = initialbatchsize;
    int batchstart = 0;
    int batchend = std::min(batchstart + batchsize, static_cast<int>(probingCliques.end() - probingCliques.begin()));
@@ -517,14 +517,6 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
    {
       propagate_variables( batchstart, std::min(batchend, static_cast<int>(probingCliques.end() - probingCliques.begin())) );
 
-      for( int i = 0; i < std::min(batchend,static_cast<int>(probingCliques.end() - probingCliques.begin())); ++i )
-      {
-         int clique = probingCliques[i].first;
-         assert( clique >= 0 && clique < nrows );
-         auto cliquevec = consMatrix.getRowCoefficients( clique );
-         auto cliquelen = cliquevec.getLength();
-         probedcliquevars += cliquelen;
-      }
 #ifdef PAPILO_TBB
       int numcliquereductions = 0;
       clique_probing_views.combine_each([&numcliquereductions](CliqueProbingView<REAL>& clique_probing_view) {
@@ -532,10 +524,10 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
          + clique_probing_view.getProbingBoundChanges().size();
       });
       if( infeasible || numcliquereductions * cliquereductionfactor 
-         <= probedcliquevars)
+         <= totalnumpropagations )
 #else
       if( infeasible || cliquereductionfactor*(cliqueProbingView.getNumSubstitutions() 
-         + static_cast<int>(cliqueProbingView.getProbingBoundChanges().size())) <= probedcliquevars )
+         + static_cast<int>(cliqueProbingView.getProbingBoundChanges().size())) <= totalnumpropagations )
 #endif
       {
          if( !successlasttime )
