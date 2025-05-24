@@ -397,7 +397,7 @@ class CliqueProbingView
 
    int64_t amountofwork;
    
-   const double cliquereductionfactor = 1.0;
+   const double cliquereductionfactor = 2.0;
    bool fewreductions = false;
 };
 
