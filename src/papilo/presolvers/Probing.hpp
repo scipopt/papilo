@@ -491,6 +491,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
             numpropagations.local() += cliqueProbingView.getNumPropagations();
 #else
             numpropagations += cliqueProbingView.getNumPropagations();
+#endif
             cliqueProbingView.resetClique();
          }
 #ifdef PAPILO_TBB
