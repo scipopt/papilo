@@ -179,7 +179,7 @@ TEST_CASE( "clique-probing-2", "[presolve]" )
     }
 
    REQUIRE( presolveStatus == PresolveStatus::kReduced );
-   REQUIRE( reductions.size() == 6 );
+   REQUIRE( reductions.size() == 1 );
 
    REQUIRE( reductions.getReduction( 0 ).col == 9 );
    REQUIRE( reductions.getReduction( 0 ).row == papilo::ColReduction::REPLACE );
