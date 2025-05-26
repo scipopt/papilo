@@ -205,9 +205,9 @@ TEST_CASE( "clique-probing-2", "[presolve]" )
    REQUIRE( reductions.getReduction( 5 ).row == papilo::ColReduction::REPLACE );
    REQUIRE( reductions.getReduction( 5 ).newval == 1 );
 
-   REQUIRE( reductions.getReduction( 5 ).col == 0 );
-   REQUIRE( reductions.getReduction( 5 ).row == papilo::ColReduction::NONE );
-   REQUIRE( reductions.getReduction( 5 ).newval == 0 );
+   REQUIRE( reductions.getReduction( 6 ).col == 0 );
+   REQUIRE( reductions.getReduction( 6 ).row == papilo::ColReduction::NONE );
+   REQUIRE( reductions.getReduction( 6 ).newval == 0 );
 
 }
 
