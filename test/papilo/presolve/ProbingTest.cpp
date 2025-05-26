@@ -179,35 +179,31 @@ TEST_CASE( "clique-probing-2", "[presolve]" )
     }
 
    REQUIRE( presolveStatus == PresolveStatus::kReduced );
-   REQUIRE( reductions.size() == 7 );
+   REQUIRE( reductions.size() == 6 );
 
-   REQUIRE( reductions.getReduction( 0 ).col == 4 );
-   REQUIRE( reductions.getReduction( 0 ).row == papilo::ColReduction::UPPER_BOUND );
-   REQUIRE( reductions.getReduction( 0 ).newval == 0 );
-   
-   REQUIRE( reductions.getReduction( 1 ).col == 9 );
-   REQUIRE( reductions.getReduction( 1 ).row == papilo::ColReduction::REPLACE );
-   REQUIRE( reductions.getReduction( 1 ).newval == 1 );
+   REQUIRE( reductions.getReduction( 0 ).col == 9 );
+   REQUIRE( reductions.getReduction( 0 ).row == papilo::ColReduction::REPLACE );
+   REQUIRE( reductions.getReduction( 0 ).newval == 1 );
 
-   REQUIRE( reductions.getReduction( 2 ).col == 2 );
-   REQUIRE( reductions.getReduction( 2 ).row == papilo::ColReduction::NONE );
-   REQUIRE( reductions.getReduction( 2 ).newval == 0 );
+   REQUIRE( reductions.getReduction( 1 ).col == 2 );
+   REQUIRE( reductions.getReduction( 1 ).row == papilo::ColReduction::NONE );
+   REQUIRE( reductions.getReduction( 1 ).newval == 0 );
    
-   REQUIRE( reductions.getReduction( 3 ).col == 7 );
-   REQUIRE( reductions.getReduction( 3 ).row == papilo::ColReduction::REPLACE );
-   REQUIRE( reductions.getReduction( 3 ).newval == 1 );
-   
-   REQUIRE( reductions.getReduction( 4 ).col == 3 );
-   REQUIRE( reductions.getReduction( 4 ).row == papilo::ColReduction::NONE );
-   REQUIRE( reductions.getReduction( 4 ).newval == 0 );
-   
-   REQUIRE( reductions.getReduction( 5 ).col == 5 );
-   REQUIRE( reductions.getReduction( 5 ).row == papilo::ColReduction::REPLACE );
-   REQUIRE( reductions.getReduction( 5 ).newval == 1 );
+   REQUIRE( reductions.getReduction( 2 ).col == 7 );
+   REQUIRE( reductions.getReduction( 2 ).row == papilo::ColReduction::REPLACE );
+   REQUIRE( reductions.getReduction( 2 ).newval == 1 );
 
-   REQUIRE( reductions.getReduction( 6 ).col == 0 );
-   REQUIRE( reductions.getReduction( 6 ).row == papilo::ColReduction::NONE );
-   REQUIRE( reductions.getReduction( 6 ).newval == 0 );
+   REQUIRE( reductions.getReduction( 3 ).col == 3 );
+   REQUIRE( reductions.getReduction( 3 ).row == papilo::ColReduction::NONE );
+   REQUIRE( reductions.getReduction( 3 ).newval == 0 );
+   
+   REQUIRE( reductions.getReduction( 4 ).col == 5 );
+   REQUIRE( reductions.getReduction( 4 ).row == papilo::ColReduction::REPLACE );
+   REQUIRE( reductions.getReduction( 4 ).newval == 1 );
+
+   REQUIRE( reductions.getReduction( 5 ).col == 0 );
+   REQUIRE( reductions.getReduction( 5 ).row == papilo::ColReduction::NONE );
+   REQUIRE( reductions.getReduction( 5 ).newval == 0 );
 
 }
 
