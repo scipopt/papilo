@@ -569,6 +569,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
    } );
    for( int i = 0; i < static_cast<int>(change_to_equation_comb.size()); ++i )
    {
+      break;
       assert( change_to_equation_comb[i] >= 0 && change_to_equation_comb[i] < nrows );
       auto cliquevec = consMatrix.getRowCoefficients( change_to_equation_comb[i] );
       auto cliquelen = cliquevec.getLength();
@@ -597,6 +598,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
 #else
    for( int i = 0; i < static_cast<int>(change_to_equation.size()); ++i )
    {
+      break;
       assert( change_to_equation[i] >= 0 && change_to_equation[i] < nrows );
       auto cliquevec = consMatrix.getRowCoefficients( change_to_equation[i] );
       auto cliquelen = cliquevec.getLength();
@@ -738,15 +740,6 @@ PresolveStatus result = PresolveStatus::kUnchanged;
    std::cout<<" Substitutions in \n";
    std::cout<<cliqueprobingtime;
    std::cout<<" seconds.";
-
-#ifdef PAPILO_TBB
-   if(ncliquefixings + static_cast<int>(cliqueBoundChanges.size()) + static_cast<int>(cliquesubstitutions.size()) 
-    + ncliquesubstitutions + static_cast<int>(change_to_equation_comb.size()) > 0 )
-#else
-   if(ncliquefixings + static_cast<int>(cliqueBoundChanges.size()) + static_cast<int>(cliquesubstitutions.size()) 
-    + ncliquesubstitutions + static_cast<int>(change_to_equation.size()) > 0 )
-#endif
-      this->setEnabled(false);
 
 if( !cliqueBoundChanges.empty() )
 {
