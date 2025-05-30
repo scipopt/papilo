@@ -336,16 +336,22 @@ setupProblemWithCliqueProbingSubstitution()
    // x3 - x10 = 0
    // x4 - x8 = 0
    // x5 + x9 = 1
+   // x1 - x2 + x3 - x4 + x5 - x11 == 0
+   // x1 - x2 + x3 - x4 + x5 - x12 == 0
+   // x1 - x2 + x3 - x4 + x5 - x13 == 0
+   // x1 - x2 + x3 - x4 + x5 - x14 == 0
+   // x1 - x2 + x3 - x4 + x5 - x15 == 0
+   // x1 - x2 + x3 - x4 + x5 - x16 == 0
    
-   Vec<double> coefficients{ 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 };
-   Vec<double> upperBounds{ 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 };
-   Vec<double> lowerBounds{ 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 };
-   Vec<uint8_t> isIntegral{ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
+   Vec<double> coefficients{ 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 };
+   Vec<double> upperBounds{ 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 };
+   Vec<double> lowerBounds{ 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 };
+   Vec<uint8_t> isIntegral{ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
 
-   Vec<double> rhs{ 1.0, 0.0, 1.0, 0.0, 0.0, 1.0 };
-   Vec<double> lhs{ 0.0, 0.0, 1.0, 0.0, 0.0, 1.0 };
-   Vec<std::string> rowNames{ "A1", "A2", "A3", "A4", "A5", "A6" };
-   Vec<std::string> columnNames{ "c1", "c2", "c3", "c4", "c5", "c6", "c7", "c8", "c9", "c10" };
+   Vec<double> rhs{ 1.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 };
+   Vec<double> lhs{ 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 };
+   Vec<std::string> rowNames{ "A1", "A2", "A3", "A4", "A5", "A6", "A7", "A8", "A9", "A10", "A11", "A12" };
+   Vec<std::string> columnNames{ "c1", "c2", "c3", "c4", "c5", "c6", "c7", "c8", "c9", "c10", "c11", "c12", "c13", "c14", "c15", "c16" };
    Vec<std::tuple<int, int, double>> entries{
        std::tuple<int, int, double>{ 0, 0, 1.0 },
        std::tuple<int, int, double>{ 0, 1, 1.0 },
@@ -367,6 +373,49 @@ setupProblemWithCliqueProbingSubstitution()
 
        std::tuple<int, int, double>{ 5, 4, 1.0 },
        std::tuple<int, int, double>{ 5, 8, 1.0 },
+
+       std::tuple<int, int, double>{ 6, 0, 1.0 },
+       std::tuple<int, int, double>{ 6, 1, -1.0 },
+       std::tuple<int, int, double>{ 6, 2, 1.0 },
+       std::tuple<int, int, double>{ 6, 3, -1.0 },
+       std::tuple<int, int, double>{ 6, 4, 1.0 },
+       std::tuple<int, int, double>{ 6, 10, -1.0 },
+       
+       std::tuple<int, int, double>{ 7, 0, 1.0 },
+       std::tuple<int, int, double>{ 7, 1, -1.0 },
+       std::tuple<int, int, double>{ 7, 2, 1.0 },
+       std::tuple<int, int, double>{ 7, 3, -1.0 },
+       std::tuple<int, int, double>{ 7, 4, 1.0 },
+       std::tuple<int, int, double>{ 7, 11, -1.0 },
+       
+       std::tuple<int, int, double>{ 8, 0, 1.0 },
+       std::tuple<int, int, double>{ 8, 1, -1.0 },
+       std::tuple<int, int, double>{ 8, 2, 1.0 },
+       std::tuple<int, int, double>{ 8, 3, -1.0 },
+       std::tuple<int, int, double>{ 8, 4, 1.0 },
+       std::tuple<int, int, double>{ 8, 12, -1.0 },
+       
+       std::tuple<int, int, double>{ 9, 0, 1.0 },
+       std::tuple<int, int, double>{ 9, 1, -1.0 },
+       std::tuple<int, int, double>{ 9, 2, 1.0 },
+       std::tuple<int, int, double>{ 9, 3, -1.0 },
+       std::tuple<int, int, double>{ 9, 4, 1.0 },
+       std::tuple<int, int, double>{ 9, 13, -1.0 },
+       
+       std::tuple<int, int, double>{ 10, 0, 1.0 },
+       std::tuple<int, int, double>{ 10, 1, -1.0 },
+       std::tuple<int, int, double>{ 10, 2, 1.0 },
+       std::tuple<int, int, double>{ 10, 3, -1.0 },
+       std::tuple<int, int, double>{ 10, 4, 1.0 },
+       std::tuple<int, int, double>{ 10, 14, -1.0 },
+       
+       std::tuple<int, int, double>{ 11, 0, 1.0 },
+       std::tuple<int, int, double>{ 11, 1, -1.0 },
+       std::tuple<int, int, double>{ 11, 2, 1.0 },
+       std::tuple<int, int, double>{ 11, 3, -1.0 },
+       std::tuple<int, int, double>{ 11, 4, 1.0 },
+       std::tuple<int, int, double>{ 11, 15, -1.0 },
+
    };
 
    ProblemBuilder<double> pb;

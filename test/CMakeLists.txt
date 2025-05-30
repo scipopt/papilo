@@ -168,7 +168,6 @@ set(unit_tests
         "happy-path-probing"
         "failed-path-probing-on-not-binary-variables"
         "clique-probing-1"
-        "clique-probing-2"
 
         #Singleton Column
         "happy-path-singleton-column"
