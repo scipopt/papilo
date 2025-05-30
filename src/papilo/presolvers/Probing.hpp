@@ -739,6 +739,14 @@ PresolveStatus result = PresolveStatus::kUnchanged;
    std::cout<<cliqueprobingtime;
    std::cout<<" seconds.";
 
+#ifdef PAPILO_TBB
+   if(ncliquefixings + static_cast<int>(cliqueBoundChanges.size()) + static_cast<int>(cliquesubstitutions.size()) 
+    + ncliquesubstitutions + static_cast<int>(change_to_equation_comb.size()) > 0 )
+#else
+   if(ncliquefixings + static_cast<int>(cliqueBoundChanges.size()) + static_cast<int>(cliquesubstitutions.size()) 
+    + ncliquesubstitutions + static_cast<int>(change_to_equation.size()) > 0 )
+#endif
+      this->setEnabled(false);
 
 if( !cliqueBoundChanges.empty() )
 {

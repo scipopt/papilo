@@ -427,7 +427,7 @@ class CliqueProbingView
    int64_t amountofwork;
    
    const int cliquereductionfactor = 1;
-   bool fewreductions = false;
+   bool fewreductions;
    int numpropagations = 0;
 };
 
@@ -710,38 +710,40 @@ CliqueProbingView<REAL>::analyzeImplications()
    }
    if( fewreductions )
       return false;
-
-   for( typename std::list<std::pair<int,REAL>>::iterator col = changed_clique_lbs_inds_vals.begin();
-   col != changed_clique_lbs_inds_vals.end(); std::advance(col,1) )
+   else
    {
-      boundChanges.emplace_back(
-         CliqueProbingBoundChg<REAL>( false, (*col).first, (*col).second, cliqueind[0] ) );
-   }
-   for( typename std::list<std::pair<int,REAL>>::iterator col = changed_clique_ubs_inds_vals.begin();
-   col != changed_clique_ubs_inds_vals.end(); std::advance(col,1) )
-   {
-      boundChanges.emplace_back(
-         CliqueProbingBoundChg<REAL>( true, (*col).first, (*col).second, cliqueind[0] ) );
-   }
-
-   for( int ind = 0; ind < static_cast<int>(binary_inds.end() - binary_inds.begin()); ++ind )
-   {
-      if( lb_implications[ind].first == cliquelen - static_cast<int>(fix_to_zero.size())
-          - static_cast<int>(cliqueEquation) && ub_implications[ind].first == 1 
-          && ub_implications[ind].second != -1 )
+      for( typename std::list<std::pair<int,REAL>>::iterator col = changed_clique_lbs_inds_vals.begin();
+      col != changed_clique_lbs_inds_vals.end(); std::advance(col,1) )
       {
-         substitutions.emplace_back(
-            CliqueProbingSubstitution<REAL>( binary_inds[ind], 1.0, ub_implications[ind].second, 0.0 ) );
+         boundChanges.emplace_back(
+            CliqueProbingBoundChg<REAL>( false, (*col).first, (*col).second, cliqueind[0] ) );
       }
-      else if( ub_implications[ind].first == cliquelen - static_cast<int>(fix_to_zero.size())
-          - static_cast<int>(cliqueEquation) && lb_implications[ind].first == 1 
-          && lb_implications[ind].second != -1 )
+      for( typename std::list<std::pair<int,REAL>>::iterator col = changed_clique_ubs_inds_vals.begin();
+      col != changed_clique_ubs_inds_vals.end(); std::advance(col,1) )
       {
-         substitutions.emplace_back(
-            CliqueProbingSubstitution<REAL>( binary_inds[ind], -1.0, lb_implications[ind].second, 1.0 ) );
+         boundChanges.emplace_back(
+            CliqueProbingBoundChg<REAL>( true, (*col).first, (*col).second, cliqueind[0] ) );
       }
+
+      for( int ind = 0; ind < static_cast<int>(binary_inds.end() - binary_inds.begin()); ++ind )
+      {
+         if( lb_implications[ind].first == cliquelen - static_cast<int>(fix_to_zero.size())
+            - static_cast<int>(cliqueEquation) && ub_implications[ind].first == 1 
+            && ub_implications[ind].second != -1 )
+         {
+            substitutions.emplace_back(
+               CliqueProbingSubstitution<REAL>( binary_inds[ind], 1.0, ub_implications[ind].second, 0.0 ) );
+         }
+         else if( ub_implications[ind].first == cliquelen - static_cast<int>(fix_to_zero.size())
+            - static_cast<int>(cliqueEquation) && lb_implications[ind].first == 1 
+            && lb_implications[ind].second != -1 )
+         {
+            substitutions.emplace_back(
+               CliqueProbingSubstitution<REAL>( binary_inds[ind], -1.0, lb_implications[ind].second, 1.0 ) );
+         }
+      }
+      return false;
    }
-   return false;
 }
 
 template <typename REAL>
