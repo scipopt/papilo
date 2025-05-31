@@ -426,7 +426,7 @@ class CliqueProbingView
 
    int64_t amountofwork;
    
-   const int cliquereductionfactor = 3;
+   const int cliquereductionfactor = 1;
    bool fewreductions;
    int numpropagations = 0;
 };
@@ -704,7 +704,7 @@ CliqueProbingView<REAL>::analyzeImplications()
    }
    for( int ind = 0; ind < static_cast<int>(fix_to_zero.end() - fix_to_zero.begin()); ++ind )
    {
-
+      break;
       boundChanges.emplace_back(
          CliqueProbingBoundChg<REAL>( true, fix_to_zero[ind], 0.0, -1 ) );
    }
