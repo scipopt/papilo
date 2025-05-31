@@ -569,7 +569,6 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
    } );
    for( int i = 0; i < static_cast<int>(change_to_equation_comb.size()); ++i )
    {
-      break;
       assert( change_to_equation_comb[i] >= 0 && change_to_equation_comb[i] < nrows );
       auto cliquevec = consMatrix.getRowCoefficients( change_to_equation_comb[i] );
       auto cliquelen = cliquevec.getLength();
@@ -598,7 +597,6 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
 #else
    for( int i = 0; i < static_cast<int>(change_to_equation.size()); ++i )
    {
-      break;
       assert( change_to_equation[i] >= 0 && change_to_equation[i] < nrows );
       auto cliquevec = consMatrix.getRowCoefficients( change_to_equation[i] );
       auto cliquelen = cliquevec.getLength();

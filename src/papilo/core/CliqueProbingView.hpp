@@ -426,7 +426,7 @@ class CliqueProbingView
 
    int64_t amountofwork;
    
-   const int cliquereductionfactor = 1;
+   const int cliquereductionfactor = 3;
    bool fewreductions;
    int numpropagations = 0;
 };
