@@ -704,7 +704,15 @@ CliqueProbingView<REAL>::analyzeImplications()
    }
    for( int ind = 0; ind < static_cast<int>(fix_to_zero.end() - fix_to_zero.begin()); ++ind )
    {
-      break;
+      for(int i = 0; i < cliquelen; ++i )
+      {
+         if( fix_to_zero[ind] != cliqueind[i] )
+            continue;
+         reset();
+         setProbingCollumn(i);
+         propagateDomains();
+         assert( isInfeasible() );
+      }
       boundChanges.emplace_back(
          CliqueProbingBoundChg<REAL>( true, fix_to_zero[ind], 0.0, -1 ) );
    }
@@ -717,12 +725,26 @@ CliqueProbingView<REAL>::analyzeImplications()
       {
          boundChanges.emplace_back(
             CliqueProbingBoundChg<REAL>( false, (*col).first, (*col).second, cliqueind[0] ) );
+         for(int i = -1; i < cliquelen; ++i )
+         {
+            reset();
+            setProbingCollumn(i);
+            propagateDomains();
+            assert( isInfeasible() || num.isGE( probing_lower_bounds[(*col).first], (*col).second ) );
+         }
       }
       for( typename std::list<std::pair<int,REAL>>::iterator col = changed_clique_ubs_inds_vals.begin();
       col != changed_clique_ubs_inds_vals.end(); std::advance(col,1) )
       {
          boundChanges.emplace_back(
             CliqueProbingBoundChg<REAL>( true, (*col).first, (*col).second, cliqueind[0] ) );
+         for(int i = -1; i < cliquelen; ++i )
+         {
+            reset();
+            setProbingCollumn(i);
+            propagateDomains();
+            assert( isInfeasible() || num.isLE( probing_upper_bounds[(*col).first], (*col).second ) );
+         }
       }
 
       for( int ind = 0; ind < static_cast<int>(binary_inds.end() - binary_inds.begin()); ++ind )
@@ -731,6 +753,7 @@ CliqueProbingView<REAL>::analyzeImplications()
             - static_cast<int>(cliqueEquation) && ub_implications[ind].first == 1 
             && ub_implications[ind].second != -1 )
          {
+            std::cout<<"\nFOUND SUBSTITUTION";
             substitutions.emplace_back(
                CliqueProbingSubstitution<REAL>( binary_inds[ind], 1.0, ub_implications[ind].second, 0.0 ) );
          }
@@ -738,6 +761,7 @@ CliqueProbingView<REAL>::analyzeImplications()
             - static_cast<int>(cliqueEquation) && lb_implications[ind].first == 1 
             && lb_implications[ind].second != -1 )
          {
+            std::cout<<"\nFOUND SUBSTITUTION";
             substitutions.emplace_back(
                CliqueProbingSubstitution<REAL>( binary_inds[ind], -1.0, lb_implications[ind].second, 1.0 ) );
          }
