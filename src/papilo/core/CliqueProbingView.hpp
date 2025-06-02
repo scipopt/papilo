@@ -287,7 +287,7 @@ class CliqueProbingView
          {
             if( num.isGT( probing_upper_bounds[(*ind).first], (*ind).second ) )
             {
-               std::cout<<"\nThe lower Bound of ";
+               std::cout<<"\nThe upper Bound of ";
                std::cout<< (*ind).first;
                std::cout<<" has to be weakened from ";
                std::cout<<(*ind).second;
