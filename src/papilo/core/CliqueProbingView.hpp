@@ -107,6 +107,8 @@ class CliqueProbingView
          lb_implications.emplace_back( 0, -1 );
          ub_implications.emplace_back( 0, -1 );
       }
+      assert(changed_clique_ubs_inds_vals.empty());
+      assert(changed_clique_lbs_inds_vals.empty());
       equationBefore = equation;
       cliqueEquation = true;
       //TODO: extract to new function
