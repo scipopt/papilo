@@ -136,7 +136,7 @@ class CliqueProbingView
                   std::cout<<"\nThe lower Bound of ";
                   std::cout<< var;
                   std::cout<<" can be changed from ";
-                  std::Cout<<problem.getLowerBounds()[var];
+                  std::cout<<problem.getLowerBounds()[var];
                   std::cout<<" to ";
                   std::cout<< probing_lower_bounds[var];
                }
@@ -146,7 +146,7 @@ class CliqueProbingView
                   std::cout<<"\nThe upper Bound of ";
                   std::cout<< var;
                   std::cout<<" can be changed from ";
-                  std::Cout<<problem.getUpperBounds()[var];
+                  std::cout<<problem.getUpperBounds()[var];
                   std::cout<<" to ";
                   std::cout<< probing_upper_bounds[var];
                }
@@ -233,7 +233,7 @@ class CliqueProbingView
                   std::cout<<"\nThe lower Bound of ";
                   std::cout<< var;
                   std::cout<<" can be changed from ";
-                  std::Cout<<problem.getLowerBounds()[var];
+                  std::cout<<problem.getLowerBounds()[var];
                   std::cout<<" to ";
                   std::cout<< probing_lower_bounds[var];
                }
@@ -243,7 +243,7 @@ class CliqueProbingView
                   std::cout<<"\nThe upper Bound of ";
                   std::cout<< var;
                   std::cout<<" can be changed from ";
-                  std::Cout<<problem.getUpperBounds()[var];
+                  std::cout<<problem.getUpperBounds()[var];
                   std::cout<<" to ";
                   std::cout<< probing_upper_bounds[var];
                }
