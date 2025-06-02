@@ -801,7 +801,9 @@ CliqueProbingView<REAL>::analyzeImplications()
                   std::cout<<"-1";
                else
                   std::cout<<cliqueind[i];
-               std::cout<<" leads to weaker lower bounds for "; 
+               std::cout<<" has feasibility ";
+               std::cout<<isInfeasible();
+               std::cout<<" and leads to weaker lower bounds for "; 
                std::cout<<(*col).first;
                std::cout<<" of ";
                std::cout<<probing_lower_bounds[(*col).first];
@@ -831,7 +833,9 @@ CliqueProbingView<REAL>::analyzeImplications()
                   std::cout<<"-1";
                else
                   std::cout<<cliqueind[i];
-               std::cout<<" leads to weaker upper bounds for "; 
+               std::cout<<" has feasibility ";
+               std::cout<<isInfeasible();
+               std::cout<<" and leads to weaker upper bounds for "; 
                std::cout<<(*col).first;
                std::cout<<" of ";
                std::cout<<probing_upper_bounds[(*col).first];
