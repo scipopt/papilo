@@ -801,8 +801,10 @@ CliqueProbingView<REAL>::analyzeImplications()
                   std::cout<<"-1";
                else
                   std::cout<<cliqueind[i];
-               std::cout<<" has feasibility ";
+               std::cout<<" has infeasibility ";
                std::cout<<isInfeasible();
+               std::cout<<" is equation ";
+               std::cout<<equationBefore;
                std::cout<<" and leads to weaker lower bounds for "; 
                std::cout<<(*col).first;
                std::cout<<" of ";
@@ -833,8 +835,10 @@ CliqueProbingView<REAL>::analyzeImplications()
                   std::cout<<"-1";
                else
                   std::cout<<cliqueind[i];
-               std::cout<<" has feasibility ";
+               std::cout<<" has infeasibility ";
                std::cout<<isInfeasible();
+               std::cout<<" is equation ";
+               std::cout<<equationBefore;
                std::cout<<" and leads to weaker upper bounds for "; 
                std::cout<<(*col).first;
                std::cout<<" of ";
