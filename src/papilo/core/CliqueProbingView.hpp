@@ -114,7 +114,7 @@ class CliqueProbingView
       if(!equation)
       {
          //TODO: introduce new function
-         reset;
+         reset();
          setProbingColumn(-1);
          std::cout<<"\n\nProbing all on zero";
 
