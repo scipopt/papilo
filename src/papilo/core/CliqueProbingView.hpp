@@ -196,7 +196,7 @@ class CliqueProbingView
          if( isInfeasible() )
          {
             std::cout<<"\nProbing was infeasible, fixing ";
-            std::cout<<std::cout<<cliqueind[i];
+            std::cout<<cliqueind[i];
             std::cout<<" to zero.";
             fix_to_zero.emplace_back( probingCol );
             reset();
