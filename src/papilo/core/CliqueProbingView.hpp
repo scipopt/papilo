@@ -341,7 +341,7 @@ class CliqueProbingView
    resetClique()
    {
     reset();
-    changed_clique_lbs_inds_vals.clear();
+    changed_clique_ubs_inds_vals.clear();
     changed_clique_lbs_inds_vals.clear();
     assert(changed_clique_ubs_inds_vals.empty());
     assert(changed_clique_lbs_inds_vals.empty());
