@@ -338,7 +338,7 @@ class CliqueProbingView
    void
    resetClique()
    {
-      reset();
+    reset();
     changed_clique_lbs_inds_vals.clear();
     changed_clique_lbs_inds_vals.clear();
     lb_implications.clear();
@@ -351,6 +351,7 @@ class CliqueProbingView
     equationBefore = false;
     fewreductions = false;
     numpropagations = 0;
+    std::cout<<"\n\nResetting Clique.\n";
    }
 
    void
