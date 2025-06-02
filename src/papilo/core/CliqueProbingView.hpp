@@ -709,7 +709,7 @@ CliqueProbingView<REAL>::analyzeImplications()
          if( fix_to_zero[ind] != cliqueind[i] )
             continue;
          reset();
-         setProbingCollumn(i);
+         setProbingColumn(i);
          propagateDomains();
          assert( isInfeasible() );
       }
@@ -728,7 +728,7 @@ CliqueProbingView<REAL>::analyzeImplications()
          for(int i = -1; i < cliquelen; ++i )
          {
             reset();
-            setProbingCollumn(i);
+            setProbingColumn(i);
             propagateDomains();
             assert( isInfeasible() || num.isGE( probing_lower_bounds[(*col).first], (*col).second ) );
          }
@@ -741,7 +741,7 @@ CliqueProbingView<REAL>::analyzeImplications()
          for(int i = -1; i < cliquelen; ++i )
          {
             reset();
-            setProbingCollumn(i);
+            setProbingColumn(i);
             propagateDomains();
             assert( isInfeasible() || num.isLE( probing_upper_bounds[(*col).first], (*col).second ) );
          }
