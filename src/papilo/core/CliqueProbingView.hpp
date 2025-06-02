@@ -807,7 +807,7 @@ CliqueProbingView<REAL>::analyzeImplications()
                std::cout<<probing_lower_bounds[(*col).first];
                std::cout<<" compared to ";
                std::cout<<(*col).second;
-               assert(false)
+               assert(false);
             }
             assert( isInfeasible() || num.isGE( probing_lower_bounds[(*col).first], (*col).second ) );
          }
@@ -835,7 +835,7 @@ CliqueProbingView<REAL>::analyzeImplications()
                std::cout<<probing_upper_bounds[(*col).first];
                std::cout<<" compared to ";
                std::cout<<(*col).second;
-               assert(false)
+               assert(false);
             }
             assert( isInfeasible() || num.isLE( probing_upper_bounds[(*col).first], (*col).second ) );
          }
