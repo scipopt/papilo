@@ -408,6 +408,10 @@ Presolve<REAL>::apply( Problem<REAL>& problem, bool store_dual_postsolve )
    }
 #endif
 
+   if( std::is_same<REAL, Rational>::value &&
+       ( presolveOptions.feastol != 0 || presolveOptions.epsilon != 0 ))
+      msg.error("\nRunning rational presolving with positive tolerances may give unexpected results. \n");
+
 #ifdef PAPILO_TBB
    return arena.execute( [this, &problem, store_dual_postsolve]() {
 #endif
