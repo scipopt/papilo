@@ -19,12 +19,12 @@ Interface changes
 
 ### New parameters with default values
 
--cliquemerging.maxedgesparallel = 1000000: Maximal number of edges in the graph constructed for parallel clique merging
--cliquemerging.maxedgessequential = 100000: Maximal number of edges in the graph constructed for sequential clique merging
--cliquemerging.maxcliquesize = 100: Maximal size of cliques considered for clique merging [Integer: [1,2147483647]]
--cliquemerging.maxgreedycalls = 10000: Maximal number of function calls for greedy clique in a single thread in clique merging 
--cliquemerging.enabled = 0: Is clique merging enabled
-
+- cliquemerging.maxedgesparallel = 1000000: maximal number of edges in the graph constructed for parallel clique merging
+- cliquemerging.maxedgessequential = 100000: maximal number of edges in the graph constructed for sequential clique merging
+- cliquemerging.maxcliquesize = 100: maximal size of cliques considered for clique merging [Integer: [1,2147483647]]
+- cliquemerging.maxgreedycalls = 10000: maximal number of function calls for greedy clique in a single thread in clique merging 
+- cliquemerging.enabled = 0: is clique merging enabled?
+- dualinfer.minboundred = 0.001: minimum relative reduction to accept a bound change in dualinfer
 
 Data Structure:
 ------------
