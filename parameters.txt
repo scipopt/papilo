@@ -25,6 +25,9 @@ dualfix.parallel = 0
 # is presolver dualinfer enabled  [Boolean: {0,1}]
 dualinfer.enabled = 1
 
+# minimum relative reduction to accept a bound change in dualinfer [Numerical: [0,1]]
+dualinfer.minboundred = 0.001
+
 # is presolver fixcontinuous enabled  [Boolean: {0,1}]
 fixcontinuous.enabled = 1
 

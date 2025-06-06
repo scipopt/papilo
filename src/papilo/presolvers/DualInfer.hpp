@@ -37,6 +37,8 @@ namespace papilo
 template <typename REAL>
 class DualInfer : public PresolveMethod<REAL>
 {
+   double minboundred = 0.001;
+
  public:
    DualInfer() : PresolveMethod<REAL>()
    {
@@ -53,7 +55,15 @@ class DualInfer : public PresolveMethod<REAL>
          this->setEnabled( false );
       return false;
    }
-   
+
+   void
+   addPresolverParams( ParameterSet& paramSet ) override
+   {
+      paramSet.addParameter( "dualinfer.minboundred",
+                             "minimum relative reduction to accept a bound change in dualinfer",
+                             minboundred, 0.0, 1.0 );
+   }
+
    bool
    is_primal_problem_bounded( const Problem<REAL>& problem, const Num<REAL>& num, int& primal_bounded )
    {
@@ -347,8 +357,8 @@ DualInfer<REAL>::execute( const Problem<REAL>& problem,
             }
          }
 
-         // reject too small bound changes
-         if( !oldboundinf && num.isFeasLE((newbound - oldbound) / (1000 * num.max(abs(oldbound), 1)), 0) )
+         // reject too small bound change
+         if( !oldboundinf && newbound <= oldbound + REAL(minboundred) * num.max(abs(oldbound), 1) )
             return;
 
          dualColFlags[dualCol].unset( ColFlag::kLbInf );
@@ -390,8 +400,8 @@ DualInfer<REAL>::execute( const Problem<REAL>& problem,
             }
          }
 
-         // reject too small bound changes
-         if( !oldboundinf && num.isFeasGE((newbound - oldbound) / (1000 * num.max(abs(oldbound), 1)), 0) )
+         // reject too small bound change
+         if( !oldboundinf && newbound >= oldbound - REAL(minboundred) * num.max(abs(oldbound), 1) )
             return;
 
          dualColFlags[dualCol].unset( ColFlag::kUbInf );
