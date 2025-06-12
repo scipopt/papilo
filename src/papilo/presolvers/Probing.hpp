@@ -469,7 +469,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
             }
             nprobedcliques[clique] += 1;
             std::pair<bool,bool> cliqueProbingResult = cliqueProbingView.probeClique(clique, cliqueind, cliquelen, 
-               probing_cands, probingCliques[i].second ); 
+               probing_cands, probingCliques[i].second, probing_scores, colsize, colperm ); 
             bool globalInfeasible = cliqueProbingResult.first;
             if( cliqueProbingResult.second && !probingCliques[i].second )
             {

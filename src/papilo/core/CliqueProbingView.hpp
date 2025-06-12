@@ -89,7 +89,8 @@ class CliqueProbingView
    reset();
 
    std::pair<bool,bool>
-   probeClique( const int clique, const int*& indices, const int len, const Vec<int>& binary_inds, bool equation )
+   probeClique( const int clique, const int*& indices, const int len, const Vec<int>& binary_inds, 
+      bool equation, Array<std::atomic_int>& probing_scores, const Vec<int>& colsize, const auto& colperm )
    {
       fewreductions = false;
       probingClique = clique;
@@ -97,6 +98,32 @@ class CliqueProbingView
       {
          cliqueind.emplace_back( indices[ind] );
       }
+
+      pdqsort( cliqueind.begin(), cliqueind.end(),
+            [this, &probing_scores, &colsize, &colperm]( int col1, int col2 )
+            {
+               std::pair<double, double> s1;
+               std::pair<double, double> s2;
+               if( nprobed[col2] == 0 && probing_scores[col2] != 0 )
+                  s2.first = probing_scores[col2] /
+                             static_cast<double>( colsize[col2] );
+               else
+                  s2.first = 0;
+               if( nprobed[col1] == 0 && probing_scores[col1] != 0 )
+                  s1.first = probing_scores[col1] /
+                             static_cast<double>( colsize[col1] );
+               else
+                  s1.first = 0;
+
+               s1.second =
+                   ( probing_scores[col1].load( std::memory_order_relaxed ) /
+                     static_cast<double>( 1 + nprobed[col1] * colsize[col1] ) );
+               s2.second =
+                   ( probing_scores[col2].load( std::memory_order_relaxed ) /
+                     static_cast<double>( 1 + nprobed[col2] * colsize[col2] ) );
+               return !(s1 > s2 || ( s1 == s2 && colperm[col1] < colperm[col2] ));
+            } );
+
       cliquelen = len;
       assert(len == static_cast<int>(cliqueind.size()));
       bool initbounds = false;
