@@ -508,7 +508,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
    auto cliqueprobinstarttime = timer.getTime();
    
    const int initialbatchsize = 2;
-   const auto cliquereductionfactor = 1;
+   const auto cliquereductionfactor = 2;
    int batchsize = initialbatchsize;
    int batchstart = 0;
    int batchend = std::min(batchstart + batchsize, static_cast<int>(probingCliques.end() - probingCliques.begin()));
@@ -524,11 +524,11 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
          numcliquereductions += clique_probing_view.getNumSubstitutions() 
          + clique_probing_view.getProbingBoundChanges().size();
       });
-      if( infeasible || numcliquereductions * cliquereductionfactor 
-         <= totalnumpropagations )
+      if( infeasible || numcliquereductions  
+         <= totalnumpropagations * cliquereductionfactor )
 #else
-      if( infeasible || cliquereductionfactor*(cliqueProbingView.getNumSubstitutions() 
-         + static_cast<int>(cliqueProbingView.getProbingBoundChanges().size())) <= totalnumpropagations )
+      if( infeasible || (cliqueProbingView.getNumSubstitutions() + static_cast<int>(cliqueProbingView.getProbingBoundChanges().size())) 
+         <= totalnumpropagations * cliquereductionfactor )
 #endif
       {
          if( !successlasttime )
