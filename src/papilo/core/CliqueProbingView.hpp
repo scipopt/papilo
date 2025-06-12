@@ -91,7 +91,8 @@ class CliqueProbingView
 
    std::pair<bool,bool>
    probeClique( const int clique, const int*& indices, const int len, const Vec<int>& binary_inds, 
-      bool equation, Array<std::atomic_int>& probing_scores, const Vec<int>& colsize, const auto& colperm )
+      bool equation, Array<std::atomic_int>& probing_scores, const Vec<int>& colsize, const Vec<int>& colperm,
+      Vec<int>& nprobed )
    {
       fewreductions = false;
       probingClique = clique;
