@@ -102,7 +102,7 @@ class CliqueProbingView
       }
 
       pdqsort( cliqueind.begin(), cliqueind.end(),
-            [this, &probing_scores, &colsize, &colperm, &nprobed]( int col1, int col2 )
+            [&probing_scores, &colsize, &colperm, &nprobed]( int col1, int col2 )
             {
                std::pair<double, double> s1;
                std::pair<double, double> s2;
