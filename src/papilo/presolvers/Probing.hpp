@@ -530,7 +530,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
 #endif
       nsubstitutions += substitutions.size();
       std::cout<<"\n\n\nPerfomance ratio: ";
-      std::cout<< (nsubstitutions + nboundchgs + nfixings) / ( 2 * ( current_badge_end - current_badge_start ) );
+      std::cout<< static_cast<float>(nsubstitutions + nboundchgs + nfixings) / static_cast<float>( 2 * ( current_badge_end - current_badge_start ) );
       std::cout<<"\n\n\n";
       current_badge_start = current_badge_end;
 
