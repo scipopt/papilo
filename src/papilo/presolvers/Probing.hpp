@@ -736,6 +736,9 @@ PresolveStatus result = PresolveStatus::kUnchanged;
    std::cout<<" Substitutions in \n";
    std::cout<<cliqueprobingtime;
    std::cout<<" seconds.";
+   std::cout<<"\n\n\nPerformance Ratio: ";
+   std::cout<< (ncliquefixings + ncliqueboundchgs + ncliquesubstitutions) / totalnumpropagations;
+   std::cout<<"\n\n\n";
 
 if( !cliqueBoundChanges.empty() )
 {
