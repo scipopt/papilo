@@ -344,13 +344,12 @@ add_library(papilo-core STATIC
 # TODO: Simplify with a generator expression.
 function(setLibProperties targetname outputname)
     set_target_properties(${targetname} PROPERTIES
-        OUTPUT_NAME ${outputname}
-        MACOSX_RPATH "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}")
+        OUTPUT_NAME ${outputname})
 endfunction(setLibProperties)
 if(MSVC)
     setLibProperties(papilo-core "libpapilo-core")
 else()
-   setLibProperties(papilo-core "papilo-core")
+    setLibProperties(papilo-core "papilo-core")
 endif()
 
 
