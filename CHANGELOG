@@ -57,6 +57,8 @@ Fixed bugs
 Build system
 ------------
 
+- disable setting the boolean variable MACOSX_RPATH to a string value to actually enable @rpath usage
+
 
 @section RN242 PaPILO 2.4.2
 
