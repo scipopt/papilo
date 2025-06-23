@@ -314,7 +314,9 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
 #ifdef PAPILO_TBB
        } );
 #endif
-
+      
+   Vec<std::pair<int,bool>> probingCliques;
+   
    if( unsuccessfulcliqueprobing <= 2 )
    {
 #ifdef PAPILO_TBB
@@ -351,7 +353,6 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
       const int max_probed_clique_vars = maxinitialbadgesize;
       int cliquevars = 0;
       Vec<bool> probedCliqueVars(ncols, false);
-      Vec<std::pair<int,bool>> probingCliques;
       probingCliques.reserve( cliques.end() - cliques.begin() );
       for( int clique = 0; clique < static_cast<int>(cliques.end() - cliques.begin()); ++clique )
       {
@@ -727,8 +728,12 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
             } );
 #endif
       ncliquesubstitutions += cliquesubstitutions.size();
+   }
 
-      PresolveStatus result = PresolveStatus::kUnchanged;
+   PresolveStatus result = PresolveStatus::kUnchanged;
+   
+   if( unsuccessfulcliqueprobing <= 2 )
+   {
       std::cout<<"\n\nClique Probing on ";
       std::cout<<std::min(static_cast<int>(probingCliques.size()), batchend);
       std::cout<<" Cliques with ";
@@ -1148,8 +1153,13 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
 
       result = PresolveStatus::kReduced;
    }
-   assert( ncliquefixings + ncliqueboundchgs + ncliquesubstitutions == 0 
-      || result == PresolveStatus::kInfeasible || result == PresolveStatus::kReduced);
+
+   if( unsuccessfulcliqueprobing <= 2 )
+   {
+      assert( ncliquefixings + ncliqueboundchgs + ncliquesubstitutions == 0 
+         || result == PresolveStatus::kInfeasible || result == PresolveStatus::kReduced);
+   }
+
    return result;
 }
 
