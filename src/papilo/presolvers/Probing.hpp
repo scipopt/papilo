@@ -440,15 +440,18 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
    int batchend = 0;
    int totalnumpropagations = 0;
    int cliqueprobingtime = 0;
+   Vec<CliqueProbingSubstitution<REAL>> cliquesubstitutions;
+   Vec<CliqueProbingBoundChg<REAL>> cliqueBoundChanges;
+   int ncliquefixings = 0;
+   int ncliqueboundchgs = 0;
+   int ncliquesubstitutions = 0;
+#ifdef PAPILO_TBB
+   Vec<int> change_to_equation_comb;
+#endif
 
-
-   if( unsuccessfulcliqueprobing <= 2 )
-   {
       HashMap<std::pair<int, int>, int, boost::hash<std::pair<int, int>>>
       cliqueSubstitutionsPos;
-      Vec<CliqueProbingSubstitution<REAL>> cliquesubstitutions;
       Vec<int> cliqueBoundPos( size_t( 2 * ncols ), 0 );
-      Vec<CliqueProbingBoundChg<REAL>> cliqueBoundChanges;
       cliqueBoundChanges.reserve( ncols );
 
 #ifdef PAPILO_TBB
@@ -465,6 +468,9 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
       cliqueProbingView.setMinContDomRed( mincontdomred );
       Vec<int> change_to_equation;
 #endif
+
+   if( unsuccessfulcliqueprobing <= 2 )
+   {
       auto propagate_variables = [&]( int cliquestart, int cliqueend )
       {
 #ifdef PAPILO_TBB
@@ -575,20 +581,6 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
       cliqueprobingtime = timer.getTime() - cliqueprobinstarttime;
 
       probing_cands.resize(clique_cutoff_ub+1);
-   }
-   
-   int ncliquefixings = 0;
-   int ncliqueboundchgs = 0;
-   int ncliquesubstitutions = 0;
-#ifdef PAPILO_TBB
-   Vec<int> change_to_equation_comb;
-#else
-   Vec<int> change_to_equation;
-#endif
-
-
-   if( unsuccessfulcliqueprobing <= 2 )
-   {
       ncliquesubstitutions = -cliquesubstitutions.size();
 
 #ifdef PAPILO_TBB
