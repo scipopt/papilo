@@ -411,9 +411,11 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
                return s1 > s2 || ( s1 == s2 && colperm[col1] < colperm[col2] );
             } );
    
+   int clique_cutoff_ub = 0;
+
    if( unsuccessfulcliqueprobing <= 2 )
    {
-      int clique_cutoff_ub = static_cast<int>(probing_cands.size())-1;
+      clique_cutoff_ub = static_cast<int>(probing_cands.size())-1;
       int clique_cutoff_lb = 0;
 
       assert( clique_cutoff_ub < static_cast<int>(probing_cands.size()));
@@ -435,6 +437,10 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
       
    std::atomic_bool infeasible{ false };
    std::atomic_int infeasible_variable{ -1 };
+   int batchend = 0;
+   int totalnumpropagations = 0;
+   int cliqueprobingtime = 0;
+
 
    if( unsuccessfulcliqueprobing <= 2 )
    {
@@ -444,8 +450,6 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
       Vec<int> cliqueBoundPos( size_t( 2 * ncols ), 0 );
       Vec<CliqueProbingBoundChg<REAL>> cliqueBoundChanges;
       cliqueBoundChanges.reserve( ncols );
-
-      int totalnumpropagations = 0;
 
 #ifdef PAPILO_TBB
       tbb::combinable<CliqueProbingView<REAL>> clique_probing_views(
@@ -528,7 +532,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
       const auto cliquereductionfactor = 2;
       int batchsize = initialbatchsize;
       int batchstart = 0;
-      int batchend = std::min(batchstart + batchsize, static_cast<int>(probingCliques.end() - probingCliques.begin()));
+      batchend = std::min(batchstart + batchsize, static_cast<int>(probingCliques.end() - probingCliques.begin()));
       bool successlasttime = true;
 
       while( batchstart < static_cast<int>(probingCliques.end() - probingCliques.begin()) )
@@ -568,15 +572,27 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
       }
       if( infeasible )
          return PresolveStatus::kInfeasible;
-      auto cliqueprobingtime = timer.getTime() - cliqueprobinstarttime;
+      cliqueprobingtime = timer.getTime() - cliqueprobinstarttime;
 
       probing_cands.resize(clique_cutoff_ub+1);
-      int ncliquefixings = 0;
-      int ncliqueboundchgs = 0;
-      int ncliquesubstitutions = -cliquesubstitutions.size();
+   }
+   
+   int ncliquefixings = 0;
+   int ncliqueboundchgs = 0;
+   int ncliquesubstitutions = 0;
+#ifdef PAPILO_TBB
+   Vec<int> change_to_equation_comb;
+#else
+   Vec<int> change_to_equation;
+#endif
+
+
+   if( unsuccessfulcliqueprobing <= 2 )
+   {
+      ncliquesubstitutions = -cliquesubstitutions.size();
 
 #ifdef PAPILO_TBB
-      Vec<int> change_to_equation_comb = change_to_equation.combine(
+      change_to_equation_comb = change_to_equation.combine(
          [](const Vec<int>& a, const Vec<int>& b) {
          Vec<int> result = a;
          result.insert(result.end(), b.begin(), b.end() );
