@@ -86,7 +86,7 @@ class Probing : public PresolveMethod<REAL>
    {
       nprobed.clear();
       nprobedcliques.clear();
-      successfulcliqueprobing = 0;
+      unsuccessfulcliqueprobing = 0;
       nprobed.resize( problem.getNCols(), 0 );
       nprobedcliques.resize( problem.getNRows(), 0 );
 
