@@ -1066,17 +1066,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
           } );
 #endif
       nsubstitutions += substitutions.size();
-      current_badge_start = current_badge_end;
-
-      if( nfixings == 0 && nboundchgs == 0 && nsubstitutions == 0 )
-         n_useless += amountofwork;
-      else
-         n_useless = 0;
-
-      Message::debug(
-          this,
-          "probing found: {} fixings, {} substitutions, {} bound changes\n",
-          nfixings, nsubstitutions, nboundchgs );
+      
       std::cout<<"\nNormal probing on ";
       std::cout<<badge_size;
       std::cout<<" variables found ";
@@ -1090,6 +1080,19 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
       std::cout<<" seconds.\n";
       std::cout<<"\n\n\nPerfomance ratio: ";
       std::cout<< static_cast<float>(nsubstitutions + nboundchgs + nfixings) / static_cast<float>( 2 * ( current_badge_end - current_badge_start ) );
+      std::cout<<"\n\n";
+
+      current_badge_start = current_badge_end;
+
+      if( nfixings == 0 && nboundchgs == 0 && nsubstitutions == 0 )
+         n_useless += amountofwork;
+      else
+         n_useless = 0;
+
+      Message::debug(
+          this,
+          "probing found: {} fixings, {} substitutions, {} bound changes\n",
+          nfixings, nsubstitutions, nboundchgs );
 
       int64_t extrawork =
           ( ( 0.1 * ( nfixings + nsubstitutions ) + 0.01 * nboundchgs ) *
