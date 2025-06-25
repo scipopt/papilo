@@ -1088,6 +1088,8 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
       std::cout<<" Boundchanges in ";
       std::cout<< probingtime;
       std::cout<<" seconds.\n";
+      std::cout<<"\n\n\nPerfomance ratio: ";
+      std::cout<< static_cast<float>(nsubstitutions + nboundchgs + nfixings) / static_cast<float>( 2 * ( current_badge_end - current_badge_start ) );
 
       int64_t extrawork =
           ( ( 0.1 * ( nfixings + nsubstitutions ) + 0.01 * nboundchgs ) *
