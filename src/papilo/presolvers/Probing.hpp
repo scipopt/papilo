@@ -431,7 +431,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
 #endif
       };
 
-      auto starttime = timer.getTime();
+      auto probingstarttime = timer.getTime();
       propagate_variables( current_badge_start, current_badge_end );
       auto probingtime = timer.getTime() - probingstarttime;
 
