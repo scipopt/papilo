@@ -431,7 +431,9 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
 #endif
       };
 
+      auto starttime = timer.getTime();
       propagate_variables( current_badge_start, current_badge_end );
+      auto probingtime = timer.getTime() - probingstarttime;
 
       if( PresolveMethod<REAL>::is_time_exceeded(
               timer, problemUpdate.getPresolveOptions().tlim ) )
