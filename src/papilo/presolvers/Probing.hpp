@@ -1077,7 +1077,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
           this,
           "probing found: {} fixings, {} substitutions, {} bound changes\n",
           nfixings, nsubstitutions, nboundchgs );
-      /*std::cout<<"\nNormal probing on ";
+      std::cout<<"\nNormal probing on ";
       std::cout<<badge_size;
       std::cout<<" variables found ";
       std::cout<< nfixings;
@@ -1087,7 +1087,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
       std::cout<< nboundchgs;
       std::cout<<" Boundchanges in ";
       std::cout<< probingtime;
-      std::cout<<" seconds.\n";*/
+      std::cout<<" seconds.\n";
 
       int64_t extrawork =
           ( ( 0.1 * ( nfixings + nsubstitutions ) + 0.01 * nboundchgs ) *
