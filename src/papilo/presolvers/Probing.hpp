@@ -529,6 +529,17 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
       } );
 #endif
       nsubstitutions += substitutions.size();
+      std::cout<<"\nNormal probing on ";
+      std::cout<<badge_size;
+      std::cout<<" variables found ";
+      std::cout<< nfixings;
+      std::cout<<" fixings, ";
+      std::cout<< nsubstitutions;
+      std::cout<<" Substitutions and ";
+      std::cout<< nboundchgs;
+      std::cout<<" Boundchanges in ";
+      std::cout<< probingtime;
+      std::cout<<" seconds.\n";
       std::cout<<"\n\n\nPerfomance ratio: ";
       std::cout<< static_cast<float>(nsubstitutions + nboundchgs + nfixings) / static_cast<float>( 2 * ( current_badge_end - current_badge_start ) );
       std::cout<<"\n\n\n";
