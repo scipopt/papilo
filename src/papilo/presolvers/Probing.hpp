@@ -173,7 +173,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
    probing_cands.reserve( ncols );
    const int maxCliqueLength = 150;
 
-   if( unsuccessfulcliqueprobing <= 2 )
+   if( unsuccessfulcliqueprobing <= 1 )
    {
       for( int row = 0; row != nrows; ++row )
       {
@@ -212,7 +212,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
                            []( int n ) { return n == 0; } ) );
    }
 
-   if( unsuccessfulcliqueprobing <= 2 )
+   if( unsuccessfulcliqueprobing <= 1 )
    {   
       if( nprobedcliques.empty() )
       {
@@ -317,7 +317,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
       
    Vec<std::pair<int,bool>> probingCliques;
    
-   if( unsuccessfulcliqueprobing <= 2 )
+   if( unsuccessfulcliqueprobing <= 1 )
    {
 #ifdef PAPILO_TBB
       tbb::parallel_for(
@@ -413,7 +413,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
    
    int clique_cutoff_ub = 0;
 
-   if( unsuccessfulcliqueprobing <= 2 )
+   if( unsuccessfulcliqueprobing <= 1 )
    {
       clique_cutoff_ub = static_cast<int>(probing_cands.size())-1;
       int clique_cutoff_lb = 0;
@@ -469,7 +469,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
       Vec<int> change_to_equation;
 #endif
 
-   if( unsuccessfulcliqueprobing <= 2 )
+   if( unsuccessfulcliqueprobing <= 1 )
    {
       auto propagate_variables = [&]( int cliquestart, int cliqueend )
       {
@@ -740,7 +740,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
 
    PresolveStatus result = PresolveStatus::kUnchanged;
    
-   if( unsuccessfulcliqueprobing <= 2 )
+   if( unsuccessfulcliqueprobing <= 1 )
    {
       std::cout<<"\n\nClique Probing on ";
       std::cout<<std::min(static_cast<int>(probingCliques.size()), batchend);
@@ -1066,7 +1066,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
           } );
 #endif
       nsubstitutions += substitutions.size();
-      
+
       std::cout<<"\nNormal probing on ";
       std::cout<<badge_size;
       std::cout<<" variables found ";
@@ -1167,7 +1167,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
       result = PresolveStatus::kReduced;
    }
 
-   if( unsuccessfulcliqueprobing <= 2 )
+   if( unsuccessfulcliqueprobing <= 1 )
    {
       assert( ncliquefixings + ncliqueboundchgs + ncliquesubstitutions == 0 
          || result == PresolveStatus::kInfeasible || result == PresolveStatus::kReduced);
