@@ -212,6 +212,7 @@ class CliqueProbingView
             auto total_duration = std::chrono::duration_cast<std::chrono::duration<double>>(end_total - start_total);
             std::cout << "probeClique() total runtime: " << total_duration.count() << " seconds\n";
             std::cout << "Total propagateDomains() time: " << total_propagate_time.count() << " seconds\n";
+            std::cout << "Average propagation time: " << total_propagate_time.count()/(i + !equationbefore) << " seconds\n";
             
             fewreductions = true;
             return { false, cliqueEquation && !equationBefore } ;
@@ -306,6 +307,7 @@ class CliqueProbingView
    
       std::cout << "probeClique() total runtime: " << total_duration.count() << " seconds\n";
       std::cout << "Total propagateDomains() time: " << total_propagate_time.count() << " seconds\n";
+      std::cout << "Average propagation time: " << total_propagate_time.count()/(cliquelen + !equationbefore) << " seconds\n";
    
       return { fix_to_zero.end() - fix_to_zero.begin() == cliquelen && cliqueEquation, cliqueEquation && !equationBefore } ;
    }
