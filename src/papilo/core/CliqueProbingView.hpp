@@ -92,73 +92,145 @@ class CliqueProbingView
    void
    reset();
 
-   std::pair<bool, bool>
-   probeClique( const int clique, const int*& indices, const int len, const Vec<int>& binary_inds,
+   std::pair<bool,bool>
+   probeClique( const int clique, const int*& indices, const int len, const Vec<int>& binary_inds, 
       bool equation, Array<std::atomic_int>& probing_scores, const Vec<int>& colsize, const Vec<int>& colperm,
       Vec<int>& nprobed )
    {
-      // TIMING: Start total time
       auto start_total = Clock::now();
-
-      // Create a timer for all propagateDomains() calls
       std::chrono::microseconds total_propagate_time(0);
 
-      // ---------- Your original code, with timing wrappers added around propagateDomains() ----------
-
-      if (!equation)
+      fewreductions = false;
+      probingClique = clique;
+      for( int ind = 0; ind < len; ++ind )
       {
+         cliqueind.emplace_back( indices[ind] );
+      }
+
+      pdqsort( cliqueind.begin(), cliqueind.end(),
+            [&probing_scores, &colsize, &colperm, &nprobed]( int col1, int col2 )
+            {
+               std::pair<double, double> s1;
+               std::pair<double, double> s2;
+               if( nprobed[col2] == 0 && probing_scores[col2] != 0 )
+                  s2.first = probing_scores[col2] /
+                             static_cast<double>( colsize[col2] );
+               else
+                  s2.first = 0;
+               if( nprobed[col1] == 0 && probing_scores[col1] != 0 )
+                  s1.first = probing_scores[col1] /
+                             static_cast<double>( colsize[col1] );
+               else
+                  s1.first = 0;
+
+               s1.second =
+                   ( probing_scores[col1].load( std::memory_order_relaxed ) /
+                     static_cast<double>( 1 + nprobed[col1] * colsize[col1] ) );
+               s2.second =
+                   ( probing_scores[col2].load( std::memory_order_relaxed ) /
+                     static_cast<double>( 1 + nprobed[col2] * colsize[col2] ) );
+               return !(s1 > s2 || ( s1 == s2 && colperm[col1] < colperm[col2] ));
+            } );
+
+      cliquelen = len;
+      assert(len == static_cast<int>(cliqueind.size()));
+      bool initbounds = false;
+      lb_implications.reserve( static_cast<int>(binary_inds.size()) );
+      ub_implications.reserve( static_cast<int>( binary_inds.size() ) );
+      for( unsigned int ind = 0; ind != binary_inds.size(); ++ind )
+      {
+         lb_implications.emplace_back( 0, -1 );
+         ub_implications.emplace_back( 0, -1 );
+      }
+      assert(changed_clique_ubs_inds_vals.empty());
+      assert(changed_clique_lbs_inds_vals.empty());
+      equationBefore = equation;
+      cliqueEquation = true;
+      //TODO: extract to new function
+      // fix all variables to zero
+      if(!equation)
+      {
+         //TODO: introduce new function
          reset();
          setProbingColumn(-1);
+
          cliqueEquation = false;
 
-         // TIMING: start and stop around propagateDomains()
          auto start_prop = Clock::now();
          propagateDomains();
          total_propagate_time += std::chrono::duration_cast<std::chrono::microseconds>(Clock::now() - start_prop);
 
          numpropagations += 1;
-
-         if (isInfeasible())
+         if( isInfeasible() )
          {
-               cliqueEquation = true;
+            cliqueEquation = true;
          }
-         else {
-               // (unchanged code...)
+         else
+         {
+            for( int var = 0; var != static_cast<int>(probing_lower_bounds.size()); ++var )
+            {
+               if( num.isGT(probing_lower_bounds[var], problem.getLowerBounds()[var]) )
+               {
+                  changed_clique_lbs_inds_vals.emplace_back(var, probing_lower_bounds[var]);
+               }
+               if( num.isLT(probing_upper_bounds[var], problem.getUpperBounds()[var]) )
+               {
+                  changed_clique_ubs_inds_vals.emplace_back(var, probing_upper_bounds[var]);
+               }
+            }
+            initbounds = true;
+         }
+         for( unsigned int ind = 0; ind !=  binary_inds.size() ; ++ind )
+         {
+            assert( ind < binary_inds.size() );
+            assert( binary_inds[ind] < static_cast<int>(probing_lower_bounds.size()) );
+            if( num.isEq( 1.0, probing_lower_bounds[binary_inds[ind]] ) )
+            {
+               assert( ind < lb_implications.size() );
+               lb_implications[ind].first += 1;
+               lb_implications[ind].second = -1;
+            }
+            assert( ind < binary_inds.size());
+            assert( binary_inds[ind] < static_cast<int>(probing_upper_bounds.size()) );
+            if( num.isEq( 0.0, probing_upper_bounds[binary_inds[ind]] ) )
+            {
+               assert( ind < ub_implications.size() );
+               ub_implications[ind].first += 1;
+               ub_implications[ind].second = -1;
+            }
          }
          reset();
       }
 
-      for (int i = 0; i < cliquelen; ++i)
+      for( int i = 0; i < cliquelen; ++i )
       {
-         if ((static_cast<int>(changed_clique_lbs_inds_vals.size())
-               + static_cast<int>(changed_clique_ubs_inds_vals.size()) - cliquelen + i) < cliquelen * cliquereductionfactor
-               && initbounds)
+         if( ( static_cast<int>(changed_clique_lbs_inds_vals.size())
+             + static_cast<int>(changed_clique_ubs_inds_vals.size()) - cliquelen + i ) < cliquelen * cliquereductionfactor
+             && initbounds )
          {
-               fewreductions = true;
-
-               // TIMING: End total time here since we're returning early
-               auto end_total = Clock::now();
-               auto total_duration = std::chrono::duration_cast<std::chrono::microseconds>(end_total - start_total);
-               std::cout << "probeClique() total runtime: " << total_duration.count() << " us\n";
-               std::cout << "Total propagateDomains() time: " << total_propagate_time.count() << " us\n";
-               return { false, cliqueEquation && !equationBefore };
+            auto end_total = Clock::now();
+            auto total_duration = std::chrono::duration_cast<std::chrono::microseconds>(end_total - start_total);
+            std::cout << "probeClique() total runtime: " << total_duration.count() << " us\n";
+            std::cout << "Total propagateDomains() time: " << total_propagate_time.count() << " us\n";
+            
+            fewreductions = true;
+            return { false, cliqueEquation && !equationBefore } ;
          }
-
          reset();
-         setProbingColumn(i);
+         assert( probing_upper_bounds[cliqueind[i]] == 1.0 );
+         assert( probing_lower_bounds[cliqueind[i]] == 0.0 );
+         setProbingColumn( i );
 
-         // TIMING: start and stop around propagateDomains()
          auto start_prop = Clock::now();
          propagateDomains();
          total_propagate_time += std::chrono::duration_cast<std::chrono::microseconds>(Clock::now() - start_prop);
 
          numpropagations += 1;
-
-         if (isInfeasible())
+         if( isInfeasible() )
          {
-               fix_to_zero.emplace_back(probingCol);
-               reset();
-               continue;
+            fix_to_zero.emplace_back( probingCol );
+            reset();
+            continue;
          }
          for( unsigned int ind = 0; ind !=  binary_inds.size() ; ++ind )
          {
@@ -228,15 +300,15 @@ class CliqueProbingView
          }
         reset();
        }
-       auto end_total = Clock::now();
-       auto total_duration = std::chrono::duration_cast<std::chrono::microseconds>(end_total - start_total);
- 
-       std::cout << "probeClique() total runtime: " << total_duration.count() << " us\n";
-       std::cout << "Total propagateDomains() time: " << total_propagate_time.count() << " us\n";
- 
-       return { fix_to_zero.end() - fix_to_zero.begin() == cliquelen && cliqueEquation,
-                cliqueEquation && !equationBefore };
-    }
+       
+      auto end_total = Clock::now();
+      auto total_duration = std::chrono::duration_cast<std::chrono::microseconds>(end_total - start_total);
+   
+      std::cout << "probeClique() total runtime: " << total_duration.count() << " us\n";
+      std::cout << "Total propagateDomains() time: " << total_propagate_time.count() << " us\n";
+   
+      return { fix_to_zero.end() - fix_to_zero.begin() == cliquelen && cliqueEquation, cliqueEquation && !equationBefore } ;
+   }
 
    void
    setProbingColumn( int col )
