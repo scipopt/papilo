@@ -29,11 +29,8 @@
 #include "papilo/misc/Array.hpp"
 #include "papilo/misc/MultiPrecision.hpp"
 #include "papilo/misc/Vec.hpp"
-#include <chrono>
 #include <memory>
 #include <list>
-
-using Clock = std::chrono::high_resolution_clock;
 
 namespace papilo
 {
@@ -97,9 +94,6 @@ class CliqueProbingView
       bool equation, Array<std::atomic_int>& probing_scores, const Vec<int>& colsize, const Vec<int>& colperm,
       Vec<int>& nprobed )
    {
-      auto start_total = Clock::now();
-      std::chrono::duration<double> total_propagate_time(0);
-
       fewreductions = false;
       probingClique = clique;
       for( int ind = 0; ind < len; ++ind )
@@ -156,9 +150,7 @@ class CliqueProbingView
 
          cliqueEquation = false;
 
-         auto start_prop = Clock::now();
          propagateDomains();
-         total_propagate_time += std::chrono::duration_cast<std::chrono::duration<double>>(Clock::now() - start_prop);
 
          numpropagations += 1;
          if( isInfeasible() )
@@ -207,13 +199,7 @@ class CliqueProbingView
          if( ( static_cast<int>(changed_clique_lbs_inds_vals.size())
              + static_cast<int>(changed_clique_ubs_inds_vals.size()) - cliquelen + i ) < cliquelen * cliquereductionfactor
              && initbounds )
-         {
-            auto end_total = Clock::now();
-            auto total_duration = std::chrono::duration_cast<std::chrono::duration<double>>(end_total - start_total);
-            std::cout << "probeClique() total runtime: " << total_duration.count() << " seconds\n";
-            std::cout << "Total propagateDomains() time: " << total_propagate_time.count() << " seconds\n";
-            std::cout << "Average propagation time: " << total_propagate_time.count()/(i + !equationbefore) << " seconds\n";
-            
+         {     
             fewreductions = true;
             return { false, cliqueEquation && !equationBefore } ;
          }
@@ -222,9 +208,7 @@ class CliqueProbingView
          assert( probing_lower_bounds[cliqueind[i]] == 0.0 );
          setProbingColumn( i );
 
-         auto start_prop = Clock::now();
          propagateDomains();
-         total_propagate_time += std::chrono::duration_cast<std::chrono::duration<double>>(Clock::now() - start_prop);
 
          numpropagations += 1;
          if( isInfeasible() )
@@ -302,13 +286,6 @@ class CliqueProbingView
         reset();
        }
 
-      auto end_total = Clock::now();
-      auto total_duration = std::chrono::duration_cast<std::chrono::duration<double>>(end_total - start_total);
-   
-      std::cout << "probeClique() total runtime: " << total_duration.count() << " seconds\n";
-      std::cout << "Total propagateDomains() time: " << total_propagate_time.count() << " seconds\n";
-      std::cout << "Average propagation time: " << total_propagate_time.count()/(cliquelen + !equationbefore) << " seconds\n";
-   
       return { fix_to_zero.end() - fix_to_zero.begin() == cliquelen && cliqueEquation, cliqueEquation && !equationBefore } ;
    }
 
