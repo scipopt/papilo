@@ -296,7 +296,7 @@ class CliqueProbingView
       int batchend = std::min( batchstart + std::min( 24, 3*tbb::this_task_arena::max_concurrency() ), len );
       while( batchstart != len )
       {
-         tbb::parallel_for( tbb::blocked_range<int>( batchstart, batchend )
+         tbb::parallel_for( tbb::blocked_range<int>( batchstart, batchend ),
             [&]( const tbb::blocked_range<int>& r )
             {
                Vec<std::pair<int,int>>& lb_implications_thread_local = lb_implications_thread.local();
