@@ -89,6 +89,141 @@ class CliqueProbingView
    void
    reset();
 
+   void
+   parallelProbe( const tbb::blocked_range<int>& r, bool& initbounds, std::list<std::pair<int, REAL>>& changed_clique_lbs_inds_vals_thread_local, 
+      std::list<std::pair<int,REAL>>& changed_clique_ubs_inds_vals_thread_local, Vec<std::pair<int,int>>& lb_implications_thread_local,
+      Vec<std::pair<int,int>>& ub_implications_thread_local, Vec<int>& fix_to_zero_thread_local, bool& cliqueEquation, Vec<int>& indices,
+      int& clique, const Vec<int>& binary_inds, const int& len )
+   {
+      probingClique = clique;
+      cliqueind = indices;
+      cliquelen = len;
+      for( int i = r.begin(); i < r.end(); ++i )
+      {
+         if( i == -1 )
+         {
+            setProbingColumn(-1);
+            propagateDomains();
+            if( isInfeasible() )
+               cliqueEquation = true;
+            else
+            {
+               cliqueEquation = false;
+               for( int var = 0; var != static_cast<int>(probing_lower_bounds.size()); ++var )
+               {
+                  if( num.isGT(probing_lower_bounds[var], problem.getLowerBounds()[var]) )
+                  {
+                     changed_clique_lbs_inds_vals_thread_local.emplace_back(var, probing_lower_bounds[var]);
+                  }
+                  if( num.isLT(probing_upper_bounds[var], problem.getUpperBounds()[var]) )
+                  {
+                     changed_clique_ubs_inds_vals_thread_local.emplace_back(var, probing_upper_bounds[var]);
+                  }
+               }
+               initbounds = true;
+            }
+            for( unsigned int ind = 0; ind !=  binary_inds.size() ; ++ind )
+            {
+               assert( ind < binary_inds.size() );
+               assert( binary_inds[ind] < static_cast<int>(probing_lower_bounds.size()) );
+               if( num.isEq( 1.0, probing_lower_bounds[binary_inds[ind]] ) )
+               {
+                  assert( ind < lb_implications_thread_local.size() );
+                  lb_implications_thread_local[ind].first += 1;
+                  lb_implications_thread_local[ind].second = -1;
+               }
+               assert( ind < binary_inds.size());
+               assert( binary_inds[ind] < static_cast<int>(probing_upper_bounds.size()) );
+               if( num.isEq( 0.0, probing_upper_bounds[binary_inds[ind]] ) )
+               {
+                  assert( ind < ub_implications_thread_local.size() );
+                  ub_implications_thread_local[ind].first += 1;
+                  ub_implications_thread_local[ind].second = -1;
+               }
+            }
+            reset();
+         }
+         else
+         {
+            setProbingColumn(indices[i]);
+            propagateDomains();
+            if( isInfeasible() )
+            {
+               fix_to_zero_thread_local.emplace_back( indices[i] );
+               reset();
+               continue;
+            }
+            for( unsigned int ind = 0; ind !=  binary_inds.size() ; ++ind )
+            {
+               assert( ind < binary_inds.size() );
+               assert( binary_inds[ind] < static_cast<int>(probing_lower_bounds.size()) );
+               if( num.isEq( 1.0, probing_lower_bounds[binary_inds[ind]] ) )
+               {
+                  assert( ind < lb_implications_thread_local.size() );
+                  lb_implications_thread_local[ind].first += 1;
+                  lb_implications_thread_local[ind].second = probingCol;
+               }
+               assert( ind < binary_inds.size());
+               assert( binary_inds[ind] < static_cast<int>(probing_upper_bounds.size()) );
+               if( num.isEq( 0.0, probing_upper_bounds[binary_inds[ind]] ) )
+               {
+                  assert( ind < ub_implications_thread_local.size() );
+                  ub_implications_thread_local[ind].first += 1;
+                  ub_implications_thread_local[ind].second = probingCol;
+               }
+            }
+            //found new global bounds
+            if( !initbounds )
+            {
+               for( unsigned int var = 0; var != probing_lower_bounds.size(); ++var )
+               {
+                  if( num.isGT( probing_lower_bounds[var], problem.getLowerBounds()[var] ) )
+                  {
+                     changed_clique_lbs_inds_vals_thread_local.emplace_back(std::pair<int,REAL> {var, probing_lower_bounds[var] } );
+                  }
+                  if( num.isLT( probing_upper_bounds[var], problem.getUpperBounds()[var] ) )
+                  {
+                     changed_clique_ubs_inds_vals_thread_local.emplace_back(std::pair<int,REAL> {var, probing_upper_bounds[var] } );
+                  }
+               }
+               initbounds = true;
+               reset();
+               continue;
+            }
+            
+            typename std::list<std::pair<int,REAL>>::iterator ind = changed_clique_lbs_inds_vals_thread_local.begin();
+            while( ind != changed_clique_lbs_inds_vals_thread_local.end() )
+            {
+               if( num.isLT( probing_lower_bounds[(*ind).first], (*ind).second ) )
+               {
+                  (*ind).second = probing_lower_bounds[(*ind).first];
+               }
+               if( num.isLE(probing_lower_bounds[(*ind).first], problem.getLowerBounds()[(*ind).first] ) )
+               {
+                  ind = changed_clique_lbs_inds_vals_thread_local.erase(ind);
+               }
+               else
+                  std::advance(ind, 1);
+            }
+            ind = changed_clique_ubs_inds_vals_thread_local.begin();
+            while( ind != changed_clique_ubs_inds_vals_thread_local.end() )
+            {
+               if( num.isGT( probing_upper_bounds[(*ind).first], (*ind).second ) )
+               {
+                  (*ind).second = probing_upper_bounds[(*ind).first];
+               }
+               if( num.isGE(probing_upper_bounds[(*ind).first], problem.getUpperBounds()[(*ind).first] ) )
+               {
+                  ind = changed_clique_ubs_inds_vals_thread_local.erase(ind);
+               }
+               else
+                  std::advance(ind, 1);
+            }
+            reset();
+         }
+      }
+   }
+
    std::pair<bool,bool>
    probeClique( const int clique, const int*& indices, const int len, const Vec<int>& binary_inds, 
       bool equation, Array<std::atomic_int>& probing_scores, const Vec<int>& colsize, const Vec<int>& colperm,
@@ -128,7 +263,6 @@ class CliqueProbingView
 
       cliquelen = len;
       assert(len == static_cast<int>(cliqueind.size()));
-      bool initbounds = false;
       lb_implications.reserve( static_cast<int>(binary_inds.size()) );
       ub_implications.reserve( static_cast<int>( binary_inds.size() ) );
       for( unsigned int ind = 0; ind != binary_inds.size(); ++ind )
@@ -140,11 +274,169 @@ class CliqueProbingView
       assert(changed_clique_lbs_inds_vals.empty());
       equationBefore = equation;
       cliqueEquation = true;
-      //TODO: extract to new function
-      // fix all variables to zero
+      bool initbounds = false;
+#ifdef PAPILO_TBB
+      tbb::combinable<Vec<std::pair<int,int>>> lb_implications_thread;
+      tbb::combinable<Vec<std::pair<int,int>>> ub_implications_thread;
+      tbb::combinable<std::pair<std::list<std::pair<int,REAL>>,bool>> changed_clique_ubs_inds_vals_initbounds_thread;
+      tbb::combinable<std::pair<std::list<std::pair<int,REAL>>,bool>> changed_clique_lbs_inds_vals_initbounds_thread;
+      tbb::combinable<Vec<int>> fix_to_zero_thread;
+      Vec<int> fix_to_zero_combined;
+      Vec<std::pair<int,int>> lb_implications_combined;
+      Vec<std::pair<int,int>> ub_implications_combined;
+      std::list<std::pair<int,REAL>> changed_clique_lbs_inds_vals_combined;
+      std::list<std::pair<int,REAL>> changed_clique_ubs_inds_vals_combined;
+      for( unsigned int ind = 0; ind != binary_inds.size(); ++ind )
+      {
+         lb_implications_combined.emplace_back( 0, -1 );
+         ub_implications_combined.emplace_back( 0, -1 );
+      }
+
+      int batchstart = -(!equation);
+      int batchend = std::min( batchstart + std::min( 24, 3*tbb::this_task_arena::max_concurrency() ), len );
+      while( batchstart != len )
+      {
+         tbb::parallel_for( tbb::blocked_range<int>( batchstart, batchend )
+            [&]( const tbb::blocked_range<int>& r )
+            {
+               Vec<std::pair<int,int>>& lb_implications_thread_local = lb_implications_thread.local();
+               Vec<std::pair<int,int>>& ub_implications_thread_local = ub_implications_thread.local();
+               if( batchstart == -(!equation) )
+               {
+                  lb_implications_thread_local = lb_implications_thread_combined;
+                  ub_implications_thread_local = ub_implications_thread_combined;
+               }
+               changed_clique_lbs_inds_vals_initbounds_thread.local().first = changed_clique_lbs_inds_vals_combined;
+               changed_clique_ubs_inds_vals_initbounds_thread.local().first = changed_clique_ubs_inds_vals_combined;
+               std::list<std::pair<int,REAL>>& changed_clique_lbs_inds_vals_thread_local = changed_clique_lbs_inds_vals_initbounds_thread.local().first;
+               std::list<std::pair<int,REAL>>& changed_clique_ubs_inds_vals_thread_local = changed_clique_ubs_inds_vals_initbounds_thread.local().first;
+               bool initbounds_thread_local = initbounds;
+               Vec<int> fix_to_zero_thread_local = fix_to_zero_thread.local();
+               CliqueProbingView<REAL> local_clique_probing( problem, num );
+               local_clique_probing.setMinContDomRed( mincontdomred );
+               local_clique_probing.parallelProbe( r, initbounds_thread_local, changed_clique_lbs_inds_vals_thread_local, 
+                  changed_clique_ubs_inds_vals_thread_local, lb_implications_thread_local,
+                  ub_implications_thread_local, fix_to_zero_thread_local, cliqueEquation, Vec<int> cliqueind,
+                  binary_inds, cliquelen );
+               changed_clique_lbs_inds_vals_initbounds_thread.local().second = initbounds_thread_local;
+               changed_clique_ubs_inds_vals_initbounds_thread.local().second = initbounds_thread_local;
+            }
+         );
+
+         fix_to_zero_thread.combine_each([&](const std::vector<int>& fix_to_zero_local ) {
+            fix_to_zero_combined.insert(fix_to_zero_combined.end(), fix_to_zero_local.begin(), fix_to_zero_local.end());
+         });
+         fix_to_zero_thread.clear();
+
+         bool initlowerbounds = initbounds;
+         changed_clique_lbs_inds_vals_initbounds_thread.combine_each([&]( std::list<std::pair<int,REAL>> changed_clique_lbs_inds_vals_initbounds_local ) 
+         {
+            if( !initlowerbounds && changed_clique_lbs_inds_vals_initbounds_local.second )
+            {
+               changed_clique_lbs_inds_vals_combined = changed_clique_lbs_inds_vals_initbounds_local.first;
+               initlowerbounds = true;
+            }
+            else if( initlowerbounds && changed_clique_lbs_inds_vals_initbounds_local.second )
+            {
+               typename std::list<std::pair<int,REAL>>::iterator ind_local = changed_clique_lbs_inds_vals_initbounds_local.first.begin();
+               typename std::list<std::pair<int,REAL>>::iterator ind_combined = changed_clique_lbs_inds_vals_combined.begin();
+               while( ind_combined != changed_clique_lbs_inds_vals_combined.end() )
+               {
+                  if( ind_local == changed_clique_lbs_inds_vals_initbounds_local.first.end() )
+                  {
+                     while( ind_combined != changed_clique_lbs_inds_vals_combined.end() )
+                     {
+                        ind_combined = changed_clique_lbs_inds_vals_thread_combined.erase(ind_combined);   
+                     }
+                  }
+                  else if( (*ind_combined).first < (*ind_local).first )
+                     ind_combined = changed_clique_lbs_inds_vals_thread_combined.erase(ind_combined);
+                  else if( (*ind_combined).first > (*ind_local).first )
+                     std::advance(ind_local, 1);
+                  else if( num.isGT((*ind_combined).second, (*ind_local).second) )
+                  {
+                     (*ind_combined).second = (*ind_local).second;
+                     std::advance(ind_local, 1);
+                     std::advance(ind_combined, 1);
+                  }
+               }
+            }
+         });
+
+         
+         bool initupperbounds = initbounds;
+         changed_clique_ubs_inds_vals_initbounds_thread.combine_each([&]( std::list<std::pair<int,REAL>> changed_clique_ubs_inds_vals_initbounds_local ) 
+         {
+            if( !initupperbounds && changed_clique_ubs_inds_vals_initbounds_local.second )
+            {
+               changed_clique_ubs_inds_vals_combined = changed_clique_ubs_inds_vals_initbounds_local.first;
+               initupperbounds = true;
+            }
+            else if( initupperbounds && changed_clique_ubs_inds_vals_initbounds_local.second )
+            {
+               typename std::list<std::pair<int,REAL>>::iterator ind_local = changed_clique_ubs_inds_vals_initbounds_local.first.begin();
+               typename std::list<std::pair<int,REAL>>::iterator ind_combined = changed_clique_ubs_inds_vals_combined.begin();
+               while( ind_combined != changed_clique_ubs_inds_vals_combined.end() )
+               {
+                  if( ind_local == changed_clique_ubs_inds_vals_initbounds_local.first.end() )
+                  {
+                     while( ind_combined != changed_clique_ubs_inds_vals_combined.end() )
+                     {
+                        ind_combined = changed_clique_ubs_inds_vals_thread_combined.erase(ind_combined);   
+                     }
+                  }
+                  else if( (*ind_combined).first < (*ind_local).first )
+                     ind_combined = changed_clique_ubs_inds_vals_thread_combined.erase(ind_combined);
+                  else if( (*ind_combined).first > (*ind_local).first )
+                     std::advance(ind_local, 1);
+                  else if( num.isLT((*ind_combined).second, (*ind_local).second) )
+                  {
+                     (*ind_combined).second = (*ind_local).second;
+                     std::advance(ind_local, 1);
+                     std::advance(ind_combined, 1);
+                  }
+               }
+            }
+         });
+
+         initbounds = initupperbounds;
+         
+         batchstart = batchend;
+         batchend = std::min( batchstart + std::min( 24, 3*tbb::this_task_arena::max_concurrency() ), len );
+      }
+
+      lb_implications_thread.combine_each([&](const std::vector<std::pair<int,int>>& lb_implications_local )
+      {
+         for( unsigned int ind = 0; ind != binary_inds.size(); ++ind )
+         {
+            lb_implications_combined[ind].first += lb_implications_local[ind].first;
+            if( lb_implications_local[ind].second != -1 )
+               lb_implications_combined[ind].second = lb_implications_local[ind].second;
+         }
+      }):
+      lb_implications_thread.clear();
+
+      ub_implications_thread.combine_each([&](const std::vector<std::pair<int,int>>& ub_implications_local )
+      {
+         for( unsigned int ind = 0; ind != binary_inds.size(); ++ind )
+         {
+            ub_implications_combined[ind].first += ub_implications_local[ind].first;
+            if( ub_implications_local[ind].second != -1 )
+               ub_implications_combined[ind].second = ub_implications_local[ind].second;
+         }
+      }):
+      ub_implications_thread.clear();
+
+      
+      changed_clique_lbs_inds_vals = changed_clique_lbs_inds_vals_combined;
+      changed_clique_ubs_inds_vals = changed_clique_ubs_inds_vals_combined;
+      ub_implications = ub_implications_combined;
+      lb_implications = lb_implications_combined;
+      fix_to_zero = fix_to_zero_combined;
+      return { fix_to_zero.end() - fix_to_zero.begin() == cliquelen && cliqueEquation, cliqueEquation && !equationBefore } ;
+#else
       if(!equation)
       {
-         //TODO: introduce new function
          reset();
          setProbingColumn(-1);
 
@@ -287,6 +579,7 @@ class CliqueProbingView
        }
 
       return { fix_to_zero.end() - fix_to_zero.begin() == cliquelen && cliqueEquation, cliqueEquation && !equationBefore } ;
+#endif
    }
 
    void
