@@ -300,7 +300,7 @@ class CliqueProbingView
       while( batchstart != len )
       {
          if( ( static_cast<int>(changed_clique_lbs_inds_vals_combined.size())
-             + static_cast<int>(changed_clique_ubs_inds_vals_combined.size()) - cliquelen + std::static_cast<int>(batchstart) ) 
+             + static_cast<int>(changed_clique_ubs_inds_vals_combined.size()) - cliquelen + static_cast<int>(batchstart) ) 
              < cliquelen * cliquereductionfactor && initbounds )
          {     
             fewreductions = true;
@@ -333,7 +333,7 @@ class CliqueProbingView
             }
          );
 
-         numpropagations += std::static_cast<int>(batchend) - std::static_cast<int>(batchstart)
+         numpropagations += static_cast<int>(batchend) - static_cast<int>(batchstart)
 
          fix_to_zero_thread.combine_each([&](const std::vector<int>& fix_to_zero_local ) {
             fix_to_zero_combined.insert(fix_to_zero_combined.end(), fix_to_zero_local.begin(), fix_to_zero_local.end());
