@@ -303,8 +303,8 @@ class CliqueProbingView
                Vec<std::pair<int,int>>& ub_implications_thread_local = ub_implications_thread.local();
                if( batchstart == -(!equation) )
                {
-                  lb_implications_thread_local = lb_implications_thread_combined;
-                  ub_implications_thread_local = ub_implications_thread_combined;
+                  lb_implications_thread_local = lb_implications_combined;
+                  ub_implications_thread_local = ub_implications_combined;
                }
                changed_clique_lbs_inds_vals_initbounds_thread.local().first = changed_clique_lbs_inds_vals_combined;
                changed_clique_ubs_inds_vals_initbounds_thread.local().first = changed_clique_ubs_inds_vals_combined;
@@ -316,7 +316,7 @@ class CliqueProbingView
                local_clique_probing.setMinContDomRed( mincontdomred );
                local_clique_probing.parallelProbe( r, initbounds_thread_local, changed_clique_lbs_inds_vals_thread_local, 
                   changed_clique_ubs_inds_vals_thread_local, lb_implications_thread_local,
-                  ub_implications_thread_local, fix_to_zero_thread_local, cliqueEquation, Vec<int> cliqueind,
+                  ub_implications_thread_local, fix_to_zero_thread_local, cliqueEquation, cliqueind,
                   binary_inds, cliquelen );
                changed_clique_lbs_inds_vals_initbounds_thread.local().second = initbounds_thread_local;
                changed_clique_ubs_inds_vals_initbounds_thread.local().second = initbounds_thread_local;
@@ -329,7 +329,7 @@ class CliqueProbingView
          fix_to_zero_thread.clear();
 
          bool initlowerbounds = initbounds;
-         changed_clique_lbs_inds_vals_initbounds_thread.combine_each([&]( std::list<std::pair<int,REAL>> changed_clique_lbs_inds_vals_initbounds_local ) 
+         changed_clique_lbs_inds_vals_initbounds_thread.combine_each([&]( std::pair<std::list<std::pair<int,REAL>>,bool> changed_clique_lbs_inds_vals_initbounds_local ) 
          {
             if( !initlowerbounds && changed_clique_lbs_inds_vals_initbounds_local.second )
             {
@@ -346,17 +346,17 @@ class CliqueProbingView
                   {
                      while( ind_combined != changed_clique_lbs_inds_vals_combined.end() )
                      {
-                        ind_combined = changed_clique_lbs_inds_vals_thread_combined.erase(ind_combined);   
+                        ind_combined = changed_clique_lbs_inds_vals_combined.erase(ind_combined);   
                      }
                   }
                   else if( (*ind_combined).first < (*ind_local).first )
-                     ind_combined = changed_clique_lbs_inds_vals_thread_combined.erase(ind_combined);
+                     ind_combined = changed_clique_lbs_inds_vals_combined.erase(ind_combined);
                   else if( (*ind_combined).first > (*ind_local).first )
                      std::advance(ind_local, 1);
                   else if( num.isGT((*ind_combined).second, (*ind_local).second) )
                   {
                      (*ind_combined).second = (*ind_local).second;
-                     std::advance(ind_local, 1);
+                     ind_local = changed_clique_lbs_inds_vals_initbounds_local.first.erase(ind_local);
                      std::advance(ind_combined, 1);
                   }
                }
@@ -365,7 +365,7 @@ class CliqueProbingView
 
          
          bool initupperbounds = initbounds;
-         changed_clique_ubs_inds_vals_initbounds_thread.combine_each([&]( std::list<std::pair<int,REAL>> changed_clique_ubs_inds_vals_initbounds_local ) 
+         changed_clique_ubs_inds_vals_initbounds_thread.combine_each([&]( std::pair<std::list<std::pair<int,REAL>>,bool> changed_clique_ubs_inds_vals_initbounds_local ) 
          {
             if( !initupperbounds && changed_clique_ubs_inds_vals_initbounds_local.second )
             {
@@ -382,17 +382,17 @@ class CliqueProbingView
                   {
                      while( ind_combined != changed_clique_ubs_inds_vals_combined.end() )
                      {
-                        ind_combined = changed_clique_ubs_inds_vals_thread_combined.erase(ind_combined);   
+                        ind_combined = changed_clique_ubs_inds_vals_combined.erase(ind_combined);   
                      }
                   }
                   else if( (*ind_combined).first < (*ind_local).first )
-                     ind_combined = changed_clique_ubs_inds_vals_thread_combined.erase(ind_combined);
+                     ind_combined = changed_clique_ubs_inds_vals_combined.erase(ind_combined);
                   else if( (*ind_combined).first > (*ind_local).first )
                      std::advance(ind_local, 1);
                   else if( num.isLT((*ind_combined).second, (*ind_local).second) )
                   {
                      (*ind_combined).second = (*ind_local).second;
-                     std::advance(ind_local, 1);
+                     ind_local = changed_clique_ubs_inds_vals_initbounds_local.first.erase(ind_local);
                      std::advance(ind_combined, 1);
                   }
                }
@@ -424,7 +424,7 @@ class CliqueProbingView
             if( ub_implications_local[ind].second != -1 )
                ub_implications_combined[ind].second = ub_implications_local[ind].second;
          }
-      }):
+      });
       ub_implications_thread.clear();
 
       
