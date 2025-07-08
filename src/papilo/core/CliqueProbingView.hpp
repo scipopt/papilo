@@ -23,6 +23,7 @@
 #ifndef _PAPILO_CORE_CLIQUE_PROBING_VIEW_HPP_
 #define _PAPILO_CORE_CLIQUE_PROBING_VIEW_HPP_
 
+#include "papilo/Config.hpp"
 #include "papilo/core/Problem.hpp"
 #include "papilo/core/SingleRow.hpp"
 #include "papilo/io/Message.hpp"
