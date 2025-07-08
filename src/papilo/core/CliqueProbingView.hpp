@@ -317,7 +317,7 @@ class CliqueProbingView
                local_clique_probing.parallelProbe( r, initbounds_thread_local, changed_clique_lbs_inds_vals_thread_local, 
                   changed_clique_ubs_inds_vals_thread_local, lb_implications_thread_local,
                   ub_implications_thread_local, fix_to_zero_thread_local, cliqueEquation, cliqueind,
-                  binary_inds, cliquelen );
+                  clique, binary_inds, cliquelen );
                changed_clique_lbs_inds_vals_initbounds_thread.local().second = initbounds_thread_local;
                changed_clique_ubs_inds_vals_initbounds_thread.local().second = initbounds_thread_local;
             }
