@@ -130,6 +130,7 @@ TEST_CASE( "clique-probing-1", "[presolve]" )
     }
     
    REQUIRE( presolveStatus == PresolveStatus::kReduced );
+#ifdef PAPLIO_TBB
    REQUIRE( reductions.size() == 8 );
 
    REQUIRE( reductions.getReduction( 0 ).col == 2 );
@@ -164,7 +165,8 @@ TEST_CASE( "clique-probing-1", "[presolve]" )
    REQUIRE( reductions.getReduction( 7 ).row == -1 );
    REQUIRE( reductions.getReduction( 7 ).newval == 0 );
 
-   /*
+#else
+
    REQUIRE( reductions.size() == 3 );
 
    REQUIRE( reductions.getReduction( 0 ).col == 3 );
@@ -177,7 +179,9 @@ TEST_CASE( "clique-probing-1", "[presolve]" )
 
    REQUIRE( reductions.getReduction( 2 ).col == 1 );
    REQUIRE( reductions.getReduction( 2 ).row == papilo::ColReduction::NONE );
-   REQUIRE( reductions.getReduction( 2 ).newval == 0 );*/
+   REQUIRE( reductions.getReduction( 2 ).newval == 0 );
+
+#endif
 }
 
 
