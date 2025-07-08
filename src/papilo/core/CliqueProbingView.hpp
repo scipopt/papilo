@@ -333,7 +333,7 @@ class CliqueProbingView
             }
          );
 
-         numpropagations += static_cast<int>(batchend) - static_cast<int>(batchstart)
+         numpropagations += static_cast<int>(batchend) - static_cast<int>(batchstart);
 
          fix_to_zero_thread.combine_each([&](const std::vector<int>& fix_to_zero_local ) {
             fix_to_zero_combined.insert(fix_to_zero_combined.end(), fix_to_zero_local.begin(), fix_to_zero_local.end());
