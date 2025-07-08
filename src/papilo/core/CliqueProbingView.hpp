@@ -90,6 +90,7 @@ class CliqueProbingView
    void
    reset();
 
+#ifdef PAPILO_TBB
    void
    parallelProbe( const tbb::blocked_range<int>& r, bool& initbounds, std::list<std::pair<int, REAL>>& changed_clique_lbs_inds_vals_thread_local, 
       std::list<std::pair<int,REAL>>& changed_clique_ubs_inds_vals_thread_local, Vec<std::pair<int,int>>& lb_implications_thread_local,
@@ -224,6 +225,7 @@ class CliqueProbingView
          }
       }
    }
+#endif
 
    std::pair<bool,bool>
    probeClique( const int clique, const int*& indices, const int len, const Vec<int>& binary_inds, 
