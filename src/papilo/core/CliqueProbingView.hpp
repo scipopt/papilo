@@ -147,7 +147,7 @@ class CliqueProbingView
          }
          else
          {
-            setProbingColumn(indices[i]);
+            setProbingColumn(i);
             propagateDomains();
             if( isInfeasible() )
             {
