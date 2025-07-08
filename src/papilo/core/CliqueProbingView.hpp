@@ -100,6 +100,14 @@ class CliqueProbingView
       probingClique = clique;
       cliqueind = indices;
       cliquelen = len;
+      assert(len == static_cast<int>(cliqueind.size()));
+      lb_implications.reserve( static_cast<int>(binary_inds.size()) );
+      ub_implications.reserve( static_cast<int>( binary_inds.size() ) );
+      for( unsigned int ind = 0; ind != binary_inds.size(); ++ind )
+      {
+         lb_implications.emplace_back( 0, -1 );
+         ub_implications.emplace_back( 0, -1 );
+      }
       for( int i = r.begin(); i < r.end(); ++i )
       {
          if( i == -1 )
