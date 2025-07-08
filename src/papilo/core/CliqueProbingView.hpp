@@ -299,6 +299,13 @@ class CliqueProbingView
       int batchend = std::min( batchstart + std::min( 24, 3*tbb::this_task_arena::max_concurrency() ), len );
       while( batchstart != len )
       {
+         if( ( static_cast<int>(changed_clique_lbs_inds_vals_combined.size())
+             + static_cast<int>(changed_clique_ubs_inds_vals_combined.size()) - cliquelen + std::static_cast<int>(batchstart) ) 
+             < cliquelen * cliquereductionfactor && initbounds )
+         {     
+            fewreductions = true;
+            return { false, cliqueEquation && !equationBefore } ;
+         }
          tbb::parallel_for( tbb::blocked_range<int>( batchstart, batchend ),
             [&]( const tbb::blocked_range<int>& r )
             {
@@ -325,6 +332,8 @@ class CliqueProbingView
                changed_clique_ubs_inds_vals_initbounds_thread.local().second = initbounds_thread_local;
             }
          );
+
+         numpropagations += std::static_cast<int>(batchend) - std::static_cast<int>(batchstart)
 
          fix_to_zero_thread.combine_each([&](const std::vector<int>& fix_to_zero_local ) {
             fix_to_zero_combined.insert(fix_to_zero_combined.end(), fix_to_zero_local.begin(), fix_to_zero_local.end());
