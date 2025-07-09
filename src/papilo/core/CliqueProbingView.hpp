@@ -100,7 +100,7 @@ class CliqueProbingView
       probingClique = clique;
       cliqueind = indices;
       cliquelen = len;
-      binary_inds = binary_indices
+      binary_inds = binary_indices;
       for( int i = r.begin(); i < r.end(); ++i )
       {
          if( i == -1 )
