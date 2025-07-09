@@ -317,8 +317,11 @@ class CliqueProbingView
             {
                Vec<std::pair<int,int>>& lb_implications_thread_local = lb_implications_thread.local();
                Vec<std::pair<int,int>>& ub_implications_thread_local = ub_implications_thread.local();
-               if( batchstart == -(!equation) )
+               if( batchstart == -(!equation) || ub_implications_thread_local.size() != binary_inds.size() 
+                || lb_implications_thread_local.size() != binary_inds.size()  )
                {
+                  assert( ub_implications_thread_local.size() == 0 );
+                  assert( lb_implications_thread_local.size() == 0 );
                   lb_implications_thread_local = lb_implications_combined;
                   ub_implications_thread_local = ub_implications_combined;
                }
