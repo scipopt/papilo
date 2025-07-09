@@ -105,6 +105,7 @@ class CliqueProbingView
       assert( lb_implications_thread_local.size() == binary_inds.size() );
       for( int i = r.begin(); i < r.end(); ++i )
       {
+         std::cout<<"\nTest1\n";
          if( i == -1 )
          {
             setProbingColumn(-1);
@@ -116,6 +117,7 @@ class CliqueProbingView
                cliqueEquation = false;
                for( int var = 0; var != static_cast<int>(probing_lower_bounds.size()); ++var )
                {
+                  std::cout<<"\nTest2\n";
                   if( num.isGT(probing_lower_bounds[var], problem.getLowerBounds()[var]) )
                   {
                      changed_clique_lbs_inds_vals_thread_local.emplace_back(var, probing_lower_bounds[var]);
@@ -129,6 +131,7 @@ class CliqueProbingView
             }
             for( unsigned int ind = 0; ind !=  binary_inds.size() ; ++ind )
             {
+               std::cout<<"\nTest3\n";
                assert( ind < binary_inds.size() );
                assert( binary_inds[ind] < static_cast<int>(probing_lower_bounds.size()) );
                if( num.isEq( 1.0, probing_lower_bounds[binary_inds[ind]] ) )
@@ -160,6 +163,7 @@ class CliqueProbingView
             }
             for( unsigned int ind = 0; ind !=  binary_inds.size() ; ++ind )
             {
+               std::cout<<"\nTest4\n";
                assert( ind < binary_inds.size() );
                assert( binary_inds[ind] < static_cast<int>(probing_lower_bounds.size()) );
                if( num.isEq( 1.0, probing_lower_bounds[binary_inds[ind]] ) )
@@ -182,6 +186,7 @@ class CliqueProbingView
             {
                for( unsigned int var = 0; var != probing_lower_bounds.size(); ++var )
                {
+                  std::cout<<"\nTest5\n";
                   if( num.isGT( probing_lower_bounds[var], problem.getLowerBounds()[var] ) )
                   {
                      changed_clique_lbs_inds_vals_thread_local.emplace_back(std::pair<int,REAL> {var, probing_lower_bounds[var] } );
@@ -199,6 +204,7 @@ class CliqueProbingView
             typename std::list<std::pair<int,REAL>>::iterator ind = changed_clique_lbs_inds_vals_thread_local.begin();
             while( ind != changed_clique_lbs_inds_vals_thread_local.end() )
             {
+               std::cout<<"\nTest6\n";
                if( num.isLT( probing_lower_bounds[(*ind).first], (*ind).second ) )
                {
                   (*ind).second = probing_lower_bounds[(*ind).first];
@@ -213,6 +219,7 @@ class CliqueProbingView
             ind = changed_clique_ubs_inds_vals_thread_local.begin();
             while( ind != changed_clique_ubs_inds_vals_thread_local.end() )
             {
+               std::cout<<"\nTest7\n";
                if( num.isGT( probing_upper_bounds[(*ind).first], (*ind).second ) )
                {
                   (*ind).second = probing_upper_bounds[(*ind).first];
@@ -305,6 +312,7 @@ class CliqueProbingView
       int batchend = std::min( batchstart + std::min( 24, 3*tbb::this_task_arena::max_concurrency() ), len );
       while( batchstart != len )
       {
+         std::cout<<"\nTest8\n";
          if( ( static_cast<int>(changed_clique_lbs_inds_vals_combined.size())
              + static_cast<int>(changed_clique_ubs_inds_vals_combined.size()) - cliquelen + static_cast<int>(batchstart) ) 
              < cliquelen * cliquereductionfactor && initbounds )
@@ -384,10 +392,12 @@ class CliqueProbingView
                typename std::list<std::pair<int,REAL>>::iterator ind_combined = changed_clique_lbs_inds_vals_combined.begin();
                while( ind_combined != changed_clique_lbs_inds_vals_combined.end() )
                {
+                  std::cout<<"\nTest9\n";
                   if( ind_local == changed_clique_lbs_inds_vals_initbounds_local.first.end() )
                   {
                      while( ind_combined != changed_clique_lbs_inds_vals_combined.end() )
                      {
+                        std::cout<<"\nTest10\n";
                         ind_combined = changed_clique_lbs_inds_vals_combined.erase(ind_combined);   
                      }
                   }
@@ -420,10 +430,12 @@ class CliqueProbingView
                typename std::list<std::pair<int,REAL>>::iterator ind_combined = changed_clique_ubs_inds_vals_combined.begin();
                while( ind_combined != changed_clique_ubs_inds_vals_combined.end() )
                {
+                  std::cout<<"\nTest11\n";
                   if( ind_local == changed_clique_ubs_inds_vals_initbounds_local.first.end() )
                   {
                      while( ind_combined != changed_clique_ubs_inds_vals_combined.end() )
                      {
+                        std::cout<<"\nTest12\n";
                         ind_combined = changed_clique_ubs_inds_vals_combined.erase(ind_combined);   
                      }
                   }
@@ -459,6 +471,7 @@ class CliqueProbingView
       {
          for( unsigned int ind = 0; ind != binary_inds.size(); ++ind )
          {
+            std::cout<<"\nTest13\n";
             lb_implications_combined[ind].first += lb_implications_local[ind].first;
             if( lb_implications_local[ind].second != -1 )
                lb_implications_combined[ind].second = lb_implications_local[ind].second;
@@ -470,6 +483,7 @@ class CliqueProbingView
       {
          for( unsigned int ind = 0; ind != binary_inds.size(); ++ind )
          {
+            std::cout<<"\nTest14\n";
             ub_implications_combined[ind].first += ub_implications_local[ind].first;
             if( ub_implications_local[ind].second != -1 )
                ub_implications_combined[ind].second = ub_implications_local[ind].second;
