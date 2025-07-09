@@ -320,17 +320,18 @@ class CliqueProbingView
                if( batchstart == -(!equation) || ub_implications_thread_local.size() != binary_inds.size() 
                 || lb_implications_thread_local.size() != binary_inds.size()  )
                {
-                  
-                  std::cout<<"\n";
-                  std::cout<<"\n";
-                  std::cout<<ub_implications_thread_local.size();
-                  std::cout<<"\n";
-                  std::cout<<lb_implications_thread_local.size();
-                  std::cout<<"\n";
-                  std::cout<<binary_inds.size();
-                  std::cout<<"\n";
-                  std::cout<<"\n";
-                  
+                  if( ub_implications_thread_local.size() != 0 || lb_implications_thread_local.size() != 0 )
+                  {
+                     std::cout<<"\n";
+                     std::cout<<"\n";
+                     std::cout<<ub_implications_thread_local.size();
+                     std::cout<<"\n";
+                     std::cout<<lb_implications_thread_local.size();
+                     std::cout<<"\n";
+                     std::cout<<binary_inds.size();
+                     std::cout<<"\n";
+                     std::cout<<"\n";
+                  }
                   assert( ub_implications_thread_local.size() == 0 );
                   assert( lb_implications_thread_local.size() == 0 );
                   lb_implications_thread_local = lb_implications_combined;
