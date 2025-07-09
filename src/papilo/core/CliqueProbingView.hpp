@@ -101,6 +101,8 @@ class CliqueProbingView
       cliqueind = indices;
       cliquelen = len;
       binary_inds = binary_indices;
+      assert( ub_implications_thread_local.size() == binary_inds.size() );
+      assert( lb_implications_thread_local.size() == binary_inds.size() );
       for( int i = r.begin(); i < r.end(); ++i )
       {
          if( i == -1 )
@@ -295,6 +297,9 @@ class CliqueProbingView
          lb_implications_combined.emplace_back( 0, -1 );
          ub_implications_combined.emplace_back( 0, -1 );
       }
+      
+      assert( ub_implications_combined.size() == binary_inds.size() );
+      assert( lb_implications_combined.size() == binary_inds.size() );
 
       int batchstart = -(!equation);
       int batchend = std::min( batchstart + std::min( 24, 3*tbb::this_task_arena::max_concurrency() ), len );
@@ -325,6 +330,13 @@ class CliqueProbingView
                Vec<int> fix_to_zero_thread_local = fix_to_zero_thread.local();
                CliqueProbingView<REAL> local_clique_probing( problem, num );
                local_clique_probing.setMinContDomRed( mincontdomred );
+
+               assert( ub_implications_thread_local.size() == binary_inds.size() );
+               assert( lb_implications_thread_local.size() == binary_inds.size() );
+               
+               assert( ub_implications_combined.size() == binary_inds.size() );
+               assert( lb_implications_combined.size() == binary_inds.size() );
+
                local_clique_probing.parallelProbe( r, initbounds_thread_local, changed_clique_lbs_inds_vals_thread_local, 
                   changed_clique_ubs_inds_vals_thread_local, lb_implications_thread_local,
                   ub_implications_thread_local, fix_to_zero_thread_local, cliqueEquation, cliqueind,
