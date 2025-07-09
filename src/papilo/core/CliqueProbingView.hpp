@@ -343,6 +343,8 @@ class CliqueProbingView
                   clique, binary_inds, cliquelen );
                changed_clique_lbs_inds_vals_initbounds_thread.local().second = initbounds_thread_local;
                changed_clique_ubs_inds_vals_initbounds_thread.local().second = initbounds_thread_local;
+               lb_implications_thread.local() = lb_implications_thread_local;
+               ub_implications_thread.local() = ub_implications_thread_local;
             }
          );
 
