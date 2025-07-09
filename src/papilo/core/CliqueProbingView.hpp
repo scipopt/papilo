@@ -95,11 +95,12 @@ class CliqueProbingView
    parallelProbe( const tbb::blocked_range<int>& r, bool& initbounds, std::list<std::pair<int, REAL>>& changed_clique_lbs_inds_vals_thread_local, 
       std::list<std::pair<int,REAL>>& changed_clique_ubs_inds_vals_thread_local, Vec<std::pair<int,int>>& lb_implications_thread_local,
       Vec<std::pair<int,int>>& ub_implications_thread_local, Vec<int>& fix_to_zero_thread_local, bool& cliqueEquation, Vec<int>& indices,
-      const int& clique, const Vec<int>& binary_inds, const int& len )
+      const int& clique, const Vec<int>& binary_indices, const int& len )
    {
       probingClique = clique;
       cliqueind = indices;
       cliquelen = len;
+      binary_inds = binary_indices
       for( int i = r.begin(); i < r.end(); ++i )
       {
          if( i == -1 )
