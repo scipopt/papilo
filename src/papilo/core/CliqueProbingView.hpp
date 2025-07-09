@@ -464,6 +464,7 @@ class CliqueProbingView
          });
 
          initbounds = initupperbounds;
+         /*
          std::cout<<"\n";
          std::cout<<batchstart;
          std::cout<<"\n";
@@ -471,7 +472,7 @@ class CliqueProbingView
          std::cout<<"\n";
          std::cout<<tbb::this_task_arena::max_concurrency();
          std::cout<<"\n";
-         
+         */
          
          batchstart = batchend;
          batchend = std::min( batchstart + std::min( 24, 3*tbb::this_task_arena::max_concurrency() ), len );
