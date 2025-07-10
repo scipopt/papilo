@@ -249,7 +249,7 @@ class CliqueProbingView
          cliqueind.emplace_back( indices[ind] );
       }
 
-      pdqsort( cliqueind.begin(), cliqueind.end(),
+      /*pdqsort( cliqueind.begin(), cliqueind.end(),
             [&probing_scores, &colsize, &colperm, &nprobed]( int col1, int col2 )
             {
                std::pair<double, double> s1;
@@ -272,7 +272,7 @@ class CliqueProbingView
                    ( probing_scores[col2].load( std::memory_order_relaxed ) /
                      static_cast<double>( 1 + nprobed[col2] * colsize[col2] ) );
                return !(s1 > s2 || ( s1 == s2 && colperm[col1] < colperm[col2] ));
-            } );
+            } );*/
 
       cliquelen = len;
       assert(len == static_cast<int>(cliqueind.size()));
@@ -309,7 +309,7 @@ class CliqueProbingView
       assert( lb_implications_combined.size() == binary_inds.size() );
 
       int batchstart = -(!equation);
-      int batchend = std::min( batchstart + std::min( 24, 3*tbb::this_task_arena::max_concurrency() ), len );
+      int batchend = std::min( batchstart + 24, len );
       while( batchstart != len )
       {
          //std::cout<<"\nTest8\n";
@@ -475,7 +475,7 @@ class CliqueProbingView
          */
          
          batchstart = batchend;
-         batchend = std::min( batchstart + std::min( 24, 3*tbb::this_task_arena::max_concurrency() ), len );
+         batchend = std::min( batchstart + 24, len );
       }
 
       lb_implications_thread.combine_each([&](const std::vector<std::pair<int,int>>& lb_implications_local )
