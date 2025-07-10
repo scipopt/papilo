@@ -215,7 +215,7 @@ REQUIRE( reductions.getReduction( 7 ).newval == 0 );*/
    REQUIRE( reductions.getReduction( 2 ).row == papilo::ColReduction::NONE );
    REQUIRE( reductions.getReduction( 2 ).newval == 0 );*/
 
-#endif
+//#endif
 }
 
 
