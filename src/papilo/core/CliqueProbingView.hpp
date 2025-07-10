@@ -249,7 +249,7 @@ class CliqueProbingView
          cliqueind.emplace_back( indices[ind] );
       }
 
-      /*pdqsort( cliqueind.begin(), cliqueind.end(),
+      pdqsort( cliqueind.begin(), cliqueind.end(),
             [&probing_scores, &colsize, &colperm, &nprobed]( int col1, int col2 )
             {
                std::pair<double, double> s1;
@@ -272,7 +272,7 @@ class CliqueProbingView
                    ( probing_scores[col2].load( std::memory_order_relaxed ) /
                      static_cast<double>( 1 + nprobed[col2] * colsize[col2] ) );
                return !(s1 > s2 || ( s1 == s2 && colperm[col1] < colperm[col2] ));
-            } );*/
+            } );
 
       cliquelen = len;
       assert(len == static_cast<int>(cliqueind.size()));
@@ -1136,12 +1136,26 @@ CliqueProbingView<REAL>::analyzeImplications()
       for( typename std::list<std::pair<int,REAL>>::iterator col = changed_clique_lbs_inds_vals.begin();
       col != changed_clique_lbs_inds_vals.end(); std::advance(col,1) )
       {
+         for(int i = -1; i < cliquelen; ++i )
+         {
+            reset();
+            setProbingColumn(i);
+            propagateDomains();
+            assert( isInfeasible() || num.isGE(probing_lower_bounds[(*col).first], (*col).second) );
+         }
          boundChanges.emplace_back(
             CliqueProbingBoundChg<REAL>( false, (*col).first, (*col).second, cliqueind[0] ) );
       }
       for( typename std::list<std::pair<int,REAL>>::iterator col = changed_clique_ubs_inds_vals.begin();
       col != changed_clique_ubs_inds_vals.end(); std::advance(col,1) )
       {
+         for(int i = -1; i < cliquelen; ++i )
+         {
+            reset();
+            setProbingColumn(i);
+            propagateDomains();
+            assert( isInfeasible() || num.isLE(probing_upper_bounds[(*col).first], (*col).second) );
+         }
          boundChanges.emplace_back(
             CliqueProbingBoundChg<REAL>( true, (*col).first, (*col).second, cliqueind[0] ) );
       }
