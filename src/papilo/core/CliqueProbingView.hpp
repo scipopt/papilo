@@ -121,10 +121,26 @@ class CliqueProbingView
                   if( num.isGT(probing_lower_bounds[var], problem.getLowerBounds()[var]) )
                   {
                      changed_clique_lbs_inds_vals_thread_local.emplace_back(var, probing_lower_bounds[var]);
+                     std::cout<<"\nProbing ";
+                     std::cout<<" all on zero ";
+                     std::cout<<"yields stronger lower bounds ";
+                     std::cout<<probing_lower_bounds[var];
+                     std::cout<<" ";
+                     std::cout<<problem.getLowerBounds()[var];
+                     std::cout<<" for variable ";
+                     std::cout<<var;
                   }
                   if( num.isLT(probing_upper_bounds[var], problem.getUpperBounds()[var]) )
                   {
                      changed_clique_ubs_inds_vals_thread_local.emplace_back(var, probing_upper_bounds[var]);
+                     std::cout<<"\nProbing ";
+                     std::cout<<" all on zero ";
+                     std::cout<<"yields stronger upper bounds ";
+                     std::cout<<probing_upper_bounds[var];
+                     std::cout<<" ";
+                     std::cout<<problem.getUpperBounds()[var];
+                     std::cout<<" for variable ";
+                     std::cout<<var;
                   }
                }
                initbounds = true;
@@ -1157,6 +1173,7 @@ CliqueProbingView<REAL>::analyzeImplications()
                std::cout<<(*col).second;
                std::cout<<" for variable ";
                std::cout<<(*col).first;
+               std::cout.flush();
             }
             assert( isInfeasible() || num.isGE(probing_lower_bounds[(*col).first], (*col).second) );
          }
@@ -1187,6 +1204,7 @@ CliqueProbingView<REAL>::analyzeImplications()
                std::cout<<(*col).second;
                std::cout<<" for variable ";
                std::cout<<(*col).first;
+               std::cout.flush();
             }
             assert( isInfeasible() || num.isLE(probing_upper_bounds[(*col).first], (*col).second) );
          }
