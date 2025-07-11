@@ -431,89 +431,240 @@ class CliqueProbingView
          fix_to_zero_thread.clear();
 
          bool initlowerbounds = initbounds;
+         static int combine_call_count = 0;
+
          changed_clique_lbs_inds_vals_initbounds_thread.combine_each([&]( std::pair<std::list<std::pair<int,REAL>>,bool> changed_clique_lbs_inds_vals_initbounds_local ) 
          {
+            ++combine_call_count;
+            std::cout << "\n=== COMBINE CALL #" << combine_call_count << " ===\n";
+            std::cout << "initlowerbounds: " << initlowerbounds << ", local.second: " << changed_clique_lbs_inds_vals_initbounds_local.second << "\n";
+            
+            // Debug: Print contents of local list
+            std::cout << "Local list contents: ";
+            for (const auto& pair : changed_clique_lbs_inds_vals_initbounds_local.first) {
+               std::cout << "(" << pair.first << "," << pair.second << ") ";
+            }
+            std::cout << "\n";
+            
+            // Debug: Print contents of combined list BEFORE processing
+            std::cout << "Combined list BEFORE: ";
+            for (const auto& pair : changed_clique_lbs_inds_vals_combined) {
+               std::cout << "(" << pair.first << "," << pair.second << ") ";
+            }
+            std::cout << "\n";
+            
+            // Debug: Check if lists are sorted
+            auto check_sorted = [](const std::list<std::pair<int,REAL>>& lst, const std::string& name) {
+               bool sorted = true;
+               int prev = -1;
+               for (const auto& pair : lst) {
+                  if (pair.first <= prev) {
+                     std::cout << "ERROR: " << name << " is NOT sorted! Found " << pair.first << " after " << prev << "\n";
+                     sorted = false;
+                  }
+                  prev = pair.first;
+               }
+               if (sorted) std::cout << name << " is properly sorted\n";
+               return sorted;
+            };
+            
+            check_sorted(changed_clique_lbs_inds_vals_initbounds_local.first, "Local list");
+            check_sorted(changed_clique_lbs_inds_vals_combined, "Combined list");
+            
             if( !initlowerbounds && changed_clique_lbs_inds_vals_initbounds_local.second )
             {
+               std::cout << "INITIALIZING combined list with local list\n";
                changed_clique_lbs_inds_vals_combined = changed_clique_lbs_inds_vals_initbounds_local.first;
                initlowerbounds = true;
             }
             else if( initlowerbounds && changed_clique_lbs_inds_vals_initbounds_local.second )
             {
+               std::cout << "INTERSECTING lists\n";
                typename std::list<std::pair<int,REAL>>::iterator ind_local = changed_clique_lbs_inds_vals_initbounds_local.first.begin();
                typename std::list<std::pair<int,REAL>>::iterator ind_combined = changed_clique_lbs_inds_vals_combined.begin();
+               
                while( ind_combined != changed_clique_lbs_inds_vals_combined.end() )
                {
-                  //std::cout<<"\nTest9\n";
+                  std::cout << "Comparing: combined(" << (*ind_combined).first << "," << (*ind_combined).second << ")";
+                  if (ind_local != changed_clique_lbs_inds_vals_initbounds_local.first.end()) {
+                     std::cout << " vs local(" << (*ind_local).first << "," << (*ind_local).second << ")";
+                  } else {
+                     std::cout << " vs local(END)";
+                  }
+                  std::cout << "\n";
+                  
                   if( ind_local == changed_clique_lbs_inds_vals_initbounds_local.first.end() )
                   {
+                     std::cout << "Local list exhausted, removing remaining combined elements\n";
                      while( ind_combined != changed_clique_lbs_inds_vals_combined.end() )
                      {
-                        //std::cout<<"\nTest10\n";
-                        ind_combined = changed_clique_lbs_inds_vals_combined.erase(ind_combined);   
+                        std::cout << "Throwing out lower bound reduction: " << (*ind_combined).first << " " << (*ind_combined).second << "\n";
+                        ind_combined = changed_clique_lbs_inds_vals_combined.erase(ind_combined);
                      }
                   }
                   else if( (*ind_combined).first < (*ind_local).first )
+                  {
+                     std::cout << "Combined element not in local, removing: " << (*ind_combined).first << " " << (*ind_combined).second << "\n";
                      ind_combined = changed_clique_lbs_inds_vals_combined.erase(ind_combined);
+                  }
                   else if( (*ind_combined).first > (*ind_local).first )
+                  {
+                     std::cout << "Local element not in combined, advancing local\n";
                      std::advance(ind_local, 1);
+                  }
                   else if( num.isGT((*ind_combined).second, (*ind_local).second) )
                   {
+                     std::cout << "Weakening lower bound reduction: " << (*ind_combined).first << " " << (*ind_combined).second << " -> " << (*ind_local).second << "\n";
                      (*ind_combined).second = (*ind_local).second;
                      ind_local = changed_clique_lbs_inds_vals_initbounds_local.first.erase(ind_local);
                      std::advance(ind_combined, 1);
                   }
                   else
                   {
+                     std::cout << "Combined bound is better or equal, keeping it\n";
                      ind_local = changed_clique_lbs_inds_vals_initbounds_local.first.erase(ind_local);
                      std::advance(ind_combined, 1);
                   }
                }
             }
+            else
+            {
+               std::cout << "Skipping this thread's results (initbounds_local.second = false)\n";
+            }
+            
+            // Debug: Print contents of combined list AFTER processing
+            std::cout << "Combined list AFTER: ";
+            for (const auto& pair : changed_clique_lbs_inds_vals_combined) {
+               std::cout << "(" << pair.first << "," << pair.second << ") ";
+            }
+            std::cout << "\n=== END COMBINE CALL #" << combine_call_count << " ===\n";
          });
 
-         
+         // Final verification
+         std::cout << "\n=== FINAL RESULT ===\n";
+         std::cout << "Final combined list: ";
+         for (const auto& pair : changed_clique_lbs_inds_vals_combined) {
+            std::cout << "(" << pair.first << "," << pair.second << ") ";
+         }
+         std::cout << "\n";
+
          bool initupperbounds = initbounds;
+         static int ub_combine_call_count = 0;
+
          changed_clique_ubs_inds_vals_initbounds_thread.combine_each([&]( std::pair<std::list<std::pair<int,REAL>>,bool> changed_clique_ubs_inds_vals_initbounds_local ) 
          {
+            ++ub_combine_call_count;
+            std::cout << "\n=== UB COMBINE CALL #" << ub_combine_call_count << " ===\n";
+            std::cout << "initupperbounds: " << initupperbounds << ", local.second: " << changed_clique_ubs_inds_vals_initbounds_local.second << "\n";
+            
+            // Debug: Print contents of local list
+            std::cout << "Local UB list contents: ";
+            for (const auto& pair : changed_clique_ubs_inds_vals_initbounds_local.first) {
+               std::cout << "(" << pair.first << "," << pair.second << ") ";
+            }
+            std::cout << "\n";
+            
+            // Debug: Print contents of combined list BEFORE processing
+            std::cout << "Combined UB list BEFORE: ";
+            for (const auto& pair : changed_clique_ubs_inds_vals_combined) {
+               std::cout << "(" << pair.first << "," << pair.second << ") ";
+            }
+            std::cout << "\n";
+            
+            // Debug: Check if lists are sorted
+            auto check_sorted = [](const std::list<std::pair<int,REAL>>& lst, const std::string& name) {
+               bool sorted = true;
+               int prev = -1;
+               for (const auto& pair : lst) {
+                  if (pair.first <= prev) {
+                     std::cout << "ERROR: " << name << " is NOT sorted! Found " << pair.first << " after " << prev << "\n";
+                     sorted = false;
+                  }
+                  prev = pair.first;
+               }
+               if (sorted) std::cout << name << " is properly sorted\n";
+               return sorted;
+            };
+            
+            check_sorted(changed_clique_ubs_inds_vals_initbounds_local.first, "Local UB list");
+            check_sorted(changed_clique_ubs_inds_vals_combined, "Combined UB list");
+            
             if( !initupperbounds && changed_clique_ubs_inds_vals_initbounds_local.second )
             {
+               std::cout << "INITIALIZING combined UB list with local list\n";
                changed_clique_ubs_inds_vals_combined = changed_clique_ubs_inds_vals_initbounds_local.first;
                initupperbounds = true;
             }
             else if( initupperbounds && changed_clique_ubs_inds_vals_initbounds_local.second )
             {
+               std::cout << "INTERSECTING UB lists\n";
                typename std::list<std::pair<int,REAL>>::iterator ind_local = changed_clique_ubs_inds_vals_initbounds_local.first.begin();
                typename std::list<std::pair<int,REAL>>::iterator ind_combined = changed_clique_ubs_inds_vals_combined.begin();
+               
                while( ind_combined != changed_clique_ubs_inds_vals_combined.end() )
                {
-                  //std::cout<<"\nTest11\n";
+                  std::cout << "Comparing UB: combined(" << (*ind_combined).first << "," << (*ind_combined).second << ")";
+                  if (ind_local != changed_clique_ubs_inds_vals_initbounds_local.first.end()) {
+                     std::cout << " vs local(" << (*ind_local).first << "," << (*ind_local).second << ")";
+                  } else {
+                     std::cout << " vs local(END)";
+                  }
+                  std::cout << "\n";
+                  
                   if( ind_local == changed_clique_ubs_inds_vals_initbounds_local.first.end() )
                   {
+                     std::cout << "Local UB list exhausted, removing remaining combined elements\n";
                      while( ind_combined != changed_clique_ubs_inds_vals_combined.end() )
                      {
-                        //std::cout<<"\nTest12\n";
+                        std::cout << "Throwing out upper bound reduction: " << (*ind_combined).first << " " << (*ind_combined).second << "\n";
                         ind_combined = changed_clique_ubs_inds_vals_combined.erase(ind_combined);   
                      }
                   }
                   else if( (*ind_combined).first < (*ind_local).first )
+                  {
+                     std::cout << "Combined UB element not in local, removing: " << (*ind_combined).first << " " << (*ind_combined).second << "\n";
                      ind_combined = changed_clique_ubs_inds_vals_combined.erase(ind_combined);
+                  }
                   else if( (*ind_combined).first > (*ind_local).first )
+                  {
+                     std::cout << "Local UB element not in combined, advancing local\n";
                      std::advance(ind_local, 1);
+                  }
                   else if( num.isLT((*ind_combined).second, (*ind_local).second) )
                   {
+                     std::cout << "Weakening upper bound reduction: " << (*ind_combined).first << " " << (*ind_combined).second << " -> " << (*ind_local).second << "\n";
                      (*ind_combined).second = (*ind_local).second;
                      ind_local = changed_clique_ubs_inds_vals_initbounds_local.first.erase(ind_local);
                      std::advance(ind_combined, 1);
                   }
                   else
                   {
+                     std::cout << "Combined UB bound is better or equal, keeping it\n";
                      ind_local = changed_clique_ubs_inds_vals_initbounds_local.first.erase(ind_local);
                      std::advance(ind_combined, 1);
                   }
                }
             }
+            else
+            {
+               std::cout << "Skipping this thread's UB results (initbounds_local.second = false)\n";
+            }
+            
+            // Debug: Print contents of combined list AFTER processing
+            std::cout << "Combined UB list AFTER: ";
+            for (const auto& pair : changed_clique_ubs_inds_vals_combined) {
+               std::cout << "(" << pair.first << "," << pair.second << ") ";
+            }
+            std::cout << "\n=== END UB COMBINE CALL #" << ub_combine_call_count << " ===\n";
          });
+
+         // Final verification
+         std::cout << "\n=== FINAL UB RESULT ===\n";
+         std::cout << "Final combined UB list: ";
+         for (const auto& pair : changed_clique_ubs_inds_vals_combined) {
+            std::cout << "(" << pair.first << "," << pair.second << ") ";
+         }
+         std::cout << "\n";
 
          initbounds = initupperbounds;
          /*
