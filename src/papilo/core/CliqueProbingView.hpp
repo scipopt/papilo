@@ -396,12 +396,14 @@ class CliqueProbingView
                   lb_implications_thread.local() = lb_implications_combined;
                   ub_implications_thread.local() = ub_implications_combined;
                }
+               bool initbounds_thread_local = initbounds;
                if( !changed_clique_lbs_inds_vals_initbounds_thread.local().second )
                {
                   changed_clique_lbs_inds_vals_initbounds_thread.local().first = changed_clique_lbs_inds_vals_combined;
                   changed_clique_ubs_inds_vals_initbounds_thread.local().first = changed_clique_ubs_inds_vals_combined;
                }
-               bool initbounds_thread_local = initbounds;
+               else
+                  initbounds_thread_local = true;
                CliqueProbingView<REAL> local_clique_probing( problem, num );
                local_clique_probing.setMinContDomRed( mincontdomred );
 
