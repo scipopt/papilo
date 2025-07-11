@@ -407,8 +407,8 @@ class CliqueProbingView
                assert( ub_implications_combined.size() == binary_inds.size() );
                assert( lb_implications_combined.size() == binary_inds.size() );
 
-               local_clique_probing.parallelProbe( r, initbounds_thread_local, changed_clique_lbs_inds_vals_initbounds_thread.local().first(), 
-               changed_clique_ubs_inds_vals_initbounds_thread.local().first(), lb_implications_thread.local(),
+               local_clique_probing.parallelProbe( r, initbounds_thread_local, changed_clique_lbs_inds_vals_initbounds_thread.local().first, 
+               changed_clique_ubs_inds_vals_initbounds_thread.local().first, lb_implications_thread.local(),
                   ub_implications_thread.local(), fix_to_zero_thread.local(), cliqueEquation, cliqueind,
                   clique, binary_inds, cliquelen );
                changed_clique_lbs_inds_vals_initbounds_thread.local().second = initbounds_thread_local;
