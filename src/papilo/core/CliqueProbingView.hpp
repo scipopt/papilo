@@ -375,6 +375,7 @@ class CliqueProbingView
          tbb::parallel_for( tbb::blocked_range<int>( batchstart, batchend ),
             [&]( const tbb::blocked_range<int>& r )
             {
+               std::cout << "Thread ID: " << std::this_thread::get_id() << " for range [" << r.begin() << ", " << r.end() << ")\n";
                if( ub_implications_thread.local().size() != binary_inds.size() 
                 || lb_implications_thread.local().size() != binary_inds.size()  )
                {
@@ -431,6 +432,11 @@ class CliqueProbingView
          changed_clique_lbs_inds_vals_initbounds_thread.combine_each([&](const auto& data) {
             std::cout << "Post thread data #" << post_count++ << ", initbounds: " << data.second 
                      << ", list size: " << data.first.size() << "\n";
+         });
+
+         int count = 0;
+         changed_clique_lbs_inds_vals_initbounds_thread.combine_each([&](const auto& data) {
+            std::cout << "combine_each call #" << count++ << ", list size: " << data.first.size() << "\n";
          });
 
          numpropagations += static_cast<int>(batchend) - static_cast<int>(batchstart);
@@ -688,7 +694,7 @@ class CliqueProbingView
          */
          changed_clique_lbs_inds_vals_initbounds_thread.clear();
          changed_clique_ubs_inds_vals_initbounds_thread.clear();
-         
+
          batchstart = batchend;
          batchend = std::min( batchstart + 24, len );
       }
