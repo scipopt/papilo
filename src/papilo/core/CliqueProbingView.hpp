@@ -426,6 +426,13 @@ class CliqueProbingView
             }
          );
 
+         std::cout << "=== AFTER PARALLEL_FOR ===\n";
+         int post_count = 0;
+         changed_clique_lbs_inds_vals_initbounds_thread.combine_each([&](const auto& data) {
+            std::cout << "Post thread data #" << post_count++ << ", initbounds: " << data.second 
+                     << ", list size: " << data.first.size() << "\n";
+         });
+
          numpropagations += static_cast<int>(batchend) - static_cast<int>(batchstart);
 
          fix_to_zero_thread.combine_each([&](const std::vector<int>& fix_to_zero_local ) {
