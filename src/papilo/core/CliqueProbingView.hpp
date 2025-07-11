@@ -206,10 +206,28 @@ class CliqueProbingView
                   if( num.isGT( probing_lower_bounds[var], problem.getLowerBounds()[var] ) )
                   {
                      changed_clique_lbs_inds_vals_thread_local.emplace_back(std::pair<int,REAL> {var, probing_lower_bounds[var] } );
+                     std::cout<<"\nProbing ";
+                     std::cout<<cliqueind[i];
+                     std::cout<<" on one and rest on zero ";
+                     std::cout<<"yields stronger lower bounds ";
+                     std::cout<<probing_lower_bounds[var];
+                     std::cout<<" ";
+                     std::cout<<problem.getLowerBounds()[var];
+                     std::cout<<" for variable ";
+                     std::cout<<var;
                   }
                   if( num.isLT( probing_upper_bounds[var], problem.getUpperBounds()[var] ) )
                   {
                      changed_clique_ubs_inds_vals_thread_local.emplace_back(std::pair<int,REAL> {var, probing_upper_bounds[var] } );
+                     std::cout<<"\nProbing ";
+                     std::cout<<cliqueind[i];
+                     std::cout<<" on one and rest on zero ";
+                     std::cout<<"yields stronger upper bounds ";
+                     std::cout<<probing_upper_bounds[var];
+                     std::cout<<" ";
+                     std::cout<<problem.getUpperBounds()[var];
+                     std::cout<<" for variable ";
+                     std::cout<<var;
                   }
                }
                initbounds = true;
@@ -223,6 +241,15 @@ class CliqueProbingView
                //std::cout<<"\nTest6\n";
                if( num.isLT( probing_lower_bounds[(*ind).first], (*ind).second ) )
                {
+                  std::cout<<"\nProbing ";
+                  std::cout<<cliqueind[i];
+                  std::cout<<" on one and rest on zero ";
+                  std::cout<<"yields weaker lower bounds ";
+                  std::cout<<probing_lower_bounds[(*ind).first];
+                  std::cout<<" ";
+                  std::cout<<(*ind).second;
+                  std::cout<<" for variable ";
+                  std::cout<<(*ind).first;
                   (*ind).second = probing_lower_bounds[(*ind).first];
                }
                if( num.isLE(probing_lower_bounds[(*ind).first], problem.getLowerBounds()[(*ind).first] ) )
@@ -238,6 +265,15 @@ class CliqueProbingView
                //std::cout<<"\nTest7\n";
                if( num.isGT( probing_upper_bounds[(*ind).first], (*ind).second ) )
                {
+                  std::cout<<"\nProbing ";
+                  std::cout<<cliqueind[i];
+                  std::cout<<" on one and rest on zero ";
+                  std::cout<<"yields weaker upper bounds ";
+                  std::cout<<probing_upper_bounds[(*ind).first];
+                  std::cout<<" ";
+                  std::cout<<(*ind).second;
+                  std::cout<<" for variable ";
+                  std::cout<<(*ind).first;
                   (*ind).second = probing_upper_bounds[(*ind).first];
                }
                if( num.isGE(probing_upper_bounds[(*ind).first], problem.getUpperBounds()[(*ind).first] ) )
