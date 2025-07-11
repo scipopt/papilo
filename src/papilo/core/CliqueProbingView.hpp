@@ -375,51 +375,45 @@ class CliqueProbingView
          tbb::parallel_for( tbb::blocked_range<int>( batchstart, batchend ),
             [&]( const tbb::blocked_range<int>& r )
             {
-               Vec<std::pair<int,int>>& lb_implications_thread_local = lb_implications_thread.local();
-               Vec<std::pair<int,int>>& ub_implications_thread_local = ub_implications_thread.local();
-               if( ub_implications_thread_local.size() != binary_inds.size() 
-                || lb_implications_thread_local.size() != binary_inds.size()  )
+               if( ub_implications_thread.local().size() != binary_inds.size() 
+                || lb_implications_thread.local().size() != binary_inds.size()  )
                {
-                  if( ub_implications_thread_local.size() != 0 || lb_implications_thread_local.size() != 0 )
+                  if( lb_implications_thread.local().size() != 0 || ub_implications_thread.local().size() != 0 )
                   {
                      std::cout<<"\n";
                      std::cout<<"\n";
-                     std::cout<<ub_implications_thread_local.size();
+                     std::cout<<lb_implications_thread.local().size();
                      std::cout<<"\n";
-                     std::cout<<lb_implications_thread_local.size();
+                     std::cout<<ub_implications_thread.local().size();
                      std::cout<<"\n";
                      std::cout<<binary_inds.size();
                      std::cout<<"\n";
                      std::cout<<"\n";
                   }
-                  assert( ub_implications_thread_local.size() == 0 );
-                  assert( lb_implications_thread_local.size() == 0 );
-                  lb_implications_thread_local = lb_implications_combined;
-                  ub_implications_thread_local = ub_implications_combined;
+                  assert( lb_implications_thread.local().size() == 0 );
+                  assert( ub_implications_thread.local().size() == 0 );
+                  lb_implications_thread.local() = lb_implications_combined;
+                  ub_implications_thread.local() = ub_implications_combined;
                }
                changed_clique_lbs_inds_vals_initbounds_thread.local().first = changed_clique_lbs_inds_vals_combined;
                changed_clique_ubs_inds_vals_initbounds_thread.local().first = changed_clique_ubs_inds_vals_combined;
-               std::list<std::pair<int,REAL>>& changed_clique_lbs_inds_vals_thread_local = changed_clique_lbs_inds_vals_initbounds_thread.local().first;
-               std::list<std::pair<int,REAL>>& changed_clique_ubs_inds_vals_thread_local = changed_clique_ubs_inds_vals_initbounds_thread.local().first;
                bool initbounds_thread_local = initbounds;
                Vec<int> fix_to_zero_thread_local = fix_to_zero_thread.local();
                CliqueProbingView<REAL> local_clique_probing( problem, num );
                local_clique_probing.setMinContDomRed( mincontdomred );
 
-               assert( ub_implications_thread_local.size() == binary_inds.size() );
-               assert( lb_implications_thread_local.size() == binary_inds.size() );
+               assert( ub_implications_thread.local().size() == binary_inds.size() );
+               assert( lb_implications_thread.local().size() == binary_inds.size() );
                
                assert( ub_implications_combined.size() == binary_inds.size() );
                assert( lb_implications_combined.size() == binary_inds.size() );
 
-               local_clique_probing.parallelProbe( r, initbounds_thread_local, changed_clique_lbs_inds_vals_thread_local, 
-                  changed_clique_ubs_inds_vals_thread_local, lb_implications_thread_local,
+               local_clique_probing.parallelProbe( r, initbounds_thread_local, changed_clique_lbs_inds_vals_initbounds_thread.local(), 
+               changed_clique_ubs_inds_vals_initbounds_thread.local(), lb_implications_thread_local,
                   ub_implications_thread_local, fix_to_zero_thread_local, cliqueEquation, cliqueind,
                   clique, binary_inds, cliquelen );
                changed_clique_lbs_inds_vals_initbounds_thread.local().second = initbounds_thread_local;
                changed_clique_ubs_inds_vals_initbounds_thread.local().second = initbounds_thread_local;
-               lb_implications_thread.local() = lb_implications_thread_local;
-               ub_implications_thread.local() = ub_implications_thread_local;
             }
          );
 
