@@ -414,12 +414,12 @@ class CliqueProbingView
                changed_clique_lbs_inds_vals_initbounds_thread.local().second = initbounds_thread_local;
                changed_clique_ubs_inds_vals_initbounds_thread.local().second = initbounds_thread_local;
                std::cout << "\nLocal thread lb list contents: ";
-               for (const auto& pair : changed_clique_lbs_inds_vals_initbounds.local().first) {
+               for (const auto& pair : changed_clique_lbs_inds_vals_initbounds_thread.local().first) {
                   std::cout << "(" << pair.first << "," << pair.second << ") ";
                }
                std::cout << "\n";
                std::cout << "\nLocal thread ub list contents: ";
-               for (const auto& pair : changed_clique_ubs_inds_vals_initbounds.local().first) {
+               for (const auto& pair : changed_clique_ubs_inds_vals_initbounds_thread.local().first) {
                   std::cout << "(" << pair.first << "," << pair.second << ") ";
                }
                std::cout << "\n";
