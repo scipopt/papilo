@@ -686,6 +686,8 @@ class CliqueProbingView
          std::cout<<tbb::this_task_arena::max_concurrency();
          std::cout<<"\n";
          */
+         changed_clique_lbs_inds_vals_initbounds_thread.clear();
+         changed_clique_ubs_inds_vals_initbounds_thread.clear();
          
          batchstart = batchend;
          batchend = std::min( batchstart + 24, len );
