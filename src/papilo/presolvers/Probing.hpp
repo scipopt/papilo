@@ -175,6 +175,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
 
    if( unsuccessfulcliqueprobing <= 1 )
    {
+      auto cliquefindstarttime = timer.getTime();
       for( int row = 0; row != nrows; ++row )
       {
          assert( row >= 0 && row < nrows );
@@ -185,6 +186,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
             cliques.emplace_back( row, std::make_pair(0, cliquecheck.second) );
          }
       }
+      std::cout<<"\nFinding all cliques took " << timer.getTime() - cliquefindstarttime << " seconds.\n";
    }
 
    for( int i = 0; i != ncols; ++i )
@@ -319,6 +321,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
    
    if( unsuccessfulcliqueprobing <= 1 )
    {
+      auto cliqueprobingscoressatrttime = timer.getTime();
 #ifdef PAPILO_TBB
       tbb::parallel_for(
       tbb::blocked_range<int>( 0, cliques.end() - cliques.begin() ),
@@ -384,6 +387,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
             break;
          }
       }
+   std::cout<<"\nAssigning probing scores and sorting took " << timer.getTime() - cliqueprobingscoressatrttime << " seconds\n";
    }
    
    pdqsort( probing_cands.begin(), probing_cands.end(),
