@@ -420,29 +420,29 @@ class CliqueProbingView
                changed_clique_lbs_inds_vals_initbounds_thread.local().second = initbounds_thread_local;
                changed_clique_ubs_inds_vals_initbounds_thread.local().second = initbounds_thread_local;
                //std::cout << "\nLocal thread lb list contents: ";
-               for (const auto& pair : changed_clique_lbs_inds_vals_initbounds_thread.local().first) {
+               /*for (const auto& pair : changed_clique_lbs_inds_vals_initbounds_thread.local().first) {
                   //std::cout << "(" << pair.first << "," << pair.second << ") ";
                }
                //std::cout << "\n";
                //std::cout << "\nLocal thread ub list contents: ";
                for (const auto& pair : changed_clique_ubs_inds_vals_initbounds_thread.local().first) {
                   //std::cout << "(" << pair.first << "," << pair.second << ") ";
-               }
+               }*/
                //std::cout << "\n";
             }
          );
 
          //std::cout << "=== AFTER PARALLEL_FOR ===\n";
-         int post_count = 0;
-         changed_clique_lbs_inds_vals_initbounds_thread.combine_each([&](const auto& data) {
+         //int post_count = 0;
+         /*changed_clique_lbs_inds_vals_initbounds_thread.combine_each([&](const auto& data) {
             //std::cout << "Post thread data #" << post_count++ << ", initbounds: " << data.second 
             //         << ", list size: " << data.first.size() << "\n";
          });
 
-         int count = 0;
+         //int count = 0;
          changed_clique_lbs_inds_vals_initbounds_thread.combine_each([&](const auto& data) {
             //std::cout << "combine_each call #" << count++ << ", list size: " << data.first.size() << "\n";
-         });
+         });*/
 
          numpropagations += static_cast<int>(batchend) - static_cast<int>(batchstart);
 
@@ -555,18 +555,18 @@ class CliqueProbingView
             
             // Debug: Print contents of combined list AFTER processing
             //std::cout << "Combined list AFTER: ";
-            for (const auto& pair : changed_clique_lbs_inds_vals_combined) {
+            /*for (const auto& pair : changed_clique_lbs_inds_vals_combined) {
                //std::cout << "(" << pair.first << "," << pair.second << ") ";
-            }
+            }*/
             //std::cout << "\n=== END COMBINE CALL #" << combine_call_count << " ===\n";
          });
 
          // Final verification
          //std::cout << "\n=== FINAL RESULT ===\n";
          //std::cout << "Final combined list: ";
-         for (const auto& pair : changed_clique_lbs_inds_vals_combined) {
+         /*for (const auto& pair : changed_clique_lbs_inds_vals_combined) {
             //std::cout << "(" << pair.first << "," << pair.second << ") ";
-         }
+         }*/
          //std::cout << "\n";
 
          bool initupperbounds = initbounds;
@@ -673,18 +673,18 @@ class CliqueProbingView
             
             // Debug: Print contents of combined list AFTER processing
             //std::cout << "Combined UB list AFTER: ";
-            for (const auto& pair : changed_clique_ubs_inds_vals_combined) {
+            /*for (const auto& pair : changed_clique_ubs_inds_vals_combined) {
                //std::cout << "(" << pair.first << "," << pair.second << ") ";
-            }
+            }*/
             //std::cout << "\n=== END UB COMBINE CALL #" << ub_combine_call_count << " ===\n";
          });
 
          // Final verification
          //std::cout << "\n=== FINAL UB RESULT ===\n";
          //std::cout << "Final combined UB list: ";
-         for (const auto& pair : changed_clique_ubs_inds_vals_combined) {
+         /*for (const auto& pair : changed_clique_ubs_inds_vals_combined) {
             //std::cout << "(" << pair.first << "," << pair.second << ") ";
-         }
+         }*/
          //std::cout << "\n";
 
          initbounds = initupperbounds;
