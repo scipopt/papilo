@@ -173,7 +173,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
    probing_cands.reserve( ncols );
    const int maxCliqueLength = 150;
 
-   if( unsuccessfulcliqueprobing <= 1 )
+   if( unsuccessfulcliqueprobing <= 0 )
    {
       auto cliquefindstarttime = timer.getTime();
       for( int row = 0; row != nrows; ++row )
@@ -214,7 +214,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
                            []( int n ) { return n == 0; } ) );
    }
 
-   if( unsuccessfulcliqueprobing <= 1 )
+   if( unsuccessfulcliqueprobing <= 0 )
    {   
       if( nprobedcliques.empty() )
       {
@@ -319,7 +319,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
       
    Vec<std::pair<int,bool>> probingCliques;
    
-   if( unsuccessfulcliqueprobing <= 1 )
+   if( unsuccessfulcliqueprobing <= 0 )
    {
       auto cliqueprobingscoressatrttime = timer.getTime();
 #ifdef PAPILO_TBB
@@ -417,7 +417,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
    
    int clique_cutoff_ub = 0;
 
-   if( unsuccessfulcliqueprobing <= 1 )
+   if( unsuccessfulcliqueprobing <= 0 )
    {
       clique_cutoff_ub = static_cast<int>(probing_cands.size())-1;
       int clique_cutoff_lb = 0;
@@ -473,7 +473,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
       Vec<int> change_to_equation;
 #endif
 
-   if( unsuccessfulcliqueprobing <= 1 )
+   if( unsuccessfulcliqueprobing <= 0 )
    {
       auto propagate_variables = [&]( int cliquestart, int cliqueend )
       {
@@ -744,7 +744,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
 
    PresolveStatus result = PresolveStatus::kUnchanged;
    
-   if( unsuccessfulcliqueprobing <= 1 )
+   if( unsuccessfulcliqueprobing <= 0 )
    {
       std::cout<<"\n\nClique Probing on ";
       std::cout<<std::min(static_cast<int>(probingCliques.size()), batchend);
@@ -1171,7 +1171,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
       result = PresolveStatus::kReduced;
    }
 
-   if( unsuccessfulcliqueprobing <= 1 )
+   if( unsuccessfulcliqueprobing <= 0 )
    {
       assert( ncliquefixings + ncliqueboundchgs + ncliquesubstitutions == 0 
          || result == PresolveStatus::kInfeasible || result == PresolveStatus::kReduced);
