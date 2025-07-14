@@ -1472,6 +1472,7 @@ CliqueProbingView<REAL>::analyzeImplications()
                   " static_cast<int>(cliqueEquation) " << static_cast<int>(cliqueEquation) << " lb_implications[ind].first "
                   << lb_implications[ind].first << " lb_implications[ind].second " << lb_implications[ind].second
                   << " ub_implications[ind].second " << ub_implications[ind].second;
+                  std::cout.flush();
                   assert( probing_lower_bounds[binary_inds[ind]] == 1.0 || isInfeasible() );
                }
                i +=1;
