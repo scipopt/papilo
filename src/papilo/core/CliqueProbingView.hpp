@@ -1439,7 +1439,7 @@ CliqueProbingView<REAL>::analyzeImplications()
             substitutions.emplace_back(
                CliqueProbingSubstitution<REAL>( binary_inds[ind], -1.0, lb_implications[ind].second, 1.0 ) );
          }
-         if( ind == 4 && static_cast<int>(binary_inds.end() - binary_inds.begin()) == 5 )
+         if( ind == 3 && static_cast<int>(binary_inds.end() - binary_inds.begin()) == 4 )
          {
             std::cout<<"\nUbimpsfirst: " << ub_implications[ind].first << " cliquelen: " << cliquelen 
             << " static_cast<int>(fix_to_zero.size()) " << static_cast<int>(fix_to_zero.size()) <<
