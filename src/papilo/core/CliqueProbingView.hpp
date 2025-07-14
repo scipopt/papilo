@@ -369,8 +369,8 @@ class CliqueProbingView
              + static_cast<int>(changed_clique_ubs_inds_vals_combined.size()) - cliquelen + static_cast<int>(batchstart) ) 
              < cliquelen * cliquereductionfactor && initbounds )
          {     
-            fewreductions = true;
-            return { false, cliqueEquation && !equationBefore } ;
+            //fewreductions = true;
+            //return { false, cliqueEquation && !equationBefore } ;
          }
          tbb::parallel_for( tbb::blocked_range<int>( batchstart, batchend ),
             [&]( const tbb::blocked_range<int>& r )
