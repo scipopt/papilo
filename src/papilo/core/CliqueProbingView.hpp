@@ -1443,9 +1443,9 @@ CliqueProbingView<REAL>::analyzeImplications()
                CliqueProbingSubstitution<REAL>( binary_inds[ind], -1.0, lb_implications[ind].second, 1.0 ) );
          }
             //std::cout<<"\nImplicationtest: " << binary_inds[ind] << "\nUbimpsfirst: " << ub_implications[ind].first << " cliquelen: " << cliquelen 
-            << " static_cast<int>(fix_to_zero.size()) " << static_cast<int>(fix_to_zero.size()) <<
-            " static_cast<int>(cliqueEquation) " << static_cast<int>(cliqueEquation) << " lb_implications[ind].first "
-            << lb_implications[ind].first << " lb_implications[ind].second " << lb_implications[ind].second;
+            //<< " static_cast<int>(fix_to_zero.size()) " << static_cast<int>(fix_to_zero.size()) <<
+            //" static_cast<int>(cliqueEquation) " << static_cast<int>(cliqueEquation) << " lb_implications[ind].first "
+            //<< lb_implications[ind].first << " lb_implications[ind].second " << lb_implications[ind].second;
       }
       return false;
    }
