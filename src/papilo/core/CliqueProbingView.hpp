@@ -101,6 +101,7 @@ class CliqueProbingView
       cliqueind = indices;
       cliquelen = len;
       binary_inds = binary_indices;
+      std::cout<<"\nBinary inds at start of parallel clique probing: " << static_cast<int>(binary_inds.end() - binary_inds.begin());
       assert( ub_implications_thread_local.size() == binary_inds.size() );
       assert( lb_implications_thread_local.size() == binary_inds.size() );
       for( int i = r.begin(); i < r.end(); ++i )
@@ -290,10 +291,11 @@ class CliqueProbingView
 #endif
 
    std::pair<bool,bool>
-   probeClique( const int clique, const int*& indices, const int len, const Vec<int>& binary_inds, 
+   probeClique( const int clique, const int*& indices, const int len, const Vec<int>& binary_indices, 
       bool equation, Array<std::atomic_int>& probing_scores, const Vec<int>& colsize, const Vec<int>& colperm,
       Vec<int>& nprobed )
    {
+      binary_inds = binary_indices;
       fewreductions = false;
       probingClique = clique;
       for( int ind = 0; ind < len; ++ind )
