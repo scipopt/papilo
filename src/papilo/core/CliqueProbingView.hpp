@@ -1465,8 +1465,15 @@ CliqueProbingView<REAL>::analyzeImplications()
                propagateDomains();
                if( i != -1 && cliqueind[i] == lb_implications[ind].second )
                   assert( probing_upper_bounds[binary_inds[ind]] == 0.0 && !isInfeasible() );
-               else
+               else if( !probing_lower_bounds[binary_inds[ind]] == 1.0 && !isInfeasible() )
+               {
+                  std::cout<<"\nImplicationtest: " << binary_inds[ind] << "\nUbimpsfirst: " << ub_implications[ind].first << " cliquelen: " << cliquelen 
+                  << " static_cast<int>(fix_to_zero.size()) " << static_cast<int>(fix_to_zero.size()) <<
+                  " static_cast<int>(cliqueEquation) " << static_cast<int>(cliqueEquation) << " lb_implications[ind].first "
+                  << lb_implications[ind].first << " lb_implications[ind].second " << lb_implications[ind].second
+                  << " ub_implications[ind].second " << ub_implications[ind].second;
                   assert( probing_lower_bounds[binary_inds[ind]] == 1.0 || isInfeasible() );
+               }
                i +=1;
             }
             reset();
