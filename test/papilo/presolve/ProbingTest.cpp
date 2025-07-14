@@ -129,7 +129,8 @@ TEST_CASE( "clique-probing-1", "[presolve]" )
         std::cout<<reductions.getReduction(i).newval;
     }
     
-   REQUIRE( presolveStatus == PresolveStatus::kReduced );/*
+   REQUIRE( presolveStatus == PresolveStatus::kReduced );
+   assert(false);/*
 #ifdef PAPLIO_TBB
    REQUIRE( reductions.size() == 8 );
 
@@ -277,6 +278,8 @@ TEST_CASE( "clique-probing-2", "[presolve]" )
    REQUIRE( reductions.getReduction( 5 ).col == 0 );
    REQUIRE( reductions.getReduction( 5 ).row == papilo::ColReduction::NONE );
    REQUIRE( reductions.getReduction( 5 ).newval == 0 );
+
+   assert(false);
 
 }
 
