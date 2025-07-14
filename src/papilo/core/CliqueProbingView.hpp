@@ -302,6 +302,7 @@ class CliqueProbingView
       {
          cliqueind.emplace_back( indices[ind] );
       }
+      assert(static_cast<int>(cliqueind.length()) == len );
 
       pdqsort( cliqueind.begin(), cliqueind.end(),
             [&probing_scores, &colsize, &colperm, &nprobed]( int col1, int col2 )
@@ -1433,6 +1434,21 @@ CliqueProbingView<REAL>::analyzeImplications()
             ////std::cout<<"\nFOUND SUBSTITUTION";
             substitutions.emplace_back(
                CliqueProbingSubstitution<REAL>( binary_inds[ind], 1.0, ub_implications[ind].second, 0.0 ) );
+
+            int i = -1;
+            while( i != cliquelen )
+            {
+               reset();
+               setProbingColumn(i);
+               propagateDomains();
+               if( binaryind[i] == ub_implications[ind].second )
+                  assert( probing_lower_bounds[binary_inds[ind]] == 1.0 && !isInfeasible() );
+               else
+                  assert( probing_upper_bounds[binary_inds[ind]] == 0.0 || isInfeasible() );
+               i +=1;
+            }
+            reset();
+      
          }
          else if( ub_implications[ind].first == cliquelen - static_cast<int>(fix_to_zero.size())
             - static_cast<int>(cliqueEquation) && lb_implications[ind].first == 1 
@@ -1441,6 +1457,21 @@ CliqueProbingView<REAL>::analyzeImplications()
             ////std::cout<<"\nFOUND SUBSTITUTION";
             substitutions.emplace_back(
                CliqueProbingSubstitution<REAL>( binary_inds[ind], -1.0, lb_implications[ind].second, 1.0 ) );
+
+            int i = -1;
+            while( i != cliquelen )
+            {
+               reset();
+               setProbingColumn(i);
+               propagateDomains();
+               if( binaryind[i] == ub_implications[ind].second )
+                  assert( probing_lower_bounds[binary_inds[ind]] == 0.0 && !isInfeasible() );
+               else
+                  assert( probing_upper_bounds[binary_inds[ind]] == 1.0 || isInfeasible() );
+               i +=1;
+            }
+            reset();
+
          }
             //std::cout<<"\nImplicationtest: " << binary_inds[ind] << "\nUbimpsfirst: " << ub_implications[ind].first << " cliquelen: " << cliquelen 
             //<< " static_cast<int>(fix_to_zero.size()) " << static_cast<int>(fix_to_zero.size()) <<
