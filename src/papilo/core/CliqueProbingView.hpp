@@ -101,12 +101,12 @@ class CliqueProbingView
       cliqueind = indices;
       cliquelen = len;
       binary_inds = binary_indices;
-      std::cout<<"\nBinary inds at start of parallel clique probing: " << static_cast<int>(binary_inds.end() - binary_inds.begin());
+      //std::cout<<"\nBinary inds at start of parallel clique probing: " << static_cast<int>(binary_inds.end() - binary_inds.begin());
       assert( ub_implications_thread_local.size() == binary_inds.size() );
       assert( lb_implications_thread_local.size() == binary_inds.size() );
       for( int i = r.begin(); i < r.end(); ++i )
       {
-         ////std::cout<<"\nTest1\n";
+         //////std::cout<<"\nTest1\n";
          if( i == -1 )
          {
             setProbingColumn(-1);
@@ -118,37 +118,37 @@ class CliqueProbingView
                cliqueEquation = false;
                for( int var = 0; var != static_cast<int>(probing_lower_bounds.size()); ++var )
                {
-                  ////std::cout<<"\nTest2\n";
+                  //////std::cout<<"\nTest2\n";
                   if( num.isGT(probing_lower_bounds[var], problem.getLowerBounds()[var]) )
                   {
                      changed_clique_lbs_inds_vals_thread_local.emplace_back(var, probing_lower_bounds[var]);
-                     //std::cout<<"\nProbing ";
-                     //std::cout<<" all on zero ";
-                     //std::cout<<"yields stronger lower bounds ";
-                     //std::cout<<probing_lower_bounds[var];
-                     //std::cout<<" ";
-                     //std::cout<<problem.getLowerBounds()[var];
-                     //std::cout<<" for variable ";
-                     //std::cout<<var;
+                     ////std::cout<<"\nProbing ";
+                     ////std::cout<<" all on zero ";
+                     ////std::cout<<"yields stronger lower bounds ";
+                     ////std::cout<<probing_lower_bounds[var];
+                     ////std::cout<<" ";
+                     ////std::cout<<problem.getLowerBounds()[var];
+                     ////std::cout<<" for variable ";
+                     ////std::cout<<var;
                   }
                   if( num.isLT(probing_upper_bounds[var], problem.getUpperBounds()[var]) )
                   {
                      changed_clique_ubs_inds_vals_thread_local.emplace_back(var, probing_upper_bounds[var]);
-                     //std::cout<<"\nProbing ";
-                     //std::cout<<" all on zero ";
-                     //std::cout<<"yields stronger upper bounds ";
-                     //std::cout<<probing_upper_bounds[var];
-                     //std::cout<<" ";
-                     //std::cout<<problem.getUpperBounds()[var];
-                     //std::cout<<" for variable ";
-                     //std::cout<<var;
+                     ////std::cout<<"\nProbing ";
+                     ////std::cout<<" all on zero ";
+                     ////std::cout<<"yields stronger upper bounds ";
+                     ////std::cout<<probing_upper_bounds[var];
+                     ////std::cout<<" ";
+                     ////std::cout<<problem.getUpperBounds()[var];
+                     ////std::cout<<" for variable ";
+                     ////std::cout<<var;
                   }
                }
                initbounds = true;
             }
             for( unsigned int ind = 0; ind !=  binary_inds.size() ; ++ind )
             {
-               ////std::cout<<"\nTest3\n";
+               //////std::cout<<"\nTest3\n";
                assert( ind < binary_inds.size() );
                assert( binary_inds[ind] < static_cast<int>(probing_lower_bounds.size()) );
                if( num.isEq( 1.0, probing_lower_bounds[binary_inds[ind]] ) )
@@ -180,7 +180,7 @@ class CliqueProbingView
             }
             for( unsigned int ind = 0; ind !=  binary_inds.size() ; ++ind )
             {
-               ////std::cout<<"\nTest4\n";
+               //////std::cout<<"\nTest4\n";
                assert( ind < binary_inds.size() );
                assert( binary_inds[ind] < static_cast<int>(probing_lower_bounds.size()) );
                if( num.isEq( 1.0, probing_lower_bounds[binary_inds[ind]] ) )
@@ -203,32 +203,32 @@ class CliqueProbingView
             {
                for( unsigned int var = 0; var != probing_lower_bounds.size(); ++var )
                {
-                  ////std::cout<<"\nTest5\n";
+                  //////std::cout<<"\nTest5\n";
                   if( num.isGT( probing_lower_bounds[var], problem.getLowerBounds()[var] ) )
                   {
                      changed_clique_lbs_inds_vals_thread_local.emplace_back(std::pair<int,REAL> {var, probing_lower_bounds[var] } );
-                     //std::cout<<"\nProbing ";
-                     //std::cout<<cliqueind[i];
-                     //std::cout<<" on one and rest on zero ";
-                     //std::cout<<"yields stronger lower bounds ";
-                     //std::cout<<probing_lower_bounds[var];
-                     //std::cout<<" ";
-                     //std::cout<<problem.getLowerBounds()[var];
-                     //std::cout<<" for variable ";
-                     //std::cout<<var;
+                     ////std::cout<<"\nProbing ";
+                     ////std::cout<<cliqueind[i];
+                     ////std::cout<<" on one and rest on zero ";
+                     ////std::cout<<"yields stronger lower bounds ";
+                     ////std::cout<<probing_lower_bounds[var];
+                     ////std::cout<<" ";
+                     ////std::cout<<problem.getLowerBounds()[var];
+                     ////std::cout<<" for variable ";
+                     ////std::cout<<var;
                   }
                   if( num.isLT( probing_upper_bounds[var], problem.getUpperBounds()[var] ) )
                   {
                      changed_clique_ubs_inds_vals_thread_local.emplace_back(std::pair<int,REAL> {var, probing_upper_bounds[var] } );
-                     //std::cout<<"\nProbing ";
-                     //std::cout<<cliqueind[i];
-                     //std::cout<<" on one and rest on zero ";
-                     //std::cout<<"yields stronger upper bounds ";
-                     //std::cout<<probing_upper_bounds[var];
-                     //std::cout<<" ";
-                     //std::cout<<problem.getUpperBounds()[var];
-                     //std::cout<<" for variable ";
-                     //std::cout<<var;
+                     ////std::cout<<"\nProbing ";
+                     ////std::cout<<cliqueind[i];
+                     ////std::cout<<" on one and rest on zero ";
+                     ////std::cout<<"yields stronger upper bounds ";
+                     ////std::cout<<probing_upper_bounds[var];
+                     ////std::cout<<" ";
+                     ////std::cout<<problem.getUpperBounds()[var];
+                     ////std::cout<<" for variable ";
+                     ////std::cout<<var;
                   }
                }
                initbounds = true;
@@ -239,18 +239,18 @@ class CliqueProbingView
             typename std::list<std::pair<int,REAL>>::iterator ind = changed_clique_lbs_inds_vals_thread_local.begin();
             while( ind != changed_clique_lbs_inds_vals_thread_local.end() )
             {
-               ////std::cout<<"\nTest6\n";
+               //////std::cout<<"\nTest6\n";
                if( num.isLT( probing_lower_bounds[(*ind).first], (*ind).second ) )
                {
-                  //std::cout<<"\nProbing ";
-                  //std::cout<<cliqueind[i];
-                  //std::cout<<" on one and rest on zero ";
-                  //std::cout<<"yields weaker lower bounds ";
-                  //std::cout<<probing_lower_bounds[(*ind).first];
-                  //std::cout<<" ";
-                  //std::cout<<(*ind).second;
-                  //std::cout<<" for variable ";
-                  //std::cout<<(*ind).first;
+                  ////std::cout<<"\nProbing ";
+                  ////std::cout<<cliqueind[i];
+                  ////std::cout<<" on one and rest on zero ";
+                  ////std::cout<<"yields weaker lower bounds ";
+                  ////std::cout<<probing_lower_bounds[(*ind).first];
+                  ////std::cout<<" ";
+                  ////std::cout<<(*ind).second;
+                  ////std::cout<<" for variable ";
+                  ////std::cout<<(*ind).first;
                   (*ind).second = probing_lower_bounds[(*ind).first];
                }
                if( num.isLE(probing_lower_bounds[(*ind).first], problem.getLowerBounds()[(*ind).first] ) )
@@ -263,18 +263,18 @@ class CliqueProbingView
             ind = changed_clique_ubs_inds_vals_thread_local.begin();
             while( ind != changed_clique_ubs_inds_vals_thread_local.end() )
             {
-               ////std::cout<<"\nTest7\n";
+               //////std::cout<<"\nTest7\n";
                if( num.isGT( probing_upper_bounds[(*ind).first], (*ind).second ) )
                {
-                  //std::cout<<"\nProbing ";
-                  //std::cout<<cliqueind[i];
-                  //std::cout<<" on one and rest on zero ";
-                  //std::cout<<"yields weaker upper bounds ";
-                  //std::cout<<probing_upper_bounds[(*ind).first];
-                  //std::cout<<" ";
-                  //std::cout<<(*ind).second;
-                  //std::cout<<" for variable ";
-                  //std::cout<<(*ind).first;
+                  ////std::cout<<"\nProbing ";
+                  ////std::cout<<cliqueind[i];
+                  ////std::cout<<" on one and rest on zero ";
+                  ////std::cout<<"yields weaker upper bounds ";
+                  ////std::cout<<probing_upper_bounds[(*ind).first];
+                  ////std::cout<<" ";
+                  ////std::cout<<(*ind).second;
+                  ////std::cout<<" for variable ";
+                  ////std::cout<<(*ind).first;
                   (*ind).second = probing_upper_bounds[(*ind).first];
                }
                if( num.isGE(probing_upper_bounds[(*ind).first], problem.getUpperBounds()[(*ind).first] ) )
@@ -366,7 +366,7 @@ class CliqueProbingView
       int batchend = std::min( batchstart + 24, len );
       while( batchstart != len )
       {
-         ////std::cout<<"\nTest8\n";
+         //////std::cout<<"\nTest8\n";
          if( ( static_cast<int>(changed_clique_lbs_inds_vals_combined.size())
              + static_cast<int>(changed_clique_ubs_inds_vals_combined.size()) - cliquelen + static_cast<int>(batchstart) ) 
              < cliquelen * cliquereductionfactor && initbounds )
@@ -377,21 +377,21 @@ class CliqueProbingView
          tbb::parallel_for( tbb::blocked_range<int>( batchstart, batchend ),
             [&]( const tbb::blocked_range<int>& r )
             {
-               //std::cout << "Thread ID: " << std::this_thread::get_id() << " for range [" << r.begin() << ", " << r.end() << ")\n";
+               ////std::cout << "Thread ID: " << std::this_thread::get_id() << " for range [" << r.begin() << ", " << r.end() << ")\n";
                if( ub_implications_thread.local().size() != binary_inds.size() 
                 || lb_implications_thread.local().size() != binary_inds.size()  )
                {
                   if( lb_implications_thread.local().size() != 0 || ub_implications_thread.local().size() != 0 )
                   {
-                     //std::cout<<"\n";
-                     //std::cout<<"\n";
-                     //std::cout<<lb_implications_thread.local().size();
-                     //std::cout<<"\n";
-                     //std::cout<<ub_implications_thread.local().size();
-                     //std::cout<<"\n";
-                     //std::cout<<binary_inds.size();
-                     //std::cout<<"\n";
-                     //std::cout<<"\n";
+                     ////std::cout<<"\n";
+                     ////std::cout<<"\n";
+                     ////std::cout<<lb_implications_thread.local().size();
+                     ////std::cout<<"\n";
+                     ////std::cout<<ub_implications_thread.local().size();
+                     ////std::cout<<"\n";
+                     ////std::cout<<binary_inds.size();
+                     ////std::cout<<"\n";
+                     ////std::cout<<"\n";
                   }
                   assert( lb_implications_thread.local().size() == 0 );
                   assert( ub_implications_thread.local().size() == 0 );
@@ -421,29 +421,29 @@ class CliqueProbingView
                   clique, binary_inds, cliquelen );
                changed_clique_lbs_inds_vals_initbounds_thread.local().second = initbounds_thread_local;
                changed_clique_ubs_inds_vals_initbounds_thread.local().second = initbounds_thread_local;
-               //std::cout << "\nLocal thread lb list contents: ";
+               ////std::cout << "\nLocal thread lb list contents: ";
                /*for (const auto& pair : changed_clique_lbs_inds_vals_initbounds_thread.local().first) {
-                  //std::cout << "(" << pair.first << "," << pair.second << ") ";
+                  ////std::cout << "(" << pair.first << "," << pair.second << ") ";
                }
-               //std::cout << "\n";
-               //std::cout << "\nLocal thread ub list contents: ";
+               ////std::cout << "\n";
+               ////std::cout << "\nLocal thread ub list contents: ";
                for (const auto& pair : changed_clique_ubs_inds_vals_initbounds_thread.local().first) {
-                  //std::cout << "(" << pair.first << "," << pair.second << ") ";
+                  ////std::cout << "(" << pair.first << "," << pair.second << ") ";
                }*/
-               //std::cout << "\n";
+               ////std::cout << "\n";
             }
          );
 
-         //std::cout << "=== AFTER PARALLEL_FOR ===\n";
+         ////std::cout << "=== AFTER PARALLEL_FOR ===\n";
          //int post_count = 0;
          /*changed_clique_lbs_inds_vals_initbounds_thread.combine_each([&](const auto& data) {
-            //std::cout << "Post thread data #" << post_count++ << ", initbounds: " << data.second 
+            ////std::cout << "Post thread data #" << post_count++ << ", initbounds: " << data.second 
             //         << ", list size: " << data.first.size() << "\n";
          });
 
          //int count = 0;
          changed_clique_lbs_inds_vals_initbounds_thread.combine_each([&](const auto& data) {
-            //std::cout << "combine_each call #" << count++ << ", list size: " << data.first.size() << "\n";
+            ////std::cout << "combine_each call #" << count++ << ", list size: " << data.first.size() << "\n";
          });*/
 
          numpropagations += static_cast<int>(batchend) - static_cast<int>(batchstart);
@@ -459,22 +459,22 @@ class CliqueProbingView
          changed_clique_lbs_inds_vals_initbounds_thread.combine_each([&]( std::pair<std::list<std::pair<int,REAL>>,bool> changed_clique_lbs_inds_vals_initbounds_local ) 
          {
             /*++combine_call_count;
-            //std::cout << "\n=== COMBINE CALL #" << combine_call_count << " ===\n";
-            //std::cout << "initlowerbounds: " << initlowerbounds << ", local.second: " << changed_clique_lbs_inds_vals_initbounds_local.second << "\n";
+            ////std::cout << "\n=== COMBINE CALL #" << combine_call_count << " ===\n";
+            ////std::cout << "initlowerbounds: " << initlowerbounds << ", local.second: " << changed_clique_lbs_inds_vals_initbounds_local.second << "\n";
             
             // Debug: Print contents of local list
-            //std::cout << "Local list contents: ";
+            ////std::cout << "Local list contents: ";
             for (const auto& pair : changed_clique_lbs_inds_vals_initbounds_local.first) {
-               //std::cout << "(" << pair.first << "," << pair.second << ") ";
+               ////std::cout << "(" << pair.first << "," << pair.second << ") ";
             }
-            //std::cout << "\n";
+            ////std::cout << "\n";
             
             // Debug: Print contents of combined list BEFORE processing
-            //std::cout << "Combined list BEFORE: ";
+            ////std::cout << "Combined list BEFORE: ";
             for (const auto& pair : changed_clique_lbs_inds_vals_combined) {
-               //std::cout << "(" << pair.first << "," << pair.second << ") ";
+               ////std::cout << "(" << pair.first << "," << pair.second << ") ";
             }
-            //std::cout << "\n";
+            ////std::cout << "\n";
             
             // Debug: Check if lists are sorted
             auto check_sorted = [](const std::list<std::pair<int,REAL>>& lst, const std::string& name) {
@@ -482,12 +482,12 @@ class CliqueProbingView
                int prev = -1;
                for (const auto& pair : lst) {
                   if (pair.first <= prev) {
-                     //std::cout << "ERROR: " << name << " is NOT sorted! Found " << pair.first << " after " << prev << "\n";
+                     ////std::cout << "ERROR: " << name << " is NOT sorted! Found " << pair.first << " after " << prev << "\n";
                      sorted = false;
                   }
                   prev = pair.first;
                }
-               if (sorted) //std::cout << name << " is properly sorted\n";
+               if (sorted) ////std::cout << name << " is properly sorted\n";
                return sorted;
             };
             
@@ -496,55 +496,55 @@ class CliqueProbingView
             
             if( !initlowerbounds && changed_clique_lbs_inds_vals_initbounds_local.second )
             {
-               //std::cout << "INITIALIZING combined list with local list\n";
+               ////std::cout << "INITIALIZING combined list with local list\n";
                changed_clique_lbs_inds_vals_combined = changed_clique_lbs_inds_vals_initbounds_local.first;
                initlowerbounds = true;
             }
             else if( initlowerbounds && changed_clique_lbs_inds_vals_initbounds_local.second )
             {
-               //std::cout << "INTERSECTING lists\n";
+               ////std::cout << "INTERSECTING lists\n";
                typename std::list<std::pair<int,REAL>>::iterator ind_local = changed_clique_lbs_inds_vals_initbounds_local.first.begin();
                typename std::list<std::pair<int,REAL>>::iterator ind_combined = changed_clique_lbs_inds_vals_combined.begin();
                
                while( ind_combined != changed_clique_lbs_inds_vals_combined.end() )
                {
-                  //std::cout << "Comparing: combined(" << (*ind_combined).first << "," << (*ind_combined).second << ")";
+                  ////std::cout << "Comparing: combined(" << (*ind_combined).first << "," << (*ind_combined).second << ")";
                   if (ind_local != changed_clique_lbs_inds_vals_initbounds_local.first.end()) {
-                     //std::cout << " vs local(" << (*ind_local).first << "," << (*ind_local).second << ")";
+                     ////std::cout << " vs local(" << (*ind_local).first << "," << (*ind_local).second << ")";
                   } else {
-                     //std::cout << " vs local(END)";
+                     ////std::cout << " vs local(END)";
                   }
-                  //std::cout << "\n";
+                  ////std::cout << "\n";
                   
                   if( ind_local == changed_clique_lbs_inds_vals_initbounds_local.first.end() )
                   {
-                     //std::cout << "Local list exhausted, removing remaining combined elements\n";
+                     ////std::cout << "Local list exhausted, removing remaining combined elements\n";
                      while( ind_combined != changed_clique_lbs_inds_vals_combined.end() )
                      {
-                        //std::cout << "Throwing out lower bound reduction: " << (*ind_combined).first << " " << (*ind_combined).second << "\n";
+                        ////std::cout << "Throwing out lower bound reduction: " << (*ind_combined).first << " " << (*ind_combined).second << "\n";
                         ind_combined = changed_clique_lbs_inds_vals_combined.erase(ind_combined);
                      }
                   }
                   else if( (*ind_combined).first < (*ind_local).first )
                   {
-                     //std::cout << "Combined element not in local, removing: " << (*ind_combined).first << " " << (*ind_combined).second << "\n";
+                     ////std::cout << "Combined element not in local, removing: " << (*ind_combined).first << " " << (*ind_combined).second << "\n";
                      ind_combined = changed_clique_lbs_inds_vals_combined.erase(ind_combined);
                   }
                   else if( (*ind_combined).first > (*ind_local).first )
                   {
-                     //std::cout << "Local element not in combined, advancing local\n";
+                     ////std::cout << "Local element not in combined, advancing local\n";
                      std::advance(ind_local, 1);
                   }
                   else if( num.isGT((*ind_combined).second, (*ind_local).second) )
                   {
-                     //std::cout << "Weakening lower bound reduction: " << (*ind_combined).first << " " << (*ind_combined).second << " -> " << (*ind_local).second << "\n";
+                     ////std::cout << "Weakening lower bound reduction: " << (*ind_combined).first << " " << (*ind_combined).second << " -> " << (*ind_local).second << "\n";
                      (*ind_combined).second = (*ind_local).second;
                      ind_local = changed_clique_lbs_inds_vals_initbounds_local.first.erase(ind_local);
                      std::advance(ind_combined, 1);
                   }
                   else
                   {
-                     //std::cout << "Combined bound is better or equal, keeping it\n";
+                     ////std::cout << "Combined bound is better or equal, keeping it\n";
                      ind_local = changed_clique_lbs_inds_vals_initbounds_local.first.erase(ind_local);
                      std::advance(ind_combined, 1);
                   }
@@ -552,24 +552,24 @@ class CliqueProbingView
             }
             else
             {
-               //std::cout << "Skipping this thread's results (initbounds_local.second = false)\n";
+               ////std::cout << "Skipping this thread's results (initbounds_local.second = false)\n";
             }
             
             // Debug: Print contents of combined list AFTER processing
-            //std::cout << "Combined list AFTER: ";
+            ////std::cout << "Combined list AFTER: ";
             /*for (const auto& pair : changed_clique_lbs_inds_vals_combined) {
-               //std::cout << "(" << pair.first << "," << pair.second << ") ";
+               ////std::cout << "(" << pair.first << "," << pair.second << ") ";
             }*/
-            //std::cout << "\n=== END COMBINE CALL #" << combine_call_count << " ===\n";
+            ////std::cout << "\n=== END COMBINE CALL #" << combine_call_count << " ===\n";
          });
 
          // Final verification
-         //std::cout << "\n=== FINAL RESULT ===\n";
-         //std::cout << "Final combined list: ";
+         ////std::cout << "\n=== FINAL RESULT ===\n";
+         ////std::cout << "Final combined list: ";
          /*for (const auto& pair : changed_clique_lbs_inds_vals_combined) {
-            //std::cout << "(" << pair.first << "," << pair.second << ") ";
+            ////std::cout << "(" << pair.first << "," << pair.second << ") ";
          }*/
-         //std::cout << "\n";
+         ////std::cout << "\n";
 
          bool initupperbounds = initbounds;
          //static int ub_combine_call_count = 0;
@@ -577,22 +577,22 @@ class CliqueProbingView
          changed_clique_ubs_inds_vals_initbounds_thread.combine_each([&]( std::pair<std::list<std::pair<int,REAL>>,bool> changed_clique_ubs_inds_vals_initbounds_local ) 
          {
             /*++ub_combine_call_count;
-            //std::cout << "\n=== UB COMBINE CALL #" << ub_combine_call_count << " ===\n";
-            //std::cout << "initupperbounds: " << initupperbounds << ", local.second: " << changed_clique_ubs_inds_vals_initbounds_local.second << "\n";
+            ////std::cout << "\n=== UB COMBINE CALL #" << ub_combine_call_count << " ===\n";
+            ////std::cout << "initupperbounds: " << initupperbounds << ", local.second: " << changed_clique_ubs_inds_vals_initbounds_local.second << "\n";
             
             // Debug: Print contents of local list
-            //std::cout << "Local UB list contents: ";
+            ////std::cout << "Local UB list contents: ";
             for (const auto& pair : changed_clique_ubs_inds_vals_initbounds_local.first) {
-               //std::cout << "(" << pair.first << "," << pair.second << ") ";
+               ////std::cout << "(" << pair.first << "," << pair.second << ") ";
             }
-            //std::cout << "\n";
+            ////std::cout << "\n";
             
             // Debug: Print contents of combined list BEFORE processing
-            //std::cout << "Combined UB list BEFORE: ";
+            ////std::cout << "Combined UB list BEFORE: ";
             for (const auto& pair : changed_clique_ubs_inds_vals_combined) {
-               //std::cout << "(" << pair.first << "," << pair.second << ") ";
+               ////std::cout << "(" << pair.first << "," << pair.second << ") ";
             }
-            //std::cout << "\n";
+            ////std::cout << "\n";
             
             // Debug: Check if lists are sorted
             auto check_sorted = [](const std::list<std::pair<int,REAL>>& lst, const std::string& name) {
@@ -600,12 +600,12 @@ class CliqueProbingView
                int prev = -1;
                for (const auto& pair : lst) {
                   if (pair.first <= prev) {
-                     //std::cout << "ERROR: " << name << " is NOT sorted! Found " << pair.first << " after " << prev << "\n";
+                     ////std::cout << "ERROR: " << name << " is NOT sorted! Found " << pair.first << " after " << prev << "\n";
                      sorted = false;
                   }
                   prev = pair.first;
                }
-               if (sorted) //std::cout << name << " is properly sorted\n";
+               if (sorted) ////std::cout << name << " is properly sorted\n";
                return sorted;
             };
             
@@ -614,55 +614,55 @@ class CliqueProbingView
             
             if( !initupperbounds && changed_clique_ubs_inds_vals_initbounds_local.second )
             {
-               //std::cout << "INITIALIZING combined UB list with local list\n";
+               ////std::cout << "INITIALIZING combined UB list with local list\n";
                changed_clique_ubs_inds_vals_combined = changed_clique_ubs_inds_vals_initbounds_local.first;
                initupperbounds = true;
             }
             else if( initupperbounds && changed_clique_ubs_inds_vals_initbounds_local.second )
             {
-               //std::cout << "INTERSECTING UB lists\n";
+               ////std::cout << "INTERSECTING UB lists\n";
                typename std::list<std::pair<int,REAL>>::iterator ind_local = changed_clique_ubs_inds_vals_initbounds_local.first.begin();
                typename std::list<std::pair<int,REAL>>::iterator ind_combined = changed_clique_ubs_inds_vals_combined.begin();
                
                while( ind_combined != changed_clique_ubs_inds_vals_combined.end() )
                {
-                  //std::cout << "Comparing UB: combined(" << (*ind_combined).first << "," << (*ind_combined).second << ")";
+                  ////std::cout << "Comparing UB: combined(" << (*ind_combined).first << "," << (*ind_combined).second << ")";
                   if (ind_local != changed_clique_ubs_inds_vals_initbounds_local.first.end()) {
-                     //std::cout << " vs local(" << (*ind_local).first << "," << (*ind_local).second << ")";
+                     ////std::cout << " vs local(" << (*ind_local).first << "," << (*ind_local).second << ")";
                   } else {
-                     //std::cout << " vs local(END)";
+                     ////std::cout << " vs local(END)";
                   }
-                  //std::cout << "\n";
+                  ////std::cout << "\n";
                   
                   if( ind_local == changed_clique_ubs_inds_vals_initbounds_local.first.end() )
                   {
-                     //std::cout << "Local UB list exhausted, removing remaining combined elements\n";
+                     ////std::cout << "Local UB list exhausted, removing remaining combined elements\n";
                      while( ind_combined != changed_clique_ubs_inds_vals_combined.end() )
                      {
-                        //std::cout << "Throwing out upper bound reduction: " << (*ind_combined).first << " " << (*ind_combined).second << "\n";
+                        ////std::cout << "Throwing out upper bound reduction: " << (*ind_combined).first << " " << (*ind_combined).second << "\n";
                         ind_combined = changed_clique_ubs_inds_vals_combined.erase(ind_combined);   
                      }
                   }
                   else if( (*ind_combined).first < (*ind_local).first )
                   {
-                     //std::cout << "Combined UB element not in local, removing: " << (*ind_combined).first << " " << (*ind_combined).second << "\n";
+                     ////std::cout << "Combined UB element not in local, removing: " << (*ind_combined).first << " " << (*ind_combined).second << "\n";
                      ind_combined = changed_clique_ubs_inds_vals_combined.erase(ind_combined);
                   }
                   else if( (*ind_combined).first > (*ind_local).first )
                   {
-                     //std::cout << "Local UB element not in combined, advancing local\n";
+                     ////std::cout << "Local UB element not in combined, advancing local\n";
                      std::advance(ind_local, 1);
                   }
                   else if( num.isLT((*ind_combined).second, (*ind_local).second) )
                   {
-                     //std::cout << "Weakening upper bound reduction: " << (*ind_combined).first << " " << (*ind_combined).second << " -> " << (*ind_local).second << "\n";
+                     ////std::cout << "Weakening upper bound reduction: " << (*ind_combined).first << " " << (*ind_combined).second << " -> " << (*ind_local).second << "\n";
                      (*ind_combined).second = (*ind_local).second;
                      ind_local = changed_clique_ubs_inds_vals_initbounds_local.first.erase(ind_local);
                      std::advance(ind_combined, 1);
                   }
                   else
                   {
-                     //std::cout << "Combined UB bound is better or equal, keeping it\n";
+                     ////std::cout << "Combined UB bound is better or equal, keeping it\n";
                      ind_local = changed_clique_ubs_inds_vals_initbounds_local.first.erase(ind_local);
                      std::advance(ind_combined, 1);
                   }
@@ -670,34 +670,34 @@ class CliqueProbingView
             }
             else
             {
-               //std::cout << "Skipping this thread's UB results (initbounds_local.second = false)\n";
+               ////std::cout << "Skipping this thread's UB results (initbounds_local.second = false)\n";
             }
             
             // Debug: Print contents of combined list AFTER processing
-            //std::cout << "Combined UB list AFTER: ";
+            ////std::cout << "Combined UB list AFTER: ";
             /*for (const auto& pair : changed_clique_ubs_inds_vals_combined) {
-               //std::cout << "(" << pair.first << "," << pair.second << ") ";
+               ////std::cout << "(" << pair.first << "," << pair.second << ") ";
             }*/
-            //std::cout << "\n=== END UB COMBINE CALL #" << ub_combine_call_count << " ===\n";
+            ////std::cout << "\n=== END UB COMBINE CALL #" << ub_combine_call_count << " ===\n";
          });
 
          // Final verification
-         //std::cout << "\n=== FINAL UB RESULT ===\n";
-         //std::cout << "Final combined UB list: ";
+         ////std::cout << "\n=== FINAL UB RESULT ===\n";
+         ////std::cout << "Final combined UB list: ";
          /*for (const auto& pair : changed_clique_ubs_inds_vals_combined) {
-            //std::cout << "(" << pair.first << "," << pair.second << ") ";
+            ////std::cout << "(" << pair.first << "," << pair.second << ") ";
          }*/
-         //std::cout << "\n";
+         ////std::cout << "\n";
 
          initbounds = initupperbounds;
          /*
-         //std::cout<<"\n";
-         //std::cout<<batchstart;
-         //std::cout<<"\n";
-         //std::cout<<batchend;
-         //std::cout<<"\n";
-         //std::cout<<tbb::this_task_arena::max_concurrency();
-         //std::cout<<"\n";
+         ////std::cout<<"\n";
+         ////std::cout<<batchstart;
+         ////std::cout<<"\n";
+         ////std::cout<<batchend;
+         ////std::cout<<"\n";
+         ////std::cout<<tbb::this_task_arena::max_concurrency();
+         ////std::cout<<"\n";
          */
          changed_clique_lbs_inds_vals_initbounds_thread.clear();
          changed_clique_ubs_inds_vals_initbounds_thread.clear();
@@ -710,7 +710,7 @@ class CliqueProbingView
       {
          for( unsigned int ind = 0; ind != binary_inds.size(); ++ind )
          {
-            ////std::cout<<"\nTest13\n";
+            //////std::cout<<"\nTest13\n";
             lb_implications_combined[ind].first += lb_implications_local[ind].first;
             if( lb_implications_local[ind].second != -1 )
                lb_implications_combined[ind].second = lb_implications_local[ind].second;
@@ -722,7 +722,7 @@ class CliqueProbingView
       {
          for( unsigned int ind = 0; ind != binary_inds.size(); ++ind )
          {
-            ////std::cout<<"\nTest14\n";
+            //////std::cout<<"\nTest14\n";
             ub_implications_combined[ind].first += ub_implications_local[ind].first;
             if( ub_implications_local[ind].second != -1 )
                ub_implications_combined[ind].second = ub_implications_local[ind].second;
@@ -1371,21 +1371,21 @@ CliqueProbingView<REAL>::analyzeImplications()
             propagateDomains();
             if( !isInfeasible() && !num.isGE(probing_upper_bounds[(*col).first], (*col).second) )
             {
-               //std::cout<<"\nError, Probing ";
+               ////std::cout<<"\nError, Probing ";
                if (i==-1)
-                  //std::cout<<" all on zero ";
+                  ////std::cout<<" all on zero ";
                else
                {   
-                  //std::cout<<cliqueind[i];
-                  //std::cout<<" on one and rest on zero ";
+                  ////std::cout<<cliqueind[i];
+                  ////std::cout<<" on one and rest on zero ";
                }
-               //std::cout<<"has weaker lower bounds ";
-               //std::cout<<probing_lower_bounds[(*col).first];
-               //std::cout<<" ";
-               //std::cout<<(*col).second;
-               //std::cout<<" for variable ";
-               //std::cout<<(*col).first;
-               std::cout.flush();
+               ////std::cout<<"has weaker lower bounds ";
+               ////std::cout<<probing_lower_bounds[(*col).first];
+               ////std::cout<<" ";
+               ////std::cout<<(*col).second;
+               ////std::cout<<" for variable ";
+               ////std::cout<<(*col).first;
+               //std::cout.flush();
             }
             assert( isInfeasible() || num.isGE(probing_lower_bounds[(*col).first], (*col).second) );
          }*/
@@ -1402,35 +1402,35 @@ CliqueProbingView<REAL>::analyzeImplications()
             propagateDomains();
             if( !isInfeasible() && !num.isLE(probing_upper_bounds[(*col).first], (*col).second) )
             {
-               //std::cout<<"\nError, Probing ";
+               ////std::cout<<"\nError, Probing ";
                if (i==-1)
-                  //std::cout<<" all on zero ";
+                  ////std::cout<<" all on zero ";
                else
                {   
-                  //std::cout<<cliqueind[i];
-                  //std::cout<<" on one and rest on zero ";
+                  ////std::cout<<cliqueind[i];
+                  ////std::cout<<" on one and rest on zero ";
                }
-               //std::cout<<"has weaker upper bounds ";
-               //std::cout<<probing_upper_bounds[(*col).first];
-               //std::cout<<" ";
-               //std::cout<<(*col).second;
-               //std::cout<<" for variable ";
-               //std::cout<<(*col).first;
-               std::cout.flush();
+               ////std::cout<<"has weaker upper bounds ";
+               ////std::cout<<probing_upper_bounds[(*col).first];
+               ////std::cout<<" ";
+               ////std::cout<<(*col).second;
+               ////std::cout<<" for variable ";
+               ////std::cout<<(*col).first;
+               //std::cout.flush();
             }
             assert( isInfeasible() || num.isLE(probing_upper_bounds[(*col).first], (*col).second) );
          }*/
          boundChanges.emplace_back(
             CliqueProbingBoundChg<REAL>( true, (*col).first, (*col).second, cliqueind[0] ) );
       }
-      std::cout<<"\nBinary inds: " << static_cast<int>(binary_inds.end() - binary_inds.begin());
+      //std::cout<<"\nBinary inds: " << static_cast<int>(binary_inds.end() - binary_inds.begin());
       for( int ind = 0; ind < static_cast<int>(binary_inds.end() - binary_inds.begin()); ++ind )
       {
          if( lb_implications[ind].first == cliquelen - static_cast<int>(fix_to_zero.size())
             - static_cast<int>(cliqueEquation) && ub_implications[ind].first == 1 
             && ub_implications[ind].second != -1 )
          {
-            //std::cout<<"\nFOUND SUBSTITUTION";
+            ////std::cout<<"\nFOUND SUBSTITUTION";
             substitutions.emplace_back(
                CliqueProbingSubstitution<REAL>( binary_inds[ind], 1.0, ub_implications[ind].second, 0.0 ) );
          }
@@ -1438,11 +1438,11 @@ CliqueProbingView<REAL>::analyzeImplications()
             - static_cast<int>(cliqueEquation) && lb_implications[ind].first == 1 
             && lb_implications[ind].second != -1 )
          {
-            //std::cout<<"\nFOUND SUBSTITUTION";
+            ////std::cout<<"\nFOUND SUBSTITUTION";
             substitutions.emplace_back(
                CliqueProbingSubstitution<REAL>( binary_inds[ind], -1.0, lb_implications[ind].second, 1.0 ) );
          }
-            std::cout<<"\nImplicationtest: " << binary_inds[ind] << "\nUbimpsfirst: " << ub_implications[ind].first << " cliquelen: " << cliquelen 
+            //std::cout<<"\nImplicationtest: " << binary_inds[ind] << "\nUbimpsfirst: " << ub_implications[ind].first << " cliquelen: " << cliquelen 
             << " static_cast<int>(fix_to_zero.size()) " << static_cast<int>(fix_to_zero.size()) <<
             " static_cast<int>(cliqueEquation) " << static_cast<int>(cliqueEquation) << " lb_implications[ind].first "
             << lb_implications[ind].first << " lb_implications[ind].second " << lb_implications[ind].second;
