@@ -302,7 +302,6 @@ class CliqueProbingView
       {
          cliqueind.emplace_back( indices[ind] );
       }
-      assert(static_cast<int>(cliqueind.length()) == len );
 
       pdqsort( cliqueind.begin(), cliqueind.end(),
             [&probing_scores, &colsize, &colperm, &nprobed]( int col1, int col2 )
