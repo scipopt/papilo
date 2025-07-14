@@ -172,6 +172,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
    Vec<int> probing_cands;
    probing_cands.reserve( ncols );
    const int maxCliqueLength = 150;
+   std::cout<<"\nNumber of unsuccessful clique probing attempts:" << unsuccessfulcliqueprobing;
 
    if( unsuccessfulcliqueprobing <= 0 )
    {
