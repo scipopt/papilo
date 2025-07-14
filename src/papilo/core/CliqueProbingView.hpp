@@ -1440,7 +1440,7 @@ CliqueProbingView<REAL>::analyzeImplications()
                reset();
                setProbingColumn(i);
                propagateDomains();
-               if( cliqueind[i] == ub_implications[ind].second )
+               if( i != -1 && cliqueind[i] == ub_implications[ind].second )
                   assert( probing_lower_bounds[binary_inds[ind]] == 1.0 && !isInfeasible() );
                else
                   assert( probing_upper_bounds[binary_inds[ind]] == 0.0 || isInfeasible() );
