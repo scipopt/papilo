@@ -1428,7 +1428,7 @@ CliqueProbingView<REAL>::analyzeImplications()
       {
          if( lb_implications[ind].first == cliquelen - static_cast<int>(fix_to_zero.size())
             - static_cast<int>(cliqueEquation) && ub_implications[ind].first == 1 
-            && ub_implications[ind].second != -1 )
+            && ub_implications[ind].second != -1 && binary_inds[ind] != ub_implications[ind].second )
          {
             ////std::cout<<"\nFOUND SUBSTITUTION";
             substitutions.emplace_back(
@@ -1451,7 +1451,7 @@ CliqueProbingView<REAL>::analyzeImplications()
          }
          else if( ub_implications[ind].first == cliquelen - static_cast<int>(fix_to_zero.size())
             - static_cast<int>(cliqueEquation) && lb_implications[ind].first == 1 
-            && lb_implications[ind].second != -1 )
+            && lb_implications[ind].second != -1 && binary_inds[ind] != lb_implications[ind].second )
          {
             ////std::cout<<"\nFOUND SUBSTITUTION";
             substitutions.emplace_back(
