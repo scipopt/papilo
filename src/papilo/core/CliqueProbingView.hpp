@@ -1421,6 +1421,7 @@ CliqueProbingView<REAL>::analyzeImplications()
          boundChanges.emplace_back(
             CliqueProbingBoundChg<REAL>( true, (*col).first, (*col).second, cliqueind[0] ) );
       }
+      std::cout<<"\nBinary inds: " << static_cast<int>(binary_inds.end() - binary_inds.begin());
       for( int ind = 0; ind < static_cast<int>(binary_inds.end() - binary_inds.begin()); ++ind )
       {
          if( lb_implications[ind].first == cliquelen - static_cast<int>(fix_to_zero.size())
