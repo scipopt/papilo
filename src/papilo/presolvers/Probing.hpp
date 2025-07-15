@@ -172,11 +172,11 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
    Vec<int> probing_cands;
    probing_cands.reserve( ncols );
    const int maxCliqueLength = 150;
-   std::cout<<"\nNumber of unsuccessful clique probing attempts:" << unsuccessfulcliqueprobing;
+   //std::cout<<"\nNumber of unsuccessful clique probing attempts:" << unsuccessfulcliqueprobing;
 
    if( unsuccessfulcliqueprobing <= 0 )
    {
-      auto cliquefindstarttime = timer.getTime();
+      //auto cliquefindstarttime = timer.getTime();
       for( int row = 0; row != nrows; ++row )
       {
          assert( row >= 0 && row < nrows );
@@ -187,7 +187,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
             cliques.emplace_back( row, std::make_pair(0, cliquecheck.second) );
          }
       }
-      std::cout<<"\nFinding all cliques took " << timer.getTime() - cliquefindstarttime << " seconds.\n";
+      //std::cout<<"\nFinding all cliques took " << timer.getTime() - cliquefindstarttime << " seconds.\n";
    }
 
    for( int i = 0; i != ncols; ++i )
@@ -322,7 +322,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
    
    if( unsuccessfulcliqueprobing <= 0 )
    {
-      auto cliqueprobingscoressatrttime = timer.getTime();
+      //auto cliqueprobingscoressatrttime = timer.getTime();
 #ifdef PAPILO_TBB
       tbb::parallel_for(
       tbb::blocked_range<int>( 0, cliques.end() - cliques.begin() ),
@@ -388,7 +388,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
             break;
          }
       }
-   std::cout<<"\nAssigning probing scores and sorting took " << timer.getTime() - cliqueprobingscoressatrttime << " seconds\n";
+   //std::cout<<"\nAssigning probing scores and sorting took " << timer.getTime() - cliqueprobingscoressatrttime << " seconds\n";
    }
    
    pdqsort( probing_cands.begin(), probing_cands.end(),
@@ -533,10 +533,10 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
       totalnumpropagations += numpropagations;
 #endif
       };
-      auto inittime  = timer.getTime() - initstarttime;
+      /*auto inittime  = timer.getTime() - initstarttime;
       std::cout<<"\nProbing initialization took ";
       std::cout<<inittime;
-      std::cout<<" seconds";
+      std::cout<<" seconds";*/
       auto cliqueprobinstarttime = timer.getTime();
       
       const int initialbatchsize = 2;
