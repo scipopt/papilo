@@ -148,7 +148,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
                         const Num<REAL>& num, Reductions<REAL>& reductions,
                         const Timer& timer, int& reason_of_infeasibility )
 {
-   auto initstarttime = timer.getTime();
+   //auto initstarttime = timer.getTime();
    if( problem.getNumIntegralCols() == 0 )
       return PresolveStatus::kUnchanged;
 
