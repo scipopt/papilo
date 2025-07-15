@@ -500,7 +500,6 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
                   nprobed[cliqueind[j]] +=1;
                }
                nprobedcliques[clique] += 1;
-               assert( cliqueind.size() == cliquelen );
                std::pair<bool,bool> cliqueProbingResult = cliqueProbingView.probeClique(clique, cliqueind, cliquelen, 
                   probing_cands, probingCliques[i].second, probing_scores, colsize, colperm, nprobed ); 
                bool globalInfeasible = cliqueProbingResult.first;

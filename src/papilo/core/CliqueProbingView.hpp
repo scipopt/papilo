@@ -302,7 +302,7 @@ class CliqueProbingView
       {
          cliqueind.emplace_back( indices[ind] );
       }
-      std::cout<<"\nLen and cliqueind size: " << len <" " <<static_cast<int>(cliqueind.size());
+      std::cout<<"\nLen and cliqueind size: " << len <<" " <<static_cast<int>(cliqueind.size());
       std::cout.flush();
       assert(len == static_cast<int>(cliqueind.size()));
 
@@ -332,7 +332,7 @@ class CliqueProbingView
             } );
 
       cliquelen = len;
-      std::cout<<"\nLen and cliqueind size after sort: " << len <" " <<static_cast<int>(cliqueind.size());
+      std::cout<<"\nLen and cliqueind size after sort: " << len <<" " <<static_cast<int>(cliqueind.size());
       std::cout.flush();
       assert(len == static_cast<int>(cliqueind.size()));
       lb_implications.reserve( static_cast<int>(binary_inds.size()) );
