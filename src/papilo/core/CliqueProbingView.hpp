@@ -1345,13 +1345,9 @@ template <typename REAL>
 bool
 CliqueProbingView<REAL>::analyzeImplications()
 {
-   if( fix_to_zero.end() - fix_to_zero.begin() == cliquelen && cliqueEquation )
-   {
-      return true;
-   }
    for( int ind = 0; ind < static_cast<int>(fix_to_zero.end() - fix_to_zero.begin()); ++ind )
    {
-      /*for(int i = 0; i < cliquelen; ++i )
+      for(int i = 0; i < cliquelen; ++i )
       {
          if( fix_to_zero[ind] != cliqueind[i] )
             continue;
@@ -1359,9 +1355,20 @@ CliqueProbingView<REAL>::analyzeImplications()
          setProbingColumn(i);
          propagateDomains();
          assert( isInfeasible() );
-      }*/
+      }
       boundChanges.emplace_back(
          CliqueProbingBoundChg<REAL>( true, fix_to_zero[ind], 0.0, -1 ) );
+   }
+   if( fix_to_zero.end() - fix_to_zero.begin() == cliquelen && cliqueEquation )
+   {
+      return true;
+   }
+   if( cliqueEquation )
+   {
+      reset();
+      setProbingColumn(-1);
+      propagateDomains();
+      assert( isInfeasible() );
    }
    if( fewreductions )
       return false;
@@ -1370,12 +1377,12 @@ CliqueProbingView<REAL>::analyzeImplications()
       for( typename std::list<std::pair<int,REAL>>::iterator col = changed_clique_lbs_inds_vals.begin();
       col != changed_clique_lbs_inds_vals.end(); std::advance(col,1) )
       {
-         /*for(int i = -1; i < cliquelen; ++i )
+         for(int i = -1; i < cliquelen; ++i )
          {
             reset();
             setProbingColumn(i);
             propagateDomains();
-            if( !isInfeasible() && !num.isGE(probing_upper_bounds[(*col).first], (*col).second) )
+            /*if( !isInfeasible() && !num.isGE(probing_upper_bounds[(*col).first], (*col).second) )
             {
                //////std::cout<<"\nError, Probing ";
                if (i==-1)
@@ -1392,21 +1399,21 @@ CliqueProbingView<REAL>::analyzeImplications()
                //////std::cout<<" for variable ";
                //////std::cout<<(*col).first;
                ////std::cout.flush();
-            }
+            }*/
             assert( isInfeasible() || num.isGE(probing_lower_bounds[(*col).first], (*col).second) );
-         }*/
+         }
          boundChanges.emplace_back(
             CliqueProbingBoundChg<REAL>( false, (*col).first, (*col).second, cliqueind[0] ) );
       }
       for( typename std::list<std::pair<int,REAL>>::iterator col = changed_clique_ubs_inds_vals.begin();
       col != changed_clique_ubs_inds_vals.end(); std::advance(col,1) )
       {
-         /*for(int i = -1; i < cliquelen; ++i )
+         for(int i = -1; i < cliquelen; ++i )
          {
             reset();
             setProbingColumn(i);
             propagateDomains();
-            if( !isInfeasible() && !num.isLE(probing_upper_bounds[(*col).first], (*col).second) )
+            /*if( !isInfeasible() && !num.isLE(probing_upper_bounds[(*col).first], (*col).second) )
             {
                //////std::cout<<"\nError, Probing ";
                if (i==-1)
@@ -1423,9 +1430,9 @@ CliqueProbingView<REAL>::analyzeImplications()
                //////std::cout<<" for variable ";
                //////std::cout<<(*col).first;
                ////std::cout.flush();
-            }
+            }*/
             assert( isInfeasible() || num.isLE(probing_upper_bounds[(*col).first], (*col).second) );
-         }*/
+         }
          boundChanges.emplace_back(
             CliqueProbingBoundChg<REAL>( true, (*col).first, (*col).second, cliqueind[0] ) );
       }
@@ -1440,7 +1447,7 @@ CliqueProbingView<REAL>::analyzeImplications()
             substitutions.emplace_back(
                CliqueProbingSubstitution<REAL>( binary_inds[ind], -1.0, ub_implications[ind].second, 1.0 ) );
 
-            /*int i = -1;
+            int i = -1;
             while( i != cliquelen )
             {
                reset();
@@ -1448,19 +1455,19 @@ CliqueProbingView<REAL>::analyzeImplications()
                propagateDomains();
                if( i != -1 && cliqueind[i] == ub_implications[ind].second )
                   assert( probing_upper_bounds[binary_inds[ind]] == 0.0 && !isInfeasible() );
-               else if( probing_lower_bounds[binary_inds[ind]] != 1.0 && !isInfeasible() )
+               else /*if( probing_lower_bounds[binary_inds[ind]] != 1.0 && !isInfeasible() )
                {
                   //std::cout<<"\nImplicationtest: " << binary_inds[ind] << "\nUbimpsfirst: " << ub_implications[ind].first << " cliquelen: " << cliquelen 
                   << " static_cast<int>(fix_to_zero.size()) " << static_cast<int>(fix_to_zero.size()) <<
                   " static_cast<int>(cliqueEquation) " << static_cast<int>(cliqueEquation) << " lb_implications[ind].first "
                   << lb_implications[ind].first << " lb_implications[ind].second " << lb_implications[ind].second
                   << " ub_implications[ind].second " << ub_implications[ind].second;
-                  //std::cout.flush();
+                  //std::cout.flush();*/
                   assert( probing_lower_bounds[binary_inds[ind]] == 1.0 || isInfeasible() );
-               }
+               //}
                i +=1;
             }
-            reset();*/
+            reset();
       
          }
          else if( ub_implications[ind].first == cliquelen - static_cast<int>(fix_to_zero.size())
@@ -1471,7 +1478,7 @@ CliqueProbingView<REAL>::analyzeImplications()
             substitutions.emplace_back(
                CliqueProbingSubstitution<REAL>( binary_inds[ind], 1.0, lb_implications[ind].second, 0.0 ) );
 
-            /*int i = -1;
+            int i = -1;
             while( i != cliquelen )
             {
                reset();
@@ -1479,19 +1486,19 @@ CliqueProbingView<REAL>::analyzeImplications()
                propagateDomains();
                if( i != -1 && cliqueind[i] == lb_implications[ind].second )
                   assert( probing_lower_bounds[binary_inds[ind]] == 1.0 && !isInfeasible() );
-               else if( !(probing_upper_bounds[binary_inds[ind]] == 0.0) && !isInfeasible() )
+               else /*if( !(probing_upper_bounds[binary_inds[ind]] == 0.0) && !isInfeasible() )
                {
                   //std::cout<<"\nImplicationtest: " << binary_inds[ind] << "\nUbimpsfirst: " << ub_implications[ind].first << " cliquelen: " << cliquelen 
                   << " static_cast<int>(fix_to_zero.size()) " << static_cast<int>(fix_to_zero.size()) <<
                   " static_cast<int>(cliqueEquation) " << static_cast<int>(cliqueEquation) << " lb_implications[ind].first "
                   << lb_implications[ind].first << " lb_implications[ind].second " << lb_implications[ind].second
                   << " ub_implications[ind].second " << ub_implications[ind].second;
-                  //std::cout.flush();
+                  //std::cout.flush();*/
                   assert( probing_upper_bounds[binary_inds[ind]] == 0.0 || isInfeasible() );
-               }
+               //}
                i +=1;
             }
-            reset();*/
+            reset();
 
          }
             ////std::cout<<"\nImplicationtest: " << binary_inds[ind] << "\nUbimpsfirst: " << ub_implications[ind].first << " cliquelen: " << cliquelen 
