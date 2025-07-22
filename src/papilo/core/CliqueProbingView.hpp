@@ -115,10 +115,13 @@ class CliqueProbingView
             {
                cliqueEquation = true;
                std::cout<<"\n\nTurned row " << clique << " into equation due to infeasibility.";
+               std::cout.flush();
             }
             else
             {
                cliqueEquation = false;
+               std::cout<<"\n\nTurned row " << clique << " into nonequation due to feasibility.";
+               std::cout.flush();
                for( int var = 0; var != static_cast<int>(probing_lower_bounds.size()); ++var )
                {
                   ////////std::cout<<"\nTest2\n";
@@ -350,6 +353,8 @@ class CliqueProbingView
       assert(changed_clique_lbs_inds_vals.empty());
       equationBefore = equation;
       cliqueEquation = equation;
+      std::cout<<"\n\nRow " << clique << " is equation due to presets.";
+      std::cout.flush();
       bool initbounds = false;
 #ifdef PAPILO_TBB
       tbb::combinable<Vec<std::pair<int,int>>> lb_implications_thread;
