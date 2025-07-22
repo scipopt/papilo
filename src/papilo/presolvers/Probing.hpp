@@ -444,7 +444,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
    std::atomic_int infeasible_variable{ -1 };
    int batchend = 0;
    int totalnumpropagations = 0;
-   int cliqueprobingtime = 0;
+   //int cliqueprobingtime = 0;
    Vec<CliqueProbingSubstitution<REAL>> cliquesubstitutions;
    Vec<CliqueProbingBoundChg<REAL>> cliqueBoundChanges;
    int ncliquefixings = 0;
@@ -537,7 +537,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
       std::cout<<"\nProbing initialization took ";
       std::cout<<inittime;
       std::cout<<" seconds";*/
-      auto cliqueprobinstarttime = timer.getTime();
+      //auto cliqueprobinstarttime = timer.getTime();
       
       const int initialbatchsize = 2;
       const auto cliquereductionfactor = 2;
@@ -583,7 +583,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
       }
       if( infeasible )
          return PresolveStatus::kInfeasible;
-      cliqueprobingtime = timer.getTime() - cliqueprobinstarttime;
+      //cliqueprobingtime = timer.getTime() - cliqueprobinstarttime;
 
       probing_cands.resize(clique_cutoff_ub+1);
       ncliquesubstitutions = -cliquesubstitutions.size();
@@ -966,9 +966,9 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
       assert(current_badge_end >= 0);
       assert(current_badge_start >= 0 );
       assert(current_badge_start <= current_badge_end );
-      auto probingstarttime = timer.getTime();
+      //auto probingstarttime = timer.getTime();
       propagate_variables( current_badge_start, current_badge_end);
-      auto probingtime = timer.getTime() - probingstarttime;
+      //auto probingtime = timer.getTime() - probingstarttime;
 
       if( PresolveMethod<REAL>::is_time_exceeded(
               timer, problemUpdate.getPresolveOptions().tlim ) )
