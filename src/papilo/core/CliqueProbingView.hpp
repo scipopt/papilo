@@ -112,7 +112,10 @@ class CliqueProbingView
             setProbingColumn(-1);
             propagateDomains();
             if( isInfeasible() )
+            {
                cliqueEquation = true;
+               std::cout<<"\n\nTurned row " << clique << " into equation due to infeasibility.";
+            }
             else
             {
                cliqueEquation = false;
@@ -1368,6 +1371,11 @@ CliqueProbingView<REAL>::analyzeImplications()
       reset();
       setProbingColumn(-1);
       propagateDomains();
+      if( !isInfeasible() )
+      {
+         std::cout<<"\n\nError: Row " << probingClique << " is marked as equation but shoudln't.";
+         std::cout.flush();
+      }
       assert( isInfeasible() );
    }
    if( fewreductions )
