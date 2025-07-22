@@ -1397,24 +1397,24 @@ CliqueProbingView<REAL>::analyzeImplications()
             reset();
             setProbingColumn(i);
             propagateDomains();
-            /*if( !isInfeasible() && !num.isGE(probing_upper_bounds[(*col).first], (*col).second) )
+            if( !isInfeasible() && !num.isGE(probing_upper_bounds[(*col).first], (*col).second) )
             {
-               //////std::cout<<"\nError, Probing ";
+               std::cout<<"\nError, Probing ";
                if (i==-1)
-                  //////std::cout<<" all on zero ";
+                  std::cout<<" all on zero ";
                else
                {   
-                  //////std::cout<<cliqueind[i];
-                  //////std::cout<<" on one and rest on zero ";
+                  std::cout<<cliqueind[i];
+                  std::cout<<" on one and rest on zero ";
                }
-               //////std::cout<<"has weaker lower bounds ";
-               //////std::cout<<probing_lower_bounds[(*col).first];
-               //////std::cout<<" ";
-               //////std::cout<<(*col).second;
-               //////std::cout<<" for variable ";
-               //////std::cout<<(*col).first;
-               ////std::cout.flush();
-            }*/
+               std::cout<<"has weaker lower bounds ";
+               std::cout<<probing_lower_bounds[(*col).first];
+               std::cout<<" ";
+               std::cout<<(*col).second;
+               std::cout<<" for variable ";
+               std::cout<<(*col).first;
+               std::cout.flush();
+            }
             assert( isInfeasible() || num.isGE(probing_lower_bounds[(*col).first], (*col).second) );
          }
          boundChanges.emplace_back(
