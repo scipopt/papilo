@@ -3,7 +3,7 @@
 /*               This file is part of the program and library                */
 /*    PaPILO --- Parallel Presolve for Integer and Linear Optimization       */
 /*                                                                           */
-/* Copyright (C) 2020-2024 Zuse Institute Berlin (ZIB)                       */
+/* Copyright (C) 2020-2025 Zuse Institute Berlin (ZIB)                       */
 /*                                                                           */
 /* This program is free software: you can redistribute it and/or modify      */
 /* it under the terms of the GNU Lesser General Public License as published  */
@@ -47,13 +47,14 @@ TEST_CASE( "happy-path-coefficient-strengthening", "[presolve]" )
                                         presolveOptions, num, msg);
    CoefficientStrengthening<double> presolvingMethod{};
    Reductions<double> reductions{};
+
    problem.recomputeAllActivities();
-#ifndef PAPILO_TBB
-   presolveOptions.threads = 1;
-#endif
    problemUpdate.trivialPresolve();
+   problemUpdate.clearChangeInfo();
+
    PresolveStatus presolveStatus =
        presolvingMethod.execute( problem, problemUpdate, num, reductions, t, cause);
+
    // the Constraint x +2y <=2 (x,y in {0,1}) is dominated by x+ y <=1
    REQUIRE( presolveStatus == PresolveStatus::kReduced );
    REQUIRE( reductions.size() == 3 );

@@ -4,7 +4,7 @@
 include(GenerateExportHeader)
 
 if(SCIP)
-   find_package(SCIP)
+   find_package(SCIP CONFIG HINTS ${SCIP_DIR})
 endif()
 if(SCIP_FOUND)
    message(STATUS "Found SCIP: ${SCIP_INCLUDE_DIRS}")
@@ -40,7 +40,7 @@ endif()
 
 
 if(SOPLEX)
-   find_package(SOPLEX)
+   find_package(SOPLEX CONFIG HINTS ${SOPLEX_DIR})
 endif()
 if(SOPLEX_FOUND)
    message(STATUS "Found SOPLEX: ${SOPLEX_INCLUDE_DIRS}")
@@ -51,7 +51,7 @@ else()
 endif()
 
 if(HIGHS)
-   find_package(HIGHS CONFIG REQUIRED)
+   find_package(HIGHS CONFIG REQUIRED HINTS ${HIGHS_DIR})
 endif()
 if(HIGHS_FOUND)
    message(STATUS "Found HIGHS: ${HIGHS_INCLUDE_DIRS}")

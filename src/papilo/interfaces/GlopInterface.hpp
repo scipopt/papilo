@@ -3,7 +3,7 @@
 /*               This file is part of the program and library                */
 /*    PaPILO --- Parallel Presolve for Integer and Linear Optimization       */
 /*                                                                           */
-/* Copyright (C) 2020-2024 Zuse Institute Berlin (ZIB)                       */
+/* Copyright (C) 2020-2025 Zuse Institute Berlin (ZIB)                       */
 /*                                                                           */
 /* This program is free software: you can redistribute it and/or modify      */
 /* it under the terms of the GNU Lesser General Public License as published  */
@@ -85,6 +85,7 @@ class GlopInterface : public SolverInterface<REAL>
          double ub = domains.flags[i].test( ColFlag::kUbInf )
                          ? infinity
                          : (double) domains.upper_bounds[i];
+         assert(lb < ub);
          variables.push_back(solver->MakeNumVar( lb, ub, varNames[origColMap[i]]));
          objective->SetCoefficient( variables[i], (double)coefficients[i] );
       }
@@ -158,6 +159,7 @@ class GlopInterface : public SolverInterface<REAL>
          double ub = domains.flags[col].test( ColFlag::kUbInf )
                          ? infinity
                          : (double) domains.upper_bounds[col];
+         assert(lb < ub);
          variables[col] = solver->MakeNumVar( lb, ub, varNames[origColMap[col]] );
          objective->SetCoefficient( variables[col], (double)coefficients[col] );
       }

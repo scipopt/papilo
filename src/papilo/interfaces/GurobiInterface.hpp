@@ -3,7 +3,7 @@
 /*               This file is part of the program and library                */
 /*    PaPILO --- Parallel Presolve for Integer and Linear Optimization       */
 /*                                                                           */
-/* Copyright (C) 2020-2024 Zuse Institute Berlin (ZIB)                       */
+/* Copyright (C) 2020-2025 Zuse Institute Berlin (ZIB)                       */
 /*                                                                           */
 /* This program is free software: you can redistribute it and/or modify      */
 /* it under the terms of the GNU Lesser General Public License as published  */
@@ -72,25 +72,24 @@ class GurobiInterface : public SolverInterface<REAL>
 
       for( int i = 0; i < ncols; ++i )
       {
-         assert( !domains.flags[i].test( ColFlag::kInactive ) );
-
+         assert(!domains.flags[i].test( ColFlag::kInactive ));
          double lb = domains.flags[i].test( ColFlag::kLbInf )
                          ? -GRB_INFINITY
                          : (double) domains.lower_bounds[i];
          double ub = domains.flags[i].test( ColFlag::kUbInf )
                          ? GRB_INFINITY
                          : (double) domains.upper_bounds[i];
+         assert(lb < ub);
 
          char type;
-         if( domains.flags[i].test( ColFlag::kIntegral ) )
+         // Gurobi does not support implied integrality
+         if( domains.flags[i].test( ColFlag::kIntegral, ColFlag::kImplInt ) )
          {
-            if( lb == 0 && ub == 1 )
+            if( lb >= 0 && ub <= 1 )
                type = GRB_BINARY;
             else
                type = GRB_INTEGER;
          }
-         else if( domains.flags[i].test( ColFlag::kImplInt ) )
-            type = GRB_INTEGER;
          else
             type = GRB_CONTINUOUS;
 
@@ -203,26 +202,24 @@ class GurobiInterface : public SolverInterface<REAL>
       for( int i = 0; i < ncols; ++i )
       {
          int col = colset[i];
-
-         assert( !domains.flags[col].test( ColFlag::kInactive ) );
-
+         assert(!domains.flags[col].test( ColFlag::kInactive ));
          double lb = domains.flags[col].test( ColFlag::kLbInf )
                          ? -GRB_INFINITY
                          : (double) domains.lower_bounds[col];
          double ub = domains.flags[col].test( ColFlag::kUbInf )
                          ? GRB_INFINITY
                          : (double) domains.upper_bounds[col];
+         assert(lb < ub);
 
          char type;
-         if( domains.flags[col].test( ColFlag::kIntegral ) )
+         // Gurobi does not support implied integrality
+         if( domains.flags[col].test( ColFlag::kIntegral, ColFlag::kImplInt ) )
          {
-            if( lb == 0 && ub == 1 )
+            if( lb >= 0 && ub <= 1 )
                type = GRB_BINARY;
             else
                type = GRB_INTEGER;
          }
-         else if( domains.flags[col].test( ColFlag::kImplInt ) )
-            type = GRB_INTEGER;
          else
             type = GRB_CONTINUOUS;
 

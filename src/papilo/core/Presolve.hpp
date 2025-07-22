@@ -3,7 +3,7 @@
 /*               This file is part of the program and library                */
 /*    PaPILO --- Parallel Presolve for Integer and Linear Optimization       */
 /*                                                                           */
-/* Copyright (C) 2020-2024 Zuse Institute Berlin (ZIB)                       */
+/* Copyright (C) 2020-2025 Zuse Institute Berlin (ZIB)                       */
 /*                                                                           */
 /* This program is free software: you can redistribute it and/or modify      */
 /* it under the terms of the GNU Lesser General Public License as published  */
@@ -290,10 +290,10 @@ class Presolve
    std::unique_ptr<SolverFactory<REAL>> satSolverFactory;
 
    Vec<std::pair<int, int>> presolverStats;
-   bool lastRoundReduced{};
-   bool currentRoundReduced{};
-   int nunsuccessful{};
+   bool successful{};
    bool rundelayed{};
+   bool reduced{};
+   bool roundReduced{};
 
    /// evaluate result array of each presolver, return the largest result value
    PresolveStatus
@@ -315,7 +315,7 @@ class Presolve
    apply_all_presolver_reductions( ProblemUpdate<REAL>& probUpdate );
 
    void
-   printRoundStats( bool unchanged, std::string rndtype );
+   printRoundStats( std::string rndtype );
 
    void
    printPresolversStats();
@@ -407,6 +407,10 @@ Presolve<REAL>::apply( Problem<REAL>& problem, bool store_dual_postsolve )
       presolveOptions.threads = 1;
    }
 #endif
+
+   if( std::is_same<REAL, Rational>::value &&
+       ( presolveOptions.feastol != 0 || presolveOptions.epsilon != 0 ))
+      msg.error("\nRunning rational presolving with positive tolerances may give unexpected results. \n");
 
 #ifdef PAPILO_TBB
    return arena.execute( [this, &problem, store_dual_postsolve]() {
@@ -518,9 +522,11 @@ Presolve<REAL>::apply( Problem<REAL>& problem, bool store_dual_postsolve )
          }
       }
 
-      round_to_evaluate = Delegator::kFast;
-      nunsuccessful = 0;
+      successful = true;
       rundelayed = true;
+      reduced = true;
+      roundReduced = true;
+      round_to_evaluate = Delegator::kFast;
       for( int i = 0; i < npresolvers; ++i )
       {
          if( presolvers[i]->isEnabled() && presolvers[i]->isDelayed() )
@@ -533,7 +539,7 @@ Presolve<REAL>::apply( Problem<REAL>& problem, bool store_dual_postsolve )
       Statistics last_rounds_stats = stats;
       do
       {
-         if( round_to_evaluate == Delegator::kFast )
+         if( roundReduced )
          {
             if( presolveOptions.maxrounds != -1 && presolveOptions.maxrounds <= stats.nrounds )
             {
@@ -544,7 +550,7 @@ Presolve<REAL>::apply( Problem<REAL>& problem, bool store_dual_postsolve )
             result.status = probUpdate.trivialPresolve();
 
             if( stats.nrounds == 0 )
-               printRoundStats( false, "Trivial" );
+               printRoundStats( "Trivial" );
 
             if( is_status_infeasible_or_unbounded( result.status ) )
                return result;
@@ -552,13 +558,18 @@ Presolve<REAL>::apply( Problem<REAL>& problem, bool store_dual_postsolve )
             if( probUpdate.getNActiveCols() == 0 || probUpdate.getNActiveRows() == 0 )
                round_to_evaluate = Delegator::kAbort;
 
-            lastRoundReduced = currentRoundReduced;
-            currentRoundReduced = false;
-            ++stats.nrounds;
+            roundReduced = false;
          }
 
          if( round_to_evaluate == Delegator::kAbort )
             break;
+
+         if( round_to_evaluate == Delegator::kFast )
+         {
+            probUpdate.clearChangeInfo();
+            ++stats.nrounds;
+            reduced = false;
+         }
 
          bool was_executed_sequential = false;
 
@@ -994,20 +1005,19 @@ Presolve<REAL>::run_presolvers( const Problem<REAL>& problem,
 #ifndef PAPILO_TBB
    assert(presolveOptions.runs_sequential() == true);
 #endif
-   if( presolveOptions.runs_sequential() &&
-       presolveOptions.apply_results_immediately_if_run_sequentially )
+   if( presolveOptions.apply_results_immediately_if_run_sequentially && presolveOptions.runs_sequential() )
    {
       int cause = -1;
       probUpdate.setPostponeSubstitutions( false );
       for( int i = presolver_2_run.first; i != presolver_2_run.second; ++i )
       {
-         results[i] =
-             presolvers[i]->run( problem, probUpdate, num, reductions[i], timer, cause );
-         assert( cause != -1 || results[i] != PresolveStatus::kInfeasible || presolvers[i]->getName() != "probing");
+         results[i] = presolvers[i]->run( problem, probUpdate, num, reductions[i], timer, cause );
+         assert( cause != -1 || results[i] != PresolveStatus::kInfeasible || presolvers[i]->getName() != "probing" );
          apply_result_sequential( i, probUpdate, run_sequential );
-         if( results[i] == PresolveStatus::kInfeasible )
+         if( is_status_infeasible_or_unbounded( results[i] ) )
             return;
-         if( problem.getNRows() == 0 || problem.getNCols() == 0 )
+         probUpdate.clearStates();
+         if( probUpdate.getNActiveCols() == 0 || probUpdate.getNActiveRows() == 0 )
             return;
       }
    }
@@ -1044,12 +1054,9 @@ Presolve<REAL>::apply_result_sequential( int index_presolver,
    run_sequential = true;
    apply_reduction_of_solver( probUpdate, index_presolver );
    probUpdate.flushChangedCoeffs();
-   if( probUpdate.flush( false ) == PresolveStatus::kInfeasible )
-   {
-      results[index_presolver] = PresolveStatus::kInfeasible;
-      return;
-   }
-   probUpdate.clearStates();
+   PresolveStatus status = probUpdate.flush( false );
+   if( is_status_infeasible_or_unbounded( status ) )
+      results[index_presolver] = status;
 }
 
 template <typename REAL>
@@ -1297,11 +1304,11 @@ Presolve<REAL>::handle_case_exceeded( Delegator& next_round )
    if( next_round != Delegator::kExceeded )
       return next_round;
 
-   ++nunsuccessful;
-
-   if( !( rundelayed && ( !lastRoundReduced || nunsuccessful == 2 ) ) )
+   if( !rundelayed || ( reduced && successful ) )
    {
-      printRoundStats( !lastRoundReduced, "Exhaustive" );
+      if( reduced )
+         printRoundStats( "Exhaustive" );
+
       if( !rundelayed )
       {
          msg.info( "activating delayed presolvers\n" );
@@ -1309,9 +1316,12 @@ Presolve<REAL>::handle_case_exceeded( Delegator& next_round )
             p->setDelayed( false );
          rundelayed = true;
       }
+
+      successful = false;
+
       return Delegator::kFast;
    }
-   printRoundStats( !lastRoundReduced, get_round_type( next_round ) );
+
    return Delegator::kAbort;
 }
 
@@ -1382,17 +1392,19 @@ Presolve<REAL>::increase_round_if_last_run_was_not_successfull(
    {
       if( are_applied_tsx_negligible( problem, probUpdate, roundStats, round_to_evaluate ) )
       {
-         currentRoundReduced =
-             currentRoundReduced || roundStats.nsidechgs > 0 ||
-             roundStats.nboundchgs > 0 || roundStats.ndeletedcols > 0 ||
-             roundStats.ndeletedrows > 0 || roundStats.ncoefchgs > 0;
+         roundReduced = roundStats.nsidechgs > 0
+            || roundStats.nboundchgs > 0 || roundStats.ndeletedcols > 0
+            || roundStats.ndeletedrows > 0 || roundStats.ncoefchgs > 0;
+         if( roundReduced )
+            reduced = true;
          next_round = increase_delegator( round_to_evaluate );
       }
       else
       {
-         printRoundStats( false, get_round_type( round_to_evaluate ) );
-         nunsuccessful = 0;
-         currentRoundReduced = true;
+         printRoundStats( get_round_type( round_to_evaluate ) );
+         successful = true;
+         roundReduced = true;
+         reduced = true;
          next_round = Delegator::kFast;
       }
    }
@@ -1433,15 +1445,8 @@ Presolve<REAL>::evaluateResults()
 
 template <typename REAL>
 void
-Presolve<REAL>::printRoundStats( bool unchanged, std::string rndtype )
+Presolve<REAL>::printRoundStats( std::string rndtype )
 {
-
-   if( unchanged )
-   {
-      msg.info( "round {:<3} ({:^10}): Unchanged\n", stats.nrounds, rndtype );
-      return;
-   }
-
    msg.info( "round {:<3} ({:^10}): {:>4} del cols, {:>4} del rows, "
              "{:>4} chg bounds, {:>4} chg sides, {:>4} chg coeffs, "
              "{:>4} tsx applied, {:>4} tsx conflicts\n",
@@ -1453,12 +1458,7 @@ template <typename REAL>
 void
 Presolve<REAL>::printPresolversStats()
 {
-   msg.info( "presolved {} rounds: {:>4} del cols, {:>4} del rows, "
-             "{:>4} chg bounds, {:>4} chg sides, {:>4} chg coeffs, "
-             "{:>4} tsx applied, {:>4} tsx conflicts\n",
-             stats.nrounds, stats.ndeletedcols, stats.ndeletedrows,
-             stats.nboundchgs, stats.nsidechgs, stats.ncoefchgs,
-             stats.ntsxapplied, stats.ntsxconflicts );
+   printRoundStats( "Final" );
    msg.info( "\n {:>18} {:>12} {:>18} {:>18} {:>18} {:>18} \n", "presolver",
              "nb calls", "success calls(%)", "nb transactions",
              "tsx applied(%)", "execution time(s)" );

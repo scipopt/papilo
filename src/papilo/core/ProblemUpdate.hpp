@@ -3,7 +3,7 @@
 /*               This file is part of the program and library                */
 /*    PaPILO --- Parallel Presolve for Integer and Linear Optimization       */
 /*                                                                           */
-/* Copyright (C) 2020-2024 Zuse Institute Berlin (ZIB)                       */
+/* Copyright (C) 2020-2025 Zuse Institute Berlin (ZIB)                       */
 /*                                                                           */
 /* This program is free software: you can redistribute it and/or modify      */
 /* it under the terms of the GNU Lesser General Public License as published  */
@@ -1341,6 +1341,10 @@ ProblemUpdate<REAL>::trivialColumnPresolve()
 
    PresolveStatus status = PresolveStatus::kUnchanged;
 
+   emptyColumns.clear();
+   singletonColumns.clear();
+   firstNewSingletonCol = 0;
+
    for( int col = 0; col < problem.getNCols(); ++col )
    {
       if( cflags[col].test( ColFlag::kInactive ) )
@@ -1700,7 +1704,6 @@ ProblemUpdate<REAL>::trivialPresolve()
       return status;
 
    flush( true );
-   clearChangeInfo();
    clearStates();
    check_and_compress();
 

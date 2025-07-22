@@ -3,7 +3,7 @@
 /*               This file is part of the program and library                */
 /*    PaPILO --- Parallel Presolve for Integer and Linear Optimization       */
 /*                                                                           */
-/* Copyright (C) 2020-2024 Zuse Institute Berlin (ZIB)                       */
+/* Copyright (C) 2020-2025 Zuse Institute Berlin (ZIB)                       */
 /*                                                                           */
 /* This program is free software: you can redistribute it and/or modify      */
 /* it under the terms of the GNU Lesser General Public License as published  */
@@ -107,23 +107,22 @@ class HighsInterface : public SolverInterface<REAL>
 
       for( int i = 0; i < ncols; ++i )
       {
-         assert( !domains.flags[i].test( ColFlag::kInactive ) );
-
+         assert(!domains.flags[i].test( ColFlag::kInactive ));
          model.col_lower_[i] = domains.flags[i].test( ColFlag::kLbInf )
                                   ? -inf
                                   : double( domains.lower_bounds[i] );
          model.col_upper_[i] = domains.flags[i].test( ColFlag::kUbInf )
                                   ? inf
                                   : double( domains.upper_bounds[i] );
+         assert(model.col_lower_[i] < model.col_upper_[i]);
 
          model.col_cost_[i] = double( obj.coefficients[i] );
 
-         model.integrality_[i] =
-             domains.flags[i].test( ColFlag::kImplInt )
-                 ? HighsVarType::kImplicitInteger
-                 : ( domains.flags[i].test( ColFlag::kIntegral )
-                         ? HighsVarType::kInteger
-                         : HighsVarType::kContinuous );
+         model.integrality_[i] = domains.flags[i].test( ColFlag::kIntegral )
+                                    ? HighsVarType::kInteger
+                                    : domains.flags[i].test( ColFlag::kImplInt )
+                                       ? HighsVarType::kImplicitInteger
+                                       : HighsVarType::kContinuous;
 
          auto colvec = consMatrix.getColumnCoefficients( i );
 
@@ -219,25 +218,23 @@ class HighsInterface : public SolverInterface<REAL>
       for( int i = 0; i != numcols; ++i )
       {
          int col = colset[i];
-
-         assert( components.getColComponentIdx( col ) == i );
-         assert( !domains.flags[col].test( ColFlag::kInactive ) );
-
+         assert(components.getColComponentIdx( col ) == i);
+         assert(!domains.flags[col].test( ColFlag::kInactive ));
          model.col_lower_[i] = domains.flags[col].test( ColFlag::kLbInf )
                                   ? -inf
                                   : double( domains.lower_bounds[col] );
          model.col_upper_[i] = domains.flags[col].test( ColFlag::kUbInf )
                                   ? inf
                                   : double( domains.upper_bounds[col] );
+         assert(model.col_lower_[i] < model.col_upper_[i]);
 
          model.col_cost_[i] = double( obj.coefficients[col] );
 
-         model.integrality_[i] =
-             domains.flags[col].test( ColFlag::kImplInt )
-                 ? HighsVarType::kImplicitInteger
-                 : ( domains.flags[col].test( ColFlag::kIntegral )
-                         ? HighsVarType::kInteger
-                         : HighsVarType::kContinuous );
+         model.integrality_[i] = domains.flags[col].test( ColFlag::kIntegral )
+                                    ? HighsVarType::kInteger
+                                    : domains.flags[col].test( ColFlag::kImplInt )
+                                       ? HighsVarType::kImplicitInteger
+                                       : HighsVarType::kContinuous;
 
          auto colvec = consMatrix.getColumnCoefficients( col );
 

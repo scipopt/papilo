@@ -3,7 +3,7 @@
 /*               This file is part of the program and library                */
 /*    PaPILO --- Parallel Presolve for Integer and Linear Optimization       */
 /*                                                                           */
-/* Copyright (C) 2020-2024 Zuse Institute Berlin (ZIB)                       */
+/* Copyright (C) 2020-2025 Zuse Institute Berlin (ZIB)                       */
 /*                                                                           */
 /* This program is free software: you can redistribute it and/or modify      */
 /* it under the terms of the GNU Lesser General Public License as published  */
@@ -320,7 +320,7 @@ SingletonStuffing<REAL>::execute( const Problem<REAL>& problem,
          }
 
          TransactionGuard<REAL> tg{ reductions };
-         reductions.lockCol( col );
+         reductions.lockColBounds( col );
          reductions.fixCol( col, lower_bounds[col] );
          result = PresolveStatus::kReduced;
 
@@ -339,7 +339,7 @@ SingletonStuffing<REAL>::execute( const Problem<REAL>& problem,
          }
 
          TransactionGuard<REAL> tg{ reductions };
-         reductions.lockCol( col );
+         reductions.lockColBounds( col );
          reductions.fixCol( col, upper_bounds[col] );
          result = PresolveStatus::kReduced;
 
@@ -675,6 +675,8 @@ SingletonStuffing<REAL>::execute( const Problem<REAL>& problem,
             int col = penaltyvars[k].first;
             const REAL& coeff = penaltyvars[k].second;
 
+            TransactionGuard<REAL> tg{ reductions };
+            reductions.lockColBounds( col );
             if( coeff < 0 )
                reductions.fixCol( col, lower_bounds[col], row );
             else
