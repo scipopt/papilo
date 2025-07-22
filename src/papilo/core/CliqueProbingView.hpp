@@ -346,7 +346,7 @@ class CliqueProbingView
       assert(changed_clique_ubs_inds_vals.empty());
       assert(changed_clique_lbs_inds_vals.empty());
       equationBefore = equation;
-      cliqueEquation = true;
+      cliqueEquation = equation;
       bool initbounds = false;
 #ifdef PAPILO_TBB
       tbb::combinable<Vec<std::pair<int,int>>> lb_implications_thread;
