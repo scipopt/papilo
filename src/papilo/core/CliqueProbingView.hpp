@@ -1493,7 +1493,7 @@ CliqueProbingView<REAL>::analyzeImplications()
             substitutions.emplace_back(
                CliqueProbingSubstitution<REAL>( binary_inds[ind], 1.0, lb_implications[ind].second, 0.0 ) );
 
-            int i = -1;
+            int i = -1 + equationBefore;
             while( i != cliquelen )
             {
                reset();
