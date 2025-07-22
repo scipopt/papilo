@@ -1392,7 +1392,7 @@ CliqueProbingView<REAL>::analyzeImplications()
       for( typename std::list<std::pair<int,REAL>>::iterator col = changed_clique_lbs_inds_vals.begin();
       col != changed_clique_lbs_inds_vals.end(); std::advance(col,1) )
       {
-         for(int i = -1; i < cliquelen; ++i )
+         for(int i = -1 + equationBefore; i < cliquelen; ++i )
          {
             reset();
             setProbingColumn(i);
@@ -1423,7 +1423,7 @@ CliqueProbingView<REAL>::analyzeImplications()
       for( typename std::list<std::pair<int,REAL>>::iterator col = changed_clique_ubs_inds_vals.begin();
       col != changed_clique_ubs_inds_vals.end(); std::advance(col,1) )
       {
-         for(int i = -1; i < cliquelen; ++i )
+         for(int i = -1 + equationBefore; i < cliquelen; ++i )
          {
             reset();
             setProbingColumn(i);
@@ -1462,7 +1462,7 @@ CliqueProbingView<REAL>::analyzeImplications()
             substitutions.emplace_back(
                CliqueProbingSubstitution<REAL>( binary_inds[ind], -1.0, ub_implications[ind].second, 1.0 ) );
 
-            int i = -1;
+            int i = -1 + equationBefore;
             while( i != cliquelen )
             {
                reset();
