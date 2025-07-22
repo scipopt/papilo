@@ -4,211 +4,140 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-libpapilo is a fork of scipopt/papilo that aims to provide PaPILO (Parallel Presolve for Integer and Linear Optimization) as a **shared library with a C API**. While the original PaPILO is implemented in C++, this fork's goal is to make the functionality accessible from other programming languages through a stable C interface.
+libpapilo is a fork of scipopt/papilo that aims to provide PaPILO (Parallel Presolve for Integer and Linear Optimization) as a **shared library with a C API**. While the original PaPILO is implemented in C++, this fork's goal is to make the presolving functionality accessible from other programming languages through a stable C interface.
 
-**Current Status**: This is a fresh fork with no development yet. The main objectives are:
-- Create a shared library (.so/.dylib/.dll) from the existing C++ codebase
-- Design and implement a C API that exposes key PaPILO functionality
-- Maintain compatibility with the original PaPILO while providing a stable ABI
-
-**Important**: This fork focuses solely on the presolving functionality. Solver integrations (SCIP, Gurobi, HiGHS, etc.) are not needed and should be excluded from the shared library.
+**Key Design Decisions:**
+- **Presolving only**: No solver integrations (SCIP, Gurobi, etc.) - users solve with their own choice of solver
+- **Double precision only**: Simplifies C API by avoiding C++ template complexity (original supports double/quadruple/rational)
+- **Fresh fork**: No development yet - starting from clean slate
 
 The original PaPILO is a C++14-based presolve package for (mixed integer) linear programming problems with support for parallel execution and multiple precision arithmetic, licensed under LGPLv3.
+
+## Development Roadmap
+
+### Phase 1: Environment Setup
+- [ ] Remove solver integration dependencies from build system
+- [ ] Configure CMake for shared library generation (.so/.dylib/.dll)
+- [ ] Set up testing framework for C API validation
+
+### Phase 2: Core C API Design
+- [ ] Extend existing `papilolib.h` with presolve-only functions
+- [ ] Implement problem construction API (building on existing foundation)
+- [ ] Add presolve execution API (individual presolvers + full pipeline)
+- [ ] Add presolved problem data extraction API
+- [ ] Add manual postsolve API
+
+### Phase 3: Implementation & Testing
+- [ ] Implement C++ wrapper layer for double-precision instantiations
+- [ ] Create comprehensive test suite matching `test/papilo/presolve/` patterns
+- [ ] Add memory management and error handling
+- [ ] Performance testing and optimization
+
+### Target C API Interface
+
+The goal is to support the three-stage workflow demonstrated in PaPILO tests:
+
+1. **Construction**: `papilo_problem_create()` → set dimensions → add variables/constraints → add matrix entries
+2. **Execution**: `papilo_solver_presolve_only()` → query status and reductions
+3. **Validation**: Extract presolved problem → manual postsolve when needed
 
 ## Build Commands
 
 ```bash
 # Standard build
-mkdir build
-cd build
-cmake ..
-make -j
+mkdir build && cd build
+cmake .. && make -j
 
-# With solver integration (e.g., SCIP)
-cmake -DSCIP_DIR=PATH_TO_SCIP_BUILD_DIR ..
-make -j
-
-# Run unit tests
+# Run tests
 make test
-# or
-ctest
 
-# Run a specific test
-./test/unit_test "test-name"
-
-# Install
-sudo make install
+# Run specific test
+./test/unit_test "dual-fix-happy-path"
 ```
 
 ## Key Dependencies
 
-- **C++ Standard**: C++14 (required)
+- **C++ Standard**: C++14
 - **CMake**: >= 3.11.0
-- **Intel TBB**: >= 2020 (for parallelization, strongly recommended)
-- **Boost**: >= 1.65 (headers required; iostreams, program_options, serialization for binaries)
+- **Intel TBB**: >= 2020 (for parallelization)
+- **Boost**: >= 1.65 (headers only for this fork)
 
-## Source Directory Structure
+## Architecture Overview
 
+### Core Components (C++ Implementation)
+- **Problem/ProblemBuilder**: Problem representation and construction
+- **Presolve**: Main orchestrator with 17 individual presolving methods
+- **Reductions**: Tracks all presolving modifications
+- **PostsolveStorage**: Enables solution transformation back to original space
+
+### Template Design
+Original PaPILO uses `REAL` template parameter for numerical precision. This fork simplifies by using `double` exclusively, avoiding template complexity in the C API.
+
+### Existing C API Foundation
+`src/papilolib.h/cpp` provides excellent groundwork:
+- ✅ Problem construction functions
+- ✅ Parameter management system  
+- ❌ Only integrated solving (presolve+solve+postsolve)
+- ❌ No presolve-only execution
+- ❌ No presolved problem data access
+
+## Detailed Implementation Notes
+
+### Source Structure
 ```
-src/
-├── papilo.cpp              # Main executable entry point
-├── papilolib.cpp/.h        # Library interface (initial C API attempt)
-├── convMPS.cpp             # MPS file conversion utility
-├── duplicates.cpp          # Duplicate detection utility
-└── papilo/
-    ├── core/               # Core presolving engine
-    │   ├── ConstraintMatrix.hpp      # Sparse matrix representation
-    │   ├── MatrixBuffer.hpp          # Matrix modification buffer
-    │   ├── Presolve.hpp              # Main presolve orchestrator
-    │   ├── Problem.hpp               # Problem data structure
-    │   ├── ProblemBuilder.hpp        # Problem construction
-    │   ├── Reductions.hpp            # Reduction data structures
-    │   ├── RowFlags.hpp/ColFlags.hpp # Row/column properties
-    │   ├── SingleRow.hpp             # Single row analysis
-    │   ├── SparseStorage.hpp         # Sparse data storage
-    │   └── postsolve/               # Postsolve components
-    │       ├── Postsolve.hpp         # Main postsolve class
-    │       ├── PostsolveStorage.hpp  # Storage for postsolve info
-    │       └── ReductionType.hpp     # Reduction type definitions
-    ├── presolvers/             # 17 presolve methods
-    │   ├── CoefficientStrengthening.hpp
-    │   ├── ConstraintPropagation.hpp
-    │   ├── DominatedCols.hpp
-    │   ├── DualFix.hpp
-    │   ├── DualInfer.hpp
-    │   ├── FixContinuous.hpp
-    │   ├── FreeVarSubstitution.hpp
-    │   ├── ImplIntDetection.hpp
-    │   ├── ParallelColDetection.hpp
-    │   ├── ParallelRowDetection.hpp
-    │   ├── Probing.hpp
-    │   ├── SimpleProbing.hpp
-    │   ├── SimpleSubstitution.hpp
-    │   ├── SimplifyInequalities.hpp
-    │   ├── SingletonCols.hpp
-    │   ├── SingletonStuffing.hpp
-    │   └── Sparsify.hpp
-    ├── interfaces/            # Solver integrations
-    │   ├── ScipInterface.hpp
-    │   ├── SoplexInterface.hpp
-    │   ├── GurobiInterface.hpp
-    │   ├── HighsInterface.hpp
-    │   └── GlopInterface.hpp
-    ├── io/                    # File I/O
-    │   ├── MpsParser.hpp      # MPS format parser
-    │   ├── MpsWriter.hpp      # MPS format writer
-    │   ├── OpbParser.hpp      # OPB format parser
-    │   └── SolParser.hpp      # Solution file parser
-    ├── misc/                  # Utilities
-    │   ├── compress_vector.hpp
-    │   ├── fmt.hpp
-    │   ├── Hash.hpp
-    │   ├── MultiPrecision.hpp
-    │   ├── Num.hpp
-    │   ├── ParameterSet.hpp
-    │   ├── PrimalDualSolValidation.hpp
-    │   ├── StableSum.hpp
-    │   ├── Timer.hpp
-    │   ├── Validation.hpp
-    │   └── Vec.hpp
-    ├── external/              # Bundled third-party libraries
-    │   ├── catch/            # Unit testing framework
-    │   ├── fmt/              # Formatting library
-    │   ├── lusol/            # LU decomposition (Fortran)
-    │   │   └── src/
-    │   │       ├── lusol.f90
-    │   │       ├── lusol6b.f
-    │   │       ├── lusol7b.f
-    │   │       ├── lusol8b.f
-    │   │       └── lusol_util.f
-    │   ├── pdqsort/          # Pattern-defeating quicksort
-    │   └── ska/              # Hash map implementations
-    └── verification/          # Certificate generation
-        └── VeriPB.hpp
-
-## High-Level Architecture
-
-The codebase is template-based to support different numerical precision types (double, quadruple, rational):
-
-1. **Core Engine** (`src/papilo/core/`):
-   - `Problem<REAL>`: Problem representation with constraint matrix, bounds, objectives
-   - `Presolve<REAL>`: Orchestrates presolving routines and manages the presolve loop
-   - `Postsolve<REAL>`: Transforms solutions back to original problem space
-   - `postsolve/`: Contains postsolve storage and reduction classes
-
-2. **Presolvers** (`src/papilo/presolvers/`): 17 individual presolve methods that detect and apply reductions:
-   - Each presolver inherits from `PresolveMethod<REAL>`
-   - Key methods: `execute()`, `initialize()`, `updateResults()`
-   - Examples: DualFix, ConstraintPropagation, ImplIntDetection, ParallelRowDetection
-
-3. **Solver Interfaces** (`src/papilo/interfaces/`):
-   - Integrations with SCIP, SoPlex, Gurobi, HiGHS, GLOP
-   - **Note**: These interfaces are NOT used in this fork - focus is purely on presolving
-
-4. **I/O** (`src/papilo/io/`):
-   - MPS format parser/writer
-   - OPB (pseudo-boolean) format support
-   - Solution file handling
-
-5. **External Dependencies** (`src/papilo/external/`):
-   - **LUSOL**: Fortran-based sparse LU factorization solver for linear systems
-   - **fmt**: Modern C++ formatting library
-   - **Catch**: Unit testing framework
-   - **pdqsort**: High-performance sorting algorithm
-   - **ska**: Efficient hash map implementations
-
-## Testing Framework
-
-1. **Unit Tests** (`test/`):
-   - Uses Catch2 framework
-   - Run with: `make test` or `./test/unit_test`
-   - Tests cover individual presolvers and core functionality
-
-2. **Performance Testing** (`check/`):
-   - Script-based testing framework for instance solving
-   - Run locally: `make test` (from root)
-   - Cluster support via `check_cluster.sh`
-
-## Common Development Tasks
-
-```bash
-# Build and run tests after changes
-cd build
-make -j && make test
-
-# Run papilo executable
-./papilo solve -f instance.mps
-./papilo presolve -f instance.mps -v postsolve.info
-./papilo postsolve -v postsolve.info -u solution.sol
-
-# Debug a specific presolver
-./test/unit_test "dual-fix-happy-path"
+src/papilo/
+├── core/              # Problem, Presolve, PostsolveStorage
+├── presolvers/        # 17 presolving methods
+├── io/                # MPS/OPB parsers (needed for C API)
+├── misc/              # Vec<T>, utilities, numerical types
+└── external/          # Third-party libraries (fmt, LUSOL, etc.)
 ```
 
-## Important Implementation Notes
+### Key Implementation Details
+- **Vec<T>**: Custom vector type (currently identical to std::vector, designed for future allocator optimization)
+- **LUSOL**: Fortran-based sparse LU solver for advanced presolving techniques
+- **Explicit instantiations**: All templates pre-instantiated for double/quad/rational types
+- **LIFO postsolve**: Reductions stored in reverse order for correct solution reconstruction
 
-- The presolve loop in `Presolve<REAL>::presolve()` applies presolvers iteratively until no more reductions are found
-- Numerical tolerances are managed through `Tolerances<REAL>` class
-- Postsolve information is stored in reverse order (LIFO) for correct reconstruction
-- Parallel execution uses Intel TBB's parallel algorithms when available
-- The `Message` class provides configurable logging levels for debugging
+### Test-Driven API Design
+Analysis of `test/papilo/presolve/` reveals the essential API patterns:
 
-## C API Development Guidelines (To Be Implemented)
+**Problem Construction Pattern:**
+```cpp
+ProblemBuilder<double> pb;
+pb.reserve(nnz, nrows, ncols);
+pb.setColUbAll(bounds) / setObjAll(coeffs) / addEntryAll(triplets);
+Problem<double> problem = pb.build();
+```
 
-When developing the C API for libpapilo, consider:
+**Presolve Execution Pattern:**
+```cpp
+PresolveOptions options{};
+ProblemUpdate<double> update(problem, postsolve, stats, options, num, msg);
+Reductions<double> reductions{};
+PresolveStatus status = presolver.execute(problem, update, num, reductions, timer);
+```
 
-1. **Handle-based API**: Use opaque pointers to hide C++ implementation details
-2. **Error handling**: Return error codes instead of throwing exceptions
-3. **Memory management**: Provide explicit create/destroy functions
-4. **Numerical types**: Initially focus on double precision, consider multiple precision support later
-5. **Key functionality to expose**:
-   - Problem creation and modification (constraint matrix, bounds, objectives)
-   - Presolve execution with parameter control
-   - Retrieving the presolved problem
-   - Postsolve functionality to transform solutions back
-   - Status and statistics queries
-   - Parameter configuration
+**Result Validation Pattern:**
+```cpp
+// Check status: kUnchanged, kReduced, kInfeasible, kUnbounded
+// Access reductions: count, individual details (col, row, value, type)
+// Extract modified problem data
+```
 
-**Excluded functionality**:
-- Solver interfaces (SCIP, Gurobi, etc.) - users will solve with their own choice of solver
-- The main executable functionality - this fork provides only the library
+The C API should mirror these patterns while providing C-compatible data structures and error handling.
+
+## Development Guidelines
+
+- **Memory safety**: All C API functions must handle allocation failures gracefully
+- **Error handling**: Use return codes, never throw exceptions across C boundary  
+- **Opaque handles**: Hide C++ implementation details behind void* handles
+- **Resource management**: Provide explicit create/destroy functions for all objects
+- **Thread safety**: Document threading requirements (likely requires external synchronization)
+
+## Next Steps
+
+1. Examine `papilolib.cpp` implementation details
+2. Design presolve-only extensions to existing API
+3. Create proof-of-concept for problem construction → presolve → data extraction workflow
+4. Implement comprehensive test coverage matching existing unit tests
