@@ -353,9 +353,9 @@ class CliqueProbingView
       assert(changed_clique_lbs_inds_vals.empty());
       equationBefore = equation;
       cliqueEquation = equation;
-      if( equation )
-      {//std::cout<<"\n\nRow " << clique << " is equation due to presets: " << problem.getConstraintMatrix().getLeftHandSides()[clique] 
-      << " " << problem.getConstraintMatrix().getRightHandSides()[clique];}
+      //if( equation )
+      //{//std::cout<<"\n\nRow " << clique << " is equation due to presets: " << problem.getConstraintMatrix().getLeftHandSides()[clique] 
+      //<< " " << problem.getConstraintMatrix().getRightHandSides()[clique];}
       //std::cout.flush();
       bool initbounds = false;
 #ifdef PAPILO_TBB
