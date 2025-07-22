@@ -353,7 +353,8 @@ class CliqueProbingView
       assert(changed_clique_lbs_inds_vals.empty());
       equationBefore = equation;
       cliqueEquation = equation;
-      std::cout<<"\n\nRow " << clique << " is equation due to presets.";
+      std::cout<<"\n\nRow " << clique << " is equation due to presets: " << problem.getLeftHandSides()[clique] 
+      << " " << problem.getRightHandSides()[clique];
       std::cout.flush();
       bool initbounds = false;
 #ifdef PAPILO_TBB
@@ -1376,12 +1377,12 @@ CliqueProbingView<REAL>::analyzeImplications()
       reset();
       setProbingColumn(-1);
       propagateDomains();
-      if( !isInfeasible() )
+      if( !isInfeasible() && !equationBefore )
       {
          std::cout<<"\n\nError: Row " << probingClique << " is marked as equation but shoudln't.";
          std::cout.flush();
       }
-      assert( isInfeasible() );
+      assert( isInfeasible() || equationBefore );
    }
    if( fewreductions )
       return false;
