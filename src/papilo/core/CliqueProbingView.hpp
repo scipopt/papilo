@@ -754,7 +754,8 @@ class CliqueProbingView
       ub_implications = ub_implications_combined;
       lb_implications = lb_implications_combined;
       fix_to_zero = fix_to_zero_combined;
-      std::cout<<"\nFinished initial probing, Infeasibility: " << fix_to_zero.end() - fix_to_zero.begin() == cliquelen && cliqueEquation;
+      bool feas = fix_to_zero.end() - fix_to_zero.begin() == cliquelen && cliqueEquation;
+      std::cout<<"\nFinished initial probing, Infeasibility: " << feas;
       return { fix_to_zero.end() - fix_to_zero.begin() == cliquelen && cliqueEquation, cliqueEquation && !equationBefore } ;
 #else
       if(!equation)
