@@ -756,6 +756,7 @@ class CliqueProbingView
       fix_to_zero = fix_to_zero_combined;
       bool feas = fix_to_zero.end() - fix_to_zero.begin() == cliquelen && cliqueEquation;
       std::cout<<"\nFinished initial probing, Infeasibility: " << feas;
+      std::cout.flush();
       return { fix_to_zero.end() - fix_to_zero.begin() == cliquelen && cliqueEquation, cliqueEquation && !equationBefore } ;
 #else
       if(!equation)
