@@ -1380,7 +1380,7 @@ CliqueProbingView<REAL>::analyzeImplications()
    {
       return true;
    }
-   /*if( cliqueEquation )
+   if( cliqueEquation )
    {
       reset();
       setProbingColumn(-1);
@@ -1391,7 +1391,7 @@ CliqueProbingView<REAL>::analyzeImplications()
          //std::cout.flush();
       }
       assert( isInfeasible() || equationBefore );
-   }*/
+   }
    if( fewreductions )
       return false;
    else
@@ -1399,62 +1399,62 @@ CliqueProbingView<REAL>::analyzeImplications()
       for( typename std::list<std::pair<int,REAL>>::iterator col = changed_clique_lbs_inds_vals.begin();
       col != changed_clique_lbs_inds_vals.end(); std::advance(col,1) )
       {
-         /*for(int i = -1 + equationBefore; i < cliquelen; ++i )
+         for(int i = -1 + equationBefore; i < cliquelen; ++i )
          {
             reset();
             setProbingColumn(i);
             propagateDomains();
             if( !isInfeasible() && !num.isGE(probing_upper_bounds[(*col).first], (*col).second) )
             {
-               //std::cout<<"\nError, Probing ";
+               std::cout<<"\nError, Probing ";
                if (i==-1)
-                  //std::cout<<" all on zero ";
+                  std::cout<<" all on zero ";
                else
                {   
-                  //std::cout<<cliqueind[i];
-                  //std::cout<<" on one and rest on zero ";
+                  std::cout<<cliqueind[i];
+                  std::cout<<" on one and rest on zero ";
                }
-               //std::cout<<"has weaker lower bounds ";
-               //std::cout<<probing_lower_bounds[(*col).first];
-               //std::cout<<" ";
-               //std::cout<<(*col).second;
-               //std::cout<<" for variable ";
-               //std::cout<<(*col).first;
-               //std::cout.flush();
+               std::cout<<"has weaker lower bounds ";
+               std::cout<<probing_lower_bounds[(*col).first];
+               std::cout<<" ";
+               std::cout<<(*col).second;
+               std::cout<<" for variable ";
+               std::cout<<(*col).first;
+               std::cout.flush();
             }
             assert( isInfeasible() || num.isGE(probing_lower_bounds[(*col).first], (*col).second) );
-         }*/
+         }
          boundChanges.emplace_back(
             CliqueProbingBoundChg<REAL>( false, (*col).first, (*col).second, cliqueind[0] ) );
       }
       for( typename std::list<std::pair<int,REAL>>::iterator col = changed_clique_ubs_inds_vals.begin();
       col != changed_clique_ubs_inds_vals.end(); std::advance(col,1) )
       {
-         /*for(int i = -1 + equationBefore; i < cliquelen; ++i )
+         for(int i = -1 + equationBefore; i < cliquelen; ++i )
          {
             reset();
             setProbingColumn(i);
             propagateDomains();
             if( !isInfeasible() && !num.isLE(probing_upper_bounds[(*col).first], (*col).second) )
             {
-               ////////std::cout<<"\nError, Probing ";
+               std::cout<<"\nError, Probing ";
                if (i==-1)
-                  ////////std::cout<<" all on zero ";
+                  std::cout<<" all on zero ";
                else
                {   
-                  ////////std::cout<<cliqueind[i];
-                  ////////std::cout<<" on one and rest on zero ";
+                  std::cout<<cliqueind[i];
+                  std::cout<<" on one and rest on zero ";
                }
-               ////////std::cout<<"has weaker upper bounds ";
-               ////////std::cout<<probing_upper_bounds[(*col).first];
-               ////////std::cout<<" ";
-               ////////std::cout<<(*col).second;
-               ////////std::cout<<" for variable ";
-               ////////std::cout<<(*col).first;
-               //////std::cout.flush();
+               std::cout<<"has weaker upper bounds ";
+               std::cout<<probing_upper_bounds[(*col).first];
+               std::cout<<" ";
+               std::cout<<(*col).second;
+               std::cout<<" for variable ";
+               std::cout<<(*col).first;
+               std::cout.flush();
             }
             assert( isInfeasible() || num.isLE(probing_upper_bounds[(*col).first], (*col).second) );
-         }*/
+         }
          boundChanges.emplace_back(
             CliqueProbingBoundChg<REAL>( true, (*col).first, (*col).second, cliqueind[0] ) );
       }
@@ -1469,7 +1469,7 @@ CliqueProbingView<REAL>::analyzeImplications()
             substitutions.emplace_back(
                CliqueProbingSubstitution<REAL>( binary_inds[ind], -1.0, ub_implications[ind].second, 1.0 ) );
 
-            /*int i = -1 + equationBefore;
+            int i = -1 + equationBefore;
             while( i != cliquelen )
             {
                reset();
@@ -1479,17 +1479,17 @@ CliqueProbingView<REAL>::analyzeImplications()
                   assert( probing_upper_bounds[binary_inds[ind]] == 0.0 && !isInfeasible() );
                else if( probing_lower_bounds[binary_inds[ind]] != 1.0 && !isInfeasible() )
                {
-                  ////std::cout<<"\nImplicationtest: " << binary_inds[ind] << "\nUbimpsfirst: " << ub_implications[ind].first << " cliquelen: " << cliquelen 
+                  std::cout<<"\nImplicationtest: " << binary_inds[ind] << "\nUbimpsfirst: " << ub_implications[ind].first << " cliquelen: " << cliquelen 
                   << " static_cast<int>(fix_to_zero.size()) " << static_cast<int>(fix_to_zero.size()) <<
                   " static_cast<int>(cliqueEquation) " << static_cast<int>(cliqueEquation) << " lb_implications[ind].first "
                   << lb_implications[ind].first << " lb_implications[ind].second " << lb_implications[ind].second
                   << " ub_implications[ind].second " << ub_implications[ind].second;
-                  ////std::cout.flush();
+                  std::cout.flush();
                   assert( probing_lower_bounds[binary_inds[ind]] == 1.0 || isInfeasible() );
-               //}
+               }
                i +=1;
             }
-            reset();*/
+            reset();
       
          }
          else if( ub_implications[ind].first == cliquelen - static_cast<int>(fix_to_zero.size())
@@ -1500,7 +1500,7 @@ CliqueProbingView<REAL>::analyzeImplications()
             substitutions.emplace_back(
                CliqueProbingSubstitution<REAL>( binary_inds[ind], 1.0, lb_implications[ind].second, 0.0 ) );
 
-            /*int i = -1 + equationBefore;
+            int i = -1 + equationBefore;
             while( i != cliquelen )
             {
                reset();
@@ -1510,17 +1510,17 @@ CliqueProbingView<REAL>::analyzeImplications()
                   assert( probing_lower_bounds[binary_inds[ind]] == 1.0 && !isInfeasible() );
                else if( !(probing_upper_bounds[binary_inds[ind]] == 0.0) && !isInfeasible() )
                {
-                  ////std::cout<<"\nImplicationtest: " << binary_inds[ind] << "\nUbimpsfirst: " << ub_implications[ind].first << " cliquelen: " << cliquelen 
+                  std::cout<<"\nImplicationtest: " << binary_inds[ind] << "\nUbimpsfirst: " << ub_implications[ind].first << " cliquelen: " << cliquelen 
                   << " static_cast<int>(fix_to_zero.size()) " << static_cast<int>(fix_to_zero.size()) <<
                   " static_cast<int>(cliqueEquation) " << static_cast<int>(cliqueEquation) << " lb_implications[ind].first "
                   << lb_implications[ind].first << " lb_implications[ind].second " << lb_implications[ind].second
                   << " ub_implications[ind].second " << ub_implications[ind].second;
-                  ////std::cout.flush();
+                  std::cout.flush();
                   assert( probing_upper_bounds[binary_inds[ind]] == 0.0 || isInfeasible() );
-               //}
+               }
                i +=1;
             }
-            reset();*/
+            reset();
 
          }
             //////std::cout<<"\nImplicationtest: " << binary_inds[ind] << "\nUbimpsfirst: " << ub_implications[ind].first << " cliquelen: " << cliquelen 
