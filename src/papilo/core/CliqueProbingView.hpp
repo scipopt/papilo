@@ -301,6 +301,8 @@ class CliqueProbingView
       bool equation, Array<std::atomic_int>& probing_scores, const Vec<int>& colsize, const Vec<int>& colperm,
       Vec<int>& nprobed )
    {
+      std::cout<<"\nStarting Probing of Clique.";
+      std::cout.flush();
       resetClique();
       binary_inds = binary_indices;
       fewreductions = false;
@@ -752,6 +754,7 @@ class CliqueProbingView
       ub_implications = ub_implications_combined;
       lb_implications = lb_implications_combined;
       fix_to_zero = fix_to_zero_combined;
+      std::cout<<"\nFinished initial probing, Infeasibility: " << fix_to_zero.end() - fix_to_zero.begin() == cliquelen && cliqueEquation;
       return { fix_to_zero.end() - fix_to_zero.begin() == cliquelen && cliqueEquation, cliqueEquation && !equationBefore } ;
 #else
       if(!equation)
