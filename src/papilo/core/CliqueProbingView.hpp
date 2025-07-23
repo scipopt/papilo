@@ -917,7 +917,7 @@ class CliqueProbingView
          if( col < 0 || col >= static_cast<int>(cliqueind.size()) )
          {
             std::cout<<"\n\nERROR: Bad Index: " << col;
-            std::cout<<"\nClique length: " << cliqueind_size();
+            std::cout<<"\nClique length: " << cliqueind.size();
             std::cout.flush();
             assert(col >= 0 && col < static_cast<int>(cliqueind.size() ));
          }
