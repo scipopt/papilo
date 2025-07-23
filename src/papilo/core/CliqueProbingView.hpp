@@ -101,6 +101,7 @@ class CliqueProbingView
       cliqueind = indices;
       cliquelen = len;
       binary_inds = binary_indices;
+      assert( cliqueind.size() > 0 );
       //////std::cout<<"\nBinary inds at start of parallel clique probing: " << static_cast<int>(binary_inds.end() - binary_inds.begin());
       assert( ub_implications_thread_local.size() == binary_inds.size() );
       assert( lb_implications_thread_local.size() == binary_inds.size() );
@@ -313,6 +314,7 @@ class CliqueProbingView
       }
       ////std::cout<<"\nLen and cliqueind size: " << len <<" " <<static_cast<int>(cliqueind.size());
       ////std::cout.flush();
+      assert( cliqueind.size() > 0 );
       assert(len == static_cast<int>(cliqueind.size()));
 
       pdqsort( cliqueind.begin(), cliqueind.end(),
