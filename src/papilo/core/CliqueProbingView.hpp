@@ -914,6 +914,13 @@ class CliqueProbingView
       }
       else
       {
+         if( col < 0 || col >= static_cast<int>(cliqueind.size()) )
+         {
+            std::cout<<"\n\nERROR: Bad Index: " << col;
+            std::cout<<"\nClique length: " << cliqueind_size();
+            std::cout.flush();
+            assert(col >= 0 && col < static_cast<int>(cliqueind.size() ));
+         }
          probingCol = cliqueind[col];
          changeLb( probingCol, 1.0 );
          for( int i = 0; i < cliquelen; ++i )
