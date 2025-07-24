@@ -23,7 +23,7 @@
 #ifndef __PAPILOLIB_H__
 #define __PAPILOLIB_H__
 
-#include "papilolib_export.h"
+#define PAPILOLIB_EXPORT __attribute__((__visibility__("default")))
 
 #ifdef __cplusplus
 extern "C"

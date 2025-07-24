@@ -21,8 +21,12 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 #include "papilolib.h"
+
+#ifdef SCIP
 #include "scip/pub_message.h"
 #include "scip/scipdefplugins.h"
+#endif // SCIP
+
 #include <cassert>
 #include <cstdlib>
 #include <new>
@@ -110,8 +114,12 @@ struct AllocatorTraits<T>
 #include "papilo/core/Presolve.hpp"
 #include "papilo/core/ProblemBuilder.hpp"
 #include "papilo/core/VariableDomains.hpp"
+
+#ifdef SCIP
 #include "papilo/interfaces/ScipInterface.hpp"
 #include "papilo/interfaces/SoplexInterface.hpp"
+#endif
+
 #include "papilo/misc/MultiPrecision.hpp"
 #include "papilo/Config.hpp"
 #ifdef PAPILO_TBB
@@ -538,6 +546,7 @@ struct Papilo_Solver
    PAPILO_SOLVING_INFO solveinfo;
 };
 
+#ifdef SCIP
 static void
 PrintSCIPMessage( SCIP_MESSAGEHDLR* handler, FILE* file, const char* message,
                   VerbosityLevel level )
@@ -616,7 +625,9 @@ setupscip( SCIP* scip, void* usrdata )
       }
    }
 }
+#endif // SCIP
 
+#ifdef SoPlex
 static void
 setupsoplex( soplex::SoPlex& spx, void* usrdata )
 {
@@ -638,6 +649,7 @@ setupsoplex( soplex::SoPlex& spx, void* usrdata )
       spx.setSettings( mainspx->getSoPlex().settings() );
    }
 }
+#endif
 
 PAPILO_SOLVER*
 papilo_solver_create()
@@ -647,10 +659,14 @@ papilo_solver_create()
    solver->messageStream = std::unique_ptr<MessageStream>(
        new MessageStream( solver->presolve.message() ) );
    solver->presolve.addDefaultPresolvers();
+#ifdef SoPlex
    solver->presolve.setLPSolverFactory( SoplexFactory<double>::create(
        setupsoplex, reinterpret_cast<void*>( solver ) ) );
+#endif
+#ifdef SCIP
    solver->presolve.setMIPSolverFactory( ScipFactory<double>::create(
        setupscip, reinterpret_cast<void*>( solver ) ) );
+#endif
    solver->paramSet = solver->presolve.getParameters();
    solver->mipSolver = solver->presolve.getMIPSolverFactory()->newSolver();
    solver->lpSolver = solver->presolve.getLPSolverFactory()->newSolver();

@@ -335,6 +335,7 @@ add_library(papilo-core STATIC
    src/papilo/presolvers/SingletonStuffing.cpp
    src/papilo/presolvers/Sparsify.cpp
    src/papilo/presolvers/SimplifyInequalities.cpp
+   src/papilolib.cpp
    ${roundingsat_source_files}
   )
 
