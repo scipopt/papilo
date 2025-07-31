@@ -1459,9 +1459,9 @@ CliqueProbingView<REAL>::analyzeImplications()
                std::cout<<" for variable ";
                std::cout<<(*col).first;
                std::cout.flush();
-            }*/
+            }
             assert( isInfeasible() || num.isLE(probing_upper_bounds[(*col).first], (*col).second) );
-         }
+         }*/
          boundChanges.emplace_back(
             CliqueProbingBoundChg<REAL>( true, (*col).first, (*col).second, cliqueind[0] ) );
       }
