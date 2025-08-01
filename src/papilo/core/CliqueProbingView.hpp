@@ -305,8 +305,8 @@ class CliqueProbingView
       bool equation, Array<std::atomic_int>& probing_scores, const Vec<int>& colsize, const Vec<int>& colperm,
       Vec<int>& nprobed )
    {
-      std::cout<<"\nStarting Probing of Clique.";
-      std::cout.flush();
+      /*std::cout<<"\nStarting Probing of Clique.";
+      std::cout.flush();*/
       resetClique();
       binary_inds = binary_indices;
       fewreductions = false;
