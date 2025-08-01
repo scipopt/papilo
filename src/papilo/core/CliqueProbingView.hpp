@@ -103,6 +103,7 @@ class CliqueProbingView
       cliquelen = len;
       binary_inds = binary_indices;
       assert( cliqueind.size() > 0 );
+      assert( cliquelen == cliqueind.size() );
       //////std::cout<<"\nBinary inds at start of parallel clique probing: " << static_cast<int>(binary_inds.end() - binary_inds.begin());
       assert( ub_implications_thread_local.size() == binary_inds.size() );
       assert( lb_implications_thread_local.size() == binary_inds.size() );
