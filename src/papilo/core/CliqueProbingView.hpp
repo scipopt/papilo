@@ -464,6 +464,7 @@ class CliqueProbingView
                   ////////std::cout << "(" << pair.first << "," << pair.second << ") ";
                }*/
                ////////std::cout << "\n";
+               assert( cliqueind.size() > 0 );
             }
          );
 
