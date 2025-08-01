@@ -395,6 +395,7 @@ class CliqueProbingView
             //fewreductions = true;
             //return { false, cliqueEquation && !equationBefore } ;
          }
+         assert( cliqueind.size() > 0 );
          tbb::parallel_for( tbb::blocked_range<int>( batchstart, batchend ),
             [&]( const tbb::blocked_range<int>& r )
             {
