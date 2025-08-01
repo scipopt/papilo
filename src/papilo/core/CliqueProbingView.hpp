@@ -433,8 +433,11 @@ class CliqueProbingView
                }
                else
                   initbounds_thread_local = true;
+               assert( cliqueind.size() > 0 );
                CliqueProbingView<REAL> local_clique_probing( problem, num );
+               assert( cliqueind.size() > 0 );
                local_clique_probing.setMinContDomRed( mincontdomred );
+               assert( cliqueind.size() > 0 );
 
                assert( ub_implications_thread.local().size() == binary_inds.size() );
                assert( lb_implications_thread.local().size() == binary_inds.size() );
