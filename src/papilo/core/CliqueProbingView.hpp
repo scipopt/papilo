@@ -446,6 +446,7 @@ class CliqueProbingView
                assert( lb_implications_combined.size() == binary_inds.size() );
                assert( cliqueind.size() > 0 );
 
+               assert( localcliqueind.size() > 0 );
                local_clique_probing.parallelProbe( r, initbounds_thread_local, changed_clique_lbs_inds_vals_initbounds_thread.local().first, 
                changed_clique_ubs_inds_vals_initbounds_thread.local().first, lb_implications_thread.local(),
                   ub_implications_thread.local(), fix_to_zero_thread.local(), cliqueEquation, localcliqueind,
