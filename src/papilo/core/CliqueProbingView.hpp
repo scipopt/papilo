@@ -97,15 +97,11 @@ class CliqueProbingView
       Vec<std::pair<int,int>>& ub_implications_thread_local, Vec<int>& fix_to_zero_thread_local, bool& cliqueEquation, Vec<int>& indices,
       const int& clique, const Vec<int>& binary_indices, const int& len )
    {
-      assert( indices.size() > 0 );
-      if( &probingClique != &clique )
-         probingClique = clique;
-      if( &cliqueind != &indices)
-         cliqueind = indices;
-      if( &cliquelen != &len)
-         cliquelen = len;
-      if( &binary_inds != &binary_indices)
-         binary_inds = binary_indices;
+      assert( indices.size() > 0 );   
+      probingClique = clique;
+      cliqueind = indices;
+      cliquelen = len;
+      binary_inds = binary_indices;
       assert( cliqueind.size() > 0 );
       //////std::cout<<"\nBinary inds at start of parallel clique probing: " << static_cast<int>(binary_inds.end() - binary_inds.begin());
       assert( ub_implications_thread_local.size() == binary_inds.size() );
