@@ -295,6 +295,7 @@ class CliqueProbingView
             reset();
          }
       }
+      assert( cliqueind.size() > 0 );
    }
 #endif
 
