@@ -381,6 +381,7 @@ class CliqueProbingView
       
       assert( ub_implications_combined.size() == binary_inds.size() );
       assert( lb_implications_combined.size() == binary_inds.size() );
+      assert( cliqueind.size() > 0 );
 
       int batchstart = -(!equation);
       int batchend = std::min( batchstart + 24, len );
@@ -397,6 +398,7 @@ class CliqueProbingView
          tbb::parallel_for( tbb::blocked_range<int>( batchstart, batchend ),
             [&]( const tbb::blocked_range<int>& r )
             {
+               assert( cliqueind.size() > 0 );
                ////////std::cout << "Thread ID: " << std::this_thread::get_id() << " for range [" << r.begin() << ", " << r.end() << ")\n";
                if( ub_implications_thread.local().size() != binary_inds.size() 
                 || lb_implications_thread.local().size() != binary_inds.size()  )
@@ -434,11 +436,13 @@ class CliqueProbingView
                
                assert( ub_implications_combined.size() == binary_inds.size() );
                assert( lb_implications_combined.size() == binary_inds.size() );
+               assert( cliqueind.size() > 0 );
 
                local_clique_probing.parallelProbe( r, initbounds_thread_local, changed_clique_lbs_inds_vals_initbounds_thread.local().first, 
                changed_clique_ubs_inds_vals_initbounds_thread.local().first, lb_implications_thread.local(),
                   ub_implications_thread.local(), fix_to_zero_thread.local(), cliqueEquation, cliqueind,
                   clique, binary_inds, cliquelen );
+               assert( cliqueind.size() > 0 );
                changed_clique_lbs_inds_vals_initbounds_thread.local().second = initbounds_thread_local;
                changed_clique_ubs_inds_vals_initbounds_thread.local().second = initbounds_thread_local;
                ////////std::cout << "\nLocal thread lb list contents: ";
