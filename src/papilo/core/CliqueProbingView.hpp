@@ -97,7 +97,9 @@ class CliqueProbingView
       Vec<std::pair<int,int>>& ub_implications_thread_local, Vec<int>& fix_to_zero_thread_local, bool& cliqueEquation, Vec<int>& indices,
       const int& clique, const Vec<int>& binary_indices, const int& len )
    {
-      assert( indices.size() > 0 );   
+      assert( indices.size() > 0 );
+      assert( r.begin() == -static_cast<int>(!cliqueEquation) );
+      assert( r.end() <= static_cast<int>(indices.size()) );
       probingClique = clique;
       cliqueind = indices;
       cliquelen = len;
@@ -112,6 +114,7 @@ class CliqueProbingView
          //////////std::cout<<"\nTest1\n";
          if( i == -1 )
          {
+            assert( cliqueEquation == false && indices.size() > 0 );
             setProbingColumn(-1);
             propagateDomains();
             if( isInfeasible() )
@@ -179,6 +182,7 @@ class CliqueProbingView
          }
          else
          {
+            assert( indices.size() > 0 && i >= 0 && i < static_cast<int>(indices.size()) )
             setProbingColumn(i);
             propagateDomains();
             if( isInfeasible() )
@@ -371,6 +375,7 @@ class CliqueProbingView
       tbb::combinable<std::pair<std::list<std::pair<int,REAL>>,bool>> changed_clique_ubs_inds_vals_initbounds_thread;
       tbb::combinable<std::pair<std::list<std::pair<int,REAL>>,bool>> changed_clique_lbs_inds_vals_initbounds_thread;
       tbb::combinable<Vec<int>> fix_to_zero_thread;
+      tbb::combinable<int> numprobings;
       Vec<int> fix_to_zero_combined;
       Vec<std::pair<int,int>> lb_implications_combined;
       Vec<std::pair<int,int>> ub_implications_combined;
@@ -451,6 +456,7 @@ class CliqueProbingView
                changed_clique_ubs_inds_vals_initbounds_thread.local().first, lb_implications_thread.local(),
                   ub_implications_thread.local(), fix_to_zero_thread.local(), cliqueEquation, localcliqueind,
                   clique, binary_inds, cliquelen );
+               numprobings.local() += 1;
                assert( localcliqueind.size() > 0 );
                changed_clique_lbs_inds_vals_initbounds_thread.local().second = initbounds_thread_local;
                changed_clique_ubs_inds_vals_initbounds_thread.local().second = initbounds_thread_local;
@@ -762,6 +768,14 @@ class CliqueProbingView
                ub_implications_combined[ind].second = ub_implications_local[ind].second;
          }
       });
+
+      int totalnumprobings = 0;
+      numprobings.combine_each([&](const int& numprobingslocal )
+      {
+         totalnumprobings+=numprobingslocal;
+      });
+      assert( totalnumprobings == cliquelen + 1 - static_cast<int>(equationBefore) );
+
       ub_implications_thread.clear();
 
       
