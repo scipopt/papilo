@@ -311,15 +311,13 @@ class CliqueProbingView
    {
       /*std::cout<<"\nStarting Probing of Clique.";
       std::cout.flush();*/
-      if( probingClique != -1 )
+      if( alreadyinitialized == true )
       {
          std::cout<<"\nERROR WITH RESET: " << probingClique << " " << clique;
          std::cout.flush();
-         Vec<int> Fail;
-         int failure = Fail[-1];
-         std::cout<< failure;
       }
-      assert( probingClique == -1 );
+      assert( alreadyinitialized = false );
+      alreadyinitialized = true;
       binary_inds = binary_indices;
       fewreductions = false;
       probingClique = clique;
@@ -1038,9 +1036,7 @@ class CliqueProbingView
    void
    resetClique()
    {
-    assert( probingClique != -1 );
-    std::cout<<"\nResetting Clique " << probingClique;
-    std::cout.flush();
+    assert( alreadyinitialized == true );
     reset();
     changed_clique_ubs_inds_vals.clear();
     changed_clique_lbs_inds_vals.clear();
@@ -1056,6 +1052,8 @@ class CliqueProbingView
     equationBefore = false;
     fewreductions = false;
     numpropagations = 0;
+
+    alreadyinitialized = false
    }
 
    void
@@ -1185,6 +1183,8 @@ class CliqueProbingView
    bool cliqueEquation;
    bool equationBefore;
 
+   bool alreadyinitialized;
+
    // datastructures for storing result of probing on one value
    Vec<CliqueProbingBoundChg<REAL>> otherValueImplications;
    bool otherValueInfeasible;
@@ -1226,6 +1226,8 @@ CliqueProbingView<REAL>::CliqueProbingView( const Problem<REAL>& problem_,
    otherValueInfeasible = false;
    minintdomred = num.getFeasTol() * 1000;
    mincontdomred = 0.3;
+
+   alreadyinitialized = false;
 }
 
 template <typename REAL>
