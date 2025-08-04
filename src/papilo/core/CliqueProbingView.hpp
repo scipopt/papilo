@@ -313,7 +313,7 @@ class CliqueProbingView
       std::cout.flush();*/
       if( probingClique != -1 )
       {
-         std::cout<<"\nERROR WITH RESET: " << probingClique;
+         std::cout<<"\nERROR WITH RESET: " << probingClique << " " << clique;
          std::cout.flush();
       }
       assert( probingClique == -1 );
