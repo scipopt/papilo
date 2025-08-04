@@ -182,7 +182,7 @@ class CliqueProbingView
          }
          else
          {
-            assert( indices.size() > 0 && i >= 0 && i < static_cast<int>(indices.size()) )
+            assert( indices.size() > 0 && i >= 0 && i < static_cast<int>(indices.size()) );
             setProbingColumn(i);
             propagateDomains();
             if( isInfeasible() )
