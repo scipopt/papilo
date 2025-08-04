@@ -475,7 +475,11 @@ class CliqueProbingView
                   clique, binary_inds, cliquelen );
                numprobings.local() += 1;
 
-               
+               if( checkInd.size() != cliqueind.size() )
+               {
+                  std::cout<<"\nERROR in clique " << clique;
+                  std::cout.flush();
+               }
                assert( checkInd.size() == cliqueind.size() );
                assert( checkLen == cliquelen );
                assert( localcliqueind.size() > 0 );
@@ -1026,6 +1030,8 @@ class CliqueProbingView
    void
    resetClique()
    {
+    std::cout<<"\nResetting Clique " << probingClique;
+    std::cout.flush();
     reset();
     changed_clique_ubs_inds_vals.clear();
     changed_clique_lbs_inds_vals.clear();
