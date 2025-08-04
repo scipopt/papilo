@@ -774,6 +774,16 @@ class CliqueProbingView
       {
          totalnumprobings+=numprobingslocal;
       });
+      if( totalnumprobings != cliquelen + 1 - static_cast<int>(equationBefore) )
+      {
+         std::cout<< "\n";
+         std::cout<< totalnumprobings;
+         std::cout<< "\n";
+         std::cout<< cliquelen;
+         std::cout<< "\n";
+         std::cout<< equationBefore;
+         std::cout.flush();
+      }
       assert( totalnumprobings == cliquelen + 1 - static_cast<int>(equationBefore) );
 
       ub_implications_thread.clear();
