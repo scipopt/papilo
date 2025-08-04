@@ -939,6 +939,11 @@ class CliqueProbingView
          {
             std::cout<<"\n\nERROR: Bad Index: " << col;
             std::cout<<"\nClique length: " << cliqueind.size();
+#ifdef PAPILO_TBB
+            std::cout<<"\nTBB is on.";
+#else
+            std::cout<<"\nTBB is off.";
+#endif
             std::cout.flush();
             assert(col >= 0 && col < static_cast<int>(cliqueind.size() ));
          }
