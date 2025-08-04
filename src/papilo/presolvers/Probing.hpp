@@ -476,7 +476,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
 
    if( unsuccessfulcliqueprobing <= 0 )
    {
-      auto propagate_variables = [&]( int cliquestart, int cliqueend )
+      auto propagate_cliques = [&]( int cliquestart, int cliqueend )
       {
 #ifdef PAPILO_TBB
          tbb::enumerable_thread_specific<int> numpropagations(0);
@@ -551,7 +551,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
 
       while( batchstart < static_cast<int>(probingCliques.end() - probingCliques.begin()) )
       {
-         propagate_variables( batchstart, std::min(batchend, static_cast<int>(probingCliques.end() - probingCliques.begin())) );
+         propagate_cliques( batchstart, std::min(batchend, static_cast<int>(probingCliques.end() - probingCliques.begin())) );
 
 #ifdef PAPILO_TBB
          int numcliquereductions = 0;
