@@ -515,6 +515,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
                   globalInfeasible = cliqueProbingView.analyzeImplications();
                if( globalInfeasible )
                      {
+                        cliqueProbingView.resetClique();
                         infeasible.store( true, std::memory_order_relaxed );
                         infeasible_variable.store( cliqueind[0] );
                         break;
