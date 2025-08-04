@@ -316,7 +316,7 @@ class CliqueProbingView
          std::cout<<"\nERROR WITH RESET: " << probingClique << " " << clique;
          std::cout.flush();
       }
-      assert( alreadyinitialized = false );
+      assert( alreadyinitialized == false );
       alreadyinitialized = true;
       binary_inds = binary_indices;
       fewreductions = false;
