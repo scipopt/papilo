@@ -311,6 +311,11 @@ class CliqueProbingView
    {
       /*std::cout<<"\nStarting Probing of Clique.";
       std::cout.flush();*/
+      if( probingClique != -1 )
+      {
+         std::cout<<"\nERROR WITH RESET: " << probingClique;
+         std::cout.flush();
+      }
       assert( probingClique == -1 );
       binary_inds = binary_indices;
       fewreductions = false;
