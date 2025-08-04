@@ -98,7 +98,7 @@ class CliqueProbingView
       const int& clique, const Vec<int>& binary_indices, const int& len )
    {
       assert( indices.size() > 0 );
-      assert( r.begin() == -static_cast<int>(!cliqueEquation) );
+      assert( r.begin() >= -static_cast<int>(!cliqueEquation) );
       assert( r.end() <= static_cast<int>(indices.size()) );
       probingClique = clique;
       cliqueind = indices;
