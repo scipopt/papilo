@@ -94,7 +94,7 @@ class CliqueProbingView
    void
    parallelProbe( const tbb::blocked_range<int>& r, bool& initbounds, std::list<std::pair<int, REAL>>& changed_clique_lbs_inds_vals_thread_local, 
       std::list<std::pair<int,REAL>>& changed_clique_ubs_inds_vals_thread_local, Vec<std::pair<int,int>>& lb_implications_thread_local,
-      Vec<std::pair<int,int>>& ub_implications_thread_local, Vec<int>& fix_to_zero_thread_local, bool& cliqueEquation, Vec<int>& indices,
+      Vec<std::pair<int,int>>& ub_implications_thread_local, Vec<int>& fix_to_zero_thread_local, bool& cliqueEquation, const Vec<int>& indices,
       const int& clique, const Vec<int>& binary_indices, const int& len )
    {
       assert( indices.size() > 0 );
@@ -778,8 +778,8 @@ class CliqueProbingView
       });
       if( totalnumprobings != cliquelen + 1 - static_cast<int>(equationBefore) )
       {
-         std::cout<< "\n"<< totalnumprobings<< " "<< cliquelen<< " "<< cliqueind.size()<< " "<< equationBefore
-         << checkInd.size() << " " << checkLen << "\n";
+         std::cout<< "\n"<< totalnumprobings<< " "<< cliquelen << " "<< cliqueind.size()<< " "<< equationBefore
+         << " " << checkInd.size() << " " << checkLen << "\n";
          std::cout.flush();
       }
       assert( totalnumprobings == cliquelen + 1 - static_cast<int>(equationBefore) );
