@@ -1053,7 +1053,7 @@ class CliqueProbingView
     fewreductions = false;
     numpropagations = 0;
 
-    alreadyinitialized = false
+    alreadyinitialized = false;
    }
 
    void
