@@ -315,6 +315,9 @@ class CliqueProbingView
       {
          std::cout<<"\nERROR WITH RESET: " << probingClique << " " << clique;
          std::cout.flush();
+         Vec<int> Fail;
+         int failure = Fail[-1];
+         std::cout<< failure;
       }
       assert( probingClique == -1 );
       binary_inds = binary_indices;
