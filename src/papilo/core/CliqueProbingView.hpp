@@ -781,6 +781,8 @@ class CliqueProbingView
          std::cout<< "\n";
          std::cout<< cliquelen;
          std::cout<< "\n";
+         std::cout<< cliqueind.size();
+         std::cout<< "\n";
          std::cout<< equationBefore;
          std::cout.flush();
       }
