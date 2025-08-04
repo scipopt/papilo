@@ -509,12 +509,20 @@ class CliqueProbingView
 
          numpropagations += static_cast<int>(batchend) - static_cast<int>(batchstart);
 
+         
+      assert( checkInd.size() == cliqueind.size() );
+      assert( checkLen == cliquelen );
+
          fix_to_zero_thread.combine_each([&](const std::vector<int>& fix_to_zero_local ) {
             fix_to_zero_combined.insert(fix_to_zero_combined.end(), fix_to_zero_local.begin(), fix_to_zero_local.end());
          });
          fix_to_zero_thread.clear();
 
          bool initlowerbounds = initbounds;
+
+         
+      assert( checkInd.size() == cliqueind.size() );
+      assert( checkLen == cliquelen );
          //static int combine_call_count = 0;
 
          changed_clique_lbs_inds_vals_initbounds_thread.combine_each([&]( std::pair<std::list<std::pair<int,REAL>>,bool> changed_clique_lbs_inds_vals_initbounds_local ) 
@@ -634,6 +642,9 @@ class CliqueProbingView
 
          bool initupperbounds = initbounds;
          //static int ub_combine_call_count = 0;
+         
+      assert( checkInd.size() == cliqueind.size() );
+      assert( checkLen == cliquelen );
 
          changed_clique_ubs_inds_vals_initbounds_thread.combine_each([&]( std::pair<std::list<std::pair<int,REAL>>,bool> changed_clique_ubs_inds_vals_initbounds_local ) 
          {
@@ -767,6 +778,10 @@ class CliqueProbingView
          batchend = std::min( batchstart + 24, len );
       }
 
+      
+      assert( checkInd.size() == cliqueind.size() );
+      assert( checkLen == cliquelen );
+
       lb_implications_thread.combine_each([&](const std::vector<std::pair<int,int>>& lb_implications_local )
       {
          for( unsigned int ind = 0; ind != binary_inds.size(); ++ind )
@@ -779,6 +794,10 @@ class CliqueProbingView
       });
       lb_implications_thread.clear();
 
+      
+      assert( checkInd.size() == cliqueind.size() );
+      assert( checkLen == cliquelen );
+
       ub_implications_thread.combine_each([&](const std::vector<std::pair<int,int>>& ub_implications_local )
       {
          for( unsigned int ind = 0; ind != binary_inds.size(); ++ind )
@@ -789,6 +808,9 @@ class CliqueProbingView
                ub_implications_combined[ind].second = ub_implications_local[ind].second;
          }
       });
+      
+      assert( checkInd.size() == cliqueind.size() );
+      assert( checkLen == cliquelen );
 
       int totalnumprobings = 0;
       numprobings.combine_each([&](const int& numprobingslocal )
