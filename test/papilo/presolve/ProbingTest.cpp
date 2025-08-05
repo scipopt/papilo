@@ -151,6 +151,8 @@ TEST_CASE( "clique-probing-1", "[presolve]" )
    REQUIRE( reductions.getReduction( 3 ).row == -1 );
    REQUIRE( reductions.getReduction( 3 ).newval == 0 );
 
+   REQUIRE( false )
+
 #endif
 
 }
@@ -233,6 +235,8 @@ TEST_CASE( "clique-probing-2", "[presolve]" )
    REQUIRE( reductions.getReduction( 9 ).col == 0 );
    REQUIRE( reductions.getReduction( 9 ).row == -1 );
    REQUIRE( reductions.getReduction( 9 ).newval == 0 );
+
+   REQUIRE( false )
 
 #endif
 
