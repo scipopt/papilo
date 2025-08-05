@@ -769,7 +769,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
       std::cout<<" ";
       std::cout<<ncliquesubstitutions;
       std::cout<<" Substitutions in \n";
-      std::cout<<cliqueprobingtime;
+      //std::cout<<cliqueprobingtime;
       std::cout<<" seconds.";
       std::cout<<"\n\n\nPerformance Ratio: ";
       std::cout<< static_cast<float>(ncliquefixings + ncliqueboundchgs + ncliquesubstitutions) 
@@ -1082,7 +1082,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
       std::cout<<" Substitutions and ";
       std::cout<< nboundchgs;
       std::cout<<" Boundchanges in ";
-      std::cout<< probingtime;
+      //std::cout<< probingtime;
       std::cout<<" seconds.\n";
       std::cout<<"\n\n\nPerfomance ratio: ";
       std::cout<< static_cast<float>(nsubstitutions + nboundchgs + nfixings) / static_cast<float>( 2 * ( current_badge_end - current_badge_start ) );
