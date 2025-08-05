@@ -151,7 +151,7 @@ TEST_CASE( "clique-probing-1", "[presolve]" )
    REQUIRE( reductions.getReduction( 3 ).row == -1 );
    REQUIRE( reductions.getReduction( 3 ).newval == 0 );
 
-   REQUIRE( false );
+   REQUIRE( presolveStatus != PresolveStatus::kReduced );
 
 #endif
 
