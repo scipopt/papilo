@@ -193,7 +193,7 @@ TEST_CASE( "clique-probing-2", "[presolve]" )
 #ifdef PAPILO_TBB
 
    REQUIRE( reductions.size() == 10 );
-/*
+
    REQUIRE( reductions.getReduction( 0 ).col == 1 );
    REQUIRE( reductions.getReduction( 0 ).row == -4 );
    REQUIRE( reductions.getReduction( 0 ).newval == 0 );
@@ -233,7 +233,7 @@ TEST_CASE( "clique-probing-2", "[presolve]" )
    REQUIRE( reductions.getReduction( 9 ).col == 0 );
    REQUIRE( reductions.getReduction( 9 ).row == -1 );
    REQUIRE( reductions.getReduction( 9 ).newval == 0 );
-*/
+
 #endif
 
 }
