@@ -596,6 +596,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
          result.insert(result.end(), b.begin(), b.end() );
          return result;
       } );
+      pdqsort( change_to_equation_comb.begin(), change_to_equation_comb.end() );
       for( int i = 0; i < static_cast<int>(change_to_equation_comb.size()); ++i )
       {
          assert( change_to_equation_comb[i] >= 0 && change_to_equation_comb[i] < nrows );
@@ -624,6 +625,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
          }
       }
 #else
+      pdqsort( change_to_equation.begin(), change_to_equation.end() );
       for( int i = 0; i < static_cast<int>(change_to_equation.size()); ++i )
       {
          assert( change_to_equation[i] >= 0 && change_to_equation[i] < nrows );
@@ -782,6 +784,11 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
 
       if( !cliqueBoundChanges.empty() )
       {
+         pdqsort( cliqueBoundChanges.begin(), cliqueBoundChanges.end(), 
+            []( const CliqueProbingBoundChg<REAL>& a, const CliqueProbingBoundChg<REAL>& b )
+            {
+               return std::make_pair( a.col, a.bound ) > std::make_pair( b.col, b.bound );
+            } );
          for( const CliqueProbingBoundChg<REAL>& boundChg : cliqueBoundChanges )
          {
             if( boundChg.upper )
