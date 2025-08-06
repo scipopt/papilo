@@ -1130,7 +1130,11 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
 
    if( !boundChanges.empty() )
    {
-
+      pdqsort( boundChanges.begin(), boundChanges.end(), 
+            []( const ProbingBoundChg<REAL>& a, const ProbingBoundChg<REAL>& b )
+            {
+               return std::make_pair( a.col, a.bound ) > std::make_pair( b.col, b.bound );
+            } );
       for( const ProbingBoundChg<REAL>& boundChg : boundChanges )
       {
          if( boundChg.upper )
