@@ -325,8 +325,10 @@ class CliqueProbingView
       {
          cliqueind.emplace_back( indices[ind] );
       }
+#ifdef PAPILO_TBB
       const Vec<int> checkInd = cliqueind;
       const int checkLen = len;
+#endif
       ////std::cout<<"\nLen and cliqueind size: " << len <<" " <<static_cast<int>(cliqueind.size());
       ////std::cout.flush();
       assert( cliqueind.size() > 0 );
