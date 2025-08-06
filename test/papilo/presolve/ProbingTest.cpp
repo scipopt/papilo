@@ -196,19 +196,19 @@ TEST_CASE( "clique-probing-2", "[presolve]" )
 
    REQUIRE( reductions.size() == 10 );
 
-   REQUIRE( reductions.getReduction( 0 ).col == 1 );
+   REQUIRE( reductions.getReduction( 0 ).col == 7 );
    REQUIRE( reductions.getReduction( 0 ).row == -4 );
    REQUIRE( reductions.getReduction( 0 ).newval == 0 );
 
-   REQUIRE( reductions.getReduction( 1 ).col == 3 );
-   REQUIRE( reductions.getReduction( 1 ).row == -4 );
-   REQUIRE( reductions.getReduction( 1 ).newval == 0 );
+   REQUIRE( reductions.getReduction( 1 ).col == 6 );
+   REQUIRE( reductions.getReduction( 1 ).row == -3 );
+   REQUIRE( reductions.getReduction( 1 ).newval == 1 );
    
-   REQUIRE( reductions.getReduction( 2 ).col == 6 );
-   REQUIRE( reductions.getReduction( 2 ).row == -3 );
-   REQUIRE( reductions.getReduction( 2 ).newval == 1 );
+   REQUIRE( reductions.getReduction( 2 ).col == 3 );
+   REQUIRE( reductions.getReduction( 2 ).row == -4 );
+   REQUIRE( reductions.getReduction( 2 ).newval == 0 );
 
-   REQUIRE( reductions.getReduction( 3 ).col == 7 );
+   REQUIRE( reductions.getReduction( 3 ).col == 1 );
    REQUIRE( reductions.getReduction( 3 ).row == -4 );
    REQUIRE( reductions.getReduction( 3 ).newval == 0 );
    
@@ -235,8 +235,6 @@ TEST_CASE( "clique-probing-2", "[presolve]" )
    REQUIRE( reductions.getReduction( 9 ).col == 0 );
    REQUIRE( reductions.getReduction( 9 ).row == -1 );
    REQUIRE( reductions.getReduction( 9 ).newval == 0 );
-
-   REQUIRE( false );
 
 #endif
 
