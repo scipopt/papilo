@@ -1191,7 +1191,7 @@ class CliqueProbingView
    bool cliqueEquation;
    bool equationBefore;
 
-   bool alreadyinitialized;
+   bool alreadyinitialized = false;
 
    // datastructures for storing result of probing on one value
    Vec<CliqueProbingBoundChg<REAL>> otherValueImplications;
