@@ -565,7 +565,10 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
                   const auto b )
               { return std::make_pair( a.col1, a.col2 ) >
                std::make_pair( b.col1, b.col2 ); } );
-               assert( res1 == res2 );
+               for( int k = 0; k < static_cast<int>(std::max(res1.size(), res2.size())); ++k )
+               {
+                  assert( res1[k].col1 == res2[k].col1 && res1[k].col2 == res2[k].col2 );
+               }
 
                auto res3 = cliqueProbingView.getProbingBoundChanges();
                pdqsort( res3.begin(), res3.end(), []( const auto a,
@@ -577,7 +580,10 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
                   const auto b )
               { return std::make_pair( a.col, a.bound ) >
                std::make_pair( b.col, b.bound ) || a.upper > b.upper ; } );
-               assert( res3 == res4 );
+               for( int k = 0; k < static_cast<int>(std::max(res3.size(), res4.size())); ++k )
+               {
+                  assert( res3[k].col == res4[k].col && res3[k].bound == res4[k].bound && res3[k].upper == res4[k].upper );
+               }
             }
 #ifdef PAPILO_TBB
          } );
