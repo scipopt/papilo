@@ -552,7 +552,8 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
                numpropagations += cliqueProbingView.getNumPropagations();
 #endif
                cliqueProbingView.resetClique();
-
+                  
+               cliqueProbingViewCheck.analyzeImplications();
                cliqueProbingViewCheck.resetClique();
                
                auto res1 = cliqueProbingView.getProbingSubstitutions();
