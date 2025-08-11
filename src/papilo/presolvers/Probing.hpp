@@ -556,15 +556,27 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
                cliqueProbingViewCheck.resetClique();
                
                auto res1 = cliqueProbingView.getProbingSubstitutions();
-               pdqsort( res1.begin(), res1.end() );
+               pdqsort( res1.begin(), res1.end(), []( const auto a,
+                  const auto b )
+              { return std::make_pair( a.col1, a.col2 ) >
+               std::make_pair( b.col1, b.col2 ); } );
                auto res2 = cliqueProbingViewCheck.getProbingSubstitutions();
-               pdqsort( res2.begin(), res2.end() );
+               pdqsort( res2.begin(), res2.end(), []( const auto a,
+                  const auto b )
+              { return std::make_pair( a.col1, a.col2 ) >
+               std::make_pair( b.col1, b.col2 ); } );
                assert( res1 == res2 );
 
                auto res3 = cliqueProbingView.getProbingBoundChanges();
-               pdqsort( res3.begin(), res3.end() );
+               pdqsort( res3.begin(), res3.end(), []( const auto a,
+                  const auto b )
+              { return std::make_pair( a.col, a.bound ) >
+               std::make_pair( b.col, b.bound ) || a.upper > b.upper ; } );
                auto res4 = cliqueProbingViewCheck.getProbingBoundChanges();
-               pdqsort( res4.begin(), res4.end() );
+               pdqsort( res4.begin(), res4.end(), []( const auto a,
+                  const auto b )
+              { return std::make_pair( a.col, a.bound ) >
+               std::make_pair( b.col, b.bound ) || a.upper > b.upper ; } );
                assert( res3 == res4 );
             }
 #ifdef PAPILO_TBB
