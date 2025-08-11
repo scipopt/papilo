@@ -310,13 +310,13 @@ class CliqueProbingView
       Vec<int>& nprobed )
    {
       /*std::cout<<"\nStarting Probing of Clique.";
-      std::cout.flush();*/
+      std::cout.flush();
       if( alreadyinitialized == true )
       {
          std::cout<<"\nERROR WITH RESET: " << probingClique << " " << clique;
          std::cout.flush();
       }
-      assert( alreadyinitialized == false );
+      assert( alreadyinitialized == false );*/
       alreadyinitialized = true;
       binary_inds = binary_indices;
       fewreductions = false;
