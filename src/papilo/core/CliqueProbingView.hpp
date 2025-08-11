@@ -1148,6 +1148,12 @@ class CliqueProbingView
       substitutions.clear();
    }
 
+   bool
+   stillRunning()
+   {
+      return alreadyinitialized ;
+   }
+
  private:
    // reference to problem and numerics class
    const Problem<REAL>& problem;

@@ -500,6 +500,12 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
                   nprobed[cliqueind[j]] +=1;
                }
                nprobedcliques[clique] += 1;
+               while( cliqueProbingView.stillRunning() )
+               {
+                  std::cout<<"\nError with reset, waiting.";
+                  std::cout.flush();
+                  Thread.sleep(10);
+               }
                std::pair<bool,bool> cliqueProbingResult = cliqueProbingView.probeClique(clique, cliqueind, cliquelen, 
                   probing_cands, probingCliques[i].second, probing_scores, colsize, colperm, nprobed ); 
                bool globalInfeasible = cliqueProbingResult.first;
