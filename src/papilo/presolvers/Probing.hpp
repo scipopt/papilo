@@ -468,6 +468,15 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
             return cliqueProbingView;
          } );
       tbb::combinable<Vec<int>> change_to_equation;
+
+      tbb::combinable<CliqueProbingView<REAL>> clique_probing_views_check(
+         [this, &problem, &num]()
+         {
+            CliqueProbingView<REAL> cliqueProbingView( problem, num );
+            cliqueProbingView.setMinContDomRed( mincontdomred );
+            return cliqueProbingView;
+         } );
+      tbb::combinable<Vec<int>> change_to_equation_check;
 #else
       CliqueProbingView<REAL> cliqueProbingView( problem, num );
       cliqueProbingView.setMinContDomRed( mincontdomred );
@@ -484,6 +493,9 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
          [&]( const tbb::blocked_range<int>& r )
          {
             CliqueProbingView<REAL>& cliqueProbingView = clique_probing_views.local();
+
+            CliqueProbingView<REAL>& cliqueProbingViewCheck = clique_probing_views_check.local();
+
             for( int i = r.begin(); i < r.end(); ++i )
 #else
             int numpropagations = 0;
@@ -500,14 +512,22 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
                   nprobed[cliqueind[j]] +=1;
                }
                nprobedcliques[clique] += 1;
-               while( cliqueProbingView.stillRunning() )
+               if( cliqueProbingView.stillRunning() )
                {
                   std::cout<<"\nError with reset, waiting.";
                   std::cout.flush();
-                  Thread.sleep(10);
+               }
+               while( cliqueProbingView.stillRunning() )
+               {
+                  
                }
                std::pair<bool,bool> cliqueProbingResult = cliqueProbingView.probeClique(clique, cliqueind, cliquelen, 
-                  probing_cands, probingCliques[i].second, probing_scores, colsize, colperm, nprobed ); 
+                  probing_cands, probingCliques[i].second, probing_scores, colsize, colperm, nprobed );
+                  
+               std::pair<bool,bool> cliqueProbingResultCheck = cliqueProbingViewCheck.probeClique(clique, cliqueind, cliquelen, 
+                  probing_cands, probingCliques[i].second, probing_scores, colsize, colperm, nprobed );
+               
+               assert( cliqueProbingResult == cliqueProbingResultCheck );
                bool globalInfeasible = cliqueProbingResult.first;
                if( cliqueProbingResult.second && !probingCliques[i].second )
                {
@@ -532,6 +552,20 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
                numpropagations += cliqueProbingView.getNumPropagations();
 #endif
                cliqueProbingView.resetClique();
+
+               cliqueProbingViewCheck.resetClique();
+               
+               auto res1 = cliqueProbingView.getProbingSubstitutions();
+               pdqsort( res1.begin(), res1.end() );
+               auto res2 = cliqueProbingViewCheck.getProbingSubstitutions();
+               pdqsort( res2.begin(), res2.end() );
+               assert( res1 == res2 );
+
+               auto res3 = cliqueProbingView.getProbingBoundChanges();
+               pdqsort( res3.begin(), res3.end() );
+               auto res4 = cliqueProbingViewCheck.getProbingBoundChanges();
+               pdqsort( res4.begin(), res4.end() );
+               assert( res3 == res4 );
             }
 #ifdef PAPILO_TBB
          } );
