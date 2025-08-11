@@ -566,7 +566,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
               { return std::make_pair( a.col1, a.col2 ) >
                std::make_pair( b.col1, b.col2 ); } );
                assert( res1.size() == res2.size() );
-               for( int k = 0; k < static_cast<int>(res1.size()); ++k )
+               for( int k = 0; k < static_cast<int>(std::min(res1.size(),res2.size())); ++k )
                {
                   assert( res1[k].col1 == res2[k].col1 && res1[k].col2 == res2[k].col2 );
                }
@@ -582,7 +582,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
               { return std::make_pair( a.col, a.bound ) >
                std::make_pair( b.col, b.bound ) || a.upper > b.upper ; } );
                assert( res3.size() == res4.size() );
-               for( int k = 0; k < static_cast<int>(res3.size()); ++k )
+               for( int k = 0; k < static_cast<int>(std::min(res3.size(),res4.size())); ++k )
                {
                   assert( res3[k].col == res4[k].col && res3[k].bound == res4[k].bound && res3[k].upper == res4[k].upper );
                }
