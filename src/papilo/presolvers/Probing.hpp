@@ -581,6 +581,20 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
                   const auto b )
               { return std::make_pair( a.col, a.bound ) >
                std::make_pair( b.col, b.bound ) || a.upper > b.upper ; } );
+               if( res3.size() != res4.size() )
+               {
+                  std::cout<<"\nError, different reductions, first Attempt: ";
+                  for( int k = 0; k < static_cast<int>(res3.size()); ++k )
+                  {
+                     std::cout<<"\n" << res3[k].col << " " << res3[k].bound << " " << res3[k].upper;
+                  }
+                  std::Cout<<"\nSecond Attempt: "
+                  for( int k = 0; k < static_cast<int>(res4.size()); ++k )
+                  {
+                     std::cout<<"\n" << res4[k].col << " " << res4[k].bound << " " << res4[k].upper;
+                  }
+                  std::cout.flush();
+               }
                assert( res3.size() == res4.size() );
                for( int k = 0; k < static_cast<int>(std::min(res3.size(),res4.size())); ++k )
                {
