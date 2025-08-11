@@ -565,6 +565,20 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
                   const auto b )
               { return std::make_pair( a.col1, a.col2 ) >
                std::make_pair( b.col1, b.col2 ); } );
+               if( res1.size() != res2.size() )
+               {
+                  std::cout<<"\nError, different subs, sizes: " << res1.size() << " " << res2.size() << " first Attempt: ";
+                  for( int k = 0; k < static_cast<int>(res1.size()); ++k )
+                  {
+                     std::cout<<"\n" << res1[k].col1 << " " << res1[k].col2;
+                  }
+                  std::cout<<"\nSecond Attempt: ";
+                  for( int k = 0; k < static_cast<int>(res2.size()); ++k )
+                  {
+                     std::cout<<"\n" << res2[k].col1 << " " << res2[k].col2;
+                  }
+                  std::cout.flush();
+               }
                assert( res1.size() == res2.size() );
                for( int k = 0; k < static_cast<int>(std::min(res1.size(),res2.size())); ++k )
                {
@@ -583,7 +597,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
                std::make_pair( b.col, b.bound ) || a.upper > b.upper ; } );
                if( res3.size() != res4.size() )
                {
-                  std::cout<<"\nError, different reductions, first Attempt: ";
+                  std::cout<<"\nError, different reductions, sizes: " << res3.size() << " " << res4.size() << " first Attempt: ";
                   for( int k = 0; k < static_cast<int>(res3.size()); ++k )
                   {
                      std::cout<<"\n" << res3[k].col << " " << res3[k].bound << " " << res3[k].upper;
