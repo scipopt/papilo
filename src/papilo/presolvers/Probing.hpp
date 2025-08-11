@@ -517,6 +517,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
                   std::cout<<"\nError with reset, waiting.";
                   std::cout.flush();
                }
+               assert( !cliqueProbingView.stillRunning() );
                while( cliqueProbingView.stillRunning() )
                {
                   
