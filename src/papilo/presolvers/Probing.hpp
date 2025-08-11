@@ -588,7 +588,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
                   {
                      std::cout<<"\n" << res3[k].col << " " << res3[k].bound << " " << res3[k].upper;
                   }
-                  std::cout<<"\nSecond Attempt: "
+                  std::cout<<"\nSecond Attempt: ";
                   for( int k = 0; k < static_cast<int>(res4.size()); ++k )
                   {
                      std::cout<<"\n" << res4[k].col << " " << res4[k].bound << " " << res4[k].upper;
