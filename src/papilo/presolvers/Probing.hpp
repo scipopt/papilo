@@ -566,7 +566,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
               { return std::make_pair( a.col1, a.col2 ) >
                std::make_pair( b.col1, b.col2 ); } );
                assert( res1.size() == res2.size() );
-               for( int k = 0; k < static_cast<int>(res1.size())); ++k )
+               for( int k = 0; k < static_cast<int>(res1.size()); ++k )
                {
                   assert( res1[k].col1 == res2[k].col1 && res1[k].col2 == res2[k].col2 );
                }
