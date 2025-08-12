@@ -882,7 +882,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
       [&cliqueProbingBoundChgs]( Vec<CliqueProbingBoundChg<REAL>>& cliqueProbingBoundChgsLocal )
       {
          cliqueProbingBoundChgs.insert(cliqueProbingBoundChgs.end(), 
-            cliqueProbingBoundChgsLocal.begin(), cliqueProbingBoundChgsLocal.end())
+            cliqueProbingBoundChgsLocal.begin(), cliqueProbingBoundChgsLocal.end());
       });
 
       Vec<CliqueProbingSubstitution<REAL>> cliqueProbingSubstitutions;
@@ -890,7 +890,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
       [&cliqueProbingSubstitutions]( Vec<CliqueProbingSubstitution<REAL>>& cliqueProbingSubsLocal )
       {
          cliqueProbingSubstitutions.insert(cliqueProbingSubstitutions.end(), 
-            cliqueProbingSubsLocal.begin(), cliqueProbingSubsLocal.end())
+            cliqueProbingSubsLocal.begin(), cliqueProbingSubsLocal.end());
       });
 #else
       auto& cliqueProbingBoundChgs = clique_probing_bound_changes;
