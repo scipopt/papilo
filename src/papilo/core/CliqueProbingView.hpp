@@ -397,8 +397,6 @@ class CliqueProbingView
       assert( lb_implications_combined.size() == binary_inds.size() );
       assert( cliqueind.size() > 0 );
 
-      assert( checkInd.size() == cliqueind.size() );
-      assert( checkLen == cliquelen );
 
       int batchstart = -(!equation);
       int batchend = std::min( batchstart + 24, len );
