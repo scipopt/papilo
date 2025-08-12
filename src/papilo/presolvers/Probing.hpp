@@ -459,7 +459,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
       Vec<int> cliqueBoundPos( size_t( 2 * ncols ), 0 );
       cliqueBoundChanges.reserve( ncols );
 
-#ifdef PAPILO_TBB
+#ifdef PAPILO_TBB/*
       tbb::combinable<CliqueProbingView<REAL>> clique_probing_views(
          [this, &problem, &num]()
          {
@@ -475,11 +475,16 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
             CliqueProbingView<REAL> cliqueProbingView( problem, num );
             cliqueProbingView.setMinContDomRed( mincontdomred );
             return cliqueProbingView;
-         } );
-      tbb::combinable<Vec<int>> change_to_equation_check;
+         } );*/
+
+      tbb::combinable<Vec<CliqueProbingBoundChg<REAL>>> clique_probing_bound_changes;
+      tbb::combinable<Vec<CliqueProbingSubstitution<REAL>>> clique_probing_subs;
+      tbb::combinable<Vec<int>> change_to_equation;
 #else
-      CliqueProbingView<REAL> cliqueProbingView( problem, num );
-      cliqueProbingView.setMinContDomRed( mincontdomred );
+      //CliqueProbingView<REAL> cliqueProbingView( problem, num );
+      //cliqueProbingView.setMinContDomRed( mincontdomred );
+      Vec<CliqueProbingBoundChg<REAL>> clique_probing_bound_changes;
+      Vec<CliqueProbingSubstitution<REAL>> clique_probing_subs;
       Vec<int> change_to_equation;
 #endif
 
@@ -492,9 +497,9 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
          tbb::parallel_for( tbb::blocked_range<int>( cliquestart, cliqueend ),
          [&]( const tbb::blocked_range<int>& r )
          {
-            CliqueProbingView<REAL>& cliqueProbingView = clique_probing_views.local();
+            /*CliqueProbingView<REAL>& cliqueProbingView = clique_probing_views.local();
 
-            CliqueProbingView<REAL>& cliqueProbingViewCheck = clique_probing_views_check.local();
+            CliqueProbingView<REAL>& cliqueProbingViewCheck = clique_probing_views_check.local();*/
 
             for( int i = r.begin(); i < r.end(); ++i )
 #else
@@ -521,14 +526,22 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
                while( cliqueProbingView.stillRunning() )
                {
                   
-               }*/
+               }*//*
                std::pair<bool,bool> cliqueProbingResult = cliqueProbingView.probeClique(clique, cliqueind, cliquelen, 
                   probing_cands, probingCliques[i].second, probing_scores, colsize, colperm, nprobed );
                   
                std::pair<bool,bool> cliqueProbingResultCheck = cliqueProbingViewCheck.probeClique(clique, cliqueind, cliquelen, 
                   probing_cands, probingCliques[i].second, probing_scores, colsize, colperm, nprobed );
                
-               assert( cliqueProbingResult == cliqueProbingResultCheck );
+               assert( cliqueProbingResult == cliqueProbingResultCheck );*/
+
+               CliqueProbingView<REAL> local_clique_probing_view( problem, num );
+               local_clique_probing_view.setMinContDomRed( mincontdomred );
+
+               std::pair<bool,bool> cliqueProbingResult = local_clique_probing_view.probeClique(clique, cliqueind, cliquelen, 
+                  probing_cands, probingCliques[i].second, probing_scores, colsize, colperm, nprobed );
+
+
                bool globalInfeasible = cliqueProbingResult.first;
                if( cliqueProbingResult.second && !probingCliques[i].second )
                {
@@ -539,26 +552,43 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
 #endif
                }
                if( !globalInfeasible )
-                  globalInfeasible = cliqueProbingView.analyzeImplications();
+                  //globalInfeasible = cliqueProbingView.analyzeImplications();
+                  globalInfeasible = local_clique_probing_view.analyzeImplications();
                if( globalInfeasible )
                      {
-                        cliqueProbingView.resetClique();
+                        //cliqueProbingView.resetClique();
+                        local_clique_probing_view.resetClique();
                         infeasible.store( true, std::memory_order_relaxed );
                         infeasible_variable.store( cliqueind[0] );
                         break;
                      }
 #ifdef PAPILO_TBB
-               numpropagations.local() += cliqueProbingView.getNumPropagations();
+               //numpropagations.local() += cliqueProbingView.getNumPropagations();
+               numpropagations.local() += local_clique_probing_view.getNumPropagations();
 #else
-               numpropagations += cliqueProbingView.getNumPropagations();
+               //numpropagations += cliqueProbingView.getNumPropagations();
+               numpropagations += local_clique_probing_view.getNumPropagations();
 #endif
-               cliqueProbingView.resetClique();
+               /*cliqueProbingView.resetClique();
                assert( !cliqueProbingView.stillRunning() );
                   
                cliqueProbingViewCheck.analyzeImplications();
-               cliqueProbingViewCheck.resetClique();
-               
-               auto res1 = cliqueProbingView.getProbingSubstitutions();
+               cliqueProbingViewCheck.resetClique();*/
+               local_clique_probing_view.resetClique();
+               Vec<CliqueProbingBoundChg<REAL>> local_bound_chgs = local_clique_probing_view.getProbingBoundChanges();
+               Vec<CliqueProbingSubstitution<REAL>> local_subs = local_clique_probing_view.getProbingSubstitutions();
+#ifdef PAPILO_TBB
+               clique_probing_bound_changes.local().insert(clique_probing_bound_changes.local().end(),
+                  local_bound_chgs.begin(), local_bound_chgs.end() );
+               clique_probing_subs.local().insert(clique_probing_subs.local().end(),
+                  local_subs.begin(), local_subs.end() );
+#else
+               clique_probing_bound_changes.insert(clique_probing_bound_changes.end(),
+                  local_bound_chgs.begin(), local_bound_chgs.end() );
+               clique_probing_subs.insert(clique_probing_subs.end(),
+                  local_subs.begin(), local_subs.end() );
+#endif
+               /*auto res1 = cliqueProbingView.getProbingSubstitutions();
                pdqsort( res1.begin(), res1.end(), []( const auto a,
                   const auto b )
               { return std::make_pair( a.col1, a.col2 ) >
@@ -616,7 +646,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
                for( int k = 0; k < static_cast<int>(std::min(res3.size(),res4.size())); ++k )
                {
                   assert( res3[k].col == res4[k].col && res3[k].bound == res4[k].bound && res3[k].upper == res4[k].upper );
-               }
+               }*/
             }
 #ifdef PAPILO_TBB
          } );
@@ -644,14 +674,24 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
 
 #ifdef PAPILO_TBB
          int numcliquereductions = 0;
-         clique_probing_views.combine_each([&numcliquereductions](CliqueProbingView<REAL>& clique_probing_view) {
+         /*clique_probing_views.combine_each([&numcliquereductions](CliqueProbingView<REAL>& clique_probing_view) {
             numcliquereductions += clique_probing_view.getNumSubstitutions() 
             + clique_probing_view.getProbingBoundChanges().size();
+         });*/
+         clique_probing_bound_changes.combine_each([&numcliquereductions](
+            Vec<CliqueProbingBoundChg<REAL>>& clique_probing_bound_changes_local) {
+            numcliquereductions += static_cast<int>(clique_probing_bound_changes_local.size());
+         });
+         clique_probing_subs.combine_each([&numcliquereductions](
+            Vec<CliqueProbingSubstitution<REAL>>& clique_probing_substitutions_local) {
+            numcliquereductions += static_cast<int>(clique_probing_substitutions_local.size());
          });
          if( infeasible || numcliquereductions  
             <= totalnumpropagations * cliquereductionfactor )
 #else
-         if( infeasible || (cliqueProbingView.getNumSubstitutions() + static_cast<int>(cliqueProbingView.getProbingBoundChanges().size())) 
+         /*if( infeasible || (cliqueProbingView.getNumSubstitutions() + static_cast<int>(cliqueProbingView.getProbingBoundChanges().size())) 
+            <= totalnumpropagations * cliquereductionfactor )*/
+         if( infeasible || (static_cast<int>(clique_probing_bound_changes.size()) + static_cast<int>(clique_probing_subs.size())) 
             <= totalnumpropagations * cliquereductionfactor )
 #endif
          {
@@ -747,7 +787,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
 #endif
 
 
-#ifdef PAPILO_TBB
+/*#ifdef PAPILO_TBB
       clique_probing_views.combine_each(
       [&]( CliqueProbingView<REAL>& cliqueProbingView )
       {
@@ -834,6 +874,99 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
 #ifdef PAPILO_TBB
             } );
 #endif
+      ncliquesubstitutions += cliquesubstitutions.size();*/
+
+#ifdef PAPILO_TBB
+      Vec<CliqueProbingBoundChg<REAL>> cliqueProbingBoundChgs;
+      clique_probing_bound_changes.combine_each(
+      [&cliqueProbingBoundChgs]( Vec<CliqueProbingBoundChg<REAL>>& cliqueProbingBoundChgsLocal )
+      {
+         cliqueProbingBoundChgs.insert(cliqueProbingBoundChgs.end(), 
+            cliqueProbingBoundChgsLocal.begin(), cliqueProbingBoundChgsLocal.end())
+      });
+
+      Vec<CliqueProbingSubstitution<REAL>> cliqueProbingSubstitutions;
+      clique_probing_subs.combine_each(
+      [&cliqueProbingSubstitutions]( Vec<CliqueProbingSubstitution<REAL>>& cliqueProbingSubsLocal )
+      {
+         cliqueProbingSubstitutions.insert(cliqueProbingSubstitutions.end(), 
+            cliqueProbingSubsLocal.begin(), cliqueProbingSubsLocal.end())
+      });
+#else
+      auto& cliqueProbingBoundChgs = clique_probing_bound_changes;
+      auto& cliqueProbingSubstitutions = clique_probing_subs;
+#endif            
+            
+               for( const CliqueProbingSubstitution<REAL>& subst :
+                     cliqueProbingSubstitutions )
+               {
+                  auto insres = cliqueSubstitutionsPos.emplace(
+                     std::make_pair( subst.col1, subst.col2 ),
+                     cliquesubstitutions.size() );
+
+                  if( insres.second )
+                     cliquesubstitutions.push_back( subst );
+               }
+               
+               for( const CliqueProbingBoundChg<REAL>& boundChg : cliqueProbingBoundChgs )
+               {
+                  if( cliqueBoundPos[2 * boundChg.col + boundChg.upper] == 0 )
+                  {
+                     // found new bound change
+                     cliqueBoundChanges.emplace_back( boundChg );
+                     cliqueBoundPos[2 * boundChg.col + boundChg.upper] =
+                        cliqueBoundChanges.size();
+
+                     // check if column is now fixed
+                     if( ( boundChg.upper &&
+                           boundChg.bound == lower_bounds[boundChg.col] ) ||
+                        ( !boundChg.upper &&
+                           boundChg.bound == upper_bounds[boundChg.col] ) )
+                        ++ncliquefixings;
+                     else
+                        ++ncliqueboundchgs;
+                  }
+                  else
+                  {
+                     // already changed that bound
+                     CliqueProbingBoundChg<REAL>& cliqueOtherBoundChg = cliqueBoundChanges
+                        [cliqueBoundPos[2 * boundChg.col + boundChg.upper] - 1];
+
+                     if( boundChg.upper && boundChg.bound < cliqueOtherBoundChg.bound )
+                     {
+                        // new upper bound change is tighter
+                        cliqueOtherBoundChg.bound = boundChg.bound;
+
+                        // check if column is now fixed
+                        if( boundChg.bound == lower_bounds[boundChg.col] )
+                           ++ncliquefixings;
+
+                        if( problemUpdate.getPresolveOptions()
+                                 .verification_with_VeriPB )
+                        {
+                           if( boundChg.probing_col == -1 )
+                              cliqueOtherBoundChg.probing_col = -1;
+                        }
+                     }
+                     else if( !boundChg.upper &&
+                              boundChg.bound > cliqueOtherBoundChg.bound )
+                     {
+                        // new lower bound change is tighter
+                        cliqueOtherBoundChg.bound = boundChg.bound;
+
+                        // check if column is now fixed
+                        if( boundChg.bound == upper_bounds[boundChg.col] )
+                           ++ncliquefixings;
+                     }
+
+                     // do only count fixings in this case for two reasons:
+                     // 1) the number of bound changes depends on the order and
+                     // would make probing non deterministic 2) the boundchange
+                     // was already counted in previous rounds and will only be
+                     // added once
+                  }
+               }
+               
       ncliquesubstitutions += cliquesubstitutions.size();
    }
 
