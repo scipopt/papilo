@@ -402,10 +402,6 @@ class CliqueProbingView
       int batchend = std::min( batchstart + 24, len );
       while( batchstart != len )
       {
-         
-         assert( checkInd.size() == cliqueind.size() );
-         assert( checkLen == cliquelen );
-
          if( ( static_cast<int>(changed_clique_lbs_inds_vals_combined.size())
              + static_cast<int>(changed_clique_ubs_inds_vals_combined.size()) - cliquelen + static_cast<int>(batchstart) ) 
              < cliquelen * cliquereductionfactor && initbounds )
@@ -417,10 +413,6 @@ class CliqueProbingView
          tbb::parallel_for( tbb::blocked_range<int>( batchstart, batchend ),
             [&]( const tbb::blocked_range<int>& r )
             {
-
-               
-               assert( checkInd.size() == cliqueind.size() );
-               assert( checkLen == cliquelen );
 
                assert( cliqueind.size() > 0 );
                Vec<int> localcliqueind = cliqueind;
@@ -455,9 +447,6 @@ class CliqueProbingView
                //assert( cliqueind.size() > 0 );
 
                assert( localcliqueind.size() > 0 );
-               
-               assert( checkInd.size() == cliqueind.size() );
-               assert( checkLen == cliquelen );
 
                local_clique_probing.parallelProbe( r, initbounds_thread_local, changed_clique_lbs_inds_vals_initbounds_thread.local().first, 
                changed_clique_ubs_inds_vals_initbounds_thread.local().first, lb_implications_thread.local(),
@@ -530,9 +519,6 @@ class CliqueProbingView
 
 
       bool initupperbounds = initbounds;
-         
-      assert( checkInd.size() == cliqueind.size() );
-      assert( checkLen == cliquelen );
 
          changed_clique_ubs_inds_vals_initbounds_thread.combine_each([&]( std::pair<std::list<std::pair<int,REAL>>,bool> changed_clique_ubs_inds_vals_initbounds_local ) 
          {
@@ -587,9 +573,6 @@ class CliqueProbingView
          batchend = std::min( batchstart + 24, len );
       }
 
-      
-      assert( checkInd.size() == cliqueind.size() );
-      assert( checkLen == cliquelen );
 
       lb_implications_thread.combine_each([&](const std::vector<std::pair<int,int>>& lb_implications_local )
       {
@@ -602,9 +585,6 @@ class CliqueProbingView
       });
       lb_implications_thread.clear();
 
-      
-      assert( checkInd.size() == cliqueind.size() );
-      assert( checkLen == cliquelen );
 
       ub_implications_thread.combine_each([&](const std::vector<std::pair<int,int>>& ub_implications_local )
       {
