@@ -317,13 +317,13 @@ endif()
 add_library(papilo-core STATIC
    src/papilo/core/VariableDomains.cpp
    src/papilo/core/SparseStorage.cpp
-   src/papilo/core/CliqueProbingView.cpp
    src/papilo/core/ConstraintMatrix.cpp
    src/papilo/core/ProblemUpdate.cpp
    src/papilo/core/Presolve.cpp
    src/papilo/core/postsolve/PostsolveStorage.cpp
    src/papilo/core/postsolve/Postsolve.cpp
    src/papilo/core/ProbingView.cpp
+   src/papilo/core/CliqueProbingView.cpp
    src/papilo/presolvers/CoefficientStrengthening.cpp
    src/papilo/presolvers/ConstraintPropagation.cpp
    src/papilo/presolvers/DominatedCols.cpp
@@ -402,6 +402,7 @@ install(FILES
    ${PROJECT_SOURCE_DIR}/src/papilo/core/PresolveMethod.hpp
    ${PROJECT_SOURCE_DIR}/src/papilo/core/PresolveOptions.hpp
    ${PROJECT_SOURCE_DIR}/src/papilo/core/ProbingView.hpp
+   ${PROJECT_SOURCE_DIR}/src/papilo/core/CliqueProbingView.hpp
    ${PROJECT_SOURCE_DIR}/src/papilo/core/Problem.hpp
    ${PROJECT_SOURCE_DIR}/src/papilo/core/ProblemBuilder.hpp
    ${PROJECT_SOURCE_DIR}/src/papilo/core/ProblemFlag.hpp
