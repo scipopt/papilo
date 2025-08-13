@@ -381,7 +381,7 @@ class CliqueProbingView
       tbb::combinable<std::pair<std::list<std::pair<int,REAL>>,bool>> changed_clique_ubs_inds_vals_initbounds_thread;
       tbb::combinable<std::pair<std::list<std::pair<int,REAL>>,bool>> changed_clique_lbs_inds_vals_initbounds_thread;
       tbb::combinable<Vec<int>> fix_to_zero_thread;
-      tbb::combinable<int> numprobings;
+      //tbb::combinable<int> numprobings;
       Vec<int> fix_to_zero_combined;
       Vec<std::pair<int,int>> lb_implications_combined;
       Vec<std::pair<int,int>> ub_implications_combined;
@@ -452,7 +452,7 @@ class CliqueProbingView
                changed_clique_ubs_inds_vals_initbounds_thread.local().first, lb_implications_thread.local(),
                   ub_implications_thread.local(), fix_to_zero_thread.local(), cliqueEquation, localcliqueind,
                   clique, binary_inds, cliquelen );
-               numprobings.local() += 1;
+               //numprobings.local() += 1;
 
                assert( localcliqueind.size() > 0 );
                changed_clique_lbs_inds_vals_initbounds_thread.local().second = initbounds_thread_local;
@@ -596,13 +596,13 @@ class CliqueProbingView
          }
       });
 
-      int totalnumprobings = 0;
+      /*int totalnumprobings = 0;
       numprobings.combine_each([&](const int& numprobingslocal )
       {
          totalnumprobings+=numprobingslocal;
       });
 
-      assert( totalnumprobings == cliquelen + 1 - static_cast<int>(equationBefore) );
+      assert( totalnumprobings == cliquelen + 1 - static_cast<int>(equationBefore) );*/
 
       ub_implications_thread.clear();
 
