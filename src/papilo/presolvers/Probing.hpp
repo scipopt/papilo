@@ -538,6 +538,10 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
                CliqueProbingView<REAL> local_clique_probing_view( problem, num );
                local_clique_probing_view.setMinContDomRed( mincontdomred );
 
+               
+               if( infeasible.load( std::memory_order_relaxed ) )
+                  break;
+
                std::pair<bool,bool> cliqueProbingResult = local_clique_probing_view.probeClique(clique, cliqueind, cliquelen, 
                   probing_cands, probingCliques[i].second, probing_scores, colsize, colperm, nprobed );
 
@@ -714,7 +718,12 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
          }
       }
       if( infeasible )
+      {   
+         reason_of_infeasibility =
+             infeasible_variable.load( std::memory_order_relaxed );
+         
          return PresolveStatus::kInfeasible;
+      }
       //cliqueprobingtime = timer.getTime() - cliqueprobinstarttime;
 
       probing_cands.resize(clique_cutoff_ub+1);
