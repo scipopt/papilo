@@ -172,7 +172,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
    Vec<int> probing_cands;
    probing_cands.reserve( ncols );
    const int maxCliqueLength = 150;
-   //std::cout<<"\nNumber of unsuccessful clique probing attempts:" << unsuccessfulcliqueprobing;
+   std::cout<<"\nNumber of unsuccessful clique probing attempts:" << unsuccessfulcliqueprobing;
 
    if( unsuccessfulcliqueprobing <= 0 )
    {
@@ -186,6 +186,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
          {
             cliques.emplace_back( row, std::make_pair(0, cliquecheck.second) );
          }
+         std::cout<<"\nNumber of cliques: " << cliques.size();
       }
       //std::cout<<"\nFinding all cliques took " << timer.getTime() - cliquefindstarttime << " seconds.\n";
    }
