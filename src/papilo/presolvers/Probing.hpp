@@ -186,7 +186,6 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
          {
             cliques.emplace_back( row, std::make_pair(0, cliquecheck.second) );
          }
-         std::cout<<"\nNumber of cliques: " << cliques.size();
       }
       //std::cout<<"\nFinding all cliques took " << timer.getTime() - cliquefindstarttime << " seconds.\n";
    }
