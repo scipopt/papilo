@@ -982,7 +982,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
    PresolveStatus result = PresolveStatus::kUnchanged;
    
    if( unsuccessfulcliqueprobing <= 0 )
-   {/*
+   {
       std::cout<<"\n\nClique Probing on ";
       std::cout<<std::min(static_cast<int>(probingCliques.size()), batchend);
       std::cout<<" Cliques with ";
@@ -1009,7 +1009,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
       std::cout<<"\n\n\nPerformance Ratio: ";
       std::cout<< static_cast<float>(ncliquefixings + ncliqueboundchgs + ncliquesubstitutions) 
          / static_cast<float>(totalnumpropagations);
-      std::cout<<"\n\n\n";*/
+      std::cout<<"\n\n\n";
       if( ncliquefixings + ncliqueboundchgs + ncliquesubstitutions == 0 )
             unsuccessfulcliqueprobing += 1;
       else
@@ -1313,7 +1313,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
 #endif
       nsubstitutions += substitutions.size();
 
-      /*std::cout<<"\nNormal probing on ";
+      std::cout<<"\nNormal probing on ";
       std::cout<<badge_size;
       std::cout<<" variables found ";
       std::cout<< nfixings;
@@ -1326,7 +1326,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
       std::cout<<" seconds.\n";
       std::cout<<"\n\n\nPerfomance ratio: ";
       std::cout<< static_cast<float>(nsubstitutions + nboundchgs + nfixings) / static_cast<float>( 2 * ( current_badge_end - current_badge_start ) );
-      std::cout<<"\n\n";*/
+      std::cout<<"\n\n";
 
       current_badge_start = current_badge_end;
 
