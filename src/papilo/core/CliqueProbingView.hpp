@@ -669,11 +669,11 @@ class CliqueProbingView
       for( int i = 0; i < cliquelen; ++i )
       {
          if( ( static_cast<int>(changed_clique_lbs_inds_vals.size())
-             + static_cast<int>(changed_clique_ubs_inds_vals.size()) - cliquelen + i ) < cliquelen * cliquereductionfactor
+             + static_cast<int>(changed_clique_ubs_inds_vals.size()) - cliquelen + i ) * 2 < cliquelen * cliquereductionfactor
              && initbounds )
          {     
-            //fewreductions = true;
-            //return { false, cliqueEquation && !equationBefore } ;
+            fewreductions = true;
+            return { false, cliqueEquation && !equationBefore } ;
          }
          reset();
          assert( probing_upper_bounds[cliqueind[i]] == 1.0 );
