@@ -672,8 +672,8 @@ class CliqueProbingView
              + static_cast<int>(changed_clique_ubs_inds_vals.size()) - cliquelen + i ) < cliquelen * cliquereductionfactor
              && initbounds )
          {     
-            fewreductions = true;
-            return { false, cliqueEquation && !equationBefore } ;
+            //fewreductions = true;
+            //return { false, cliqueEquation && !equationBefore } ;
          }
          reset();
          assert( probing_upper_bounds[cliqueind[i]] == 1.0 );

@@ -354,7 +354,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
          return clique1.second.first > clique2.second.first ;
       } );
       
-      const int max_probed_clique_vars = maxinitialbadgesize;
+      const int max_probed_clique_vars = 3*maxinitialbadgesize;
       int cliquevars = 0;
       Vec<bool> probedCliqueVars(ncols, false);
       probingCliques.reserve( cliques.end() - cliques.begin() );
@@ -379,7 +379,6 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
                {
                   probedCliqueVars[rowinds[ind]] = true;
                   cliquevars += 1;
-                  probing_scores[rowinds[ind]] = -2;
                }
             }
          }
@@ -391,54 +390,6 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
    //std::cout<<"\nAssigning probing scores and sorting took " << timer.getTime() - cliqueprobingscoressatrttime << " seconds\n";
    }
    
-   pdqsort( probing_cands.begin(), probing_cands.end(),
-            [this, &probing_scores, &colsize, &colperm]( int col1, int col2 )
-            {
-               std::pair<double, double> s1;
-               std::pair<double, double> s2;
-               if( nprobed[col2] == 0 && probing_scores[col2] != 0 )
-                  s2.first = probing_scores[col2] /
-                             static_cast<double>( colsize[col2] );
-               else
-                  s2.first = 0;
-               if( nprobed[col1] == 0 && probing_scores[col1] != 0 )
-                  s1.first = probing_scores[col1] /
-                             static_cast<double>( colsize[col1] );
-               else
-                  s1.first = 0;
-
-               s1.second =
-                   ( probing_scores[col1].load( std::memory_order_relaxed ) /
-                     static_cast<double>( 1 + nprobed[col1] * colsize[col1] ) );
-               s2.second =
-                   ( probing_scores[col2].load( std::memory_order_relaxed ) /
-                     static_cast<double>( 1 + nprobed[col2] * colsize[col2] ) );
-               return s1 > s2 || ( s1 == s2 && colperm[col1] < colperm[col2] );
-            } );
-   
-   int clique_cutoff_ub = 0;
-
-   if( unsuccessfulcliqueprobing <= 0 )
-   {
-      clique_cutoff_ub = static_cast<int>(probing_cands.size())-1;
-      int clique_cutoff_lb = 0;
-
-      assert( clique_cutoff_ub < static_cast<int>(probing_cands.size()));
-      if( clique_cutoff_ub != -1 && probing_scores[probing_cands[clique_cutoff_ub]] < 0 )
-      {
-         while (clique_cutoff_ub - clique_cutoff_lb > 1 )
-         {  
-            if( probing_scores[probing_cands[ ( clique_cutoff_ub + clique_cutoff_lb ) / 2 ]] >= 0 )
-            {
-               clique_cutoff_lb = ( clique_cutoff_ub + clique_cutoff_lb ) / 2;
-            }
-            else if( probing_scores[probing_cands[ ( clique_cutoff_ub + clique_cutoff_lb ) / 2 ]] < 0 )
-            {
-               clique_cutoff_ub = ( clique_cutoff_ub + clique_cutoff_lb ) / 2;
-            }
-         }
-      }
-   }
       
    std::atomic_bool infeasible{ false };
    std::atomic_int infeasible_variable{ -1 };
@@ -725,8 +676,17 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
          return PresolveStatus::kInfeasible;
       }
       //cliqueprobingtime = timer.getTime() - cliqueprobinstarttime;
+      for( int clique = 0; clique < std::min(batchend, static_cast<int>(probingCliques.end() - probingCliques.begin())); ++clique )
+      {
+         auto cliquevec = consMatrix.getRowCoefficients( probingCliques[clique].first );
+         auto cliqueind = cliquevec.getIndices();
+         auto cliquelen = cliquevec.getLength();
+         for( int ind = 0; ind < cliquelen; ++ind )
+         {
+            probing_scores[cliqueind[ind]] = -2;
+         }
+      }
 
-      probing_cands.resize(clique_cutoff_ub+1);
       ncliquesubstitutions = -cliquesubstitutions.size();
 
 #ifdef PAPILO_TBB
@@ -1070,6 +1030,57 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
 
          result = PresolveStatus::kReduced;
       }
+   }
+
+   pdqsort( probing_cands.begin(), probing_cands.end(),
+            [this, &probing_scores, &colsize, &colperm]( int col1, int col2 )
+            {
+               std::pair<double, double> s1;
+               std::pair<double, double> s2;
+               if( nprobed[col2] == 0 && probing_scores[col2] != 0 )
+                  s2.first = probing_scores[col2] /
+                             static_cast<double>( colsize[col2] );
+               else
+                  s2.first = 0;
+               if( nprobed[col1] == 0 && probing_scores[col1] != 0 )
+                  s1.first = probing_scores[col1] /
+                             static_cast<double>( colsize[col1] );
+               else
+                  s1.first = 0;
+
+               s1.second =
+                   ( probing_scores[col1].load( std::memory_order_relaxed ) /
+                     static_cast<double>( 1 + nprobed[col1] * colsize[col1] ) );
+               s2.second =
+                   ( probing_scores[col2].load( std::memory_order_relaxed ) /
+                     static_cast<double>( 1 + nprobed[col2] * colsize[col2] ) );
+               return s1 > s2 || ( s1 == s2 && colperm[col1] < colperm[col2] );
+            } );
+   
+   int clique_cutoff_ub = 0;
+
+   if( unsuccessfulcliqueprobing <= 0 )
+   {
+      clique_cutoff_ub = static_cast<int>(probing_cands.size())-1;
+      int clique_cutoff_lb = 0;
+
+      assert( clique_cutoff_ub < static_cast<int>(probing_cands.size()));
+      if( clique_cutoff_ub != -1 && probing_scores[probing_cands[clique_cutoff_ub]] < 0 )
+      {
+         while (clique_cutoff_ub - clique_cutoff_lb > 1 )
+         {  
+            if( probing_scores[probing_cands[ ( clique_cutoff_ub + clique_cutoff_lb ) / 2 ]] >= 0 )
+            {
+               clique_cutoff_lb = ( clique_cutoff_ub + clique_cutoff_lb ) / 2;
+            }
+            else if( probing_scores[probing_cands[ ( clique_cutoff_ub + clique_cutoff_lb ) / 2 ]] < 0 )
+            {
+               clique_cutoff_ub = ( clique_cutoff_ub + clique_cutoff_lb ) / 2;
+            }
+         }
+      }
+
+      probing_cands.resize(clique_cutoff_ub+1);
    }
    
    const Vec<int>& rowsize = consMatrix.getRowSizes();
