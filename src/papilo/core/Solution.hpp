@@ -81,9 +81,9 @@ class Solution
 )
        : type( SolutionType::kPrimalDual ),
          primal( std::move( primal_values ) ),
-         dual( std::move( dual_values ),
+         dual( std::move( dual_values ) ),
          reducedCosts( std::move( reduced_values ) ),
-         slack( std::move( slack_values ) ) ),
+         slack( std::move( slack_values ) ),
          basisAvailabe( basisAvailabe_value ),
          varBasisStatus( std::move( var_basis_status )),
          rowBasisStatus( std::move( row_basis_status ))
