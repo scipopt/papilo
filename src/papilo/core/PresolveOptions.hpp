@@ -116,6 +116,8 @@ struct PresolveOptions
 
    double totaltlim = std::numeric_limits<double>::max();
 
+   std::function<bool()> early_exit_callback = nullptr;
+
    bool verification_with_VeriPB = false;
 
    void

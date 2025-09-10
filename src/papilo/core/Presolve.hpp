@@ -1336,16 +1336,16 @@ template <typename REAL>
 bool
 Presolve<REAL>::is_time_exceeded( const Timer& presolvetimer ) const
 {
-   return presolveOptions.tlim != std::numeric_limits<double>::max() &&
-          presolvetimer.getTime() >= presolveOptions.tlim;
+   return (presolveOptions.tlim != std::numeric_limits<double>::max() &&
+          presolvetimer.getTime() >= presolveOptions.tlim) || (presolveOptions.early_exit_callback && presolveOptions.early_exit_callback());
 }
 
 template <typename REAL>
 bool
 Presolve<REAL>::is_total_time_exceeded( const Timer& presolvetimer ) const
 {
-   return presolveOptions.totaltlim != std::numeric_limits<double>::max() &&
-          presolvetimer.getTime() >= presolveOptions.totaltlim;
+   return (presolveOptions.totaltlim != std::numeric_limits<double>::max() &&
+          presolvetimer.getTime() >= presolveOptions.totaltlim) || (presolveOptions.early_exit_callback && presolveOptions.early_exit_callback());
 }
 
 template <typename REAL>

@@ -390,7 +390,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
 #endif
                 {
                    if( PresolveMethod<REAL>::is_time_exceeded(
-                           timer, problemUpdate.getPresolveOptions().tlim ) )
+                           timer, problemUpdate.getPresolveOptions().tlim, problemUpdate.getPresolveOptions().early_exit_callback ) )
                       break;
                    const int col = probing_cands[i];
 
@@ -558,7 +558,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
 
       abort = n_useless >= consMatrix.getNnz() * 2 || working_limit < 0 ||
               current_badge_start == current_badge_end ||
-              PresolveMethod<REAL>::is_time_exceeded(timer, problemUpdate.getPresolveOptions().tlim );
+              PresolveMethod<REAL>::is_time_exceeded(timer, problemUpdate.getPresolveOptions().tlim, problemUpdate.getPresolveOptions().early_exit_callback);
    } while( !abort );
 
    PresolveStatus result = PresolveStatus::kUnchanged;
