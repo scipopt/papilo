@@ -303,7 +303,7 @@ class Presolve
    finishRound( ProblemUpdate<REAL>& probUpdate );
 
    void
-   applyPostponed( ProblemUpdate<REAL>& probUpdate );
+   applyPostponed( ProblemUpdate<REAL>& probUpdate, const Timer& presolveTimer );
 
    Delegator
    determine_next_round( Problem<REAL>& problem,
@@ -312,7 +312,7 @@ class Presolve
                          const Timer& presolvetimer, bool unchanged = false );
 
    PresolveStatus
-   apply_all_presolver_reductions( ProblemUpdate<REAL>& probUpdate );
+   apply_all_presolver_reductions( ProblemUpdate<REAL>& probUpdate, const Timer& presolveTimer );
 
    void
    printRoundStats( std::string rndtype );
@@ -327,6 +327,9 @@ class Presolve
 
    bool
    is_time_exceeded( const Timer& presolvetimer ) const;
+
+   bool
+   is_total_time_exceeded( const Timer& presolvetimer ) const;
 
    bool
    are_applied_tsx_negligible( const Problem<REAL>& problem,
@@ -1106,7 +1109,7 @@ Presolve<REAL>::evaluate_and_apply( const Timer& timer, Problem<REAL>& problem,
       // problem reductions where found by at least one presolver
       PresolveStatus status;
       if( !run_sequential )
-         status = apply_all_presolver_reductions( probUpdate );
+         status = apply_all_presolver_reductions( probUpdate, timer );
       else
          status = PresolveStatus::kReduced;
       if( is_status_infeasible_or_unbounded( status ) )
@@ -1137,7 +1140,7 @@ Presolve<REAL>::is_status_infeasible_or_unbounded(
 template <typename REAL>
 PresolveStatus
 Presolve<REAL>::apply_all_presolver_reductions(
-    ProblemUpdate<REAL>& probUpdate )
+    ProblemUpdate<REAL>& probUpdate, const Timer& presolveTimer )
 {
    probUpdate.setPostponeSubstitutions( true );
 
@@ -1155,7 +1158,7 @@ Presolve<REAL>::apply_all_presolver_reductions(
 
    probUpdate.flushChangedCoeffs();
 
-   applyPostponed( probUpdate );
+   applyPostponed( probUpdate, presolveTimer );
 
    return probUpdate.flush( true );
 }
@@ -1253,7 +1256,7 @@ Presolve<REAL>::applyReductions( int p, const Reductions<REAL>& reductions_,
 
 template <typename REAL>
 void
-Presolve<REAL>::applyPostponed( ProblemUpdate<REAL>& probUpdate )
+Presolve<REAL>::applyPostponed( ProblemUpdate<REAL>& probUpdate, const Timer& presolveTimer )
 {
    probUpdate.setPostponeSubstitutions( false );
 
@@ -1268,7 +1271,7 @@ Presolve<REAL>::applyPostponed( ProblemUpdate<REAL>& probUpdate )
       {
          const auto& ptrpair = postponedReductions[i];
 
-         ApplyResult r =
+         ApplyResult r = is_total_time_exceeded( presolveTimer ) ? ApplyResult::kRejected :
              probUpdate.applyTransaction( ptrpair.first, ptrpair.second, ArgumentType::kPrimal );
          if( r == ApplyResult::kApplied )
          {
@@ -1331,6 +1334,14 @@ Presolve<REAL>::is_time_exceeded( const Timer& presolvetimer ) const
 {
    return presolveOptions.tlim != std::numeric_limits<double>::max() &&
           presolvetimer.getTime() >= presolveOptions.tlim;
+}
+
+template <typename REAL>
+bool
+Presolve<REAL>::is_total_time_exceeded( const Timer& presolvetimer ) const
+{
+   return presolveOptions.totaltlim != std::numeric_limits<double>::max() &&
+          presolvetimer.getTime() >= presolveOptions.totaltlim;
 }
 
 template <typename REAL>
