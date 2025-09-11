@@ -330,7 +330,7 @@ class Presolve
               const PostsolveStorage<REAL>& postsolveStorage ) const;
 
    bool
-   is_time_exceeded_or_early_callback( const Timer& presolvetimer ) const;
+   is_interrupted( const Timer& presolvetimer ) const;
 
 
    bool
@@ -352,6 +352,12 @@ class Presolve
 
    Delegator
    handle_case_exceeded( Delegator& next_round );
+
+   bool
+   is_user_interrupted() const;
+
+   bool
+   is_time_exceeded( const Timer& presolvetimer ) const;
 
    PresolveStatus
    evaluate_and_apply( const Timer& timer, Problem<REAL>& problem,
@@ -1072,7 +1078,7 @@ Presolve<REAL>::determine_next_round( Problem<REAL>& problem,
                                       const Timer& presolvetimer,
                                       bool unchanged )
 {
-   if( is_time_exceeded_or_early_callback( presolvetimer ) )
+   if( is_interrupted( presolvetimer ) )
       return Delegator::kAbort;
 
    Delegator next_round = increase_round_if_last_run_was_not_successfull(
@@ -1273,7 +1279,7 @@ Presolve<REAL>::applyPostponed( ProblemUpdate<REAL>& probUpdate, const Timer& pr
       {
          const auto& ptrpair = postponedReductions[i];
 
-         ApplyResult r = is_time_exceeded_or_early_callback( presolveTimer ) ? ApplyResult::kRejected :
+         ApplyResult r = is_interrupted( presolveTimer ) ? ApplyResult::kRejected :
              probUpdate.applyTransaction( ptrpair.first, ptrpair.second, ArgumentType::kPrimal );
          if( r == ApplyResult::kApplied )
          {
@@ -1332,12 +1338,25 @@ Presolve<REAL>::handle_case_exceeded( Delegator& next_round )
 
 template <typename REAL>
 bool
-Presolve<REAL>::is_time_exceeded_or_early_callback( const Timer& presolvetimer ) const
+Presolve<REAL>::is_user_interrupted() const
 {
-   return ( presolveOptions.tlim != std::numeric_limits<double>::max() &&
-            presolvetimer.getTime() >= presolveOptions.tlim ) ||
-          ( presolveOptions.early_exit_callback &&
-            presolveOptions.early_exit_callback() );
+   return presolveOptions.early_exit_callback &&
+          presolveOptions.early_exit_callback();
+}
+
+template <typename REAL>
+bool
+Presolve<REAL>::is_time_exceeded( const Timer& presolvetimer ) const
+{
+   return presolveOptions.tlim != std::numeric_limits<double>::max() &&
+          presolvetimer.getTime() >= presolveOptions.tlim;
+}
+
+template <typename REAL>
+bool
+Presolve<REAL>::is_interrupted( const Timer& presolvetimer ) const
+{
+   return is_time_exceeded( presolvetimer ) || is_user_interrupted();
 }
 
 template <typename REAL>
