@@ -389,8 +389,8 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
          for( int i = start; i < end; i++ )
 #endif
                 {
-                   if( PresolveMethod<REAL>::is_time_exceeded(
-                           timer, problemUpdate.getPresolveOptions().tlim ) )
+                   if( PresolveMethod<REAL>::is_interrupted(
+                           timer, problemUpdate.getPresolveOptions().tlim, problemUpdate.getPresolveOptions().early_exit_callback ) )
                       break;
                    const int col = probing_cands[i];
 
@@ -433,8 +433,8 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
 
       propagate_variables( current_badge_start, current_badge_end );
 
-      if( PresolveMethod<REAL>::is_time_exceeded(
-              timer, problemUpdate.getPresolveOptions().tlim ) )
+      if( PresolveMethod<REAL>::is_interrupted(
+              timer, problemUpdate.getPresolveOptions().tlim, problemUpdate.getPresolveOptions().early_exit_callback) )
          return PresolveStatus::kUnchanged;
 
       if( infeasible.load( std::memory_order_relaxed ) )
@@ -558,7 +558,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
 
       abort = n_useless >= consMatrix.getNnz() * 2 || working_limit < 0 ||
               current_badge_start == current_badge_end ||
-              PresolveMethod<REAL>::is_time_exceeded(timer, problemUpdate.getPresolveOptions().tlim );
+              PresolveMethod<REAL>::is_interrupted(timer, problemUpdate.getPresolveOptions().tlim, problemUpdate.getPresolveOptions().early_exit_callback);
    } while( !abort );
 
    PresolveStatus result = PresolveStatus::kUnchanged;

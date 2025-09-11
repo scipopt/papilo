@@ -307,7 +307,7 @@ class Presolve
    finishRound( ProblemUpdate<REAL>& probUpdate );
 
    void
-   applyPostponed( ProblemUpdate<REAL>& probUpdate );
+   applyPostponed( ProblemUpdate<REAL>& probUpdate, const Timer& presolveTimer );
 
    Delegator
    determine_next_round( Problem<REAL>& problem,
@@ -316,7 +316,7 @@ class Presolve
                          const Timer& presolvetimer, bool unchanged = false );
 
    PresolveStatus
-   apply_all_presolver_reductions( ProblemUpdate<REAL>& probUpdate );
+   apply_all_presolver_reductions( ProblemUpdate<REAL>& probUpdate, const Timer& presolveTimer );
 
    void
    printRoundStats( std::string rndtype );
@@ -330,7 +330,8 @@ class Presolve
               const PostsolveStorage<REAL>& postsolveStorage ) const;
 
    bool
-   is_time_exceeded( const Timer& presolvetimer ) const;
+   is_interrupted( const Timer& presolvetimer ) const;
+
 
    bool
    are_applied_tsx_negligible( const Problem<REAL>& problem,
@@ -351,6 +352,12 @@ class Presolve
 
    Delegator
    handle_case_exceeded( Delegator& next_round );
+
+   bool
+   is_user_interrupted() const;
+
+   bool
+   is_time_exceeded( const Timer& presolvetimer ) const;
 
    PresolveStatus
    evaluate_and_apply( const Timer& timer, Problem<REAL>& problem,
@@ -1071,7 +1078,7 @@ Presolve<REAL>::determine_next_round( Problem<REAL>& problem,
                                       const Timer& presolvetimer,
                                       bool unchanged )
 {
-   if( is_time_exceeded( presolvetimer ) )
+   if( is_interrupted( presolvetimer ) )
       return Delegator::kAbort;
 
    Delegator next_round = increase_round_if_last_run_was_not_successfull(
@@ -1110,7 +1117,7 @@ Presolve<REAL>::evaluate_and_apply( const Timer& timer, Problem<REAL>& problem,
       // problem reductions where found by at least one presolver
       PresolveStatus status;
       if( !run_sequential )
-         status = apply_all_presolver_reductions( probUpdate );
+         status = apply_all_presolver_reductions( probUpdate, timer );
       else
          status = PresolveStatus::kReduced;
       if( is_status_infeasible_or_unbounded( status ) )
@@ -1141,7 +1148,7 @@ Presolve<REAL>::is_status_infeasible_or_unbounded(
 template <typename REAL>
 PresolveStatus
 Presolve<REAL>::apply_all_presolver_reductions(
-    ProblemUpdate<REAL>& probUpdate )
+    ProblemUpdate<REAL>& probUpdate, const Timer& presolveTimer )
 {
    probUpdate.setPostponeSubstitutions( true );
 
@@ -1159,7 +1166,7 @@ Presolve<REAL>::apply_all_presolver_reductions(
 
    probUpdate.flushChangedCoeffs();
 
-   applyPostponed( probUpdate );
+   applyPostponed( probUpdate, presolveTimer );
 
    return probUpdate.flush( true );
 }
@@ -1257,7 +1264,7 @@ Presolve<REAL>::applyReductions( int p, const Reductions<REAL>& reductions_,
 
 template <typename REAL>
 void
-Presolve<REAL>::applyPostponed( ProblemUpdate<REAL>& probUpdate )
+Presolve<REAL>::applyPostponed( ProblemUpdate<REAL>& probUpdate, const Timer& presolveTimer )
 {
    probUpdate.setPostponeSubstitutions( false );
 
@@ -1272,7 +1279,7 @@ Presolve<REAL>::applyPostponed( ProblemUpdate<REAL>& probUpdate )
       {
          const auto& ptrpair = postponedReductions[i];
 
-         ApplyResult r =
+         ApplyResult r = is_interrupted( presolveTimer ) ? ApplyResult::kRejected :
              probUpdate.applyTransaction( ptrpair.first, ptrpair.second, ArgumentType::kPrimal );
          if( r == ApplyResult::kApplied )
          {
@@ -1331,10 +1338,25 @@ Presolve<REAL>::handle_case_exceeded( Delegator& next_round )
 
 template <typename REAL>
 bool
+Presolve<REAL>::is_user_interrupted() const
+{
+   return presolveOptions.early_exit_callback &&
+          presolveOptions.early_exit_callback();
+}
+
+template <typename REAL>
+bool
 Presolve<REAL>::is_time_exceeded( const Timer& presolvetimer ) const
 {
    return presolveOptions.tlim != std::numeric_limits<double>::max() &&
           presolvetimer.getTime() >= presolveOptions.tlim;
+}
+
+template <typename REAL>
+bool
+Presolve<REAL>::is_interrupted( const Timer& presolvetimer ) const
+{
+   return is_time_exceeded( presolvetimer ) || is_user_interrupted();
 }
 
 template <typename REAL>
