@@ -13,6 +13,7 @@ Interface changes
 ### New API functions
 
 - ProblemBuilder: setColImplIntAll() to set all implied integrality flags at once
+- PresolveOptions: early_exit_callback if a calling program wants to forcefully stop PaPILO. (PAPILO_API_VERSION 8)
 
 ### Changed parameters
 
