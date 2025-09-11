@@ -44,6 +44,11 @@ Fixed bugs
 ----------
 
 
+Miscellaneous
+-------------
+
+- Timelimit is checked when applying the presolve reductions
+
 @page RN24 Release notes for PAPILO 2.4
 
 @section RN244 PaPILO 2.4.4
