@@ -114,7 +114,6 @@ struct PresolveOptions
 
    double tlim = std::numeric_limits<double>::max();
 
-   double totaltlim = std::numeric_limits<double>::max();
 
    std::function<bool()> early_exit_callback = nullptr;
 
@@ -187,8 +186,6 @@ struct PresolveOptions
                              "times the number of rows or columns are active",
                              compressfac, 0.0, 1.0 );
       paramSet.addParameter( "presolve.tlim", "time limit for presolve", tlim,
-                             0.0 );
-      paramSet.addParameter( "presolve.totaltlim", "total time limit for presolve including the applying the reductions", totaltlim,
                              0.0 );
       paramSet.addParameter( "presolve.minabscoeff",
                              "minimum absolute coefficient value allowed in "
