@@ -80,6 +80,7 @@ SingletonStuffing<REAL>::execute( const Problem<REAL>& problem,
                                   const ProblemUpdate<REAL>& problemUpdate,
                                   const Num<REAL>& num, Reductions<REAL>& reductions,
                                   const Timer& timer, int& reason_of_infeasibility){
+
    const auto& domains = problem.getVariableDomains();
    const auto& lower_bounds = domains.lower_bounds;
    const auto& upper_bounds = domains.upper_bounds;
@@ -107,7 +108,7 @@ SingletonStuffing<REAL>::execute( const Problem<REAL>& problem,
                               const REAL& val, int row, bool impliedeq,
                               const REAL& side ) {
       if( !impliedeq && rowsize[row] <= 1 )
-         return;
+         return;     
 
       result = PresolveStatus::kReduced;
 
@@ -210,8 +211,25 @@ SingletonStuffing<REAL>::execute( const Problem<REAL>& problem,
       }
    };
 
+   constexpr size_t one_billion = 1000000000;
+   constexpr size_t one_million = 1000000;
+   size_t counter = 0;
    for( int col : singletonCols )
    {
+
+      // Going over 2B transactions cause integer overflow 
+      // Since the same presolvers called again, the missed reductions might be recovered 
+      // in later stages
+      if (reductions.size() >= one_billion) {
+         break;
+      }
+
+      // Check if the presolver should be interrupted, but do it occasionally to avoid overhead 
+      if ( counter++ % one_million == 0 && PresolveMethod<REAL>::is_interrupted(
+                           timer, problemUpdate.getPresolveOptions().tlim, problemUpdate.getPresolveOptions().early_exit_callback ) ) {
+                      break;
+      }
+
       assert( colsize[col] == 1 );
       assert( constMatrix.getColumnCoefficients( col ).getLength() == 1 );
 
@@ -526,7 +544,7 @@ SingletonStuffing<REAL>::execute( const Problem<REAL>& problem,
    Vec<std::pair<int, REAL>> penaltyvars;
 
    for( int row : rowsWithPenaltySingletons )
-   {
+   {     
       assert( rflags[row].test( RowFlag::kLhsInf ) ||
               rflags[row].test( RowFlag::kRhsInf ) );
       assert( !rflags[row].test( RowFlag::kLhsInf ) ||
