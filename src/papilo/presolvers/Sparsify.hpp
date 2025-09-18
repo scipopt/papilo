@@ -153,6 +153,7 @@ Sparsify<REAL>::execute( const Problem<REAL>& problem,
           auto& reductionBuffer = localData.reductionBuffer;
 
           for( int i = r.begin(); i < r.end(); ++i )
+          {
 #else
    SparsifyData s = SparsifyData(nrows);
    auto& candrowhits = s.candrowhits;
@@ -161,8 +162,11 @@ Sparsify<REAL>::execute( const Problem<REAL>& problem,
    std::size_t sparsifyStart;
    auto& reductionBuffer = s.reductionBuffer;
    for( int i = 0; i < (int) equalities.size(); ++i )
+   {
+      if( reductions.size() >= problemUpdate.getPresolveOptions().max_reduction )
+         break;
 #endif
-          {
+
              int eqrow = equalities[i];
 
              auto rowvec = consmatrix.getRowCoefficients( eqrow );

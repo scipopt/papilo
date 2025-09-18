@@ -138,6 +138,8 @@ DualFix<REAL>::execute( const Problem<REAL>& problem,
    {
       for( int col = 0; col < ncols; ++col )
       {
+         if( reductions.size() >= problemUpdate.getPresolveOptions().max_reduction )
+            break;
          PresolveStatus local_status = perform_dual_fix_step(
              num, reductions, consMatrix, activities, cflags, objective, lbs,
              ubs, rflags, lhs, rhs, col, noStrongReductions, skip_variable_tightening, bound_tightening_offset );

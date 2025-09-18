@@ -73,6 +73,9 @@ presolve.boundrelax = 0
 # maximum number of integral variables for trying to solve disconnected components of the problem in presolving (-1: disabled)  [Integer: [-1,2147483647]]
 presolve.componentsmaxint = 0
 
+# abort the presolver after a specified number of reductions. [Integer: [0,4294967295]]
+presolve.max_reduction_seq = 1000000000
+
 # compress the problem if fewer than compressfac times the number of rows or columns are active  [Numerical: [0,1]]
 presolve.compressfac = 0.84999999999999998
 

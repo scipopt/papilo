@@ -118,6 +118,8 @@ SimpleSubstitution<REAL>::execute( const Problem<REAL>& problem,
    {
       for( int k = 0; k < nrows; ++k )
       {
+         if( reductions.size() >= problemUpdate.getPresolveOptions().max_reduction )
+            break;
          PresolveStatus s = perform_simple_substitution_step(
              problemUpdate, num, reductions, domains, cflags, constMatrix,
              lhs_values, rhs_values, lower_bounds, upper_bounds, rflags,

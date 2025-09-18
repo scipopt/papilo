@@ -321,6 +321,8 @@ SimplifyInequalities<REAL>::execute( const Problem<REAL>& problem,
       Vec<int> coefficientsThatCanBeDeleted;
       for( int row = 0; row < nrows; row++ )
       {
+         if( reductions.size() >= problemUpdate.getPresolveOptions().max_reduction )
+            break;
          if( perform_simplify_ineq_task(
                  num, consMatrix, activities, rflags, cflags, lhs, rhs, lbs,
                  ubs, row, reductions, coefficientsThatCanBeDeleted,

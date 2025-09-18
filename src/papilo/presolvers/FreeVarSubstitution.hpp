@@ -150,6 +150,8 @@ Substitution<REAL>::execute( const Problem<REAL>& problem,
 
    for( auto equality : equalities )
    {
+      if( reductions.size() >= problemUpdate.getPresolveOptions().max_reduction )
+         break;
       int row = std::get<1>( equality );
       const int length = std::get<0>( equality ).getLength();
       const int* rowindices = std::get<0>( equality ).getIndices();

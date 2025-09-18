@@ -98,6 +98,8 @@ CoefficientStrengthening<REAL>::execute( const Problem<REAL>& problem,
       Vec<std::pair<REAL, int>> integerCoefficients;
       for( int i : changedActivities )
       {
+         if( reductions.size() >= problemUpdate.getPresolveOptions().max_reduction )
+            break;
          if( perform_coefficient_tightening(
                  num, domains, activities, i, constMatrix, lhs_values,
                  rhs_values, rflags, cflags, reductions,

@@ -211,24 +211,16 @@ SingletonStuffing<REAL>::execute( const Problem<REAL>& problem,
       }
    };
 
-   constexpr size_t one_billion = 1000000000;
-   constexpr size_t one_million = 1000000;
-   size_t counter = 0;
    for( int col : singletonCols )
    {
-
-      // Going over 2B transactions cause integer overflow 
-      // Since the same presolvers called again, the missed reductions might be recovered 
-      // in later stages
-      if (reductions.size() >= one_billion) {
+      if( reductions.size() >= problemUpdate.getPresolveOptions().max_reduction )
          break;
-      }
+      if( singletonCols.size() % problemUpdate.getPresolveOptions().max_reduction * 1000 == 0
+         && PresolveMethod<REAL>::is_interrupted(
+              timer, problemUpdate.getPresolveOptions().tlim,
+              problemUpdate.getPresolveOptions().early_exit_callback ) )
+         break;
 
-      // Check if the presolver should be interrupted, but do it occasionally to avoid overhead 
-      if ( counter++ % one_million == 0 && PresolveMethod<REAL>::is_interrupted(
-                           timer, problemUpdate.getPresolveOptions().tlim, problemUpdate.getPresolveOptions().early_exit_callback ) ) {
-                      break;
-      }
 
       assert( colsize[col] == 1 );
       assert( constMatrix.getColumnCoefficients( col ).getLength() == 1 );

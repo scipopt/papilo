@@ -85,6 +85,8 @@ struct PresolveOptions
 
    unsigned int randomseed = 0;
 
+   unsigned int max_reduction_seq = 1000000000;
+
 
    double abortfacfast = 8e-4;
 
@@ -161,6 +163,8 @@ struct PresolveOptions
           maxfillinpersubstitution, 0 );
       paramSet.addParameter( "presolve.randomseed", "random seed value",
                              randomseed );
+      paramSet.addParameter( "presolve.maxreductions_seq", "abort the sequential executed presolver after a specified number of reductions.",
+                       max_reduction_seq );
       paramSet.addParameter( "substitution.maxshiftperrow",
                              "maximum amount of nonzeros being moved to make "
                              "space for fillin from substitutions within a row",
