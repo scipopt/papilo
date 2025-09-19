@@ -41,7 +41,6 @@
 #include <boost/optional.hpp>
 #include <boost/spirit/include/qi.hpp>
 #include <boost/utility/string_ref.hpp>
-#include <boost/algorithm/string/trim.hpp>
 #include <fstream>
 #include <iostream>
 #include <iterator>
