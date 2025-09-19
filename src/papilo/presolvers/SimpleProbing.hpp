@@ -101,7 +101,7 @@ SimpleProbing<REAL>::execute( const Problem<REAL>& problem,
    {
       for( int i = 0; i < nrows; ++i )
       {
-         if( reductions.size() >= problemUpdate.getPresolveOptions().max_reduction )
+         if( reductions.size() >= problemUpdate.getPresolveOptions().max_reduction_seq )
             break;
          if( perform_simple_probing_step(
                  num, reductions, domains, cflags, activities, constMatrix,

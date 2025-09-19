@@ -83,7 +83,7 @@ FixContinuous<REAL>::execute( const Problem<REAL>& problem,
 
    for( int i = 0; i < ncols; ++i )
    {
-      if( reductions.size() >= problemUpdate.getPresolveOptions().max_reduction )
+      if( reductions.size() >= problemUpdate.getPresolveOptions().max_reduction_seq )
          break;
       // do not fix columns which are inactive, unbounded, integral,
       // or have feasibly distinct bounds

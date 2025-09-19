@@ -217,7 +217,7 @@ ConstraintPropagation<REAL>::execute( const Problem<REAL>& problem,
       };
       for( int row : changedactivities )
       {
-         if( reductions.size() >= problemUpdate.getPresolveOptions().max_reduction )
+         if( reductions.size() >= problemUpdate.getPresolveOptions().max_reduction_seq )
             break;
          auto rowvec = consMatrix.getRowCoefficients( row );
 

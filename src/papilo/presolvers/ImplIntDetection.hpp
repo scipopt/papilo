@@ -98,7 +98,7 @@ ImplIntDetection<REAL>::execute( const Problem<REAL>& problem,
    {
       for( int col = 0; col < ncols; ++col )
       {
-         if( reductions.size() >= problemUpdate.getPresolveOptions().max_reduction )
+         if( reductions.size() >= problemUpdate.getPresolveOptions().max_reduction_seq )
             break;
          if( perform_implied_integer_task(
                  problemUpdate, num, reductions, cflags, consmatrix, lhs_values,

@@ -213,9 +213,9 @@ SingletonStuffing<REAL>::execute( const Problem<REAL>& problem,
 
    for( int col : singletonCols )
    {
-      if( reductions.size() >= problemUpdate.getPresolveOptions().max_reduction )
+      if( reductions.size() >= problemUpdate.getPresolveOptions().max_reduction_seq )
          break;
-      if( singletonCols.size() % problemUpdate.getPresolveOptions().max_reduction * 1000 == 0
+      if( singletonCols.size() % problemUpdate.getPresolveOptions().max_reduction_seq * 1000 == 0
          && PresolveMethod<REAL>::is_interrupted(
               timer, problemUpdate.getPresolveOptions().tlim,
               problemUpdate.getPresolveOptions().early_exit_callback ) )
