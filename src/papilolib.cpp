@@ -624,12 +624,21 @@ setupsoplex( soplex::SoPlex& spx, void* usrdata )
 {
    PAPILO_SOLVER* solver = reinterpret_cast<PAPILO_SOLVER*>( usrdata );
 
+#if SOPLEX_APIVERSION > 19
+   spx.spxout.setStream( soplex::SPxOut::VERB_ERROR, *solver->messageStream );
+   spx.spxout.setStream( soplex::SPxOut::VERB_WARNING, *solver->messageStream );
+   spx.spxout.setStream( soplex::SPxOut::VERB_DEBUG, *solver->messageStream );
+   spx.spxout.setStream( soplex::SPxOut::VERB_INFO1, *solver->messageStream );
+   spx.spxout.setStream( soplex::SPxOut::VERB_INFO2, *solver->messageStream );
+   spx.spxout.setStream( soplex::SPxOut::VERB_INFO3, *solver->messageStream );
+#else
    spx.spxout.setStream( soplex::SPxOut::ERROR, *solver->messageStream );
    spx.spxout.setStream( soplex::SPxOut::WARNING, *solver->messageStream );
    spx.spxout.setStream( soplex::SPxOut::DEBUG, *solver->messageStream );
    spx.spxout.setStream( soplex::SPxOut::INFO1, *solver->messageStream );
    spx.spxout.setStream( soplex::SPxOut::INFO2, *solver->messageStream );
    spx.spxout.setStream( soplex::SPxOut::INFO3, *solver->messageStream );
+#endif
 
    // copy settings from main solver if further instances are created, e.g. for
    // components
