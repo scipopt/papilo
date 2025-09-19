@@ -550,6 +550,10 @@ Presolve<REAL>::apply( Problem<REAL>& problem, bool store_dual_postsolve )
       Statistics last_rounds_stats = stats;
       do
       {
+         if (is_interrupted(timer)) {
+            return result;
+         }
+
          if( roundReduced )
          {
             if( presolveOptions.maxrounds != -1 && presolveOptions.maxrounds <= stats.nrounds )
@@ -1156,6 +1160,9 @@ Presolve<REAL>::apply_all_presolver_reductions(
 
    for( std::size_t i = 0; i < presolvers.size(); ++i )
    {
+      if (is_interrupted(presolveTimer)) {
+         break;
+      }
       apply_reduction_of_solver( probUpdate, i );
       postponedReductionToPresolver.push_back( postponedReductions.size() );
    }
