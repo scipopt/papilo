@@ -551,7 +551,7 @@ Presolve<REAL>::apply( Problem<REAL>& problem, bool store_dual_postsolve )
       do
       {
          if (is_interrupted(timer)) {
-            return result;
+            round_to_evaluate = Delegator::kAbort;
          }
 
          if( roundReduced )
