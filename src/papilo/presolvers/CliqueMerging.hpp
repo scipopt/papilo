@@ -55,6 +55,8 @@ class CliqueMerging : public PresolveMethod<REAL>
    int maxedgessequential = 100000;
    int maxcliquesize = 100;
    int maxgreedycalls = 10000;
+   int maxcalls = 1;
+   int ncalls = 0;
 
  public:
    CliqueMerging() : PresolveMethod<REAL>()
@@ -70,19 +72,23 @@ class CliqueMerging : public PresolveMethod<REAL>
    {
       paramSet.addParameter( "cliquemerging.maxedgesparallel",
                              "maximum number of edges when executed in parallel",
-                             maxedgesparallel, 1000000, 1.0);
+                             maxedgesparallel, 0, std::numeric_limits<int>::max());
 
       paramSet.addParameter( "cliquemerging.maxedgessequential",
                              "maximum number of edges when executed sequentially ",
-                             maxedgessequential, 100000, 1.0);
+                             maxedgessequential, 0, std::numeric_limits<int>::max());
 
       paramSet.addParameter( "cliquemerging.maxcliquesize",
                              "maximal size of cliques considered for clique merging",
-                              maxcliquesize, 100, 1.0);
+                              maxcliquesize, 0, std::numeric_limits<int>::max());
 
       paramSet.addParameter( "cliquemerging.maxgreedycalls",
                              "maximum number of greedy clique calls in a single thread",
-                             maxgreedycalls, 10000, 1.0);
+                             maxgreedycalls, 10000, std::numeric_limits<int>::max());
+
+      paramSet.addParameter( "cliquemerging.maxcalls",
+                             "maximum number of calls to the clique merging presolver",
+                             maxcalls, 1, std::numeric_limits<int>::max());
    }
 
    PresolveStatus
@@ -297,7 +303,7 @@ CliqueMerging<REAL>::execute( const Problem<REAL>& problem,
       } );
 #endif
       int clique = Cliques[cliqueInd];
-      if( cliqueInd > maxgreedycalls )
+      if( cliqueInd > maxgreedycalls )      
          break;
       if( std::find( completedCliques.begin(), completedCliques.end(),
                      clique ) != completedCliques.end() )
@@ -445,7 +451,8 @@ CliqueMerging<REAL>::execute( const Problem<REAL>& problem,
       }
    }
 #endif
-   this->setEnabled( false );
+   if (++ncalls == maxcalls)
+      this->setEnabled( false );
    
    return result;
 }
