@@ -428,6 +428,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
    std::atomic_int infeasible_variable{ -1 };
    int batchend = 0;
    int totalnumpropagations = 0;
+   auto cliqueprobingtime = timer.getTime();
    Vec<CliqueProbingSubstitution<REAL>> cliquesubstitutions;
    Vec<CliqueProbingBoundChg<REAL>> cliqueBoundChanges;
    int ncliquefixings = 0;
