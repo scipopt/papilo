@@ -67,7 +67,7 @@ def parse_logfile(filename1, filename2):
 	i = 0
 	outputstring = ""
 	while i < len(results) :
-		if results[i][2] == results[i][6] and results[i][3] == results[i][7] and results[i][4] == results[i][8] and ( results[i][1] + 0.0001 ) /( results[i][5] + 0.0001 ) < 1.5 and ( results[i][1] + 0.0001 ) / (results[i][5] + 0.0001) > 0.66 :
+		if results[i][2] == results[i][6] and results[i][3] == results[i][7] and results[i][4] == results[i][8] and ( ( ( results[i][1] + 0.0001 ) /( results[i][5] + 0.0001 ) < 1.05 and ( results[i][5] + 0.0001 ) / (results[i][1] + 0.0001) < 1.05 ) or ( results[i][1] - results[i][1] < 0.2 and results[i][1] - results[i][1] > -0.2 ) ) :
 			i += 1
 			continue
 		outputstring += results[i][0]
