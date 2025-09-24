@@ -84,7 +84,7 @@ class CliqueMerging : public PresolveMethod<REAL>
 
       paramSet.addParameter( "cliquemerging.maxgreedycalls",
                              "maximum number of greedy clique calls in a single thread",
-                             maxgreedycalls, 10000, std::numeric_limits<int>::max());
+                             maxgreedycalls, 0, std::numeric_limits<int>::max());
 
       paramSet.addParameter( "cliquemerging.maxcalls",
                              "maximum number of calls to the clique merging presolver",
