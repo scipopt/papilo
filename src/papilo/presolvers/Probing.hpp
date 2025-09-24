@@ -428,7 +428,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
    std::atomic_int infeasible_variable{ -1 };
    int batchend = 0;
    int totalnumpropagations = 0;
-   //int cliqueprobingtime = 0;
+   auto cliqueprobingtime = 0;
    Vec<CliqueProbingSubstitution<REAL>> cliquesubstitutions;
    Vec<CliqueProbingBoundChg<REAL>> cliqueBoundChanges;
    int ncliquefixings = 0;
@@ -707,7 +707,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
          
          return PresolveStatus::kInfeasible;
       }
-      //cliqueprobingtime = timer.getTime() - cliqueprobinstarttime;
+      cliqueprobingtime = timer.getTime() - cliqueprobinstarttime;
       for( int clique = 0; clique < std::min(batchend, static_cast<int>(probingCliques.end() - probingCliques.begin())); ++clique )
       {
          auto cliquevec = consMatrix.getRowCoefficients( probingCliques[clique].first );
@@ -996,7 +996,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
       std::cout<<" ";
       std::cout<<ncliquesubstitutions;
       std::cout<<" Substitutions in \n";
-      //std::cout<<cliqueprobingtime;
+      std::cout<<cliqueprobingtime;
       std::cout<<" seconds.";
       std::cout<<"\n\n\nPerformance Ratio: ";
       std::cout<< static_cast<float>(ncliquefixings + ncliqueboundchgs + ncliquesubstitutions) 
@@ -1250,9 +1250,9 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
       assert(current_badge_end >= 0);
       assert(current_badge_start >= 0 );
       assert(current_badge_start <= current_badge_end );
-      //auto probingstarttime = timer.getTime();
+      auto probingstarttime = timer.getTime();
       propagate_variables( current_badge_start, current_badge_end);
-      //auto probingtime = timer.getTime() - probingstarttime;
+      auto probingtime = timer.getTime() - probingstarttime;
 
       if( PresolveMethod<REAL>::is_time_exceeded(
               timer, problemUpdate.getPresolveOptions().tlim ) )
@@ -1365,7 +1365,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
       std::cout<<" Substitutions and ";
       std::cout<< nboundchgs;
       std::cout<<" Boundchanges in ";
-      //std::cout<< probingtime;
+      std::cout<< probingtime;
       std::cout<<" seconds.\n";
       std::cout<<"\n\n\nPerfomance ratio: ";
       std::cout<< static_cast<float>(nsubstitutions + nboundchgs + nfixings) / static_cast<float>( 2 * ( current_badge_end - current_badge_start ) );
