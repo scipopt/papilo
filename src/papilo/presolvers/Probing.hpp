@@ -648,7 +648,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
       std::cout<<"\nProbing initialization took ";
       std::cout<<inittime;
       std::cout<<" seconds";*/
-      //auto cliqueprobinstarttime = timer.getTime();
+      auto cliqueprobinstarttime = timer.getTime();
       
       int batchsize = initialbatchsize;
       int batchstart = 0;
