@@ -428,7 +428,6 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
    std::atomic_int infeasible_variable{ -1 };
    int batchend = 0;
    int totalnumpropagations = 0;
-   auto cliqueprobingtime = 0;
    Vec<CliqueProbingSubstitution<REAL>> cliquesubstitutions;
    Vec<CliqueProbingBoundChg<REAL>> cliqueBoundChanges;
    int ncliquefixings = 0;
@@ -707,7 +706,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
          
          return PresolveStatus::kInfeasible;
       }
-      cliqueprobingtime = timer.getTime() - cliqueprobinstarttime;
+      auto cliqueprobingtime = timer.getTime() - cliqueprobinstarttime;
       for( int clique = 0; clique < std::min(batchend, static_cast<int>(probingCliques.end() - probingCliques.begin())); ++clique )
       {
          auto cliquevec = consMatrix.getRowCoefficients( probingCliques[clique].first );
