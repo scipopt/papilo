@@ -307,7 +307,7 @@ class CliqueProbingView
    std::pair<bool,bool>
    probeClique( const int clique, const int*& indices, const int len, const Vec<int>& binary_indices, 
       bool equation, Array<std::atomic_int>& probing_scores, const Vec<int>& colsize, const Vec<int>& colperm,
-      Vec<int>& nprobed )
+      Vec<int>& nprobed, int cliquereductionfactor, int minabortedvariables )
    {
       /*std::cout<<"\nStarting Probing of Clique.";
       std::cout.flush();
@@ -670,7 +670,7 @@ class CliqueProbingView
       {
          if( ( static_cast<int>(changed_clique_lbs_inds_vals.size()) * 2
              + static_cast<int>(changed_clique_ubs_inds_vals.size()) * 2 - cliquelen + i * 4 ) < cliquelen * cliquereductionfactor
-             && initbounds )
+             && initbounds && cliquelen - i > minabortedvariables )
          {     
             fewreductions = true;
             return { false, cliqueEquation && !equationBefore } ;
@@ -956,7 +956,6 @@ class CliqueProbingView
 
    int64_t amountofwork;
    
-   const int cliquereductionfactor = 3;
    bool fewreductions;
    int numpropagations = 0;
 };

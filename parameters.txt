@@ -127,6 +127,27 @@ probing.maxbadgesize = -1
 # minimum fraction of domain that needs to be reduced for continuous variables to accept a bound change in probing  [Numerical: [0,1]]
 probing.mincontdomred = 0.29999999999999999
 
+# maximal size of cliques that are probed on  [Integer: [0,2147483647]]
+probing.maxCliqueLength = 150
+
+# maximal number of variables in cliques that are probed on  [Integer: [0,2147483647]]
+probing.max_probed_clique_vars = 3000
+
+# maximal ratio of variables in clique that are also covered by other probed cliques [Integer: [0,2147483647]]
+probing.ratiocoveredcliquevars = 2
+
+# initial number of probed cliques  [Integer: [0,2147483647]]
+probing.initialbatchsize = 2
+
+# number of reductions per variable in probed clique to deem clique probing successful [Integer: [0,2147483647]]
+probing.cliquereductionfactor = 3
+
+# minimum number of variables left in clique before we consider abort probing on the clique [Integer: [0,2147483647]]
+probing.minabortedvariables = 0
+
+# number of times clique probing may fail before being disabled
+probing.numcliquefails = 0
+
 # is presolver propagation enabled  [Boolean: {0,1}]
 propagation.enabled = 1
 

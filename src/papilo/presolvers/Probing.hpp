@@ -60,6 +60,13 @@ class Probing : public PresolveMethod<REAL>
    int minbadgesize = 10;
    int max_badge_size = DEFAULT_MAX_BADGE_SIZE;
    double mincontdomred = 0.3;
+   int maxCliqueLength = 150;
+   int max_probed_clique_vars = 3000;
+   int ratiocoveredcliquevars = 2;
+   int initialbatchsize = 2;
+   int cliquereductionfactor = 3;
+   int minabortedvariables = 0;
+   int numcliquefails = 0;
 
  public:
    Probing() : PresolveMethod<REAL>()
@@ -119,6 +126,34 @@ class Probing : public PresolveMethod<REAL>
           "minimum fraction of domain that needs to be reduced for continuous "
           "variables to accept a bound change in probing",
           mincontdomred, 0.0, 1.0 );
+
+      paramSet.addParameter( "probing.maxCliqueLength",
+                             "maximal size of cliques that are probed on ",
+                             maxCliqueLength, 150 );
+
+      paramSet.addParameter( "probing.max_probed_clique_vars",
+                             "maximal number of variables in cliques that are probed on ",
+                             max_probed_clique_vars, 3000 );
+
+      paramSet.addParameter( "probing.ratiocoveredcliquevars",
+                             "maximal ratio of variables in clique that are also covered by other probed cliques ",
+                             ratiocoveredcliquevars, 2 );
+
+      paramSet.addParameter( "probing.initialbatchsize",
+                             "initial number of probed cliques ",
+                             initialbatchsize, 2 );
+      
+      paramSet.addParameter( "probing.cliquereductionfactor",
+                             "number of reductions per variable in probed clique to deem clique probing successful ",
+                             cliquereductionfactor, 3 );
+                             
+      paramSet.addParameter( "probing.minabortedvariables",
+                             "minimum number of variables left in clique before we consider abort probing on the clique",
+                             minabortedvariables, 0 );
+
+      paramSet.addParameter( "probing.numcliquefails",
+                             "number of times clique probing may fail before being disabled",
+                             numcliquefails, 0 );
    }
 
    PresolveStatus
@@ -171,10 +206,9 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
    cliques.reserve( nrows );
    Vec<int> probing_cands;
    probing_cands.reserve( ncols );
-   const int maxCliqueLength = 150;
    std::cout<<"\nNumber of unsuccessful clique probing attempts:" << unsuccessfulcliqueprobing;
 
-   if( unsuccessfulcliqueprobing <= 0 )
+   if( unsuccessfulcliqueprobing <= numcliquefails )
    {
       //auto cliquefindstarttime = timer.getTime();
       for( int row = 0; row != nrows; ++row )
@@ -215,7 +249,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
                            []( int n ) { return n == 0; } ) );
    }
 
-   if( unsuccessfulcliqueprobing <= 0 )
+   if( unsuccessfulcliqueprobing <= numcliquefails )
    {   
       if( nprobedcliques.empty() )
       {
@@ -320,7 +354,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
       
    Vec<std::pair<int,bool>> probingCliques;
    
-   if( unsuccessfulcliqueprobing <= 0 )
+   if( unsuccessfulcliqueprobing <= numcliquefails )
    {
       //auto cliqueprobingscoressatrttime = timer.getTime();
 #ifdef PAPILO_TBB
@@ -354,7 +388,6 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
          return clique1.second.first > clique2.second.first ;
       } );
       
-      const int max_probed_clique_vars = 3*maxinitialbadgesize;
       int cliquevars = 0;
       Vec<bool> probedCliqueVars(ncols, false);
       probingCliques.reserve( cliques.end() - cliques.begin() );
@@ -369,7 +402,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
             if( probedCliqueVars[rowinds[ind]] )
                covered += 1;
          }
-         if( 2 * covered <= rowvec.getLength() )
+         if( ratiocoveredcliquevars * covered <= rowvec.getLength() )
          {
             assert( cliques[clique].first >= 0 && cliques[clique].first < nrows );
             probingCliques.emplace_back( cliques[clique].first, cliques[clique].second.second );
@@ -439,7 +472,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
       Vec<int> change_to_equation;
 #endif
 
-   if( unsuccessfulcliqueprobing <= 0 )
+   if( unsuccessfulcliqueprobing <= numcliquefails )
    {
       auto propagate_cliques = [&]( int cliquestart, int cliqueend )
       {
@@ -494,7 +527,8 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
                   break;
 
                std::pair<bool,bool> cliqueProbingResult = local_clique_probing_view.probeClique(clique, cliqueind, cliquelen, 
-                  probing_cands, probingCliques[i].second, probing_scores, colsize, colperm, nprobed );
+                  probing_cands, probingCliques[i].second, probing_scores, colsize, colperm, nprobed, cliquereductionfactor, 
+                  minabortedvariables );
 
 
                bool globalInfeasible = cliqueProbingResult.first;
@@ -616,8 +650,6 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
       std::cout<<" seconds";*/
       //auto cliqueprobinstarttime = timer.getTime();
       
-      const int initialbatchsize = 2;
-      const auto cliquereductionfactor = 3;
       int batchsize = initialbatchsize;
       int batchstart = 0;
       batchend = std::min(batchstart + batchsize, static_cast<int>(probingCliques.end() - probingCliques.begin()));
@@ -941,7 +973,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
 
    PresolveStatus result = PresolveStatus::kUnchanged;
    
-   if( unsuccessfulcliqueprobing <= 0 )
+   if( unsuccessfulcliqueprobing <= numcliquefails )
    {
       std::cout<<"\n\nClique Probing on ";
       std::cout<<std::min(static_cast<int>(probingCliques.size()), batchend);
@@ -1059,7 +1091,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
    
    int clique_cutoff_ub = 0;
 
-   if( unsuccessfulcliqueprobing <= 0 )
+   if( unsuccessfulcliqueprobing <= numcliquefails )
    {
       clique_cutoff_ub = static_cast<int>(probing_cands.size())-1;
       int clique_cutoff_lb = 0;
@@ -1428,7 +1460,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
       result = PresolveStatus::kReduced;
    }
 
-   if( unsuccessfulcliqueprobing <= 0 )
+   if( unsuccessfulcliqueprobing <= numcliquefails )
    {
       assert( ncliquefixings + ncliqueboundchgs + ncliquesubstitutions == 0 
          || result == PresolveStatus::kInfeasible || result == PresolveStatus::kReduced);
