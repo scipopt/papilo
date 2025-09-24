@@ -55,6 +55,8 @@ class CliqueMerging : public PresolveMethod<REAL>
    int maxedgessequential = 100000;
    int maxcliquesize = 100;
    int maxgreedycalls = 10000;
+   int maxcalls = 1;
+   int ncalls = 0;
 
  public:
    CliqueMerging() : PresolveMethod<REAL>()
@@ -70,19 +72,23 @@ class CliqueMerging : public PresolveMethod<REAL>
    {
       paramSet.addParameter( "cliquemerging.maxedgesparallel",
                              "maximum number of edges when executed in parallel",
-                             maxedgesparallel, 1000000, 1.0);
+                             maxedgesparallel, 1, std::numeric_limits<int>::max());
 
       paramSet.addParameter( "cliquemerging.maxedgessequential",
                              "maximum number of edges when executed sequentially ",
-                             maxedgessequential, 100000, 1.0);
+                             maxedgessequential, 1, std::numeric_limits<int>::max());
 
       paramSet.addParameter( "cliquemerging.maxcliquesize",
                              "maximal size of cliques considered for clique merging",
-                              maxcliquesize, 100, 1.0);
+                              maxcliquesize, 1, std::numeric_limits<int>::max());
 
       paramSet.addParameter( "cliquemerging.maxgreedycalls",
                              "maximum number of greedy clique calls in a single thread",
-                             maxgreedycalls, 10000, 1.0);
+                             maxgreedycalls, 1, std::numeric_limits<int>::max());
+
+      paramSet.addParameter( "cliquemerging.maxcalls",
+                             "maximum number of calls to the clique merging presolver",
+                             maxcalls, 1, std::numeric_limits<int>::max());
    }
 
    PresolveStatus
@@ -339,6 +345,22 @@ CliqueMerging<REAL>::execute( const Problem<REAL>& problem,
 #else
 
          result = PresolveStatus::kReduced;
+         {
+            TransactionGuard<REAL> tg{ reductions };
+         for( int covRow = 0;
+            covRow < coveredCliques.end() - coveredCliques.begin(); ++covRow )
+       {
+          reductions.lockRow( Cliques[coveredCliques[covRow]] );
+       }
+
+       for( int row = 0; row < coveredCliques.end() - coveredCliques.begin();
+       ++row )
+  {
+     reductions.markRowRedundant( Cliques[coveredCliques[row]] );
+  }
+         }
+
+         {
          TransactionGuard<REAL> tg{ reductions };
          for( std::set<int>::iterator vertexIndex = newClique.begin();
               vertexIndex != newClique.end(); ++vertexIndex )
@@ -346,11 +368,7 @@ CliqueMerging<REAL>::execute( const Problem<REAL>& problem,
             reductions.lockCol( *vertexIndex );
             reductions.lockColBounds( *vertexIndex );
          }
-         for( int covRow = 0;
-              covRow < coveredCliques.end() - coveredCliques.begin(); ++covRow )
-         {
-            reductions.lockRow( Cliques[coveredCliques[covRow]] );
-         }
+     
          reductions.lockRow( clique );
          assert( clique >= 0 );
          assert( clique < matrix.getNRows() );
@@ -370,11 +388,7 @@ CliqueMerging<REAL>::execute( const Problem<REAL>& problem,
                                        lb[newVertices[vertexIndex]] ),
                                0.0 ) );
          }
-         for( int row = 0; row < coveredCliques.end() - coveredCliques.begin();
-              ++row )
-         {
-            reductions.markRowRedundant( Cliques[coveredCliques[row]] );
-         }
+      }      
 #endif
       }
    }
@@ -393,30 +407,51 @@ CliqueMerging<REAL>::execute( const Problem<REAL>& problem,
       for( int transactionindex = 0; transactionindex * reductionsize < reductionResultsComb.end() - reductionResultsComb.begin(); ++transactionindex )
       {
          result = PresolveStatus::kReduced;
-         TransactionGuard<REAL> tg{ reductions };
+         // Group row reductions together. This is because when row redundant reductions are grouped together with matrix entry reductions, 
+         // there are conflicts and its resulting in early termination of the applying reductions 
+         {
+            TransactionGuard<REAL> tg{ reductions };
+            for( int reductionindex = transactionindex * reductionsize; reductionindex < std::min((transactionindex+1)* reductionsize,totalreductionsize); ++reductionindex )
+            {
+               Vec<int> covCliques = reductionResultsComb[reductionindex].second;                                    
+               for( int row = 0; row < covCliques.end() - covCliques.begin(); ++row )
+               {
+                  reductions.lockRow( Cliques[covCliques[row]] );
+               }
+            }
+     
          for( int reductionindex = transactionindex * reductionsize; reductionindex < std::min((transactionindex+1)* reductionsize,totalreductionsize); ++reductionindex )
          {
             Vec<int> covCliques = reductionResultsComb[reductionindex].second;
-            int clique = reductionResultsComb[reductionindex].first.back();
-            Vec<int> newVertices = reductionResultsComb[reductionindex].first;
-            auto cliqueRow = matrix.getRowCoefficients( clique );
-            auto cliqueIndices = cliqueRow.getIndices();
-            for( int cliqueIndex = 0; cliqueIndex < cliqueRow.getLength(); ++cliqueIndex )
-            {
-               reductions.lockCol( cliqueIndices[cliqueIndex] );
-               reductions.lockColBounds( cliqueIndices[cliqueIndex] );
-            }
-            for( int vertexIndex = 0; vertexIndex < newVertices.end() - newVertices.begin() - 1; ++vertexIndex )
-            {
-               reductions.lockCol( newVertices[vertexIndex] );
-               reductions.lockColBounds( newVertices[vertexIndex] );
-            }
-            for( int rowIndex = 0; rowIndex < covCliques.end() - covCliques.begin(); ++rowIndex )
-            {
-               reductions.lockRow( Cliques[covCliques[rowIndex]] );
-            }
-            reductions.lockRow( clique );
+            for( int row = 0; row < covCliques.end() - covCliques.begin();
+               ++row )
+               {reductions.markRowRedundant( Cliques[covCliques[row]] );}
          }
+      }
+
+      // group matrix entry reductions together
+      {
+      TransactionGuard<REAL> tg{ reductions };
+      for( int reductionindex = transactionindex * reductionsize; reductionindex < std::min((transactionindex+1)* reductionsize,totalreductionsize); ++reductionindex )
+      {
+         Vec<int> covCliques = reductionResultsComb[reductionindex].second;
+         int clique = reductionResultsComb[reductionindex].first.back();
+         Vec<int> newVertices = reductionResultsComb[reductionindex].first;
+         auto cliqueRow = matrix.getRowCoefficients( clique );
+         auto cliqueIndices = cliqueRow.getIndices();
+         for( int cliqueIndex = 0; cliqueIndex < cliqueRow.getLength(); ++cliqueIndex )
+         {
+            reductions.lockCol( cliqueIndices[cliqueIndex] );
+            reductions.lockColBounds( cliqueIndices[cliqueIndex] );
+         }
+         for( int vertexIndex = 0; vertexIndex < newVertices.end() - newVertices.begin() - 1; ++vertexIndex )
+         {
+            reductions.lockCol( newVertices[vertexIndex] );
+            reductions.lockColBounds( newVertices[vertexIndex] );
+         }     
+         reductions.lockRow( clique );
+      }
+
          for( int reductionindex = transactionindex * reductionsize; reductionindex < std::min((transactionindex+1)* reductionsize,totalreductionsize); ++reductionindex )
          {
             int clique = reductionResultsComb[reductionindex].first.back();
@@ -435,17 +470,13 @@ CliqueMerging<REAL>::execute( const Problem<REAL>& problem,
                            lb[newVertices[vertexIndex]] ) );
                }
          }
-         for( int reductionindex = transactionindex * reductionsize; reductionindex < std::min((transactionindex+1)* reductionsize,totalreductionsize); ++reductionindex )
-         {
-            Vec<int> covCliques = reductionResultsComb[reductionindex].second;
-            for( int row = 0; row < covCliques.end() - covCliques.begin();
-               ++row )
-               {reductions.markRowRedundant( Cliques[covCliques[row]] );}
-         }
       }
    }
+   }
 #endif
-   this->setEnabled( false );
+
+   if (++ncalls == maxcalls)
+      this->setEnabled( false );
    
    return result;
 }
