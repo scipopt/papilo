@@ -707,7 +707,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
          
          return PresolveStatus::kInfeasible;
       }
-      auto cliqueprobingtime = timer.getTime() - cliqueprobinstarttime;
+      cliqueprobingtime = timer.getTime() - cliqueprobinstarttime;
       for( int clique = 0; clique < std::min(batchend, static_cast<int>(probingCliques.end() - probingCliques.begin())); ++clique )
       {
          auto cliquevec = consMatrix.getRowCoefficients( probingCliques[clique].first );
