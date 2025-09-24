@@ -99,7 +99,7 @@ class CliqueMerging : public PresolveMethod<REAL>
 
    void
    setParameters( int maxEdgesParallel, int maxEdgesSequential,
-                  int maxCliqueSize, int maxGreedyCalls );
+                  int maxCliqueSize, int maxGreedyCalls, int maxCalls = 1 );
 
    private:
    std::pair<std::set<int>, Vec<int>>
@@ -195,12 +195,13 @@ CliqueMerging<REAL>::isCovered( const ConstraintMatrix<REAL>& matrix,
 template <typename REAL>
 void
 CliqueMerging<REAL>::setParameters( int maxEdgesParallel, int maxEdgesSequential,
-                                    int maxCliqueSize, int maxGreedyCalls )
+                                    int maxCliqueSize, int maxGreedyCalls, int maxCalls )
 {
    maxedgesparallel = maxEdgesParallel;
    maxedgessequential = maxEdgesSequential;
    maxcliquesize = maxCliqueSize;
    maxgreedycalls = maxGreedyCalls;
+   maxcalls = maxCalls;
 }
 
 template <typename REAL>
