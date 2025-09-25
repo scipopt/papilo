@@ -208,5 +208,8 @@ cliquemerging.maxcliquesize = 100
 # Maximal number of function calls for greedy clique in a single thread in clique merging [Integer: [1,2147483647]]
 cliquemerging.maxgreedycalls = 10000
 
+# Maximal number of calls to the clique merging presolver [Integer: [1,2147483647]]
+cliquemerging.maxcalls = 1
+
 # Is presolver clique merging enabled [Boolean: {0,1}]
 cliquemerging.enabled = 0
