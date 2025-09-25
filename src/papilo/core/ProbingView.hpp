@@ -207,8 +207,10 @@ class ProbingView
    Vec<int> changed_activities;
    Vec<REAL> probing_lower_bounds;
    Vec<REAL> probing_upper_bounds;
+public:
    Vec<REAL> origin_lower_bounds;
    Vec<REAL> origin_upper_bounds;
+private:
    Vec<ColFlags> probing_domain_flags;
    Vec<RowActivity<REAL>> probing_activities;
    Vec<RowActivity<REAL>> origin_activities;

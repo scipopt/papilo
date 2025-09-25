@@ -715,7 +715,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
          auto cliquelen = cliquevec.getLength();
          for( int ind = 0; ind < cliquelen; ++ind )
          {
-            probing_scores[cliqueind[ind]] = -2;
+            probing_scores[cliqueind[ind]] = -100000;
          }
       }
 
@@ -1025,7 +1025,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
                      boundChg.probing_col, boundChg.col );
                reductions.changeColUB( boundChg.col, boundChg.bound );
                if( binary )
-                  nprobed[boundChg.col] = -2;
+                  nprobed[boundChg.col] = -100000;
             }
             else
             {
@@ -1035,7 +1035,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
                      boundChg.probing_col, boundChg.col );
                reductions.changeColLB( boundChg.col, boundChg.bound );
                if( binary )
-                  nprobed[boundChg.col] = -2;
+                  nprobed[boundChg.col] = -100000;
             }
          }
 
@@ -1069,8 +1069,6 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
       }
    }
 
-
-
    pdqsort( probing_cands.begin(), probing_cands.end(),
             [this, &probing_scores, &colsize, &colperm]( int col1, int col2 )
             {
@@ -1095,6 +1093,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
                      static_cast<double>( 1 + nprobed[col2] * colsize[col2] ) );
                return s1 > s2 || ( s1 == s2 && colperm[col1] < colperm[col2] );
             } );
+
 
    int clique_cutoff_ub = 0;
 
@@ -1219,6 +1218,12 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
                    assert(
                        cflags[col].test( ColFlag::kIntegral ) &&
                        ( lower_bounds[col] == 0 || upper_bounds[col] == 1 ) );
+
+                   if(  probingView.origin_upper_bounds[col] == probingView.origin_lower_bounds[col] )
+                   {
+                      assert( nprobed[col] == -100000 );
+                      continue;
+                   }
 
                    if( infeasible.load( std::memory_order_relaxed ) )
                       break;
@@ -1429,7 +1434,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
                    boundChg.probing_col, boundChg.col );
             reductions.changeColUB( boundChg.col, boundChg.bound );
             if(binary)
-               nprobed[boundChg.col] = -2;
+               nprobed[boundChg.col] = -100000;
          }
          else
          {
@@ -1439,7 +1444,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
                    boundChg.probing_col, boundChg.col );
             reductions.changeColLB( boundChg.col, boundChg.bound );
             if(binary)
-               nprobed[boundChg.col] = -2;
+               nprobed[boundChg.col] = -100000;
          }
       }
 
