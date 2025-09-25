@@ -1024,7 +1024,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
                reductions.changeColUB( boundChg.col, boundChg.bound );
                if( binary )
                {
-                  probing_score[boundChg.col] = -100000;
+                  probing_scores[boundChg.col] = -100000;
                   nprobed[boundChg.col] = -100000;
                }
             }
@@ -1037,7 +1037,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
                reductions.changeColLB( boundChg.col, boundChg.bound );
                if( binary )
                {
-                  probing_score[boundChg.col] = -100000;
+                  probing_scores[boundChg.col] = -100000;
                   nprobed[boundChg.col] = -100000;
                }
             }
@@ -1225,7 +1225,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
 
                    if(  probingView.origin_upper_bounds[col] == probingView.origin_lower_bounds[col] )
                    {
-                      assert( probing_score[col] == -100000 );
+                      assert( probing_scores[col] == -100000 );
                       continue;
                    }
 
@@ -1439,7 +1439,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
             reductions.changeColUB( boundChg.col, boundChg.bound );
             if(binary)
             {
-               probing_score[boundChg.col] = -100000;
+               probing_scores[boundChg.col] = -100000;
                nprobed[boundChg.col] = -100000;
             }
          }
@@ -1452,7 +1452,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
             reductions.changeColLB( boundChg.col, boundChg.bound );
             if(binary)
             {
-               probing_score[boundChg.col] = -100000;
+               probing_scores[boundChg.col] = -100000;
                nprobed[boundChg.col] = -100000;
             }
          }
