@@ -1438,7 +1438,10 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
                    boundChg.probing_col, boundChg.col );
             reductions.changeColUB( boundChg.col, boundChg.bound );
             if(binary)
+            {
+               probing_score[boundChg.col] = -100000;
                nprobed[boundChg.col] = -100000;
+            }
          }
          else
          {
@@ -1448,7 +1451,10 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
                    boundChg.probing_col, boundChg.col );
             reductions.changeColLB( boundChg.col, boundChg.bound );
             if(binary)
+            {
+               probing_score[boundChg.col] = -100000;
                nprobed[boundChg.col] = -100000;
+            }
          }
       }
 
