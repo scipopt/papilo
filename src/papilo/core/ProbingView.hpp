@@ -25,7 +25,7 @@
 #ifndef _PAPILO_CORE_PROBING_VIEW_HPP_
 #define _PAPILO_CORE_PROBING_VIEW_HPP_
 
-#include "CliqueProbingView.hpp"
+#include "papilo/core/CliqueProbingView.hpp"
 #include "papilo/core/Problem.hpp"
 #include "papilo/core/SingleRow.hpp"
 #include "papilo/io/Message.hpp"
