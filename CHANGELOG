@@ -26,7 +26,9 @@ Interface changes
 - cliquemerging.maxgreedycalls = 10000: maximal number of function calls for greedy clique in a single thread in clique merging 
 - cliquemerging.enabled = 0: is clique merging enabled?
 - dualinfer.minboundred = 0.001: minimum relative reduction to accept a bound change in dualinfer
-- presolve.max_reduction_seq = 1000000000:  abort the sequential executed presolver after a specified number of reductions (PAPILO_API_VERSION 9)
+- presolve.max_reduction_seq = 1000000000: abort the sequential executed presolver after a specified number of reductions (PAPILO_API_VERSION 9)
+- cliquemerging.maxcalls = 1 : maximum number of calls to the clique merging presolver (PAPILO_API_VERSION 10)
+
 
 Data Structure:
 ------------
