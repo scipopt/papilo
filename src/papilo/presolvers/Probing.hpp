@@ -1016,6 +1016,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
             } );
          for( const CliqueProbingBoundChg<REAL>& boundChg : cliqueBoundChanges )
          {
+            bool binary = problem.getVariableDomains().isBinary( boundChg.col );
             if( boundChg.upper )
             {
                if( problemUpdate.getPresolveOptions().verification_with_VeriPB &&
@@ -1023,6 +1024,8 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
                   reductions.reason_probing_upper_bound_change(
                      boundChg.probing_col, boundChg.col );
                reductions.changeColUB( boundChg.col, boundChg.bound );
+               if( binary )
+                  nprobed[boundChg.col] = -2;
             }
             else
             {
@@ -1031,6 +1034,8 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
                   reductions.reason_probing_lower_bound_change(
                      boundChg.probing_col, boundChg.col );
                reductions.changeColLB( boundChg.col, boundChg.bound );
+               if( binary )
+                  nprobed[boundChg.col] = -2;
             }
          }
 

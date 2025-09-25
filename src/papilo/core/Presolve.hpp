@@ -537,7 +537,6 @@ Presolve<REAL>::apply( Problem<REAL>& problem, bool store_dual_postsolve )
       }
 
       Statistics last_rounds_stats = stats;
-      bool abort = false;
       do
       {
          if( roundReduced )
@@ -587,7 +586,6 @@ Presolve<REAL>::apply( Problem<REAL>& problem, bool store_dual_postsolve )
          case Delegator::kExhaustive:
             run_presolvers( problem, exhaustivePresolvers, probUpdate,
                             was_executed_sequential, timer );
-            abort = true;
             break;
          default:
             assert( false );
@@ -596,7 +594,7 @@ Presolve<REAL>::apply( Problem<REAL>& problem, bool store_dual_postsolve )
          result.status = evaluate_and_apply( timer, problem, result, probUpdate,last_rounds_stats,
                was_executed_sequential );
 
-         if( is_status_infeasible_or_unbounded( result.status ) || abort )
+         if( is_status_infeasible_or_unbounded( result.status ) )
             return result;
 
          last_rounds_stats = stats;
