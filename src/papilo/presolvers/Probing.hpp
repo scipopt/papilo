@@ -31,12 +31,10 @@
 #include "papilo/core/ProbingView.hpp"
 #include "papilo/core/Problem.hpp"
 #include "papilo/core/ProblemUpdate.hpp"
-#include "papilo/core/SingleRow.hpp"
 #include "papilo/misc/Array.hpp"
 #include "papilo/misc/Hash.hpp"
 #include "papilo/misc/Vec.hpp"
 #include "papilo/misc/compress_vector.hpp"
-#include "papilo/misc/fmt.hpp"
 #include <algorithm>
 #include <atomic>
 #include <boost/functional/hash.hpp>

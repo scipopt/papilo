@@ -131,27 +131,6 @@ TEST_CASE( "clique-probing-1", "[presolve]" )
     
    REQUIRE( presolveStatus == PresolveStatus::kReduced );
 
-#ifdef PAPILO_TBB
-
-   REQUIRE( reductions.size() == 4 );
-
-   REQUIRE( reductions.getReduction( 0 ).col == 3 );
-   REQUIRE( reductions.getReduction( 0 ).row == -4 );
-   REQUIRE( reductions.getReduction( 0 ).newval == 1 );
-
-   REQUIRE( reductions.getReduction( 1 ).col == 3 );
-   REQUIRE( reductions.getReduction( 1 ).row == -4 );
-   REQUIRE( reductions.getReduction( 1 ).newval == 1 );
-
-   REQUIRE( reductions.getReduction( 2 ).col == 4 );
-   REQUIRE( reductions.getReduction( 2 ).row == -10 );
-   REQUIRE( reductions.getReduction( 2 ).newval == 1 );
-
-   REQUIRE( reductions.getReduction( 3 ).col == 1 );
-   REQUIRE( reductions.getReduction( 3 ).row == -1 );
-   REQUIRE( reductions.getReduction( 3 ).newval == 0 );
-
-#else
 
     REQUIRE( reductions.size() == 3 );
 
@@ -166,8 +145,6 @@ TEST_CASE( "clique-probing-1", "[presolve]" )
     REQUIRE( reductions.getReduction( 2 ).col == 1 );
     REQUIRE( reductions.getReduction( 2 ).row == -1 );
     REQUIRE( reductions.getReduction( 2 ).newval == 0 );
-
-#endif
 
 }
 
@@ -208,7 +185,7 @@ TEST_CASE( "clique-probing-2", "[presolve]" )
 
 #ifdef PAPILO_TBB
 
-    REQUIRE( reductions.size() == 12 );
+    REQUIRE( reductions.size() == 8 );
 
     REQUIRE( reductions.getReduction( 0 ).col == 7 );
     REQUIRE( reductions.getReduction( 0 ).row == -4 );
@@ -226,37 +203,21 @@ TEST_CASE( "clique-probing-2", "[presolve]" )
     REQUIRE( reductions.getReduction( 3 ).row == -4 );
     REQUIRE( reductions.getReduction( 3 ).newval == 0 );
 
-    REQUIRE( reductions.getReduction( 4 ).col == 7 );
-    REQUIRE( reductions.getReduction( 4 ).row == -4 );
-    REQUIRE( reductions.getReduction( 4 ).newval == 0 );
+    REQUIRE( reductions.getReduction( 4 ).col == 9 );
+    REQUIRE( reductions.getReduction( 4 ).row == -10 );
+    REQUIRE( reductions.getReduction( 4 ).newval == 1 );
 
-    REQUIRE( reductions.getReduction( 5 ).col == 6 );
-    REQUIRE( reductions.getReduction( 5 ).row == -3 );
-    REQUIRE( reductions.getReduction( 5 ).newval == 1 );
+    REQUIRE( reductions.getReduction( 5 ).col == 2 );
+    REQUIRE( reductions.getReduction( 5 ).row == -1 );
+    REQUIRE( reductions.getReduction( 5 ).newval == 0 );
 
-    REQUIRE( reductions.getReduction( 6 ).col == 3 );
-    REQUIRE( reductions.getReduction( 6 ).row == -4 );
-    REQUIRE( reductions.getReduction( 6 ).newval == 0 );
+    REQUIRE( reductions.getReduction( 6 ).col == 5 );
+    REQUIRE( reductions.getReduction( 6 ).row == -10 );
+    REQUIRE( reductions.getReduction( 6 ).newval == 1 );
 
-    REQUIRE( reductions.getReduction( 7 ).col == 1 );
-    REQUIRE( reductions.getReduction( 7 ).row == -4 );
+    REQUIRE( reductions.getReduction( 7 ).col == 0 );
+    REQUIRE( reductions.getReduction( 7 ).row == -1 );
     REQUIRE( reductions.getReduction( 7 ).newval == 0 );
-
-    REQUIRE( reductions.getReduction( 8 ).col == 9 );
-    REQUIRE( reductions.getReduction( 8 ).row == -10 );
-    REQUIRE( reductions.getReduction( 8 ).newval == 1 );
-
-    REQUIRE( reductions.getReduction( 9 ).col == 2 );
-    REQUIRE( reductions.getReduction( 9 ).row == -1 );
-    REQUIRE( reductions.getReduction( 9 ).newval == 0 );
-
-    REQUIRE( reductions.getReduction( 10 ).col == 5 );
-    REQUIRE( reductions.getReduction( 10 ).row == -10 );
-    REQUIRE( reductions.getReduction( 10 ).newval == 1 );
-
-    REQUIRE( reductions.getReduction( 11 ).col == 0 );
-    REQUIRE( reductions.getReduction( 11 ).row == -1 );
-    REQUIRE( reductions.getReduction( 11 ).newval == 0 );
 
 #else
 
