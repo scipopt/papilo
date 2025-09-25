@@ -219,6 +219,8 @@ TEST_CASE( "clique-probing-2", "[presolve]" )
     REQUIRE( reductions.getReduction( 7 ).row == -1 );
     REQUIRE( reductions.getReduction( 7 ).newval == 0 );
 
+#endif
+
 }
 
 Problem<double>
