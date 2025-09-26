@@ -1174,9 +1174,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
    Vec<ProbingBoundChg<REAL>> boundChanges;
    boundChanges.reserve( ncols );
    int64_t amountofwork = 0;
-   int nfixings = 0;
-   int nboundchgs = 0;
-   int nsubstitutions = -substitutions.size();
+
 
    // use tbb combinable so that each thread will copy the activities and
    // bounds at most once
@@ -1261,6 +1259,10 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
              } );
 #endif
       };
+
+      int nfixings = 0;
+      int nboundchgs = 0;
+      int nsubstitutions = -substitutions.size();
 
       assert(current_badge_end <= static_cast<int>(probing_cands.size()));
       assert(current_badge_end >= 0);
