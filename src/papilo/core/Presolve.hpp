@@ -1275,7 +1275,7 @@ Presolve<REAL>::applyPostponed( ProblemUpdate<REAL>& probUpdate, const Timer& pr
 {
    probUpdate.setPostponeSubstitutions( false );
 
-   for( int presolver = 0; presolver != (int) presolvers.size(); ++presolver )
+   for( int presolver = 0; presolver != (int) postponedReductionToPresolver.size() - 1; ++presolver )
    {
       int first = postponedReductionToPresolver[presolver];
       int last = postponedReductionToPresolver[presolver + 1];
