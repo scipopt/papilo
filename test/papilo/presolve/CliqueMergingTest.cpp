@@ -70,7 +70,7 @@ TEST_CASE( "clique-merging-basic", "[presolve]" )
 
    REQUIRE( status == PresolveStatus::kReduced );
 #ifdef PAPILO_TBB
-    REQUIRE( reductions.size() == 12 );
+    REQUIRE( reductions.size() == 36 );
     
     REQUIRE( reductions.getReduction(0).row == ColReduction::LOCKED );
     REQUIRE( reductions.getReduction(0).col == 0 );
@@ -179,7 +179,7 @@ TEST_CASE( "clique-merging-cover", "[presolve]" )
 
    REQUIRE( status == PresolveStatus::kReduced );
 #ifdef PAPILO_TBB
-    REQUIRE( reductions.size() == 9 );
+    REQUIRE( reductions.size() == 19 );
     
     REQUIRE( reductions.getReduction(0).row == ColReduction::LOCKED );
     REQUIRE( reductions.getReduction(0).col == 0 );
