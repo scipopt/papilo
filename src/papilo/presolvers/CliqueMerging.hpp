@@ -394,7 +394,6 @@ CliqueMerging<REAL>::execute( const Problem<REAL>& problem,
       return result;
    } );
    pdqsort(reductionResultsComb.begin(), reductionResultsComb.end());
-   int totalreductionsize = reductionResultsComb.end() - reductionResultsComb.begin();
    for( int reductionindex = 0; reductionindex < reductionResultsComb.end() - reductionResultsComb.begin(); ++reductionindex )
    {
       result = PresolveStatus::kReduced;
@@ -419,8 +418,6 @@ CliqueMerging<REAL>::execute( const Problem<REAL>& problem,
          reductions.lockRow( Cliques[covCliques[rowIndex]] );
       }
       reductions.lockRow( clique );
-      int clique = reductionResultsComb[reductionindex].first.back();
-      Vec<int> newVertices = reductionResultsComb[reductionindex].first;
       auto rowVector = matrix.getRowCoefficients( clique );
       auto rowValues = rowVector.getValues();
       auto rowInds = rowVector.getIndices();
@@ -434,7 +431,6 @@ CliqueMerging<REAL>::execute( const Problem<REAL>& problem,
             val * ( ub[newVertices[vertexIndex]] -
                     lb[newVertices[vertexIndex]] ) );
       }
-      Vec<int> covCliques = reductionResultsComb[reductionindex].second;
       for( int row = 0; row < covCliques.end() - covCliques.begin();
          ++row )
          {reductions.markRowRedundant( Cliques[covCliques[row]] );}
