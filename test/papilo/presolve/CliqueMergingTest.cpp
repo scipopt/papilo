@@ -59,14 +59,14 @@ TEST_CASE( "clique-merging-basic", "[presolve]" )
    int cause = -1;
    PresolveStatus status = presolvingMethod.execute(
        problem, problemUpdate, { }, reductions, t, cause );
-    /*
+    
     for( int i = 0; (unsigned int)i < reductions.size(); ++i)
     {
         std::cout << "\n";
         std::cout << reductions.getReduction(i).row;
         std::cout << " ";
         std::cout << reductions.getReduction(i).col;
-    }*/
+    }
 
    REQUIRE( status == PresolveStatus::kReduced );
 #ifdef PAPILO_TBB
