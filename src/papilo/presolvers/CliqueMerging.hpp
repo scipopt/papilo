@@ -394,62 +394,46 @@ CliqueMerging<REAL>::execute( const Problem<REAL>& problem,
       return result;
    } );
    pdqsort(reductionResultsComb.begin(), reductionResultsComb.end());
-   int totalreductionsize = reductionResultsComb.end() - reductionResultsComb.begin();
-   for( int reductionsize = reductionResultsComb.end() - reductionResultsComb.begin(); reductionsize > 0; reductionsize /= 2 )
+   for( int reductionindex = 0; reductionindex < reductionResultsComb.end() - reductionResultsComb.begin(); ++reductionindex )
    {
-      for( int transactionindex = 0; transactionindex * reductionsize < reductionResultsComb.end() - reductionResultsComb.begin(); ++transactionindex )
+      result = PresolveStatus::kReduced;
+      TransactionGuard<REAL> tg{ reductions };
+      Vec<int> covCliques = reductionResultsComb[reductionindex].second;
+      int clique = reductionResultsComb[reductionindex].first.back();
+      Vec<int> newVertices = reductionResultsComb[reductionindex].first;
+      auto cliqueRow = matrix.getRowCoefficients( clique );
+      auto cliqueIndices = cliqueRow.getIndices();
+      for( int cliqueIndex = 0; cliqueIndex < cliqueRow.getLength(); ++cliqueIndex )
       {
-         result = PresolveStatus::kReduced;
-         TransactionGuard<REAL> tg{ reductions };
-         for( int reductionindex = transactionindex * reductionsize; reductionindex < std::min((transactionindex+1)* reductionsize,totalreductionsize); ++reductionindex )
-         {
-            Vec<int> covCliques = reductionResultsComb[reductionindex].second;
-            int clique = reductionResultsComb[reductionindex].first.back();
-            Vec<int> newVertices = reductionResultsComb[reductionindex].first;
-            auto cliqueRow = matrix.getRowCoefficients( clique );
-            auto cliqueIndices = cliqueRow.getIndices();
-            for( int cliqueIndex = 0; cliqueIndex < cliqueRow.getLength(); ++cliqueIndex )
-            {
-               reductions.lockCol( cliqueIndices[cliqueIndex] );
-               reductions.lockColBounds( cliqueIndices[cliqueIndex] );
-            }
-            for( int vertexIndex = 0; vertexIndex < newVertices.end() - newVertices.begin() - 1; ++vertexIndex )
-            {
-               reductions.lockCol( newVertices[vertexIndex] );
-               reductions.lockColBounds( newVertices[vertexIndex] );
-            }
-            for( int rowIndex = 0; rowIndex < covCliques.end() - covCliques.begin(); ++rowIndex )
-            {
-               reductions.lockRow( Cliques[covCliques[rowIndex]] );
-            }
-            reductions.lockRow( clique );
-         }
-         for( int reductionindex = transactionindex * reductionsize; reductionindex < std::min((transactionindex+1)* reductionsize,totalreductionsize); ++reductionindex )
-         {
-            int clique = reductionResultsComb[reductionindex].first.back();
-            Vec<int> newVertices = reductionResultsComb[reductionindex].first;
-            auto rowVector = matrix.getRowCoefficients( clique );
-            auto rowValues = rowVector.getValues();
-            auto rowInds = rowVector.getIndices();
-            auto val = rowValues[0] * ( ub[rowInds[0]] - abs( lb[rowInds[0]] ) );
-            for( int vertexIndex = 0;
-                  vertexIndex < newVertices.end() - newVertices.begin() - 1;
-                  ++vertexIndex )
-               { 
-               reductions.changeMatrixEntry(
-                  clique, newVertices[vertexIndex],
-                  val * ( ub[newVertices[vertexIndex]] -
-                           lb[newVertices[vertexIndex]] ) );
-               }
-         }
-         for( int reductionindex = transactionindex * reductionsize; reductionindex < std::min((transactionindex+1)* reductionsize,totalreductionsize); ++reductionindex )
-         {
-            Vec<int> covCliques = reductionResultsComb[reductionindex].second;
-            for( int row = 0; row < covCliques.end() - covCliques.begin();
-               ++row )
-               {reductions.markRowRedundant( Cliques[covCliques[row]] );}
-         }
+         reductions.lockCol( cliqueIndices[cliqueIndex] );
+         reductions.lockColBounds( cliqueIndices[cliqueIndex] );
       }
+      for( int vertexIndex = 0; vertexIndex < newVertices.end() - newVertices.begin() - 1; ++vertexIndex )
+      {
+         reductions.lockCol( newVertices[vertexIndex] );
+         reductions.lockColBounds( newVertices[vertexIndex] );
+      }
+      for( int rowIndex = 0; rowIndex < covCliques.end() - covCliques.begin(); ++rowIndex )
+      {
+         reductions.lockRow( Cliques[covCliques[rowIndex]] );
+      }
+      reductions.lockRow( clique );
+      auto rowVector = matrix.getRowCoefficients( clique );
+      auto rowValues = rowVector.getValues();
+      auto rowInds = rowVector.getIndices();
+      auto val = rowValues[0] * ( ub[rowInds[0]] - abs( lb[rowInds[0]] ) );
+      for( int vertexIndex = 0;
+            vertexIndex < newVertices.end() - newVertices.begin() - 1;
+            ++vertexIndex )
+      { 
+         reductions.changeMatrixEntry(
+            clique, newVertices[vertexIndex],
+            val * ( ub[newVertices[vertexIndex]] -
+                    lb[newVertices[vertexIndex]] ) );
+      }
+      for( int row = 0; row < covCliques.end() - covCliques.begin();
+         ++row )
+         {reductions.markRowRedundant( Cliques[covCliques[row]] );}
    }
 #endif
    if (++ncalls == maxcalls)
