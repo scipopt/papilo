@@ -160,7 +160,6 @@ if(Boost_IOSTREAMS_FOUND AND Boost_SERIALIZATION_FOUND AND Boost_PROGRAM_OPTIONS
    if(PAPILO_HAVE_HIGHS)
       list(APPEND linked_solvers "HiGHS")
       set(PAPILO_HAVE_HIGHS 1 PARENT_SCOPE)
-      find_package(OpenMP)
       target_compile_definitions(papilo-executable PRIVATE PAPILO_HAVE_HIGHS)
       target_link_libraries(papilo-executable highs::highs)
    endif()
