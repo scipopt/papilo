@@ -2,12 +2,13 @@
 
 @section RN244 PaPILO 2.4.4
 
-Fixed bugs
-----------
+Fixed bugs and other minor changes
+----------------------------------
 
-Build system
-------------
-
+- suppress compiler warnings from GCC 12 with Boost < 1.85
+- support renamed verbosity levels in SoPlex
+- fixed constructor of Solution class
+- remove check for OpenMP if calling cmake with HIGHS=on
 
 @section RN243 PaPILO 2.4.3
 
