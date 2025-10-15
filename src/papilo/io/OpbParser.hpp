@@ -38,6 +38,7 @@
 #include "papilo/misc/Num.hpp"
 #include <algorithm>
 #include <boost/algorithm/string/predicate.hpp>
+#include <boost/algorithm/string/trim.hpp>
 #include <boost/dynamic_bitset.hpp>
 #include <boost/iostreams/filtering_stream.hpp>
 #include <boost/optional.hpp>
