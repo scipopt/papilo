@@ -1408,9 +1408,12 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
       working_limit -= amountofwork;
       working_limit += extrawork;
 
+      if (amountofwork != 0)
       badge_size = static_cast<int>(
           ceil( badge_size * static_cast<double>( working_limit + extrawork ) /
                 (double)amountofwork ) );
+      else
+         badge_size = nprobingcands - current_badge_start;
       badge_size = std::min( nprobingcands - current_badge_start, badge_size );
       if( max_badge_size > 0 )
          badge_size = std::min( max_badge_size, badge_size );
