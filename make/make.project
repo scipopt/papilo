@@ -47,7 +47,7 @@ CLUSTERNODES    =       all
 SLURMACCOUNT    =       default
 
 # set PAPILO version here for external projects
-VERSION	=	3.0.0
+VERSION	=	4.0.0
 
 ## compiling and linking parameters
 #VERBOSE		=	false

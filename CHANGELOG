@@ -1,3 +1,35 @@
+@page RN40 Release notes for PAPILO 4.0
+
+@section RN400 PaPILO 4.0.0
+
+Features
+--------
+
+Performance improvements
+------------------------
+
+Interface changes
+-----------------
+
+### New API functions
+
+### Changed parameters
+
+### New parameters with default values
+
+Data Structures
+---------------
+
+Build system
+------------
+
+Fixed bugs
+----------
+
+Miscellaneous
+-------------
+
+
 @page RN30 Release notes for PAPILO 3.0
 
 @section RN300 PaPILO 3.0.0
