@@ -414,7 +414,7 @@ class GurobiFactory : public SolverFactory<REAL>
 
  public:
    virtual std::unique_ptr<SolverInterface<REAL>>
-   newSolver( VerbosityLevel verbosity ) const
+   newSolver( VerbosityLevel verbosity ) const override
    {
       auto gurobi =
           std::unique_ptr<SolverInterface<REAL>>( new GurobiInterface<REAL>() );

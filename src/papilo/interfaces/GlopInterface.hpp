@@ -346,7 +346,7 @@ class GlopFactory : public SolverFactory<REAL>
    GlopInterface<REAL>* solver;
  public:
    virtual std::unique_ptr<SolverInterface<REAL>>
-   newSolver( VerbosityLevel verbosity ) const
+   newSolver( VerbosityLevel verbosity ) const override
    {
       auto glop = std::unique_ptr<SolverInterface<REAL>>( solver );
       auto res = std::move( glop );

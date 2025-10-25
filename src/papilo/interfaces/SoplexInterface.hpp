@@ -521,7 +521,7 @@ class SoplexFactory : public SolverFactory<REAL>
 
  public:
    std::unique_ptr<SolverInterface<REAL>>
-   newSolver( VerbosityLevel verbosity ) const
+   newSolver( VerbosityLevel verbosity ) const override
    {
       auto soplex =
           std::unique_ptr<SolverInterface<REAL>>( new SoplexInterface<REAL>() );
