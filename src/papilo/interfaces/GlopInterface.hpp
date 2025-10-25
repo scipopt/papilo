@@ -354,7 +354,7 @@ class GlopFactory : public SolverFactory<REAL>
    }
 
    virtual void
-   add_parameters( ParameterSet& parameter ) const
+   add_parameters( ParameterSet& parameter ) const override
    {
       //TODO: configure parameters of GLOP
       solver->addParameters( parameter );

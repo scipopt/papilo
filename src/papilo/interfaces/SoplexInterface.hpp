@@ -541,7 +541,7 @@ class SoplexFactory : public SolverFactory<REAL>
    }
 
    virtual void
-   add_parameters( ParameterSet& parameter ) const
+   add_parameters( ParameterSet& parameter ) const override
    {
    }
 
