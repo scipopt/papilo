@@ -42,6 +42,7 @@ Build system
 
 - for cmake >= 3.30 CMP0167 is enforced and BOOST_ROOT no longer supported, please use Boost_DIR instead with these cmake versions
 - disable default solvers and require linking when enabled
+- recognize also Gurobi 10 to 13 libs automatically
 
 Fixed bugs
 ----------
