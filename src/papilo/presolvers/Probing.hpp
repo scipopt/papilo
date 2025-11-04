@@ -706,6 +706,8 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
          return PresolveStatus::kInfeasible;
       }
       cliqueprobingtime = timer.getTime() - cliqueprobinstarttime;
+      std::set<int> probedvars;
+      int nprobedvars;
       for( int clique = 0; clique < std::min(batchend, static_cast<int>(probingCliques.end() - probingCliques.begin())); ++clique )
       {
          auto cliquevec = consMatrix.getRowCoefficients( probingCliques[clique].first );
@@ -714,7 +716,9 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
          for( int ind = 0; ind < cliquelen; ++ind )
          {
             probing_scores[cliqueind[ind]] = -100000;
+            probedvars.emplace(cliqueind[ind]);
          }
+         nprobedvars += cliquelen;
       }
 
       ncliquesubstitutions = -cliquesubstitutions.size();
@@ -977,7 +981,8 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
       std::cout<<std::min(static_cast<int>(probingCliques.size()), batchend);
       std::cout<<" Cliques with ";
       std::cout<< totalnumpropagations;
-      std::cout<<" probed Variables led to ";
+      std::cout<<" propagations on ";
+      std::cout<<nprobedvars<<" duplicate variables and " << probedvars.size() << " individual variables led to ";
       std::cout<<ncliquefixings;
       std::cout<<" fixings, ";
 #ifdef PAPILO_TBB
