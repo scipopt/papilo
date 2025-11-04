@@ -421,7 +421,8 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
    //std::cout<<"\nAssigning probing scores and sorting took " << timer.getTime() - cliqueprobingscoressatrttime << " seconds\n";
    }
 
-
+   std::set<int> probedvars;
+   int nprobedvars;
    std::atomic_bool infeasible{ false };
    std::atomic_int infeasible_variable{ -1 };
    int batchend = 0;
@@ -706,8 +707,6 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
          return PresolveStatus::kInfeasible;
       }
       cliqueprobingtime = timer.getTime() - cliqueprobinstarttime;
-      std::set<int> probedvars;
-      int nprobedvars;
       for( int clique = 0; clique < std::min(batchend, static_cast<int>(probingCliques.end() - probingCliques.begin())); ++clique )
       {
          auto cliquevec = consMatrix.getRowCoefficients( probingCliques[clique].first );
