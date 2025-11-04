@@ -32,6 +32,7 @@
 #include "papilo/misc/Vec.hpp"
 #include <memory>
 #include <list>
+#include <tuple>
 
 namespace papilo
 {
@@ -304,7 +305,7 @@ class CliqueProbingView
    }
 #endif
 
-   std::pair<bool,bool>
+   std::tuple<bool,bool,int>
    probeClique( const int clique, const int*& indices, const int len, const Vec<int>& binary_indices, 
       bool equation, Array<std::atomic_int>& probing_scores, const Vec<int>& colsize, const Vec<int>& colperm,
       Vec<int>& nprobed, int cliquereductionfactor, int minabortedvariables )
@@ -613,7 +614,7 @@ class CliqueProbingView
       lb_implications = lb_implications_combined;
       fix_to_zero = fix_to_zero_combined;
 
-      return { fix_to_zero.end() - fix_to_zero.begin() == cliquelen && cliqueEquation, cliqueEquation && !equationBefore } ;
+      return { fix_to_zero.end() - fix_to_zero.begin() == cliquelen && cliqueEquation, cliqueEquation && !equationBefore, cliquelen } ;
 #else
       if(!equation)
       {
@@ -673,7 +674,7 @@ class CliqueProbingView
              && initbounds && cliquelen - i > minabortedvariables )
          {     
             fewreductions = true;
-            return { false, cliqueEquation && !equationBefore } ;
+            return { false, cliqueEquation && !equationBefore, i } ;
          }
          reset();
          assert( probing_upper_bounds[cliqueind[i]] == 1.0 );
@@ -758,7 +759,7 @@ class CliqueProbingView
         reset();
        }
 
-      return { fix_to_zero.end() - fix_to_zero.begin() == cliquelen && cliqueEquation, cliqueEquation && !equationBefore } ;
+      return { fix_to_zero.end() - fix_to_zero.begin() == cliquelen && cliqueEquation, cliqueEquation && !equationBefore, cliquelen } ;
 #endif
    }
 

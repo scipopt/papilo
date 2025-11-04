@@ -39,6 +39,7 @@
 #include <atomic>
 #include <boost/functional/hash.hpp>
 #include <set>
+#include <tuple>
 #ifdef PAPILO_TBB
 #include "papilo/misc/tbb.hpp"
 #endif
@@ -470,6 +471,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
       Vec<CliqueProbingSubstitution<REAL>> clique_probing_subs;
       Vec<int> change_to_equation;
 #endif
+   Vec<int> finalinds( static_cast<int>(probingCliques.end() - probingCliques.begin()), 0 );
 
    if( unsuccessfulcliqueprobing <= numcliquefails )
    {
@@ -525,13 +527,14 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
                if( infeasible.load( std::memory_order_relaxed ) )
                   break;
 
-               std::pair<bool,bool> cliqueProbingResult = local_clique_probing_view.probeClique(clique, cliqueind, cliquelen,
+               std::tuple<bool,bool,int> cliqueProbingResult = local_clique_probing_view.probeClique(clique, cliqueind, cliquelen,
                   probing_cands, probingCliques[i].second, probing_scores, colsize, colperm, nprobed, cliquereductionfactor,
                   minabortedvariables );
 
 
-               bool globalInfeasible = cliqueProbingResult.first;
-               if( cliqueProbingResult.second && !probingCliques[i].second )
+               bool globalInfeasible = get<0>(cliqueProbingResult);
+               finalinds[i] = get<2>(cliqueProbingResult);
+               if( get<1>(cliqueProbingResult) && !probingCliques[i].second )
                {
 #ifdef PAPILO_TBB
                   change_to_equation.local().emplace_back( clique );
@@ -712,12 +715,12 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
          auto cliquevec = consMatrix.getRowCoefficients( probingCliques[clique].first );
          auto cliqueind = cliquevec.getIndices();
          auto cliquelen = cliquevec.getLength();
-         for( int ind = 0; ind < cliquelen; ++ind )
+         for( int ind = 0; ind < finalinds[i]; ++ind )
          {
             probing_scores[cliqueind[ind]] = -100000;
             probedvars.emplace(cliqueind[ind]);
          }
-         nprobedvars += cliquelen;
+         nprobedvars += finalinds[i];
       }
 
       ncliquesubstitutions = -cliquesubstitutions.size();
