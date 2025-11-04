@@ -714,7 +714,6 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
       {
          auto cliquevec = consMatrix.getRowCoefficients( probingCliques[clique].first );
          auto cliqueind = cliquevec.getIndices();
-         auto cliquelen = cliquevec.getLength();
          for( int ind = 0; ind < finalinds[clique]; ++ind )
          {
             probing_scores[cliqueind[ind]] = -100000;
