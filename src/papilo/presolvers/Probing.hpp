@@ -396,7 +396,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
          auto rowvec = consMatrix.getRowCoefficients( cliques[clique].first );
          auto rowinds = rowvec.getIndices();
          int covered = 0;
-         for( int ind = 0; ind + covered < rowvec.getLength(); ++ind )
+         for( int ind = 0; ind < rowvec.getLength() && ratiocoveredcliquevars * covered <= rowvec.getLength(); ++ind )
          {
             if( probedCliqueVars[rowinds[ind]] )
                covered += 1;
