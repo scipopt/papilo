@@ -720,7 +720,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
             probedvars.emplace(cliqueind[ind]);
          }
          nprobedvars += finalinds[clique];
-         std::cout<<"\n"<<finalinds[clique]<<" "<<cliquevec.getLength();
+         //std::cout<<"\n"<<finalinds[clique]<<" "<<cliquevec.getLength();
       }
 
       ncliquesubstitutions = -cliquesubstitutions.size();
