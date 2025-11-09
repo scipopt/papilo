@@ -84,7 +84,7 @@ if(TARGET clusol)
 endif()
 
 # Search again since we cannot rely on papilo/CMakeLists.txt having searched for Boost already.
-find_package(Boost ${BOOST_MIN_VERSION} OPTIONAL_COMPONENTS iostreams program_options serialization)
+find_package(Boost ${BOOST_MIN_VERSION} REQUIRED OPTIONAL_COMPONENTS iostreams program_options serialization)
 
 include_directories(${SCIP_INCLUDE_DIRS} ${SOPLEX_INCLUDE_DIRS} ${CMAKE_CURRENT_BINARY_DIR})
 
