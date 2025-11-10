@@ -210,6 +210,9 @@ SingletonCols<REAL>::execute( const Problem<REAL>& problem,
    int firstNewSingleton = problemUpdate.getFirstNewSingletonCol();
    for( std::size_t i = firstNewSingleton; i < singletonCols.size(); ++i )
    {
+      if( reductions.size() >= problemUpdate.getPresolveOptions().max_reduction_seq )
+         break;
+
       int col = singletonCols[i];
 
       assert( constMatrix.getColSizes()[col] == 1 );

@@ -1217,8 +1217,8 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
          for( int i = start; i < end; i++ )
 #endif
                 {
-                   if( PresolveMethod<REAL>::is_time_exceeded(
-                           timer, problemUpdate.getPresolveOptions().tlim ) )
+                   if( PresolveMethod<REAL>::is_interrupted(
+                           timer, problemUpdate.getPresolveOptions().tlim, problemUpdate.getPresolveOptions().early_exit_callback ) )
                       break;
                   assert(i >= 0);
                   assert(i < static_cast<int>(probing_cands.size()));

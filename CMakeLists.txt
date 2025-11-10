@@ -1,9 +1,9 @@
 cmake_minimum_required (VERSION 3.11.0)
 
-set(PAPILO_VERSION_MAJOR 3)
+set(PAPILO_VERSION_MAJOR 4)
 set(PAPILO_VERSION_MINOR 0)
 set(PAPILO_VERSION_PATCH 0)
-set(PAPILO_API_VERSION 6)
+set(PAPILO_API_VERSION 10)
 
 project(papilo VERSION ${PAPILO_VERSION_MAJOR}.${PAPILO_VERSION_MINOR}.${PAPILO_VERSION_PATCH}.0)
 
@@ -351,13 +351,12 @@ add_library(papilo-core STATIC
 # TODO: Simplify with a generator expression.
 function(setLibProperties targetname outputname)
     set_target_properties(${targetname} PROPERTIES
-        OUTPUT_NAME ${outputname}
-        MACOSX_RPATH "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}")
+        OUTPUT_NAME ${outputname})
 endfunction(setLibProperties)
 if(MSVC)
     setLibProperties(papilo-core "libpapilo-core")
 else()
-   setLibProperties(papilo-core "papilo-core")
+    setLibProperties(papilo-core "papilo-core")
 endif()
 
 

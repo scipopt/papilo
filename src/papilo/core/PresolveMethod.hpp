@@ -345,10 +345,23 @@ class PresolveMethod
    }
 
    static bool
-   is_time_exceeded( const Timer& timer,  double tlim)
+   is_user_interrupted( std::function<bool()> early_exit_callback )
+   {
+      return early_exit_callback && early_exit_callback();
+   }
+
+   static bool
+   is_time_exceeded( const Timer& presolvetimer, double tlim )
    {
       return tlim != std::numeric_limits<double>::max() &&
-             timer.getTime() >= tlim;
+             presolvetimer.getTime() >= tlim;
+   }
+
+   static bool
+   is_interrupted( const Timer& timer, double tlim, std::function<bool()> early_exit_callback = nullptr )
+   {
+      return is_time_exceeded( timer, tlim ) ||
+             is_user_interrupted( early_exit_callback );
    }
 
    bool

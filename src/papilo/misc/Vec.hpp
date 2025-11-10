@@ -26,7 +26,23 @@
 #define _PAPILO_MISC_VEC_HPP_
 
 #include "papilo/misc/Alloc.hpp"
+
+// GCC 12 is confused about array access in small_vector and raises stringop warnings
+// Boost >= 1.85 suppresses this warnings, but for earlier Boost, we do this here
+#include <boost/version.hpp>
+#include <boost/config.hpp>  // for BOOST_GCC
+#if BOOST_VERSION < 108500 && defined(BOOST_GCC) && ((BOOST_GCC >= 120000) && (BOOST_GCC < 130000))
+#  pragma GCC diagnostic push
+#  pragma GCC diagnostic ignored "-Wstringop-overread"
+#  pragma GCC diagnostic ignored "-Wstringop-overflow"
+#endif
+
 #include <boost/container/small_vector.hpp>
+
+#if BOOST_VERSION < 108500 && defined(BOOST_GCC) && ((BOOST_GCC >= 120000) && (BOOST_GCC < 130000))
+#pragma GCC diagnostic pop
+#endif
+
 #include <vector>
 namespace papilo
 {

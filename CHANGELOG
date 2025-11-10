@@ -1,6 +1,38 @@
-@page RN25 Release notes for PAPILO 3.0
+@page RN40 Release notes for PAPILO 4.0
 
-@section RN250 PaPILO 3.0.0
+@section RN400 PaPILO 4.0.0
+
+Features
+--------
+
+Performance improvements
+------------------------
+
+Interface changes
+-----------------
+
+### New API functions
+
+### Changed parameters
+
+### New parameters with default values
+
+Data Structures
+---------------
+
+Build system
+------------
+
+Fixed bugs
+----------
+
+Miscellaneous
+-------------
+
+
+@page RN30 Release notes for PAPILO 3.0
+
+@section RN300 PaPILO 3.0.0
 
 License changes
 ---------------
@@ -13,17 +45,21 @@ Interface changes
 ### New API functions
 
 - ProblemBuilder: setColImplIntAll() to set all implied integrality flags at once
+- PresolveOptions: early_exit_callback if a calling program wants to forcefully stop PaPILO. (PAPILO_API_VERSION 8)
 
 ### Changed parameters
 
 
 ### New parameters with default values
 
--cliquemerging.maxedgesparallel = 1000000: Maximal number of edges in the graph constructed for parallel clique merging
--cliquemerging.maxedgessequential = 100000: Maximal number of edges in the graph constructed for sequential clique merging
--cliquemerging.maxcliquesize = 100: Maximal size of cliques considered for clique merging [Integer: [1,2147483647]]
--cliquemerging.maxgreedycalls = 10000: Maximal number of function calls for greedy clique in a single thread in clique merging 
--cliquemerging.enabled = 0: Is clique merging enabled
+- cliquemerging.maxedgesparallel = 1000000: maximal number of edges in the graph constructed for parallel clique merging
+- cliquemerging.maxedgessequential = 100000: maximal number of edges in the graph constructed for sequential clique merging
+- cliquemerging.maxcliquesize = 100: maximal size of cliques considered for clique merging [Integer: [1,2147483647]]
+- cliquemerging.maxgreedycalls = 10000: maximal number of function calls for greedy clique in a single thread in clique merging 
+- cliquemerging.enabled = 0: is clique merging enabled?
+- dualinfer.minboundred = 0.001: minimum relative reduction to accept a bound change in dualinfer
+- presolve.max_reduction_seq = 1000000000: abort the sequential executed presolver after a specified number of reductions (PAPILO_API_VERSION 9)
+- cliquemerging.maxcalls = 1 : maximum number of calls to the clique merging presolver (PAPILO_API_VERSION 10)
 
 
 Data Structure:
@@ -43,7 +79,22 @@ Fixed bugs
 ----------
 
 
+Miscellaneous
+-------------
+
+- Timelimit is checked when applying the presolve reductions
+
 @page RN24 Release notes for PAPILO 2.4
+
+@section RN244 PaPILO 2.4.4
+
+Fixed bugs and other minor changes
+----------------------------------
+
+- suppress compiler warnings from GCC 12 with Boost < 1.85
+- support renamed verbosity levels in SoPlex
+- fixed constructor of Solution class
+- remove check for OpenMP if calling cmake with HIGHS=on
 
 @section RN243 PaPILO 2.4.3
 
@@ -56,6 +107,8 @@ Fixed bugs
 
 Build system
 ------------
+
+- disable setting the boolean variable MACOSX_RPATH to a string value to actually enable @rpath usage
 
 
 @section RN242 PaPILO 2.4.2
