@@ -13,45 +13,37 @@ Interface changes
 ### New API functions
 
 - ProblemBuilder: setColImplIntAll() to set all implied integrality flags at once
-- PresolveOptions: early_exit_callback if a calling program wants to forcefully stop PaPILO. (PAPILO_API_VERSION 8)
-
-### Changed parameters
-
+- PresolveOptions: early_exit_callback if a calling program wants to forcefully stop PaPILO (PAPILO_API_VERSION 8)
 
 ### New parameters with default values
 
 - cliquemerging.maxedgesparallel = 1000000: maximal number of edges in the graph constructed for parallel clique merging
 - cliquemerging.maxedgessequential = 100000: maximal number of edges in the graph constructed for sequential clique merging
 - cliquemerging.maxcliquesize = 100: maximal size of cliques considered for clique merging [Integer: [1,2147483647]]
-- cliquemerging.maxgreedycalls = 10000: maximal number of function calls for greedy clique in a single thread in clique merging 
+- cliquemerging.maxgreedycalls = 10000: maximal number of function calls for greedy clique in a single thread in clique merging
 - cliquemerging.enabled = 0: is clique merging enabled?
 - dualinfer.minboundred = 0.001: minimum relative reduction to accept a bound change in dualinfer
 - presolve.max_reduction_seq = 1000000000: abort the sequential executed presolver after a specified number of reductions (PAPILO_API_VERSION 9)
 - cliquemerging.maxcalls = 1 : maximum number of calls to the clique merging presolver (PAPILO_API_VERSION 10)
 
-
 Data Structure:
 ------------
 
-- Postsolve: The event "FixedColInf" contains now also the information if the opposing bound is infinite.
+- Postsolve: The event "FixedColInf" contains now also the information whether the opposing bound is infinite.
     Note that Postsolving is no longer backwards compatible. (PAPILO_API_VERSION 4)
     The PostsolveStack for this entry is changed from (ind = [col,...], val=[bound,...]) to (ind = [col,is_inf, ...], val=[0,bound,...])
 
 Build system
 ------------
 
-- for cmake >= 3.30 CMP0167 is enforced and BOOST_ROOT no longer supported, please use Boost_DIR instead with these cmake versions
-- disable default solvers and require linking when enabled
+- for cmake >= 3.30, CMP0167 is enforced and BOOST_ROOT no longer supported; use Boost_DIR instead with these cmake versions
+- disabled default solvers and require linking when enabled
 - recognize also Gurobi 10 to 13 libs automatically
-
-Fixed bugs
-----------
-
 
 Miscellaneous
 -------------
 
-- Timelimit is checked when applying the presolve reductions
+- the time limit is now checked while applying the presolve reductions
 
 @page RN24 Release notes for PAPILO 2.4
 
