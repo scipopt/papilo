@@ -668,7 +668,7 @@ class ScipFactory : public SolverFactory<REAL>
 
  public:
    virtual std::unique_ptr<SolverInterface<REAL>>
-   newSolver( VerbosityLevel verbosity ) const
+   newSolver( VerbosityLevel verbosity ) const override
    {
       auto scip =
           std::unique_ptr<SolverInterface<REAL>>( new ScipInterface<REAL>() );
@@ -683,7 +683,7 @@ class ScipFactory : public SolverFactory<REAL>
    }
 
    virtual void
-   add_parameters( ParameterSet& parameter ) const
+   add_parameters( ParameterSet& parameter ) const override
    {
    }
 
