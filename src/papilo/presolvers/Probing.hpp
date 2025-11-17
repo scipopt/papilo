@@ -438,8 +438,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
    Vec<int> change_to_equation_comb;
 #endif
 
-      HashMap<std::pair<int, int>, int, boost::hash<std::pair<int, int>>>
-      cliqueSubstitutionsPos;
+      HashMap<std::pair<int, int>, int, boost::hash<std::pair<int, int>>> cliqueSubstitutionsPos;
       Vec<int> cliqueBoundPos( size_t( 2 * ncols ), 0 );
       cliqueBoundChanges.reserve( ncols );
 
@@ -1174,8 +1173,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
    int n_useless = 0;
    bool abort = false;
 
-   HashMap<std::pair<int, int>, int, boost::hash<std::pair<int, int>>>
-   substitutionsPos;
+   HashMap<std::pair<int, int>, int, boost::hash<std::pair<int, int>>> substitutionsPos;
    Vec<ProbingSubstitution<REAL>> substitutions;
    Vec<int> boundPos( size_t( 2 * ncols ), 0 );
    Vec<ProbingBoundChg<REAL>> boundChanges;
@@ -1196,12 +1194,29 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
 #else
    ProbingView<REAL> probingView( problem, num, cliqueBoundChanges );
    probingView.setMinContDomRed( mincontdomred );
-   #endif
+#endif
+
+   int hits = 0;
+   int counter = current_badge_start;
+   // TODO: activate only i clique probing is activate and found something
+   // in case CliqueProbing is activated extend the range to cover for fixed variables
+   while( hits < current_badge_end && counter < current_badge_end )
+   {
+#ifdef PAPILO_TBB
+      if( probing_views.local().origin_upper_bounds[probing_cands[counter]] !=
+          probing_views.local().origin_lower_bounds[probing_cands[counter]] )
+#else
+      if( probingView.origin_upper_bounds[probing_cands[counter]] !=
+          probingView.origin_lower_bounds[probing_cands[counter]] )
+#endif
+         hits++;
+      counter++;
+   }
+   current_badge_end += counter;
 
    do
    {
-      Message::debug( this, "probing candidates {} to {}\n",
-                      current_badge_start, current_badge_end );
+      Message::debug( this, "probing candidates {} to {}\n", current_badge_start, current_badge_end );
 
       auto propagate_variables = [&]( int start, int end )
       {
