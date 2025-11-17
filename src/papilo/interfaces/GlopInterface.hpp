@@ -346,7 +346,7 @@ class GlopFactory : public SolverFactory<REAL>
    GlopInterface<REAL>* solver;
  public:
    virtual std::unique_ptr<SolverInterface<REAL>>
-   newSolver( VerbosityLevel verbosity ) const
+   newSolver( VerbosityLevel verbosity ) const override
    {
       auto glop = std::unique_ptr<SolverInterface<REAL>>( solver );
       auto res = std::move( glop );
@@ -354,7 +354,7 @@ class GlopFactory : public SolverFactory<REAL>
    }
 
    virtual void
-   add_parameters( ParameterSet& parameter ) const
+   add_parameters( ParameterSet& parameter ) const override
    {
       //TODO: configure parameters of GLOP
       solver->addParameters( parameter );
