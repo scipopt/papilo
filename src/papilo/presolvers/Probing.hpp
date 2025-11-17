@@ -1196,23 +1196,25 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
    probingView.setMinContDomRed( mincontdomred );
 #endif
 
-   int hits = 0;
-   int counter = current_badge_start;
-   // TODO: activate only i clique probing is activate and found something
    // in case CliqueProbing is activated extend the range to cover for fixed variables
-   while( hits < current_badge_end && counter < current_badge_end )
+   if( numcliquefails != -1 && cliqueBoundChanges.size() > 0 )
    {
+      int counter = current_badge_start;
+      int hits = 0;
+      while( hits < current_badge_end && counter < current_badge_end )
+      {
 #ifdef PAPILO_TBB
-      if( probing_views.local().origin_upper_bounds[probing_cands[counter]] !=
-          probing_views.local().origin_lower_bounds[probing_cands[counter]] )
+         if( probing_views.local().origin_upper_bounds[probing_cands[counter]] !=
+             probing_views.local().origin_lower_bounds[probing_cands[counter]] )
 #else
-      if( probingView.origin_upper_bounds[probing_cands[counter]] !=
-          probingView.origin_lower_bounds[probing_cands[counter]] )
+         if( probingView.origin_upper_bounds[probing_cands[counter]] !=
+             probingView.origin_lower_bounds[probing_cands[counter]] )
 #endif
-         hits++;
-      counter++;
+            hits++;
+         counter++;
+      }
+      current_badge_end += counter;
    }
-   current_badge_end += counter;
 
    do
    {
