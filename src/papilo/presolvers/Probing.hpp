@@ -1213,7 +1213,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
             hits++;
          counter++;
       }
-      current_badge_end += counter;
+      current_badge_end = counter;
    }
 
    do

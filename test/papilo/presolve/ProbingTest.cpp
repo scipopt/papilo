@@ -108,8 +108,7 @@ TEST_CASE( "clique-probing-1", "[presolve]" )
    Statistics statistics{};
    PresolveOptions presolveOptions{};
    presolveOptions.dualreds = 0;
-   PostsolveStorage<double> postsolve =
-       PostsolveStorage<double>( problem, num, presolveOptions );
+   auto postsolve = PostsolveStorage<double>( problem, num, presolveOptions );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
    Probing<double> presolvingMethod{};
@@ -118,33 +117,22 @@ TEST_CASE( "clique-probing-1", "[presolve]" )
 
    PresolveStatus presolveStatus =
        presolvingMethod.execute( problem, problemUpdate, num, reductions, t, cause );
-    std::cout<<"\nTESTRESULTS:\n";
-    for( int i = 0; i < static_cast<int>(reductions.size()); ++i )
-    {
-        std::cout<<"\n";
-        std::cout<<reductions.getReduction(i).col;
-        std::cout<<"\n";
-        std::cout<<reductions.getReduction(i).row;
-        std::cout<<"\n";
-        std::cout<<reductions.getReduction(i).newval;
-    }
-    
+
    REQUIRE( presolveStatus == PresolveStatus::kReduced );
 
+   REQUIRE( reductions.size() == 3 );
 
-    REQUIRE( reductions.size() == 3 );
+   REQUIRE( reductions.getReduction( 0 ).col == 3 );
+   REQUIRE( reductions.getReduction( 0 ).row == -4 );
+   REQUIRE( reductions.getReduction( 0 ).newval == 1 );
 
-    REQUIRE( reductions.getReduction( 0 ).col == 3 );
-    REQUIRE( reductions.getReduction( 0 ).row == -4 );
-    REQUIRE( reductions.getReduction( 0 ).newval == 1 );
+   REQUIRE( reductions.getReduction( 1 ).col == 4 );
+   REQUIRE( reductions.getReduction( 1 ).row == -10 );
+   REQUIRE( reductions.getReduction( 1 ).newval == 1 );
 
-    REQUIRE( reductions.getReduction( 1 ).col == 4 );
-    REQUIRE( reductions.getReduction( 1 ).row == -10 );
-    REQUIRE( reductions.getReduction( 1 ).newval == 1 );
-
-    REQUIRE( reductions.getReduction( 2 ).col == 1 );
-    REQUIRE( reductions.getReduction( 2 ).row == -1 );
-    REQUIRE( reductions.getReduction( 2 ).newval == 0 );
+   REQUIRE( reductions.getReduction( 2 ).col == 1 );
+   REQUIRE( reductions.getReduction( 2 ).row == -1 );
+   REQUIRE( reductions.getReduction( 2 ).newval == 0 );
 
 }
 
@@ -160,8 +148,8 @@ TEST_CASE( "clique-probing-2", "[presolve]" )
    Statistics statistics{};
    PresolveOptions presolveOptions{};
    presolveOptions.dualreds = 0;
-   PostsolveStorage<double> postsolve =
-       PostsolveStorage<double>( problem, num, presolveOptions );
+   auto postsolve =
+      PostsolveStorage<double>( problem, num, presolveOptions );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
                                         presolveOptions, num, msg );
    Probing<double> presolvingMethod{};
@@ -170,16 +158,6 @@ TEST_CASE( "clique-probing-2", "[presolve]" )
 
    PresolveStatus presolveStatus =
        presolvingMethod.execute( problem, problemUpdate, num, reductions, t, cause );
-    std::cout<<"\nTESTRESULTS:\n";
-    for( int i = 0; i < static_cast<int>(reductions.size()); ++i )
-    {
-        std::cout<<"\n";
-        std::cout<<reductions.getReduction(i).col;
-        std::cout<<"\n";
-        std::cout<<reductions.getReduction(i).row;
-        std::cout<<"\n";
-        std::cout<<reductions.getReduction(i).newval;
-    }
 
    REQUIRE( presolveStatus == PresolveStatus::kReduced );
 
