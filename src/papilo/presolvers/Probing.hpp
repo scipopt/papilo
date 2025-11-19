@@ -555,14 +555,12 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
          int numcliquereductions = 0;
          int numcliquebc = 0;
          int numcliquesubs = 0;
-         clique_probing_bound_changes.combine_each([&numcliquereductions](
+         clique_probing_bound_changes.combine_each([&numcliquebc](
             Vec<CliqueProbingBoundChg<REAL>>& clique_probing_bound_changes_local) {
-            numcliquereductions += static_cast<int>(clique_probing_bound_changes_local.size());
             numcliquebc += static_cast<int>(clique_probing_bound_changes_local.size());
          });
-         clique_probing_subs.combine_each([&numcliquereductions](
+         clique_probing_subs.combine_each([&numcliquesubs](
             Vec<CliqueProbingSubstitution<REAL>>& clique_probing_substitutions_local) {
-            numcliquereductions += static_cast<int>(clique_probing_substitutions_local.size());
             numcliquesubs += static_cast<int>(clique_probing_substitutions_local.size());
          });
          amounts_of_work.combine_each([&amountofwork]( int work )
@@ -570,6 +568,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
             amountofwork += work;
          });
          amounts_of_work.clear();
+         numcliquereductions = numcliquebc + numcliquesubs;
          if( infeasible || numcliquereductions
             <= totalnumpropagations * cliquereductionfactor )
 #else
