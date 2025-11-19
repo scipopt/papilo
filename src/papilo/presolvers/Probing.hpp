@@ -553,13 +553,17 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
 
 #ifdef PAPILO_TBB
          int numcliquereductions = 0;
+         int numcliquebc = 0;
+         int numcliquesubs = 0;
          clique_probing_bound_changes.combine_each([&numcliquereductions](
             Vec<CliqueProbingBoundChg<REAL>>& clique_probing_bound_changes_local) {
             numcliquereductions += static_cast<int>(clique_probing_bound_changes_local.size());
+            numcliquebc += static_cast<int>(clique_probing_bound_changes_local.size());
          });
          clique_probing_subs.combine_each([&numcliquereductions](
             Vec<CliqueProbingSubstitution<REAL>>& clique_probing_substitutions_local) {
             numcliquereductions += static_cast<int>(clique_probing_substitutions_local.size());
+            numcliquesubs += static_cast<int>(clique_probing_substitutions_local.size());
          });
          amounts_of_work.combine_each([&amountofwork]( int work )
          {
@@ -581,11 +585,17 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
                batchstart = batchend;
                batchsize /= 2;
                batchend = batchstart + batchsize;
+#ifdef PAPILO_TBB
+               if( totalnumpropagations * static_cast<double>( consMatrix.getNnz() * 2 + ( ( 0.1 * 
+                  ( numcliquebc + numcliquesubs ) 
+                  + 0.01 * numcliquebc ) *
+                  consMatrix.getNnz() ) ) / amountofwork < 0.1 * totalnumpropagations )
+#else 
                if( totalnumpropagations * static_cast<double>( consMatrix.getNnz() * 2 + ( ( 0.1 * 
                   ( static_cast<int>(clique_probing_bound_changes.size()) + static_cast<int>(clique_probing_subs.size()) ) 
                   + 0.01 * static_cast<int>(clique_probing_bound_changes.size()) ) *
-                  consMatrix.getNnz() ) ) / amountofwork < 0.1 * totalnumpropagations 
-               )
+                  consMatrix.getNnz() ) ) / amountofwork < 0.1 * totalnumpropagations )
+#endif
                {
                   unsuccessfulcliqueprobing += 1;
                   break;
