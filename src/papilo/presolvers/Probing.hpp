@@ -220,7 +220,6 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
             cliques.emplace_back( row, std::make_pair(0, cliquecheck.second) );
          }
       }
-      //std::cout<<"\nFinding all cliques took " << timer.getTime() - cliquefindstarttime << " seconds.\n";
    }
 
    for( int i = 0; i != ncols; ++i )
@@ -355,7 +354,6 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
 
    if( unsuccessfulcliqueprobing <= numcliquefails )
    {
-      //auto cliqueprobingscoressatrttime = timer.getTime();
 #ifdef PAPILO_TBB
       tbb::parallel_for(
       tbb::blocked_range<int>( 0, cliques.end() - cliques.begin() ),
@@ -419,7 +417,6 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
             break;
          }
       }
-   //std::cout<<"\nAssigning probing scores and sorting took " << timer.getTime() - cliqueprobingscoressatrttime << " seconds\n";
    }
 
    std::set<int> probedvars;
@@ -434,6 +431,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
    int ncliquefixings = 0;
    int ncliqueboundchgs = 0;
    int ncliquesubstitutions = 0;
+   int64_t amountofwork = 0;
 #ifdef PAPILO_TBB
    Vec<int> change_to_equation_comb;
 #endif
@@ -443,30 +441,13 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
       Vec<int> cliqueBoundPos( size_t( 2 * ncols ), 0 );
       cliqueBoundChanges.reserve( ncols );
 
-#ifdef PAPILO_TBB/*
-      tbb::combinable<CliqueProbingView<REAL>> clique_probing_views(
-         [this, &problem, &num]()
-         {
-            CliqueProbingView<REAL> cliqueProbingView( problem, num );
-            cliqueProbingView.setMinContDomRed( mincontdomred );
-            return cliqueProbingView;
-         } );
-      tbb::combinable<Vec<int>> change_to_equation;
-
-      tbb::combinable<CliqueProbingView<REAL>> clique_probing_views_check(
-         [this, &problem, &num]()
-         {
-            CliqueProbingView<REAL> cliqueProbingView( problem, num );
-            cliqueProbingView.setMinContDomRed( mincontdomred );
-            return cliqueProbingView;
-         } );*/
+#ifdef PAPILO_TBB
 
       tbb::combinable<Vec<CliqueProbingBoundChg<REAL>>> clique_probing_bound_changes;
       tbb::combinable<Vec<CliqueProbingSubstitution<REAL>>> clique_probing_subs;
       tbb::combinable<Vec<int>> change_to_equation;
+      tbb::combinable<int> amounts_of_work;
 #else
-      //CliqueProbingView<REAL> cliqueProbingView( problem, num );
-      //cliqueProbingView.setMinContDomRed( mincontdomred );
       Vec<CliqueProbingBoundChg<REAL>> clique_probing_bound_changes;
       Vec<CliqueProbingSubstitution<REAL>> clique_probing_subs;
       Vec<int> change_to_equation;
@@ -482,10 +463,6 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
          tbb::parallel_for( tbb::blocked_range<int>( cliquestart, cliqueend ),
          [&]( const tbb::blocked_range<int>& r )
          {
-            /*CliqueProbingView<REAL>& cliqueProbingView = clique_probing_views.local();
-
-            CliqueProbingView<REAL>& cliqueProbingViewCheck = clique_probing_views_check.local();*/
-
             for( int i = r.begin(); i < r.end(); ++i )
 #else
             int numpropagations = 0;
@@ -502,24 +479,6 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
                   nprobed[cliqueind[j]] +=1;
                }
                nprobedcliques[clique] += 1;
-               /*if( cliqueProbingView.stillRunning() )
-               {
-                  std::cout<<"\nError with reset, waiting.";
-                  std::cout.flush();
-               }
-               assert( !cliqueProbingView.stillRunning() );
-               while( cliqueProbingView.stillRunning() )
-               {
-
-               }*//*
-               std::pair<bool,bool> cliqueProbingResult = cliqueProbingView.probeClique(clique, cliqueind, cliquelen,
-                  probing_cands, probingCliques[i].second, probing_scores, colsize, colperm, nprobed );
-
-               std::pair<bool,bool> cliqueProbingResultCheck = cliqueProbingViewCheck.probeClique(clique, cliqueind, cliquelen,
-                  probing_cands, probingCliques[i].second, probing_scores, colsize, colperm, nprobed );
-
-               assert( cliqueProbingResult == cliqueProbingResultCheck );*/
-
                CliqueProbingView<REAL> local_clique_probing_view( problem, num );
                local_clique_probing_view.setMinContDomRed( mincontdomred );
 
@@ -543,28 +502,22 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
 #endif
                }
                if( !globalInfeasible )
-                  //globalInfeasible = cliqueProbingView.analyzeImplications();
                   globalInfeasible = local_clique_probing_view.analyzeImplications();
                if( globalInfeasible )
                      {
-                        //cliqueProbingView.resetClique();
                         local_clique_probing_view.resetClique();
                         infeasible.store( true, std::memory_order_relaxed );
                         infeasible_variable.store( cliqueind[0] );
                         break;
                      }
 #ifdef PAPILO_TBB
-               //numpropagations.local() += cliqueProbingView.getNumPropagations();
                numpropagations.local() += local_clique_probing_view.getNumPropagations();
+               amounts_of_work.local() += local_clique_probing_view.getAmountOfWork();
 #else
-               //numpropagations += cliqueProbingView.getNumPropagations();
                numpropagations += local_clique_probing_view.getNumPropagations();
+               amountofwork += local_clique_probing_view.getAmountOfWork();
 #endif
-               /*cliqueProbingView.resetClique();
-               assert( !cliqueProbingView.stillRunning() );
-
-               cliqueProbingViewCheck.analyzeImplications();
-               cliqueProbingViewCheck.resetClique();*/
+               local_clique_probing_view.clearAmountOfWork();
                local_clique_probing_view.resetClique();
                Vec<CliqueProbingBoundChg<REAL>> local_bound_chgs = local_clique_probing_view.getProbingBoundChanges();
                Vec<CliqueProbingSubstitution<REAL>> local_subs = local_clique_probing_view.getProbingSubstitutions();
@@ -579,65 +532,6 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
                clique_probing_subs.insert(clique_probing_subs.end(),
                   local_subs.begin(), local_subs.end() );
 #endif
-               /*auto res1 = cliqueProbingView.getProbingSubstitutions();
-               pdqsort( res1.begin(), res1.end(), []( const auto a,
-                  const auto b )
-              { return std::make_pair( a.col1, a.col2 ) >
-               std::make_pair( b.col1, b.col2 ); } );
-               auto res2 = cliqueProbingViewCheck.getProbingSubstitutions();
-               pdqsort( res2.begin(), res2.end(), []( const auto a,
-                  const auto b )
-              { return std::make_pair( a.col1, a.col2 ) >
-               std::make_pair( b.col1, b.col2 ); } );
-               if( res1.size() != res2.size() )
-               {
-                  std::cout<<"\nError, different subs, sizes: " << res1.size() << " " << res2.size() << " first Attempt: ";
-                  for( int k = 0; k < static_cast<int>(res1.size()); ++k )
-                  {
-                     std::cout<<"\n" << res1[k].col1 << " " << res1[k].col2;
-                  }
-                  std::cout<<"\nSecond Attempt: ";
-                  for( int k = 0; k < static_cast<int>(res2.size()); ++k )
-                  {
-                     std::cout<<"\n" << res2[k].col1 << " " << res2[k].col2;
-                  }
-                  std::cout.flush();
-               }
-               assert( res1.size() == res2.size() );
-               for( int k = 0; k < static_cast<int>(std::min(res1.size(),res2.size())); ++k )
-               {
-                  assert( res1[k].col1 == res2[k].col1 && res1[k].col2 == res2[k].col2 );
-               }
-
-               auto res3 = cliqueProbingView.getProbingBoundChanges();
-               pdqsort( res3.begin(), res3.end(), []( const auto a,
-                  const auto b )
-              { return std::make_pair( a.col, a.bound ) >
-               std::make_pair( b.col, b.bound ) || a.upper > b.upper ; } );
-               auto res4 = cliqueProbingViewCheck.getProbingBoundChanges();
-               pdqsort( res4.begin(), res4.end(), []( const auto a,
-                  const auto b )
-              { return std::make_pair( a.col, a.bound ) >
-               std::make_pair( b.col, b.bound ) || a.upper > b.upper ; } );
-               if( res3.size() != res4.size() )
-               {
-                  std::cout<<"\nError, different reductions, sizes: " << res3.size() << " " << res4.size() << " first Attempt: ";
-                  for( int k = 0; k < static_cast<int>(res3.size()); ++k )
-                  {
-                     std::cout<<"\n" << res3[k].col << " " << res3[k].bound << " " << res3[k].upper;
-                  }
-                  std::cout<<"\nSecond Attempt: ";
-                  for( int k = 0; k < static_cast<int>(res4.size()); ++k )
-                  {
-                     std::cout<<"\n" << res4[k].col << " " << res4[k].bound << " " << res4[k].upper;
-                  }
-                  std::cout.flush();
-               }
-               assert( res3.size() == res4.size() );
-               for( int k = 0; k < static_cast<int>(std::min(res3.size(),res4.size())); ++k )
-               {
-                  assert( res3[k].col == res4[k].col && res3[k].bound == res4[k].bound && res3[k].upper == res4[k].upper );
-               }*/
             }
 #ifdef PAPILO_TBB
          } );
@@ -646,10 +540,6 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
       totalnumpropagations += numpropagations;
 #endif
       };
-      /*auto inittime  = timer.getTime() - initstarttime;
-      std::cout<<"\nProbing initialization took ";
-      std::cout<<inittime;
-      std::cout<<" seconds";*/
       auto cliqueprobinstarttime = timer.getTime();
 
       int batchsize = initialbatchsize;
@@ -663,10 +553,6 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
 
 #ifdef PAPILO_TBB
          int numcliquereductions = 0;
-         /*clique_probing_views.combine_each([&numcliquereductions](CliqueProbingView<REAL>& clique_probing_view) {
-            numcliquereductions += clique_probing_view.getNumSubstitutions()
-            + clique_probing_view.getProbingBoundChanges().size();
-         });*/
          clique_probing_bound_changes.combine_each([&numcliquereductions](
             Vec<CliqueProbingBoundChg<REAL>>& clique_probing_bound_changes_local) {
             numcliquereductions += static_cast<int>(clique_probing_bound_changes_local.size());
@@ -675,11 +561,14 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
             Vec<CliqueProbingSubstitution<REAL>>& clique_probing_substitutions_local) {
             numcliquereductions += static_cast<int>(clique_probing_substitutions_local.size());
          });
+         amounts_of_work.combine_each([&amountofwork]( int work )
+         {
+            amountofwork += work;
+         });
+         amounts_of_work.clear();
          if( infeasible || numcliquereductions
             <= totalnumpropagations * cliquereductionfactor )
 #else
-         /*if( infeasible || (cliqueProbingView.getNumSubstitutions() + static_cast<int>(cliqueProbingView.getProbingBoundChanges().size()))
-            <= totalnumpropagations * cliquereductionfactor )*/
          if( infeasible || (static_cast<int>(clique_probing_bound_changes.size()) + static_cast<int>(clique_probing_subs.size()))
             <= totalnumpropagations * cliquereductionfactor )
 #endif
@@ -692,6 +581,15 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
                batchstart = batchend;
                batchsize /= 2;
                batchend = batchstart + batchsize;
+               if( totalnumpropagations * static_cast<double>( consMatrix.getNnz() * 2 + ( ( 0.1 * 
+                  ( static_cast<int>(clique_probing_bound_changes.size()) + static_cast<int>(clique_probing_subs.size()) ) 
+                  + 0.01 * static_cast<int>(clique_probing_bound_changes.size()) ) *
+                  consMatrix.getNnz() ) ) / amountofwork < 0.1 * totalnumpropagations 
+               )
+               {
+                  unsuccessfulcliqueprobing += 1;
+                  break;
+               }   
             }
          }
          else
@@ -720,7 +618,6 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
             probedvars.emplace(cliqueind[ind]);
          }
          nprobedvars += finalinds[clique];
-         //std::cout<<"\n"<<finalinds[clique]<<" "<<cliquevec.getLength();
       }
 
       ncliquesubstitutions = -cliquesubstitutions.size();
@@ -791,95 +688,6 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
    }
 #endif
 
-
-/*#ifdef PAPILO_TBB
-      clique_probing_views.combine_each(
-      [&]( CliqueProbingView<REAL>& cliqueProbingView )
-      {
-#endif
-               const auto& cliqueProbingBoundChgs =
-                  cliqueProbingView.getProbingBoundChanges();
-
-               const auto& cliqueProbingSubstitutions =
-                  cliqueProbingView.getProbingSubstitutions();
-
-               //amountofwork += cliqueProbingView.getAmountOfWork();
-
-               for( const CliqueProbingSubstitution<REAL>& subst :
-                     cliqueProbingSubstitutions )
-               {
-                  auto insres = cliqueSubstitutionsPos.emplace(
-                     std::make_pair( subst.col1, subst.col2 ),
-                     cliquesubstitutions.size() );
-
-                  if( insres.second )
-                     cliquesubstitutions.push_back( subst );
-               }
-
-               for( const CliqueProbingBoundChg<REAL>& boundChg : cliqueProbingBoundChgs )
-               {
-                  if( cliqueBoundPos[2 * boundChg.col + boundChg.upper] == 0 )
-                  {
-                     // found new bound change
-                     cliqueBoundChanges.emplace_back( boundChg );
-                     cliqueBoundPos[2 * boundChg.col + boundChg.upper] =
-                        cliqueBoundChanges.size();
-
-                     // check if column is now fixed
-                     if( ( boundChg.upper &&
-                           boundChg.bound == lower_bounds[boundChg.col] ) ||
-                        ( !boundChg.upper &&
-                           boundChg.bound == upper_bounds[boundChg.col] ) )
-                        ++ncliquefixings;
-                     else
-                        ++ncliqueboundchgs;
-                  }
-                  else
-                  {
-                     // already changed that bound
-                     CliqueProbingBoundChg<REAL>& cliqueOtherBoundChg = cliqueBoundChanges
-                        [cliqueBoundPos[2 * boundChg.col + boundChg.upper] - 1];
-
-                     if( boundChg.upper && boundChg.bound < cliqueOtherBoundChg.bound )
-                     {
-                        // new upper bound change is tighter
-                        cliqueOtherBoundChg.bound = boundChg.bound;
-
-                        // check if column is now fixed
-                        if( boundChg.bound == lower_bounds[boundChg.col] )
-                           ++ncliquefixings;
-
-                        if( problemUpdate.getPresolveOptions()
-                                 .verification_with_VeriPB )
-                        {
-                           if( boundChg.probing_col == -1 )
-                              cliqueOtherBoundChg.probing_col = -1;
-                        }
-                     }
-                     else if( !boundChg.upper &&
-                              boundChg.bound > cliqueOtherBoundChg.bound )
-                     {
-                        // new lower bound change is tighter
-                        cliqueOtherBoundChg.bound = boundChg.bound;
-
-                        // check if column is now fixed
-                        if( boundChg.bound == upper_bounds[boundChg.col] )
-                           ++ncliquefixings;
-                     }
-
-                     // do only count fixings in this case for two reasons:
-                     // 1) the number of bound changes depends on the order and
-                     // would make probing non deterministic 2) the boundchange
-                     // was already counted in previous rounds and will only be
-                     // added once
-                  }
-               }
-
-               cliqueProbingView.clearResults();
-#ifdef PAPILO_TBB
-            } );
-#endif
-      ncliquesubstitutions += cliquesubstitutions.size();*/
 
 #ifdef PAPILO_TBB
       Vec<CliqueProbingBoundChg<REAL>> cliqueProbingBoundChgs;
@@ -1180,7 +988,6 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
    Vec<int> boundPos( size_t( 2 * ncols ), 0 );
    Vec<ProbingBoundChg<REAL>> boundChanges;
    boundChanges.reserve( ncols );
-   int64_t amountofwork = 0;
 
 
    // use tbb combinable so that each thread will copy the activities and
