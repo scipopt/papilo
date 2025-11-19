@@ -469,7 +469,7 @@ class CliqueProbingView
 
       ub_implications_thread.clear();
 
-      amount_of_work.combine_each([&amountofwork]( int work ) {
+      amount_of_work.combine_each([&]( int work ) {
          amountofwork += work;
       });
       amount_of_work.clear();
