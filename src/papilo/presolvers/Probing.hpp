@@ -952,6 +952,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
    const Vec<int>& rowsize = consMatrix.getRowSizes();
 
    int current_badge_start = 0;
+   amountofwork = 0;
 
    int64_t working_limit = consMatrix.getNnz() * 2;
    int initial_badge_limit = 0.1 * working_limit;
