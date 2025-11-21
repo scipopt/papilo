@@ -454,6 +454,8 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
 #endif
    Vec<int> finalinds( static_cast<int>(probingCliques.end() - probingCliques.begin()), 0 );
 
+   bool earlycliqueabort = false;
+
    if( unsuccessfulcliqueprobing <= numcliquefails )
    {
       auto propagate_cliques = [&]( int cliquestart, int cliqueend )
@@ -596,7 +598,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
                   consMatrix.getNnz() ) ) / amountofwork < 0.1 * totalnumpropagations )
 #endif
                {
-                  unsuccessfulcliqueprobing += 1;
+                  earlycliqueabort = true;
                   break;
                }   
             }
@@ -824,7 +826,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
       std::cout<< static_cast<float>(ncliquefixings + ncliqueboundchgs + ncliquesubstitutions)
          / static_cast<float>(totalnumpropagations);
       std::cout<<"\n\n\n";
-      if( ncliquefixings + ncliqueboundchgs + ncliquesubstitutions == 0 )
+      if( ncliquefixings + ncliqueboundchgs + ncliquesubstitutions == 0 || earlycliqueabort )
             unsuccessfulcliqueprobing += 1;
       else
             unsuccessfulcliqueprobing = 0;
