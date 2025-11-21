@@ -38,7 +38,9 @@ enum ParseKey
    kNone,
    kEnd,
    kFail,
-   kComment
+   kComment,
+   kObjSense,
+   kObjSenseParsed,
 };
 
 } // namespace papilo

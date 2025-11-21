@@ -142,6 +142,19 @@ class Problem
       }
    }
 
+   bool
+   is_objective_negated() const
+   {
+      return objective_negated;
+   }
+
+   void
+   set_objective_negated( const bool flag )
+   {
+      objective_negated = flag;
+   }
+
+
    /// set domains of variables
    void
    setVariableDomains( Vec<REAL> lower_bounds, Vec<REAL> upper_bounds,
@@ -822,6 +835,7 @@ class Problem
    VariableDomains<REAL> variableDomains;
    int ncontinuous;
    int nintegers;
+   bool objective_negated = false;
    VariableDomains<REAL> domains;
 
    Vec<String> variableNames;

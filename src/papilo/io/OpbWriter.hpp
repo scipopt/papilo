@@ -136,7 +136,7 @@ struct OpbWriter
             REAL coef = obj.coefficients[i];
             if( coef == 0 )
                continue;
-            fmt::print( out, "{}{} {} ", coef > 0 ? "+" : "-", boost::multiprecision::cpp_int( abs(coef) ).str(),
+            fmt::print( out, "{}{} {} ", !prob.is_objective_negated() == (coef > 0) ? "+" : "-", boost::multiprecision::cpp_int( abs(coef) ).str(),
                         varnames[col_mapping[i]] );
          }
          fmt::print( out, ";\n" );

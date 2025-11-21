@@ -1520,9 +1520,11 @@ Presolve<REAL>::logStatus( ProblemUpdate<REAL>& problem_update,
       postsolve.undo( empty_sol, solution, postsolveStorage );
       const Problem<REAL>& origprob = postsolveStorage.getOriginalProblem();
       REAL origobj = origprob.computeSolObjective( solution.primal );
+      if( origprob.is_objective_negated() )
+         origobj *= -1;
       msg.info(
           "problem is solved [optimal solution found] [objective value: {} (double precision)]\n",
-          (double) origobj );
+          static_cast<double>( origobj ) );
       problem_update.getCertificateInterface()->log_solution( solution, problem.getVariableNames(), origobj );
    }
    else
