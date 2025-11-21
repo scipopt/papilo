@@ -7,6 +7,11 @@ License changes
 
 - The license of PaPILO has changed to the Apache License 2.0.
 
+Features
+--------------
+
+- MPS Parser can now handle maximization problem (OBJSENSE MAX) (PAPILO_API_VERSION 11)
+
 Interface changes
 -----------------
 
