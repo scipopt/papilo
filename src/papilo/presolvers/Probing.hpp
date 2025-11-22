@@ -1262,7 +1262,6 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
             if(binary)
             {
                probing_scores[boundChg.col] = -100000;
-               nprobed[boundChg.col] = -100000;
             }
          }
          else
@@ -1275,7 +1274,6 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
             if(binary)
             {
                probing_scores[boundChg.col] = -100000;
-               nprobed[boundChg.col] = -100000;
             }
          }
       }
