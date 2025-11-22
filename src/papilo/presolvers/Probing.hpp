@@ -1103,8 +1103,6 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
             } );
 
 
-   int clique_cutoff_ub = 0;
-
    if( unsuccessfulcliqueprobing <= numcliquefails )
    {
       if( probing_scores[probing_cands[0]] < 0 )
