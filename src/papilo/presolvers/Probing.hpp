@@ -1031,7 +1031,6 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
                if( binary )
                {
                   probing_scores[boundChg.col] = -100000;
-                  nprobed[boundChg.col] = -100000;
                }
             }
             else
@@ -1044,7 +1043,6 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
                if( binary )
                {
                   probing_scores[boundChg.col] = -100000;
-                  nprobed[boundChg.col] = -100000;
                }
             }
          }
@@ -1109,26 +1107,21 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
 
    if( unsuccessfulcliqueprobing <= numcliquefails )
    {
-      clique_cutoff_ub = static_cast<int>(probing_cands.size())-1;
-      int clique_cutoff_lb = 0;
-
-      assert( clique_cutoff_ub < static_cast<int>(probing_cands.size()));
-      if( clique_cutoff_ub != -1 && probing_scores[probing_cands[clique_cutoff_ub]] < 0 )
+      if( probing_scores[probing_cands[0]] < 0 )
       {
-         while (clique_cutoff_ub - clique_cutoff_lb > 1 )
-         {
-            if( probing_scores[probing_cands[ ( clique_cutoff_ub + clique_cutoff_lb ) / 2 ]] >= 0 )
-            {
-               clique_cutoff_lb = ( clique_cutoff_ub + clique_cutoff_lb ) / 2;
-            }
-            else if( probing_scores[probing_cands[ ( clique_cutoff_ub + clique_cutoff_lb ) / 2 ]] < 0 )
-            {
-               clique_cutoff_ub = ( clique_cutoff_ub + clique_cutoff_lb ) / 2;
-            }
-         }
+         probing_cands.clear();
+         return result;
       }
+      
+      auto cutoff = std::partition_point(
+         probing_cands.begin(),
+         probing_cands.end(),
+         [&](int x) { return probing_scores[x] >= 0; }
+      );
 
-      probing_cands.resize(clique_cutoff_ub+1);
+      probing_cands.resize(std::distance(probing_cands.begin(), cutoff));
+
+      assert( probing_scores[ probing_cands[ static_cast<int>(probing_cands.size()) - 1 ] ] >= 0 );
    }
 
    const Vec<int>& rowsize = consMatrix.getRowSizes();
@@ -1195,26 +1188,6 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
    ProbingView<REAL> probingView( problem, num, cliqueBoundChanges );
    probingView.setMinContDomRed( mincontdomred );
 #endif
-
-   // in case CliqueProbing is activated extend the range to cover for fixed variables
-   if( numcliquefails != -1 && cliqueBoundChanges.size() > 0 )
-   {
-      int counter = current_badge_start;
-      int hits = 0;
-      while( hits < current_badge_end && counter < current_badge_end )
-      {
-#ifdef PAPILO_TBB
-         if( probing_views.local().origin_upper_bounds[probing_cands[counter]] !=
-             probing_views.local().origin_lower_bounds[probing_cands[counter]] )
-#else
-         if( probingView.origin_upper_bounds[probing_cands[counter]] !=
-             probingView.origin_lower_bounds[probing_cands[counter]] )
-#endif
-            hits++;
-         counter++;
-      }
-      current_badge_end = counter;
-   }
 
    do
    {
@@ -1469,7 +1442,6 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
             if(binary)
             {
                probing_scores[boundChg.col] = -100000;
-               nprobed[boundChg.col] = -100000;
             }
          }
          else
@@ -1482,7 +1454,6 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
             if(binary)
             {
                probing_scores[boundChg.col] = -100000;
-               nprobed[boundChg.col] = -100000;
             }
          }
       }
