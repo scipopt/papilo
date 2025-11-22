@@ -923,37 +923,22 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
             } );
 
 
-   int clique_cutoff_ub = 0;
-
    if( unsuccessfulcliqueprobing <= numcliquefails )
    {
-      clique_cutoff_ub = static_cast<int>(probing_cands.size())-1;
-      int clique_cutoff_lb = 0;
-
-      assert( clique_cutoff_ub < static_cast<int>(probing_cands.size()));
-      if( clique_cutoff_ub != -1 && probing_scores[probing_cands[clique_cutoff_ub]] < 0 )
-      {
-         while (clique_cutoff_ub - clique_cutoff_lb > 1 )
-         {
-            if( probing_scores[probing_cands[ ( clique_cutoff_ub + clique_cutoff_lb ) / 2 ]] >= 0 )
-            {
-               clique_cutoff_lb = ( clique_cutoff_ub + clique_cutoff_lb ) / 2;
-            }
-            else if( probing_scores[probing_cands[ ( clique_cutoff_ub + clique_cutoff_lb ) / 2 ]] < 0 )
-            {
-               clique_cutoff_ub = ( clique_cutoff_ub + clique_cutoff_lb ) / 2;
-            }
-         }
-      }
       if( probing_scores[probing_cands[0]] < 0 )
       {
          probing_cands.clear();
          return result;
-      } 
+      }
+      
+      auto cutoff = std::partition_point(
+         probing_cands.begin(),
+         probing_cands.end(),
+         [&](int x) { return probing_scores[x] >= 0; }
+      );
 
-      assert( clique_cutoff_ub + 1 == static_cast<int>(probing_cands.size()) 
-              || probing_scores[ probing_cands[ clique_cutoff_ub + 1 ]] < 0 );
-      probing_cands.resize(clique_cutoff_ub+1);
+      probing_cands.resize(std::distance(probing_cands.begin(), cutoff));
+
       assert( probing_scores[ probing_cands[ static_cast<int>(probing_cands.size()) - 1 ] ] >= 0 );
    }
 
