@@ -32,12 +32,23 @@ Miscellaneous
 
 @page RN30 Release notes for PAPILO 3.0
 
+@section RN301 PaPILO 3.0.1
+
+Fixed bugs
+----------
+
+
 @section RN300 PaPILO 3.0.0
 
 License changes
 ---------------
 
 - The license of PaPILO has changed to the Apache License 2.0.
+
+Features
+--------------
+
+- MPS Parser can now handle maximization problem (OBJSENSE MAX) (PAPILO_API_VERSION 11)
 
 Interface changes
 -----------------

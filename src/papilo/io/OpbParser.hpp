@@ -90,7 +90,7 @@ class OpbParser
 
       assert(static_cast<int>(parser.coeffobj.size()) == parser.nCols);
 
-      Vec<REAL> obj_vec( size_t( parser.nCols ), REAL{ 0.0 } );
+      Vec<REAL> obj_vec( static_cast<size_t>( parser.nCols ), REAL{ 0.0 } );
 
       for( auto i : parser.coeffobj )
          obj_vec[i.first] = i.second;

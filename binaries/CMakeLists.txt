@@ -84,7 +84,7 @@ if(TARGET clusol)
 endif()
 
 # Search again since we cannot rely on papilo/CMakeLists.txt having searched for Boost already.
-find_package(Boost ${BOOST_MIN_VERSION} OPTIONAL_COMPONENTS iostreams program_options serialization)
+find_package(Boost ${BOOST_MIN_VERSION} REQUIRED OPTIONAL_COMPONENTS iostreams program_options serialization)
 
 include_directories(${SCIP_INCLUDE_DIRS} ${SOPLEX_INCLUDE_DIRS} ${CMAKE_CURRENT_BINARY_DIR})
 
@@ -175,6 +175,9 @@ if(Boost_IOSTREAMS_FOUND AND Boost_SERIALIZATION_FOUND AND Boost_PROGRAM_OPTIONS
    endif()
    target_compile_definitions(papilo-executable PRIVATE PAPILO_USE_EXTERN_TEMPLATES PAPILO_MPS_WRITER)
    install(TARGETS papilo-executable ARCHIVE DESTINATION ${CMAKE_INSTALL_BINDIR} LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+   if(MSVC)
+       install(FILES $<TARGET_PDB_FILE:papilo-executable> DESTINATION ${CMAKE_INSTALL_BINDIR} OPTIONAL)
+   endif()
 
 #   add_executable(convMPS EXCLUDE_FROM_ALL ${CMAKE_CURRENT_LIST_DIR}/../src/convMPS.cpp)
 #   set_target_properties(convMPS PROPERTIES OUTPUT_NAME convMPS RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
