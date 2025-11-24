@@ -1234,8 +1234,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
           ceil( badge_size * static_cast<double>( working_limit + extrawork ) /
                 (double)amountofwork ) )<<"\nPrevious badge size: " << badge_size
                 <<"\nWorking limit: "<<  working_limit << "\nextrawork: " << extrawork
-                << "\namount of work: " << amountofwork ;
-      std::cout.flush;
+                << "\namount of work: " << amountofwork << std::flush;
 
       if (amountofwork != 0)
       badge_size = static_cast<int>(
