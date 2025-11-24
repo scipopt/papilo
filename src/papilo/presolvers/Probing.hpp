@@ -1015,7 +1015,6 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
 
       auto propagate_variables = [&]( int start, int end )
       {
-         std::cout<<"\n"<<start<<" "<<end;
 #ifdef PAPILO_TBB
          tbb::parallel_for(
              tbb::blocked_range<int>( start, end ),
@@ -1076,7 +1075,6 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
 #ifdef PAPILO_TBB
              } );
 #endif
-      std::cout<<"\nFinished";
       };
 
       int nfixings = 0;
@@ -1088,11 +1086,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
       assert(current_badge_start >= 0 );
       assert(current_badge_start <= current_badge_end );
       auto probingstarttime = timer.getTime();
-      std::cout<<"\nStarting Probing of variables in batch from " << current_badge_start << " to " 
-               << current_badge_end << " with a total of " << static_cast<int>(probing_cands.size())
-               << " candidates.";
       propagate_variables( current_badge_start, current_badge_end);
-      std::cout<<"\nFinished batch.";
       auto probingtime = timer.getTime() - probingstarttime;
 
       if( PresolveMethod<REAL>::is_time_exceeded(
@@ -1230,11 +1224,6 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
 
       working_limit -= amountofwork;
       working_limit += extrawork;
-      std::cout<<"\nHypothetical badge size: " << static_cast<int>(
-          ceil( badge_size * static_cast<double>( working_limit + extrawork ) /
-                (double)amountofwork ) )<<"\nPrevious badge size: " << badge_size
-                <<"\nWorking limit: "<<  working_limit << "\nextrawork: " << extrawork
-                << "\namount of work: " << amountofwork << std::flush;
 
       if (amountofwork != 0)
       badge_size = static_cast<int>(
