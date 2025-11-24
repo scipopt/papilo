@@ -1015,6 +1015,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
 
       auto propagate_variables = [&]( int start, int end )
       {
+         std::cout<<"\n"<<start<<" "<<end;
 #ifdef PAPILO_TBB
          tbb::parallel_for(
              tbb::blocked_range<int>( start, end ),
@@ -1075,6 +1076,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
 #ifdef PAPILO_TBB
              } );
 #endif
+      std::cout<<"\nFinished";
       };
 
       int nfixings = 0;
