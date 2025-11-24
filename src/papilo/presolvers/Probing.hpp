@@ -47,7 +47,7 @@
 namespace papilo
 {
 
-const static int DEFAULT_MAX_BADGE_SIZE = 1024;
+const static int DEFAULT_MAX_BADGE_SIZE = -1;
 
 template <typename REAL>
 class Probing : public PresolveMethod<REAL>
@@ -1230,6 +1230,12 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
 
       working_limit -= amountofwork;
       working_limit += extrawork;
+      std::cout<<"\nHypothetical badge size: " << static_cast<int>(
+          ceil( badge_size * static_cast<double>( working_limit + extrawork ) /
+                (double)amountofwork ) )<<"\nPrevious badge size: " << badge_size
+                <<"\nWorking limit: "<<  working_limit << "\nextrawork: " << extrawork
+                << "\namount of work: " << amountofwork ;
+      std::cout.flush;
 
       if (amountofwork != 0)
       badge_size = static_cast<int>(
