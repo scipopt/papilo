@@ -47,7 +47,7 @@
 namespace papilo
 {
 
-const static int DEFAULT_MAX_BADGE_SIZE = -1;
+const static int DEFAULT_MAX_BADGE_SIZE = 1024;
 
 template <typename REAL>
 class Probing : public PresolveMethod<REAL>
