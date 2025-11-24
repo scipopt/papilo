@@ -438,8 +438,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
    Vec<int> change_to_equation_comb;
 #endif
 
-      HashMap<std::pair<int, int>, int, boost::hash<std::pair<int, int>>>
-      cliqueSubstitutionsPos;
+      HashMap<std::pair<int, int>, int, boost::hash<std::pair<int, int>>> cliqueSubstitutionsPos;
       Vec<int> cliqueBoundPos( size_t( 2 * ncols ), 0 );
       cliqueBoundChanges.reserve( ncols );
 
@@ -1032,7 +1031,6 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
                if( binary )
                {
                   probing_scores[boundChg.col] = -100000;
-                  nprobed[boundChg.col] = -100000;
                }
             }
             else
@@ -1045,7 +1043,6 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
                if( binary )
                {
                   probing_scores[boundChg.col] = -100000;
-                  nprobed[boundChg.col] = -100000;
                }
             }
          }
@@ -1106,30 +1103,23 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
             } );
 
 
-   int clique_cutoff_ub = 0;
-
    if( unsuccessfulcliqueprobing <= numcliquefails )
    {
-      clique_cutoff_ub = static_cast<int>(probing_cands.size())-1;
-      int clique_cutoff_lb = 0;
-
-      assert( clique_cutoff_ub < static_cast<int>(probing_cands.size()));
-      if( clique_cutoff_ub != -1 && probing_scores[probing_cands[clique_cutoff_ub]] < 0 )
+      if( probing_scores[probing_cands[0]] < 0 )
       {
-         while (clique_cutoff_ub - clique_cutoff_lb > 1 )
-         {
-            if( probing_scores[probing_cands[ ( clique_cutoff_ub + clique_cutoff_lb ) / 2 ]] >= 0 )
-            {
-               clique_cutoff_lb = ( clique_cutoff_ub + clique_cutoff_lb ) / 2;
-            }
-            else if( probing_scores[probing_cands[ ( clique_cutoff_ub + clique_cutoff_lb ) / 2 ]] < 0 )
-            {
-               clique_cutoff_ub = ( clique_cutoff_ub + clique_cutoff_lb ) / 2;
-            }
-         }
+         probing_cands.clear();
+         return result;
       }
+      
+      auto cutoff = std::partition_point(
+         probing_cands.begin(),
+         probing_cands.end(),
+         [&](int x) { return probing_scores[x] >= 0; }
+      );
 
-      probing_cands.resize(clique_cutoff_ub+1);
+      probing_cands.resize(std::distance(probing_cands.begin(), cutoff));
+
+      assert( probing_scores[ probing_cands[ static_cast<int>(probing_cands.size()) - 1 ] ] >= 0 );
    }
 
    const Vec<int>& rowsize = consMatrix.getRowSizes();
@@ -1174,8 +1164,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
    int n_useless = 0;
    bool abort = false;
 
-   HashMap<std::pair<int, int>, int, boost::hash<std::pair<int, int>>>
-   substitutionsPos;
+   HashMap<std::pair<int, int>, int, boost::hash<std::pair<int, int>>> substitutionsPos;
    Vec<ProbingSubstitution<REAL>> substitutions;
    Vec<int> boundPos( size_t( 2 * ncols ), 0 );
    Vec<ProbingBoundChg<REAL>> boundChanges;
@@ -1196,12 +1185,11 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
 #else
    ProbingView<REAL> probingView( problem, num, cliqueBoundChanges );
    probingView.setMinContDomRed( mincontdomred );
-   #endif
+#endif
 
    do
    {
-      Message::debug( this, "probing candidates {} to {}\n",
-                      current_badge_start, current_badge_end );
+      Message::debug( this, "probing candidates {} to {}\n", current_badge_start, current_badge_end );
 
       auto propagate_variables = [&]( int start, int end )
       {
@@ -1452,7 +1440,6 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
             if(binary)
             {
                probing_scores[boundChg.col] = -100000;
-               nprobed[boundChg.col] = -100000;
             }
          }
          else
@@ -1465,7 +1452,6 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
             if(binary)
             {
                probing_scores[boundChg.col] = -100000;
-               nprobed[boundChg.col] = -100000;
             }
          }
       }
