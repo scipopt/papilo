@@ -1086,7 +1086,11 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
       assert(current_badge_start >= 0 );
       assert(current_badge_start <= current_badge_end );
       auto probingstarttime = timer.getTime();
+      std::cout<<"\nStarting Probing of variables in batch from " << current_badge_start << " to " 
+               << current_badge_end << " with a total of " << static_cast<int>(probing_cands.size())
+               << " candidates.";
       propagate_variables( current_badge_start, current_badge_end);
+      std::cout<<"\nFinished batch.";
       auto probingtime = timer.getTime() - probingstarttime;
 
       if( PresolveMethod<REAL>::is_time_exceeded(
