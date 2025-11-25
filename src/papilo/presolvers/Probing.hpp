@@ -587,11 +587,6 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
                batchstart = batchend;
                batchsize /= 2;
                batchend = batchstart + batchsize;
-               std::cout<<"\ntotalnumpropagations: " << totalnumpropagations << "\nconsMatrix.getNnz(): "
-               << consMatrix.getNnz() << "\nnumcliquebc: " << numcliquebc << "\nnumcliquesubs: " <<
-               numcliquesubs << "\namountofwork: " <<amountofwork<< "\nRatio: " 
-               << static_cast<double>(totalnumpropagations * consMatrix.getNnz() 
-               * ( 1 + numcliquebc + numcliquesubs ) ) / static_cast<double>(amountofwork) << std::flush;
 
                if( static_cast<double>(totalnumpropagations * consMatrix.getNnz() 
                * ( 1 + numcliquebc + numcliquesubs ) ) / static_cast<double>(amountofwork) < 0.5 )
