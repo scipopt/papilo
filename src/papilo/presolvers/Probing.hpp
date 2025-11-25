@@ -585,6 +585,9 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
                batchstart = batchend;
                batchsize /= 2;
                batchend = batchstart + batchsize;
+               std::cout<<"\ntotalnumpropagations: " << totalnumpropagations << "\nconsMatrix.getNnz(): "
+               << consMatrix.getNnz() << "\nnumcliquebc: " << numcliquebc << "\nnumcliquesubs: " <<
+               numcliquesubs << "\namountofwork: " <<amountofwork<< std.flush;
 #ifdef PAPILO_TBB
                if( totalnumpropagations * static_cast<double>( consMatrix.getNnz() * 2 + ( ( 0.1 * 
                   ( numcliquebc + numcliquesubs ) 
