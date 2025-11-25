@@ -573,6 +573,8 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
          if( infeasible || numcliquereductions
             <= totalnumpropagations * cliquereductionfactor )
 #else
+         numcliquebc = static_cast<int>(clique_probing_bound_changes.size());
+         numcliquesubs = static_cast<int>(clique_probing_subs.size());
          if( infeasible || (static_cast<int>(clique_probing_bound_changes.size()) + static_cast<int>(clique_probing_subs.size()))
             <= totalnumpropagations * cliquereductionfactor )
 #endif
@@ -587,18 +589,12 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
                batchend = batchstart + batchsize;
                std::cout<<"\ntotalnumpropagations: " << totalnumpropagations << "\nconsMatrix.getNnz(): "
                << consMatrix.getNnz() << "\nnumcliquebc: " << numcliquebc << "\nnumcliquesubs: " <<
-               numcliquesubs << "\namountofwork: " <<amountofwork<< std::flush;
-#ifdef PAPILO_TBB
-               if( totalnumpropagations * static_cast<double>( consMatrix.getNnz() * 2 + ( ( 0.1 * 
-                  ( numcliquebc + numcliquesubs ) 
-                  + 0.01 * numcliquebc ) *
-                  consMatrix.getNnz() ) ) / amountofwork < 0.1 * totalnumpropagations )
-#else 
-               if( totalnumpropagations * static_cast<double>( consMatrix.getNnz() * 2 + ( ( 0.1 * 
-                  ( static_cast<int>(clique_probing_bound_changes.size()) + static_cast<int>(clique_probing_subs.size()) ) 
-                  + 0.01 * static_cast<int>(clique_probing_bound_changes.size()) ) *
-                  consMatrix.getNnz() ) ) / amountofwork < 0.1 * totalnumpropagations )
-#endif
+               numcliquesubs << "\namountofwork: " <<amountofwork<< "\nRatio: " 
+               << static_cast<double>(totalnumpropagations * consMatrix.getNnz() 
+               * ( 1 + numcliquebc + numcliquesubs ) ) / static_cast<double>(amountofwork) << std::flush;
+
+               if( static_cast<double>(totalnumpropagations * consMatrix.getNnz() 
+               * ( 1 + numcliquebc + numcliquesubs ) ) / static_cast<double>(amountofwork) < 0.5 )
                {
                   earlycliqueabort = true;
                   break;
