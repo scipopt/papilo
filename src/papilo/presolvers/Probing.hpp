@@ -591,6 +591,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
                if( static_cast<double>(totalnumpropagations * consMatrix.getNnz() 
                * ( 1 + numcliquebc + numcliquesubs ) ) / static_cast<double>(amountofwork) < 0.5 )
                {
+                  std::cout<<"\nEarly clique probing abortion";
                   earlycliqueabort = true;
                   break;
                }   
