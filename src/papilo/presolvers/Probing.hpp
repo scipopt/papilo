@@ -575,7 +575,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
 #else
          numcliquebc = static_cast<int>(clique_probing_bound_changes.size());
          numcliquesubs = static_cast<int>(clique_probing_subs.size());
-         if( infeasible || (static_cast<int>(clique_probing_bound_changes.size()) + static_cast<int>(clique_probing_subs.size()))
+         if( infeasible || (numcliquebc + numcliquesubs)
             <= totalnumpropagations * cliquereductionfactor )
 #endif
          {
