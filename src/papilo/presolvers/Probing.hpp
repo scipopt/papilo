@@ -579,6 +579,13 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
             <= totalnumpropagations * cliquereductionfactor )
 #endif
          {
+            if( static_cast<double>(totalnumpropagations * consMatrix.getNnz() 
+            * ( 1 + numcliquebc + numcliquesubs ) ) / static_cast<double>(amountofwork) < 0.5 )
+            {
+               std::cout<<"\nEarly clique probing abortion";
+               earlycliqueabort = true;
+               break;
+            }   
             if( !successlasttime )
                break;
             else
@@ -587,14 +594,6 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
                batchstart = batchend;
                batchsize /= 2;
                batchend = batchstart + batchsize;
-
-               if( static_cast<double>(totalnumpropagations * consMatrix.getNnz() 
-               * ( 1 + numcliquebc + numcliquesubs ) ) / static_cast<double>(amountofwork) < 0.5 )
-               {
-                  std::cout<<"\nEarly clique probing abortion";
-                  earlycliqueabort = true;
-                  break;
-               }   
             }
          }
          else
