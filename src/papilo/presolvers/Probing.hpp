@@ -551,11 +551,10 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
       while( batchstart < static_cast<int>(probingCliques.end() - probingCliques.begin()) )
       {
          propagate_cliques( batchstart, std::min(batchend, static_cast<int>(probingCliques.end() - probingCliques.begin())) );
-         int numcliquereductions = 0;
          int numcliquebc = 0;
          int numcliquesubs = 0;
 #ifdef PAPILO_TBB
-
+         int numcliquereductions = 0;
          clique_probing_bound_changes.combine_each([&numcliquebc](
             Vec<CliqueProbingBoundChg<REAL>>& clique_probing_bound_changes_local) {
             numcliquebc += static_cast<int>(clique_probing_bound_changes_local.size());
