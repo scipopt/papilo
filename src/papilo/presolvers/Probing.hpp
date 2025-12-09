@@ -167,6 +167,12 @@ class Probing : public PresolveMethod<REAL>
 
    void
    set_max_badge_size( int val );
+
+   void
+   set_numcliquefails(int val)
+   {
+      this->numcliquefails = val;
+   }
 };
 
 #ifdef PAPILO_USE_EXTERN_TEMPLATES
@@ -1323,6 +1329,7 @@ Probing<REAL>::set_max_badge_size( int val )
 {
    max_badge_size = val;
 }
+
 
 } // namespace papilo
 
