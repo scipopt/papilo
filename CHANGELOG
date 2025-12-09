@@ -5,7 +5,7 @@
 Features
 --------
 
-- CliqueProbing exploits datastructure present in the problem (cliques) during Probing (PAPILO_API_VERSION 11)
+- CliqueProbing exploits datastructure present in the problem (cliques) during Probing (PAPILO_API_VERSION 12)
 
 Performance improvements
 ------------------------
@@ -19,13 +19,13 @@ Interface changes
 
 ### New parameters with default values
 
-- probing.maxCliqueLength = 150: maximal size of cliques that are probed on (PAPILO_API_VERSION 11)
-- probing.max_probed_clique_vars = 3000: maximal number of variables in cliques that are probed on (PAPILO_API_VERSION 11)
-- probing.ratiocoveredcliquevars = 2: maximal ratio of variables in clique that are also covered by other probed cliques (PAPILO_API_VERSION 11)
-- probing.initialbatchsize = 2: initial number of probed cliques (PAPILO_API_VERSION 11)
-- probing.cliquereductionfactor = 3: number of reductions per variable in probed clique to deem clique probing successful (PAPILO_API_VERSION 11)
-- probing.minabortedvariables = 0: minimum number of variables left in clique before we consider abort probing on the clique (PAPILO_API_VERSION 11)
-- probing.numcliquefails = 0: number of times clique probing may fail before being disabled (PAPILO_API_VERSION 11)
+- probing.maxCliqueLength = 150: maximal size of cliques that are probed on (PAPILO_API_VERSION 12)
+- probing.max_probed_clique_vars = 3000: maximal number of variables in cliques that are probed on (PAPILO_API_VERSION 12)
+- probing.ratiocoveredcliquevars = 2: maximal ratio of variables in clique that are also covered by other probed cliques (PAPILO_API_VERSION 12)
+- probing.initialbatchsize = 2: initial number of probed cliques (PAPILO_API_VERSION 12)
+- probing.cliquereductionfactor = 3: number of reductions per variable in probed clique to deem clique probing successful (PAPILO_API_VERSION 12)
+- probing.minabortedvariables = 0: minimum number of variables left in clique before we consider abort probing on the clique (PAPILO_API_VERSION 12)
+- probing.numcliquefails = 0: number of times clique probing may fail before being disabled (PAPILO_API_VERSION 12)
 
 Data Structures
 ---------------
