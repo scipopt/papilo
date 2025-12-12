@@ -331,6 +331,7 @@ add_library(papilo-core STATIC
    src/papilo/presolvers/DualFix.cpp
    src/papilo/presolvers/DualInfer.cpp
    src/papilo/presolvers/FixContinuous.cpp
+   src/papilo/presolvers/GF2.cpp
    src/papilo/presolvers/FreeVarSubstitution.cpp
    src/papilo/presolvers/ImplIntDetection.cpp
    src/papilo/presolvers/ParallelColDetection.cpp

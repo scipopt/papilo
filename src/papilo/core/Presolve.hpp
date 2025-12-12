@@ -50,6 +50,7 @@
 #include "papilo/presolvers/DualInfer.hpp"
 #include "papilo/presolvers/FixContinuous.hpp"
 #include "papilo/presolvers/FreeVarSubstitution.hpp"
+#include "papilo/presolvers/GF2.hpp"
 #include "papilo/presolvers/ImplIntDetection.hpp"
 #include "papilo/presolvers/ParallelColDetection.hpp"
 #include "papilo/presolvers/ParallelRowDetection.hpp"
@@ -112,6 +113,7 @@ class Presolve
       addPresolveMethod( uptr( new SimplifyInequalities<REAL>() ) );
       addPresolveMethod( uptr( new SimpleSubstitution<REAL>() ) );
       addPresolveMethod( uptr( new CliqueMerging<REAL>() ) );
+      addPresolveMethod( uptr( new GF2<REAL>() ) );
 
       //exhaustive presolvers
       addPresolveMethod( uptr( new ImplIntDetection<REAL>() ) );
