@@ -406,7 +406,7 @@ Since version 3.0.0, PaPILO is available under Apache License 2.0.
 
 [Alexander Hoen](https://www.zib.de/members/hoen)  ([@alexhoen](https://github.com/alexhoen)) &mdash; main developer
 
-[Jacob von Holly-Ponientzietz](https://www.zib.de/members/vonholly-ponientzietz) ([@JacobvonHolly-Ponientzietz](https://github.com/JacobvonHolly-Ponientzietz)) &mdash; Clique Merging
+[Jacob von Holly-Ponientzietz](https://www.zib.de/members/vonholly-ponientzietz) ([@JacobvonHolly-Ponientzietz](https://github.com/JacobvonHolly-Ponientzietz)) &mdash; Clique Merging; Clique Probing
 
 [Dominik Kamp](https://www.wm.uni-bayreuth.de/de/team/kamp_dominik/index.php)  ([@DominikKamp](https://github.com/DominikKamp)) &mdash; developer
 
