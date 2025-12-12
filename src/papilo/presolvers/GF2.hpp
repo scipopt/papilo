@@ -1,26 +1,27 @@
-/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
-/*                                                                           */
-/*               This file is part of the program and library                */
-/*    PaPILO --- Parallel Presolve for Integer and Linear Optimization       */
-/*                                                                           */
-/* Copyright (C) 2020-2025 Zuse Institute Berlin (ZIB)                       */
-/*                                                                           */
-/* Licensed under the Apache License, Version 2.0 (the "License");           */
-/* you may not use this file except in compliance with the License.          */
-/* You may obtain a copy of the License at                                   */
-/*                                                                           */
-/*     http://www.apache.org/licenses/LICENSE-2.0                            */
-/*                                                                           */
-/* Unless required by applicable law or agreed to in writing, software       */
-/* distributed under the License is distributed on an "AS IS" BASIS,         */
-/* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  */
-/* See the License for the specific language governing permissions and       */
-/* limitations under the License.                                            */
-/*                                                                           */
-/* You should have received a copy of the Apache-2.0 license                 */
-/* along with PaPILO; see the file LICENSE. If not visit scipopt.org.        */
-/*                                                                           */
-/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+/*
+ * SPDX-FileCopyrightText: Copyright (c) 2025, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+
+/*
+ * GF(2) Presolve Explanation:
+ *
+ * This routine simplifies binary (0/1) constraints using linear algebra over GF(2),
+ * the finite field with two elements (0 and 1) where:
+ *    - Addition is modulo 2 (1 + 1 = 0, like XOR)
+ *    - Multiplication is normal (1*1 = 1, 0*1 = 0)
+ *
+ * Steps:
+ * 1. Represent all binary constraints as a matrix equation over GF(2):
+ *       A * x = b (mod 2)
+ * 2. Perform Gaussian elimination modulo 2:
+ *       - Choose pivot rows and eliminate 1s in the same column in other rows using XOR
+ *       - Repeat for all columns to simplify the system
+ * 3. From the simplified system:
+ *       - Fix variables (set some x_i = 0 or 1)
+ *
+ */
 
 #ifndef _PAPILO_PRESOLVERS_GF2_HPP_
 #define _PAPILO_PRESOLVERS_GF2_HPP_
@@ -32,26 +33,16 @@
 namespace papilo
 {
 
-#if GF2_PRESOLVE_DEBUG
-#define NOT_GF2( reason, ... )                                                 \
-   do                                                                          \
-   {                                                                           \
-      printf( "NO : Cons %d is not gf2: " reason "\n", cstr_idx,               \
-              ##__VA_ARGS__ );                                                 \
-      goto not_valid;                                                          \
-   } while( 0 )
-#else
-#define NOT_GF2( reason, ... )                                                 \
-   do                                                                          \
-   {                                                                           \
-      goto not_valid;                                                          \
-   } while( 0 )
-#endif
+const static int DEFAULT_GF2_LIMIT = 1000;
 
 /// presolver to fix continuous variables whose bounds are very close
 template <typename REAL>
 class GF2 final : public PresolveMethod<REAL>
 {
+
+   int limit = DEFAULT_GF2_LIMIT;
+
+
  public:
    GF2() : PresolveMethod<REAL>()
    {
@@ -62,18 +53,29 @@ class GF2 final : public PresolveMethod<REAL>
 
    bool
    check_variables_and_coeff_in_constraint(
-       const Vec<ColFlags>& col_flags, const Vec<REAL>& lower_bounds,
-       const Vec<REAL>& upper_bounds,
-       std::unordered_map<size_t, size_t> gf2_bin_vars,
-       std::unordered_map<size_t, size_t> gf2_key_vars,
-       REAL integrality_tolerance, int& key_var_idx, REAL& key_var_coeff,
-       std::vector<std::pair<size_t, REAL>> constraint_bin_vars,
-       const int* row_indices, const REAL* row_values, int row_length );
+       const Vec<ColFlags>& col_flags,
+       const std::vector<REAL, typename AllocatorTraits<REAL>::type>&
+           lower_bounds,
+       const std::vector<REAL, typename AllocatorTraits<REAL>::type>&
+           upper_bounds,
+       std::unordered_map<size_t, size_t>& gf2_bin_vars,
+       std::unordered_map<size_t, size_t>& gf2_key_vars, int& key_var_idx,
+       REAL& key_var_coeff, Vec<std::pair<size_t, REAL>>& constraint_bin_vars,
+       const SparseVectorView<REAL>& row_coeff, const Num<REAL>& num );
+
    PresolveStatus
    execute( const Problem<REAL>& problem,
             const ProblemUpdate<REAL>& problemUpdate, const Num<REAL>& num,
             Reductions<REAL>& reductions, const Timer& timer,
             int& reason_of_infeasibility ) override;
+
+   void
+   addPresolverParams( ParameterSet& paramSet ) override
+   {
+      paramSet.addParameter( "gf2.limit",
+                             "Upper bound on the number of constraints considered during GF2 presolver processing.", limit
+                             , DEFAULT_GF2_LIMIT );
+   }
 
    struct gf2_constraint_t
    {
@@ -97,7 +99,6 @@ class GF2 final : public PresolveMethod<REAL>
       gf2_constraint_t&
       operator=( gf2_constraint_t&& other ) noexcept = default;
    };
-
 };
 
 #ifdef PAPILO_USE_EXTERN_TEMPLATES
@@ -107,7 +108,7 @@ extern template class GF2<Rational>;
 #endif
 
 template <typename i_t>
-static inline i_t
+static i_t
 positive_modulo( i_t i, i_t n )
 {
    return ( i % n + n ) % n;
@@ -180,16 +181,17 @@ gf2_solve( std::vector<std::vector<int>>& A, std::vector<int>& b,
 template <typename REAL>
 bool
 GF2<REAL>::check_variables_and_coeff_in_constraint(
-    const Vec<ColFlags>& col_flags, const Vec<REAL>& lower_bounds,
-    const Vec<REAL>& upper_bounds,
-    std::unordered_map<size_t, size_t> gf2_bin_vars,
-    std::unordered_map<size_t, size_t> gf2_key_vars, REAL integrality_tolerance,
-    int& key_var_idx, REAL& key_var_coeff,
-    std::vector<std::pair<size_t, REAL>> constraint_bin_vars,
-    const int* row_indices, const REAL* row_values, int row_length )
+    const Vec<ColFlags>& col_flags,
+    const std::vector<REAL, typename AllocatorTraits<REAL>::type>& lower_bounds,
+    const std::vector<REAL, typename AllocatorTraits<REAL>::type>& upper_bounds,
+    std::unordered_map<size_t, size_t>& gf2_bin_vars,
+    std::unordered_map<size_t, size_t>& gf2_key_vars, int& key_var_idx,
+    REAL& key_var_coeff, Vec<std::pair<size_t, REAL>>& constraint_bin_vars,
+    const SparseVectorView<REAL>& row_coeff, const Num<REAL>& num )
 {
-   // TODO:
-   Num<REAL> num{};
+   const int* row_indices = row_coeff.getIndices();
+   const REAL* row_values = row_coeff.getValues();
+   const int row_length = row_coeff.getLength();
    for( int j = 0; j < row_length; ++j )
    {
       if( !num.isIntegral( row_values[j] ) )
@@ -249,8 +251,6 @@ GF2<REAL>::execute( const Problem<REAL>& problem,
 {
    const auto& constraint_matrix = problem.getConstraintMatrix();
    const auto& lhs_values = constraint_matrix.getLeftHandSides();
-   const auto& rhs_values = constraint_matrix.getRightHandSides();
-   const auto& row_flags = constraint_matrix.getRowFlags();
    const auto& domains = problem.getVariableDomains();
    const auto& col_flags = domains.flags;
    const auto& lower_bounds = domains.lower_bounds;
@@ -262,8 +262,6 @@ GF2<REAL>::execute( const Problem<REAL>& problem,
    std::unordered_map<size_t, size_t> gf2_key_vars;
    std::vector<gf2_constraint_t> gf2_constraints;
 
-   const REAL integrality_tolerance = num.getFeasTol();
-
    for( int cstr_idx = 0; cstr_idx < num_rows; ++cstr_idx )
    {
       int key_var_idx = -1;
@@ -273,9 +271,6 @@ GF2<REAL>::execute( const Problem<REAL>& problem,
 
       // Check constraint coefficients
       auto row_coeff = constraint_matrix.getRowCoefficients( cstr_idx );
-      const int* row_indices = row_coeff.getIndices();
-      const REAL* row_values = row_coeff.getValues();
-      const int row_length = row_coeff.getLength();
       REAL rhs = num.round( lhs_values[cstr_idx] );
 
       // Check if this is an equality constraint
@@ -288,8 +283,8 @@ GF2<REAL>::execute( const Problem<REAL>& problem,
 
       if( !check_variables_and_coeff_in_constraint(
               col_flags, lower_bounds, upper_bounds, gf2_bin_vars, gf2_key_vars,
-              integrality_tolerance, key_var_idx, key_var_coeff,
-              constraint_bin_vars, row_indices, row_values, row_length ) )
+              key_var_idx, key_var_coeff, constraint_bin_vars, row_coeff,
+              num ) )
          continue;
 
       gf2_constraints.emplace_back(
@@ -304,7 +299,7 @@ GF2<REAL>::execute( const Problem<REAL>& problem,
 
    // Skip if that would cause computational explosion (O(n^3) with simple
    // gaussian elimination)
-   if( gf2_constraints.size() > 1000 )
+   if( gf2_constraints.size() > static_cast<unsigned int>(limit) )
       return PresolveStatus::kUnchanged;
 
    // Validate structure
@@ -314,8 +309,8 @@ GF2<REAL>::execute( const Problem<REAL>& problem,
 
    // Create inverse mappings
    std::unordered_map<size_t, size_t> gf2_bin_vars_invmap;
-   for( const auto& [var_idx, gf2_idx] : gf2_bin_vars )
-      gf2_bin_vars_invmap.insert( { gf2_idx, var_idx } );
+   for( const auto& bin : gf2_bin_vars )
+      gf2_bin_vars_invmap.insert( { bin.second, bin.first } );
 
    // Build binary matrix
    // Could be a flat vector but. oh well. in practice N is small
@@ -324,15 +319,15 @@ GF2<REAL>::execute( const Problem<REAL>& problem,
    std::vector<int> b( gf2_constraints.size() );
    for( const auto& cons : gf2_constraints )
    {
-      for( auto [bin_var, _] : cons.bin_vars )
+      for( auto bin : cons.bin_vars )
       {
-         A[cons.cstr_idx][gf2_bin_vars[bin_var]] = 1;
+         A[cons.cstr_idx][gf2_bin_vars[bin.first]] = 1;
       }
       b[cons.cstr_idx] = cons.rhs;
    }
 
    std::vector<int> solution( gf2_constraints.size() );
-   bool feasible = gf2_solve( A, b, solution );
+   const bool feasible = gf2_solve( A, b, solution );
    if( !feasible )
    {
       return PresolveStatus::kInfeasible;
@@ -346,20 +341,23 @@ GF2<REAL>::execute( const Problem<REAL>& problem,
    // Compute fixings for key variables by solving for the constraint
    for( const auto& cons : gf2_constraints )
    {
-      auto [key_var_idx, key_var_coeff] = cons.key_var;
+      auto key_var_idx = cons.key_var.first;
+      auto key_var_coeff = cons.key_var.second;
       REAL constraint_rhs = lhs_values[cons.cstr_idx]; // equality constraint
       REAL lhs = -constraint_rhs;
-      for( auto [bin_var, coeff] : cons.bin_vars )
+      for( auto bin : cons.bin_vars )
       {
-         lhs += fixings[bin_var] * coeff;
+         lhs += fixings[bin.first] * bin.second;
       }
       fixings[key_var_idx] = num.round( -lhs / key_var_coeff );
    }
 
    auto status = PresolveStatus::kUnchanged;
    TransactionGuard<REAL> rg{ reductions };
-   for( const auto& [var_idx, fixing] : fixings )
+   for( const auto& iter : fixings )
    {
+      auto var_idx = iter.first;
+      auto fixing = iter.second;
       if( num.isZero( fixing ) )
          reductions.fixCol( var_idx, 0 );
       else

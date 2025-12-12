@@ -11,6 +11,7 @@
 #simpleprobing.enabled = 0
 #fixcontinuous.enabled = 0
 #cliquemerging.enabled = 0
+#gf2.enabled = 0
 
 #probing.enabled = 0
 #implint.enabled = 0

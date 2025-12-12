@@ -5,6 +5,8 @@
 Features
 --------
 
+- new Presolver GF2
+
 Performance improvements
 ------------------------
 
@@ -16,6 +18,10 @@ Interface changes
 ### Changed parameters
 
 ### New parameters with default values
+
+- gf2.enabled = 1: is presolver gf2 enabled  [Boolean: {0,1}]
+- gf2.limit = 1000: Upper bound on the number of constraints considered during GF2 presolver processing
+
 
 Data Structures
 ---------------

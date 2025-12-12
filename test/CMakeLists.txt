@@ -56,6 +56,7 @@ add_executable(unit_test TestMain.cpp
         papilo/presolve/SimplifyInequalitiesTest.cpp
         papilo/presolve/SparsifyTest.cpp
         papilo/presolve/CliqueMergingTest.cpp
+        papilo/presolve/GF2Test.cpp
 
         ${BOOST_REQUIRED_TEST_FILES}
         ${PAPILOLIB_TEST_FILE})
@@ -206,6 +207,8 @@ set(unit_tests
         "happy-path-sparsify"
         "happy-path-sparsify-two-equalities"
         "failed-path-sparsify-if-misses-one-for-integer"
+
+        "happy-path-gf2"
 
         #CliqueMerging
         "clique-merging-basic"

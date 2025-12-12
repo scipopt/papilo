@@ -341,7 +341,7 @@ and grants write access to an instance of `papilo::Reductions<REAL>`. A presolve
 to the reductions class. This is only the broad picture and there are some more details that we omit here for brevity.
 Looking at some of the default implemented presolvers can help for understanding further details and also the resources in the next section.
 
-Finally when a new presolve method is implemented it needs to be added to the `papilo::Presolve<REAL>` instance that is used for presolving.
+Finally, when a new presolve method is implemented it needs to be added to the `papilo::Presolve<REAL>` instance that is used for presolving.
 Assuming the new presolve method is called `MyPresolveMethod` this is achiev
 ed by the following call:
 ```
@@ -412,6 +412,8 @@ Since version 3.0.0, PaPILO is available under Apache License 2.0.
 
 
 #### Former Contributors
+
+Alice Boucher ([@aliceb-nv](https://github.com/aliceb-nv)) &mdash; GF2 presolver
 
 Ivet Galabova ([@galabovaa](https://github.com/galabovaa)) &mdash; initial draft for dual postsolve
 
