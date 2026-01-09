@@ -188,7 +188,6 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
                         const Num<REAL>& num, Reductions<REAL>& reductions,
                         const Timer& timer, int& reason_of_infeasibility )
 {
-   //auto initstarttime = timer.getTime();
    if( problem.getNumIntegralCols() == 0 )
       return PresolveStatus::kUnchanged;
 
@@ -214,7 +213,6 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
 
    if( unsuccessfulcliqueprobing <= numcliquefails )
    {
-      //auto cliquefindstarttime = timer.getTime();
       for( int row = 0; row != nrows; ++row )
       {
          assert( row >= 0 && row < nrows );
@@ -425,12 +423,10 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
    }
 
    std::set<int> probedvars;
-   int nprobedvars = 0;
    std::atomic_bool infeasible{ false };
    std::atomic_int infeasible_variable{ -1 };
    int batchend = 0;
    int totalnumpropagations = 0;
-   auto cliqueprobingtime = timer.getTime();
    Vec<CliqueProbingSubstitution<REAL>> cliquesubstitutions;
    Vec<CliqueProbingBoundChg<REAL>> cliqueBoundChanges;
    int ncliquefixings = 0;
@@ -546,7 +542,6 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
       totalnumpropagations += numpropagations;
 #endif
       };
-      auto cliqueprobinstarttime = timer.getTime();
 
       int batchsize = initialbatchsize;
       int batchstart = 0;
@@ -614,7 +609,6 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
 
          return PresolveStatus::kInfeasible;
       }
-      cliqueprobingtime = timer.getTime() - cliqueprobinstarttime;
       for( int clique = 0; clique < std::min(batchend, static_cast<int>(probingCliques.end() - probingCliques.begin())); ++clique )
       {
          auto cliquevec = consMatrix.getRowCoefficients( probingCliques[clique].first );
@@ -1051,9 +1045,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
       assert(current_badge_end >= 0);
       assert(current_badge_start >= 0 );
       assert(current_badge_start <= current_badge_end );
-      auto probingstarttime = timer.getTime();
       propagate_variables( current_badge_start, current_badge_end);
-      auto probingtime = timer.getTime() - probingstarttime;
 
       if( PresolveMethod<REAL>::is_time_exceeded(
               timer, problemUpdate.getPresolveOptions().tlim ) )
