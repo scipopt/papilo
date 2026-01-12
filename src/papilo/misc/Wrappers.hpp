@@ -459,8 +459,9 @@ postsolve( PostsolveStorage<REAL>& postsolveStorage,
                                                   original_sol.primal,
                                                   boundviol, rowviol, intviol );
 
+   auto real = origprob.is_objective_negated() ? -origobj : origobj;
    fmt::print( "feasible: {}\nobjective value: {:.15}\n", origfeas,
-               double( origobj ) );
+               static_cast<double>( real ) );
 
    fmt::print( "\nviolations:\n" );
    fmt::print( "  bounds:      {:.15}\n", double( boundviol ) );

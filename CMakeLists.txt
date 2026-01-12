@@ -276,6 +276,8 @@ if(CMAKE_Fortran_COMPILER AND BLAS_FOUND)
    target_link_libraries(papilo INTERFACE clusol)
    set(PAPILO_HAVE_LUSOL 1)
    set(CLUSOL_TARGET clusol)
+   install(FILES
+       ${PROJECT_SOURCE_DIR}/src/papilo/external/lusol/LICENSE.md DESTINATION ${CMAKE_INSTALL_DATADIR}/licenses/papilo/lusol)
 else()
    set(PAPILO_HAVE_LUSOL 0)
    set(CLUSOL_TARGET "")
@@ -539,6 +541,15 @@ install(FILES
 install(FILES
    ${PROJECT_SOURCE_DIR}/src/papilo/external/lusol/clusol.h
    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/papilo/external/lusol)
+
+install(FILES
+   ${PROJECT_SOURCE_DIR}/LICENSE DESTINATION ${CMAKE_INSTALL_DATADIR}/licenses/papilo)
+install(FILES
+   ${PROJECT_SOURCE_DIR}/src/papilo/external/pdqsort/license.txt DESTINATION ${CMAKE_INSTALL_DATADIR}/licenses/papilo/pdqsort)
+install(FILES
+   ${PROJECT_SOURCE_DIR}/src/papilo/external/ska/LICENSE.txt DESTINATION ${CMAKE_INSTALL_DATADIR}/licenses/papilo/ska)
+install(FILES
+   ${PROJECT_SOURCE_DIR}/src/papilo/external/fmt/LICENSE.rst DESTINATION ${CMAKE_INSTALL_DATADIR}/licenses/papilo/fmt)
 
 # Configure the papilo-config.cmake for the build-tree:
 # We add the CMake module path from the sources.

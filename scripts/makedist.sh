@@ -22,7 +22,7 @@ sed -i "s/undef PAPILO_GITHASH/define PAPILO_GITHASH \"$GITHASH\"/g" src/papilo/
 echo "adjust file modes"
 git ls-files | xargs dirname | sort -u | xargs chmod 750
 git ls-files | xargs chmod 640
-git ls-files "*.sh" "*.py" "scripts/*" | grep -v external | xargs chmod 750
+git ls-files "*.sh" "src/**.py" "scripts/*" | grep -v external | xargs chmod 750
 
 # pack files tracked by git and append $NAME to the front
 git ls-files -c | xargs tar --transform "s|^|${NAME}/|" -cvhf $NAME.tar \

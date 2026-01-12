@@ -132,7 +132,8 @@ struct MpsWriter
 
             if( obj.coefficients[i] != 0.0 )
             {
-               fmt::print( out, "    {:<9} OBJ       {:}\n", varnames[col_mapping[i]], obj.coefficients[i] );
+               auto coeff = prob.is_objective_negated() ? -obj.coefficients[i] : obj.coefficients[i];
+               fmt::print( out, "    {:<9} OBJ       {:}\n", varnames[col_mapping[i]], coeff );
             }
 
             SparseVectorView<REAL> column =
@@ -168,7 +169,7 @@ struct MpsWriter
       if( obj.offset != 0 )
       {
          if( obj.offset != REAL{ 0.0 } )
-            fmt::print( out, "    B         {:<9} {:}\n", "OBJ", -obj.offset );
+            fmt::print( out, "    B         {:<9} {:}\n", "OBJ", prob.is_objective_negated() ? -obj.offset : obj.offset );
       }
 
       for( int i = 0; i < consmatrix.getNRows(); ++i )
