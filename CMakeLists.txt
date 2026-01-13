@@ -3,7 +3,7 @@ cmake_minimum_required (VERSION 3.11.0)
 set(PAPILO_VERSION_MAJOR 4)
 set(PAPILO_VERSION_MINOR 0)
 set(PAPILO_VERSION_PATCH 0)
-set(PAPILO_API_VERSION 12)
+set(PAPILO_API_VERSION 13)
 
 project(papilo VERSION ${PAPILO_VERSION_MAJOR}.${PAPILO_VERSION_MINOR}.${PAPILO_VERSION_PATCH}.0)
 
@@ -332,6 +332,7 @@ add_library(papilo-core STATIC
    src/papilo/presolvers/DualFix.cpp
    src/papilo/presolvers/DualInfer.cpp
    src/papilo/presolvers/FixContinuous.cpp
+   src/papilo/presolvers/GF2.cpp
    src/papilo/presolvers/FreeVarSubstitution.cpp
    src/papilo/presolvers/ImplIntDetection.cpp
    src/papilo/presolvers/ParallelColDetection.cpp

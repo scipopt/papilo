@@ -31,6 +31,12 @@ dualinfer.minboundred = 0.001
 # is presolver fixcontinuous enabled  [Boolean: {0,1}]
 fixcontinuous.enabled = 1
 
+# is presolver gf2 enabled  [Boolean: {0,1}]
+gf2.enabled = 1
+
+# Upper bound on the number of constraints considered during GF2 presolver processing
+gf2.limit = 1000
+
 # is presolver implint enabled  [Boolean: {0,1}]
 implint.enabled = 1
 

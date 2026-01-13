@@ -6,6 +6,7 @@ Features
 --------
 
 - CliqueProbing exploits datastructure present in the problem (cliques) during Probing (PAPILO_API_VERSION 12)
+- new Presolver GF2 (PAPILO_API_VERSION 13)
 
 Performance improvements
 ------------------------
@@ -26,6 +27,9 @@ Interface changes
 - probing.cliquereductionfactor = 3: number of reductions per variable in probed clique to deem clique probing successful (PAPILO_API_VERSION 12)
 - probing.minabortedvariables = 0: minimum number of variables left in clique before we consider abort probing on the clique (PAPILO_API_VERSION 12)
 - probing.numcliquefails = 0: number of times clique probing may fail before being disabled (PAPILO_API_VERSION 12)
+- gf2.enabled = 1: is presolver gf2 enabled  [Boolean: {0,1}] (PAPILO_API_VERSION 13)
+- gf2.limit = 1000: Upper bound on the number of constraints considered during GF2 presolver processing (PAPILO_API_VERSION 13)
+
 
 Data Structures
 ---------------

@@ -22,25 +22,13 @@
 /*                                                                           */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef _PAPILO_CONFIG_HPP_
-#define _PAPILO_CONFIG_HPP_
+#include "papilo/presolvers/GF2.hpp"
 
-#ifndef PAPILO_NO_CMAKE_CONFIG
+namespace papilo
+{
 
-#include "papilo/CMakeConfig.hpp"
+template class GF2<double>;
+template class GF2<Quad>;
+template class GF2<Rational>;
 
-#else
-
-#define PAPILO_VERSION_MAJOR 4
-#define PAPILO_VERSION_MINOR 0
-#define PAPILO_VERSION_PATCH 0
-#define PAPILO_VERSION_TWEAK 0
-
-#define PAPILO_API_VERSION 13
-
-#undef PAPILO_GITHASH_AVAILABLE
-#undef PAPILO_GITHASH
-
-#endif
-
-#endif
+} // namespace papilo
