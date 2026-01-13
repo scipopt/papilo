@@ -400,24 +400,24 @@ and is available under https://www.youtube.com/watch?v=JKAyyWXGeQM.
 
 Since version 3.0.0, PaPILO is available under Apache License 2.0.
 
-# Contributors
+# Team
 
-[Ambros Gleixner](https://www.zib.de/members/gleixner) ([@ambros-gleixner](https://github.com/ambros-gleixner)) &mdash; project head
+[Alexander Hoen](https://alexhoen.github.io/)  ([@alexhoen](https://github.com/alexhoen)) &mdash; main developer
 
-[Alexander Hoen](https://www.zib.de/members/hoen)  ([@alexhoen](https://github.com/alexhoen)) &mdash; main developer
-
-[Jacob von Holly-Ponientzietz](https://www.zib.de/members/vonholly-ponientzietz) ([@JacobvonHolly-Ponientzietz](https://github.com/JacobvonHolly-Ponientzietz)) &mdash; Clique Merging
-
-[Dominik Kamp](https://www.wm.uni-bayreuth.de/de/team/kamp_dominik/index.php)  ([@DominikKamp](https://github.com/DominikKamp)) &mdash; developer
+[Ambros Gleixner](https://www.zib.de/userpage/gleixner/) ([@ambros-gleixner](https://github.com/ambros-gleixner)) &mdash; project head
 
 
-#### Former Contributors
+#### Further Contributors
 
 Ivet Galabova ([@galabovaa](https://github.com/galabovaa)) &mdash; initial draft for dual postsolve
 
 [Leona Gottwald](https://www.zib.de/members/gottwald)  ([@lgottwald](https://github.com/lgottwald)) &mdash; creator and former main developer
 
 [Katrin Halbig](https://www.datascience.nat.fau.eu/research/groups/amio/members/katrin-halbig/) ([@khalbig](https://github.com/khalbig)) &mdash; presolver for GCD based reductions on inequalities (SimplifyIneq), strengthening in DualFix
+
+[Jacob von Holly-Ponientzietz](https://www.zib.de/members/vonholly-ponientzietz) ([@JacobvonHolly-Ponientzietz](https://github.com/JacobvonHolly-Ponientzietz)) &mdash; Clique Merging
+
+[Dominik Kamp](https://www.zib.de/de/members/kamp)  ([@DominikKamp](https://github.com/DominikKamp)) &mdash; developer
 
 Gabriel Kressin ([@GabrielKP](https://github.com/GabrielKP)) &mdash; numerical statistics, testing
 
