@@ -88,6 +88,8 @@ set(unit_tests
         "clique-row-flag-detection6"
         "clique-row-flag-detection7"
         "clique-row-flag-detection8"
+        "clique-row-flag-detection9"
+        "clique-row-flag-detection10"
 
         "problem-comparisons"
 
@@ -165,6 +167,8 @@ set(unit_tests
         #Probing
         "happy-path-probing"
         "failed-path-probing-on-not-binary-variables"
+        "clique-probing-1"
+        "clique-probing-2"
 
         #Singleton Column
         "happy-path-singleton-column"

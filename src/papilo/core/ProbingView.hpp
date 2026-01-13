@@ -25,6 +25,7 @@
 #ifndef _PAPILO_CORE_PROBING_VIEW_HPP_
 #define _PAPILO_CORE_PROBING_VIEW_HPP_
 
+#include "papilo/core/CliqueProbingView.hpp"
 #include "papilo/core/Problem.hpp"
 #include "papilo/core/SingleRow.hpp"
 #include "papilo/io/Message.hpp"
@@ -73,6 +74,9 @@ class ProbingView
 {
  public:
    ProbingView( const Problem<REAL>& problem, const Num<REAL>& num );
+
+   ProbingView( const Problem<REAL>& problem, const Num<REAL>& num, Vec<CliqueProbingBoundChg<REAL>>& changes );
+
 
    void
    setMinIntDomRed( const REAL& value )
@@ -203,8 +207,14 @@ class ProbingView
    Vec<int> changed_activities;
    Vec<REAL> probing_lower_bounds;
    Vec<REAL> probing_upper_bounds;
+public:
+   Vec<REAL> origin_lower_bounds;
+   Vec<REAL> origin_upper_bounds;
+private:
    Vec<ColFlags> probing_domain_flags;
    Vec<RowActivity<REAL>> probing_activities;
+   Vec<RowActivity<REAL>> origin_activities;
+
 
    Vec<int> prop_activities;
    Vec<int> next_prop_activities;
@@ -237,8 +247,11 @@ ProbingView<REAL>::ProbingView( const Problem<REAL>& problem_,
     : problem( problem_ ), num( num_ ),
       probing_lower_bounds( problem_.getLowerBounds() ),
       probing_upper_bounds( problem_.getUpperBounds() ),
+      origin_lower_bounds( problem_.getLowerBounds() ),
+      origin_upper_bounds( problem_.getUpperBounds() ),
       probing_domain_flags( problem_.getColFlags() ),
-      probing_activities( problem_.getRowActivities() )
+      probing_activities( problem_.getRowActivities() ),
+      origin_activities( problem_.getRowActivities() )
 {
    round = -2;
    infeasible = false;
@@ -251,12 +264,61 @@ ProbingView<REAL>::ProbingView( const Problem<REAL>& problem_,
 }
 
 template <typename REAL>
+ProbingView<REAL>::ProbingView( const Problem<REAL>& problem_,
+                                const Num<REAL>& num_,
+                                Vec<CliqueProbingBoundChg<REAL>>& changes
+ )
+    : problem( problem_ ), num( num_ ),
+      probing_lower_bounds( problem_.getLowerBounds() ),
+      probing_upper_bounds( problem_.getUpperBounds() ),
+      probing_domain_flags( problem_.getColFlags() ),
+      probing_activities( problem_.getRowActivities() )
+{
+   for (auto change : changes)
+   {
+      if(change.upper)
+      {
+         probing_upper_bounds[change.col] = change.bound;
+         probing_domain_flags[change.col].unset( ColFlag::kUbInf );
+      }
+      else
+      {
+         probing_lower_bounds[change.col] = change.bound;
+         probing_domain_flags[change.col].unset( ColFlag::kLbInf );
+      }
+   }
+
+   for(int i=0; i< problem_.getNRows(); i++)
+   {
+      auto rowvec = problem_.getConstraintMatrix().getRowCoefficients( i );
+      probing_activities[i] = compute_row_activity(
+                          rowvec.getValues(), rowvec.getIndices(), rowvec.getLength(),
+                          probing_lower_bounds, probing_upper_bounds,
+                          probing_domain_flags );
+   }
+   origin_lower_bounds = probing_lower_bounds ;
+   origin_upper_bounds =  probing_upper_bounds;
+   origin_activities =  probing_activities ;
+   round = -2;
+   infeasible = false;
+   amountofwork = 0;
+   probingCol = -1;
+   probingValue = false;
+   otherValueInfeasible = false;
+   minintdomred = num.getFeasTol() * 1000;
+   mincontdomred = 0.3;
+}
+
+
+
+
+template <typename REAL>
 void
 ProbingView<REAL>::reset()
 {
    const Vec<int>& rowsize = problem.getConstraintMatrix().getRowSizes();
 
-   const auto& orig_lbs = problem.getLowerBounds();
+   const auto& orig_lbs = origin_lower_bounds;
    for( int i : changed_lbs )
    {
       if( i < 0 )
@@ -274,7 +336,7 @@ ProbingView<REAL>::reset()
    }
    changed_lbs.clear();
 
-   const auto& orig_ubs = problem.getUpperBounds();
+   const auto& orig_ubs = origin_upper_bounds;
    for( int i : changed_ubs )
    {
       if( i < 0 )
@@ -292,7 +354,7 @@ ProbingView<REAL>::reset()
    }
    changed_ubs.clear();
 
-   const auto& orig_activities = problem.getRowActivities();
+   const auto& orig_activities = origin_activities;
    for( int i : changed_activities )
    {
       amountofwork += rowsize[i];
@@ -407,7 +469,7 @@ ProbingView<REAL>::changeLb( int col, REAL newlb )
 {
    const auto& consMatrix = problem.getConstraintMatrix();
    auto colvec = consMatrix.getColumnCoefficients( col );
-   const auto& orig_lbs = problem.getLowerBounds();
+   const auto& orig_lbs = origin_lower_bounds;
 
    // bound must be tighter than current domains
    bool lbinf = probing_domain_flags[col].test( ColFlag::kLbUseless );
@@ -449,7 +511,7 @@ ProbingView<REAL>::changeUb( int col, REAL newub )
 {
    const auto& consMatrix = problem.getConstraintMatrix();
    auto colvec = consMatrix.getColumnCoefficients( col );
-   const auto& orig_ubs = problem.getUpperBounds();
+   const auto& orig_ubs = origin_upper_bounds;
 
    // bound must be tighter than current domains
    bool ubinf = probing_domain_flags[col].test( ColFlag::kUbUseless );
@@ -525,8 +587,8 @@ template <typename REAL>
 bool
 ProbingView<REAL>::analyzeImplications()
 {
-   const auto& orig_ubs = problem.getUpperBounds();
-   const auto& orig_lbs = problem.getLowerBounds();
+   const auto& orig_ubs = origin_upper_bounds;
+   const auto& orig_lbs = origin_lower_bounds;
    const Vec<ColFlags>& orig_domain_flags = problem.getColFlags();
 
    // check infeasibility

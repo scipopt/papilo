@@ -39,6 +39,9 @@ setupProblemPresolveSingletonRowFixed();
 Problem<double>
 setupProblemWIthCliques();
 
+Problem<double>
+setupProblemWithProbing();
+
 TEST_CASE( "trivial-presolve-singleton-row", "[core]" )
 {
    Num<double> num{};
@@ -78,56 +81,105 @@ TEST_CASE( "clique-row-flag-detection1", "[core]" )
 {
    Num<double> num{};
    Problem<double> problem = setupProblemWIthCliques();
-   REQUIRE( !problem.getRowFlags()[0].test( RowFlag::kClique ) );
+   REQUIRE( !problem.is_clique( problem.getConstraintMatrix(), 0, num )  );
 }
 
 TEST_CASE( "clique-row-flag-detection2", "[core]" )
 {
    Num<double> num{};
    Problem<double> problem = setupProblemWIthCliques();
-   REQUIRE( !problem.getRowFlags()[1].test( RowFlag::kClique ) );
+   REQUIRE( !problem.is_clique( problem.getConstraintMatrix(), 1, num ) );
 }
 
 TEST_CASE( "clique-row-flag-detection3", "[core]" )
 {
    Num<double> num{};
    Problem<double> problem = setupProblemWIthCliques();
-   REQUIRE( !problem.getRowFlags()[2].test( RowFlag::kClique ) );
+   REQUIRE( !problem.is_clique( problem.getConstraintMatrix(), 2, num ) );
 }
 
 TEST_CASE( "clique-row-flag-detection4", "[core]" )
 {
    Num<double> num{};
    Problem<double> problem = setupProblemWIthCliques();
-   REQUIRE( !problem.getRowFlags()[3].test( RowFlag::kClique ) );
+   REQUIRE( !problem.is_clique( problem.getConstraintMatrix(), 3, num ) );
 }
 
 TEST_CASE( "clique-row-flag-detection5", "[core]" )
 {
    Num<double> num{};
    Problem<double> problem = setupProblemWIthCliques();
-   REQUIRE( !problem.getRowFlags()[4].test( RowFlag::kClique ) );
+   REQUIRE( !problem.is_clique( problem.getConstraintMatrix(), 4, num ) );
 }
 
 TEST_CASE( "clique-row-flag-detection6", "[core]" )
 {
    Num<double> num{};
    Problem<double> problem = setupProblemWIthCliques();
-   REQUIRE( !problem.getRowFlags()[5].test( RowFlag::kClique ) );
+   REQUIRE( !problem.is_clique( problem.getConstraintMatrix(), 5, num ) );
 }
 
 TEST_CASE( "clique-row-flag-detection7", "[core]" )
 {
    Num<double> num{};
    Problem<double> problem = setupProblemWIthCliques();
-   REQUIRE( !problem.getRowFlags()[6].test( RowFlag::kClique ) );
+   REQUIRE( !problem.is_clique( problem.getConstraintMatrix(), 6, num ) );
 }
 
 TEST_CASE( "clique-row-flag-detection8", "[core]" )
 {
    Num<double> num{};
    Problem<double> problem = setupProblemWIthCliques();
-   REQUIRE( !problem.getRowFlags()[7].test( RowFlag::kClique ) );
+   REQUIRE( !problem.is_clique( problem.getConstraintMatrix(), 7, num ) );
+}
+
+TEST_CASE( "clique-row-flag-detection9", "[core]" )
+{
+   Num<double> num{};
+   Problem<double> problem = setupProblemWIthCliques();
+   REQUIRE( problem.is_clique( problem.getConstraintMatrix(), 8, num ) );
+}
+
+TEST_CASE( "clique-row-flag-detection10", "[core]" )
+{
+   Num<double> num{};
+   Problem<double> problem = setupProblemWithProbing();
+   REQUIRE( !problem.is_clique( problem.getConstraintMatrix(), 0, num ) );
+}
+
+Problem<double>
+setupProblemWithProbing()
+{
+   // x + 2y<=1
+   // y + z + w <=1
+   Vec<double> coefficients{ 1.0, 1.0, 1.0, 1.0 };
+   Vec<double> upperBounds{ 1.0, 1.0, 1.0, 1.0 };
+   Vec<double> lowerBounds{ 0.0, 0.0, 0.0, 0.0 };
+   Vec<uint8_t> isIntegral{ 1, 1, 1, 1 };
+
+   Vec<double> rhs{ 1.0 };
+   Vec<std::string> rowNames{ "A1" };
+   Vec<std::string> columnNames{ "c1", "c2", "c3", "c4" };
+   Vec<std::tuple<int, int, double>> entries{
+       std::tuple<int, int, double>{ 0, 0, 1.0 },
+       std::tuple<int, int, double>{ 0, 1, 2.0 },
+   };
+
+   ProblemBuilder<double> pb;
+   pb.reserve( entries.size(), rowNames.size(), columnNames.size() );
+   pb.setNumRows( rowNames.size() );
+   pb.setNumCols( columnNames.size() );
+   pb.setColUbAll( upperBounds );
+   pb.setColLbAll( lowerBounds );
+   pb.setObjAll( coefficients );
+   pb.setObjOffset( 0.0 );
+   pb.setColIntegralAll( isIntegral );
+   pb.setRowRhsAll( rhs );
+   pb.addEntryAll( entries );
+   pb.setColNameAll( columnNames );
+   pb.setProblemName( "matrix for testing probing" );
+   Problem<double> problem = pb.build();
+   return problem;
 }
 
 
@@ -249,9 +301,9 @@ setupProblemWIthCliques()
        std::tuple<int, int, double>{ 7, 2, 6.0 },
        std::tuple<int, int, double>{ 7, 5, 5.0 },
        // Eigth Row is not a Clique, no SOS1
-       std::tuple<int, int, double>{ 7, 0, 1.0 },
-       std::tuple<int, int, double>{ 7, 1, 1.0 },
-       std::tuple<int, int, double>{ 7, 6, 1.0 },
+       std::tuple<int, int, double>{ 8, 0, 1.0 },
+       std::tuple<int, int, double>{ 8, 1, 1.0 },
+       std::tuple<int, int, double>{ 8, 6, 1.0 },
        // Ninth Row is a clique, no SOS1
    };
 
