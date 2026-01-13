@@ -499,6 +499,7 @@ install(FILES
    ${PROJECT_SOURCE_DIR}/src/papilo/presolvers/DominatedCols.hpp
    ${PROJECT_SOURCE_DIR}/src/papilo/presolvers/DualFix.hpp
    ${PROJECT_SOURCE_DIR}/src/papilo/presolvers/DualInfer.hpp
+   ${PROJECT_SOURCE_DIR}/src/papilo/presolvers/GF2.hpp
    ${PROJECT_SOURCE_DIR}/src/papilo/presolvers/FixContinuous.hpp
    ${PROJECT_SOURCE_DIR}/src/papilo/presolvers/FreeVarSubstitution.hpp
    ${PROJECT_SOURCE_DIR}/src/papilo/presolvers/ImplIntDetection.hpp
