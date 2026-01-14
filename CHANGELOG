@@ -5,6 +5,8 @@
 Fixed bugs
 ----------
 
+- issue warning if PaPILO is not build with Boost iostreams but user attempts to parse compressed file
+
 
 @section RN300 PaPILO 3.0.0
 
