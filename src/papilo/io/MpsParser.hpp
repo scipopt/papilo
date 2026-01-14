@@ -873,15 +873,24 @@ MpsParser<REAL>::parseFile( const std::string& filename )
    if( !file )
       return false;
 
-#ifdef PAPILO_USE_BOOST_IOSTREAMS_WITH_ZLIB
    if( boost::algorithm::ends_with( filename, ".gz" ) )
+   {
+#ifdef PAPILO_USE_BOOST_IOSTREAMS_WITH_ZLIB
       in.push( boost::iostreams::gzip_decompressor() );
+#else
+      fmt::print( "Boost iostreams required to read gz-compressed files." );
+      return false;
 #endif
-
+   }
+   else if( boost::algorithm::ends_with( filename, ".bz2" ) )
+   {
 #ifdef PAPILO_USE_BOOST_IOSTREAMS_WITH_BZIP2
-   if( boost::algorithm::ends_with( filename, ".bz2" ) )
       in.push( boost::iostreams::bzip2_decompressor() );
+#else
+      fmt::print( "Boost iostreams required to read bz2-compressed files." );
+      return false;
 #endif
+   }
 
    in.push( file );
 
