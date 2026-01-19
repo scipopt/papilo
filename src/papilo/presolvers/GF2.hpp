@@ -121,7 +121,7 @@ positive_modulo( i_t i, i_t n )
 // for this since A is likely to be sparse and low-bandwidth (i think?) unlikely
 // to occur in real-world problems however. doubt it'd be worth the effort
 // trashes A and b, return true if solved
-static bool
+static inline bool
 gf2_solve( std::vector<std::vector<int>>& A, std::vector<int>& b,
            std::vector<int>& x )
 {
