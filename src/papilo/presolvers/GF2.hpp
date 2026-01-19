@@ -26,6 +26,8 @@
 #ifndef _PAPILO_PRESOLVERS_GF2_HPP_
 #define _PAPILO_PRESOLVERS_GF2_HPP_
 
+#include <unordered_map>
+
 #include "papilo/core/PresolveMethod.hpp"
 #include "papilo/core/Problem.hpp"
 #include "papilo/core/ProblemUpdate.hpp"
