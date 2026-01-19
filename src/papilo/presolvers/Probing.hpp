@@ -423,7 +423,6 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
    }
 
    std::set<int> probedvars;
-   int nprobedvars = 0;
    std::atomic_bool infeasible{ false };
    std::atomic_int infeasible_variable{ -1 };
    int batchend = 0;
@@ -619,7 +618,6 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
             probing_scores[cliqueind[ind]] = -100000;
             probedvars.emplace(cliqueind[ind]);
          }
-         nprobedvars += finalinds[clique];
       }
 
       ncliquesubstitutions = -cliquesubstitutions.size();
