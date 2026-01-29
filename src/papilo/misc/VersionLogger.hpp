@@ -3,7 +3,7 @@
 /*               This file is part of the program and library                */
 /*    PaPILO --- Parallel Presolve for Integer and Linear Optimization       */
 /*                                                                           */
-/* Copyright (C) 2020-2025 Zuse Institute Berlin (ZIB)                       */
+/* Copyright (C) 2020-2026 Zuse Institute Berlin (ZIB)                       */
 /*                                                                           */
 /* Licensed under the Apache License, Version 2.0 (the "License");           */
 /* you may not use this file except in compliance with the License.          */
@@ -121,7 +121,7 @@ print_header()
                PAPILO_VERSION_MAJOR, PAPILO_VERSION_MINOR, PAPILO_VERSION_PATCH,
                mode, solvers );
 #endif
-   fmt::print( "Copyright (C) 2020-2025 Zuse Institute Berlin (ZIB)\n" );
+   fmt::print( "Copyright (C) 2020-2026 Zuse Institute Berlin (ZIB)\n" );
    fmt::print( "\n" );
 
    fmt::print( "External libraries: \n" );

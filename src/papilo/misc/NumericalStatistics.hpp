@@ -3,7 +3,7 @@
 /*               This file is part of the program and library                */
 /*    PaPILO --- Parallel Presolve for Integer and Linear Optimization       */
 /*                                                                           */
-/* Copyright (C) 2002-2025 Zuse Institute Berlin (ZIB)                       */
+/* Copyright (C) 2002-2026 Zuse Institute Berlin (ZIB)                       */
 /*                                                                           */
 /* Licensed under the Apache License, Version 2.0 (the "License");           */
 /* you may not use this file except in compliance with the License.          */

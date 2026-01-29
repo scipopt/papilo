@@ -4,7 +4,7 @@
 #*                  This file is part of the program and library             *
 #*         SCIP --- Solving Constraint Integer Programs                      *
 #*                                                                           *
-#*    Copyright (C) 2020-2025 Zuse Institute Berlin (ZIB)                    *
+#*    Copyright (C) 2020-2026 Zuse Institute Berlin (ZIB)                    *
 #*                                                                           *
 #*  SCIP is distributed under the terms of the ZIB Academic License.         *
 #*                                                                           *
