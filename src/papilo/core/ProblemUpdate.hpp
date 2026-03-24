@@ -226,15 +226,17 @@ class ProblemUpdate
    void
    markRowRedundant( int row, ArgumentType argument = ArgumentType::kPrimal)
    {
+
       RowFlags& rflags = problem.getRowFlags()[row];
       if( !rflags.test( RowFlag::kRedundant ) )
       {
          redundant_rows.push_back( row );
          ++stats.ndeletedrows;
          rflags.set( RowFlag::kRedundant );
+         postsolve.storeRedundantRow( row );
+         certificate_interface->mark_row_redundant(row, problem, argument);
       }
-      postsolve.storeRedundantRow( row );
-      certificate_interface->mark_row_redundant(row, problem, argument);
+
    }
 
    void
@@ -1590,7 +1592,7 @@ ProblemUpdate<REAL>::trivialRowPresolve()
                                                      rhs[row] );
          switch( st )
          {
-         case RowStatus::kRedundant:
+            case RowStatus::kRedundant:
             markRowRedundant( row );
             break;
          case RowStatus::kRedundantLhs:
