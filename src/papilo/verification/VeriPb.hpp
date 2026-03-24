@@ -1706,7 +1706,7 @@ class VeriPb : public CertificateInterface<REAL>
             proof_out << cast_to_long(offset * old_obj_coeff * values[0]/values[1]) << ";";
             if ( abs(old_obj_coeff) != 1 )
             {
-               proof_out << " ; begin\n\tproofgoal #1\n\t\t" << POL;
+               proof_out << " begin\n\tproofgoal #1\n\t\t" << POL;
                if(old_obj_coeff/ substitute_factor < 0 )
                   proof_out << first_constraint_id << " " << cast_to_long( abs( old_obj_coeff ) ) << " * " << " -1 " << cast_to_long( abs( substitute_factor ) ) << " * +";
                else
@@ -1791,7 +1791,7 @@ class VeriPb : public CertificateInterface<REAL>
 
          if( abs(old_obj_coeff) != 1)
          {
-            proof_out << " ; begin\n\tproofgoal #1\n\t\t" << POL;
+            proof_out << " begin\n\tproofgoal #1\n\t\t" << POL;
             if(old_obj_coeff/ substitute_factor < 0 )
                proof_out << lhs_row_mapping[row] << " " << cast_to_long( abs( old_obj_coeff ) ) << " * " << " -1 " << cast_to_long( abs( substitute_factor ) ) << " * +";
             else
@@ -1917,7 +1917,7 @@ class VeriPb : public CertificateInterface<REAL>
             proof_out << cast_to_long( offset * factor) << ";";
             if( abs(old_obj_coeff) != 1)
             {
-               proof_out << " ; begin\n\tproofgoal #1\n\t\t" << POL;
+               proof_out << " begin\n\tproofgoal #1\n\t\t" << POL;
                if(old_obj_coeff/ substitute_factor < 0 )
                   proof_out << lhs_row_mapping[substituted_row] << " " << cast_to_long( abs( old_obj_coeff ) ) << " * " << " -1 " << cast_to_long( abs( substitute_factor ) ) << " * +";
                else
