@@ -294,34 +294,46 @@ class VeriPb : public CertificateInterface<REAL>
       assert( val == 0 );
       const Vec<String>& names = problem.getVariableNames();
       int orig_col = var_mapping[col];
-      switch( argument )
-      {
-      case ArgumentType::kPropagation:
-         if(propagation_option == 1)
-         {
-            assert( row_forcing_propagation != -1 );
-            propagate_row( row_forcing_propagation, col, val, false, problem,
-                           var_mapping );
+      switch( argument ) {
+         case ArgumentType::kPropagation: {
+            if(propagation_option == 1)
+            {
+               assert( row_forcing_propagation != -1 );
+               propagate_row( row_forcing_propagation, col, val, false, problem,
+                              var_mapping );
+               break;
+            }
+            proof_out << RUP << "1 " << NEGATED << names[orig_col] << " >= 1 ; ";
+            REAL coeff = 0;
+            auto row_coefficients = problem.getConstraintMatrix().getRowCoefficients(row_forcing_propagation);
+            for (int i = 0; i < row_coefficients.getLength(); ++i)
+               if (row_coefficients.getIndices()[i] == col) {
+                  coeff = row_coefficients.getValues()[i];
+                  break;
+               }
+            assert(coeff != 0);
+            if (coeff < 0)
+               proof_out << lhs_row_mapping[row_forcing_propagation] << "\n";
+            else
+               proof_out << rhs_row_mapping[row_forcing_propagation] << "\n";
             break;
          }
-         proof_out << RUP << "1 " << NEGATED << names[orig_col] << " >= 1 ; " << row_forcing_propagation << "\n";
-         break;
-      case ArgumentType::kPrimal:
-         if( stored_dominated_col == orig_col)
-         {
-            assert(stored_dominating_col != UNKNOWN);
-            proof_out << RED << "1 " << NEGATED << names[orig_col] << " >= 1 ; "
-                      << names[orig_col] << " -> 0 " << names[stored_dominating_col] << " -> 0";
+         case ArgumentType::kPrimal:
+            if( stored_dominated_col == orig_col)
+            {
+               assert(stored_dominating_col != UNKNOWN);
+               proof_out << RED << "1 " << NEGATED << names[orig_col] << " >= 1 ; "
+                         << names[orig_col] << " -> 0 " << names[stored_dominating_col] << " -> 0";
 #if VERIPB_VERSION == 1
-            add_substitutions_fix_to_witness( names, stored_dominated_col, val == 1 );
-            add_substitutions_fix_to_witness( names, stored_dominating_col, val == 1 );
+               add_substitutions_fix_to_witness( names, stored_dominated_col, val == 1 );
+               add_substitutions_fix_to_witness( names, stored_dominating_col, val == 1 );
 #endif
-            proof_out << "\n";
-            break;
-         }
+               proof_out << "\n";
+               break;
+            }
 
-         proof_out << RUP << "1 " << NEGATED << names[orig_col] << " >= 1 ; \n";
-         break;
+            proof_out << RUP << "1 " << NEGATED << names[orig_col] << " >= 1 ; \n";
+            break;
       case ArgumentType::kAggregation:
       case ArgumentType::kDual:
       case ArgumentType::kSymmetry:
@@ -457,18 +469,30 @@ class VeriPb : public CertificateInterface<REAL>
       assert( val == 1 );
       const Vec<String>& names = problem.getVariableNames();
       int orig_col = var_mapping[col];
-      switch( argument )
-      {
-      case ArgumentType::kPropagation:
-         if( propagation_option == 1)
-         {
-            assert( row_forcing_propagation != -1 );
-            propagate_row( row_forcing_propagation, col, val, true, problem,
-                           var_mapping );
+      switch( argument ) {
+         case ArgumentType::kPropagation:{
+            if( propagation_option == 1)
+            {
+               assert( row_forcing_propagation != -1 );
+               propagate_row( row_forcing_propagation, col, val, true, problem,
+                              var_mapping );
+               break;
+            }
+            proof_out << RUP << "1 " << names[orig_col] << " >= " << cast_to_long(val) << " ;";
+            REAL coeff = 0;
+            auto row_coefficients = problem.getConstraintMatrix().getRowCoefficients(row_forcing_propagation);
+            for (int i = 0; i < row_coefficients.getLength(); ++i)
+               if (row_coefficients.getIndices()[i] == col) {
+                  coeff = row_coefficients.getValues()[i];
+                  break;
+               }
+            assert(coeff != 0);
+            if (coeff > 0)
+               proof_out << lhs_row_mapping[row_forcing_propagation] << "\n";
+            else
+               proof_out << rhs_row_mapping[row_forcing_propagation] << "\n";
             break;
-         }
-         proof_out << RUP << "1 " << names[orig_col] << " >= " << cast_to_long(val) << " ;"  << row_forcing_propagation << "\n";
-         break;
+      }
       case ArgumentType::kPrimal:
          if( stored_dominating_col == orig_col)
          {
