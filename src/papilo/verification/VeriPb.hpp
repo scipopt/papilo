@@ -49,6 +49,7 @@ static const char* const CONCLUSION = "conclusion ";
 static const char* const OUTPUT = "output ";
 static const char* const NONE = "NONE";
 static const char* const EQUIOPTIMAL = "EQUIOPTIMAL FILE";
+static const char* const EQUISATISFIABLE = "EQUISATISFIABLE FILE";
 #if VERIPB_VERSION >= 2
 static const char* const DELETE_CONS = "delc ";
 #else
@@ -2342,7 +2343,10 @@ class VeriPb : public CertificateInterface<REAL>
       if( status == -2)
          return;
 #if VERIPB_VERSION >= 2
-      proof_out << OUTPUT << EQUIOPTIMAL << " \n";
+      if (is_optimization_problem)
+         proof_out << OUTPUT << EQUIOPTIMAL << " \n";
+      else
+         proof_out << OUTPUT << EQUISATISFIABLE << " \n";
       proof_out << CONCLUSION;
       if(is_optimization_problem)
       {
