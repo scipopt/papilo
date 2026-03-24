@@ -48,6 +48,7 @@ static const char* const COMMENT = "* ";
 static const char* const CONCLUSION = "conclusion ";
 static const char* const OUTPUT = "output ";
 static const char* const NONE = "NONE";
+static const char* const EQUIOPTIMAL = "EQUIOPTIMAL FILE";
 #if VERIPB_VERSION >= 2
 static const char* const DELETE_CONS = "delc ";
 #else
@@ -302,7 +303,7 @@ class VeriPb : public CertificateInterface<REAL>
                            var_mapping );
             break;
          }
-         proof_out << RUP << "1 " << NEGATED << names[orig_col] << " >= 1 ;\n";
+         proof_out << RUP << "1 " << NEGATED << names[orig_col] << " >= 1 ; " << row_forcing_propagation << "\n";
          break;
       case ArgumentType::kPrimal:
          if( stored_dominated_col == orig_col)
@@ -318,7 +319,7 @@ class VeriPb : public CertificateInterface<REAL>
             break;
          }
 
-         proof_out << RUP << "1 " << NEGATED << names[orig_col] << " >= 1 ;\n";
+         proof_out << RUP << "1 " << NEGATED << names[orig_col] << " >= 1 ; \n";
          break;
       case ArgumentType::kAggregation:
       case ArgumentType::kDual:
@@ -465,12 +466,8 @@ class VeriPb : public CertificateInterface<REAL>
                            var_mapping );
             break;
          }
-         else
-         {
-            proof_out << RUP << "1 " << names[orig_col]
-                      << " >= " << cast_to_long( val ) << " ;\n";
-            break;
-         }
+         proof_out << RUP << "1 " << names[orig_col] << " >= " << cast_to_long(val) << " ;"  << row_forcing_propagation << "\n";
+         break;
       case ArgumentType::kPrimal:
          if( stored_dominating_col == orig_col)
          {
@@ -2345,7 +2342,7 @@ class VeriPb : public CertificateInterface<REAL>
       if( status == -2)
          return;
 #if VERIPB_VERSION >= 2
-      proof_out << OUTPUT << NONE << " \n";
+      proof_out << OUTPUT << EQUIOPTIMAL << " \n";
       proof_out << CONCLUSION;
       if(is_optimization_problem)
       {
