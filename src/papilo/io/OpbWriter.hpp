@@ -50,9 +50,45 @@ template <typename REAL>
 struct OpbWriter
 {
 
+   static REAL computeIntegralScale(const REAL* values,
+                             int n,
+                             const Num<REAL>& num,
+                             REAL lhs,
+                             bool include_lhs)
+   {
+      REAL scale = 1;
+
+      auto update_scale = [&](REAL val)
+      {
+         if (num.isIntegral(val))
+            return;
+
+         REAL local_scale = 1;
+         REAL scaled = val;
+
+         for (int k = 0; k < 12; ++k)
+         {
+            if (num.isIntegral(scaled))
+               break;
+
+            local_scale *= 10;
+            scaled = val * local_scale;
+         }
+         scale *= local_scale;
+      };
+
+      for (int i = 0; i < n; ++i)
+         update_scale(values[i]);
+
+      if (include_lhs)
+         update_scale(lhs);
+
+      return scale;
+   }
+
    static bool
    writeProb( const std::string& filename, const Problem<REAL>& prob,
-              const Vec<int>& col_mapping, const Vec<int>& row_scaling,
+              const Vec<int>& col_mapping,
               const Num<REAL>& num)
    {
       const ConstraintMatrix<REAL>& matrix = prob.getConstraintMatrix();
@@ -91,24 +127,24 @@ struct OpbWriter
             return false;
          }
       }
-      for( int i = 0; i < prob.getNRows(); ++i )
-      {
-         auto vector = matrix.getRowCoefficients( i );
-         for( int j = 0; j < vector.getLength(); j++ )
-            if( !num.isIntegral( vector.getValues()[j] * row_scaling[i] ) )
-            {
-               fmt::print( "Matrix contains fractional values. Opb is not the "
-                           "write format." );
-               return false;
-            }
-         if( !num.isIntegral( lhs[i] * row_scaling[i] ) ||
-             !num.isIntegral( rhs[i] * row_scaling[i] ) )
-         {
-            fmt::print( "Lhs/Rhs contains fractional values. Opb is not the "
-                        "correct format.\n" );
-            return false;
-         }
-      }
+      // for( int i = 0; i < prob.getNRows(); ++i )
+      // {
+      //    auto vector = matrix.getRowCoefficients( i );
+      //    for( int j = 0; j < vector.getLength(); j++ )
+      //       if( !num.isIntegral( vector.getValues()[j] * row_scaling[i] ) )
+      //       {
+      //          fmt::print( "Matrix contains fractional values. Opb is not the "
+      //                      "write format." );
+      //          return false;
+      //       }
+      //    if( !num.isIntegral( lhs[i] * row_scaling[i] ) ||
+      //        !num.isIntegral( rhs[i] * row_scaling[i] ) )
+      //    {
+      //       fmt::print( "Lhs/Rhs contains fractional values. Opb is not the "
+      //                   "correct format.\n" );
+      //       return false;
+      //    }
+      // }
       out.push( file );
 
       fmt::print( out, "* #variable= {} #constraint= {}\n",
@@ -159,7 +195,10 @@ struct OpbWriter
              !row_flags[row].test( RowFlag::kLhsInf ) )
          {
             scale_necessary = scale_necessary || !num.isIntegral(lhs[row]);
-            REAL scale = scale_necessary ? abs(row_scaling[row]) : 1;
+            REAL scale = 1;
+            if (scale_necessary)
+               scale = computeIntegralScale(vector.getValues(),
+                                    vector.getLength(), num, lhs[row], true);
 
             assert( !row_flags[row].test( RowFlag::kLhsInf ) );
             for( int j = 0; j < vector.getLength(); j++ )
@@ -167,11 +206,17 @@ struct OpbWriter
                REAL val = vector.getValues()[j] * scale;
                assert( val != 0 );
                assert( num.isIntegral(val ) );
+               if (!num.isIntegral(val)) {
+                  return false;
+               }
                fmt::print( out, "{}{} {} ", val > 0 ? "+" : "-",
                            abs( cast_to_long( val ) ),
                            varnames[col_mapping[vector.getIndices()[j]]] );
             }
             assert(num.isIntegral( lhs[row] * scale ));
+            if (!num.isIntegral(lhs[row] * scale)) {
+               return false;
+            }
             if( row_flags[row].test( RowFlag::kEquation ) )
                fmt::print( out, "= " );
             else
@@ -184,20 +229,31 @@ struct OpbWriter
             assert( !row_flags[row].test( RowFlag::kRhsInf ) );
 
             scale_necessary = scale_necessary || !num.isIntegral(rhs[row]);
-            REAL scale = scale_necessary ? abs(row_scaling[row]) : 1;
-            for( int j = 0; j < vector.getLength(); j++ )
-            {
+            REAL scale = 1;
+            if (scale_necessary)
+               scale = computeIntegralScale(vector.getValues(),
+                                    vector.getLength(),num,
+                                    rhs[row],
+                                    true);
+            for (int j = 0; j < vector.getLength(); j++) {
                REAL val = vector.getValues()[j] * scale;
                assert( val != 0 );
                assert( num.isIntegral(val ) );
+               if (!num.isIntegral(val)) {
+                  return false;
+               }
                fmt::print( out, "{}{} {} ", val < 0 ? "+" : "-",
                            boost::multiprecision::cpp_int( abs( val ) ).str(),
                            varnames[col_mapping[vector.getIndices()[j]]] );
             }
             assert(num.isIntegral( rhs[row] * scale ));
+            if (!num.isIntegral(rhs[row] * scale)) {
+               return false;
+            }
             fmt::print( out, ">= {} ;\n",
                         -cast_to_long( rhs[row] * scale ) );
          }
+         out.flush();
       }
       for( auto sym_c : sym )
       {
@@ -264,7 +320,7 @@ struct OpbWriter
    static long
    cast_to_long( const REAL& x )
    {
-      return (long) ( REAL( x + REAL( 0.5 ) ) );
+      return x >= 0 ? (long)(x + 0.5): (long)(x - 0.5);
    }
 };
 
