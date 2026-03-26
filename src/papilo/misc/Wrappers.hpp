@@ -297,7 +297,7 @@ presolve_and_solve(
             num.setHugeVal( REAL{ presolve.getPresolveOptions().hugeval } );
             num.setUseAbsFeas( presolve.getPresolveOptions().useabsfeas );
             bool success = OpbWriter<REAL>::writeProb( opts.reduced_problem_file, problem,
-                                        result.postsolve.origcol_mapping, presolve.getRowScalingFactors(), num );
+                                        result.postsolve.origcol_mapping, num );
             //TODO: change name
             if(!success)
                MpsWriter<REAL>::writeProb( opts.reduced_problem_file, problem,
@@ -338,8 +338,6 @@ presolve_and_solve(
       {
          Timer t( solvetime );
 
-         if(presolve.getPresolveOptions().verification_with_VeriPB)
-            solver->setRowScalingFactor(presolve.getRowScalingFactors());
          solver->setUp( problem, result.postsolve.origrow_mapping,
                         result.postsolve.origcol_mapping );
 

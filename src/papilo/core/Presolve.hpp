@@ -137,17 +137,10 @@ class Presolve
       return paramSet;
    }
 
-   Vec<int>&
-   getRowScalingFactors()
-   {
-      assert(presolveOptions.verification_with_VeriPB);
-      return row_scaling;
-   }
-
    /***
     * presolves the problem and applies the reductions found by the presolvers
     * immediately to it.
-    * The functions returns the PresolveStatus (Reduced, Unchanged, ) and the
+    * The function returns the PresolveStatus (Reduced, Unchanged, ) and the
     * postsolve information
     *
     * @tparam REAL: computational accuracy template
