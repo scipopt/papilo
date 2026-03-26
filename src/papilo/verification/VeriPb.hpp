@@ -453,6 +453,7 @@ class VeriPb : public CertificateInterface<REAL>
          proof_out << OBJECTIVE_DIFF << (-obj_coeff ) << " " << names[orig_col] << ";\n";
       stored_objective.coefficients[col] = 0;
       fixed_variable[col] = -1;
+      proof_out << DELETE_CONS <<  cons_id_fixing << " ; " << names[orig_col] << " 0 ;\n";
 #endif
    }
 
@@ -624,6 +625,7 @@ class VeriPb : public CertificateInterface<REAL>
          stored_objective.offset += obj_coeff * val;
       }
       stored_objective.coefficients[col] = 0;
+      proof_out << DELETE_CONS <<  cons_id_fixing << " ; " << names[orig_col] << " 1 ;\n";
       fixed_variable[col] = 1;
 #endif
    }
