@@ -3940,10 +3940,10 @@ FMT_CONSTEXPR detail::udl_formatter<wchar_t> operator"" _format(
     fmt::print("Elapsed time: {s:.2f} seconds", "s"_a=1.23);
   \endrst
  */
-FMT_CONSTEXPR detail::udl_arg<char> operator"" _a(const char* s, size_t) {
+FMT_CONSTEXPR detail::udl_arg<char> operator""_a(const char* s, size_t) {
   return {s};
 }
-FMT_CONSTEXPR detail::udl_arg<wchar_t> operator"" _a(const wchar_t* s, size_t) {
+FMT_CONSTEXPR detail::udl_arg<wchar_t> operator""_a(const wchar_t* s, size_t) {
   return {s};
 }
 }  // namespace literals
