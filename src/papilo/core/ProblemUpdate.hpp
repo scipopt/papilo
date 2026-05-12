@@ -1571,6 +1571,7 @@ ProblemUpdate<REAL>::trivialRowPresolve()
                 __FILE__, __LINE__ );
             return PresolveStatus::kInfeasible;
          }
+         certificate_interface->mark_row_redundant(row, problem);
          rflags[row].set( RowFlag::kRedundant );
          rowsize[row] = -1;
          postsolve.storeRedundantRow( row );
