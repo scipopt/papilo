@@ -550,7 +550,7 @@ class Problem
          if( ( !lhsClique && !rhsClique ) || SOS1 )
             return {false, false};
       }
-      if( (rhsClique && num.isGT(matrix.getLeftHandSides()[row],0.0)) || (lhsClique && num.isLT(matrix.getRightHandSides()[row],0.0)) )
+      if( (rhsClique && !rowFlag.test( RowFlag::kLhsInf ) && num.isGT(matrix.getLeftHandSides()[row],0.0)) || (lhsClique && !rowFlag.test( RowFlag::kRhsInf ) && num.isLT(matrix.getRightHandSides()[row],0.0)) )
          equation = true;
       return {!SOS1, equation} ;
    }
