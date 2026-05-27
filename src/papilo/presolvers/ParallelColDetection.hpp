@@ -29,11 +29,11 @@
 #include "papilo/core/PresolveMethod.hpp"
 #include "papilo/core/Problem.hpp"
 #include "papilo/core/ProblemUpdate.hpp"
-#include "papilo/external/pdqsort/pdqsort.h"
 #include "papilo/misc/Hash.hpp"
 #ifdef PAPILO_TBB
 #include "papilo/misc/tbb.hpp"
 #endif
+#include <boost/sort/pdqsort/pdqsort.hpp>
 
 namespace papilo
 {
@@ -536,7 +536,7 @@ ParallelColDetection<REAL>::execute( const Problem<REAL>& problem,
    computeSupportId( constMatrix, supportid.get() );
 #endif
 
-   pdqsort(
+   boost::sort::pdqsort(
        col.get(), col.get() + ncols,
        [&]( int a, int b )
        {

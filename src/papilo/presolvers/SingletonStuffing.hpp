@@ -638,7 +638,7 @@ SingletonStuffing<REAL>::execute( const Problem<REAL>& problem,
          continue;
       }
 
-      pdqsort( penaltyvars.begin(), penaltyvars.end(),
+      boost::sort::pdqsort( penaltyvars.begin(), penaltyvars.end(),
                [&]( const std::pair<int, REAL>& c1,
                     const std::pair<int, REAL>& c2 ) {
                   return ( obj[c1.first] / c1.second ) >

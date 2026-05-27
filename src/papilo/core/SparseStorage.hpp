@@ -25,10 +25,10 @@
 #ifndef _PAPILO_CORE_SPARSE_STORAGE_HPP_
 #define _PAPILO_CORE_SPARSE_STORAGE_HPP_
 
-#include "papilo/external/pdqsort/pdqsort.h"
 #include "papilo/misc/MultiPrecision.hpp"
 #include "papilo/misc/Vec.hpp"
 #include <algorithm>
+#include <boost/sort/pdqsort/pdqsort.hpp>
 #include <cassert>
 #include <cstdint>
 #include <cstring>
@@ -430,7 +430,7 @@ SparseStorage<REAL>::SparseStorage( Vec<Triplet<REAL>> entries, int nRows_in,
    assert( !sorted || std::is_sorted( entries.begin(), entries.end() ) );
 
    if( !sorted )
-      pdqsort( entries.begin(), entries.end() );
+      boost::sort::pdqsort( entries.begin(), entries.end() );
 
    nnz = entries.size();
    nAlloc = computeNAlloc();

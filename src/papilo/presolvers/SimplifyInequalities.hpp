@@ -29,8 +29,8 @@
 #include "papilo/core/PresolveMethod.hpp"
 #include "papilo/core/Problem.hpp"
 #include "papilo/core/ProblemUpdate.hpp"
-#include "papilo/external/pdqsort/pdqsort.h"
 #include <boost/integer/common_factor.hpp>
+#include <boost/sort/pdqsort/pdqsort.hpp>
 
 namespace papilo
 {
@@ -209,7 +209,7 @@ SimplifyInequalities<REAL>::simplify(
        partition( colOrder.begin(), colOrder.end(),
                   [&colinds, &cflags]( int const& a )
                   { return cflags[colinds[a]].test( ColFlag::kIntegral ); } );
-   pdqsort( colOrder.begin(), start_cont,
+   boost::sort::pdqsort( colOrder.begin(), start_cont,
             [&values]( int const& a, int const& b )
             { return abs( values[a] ) > abs( values[b] ); } );
 

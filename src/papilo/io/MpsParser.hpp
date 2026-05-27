@@ -28,7 +28,6 @@
 #include "papilo/core/ConstraintMatrix.hpp"
 #include "papilo/core/Problem.hpp"
 #include "papilo/core/VariableDomains.hpp"
-#include "papilo/external/pdqsort/pdqsort.h"
 #include "papilo/io/BoundType.hpp"
 #include "papilo/io/ParseKey.hpp"
 #include "papilo/misc/Flags.hpp"
@@ -38,6 +37,7 @@
 #include <algorithm>
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/iostreams/filtering_stream.hpp>
+#include <boost/sort/pdqsort/pdqsort.hpp>
 #include <boost/spirit/include/qi.hpp>
 #include <boost/utility/string_ref.hpp>
 #include <fstream>
@@ -423,7 +423,7 @@ MpsParser<REAL>::parseCols( boost::iostreams::filtering_istream& file,
       if( key != kNone )
       {
          if( ncols > 1 )
-            pdqsort( entries.begin() + colstart, entries.end(),
+            boost::sort::pdqsort( entries.begin() + colstart, entries.end(),
                      []( Triplet<REAL> a, Triplet<REAL> b ) {
                         return std::get<1>( b ) > std::get<1>( a );
                      } );
@@ -492,7 +492,7 @@ MpsParser<REAL>::parseCols( boost::iostreams::filtering_istream& file,
          assert( col_flags.size() == lb4cols.size() );
 
          if( ncols > 1 )
-            pdqsort( entries.begin() + colstart, entries.end(),
+            boost::sort::pdqsort( entries.begin() + colstart, entries.end(),
                      []( Triplet<REAL> a, Triplet<REAL> b ) {
                         return std::get<1>( b ) > std::get<1>( a );
                      } );

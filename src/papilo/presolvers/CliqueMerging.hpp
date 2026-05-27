@@ -30,8 +30,8 @@
 #include "papilo/core/PresolveOptions.hpp"
 #include "papilo/core/Problem.hpp"
 #include "papilo/core/ProblemUpdate.hpp"
-#include "papilo/external/pdqsort/pdqsort.h"
 #include <algorithm>
+#include <boost/sort/pdqsort/pdqsort.hpp>
 #include <unordered_map>
 #include <set>
 #include <vector>
@@ -393,7 +393,7 @@ CliqueMerging<REAL>::execute( const Problem<REAL>& problem,
       result.insert(result.end(), b.begin(), b.end() );
       return result;
    } );
-   pdqsort(reductionResultsComb.begin(), reductionResultsComb.end());
+   boost::sort::pdqsort(reductionResultsComb.begin(), reductionResultsComb.end());
    for( int reductionindex = 0; reductionindex < reductionResultsComb.end() - reductionResultsComb.begin(); ++reductionindex )
    {
       result = PresolveStatus::kReduced;

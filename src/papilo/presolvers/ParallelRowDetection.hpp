@@ -29,11 +29,12 @@
 #include "papilo/core/PresolveMethod.hpp"
 #include "papilo/core/Problem.hpp"
 #include "papilo/core/ProblemUpdate.hpp"
-#include "papilo/external/pdqsort/pdqsort.h"
 #include "papilo/misc/Hash.hpp"
 #ifdef PAPILO_TBB
 #include "papilo/misc/tbb.hpp"
 #endif
+#include <boost/sort/pdqsort/pdqsort.hpp>
+
 namespace papilo
 {
 
@@ -515,7 +516,7 @@ ParallelRowDetection<REAL>::execute( const Problem<REAL>& problem,
    computeSupportId( constMatrix, supportid.get() );
 #endif
 
-   pdqsort( row.get(), row.get() + nRows, [&]( int a, int b ) {
+   boost::sort::pdqsort( row.get(), row.get() + nRows, [&]( int a, int b ) {
       return supportid[a] < supportid[b] ||
              ( supportid[a] == supportid[b] && coefhash[a] < coefhash[b] ) ||
              ( supportid[a] == supportid[b] && coefhash[a] == coefhash[b] &&

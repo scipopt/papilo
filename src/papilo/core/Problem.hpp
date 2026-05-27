@@ -827,7 +827,7 @@ class Problem
              colsize[i],
              constraintMatrix.getColumnCoefficients( i ).getDynamism(), i );
 
-      pdqsort( colperm.begin(), colperm.end() );
+      boost::sort::pdqsort( colperm.begin(), colperm.end() );
 
       for( const auto& tuple : colperm )
       {

@@ -29,10 +29,10 @@
 #include "papilo/core/PresolveMethod.hpp"
 #include "papilo/core/Problem.hpp"
 #include "papilo/core/ProblemUpdate.hpp"
-#include "papilo/external/pdqsort/pdqsort.h"
 #include "papilo/misc/Num.hpp"
 #include "papilo/misc/fmt.hpp"
 #include <boost/dynamic_bitset.hpp>
+#include <boost/sort/pdqsort/pdqsort.hpp>
 
 namespace papilo
 {
@@ -133,7 +133,7 @@ Substitution<REAL>::execute( const Problem<REAL>& problem,
       equalities.emplace_back( constMatrix.getRowCoefficients( i ), i );
    }
 
-   pdqsort( equalities.begin(), equalities.end(),
+   boost::sort::pdqsort( equalities.begin(), equalities.end(),
             [this, &rowperm]( const Equality& a, const Equality& b ) {
                return std::make_tuple( ntried[std::get<1>( a )],
                                        std::get<0>( a ).getLength(),
@@ -224,7 +224,7 @@ Substitution<REAL>::execute( const Problem<REAL>& problem,
          column_candidates.push_back( i );
       }
 
-      pdqsort( column_candidates.begin(), column_candidates.end(),
+      boost::sort::pdqsort( column_candidates.begin(), column_candidates.end(),
                [&]( int i1, int i2 ) {
                   int col1 = rowindices[i1];
                   int col2 = rowindices[i2];

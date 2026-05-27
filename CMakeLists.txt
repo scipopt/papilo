@@ -12,7 +12,7 @@ if(POLICY CMP0167)
     cmake_policy(SET CMP0167 NEW)
 endif()
 
-set(BOOST_MIN_VERSION 1.65)
+set(BOOST_MIN_VERSION 1.67)
 set(CMAKE_CXX_STANDARD 14)
 set(CXX_STANDARD_REQUIRED ON)
 
@@ -531,10 +531,6 @@ install(FILES
    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/papilo/external/fmt)
 
 install(FILES
-   ${PROJECT_SOURCE_DIR}/src/papilo/external/pdqsort/pdqsort.h
-   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/papilo/external/pdqsort)
-
-install(FILES
    ${PROJECT_SOURCE_DIR}/src/papilo/external/ska/bytell_hash_map.hpp
    ${PROJECT_SOURCE_DIR}/src/papilo/external/ska/flat_hash_map.hpp
    ${PROJECT_SOURCE_DIR}/src/papilo/external/ska/unordered_map.hpp
@@ -546,8 +542,6 @@ install(FILES
 
 install(FILES
    ${PROJECT_SOURCE_DIR}/LICENSE DESTINATION ${CMAKE_INSTALL_DATADIR}/licenses/papilo)
-install(FILES
-   ${PROJECT_SOURCE_DIR}/src/papilo/external/pdqsort/license.txt DESTINATION ${CMAKE_INSTALL_DATADIR}/licenses/papilo/pdqsort)
 install(FILES
    ${PROJECT_SOURCE_DIR}/src/papilo/external/ska/LICENSE.txt DESTINATION ${CMAKE_INSTALL_DATADIR}/licenses/papilo/ska)
 install(FILES

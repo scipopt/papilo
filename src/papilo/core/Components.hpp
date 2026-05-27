@@ -26,10 +26,10 @@
 #define _PAPILO_CORE_COMPONENTS_HPP_
 
 #include "papilo/core/Problem.hpp"
-#include "papilo/external/pdqsort/pdqsort.h"
 #include "papilo/misc/Hash.hpp"
 #include "papilo/misc/Vec.hpp"
 #include <boost/pending/disjoint_sets.hpp>
+#include <boost/sort/pdqsort/pdqsort.hpp>
 
 namespace papilo
 {
@@ -169,7 +169,7 @@ class Components
             comprows[i] = i;
          }
 
-         pdqsort( compcols.begin(), compcols.end(), [&]( int col1, int col2 ) {
+         boost::sort::pdqsort( compcols.begin(), compcols.end(), [&]( int col1, int col2 ) {
             return col2comp[col1] < col2comp[col2];
          } );
 
@@ -203,7 +203,7 @@ class Components
          // last component ends at ncols
          compcolstart[numcomponents] = ncols;
 
-         pdqsort( comprows.begin(), comprows.end(), [&]( int row1, int row2 ) {
+         boost::sort::pdqsort( comprows.begin(), comprows.end(), [&]( int row1, int row2 ) {
             return row2comp[row1] < row2comp[row2];
          } );
 
@@ -254,7 +254,7 @@ class Components
             }
          }
 
-         pdqsort( compInfo.begin(), compInfo.end() );
+         boost::sort::pdqsort( compInfo.begin(), compInfo.end() );
       }
 
       return numcomponents;
