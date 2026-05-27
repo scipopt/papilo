@@ -229,7 +229,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
              if( nbinvarsrow == 0 )
                 continue;
 
-             pdqsort( binary_variables_in_row.begin(),
+             boost::sort::pdqsort( binary_variables_in_row.begin(),
                       binary_variables_in_row.end(),
                       []( const std::pair<REAL, int>& a,
                           const std::pair<REAL, int>& b ) {
@@ -283,7 +283,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
        });
 #endif
 
-   pdqsort( probing_cands.begin(), probing_cands.end(),
+   boost::sort::pdqsort( probing_cands.begin(), probing_cands.end(),
             [this, &probing_scores, &colsize, &colperm]( int col1, int col2 ) {
                std::pair<double, double> s1;
                std::pair<double, double> s2;
@@ -588,7 +588,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
 
    if( !substitutions.empty() )
    {
-      pdqsort( substitutions.begin(), substitutions.end(),
+      boost::sort::pdqsort( substitutions.begin(), substitutions.end(),
                []( const ProbingSubstitution<REAL>& a,
                    const ProbingSubstitution<REAL>& b ) {
                   return std::make_pair( a.col1, a.col2 ) >

@@ -52,6 +52,7 @@ Build system
 - for cmake >= 3.30, CMP0167 is enforced and BOOST_ROOT no longer supported; use Boost_DIR instead with these cmake versions
 - disabled default solvers and require linking when enabled
 - recognize also Gurobi 10 to 13 libs automatically
+- use the Boost version of pdqsort; require Boost >= 1.67
 
 Miscellaneous
 -------------

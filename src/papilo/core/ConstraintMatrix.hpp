@@ -1520,7 +1520,7 @@ ConstraintMatrix<REAL>::aggregate(
 
    if( !tripletbuffer.empty() )
    {
-      pdqsort( tripletbuffer.begin(), tripletbuffer.end() );
+      boost::sort::pdqsort( tripletbuffer.begin(), tripletbuffer.end() );
 
       auto handleCol = [&]( int col, int start, int end ) {
          int newsize = cons_matrix_transp.changeRow(

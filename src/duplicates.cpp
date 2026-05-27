@@ -33,8 +33,8 @@
 #ifdef PAPILO_TBB
 #include "papilo/misc/tbb.hpp"
 #endif
-#include "papilo/external/pdqsort/pdqsort.h"
 #include <algorithm>
+#include <boost/sort/pdqsort/pdqsort.hpp>
 #include <sys/stat.h>
 
 using namespace papilo;
@@ -222,7 +222,7 @@ compute_row_and_column_permutation( const Problem<double>& prob, bool verbose )
                 int start = csrstarts[row];
                 int end = csrstarts[row + 1];
                 const auto csrvals_ptr = csrvals.data();
-                pdqsort( &csrvals_ptr[start], &csrvals_ptr[end], comp_rowvals );
+                boost::sort::pdqsort( &csrvals_ptr[start], &csrvals_ptr[end], comp_rowvals );
 
                 Hasher<uint64_t> hasher( end - start );
                 for( int k = start; k < end; ++k )
@@ -241,7 +241,7 @@ compute_row_and_column_permutation( const Problem<double>& prob, bool verbose )
       for( int i = 0; i < nrows2; ++i )
          distinct_row_hashes[rowhashes[rowperm[i]]] += 1;
 
-      pdqsort( rowperm.begin(), rowperm.begin() + nrows2, [&]( int a, int b ) {
+      boost::sort::pdqsort( rowperm.begin(), rowperm.begin() + nrows2, [&]( int a, int b ) {
          return std::make_tuple( -distinct_row_hashes[rowhashes[a]],
                                  rowhashes[a], a ) <
                 std::make_tuple( -distinct_row_hashes[rowhashes[b]],
@@ -289,7 +289,7 @@ compute_row_and_column_permutation( const Problem<double>& prob, bool verbose )
                 int start = cscstarts[col];
                 int end = cscstarts[col + 1];
                 const auto cscvals_ptr = cscvals.data();
-                pdqsort( &cscvals_ptr[start], &cscvals_ptr[end], comp_colvals );
+                boost::sort::pdqsort( &cscvals_ptr[start], &cscvals_ptr[end], comp_colvals );
 
                 Hasher<uint64_t> hasher( end - start );
                 for( int k = start; k < end; ++k )
@@ -308,7 +308,7 @@ compute_row_and_column_permutation( const Problem<double>& prob, bool verbose )
       for( int i = 0; i < ncols2; ++i )
          distinct_hashes[colhashes[colperm[i]]] += 1;
 
-      pdqsort( colperm.begin(), colperm.begin() + ncols2, [&]( int a, int b ) {
+      boost::sort::pdqsort( colperm.begin(), colperm.begin() + ncols2, [&]( int a, int b ) {
          return std::make_pair( -distinct_hashes[colhashes[a]], colhashes[a] ) <
                 std::make_pair( -distinct_hashes[colhashes[b]], colhashes[b] );
       } );
@@ -812,7 +812,7 @@ compute_instancehash( const Problem<double>& prob )
                 int start = csrstarts[row];
                 int end = csrstarts[row + 1];
                 const auto csrvals_ptr = csrvals.data();
-                pdqsort( &csrvals_ptr[start], &csrvals_ptr[end], comp_rowvals );
+                boost::sort::pdqsort( &csrvals_ptr[start], &csrvals_ptr[end], comp_rowvals );
 
                 Hasher<uint64_t> hasher( end - start );
                 for( int k = start; k < end; ++k )
@@ -832,7 +832,7 @@ compute_instancehash( const Problem<double>& prob )
       for( int i = 0; i < nrows2; ++i )
          distinct_row_hashes[rowhashes[rowperm[i]]] += 1;
 
-      pdqsort( rowperm.begin(), rowperm.begin() + nrows2, [&]( int a, int b ) {
+      boost::sort::pdqsort( rowperm.begin(), rowperm.begin() + nrows2, [&]( int a, int b ) {
          return std::make_tuple( -distinct_row_hashes[rowhashes[a]],
                                  rowhashes[a], a ) <
                 std::make_tuple( -distinct_row_hashes[rowhashes[b]],
@@ -880,7 +880,7 @@ compute_instancehash( const Problem<double>& prob )
                 int start = cscstarts[col];
                 int end = cscstarts[col + 1];
                 const auto cscvals_ptr = cscvals.data();
-                pdqsort( &cscvals_ptr[start], &cscvals_ptr[end], comp_colvals );
+                boost::sort::pdqsort( &cscvals_ptr[start], &cscvals_ptr[end], comp_colvals );
 
                 Hasher<uint64_t> hasher( end - start );
                 for( int k = start; k < end; ++k )
@@ -899,7 +899,7 @@ compute_instancehash( const Problem<double>& prob )
       for( int i = 0; i < ncols2; ++i )
          distinct_col_hashes[colhashes[colperm[i]]] += 1;
 
-      pdqsort( colperm.begin(), colperm.begin() + ncols2, [&]( int a, int b ) {
+      boost::sort::pdqsort( colperm.begin(), colperm.begin() + ncols2, [&]( int a, int b ) {
          return std::make_pair( -distinct_col_hashes[colhashes[a]],
                                 colhashes[a] ) <
                 std::make_pair( -distinct_col_hashes[colhashes[b]],
@@ -925,9 +925,9 @@ compute_instancehash( const Problem<double>& prob )
       ++iters;
    }
    // Sort hashes
-   pdqsort( rowhashes.begin(), rowhashes.end(),
+   boost::sort::pdqsort( rowhashes.begin(), rowhashes.end(),
             []( uint64_t a, uint64_t b ) { return a < b; } );
-   pdqsort( colhashes.begin(), colhashes.end(),
+   boost::sort::pdqsort( colhashes.begin(), colhashes.end(),
             []( uint64_t a, uint64_t b ) { return a < b; } );
 
    // Put all values in the hasher

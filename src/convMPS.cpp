@@ -35,7 +35,7 @@
 #include "papilo/misc/Hash.hpp"
 #include "papilo/misc/Vec.hpp"
 #include "papilo/misc/fmt.hpp"
-#include "papilo/external/pdqsort/pdqsort.h"
+#include <boost/sort/pdqsort/pdqsort.hpp>
 
 using namespace papilo;
 

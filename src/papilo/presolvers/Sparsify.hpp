@@ -370,7 +370,7 @@ Sparsify<REAL>::execute( const Problem<REAL>& problem,
                       ++h;
                    }
 
-                   pdqsort( scales.begin(), scales.end() );
+                   boost::sort::pdqsort( scales.begin(), scales.end() );
 
                    int bestcancel = 0;
                    REAL bestscale = 0;
@@ -464,7 +464,7 @@ Sparsify<REAL>::execute( const Problem<REAL>& problem,
 
       const Vec<int>& rowperm = problemUpdate.getRandomRowPerm();
 
-      pdqsort( reductionData.begin(), reductionData.end(),
+      boost::sort::pdqsort( reductionData.begin(), reductionData.end(),
                [&]( const std::tuple<int, int, std::pair<int, REAL>*>& a,
                     const std::tuple<int, int, std::pair<int, REAL>*>& b ) {
                   int eqrowA = std::get<0>( a );

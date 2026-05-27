@@ -30,7 +30,6 @@
 #include "papilo/core/Objective.hpp"
 #include "papilo/core/Problem.hpp"
 #include "papilo/core/VariableDomains.hpp"
-#include "papilo/external/pdqsort/pdqsort.h"
 #include "papilo/io/BoundType.hpp"
 #include "papilo/io/ParseKey.hpp"
 #include "papilo/misc/Flags.hpp"
@@ -42,6 +41,7 @@
 #include <boost/dynamic_bitset.hpp>
 #include <boost/iostreams/filtering_stream.hpp>
 #include <boost/optional.hpp>
+#include <boost/sort/pdqsort/pdqsort.hpp>
 #include <boost/spirit/include/qi.hpp>
 #include <boost/utility/string_ref.hpp>
 #include <fstream>
