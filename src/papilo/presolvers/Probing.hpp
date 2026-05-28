@@ -629,7 +629,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
          result.insert(result.end(), b.begin(), b.end() );
          return result;
       } );
-      pdqsort( change_to_equation_comb.begin(), change_to_equation_comb.end() );
+      boost::sort::pdqsort( change_to_equation_comb.begin(), change_to_equation_comb.end() );
       for( int i = 0; i < static_cast<int>(change_to_equation_comb.size()); ++i )
       {
          assert( change_to_equation_comb[i] >= 0 && change_to_equation_comb[i] < nrows );
@@ -658,7 +658,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
          }
       }
 #else
-      pdqsort( change_to_equation.begin(), change_to_equation.end() );
+      boost::sort::pdqsort( change_to_equation.begin(), change_to_equation.end() );
       for( int i = 0; i < static_cast<int>(change_to_equation.size()); ++i )
       {
          assert( change_to_equation[i] >= 0 && change_to_equation[i] < nrows );
@@ -794,7 +794,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
 
       if( !cliqueBoundChanges.empty() )
       {
-         pdqsort( cliqueBoundChanges.begin(), cliqueBoundChanges.end(),
+         boost::sort::pdqsort( cliqueBoundChanges.begin(), cliqueBoundChanges.end(),
             []( const CliqueProbingBoundChg<REAL>& a, const CliqueProbingBoundChg<REAL>& b )
             {
                return std::make_pair( a.col, a.bound ) > std::make_pair( b.col, b.bound );
@@ -833,7 +833,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
 
       if( !cliquesubstitutions.empty() )
       {
-         pdqsort( cliquesubstitutions.begin(), cliquesubstitutions.end(),
+         boost::sort::pdqsort( cliquesubstitutions.begin(), cliquesubstitutions.end(),
                   []( const CliqueProbingSubstitution<REAL>& a,
                      const CliqueProbingSubstitution<REAL>& b )
                   {
@@ -858,7 +858,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
       }
    }
 
-   pdqsort( probing_cands.begin(), probing_cands.end(),
+   boost::sort::pdqsort( probing_cands.begin(), probing_cands.end(),
             [this, &probing_scores, &colsize, &colperm]( int col1, int col2 )
             {
                std::pair<double, double> s1;
@@ -1184,7 +1184,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
 
    if( !boundChanges.empty() )
    {
-      pdqsort( boundChanges.begin(), boundChanges.end(),
+      boost::sort::pdqsort( boundChanges.begin(), boundChanges.end(),
             []( const ProbingBoundChg<REAL>& a, const ProbingBoundChg<REAL>& b )
             {
                return std::make_pair( a.col, a.bound ) > std::make_pair( b.col, b.bound );
