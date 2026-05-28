@@ -234,7 +234,7 @@ DualInfer<REAL>::execute( const Problem<REAL>& problem,
           c );
    }
 
-   pdqsort( checkRedundantBounds.begin(), checkRedundantBounds.end(),
+   boost::sort::pdqsort( checkRedundantBounds.begin(), checkRedundantBounds.end(),
             []( std::pair<int, int> c1, std::pair<int, int> c2 ) {
                return c1.first < c2.first;
             } );
