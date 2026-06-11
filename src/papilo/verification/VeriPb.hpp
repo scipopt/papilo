@@ -2201,10 +2201,6 @@ class VeriPb : public CertificateInterface<REAL>
    {
       if( status == -2)
          return;
-#if VERIPB_VERSION == 1
-      if( !verification_possible )
-         return;
-#endif
       next_constraint_id++;
       proof_out << "u >= 1 ;\n";
 #if VERIPB_VERSION == 1
@@ -2363,7 +2359,9 @@ class VeriPb : public CertificateInterface<REAL>
       if( status == -2)
          return;
 #if VERIPB_VERSION >= 2
-      if (is_optimization_problem)
+      if (status == -1)
+         proof_out << OUTPUT << NONE << " \n";
+      else if (is_optimization_problem)
          proof_out << OUTPUT << EQUIOPTIMAL << " \n";
       else
          proof_out << OUTPUT << EQUISATISFIABLE << " \n";
