@@ -2037,17 +2037,22 @@ class VeriPb : public CertificateInterface<REAL>
 
             if( row_implying_ub != UNKNOWN && substitute_factor > 0)
             {
-
-               assert( (get_coeff_in_col_vec( row_implying_ub, col_vec ) >0  && rhs_row_mapping[row_implying_ub] != UNKNOWN)
-                       || (lhs_row_mapping[row_implying_ub] != UNKNOWN));
-               proof_out << DELETE_CONS << implied_constraint_lhs << " ; ; begin\n\t" << POL << rhs_row_mapping[row_implying_ub] << " -1 +\nend\n";
+               REAL coeff_ub = get_coeff_in_col_vec( row_implying_ub, col_vec );
+               int contradiction = coeff_ub > 0 ? rhs_row_mapping[row_implying_ub]: lhs_row_mapping[row_implying_ub];
+               assert(contradiction != UNKNOWN);
+               // assert( (get_coeff_in_col_vec( row_implying_ub, col_vec ) >0  && rhs_row_mapping[row_implying_ub] != UNKNOWN)
+               //         || (lhs_row_mapping[row_implying_ub] != UNKNOWN));
+               proof_out << DELETE_CONS << implied_constraint_lhs << " ; ; begin\n\t" << POL << contradiction << " -1 +\nend\n";
                next_constraint_id += 2;
             }
             else if ( row_implying_lb != UNKNOWN && substitute_factor < 0)
             {
-               assert( (get_coeff_in_col_vec( row_implying_lb, col_vec ) >0  && lhs_row_mapping[row_implying_ub] != UNKNOWN)
-                       || (rhs_row_mapping[row_implying_ub] != UNKNOWN));
-               proof_out << DELETE_CONS << implied_constraint_lhs << " ; ; begin\n\t" << POL << rhs_row_mapping[row_implying_lb] << " -1 +\nend\n";
+               REAL coeff_lb = get_coeff_in_col_vec( row_implying_lb, col_vec );
+               int contradiction = coeff_lb > 0 ? lhs_row_mapping[row_implying_lb]: rhs_row_mapping[row_implying_lb];
+               assert(contradiction != UNKNOWN);
+               // assert( get_coeff_in_col_vec( row_implying_lb, col_vec ) < 0  && (lhs_row_mapping[row_implying_ub] != UNKNOWN
+               //         || rhs_row_mapping[row_implying_lb] != UNKNOWN));
+               proof_out << DELETE_CONS << implied_constraint_lhs << " ; ; begin\n\t" << POL << contradiction << " -1 +\nend\n";
                next_constraint_id += 2;
             }
             else
