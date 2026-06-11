@@ -63,6 +63,7 @@ static const char* const EQUAL_CHECK = "e ";
 static const char* const SATURATION = "s";
 static const char* const WEAKENING = "w";
 static const int UNKNOWN = -1;
+static const int UNKNOWN_SKIP_DELETING = 0;
 static const char* const MOVE_LAST_CONS_TO_CORE = "core id -1\n";
 
 template <typename REAL>
@@ -113,8 +114,8 @@ class VeriPb : public CertificateInterface<REAL>
    int next_constraint_id = 0;
 
    /// skip reductions
-   int skip_deleting_rhs_constraint_id = UNKNOWN;
-   int skip_deleting_lhs_constraint_id = UNKNOWN;
+   int skip_deleting_rhs_constraint_id = UNKNOWN_SKIP_DELETING;
+   int skip_deleting_lhs_constraint_id = UNKNOWN_SKIP_DELETING;
    int skip_changing_rhs = UNKNOWN;
    int skip_changing_lhs = UNKNOWN;
    bool saturation_already_called = false;
@@ -2085,9 +2086,9 @@ class VeriPb : public CertificateInterface<REAL>
       if( lhs_row_mapping[row] != UNKNOWN )
       {
          if( lhs_row_mapping[row] == skip_deleting_lhs_constraint_id )
-            skip_deleting_lhs_constraint_id = UNKNOWN;
+            skip_deleting_lhs_constraint_id = UNKNOWN_SKIP_DELETING;
          else if( lhs_row_mapping[row] == -skip_deleting_rhs_constraint_id )
-            skip_deleting_rhs_constraint_id = UNKNOWN;
+            skip_deleting_rhs_constraint_id = UNKNOWN_SKIP_DELETING;
          else
          {
             proof_out << DELETE_CONS << lhs_row_mapping[row];
@@ -2121,9 +2122,9 @@ class VeriPb : public CertificateInterface<REAL>
       if( rhs_row_mapping[row] != UNKNOWN )
       {
          if( rhs_row_mapping[row] == -skip_deleting_lhs_constraint_id )
-            skip_deleting_lhs_constraint_id = UNKNOWN;
+            skip_deleting_lhs_constraint_id = UNKNOWN_SKIP_DELETING;
          else if( rhs_row_mapping[row] == skip_deleting_rhs_constraint_id )
-            skip_deleting_rhs_constraint_id = UNKNOWN;
+            skip_deleting_rhs_constraint_id = UNKNOWN_SKIP_DELETING;
          else
          {
             proof_out << DELETE_CONS << rhs_row_mapping[row];
