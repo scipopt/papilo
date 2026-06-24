@@ -220,7 +220,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
                 int c = colinds[i];
                 if( isBinaryVariable( upper_bounds[c], lower_bounds[c],
                                       colsize[c], cflags[c] ) )
-                   binary_variables_in_row.emplace_back( rowvals[i], colinds[i] );
+                   binary_variables_in_row.emplace_back( rowvals[i], c );
              }
 
              const int nbinvarsrow =

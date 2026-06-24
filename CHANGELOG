@@ -6,7 +6,7 @@ Fixed bugs
 ----------
 
 - issue warning if PaPILO is not build with Boost iostreams but user attempts to parse compressed file
-- Probing: fix bug where Probing was applied on non-binary variables.
+- Probing: correct index in binary column restriction
 
 
 @section RN300 PaPILO 3.0.0
