@@ -29,6 +29,8 @@
 #include "globals.hpp"
 #include "parsing.hpp"
 #include "run.hpp"
+#include "ConstrExp.hpp"
+#include "ConstrExpPool.hpp"
 #include <csignal>
 #include <fstream>
 #include <memory>
@@ -47,6 +49,7 @@ template <typename REAL>
 class RoundingsatInterface : public SolverInterface<REAL>
 {
    //   Num<REAL>& num;
+   rs::Env env;
    rs::CeArb objective;
    Vec<int> scaling_row_factor;
 
@@ -55,9 +58,9 @@ class RoundingsatInterface : public SolverInterface<REAL>
             const Vec<int>& origColMap )
    {
       Num<REAL> num{};
-      objective = rs::run::solver.cePools.takeArb();
+
       assert( objective->isReset() );
-      rs::CeArb input = rs::run::solver.cePools.takeArb();
+      rs::CeArb input = env.cePools->takeArb();
 
       const Vec<REAL>& obj = problem.getObjective().coefficients;
       const Vec<REAL>& rhs = problem.getConstraintMatrix().getRightHandSides();
@@ -75,7 +78,7 @@ class RoundingsatInterface : public SolverInterface<REAL>
          if(sat_var_index < 1)
             return -1;
          rs::BigCoef coeff = rs::BigCoef ( obj[col] );
-         rs::run::solver.setNbVars( abs( sat_var_index ), true );
+         env.solver->setNbVars( abs( sat_var_index ), true );
          input->addLhs( coeff, sat_var_index );
       }
       input->copyTo( objective );
@@ -88,7 +91,7 @@ class RoundingsatInterface : public SolverInterface<REAL>
          if( consMatrix.getRowFlags()[row].test( RowFlag::kEquation ) )
          {
             int ret = map_cons_to_lhs( input, row_coeff, row, lhs[row], num, problem, origColMap );
-            if( ret < 0 || rs::run::solver.addConstraint( input, rs::Origin::FORMULA )
+            if( ret < 0 || env.solver->addConstraint( input, rs::Origin::FORMULA )
                     .second == rs::ID_Unsat )
             {
                fmt::print( "An error occurred\n" );
@@ -96,7 +99,7 @@ class RoundingsatInterface : public SolverInterface<REAL>
             }
             input->invert();
             const std::pair<rs::ID, rs::ID>& pair =
-                rs::run::solver.addConstraint( input, rs::Origin::FORMULA );
+                env.solver->addConstraint( input, rs::Origin::FORMULA );
             if( pair.second == rs::ID_Unsat )
             {
                fmt::print( "An error occurred\n" );
@@ -109,7 +112,7 @@ class RoundingsatInterface : public SolverInterface<REAL>
          {
             int ret = map_cons_to_lhs( input, row_coeff, row, lhs[row], num, problem, origColMap );
             const std::pair<rs::ID, rs::ID>& pair =
-                rs::run::solver.addConstraint( input, rs::Origin::FORMULA );
+                env.solver->addConstraint( input, rs::Origin::FORMULA );
             if( ret < 0 || pair.second == rs::ID_Unsat )
             {
                fmt::print( "An error occurred\n" );
@@ -122,7 +125,7 @@ class RoundingsatInterface : public SolverInterface<REAL>
                input->reset();
             int ret = map_cons_to_rhs( input, row_coeff, row, rhs[row], num, problem, origColMap );
             const std::pair<rs::ID, rs::ID>& pair =
-                rs::run::solver.addConstraint( input, rs::Origin::FORMULA );
+                env.solver->addConstraint( input, rs::Origin::FORMULA );
             if( ret < 0 || pair.second == rs::ID_Unsat )
             {
                fmt::print( "An error occurred\n" );
@@ -159,7 +162,7 @@ class RoundingsatInterface : public SolverInterface<REAL>
          }
 
          const std::pair<rs::ID, rs::ID>& pair =
-             rs::run::solver.addConstraint( input, rs::Origin::FORMULA );
+             env.solver->addConstraint( input, rs::Origin::FORMULA );
          if( pair.second == rs::ID_Unsat )
          {
             fmt::print( "An error occurred\n" );
@@ -217,7 +220,7 @@ class RoundingsatInterface : public SolverInterface<REAL>
             return -1;
          assert( num.isIntegral( row_coeff.getValues()[j] * scale )  );
          rs::BigCoef coeff = to_int( row_coeff.getValues()[j], scale, num);
-         rs::run::solver.setNbVars( abs( sat_var_index ), true );
+         env.solver->setNbVars( abs( sat_var_index ), true );
          input->addLhs( coeff, sat_var_index );
       }
       input->addRhs( to_int( lhs, scale, num ) );
@@ -245,7 +248,7 @@ class RoundingsatInterface : public SolverInterface<REAL>
             return -1;
          assert( num.isIntegral( -row_coeff.getValues()[j] * scale )  );
          rs::BigCoef coeff = to_int( -row_coeff.getValues()[j], scale, num);
-         rs::run::solver.setNbVars( abs( sat_var_index ), true );
+         env.solver->setNbVars( abs( sat_var_index ), true );
          input->addLhs( coeff, sat_var_index );
       }
       input->addRhs( -to_int( rhs, scale, num ) );
@@ -265,7 +268,14 @@ class RoundingsatInterface : public SolverInterface<REAL>
    RoundingsatInterface()
    {
       // TODO: num = {};
-      rs::run::solver.init();
+      // TODO : if support for proof logging is desired, then create an outstream `out` to which the proof
+      // should be written, and then uncomment the next line.
+      // env.logger = std::make_unique<rs::Logger>(out);
+
+      env.cePools = std::make_unique<rs::ConstrExpPools>(env);
+      env.solver = std::make_unique<rs::Solver>(env);
+
+      objective = env.cePools->takeArb();
    }
 
    void
@@ -324,10 +334,10 @@ class RoundingsatInterface : public SolverInterface<REAL>
       if(this->status == SolverStatus::kError)
          return ;
 
-      rs::run::solver.initLP( objective );
-      rs::run::run( objective );
+      env.solver->initLP( objective );
+      rs::run::run( env, objective );
 
-      bool satisfiable = rs::run::solver.foundSolution();
+      bool satisfiable = env.solver->foundSolution();
       bool time_expired = rs::stats.getTime() > rs::options.time_limit.get();
       if( time_expired && !satisfiable )
          // postsolving not possible -> so return error to avoid it
@@ -349,7 +359,7 @@ class RoundingsatInterface : public SolverInterface<REAL>
    getSolution( Solution<REAL>& sol_buffer, PostsolveStorage<REAL>& postsolve ) override
    {
 
-      std::vector<rs::Lit>& sol = rs::run::solver.lastSol;
+      std::vector<rs::Lit>& sol = env.solver->lastSol;
       Vec<REAL> primal{};
 
       int ncols = postsolve.origcol_mapping.size();

@@ -66,7 +66,7 @@ endif()
 set(CMAKE_CXX_STANDARD 14)
 if(ROUNDINGSAT_DIR)
    message(STATUS "Found ROUNDINGSAT: ${ROUNDINGSAT_DIR}")
-   set(CMAKE_CXX_STANDARD 17)
+   set(CMAKE_CXX_STANDARD 20)
 else()
    message(STATUS "Finding ROUNDINGSAT - not found")
    set(PAPILO_HAVE_ROUNDINGSAT 0)
@@ -114,15 +114,22 @@ if(Boost_IOSTREAMS_FOUND AND Boost_SERIALIZATION_FOUND AND Boost_PROGRAM_OPTIONS
          roundingsat_source_files
          ${ROUNDINGSAT_DIR}/src/Constr.cpp
          ${ROUNDINGSAT_DIR}/src/ConstrExp.cpp
+         ${ROUNDINGSAT_DIR}/src/ConstrExpPool.cpp
          ${ROUNDINGSAT_DIR}/src/ConstrSimple.cpp
+         ${ROUNDINGSAT_DIR}/src/Env.cpp
+         ${ROUNDINGSAT_DIR}/src/Logger.cpp
          ${ROUNDINGSAT_DIR}/src/LpSolver.cpp
+         ${ROUNDINGSAT_DIR}/src/ProofBuffer.cpp
          ${ROUNDINGSAT_DIR}/src/Solver.cpp
+         ${ROUNDINGSAT_DIR}/src/SolverStructs.cpp
+         ${ROUNDINGSAT_DIR}/src/Stats.cpp
+         ${ROUNDINGSAT_DIR}/src/objrewrite.cpp
+         ${ROUNDINGSAT_DIR}/src/optimize.cpp
          ${ROUNDINGSAT_DIR}/src/parsing.cpp
          ${ROUNDINGSAT_DIR}/src/quit.cpp
          ${ROUNDINGSAT_DIR}/src/run.cpp
-         ${ROUNDINGSAT_DIR}/src/SolverStructs.cpp
          ${ROUNDINGSAT_DIR}/src/used_licenses/gpl_3_0.cpp
-         ${ROUNDINGSAT_DIR}/src/used_licenses/zib_academic.cpp
+         ${ROUNDINGSAT_DIR}/src/used_licenses/apache_2.cpp
          ${ROUNDINGSAT_DIR}/src/used_licenses/roundingsat.cpp
          ${ROUNDINGSAT_DIR}/src/used_licenses/MIT.cpp
          ${ROUNDINGSAT_DIR}/src/used_licenses/licenses.cpp
