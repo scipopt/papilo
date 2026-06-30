@@ -338,7 +338,7 @@ class RoundingsatInterface : public SolverInterface<REAL>
       rs::run::run( env, objective );
 
       bool satisfiable = env.solver->foundSolution();
-      bool time_expired = rs::stats.getTime() > rs::options.time_limit.get();
+      bool time_expired = (rs::options.time_limit.get() != -1) && rs::stats.getTime() > rs::options.time_limit.get();
       if( time_expired && !satisfiable )
          // postsolving not possible -> so return error to avoid it
          this->status = SolverStatus::kError;
