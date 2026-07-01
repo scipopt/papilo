@@ -428,3 +428,6 @@ Anass Meskini &mdash; general development and contributions to substitution pres
 [Daniel Rehfeldt](https://www.zib.de/members/rehfeldt) ([@dRehfeldt](https://github.com/dRehfeldt)) &mdash; core data structures and MPS parsing
 
 [Franziska Schlösser](https://www.zib.de/members/schloesser)  ([@fschloesser](https://github.com/fschloesser)) &mdash; build system
+
+Wietze Koops &mdash ([@wkoops](https://github.com/wkoops)) &mdash; RoundingSAT interface
+

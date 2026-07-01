@@ -12,7 +12,7 @@
 
 ### Additional Testing (depending on the changes)
 
-* [ ] Supported integrated solver (besides SCIP and SoPlex) pass `jenkins rerun build_with_{gurobi,glop,highs}`). 
+* [ ] Supported integrated solver (besides SCIP and SoPlex) pass `jenkins rerun build_with_{gurobi,glop,highs,roundingsat}`).
 * [ ] PaPILO without TBB is build `jenkins rerun build_no_TBB`
 
 ### Does this merge request introduce an API change? :warning:
