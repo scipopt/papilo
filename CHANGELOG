@@ -46,12 +46,20 @@ Miscellaneous
 
 @page RN30 Release notes for PAPILO 3.0
 
+@section RN302 PaPILO 3.0.2
+
+Fixed bugs
+----------
+
+
 @section RN301 PaPILO 3.0.1
 
 Fixed bugs
 ----------
 
 - issue warning if PaPILO is not build with Boost iostreams but user attempts to parse compressed file
+- Probing: correct index in binary column restriction
+- RoundingSAT: update interface
 
 
 @section RN300 PaPILO 3.0.0

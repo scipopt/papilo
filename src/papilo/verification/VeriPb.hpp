@@ -2288,13 +2288,7 @@ class VeriPb : public CertificateInterface<REAL>
           },
           [this, &colmapping, full]()
           {
-             REAL count = 0;
-             for(auto v: stored_objective.coefficients)
-                count += v;
              compress_vector( colmapping, stored_objective.coefficients );
-             REAL count2 = 0;
-             for(auto v: stored_objective.coefficients)
-                count2 += v;
              if( full )
                 stored_objective.coefficients.shrink_to_fit();
           },
