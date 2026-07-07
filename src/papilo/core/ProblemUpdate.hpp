@@ -1158,6 +1158,29 @@ ProblemUpdate<REAL>::flush( bool reset_changed_activities )
             } ), current_changed_activities.end() );
    }
 
+   // Some reductions (substitution/probing/sparsify) strip a row's last coefficient as a side effect of
+   // column substitution/fixing without registering an activity change, so the emptied row never reaches
+   // checkChangedActivities() and is left live with a size 0. This mark these empty
+   // rows as redundant so they can be cleaned afterwards.
+   {
+      const Vec<int>& rowSizes = problem.getRowSizes();
+      const Vec<REAL>& lhs = consMatrix.getLeftHandSides();
+      const Vec<REAL>& rhs = consMatrix.getRightHandSides();
+
+      for ( int i = 0; i < rowSizes.size(); ++i )
+      {
+         if (rowSizes[i] == 0 && rflags[i].test( RowFlag::kRedundant ) )
+         {
+            bool is_lhs_ok = rflags[i].test( RowFlag::kLhsInf ) || num.isFeasLE( lhs[i], REAL(0) );
+            bool is_rhs_ok = rflags[i].test( RowFlag::kRhsInf ) || num.isFeasLE( REAL(0), rhs[i] );
+            if( is_lhs_ok && is_rhs_ok )
+               markRowRedundant( i );
+            else
+               return PresolveStatus::kInfeasible;
+         }
+      }
+   }
+
    // remove constants of fixed columns
    removeFixedCols();
 
