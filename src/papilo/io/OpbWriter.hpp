@@ -89,7 +89,7 @@ struct OpbWriter
    static bool
    writeProb( const std::string& filename, const Problem<REAL>& prob,
               const Vec<int>& col_mapping,
-              const Num<REAL>& num)
+              const Num<REAL>& num, const Presolve<REAL>& presolve)
    {
       const ConstraintMatrix<REAL>& matrix = prob.getConstraintMatrix();
       const Vec<std::string>& varnames = prob.getVariableNames();
@@ -188,7 +188,7 @@ struct OpbWriter
          assert( !matrix.isRowRedundant( row ) );
          auto vector = matrix.getRowCoefficients( row );
 
-         bool scale_necessary = false;
+         bool scale_necessary = presolve.getPresolveOptions().verification_with_VeriPB;
          for( int j = 0; j < vector.getLength(); ++j )
          {
             if(scale_necessary)
@@ -200,7 +200,9 @@ struct OpbWriter
          {
             scale_necessary = scale_necessary || !num.isIntegral(lhs[row]);
             REAL scale = 1;
-            if (scale_necessary)
+            if (presolve.getPresolveOptions().verification_with_VeriPB)
+               scale = presolve.get_row_scaling(row);
+            else if (scale_necessary)
                scale = computeIntegralScale(vector.getValues(),
                                     vector.getLength(), num, lhs[row], true);
 

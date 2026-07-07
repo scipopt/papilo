@@ -263,6 +263,10 @@ class Presolve
    applyReductions( int p, const Reductions<REAL>& reductions_,
                     ProblemUpdate<REAL>& probUpdate );
 
+   int get_row_scaling(const int row) const {
+      return row_scaling[row];
+   }
+
  private:
    // data to perform presolving
    Vec<PresolveStatus> results;
