@@ -1169,7 +1169,7 @@ ProblemUpdate<REAL>::flush( bool reset_changed_activities )
 
       for ( int i = 0; i < rowSizes.size(); ++i )
       {
-         if (rowSizes[i] == 0 && rflags[i].test( RowFlag::kRedundant ) )
+         if (rowSizes[i] == 0 && !rflags[i].test( RowFlag::kRedundant ) )
          {
             bool is_lhs_ok = rflags[i].test( RowFlag::kLhsInf ) || num.isFeasLE( lhs[i], REAL(0) );
             bool is_rhs_ok = rflags[i].test( RowFlag::kRhsInf ) || num.isFeasLE( REAL(0), rhs[i] );
