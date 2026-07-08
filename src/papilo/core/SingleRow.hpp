@@ -466,7 +466,8 @@ update_activity_after_coeffchange( REAL collb, REAL colub, ColFlags cflags,
                                    const Num<REAL> num,
                                    ACTIVITYCHANGE&& activityChange )
 {
-   assert( oldcolcoef != newcolcoef );
+   if (oldcolcoef == newcolcoef)
+      return;
 
    if( oldcolcoef * newcolcoef <= 0.0 )
    { // the sign of the coefficient flipped, so the column bounds now contribute
