@@ -255,7 +255,6 @@ class GurobiInterface : public SolverInterface<REAL>
          model.update();
       }
       model.update();
-      model.write( "test.mps" );
       model.optimize();
       grb_status = model.get( GRB_IntAttr_Status );
       fmt::print( "{}\n", model.get( GRB_DoubleAttr_ObjVal ) );

@@ -50,6 +50,7 @@ Miscellaneous
 
 Fixed bugs
 ----------
+- OpbWriter: fixed bug where negative numbers where not correctly casted in the objective offset
 
 
 @section RN301 PaPILO 3.0.1
