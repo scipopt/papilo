@@ -113,7 +113,8 @@ struct OpbWriter
 
       fmt::print( out, "* #variable= {} #constraint= {}\n",
                   getVars( prob, col_mapping ), getRows( prob ) );
-      fmt::print( out, "* Objective Offset {}\n", boost::multiprecision::cpp_int( abs(prob.getObjective().offset) ).str() );
+      std::string offset_string = prob.getObjective().offset >= 0? "+" : "-" + boost::multiprecision::cpp_int( abs(prob.getObjective().offset) ).str();
+      fmt::print( out, "* Objective Offset {}\n", offset_string);
 
       bool obj_has_nonzeros = false;
       if( obj.offset == 0 )
@@ -139,6 +140,7 @@ struct OpbWriter
             fmt::print( out, "{}{} {} ", !prob.is_objective_negated() == (coef > 0) ? "+" : "-", boost::multiprecision::cpp_int( abs(coef) ).str(),
                         varnames[col_mapping[i]] );
          }
+         fmt::print(out, " {}", offset_string);
          fmt::print( out, ";\n" );
       }
 
