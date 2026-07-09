@@ -692,8 +692,9 @@ class VeriPb : public CertificateInterface<REAL>
    };
 
    void
-   store_parallel_row( int row ) override
+   store_parallel_row(const int row ) override
    {
+      // proof_out << COMMENT << " remaining row " << row << " ;\n";
       parallel_remaining_row = row;
    };
 
@@ -1107,8 +1108,6 @@ class VeriPb : public CertificateInterface<REAL>
                lhs_row_mapping[row] = next_constraint_id;
 #if VERIPB_VERSION >= 2
                int used_row = lhs_row_mapping[parallel_row];
-               if( factor < 0)
-                  used_row = rhs_row_mapping[parallel_row];
                proof_out << " ; ; begin\n" << POL << used_row << " " << cast_to_long( factor ) <<" * -1 + \nend -1";
                next_constraint_id += 2;
 #endif
@@ -1157,7 +1156,8 @@ class VeriPb : public CertificateInterface<REAL>
                proof_out << DELETE_CONS << lhs_row_mapping[row];
                lhs_row_mapping[row] = next_constraint_id;
 #if VERIPB_VERSION >= 2
-               int used_row = lhs_row_mapping[parallel_row];
+               // int used_row = lhs_row_mapping[parallel_row];
+               int used_row = rhs_row_mapping[parallel_row];
                proof_out << " ; ; begin\n\t" << POL << used_row << " " << (int) abs( factor ) <<" * -1 + \nend -1";
                next_constraint_id += 2;
 #endif
