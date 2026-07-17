@@ -539,10 +539,17 @@ inline size_t count_code_points(basic_string_view<char> s) {
   return num_code_points;
 }
 
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+#endif
 inline size_t count_code_points(basic_string_view<char8_type> s) {
   return count_code_points(basic_string_view<char>(
       reinterpret_cast<const char*>(s.data()), s.size()));
 }
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#endif
 
 template <typename Char>
 inline size_t code_point_index(basic_string_view<Char> s, size_t n) {
