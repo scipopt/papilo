@@ -354,7 +354,8 @@ inline typename Container::value_type* get_data(Container& c) {
   return c.data();
 }
 
-#if defined(_SECURE_SCL) && _SECURE_SCL
+// stdext::checked_array_iterator removed with MSVC 14.51
+#if defined(_SECURE_SCL) && _SECURE_SCL && (!defined(_MSC_VER) || _MSC_VER < 1951)
 // Make a checked iterator to avoid MSVC warnings.
 template <typename T> using checked_ptr = stdext::checked_array_iterator<T*>;
 template <typename T> checked_ptr<T> make_checked(T* p, size_t size) {
