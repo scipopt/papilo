@@ -5,6 +5,7 @@
 Fixed bugs
 ----------
 - OpbWriter: fixed bug where negative numbers where not correctly casted in the objective offset
+- disable deprecated iterators in fmt external to support modern MSVC
 
 
 @section RN301 PaPILO 3.0.1
