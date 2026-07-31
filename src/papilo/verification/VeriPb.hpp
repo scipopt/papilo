@@ -331,7 +331,6 @@ class VeriPb : public CertificateInterface<REAL>
                add_substitutions_fix_to_witness( names, stored_dominating_col, val == 1 );
 #endif
                proof_out << "\n";
-               proof_out << DELETE_DERIVED_CONS <<  next_constraint_id - 1 << " ; " << names[orig_col] << " 0 ;\n";
                break;
             }
 
@@ -510,7 +509,6 @@ class VeriPb : public CertificateInterface<REAL>
             add_substitutions_fix_to_witness( names, stored_dominating_col, val == 1 );
 #endif
             proof_out << "\n";
-            proof_out << DELETE_DERIVED_CONS <<  next_constraint_id - 1 << " ; " << names[orig_col] << " 1 ;\n";
             break;
          }
          proof_out << RUP << "1 " << names[orig_col]
@@ -2368,7 +2366,7 @@ class VeriPb : public CertificateInterface<REAL>
       if( status == -2)
          return;
 #if VERIPB_VERSION >= 2
-      if (status == -1)
+      if (status == -1 || status == 1 )
          proof_out << OUTPUT << NONE << " \n";
       else if (is_optimization_problem)
          proof_out << OUTPUT << EQUIOPTIMAL << " \n";
