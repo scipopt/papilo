@@ -331,6 +331,7 @@ class VeriPb : public CertificateInterface<REAL>
                add_substitutions_fix_to_witness( names, stored_dominating_col, val == 1 );
 #endif
                proof_out << "\n";
+               proof_out << DELETE_DERIVED_CONS <<  next_constraint_id - 1 << " ;\n";
                break;
             }
 
