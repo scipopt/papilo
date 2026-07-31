@@ -151,7 +151,7 @@ struct OpbWriter
                   getVars( prob, col_mapping ), getRows( prob ) );
       std::string offset_string;
       if (prob.getObjective().offset != 0) {
-         offset_string = prob.getObjective().offset >= 0? "+" : "-" + boost::multiprecision::cpp_int( abs(prob.getObjective().offset) ).str();
+         offset_string = (prob.getObjective().offset >= 0? "+" : "-") + boost::multiprecision::cpp_int( abs(prob.getObjective().offset) ).str();
          fmt::print( out, "* Objective Offset {}\n", offset_string);
       }
 
