@@ -80,6 +80,7 @@ set(unit_tests
         #ProblemUpdate
         "trivial-presolve-singleton-row"
         "trivial-presolve-singleton-row-pt-2"
+        "flush-removes-row-emptied-by-fixed-columns"
         "clique-row-flag-detection1"
         "clique-row-flag-detection2"
         "clique-row-flag-detection3"
