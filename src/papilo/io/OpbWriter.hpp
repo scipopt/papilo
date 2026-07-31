@@ -168,7 +168,7 @@ struct OpbWriter
       else
          obj_has_nonzeros = true;
 
-      if( obj_has_nonzeros )
+      if( obj_has_nonzeros || presolve.getPresolveOptions().verification_with_VeriPB )
       {
          fmt::print( out, "min: " );
          for( int i = 0; i < prob.getNCols(); i++ )
