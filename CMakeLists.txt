@@ -62,6 +62,8 @@ else()
    option(LUSOL "should LUSOL package be enabled" ON)
 endif()
 
+option(SYSTEM_FMT "use system FMT library instead of bundled headers" OFF)
+
 option(TBB "should TBB be linked if found" ON)
 option(TBB_DOWNLOAD "should TBB be downloaded" OFF)
 option(INSTALL_TBB "should the TBB library be installed" OFF)
@@ -80,6 +82,14 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 
 message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
+
+# Search for system fmt.
+if(SYSTEM_FMT)
+   find_package(fmt CONFIG REQUIRED)
+   set(PAPILO_HAVE_SYSTEM_FMT 1)
+else()
+   set(PAPILO_HAVE_SYSTEM_FMT 0)
+endif()
 
 # Search for Boost: headers are required and the other components are needed for the binaries.
 find_package(Boost ${BOOST_MIN_VERSION} REQUIRED OPTIONAL_COMPONENTS iostreams program_options serialization)
@@ -173,6 +183,10 @@ target_include_directories(papilo INTERFACE
    ${GMP_INCLUDE_DIRS}
    ${Quadmath_INCLUDE_DIRS}
    ${ROUNDINGSAT_INCLUDE_DIRS})
+
+if(SYSTEM_FMT)
+   target_link_libraries(papilo INTERFACE fmt::fmt)
+endif()
 
 # Add the Boost dependencies that were found.
 if(PAPILO_HAVE_BOOST_IOSTREAMS)
@@ -515,20 +529,22 @@ install(FILES
    ${PROJECT_SOURCE_DIR}/src/papilo/presolvers/CliqueMerging.hpp
    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/papilo/presolvers)
 
-install(FILES
-   ${PROJECT_SOURCE_DIR}/src/papilo/external/fmt/chrono.h
-   ${PROJECT_SOURCE_DIR}/src/papilo/external/fmt/color.h
-   ${PROJECT_SOURCE_DIR}/src/papilo/external/fmt/compile.h
-   ${PROJECT_SOURCE_DIR}/src/papilo/external/fmt/core.h
-   ${PROJECT_SOURCE_DIR}/src/papilo/external/fmt/format-inl.h
-   ${PROJECT_SOURCE_DIR}/src/papilo/external/fmt/format.h
-   ${PROJECT_SOURCE_DIR}/src/papilo/external/fmt/locale.h
-   ${PROJECT_SOURCE_DIR}/src/papilo/external/fmt/os.h
-   ${PROJECT_SOURCE_DIR}/src/papilo/external/fmt/ostream.h
-   ${PROJECT_SOURCE_DIR}/src/papilo/external/fmt/posix.h
-   ${PROJECT_SOURCE_DIR}/src/papilo/external/fmt/printf.h
-   ${PROJECT_SOURCE_DIR}/src/papilo/external/fmt/ranges.h
-   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/papilo/external/fmt)
+if(NOT SYSTEM_FMT)
+   install(FILES
+      ${PROJECT_SOURCE_DIR}/src/papilo/external/fmt/chrono.h
+      ${PROJECT_SOURCE_DIR}/src/papilo/external/fmt/color.h
+      ${PROJECT_SOURCE_DIR}/src/papilo/external/fmt/compile.h
+      ${PROJECT_SOURCE_DIR}/src/papilo/external/fmt/core.h
+      ${PROJECT_SOURCE_DIR}/src/papilo/external/fmt/format-inl.h
+      ${PROJECT_SOURCE_DIR}/src/papilo/external/fmt/format.h
+      ${PROJECT_SOURCE_DIR}/src/papilo/external/fmt/locale.h
+      ${PROJECT_SOURCE_DIR}/src/papilo/external/fmt/os.h
+      ${PROJECT_SOURCE_DIR}/src/papilo/external/fmt/ostream.h
+      ${PROJECT_SOURCE_DIR}/src/papilo/external/fmt/posix.h
+      ${PROJECT_SOURCE_DIR}/src/papilo/external/fmt/printf.h
+      ${PROJECT_SOURCE_DIR}/src/papilo/external/fmt/ranges.h
+      DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/papilo/external/fmt)
+endif()
 
 install(FILES
    ${PROJECT_SOURCE_DIR}/src/papilo/external/ska/bytell_hash_map.hpp
@@ -544,8 +560,10 @@ install(FILES
    ${PROJECT_SOURCE_DIR}/LICENSE DESTINATION ${CMAKE_INSTALL_DATADIR}/licenses/papilo)
 install(FILES
    ${PROJECT_SOURCE_DIR}/src/papilo/external/ska/LICENSE.txt DESTINATION ${CMAKE_INSTALL_DATADIR}/licenses/papilo/ska)
-install(FILES
-   ${PROJECT_SOURCE_DIR}/src/papilo/external/fmt/LICENSE.rst DESTINATION ${CMAKE_INSTALL_DATADIR}/licenses/papilo/fmt)
+if(NOT SYSTEM_FMT)
+   install(FILES
+      ${PROJECT_SOURCE_DIR}/src/papilo/external/fmt/LICENSE.rst DESTINATION ${CMAKE_INSTALL_DATADIR}/licenses/papilo/fmt)
+endif()
 
 # Configure the papilo-config.cmake for the build-tree:
 # We add the CMake module path from the sources.

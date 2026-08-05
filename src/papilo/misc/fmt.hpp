@@ -25,13 +25,10 @@
 #ifndef _PAPILO_MISC_FMT_HPP_
 #define _PAPILO_MISC_FMT_HPP_
 
-#ifndef FMT_HEADER_ONLY
-#define FMT_HEADER_ONLY
-#endif
+#include "papilo/Config.hpp"
 
-/* if those macros are not defined and fmt includes windows.h
- * then many macros are defined that can interfere with standard C++ code
- */
+// if those macros are not defined and fmt includes windows.h
+// then many macros are defined that can interfere with standard C++ code
 #ifndef NOMINMAX
 #define NOMINMAX
 #define PAPILO_DEFINED_NOMINMAX
@@ -47,8 +44,17 @@
 #define PAPILO_DEFINED_NOGDI
 #endif
 
+#if defined(PAPILO_HAVE_SYSTEM_FMT)
+#include <fmt/format.h>
+#include <fmt/ostream.h>
+#else
+// bundled fmt header-only
+#ifndef FMT_HEADER_ONLY
+#define FMT_HEADER_ONLY
+#endif
 #include "papilo/external/fmt/format.h"
 #include "papilo/external/fmt/ostream.h"
+#endif
 
 #ifdef PAPILO_DEFINED_NOGDI
 #undef NOGDI

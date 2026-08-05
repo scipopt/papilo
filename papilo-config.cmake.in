@@ -9,6 +9,14 @@ include(CMakeFindDependencyMacro)
 
 list(APPEND CMAKE_MODULE_PATH @EXTRA_CMAKE_MODULE_PATH@)
 
+# If PAPILO was built with system fmt then we also need it.
+set(PAPILO_HAVE_SYSTEM_FMT @PAPILO_HAVE_SYSTEM_FMT@)
+if(PAPILO_HAVE_SYSTEM_FMT AND PAPILO_FOUND)
+   if(NOT fmt_FOUND)
+      find_dependency(fmt CONFIG)
+   endif()
+endif()
+
 # If PAPILO was built with Quadmath then we also need it.
 set(PAPILO_HAVE_FLOAT128 @PAPILO_HAVE_FLOAT128@)
 if(PAPILO_HAVE_FLOAT128)
