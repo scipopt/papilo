@@ -37,6 +37,12 @@
 #include <utility>
 #include <vector>
 
+// operator<< fallback removed in FMT 9
+#if FMT_VERSION >= 90000
+template <>
+struct fmt::formatter<boost::program_options::options_description> : fmt::ostream_formatter {};
+#endif
+
 namespace papilo
 {
 #ifdef PAPILO_COMMAND_LINE_AVAILABLE

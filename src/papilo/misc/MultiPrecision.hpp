@@ -26,6 +26,7 @@
 #define _PAPILO_MISC_MULTIPRECISION_HPP_
 
 #include "papilo/Config.hpp"
+#include "papilo/misc/fmt.hpp"
 
 // work around build failure with boost on Fedora 37
 #include <memory>
@@ -156,6 +157,12 @@ using Float500 =
 using Float1000 =
     boost::multiprecision::number<boost::multiprecision::cpp_bin_float<1000>>;
 } // namespace papilo
+#endif
+
+// operator<< fallback removed in FMT 9
+#if FMT_VERSION >= 90000
+template <typename Backend, boost::multiprecision::expression_template_option ExpressionTemplates>
+struct fmt::formatter<boost::multiprecision::number<Backend, ExpressionTemplates>> : fmt::ostream_formatter {};
 #endif
 
 #endif

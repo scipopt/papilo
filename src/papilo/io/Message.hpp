@@ -71,13 +71,7 @@ class Message
           Args... args ) const
    {
       fmt::basic_memory_buffer<char> buf;
-      fmt::vformat_to(
-#if FMT_VERSION >= 70000
-         std::back_inserter(buf),
-#else
-         buf,
-#endif
-         format_str, { fmt::make_format_args( std::forward<Args>( args )... ) } );
+      fmt::vformat_to( std::back_inserter( buf ), format_str, fmt::make_format_args( args... ) );
       std::size_t size = buf.size();
 
       if( write != nullptr )
