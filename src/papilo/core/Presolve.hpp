@@ -733,7 +733,7 @@ Presolve<REAL>::apply( Problem<REAL>& problem, bool store_dual_postsolve )
                Vec<int> dependentFreeCols;
                double factorTime = 0.0;
                msg.info(
-                   "found {} free columns, checking for linear dependency\n",
+                   "found {} free columns ({} nonzeros), checking for linear dependency\n",
                    freeCols.size(), freeColNnz );
 
                {
