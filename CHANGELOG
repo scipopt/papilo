@@ -37,6 +37,8 @@ Data Structures
 Build system
 ------------
 
+- add option SYSTEM_FMT to link FMT library of system instead of bundled headers
+
 Fixed bugs
 ----------
 
