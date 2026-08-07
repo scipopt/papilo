@@ -354,7 +354,8 @@ inline typename Container::value_type* get_data(Container& c) {
   return c.data();
 }
 
-#if defined(_SECURE_SCL) && _SECURE_SCL
+// stdext::checked_array_iterator removed with MSVC 14.51
+#if defined(_SECURE_SCL) && _SECURE_SCL && (!defined(_MSC_VER) || _MSC_VER < 1951)
 // Make a checked iterator to avoid MSVC warnings.
 template <typename T> using checked_ptr = stdext::checked_array_iterator<T*>;
 template <typename T> checked_ptr<T> make_checked(T* p, size_t size) {
@@ -539,10 +540,17 @@ inline size_t count_code_points(basic_string_view<char> s) {
   return num_code_points;
 }
 
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+#endif
 inline size_t count_code_points(basic_string_view<char8_type> s) {
   return count_code_points(basic_string_view<char>(
       reinterpret_cast<const char*>(s.data()), s.size()));
 }
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#endif
 
 template <typename Char>
 inline size_t code_point_index(basic_string_view<Char> s, size_t n) {

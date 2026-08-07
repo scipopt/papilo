@@ -50,7 +50,9 @@ Miscellaneous
 
 Fixed bugs
 ----------
+- ProblemUpdate: synchronize last_changed_activities and current_changed_activities after aggregate(), sparsify(), and change_coefficient() to flush changes completely
 - OpbWriter: fixed bug where negative numbers where not correctly casted in the objective offset
+- disable deprecated iterators in fmt external to support modern MSVC
 
 
 @section RN301 PaPILO 3.0.1

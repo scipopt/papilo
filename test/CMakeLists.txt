@@ -79,6 +79,7 @@ set(unit_tests
         "presolve-activity-is-updated-correctly-huge-values"
 
         #ProblemUpdate
+        "trivial-presolve-empty-row"
         "trivial-presolve-singleton-row"
         "trivial-presolve-singleton-row-pt-2"
         "clique-row-flag-detection1"

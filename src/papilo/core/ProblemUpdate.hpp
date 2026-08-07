@@ -2156,13 +2156,16 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
             matrix_buffer.addEntry( reduction.row, reduction.col, reduction.newval );
          else
          {
+            int nchanged = current_changed_activities.size();
             bool successful = constraintMatrix.change_coefficient(
                 num, reduction.row, reduction.col, reduction.newval,
                 problem.getVariableDomains(), intbuffer, realbuffer,
-                last_changed_activities, problem.getRowActivities(),
+                current_changed_activities, problem.getRowActivities(),
                 stats.nrounds );
             if( !successful )
                return ApplyResult::kRejected ;
+            while( nchanged < (int)current_changed_activities.size() )
+               last_changed_activities.push_back( current_changed_activities[nchanged++] );
          }
 
          auto& next_reduction = *(iter+1);
@@ -2349,11 +2352,14 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
 
 
             // make the changes in the constraint matrix
+            int nchanged = current_changed_activities.size();
             constraintMatrix.aggregate(
                 num, col, rowvec, eqRHS, problem.getVariableDomains(),
-                intbuffer, realbuffer, tripletbuffer, last_changed_activities,
+                intbuffer, realbuffer, tripletbuffer, current_changed_activities,
                 problem.getRowActivities(), singletonRows, singletonColumns,
                 emptyColumns, stats.nrounds );
+            while( nchanged < (int)current_changed_activities.size() )
+               last_changed_activities.push_back( current_changed_activities[nchanged++] );
 
             stats.ncoefchgs += row_length * nbrelevantrows;
 
@@ -2612,11 +2618,14 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
                certificate_interface->substitute(col1, equalityLHS, offset, old_obj_coeff, problem, problem.getVariableNames(), postsolve.origcol_mapping);
 
                // perform changes in matrix and side
+               int nchanged = current_changed_activities.size();
                constraintMatrix.aggregate(
                    num, col1, equalityLHS, offset, problem.getVariableDomains(),
-                   intbuffer, realbuffer, tripletbuffer, last_changed_activities,
+                   intbuffer, realbuffer, tripletbuffer, current_changed_activities,
                    problem.getRowActivities(), singletonRows, singletonColumns,
                    emptyColumns, stats.nrounds );
+               while( nchanged < (int)current_changed_activities.size() )
+                  last_changed_activities.push_back( current_changed_activities[nchanged++] );
 
                // update col flags
                setColState( col1, State::kModified );
@@ -2924,14 +2933,17 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
 
                assert( candrow != eqrow );
 
+               int nchanged = current_changed_activities.size();
                int canceled = constraintMatrix.sparsify(
                    num, eqrow, scale, candrow, intbuffer, realbuffer,
-                   problem.getVariableDomains(), last_changed_activities,
+                   problem.getVariableDomains(), current_changed_activities,
                    problem.getRowActivities(), singletonRows, singletonColumns,
                    emptyColumns, stats.nrounds );
 
                if( canceled != 0 )
                {
+                  while( nchanged < (int)current_changed_activities.size() )
+                     last_changed_activities.push_back( current_changed_activities[nchanged++] );
                   setRowState( candrow, State::kModified );
                   certificate_interface->sparsify(eqrow, candrow, scale, problem);
                   msg.detailed( "modified rows: {}, \n", candrow );
