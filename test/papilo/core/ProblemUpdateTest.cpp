@@ -22,11 +22,13 @@
 /*                                                                           */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#include "papilo/external/catch/catch_amalgamated.hpp"
 #include "papilo/core/Problem.hpp"
 #include "papilo/core/ProblemBuilder.hpp"
 #include "papilo/core/Reductions.hpp"
+#include "papilo/presolvers/DualInfer.hpp"
 #include "papilo/presolvers/ImplIntDetection.hpp"
+
+#include "papilo/external/catch/catch_amalgamated.hpp"
 
 namespace papilo
 {
@@ -38,6 +40,48 @@ setupProblemPresolveSingletonRowFixed();
 
 Problem<double>
 setupProblemWIthCliques();
+
+TEST_CASE( "trivial-presolve-empty-row", "[core]" )
+{
+   ProblemBuilder<double> problemBuilder;
+   problemBuilder.setNumRows( 1 );
+   problemBuilder.setNumCols( 3 );
+   problemBuilder.setColLbAll( { 0.0, 0.0, 0.0 } );
+   problemBuilder.setColUbAll( { 0.0, 0.0, 1.0 } );
+   problemBuilder.setObjAll( { 0.0, 0.0, 0.0 } );
+   problemBuilder.setRowLhsAll( { -1.0 } );
+   problemBuilder.setRowRhsAll( { 1.0 } );
+   problemBuilder.addEntryAll( { { 0, 0, 1.0 }, { 0, 1, 1.0 } } );
+
+   Num<double> num{};
+   Message msg{};
+   Problem<double> problem = problemBuilder.build();
+   problem.recomputeAllActivities();
+   Statistics statistics{};
+   PresolveOptions presolveOptions{};
+   PostsolveStorage<double> postsolve{ problem, num, presolveOptions };
+   ProblemUpdate<double> problemUpdate{ problem, postsolve, statistics, presolveOptions, num, msg };
+
+   problemUpdate.markColFixed( 0 );
+   problemUpdate.markColFixed( 1 );
+   REQUIRE( problem.getRowSizes()[0] == 2 );
+
+   PresolveStatus status = problemUpdate.trivialRowPresolve();
+   REQUIRE( status == PresolveStatus::kUnchanged );
+   REQUIRE( problem.getRowFlags()[0].test( RowFlag::kRedundant ) );
+
+   status = problemUpdate.flush( true );
+   REQUIRE( status == PresolveStatus::kReduced );
+   REQUIRE( problem.getRowSizes()[0] == -1 );
+
+   double time = 0.0;
+   Timer timer{ time };
+   Reductions<double> reductions{};
+   DualInfer<double> dualInfer{};
+   int cause = -1;
+   status = dualInfer.execute( problem, problemUpdate, num, reductions, timer, cause );
+   REQUIRE( status == PresolveStatus::kUnchanged );
+}
 
 TEST_CASE( "trivial-presolve-singleton-row", "[core]" )
 {
