@@ -1324,12 +1324,12 @@ ConstraintMatrix<REAL>::change_coefficient(
    auto mergeVal = [&]( const REAL& oldval, const REAL& newval )
    { return newval; };
 
-   if(cons_matrix.rowranges[row].end + 1 == cons_matrix.rowranges[row+1].start)
+   if( cons_matrix.rowranges[row].end >= cons_matrix.rowranges[row + 1].start )
    {
       //fmt::print("did not add col {} to clique {}\n", col, row);
       return false;
    }
-   if(cons_matrix_transp.rowranges[col].end + 1 == cons_matrix_transp.rowranges[col+1].start)
+   if( cons_matrix_transp.rowranges[col].end >= cons_matrix_transp.rowranges[col + 1].start )
    {
       //fmt::print("did not add col {} to clique {}\n", col, row);
       return false;
