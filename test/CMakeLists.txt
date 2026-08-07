@@ -35,6 +35,7 @@ add_executable(unit_test TestMain.cpp
 
         papilo/core/MatrixBufferTest.cpp
         papilo/core/SparseStorageTest.cpp
+        papilo/core/ConstraintMatrixTest.cpp
         papilo/core/PresolveTest.cpp
         papilo/core/ProblemUpdateTest.cpp
         papilo/misc/VectorUtilsTest.cpp
