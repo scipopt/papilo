@@ -265,11 +265,12 @@ class SparseStorage
               MergeVals&& mergeVals, CoeffChanged&& coeffChanged,
               Vec<REAL>& valbuffer, Vec<int>& indbuffer )
    {
-      auto rowmaxlen =
-          rowranges[row].end - rowranges[row].start + ( itend - it );
       assert( valbuffer.empty() );
       assert( indbuffer.empty() );
+      assert( rowranges[row].end <= rowranges[row + 1].start );
 
+      const auto rowmaxlen = std::min( itend - it + rowranges[row].end,
+            rowranges[row + 1].start ) - rowranges[row].start;
       valbuffer.reserve( rowmaxlen );
       indbuffer.reserve( rowmaxlen );
 
@@ -336,7 +337,7 @@ class SparseStorage
 
       int newsize = static_cast<int>( indbuffer.size() );
 
-      assert( newsize <= rowranges[row + 1].start - rowranges[row].start );
+      assert( newsize <= rowmaxlen );
 
       nnz = nnz - rowranges[row].end + rowranges[row].start + newsize;
 
