@@ -179,7 +179,7 @@ struct OpbWriter
             fmt::print( out, "{}{} {} ", !prob.is_objective_negated() == (coef > 0) ? "+" : "-", boost::multiprecision::cpp_int( abs(coef) ).str(),
                         varnames[col_mapping[i]] );
          }
-         fmt::print(out, " {}", offset_string);
+         fmt::print(out, " {}", offset_string.empty() ? "0": offset_string);
          fmt::print( out, ";\n" );
       }
 
