@@ -1074,8 +1074,8 @@ class VeriPb : public CertificateInterface<REAL>
          }
          else
          {
-            assert( ( lhs_row_mapping[row] != UNKNOWN && factor == 1 ) ||
-                    ( factor == -1 && rhs_row_mapping[row] != UNKNOWN ) );
+            assert( ( lhs_row_mapping[row] != UNKNOWN && factor == -1 ) ||
+                    ( factor == 1 && rhs_row_mapping[row] != UNKNOWN ) );
             assert( factor == 1 || factor == -1 );
             if( factor == 1 )
                lhs_row_mapping[row] = lhs_row_mapping[parallel_row];
