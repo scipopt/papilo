@@ -296,7 +296,7 @@ presolve_and_solve(
             num.setEpsilon( REAL{ presolve.getPresolveOptions().epsilon } );
             num.setHugeVal( REAL{ presolve.getPresolveOptions().hugeval } );
             num.setUseAbsFeas( presolve.getPresolveOptions().useabsfeas );
-            bool success = OpbWriter<REAL>::writeProb( opts.reduced_problem_file, problem,
+            bool success = OpbWriter<REAL>::writeProb( opts.reduced_problem_file, problem, prob.get(),
                                         result.postsolve.origcol_mapping, num, presolve );
             //TODO: change name
             if(!success)

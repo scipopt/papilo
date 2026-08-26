@@ -86,8 +86,25 @@ struct OpbWriter
       return scale;
    }
 
+   static bool are_all_obj_coeff_and_offset_zero(const Objective<REAL> &obj) {
+      if (obj.offset != 0)
+         return false;
+      for (auto coef: obj.coefficients)
+         if (coef != 0) {
+            return false;
+         }
+      return true;
+   }
+
+
+   static bool is_write_objective(const bool is_reduced_decision, const bool verification_with_VeriPB, const Problem<REAL>& original_problem) {
+      if (!verification_with_VeriPB)
+         return !is_reduced_decision;
+      return !are_all_obj_coeff_and_offset_zero(original_problem.getObjective());
+   }
+
    static bool
-   writeProb( const std::string& filename, const Problem<REAL>& prob,
+   writeProb( const std::string& filename, const Problem<REAL>& prob, const Problem<REAL>& original_problem,
               const Vec<int>& col_mapping,
               const Num<REAL>& num, const Presolve<REAL>& presolve)
    {
@@ -155,20 +172,7 @@ struct OpbWriter
          fmt::print( out, "* Objective Offset {}\n", offset_string);
       }
 
-      bool obj_has_nonzeros = false;
-      if( obj.offset == 0 )
-      {
-         for( auto coef : obj.coefficients )
-            if( coef != 0 )
-            {
-               obj_has_nonzeros = true;
-               break;
-            }
-      }
-      else
-         obj_has_nonzeros = true;
-
-      if( obj_has_nonzeros || presolve.getPresolveOptions().verification_with_VeriPB )
+      if( is_write_objective(are_all_obj_coeff_and_offset_zero(obj), presolve.getPresolveOptions().verification_with_VeriPB, original_problem) )
       {
          fmt::print( out, "min: " );
          for( int i = 0; i < prob.getNCols(); i++ )
