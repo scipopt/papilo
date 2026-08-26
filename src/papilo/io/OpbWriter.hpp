@@ -144,24 +144,7 @@ struct OpbWriter
             return false;
          }
       }
-      // for( int i = 0; i < prob.getNRows(); ++i )
-      // {
-      //    auto vector = matrix.getRowCoefficients( i );
-      //    for( int j = 0; j < vector.getLength(); j++ )
-      //       if( !num.isIntegral( vector.getValues()[j] * row_scaling[i] ) )
-      //       {
-      //          fmt::print( "Matrix contains fractional values. Opb is not the "
-      //                      "write format." );
-      //          return false;
-      //       }
-      //    if( !num.isIntegral( lhs[i] * row_scaling[i] ) ||
-      //        !num.isIntegral( rhs[i] * row_scaling[i] ) )
-      //    {
-      //       fmt::print( "Lhs/Rhs contains fractional values. Opb is not the "
-      //                   "correct format.\n" );
-      //       return false;
-      //    }
-      // }
+
       out.push( file );
 
       fmt::print( out, "* #variable= {} #constraint= {}\n",
