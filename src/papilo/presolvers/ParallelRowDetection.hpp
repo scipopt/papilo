@@ -297,7 +297,7 @@ ParallelRowDetection<REAL>::execute( const Problem<REAL>& problem,
 
    // lambda mark all reductions except one redundant and update rhs/lhs
    auto handleRows = [&reductions, &result, &lhs_values, &rhs_values, &rflags,
-                      &num, &constMatrix]( Vec<int> parallel_rows ) {
+                      &num, &constMatrix](const Vec<int> &parallel_rows ) {
       using std::swap;
 
       assert( parallel_rows.size() >= 2 );
