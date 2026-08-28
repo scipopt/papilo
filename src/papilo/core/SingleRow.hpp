@@ -102,7 +102,7 @@ struct RowActivity
              num.isSafeLT( max, lhs ) )
             return RowStatus::kInfeasible;
 
-         if( ninfmin == 0 && num.isFeasGE( min, lhs ) )
+         if( ninfmin == 0 && num.isGE( min, lhs ) )
             status = RowStatus::kRedundantLhs;
          else
             status = RowStatus::kUnknown;
@@ -114,7 +114,7 @@ struct RowActivity
              num.isSafeGT( min, rhs ) )
             return RowStatus::kInfeasible;
 
-         if( ninfmax == 0 && num.isFeasLE( max, rhs ) )
+         if( ninfmax == 0 && num.isLE( max, rhs ) )
          {
             if( status == RowStatus::kUnknown )
                status = RowStatus::kRedundantRhs;

@@ -53,6 +53,7 @@ Fixed bugs
 
 - ProblemUpdate: synchronize last_changed_activities and current_changed_activities after aggregate(), sparsify(), and change_coefficient() to flush changes completely
 - ConstraintMatrix: allow using last remaining slots in sparse matrix storage by relaxing addition rejection to full vectors
+- SingleRow: restrict redundancy definition from feasibility to epsilon tolerance for numerical stability
 - OpbWriter: fixed bug where negative numbers where not correctly casted in the objective offset
 - disable deprecated iterators in fmt external to support modern MSVC
 

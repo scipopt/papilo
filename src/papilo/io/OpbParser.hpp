@@ -368,7 +368,6 @@ OpbParser<REAL>::parseObjective( std::string& line )
          return ParseKey::kFail;
       }
 
-   REAL offset = 0;
    std::pair<bool, REAL> result;
    for( int counter = 0; counter < (long long)tokens.size(); counter += 2 )
    {
@@ -386,7 +385,6 @@ OpbParser<REAL>::parseObjective( std::string& line )
       {
          negated = true;
          var = var.substr( 1 );
-         offset += coef;
       }
       if( var.empty() || var[0] != 'x' )
       {
