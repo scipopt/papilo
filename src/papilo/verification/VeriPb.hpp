@@ -115,7 +115,9 @@ class VeriPb : public CertificateInterface<REAL>
    int next_constraint_id = 0;
 
    /// skip reductions
+   bool skip_deleting_rhs_set = false;
    int skip_deleting_rhs_constraint_id = UNKNOWN_SKIP_DELETING;
+   bool skip_deleting_lhs_set = false;
    int skip_deleting_lhs_constraint_id = UNKNOWN_SKIP_DELETING;
    int skip_changing_rhs = UNKNOWN;
    int skip_changing_lhs = UNKNOWN;
@@ -230,6 +232,8 @@ class VeriPb : public CertificateInterface<REAL>
       skip_changing_rhs = UNKNOWN;
       skip_deleting_lhs_constraint_id = UNKNOWN;
       skip_deleting_rhs_constraint_id = UNKNOWN;
+      skip_deleting_lhs_set = false;
+      skip_deleting_rhs_set = false;
       stored_dominating_col = UNKNOWN;
       stored_dominated_col = UNKNOWN;
       changed_entries_during_current_tsxs.clear();
@@ -914,10 +918,14 @@ class VeriPb : public CertificateInterface<REAL>
             else
                rhs_row_mapping[row] = lhs_row_mapping[parallel_row];
          }
-         if(factor < 0)
+         if(factor < 0) {
+            skip_deleting_rhs_set = true;
             skip_deleting_rhs_constraint_id = -rhs_row_mapping[row];
-         else
+         }
+         else {
+            skip_deleting_rhs_set = true;
             skip_deleting_rhs_constraint_id = rhs_row_mapping[row];
+         }
       }
       else
       {
@@ -1082,10 +1090,14 @@ class VeriPb : public CertificateInterface<REAL>
             else
                lhs_row_mapping[row] = rhs_row_mapping[parallel_row];
          }
-         if(factor > 0 )
+         if(factor > 0 ) {
+            skip_deleting_lhs_set = true;
             skip_deleting_lhs_constraint_id = lhs_row_mapping[row];
-         else
+         }
+         else {
+            skip_deleting_rhs_set = true;
             skip_deleting_rhs_constraint_id = -rhs_row_mapping[row];
+         }
 
       }
       else
@@ -1852,6 +1864,8 @@ class VeriPb : public CertificateInterface<REAL>
          proof_out << " ; " << name << " -> 0";
 #endif
       proof_out << "\n";
+      skip_deleting_rhs_set = true;
+      skip_deleting_lhs_set = true;
       skip_deleting_rhs_constraint_id = rhs_row_mapping[row];
       skip_deleting_lhs_constraint_id = lhs_row_mapping[row];
    };
@@ -1917,6 +1931,8 @@ class VeriPb : public CertificateInterface<REAL>
 
          skip_deleting_lhs_constraint_id = lhs_row_mapping[substituted_row];
          skip_deleting_rhs_constraint_id = rhs_row_mapping[substituted_row];
+         skip_deleting_rhs_set = true;
+         skip_deleting_lhs_set = true;
       }
       assert( !matrix.getRowFlags()[substituted_row].test( RowFlag::kRhsInf ) );
       assert( !matrix.getRowFlags()[substituted_row].test( RowFlag::kLhsInf ) );
@@ -2092,10 +2108,14 @@ class VeriPb : public CertificateInterface<REAL>
               rhs_row_mapping[row] != UNKNOWN );
       if( lhs_row_mapping[row] != UNKNOWN )
       {
-         if( lhs_row_mapping[row] == skip_deleting_lhs_constraint_id )
+         if(skip_deleting_lhs_set && lhs_row_mapping[row] == skip_deleting_lhs_constraint_id ) {
             skip_deleting_lhs_constraint_id = UNKNOWN_SKIP_DELETING;
-         else if( lhs_row_mapping[row] == -skip_deleting_rhs_constraint_id )
+            skip_deleting_lhs_set = false;
+         }
+         else if( skip_deleting_rhs_set && lhs_row_mapping[row] == -skip_deleting_rhs_constraint_id ) {
+            skip_deleting_rhs_set = false;
             skip_deleting_rhs_constraint_id = UNKNOWN_SKIP_DELETING;
+         }
          else
          {
             proof_out << DELETE_CONS << lhs_row_mapping[row];
@@ -2128,10 +2148,14 @@ class VeriPb : public CertificateInterface<REAL>
       }
       if( rhs_row_mapping[row] != UNKNOWN )
       {
-         if( rhs_row_mapping[row] == -skip_deleting_lhs_constraint_id )
+         if( skip_deleting_lhs_set &&  rhs_row_mapping[row] == -skip_deleting_lhs_constraint_id ) {
+            skip_deleting_lhs_set = true;
             skip_deleting_lhs_constraint_id = UNKNOWN_SKIP_DELETING;
-         else if( rhs_row_mapping[row] == skip_deleting_rhs_constraint_id )
+         }
+         else if( skip_deleting_rhs_set && rhs_row_mapping[row] == skip_deleting_rhs_constraint_id ) {
+            skip_deleting_rhs_set = true;
             skip_deleting_rhs_constraint_id = UNKNOWN_SKIP_DELETING;
+         }
          else
          {
             proof_out << DELETE_CONS << rhs_row_mapping[row];
