@@ -232,7 +232,7 @@ CoefficientStrengthening<REAL>::perform_coefficient_tightening(
    if( integerCoefficients.empty() )
       return PresolveStatus::kUnchanged;
 
-   assert( num.isFeasGT( maxact, rhs ) );
+   assert( num.isGT( maxact, rhs ) );
 
    // adjust side and qualified coefficients
    for( std::pair<REAL, int>& intCoef : integerCoefficients )
