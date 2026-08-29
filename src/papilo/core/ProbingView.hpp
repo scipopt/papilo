@@ -617,7 +617,7 @@ ProbingView<REAL>::analyzeImplications()
          assert( c < 0 || probing_lower_bounds[col] > orig_lbs[col] );
 
          boundChanges.emplace_back(
-             ProbingBoundChg<REAL>( false, col, probing_lower_bounds[col], -1 ) );
+             ProbingBoundChg<REAL>( false, col, probing_lower_bounds[col], probingCol ) );
       }
 
       for( int c : changed_ubs )
@@ -633,7 +633,7 @@ ProbingView<REAL>::analyzeImplications()
          assert( c < 0 || probing_upper_bounds[col] < orig_ubs[col] );
 
          boundChanges.emplace_back(
-             ProbingBoundChg<REAL>( true, col, probing_upper_bounds[col], -1 ) );
+             ProbingBoundChg<REAL>( true, col, probing_upper_bounds[col], probingCol ) );
       }
 
       return false;
