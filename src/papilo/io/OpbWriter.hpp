@@ -206,7 +206,7 @@ struct OpbWriter
                   return false;
                }
                fmt::print( out, "{}{} {} ", val > 0 ? "+" : "-",
-                           abs( cast_to_long( val ) ),
+                           abs( cast_to_cpp( val ) ),
                            varnames[col_mapping[vector.getIndices()[j]]] );
             }
 
@@ -218,7 +218,7 @@ struct OpbWriter
                fmt::print( out, "= " );
             else
                fmt::print( out, ">= " );
-            fmt::print( out, " {} ;\n", num.isZero(lhs[row]) ? 0 : cast_to_long( lhs[row] * scale ) );
+            fmt::print( out, " {} ;\n", num.isZero(lhs[row]) ? 0 : cast_to_cpp( lhs[row] * scale ) );
          }
          if(!row_flags[row].test( RowFlag::kEquation ) &&
              !row_flags[row].test( RowFlag::kRhsInf ))
@@ -250,7 +250,7 @@ struct OpbWriter
                return false;
             }
             fmt::print( out, ">= {} ;\n", num.isZero(rhs[row]) ? 0 :
-                        -cast_to_long( rhs[row] * scale ) );
+                        -cast_to_cpp( rhs[row] * scale ) );
          }
          out.flush();
       }
@@ -316,7 +316,7 @@ struct OpbWriter
 
    }
 
-   static cpp_int cast_to_long(const REAL& x)
+   static cpp_int cast_to_cpp(const REAL& x)
    {
       return x >= 0
           ? cpp_int(x + 0.5)

@@ -43,6 +43,8 @@
 namespace papilo
 {
 
+using boost::multiprecision::cpp_int;
+
 static const char* const NEGATED = "~";
 static const char* const COMMENT = "* ";
 static const char* const CONCLUSION = "conclusion ";
@@ -1822,7 +1824,7 @@ class VeriPb : public CertificateInterface<REAL>
       apply_substitution_to_objective(col, row_data, matrix.getLeftHandSides()[row]);
       if( old_obj_coeff != 0)
       {
-         proof_out << OBJECTIVE_DIFF << cast_to_long( -old_obj_coeff ) << " " << name << " ";
+         proof_out << OBJECTIVE_DIFF << cast_to_cpp( -old_obj_coeff ) << " " << name << " ";
          REAL factor = old_obj_coeff / substitute_factor;
          REAL offset = currentProblem.getConstraintMatrix().getRightHandSides()[row];
          for(int i=0; i<row_data.getLength(); i++)
@@ -1835,22 +1837,22 @@ class VeriPb : public CertificateInterface<REAL>
                offset -= row_data.getValues()[i];
                continue;
             }
-            proof_out  << cast_to_long( -factor * row_data.getValues()[i] ) << " " << currentProblem.getVariableNames()[var_mapping[index]] << " ";
+            proof_out  << cast_to_cpp( -factor * row_data.getValues()[i] ) << " " << currentProblem.getVariableNames()[var_mapping[index]] << " ";
          }
-         proof_out << cast_to_long(offset * factor) << ";";
+         proof_out << cast_to_cpp(offset * factor) << ";";
 
          if( abs(old_obj_coeff) != 1)
          {
             proof_out << " begin\n\tproofgoal #1\n\t\t" << POL;
             if(old_obj_coeff/ substitute_factor < 0 )
-               proof_out << lhs_row_mapping[row] << " " << cast_to_long( abs( old_obj_coeff ) ) << " * " << " -1 " << cast_to_long( abs( substitute_factor ) ) << " * +";
+               proof_out << lhs_row_mapping[row] << " " << cast_to_cpp( abs( old_obj_coeff ) ) << " * " << " -1 " << cast_to_cpp( abs( substitute_factor ) ) << " * +";
             else
-               proof_out << rhs_row_mapping[row] << " " << cast_to_long( abs( old_obj_coeff ) ) << " * " << " -1 " << cast_to_long( abs( substitute_factor ) ) << " * +";
+               proof_out << rhs_row_mapping[row] << " " << cast_to_cpp( abs( old_obj_coeff ) ) << " * " << " -1 " << cast_to_cpp( abs( substitute_factor ) ) << " * +";
             proof_out << "\nend -1\n\tproofgoal #2\n\t\t" << POL;
             if(old_obj_coeff/ substitute_factor > 0 )
-               proof_out << lhs_row_mapping[row] << " " << cast_to_long( abs( old_obj_coeff ) ) << " * " << " -1 " << cast_to_long( abs( substitute_factor ) ) << " * +";
+               proof_out << lhs_row_mapping[row] << " " << cast_to_cpp( abs( old_obj_coeff ) ) << " * " << " -1 " << cast_to_cpp( abs( substitute_factor ) ) << " * +";
             else
-               proof_out << rhs_row_mapping[row] << " " << cast_to_long( abs( old_obj_coeff ) ) << " * " << " -1 " << cast_to_long( abs( substitute_factor ) ) << " * +";
+               proof_out << rhs_row_mapping[row] << " " << cast_to_cpp( abs( old_obj_coeff ) ) << " * " << " -1 " << cast_to_cpp( abs( substitute_factor ) ) << " * +";
             proof_out << "\nend -1\nend";
             next_constraint_id += 4;
          }
@@ -1953,7 +1955,7 @@ class VeriPb : public CertificateInterface<REAL>
          apply_substitution_to_objective(col, row_data, matrix.getLeftHandSides()[substituted_row]);
          if( old_obj_coeff != 0)
          {
-            proof_out << OBJECTIVE_DIFF << cast_to_long( -old_obj_coeff ) << " " << name << " ";
+            proof_out << OBJECTIVE_DIFF << cast_to_cpp( -old_obj_coeff ) << " " << name << " ";
             REAL factor = old_obj_coeff / substitute_factor;
             REAL offset = currentProblem.getConstraintMatrix().getRightHandSides()[substituted_row];
             for( int i = 0; i < row_data.getLength(); i++ )
@@ -1966,21 +1968,21 @@ class VeriPb : public CertificateInterface<REAL>
                   offset -= row_data.getValues()[i];
                   continue;
                }
-               proof_out  << cast_to_long(( -factor ) * row_data.getValues()[i] ) << " " << currentProblem.getVariableNames()[var_mapping[index]] << " ";
+               proof_out  << cast_to_cpp(( -factor ) * row_data.getValues()[i] ) << " " << currentProblem.getVariableNames()[var_mapping[index]] << " ";
             }
-            proof_out << cast_to_long( offset * factor) << ";";
+            proof_out << cast_to_cpp( offset * factor) << ";";
             if( abs(old_obj_coeff) != 1)
             {
                proof_out << " begin\n\tproofgoal #1\n\t\t" << POL;
                if(old_obj_coeff/ substitute_factor < 0 )
-                  proof_out << lhs_row_mapping[substituted_row] << " " << cast_to_long( abs( old_obj_coeff ) ) << " * " << " -1 " << cast_to_long( abs( substitute_factor ) ) << " * +";
+                  proof_out << lhs_row_mapping[substituted_row] << " " << cast_to_cpp( abs( old_obj_coeff ) ) << " * " << " -1 " << cast_to_cpp( abs( substitute_factor ) ) << " * +";
                else
-                  proof_out << rhs_row_mapping[substituted_row] << " " << cast_to_long( abs( old_obj_coeff ) ) << " * " << " -1 " << cast_to_long( abs( substitute_factor ) ) << " * +";
+                  proof_out << rhs_row_mapping[substituted_row] << " " << cast_to_cpp( abs( old_obj_coeff ) ) << " * " << " -1 " << cast_to_cpp( abs( substitute_factor ) ) << " * +";
                proof_out << "\nend -1\n\tproofgoal #2\n\t\t" << POL;
                if(old_obj_coeff/ substitute_factor > 0 )
-                  proof_out << lhs_row_mapping[substituted_row] << " " << cast_to_long( abs( old_obj_coeff ) ) << " * " << " -1 " << cast_to_long( abs( substitute_factor ) ) << " * +";
+                  proof_out << lhs_row_mapping[substituted_row] << " " << cast_to_cpp( abs( old_obj_coeff ) ) << " * " << " -1 " << cast_to_cpp( abs( substitute_factor ) ) << " * +";
                else
-                  proof_out << rhs_row_mapping[substituted_row] << " " << cast_to_long( abs( old_obj_coeff ) ) << " * " << " -1 " << cast_to_long( abs( substitute_factor ) ) << " * +";
+                  proof_out << rhs_row_mapping[substituted_row] << " " << cast_to_cpp( abs( old_obj_coeff ) ) << " * " << " -1 " << cast_to_cpp( abs( substitute_factor ) ) << " * +";
                proof_out << "\nend -1\nend";
                next_constraint_id += 4;
             }
@@ -2005,7 +2007,7 @@ class VeriPb : public CertificateInterface<REAL>
             proof_out << " ; begin\n\t" << POL << implied_constraint_lhs << " " ;
                 if( substitute_factor < 0)
                proof_out << NEGATED ;
-            proof_out << name << " " << abs( cast_to_long( substitute_factor )) << " * +\nend";
+            proof_out << name << " " << abs( cast_to_cpp( substitute_factor )) << " * +\nend";
             next_constraint_id += 2;
          }
 #endif
@@ -2027,7 +2029,7 @@ class VeriPb : public CertificateInterface<REAL>
             proof_out << " ; begin\n\t" << POL << implied_constraint_rhs << " " ;
             if( substitute_factor > 0)
                proof_out << NEGATED ;
-            proof_out << name << " " << abs( cast_to_long( substitute_factor )) << " * +\nend";
+            proof_out << name << " " << abs( cast_to_cpp( substitute_factor )) << " * +\nend";
             next_constraint_id += 2;
          }
 #endif
@@ -2469,6 +2471,13 @@ class VeriPb : public CertificateInterface<REAL>
    cast_to_long( const REAL& x )
    {
       return (long) floor( REAL( x + REAL( 0.5 ) ) );
+   }
+
+   cpp_int cast_to_cpp(const REAL& x)
+   {
+      return x >= 0
+          ? cpp_int(x + 0.5)
+          : cpp_int(x - 0.5);
    }
 
 #if VERIPB_VERSION == 1
