@@ -46,10 +46,10 @@ class Parser
    static boost::optional<Problem<REAL>>
    loadProblem( const std::string& filename )
    {
-      if (filename.size() >= 4 && filename.compare(filename.size() - 4, 4, ".mps") == 0)
-         return MpsParser<REAL>::loadProblem(filename);
-      else if (filename.size() >= 4 && filename.compare(filename.size() - 4, 4, ".opb") == 0)
-         return OpbParser<REAL>::loadProblem(filename);
+      if( filename.find(".mps") != std::string::npos)
+         return MpsParser<REAL>::loadProblem( filename );
+      else if( filename.find(".opb") != std::string::npos)
+         return OpbParser<REAL>::loadProblem( filename );
       else
          return boost::none;
    }
