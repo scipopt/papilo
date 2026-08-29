@@ -45,6 +45,9 @@
 namespace papilo
 {
 
+using boost::multiprecision::cpp_int;
+
+
 /// Writer to write problem structures into an opb file
 template <typename REAL>
 struct OpbWriter
@@ -313,10 +316,11 @@ struct OpbWriter
 
    }
 
-   static long
-   cast_to_long( const REAL& x )
+   static cpp_int cast_to_long(const REAL& x)
    {
-      return x >= 0 ? (long)(x + 0.5): (long)(x - 0.5);
+      return x >= 0
+          ? cpp_int(x + 0.5)
+          : cpp_int(x - 0.5);
    }
 };
 
