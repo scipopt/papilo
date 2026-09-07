@@ -27,12 +27,14 @@
 #include "papilo/core/PresolveMethod.hpp"
 #include "papilo/core/Problem.hpp"
 #include "papilo/core/ProblemBuilder.hpp"
-#include "papilo/core/RowFlags.hpp"
 
 using namespace papilo;
 
 Problem<double>
 setupProblemWithSingletonStuffingColumn();
+
+Problem<double>
+setupProblemWithIntegralSingletonStuffingColumn();
 
 void
 forceCalculationOfSingletonStuffingRows( Problem<double>& problem,
@@ -47,15 +49,15 @@ TEST_CASE( "singleton-stuffing-make-sure-to-first-set-bounds-to-infinity", "[pre
 {
    Num<double> num{};
    Message msg{};
-      double time = 0.0;
+   double time = 0.0;
    int cause = -1;
    Timer t{ time };
    Problem<double> problem = setupProblemWithSingletonStuffingColumn();
    Statistics statistics{};
    PresolveOptions presolveOptions{};
-   PostsolveStorage<double> postsolve = PostsolveStorage<double>( problem, num, presolveOptions );
+   auto postsolve = PostsolveStorage<double>( problem, num, presolveOptions );
    ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
-                                        presolveOptions, num , msg);
+                                        presolveOptions, num, msg );
    presolveOptions.dualreds = 0;
    forceCalculationOfSingletonStuffingRows( problem, problemUpdate );
    SingletonStuffing<double> presolvingMethod{};
@@ -97,23 +99,92 @@ TEST_CASE( "singleton-stuffing-make-sure-to-first-set-bounds-to-infinity", "[pre
    REQUIRE( reductions.getReduction( 6 ).newval == 1.98 );
 }
 
+TEST_CASE( "singleton-stuffing-ensure-integrality", "[presolve]" )
+{
+   Num<double> num{};
+   Message msg{};
+   double time = 0.0;
+   int cause = -1;
+   Timer t{ time };
+   Problem<double> problem = setupProblemWithIntegralSingletonStuffingColumn();
+   Statistics statistics{};
+   PresolveOptions presolveOptions{};
+   auto postsolve = PostsolveStorage<double>( problem, num, presolveOptions );
+   ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
+                                        presolveOptions, num, msg );
+   presolveOptions.dualreds = 0;
+   forceCalculationOfSingletonStuffingRows( problem, problemUpdate );
+   SingletonStuffing<double> presolvingMethod{};
+   Reductions<double> reductions{};
+   presolveOptions.dualreds = 2;
+
+   PresolveStatus presolveStatus =
+       presolvingMethod.execute( problem, problemUpdate, num, reductions, t, cause );
+
+   REQUIRE( presolveStatus == PresolveStatus::kUnchanged );
+}
+
+Problem<double>
+setupProblemWithIntegralSingletonStuffingColumn()
+{
+   const Vec<double> coefficients{ 0.0, 0.0, 0.0, 0.0 };
+   const Vec<double> upperBounds{ 1.0, 1.0, 1.0, 1.0 };
+   const Vec<double> lowerBounds{ 0.0, 0.0, 0.0, 0.0 };
+   const Vec<uint8_t> upper_bound_infinity{ 0, 0, 0, 0 };
+
+   const Vec<uint8_t> isIntegral{ 1, 1, 1, 1 };
+
+   const Vec<uint8_t> isLefthandsideInfinity{ 0 };
+   const Vec<uint8_t> isRighthandsideInfinity{ 0 };
+   const Vec<double> rhs{ 1.0 };
+   const Vec<double> lhs{ 1.0 };
+   const Vec<std::string> rowNames{ "A1" };
+   const Vec<std::string> columnNames{ "c1", "c2", "c3", "c4" };
+   const Vec<std::tuple<int, int, double>> entries{
+      std::tuple<int, int, double>{ 0, 0, 2.0 },
+      std::tuple<int, int, double>{ 0, 1, 4.0 },
+      std::tuple<int, int, double>{ 0, 2, 8.0 },
+      std::tuple<int, int, double>{ 0, 3, 16.0 },
+   };
+
+   ProblemBuilder<double> pb;
+   pb.reserve( static_cast<int>(entries.size()), static_cast<int>(rowNames.size()), static_cast<int>(columnNames.size()) );
+   pb.setNumRows( static_cast<int>(rowNames.size()) );
+   pb.setNumCols( static_cast<int>(columnNames.size()) );
+   pb.setColUbAll( upperBounds );
+   pb.setColUbInfAll( upper_bound_infinity );
+   pb.setColLbAll( lowerBounds );
+   pb.setObjAll( coefficients );
+   pb.setObjOffset( 0.0 );
+   pb.setColIntegralAll( isIntegral );
+   pb.setRowRhsAll( rhs );
+   pb.setRowLhsInfAll( isLefthandsideInfinity );
+   pb.setRowRhsInfAll( isRighthandsideInfinity );
+   pb.addEntryAll( entries );
+   pb.setColNameAll( columnNames );
+   pb.setProblemName( "integral singleton column" );
+   Problem<double> problem = pb.build();
+   const Num<double> num{};
+   problem.getConstraintMatrix().modifyLeftHandSide( 0, num, lhs[0] );
+   return problem;
+}
+
 Problem<double>
 setupProblemWithSingletonStuffingColumn()
 {
-   Vec<double> coefficients{ 0.0, 0.0, 0.0, -9.0699679999999994 };
-   Vec<double> upperBounds{ 0.0, 0.0, 0.0, 0.0 };
-   Vec<double> lowerBounds{ 0.0, 0.0, 0.0, 1.98 };
-   Vec<uint8_t> upper_bound_infinity{ 1, 1, 1, 1 };
+   const Vec<double> coefficients{ 0.0, 0.0, 0.0, -9.0699679999999994 };
+   const Vec<double> upperBounds{ 0.0, 0.0, 0.0, 0.0 };
+   const Vec<double> lowerBounds{ 0.0, 0.0, 0.0, 1.98 };
+   const Vec<uint8_t> upper_bound_infinity{ 1, 1, 1, 1 };
 
-   Vec<uint8_t> isIntegral{ 0, 0, 0, 0 };
+   const Vec<uint8_t> isIntegral{ 0, 0, 0, 0 };
 
-   Vec<uint8_t> isLefthandsideInfinity{ 0, 0 };
-   Vec<uint8_t> isRighthandsideInfinity{ 1, 1 };
-   Vec<double> rhs{ 1.0, 0 };
-   Vec<double> lhs{ 1.0, -1.6239999999999999 };
-   Vec<std::string> rowNames{ "A1", "row with SingletonRow" };
-   Vec<std::string> columnNames{ "c1", "c2", "c3", "c4" };
-   Vec<std::tuple<int, int, double>> entries{
+   const Vec<uint8_t> isLefthandsideInfinity{ 0, 0 };
+   const Vec<uint8_t> isRighthandsideInfinity{ 1, 1 };
+   const Vec<double> rhs{ 1.0, 0.0 };
+   const Vec<std::string> rowNames{ "A1", "row with SingletonRow" };
+   const Vec<std::string> columnNames{ "c1", "c2", "c3", "c4" };
+   const Vec<std::tuple<int, int, double>> entries{
        std::tuple<int, int, double>{ 0, 0, 1.0 },
        std::tuple<int, int, double>{ 0, 1, 1.0 },
        std::tuple<int, int, double>{ 0, 2, 2.0 },
@@ -124,9 +195,9 @@ setupProblemWithSingletonStuffingColumn()
    };
 
    ProblemBuilder<double> pb;
-   pb.reserve( (int) entries.size(), (int) rowNames.size(), (int) columnNames.size() );
-   pb.setNumRows( (int) rowNames.size() );
-   pb.setNumCols( (int) columnNames.size() );
+   pb.reserve( static_cast<int>(entries.size()), static_cast<int>(rowNames.size()), static_cast<int>(columnNames.size()) );
+   pb.setNumRows( static_cast<int>(rowNames.size()) );
+   pb.setNumCols( static_cast<int>(columnNames.size()) );
    pb.setColUbAll( upperBounds );
    pb.setColUbInfAll( upper_bound_infinity );
    pb.setColLbAll( lowerBounds );
@@ -140,5 +211,6 @@ setupProblemWithSingletonStuffingColumn()
    pb.setColNameAll( columnNames );
    pb.setProblemName( "singleton column" );
    Problem<double> problem = pb.build();
+
    return problem;
 }

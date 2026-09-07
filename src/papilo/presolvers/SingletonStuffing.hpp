@@ -237,11 +237,12 @@ SingletonStuffing<REAL>::execute( const Problem<REAL>& problem,
       if( rflags[row].test( RowFlag::kEquation ) )
       {
          assert( !rflags[row].test( RowFlag::kLhsInf, RowFlag::kRhsInf ) );
+         assert( num.isEq( constMatrix.getLeftHandSides()[row], constMatrix.getRightHandSides()[row] ) );
 
          // Found singleton column within an equation:
          // Check if it is implied free on one bound. In that case the
          // variable is substituted and the constraint stays as an inequality
-         // constraint. Otherwise it is equaivalent to implied free variable
+         // constraint. Otherwise, it is equivalent to implied free variable
          // substitution.
 
          if( rowsize[row] <= 1 )
@@ -267,6 +268,9 @@ SingletonStuffing<REAL>::execute( const Problem<REAL>& problem,
 
          if( cflags[col].test( ColFlag::kIntegral ) )
          {
+            if( !num.isFeasIntegral( constMatrix.getRightHandSides()[row] / val ) )
+               continue;
+
             bool unsuitableForSubstitution = false;
 
             auto rowvec = constMatrix.getRowCoefficients( row );
