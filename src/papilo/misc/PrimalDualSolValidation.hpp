@@ -59,7 +59,7 @@ class PrimalDualSolValidation
    }
 
    bool
-   checkPrimalBounds( const Vec<REAL>& primalSolution,
+   checkPrimalDomains( const Vec<REAL>& primalSolution,
                       const Problem<REAL>& problem )
    {
       bool failure = false;
@@ -71,6 +71,12 @@ class PrimalDualSolValidation
       {
          if( problem.getColFlags()[col].test( ColFlag::kInactive ) )
             continue;
+
+         if( problem.getColFlags()[col].test( ColFlag::kIntegral ) && !num.isFeasIntegral( primalSolution[col] ) )
+         {
+            message.info( "Column {:<3} violates integrality ({}).\n", col, (double) primalSolution[col] );
+            failure = true;
+         }
 
          if( ( ! problem.getColFlags()[col].test( ColFlag::kLbInf ) ) &&
              num.isFeasLT( primalSolution[col], lb[col] ) )
@@ -143,7 +149,7 @@ class PrimalDualSolValidation
    checkPrimalFeasibilityAndUpdateSlack( Solution<REAL>& solution,
                                          const Problem<REAL>& problem )
    {
-      bool primalBounds = checkPrimalBounds( solution.primal, problem );
+      bool primalBounds = checkPrimalDomains( solution.primal, problem );
       bool primalConstraint =
           checkPrimalConstraintAndUpdateSlack( solution, problem );
       return primalBounds || primalConstraint;
