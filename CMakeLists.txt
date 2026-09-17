@@ -27,7 +27,7 @@ set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 #    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-psabi")
 # endif()
 if(MSVC)
-   add_compile_options(/permissive)
+   add_compile_options($<$<COMPILE_LANGUAGE:CXX>:/permissive>)
 endif()
 
 # Sets installation directories according to GNU coding standards.
@@ -47,7 +47,7 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 # Disable fused floating point contraction to enhance reproducibility across compilers and
 # architectures.
 if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
-   add_compile_options(/fp:precise)
+   add_compile_options($<$<COMPILE_LANGUAGE:CXX>:/fp:precise>)
 elseif(CMAKE_CXX_COMPILER_ID MATCHES "Intel")
    add_compile_options(-fp-model=precise)
 elseif((CMAKE_CXX_COMPILER_ID MATCHES "GNU") OR (CMAKE_CXX_COMPILER_ID MATCHES "Clang"))

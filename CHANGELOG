@@ -59,6 +59,7 @@ Fixed bugs
 - SingletonStuffing: include rhs into suitable-check
 - OpbWriter: fixed bug where negative numbers where not correctly casted in the objective offset
 - disable deprecated iterators in fmt external to support modern MSVC
+- apply additional MSVC compiler flags for C++ code only
 
 
 @section RN301 PaPILO 3.0.1
