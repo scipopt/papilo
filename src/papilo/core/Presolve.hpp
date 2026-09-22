@@ -566,8 +566,10 @@ Presolve<REAL>::apply( Problem<REAL>& problem, bool store_dual_postsolve )
             if( stats.nrounds == 0 )
                printRoundStats( "Trivial" );
 
-            if( is_status_infeasible_or_unbounded( result.status ) )
+            if (is_status_infeasible_or_unbounded(result.status)) {
+               probUpdate.log_infeasiblity_in_certificate(result.postsolve.origcol_mapping, problem.getVariableNames());
                return result;
+            }
 
             if( probUpdate.getNActiveCols() == 0 || probUpdate.getNActiveRows() == 0 )
                round_to_evaluate = Delegator::kAbort;
