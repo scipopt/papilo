@@ -383,8 +383,8 @@ class VeriPb : public CertificateInterface<REAL>
          else
             unscaled_row_value = col_coeff.getValues()[row_index];
          assert(num.isIntegral(unscaled_row_value * scale_factor[row]));
-         int row_value =
-             cast_to_long( unscaled_row_value * scale_factor[row] );
+         cpp_int row_value =
+             cast_to_cpp( unscaled_row_value * scale_factor[row] );
          if( !problem.getRowFlags()[row].test( RowFlag::kLhsInf ) )
          {
             next_constraint_id++;
@@ -562,8 +562,8 @@ class VeriPb : public CertificateInterface<REAL>
          else
             unscaled_row_value = col_coeff.getValues()[row_index];
          assert(num.isIntegral(unscaled_row_value * scale_factor[row]));
-         int row_value =
-             cast_to_long( unscaled_row_value * scale_factor[row] );
+         cpp_int row_value =
+             cast_to_cpp( unscaled_row_value * scale_factor[row] );
          if( !problem.getRowFlags()[row].test( RowFlag::kLhsInf ) )
          {
             next_constraint_id++;
