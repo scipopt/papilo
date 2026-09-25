@@ -267,6 +267,13 @@ class Presolve
       return row_scaling[row];
    }
 
+   const Vec<int>&
+   get_row_scaling_factors() const
+   {
+      assert( presolveOptions.verification_with_VeriPB );
+      return row_scaling;
+   }
+
  private:
    // data to perform presolving
    Vec<PresolveStatus> results;

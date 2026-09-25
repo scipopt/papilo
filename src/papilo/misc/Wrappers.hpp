@@ -338,6 +338,8 @@ presolve_and_solve(
       {
          Timer t( solvetime );
 
+         if( presolve.getPresolveOptions().verification_with_VeriPB )
+            solver->setRowScalingFactor( presolve.get_row_scaling_factors() );
          solver->setUp( problem, result.postsolve.origrow_mapping,
                         result.postsolve.origcol_mapping );
 

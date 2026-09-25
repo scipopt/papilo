@@ -44,7 +44,7 @@ Build system
 
 Fixed bugs
 ----------
-- OpbWriter: fixed bug where negative numbers where not correctly casted
+- OpbWriter: fixed bug where negative numbers were not correctly cast
 
 Miscellaneous
 -------------
@@ -74,7 +74,7 @@ Fixed bugs
 - ConstraintMatrix: allow using last remaining slots in sparse matrix storage by relaxing addition rejection to full vectors
 - SingleRow: restrict redundancy definition from feasibility to epsilon tolerance for numerical stability
 - SingletonStuffing: include rhs into suitable-check
-- OpbWriter: fixed bug where negative numbers where not correctly casted in the objective offset
+- OpbWriter: fixed bug where negative numbers were not correctly cast in the objective offset
 - disable deprecated iterators in fmt external to support modern MSVC
 - apply additional MSVC compiler flags for C++ code only
 
