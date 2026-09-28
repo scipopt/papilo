@@ -674,8 +674,8 @@ ProbingView<REAL>::analyzeImplications()
       // the other value as bound change
       if( infeasible )
       {
-         boundChanges.emplace_back( boundChg );
-
+         boundChanges.emplace_back( ProbingBoundChg<REAL>(
+             boundChg.upper, boundChg.col, boundChg.bound, probingCol ) );
          continue;
       }
 
