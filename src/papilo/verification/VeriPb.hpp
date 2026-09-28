@@ -463,6 +463,7 @@ class VeriPb : public CertificateInterface<REAL>
                       << names[orig_col] << " -> " << cast_to_long( val ) << " "
                       << names[stored_dominated_col] << " -> 1";
             proof_out << "\n";
+            proof_out << DELETE_DERIVED_CONS <<  next_constraint_id - 1 << " ;\n";
             break;
          }
          proof_out << RUP << "1 " << names[orig_col]
