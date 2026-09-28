@@ -707,7 +707,9 @@ class VeriPb : public CertificateInterface<REAL>
          assert( false );
       }
       proof_out << MOVE_LAST_CONS_TO_CORE;
-      proof_out << DELETE_CONS << rhs_row_mapping[row] << "\n";
+      // the row may not have had a rhs before (e.g. converted to an equation)
+      if( rhs_row_mapping[row] != UNKNOWN )
+         proof_out << DELETE_CONS << rhs_row_mapping[row] << "\n";
       rhs_row_mapping[row] = next_constraint_id;
    }
 
@@ -778,7 +780,9 @@ class VeriPb : public CertificateInterface<REAL>
          assert( false );
       }
       proof_out << MOVE_LAST_CONS_TO_CORE;
-      proof_out << DELETE_CONS << lhs_row_mapping[row] << "\n";
+      // the row may not have had a lhs before (e.g. converted to an equation)
+      if( lhs_row_mapping[row] != UNKNOWN )
+         proof_out << DELETE_CONS << lhs_row_mapping[row] << "\n";
       lhs_row_mapping[row] = next_constraint_id;
    }
 
@@ -2192,7 +2196,7 @@ class VeriPb : public CertificateInterface<REAL>
          REAL factor = col_vec.getValues()[i] * abs(scale_factor[row]);
          if( num.isIntegral( factor / substitute_factor ) )
          {
-            int val = cast_to_long( factor / substitute_factor );
+            cpp_int val = cast_to_cpp( factor / substitute_factor );
             if( !matrix.getRowFlags()[row].test( RowFlag::kRhsInf ) )
             {
                next_constraint_id++;
@@ -2208,9 +2212,9 @@ class VeriPb : public CertificateInterface<REAL>
                rhs_row_mapping[row] = next_constraint_id;
                proof_out << " ; ; begin \n\t";
                if( substitute_factor * factor > 0 )
-                  proof_out << POL << " " << rhs_row_mapping[row] << " " << rhs_id <<  " " << cast_to_long( abs( val ) ) << " * + \n";
+                  proof_out << POL << " " << rhs_row_mapping[row] << " " << rhs_id <<  " " << abs( val ) << " * + \n";
                else
-                  proof_out << POL << " " << rhs_row_mapping[row] << " " << lhs_id << " " << cast_to_long( abs( val ) ) << " * + \n";
+                  proof_out << POL << " " << rhs_row_mapping[row] << " " << lhs_id << " " << abs( val ) << " * + \n";
 
                proof_out << "end";
                next_constraint_id += 2;
@@ -2231,9 +2235,9 @@ class VeriPb : public CertificateInterface<REAL>
                lhs_row_mapping[row] = next_constraint_id;
                proof_out << " ; ; begin \n\t";
                if( substitute_factor * factor > 0 )
-                  proof_out << POL << lhs_row_mapping[row] << " " << lhs_id << " " << cast_to_long( abs( val ) ) << " * + \n";
+                  proof_out << POL << lhs_row_mapping[row] << " " << lhs_id << " " << abs( val ) << " * + \n";
                else
-                  proof_out << POL << lhs_row_mapping[row] << " " << rhs_id << " " << cast_to_long( abs( val ) ) << " * + \n";
+                  proof_out << POL << lhs_row_mapping[row] << " " << rhs_id << " " << abs( val ) << " * + \n";
                proof_out << "end";
                next_constraint_id += 2;
                proof_out << "\n";
@@ -2243,7 +2247,7 @@ class VeriPb : public CertificateInterface<REAL>
          {
             scale_factor[row] *=
                 cast_to_long( abs( substitute_factor / factor ) );
-            int val = abs( cast_to_long( substitute_factor / factor ) );
+            cpp_int val = abs( cast_to_cpp( substitute_factor / factor ) );
             assert( val > 0 );
             if( !matrix.getRowFlags()[row].test( RowFlag::kRhsInf ) )
             {
@@ -2258,9 +2262,9 @@ class VeriPb : public CertificateInterface<REAL>
                rhs_row_mapping[row] = next_constraint_id;
                proof_out << " ; ; begin \n\t";
                if( substitute_factor * factor > 0 )
-                  proof_out << POL << rhs_row_mapping[row] << " " << rhs_id << " + "  << cast_to_long( abs( val ) ) << " d\n";
+                  proof_out << POL << rhs_row_mapping[row] << " " << rhs_id << " + "  << abs( val ) << " d\n";
                else
-                  proof_out << POL << rhs_row_mapping[row] << " " << lhs_id << " + " << cast_to_long( abs( val ) ) << " d\n";
+                  proof_out << POL << rhs_row_mapping[row] << " " << lhs_id << " + " << abs( val ) << " d\n";
                proof_out << "end";
                next_constraint_id += 2;
                proof_out << "\n";
@@ -2281,9 +2285,9 @@ class VeriPb : public CertificateInterface<REAL>
                lhs_row_mapping[row] = next_constraint_id;
                proof_out << " ; ; begin \n\t";
                if( substitute_factor * factor < 0 )
-                  proof_out << POL << lhs_row_mapping[row] << " " << rhs_id << " + " << cast_to_long( abs( val ) ) << " d\n";
+                  proof_out << POL << lhs_row_mapping[row] << " " << rhs_id << " + " << abs( val ) << " d\n";
                else
-                  proof_out << POL << lhs_row_mapping[row] << " " << lhs_id << " + " << cast_to_long( abs( val ) ) << " d\n";
+                  proof_out << POL << lhs_row_mapping[row] << " " << lhs_id << " + " << abs( val ) << " d\n";
                proof_out << "end";
                next_constraint_id += 2;
                proof_out << "\n";
@@ -2294,8 +2298,8 @@ class VeriPb : public CertificateInterface<REAL>
             assert( num.isIntegral( substitute_factor ) );
             assert( num.isIntegral( factor ) );
             scale_factor[row] *= cast_to_long( abs( substitute_factor ) );
-            int val = abs( cast_to_long( factor ) );
-            int val2 = abs( cast_to_long( substitute_factor ) );
+            cpp_int val = abs( cast_to_cpp( factor ) );
+            cpp_int val2 = abs( cast_to_cpp( substitute_factor ) );
 
             if( !matrix.getRowFlags()[row].test( RowFlag::kRhsInf ) )
             {
@@ -2312,9 +2316,9 @@ class VeriPb : public CertificateInterface<REAL>
                rhs_row_mapping[row] = next_constraint_id;
                proof_out << " ; ; begin \n\t";
                if( substitute_factor * factor > 0 )
-                  proof_out << POL << rhs_id << " " << cast_to_long( abs( val ) ) << " * " << rhs_row_mapping[row] << " + " << cast_to_long( abs( val2 ) ) << " d\n";
+                  proof_out << POL << rhs_id << " " << abs( val ) << " * " << rhs_row_mapping[row] << " + " << abs( val2 ) << " d\n";
                else
-                  proof_out << POL << lhs_id << " " << cast_to_long( abs( val ) ) << " * " << rhs_row_mapping[row] << " + " << cast_to_long( abs( val2 ) ) << " d\n";
+                  proof_out << POL << lhs_id << " " << abs( val ) << " * " << rhs_row_mapping[row] << " + " << abs( val2 ) << " d\n";
                proof_out << "end";
                next_constraint_id += 2;
                proof_out << "\n";
@@ -2334,9 +2338,9 @@ class VeriPb : public CertificateInterface<REAL>
                lhs_row_mapping[row] = next_constraint_id;
                proof_out << " ; ; begin \n\t";
                if( substitute_factor * factor > 0 )
-                  proof_out << POL << lhs_id << " " << cast_to_long( abs( val ) ) << " * " << lhs_row_mapping[row] << " + " << cast_to_long( abs( val2 ) ) << " d\n";
+                  proof_out << POL << lhs_id << " " << abs( val ) << " * " << lhs_row_mapping[row] << " + " << abs( val2 ) << " d\n";
                else
-                  proof_out << POL << rhs_id << " " << cast_to_long( abs( val ) ) << " * " << lhs_row_mapping[row] << " + " << cast_to_long( abs( val2 ) ) << " d\n";
+                  proof_out << POL << rhs_id << " " << abs( val ) << " * " << lhs_row_mapping[row] << " + " << abs( val2 ) << " d\n";
                proof_out << "end";
                next_constraint_id += 2;
                proof_out << "\n";
