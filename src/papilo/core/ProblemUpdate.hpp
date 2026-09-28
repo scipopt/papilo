@@ -2217,6 +2217,9 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
             int col = reduction.col;
             assert(num.isIntegral(reduction.newval));
             int causing_col = (int) reduction.newval;
+            // column may have been fixed/substituted in the meantime
+            if( problem.getColFlags()[col].test( ColFlag::kInactive ) )
+               break;
             certificate_interface->add_probing_reasoning(false, causing_col, col, problem.getVariableNames(), postsolve.origcol_mapping );
             break;
          }
@@ -2225,6 +2228,9 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
             int causing_col = reduction.col;
             assert(num.isIntegral(reduction.newval));
             int col = (int) reduction.newval;
+            // column may have been fixed/substituted in the meantime
+            if( problem.getColFlags()[col].test( ColFlag::kInactive ) )
+               break;
             certificate_interface->add_probing_reasoning(true, causing_col, col, problem.getVariableNames(), postsolve.origcol_mapping );
             break;
          }
