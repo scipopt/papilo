@@ -129,16 +129,19 @@ REAL
 SimplifyInequalities<REAL>::computeGreatestCommonDivisor( REAL val1, REAL val2,
                                                           const Num<REAL>& num )
 {
-   auto is_int64_castable = [&num]( REAL val )
+   // checks whether abs( val ) is castable to int64_t, which excludes INT64_MIN
+   // since boost::gcd takes the absolute value internally
+   auto is_int64_abscastable = []( REAL val )
    {
-      return num.isIntegral( val ) && static_cast<int64_t>( val ) == val;
+      return abs( val ) < REAL( std::numeric_limits<int64_t>::max() )
+            && static_cast<int64_t>( val ) == val;
    };
 
    if( num.isZero( val1 ) || num.isZero( val2 ) )
       return 0;
 
    // gcd for integer values
-   if( is_int64_castable( val1 ) && is_int64_castable( val2 ) )
+   if( is_int64_abscastable( val1 ) && is_int64_abscastable( val2 ) )
    {
 #ifndef BOOST_VERSION_NUMBER_PATCH
       return boost::gcd( static_cast<int64_t>( val1 ),
@@ -157,18 +160,18 @@ SimplifyInequalities<REAL>::computeGreatestCommonDivisor( REAL val1, REAL val2,
    // integral, return d
    if( abs( val2 ) < abs( val1 ) )
    {
-      if( is_int64_castable( val1 / val2 ) )
+      if( is_int64_abscastable( val1 / val2 ) )
          return abs( val2 );
    }
    else
    {
-      if( is_int64_castable( val2 / val1 ) )
+      if( is_int64_abscastable( val2 / val1 ) )
          return abs( val1 );
    }
 
    double multiplier = 600;
-   if( is_int64_castable( multiplier * val1 ) &&
-       is_int64_castable( multiplier * val2 ) )
+   if( is_int64_abscastable( multiplier * val1 ) &&
+       is_int64_abscastable( multiplier * val2 ) )
 #ifndef BOOST_VERSION_NUMBER_PATCH
       return boost::gcd( static_cast<int64_t>( val1 * multiplier ),
                          static_cast<int64_t>( val2 * multiplier ) ) /

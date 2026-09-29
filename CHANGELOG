@@ -53,6 +53,8 @@ Miscellaneous
 Fixed bugs
 ----------
 
+- SimplifyInequalities: exclude int64_t boundaries from gcd calculation to avoid type exception
+
 
 @section RN302 PaPILO 3.0.2
 
