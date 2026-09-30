@@ -233,6 +233,8 @@ class VeriPb : public CertificateInterface<REAL>
    end_transaction( const Problem<REAL>& problem,
                     const Vec<int>& var_mapping, const Vec<int>& dirty_row_states ) override
    {
+      stored_dominating_col = UNKNOWN;
+      stored_dominated_col = UNKNOWN;
       if( row_with_gcd.first != UNKNOWN )
       {
          int row = row_with_gcd.first;
@@ -276,7 +278,7 @@ class VeriPb : public CertificateInterface<REAL>
       next_constraint_id++;
       assert( val == 0 );
       const Vec<String>& names = problem.getVariableNames();
-      int orig_col = var_mapping[col];
+      const int orig_col = var_mapping[col];
       switch( argument ) {
          case ArgumentType::kPropagation: {
             if(propagation_option == 1)
