@@ -2546,10 +2546,10 @@ class VeriPb : public CertificateInterface<REAL>
          assert(num.isIntegral( values[i]));
          if(!( (values[i] < 0 && is_lhs) || (values[i] > 0 && !is_lhs)) )
             proof_out << NEGATED;
-         proof_out << names[var_mapping[c]] << " " << cast_to_long( abs( values[i] ) ) << " * + ";
+         proof_out << names[var_mapping[c]] << " " << cast_to_cpp( abs( values[i] ) ) << " * + ";
       }
       assert(col_coef != 0);
-      proof_out << cast_to_long( abs( col_coef ) ) << " d\n";
+      proof_out << cast_to_cpp( abs( col_coef ) ) << " d\n";
       assert(
           (col_coef > 0 && is_lb && lhs_row_mapping[row]!= UNKNOWN) ||
           (col_coef < 0 && is_lb && rhs_row_mapping[row]!= UNKNOWN) ||
