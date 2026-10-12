@@ -8,6 +8,7 @@ Fixed bugs
 - SimplifyInequalities: exclude int64_t boundaries from gcd calculation to avoid type exception
 - DualFix: lock column bounds and rows when fixing a column to avoid fixing to a bound that was changed by another presolver in the same round (#99)
 - SimpleSubstitution: use the bounds of the row's columns instead of columns 0 and 1 in the gcd feasibility check (#100)
+- CoefficientStrengthening: fix assertion on implied integer columns with almost integral bounds (#97)
 
 
 @section RN302 PaPILO 3.0.2

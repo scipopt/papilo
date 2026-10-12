@@ -239,13 +239,12 @@ CoefficientStrengthening<REAL>::perform_coefficient_tightening(
    {
       assert( domains.flags[intCoef.second].test( ColFlag::kLbInf ) ||
               domains.flags[intCoef.second].test( ColFlag::kUbInf ) ||
-              domains.lower_bounds[intCoef.second] !=
-                  domains.upper_bounds[intCoef.second] );
+              !num.isEq(domains.lower_bounds[intCoef.second],
+                  domains.upper_bounds[intCoef.second]) );
       assert( domains.flags[intCoef.second].test( ColFlag::kLbInf ) ||
               domains.flags[intCoef.second].test( ColFlag::kUbInf ) ||
-              domains.upper_bounds[intCoef.second] -
-                      domains.lower_bounds[intCoef.second] >=
-                  1.0 );
+              num.isGE(domains.upper_bounds[intCoef.second] -
+                      domains.lower_bounds[intCoef.second],1.0 ) );
       assert( newabscoef < abs( intCoef.first ) );
 
       if( intCoef.first < REAL{ 0 } )
