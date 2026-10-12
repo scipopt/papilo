@@ -1217,7 +1217,7 @@ Postsolve<REAL>::apply_parallel_col_to_original_solution(
             col2val = floor( col2val );
 
          // recompute value for column 1
-         col1val = solval - col1val * col2scale;
+         col1val = ( solval - col2val ) / col2scale;
       }
    }
    // bounds and integrality should hold now within feasibility

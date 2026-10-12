@@ -27,6 +27,7 @@
 #include "papilo/core/PresolveMethod.hpp"
 #include "papilo/core/Problem.hpp"
 #include "papilo/core/ProblemBuilder.hpp"
+#include "papilo/core/postsolve/Postsolve.hpp"
 
 using namespace papilo;
 
@@ -38,6 +39,11 @@ setupProblemWithParallelColumns( bool first_col_int, bool second_col_int,
 
 Problem<double>
 setupProblemWithMultipleParallelColumns();
+
+Vec<double>
+postsolveParallelContIntColumns( double lb_cont_col, double ub_cont_col,
+                                 double lb_int_col, double ub_int_col,
+                                 double scale, double merged_value );
 
 TEST_CASE( "parallel_col_detection_2_integer_columns", "[presolve]" )
 {
@@ -397,6 +403,55 @@ TEST_CASE( "parallel_col_detection_multiple_parallel_columns", "[presolve]" )
    REQUIRE( reductions.getReduction( 12 ).row == ColReduction::PARALLEL );
    REQUIRE( reductions.getReduction( 12 ).col == 5 );
    REQUIRE( reductions.getReduction( 12 ).newval == remaining_integer_col );
+}
+
+TEST_CASE( "parallel_col_postsolve_cont_int_recompute_after_rounding",
+           "[presolve]" )
+{
+   // x_int + 0.2 * x_cont = 5.8: x_cont is clamped to 25, x_int = 0.8 is
+   // rounded up to 1, hence x_cont has to be recomputed as 24
+   Vec<double> values = postsolveParallelContIntColumns( 0, 25, 0, 1, 0.2, 5.8 );
+   REQUIRE( values[0] == Catch::Approx( 24 ) );
+   REQUIRE( values[1] == 1 );
+
+   // x_int + 0.25 * x_cont = 6.75: x_cont is clamped to 25, x_int = 0.5 is
+   // rounded up to 1, hence x_cont has to be recomputed as 23
+   values = postsolveParallelContIntColumns( 16.999999999999989, 25, 0, 1, 0.25,
+                                             6.75 );
+   REQUIRE( values[0] == Catch::Approx( 23 ) );
+   REQUIRE( values[1] == 1 );
+}
+
+Vec<double>
+postsolveParallelContIntColumns( double lb_cont_col, double ub_cont_col,
+                                 double lb_int_col, double ub_int_col,
+                                 double scale, double merged_value )
+{
+   ProblemBuilder<double> pb;
+   pb.reserve( 0, 0, 2 );
+   pb.setNumRows( 0 );
+   pb.setNumCols( 2 );
+   pb.setColLbAll( { lb_cont_col, lb_int_col } );
+   pb.setColUbAll( { ub_cont_col, ub_int_col } );
+   pb.setObjAll( { 0.0, 0.0 } );
+   pb.setColIntegralAll( { 0, 1 } );
+   pb.setColNameAll( Vec<std::string>{ "c1", "i2" } );
+   Problem<double> problem = pb.build();
+
+   Num<double> num{};
+   Message msg{};
+   PostsolveStorage<double> storage{ problem, num, PresolveOptions{} };
+   storage.storeParallelCols( 0, false, false, lb_cont_col, false, ub_cont_col,
+                              1, true, false, lb_int_col, false, ub_int_col,
+                              scale );
+
+   // the merged column takes over the index of the integer column
+   Solution<double> reduced_solution{ Vec<double>{ 0, merged_value } };
+   Solution<double> original_solution{};
+   Postsolve<double> postsolve{ msg, num };
+   REQUIRE( postsolve.undo( reduced_solution, original_solution, storage ) ==
+            PostsolveStatus::kOk );
+   return original_solution.primal;
 }
 
 Problem<double>
