@@ -40,4 +40,18 @@ enum class PostsolveStatus : int
 /// @deprecated Use papilo::PostsolveStatus instead.
 using PostsolveStatus = papilo::PostsolveStatus;
 
+// for MSVS 2022, the handling of operator<< for papilo::PostsolveStatus fails
+// instead, one gets some cryptic compiling error
+// this adds an specific implementation as a workaround
+#ifdef _MSC_VER
+#include <ostream>
+
+inline std::ostream&
+operator<<( std::ostream& os, const papilo::PostsolveStatus& p )
+{
+   os << (int)p;
+   return os;
+}
+#endif
+
 #endif
