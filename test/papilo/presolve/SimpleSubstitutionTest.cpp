@@ -45,6 +45,9 @@ setupProblemWithSimpleSubstitutionInfeasibleGcd();
 Problem<double>
 setupProblemWithSimpleSubstitutionFeasibleGcd();
 
+Problem<double>
+setupProblemWithSimpleSubstitutionGcdOnLaterColumns();
+
 PresolveStatus
 check_gcd_result_with_expectation(double obj_x, double obj_y, double rhs, double coef1,
                                    double coef2, double lb1, double ub1, double lb2, double ub2 );
@@ -334,6 +337,33 @@ TEST_CASE( "simple-substitution-should_return_infeasible_if_gcd_of_coeff_is_in_r
    REQUIRE( presolveStatus == PresolveStatus::kInfeasible );
 }
 
+TEST_CASE( "simple-substitution-gcd-uses-bounds-of-row-columns", "[presolve]" )
+{
+   // 2x - 3y = 1 with x in [2,98], y in [1,65] is feasible (x = 2, y = 1);
+   // the bounds of the columns 0 and 1 that are not in the row must not matter
+   Message msg {};
+   double time = 0.0;
+   int cause = -1;
+   Timer t{ time };
+   Num<double> num{};
+   Problem<double> problem = setupProblemWithSimpleSubstitutionGcdOnLaterColumns();
+   Statistics statistics{};
+   PresolveOptions presolveOptions{};
+   presolveOptions.dualreds = 0;
+   PostsolveStorage<double> postsolve =
+       PostsolveStorage<double>( problem, num, presolveOptions );
+   ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
+                                        presolveOptions, num, msg );
+   SimpleSubstitution<double> presolvingMethod{};
+   Reductions<double> reductions{};
+   problem.recomputeAllActivities();
+
+   PresolveStatus presolveStatus =
+       presolvingMethod.execute( problem, problemUpdate, num, reductions, t, cause );
+
+   REQUIRE( presolveStatus == PresolveStatus::kUnchanged );
+}
+
 PresolveStatus
 check_gcd_result_with_expectation( double obj_x, double obj_y, double rhs, double coef1,
                                   double coef2, double lb1, double ub1,
@@ -505,6 +535,43 @@ setupProblemWithSimpleSubstitutionFeasibleGcd()
    pb.addEntryAll( entries );
    pb.setColNameAll( columnNames );
    pb.setProblemName( "gcd(x,y) is divisor of rhs" );
+   Problem<double> problem = pb.build();
+   problem.getConstraintMatrix().modifyLeftHandSide( 0, num, rhs[0] );
+   return problem;
+}
+
+Problem<double>
+setupProblemWithSimpleSubstitutionGcdOnLaterColumns()
+{
+   // 2x - 3y = 1
+   // z0 in [0,1], z1 in [10,11], 2 <= x <= 98, 1 <= y <= 65
+   Num<double> num{};
+   Vec<double> coefficients{ 1.0, 1.0, 1.0, 1.0 };
+   Vec<double> upperBounds{ 1.0, 11.0, 98.0, 65.0 };
+   Vec<double> lowerBounds{ 0.0, 10.0, 2.0, 1.0 };
+   Vec<uint8_t> isIntegral{ 1, 1, 1, 1 };
+
+   Vec<double> rhs{ 1.0 };
+   Vec<std::string> rowNames{ "A1" };
+   Vec<std::string> columnNames{ "z0", "z1", "x", "y" };
+   Vec<std::tuple<int, int, double>> entries{
+       std::tuple<int, int, double>{ 0, 2, 2.0 },
+       std::tuple<int, int, double>{ 0, 3, -3.0 },
+   };
+
+   ProblemBuilder<double> pb;
+   pb.reserve( (int) entries.size(), (int) rowNames.size(), (int) columnNames.size() );
+   pb.setNumRows( (int) rowNames.size() );
+   pb.setNumCols( (int) columnNames.size() );
+   pb.setColUbAll( upperBounds );
+   pb.setColLbAll( lowerBounds );
+   pb.setObjAll( coefficients );
+   pb.setObjOffset( 0.0 );
+   pb.setColIntegralAll( isIntegral );
+   pb.setRowRhsAll( rhs );
+   pb.addEntryAll( entries );
+   pb.setColNameAll( columnNames );
+   pb.setProblemName( "gcd check on columns other than 0 and 1" );
    Problem<double> problem = pb.build();
    problem.getConstraintMatrix().modifyLeftHandSide( 0, num, rhs[0] );
    return problem;

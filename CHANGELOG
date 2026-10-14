@@ -6,6 +6,7 @@ Fixed bugs
 ----------
 
 - SimplifyInequalities: exclude int64_t boundaries from gcd calculation to avoid type exception
+- SimpleSubstitution: use the bounds of the row's columns instead of columns 0 and 1 in the gcd feasibility check (#100)
 
 
 @section RN302 PaPILO 3.0.2
