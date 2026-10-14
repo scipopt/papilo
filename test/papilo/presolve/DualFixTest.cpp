@@ -96,8 +96,15 @@ TEST_CASE( "dual-fix-happy-path", "[presolve]" )
    REQUIRE( reductions.getReduction( 0 ).row == papilo::ColReduction::LOCKED );
    REQUIRE( reductions.getReduction( 0 ).newval == 0 );
    REQUIRE( reductions.getReduction( 1 ).col == 0 );
-   REQUIRE( reductions.getReduction( 1 ).row == papilo::ColReduction::FIXED );
-   REQUIRE( reductions.getReduction( 1 ).newval == 1 );
+   REQUIRE( reductions.getReduction( 1 ).row ==
+            papilo::ColReduction::BOUNDS_LOCKED );
+   REQUIRE( reductions.getReduction( 2 ).col == papilo::RowReduction::LOCKED );
+   REQUIRE( reductions.getReduction( 2 ).row == 0 );
+   REQUIRE( reductions.getReduction( 3 ).col == papilo::RowReduction::LOCKED );
+   REQUIRE( reductions.getReduction( 3 ).row == 2 );
+   REQUIRE( reductions.getReduction( 4 ).col == 0 );
+   REQUIRE( reductions.getReduction( 4 ).row == papilo::ColReduction::FIXED );
+   REQUIRE( reductions.getReduction( 4 ).newval == 1 );
 }
 
 TEST_CASE( "dual-fix-no-dual-substitution-for-lp", "[presolve]" )
@@ -333,29 +340,33 @@ int cause = -1;
    REQUIRE( reductions.getReduction( 0 ).col == 0 );
    REQUIRE( reductions.getReduction( 0 ).newval == 0 );
 
+   REQUIRE( reductions.getReduction( 1 ).row ==
+            papilo::ColReduction::BOUNDS_LOCKED );
+   REQUIRE( reductions.getReduction( 1 ).col == 0 );
+
    for( int i = 0; i < 3; i++ )
    {
-      REQUIRE( reductions.getReduction( 1 + i ).col ==
+      REQUIRE( reductions.getReduction( 2 + i ).col ==
                papilo::RowReduction::LOCKED );
-      REQUIRE( reductions.getReduction( 1 + i ).row == i );
-      REQUIRE( reductions.getReduction( 1 + i ).newval == 0 );
+      REQUIRE( reductions.getReduction( 2 + i ).row == i );
+      REQUIRE( reductions.getReduction( 2 + i ).newval == 0 );
    }
 
    for( int i = 0; i < 3; ++i )
    {
-      REQUIRE( reductions.getReduction( 4 + i ).col ==
+      REQUIRE( reductions.getReduction( 5 + i ).col ==
                papilo::RowReduction::REDUNDANT );
-      REQUIRE( reductions.getReduction( 4 + i ).row == i );
-      REQUIRE( reductions.getReduction( 4 + i ).newval == 0 );
+      REQUIRE( reductions.getReduction( 5 + i ).row == i );
+      REQUIRE( reductions.getReduction( 5 + i ).newval == 0 );
    }
 
-   REQUIRE( reductions.getReduction( 7 ).col == 0 );
-   REQUIRE( reductions.getReduction( 7 ).row ==
+   REQUIRE( reductions.getReduction( 8 ).col == 0 );
+   REQUIRE( reductions.getReduction( 8 ).row ==
             papilo::ColReduction::FIXED_INFINITY );
-   REQUIRE( reductions.getReduction( 7 ).newval == -1 );
+   REQUIRE( reductions.getReduction( 8 ).newval == -1 );
 
    REQUIRE( reductions.getTransactions()[0].start == 0 );
-   REQUIRE( reductions.getTransactions()[0].end == 8 );
+   REQUIRE( reductions.getTransactions()[0].end == 9 );
 }
 
 Problem<double>

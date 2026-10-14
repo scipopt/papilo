@@ -262,6 +262,9 @@ DualFix<REAL>::perform_dual_fix_step(
          TransactionGuard<REAL> guard{ reductions };
 
          reductions.lockCol( i );
+         reductions.lockColBounds( i );
+         for( int row = 0; row < collen; ++row )
+            reductions.lockRow( rowinds[row] );
          reductions.fixCol( i, lbs[i] );
 
          return PresolveStatus::kReduced;
@@ -274,6 +277,7 @@ DualFix<REAL>::perform_dual_fix_step(
       {
          TransactionGuard<REAL> guard{ reductions };
          reductions.lockCol( i );
+         reductions.lockColBounds( i );
          for( int row = 0; row < collen; ++row )
             reductions.lockRow( rowinds[row] );
          reductions.fixColNegativeInfinity( i, collen, rowinds );
@@ -288,6 +292,7 @@ DualFix<REAL>::perform_dual_fix_step(
       {
          TransactionGuard<REAL> guard{ reductions };
          reductions.lockCol( i );
+         reductions.lockColBounds( i );
          for( int row = 0; row < collen; ++row )
             reductions.lockRow( rowinds[row] );
          reductions.fixCol( i, ubs[i] );
@@ -301,6 +306,7 @@ DualFix<REAL>::perform_dual_fix_step(
       {
          TransactionGuard<REAL> guard{ reductions };
          reductions.lockCol( i );
+         reductions.lockColBounds( i );
          for( int row = 0; row < collen; row++)
             reductions.lockRow( rowinds[row] );
          reductions.fixColPositiveInfinity( i, collen, rowinds );
