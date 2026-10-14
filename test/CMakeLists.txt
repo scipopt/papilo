@@ -77,6 +77,7 @@ set(unit_tests
         "happy-path-substitute-matrix-coefficient-into-objective"
         "happy-path-aggregate-free-column"
         "presolve-activity-is-updated-correctly-huge-values"
+        "dual-fix-is-rejected-after-bound-change-in-same-round"
 
         #ProblemUpdate
         "trivial-presolve-empty-row"

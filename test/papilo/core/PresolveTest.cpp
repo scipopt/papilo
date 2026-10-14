@@ -81,6 +81,9 @@ row_sizes()
 papilo::Problem<double>
 setupProblemWithMultiplePresolvingOptions();
 
+papilo::Problem<double>
+setupProblemWithDualFixAfterParallelCols();
+
 std::pair<std::pair<papilo::Problem<double>, papilo::PostsolveStorage<double>>,
           std::pair<int, int>>
 applyReductions( const papilo::Reductions<double>& reductions,
@@ -247,6 +250,72 @@ TEST_CASE( "presolve-activity-is-updated-correctly-huge-values", "[core]" )
 
    REQUIRE( activity.min == -2265603.6036036061);
 
+}
+
+TEST_CASE( "dual-fix-is-rejected-after-bound-change-in-same-round", "[core]" )
+{
+   // parallelcols merges y into x (new bounds [3,14]) and dualfix fixes x to
+   // its old lower bound 0 in the same round; the fixing must be rejected
+   Problem<double> problem = setupProblemWithDualFixAfterParallelCols();
+   Presolve<double> presolve{};
+   presolve.addDefaultPresolvers();
+   presolve.setVerbosityLevel( VerbosityLevel::kQuiet );
+
+   PresolveResult<double> result = presolve.apply( problem );
+
+   REQUIRE( result.status != PresolveStatus::kInfeasible );
+   REQUIRE( result.status != PresolveStatus::kUnbndOrInfeas );
+}
+
+Problem<double>
+setupProblemWithDualFixAfterParallelCols()
+{
+   // min x + y - z + w
+   // x + y          >= -100   (redundant)
+   // x + y + z      <=   10
+   // x + y     - w  <=    5
+   //         z + w  <=   15
+   // 0 <= x <= 7, 3 <= y <= 7, 0 <= z <= 7, 0 <= w <= 15
+   // feasible, e.g. x = 0, y = 3, z = 7, w = 0 with objective -4
+   Vec<double> coefficients{ 1.0, 1.0, -1.0, 1.0 };
+   Vec<double> upperBounds{ 7.0, 7.0, 7.0, 15.0 };
+   Vec<double> lowerBounds{ 0.0, 3.0, 0.0, 0.0 };
+   Vec<uint8_t> isIntegral{ 0, 0, 0, 0 };
+   Vec<double> lhs{ -100.0, 0.0, 0.0, 0.0 };
+   Vec<double> rhs{ 0.0, 10.0, 5.0, 15.0 };
+   Vec<uint8_t> lhsInfinity{ 0, 1, 1, 1 };
+   Vec<uint8_t> rhsInfinity{ 1, 0, 0, 0 };
+   Vec<std::string> rowNames{ "rred", "r1", "r2", "r3" };
+   Vec<std::string> columnNames{ "x", "y", "z", "w" };
+   Vec<std::tuple<int, int, double>> entries{
+       std::tuple<int, int, double>{ 0, 0, 1.0 },
+       std::tuple<int, int, double>{ 0, 1, 1.0 },
+       std::tuple<int, int, double>{ 1, 0, 1.0 },
+       std::tuple<int, int, double>{ 1, 1, 1.0 },
+       std::tuple<int, int, double>{ 1, 2, 1.0 },
+       std::tuple<int, int, double>{ 2, 0, 1.0 },
+       std::tuple<int, int, double>{ 2, 1, 1.0 },
+       std::tuple<int, int, double>{ 2, 3, -1.0 },
+       std::tuple<int, int, double>{ 3, 2, 1.0 },
+       std::tuple<int, int, double>{ 3, 3, 1.0 } };
+
+   ProblemBuilder<double> pb;
+   pb.reserve( (int) entries.size(), (int) rowNames.size(), (int) columnNames.size() );
+   pb.setNumRows( (int) rowNames.size() );
+   pb.setNumCols( (int) columnNames.size() );
+   pb.setColUbAll( upperBounds );
+   pb.setColLbAll( lowerBounds );
+   pb.setObjAll( coefficients );
+   pb.setObjOffset( 0.0 );
+   pb.setColIntegralAll( isIntegral );
+   pb.setRowLhsAll( lhs );
+   pb.setRowRhsAll( rhs );
+   pb.setRowLhsInfAll( lhsInfinity );
+   pb.setRowRhsInfAll( rhsInfinity );
+   pb.addEntryAll( entries );
+   pb.setColNameAll( columnNames );
+   pb.setProblemName( "dual fix after parallel columns in same round" );
+   return pb.build();
 }
 
 Problem<double>
