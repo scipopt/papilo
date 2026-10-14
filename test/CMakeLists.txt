@@ -164,6 +164,7 @@ set(unit_tests
         "parallel_col_detection_obj_not_parallel"
         "parallel_col_detection_multiple_parallel_columns"
         "parallel_col_detection_objective_zero"
+        "parallel_col_postsolve_cont_int_recompute_after_rounding"
 
         #Probing
         "happy-path-probing"
