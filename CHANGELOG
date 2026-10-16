@@ -10,6 +10,7 @@ Fixed bugs
 - SimpleSubstitution: use the bounds of the row's columns instead of columns 0 and 1 in the gcd feasibility check (#100)
 - ProblemUpdate: decide redundancy for empty rows w.r.t. feasibility tolerance (#94)
 - ParallelColDetection: recompute continuous column from rounded integer column in postsolve
+- ParallelColDetection: correct bound check for second column after postsolve of primal-dual solution (#95)
 
 
 @section RN302 PaPILO 3.0.2

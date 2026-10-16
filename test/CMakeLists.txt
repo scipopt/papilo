@@ -165,6 +165,8 @@ set(unit_tests
         "parallel_col_detection_multiple_parallel_columns"
         "parallel_col_detection_objective_zero"
         "parallel_col_postsolve_cont_int_recompute_after_rounding"
+        "parallel_col_postsolve_int_int_not_on_bounds"
+        "parallel_col_postsolve_cont_free_col1_col2_on_bounds"
 
         #Probing
         "happy-path-probing"
