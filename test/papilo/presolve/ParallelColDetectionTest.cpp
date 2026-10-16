@@ -28,6 +28,9 @@
 #include "papilo/core/ProblemBuilder.hpp"
 #include "papilo/core/postsolve/Postsolve.hpp"
 #include "papilo/external/catch/catch_amalgamated.hpp"
+#include "papilo/core/postsolve/Postsolve.hpp"
+
+#include <cmath>
 
 using namespace papilo;
 
@@ -44,6 +47,11 @@ Vec<double>
 postsolveParallelContIntColumns( double lb_cont_col, double ub_cont_col,
                                  double lb_int_col, double ub_int_col,
                                  double scale, double merged_value );
+
+Vec<double>
+postsolveParallelColumns( bool integral, bool col1_lb_inf, double lb_col1,
+                          bool col1_ub_inf, double ub_col1, double lb_col2,
+                          double ub_col2, double scale, double merged_value );
 
 TEST_CASE( "parallel_col_detection_2_integer_columns", "[presolve]" )
 {
@@ -451,6 +459,83 @@ postsolveParallelContIntColumns( double lb_cont_col, double ub_cont_col,
    Postsolve<double> postsolve{ msg, num };
    REQUIRE( (postsolve.undo( reduced_solution, original_solution, storage ) ==
             PostsolveStatus::kOk) );
+   return original_solution.primal;
+}
+
+TEST_CASE( "parallel_col_postsolve_int_int_not_on_bounds", "[presolve]" )
+{
+   // x_2 + scale * x_1 = merged_value with two integer columns: the postsolved
+   // values are feasible but neither column needs to be at one of its bounds
+   // (issue #95)
+   struct Instance
+   {
+      double lb1, ub1, lb2, ub2, scale, merged_value;
+   };
+   const Vec<Instance> instances{
+       { -8, 3, -5, 3, -1, 0 }, // fiball
+       { 0, 2, -2, 3, -3, -3 }, // nu25-pr12
+       { 0, 5, 0, 5, 2, 6 },    // neos-3024952-loue
+       // only feasible integer solution is (2, 1), i.e., in the interior
+       { 0, 4, 0, 2, 3, 7 } };
+
+   for( const Instance& i : instances )
+   {
+      Vec<double> values =
+          postsolveParallelColumns( true, false, i.lb1, false, i.ub1, i.lb2,
+                                    i.ub2, i.scale, i.merged_value );
+      REQUIRE( values[0] >= i.lb1 );
+      REQUIRE( values[0] <= i.ub1 );
+      REQUIRE( values[1] >= i.lb2 );
+      REQUIRE( values[1] <= i.ub2 );
+      REQUIRE( values[0] == std::round( values[0] ) );
+      REQUIRE( values[1] == std::round( values[1] ) );
+      REQUIRE( values[1] + i.scale * values[0] ==
+               Catch::Approx( i.merged_value ) );
+   }
+}
+
+TEST_CASE( "parallel_col_postsolve_cont_free_col1_col2_on_bounds",
+           "[presolve]" )
+{
+   // x_2 + x_1 = 5 with x_1 free and x_2 in [0, 10]: x_2 is set to its lower
+   // bound, which has to be detected using the bound flags of x_2 (issue #95)
+   Vec<double> values = postsolveParallelColumns( false, true, 0, true, 0, 0,
+                                                  10, 1, 5 );
+   REQUIRE( values[0] == Catch::Approx( 5 ) );
+   REQUIRE( values[1] == 0 );
+}
+
+Vec<double>
+postsolveParallelColumns( bool integral, bool col1_lb_inf, double lb_col1,
+                          bool col1_ub_inf, double ub_col1, double lb_col2,
+                          double ub_col2, double scale, double merged_value )
+{
+   ProblemBuilder<double> pb;
+   pb.reserve( 0, 0, 2 );
+   pb.setNumRows( 0 );
+   pb.setNumCols( 2 );
+   pb.setColLbAll( { lb_col1, lb_col2 } );
+   pb.setColUbAll( { ub_col1, ub_col2 } );
+   pb.setColLbInf( 0, col1_lb_inf );
+   pb.setColUbInf( 0, col1_ub_inf );
+   pb.setObjAll( { 0.0, 0.0 } );
+   pb.setColIntegralAll( { integral, integral } );
+   pb.setColNameAll( Vec<std::string>{ "x1", "x2" } );
+   Problem<double> problem = pb.build();
+
+   Num<double> num{};
+   Message msg{};
+   PostsolveStorage<double> storage{ problem, num, PresolveOptions{} };
+   storage.storeParallelCols( 0, integral, col1_lb_inf, lb_col1, col1_ub_inf,
+                              ub_col1, 1, integral, false, lb_col2, false,
+                              ub_col2, scale );
+
+   // the merged column takes over the index of the second column
+   Solution<double> reduced_solution{ Vec<double>{ 0, merged_value } };
+   Solution<double> original_solution{};
+   Postsolve<double> postsolve{ msg, num };
+   REQUIRE( postsolve.undo( reduced_solution, original_solution, storage ) ==
+            PostsolveStatus::kOk );
    return original_solution.primal;
 }
 
