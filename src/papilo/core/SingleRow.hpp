@@ -96,13 +96,18 @@ struct RowActivity
    {
       RowStatus status = RowStatus::kRedundant;
 
+      // if the activity is constant (e.g. all columns are fixed), the
+      // row becomes empty once the fixed columns are removed; consider them
+      // redundant as long as the sides are satisfied within feastol
+      const bool trivial = ninfmin == 0 && ninfmax == 0 && num.isGE( min, max );
+
       if( !rflags.test( RowFlag::kLhsInf ) )
       {
          if( ninfmax == 0 && num.isFeasLT( max, lhs ) &&
              num.isSafeLT( max, lhs ) )
             return RowStatus::kInfeasible;
 
-         if( ninfmin == 0 && num.isGE( min, lhs ) )
+         if( trivial ? num.isFeasGE( min, lhs ) : ninfmin == 0 && num.isGE( min, lhs ) )
             status = RowStatus::kRedundantLhs;
          else
             status = RowStatus::kUnknown;
@@ -114,7 +119,7 @@ struct RowActivity
              num.isSafeGT( min, rhs ) )
             return RowStatus::kInfeasible;
 
-         if( ninfmax == 0 && num.isLE( max, rhs ) )
+         if( trivial ? num.isFeasLE( max, rhs ) : ninfmax == 0 && num.isLE( max, rhs ) )
          {
             if( status == RowStatus::kUnknown )
                status = RowStatus::kRedundantRhs;
