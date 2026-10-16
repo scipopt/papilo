@@ -1044,7 +1044,7 @@ ProblemUpdate<REAL>::checkChangedActivities()
       if( rflags[r].test( RowFlag::kRedundant ) )
          continue;
 
-      RowStatus st = problem.getRowActivities()[r].checkStatus(
+      const RowStatus st = problem.getRowActivities()[r].checkStatus(
           num, rflags[r], lhs[r], rhs[r] );
 
       switch( st )
