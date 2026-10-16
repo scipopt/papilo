@@ -23,11 +23,11 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 #include "papilo/presolvers/ParallelColDetection.hpp"
-#include "papilo/external/catch/catch_amalgamated.hpp"
 #include "papilo/core/PresolveMethod.hpp"
 #include "papilo/core/Problem.hpp"
 #include "papilo/core/ProblemBuilder.hpp"
 #include "papilo/core/postsolve/Postsolve.hpp"
+#include "papilo/external/catch/catch_amalgamated.hpp"
 
 using namespace papilo;
 
