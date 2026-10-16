@@ -78,6 +78,7 @@ set(unit_tests
         "happy-path-substitute-matrix-coefficient-into-objective"
         "happy-path-aggregate-free-column"
         "presolve-activity-is-updated-correctly-huge-values"
+        "dual-fix-is-rejected-after-bound-change-in-same-round"
 
         #ProblemUpdate
         "trivial-presolve-empty-row"
@@ -166,6 +167,9 @@ set(unit_tests
         "parallel_col_detection_obj_not_parallel"
         "parallel_col_detection_multiple_parallel_columns"
         "parallel_col_detection_objective_zero"
+        "parallel_col_postsolve_cont_int_recompute_after_rounding"
+        "parallel_col_postsolve_int_int_not_on_bounds"
+        "parallel_col_postsolve_cont_free_col1_col2_on_bounds"
 
         #Probing
         "happy-path-probing"
@@ -202,6 +206,7 @@ set(unit_tests
         "simple-substitution-simple-substitution-for-2-int"
         "simple-substitution-2-negative-integer"
         "simple-substitution-feasible-gcd"
+        "simple-substitution-gcd-uses-bounds-of-row-columns"
         "simple-substitution-non-coprime"
         "simple-substitution-violated-gcd"
 

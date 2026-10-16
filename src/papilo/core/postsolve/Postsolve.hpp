@@ -1217,7 +1217,7 @@ Postsolve<REAL>::apply_parallel_col_to_original_solution(
             col2val = floor( col2val );
 
          // recompute value for column 1
-         col1val = solval - col1val * col2scale;
+         col1val = ( solval - col2val ) / col2scale;
       }
    }
    // bounds and integrality should hold now within feasibility
@@ -1233,16 +1233,17 @@ Postsolve<REAL>::apply_parallel_col_to_original_solution(
    originalSolution.primal[col1] = col1val;
    originalSolution.primal[col2] = col2val;
 
-   bool col1onBounds =
-       ( !( col1boundFlags & IS_UBINF ) && num.isEq( col1val, col1ub ) ) ||
-       ( !( col1boundFlags & IS_LBINF ) && num.isEq( col1val, col1lb ) );
-   bool col2onBounds =
-       ( !( col1boundFlags & IS_UBINF ) && num.isEq( col2val, col2ub ) ) ||
-       ( !( col1boundFlags & IS_LBINF ) && num.isEq( col2val, col2lb ) );
-   assert( col1onBounds || col2onBounds );
-
    if( originalSolution.type == SolutionType::kPrimalDual )
    {
+      // being on a bound is required to reconstruct a basis
+      bool col1onBounds =
+            ( !( col1boundFlags & IS_UBINF ) && num.isEq( col1val, col1ub ) ) ||
+            ( !( col1boundFlags & IS_LBINF ) && num.isEq( col1val, col1lb ) );
+      bool col2onBounds =
+            ( !( col2boundFlags & IS_UBINF ) && num.isEq( col2val, col2ub ) ) ||
+            ( !( col2boundFlags & IS_LBINF ) && num.isEq( col2val, col2lb ) );
+      assert( col1onBounds || col2onBounds );
+
       stored.set_bounds_of_variable(
           col1, ( col1boundFlags & IS_LBINF ) == IS_LBINF,
           ( col1boundFlags & IS_UBINF ) == IS_UBINF, col1lb, col1ub );

@@ -66,8 +66,9 @@ class SimpleSubstitution : public PresolveMethod<REAL>
    bool
    isConstraintsFeasibleWithGivenBounds(
        const Num<REAL>& num, const Vec<REAL>& lower_bounds,
-       const Vec<REAL>& upper_bounds, const REAL* vals, REAL rhs, int subst,
-       int stay, const boost::integer::euclidean_result_t<int64_t>& res ) const;
+       const Vec<REAL>& upper_bounds, const REAL* vals, const int* inds,
+       REAL rhs, int subst, int stay,
+       const boost::integer::euclidean_result_t<int64_t>& res ) const;
 
    PresolveStatus
    perform_simple_substitution_step(
@@ -263,7 +264,8 @@ SimpleSubstitution<REAL>::perform_simple_substitution_step(
             normalized_vals[1] /= res.gcd;
             res.gcd = 1;
             if( !isConstraintsFeasibleWithGivenBounds(
-                    num, lower_bounds, upper_bounds, normalized_vals, normalized_rhs, subst, stay, res ) )
+                    num, lower_bounds, upper_bounds, normalized_vals, inds,
+                    normalized_rhs, subst, stay, res ) )
                return PresolveStatus::kInfeasible;
             else
                return PresolveStatus::kUnchanged;
@@ -356,8 +358,9 @@ template <typename REAL>
 bool
 SimpleSubstitution<REAL>::isConstraintsFeasibleWithGivenBounds(
     const Num<REAL>& num, const Vec<REAL>& lower_bounds,
-    const Vec<REAL>& upper_bounds, const REAL* vals, REAL rhs, int subst,
-    int stay, const boost::integer::euclidean_result_t<int64_t>& res ) const
+    const Vec<REAL>& upper_bounds, const REAL* vals, const int* inds,
+    REAL rhs, int subst, int stay,
+    const boost::integer::euclidean_result_t<int64_t>& res ) const
 {
    assert( num.round( vals[0] ) == vals[0] );
    assert( num.round( vals[1] ) == vals[1] );
@@ -368,12 +371,13 @@ SimpleSubstitution<REAL>::isConstraintsFeasibleWithGivenBounds(
    assert( num.round( s ) == s );
    assert( num.round( t ) == t );
 
-   REAL ub_sol_y = ( t - lower_bounds[subst] ) / vals[stay];
-   REAL lb_sol_y = ( t - upper_bounds[subst] ) / vals[stay];
+   // subst and stay are positions in the row; the bounds are indexed by column
+   REAL ub_sol_y = ( t - lower_bounds[inds[subst]] ) / vals[stay];
+   REAL lb_sol_y = ( t - upper_bounds[inds[subst]] ) / vals[stay];
    if( vals[stay] < 0 )
       std::swap( ub_sol_y, lb_sol_y );
-   REAL ub_sol_x = ( upper_bounds[stay] - s ) / vals[subst];
-   REAL lb_sol_x = ( lower_bounds[stay] - s ) / vals[subst];
+   REAL ub_sol_x = ( upper_bounds[inds[stay]] - s ) / vals[subst];
+   REAL lb_sol_x = ( lower_bounds[inds[stay]] - s ) / vals[subst];
    if( vals[subst] < 0 )
       std::swap( ub_sol_x, lb_sol_x );
 
