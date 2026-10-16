@@ -9,6 +9,7 @@ Fixed bugs
 - DualFix: lock column bounds and rows when fixing a column to avoid fixing to a bound that was changed by another presolver in the same round (#99)
 - SimpleSubstitution: use the bounds of the row's columns instead of columns 0 and 1 in the gcd feasibility check (#100)
 - ProblemUpdate: decide redundancy for empty rows w.r.t. feasibility tolerance (#94)
+- ParallelColDetection: recompute continuous column from rounded integer column in postsolve
 
 
 @section RN302 PaPILO 3.0.2
