@@ -449,8 +449,8 @@ postsolveParallelContIntColumns( double lb_cont_col, double ub_cont_col,
    Solution<double> reduced_solution{ Vec<double>{ 0, merged_value } };
    Solution<double> original_solution{};
    Postsolve<double> postsolve{ msg, num };
-   REQUIRE( postsolve.undo( reduced_solution, original_solution, storage ) ==
-            PostsolveStatus::kOk );
+   REQUIRE( (postsolve.undo( reduced_solution, original_solution, storage ) ==
+            PostsolveStatus::kOk) );
    return original_solution.primal;
 }
 
