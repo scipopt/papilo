@@ -36,6 +36,9 @@ using namespace papilo;
 Problem<double>
 setupProblemForFreeVariableSubstitution();
 
+Problem<double>
+setupProblemWithIntegerEquationOddRhs();
+
 
 TEST_CASE( "happy-path-test-free-variable-detection", "[presolve]" )
 {
@@ -127,5 +130,81 @@ setupProblemForFreeVariableSubstitution()
    pb.setProblemName( "matrix with free variables (3,4)" );
    Problem<double> problem = pb.build();
    problem.getConstraintMatrix().modifyLeftHandSide( 2, num, lhs[2] );
+   return problem;
+}
+
+TEST_CASE( "free-variable-substitution-detects-infeasible-integer-equation",
+           "[presolve]" )
+{
+   Problem<double> problem = setupProblemWithIntegerEquationOddRhs();
+
+   double time = 0.0;
+   int cause = -1;
+   Timer t{time};
+   Num<double> num{};
+   Message msg{};
+   Statistics statistics{};
+   PresolveOptions presolveOptions{};
+   PostsolveStorage<double> postsolve =
+       PostsolveStorage<double>( problem, num, presolveOptions );
+   problem.recomputeAllActivities();
+
+   ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
+                                                presolveOptions, num, msg );
+
+   Substitution<double> presolvingMethod{};
+   Reductions<double> reductions{};
+
+   presolvingMethod.initialize( problem, presolveOptions );
+
+   PresolveStatus presolveStatus =
+       presolvingMethod.execute( problem, problemUpdate, num, reductions, t, cause);
+
+   // substituting y would yield y = 71.5 - 3x - z - 3w, i.e., y could never
+   // be integral
+   REQUIRE( presolveStatus == PresolveStatus::kInfeasible );
+   REQUIRE( reductions.size() == 0 );
+}
+
+Problem<double>
+setupProblemWithIntegerEquationOddRhs()
+{
+   // min 10x + 8y + 2z + w
+   // 6x + 2y + 2z + 6w = 143
+   // 0 <= y + z <= 17
+   // 0 <= x <= 12; -11 <= y <= 17; 0 <= z <= 11; 0 <= w <= 18
+   // x, y, z, w integer
+   Vec<double> coefficients{ 10.0, 8.0, 2.0, 1.0 };
+   Vec<double> upperBounds{ 12.0, 17.0, 11.0, 18.0 };
+   Vec<double> lowerBounds{ 0.0, -11.0, 0.0, 0.0 };
+   Vec<uint8_t> isIntegral{ 1, 1, 1, 1 };
+   Vec<double> rhs{ 143.0, 17.0 };
+   Vec<double> lhs{ 143.0, 0.0 };
+   Vec<std::string> rowNames{ "r0", "r1" };
+   Vec<std::string> columnNames{ "x", "y", "z", "w" };
+   Vec<std::tuple<int, int, double>> entries{
+       std::tuple<int, int, double>{ 0, 0, 6.0 },
+       std::tuple<int, int, double>{ 0, 1, 2.0 },
+       std::tuple<int, int, double>{ 0, 2, 2.0 },
+       std::tuple<int, int, double>{ 0, 3, 6.0 },
+       std::tuple<int, int, double>{ 1, 1, 1.0 },
+       std::tuple<int, int, double>{ 1, 2, 1.0 },
+   };
+
+   ProblemBuilder<double> pb;
+   pb.reserve( entries.size(), rowNames.size(), columnNames.size() );
+   pb.setNumRows( rowNames.size() );
+   pb.setNumCols( columnNames.size() );
+   pb.setColUbAll( upperBounds );
+   pb.setColLbAll( lowerBounds );
+   pb.setObjAll( coefficients );
+   pb.setObjOffset( 0.0 );
+   pb.setColIntegralAll( isIntegral );
+   pb.setRowRhsAll( rhs );
+   pb.setRowLhsAll( lhs );
+   pb.addEntryAll( entries );
+   pb.setColNameAll( columnNames );
+   pb.setProblemName( "integer equation with odd rhs (scip_exact_freeint)" );
+   Problem<double> problem = pb.build();
    return problem;
 }

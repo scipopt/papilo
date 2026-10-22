@@ -123,6 +123,7 @@ set(unit_tests
 
         #FreeVarSubstitution
         "happy-path-test-free-variable-detection"
+        "free-variable-substitution-detects-infeasible-integer-equation"
 
         #Implied Integer
         "happy-path-implied-integer-detection"
