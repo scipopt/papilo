@@ -76,8 +76,7 @@ TEST_CASE( "happy-path-test-free-variable-detection", "[presolve]" )
    REQUIRE( reductions.getReduction( 1 ).newval == 0 );
 
    REQUIRE( reductions.getReduction( 2 ).col == 3 );
-   REQUIRE( reductions.getReduction( 2 ).row ==
-            ColReduction::SUBSTITUTE );
+   REQUIRE( reductions.getReduction( 2 ).row == ColReduction::SUBSTITUTE );
    REQUIRE( reductions.getReduction( 2 ).newval == 2 );
 }
 

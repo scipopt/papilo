@@ -534,8 +534,8 @@ postsolveParallelColumns( bool integral, bool col1_lb_inf, double lb_col1,
    Solution<double> reduced_solution{ Vec<double>{ 0, merged_value } };
    Solution<double> original_solution{};
    Postsolve<double> postsolve{ msg, num };
-   REQUIRE( postsolve.undo( reduced_solution, original_solution, storage ) ==
-            PostsolveStatus::kOk );
+   REQUIRE( (postsolve.undo( reduced_solution, original_solution, storage ) ==
+            PostsolveStatus::kOk) );
    return original_solution.primal;
 }
 
