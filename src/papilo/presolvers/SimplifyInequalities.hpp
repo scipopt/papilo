@@ -446,6 +446,11 @@ SimplifyInequalities<REAL>::perform_simplify_ineq_task(
 
       TransactionGuard<REAL> guard{ reductions };
       reductions.lockRow( row );
+      // the reduction relies on the bounds of all columns of the row, which
+      // may be changed by other transactions without modifying the row, e.g.,
+      // by merging parallel columns
+      for( int i = 0; i < rowLength; ++i )
+         reductions.lockColBounds( colinds[i] );
       reductions.submit_gcd( row, greatestCommonDivisor );
 
       for( int col : coefficientsThatCanBeDeleted )

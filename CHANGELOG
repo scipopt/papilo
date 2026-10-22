@@ -6,6 +6,7 @@ Fixed bugs
 ----------
 
 - SimplifyInequalities: exclude int64_t boundaries from gcd calculation to avoid type exception
+- SimplifyInequalities: lock the bounds of all columns of the row to avoid applying a simplification that relies on bounds widened by merging parallel columns in the same round
 - DualFix: lock column bounds and rows when fixing a column to avoid fixing to a bound that was changed by another presolver in the same round (#99)
 - SimpleSubstitution: use the bounds of the row's columns instead of columns 0 and 1 in the gcd feasibility check (#100)
 - ProblemUpdate: decide redundancy for empty rows w.r.t. feasibility tolerance (#94)
