@@ -67,31 +67,40 @@ TEST_CASE( "happy-path-simplify-inequalities", "[presolve]" )
 
    REQUIRE( presolveStatus == PresolveStatus::kReduced );
 
-   REQUIRE( reductions.getReductions().size() == 6 );
+   REQUIRE( reductions.getReductions().size() == 11 );
 
    REQUIRE( reductions.getReduction( 0 ).newval == 0 );
    REQUIRE( reductions.getReduction( 0 ).row == 0 );
    REQUIRE( reductions.getReduction( 0 ).col == RowReduction::LOCKED );
 
-   REQUIRE( reductions.getReduction( 1 ).newval == 15 );
-   REQUIRE( reductions.getReduction( 1 ).row == 0 );
-   REQUIRE( reductions.getReduction( 1 ).col == RowReduction::CERTIFICATE_RHS_GCD );
+   // the bounds of all columns of the row are locked
+   for( int i = 0; i < 5; ++i )
+   {
+      REQUIRE( reductions.getReduction( 1 + i ).newval == 0 );
+      REQUIRE( reductions.getReduction( 1 + i ).row ==
+               ColReduction::BOUNDS_LOCKED );
+      REQUIRE( reductions.getReduction( 1 + i ).col == i );
+   }
 
-   REQUIRE( reductions.getReduction( 2 ).newval == 0 );
-   REQUIRE( reductions.getReduction( 2 ).row == 0 );
-   REQUIRE( reductions.getReduction( 2 ).col == 2 );
+   REQUIRE( reductions.getReduction( 6 ).newval == 15 );
+   REQUIRE( reductions.getReduction( 6 ).row == 0 );
+   REQUIRE( reductions.getReduction( 6 ).col == RowReduction::CERTIFICATE_RHS_GCD );
 
-   REQUIRE( reductions.getReduction( 3 ).newval == 0 );
-   REQUIRE( reductions.getReduction( 3 ).row == 0 );
-   REQUIRE( reductions.getReduction( 3 ).col == 3 );
+   REQUIRE( reductions.getReduction( 7 ).newval == 0 );
+   REQUIRE( reductions.getReduction( 7 ).row == 0 );
+   REQUIRE( reductions.getReduction( 7 ).col == 2 );
 
-   REQUIRE( reductions.getReduction( 4 ).newval == 0 );
-   REQUIRE( reductions.getReduction( 4 ).row == 0 );
-   REQUIRE( reductions.getReduction( 4 ).col == 4 );
+   REQUIRE( reductions.getReduction( 8 ).newval == 0 );
+   REQUIRE( reductions.getReduction( 8 ).row == 0 );
+   REQUIRE( reductions.getReduction( 8 ).col == 3 );
 
-   REQUIRE( reductions.getReduction( 5 ).newval == 15 );
-   REQUIRE( reductions.getReduction( 5 ).row == 0 );
-   REQUIRE( reductions.getReduction( 5 ).col == RowReduction::RHS );
+   REQUIRE( reductions.getReduction( 9 ).newval == 0 );
+   REQUIRE( reductions.getReduction( 9 ).row == 0 );
+   REQUIRE( reductions.getReduction( 9 ).col == 4 );
+
+   REQUIRE( reductions.getReduction( 10 ).newval == 15 );
+   REQUIRE( reductions.getReduction( 10 ).row == 0 );
+   REQUIRE( reductions.getReduction( 10 ).col == RowReduction::RHS );
 
 }
 
@@ -121,8 +130,10 @@ TEST_CASE( "simplify_inequ_doesnt_lock_more_rows", "[presolve]" )
        presolvingMethod.execute( problem, problemUpdate, num, reductions, t, cause );
 
    REQUIRE( presolveStatus == PresolveStatus::kReduced );
-   REQUIRE( reductions.getReduction( 2 ).newval == -275 );
-   REQUIRE( reductions.getReduction( 2 ).row == 1 );
+   // row lock, 4 column bound locks, gcd certificate, rhs change
+   REQUIRE( reductions.getReduction( 6 ).newval == -275 );
+   REQUIRE( reductions.getReduction( 6 ).row == 1 );
+   REQUIRE( reductions.getReduction( 6 ).col == RowReduction::RHS );
 }
 
 TEST_CASE( "simplify_inequ_doesnt_apply_lb_and_ub_on_one_row", "[presolve]" )
