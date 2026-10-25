@@ -49,9 +49,20 @@ postsolveParallelContIntColumns( double lb_cont_col, double ub_cont_col,
                                  double scale, double merged_value );
 
 Vec<double>
-postsolveParallelColumns( bool integral, bool col1_lb_inf, double lb_col1,
-                          bool col1_ub_inf, double ub_col1, double lb_col2,
-                          double ub_col2, double scale, double merged_value );
+postsolveParallelColumns( bool col1_integral, bool col2_integral,
+                          bool col1_lb_inf, double lb_col1, bool col1_ub_inf,
+                          double ub_col1, double lb_col2, double ub_col2,
+                          double scale, double merged_value,
+                          bool col2_lb_inf = false, bool col2_ub_inf = false );
+
+Problem<double>
+setupProblemWithContAndTwoIntParallelColumns( double lb, double rhs,
+                                              bool equality );
+
+Vec<double>
+presolveAndPostsolveContAndTwoIntParallelColumns( Problem<double>& problem,
+                                                  double lb,
+                                                  double merged_value );
 
 TEST_CASE( "parallel_col_detection_2_integer_columns", "[presolve]" )
 {
@@ -413,6 +424,34 @@ TEST_CASE( "parallel_col_detection_multiple_parallel_columns", "[presolve]" )
    REQUIRE( reductions.getReduction( 12 ).newval == remaining_integer_col );
 }
 
+TEST_CASE( "parallel_col_detection_cont_and_two_int_columns", "[presolve]" )
+{
+   // x_0 continuous, x_1 and x_2 integer, all in [0, 10] and parallel: x_0 is
+   // merged into x_1 first, which turns x_1 continuous, before x_2 is merged
+   // into x_1. The resulting column must be continuous (issue #93)
+   Problem<double> problem =
+       setupProblemWithContAndTwoIntParallelColumns( 0, 20, false );
+   Vec<double> values =
+       presolveAndPostsolveContAndTwoIntParallelColumns( problem, 0, 0 );
+   REQUIRE( values[0] == 0 );
+   REQUIRE( values[1] == 0 );
+   REQUIRE( values[2] == 0 );
+}
+
+TEST_CASE( "parallel_col_detection_cont_and_two_int_columns_fractional",
+           "[presolve]" )
+{
+   // x_0 + x_1 + x_2 = -0.2 is feasible, e.g., (0.8, 0, -1), hence the merged
+   // column must not be integral (issue #93)
+   Problem<double> problem =
+       setupProblemWithContAndTwoIntParallelColumns( -10, -0.2, true );
+   Vec<double> values =
+       presolveAndPostsolveContAndTwoIntParallelColumns( problem, -10, -0.2 );
+   REQUIRE( values[1] == std::round( values[1] ) );
+   REQUIRE( values[2] == std::round( values[2] ) );
+   REQUIRE( values[0] + values[1] + values[2] == Catch::Approx( -0.2 ) );
+}
+
 TEST_CASE( "parallel_col_postsolve_cont_int_recompute_after_rounding",
            "[presolve]" )
 {
@@ -457,8 +496,8 @@ postsolveParallelContIntColumns( double lb_cont_col, double ub_cont_col,
    Solution<double> reduced_solution{ Vec<double>{ 0, merged_value } };
    Solution<double> original_solution{};
    Postsolve<double> postsolve{ msg, num };
-   REQUIRE( (postsolve.undo( reduced_solution, original_solution, storage ) ==
-            PostsolveStatus::kOk) );
+   auto status = postsolve.undo( reduced_solution, original_solution, storage );
+   REQUIRE( ( status == PostsolveStatus::kOk) );
    return original_solution.primal;
 }
 
@@ -481,8 +520,8 @@ TEST_CASE( "parallel_col_postsolve_int_int_not_on_bounds", "[presolve]" )
    for( const Instance& i : instances )
    {
       Vec<double> values =
-          postsolveParallelColumns( true, false, i.lb1, false, i.ub1, i.lb2,
-                                    i.ub2, i.scale, i.merged_value );
+          postsolveParallelColumns( true, true, false, i.lb1, false, i.ub1,
+                                    i.lb2, i.ub2, i.scale, i.merged_value );
       REQUIRE( values[0] >= i.lb1 );
       REQUIRE( values[0] <= i.ub1 );
       REQUIRE( values[1] >= i.lb2 );
@@ -499,16 +538,71 @@ TEST_CASE( "parallel_col_postsolve_cont_free_col1_col2_on_bounds",
 {
    // x_2 + x_1 = 5 with x_1 free and x_2 in [0, 10]: x_2 is set to its lower
    // bound, which has to be detected using the bound flags of x_2 (issue #95)
-   Vec<double> values = postsolveParallelColumns( false, true, 0, true, 0, 0,
-                                                  10, 1, 5 );
+   Vec<double> values = postsolveParallelColumns( false, false, true, 0, true,
+                                                  0, 0, 10, 1, 5 );
    REQUIRE( values[0] == Catch::Approx( 5 ) );
    REQUIRE( values[1] == 0 );
 }
 
+TEST_CASE( "parallel_col_postsolve_int_into_cont", "[presolve]" )
+{
+   // x_2 + scale * x_1 = merged_value with x_1 integer and x_2 continuous:
+   // x_1 has to be rounded towards the violated bound of x_2 since
+   // merged_value is fractional (issue #93)
+   struct Instance
+   {
+      double lb1, ub1, lb2, ub2, scale, merged_value, x1, x2;
+   };
+   const Vec<Instance> instances{
+       // x_2 = 25.3 > 20: x_1 = ceil(5.3) = 6
+       { 0, 10, 0, 20, 1, 25.3, 6, 19.3 },
+       // x_2 = -5.3 < 0: x_1 = floor(-5.3) = -6
+       { -10, 10, 0, 20, 1, -5.3, -6, 0.7 },
+       // x_2 = -15.3 < 0: x_1 = ceil(7.65) = 8
+       { 0, 10, 0, 20, -2, -15.3, 8, 0.7 } };
+
+   for( const Instance& i : instances )
+   {
+      Vec<double> values =
+          postsolveParallelColumns( true, false, false, i.lb1, false, i.ub1,
+                                    i.lb2, i.ub2, i.scale, i.merged_value );
+      REQUIRE( values[0] == i.x1 );
+      REQUIRE( values[1] == Catch::Approx( i.x2 ) );
+   }
+}
+
+TEST_CASE( "parallel_col_postsolve_int_into_cont_infinite_bounds",
+           "[presolve]" )
+{
+   // x_2 + x_1 = merged_value with x_1 in [0, 10] integer and x_2 continuous
+   // with infinite bounds: this happens if a free continuous column was merged
+   // into x_2 earlier in the same round (issue #93)
+
+   // x_2 in (-inf, 20]: x_2 = 25.3 > 20, hence x_1 = ceil(5.3) = 6
+   Vec<double> values = postsolveParallelColumns(
+       true, false, false, 0, false, 10, 0, 20, 1, 25.3, true, false );
+   REQUIRE( values[0] == 6 );
+   REQUIRE( values[1] == Catch::Approx( 19.3 ) );
+
+   // x_2 in (-inf, 20]: the lower bound must be ignored
+   values = postsolveParallelColumns( true, false, false, 0, false, 10, 0, 20,
+                                      1, -5.3, true, false );
+   REQUIRE( values[0] == 0 );
+   REQUIRE( values[1] == Catch::Approx( -5.3 ) );
+
+   // x_2 free: x_1 stays at 0
+   values = postsolveParallelColumns( true, false, false, 0, false, 10, 0, 0, 1,
+                                      -5.3, true, true );
+   REQUIRE( values[0] == 0 );
+   REQUIRE( values[1] == Catch::Approx( -5.3 ) );
+}
+
 Vec<double>
-postsolveParallelColumns( bool integral, bool col1_lb_inf, double lb_col1,
-                          bool col1_ub_inf, double ub_col1, double lb_col2,
-                          double ub_col2, double scale, double merged_value )
+postsolveParallelColumns(bool col1_integral, bool col2_integral,
+                          bool col1_lb_inf, double lb_col1, bool col1_ub_inf,
+                          double ub_col1, double lb_col2, double ub_col2,
+                          double scale, double merged_value, bool col2_lb_inf,
+                          bool col2_ub_inf )
 {
    ProblemBuilder<double> pb;
    pb.reserve( 0, 0, 2 );
@@ -518,24 +612,28 @@ postsolveParallelColumns( bool integral, bool col1_lb_inf, double lb_col1,
    pb.setColUbAll( { ub_col1, ub_col2 } );
    pb.setColLbInf( 0, col1_lb_inf );
    pb.setColUbInf( 0, col1_ub_inf );
+   pb.setColLbInf( 1, col2_lb_inf );
+   pb.setColUbInf( 1, col2_ub_inf );
    pb.setObjAll( { 0.0, 0.0 } );
-   pb.setColIntegralAll( { integral, integral } );
+   pb.setColIntegralAll( { col1_integral, col2_integral } );
    pb.setColNameAll( Vec<std::string>{ "x1", "x2" } );
    Problem<double> problem = pb.build();
 
    Num<double> num{};
    Message msg{};
    PostsolveStorage<double> storage{ problem, num, PresolveOptions{} };
-   storage.storeParallelCols( 0, integral, col1_lb_inf, lb_col1, col1_ub_inf,
-                              ub_col1, 1, integral, false, lb_col2, false,
-                              ub_col2, scale );
+   storage.storeParallelCols( 0, col1_integral, col1_lb_inf, lb_col1,
+                              col1_ub_inf, ub_col1, 1, col2_integral,
+                              col2_lb_inf, lb_col2, col2_ub_inf, ub_col2,
+                              scale );
 
    // the merged column takes over the index of the second column
    Solution<double> reduced_solution{ Vec<double>{ 0, merged_value } };
    Solution<double> original_solution{};
    Postsolve<double> postsolve{ msg, num };
-   REQUIRE( (postsolve.undo( reduced_solution, original_solution, storage ) ==
-            PostsolveStatus::kOk) );
+   auto status = postsolve.undo( reduced_solution, original_solution, storage );
+   REQUIRE( (status == PostsolveStatus::kOk) );
+
    return original_solution.primal;
 }
 
@@ -633,4 +731,77 @@ setupProblemWithMultipleParallelColumns()
    pb.setProblemName( "matrix with multiple parallel columns" );
    Problem<double> problem = pb.build();
    return problem;
+}
+
+Problem<double>
+setupProblemWithContAndTwoIntParallelColumns( double lb, double rhs,
+                                              bool equality )
+{
+   ProblemBuilder<double> pb;
+   pb.reserve( 6, 2, 3 );
+   pb.setNumRows( 2 );
+   pb.setNumCols( 3 );
+   pb.setColLbAll( { lb, lb, lb } );
+   pb.setColUbAll( { 10, 10, 10 } );
+   pb.setColIntegralAll( { 0, 1, 1 } );
+   pb.setObjAll( { 1, 1, 1 } );
+   pb.setRowRhsAll( { rhs, 2 * rhs } );
+   if( equality )
+      pb.setRowLhsAll( { rhs, 2 * rhs } );
+   pb.addEntryAll( { { 0, 0, 1 }, { 0, 1, 1 }, { 0, 2, 1 },
+                     { 1, 0, 2 }, { 1, 1, 2 }, { 1, 2, 2 } } );
+   pb.setColNameAll( Vec<std::string>{ "c0", "i1", "i2" } );
+   pb.setProblemName( "continuous and two integer parallel columns" );
+   return pb.build();
+}
+
+Vec<double>
+presolveAndPostsolveContAndTwoIntParallelColumns( Problem<double>& problem,
+                                                  double lb,
+                                                  double merged_value )
+{
+   double time = 0.0;
+   int cause = -1;
+   Timer t{ time };
+   Num<double> num{};
+   Message msg{};
+   Statistics statistics{};
+   PresolveOptions presolveOptions{};
+   PostsolveStorage<double> postsolve{ problem, num, presolveOptions };
+   ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
+                                        presolveOptions, num, msg );
+   problemUpdate.checkChangedActivities();
+   ParallelColDetection<double> presolvingMethod{};
+   Reductions<double> reductions{};
+
+   REQUIRE( presolvingMethod.execute( problem, problemUpdate, num, reductions,
+                                      t, cause ) == PresolveStatus::kReduced );
+
+   const auto& reds = reductions.getReductions();
+   for( const auto& tx : reductions.getTransactions() )
+      problemUpdate.applyTransaction( &reds[tx.start], &reds[tx.end],
+                                      ArgumentType::kPrimal );
+
+   // all three columns are merged into one continuous column
+   int remaining_col = -1;
+   for( int col = 0; col < problem.getNCols(); ++col )
+   {
+      if( problem.getColFlags()[col].test( ColFlag::kInactive ) )
+         continue;
+      REQUIRE( remaining_col == -1 );
+      remaining_col = col;
+   }
+   REQUIRE( remaining_col != -1 );
+   REQUIRE( !problem.getColFlags()[remaining_col].test( ColFlag::kIntegral ) );
+   REQUIRE( problem.getLowerBounds()[remaining_col] == 3 * lb );
+   REQUIRE( problem.getUpperBounds()[remaining_col] == 30 );
+
+   Vec<double> reduced( problem.getNCols(), 0.0 );
+   reduced[remaining_col] = merged_value;
+   Solution<double> reduced_solution{ reduced };
+   Solution<double> original_solution{};
+   Postsolve<double> postsolve_engine{ msg, num };
+   auto status = postsolve_engine.undo( reduced_solution, original_solution, postsolve );
+   REQUIRE( ( status == PostsolveStatus::kOk) );
+   return original_solution.primal;
 }
