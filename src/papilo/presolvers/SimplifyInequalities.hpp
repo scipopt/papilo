@@ -446,14 +446,15 @@ SimplifyInequalities<REAL>::perform_simplify_ineq_task(
 
       TransactionGuard<REAL> guard{ reductions };
       reductions.lockRow( row );
-      reductions.submit_gcd( row, greatestCommonDivisor );
-
       // the reduction relies on the bounds of the deleted columns, which may
       // be widened by other transactions without modifying the row, e.g., by
       // merging parallel columns
-      for(const int col : coefficientsThatCanBeDeleted )
-      {
+      for( const int col : coefficientsThatCanBeDeleted )
          reductions.lockColBounds( colinds[col] );
+      reductions.submit_gcd( row, greatestCommonDivisor );
+
+      for( const int col : coefficientsThatCanBeDeleted )
+      {
          reductions.changeMatrixEntry( row, colinds[col], 0 );
          result = PresolveStatus::kReduced;
       }
