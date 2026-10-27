@@ -184,6 +184,8 @@ set(unit_tests
         #Singleton Stuffing
         "singleton-stuffing-make-sure-to-first-set-bounds-to-infinity"
         "singleton-stuffing-ensure-integrality"
+        "singleton-stuffing-ensure-integrality-not-divisible"
+        "singleton-stuffing-ensure-integrality-side-not-exactly-integral"
 
         #Simple Probing
         "simple-probing-trivial-example"
