@@ -52,6 +52,7 @@ class CoefficientStrengthening : public PresolveMethod<REAL>
             const Timer& timer, int& reason_of_infeasibility) override;
 
  private:
+   PAPILO_NO_EXPORT
    PresolveStatus
    perform_coefficient_tightening(
        const Num<REAL>& num, const VariableDomains<REAL>& domains,
@@ -62,11 +63,11 @@ class CoefficientStrengthening : public PresolveMethod<REAL>
        Vec<std::pair<REAL, int>>& integerCoefficients ) const;
 };
 
-#ifdef PAPILO_USE_EXTERN_TEMPLATES
-extern template class CoefficientStrengthening<double>;
-extern template class CoefficientStrengthening<Quad>;
-extern template class CoefficientStrengthening<Rational>;
-#endif
+#ifndef PAPILO_HEADER_ONLY
+extern template class PAPILO_EXPORT_TEMPLATE CoefficientStrengthening<double>;
+extern template class PAPILO_EXPORT_TEMPLATE CoefficientStrengthening<Quad>;
+extern template class PAPILO_EXPORT_TEMPLATE CoefficientStrengthening<Rational>;
+#endif /* !PAPILO_HEADER_ONLY */
 
 template <typename REAL>
 PresolveStatus
@@ -88,7 +89,7 @@ CoefficientStrengthening<REAL>::execute( const Problem<REAL>& problem,
 
    PresolveStatus result = PresolveStatus::kUnchanged;
 
-#ifndef PAPILO_TBB
+#if ! PAPILO_HAS_TBB
    assert( problemUpdate.getPresolveOptions().runs_sequential() );
 #endif
 
@@ -107,7 +108,7 @@ CoefficientStrengthening<REAL>::execute( const Problem<REAL>& problem,
             result = PresolveStatus::kReduced;
       }
    }
-#ifdef PAPILO_TBB
+#if PAPILO_HAS_TBB
    else
    {
       Vec<Reductions<REAL>> stored_reductions( changedActivities.size() );

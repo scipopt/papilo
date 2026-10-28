@@ -27,8 +27,10 @@
 namespace papilo
 {
 
+#ifndef PAPILO_HEADER_ONLY
 template class CliqueMerging<double>;
 template class CliqueMerging<Quad>;
 template class CliqueMerging<Rational>;
+#endif /* !PAPILO_HEADER_ONLY */
 
 } // namespace papilo

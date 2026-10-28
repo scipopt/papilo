@@ -35,10 +35,10 @@
 #include <fstream>
 #include <iostream>
 
-#ifdef PAPILO_USE_BOOST_IOSTREAMS_WITH_BZIP2
+#if PAPILO_HAS_BOOST_IOSTREAMS_BZIP2
 #include <boost/iostreams/filter/bzip2.hpp>
 #endif
-#ifdef PAPILO_USE_BOOST_IOSTREAMS_WITH_ZLIB
+#if PAPILO_HAS_BOOST_IOSTREAMS_ZLIB
 #include <boost/iostreams/filter/gzip.hpp>
 #endif
 
@@ -66,12 +66,12 @@ struct OpbWriter
       std::ofstream file( filename, std::ofstream::out );
       boost::iostreams::filtering_ostream out;
 
-#ifdef PAPILO_USE_BOOST_IOSTREAMS_WITH_ZLIB
+#if PAPILO_HAS_BOOST_IOSTREAMS_ZLIB
       if( boost::algorithm::ends_with( filename, ".gz" ) )
          out.push( boost::iostreams::gzip_compressor() );
 #endif
 
-#ifdef PAPILO_USE_BOOST_IOSTREAMS_WITH_BZIP2
+#if PAPILO_HAS_BOOST_IOSTREAMS_BZIP2
       if( boost::algorithm::ends_with( filename, ".bz2" ) )
          out.push( boost::iostreams::bzip2_compressor() );
 #endif

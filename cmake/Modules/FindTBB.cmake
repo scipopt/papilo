@@ -404,8 +404,10 @@ make_library_set(TBB_LIBRARY)
 
 #if we haven't found TBB no point on going any further
 if (NOT TBB_FOUND)
+    message(STATUS "Could NOT find TBB (missing: TBB_DIR)")
     return()
 endif ()
+
 
 findpkg_finish(TBB tbb)
 #=============================================================================
@@ -479,5 +481,6 @@ if(NOT TBB_VERSION)
             ".*#define TBB_COMPATIBLE_INTERFACE_VERSION ([0-9]+).*" "\\1"
             TBB_COMPATIBLE_INTERFACE_VERSION "${TBB_VERSION_CONTENTS}")
 
+    set(TBB_VERSION "${TBB_VERSION_MAJOR}.${TBB_VERSION_MINOR}.${TBB_INTERFACE_VERSION}")
 endif()
 

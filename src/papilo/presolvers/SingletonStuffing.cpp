@@ -27,8 +27,10 @@
 namespace papilo
 {
 
+#ifndef PAPILO_HEADER_ONLY
 template class SingletonStuffing<double>;
 template class SingletonStuffing<Quad>;
 template class SingletonStuffing<Rational>;
+#endif /* !PAPILO_HEADER_ONLY */
 
 } // namespace papilo

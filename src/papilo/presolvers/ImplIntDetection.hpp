@@ -54,6 +54,7 @@ class ImplIntDetection : public PresolveMethod<REAL>
        override;
 
  private:
+   PAPILO_NO_EXPORT
    PresolveStatus
    perform_implied_integer_task(
        const ProblemUpdate<REAL>& problemUpdate, const Num<REAL>& num,
@@ -64,11 +65,11 @@ class ImplIntDetection : public PresolveMethod<REAL>
        int col ) const;
 };
 
-#ifdef PAPILO_USE_EXTERN_TEMPLATES
-extern template class ImplIntDetection<double>;
-extern template class ImplIntDetection<Quad>;
-extern template class ImplIntDetection<Rational>;
-#endif
+#ifndef PAPILO_HEADER_ONLY
+extern template class PAPILO_EXPORT_TEMPLATE ImplIntDetection<double>;
+extern template class PAPILO_EXPORT_TEMPLATE ImplIntDetection<Quad>;
+extern template class PAPILO_EXPORT_TEMPLATE ImplIntDetection<Rational>;
+#endif /* !PAPILO_HEADER_ONLY */
 
 template <typename REAL>
 PresolveStatus
@@ -89,7 +90,7 @@ ImplIntDetection<REAL>::execute( const Problem<REAL>& problem,
 
    PresolveStatus result = PresolveStatus::kUnchanged;
 
-#ifndef PAPILO_TBB
+#if ! PAPILO_HAS_TBB
    assert( problemUpdate.getPresolveOptions().runs_sequential() );
 #endif
 
@@ -107,7 +108,7 @@ ImplIntDetection<REAL>::execute( const Problem<REAL>& problem,
             result = PresolveStatus::kReduced;
       }
    }
-#ifdef PAPILO_TBB
+#if PAPILO_HAS_TBB
    else
    {
       Vec<Reductions<REAL>> stored_reductions( ncols );

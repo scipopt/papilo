@@ -38,7 +38,7 @@
 #include "papilo/misc/String.hpp"
 #include "papilo/misc/Vec.hpp"
 #include "papilo/misc/fmt.hpp"
-#ifdef PAPILO_TBB
+#if PAPILO_HAS_TBB
 #include "papilo/misc/tbb.hpp"
 #endif
 
@@ -702,7 +702,7 @@ class Problem
           constraintMatrix.compress( full );
 
       // update information about columns that is stored by index
-#ifdef PAPILO_TBB
+#if PAPILO_HAS_TBB
       tbb::parallel_invoke(
           [this, &mappings, full]() {
              compress_vector( mappings.second, objective.coefficients );
@@ -754,7 +754,7 @@ class Problem
 
       // loop through rows once, compute initial acitvities, detect trivial
       // redundancy
-#ifdef PAPILO_TBB
+#if PAPILO_HAS_TBB
       tbb::parallel_for(
           tbb::blocked_range<int>( 0, getNRows() ),
           [this]( const tbb::blocked_range<int>& r ) {
@@ -769,7 +769,7 @@ class Problem
                     variableDomains.lower_bounds, variableDomains.upper_bounds,
                     variableDomains.flags );
              }
-#ifdef PAPILO_TBB
+#if PAPILO_HAS_TBB
           } );
 #endif
    }
@@ -781,7 +781,7 @@ class Problem
 
       // loop through rows once, compute initial activities, detect trivial
       // redundancy
-#ifdef PAPILO_TBB
+#if PAPILO_HAS_TBB
       tbb::parallel_for(
           tbb::blocked_range<int>( 0, getNCols() ),
           [this]( const tbb::blocked_range<int>& c ) {
@@ -801,7 +801,7 @@ class Problem
                    count_locks( vals[i], rflags[inds[i]], locks[col].down,
                                 locks[col].up );
              }
-#ifdef PAPILO_TBB
+#if PAPILO_HAS_TBB
           } );
 #endif
    }

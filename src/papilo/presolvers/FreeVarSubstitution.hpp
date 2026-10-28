@@ -84,11 +84,11 @@ class Substitution : public PresolveMethod<REAL>
                  REAL min_abs_int_value ) const;
 };
 
-#ifdef PAPILO_USE_EXTERN_TEMPLATES
-extern template class Substitution<double>;
-extern template class Substitution<Quad>;
-extern template class Substitution<Rational>;
-#endif
+#ifndef PAPILO_HEADER_ONLY
+extern template class PAPILO_EXPORT_TEMPLATE Substitution<double>;
+extern template class PAPILO_EXPORT_TEMPLATE Substitution<Quad>;
+extern template class PAPILO_EXPORT_TEMPLATE Substitution<Rational>;
+#endif /* !PAPILO_HEADER_ONLY */
 
 template <typename REAL>
 PresolveStatus

@@ -59,6 +59,7 @@ class SingletonStuffing : public PresolveMethod<REAL>
        * in the variable bound.
        * This scaling affects dual-postsolve in which it is currently not considered and therefore then disabled.
     */
+   PAPILO_NO_EXPORT
    REAL
    scale_and_shift( bool is_primal, REAL side, REAL var_bound, REAL val )
    {
@@ -68,11 +69,11 @@ class SingletonStuffing : public PresolveMethod<REAL>
    };
 };
 
-#ifdef PAPILO_USE_EXTERN_TEMPLATES
-extern template class SingletonStuffing<double>;
-extern template class SingletonStuffing<Quad>;
-extern template class SingletonStuffing<Rational>;
-#endif
+#ifndef PAPILO_HEADER_ONLY
+extern template class PAPILO_EXPORT_TEMPLATE SingletonStuffing<double>;
+extern template class PAPILO_EXPORT_TEMPLATE SingletonStuffing<Quad>;
+extern template class PAPILO_EXPORT_TEMPLATE SingletonStuffing<Rational>;
+#endif /* !PAPILO_HEADER_ONLY */
 
 template <typename REAL>
 PresolveStatus

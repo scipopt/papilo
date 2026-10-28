@@ -14,6 +14,7 @@
 #include "flat_hash_map.hpp"
 #include <vector>
 #include <array>
+#include <limits>
 
 namespace ska
 {

@@ -44,17 +44,17 @@
 #define PAPILO_DEFINED_NOGDI
 #endif
 
-#if defined(PAPILO_HAVE_SYSTEM_FMT)
+#if PAPILO_HAS_SYSTEM_FMT
 #include <fmt/format.h>
 #include <fmt/ostream.h>
-#else
+#else /* !PAPILO_HAS_SYSTEM_FMT */
 // bundled fmt header-only
 #ifndef FMT_HEADER_ONLY
 #define FMT_HEADER_ONLY
 #endif
 #include "papilo/external/fmt/format.h"
 #include "papilo/external/fmt/ostream.h"
-#endif
+#endif /* PAPILO_HAS_SYSTEM_FMT */
 
 #ifdef PAPILO_DEFINED_NOGDI
 #undef NOGDI

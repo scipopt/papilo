@@ -3928,11 +3928,11 @@ FMT_CONSTEXPR detail::udl_formatter<Char, CHARS...> operator""_format() {
     std::string message = "The answer is {}"_format(42);
   \endrst
  */
-FMT_CONSTEXPR detail::udl_formatter<char> operator"" _format(const char* s,
+FMT_CONSTEXPR detail::udl_formatter<char> operator""_format(const char* s,
                                                              size_t n) {
   return {{s, n}};
 }
-FMT_CONSTEXPR detail::udl_formatter<wchar_t> operator"" _format(
+FMT_CONSTEXPR detail::udl_formatter<wchar_t> operator""_format(
     const wchar_t* s, size_t n) {
   return {{s, n}};
 }

@@ -27,8 +27,10 @@
 namespace papilo
 {
 
+#ifndef PAPILO_HEADER_ONLY
 template struct VariableDomains<double>;
 template struct VariableDomains<Quad>;
 template struct VariableDomains<Rational>;
+#endif /* !PAPILO_HEADER_ONLY */
 
 } // namespace papilo

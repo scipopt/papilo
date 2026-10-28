@@ -46,6 +46,7 @@ class PrimalDualSolValidation
 
  private:
 
+   PAPILO_NO_EXPORT
    bool
    checkLength( const Solution<REAL>& solution, const Problem<REAL>& problem )
    {
@@ -58,6 +59,7 @@ class PrimalDualSolValidation
       return primal_check;
    }
 
+   PAPILO_NO_EXPORT
    bool
    checkPrimalDomains( const Vec<REAL>& primalSolution,
                       const Problem<REAL>& problem )
@@ -95,6 +97,7 @@ class PrimalDualSolValidation
       return failure;
    }
 
+   PAPILO_NO_EXPORT
    bool
    checkPrimalConstraintAndUpdateSlack( Solution<REAL>& solution,
                                         const Problem<REAL>& problem ) const
@@ -145,6 +148,7 @@ class PrimalDualSolValidation
       return false;
    }
 
+   PAPILO_NO_EXPORT
    bool
    checkPrimalFeasibilityAndUpdateSlack( Solution<REAL>& solution,
                                          const Problem<REAL>& problem )
@@ -155,6 +159,7 @@ class PrimalDualSolValidation
       return primalBounds || primalConstraint;
    }
 
+   PAPILO_NO_EXPORT
    bool
    checkDualFeasibility( const Vec<REAL>& primalSolution,
                          const Vec<REAL>& dualSolution,
@@ -193,6 +198,7 @@ class PrimalDualSolValidation
       return false;
    }
 
+   PAPILO_NO_EXPORT
    bool
    checkComplementarySlackness( const Vec<REAL>& primalSolution,
                                 const Vec<REAL>& dualSolution,
@@ -284,6 +290,7 @@ class PrimalDualSolValidation
       return false;
    }
 
+   PAPILO_NO_EXPORT
    bool
    checkBasis( const Solution<REAL>& solution, const Problem<REAL>& problem )
    {

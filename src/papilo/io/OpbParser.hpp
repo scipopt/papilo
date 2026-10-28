@@ -53,10 +53,10 @@
 #include <tuple>
 #include <utility>
 
-#ifdef PAPILO_USE_BOOST_IOSTREAMS_WITH_BZIP2
+#if PAPILO_HAS_BOOST_IOSTREAMS_BZIP2
 #include <boost/iostreams/filter/bzip2.hpp>
 #endif
-#ifdef PAPILO_USE_BOOST_IOSTREAMS_WITH_ZLIB
+#if PAPILO_HAS_BOOST_IOSTREAMS_ZLIB
 #include <boost/iostreams/filter/gzip.hpp>
 #endif
 
@@ -115,12 +115,15 @@ class OpbParser
    }
 
  private:
+   PAPILO_NO_EXPORT
    OpbParser() = default;
 
    /// load LP from MPS file as transposed triplet matrix
+   PAPILO_NO_EXPORT
    bool
    parseFile( const std::string& filename );
 
+   PAPILO_NO_EXPORT
    bool
    parse( boost::iostreams::filtering_istream& file );
 
@@ -148,12 +151,15 @@ class OpbParser
    int nRows = 0;
    int nnz = -1;
 
+   PAPILO_NO_EXPORT
    ParseKey
    parseRows( std::string& line );
 
+   PAPILO_NO_EXPORT
    ParseKey
    parseObjective( std::string& line );
 
+   PAPILO_NO_EXPORT
    void
    add_binary_variable( const String& name );
 };
@@ -168,12 +174,12 @@ OpbParser<REAL>::parseFile( const std::string& filename )
    if( !file )
       return false;
 
-#ifdef PAPILO_USE_BOOST_IOSTREAMS_WITH_ZLIB
+#if PAPILO_HAS_BOOST_IOSTREAMS_ZLIB
    if( boost::algorithm::ends_with( filename, ".gz" ) )
       in.push( boost::iostreams::gzip_decompressor() );
 #endif
 
-#ifdef PAPILO_USE_BOOST_IOSTREAMS_WITH_BZIP2
+#if PAPILO_HAS_BOOST_IOSTREAMS_BZIP2
    if( boost::algorithm::ends_with( filename, ".bz2" ) )
       in.push( boost::iostreams::bzip2_decompressor() );
 #endif

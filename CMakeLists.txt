@@ -1,302 +1,327 @@
+# Overall structure
+#
+# POLICIES
+# PROJECT DEFINITIONS
+#    Version
+#    Project declaration
+#    Minimum dependency versions
+#    Directories and search paths
+#    Packaging
+# OPTIONS
+#    Declarations with preprocessing/printing
+# BASIC SETTINGS
+#    Shared/static libraries
+#    Build type
+#    [LTO]
+#    Githash
+# DEPENDENCIES
+#    Search and process
+#    Check for position-independent code
+# TOOLS
+#    [Code coverage]
+#    Global compilation settings
+# SUBDIRECTORIES
+# INSTALLATION
+#    Licenses
+#    Config(-version) files
+#    Build-tree targets
+# [LOGGING]
+#    [Non-default parameters]
+
 cmake_minimum_required (VERSION 3.11.0)
 
+##### POLICIES #####
+
+# FindBoost is removed in version cmake 3.30.
+if(POLICY CMP0167)
+   cmake_policy(SET CMP0167 NEW)
+endif()
+
+##### PROJECT DEFINITIONS #####
+
+# PaPILO version
 set(PAPILO_VERSION_MAJOR 4)
 set(PAPILO_VERSION_MINOR 0)
 set(PAPILO_VERSION_PATCH 0)
 set(PAPILO_API_VERSION 13)
 
-project(papilo VERSION ${PAPILO_VERSION_MAJOR}.${PAPILO_VERSION_MINOR}.${PAPILO_VERSION_PATCH}.0)
-
-# FindBoost is removed in version cmake 3.30
-if(POLICY CMP0167)
-    cmake_policy(SET CMP0167 NEW)
-endif()
+# Project
+project(papilo
+   VERSION ${PAPILO_VERSION_MAJOR}.${PAPILO_VERSION_MINOR}.${PAPILO_VERSION_PATCH}.0)
 
 set(BOOST_MIN_VERSION 1.67)
-set(CMAKE_CXX_STANDARD 14)
-set(CXX_STANDARD_REQUIRED ON)
+set(TBB_MIN_VERSION 2018)
 
-# Each directory used during linking is appended to the rpath of installed libraries.
-set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
-
-# set(CMAKE_CXX_EXTENSIONS OFF) # use -std=c++... instead of -std=gnu++...
-# required for gcc if set(CMAKE_CXX_EXTENSIONS OFF) is used
-# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fext-numeric-literals")
-
-# if(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
-#    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-psabi")
-# endif()
-if(MSVC)
-   add_compile_options($<$<COMPILE_LANGUAGE:CXX>:/permissive>)
-endif()
-
-# Sets installation directories according to GNU coding standards.
+# Set installation directories according to GNU coding standards.
 include(GNUInstallDirs)
-#add_definitions ("-Wall")
 
-# Location for storing CMake files.
-list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/Modules/)
+# Path to CMake modules such as FindGMP.cmake.
+list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake/Modules/")
 
-# Functions without PAPILOLIB_EXPORT will not be accessible from outside.
-set(CMAKE_CXX_VISIBILITY_PRESET hidden)
-set(CMAKE_VISIBILITY_INLINES_HIDDEN 1)
+##### OPTIONS #####
 
-# Even static libs have position-independent code by default, and can be linked into shared libs.
-set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+# Options
+option(BUILD_PACKAGE "are we building a package" OFF)
 
-# Disable fused floating point contraction to enhance reproducibility across compilers and
-# architectures.
-if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
-   add_compile_options($<$<COMPILE_LANGUAGE:CXX>:/fp:precise>)
-elseif(CMAKE_CXX_COMPILER_ID MATCHES "Intel")
-   add_compile_options(-fp-model=precise)
-elseif((CMAKE_CXX_COMPILER_ID MATCHES "GNU") OR (CMAKE_CXX_COMPILER_ID MATCHES "Clang"))
-   add_compile_options(-ffp-contract=off)
-endif()
+option(BUILD_SHARED_LIBS "Build shared libraries" ON)
 
-option(GMP "should gmp be linked" ON)
-option(QUADMATH "should quadmath library be used" ON)
-if(MSVC)
-   option(LUSOL "should LUSOL package be enabled" OFF)
-else()
-   option(LUSOL "should LUSOL package be enabled" ON)
-endif()
+option(GITHASH_BRANCH "append the current branch to the githash" OFF)
 
-option(SYSTEM_FMT "use system FMT library instead of bundled headers" OFF)
+set(GMP AUTO CACHE STRING "should PaPILO link to GMP")
+set_property(CACHE GMP PROPERTY STRINGS AUTO ON OFF)
+string(TOUPPER "${GMP}" GMP)
 
-option(TBB "should TBB be linked if found" ON)
-option(TBB_DOWNLOAD "should TBB be downloaded" OFF)
-option(INSTALL_TBB "should the TBB library be installed" OFF)
+set(QUADMATH AUTO CACHE STRING "should quadmath library be linked")
+set_property(CACHE QUADMATH PROPERTY STRINGS AUTO ON OFF)
+string(TOUPPER "${QUADMATH}" QUADMATH)
 
-option(SOPLEX "should SoPlex LP solver be linked" OFF)
-option(SCIP "should SCIP solver be linked" OFF)
-option(HIGHS "should HiGHS LP solver be linked" OFF)
-option(GLOP "should ortools solver be linked" OFF)
-option(GUROBI "should gurobi solver be linked" OFF)
+set(LUSOL AUTO CACHE STRING "should LUSOL package be enabled")
+set_property(CACHE LUSOL PROPERTY STRINGS AUTO ON OFF)
+string(TOUPPER "${LUSOL}" LUSOL)
+
+
+set(TBB AUTO CACHE STRING "should TBB be linked")
+set_property(CACHE TBB PROPERTY STRINGS AUTO ON OFF)
+string(TOUPPER "${TBB}" TBB)
+
+set(SOPLEX AUTO CACHE STRING "should executable link to the SoPlex LP solver")
+set_property(CACHE SOPLEX PROPERTY STRINGS AUTO ON OFF)
+string(TOUPPER "${SOPLEX}" SOPLEX)
+
+set(SYSTEM_FMT OFF CACHE STRING "use system FMT library instead of bundled headers")
+set_property(CACHE SYSTEM_FMT PROPERTY STRINGS AUTO ON OFF)
+string(TOUPPER "${SYSTEM_FMT}" SYSTEM_FMT)
+
+set(SCIP AUTO CACHE STRING "should the executable link to the SCIP solver")
+set_property(CACHE SCIP PROPERTY STRINGS AUTO ON OFF)
+string(TOUPPER "${SCIP}" SCIP)
+
+set(HIGHS AUTO CACHE STRING "should the executable link to the HiGHS solver")
+set_property(CACHE HIGHS PROPERTY STRINGS AUTO ON OFF)
+string(TOUPPER "${HIGHS}" HIGHS)
+
+set(GLOP AUTO CACHE STRING "should the executable link to the GLOP solver from OR-Tools")
+set_property(CACHE GLOP PROPERTY STRINGS AUTO ON OFF)
+string(TOUPPER "${GLOP}" GLOP)
+
+set(GUROBI AUTO CACHE STRING "should executable link to the Gurobi solver")
+set_property(CACHE GUROBI PROPERTY STRINGS AUTO ON OFF)
+string(TOUPPER "${GUROBI}" GUROBI)
 
 option(BUILD_TESTING "should tests be enabled and built" ON)
 
-# Make 'Release' the default build type.
-if(NOT CMAKE_BUILD_TYPE)
-   set(CMAKE_BUILD_TYPE Release)
+option(HEADER_ONLY "turn off compiling specialized templates into library" OFF)
+
+##### BASIC SETTINGS #####
+
+if(BUILD_SHARED_LIBS)
+   message(STATUS "Building shared libraries.")
+   set(PAPILO_HAS_PIC 1)
+else()
+   message(STATUS "Building static libraries.")
+   set(PAPILO_HAS_PIC 0)
 endif()
 
+# Make 'Release' the default build type.
+if(NOT CMAKE_BUILD_TYPE)
+   set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Build type" FORCE)
+elseif(NOT CMAKE_BUILD_TYPE MATCHES "Release|Debug|RelWithDebInfo|MinSizeRel")
+   message(FATAL_ERROR "Option CMAKE_BUILD_TYPE has invalid value \"${CMAKE_BUILD_TYPE}\"! Possible are `Release`, `Debug`, `RelWithDebInfo` and `MinSizeRel`.")
+endif()
 message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 
-# Search for system fmt.
-if(SYSTEM_FMT)
-   find_package(fmt CONFIG REQUIRED)
-   set(PAPILO_HAVE_SYSTEM_FMT 1)
+# Query git hash.
+include(GitHash)
+githash_query(PAPILO_GITHASH "${CMAKE_CURRENT_SOURCE_DIR}/src/papilo/Config.hpp" "PAPILO_GITHASH" ${GITHASH_BRANCH})
+if(PAPILO_GITHASH)
+   message(STATUS "Git hash: ${PAPILO_GITHASH}")
+   set(PAPILO_HAS_GITHASH 1)
 else()
-   set(PAPILO_HAVE_SYSTEM_FMT 0)
+   set(PAPILO_HAS_GITHASH 0)
+endif()
+
+# Definition for header-only library.
+set(PAPILO_HEADER_ONLY ${HEADER_ONLY})
+if(PAPILO_HEADER_ONLY)
+   message(STATUS "Creating header-only PaPILO library.")
+endif()
+
+##### DEPENDENCIES #####
+
+# Search for system fmt.
+set(PAPILO_HAS_SYSTEM_FMT 0)
+if(SYSTEM_FMT)
+   if(SYSTEM_FMT STREQUAL "AUTO")
+      find_package(fmt CONFIG)
+   else()
+      find_package(fmt CONFIG REQUIRED)
+   endif()
+   if(fmt_FOUND)
+      set(PAPILO_HAS_SYSTEM_FMT 1)
+   endif()
+endif()
+if(PAPILO_HAS_SYSTEM_FMT)
+   message(STATUS "Using system FMT.")
+else()
+   message(STATUS "Using bundled FMT.")
 endif()
 
 # Search for Boost: headers are required and the other components are needed for the binaries.
+set(PAPILO_HAS_BOOST_IOSTREAMS 0)
+set(PAPILO_HAS_BOOST_IOSTREAMS_ZLIB 0)
+set(PAPILO_HAS_BOOST_IOSTREAMS_BZIP2 0)
+set(PAPILO_HAS_BOOST_PROGRAM_OPTIONS 0)
+set(PAPILO_HAS_BOOST_SERIALIZATION 0)
+message(STATUS "Searching for Boost.")
 find_package(Boost ${BOOST_MIN_VERSION} REQUIRED OPTIONAL_COMPONENTS iostreams program_options serialization)
-if(Boost_IOSTREAMS_FOUND)
-   set(PAPILO_HAVE_BOOST_IOSTREAMS 1)
-else()
-   set(PAPILO_HAVE_BOOST_IOSTREAMS 0)
+if(NOT DEFINED Boost_VERSION_STRING)
+   math(EXPR _boost_major "${Boost_VERSION} / 100000")
+   math(EXPR _boost_minor "${Boost_VERSION} / 100 % 1000")
+   math(EXPR _boost_patch "${Boost_VERSION} % 100")
+   set(Boost_VERSION_STRING "${_boost_major}.${_boost_minor}.${_boost_patch}")
 endif()
-if(Boost_PROGRAM_OPTIONS_FOUND)
-   set(PAPILO_COMMAND_LINE_AVAILABLE 1)
-else()
-   set(PAPILO_COMMAND_LINE_AVAILABLE 0)
+message(STATUS "Found Boost version ${Boost_VERSION_STRING}.")
+set(PAPILO_HAS_BOOST 1)
+set(PAPILO_BOOST_COMPONENTS)
+
+include(CheckCXXSourceCompiles)
+if(Boost_iostreams_FOUND)
+   set(PAPILO_HAS_BOOST_IOSTREAMS 1)
+   set(PAPILO_BOOST_COMPONENTS ${PAPILO_BOOST_COMPONENTS} iostreams)
+
+   set(CMAKE_REQUIRED_INCLUDES ${Boost_INCLUDE_DIRS})
+   set(CMAKE_REQUIRED_LIBRARIES ${Boost_LIBRARIES})
+   set(CMAKE_REQUIRED_QUIET TRUE)
+   unset(PAPILO_HAS_BOOST_IOSTREAMS_ZLIB)
+   check_cxx_source_compiles(
+      "#include <boost/iostreams/filter/gzip.hpp>
+       int main() { auto decomp = boost::iostreams::gzip_decompressor(); (void)decomp; return 0; }"
+      PAPILO_HAS_BOOST_IOSTREAMS_ZLIB )
+   unset(PAPILO_HAS_BOOST_IOSTREAMS_BZIP2)
+   check_cxx_source_compiles(
+      "#include <boost/iostreams/filter/bzip2.hpp>
+       int main() { auto decomp = boost::iostreams::bzip2_decompressor(); (void)decomp; return 0; }"
+      PAPILO_HAS_BOOST_IOSTREAMS_BZIP2 )
+   unset(CMAKE_REQUIRED_INCLUDES)
+   unset(CMAKE_REQUIRED_LIBRARIES)
+   unset(CMAKE_REQUIRED_QUIET)
+   if(PAPILO_HAS_BOOST_IOSTREAMS_ZLIB AND PAPILO_HAS_BOOST_IOSTREAMS_BZIP2)
+      message(STATUS "Tested Boost: support for zlib and bzip2 (de)compression.")
+   elseif(PAPILO_HAS_BOOST_IOSTREAMS_ZLIB)
+      message(STATUS "Tested Boost: support for zlib (de)compression.")
+   elseif(PAPILO_HAS_BOOST_IOSTREAMS_BZIP2)
+      message(STATUS "Tested Boost: support for bzip2 (de)compression.")
+   else()
+      message(STATUS "Tested Boost: no support for zlib or bzip2 (de)compression.")
+   endif()
 endif()
-if(Boost_SERIALIZATION_FOUND)
-   set(PAPILO_SERIALIZATION_AVAILABLE 1)
+if(Boost_program_options_FOUND)
+   set(PAPILO_HAS_BOOST_PROGRAM_OPTIONS 1)
+   set(PAPILO_BOOST_COMPONENTS ${PAPILO_BOOST_COMPONENTS} program_options)
 endif()
-if(NOT Boost_IOSTREAMS_FOUND OR NOT Boost_PROGRAM_OPTIONS_FOUND OR NOT Boost_SERIALIZATION_FOUND)
-   message("WARNING: Boost iostreams, program_options or serialization not found. PaPILO can only be used as a library!")
+if(Boost_serialization_FOUND)
+   set(PAPILO_HAS_BOOST_SERIALIZATION 1)
+   set(PAPILO_BOOST_COMPONENTS ${PAPILO_BOOST_COMPONENTS} serialization)
+endif()
+if(NOT PAPILO_HAS_BOOST_IOSTREAMS OR NOT PAPILO_HAS_BOOST_PROGRAM_OPTIONS OR NOT PAPILO_HAS_BOOST_SERIALIZATION)
+   message(WARNING "Boost iostreams, program_options or serialization not found. PaPILO can only be used as a library!")
 endif()
 
 # Search for GMP.
 if(GMP)
-   find_package(GMP)
-endif()
-if(GMP_FOUND)
-   set(PAPILO_HAVE_GMP 1)
-   set(GMP_VERSION "${GMP_VERSION}")
+   if(GMP STREQUAL "AUTO")
+      find_package(GMP)
+   else()
+      find_package(GMP REQUIRED)
+   endif()
+   if(GMP_FOUND)
+      set(PAPILO_HAS_GMP 1)
+   else()
+      set(PAPILO_HAS_GMP 0)
+   endif()
 else()
-   set(PAPILO_HAVE_GMP 0)
-   set(GMP_INCLUDE_DIRS "")
-   set(GMP_LIBRARIES "")
+   message(STATUS "GMP is disabled.")
+   set(PAPILO_HAS_GMP 0)
 endif()
 
 # Search for Quadmath.
 if(QUADMATH)
-   find_package(Quadmath)
-endif()
-if(Quadmath_FOUND)
-   set(PAPILO_HAVE_FLOAT128 1)
-else()
-   set(PAPILO_HAVE_FLOAT128 0)
-   set(Quadmath_INCLUDE_DIRS "")
-endif()
-
-# Search for Gurobi.
-if(GUROBI)
-   find_package(GUROBI REQUIRED)
-endif()
-
-# Search for GLOP.
-if(GLOP)
-   find_package(GLOP REQUIRED)
-endif()
-
-# Search for git.
-find_program(GIT git)
-if((GIT) AND (EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/.git))
-   # If git is available and this is a repository, we query the git hash.
-   execute_process(
-      COMMAND ${GIT} rev-parse --short HEAD
-      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-      OUTPUT_VARIABLE PAPILO_GITHASH OUTPUT_STRIP_TRAILING_WHITESPACE)
-else()
-   # Otherwise we extract the githash in case was defined in papilo/Config.hpp.
-   file(STRINGS ${CMAKE_CURRENT_SOURCE_DIR}/src/papilo/Config.hpp githash_define REGEX "define PAPILO_GITHASH .*")
-   if(githash_define)
-      string(REGEX MATCH "\\\"(.*)\\\"" _matched ${githash_define})
-      if(_matched)
-         set(PAPILO_GITHASH ${CMAKE_MATCH_1})
-      endif()
+   if(QUADMATH STREQUAL "AUTO")
+      find_package(Quadmath)
+   else()
+      find_package(Quadmath REQUIRED)
    endif()
-endif()
-
-# Output the githash.
-if(PAPILO_GITHASH)
-   message(STATUS "Git hash: ${PAPILO_GITHASH}")
-   set(PAPILO_GITHASH_AVAILABLE 1)
+   if(Quadmath_FOUND)
+      set(PAPILO_HAS_QUADMATH 1)
+   else()
+      set(PAPILO_HAS_QUADMATH 0)
+   endif()
 else()
-   set(PAPILO_GITHASH_AVAILABLE 0)
-endif()
-
-# Target `papilo` is an interface with all the dependencies.
-add_library(papilo INTERFACE)
-if(ROUNDINGSAT_DIR)
-   set(ROUNDINGSAT_INCLUDE_DIRS ${ROUNDINGSAT_DIR}/src/)
-endif()
-target_include_directories(papilo INTERFACE
-   $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}>
-   $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src>
-   $<INSTALL_INTERFACE:include>
-   ${GMP_INCLUDE_DIRS}
-   ${Quadmath_INCLUDE_DIRS}
-   ${ROUNDINGSAT_INCLUDE_DIRS})
-
-if(SYSTEM_FMT)
-   target_link_libraries(papilo INTERFACE fmt::fmt)
-endif()
-
-# Add the Boost dependencies that were found.
-if(PAPILO_HAVE_BOOST_IOSTREAMS)
-   target_link_libraries(papilo INTERFACE Boost::iostreams)
-endif()
-if(PAPILO_COMMAND_LINE_AVAILABLE)
-   target_link_libraries(papilo INTERFACE Boost::program_options)
-endif()
-if(PAPILO_SERIALIZATION_AVAILABLE)
-   target_link_libraries(papilo INTERFACE Boost::serialization)
-endif()
-if(Quadmath_FOUND)
-   target_link_libraries(papilo INTERFACE Quadmath::quadmath)
+   message(STATUS "Quadmath is disabled.")
+   set(PAPILO_HAS_QUADMATH 0)
 endif()
 
 # Search for TBB.
 if(TBB)
-   set(PAPILO_TBB on)
-   # On windows we do not build TBB.
-   if(WIN32)
-      find_package(TBB 2018 COMPONENTS tbb tbbmalloc REQUIRED)
+   if(TBB STREQUAL "AUTO")
+      find_package(TBB ${TBB_MIN_VERSION} HINTS "${TBB_DIR}" COMPONENTS tbb tbbmalloc)
+      find_package(Threads)
    else()
-      if(TBB_DOWNLOAD)
-         # Utilities to automatically download and build missing dependencies.
-         include(cmake/Dependencies.cmake)
-         find_or_download_package(
-            NAME TBB
-            VERSION 2018
-            URL https://github.com/oneapi-src/oneTBB/archive/refs/tags/v2022.0.0.tar.gz
-            COMPONENTS tbb tbbmalloc
-            URL_HASH SHA256=e8e89c9c345415b17b30a2db3095ba9d47647611662073f7fbf54ad48b7f3c2a
-            CONFIGURE_ARGS -DTBB_TEST=OFF -DTBB_EXAMPLES=OFF -DTBB4PY_BUILD=OFF)
-      else()
-         # Otherwise we try to find TBB.
-         find_package(TBB 2018 COMPONENTS tbb tbbmalloc)
-      endif()
-      if(NOT TBB_FOUND)
-         message(FATAL_ERROR "TBB was not found. Please specify its location (-DTBB_DIR=...), enable auto-download of TBB (-DTBB_DOWNLOAD=on) or disable TBB (-DTBB=off).")
-      else()
-         message(STATUS "Found TBB: ${TBB_DIR}") # TODO: Extract and print version information.
-      endif()
+      find_package(TBB ${TBB_MIN_VERSION} HINTS "${TBB_DIR}" REQUIRED COMPONENTS tbb tbbmalloc)
+      find_package(Threads REQUIRED)
    endif()
-
-   # Add this to the `papilo` target.
-   target_link_libraries(papilo INTERFACE TBB::tbb Threads::Threads $<$<PLATFORM_ID:Linux>:rt>)
+   if(TBB_FOUND AND Threads_FOUND)
+      message(STATUS "Found TBB version ${TBB_VERSION}: ${TBB_CONFIG}")
+      set(PAPILO_HAS_TBB 1)
+   elseif(NOT TBB_FOUND)
+      message(WARNING "TBB not found. Disabling parallel presolving capabilities!")
+      set(PAPILO_HAS_TBB 0)
+   else()
+      message(WARNING "Threads library not found, but required for TBB. Disabling parallel presolving capabilities!")
+      set(PAPILO_HAS_TBB 0)
+   endif()
 else()
-   set(PAPILO_TBB off)
-   message(WARNING "Disabling TBB results in a dramatically degradation in the performance of PaPILO!")
+   set(PAPILO_HAS_TBB 0)
+   message(WARNING "Parallel presolving capabilities disabled due to TBB being disabled!")
 endif()
 
-# Search for Threads.
-find_package(Threads REQUIRED)
-
-# TODO: Fix FindGMP.cmake and FindGLOP to create targets instead of variables.
-target_link_libraries(papilo
-   INTERFACE ${GMP_LIBRARIES} ${GLOP_LIBRARIES})
-
-# Determines whether -latomic must be added.
-# TODO: Fix cmake/StdAtomic.cmake to create a target that can then be added to `papilo`.
-include(cmake/StdAtomic.cmake)
-
-# For `write_basic_package_version_file` function.
-include(CMakePackageConfigHelpers)
-
-write_basic_package_version_file(
-   ${CMAKE_BINARY_DIR}/papilo-config-version.cmake
-   VERSION ${PAPILO_VERSION_MAJOR}.${PAPILO_VERSION_MINOR}.${PAPILO_VERSION_PATCH}
-   COMPATIBILITY SameMajorVersion
-)
-
-# Specific compilation flags.
-if(MSVC)
-   target_compile_definitions(papilo INTERFACE BOOST_ALL_NO_LIB)
-   target_compile_options(papilo INTERFACE /bigobj)
-   target_compile_options(papilo INTERFACE ${TBB_CXX_STD_FLAG})
-else()
-   #TODO: configure warning level https://stackoverflow.com/questions/2368811/how-to-set-warning-level-in-cmake
-   target_compile_options(papilo INTERFACE ${TBB_CXX_STD_FLAG} -Wno-shadow -Wall)
-endif()
-
-# Search for BLAS and build clusol.
+# LUSOL
 if(LUSOL)
    include(CheckLanguage)
    check_language(Fortran)
-   find_package(BLAS)
-endif()
-if(CMAKE_Fortran_COMPILER AND BLAS_FOUND)
-   enable_language(Fortran)
-
-   add_library(clusol STATIC
-      src/papilo/external/lusol/src/lusol6b.f
-      src/papilo/external/lusol/src/lusol7b.f
-      src/papilo/external/lusol/src/lusol8b.f
-      src/papilo/external/lusol/src/lusol_util.f
-      src/papilo/external/lusol/src/lusol.f90
-      src/papilo/external/lusol/src/clusol.c
-      src/papilo/external/lusol/src/lusol_precision.f90)
-   set_property(TARGET clusol PROPERTY POSITION_INDEPENDENT_CODE ON)
-   target_include_directories(clusol PRIVATE src/papilo/external/lusol)
-   target_link_libraries(clusol ${BLAS_LIBRARIES})
-   target_link_libraries(papilo INTERFACE clusol)
-   set(PAPILO_HAVE_LUSOL 1)
-   set(CLUSOL_TARGET clusol)
-   install(FILES
-       ${PROJECT_SOURCE_DIR}/src/papilo/external/lusol/LICENSE.md DESTINATION ${CMAKE_INSTALL_DATADIR}/licenses/papilo/lusol)
+   if(LUSOL STREQUAL "AUTO")
+      if(CMAKE_Fortran_COMPILER)
+         find_package(BLAS)
+      else()
+         message(STATUS "No Fortran support.")
+      endif()
+   elseif(NOT CMAKE_Fortran_COMPILER)
+      message(FATAL_ERROR "Fortran support is required due to LUSOL=${LUSOL}.")
+   else()
+      find_package(BLAS REQUIRED)
+   endif()
+   if(CMAKE_Fortran_COMPILER AND BLAS_FOUND)
+      enable_language(Fortran)
+      set(PAPILO_HAS_LUSOL 1)
+      if(CMAKE_VERSION VERSION_LESS 3.18)
+         # TODO: Remove this once we require CMake >= 3.18.
+         message(WARNING "Defining target BLAS::BLAS with linker flags \"${BLAS_LINKER_FLAGS}\" and libraries \"${BLAS_LIBRARIES}\". Consider upgrading to CMake version 3.18 or higher.")
+         add_library(BLAS::BLAS IMPORTED UNKNOWN)
+         set_target_properties(BLAS::BLAS PROPERTIES
+            INTERFACE_INCLUDE_DIRECTORIES "${BLAS_LINKER_FLAGS}"
+            IMPORTED_LOCATION "${BLAS_LIBRARIES}")
+      endif()
+   else()
+      set(PAPILO_HAS_LUSOL 0)
+   endif()
 else()
-   set(PAPILO_HAVE_LUSOL 0)
-   set(CLUSOL_TARGET "")
-   message(STATUS "LUSOL is not built")
+   set(PAPILO_HAS_LUSOL 0)
+   message(STATUS "LUSOL is disabled.")
 endif()
+
+# Determines whether -latomic must be added.
+# TODO: Fix cmake/StdAtomic.cmake to create a target that can then be added to `libpapilo`.
+include(cmake/StdAtomic.cmake)
 
 # For `check_cxx_source_compiles` function.
 include(CheckCXXSourceCompiles)
@@ -317,11 +342,11 @@ if(NOT MSVC)
 endif()
 
 # Includes for `check_cxx_source_compiles` call.
-set(CMAKE_REQUIRED_INCLUDES ${PROJECT_SOURCE_DIR}/src/papilo/external)
+set(CMAKE_REQUIRED_INCLUDES "${PROJECT_SOURCE_DIR}/src/papilo/external")
 check_cxx_source_compiles(
    "#include \"ska/bytell_hash_map.hpp\"
    int main() { ska::bytell_hash_map<int,int> hashmap; (void)hashmap; return 0; }"
-   PAPILO_BYTELL_HASHMAP_WORKS )
+   PAPILO_HAS_BYTELL_HASHMAP)
 
 if(PAPILO_BYTELL_HASHMAP_WORKS)
    set(PAPILO_USE_STANDARD_HASHMAP 0)
@@ -329,67 +354,43 @@ else()
    set(PAPILO_USE_STANDARD_HASHMAP 1)
 endif()
 
-# Create target `papilo-core` which is the static library.
-add_library(papilo-core STATIC
-   src/papilo/core/VariableDomains.cpp
-   src/papilo/core/SparseStorage.cpp
-   src/papilo/core/ConstraintMatrix.cpp
-   src/papilo/core/ProblemUpdate.cpp
-   src/papilo/core/Presolve.cpp
-   src/papilo/core/postsolve/PostsolveStorage.cpp
-   src/papilo/core/postsolve/Postsolve.cpp
-   src/papilo/core/ProbingView.cpp
-   src/papilo/core/CliqueProbingView.cpp
-   src/papilo/presolvers/CoefficientStrengthening.cpp
-   src/papilo/presolvers/ConstraintPropagation.cpp
-   src/papilo/presolvers/DominatedCols.cpp
-   src/papilo/presolvers/DualFix.cpp
-   src/papilo/presolvers/DualInfer.cpp
-   src/papilo/presolvers/FixContinuous.cpp
-   src/papilo/presolvers/GF2.cpp
-   src/papilo/presolvers/FreeVarSubstitution.cpp
-   src/papilo/presolvers/ImplIntDetection.cpp
-   src/papilo/presolvers/ParallelColDetection.cpp
-   src/papilo/presolvers/ParallelRowDetection.cpp
-   src/papilo/presolvers/Probing.cpp
-   src/papilo/presolvers/SimpleProbing.cpp
-   src/papilo/presolvers/SimpleSubstitution.cpp
-   src/papilo/presolvers/SingletonCols.cpp
-   src/papilo/presolvers/SingletonStuffing.cpp
-   src/papilo/presolvers/Sparsify.cpp
-   src/papilo/presolvers/SimplifyInequalities.cpp
-   src/papilo/presolvers/CliqueMerging.cpp
-   ${roundingsat_source_files}
-  )
+##### TOOLS #####
 
-#
-# interface function for setting common library properties
-#
-# TODO: Simplify with a generator expression.
-function(setLibProperties targetname outputname)
-    set_target_properties(${targetname} PROPERTIES
-        OUTPUT_NAME ${outputname})
-endfunction(setLibProperties)
+set(CMAKE_CXX_STANDARD 14)
+set(CXX_STANDARD_REQUIRED ON)
+
+# set(CMAKE_CXX_EXTENSIONS OFF) # use -std=c++... instead of -std=gnu++...
+# required for gcc if set(CMAKE_CXX_EXTENSIONS OFF) is used
+# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fext-numeric-literals")
+
+# if(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
+#    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-psabi")
+# endif()
 if(MSVC)
-    setLibProperties(papilo-core "libpapilo-core")
-else()
-    setLibProperties(papilo-core "papilo-core")
+   add_compile_options(/permissive)
 endif()
 
+#add_definitions ("-Wall")
 
-# Add dependency-target `papilo` to static library-target `papilo-core`.
-target_link_libraries(papilo-core papilo)
-target_compile_definitions(papilo-core PRIVATE PAPILO_USE_EXTERN_TEMPLATES)
+# Disable fused floating point contraction to enhance reproducibility across compilers and
+# architectures.
+if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
+   add_compile_options(/fp:precise)
+elseif(CMAKE_CXX_COMPILER_ID MATCHES "Intel")
+   add_compile_options(-fp-model=precise)
+elseif((CMAKE_CXX_COMPILER_ID MATCHES "GNU") OR (CMAKE_CXX_COMPILER_ID MATCHES "Clang"))
+   add_compile_options(-ffp-contract=off)
+endif()
 
-# When including from scipoptsuite, this is set to postpone generation of binaries until SCIP is built.
+##### SUBDIRECTORIES #####
+
+# Main code
+add_subdirectory(src)
+
+# Create and install papilo binary unless we postpone it from within the scipoptsuite.
 if(NOT PAPILO_NO_BINARIES)
    add_subdirectory(binaries)
 endif()
-
-# Create build/papilo/CMakeConfig.hpp, which contains all definitions based on the configuration.
-# TODO: Are quotes really needed?
-configure_file("${PROJECT_SOURCE_DIR}/src/papilo/CMakeConfig.hpp.in"
-   "${PROJECT_BINARY_DIR}/papilo/CMakeConfig.hpp")
 
 # Add tests and include the subdirectory.
 # TODO: Does this avoid PAPILO tests if included from scipoptsuite?!
@@ -398,227 +399,87 @@ if(BUILD_TESTING)
    add_subdirectory(${PROJECT_SOURCE_DIR}/test)
 endif()
 
-# Install the header files of PAPILO.
+##### INSTALLATION #####
+
+# Install license files.
 install(FILES
-   ${PROJECT_BINARY_DIR}/papilo/CMakeConfig.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/Config.hpp
-   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/papilo)
-
-install(FILES
-   ${CMAKE_BINARY_DIR}/papilo-config-version.cmake
-   DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/papilo)
-
-# TODO: Any reason for ${PROJECT_SOURCE_DIR}/src as opposed to just src/ ?
-install(FILES
-   ${PROJECT_SOURCE_DIR}/src/papilo/core/Components.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/core/ConstraintMatrix.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/core/MatrixBuffer.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/core/Objective.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/core/Presolve.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/core/PresolveMethod.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/core/PresolveOptions.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/core/ProbingView.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/core/CliqueProbingView.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/core/Problem.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/core/ProblemBuilder.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/core/ProblemFlag.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/core/ProblemUpdate.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/core/Reductions.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/core/RowFlags.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/core/SingleRow.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/core/Solution.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/core/SparseStorage.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/core/Statistics.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/core/SymmetryStorage.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/core/VariableDomains.hpp
-   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/papilo/core)
-
-
-install(FILES
-   ${PROJECT_SOURCE_DIR}/src/papilo/core/postsolve/BoundStorage.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/core/postsolve/PostsolveStorage.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/core/postsolve/Postsolve.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/core/postsolve/PostsolveStatus.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/core/postsolve/PostsolveType.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/core/postsolve/ReductionType.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/core/postsolve/SavedRow.hpp
-   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/papilo/core/postsolve)
-
-install(FILES
-   ${PROJECT_SOURCE_DIR}/src/papilo/interfaces/HighsInterface.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/interfaces/GlopInterface.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/interfaces/GurobiInterface.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/interfaces/ScipInterface.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/interfaces/SolverInterface.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/interfaces/SoplexInterface.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/interfaces/RoundingsatInterface.hpp
-   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/papilo/interfaces)
-
-install(FILES
-   ${PROJECT_SOURCE_DIR}/src/papilo/io/BoundType.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/io/Message.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/io/MpsParser.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/io/MpsWriter.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/io/OpbParser.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/io/OpbWriter.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/io/ParseKey.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/io/Parser.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/io/SolParser.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/io/SolWriter.hpp
-   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/papilo/io)
-
-install(FILES
-   ${PROJECT_SOURCE_DIR}/src/papilo/misc/Alloc.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/misc/Array.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/misc/compress_vector.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/misc/DependentRows.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/misc/Flags.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/misc/fmt.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/misc/Hash.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/misc/MultiPrecision.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/misc/Num.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/misc/NumericalStatistics.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/misc/PrimalDualSolValidation.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/misc/OptionsParser.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/misc/VersionLogger.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/misc/ParameterSet.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/misc/Signature.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/misc/StableSum.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/misc/String.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/misc/tbb.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/misc/Timer.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/misc/Validation.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/misc/Vec.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/misc/VectorUtils.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/misc/Wrappers.hpp
-   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/papilo/misc)
-
-install(FILES
-   ${PROJECT_SOURCE_DIR}/src/papilo/verification/ArgumentType.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/verification/CertificateInterface.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/verification/EmptyCertificate.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/verification/VeriPb.hpp
-   DESTINATION include/papilo/verification)
-
-# Add extended Euclidean code in case Boost version is below 1.70.
-if((DEFINED Boost_VERSION) AND (Boost_VERSION VERSION_LESS 107000))
+   "${PROJECT_SOURCE_DIR}/LICENSE"
+   DESTINATION "${CMAKE_INSTALL_DATADIR}/licenses/papilo"
+   )
+if(NOT PAPILO_HAS_SYSTEM_FMT)
    install(FILES
-      ${PROJECT_SOURCE_DIR}/src/papilo/misc/extended_euclidean.hpp
-      DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/papilo/misc)
+      "${PROJECT_SOURCE_DIR}/src/papilo/external/fmt/LICENSE.rst"
+      DESTINATION "${CMAKE_INSTALL_DATADIR}/licenses/papilo/fmt"
+      )
+endif()
+if(PAPILO_HAS_BYTELL_HASHMAP)
+   install(FILES
+      "${PROJECT_SOURCE_DIR}/src/papilo/external/ska/LICENSE.txt"
+      DESTINATION "${CMAKE_INSTALL_DATADIR}/licenses/papilo/ska"
+      )
+endif()
+if(PAPILO_HAS_LUSOL)
+   install(FILES
+      "${PROJECT_SOURCE_DIR}/src/papilo/external/lusol/LICENSE.md"
+      DESTINATION "${CMAKE_INSTALL_DATADIR}/licenses/papilo/lusol"
+      )
 endif()
 
-install(FILES
-   ${PROJECT_SOURCE_DIR}/src/papilo/presolvers/CoefficientStrengthening.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/presolvers/ConstraintPropagation.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/presolvers/DominatedCols.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/presolvers/DualFix.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/presolvers/DualInfer.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/presolvers/GF2.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/presolvers/FixContinuous.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/presolvers/FreeVarSubstitution.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/presolvers/ImplIntDetection.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/presolvers/ParallelColDetection.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/presolvers/ParallelRowDetection.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/presolvers/Probing.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/presolvers/SimpleProbing.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/presolvers/SimpleSubstitution.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/presolvers/SimplifyInequalities.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/presolvers/SingletonCols.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/presolvers/SingletonStuffing.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/presolvers/Sparsify.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/presolvers/CliqueMerging.hpp
-   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/papilo/presolvers)
+# Create papilo-config-version.cmake.
+include(CMakePackageConfigHelpers)
+write_basic_package_version_file("${CMAKE_BINARY_DIR}/papilo-config-version.cmake"
+   VERSION ${PAPILO_VERSION_MAJOR}.${PAPILO_VERSION_MINOR}.${PAPILO_VERSION_PATCH}
+   COMPATIBILITY SameMajorVersion
+)
 
-if(NOT SYSTEM_FMT)
-   install(FILES
-      ${PROJECT_SOURCE_DIR}/src/papilo/external/fmt/chrono.h
-      ${PROJECT_SOURCE_DIR}/src/papilo/external/fmt/color.h
-      ${PROJECT_SOURCE_DIR}/src/papilo/external/fmt/compile.h
-      ${PROJECT_SOURCE_DIR}/src/papilo/external/fmt/core.h
-      ${PROJECT_SOURCE_DIR}/src/papilo/external/fmt/format-inl.h
-      ${PROJECT_SOURCE_DIR}/src/papilo/external/fmt/format.h
-      ${PROJECT_SOURCE_DIR}/src/papilo/external/fmt/locale.h
-      ${PROJECT_SOURCE_DIR}/src/papilo/external/fmt/os.h
-      ${PROJECT_SOURCE_DIR}/src/papilo/external/fmt/ostream.h
-      ${PROJECT_SOURCE_DIR}/src/papilo/external/fmt/posix.h
-      ${PROJECT_SOURCE_DIR}/src/papilo/external/fmt/printf.h
-      ${PROJECT_SOURCE_DIR}/src/papilo/external/fmt/ranges.h
-      DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/papilo/external/fmt)
+# Unless we build a package, we populate search directories for dependencies.
+include(PackageConfigDependencies)
+
+if(NOT BUILD_PACKAGE AND PAPILO_HAS_GMP AND GMP_DIR)
+   package_config_dependency_dir(PAPILO_CONFIG_GMP_DIR GMP_FOUND GMP_DIR)
+endif()
+if(NOT BUILD_PACKAGE AND PAPILO_HAS_QUADMATH AND QUADMATH_DIR)
+   package_config_dependency_dir(PAPILO_CONFIG_QUADMATH_DIR Quadmath_FOUND QUADMATH_DIR)
+endif()
+if(NOT BUILD_PACKAGE AND PAPILO_HAS_BOOST AND Boost_DIR)
+   package_config_dependency_dir(PAPILO_CONFIG_BOOST_DIR Boost_FOUND Boost_DIR)
+endif()
+if(NOT BUILD_PACKAGE AND PAPILO_HAS_TBB AND TBB_DIR)
+   package_config_dependency_dir(PAPILO_CONFIG_TBB_DIR TBB_FOUND TBB_DIR)
 endif()
 
-install(FILES
-   ${PROJECT_SOURCE_DIR}/src/papilo/external/ska/bytell_hash_map.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/external/ska/flat_hash_map.hpp
-   ${PROJECT_SOURCE_DIR}/src/papilo/external/ska/unordered_map.hpp
-   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/papilo/external/ska)
-
-install(FILES
-   ${PROJECT_SOURCE_DIR}/src/papilo/external/lusol/clusol.h
-   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/papilo/external/lusol)
-
-install(FILES
-   ${PROJECT_SOURCE_DIR}/LICENSE DESTINATION ${CMAKE_INSTALL_DATADIR}/licenses/papilo)
-install(FILES
-   ${PROJECT_SOURCE_DIR}/src/papilo/external/ska/LICENSE.txt DESTINATION ${CMAKE_INSTALL_DATADIR}/licenses/papilo/ska)
-if(NOT SYSTEM_FMT)
-   install(FILES
-      ${PROJECT_SOURCE_DIR}/src/papilo/external/fmt/LICENSE.rst DESTINATION ${CMAKE_INSTALL_DATADIR}/licenses/papilo/fmt)
-endif()
-
-# Configure the papilo-config.cmake for the build-tree:
+# Configure papilo-config.cmake for the build-tree:
 # We add the CMake module path from the sources.
-set(EXTRA_CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/Modules)
+set(EXTRA_CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake/Modules")
 configure_file(${PROJECT_SOURCE_DIR}/papilo-config.cmake.in
-   "${CMAKE_BINARY_DIR}/papilo-config.cmake" @ONLY)
+   "${CMAKE_BINARY_DIR}/papilo-config.cmake"
+   @ONLY)
 
-# Configure the papilo-config.cmake for the installation.
+# Configure papilo-config.cmake for the installation.
 # We add the current directory of the installed papilo-config.cmake.
 set(EXTRA_CMAKE_MODULE_PATH "\${CMAKE_CURRENT_LIST_DIR}")
 configure_file(${PROJECT_SOURCE_DIR}/papilo-config.cmake.in
-   "${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/papilo-config.cmake" @ONLY)
+   "${PROJECT_BINARY_DIR}/${CMAKE_FILES_DIRECTORY}/papilo-config.cmake"
+   @ONLY)
 
-# Install FindGMP.cmake module.
-if(PAPILO_HAVE_GMP)
-   install(FILES ${PROJECT_SOURCE_DIR}/cmake/Modules/FindGMP.cmake
-      DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/papilo)
-endif()
+# Install CMake config and modules.
+install(FILES
+   "${PROJECT_BINARY_DIR}/${CMAKE_FILES_DIRECTORY}/papilo-config.cmake"
+   "${CMAKE_BINARY_DIR}/papilo-config-version.cmake"
+   $<$<BOOL:${PAPILO_HAS_GMP}>:${PROJECT_SOURCE_DIR}/cmake/Modules/FindGMP.cmake>
+   $<$<BOOL:${PAPILO_HAS_QUADMATH}>:${PROJECT_SOURCE_DIR}/cmake/Modules/FindQuadmath.cmake>
+   $<$<BOOL:${PAPILO_HAS_TBB}>:${PROJECT_SOURCE_DIR}/cmake/Modules/FindTBB.cmake>
+   DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/papilo")
 
-# Install FindQuadmath.cmake module.
-if(PAPILO_HAVE_FLOAT128)
-   install(FILES ${PROJECT_SOURCE_DIR}/cmake/Modules/FindQuadmath.cmake
-      DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/papilo)
-endif()
-
-# Install the papilo-config.
-install(FILES ${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/papilo-config.cmake
-   DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/papilo)
-
-# Install the FindTBB.cmake module.
-install(FILES ${PROJECT_SOURCE_DIR}/cmake/Modules/FindTBB.cmake
-   DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/papilo)
-
-# Install TBB if requested.
-if(INSTALL_TBB AND CMAKE_SYSTEM_NAME STREQUAL "Windows")
-   if(EXISTS "${TBB_tbb_DLL}")
-      install(FILES "${TBB_tbb_DLL}" DESTINATION ${CMAKE_INSTALL_BINDIR})
-      install(FILES "${TBB_tbb_DLL}" DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/papilo)
-   endif()
-   if(EXISTS "${TBB_tbbmalloc_DLL}")
-      install(FILES "${TBB_tbbmalloc_DLL}" DESTINATION ${CMAKE_INSTALL_BINDIR})
-   endif()
-endif()
+# Install the papilo-targets export set.
+install(EXPORT papilo-targets
+   NAMESPACE PAPILO::
+   DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/papilo")
 
 # Export targets for the build-tree.
-export(TARGETS papilo papilo-core ${CLUSOL_TARGET} FILE "${CMAKE_BINARY_DIR}/papilo-targets.cmake")
+export(EXPORT papilo-targets
+   NAMESPACE PAPILO::
+   FILE "${CMAKE_BINARY_DIR}/papilo-targets.cmake")
 
-# Install the dependencies.
-if(EXISTS ${CMAKE_BINARY_DIR}/_deps)
-   install(DIRECTORY ${CMAKE_BINARY_DIR}/_deps DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/papilo/)
-endif()
-
-# Install targets.
-install(TARGETS papilo papilo-core ${CLUSOL_TARGET} EXPORT papilo-targets ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
-
-# Install the papilo-targets.
-install(EXPORT papilo-targets DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/papilo)
-
+# If we include this directory then we mark PaPILO as found.
+set(PAPILO_FOUND 1)

@@ -28,10 +28,10 @@
 #include "papilo/Config.hpp"
 #include "papilo/io/MpsParser.hpp"
 #include "papilo/io/OpbParser.hpp"
-#ifdef PAPILO_USE_BOOST_IOSTREAMS_WITH_BZIP2
+#if PAPILO_HAS_BOOST_IOSTREAMS_BZIP2
 #include <boost/iostreams/filter/bzip2.hpp>
 #endif
-#ifdef PAPILO_USE_BOOST_IOSTREAMS_WITH_ZLIB
+#if PAPILO_HAS_BOOST_IOSTREAMS_ZLIB
 #include <boost/iostreams/filter/gzip.hpp>
 #endif
 

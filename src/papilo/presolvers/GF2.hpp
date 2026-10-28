@@ -103,11 +103,11 @@ class GF2 final : public PresolveMethod<REAL>
    };
 };
 
-#ifdef PAPILO_USE_EXTERN_TEMPLATES
-extern template class GF2<double>;
-extern template class GF2<Quad>;
-extern template class GF2<Rational>;
-#endif
+#ifndef PAPILO_HEADER_ONLY
+extern template class PAPILO_EXPORT_TEMPLATE GF2<double>;
+extern template class PAPILO_EXPORT_TEMPLATE GF2<Quad>;
+extern template class PAPILO_EXPORT_TEMPLATE GF2<Rational>;
+#endif /* !PAPILO_HEADER_ONLY */
 
 template <typename i_t>
 static i_t

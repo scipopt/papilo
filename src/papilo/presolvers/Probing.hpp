@@ -40,7 +40,7 @@
 #include <boost/functional/hash.hpp>
 #include <set>
 #include <tuple>
-#ifdef PAPILO_TBB
+#if PAPILO_HAS_TBB
 #include "papilo/misc/tbb.hpp"
 #endif
 
@@ -175,11 +175,11 @@ class Probing : public PresolveMethod<REAL>
    }
 };
 
-#ifdef PAPILO_USE_EXTERN_TEMPLATES
-extern template class Probing<double>;
-extern template class Probing<Quad>;
-extern template class Probing<Rational>;
-#endif
+#ifndef PAPILO_HEADER_ONLY
+extern template class PAPILO_EXPORT_TEMPLATE Probing<double>;
+extern template class PAPILO_EXPORT_TEMPLATE Probing<Quad>;
+extern template class PAPILO_EXPORT_TEMPLATE Probing<Rational>;
+#endif /* !PAPILO_HEADER_ONLY */
 
 template <typename REAL>
 PresolveStatus
@@ -258,7 +258,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
       }
    }
 
-#ifdef PAPILO_TBB
+#if PAPILO_HAS_TBB
    tbb::parallel_for(
        tbb::blocked_range<int>( 0, problem.getNRows() ),
        [&]( const tbb::blocked_range<int>& r )
@@ -349,7 +349,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
              binary_variables_in_row.clear();
           }
 
-#ifdef PAPILO_TBB
+#if PAPILO_HAS_TBB
        } );
 #endif
 
@@ -357,7 +357,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
 
    if( unsuccessfulcliqueprobing <= numcliquefails )
    {
-#ifdef PAPILO_TBB
+#if PAPILO_HAS_TBB
       tbb::parallel_for(
       tbb::blocked_range<int>( 0, cliques.end() - cliques.begin() ),
       [&]( const tbb::blocked_range<int>& r ) {
@@ -378,7 +378,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
          cliques[clique].second.first = cliques[clique].second.first
          / ( rowvec.getLength() * ( nprobedcliques[cliques[clique].first] + 1 ) ) ;
       }
-#ifdef PAPILO_TBB
+#if PAPILO_HAS_TBB
       } );
 #endif
 
@@ -433,7 +433,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
    int ncliqueboundchgs = 0;
    int ncliquesubstitutions = 0;
    int64_t amountofwork = 0;
-#ifdef PAPILO_TBB
+#if PAPILO_HAS_TBB
    Vec<int> change_to_equation_comb;
 #endif
 
@@ -441,7 +441,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
       Vec<int> cliqueBoundPos( size_t( 2 * ncols ), 0 );
       cliqueBoundChanges.reserve( ncols );
 
-#ifdef PAPILO_TBB
+#if PAPILO_HAS_TBB
 
       tbb::combinable<Vec<CliqueProbingBoundChg<REAL>>> clique_probing_bound_changes;
       tbb::combinable<Vec<CliqueProbingSubstitution<REAL>>> clique_probing_subs;
@@ -460,7 +460,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
    {
       auto propagate_cliques = [&]( int cliquestart, int cliqueend )
       {
-#ifdef PAPILO_TBB
+#if PAPILO_HAS_TBB
          tbb::enumerable_thread_specific<int> numpropagations(0);
          tbb::parallel_for( tbb::blocked_range<int>( cliquestart, cliqueend ),
          [&]( const tbb::blocked_range<int>& r )
@@ -497,7 +497,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
                finalinds[i] = std::get<2>(cliqueProbingResult);
                if( std::get<1>(cliqueProbingResult) && !probingCliques[i].second )
                {
-#ifdef PAPILO_TBB
+#if PAPILO_HAS_TBB
                   change_to_equation.local().emplace_back( clique );
 #else
                   change_to_equation.emplace_back( clique );
@@ -512,7 +512,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
                         infeasible_variable.store( cliqueind[0] );
                         break;
                      }
-#ifdef PAPILO_TBB
+#if PAPILO_HAS_TBB
                numpropagations.local() += local_clique_probing_view.getNumPropagations();
                amounts_of_work.local() += local_clique_probing_view.getAmountOfWork();
 #else
@@ -523,7 +523,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
                local_clique_probing_view.resetClique();
                Vec<CliqueProbingBoundChg<REAL>> local_bound_chgs = local_clique_probing_view.getProbingBoundChanges();
                Vec<CliqueProbingSubstitution<REAL>> local_subs = local_clique_probing_view.getProbingSubstitutions();
-#ifdef PAPILO_TBB
+#if PAPILO_HAS_TBB
                clique_probing_bound_changes.local().insert(clique_probing_bound_changes.local().end(),
                   local_bound_chgs.begin(), local_bound_chgs.end() );
                clique_probing_subs.local().insert(clique_probing_subs.local().end(),
@@ -535,7 +535,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
                   local_subs.begin(), local_subs.end() );
 #endif
             }
-#ifdef PAPILO_TBB
+#if PAPILO_HAS_TBB
          } );
       totalnumpropagations += std::accumulate(numpropagations.begin(), numpropagations.end(), 0);
 #else
@@ -553,7 +553,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
          propagate_cliques( batchstart, std::min(batchend, static_cast<int>(probingCliques.end() - probingCliques.begin())) );
          int numcliquebc = 0;
          int numcliquesubs = 0;
-#ifdef PAPILO_TBB
+#if PAPILO_HAS_TBB
          int numcliquereductions = 0;
          clique_probing_bound_changes.combine_each([&numcliquebc](
             Vec<CliqueProbingBoundChg<REAL>>& clique_probing_bound_changes_local) {
@@ -622,7 +622,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
 
       ncliquesubstitutions = -cliquesubstitutions.size();
 
-#ifdef PAPILO_TBB
+#if PAPILO_HAS_TBB
       change_to_equation_comb = change_to_equation.combine(
          [](const Vec<int>& a, const Vec<int>& b) {
          Vec<int> result = a;
@@ -689,7 +689,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
 #endif
 
 
-#ifdef PAPILO_TBB
+#if PAPILO_HAS_TBB
       Vec<CliqueProbingBoundChg<REAL>> cliqueProbingBoundChgs;
       clique_probing_bound_changes.combine_each(
       [&cliqueProbingBoundChgs]( Vec<CliqueProbingBoundChg<REAL>>& cliqueProbingBoundChgsLocal )
@@ -955,7 +955,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
 
    // use tbb combinable so that each thread will copy the activities and
    // bounds at most once
-#ifdef PAPILO_TBB
+#if PAPILO_HAS_TBB
    tbb::combinable<ProbingView<REAL>> probing_views(
        [this, &problem, &num, &cliqueBoundChanges]()
        {
@@ -974,7 +974,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
 
       auto propagate_variables = [&]( int start, int end )
       {
-#ifdef PAPILO_TBB
+#if PAPILO_HAS_TBB
          tbb::parallel_for(
              tbb::blocked_range<int>( start, end ),
              [&]( const tbb::blocked_range<int>& r )
@@ -1031,7 +1031,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
                       break;
                    }
                 }
-#ifdef PAPILO_TBB
+#if PAPILO_HAS_TBB
              } );
 #endif
       };
@@ -1059,7 +1059,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
          return PresolveStatus::kInfeasible;
       }
 
-#ifdef PAPILO_TBB
+#if PAPILO_HAS_TBB
       probing_views.combine_each(
           [&]( ProbingView<REAL>& probingView )
           {
@@ -1142,7 +1142,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
              }
 
              probingView.clearResults();
-#ifdef PAPILO_TBB
+#if PAPILO_HAS_TBB
           } );
 #endif
       nsubstitutions += substitutions.size();

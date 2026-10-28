@@ -27,7 +27,7 @@
 
 #include "papilo/Config.hpp"
 #include "papilo/misc/fmt.hpp"
-#ifdef PAPILO_COMMAND_LINE_AVAILABLE
+#if PAPILO_HAS_BOOST_PROGRAM_OPTIONS
 #include <boost/none.hpp>
 #include <boost/program_options.hpp>
 #endif
@@ -45,7 +45,7 @@ struct fmt::formatter<boost::program_options::options_description> : fmt::ostrea
 
 namespace papilo
 {
-#ifdef PAPILO_COMMAND_LINE_AVAILABLE
+#if PAPILO_HAS_BOOST_PROGRAM_OPTIONS
 using namespace boost::program_options;
 #endif
 enum class Command
@@ -146,7 +146,7 @@ struct OptionsInfo
    {
       return !filename.empty() && !std::ifstream( filename );
    }
-#ifdef PAPILO_COMMAND_LINE_AVAILABLE
+#if PAPILO_HAS_BOOST_PROGRAM_OPTIONS
    void
    parse( const std::string& commandString,
           const std::vector<std::string>& opts = std::vector<std::string>() )
@@ -291,7 +291,7 @@ struct OptionsInfo
          }
          break;
       case Command::kPostsolve:
-#ifndef PAPILO_SERIALIZATION_AVAILABLE
+#if ! PAPILO_HAS_BOOST_SERIALIZATION
          fmt::print(
              "{} requires Boost serialization package that is currently not provided\n",
              commandString );
@@ -321,7 +321,7 @@ struct OptionsInfo
 OptionsInfo
 parseOptions( int argc, char* argv[] )
 {
-#ifdef PAPILO_COMMAND_LINE_AVAILABLE
+#if PAPILO_HAS_BOOST_PROGRAM_OPTIONS
    OptionsInfo optionsInfo;
    using namespace boost::program_options;
    using boost::none;

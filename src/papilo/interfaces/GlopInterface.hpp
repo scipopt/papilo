@@ -51,6 +51,7 @@ class GlopInterface : public SolverInterface<REAL>
    std::unique_ptr<MPSolver> solver;
    std::string solver_id = "PDLP";
 
+   PAPILO_NO_EXPORT
    int
    doSetUp( const Problem<REAL>& problem, const Vec<int>& origRowMap,
             const Vec<int>& origColMap )
@@ -117,6 +118,7 @@ class GlopInterface : public SolverInterface<REAL>
       return 0;
    }
 
+   PAPILO_NO_EXPORT
    int
    doSetUp( const Problem<REAL>& problem, const Vec<int>& origRowMap,
             const Vec<int>& origColMap, const Components& components,

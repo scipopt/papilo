@@ -46,10 +46,10 @@
 #include <tuple>
 #include <utility>
 
-#ifdef PAPILO_USE_BOOST_IOSTREAMS_WITH_BZIP2
+#if PAPILO_HAS_BOOST_IOSTREAMS_BZIP2
 #include <boost/iostreams/filter/bzip2.hpp>
 #endif
-#ifdef PAPILO_USE_BOOST_IOSTREAMS_WITH_ZLIB
+#if PAPILO_HAS_BOOST_IOSTREAMS_ZLIB
 #include <boost/iostreams/filter/gzip.hpp>
 #endif
 
@@ -105,18 +105,23 @@ class MpsParser
    }
 
  private:
+   PAPILO_NO_EXPORT
    MpsParser() {}
 
    /// load LP from MPS file as transposed triplet matrix
+   PAPILO_NO_EXPORT
    bool
    parseFile( const std::string& filename );
 
+   PAPILO_NO_EXPORT
    ParseKey
    parse_objective_sense( boost::iostreams::filtering_istream& file );
 
+   PAPILO_NO_EXPORT
    bool
    parse( boost::iostreams::filtering_istream& file );
 
+   PAPILO_NO_EXPORT
    static void
    printErrorMessage( const ParseKey keyword )
    {
@@ -173,27 +178,34 @@ class MpsParser
    int nnz = -1;
 
    /// checks first word of strline and wraps it by it_begin and it_end
+   PAPILO_NO_EXPORT
    ParseKey
    checkFirstWord( std::string& strline, std::string::iterator& it,
                    boost::string_ref& word_ref );
 
+   PAPILO_NO_EXPORT
    ParseKey
    parseDefault( boost::iostreams::filtering_istream& file );
 
+   PAPILO_NO_EXPORT
    ParseKey
    parseRows( boost::iostreams::filtering_istream& file,
               Vec<BoundType>& rowtype );
 
+   PAPILO_NO_EXPORT
    ParseKey
    parseCols( boost::iostreams::filtering_istream& file,
               const Vec<BoundType>& rowtype );
 
+   PAPILO_NO_EXPORT
    ParseKey
    parseRhs( boost::iostreams::filtering_istream& file );
 
+   PAPILO_NO_EXPORT
    ParseKey
    parseRanges( boost::iostreams::filtering_istream& file );
 
+   PAPILO_NO_EXPORT
    ParseKey
    parseBounds( boost::iostreams::filtering_istream& file );
 };
@@ -875,7 +887,7 @@ MpsParser<REAL>::parseFile( const std::string& filename )
 
    if( boost::algorithm::ends_with( filename, ".gz" ) )
    {
-#ifdef PAPILO_USE_BOOST_IOSTREAMS_WITH_ZLIB
+#if PAPILO_HAS_BOOST_IOSTREAMS_ZLIB
       in.push( boost::iostreams::gzip_decompressor() );
 #else
       fmt::print( "Boost iostreams required to read gz-compressed files." );
@@ -884,7 +896,7 @@ MpsParser<REAL>::parseFile( const std::string& filename )
    }
    else if( boost::algorithm::ends_with( filename, ".bz2" ) )
    {
-#ifdef PAPILO_USE_BOOST_IOSTREAMS_WITH_BZIP2
+#if PAPILO_HAS_BOOST_IOSTREAMS_BZIP2
       in.push( boost::iostreams::bzip2_decompressor() );
 #else
       fmt::print( "Boost iostreams required to read bz2-compressed files." );
