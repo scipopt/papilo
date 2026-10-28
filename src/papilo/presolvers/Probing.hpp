@@ -548,16 +548,26 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
       working_limit -= amountofwork;
       working_limit += extrawork;
 
-      badge_size = static_cast<int>(
-          ceil( badge_size * static_cast<double>( working_limit + extrawork ) /
-                (double) amountofwork ) );
-      badge_size = std::min( nprobingcands - current_badge_start, badge_size );
+      // if no work was measured the ratio is undefined, keep the badge size
+      // and bound the proposal before converting it to int to avoid UB
+      int remaining_cands = nprobingcands - current_badge_start;
+      if( amountofwork > 0 )
+      {
+         double proposed_badge_size =
+             ceil( badge_size * static_cast<double>( working_limit + extrawork ) /
+                   (double) amountofwork );
+         if( proposed_badge_size >= remaining_cands )
+            badge_size = remaining_cands;
+         else
+            badge_size = static_cast<int>( std::max( 0.0, proposed_badge_size ) );
+      }
+      badge_size = std::min( remaining_cands, badge_size );
       if( max_badge_size > 0 )
          badge_size = std::min( max_badge_size, badge_size );
       current_badge_end = current_badge_start + badge_size;
 
       abort = n_useless >= consMatrix.getNnz() * 2 || working_limit < 0 ||
-              current_badge_start == current_badge_end ||
+              current_badge_start >= current_badge_end ||
               PresolveMethod<REAL>::is_interrupted(timer, problemUpdate.getPresolveOptions().tlim, problemUpdate.getPresolveOptions().early_exit_callback);
    } while( !abort );
 

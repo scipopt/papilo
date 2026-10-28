@@ -15,6 +15,7 @@ Fixed bugs
 - SingleRow: decide implied bounds in row_implies_LB/UB w.r.t. epsilon instead of feasibility tolerance to avoid significant relaxation (scip#240)
 - SimplifyInequalities: lock the bounds of all columns of the row to avoid applying a simplification that relies on bounds widened by merging parallel columns in the same round
 - FreeVarSubstitution: check divisibility of the side of an integral equation before substituting an integer column to avoid losing integrality and detect infeasibility (scip!#239)
+- Probing: guard the badge size computation against division by zero and out-of-range conversion to int to avoid an invalid candidate range (#102)
 
 @section RN302 PaPILO 3.0.2
 
