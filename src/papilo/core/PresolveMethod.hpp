@@ -36,7 +36,7 @@
 #include "papilo/misc/Timer.hpp"
 #include "papilo/misc/Vec.hpp"
 #include "papilo/misc/fmt.hpp"
-#ifdef PAPILO_TBB
+#if PAPILO_HAS_TBB
 #include "papilo/misc/tbb.hpp"
 #else
 #include <chrono>
@@ -162,14 +162,14 @@ class PresolveMethod
 
       ++ncalls;
 
-#ifdef PAPILO_TBB
+#if PAPILO_HAS_TBB
       auto start = tbb::tick_count::now();
 #else
       auto start = std::chrono::steady_clock::now();
 #endif
       PresolveStatus result =
           execute( problem, problemUpdate, num, reductions, timer, cause );
-#ifdef PAPILO_TBB
+#if PAPILO_HAS_TBB
       auto end = tbb::tick_count::now();
       auto duration = end - start;
       execTime = execTime + duration.seconds();
@@ -278,14 +278,14 @@ class PresolveMethod
       if( !enabled || !symmetries_active )
          return PresolveStatus::kUnchanged;
 
-#ifdef PAPILO_TBB
+#if PAPILO_HAS_TBB
       auto start = tbb::tick_count::now();
 #else
       auto start = std::chrono::steady_clock::now();
 #endif
       PresolveStatus result =
           execute_symmetries( problem, problemUpdate, num, reductions, timer );
-#ifdef PAPILO_TBB
+#if PAPILO_HAS_TBB
       auto end = tbb::tick_count::now();
       auto duration = end - start;
       execTime = execTime + duration.seconds();
@@ -428,7 +428,7 @@ class PresolveMethod
    void
    loop( int start, int end, LOOP&& loop_instruction )
    {
-#ifdef PAPILO_TBB
+#if PAPILO_HAS_TBB
       tbb::parallel_for( tbb::blocked_range<int>( start, end ),
                          [&]( const tbb::blocked_range<int>& r )
                          {

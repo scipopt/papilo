@@ -40,7 +40,7 @@
 #include "papilo/misc/Vec.hpp"
 #include "papilo/misc/compress_vector.hpp"
 #include "papilo/misc/fmt.hpp"
-#ifdef PAPILO_TBB
+#if PAPILO_HAS_TBB
 #include "papilo/misc/tbb.hpp"
 #endif
 #include <algorithm>
@@ -400,7 +400,7 @@ class ConstraintMatrix
          return;
 
       // update row major storage, and pass down the coeffChanged callback
-#ifdef PAPILO_TBB
+#if PAPILO_HAS_TBB
       tbb::parallel_invoke(
           [&]() {
 #endif
@@ -441,7 +441,7 @@ class ConstraintMatrix
                    rowsize[row] = newsize;
                 }
              }
-#ifdef PAPILO_TBB
+#if PAPILO_HAS_TBB
           },
           [&]() {
 #endif
@@ -488,7 +488,7 @@ class ConstraintMatrix
                    colsize[col] = newsize;
                 }
              }
-#ifdef PAPILO_TBB
+#if PAPILO_HAS_TBB
           } );
 #endif
    }
@@ -628,18 +628,18 @@ class ConstraintMatrix
    Vec<int> colsize;
 };
 
-#ifdef PAPILO_USE_EXTERN_TEMPLATES
-extern template class ConstraintMatrix<double>;
-extern template class ConstraintMatrix<Quad>;
-extern template class ConstraintMatrix<Rational>;
-#endif
+#ifndef PAPILO_HEADER_ONLY
+extern template class PAPILO_EXPORT_TEMPLATE ConstraintMatrix<double>;
+extern template class PAPILO_EXPORT_TEMPLATE ConstraintMatrix<Quad>;
+extern template class PAPILO_EXPORT_TEMPLATE ConstraintMatrix<Rational>;
+#endif /* !PAPILO_HEADER_ONLY */
 
 template <typename REAL>
 std::pair<Vec<int>, Vec<int>>
 ConstraintMatrix<REAL>::compress( bool full )
 {
    std::pair<Vec<int>, Vec<int>> mappings;
-#ifdef PAPILO_TBB
+#if PAPILO_HAS_TBB
    tbb::parallel_invoke(
        [this, &mappings, full]() {
           mappings.first =
@@ -654,7 +654,7 @@ ConstraintMatrix<REAL>::compress( bool full )
    mappings.second = cons_matrix.compress( rowsize, colsize, full );
 #endif
 
-#ifdef PAPILO_TBB
+#if PAPILO_HAS_TBB
    tbb::parallel_invoke(
        [this, &mappings, full]() {
           compress_vector( mappings.second, colsize );
@@ -724,7 +724,7 @@ ConstraintMatrix<REAL>::deleteRowsAndCols( Vec<int>& deletedRows,
    IndexRange* colranges = cons_matrix_transp.getRowRanges();
    REAL* colvalues = cons_matrix_transp.getValues();
 
-#ifdef PAPILO_TBB
+#if PAPILO_HAS_TBB
    tbb::parallel_invoke(
        [this, &deletedRows]() {
           for( int row : deletedRows )
@@ -748,7 +748,7 @@ ConstraintMatrix<REAL>::deleteRowsAndCols( Vec<int>& deletedRows,
 #endif
 
    // delete rows from row storage and update column sizes
-#ifdef PAPILO_TBB
+#if PAPILO_HAS_TBB
    tbb::parallel_invoke(
        [this, &deletedRows, rowranges, rowcols, &activities]() {
 #endif
@@ -775,7 +775,7 @@ ConstraintMatrix<REAL>::deleteRowsAndCols( Vec<int>& deletedRows,
              activities[row].min = 0;
              activities[row].max = 0;
           }
-#ifdef PAPILO_TBB
+#if PAPILO_HAS_TBB
        },
        // delete cols from col storage and update rowsizes
        [this, &deletedCols, colranges, colrows] {
@@ -796,11 +796,11 @@ ConstraintMatrix<REAL>::deleteRowsAndCols( Vec<int>& deletedRows,
              colranges[col].start = colranges[col + 1].start;
              colranges[col].end = colranges[col + 1].start;
           }
-#ifdef PAPILO_TBB
+#if PAPILO_HAS_TBB
        } );
 #endif
 
-#ifdef PAPILO_TBB
+#if PAPILO_HAS_TBB
    tbb::parallel_invoke(
        [this, colranges, &singletonCols, &emptyCols, colrows, colvalues]() {
 #endif
@@ -848,7 +848,7 @@ ConstraintMatrix<REAL>::deleteRowsAndCols( Vec<int>& deletedRows,
                 colranges[col].end = colranges[col].start + colsize[col];
              }
           }
-#ifdef PAPILO_TBB
+#if PAPILO_HAS_TBB
        },
        [this, rowranges, &singletonRows, &activities, rowcols, rowvalues]() {
 #endif
@@ -893,7 +893,7 @@ ConstraintMatrix<REAL>::deleteRowsAndCols( Vec<int>& deletedRows,
 
              rowranges[row].end = rowranges[row].start + rowsize[row];
           }
-#ifdef PAPILO_TBB
+#if PAPILO_HAS_TBB
        } );
 #endif
 

@@ -79,6 +79,7 @@ class DualFix : public PresolveMethod<REAL>
        override;
 
  private:
+   PAPILO_NO_EXPORT
    PresolveStatus
    perform_dual_fix_step( const Num<REAL>& num, Reductions<REAL>& reductions,
                           const ConstraintMatrix<REAL>& consMatrix,
@@ -92,11 +93,11 @@ class DualFix : public PresolveMethod<REAL>
                           REAL bound_tightening_offset ) const;
 };
 
-#ifdef PAPILO_USE_EXTERN_TEMPLATES
-extern template class DualFix<double>;
-extern template class DualFix<Quad>;
-extern template class DualFix<Rational>;
-#endif
+#ifndef PAPILO_HEADER_ONLY
+extern template class PAPILO_EXPORT_TEMPLATE DualFix<double>;
+extern template class PAPILO_EXPORT_TEMPLATE DualFix<Quad>;
+extern template class PAPILO_EXPORT_TEMPLATE DualFix<Rational>;
+#endif /* !PAPILO_HEADER_ONLY */
 
 template <typename REAL>
 PresolveStatus
@@ -129,7 +130,7 @@ DualFix<REAL>::execute( const Problem<REAL>& problem,
    const REAL bound_tightening_offset =
        REAL(problemUpdate.getPresolveOptions().get_variable_bound_tightening_offset());
 
-#ifndef PAPILO_TBB
+#if ! PAPILO_HAS_TBB
    assert( problemUpdate.getPresolveOptions().runs_sequential() );
 #endif
 
@@ -154,7 +155,7 @@ DualFix<REAL>::execute( const Problem<REAL>& problem,
             result = PresolveStatus::kReduced;
       }
    }
-#ifdef PAPILO_TBB
+#if PAPILO_HAS_TBB
    else
    {
       Vec<Reductions<REAL>> stored_reductions( ncols );

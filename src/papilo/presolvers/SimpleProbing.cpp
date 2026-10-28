@@ -27,8 +27,10 @@
 namespace papilo
 {
 
+#ifndef PAPILO_HEADER_ONLY
 template class SimpleProbing<double>;
 template class SimpleProbing<Quad>;
 template class SimpleProbing<Rational>;
+#endif /* !PAPILO_HEADER_ONLY */
 
 } // namespace papilo

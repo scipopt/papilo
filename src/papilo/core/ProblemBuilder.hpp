@@ -385,7 +385,7 @@ class ProblemBuilder
       problem.setVariableNames( std::move( colnames ) );
       problem.setConstraintNames( std::move( rownames ) );
       ConstraintMatrix<REAL>& matrix = problem.getConstraintMatrix(); 
-//#ifdef PAPILO_TBB
+//#if PAPILO_HAS_TBB
 //      tbb::parallel_for(
 //          tbb::blocked_range<int>( 0, problem.getNRows() ),
 //          [&]( const tbb::blocked_range<int>& r )
@@ -402,7 +402,7 @@ class ProblemBuilder
                         matrix.getRightHandSides()[i] )
                    matrix.getRowFlags()[i].set( RowFlag::kEquation );
              }
-//#ifdef PAPILO_TBB
+//#if PAPILO_HAS_TBB
 //          } );
 //#endif
       if( problem.getNumIntegralCols() == 0 )

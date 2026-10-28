@@ -33,10 +33,11 @@
 #include <cassert>
 #include <fstream>
 
-#ifdef PAPILO_HAVE_SCIP
+#if PAPILO_HAS_SCIP
 
 #include "papilo/interfaces/ScipInterface.hpp"
 #include "scip/scipdefplugins.h"
+
 static void
 setupscip( SCIP* scip, void* usrdata )
 {
@@ -59,7 +60,7 @@ get_mip_solver_factory( papilo::OptionsInfo& optionsInfo )
    return papilo::ScipFactory<REAL>::create( setupscip, &optionsInfo );
 }
 
-#elif defined PAPILO_HAVE_HIGHS
+#elif defined(PAPILO_HAS_HIGHS)
 
 #include "papilo/interfaces/HighsInterface.hpp"
 
@@ -70,7 +71,7 @@ get_mip_solver_factory( papilo::OptionsInfo& optionsInfo )
    return papilo::HighsFactory<REAL>::create();
 }
 
-#elif defined PAPILO_HAVE_GUROBI
+#elif PAPILO_HAS_GUROBI
 
 #include "papilo/interfaces/GurobiInterface.hpp"
 
@@ -81,7 +82,7 @@ get_mip_solver_factory( papilo::OptionsInfo& optionsInfo )
 {
    return papilo::GurobiFactory<REAL>::create( );
 }
-#else
+#else /* !PAPILO_HAS_SCIP && !PAPILO_HAS_HIGHS && !PAPILO_HAS_GUROBI */
 
 template <typename REAL>
 static std::unique_ptr<papilo::SolverFactory<REAL>>
@@ -90,9 +91,9 @@ get_mip_solver_factory( papilo::OptionsInfo& optionsInfo )
    return nullptr;
 }
 
-#endif
+#endif /* PAPILO_HAS_SCIP */
 
-#if defined PAPILO_HAVE_ROUNDINGSAT
+#if PAPILO_HAS_ROUNDINGSAT
 
 #include "papilo/interfaces/RoundingsatInterface.hpp"
 
@@ -102,7 +103,7 @@ get_sat_solver_factory( papilo::OptionsInfo& optionsInfo )
 {
    return papilo::RoundingsatFactory<REAL>::create( );
 }
-#else
+#else /* !PAPILO_HAS_ROUNDINGSAT */
 
 template <typename REAL>
 static std::unique_ptr<papilo::SolverFactory<REAL>>
@@ -110,10 +111,10 @@ get_sat_solver_factory( papilo::OptionsInfo& optionsInfo )
 {
    return nullptr;
 }
-#endif
+#endif /* PAPILO_HAS_ROUNDINGSAT */
 
 
-#if defined( PAPILO_HAVE_SOPLEX )
+#if PAPILO_HAS_SOPLEX
 #include "papilo/interfaces/SoplexInterface.hpp"
 
 static void
@@ -132,7 +133,7 @@ get_lp_solver_factory( papilo::OptionsInfo& optionsInfo )
 {
    return papilo::SoplexFactory<REAL>::create( setupsoplex, &optionsInfo );
 }
-#elif defined PAPILO_HAVE_GLOP
+#elif PAPILO_HAS_GLOP
 
 #include "papilo/interfaces/GlopInterface.hpp"
 
@@ -159,7 +160,7 @@ int
 main( int argc, char* argv[] )
 {
    using namespace papilo;
-//#ifdef PAPILO_HAVE_GLOP
+//#ifdef PAPILO_HAS_GLOP
 //   google::InitGoogleLogging(argv[0]);
 //#endif
    print_header();

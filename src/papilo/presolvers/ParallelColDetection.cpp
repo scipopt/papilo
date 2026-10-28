@@ -27,8 +27,10 @@
 namespace papilo
 {
 
+#ifndef PAPILO_HEADER_ONLY
 template class ParallelColDetection<double>;
 template class ParallelColDetection<Quad>;
 template class ParallelColDetection<Rational>;
+#endif /* !PAPILO_HEADER_ONLY */
 
 } // namespace papilo

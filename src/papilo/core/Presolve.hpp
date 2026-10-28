@@ -38,7 +38,7 @@
 #include "papilo/misc/DependentRows.hpp"
 #include "papilo/misc/ParameterSet.hpp"
 #include "papilo/misc/Timer.hpp"
-#ifdef PAPILO_TBB
+#if PAPILO_HAS_TBB
 #include "papilo/misc/tbb.hpp"
 #endif
 #include "papilo/misc/Vec.hpp"
@@ -302,97 +302,119 @@ class Presolve
    bool roundReduced{};
 
    /// evaluate result array of each presolver, return the largest result value
+   PAPILO_NO_EXPORT
    PresolveStatus
    evaluateResults();
 
+   PAPILO_NO_EXPORT
    void
    finishRound( ProblemUpdate<REAL>& probUpdate );
 
+   PAPILO_NO_EXPORT
    void
    applyPostponed( ProblemUpdate<REAL>& probUpdate, const Timer& presolveTimer );
 
+   PAPILO_NO_EXPORT
    Delegator
    determine_next_round( Problem<REAL>& problem,
                          ProblemUpdate<REAL>& probUpdate,
                          const Statistics& roundStats,
                          const Timer& presolvetimer, bool unchanged = false );
 
+   PAPILO_NO_EXPORT
    PresolveStatus
    apply_all_presolver_reductions( ProblemUpdate<REAL>& probUpdate, const Timer& presolveTimer );
 
+   PAPILO_NO_EXPORT
    void
    printRoundStats( std::string rndtype );
 
+   PAPILO_NO_EXPORT
    void
    printPresolversStats();
 
  private:
+   PAPILO_NO_EXPORT
    void
    logStatus( ProblemUpdate<REAL>& problem,
               const PostsolveStorage<REAL>& postsolveStorage ) const;
 
+   PAPILO_NO_EXPORT
    bool
    is_interrupted( const Timer& presolvetimer ) const;
 
 
+   PAPILO_NO_EXPORT
    bool
    are_applied_tsx_negligible( const Problem<REAL>& problem,
                              const ProblemUpdate<REAL>& probUpdate,
                              const Statistics& roundStats,
                              Delegator delegator ) ;
 
+   PAPILO_NO_EXPORT
    Delegator
    increase_delegator( Delegator delegator );
 
+   PAPILO_NO_EXPORT
    std::string
    get_round_type( Delegator delegator );
 
+   PAPILO_NO_EXPORT
    Delegator
    increase_round_if_last_run_was_not_successfull(
        const Problem<REAL>& problem, const ProblemUpdate<REAL>& probUpdate,
        const Statistics& roundStats, bool unchanged );
 
+   PAPILO_NO_EXPORT
    Delegator
    handle_case_exceeded( Delegator& next_round );
 
+   PAPILO_NO_EXPORT
    bool
    is_user_interrupted() const;
 
+   PAPILO_NO_EXPORT
    bool
    is_time_exceeded( const Timer& presolvetimer ) const;
 
+   PAPILO_NO_EXPORT
    PresolveStatus
    evaluate_and_apply( const Timer& timer, Problem<REAL>& problem,
                        PresolveResult<REAL>& result,
                        ProblemUpdate<REAL>& probUpdate,
                        const Statistics& oldstats, bool run_sequential );
 
+   PAPILO_NO_EXPORT
    void
    apply_reduction_of_solver( ProblemUpdate<REAL>& probUpdate,
                               size_t index_presolver );
 
+   PAPILO_NO_EXPORT
    void
    apply_result_sequential( int index_presolver,
                              ProblemUpdate<REAL>& probUpdate,
                              bool& run_sequential );
 
+   PAPILO_NO_EXPORT
    void
    run_presolvers( const Problem<REAL>& problem,
                    const std::pair<int, int>& presolver_2_run,
                    ProblemUpdate<REAL>& probUpdate, bool& run_sequential, const Timer& timer );
 
+   PAPILO_NO_EXPORT
    bool
    is_status_infeasible_or_unbounded( const PresolveStatus& status ) const;
 
+   PAPILO_NO_EXPORT
    bool
    are_only_dual_postsolve_presolvers_enabled();
 };
 
-#ifdef PAPILO_USE_EXTERN_TEMPLATES
-extern template class Presolve<double>;
-extern template class Presolve<Quad>;
-extern template class Presolve<Rational>;
-#endif
+#ifndef PAPILO_HEADER_ONLY
+extern template class PAPILO_EXPORT_TEMPLATE Presolve<double>;
+extern template class PAPILO_EXPORT_TEMPLATE Presolve<Quad>;
+extern template class PAPILO_EXPORT_TEMPLATE Presolve<Rational>;
+#endif /* !PAPILO_HEADER_ONLY */
 
 /***
  * presolves the problem and applies the reductions found by the presolvers
@@ -409,7 +431,7 @@ template <typename REAL>
 PresolveResult<REAL>
 Presolve<REAL>::apply( Problem<REAL>& problem, bool store_dual_postsolve )
 {
-#ifdef PAPILO_TBB
+#if PAPILO_HAS_TBB
    tbb::task_arena arena( presolveOptions.threads == 0
                               ? tbb::task_arena::automatic
                               : presolveOptions.threads );
@@ -425,7 +447,7 @@ Presolve<REAL>::apply( Problem<REAL>& problem, bool store_dual_postsolve )
        ( presolveOptions.feastol != 0 || presolveOptions.epsilon != 0 ))
       msg.error("\nRunning rational presolving with positive tolerances may give unexpected results. \n");
 
-#ifdef PAPILO_TBB
+#if PAPILO_HAS_TBB
    return arena.execute( [this, &problem, store_dual_postsolve]() {
 #endif
       stats = Statistics();
@@ -447,7 +469,7 @@ Presolve<REAL>::apply( Problem<REAL>& problem, bool store_dual_postsolve )
       result.postsolve =
           PostsolveStorage<REAL>( problem, num, presolveOptions );
 
-#ifndef PAPILO_TBB
+#if ! PAPILO_HAS_TBB
       if( presolveOptions.threads != 1 )
          msg.warn( "PaPILO without TBB can only use one thread. Number of "
                    "threads is set to 1\n" );
@@ -824,7 +846,7 @@ Presolve<REAL>::apply( Problem<REAL>& problem, bool store_dual_postsolve )
                   solution.varBasisStatus.resize( problem.getNCols() );
                }
 
-#ifdef PAPILO_TBB
+#if PAPILO_HAS_TBB
                tbb::parallel_for(
                    tbb::blocked_range<int>( 0, ncomponents - 1 ),
                    [this, &components, &solution, &problem, &result, &compInfo,
@@ -919,7 +941,7 @@ Presolve<REAL>::apply( Problem<REAL>& problem, bool store_dual_postsolve )
                             }
                          }
                       }
-#ifdef PAPILO_TBB
+#if PAPILO_HAS_TBB
                    }
                    ,tbb::simple_partitioner() );
 #endif
@@ -1007,7 +1029,7 @@ Presolve<REAL>::apply( Problem<REAL>& problem, bool store_dual_postsolve )
       // problem was not changed
       result.status = PresolveStatus::kUnchanged;
       return result;
-#ifdef PAPILO_TBB
+#if PAPILO_HAS_TBB
    } );
 #endif
 }
@@ -1019,7 +1041,7 @@ Presolve<REAL>::run_presolvers( const Problem<REAL>& problem,
                                 ProblemUpdate<REAL>& probUpdate,
                                 bool& run_sequential, const Timer& timer )
 {
-#ifndef PAPILO_TBB
+#if ! PAPILO_HAS_TBB
    assert(presolveOptions.runs_sequential() == true);
 #endif
    if( presolveOptions.apply_results_immediately_if_run_sequentially && presolveOptions.runs_sequential() )
@@ -1038,7 +1060,7 @@ Presolve<REAL>::run_presolvers( const Problem<REAL>& problem,
             return;
       }
    }
-#ifdef PAPILO_TBB
+#if PAPILO_HAS_TBB
    else
    {
       int cause = -1;

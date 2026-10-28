@@ -27,8 +27,10 @@
 namespace papilo
 {
 
+#ifndef PAPILO_HEADER_ONLY
 template class SingletonCols<double>;
 template class SingletonCols<Quad>;
 template class SingletonCols<Rational>;
+#endif /* !PAPILO_HEADER_ONLY */
 
 } // namespace papilo

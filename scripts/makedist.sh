@@ -15,7 +15,7 @@ echo ">>> Packaging $NAME."
 
 # echo "store git hash"
 GITHASH=`git rev-parse --short HEAD`
-sed -i "s/undef PAPILO_GITHASH_AVAILABLE/define PAPILO_GITHASH_AVAILABLE/g" src/papilo/Config.hpp
+sed -i "s/#define PAPILO_HAS_GITHASH 0/#define PAPILO_HAS_GITHASH 1/g" src/papilo/Config.hpp
 sed -i "s/undef PAPILO_GITHASH/define PAPILO_GITHASH \"$GITHASH\"/g" src/papilo/Config.hpp
 
 # Before we create a tarball change the directory and file rights in a command way

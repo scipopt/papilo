@@ -1,93 +1,213 @@
-if(NOT TARGET papilo)
-  include(${CMAKE_CURRENT_LIST_DIR}/papilo-targets.cmake)
+# This CMake configuration exposes the following targets:
+#
+# PAPILO::PAPILO             alias to PAPILO::libpapilo-core
+# PAPILO::libpapilo          Header-only PaPILO library, refers to PAPILO::libclusol and other dependencies.
+# PAPILO::papilo-executable  The PaPILO executable.
+# PAPILO::libpapilo-core     PAPILO::libpapilo plus static library.
+# PAPILO::libclusol          Additional static library with linear algebra functionality.
+# PAPILO::libpapilo_c        The shared C library.
+#
+# papilo                     Deprecated; refers to PAPILO::libpapilo.
+#
+# Moreover, it defines the following variables:
+#
+# PAPILO_FOUND               Indicates whether PaPILO was found
+# PAPILO_VERSION             Version string
+
+# Check if already found.
+if(TARGET PAPILO::PAPILO)
+   if(NOT PAPILO_FIND_QUIETLY)
+      message(STATUS "Already found suitable PaPILO version ${PAPILO_VERSION}.")
+   endif()
+else()
+  if(NOT PAPILO_FIND_QUIETLY)
+     message(STATUS "Checking PaPILO: ${CMAKE_CURRENT_LIST_FILE}")
+  endif()
 endif()
-set(PAPILO_IMPORTED_TARGETS papilo)
-set(PAPILO_FOUND 1)
 
-# For `find_dependency` function.
-include(CMakeFindDependencyMacro)
+# Whether papilo-core is built with position-independent code.
+set(PAPILO_HAS_PIC @PAPILO_HAS_PIC@)
 
-list(APPEND CMAKE_MODULE_PATH @EXTRA_CMAKE_MODULE_PATH@)
-
-# If PAPILO was built with system fmt then we also need it.
+# Whether PaPILO uses the system fmt library.
 set(PAPILO_HAVE_SYSTEM_FMT @PAPILO_HAVE_SYSTEM_FMT@)
-if(PAPILO_HAVE_SYSTEM_FMT AND PAPILO_FOUND)
-   if(NOT fmt_FOUND)
+
+# Whether PaPILO was built with GMP.
+set(PAPILO_HAS_GMP @PAPILO_HAS_GMP@)
+
+# Whether PaPILO was built with Quadmath.
+set(PAPILO_HAS_QUADMATH @PAPILO_HAS_QUADMATH@)
+
+# Whether PaPILO was built with TBBi.
+set(PAPILO_HAS_TBB @PAPILO_HAS_TBB@)
+
+# Whether PaPILO uses the bytell hashmap.
+set(PAPILO_HAS_BYTELL_HASHMAP @PAPILO_HAS_BYTELL_HASHMAP@)
+
+# Whether PaPILO was built with Boost.
+set(PAPILO_HAS_BOOST @PAPILO_HAS_BOOST@)
+
+# Whether PaPILO was built with LUSOL.
+set(PAPILO_HAS_LUSOL @PAPILO_HAS_LUSOL@)
+
+# Dependency search and inclusion of targets.
+if(NOT TARGET PAPILO::PAPILO)
+   # Indent messages for dependency search.
+   list(APPEND CMAKE_MESSAGE_INDENT "  ")
+   
+   # For `find_dependency` function.
+   include(CMakeFindDependencyMacro)
+   
+   list(APPEND CMAKE_MODULE_PATH @EXTRA_CMAKE_MODULE_PATH@)
+   
+   # If PAPILO was built with system fmt then we also need it.
+   if(PAPILO_HAVE_SYSTEM_FMT AND PAPILO_FOUND)
       find_dependency(fmt CONFIG)
    endif()
-endif()
-
-# If PAPILO was built with Quadmath then we also need it.
-set(PAPILO_HAVE_FLOAT128 @PAPILO_HAVE_FLOAT128@)
-if(PAPILO_HAVE_FLOAT128)
-   if(NOT Quadmath_FOUND)
-      find_dependency(Quadmath)
-   endif()
-endif()
-
-# If PAPILO was built with GMP then we also need it.
-set(PAPILO_HAVE_GMP @PAPILO_HAVE_GMP@)
-if(PAPILO_HAVE_GMP AND PAPILO_FOUND)
-   if(NOT GMP_FOUND)
-      if(NOT GMP_DIR)
-         set(GMP_DIR @GMP_DIR@)
-      endif()
+   
+   # If PaPILO was built with GMP then we also need it.
+   @PAPILO_CONFIG_GMP_DIR@
+   if(PAPILO_HAS_GMP)
       find_dependency(GMP)
-   endif()
-endif()
-
-# If PAPILO was built with TBB then we also need it.
-set(PAPILO_TBB @PAPILO_TBB@)
-if(PAPILO_TBB AND PAPILO_FOUND)
-   if(NOT TBB_FOUND)
-      if(NOT TBB_DIR)
-         set(TBB_DIR @TBB_DIR@)
+   
+      # Support legacy FindGMP.cmake module when importing PaPILO.
+      if(GMP_FOUND AND NOT TARGET GMP::GMP)
+         if(TARGET GMP::gmp)
+            message(WARNING "Found GMP version ${GMP_VERSION} has no GMP::GMP target; interfacing GMP::gmp target instead.")
+            add_library(GMP::GMP INTERFACE IMPORTED)
+            target_link_libraries(GMP::GMP INTERFACE GMP::gmp)
+         elseif(TARGET GMP)
+            message(WARNING "Found GMP version ${GMP_VERSION} has no GMP::GMP target; interfacing GMP target instead.")
+            add_library(GMP::GMP INTERFACE IMPORTED)
+            target_link_libraries(GMP::GMP INTERFACE GMP)
+         elseif(TARGET gmp)
+            message(WARNING "Found GMP version ${GMP_VERSION} has no GMP::GMP target; interfacing gmp target instead.")
+            add_library(GMP::GMP INTERFACE IMPORTED)
+            target_link_libraries(GMP::GMP INTERFACE gmp)
+         elseif(GMP_INCLUDE_DIRS AND GMP_LIBRARIES)
+            message(WARNING "Found GMP version ${GMP_VERSION} has no GMP::GMP target; using legacy variables GMP_INCLUDE_DIRS=\"${GMP_INCLUDE_DIRS}\" and GMP_LIBRARIES=\"${GMP_LIBRARIES}\" instead.")
+            # GMP_LIBRARIES may be a list, so we need to create each library seperately and glue them via an INTERFACE library.
+            list(LENGTH GMP_LIBRARIES num_gmp_lib)
+            math(EXPR last_gmp_lib ${num_gmp_lib}-1)
+            add_library(GMP_libgmp INTERFACE IMPORTED)
+            foreach(id_gmp_lib RANGE ${last_gmp_lib})
+               add_library(GMP::libgmp_${id_gmp_lib} UNKNOWN IMPORTED)
+               list(GET GMP_LIBRARIES ${id_gmp_lib} the_gmp_lib)
+               set_target_properties(GMP::libgmp_${id_gmp_lib} PROPERTIES
+                  IMPORTED_LOCATION "${the_gmp_lib}"
+                  INTERFACE_INCLUDE_DIRECTORIES "${GMP_INCLUDE_DIRS}")
+               target_link_libraries(GMP_libgmp INTERFACE GMP::libgmp_${id_gmp_lib})
+            endforeach()
+            add_library(GMP::GMP INTERFACE IMPORTED)
+            target_link_libraries(GMP::GMP INTERFACE GMP_libgmp)
+         else()
+            message(FATAL_ERROR "Found GMP version ${GMP_VERSION} has no GMP::GMP target; unable to recover!")
+         endif()
       endif()
-      find_dependency(TBB 2018 COMPONENTS tbb tbbmalloc HINTS ${CMAKE_CURRENT_LIST_DIR}/_deps/local/ ${CMAKE_CURRENT_LIST_DIR}/_deps/local/lib)
    endif()
-endif()
-
-# If PAPILO uses the standard hashmap then we also do.
-set(PAPILO_USE_STANDARD_HASHMAP @PAPILO_USE_STANDARD_HASHMAP@)
-
-# If PAPILO was built with iostreams / program_options / serialization then we also need it.
-set(PAPILO_HAVE_BOOST_IOSTREAMS @PAPILO_HAVE_BOOST_IOSTREAMS@)
-set(PAPILO_USE_BOOST_IOSTREAMS_WITH_ZLIB @PAPILO_USE_BOOST_IOSTREAMS_WITH_ZLIB@)
-set(PAPILO_USE_BOOST_IOSTREAMS_WITH_BZIP2 @PAPILO_USE_BOOST_IOSTREAMS_WITH_BZIP2@)
-set(PAPILO_COMMAND_LINE_AVAILABLE @PAPILO_COMMAND_LINE_AVAILABLE@)
-set(PAPILO_SERIALIZATION_AVAILABLE @PAPILO_SERIALIZATION_AVAILABLE@)
-set(BOOST_COMPONENTS)
-if(PAPILO_HAVE_BOOST_IOSTREAMS)
-   set(BOOST_COMPONENTS ${BOOST_COMPONENTS} iostreams)
-endif()
-if(PAPILO_COMMAND_LINE_AVAILABLE)
-   set(BOOST_COMPONENTS ${BOOST_COMPONENTS} program_options)
-endif()
-if(PAPILO_SERIALIZATION_AVAILABLE)
-   set(BOOST_COMPONENTS ${BOOST_COMPONENTS} serialization)
-endif()
-if(BOOST_COMPONENTS AND PAPILO_FOUND)
-   if((NOT Boost_PROGRAM_OPTIONS_FOUND AND PAPILO_COMMAND_LINE_AVAILABLE) OR (NOT Boost_SERIALIZATION_FOUND AND PAPILO_SERIALIZATION_AVAILABLE) OR (NOT Boost_IOSTREAMS_FOUND AND PAPILO_HAVE_BOOST_IOSTREAMS))
-      if(NOT BOOST_ROOT)
-         set(BOOST_ROOT @BOOST_ROOT@)
+   
+   # If PAPILO was built with Quadmath then we also need it.
+   @PAPILO_CONFIG_QUADMATH_DIR@
+   if(PAPILO_HAS_QUADMATH)
+      find_dependency(Quadmath)
+   
+      # Support legacy FindQuadmath.cmake module when importing PaPILO.
+      if(Quadmath_FOUND AND NOT TARGET Quadmath::Quadmath)
+         if(TARGET Quadmath::quadmath)
+            message(WARNING "Found Quadmath has no Quadmath::Quadmath target; interfacing Quadmath::quadmath target instead.")
+            add_library(Quadmath::Quadmath INTERFACE IMPORTED)
+            target_link_libraries(Quadmath::Quadmath INTERFACE Quadmath::quadmath)
+         elseif(QUADMATH_INCLUDE_DIRS AND QUADMATH_LIBRARIES)
+            message(WARNING "Found Quadmath has no Quadmath::Quadmath target; using legacy variables QUADMATH_INCLUDE_DIRS=\"${QUADMATH_INCLUDE_DIRS}\" and QUADMATH_LIBRARIES=\"${QUADMATH_LIBRARIES}\" instead.")
+            add_library(Quadmath::Quadmath UNKNOWN IMPORTED)
+            set_target_properties(Quadmath::Quadmath PROPERTIES
+               IMPORTED_LOCATION "${QUADMATH_LIBRARIES}"
+               INTERFACE_INCLUDE_DIRECTORIES "${QUADMATH_INCLUDE_DIRS}"
+               )
+         else()
+            message(FATAL_ERROR "Found Quadmath has no Quadmath::Quadmath target; unable to recover!")
+         endif()
       endif()
-      find_dependency(Boost @BOOST_MIN_VERSION@ COMPONENTS ${BOOST_COMPONENTS})
+   endif()
+   
+   # If PAPILO was built with TBB then we also need it.
+   @PAPILO_CONFIG_TBB_DIR@
+   if(PAPILO_HAS_TBB)
+      find_dependency(TBB @TBB_MIN_VERSION@
+         COMPONENTS tbb tbbmalloc
+         HINTS "${TBB_DIR}")
+   endif()
+   
+   # If PAPILO was built with Boost then we also need those.
+   @PAPILO_CONFIG_BOOST_DIR@
+   if(PAPILO_HAS_BOOST AND ((NOT Boost_FOUND) OR ("${Boost_VERSION}" VERSION_LESS @BOOST_MIN_VERSION@)))
+      find_dependency(Boost @BOOST_MIN_VERSION@)
+   endif()
+   
+   # We also need Threads.
+   find_dependency(Threads)
+   
+   # If PAPILO was built with LUSOL then we also need Fortran and BLAS.
+   if(PAPILO_HAS_LUSOL)
+      enable_language(Fortran)
+      find_dependency(BLAS)
+      if(BLAS_FOUND AND (NOT TARGET BLAS::BLAS) AND (CMAKE_VERSION VERSION_LESS 3.18))
+         message(WARNING "Defining target BLAS::BLAS with linker flags \"${BLAS_LINKER_FLAGS}\" and libraries \"${BLAS_LIBRARIES}\". Consider upgrading to CMake version 3.18 or higher.")
+         add_library(BLAS::BLAS IMPORTED UNKNOWN)
+         set_target_properties(BLAS::BLAS PROPERTIES
+            INTERFACE_INCLUDE_DIRECTORIES "${BLAS_LINKER_FLAGS}"
+            IMPORTED_LOCATION "${BLAS_LIBRARIES}")
+      endif()
+   endif()
+   
+   # Unindent messages again; equivalent to list(POP_BACK, CMAKE_MESSAGE_INDENT) which requires CMake 3.15.
+   list(REVERSE CMAKE_MESSAGE_INDENT)
+   list(REMOVE_AT CMAKE_MESSAGE_INDENT 0)
+   list(REVERSE CMAKE_MESSAGE_INDENT)
+   
+   # Include the targets.
+   include("${CMAKE_CURRENT_LIST_DIR}/papilo-targets.cmake")
+   
+   # Add main alias.
+   add_library(PAPILO::PAPILO ALIAS PAPILO::libpapilo-core)
+
+   # Set version.
+   set(PAPILO_VERSION "@PAPILO_VERSION_MAJOR@.@PAPILO_VERSION_MINOR@.@PAPILO_VERSION_PATCH@")
+
+   # Report success.
+   if(NOT PAPILO_FIND_QUIETLY)
+      message(STATUS "Found PaPILO version ${PAPILO_VERSION}.")
    endif()
 endif()
 
-# We also need Threads.
-if(PAPILO_FOUND)
-   if(NOT Threads_FOUND)
-      find_dependency(Threads)
+# Deprecated variables.
+set(PAPILO_TBB ${PAPILO_HAS_TBB})
+set(PAPILO_HAVE_FLOAT128 ${PAPILO_HAS_QUADMATH})
+set(PAPILO_HAVE_GMP ${PAPILO_HAS_GMP})
+set(PAPILO_SERIALIZATION_AVAILABLE ${PAPILO_HAS_BOOST_SERIALIZATION})
+set(PAPILO_COMMAND_LINE_AVAILABLE ${PAPILO_HAS_BOOST_PROGRAM_OPTIONS})
+set(PAPILO_USE_BOOST_IOSTREAMS_WITH_ZLIB ${PAPILO_HAS_BOOST_IOSTREAMS_ZLIB})
+set(PAPILO_USE_BOOST_IOSTREAMS_WITH_BZIP2 ${PAPILO_HAS_BOOST_IOSTREAMS_BZIP2})
+set(PAPILO_USE_STANDARD_HASHMAP NOT ${PAPILO_HAS_BYTELL_HASHMAP})
+
+# Deprecated `PAPILO_IMPORTED_TARGETS` target aliases libpapilo-core.
+if(NOT TARGET PAPILO_IMPORTED_TARGETS)
+   add_library(PAPILO_IMPORTED_TARGETS INTERFACE IMPORTED)
+   if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.17)
+      set_target_properties(PAPILO_IMPORTED_TARGETS PROPERTIES
+         DEPRECATION "Do not use PAPILO_IMPORTED_TARGETS anymore, but the PAPILO::PAPILO target instead.")
+   else()
+      message(DEBUG "CMake version ${CMAKE_VERSION} is too low to mark PAPILO_IMPORTED_TARGETS target as deprecated!")
    endif()
+   target_link_libraries(PAPILO_IMPORTED_TARGETS INTERFACE PAPILO::libpapilo-core)
 endif()
+set(PAPILO_IMPORTED_TARGETS "PAPILO_IMPORTED_TARGETS")
+get_target_property(PAPILO_INCLUDE_DIRS PAPILO::libpapilo INTERFACE_INCLUDE_DIRECTORIES)
 
-if(@PAPILO_HAVE_LUSOL@ AND PAPILO_FOUND)
-   enable_language(Fortran)
-endif()
-
-if(PAPILO_FOUND)
-  find_package_message(PAPILO "Found PAPILO: ${CMAKE_CURRENT_LIST_FILE} (found suitable version \"@papilo_VERSION@\")"
-    "[${PAPILO_FOUND}][${TBB_FOUND}]")
+# Deprecated `papilo` aliases PAPILO::PAPILO.
+if(NOT TARGET papilo)
+   add_library(papilo INTERFACE IMPORTED)
+   set_target_properties(papilo PROPERTIES
+      DEPRECATION "Do not use target papilo anymore, but PAPILO::PAPILO instead.")
+   target_link_libraries(papilo INTERFACE PAPILO::PAPILO)
 endif()
 

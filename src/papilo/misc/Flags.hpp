@@ -83,6 +83,7 @@ class Flags
  private:
    using UnderlyingType = typename std::underlying_type<BaseType>::type;
 
+   PAPILO_NO_EXPORT
    static UnderlyingType
    joinFlags( BaseType f1 )
    {
@@ -90,6 +91,7 @@ class Flags
    }
 
    template <typename... Args>
+   PAPILO_NO_EXPORT
    static UnderlyingType
    joinFlags( BaseType f1, Args... other )
    {

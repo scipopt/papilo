@@ -27,8 +27,10 @@
 namespace papilo
 {
 
+#ifndef PAPILO_HEADER_ONLY
 template class ConstraintMatrix<double>;
 template class ConstraintMatrix<Quad>;
 template class ConstraintMatrix<Rational>;
+#endif /* !PAPILO_HEADER_ONLY */
 
 } // namespace papilo

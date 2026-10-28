@@ -122,6 +122,7 @@ class ProblemUpdate
 
  private:
    template <typename... Args>
+   PAPILO_NO_EXPORT
    void
    setColState( int col, Args... flags )
    {
@@ -134,6 +135,7 @@ class ProblemUpdate
    }
 
    template <typename... Args>
+   PAPILO_NO_EXPORT
    void
    setRowState( int row, Args... flags )
    {
@@ -476,11 +478,11 @@ class ProblemUpdate
    shuffle( std::ranlux24& random_generator, Vec<int>& array );
 };
 
-#ifdef PAPILO_USE_EXTERN_TEMPLATES
-extern template class ProblemUpdate<double>;
-extern template class ProblemUpdate<Quad>;
-extern template class ProblemUpdate<Rational>;
-#endif
+#ifndef PAPILO_HEADER_ONLY
+extern template class PAPILO_EXPORT_TEMPLATE ProblemUpdate<double>;
+extern template class PAPILO_EXPORT_TEMPLATE ProblemUpdate<Quad>;
+extern template class PAPILO_EXPORT_TEMPLATE ProblemUpdate<Rational>;
+#endif /* !PAPILO_HEADER_ONLY */
 
 template <typename REAL>
 ProblemUpdate<REAL>::ProblemUpdate(
@@ -938,7 +940,7 @@ ProblemUpdate<REAL>::compress( bool full )
    row_state.resize( problem.getNRows() );
    col_state.resize( problem.getNCols() );
 
-#ifdef PAPILO_TBB
+#if PAPILO_HAS_TBB
    tbb::parallel_invoke(
        [this, &mappings, full]() {
           compress_index_vector( mappings.first, random_row_perm );

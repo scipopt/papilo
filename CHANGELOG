@@ -37,7 +37,21 @@ Data Structures
 Build system
 ------------
 
-- add option SYSTEM_FMT to link FMT library of system instead of bundled headers
+- Renamed several CMake variables and preprocessor macros to PAPILO_HAS_*, creating deprecated aliases. The new macros are always defined but are either 0 or 1. Affected: PAPILO_TBB -> PAPILO_HAS_TBB, PAPILO_HAVE_FLOAT128 -> PAPILO_HAS_QUADMATH, PAPILO_HAVE_GMP -> PAPILO_HAS_GMP and PAPILO_USE_* and PAPILO_*_AVAILABLE.
+- Removed CMake options TBB_DOWNLOAD and INSTALL_TBB.
+- Several CMake options now allow three options: 1/ON/TRUE makes a dependency required, 0/OFF/FALSE disables it, and AUTO makes it optional. Affected options: TBB, GLOP, GMP, QUADMATH, SOPLEX, GUROBI, SCIP, HIGHS, LUSOL.
+- Added tests for whether SoPlex is compatible with respect to using GMP/Boost.
+- Added CMake option ORTOOLS_DIR to supply a directory for finding OR-Tools (for GLOP LP solver).
+- Removed own CMake module for GLOP; import ortools directly.
+- Replaced CMake module for Quadmath.
+- Replaced CMake module for GMP.
+- Replaced CMake module for Gurobi.
+- Renamed CMake targets: papilo -> PAPILO::libpapilo, papilo-core -> PAPILO::libpapilo-core and libpapilo -> libpapilo_c
+- Status messages for finding dependencies are indented.
+- Moved library targets (declaration and installation) to src/CMakeLists.txt.
+- Added HEADER_ONLY option. If set, no specialized templates are compiled into the library.
+- Added option SYSTEM_FMT to link FMT library of system instead of bundled headers
+- Added option GITHASH_BRANCH to append the current git branch to the githash.
 
 Fixed bugs
 ----------

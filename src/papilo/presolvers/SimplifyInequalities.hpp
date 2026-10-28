@@ -67,9 +67,11 @@ class SimplifyInequalities : public PresolveMethod<REAL>
             const Timer& timer, int& reason_of_infeasibility) override;
 
  private:
+   PAPILO_NO_EXPORT
    REAL
    computeGreatestCommonDivisor( REAL val1, REAL val2, const Num<REAL>& num );
 
+   PAPILO_NO_EXPORT
    void
    simplify( const REAL* values, const int* colinds, int rowLength,
              const RowActivity<REAL>& activity, const RowFlags& rflag,
@@ -78,16 +80,20 @@ class SimplifyInequalities : public PresolveMethod<REAL>
              Vec<int>& coeffDelete, REAL& gcd, bool& change,
              const Num<REAL>& num );
 
+   PAPILO_NO_EXPORT
    bool
    isUnbounded( int row, const Vec<RowFlags>& rowFlags ) const;
 
+   PAPILO_NO_EXPORT
    bool
    isRedundant( int row, const Vec<RowFlags>& rflags ) const;
 
+   PAPILO_NO_EXPORT
    bool
    isInfiniteActivity( const Vec<RowActivity<REAL>>& activities,
                        int row ) const;
 
+   PAPILO_NO_EXPORT
    PresolveStatus
    perform_simplify_ineq_task(
        const Num<REAL>& num, const ConstraintMatrix<REAL>& consMatrix,
@@ -98,11 +104,11 @@ class SimplifyInequalities : public PresolveMethod<REAL>
        Vec<int>& colOrder );
 };
 
-#ifdef PAPILO_USE_EXTERN_TEMPLATES
-extern template class SimplifyInequalities<double>;
-extern template class SimplifyInequalities<Quad>;
-extern template class SimplifyInequalities<Rational>;
-#endif
+#ifndef PAPILO_HEADER_ONLY
+extern template class PAPILO_EXPORT_TEMPLATE SimplifyInequalities<double>;
+extern template class PAPILO_EXPORT_TEMPLATE SimplifyInequalities<Quad>;
+extern template class PAPILO_EXPORT_TEMPLATE SimplifyInequalities<Rational>;
+#endif /* !PAPILO_HEADER_ONLY */
 
 /***
  * to calculate the Greatest Common Divisor heuristics are used according to
@@ -312,7 +318,7 @@ SimplifyInequalities<REAL>::execute( const Problem<REAL>& problem,
 
    PresolveStatus result = PresolveStatus::kUnchanged;
 
-#ifndef PAPILO_TBB
+#if ! PAPILO_HAS_TBB
    assert( problemUpdate.getPresolveOptions().runs_sequential() );
 #endif
 
@@ -333,7 +339,7 @@ SimplifyInequalities<REAL>::execute( const Problem<REAL>& problem,
             result = PresolveStatus::kReduced;
       }
    }
-#ifdef PAPILO_TBB
+#if PAPILO_HAS_TBB
    else
    {
       Vec<Reductions<REAL>> stored_reductions( nrows );

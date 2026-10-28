@@ -91,7 +91,7 @@ class CliqueProbingView
    void
    reset();
 
-#ifdef PAPILO_TBB
+#if PAPILO_HAS_TBB
    void
    parallelProbe( const tbb::blocked_range<int>& r, bool& initbounds, std::list<std::pair<int, REAL>>& changed_clique_lbs_inds_vals_thread_local, 
       std::list<std::pair<int,REAL>>& changed_clique_ubs_inds_vals_thread_local, Vec<std::pair<int,int>>& lb_implications_thread_local,
@@ -258,7 +258,7 @@ class CliqueProbingView
       cliqueEquation = equation;
 
       bool initbounds = false;
-#ifdef PAPILO_TBB
+#if PAPILO_HAS_TBB
       tbb::combinable<Vec<std::pair<int,int>>> lb_implications_thread;
       tbb::combinable<Vec<std::pair<int,int>>> ub_implications_thread;
       tbb::combinable<std::pair<std::list<std::pair<int,REAL>>,bool>> changed_clique_ubs_inds_vals_initbounds_thread;
@@ -832,11 +832,11 @@ class CliqueProbingView
    int numpropagations = 0;
 };
 
-#ifdef PAPILO_USE_EXTERN_TEMPLATES
-extern template class CliqueProbingView<double>;
-extern template class CliqueProbingView<Quad>;
-extern template class CliqueProbingView<Rational>;
-#endif
+#ifndef PAPILO_HEADER_ONLY
+extern template class PAPILO_EXPORT_TEMPLATE CliqueProbingView<double>;
+extern template class PAPILO_EXPORT_TEMPLATE CliqueProbingView<Quad>;
+extern template class PAPILO_EXPORT_TEMPLATE CliqueProbingView<Rational>;
+#endif /* !PAPILO_HEADER_ONLY */
 
 template <typename REAL>
 CliqueProbingView<REAL>::CliqueProbingView( const Problem<REAL>& problem_,

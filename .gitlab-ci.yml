@@ -7,7 +7,10 @@ variables:
   SOPLEX_REVISION: v8.1.0
   SCIP_REVISION: v10.1.0
   HIGHS_REVISION: v1.15.1
-  OR_TOOLS_REVISION: v9.10
+  ORTOOLS_VERSION: 9.15
+  ORTOOLS_BUILD: 6755
+  # Commit 3.3.26 https://gitlab.com/MIAOresearch/software/roundingsat/-/commit/d4edbf7908a9bb951fd181940919e0f3ac7ab1ee
+  ROUNDINGSAT_REVISION: d4edbf7908a9bb951fd181940919e0f3ac7ab1ee
 
   # project directories
   SETUP_DIR: ${CI_PROJECT_DIR}/setups
@@ -20,6 +23,7 @@ variables:
   SCIP_DIR: ${SETUP_DIR}/scip
   HIGHS_DIR: ${SETUP_DIR}/highs
   ROUNDINGSAT_DIR: ${SETUP_DIR}/roundingsat
+  ORTOOLS_DIR: ${SETUP_DIR}/ortools
 
 #### stages ####
 
@@ -69,6 +73,23 @@ boost-setup:
     - ./bootstrap.sh --prefix=${INSTALL_DIR} --with-libraries=program_options,serialization,iostreams,regex
     - ./b2 --prefix=${INSTALL_DIR} -j8 install
 
+"ortools-setup":
+  extends: .common
+  stage: setup
+  artifacts:
+    paths:
+      - ${ORTOOLS_DIR}
+    expire_in: 1 hour
+  when: manual
+  allow_failure: true
+  # use the prebuilt C++ archive for Debian 12 (base of the gcc:12 image), building from source takes hours
+  # it bundles its own Boost, SCIP, SoPlex and HiGHS, hence it is kept out of INSTALL_DIR
+  script:
+    - mkdir -p ${ORTOOLS_DIR}
+    - wget https://github.com/google/or-tools/releases/download/v${ORTOOLS_VERSION}/or-tools_amd64_debian-12_cpp_v${ORTOOLS_VERSION}.${ORTOOLS_BUILD}.tar.gz -O ${ORTOOLS_DIR}.tar.gz
+    - tar -xzf ${ORTOOLS_DIR}.tar.gz -C ${ORTOOLS_DIR} --strip-components=1
+
+
 papilo-setup:
   extends: .common
   stage: setup
@@ -82,9 +103,25 @@ papilo-setup:
     - make -j8 install
     - ctest --output-on-failure -j8
 
+"roundingsat-setup":
+  extends: .common
+  stage: setup
+  artifacts:
+    paths:
+      - ${ROUNDINGSAT_DIR}
+    expire_in: 1 hour
+  when: manual
+  allow_failure: true
+  # PaPILO compiles the RoundingSat sources itself, so only the sources are provided
+  script:
+    - mkdir -p ${ROUNDINGSAT_DIR}
+    - wget https://gitlab.com/MIAOresearch/software/roundingsat/-/archive/${ROUNDINGSAT_REVISION}/roundingsat-${ROUNDINGSAT_REVISION}.tar.gz -O ${ROUNDINGSAT_DIR}.tar.gz
+    - tar -xzf ${ROUNDINGSAT_DIR}.tar.gz -C ${ROUNDINGSAT_DIR} --strip-components=1
+
 soplex-setup:
   extends: .common
   stage: setup
+  needs: [ boost-setup ]
   artifacts:
     paths:
       - ${CI_PROJECT_DIR}/installs
@@ -103,17 +140,17 @@ check-cmakeconfig-includes:
   extends: .common
   stage: setup
   script:
-    - /bin/bash test/check_CmakeConfig_includes.sh ${CI_PROJECT_DIR} PAPILO_HAVE_FLOAT128
-    - /bin/bash test/check_CmakeConfig_includes.sh ${CI_PROJECT_DIR} PAPILO_HAVE_GMP
-    - /bin/bash test/check_CmakeConfig_includes.sh ${CI_PROJECT_DIR} PAPILO_COMMAND_LINE_AVAILABLE
-    - /bin/bash test/check_CmakeConfig_includes.sh ${CI_PROJECT_DIR} PAPILO_SERIALIZATION_AVAILABLE
-    - /bin/bash test/check_CmakeConfig_includes.sh ${CI_PROJECT_DIR} PAPILO_HAVE_LUSOL
-    - /bin/bash test/check_CmakeConfig_includes.sh ${CI_PROJECT_DIR} PAPILO_USE_STANDARD_HASHMAP
-    - /bin/bash test/check_CmakeConfig_includes.sh ${CI_PROJECT_DIR} PAPILO_USE_BOOST_IOSTREAMS_WITH_ZLIB
-    - /bin/bash test/check_CmakeConfig_includes.sh ${CI_PROJECT_DIR} PAPILO_USE_BOOST_IOSTREAMS_WITH_BZIP2
-    - /bin/bash test/check_CmakeConfig_includes.sh ${CI_PROJECT_DIR} PAPILO_GITHASH_AVAILABLE
-    - /bin/bash test/check_CmakeConfig_includes.sh ${CI_PROJECT_DIR} BOOST_FOUND
-    - /bin/bash test/check_CmakeConfig_includes.sh ${CI_PROJECT_DIR} PAPILO_TBB
+    - /bin/bash test/check_CmakeConfig_includes.sh ${CI_PROJECT_DIR} PAPILO_HAS_QUADMATH
+    - /bin/bash test/check_CmakeConfig_includes.sh ${CI_PROJECT_DIR} PAPILO_HAS_GMP
+    - /bin/bash test/check_CmakeConfig_includes.sh ${CI_PROJECT_DIR} PAPILO_HAS_BOOST
+    - /bin/bash test/check_CmakeConfig_includes.sh ${CI_PROJECT_DIR} PAPILO_HAS_BOOST_IOSTREAMS_ZLIB
+    - /bin/bash test/check_CmakeConfig_includes.sh ${CI_PROJECT_DIR} PAPILO_HAS_BOOST_IOSTREAMS_BZIP2
+    - /bin/bash test/check_CmakeConfig_includes.sh ${CI_PROJECT_DIR} PAPILO_HAS_BOOST_PROGRAM_OPTIONS
+    - /bin/bash test/check_CmakeConfig_includes.sh ${CI_PROJECT_DIR} PAPILO_HAS_BOOST_SERIALIZATION
+    - /bin/bash test/check_CmakeConfig_includes.sh ${CI_PROJECT_DIR} PAPILO_HAS_LUSOL
+    - /bin/bash test/check_CmakeConfig_includes.sh ${CI_PROJECT_DIR} PAPILO_HAS_BYTELL_HASHMAP
+    - /bin/bash test/check_CmakeConfig_includes.sh ${CI_PROJECT_DIR} PAPILO_HAS_GITHASH
+    - /bin/bash test/check_CmakeConfig_includes.sh ${CI_PROJECT_DIR} PAPILO_HAS_TBB
 
 scip-setup:
   extends: .common
@@ -221,7 +258,7 @@ highs-setup:
   extends: .ctest
   needs: [ boost-setup, scip-setup ]
   variables:
-    CMAKE_FLAGS: "-DSCIP=on"
+    CMAKE_FLAGS: "-DSCIP=on -DSOPLEX=off"
 
 "ctest_highs":
   extends: .ctest
@@ -229,6 +266,23 @@ highs-setup:
   allow_failure: true
   variables:
     CMAKE_FLAGS: "-DHIGHS=on"
+
+"ctest_ortools":
+  extends: .ctest
+  needs: [ boost-setup, ortools-setup ]
+  allow_failure: true
+  variables:
+    # INSTALL_DIR first so that Boost from boost-setup is preferred over the bundled one
+    CMAKE_FLAGS: "-DGLOP=on -DSCIP=off -DSOPLEX=off -DHIGHS=off -DCMAKE_PREFIX_PATH=${INSTALL_DIR};${ORTOOLS_DIR}"
+
+
+"ctest_roundingsat":
+  extends: .ctest
+  needs: [ boost-setup, roundingsat-setup ]
+  allow_failure: true
+  variables:
+    CMAKE_FLAGS: "-DROUNDINGSAT_DIR=${ROUNDINGSAT_DIR}"
+
 
 "soplex_integration":
   extends: .integration
@@ -243,42 +297,3 @@ highs-setup:
   variables:
     SOLVER_REPOSITORY: "https://github.com/scipopt/scip.git"
     CMAKE_FLAGS: "-DLPS=spx -DREADLINE=off -DZIMPL=off -DIPOPT=off -DPAPILO=on"
-
-##############################################
-# TODOs: add tests and integrations of RoundingSAT/ORTools
-##############################################
-
-#".ctest_ortools":
-#  extends: .common
-#  stage: test
-#  #build papilo in debug mode and link ortools and then run ctests
-#  script:
-#    # currently requires Cmake 3.20 but only 3.18 is installed
-#    - mkdir -p ${BUILD_DIR}/${CI_JOB_NAME}
-#    - git clone https://github.com/google/or-tools.git ${BUILD_DIR}/${CI_JOB_NAME}/ortools
-#    - cd ${BUILD_DIR}/${CI_JOB_NAME}/ortools
-#    - git checkout ${ORTOOLS_REVISION}
-#    - cmake -S. -Bbuild -DBUILD_DEPS:BOOL=ON
-#    - cmake --build build
-#"ctest_ortools":
-#  extends: .ctest_ortools
-#  needs: [ boost-setup, scip-setup ]
-#  when: manual
-#  variables:
-#    CMAKE_FLAGS: "-DSCIP=on"
-#
-#"roundingsat-setup":
-#  extends: .common
-#  stage: test
-#  needs: [ boost-setup ]
-#  when: manual
-#  script:
-#    - mkdir -p ${ROUNDINGSAT_DIR}
-#    - export CFLAGS=""
-#    - export CXXFLAGS=""
-#    - wget https://gitlab.com/MIAOresearch/software/roundingsat/-/archive/master/roundingsat-master.tar.gz -P ${CI_PROJECT_DIR}
-#    - tar -xf ${CI_PROJECT_DIR}/roundingsat-master.tar.gz -C ${ROUNDINGSAT_DIR} --strip-components=1
-#    - cd ${ROUNDINGSAT_DIR}
-#    - cmake . -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}
-#    - make -j8 install
-#    #build papilo in debug mode and link roundingsat and then run ctests

@@ -32,7 +32,7 @@
 #include "papilo/core/SingleRow.hpp"
 #include "papilo/misc/Hash.hpp"
 #include "papilo/misc/Signature.hpp"
-#ifdef PAPILO_TBB
+#if PAPILO_HAS_TBB
 #include "papilo/misc/tbb.hpp"
 #endif
 
@@ -107,11 +107,11 @@ class DominatedCols : public PresolveMethod<REAL>
             int& reason_of_infeasibility ) override;
 };
 
-#ifdef PAPILO_USE_EXTERN_TEMPLATES
-extern template class DominatedCols<double>;
-extern template class DominatedCols<Quad>;
-extern template class DominatedCols<Rational>;
-#endif
+#ifndef PAPILO_HEADER_ONLY
+extern template class PAPILO_EXPORT_TEMPLATE DominatedCols<double>;
+extern template class PAPILO_EXPORT_TEMPLATE DominatedCols<Quad>;
+extern template class PAPILO_EXPORT_TEMPLATE DominatedCols<Rational>;
+#endif /* !PAPILO_HEADER_ONLY */
 
 template <typename REAL>
 PresolveStatus
@@ -142,7 +142,7 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
    const size_t nrows = problem.getNRows();
    Vec<ColInfo> colinfo( ncols );
 
-#ifdef PAPILO_TBB
+#if PAPILO_HAS_TBB
    std::atomic<int> nunboundedcols { };
 #else
    int nunboundedcols = 0;
@@ -150,7 +150,7 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
 
    // compute signatures and implied bound information of all columns in
    // parallel
-#ifdef PAPILO_TBB
+#if PAPILO_HAS_TBB
    tbb::parallel_for(
        tbb::blocked_range<unsigned int>( 0, ncols ),
        [&]( const tbb::blocked_range<unsigned int>& r ) {
@@ -217,7 +217,7 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
              if( colinfo[col].lbfree != 0 || colinfo[col].ubfree != 0 )
                 ++nunboundedcols;
           }
-#ifdef PAPILO_TBB
+#if PAPILO_HAS_TBB
        } );
 #endif
 
@@ -405,7 +405,7 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
          if( (int)domcolsbuffers.size() < ndomcolsbuffers )
             domcolsbuffers.resize(ndomcolsbuffers);
 
-#ifdef PAPILO_TBB
+#if PAPILO_HAS_TBB
    // scan unbounded columns if they dominate other columns
    tbb::parallel_for(
        tbb::blocked_range<unsigned int>( start, stopp ),
@@ -551,7 +551,7 @@ DominatedCols<REAL>::execute( const Problem<REAL>& problem,
                 }
              }
           }
-#ifdef PAPILO_TBB
+#if PAPILO_HAS_TBB
        } );
 #endif
 

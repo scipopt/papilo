@@ -35,7 +35,7 @@
 #include <unordered_map>
 #include <set>
 #include <vector>
-#ifdef PAPILO_TBB
+#if PAPILO_HAS_TBB
 #include "papilo/misc/tbb.hpp"
 #endif
 
@@ -102,6 +102,7 @@ class CliqueMerging : public PresolveMethod<REAL>
                   int maxCliqueSize, int maxGreedyCalls, int maxCalls = 1 );
 
    private:
+   PAPILO_NO_EXPORT
    std::pair<std::set<int>, Vec<int>>
    greedyClique( const ConstraintMatrix<REAL>& matrix,
                  const std::set<std::pair<int, int>>& edges,
@@ -109,16 +110,17 @@ class CliqueMerging : public PresolveMethod<REAL>
                  int clique );
 
    private:
+   PAPILO_NO_EXPORT
    bool
    isCovered( const ConstraintMatrix<REAL>& matrix, int row,
               const std::set<int>& newClique );
 };
 
-#ifdef PAPILO_USE_EXTERN_TEMPLATES
-extern template class CliqueMerging<double>;
-extern template class CliqueMerging<Quad>;
-extern template class CliqueMerging<Rational>;
-#endif
+#ifndef PAPILO_HEADER_ONLY
+extern template class PAPILO_EXPORT_TEMPLATE CliqueMerging<double>;
+extern template class PAPILO_EXPORT_TEMPLATE CliqueMerging<Quad>;
+extern template class PAPILO_EXPORT_TEMPLATE CliqueMerging<Rational>;
+#endif /* !PAPILO_HEADER_ONLY */
 
 template <typename REAL>
 std::pair<std::set<int>, Vec<int>>
@@ -270,7 +272,7 @@ CliqueMerging<REAL>::execute( const Problem<REAL>& problem,
       {
          rowFlags[row].unset( RowFlag::kClique );
       }
-#ifdef PAPILO_TBB
+#if PAPILO_HAS_TBB
       if( edges.size() > static_cast<long unsigned int>(maxedgesparallel) )
 #else
       if( edges.size() > static_cast<long unsigned int>(maxedgessequential) )
@@ -278,13 +280,13 @@ CliqueMerging<REAL>::execute( const Problem<REAL>& problem,
          break;
    }
 
-#ifdef PAPILO_TBB
+#if PAPILO_HAS_TBB
    tbb::combinable<Vec<int>> completedCliquesComb;
 #else   
    Vec<int> completedCliques;
 #endif
 
-#ifdef PAPILO_TBB
+#if PAPILO_HAS_TBB
    tbb::combinable<Vec<std::pair<Vec<int>,Vec<int>>>> reductionResults;
    tbb::parallel_for(
        tbb::blocked_range<int>( 0, Cliques.end() - Cliques.begin() ),
@@ -296,7 +298,7 @@ CliqueMerging<REAL>::execute( const Problem<REAL>& problem,
         ++cliqueInd )
 #endif
       {
-#ifdef PAPILO_TBB
+#if PAPILO_HAS_TBB
       Vec<int> completedCliques = completedCliquesComb.combine( [](const Vec<int>& a, const Vec<int>& b) {
          std::vector<int> result = a;
          result.insert(result.end(), b.begin(), b.end() );
@@ -317,7 +319,7 @@ CliqueMerging<REAL>::execute( const Problem<REAL>& problem,
 
       const Vec<int> newVertices = resultOfSearch.second;
 
-#ifdef PAPILO_TBB
+#if PAPILO_HAS_TBB
       std::pair<Vec<int>,Vec<int>> reductionResult;
       reductionResult.first = newVertices ;
       reductionResult.first.push_back( clique );
@@ -333,7 +335,7 @@ CliqueMerging<REAL>::execute( const Problem<REAL>& problem,
          }
       }
 
-#ifdef PAPILO_TBB
+#if PAPILO_HAS_TBB
       reductionResult.second = coveredCliques;
 #endif
 
@@ -341,7 +343,7 @@ CliqueMerging<REAL>::execute( const Problem<REAL>& problem,
       if( coveredCliques.end() - coveredCliques.begin() > 0 )
       {
 
-#ifdef PAPILO_TBB
+#if PAPILO_HAS_TBB
          reductionResults.local().push_back( reductionResult );
 #else
 
@@ -385,7 +387,7 @@ CliqueMerging<REAL>::execute( const Problem<REAL>& problem,
 #endif
       }
    }
-#ifdef PAPILO_TBB
+#if PAPILO_HAS_TBB
    });
    Vec<std::pair<Vec<int>,Vec<int>>> reductionResultsComb = reductionResults.combine( 
       [](const Vec<std::pair<Vec<int>,Vec<int>>>& a, const Vec<std::pair<Vec<int>,Vec<int>>>& b) {

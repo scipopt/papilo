@@ -58,7 +58,7 @@ TEST_CASE( "happy-path-simplify-inequalities", "[presolve]" )
    SimplifyInequalities<double> presolvingMethod{};
    Reductions<double> reductions{};
 
-#ifndef PAPILO_TBB
+#if ! PAPILO_HAS_TBB
    presolveOptions.threads = 1;
 #endif
 
@@ -122,7 +122,7 @@ TEST_CASE( "simplify_inequ_doesnt_lock_more_rows", "[presolve]" )
    SimplifyInequalities<double> presolvingMethod{};
    Reductions<double> reductions{};
 
-#ifndef PAPILO_TBB
+#if ! PAPILO_HAS_TBB
    presolveOptions.threads = 1;
 #endif
 
@@ -158,7 +158,7 @@ TEST_CASE( "simplify_inequ_doesnt_apply_lb_and_ub_on_one_row", "[presolve]" )
    PresolveStatus presolveStatus =
        presolvingMethod.execute( problem, problemUpdate, num, reductions, t, cause );
 
-#ifndef PAPILO_TBB
+#if ! PAPILO_HAS_TBB
    presolveOptions.threads = 1;
 #endif
 

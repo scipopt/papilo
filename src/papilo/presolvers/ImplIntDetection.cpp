@@ -27,8 +27,10 @@
 namespace papilo
 {
 
+#ifndef PAPILO_HEADER_ONLY
 template class ImplIntDetection<double>;
 template class ImplIntDetection<Quad>;
 template class ImplIntDetection<Rational>;
+#endif /* !PAPILO_HEADER_ONLY */
 
 } // namespace papilo
