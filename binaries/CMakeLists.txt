@@ -1,7 +1,9 @@
 # We include this directory either from papilo or separately from scipoptsuite.
 # In the latter case, the PAPILO_HAS_* variables are local to papilo and thus
 # not visible here. Hence, we search for PaPILO.
+set(old_papilo_dir "${PAPILO_DIR}")
 find_package(PAPILO CONFIG QUIET HINTS "${CMAKE_BINARY_DIR}")
+set(PAPILO_DIR "${old_papilo_dir}")
 
 # Search for SCIP.
 set(PAPILO_HAS_SCIP 0)
