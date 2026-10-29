@@ -12,7 +12,7 @@ Fixed bugs
 - ProblemUpdate: decide redundancy for empty rows w.r.t. feasibility tolerance (#94)
 - ParallelColDetection: recompute continuous column from rounded integer column in postsolve
 - ParallelColDetection: correct bound check for second column after postsolve of primal-dual solution (#95)
-
+- Probing: only swap the columns of a probing substitution if both are binary, since the substitution is otherwise not inverted correctly (scip#261)
 
 @section RN302 PaPILO 3.0.2
 

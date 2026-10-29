@@ -646,10 +646,14 @@ ProbingView<REAL>::analyzeImplications()
          REAL scale = onefixval - zerofixval;
 
          // in case both columns are binary, we keep the one whith the
-         // smaller index
+         // smaller index; swapping is only valid for binaries since the
+         // substitution is only self-inverse in this case
          if( col1 < col2 && abs( scale ) == 1 &&
              ( zerofixval == 1 || zerofixval == 0 ) &&
-             probing_domain_flags[col1].test( ColFlag::kIntegral ) )
+             probing_domain_flags[col1].test( ColFlag::kIntegral ) &&
+             !orig_domain_flags[col1].test( ColFlag::kLbInf,
+                                            ColFlag::kUbInf ) &&
+             orig_lbs[col1] == 0 && orig_ubs[col1] == 1 )
             std::swap( col1, col2 );
 
          // add the corresponding substitution.

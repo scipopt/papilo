@@ -36,6 +36,9 @@ setupProblemWithProbing();
 Problem<double>
 setupProblemWithProbingWithNoBinary();
 
+Problem<double>
+setupProblemWithProbingSubstitutionOfInteger();
+
 TEST_CASE( "happy-path-probing", "[presolve]" )
 {
    Num<double> num{};
@@ -89,6 +92,40 @@ TEST_CASE( "failed-path-probing-on-not-binary-variables", "[presolve]" )
        presolvingMethod.execute( problem, problemUpdate, num, reductions, t, cause );
 
    REQUIRE( presolveStatus == PresolveStatus::kUnchanged );
+}
+
+TEST_CASE( "probing-substitution-of-integer-by-binary", "[presolve]" )
+{
+   double time = 0.0;
+   int cause = -1;
+   Timer t{ time };
+   Num<double> num{};
+   Message msg{};
+   Problem<double> problem = setupProblemWithProbingSubstitutionOfInteger();
+   Statistics statistics{};
+   PresolveOptions presolveOptions{};
+   presolveOptions.dualreds = 0;
+   PostsolveStorage<double> postsolve =
+       PostsolveStorage<double>( problem, num, presolveOptions );
+   ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
+                                        presolveOptions, num, msg );
+   Probing<double> presolvingMethod{};
+   Reductions<double> reductions{};
+   problem.recomputeAllActivities();
+
+   PresolveStatus presolveStatus =
+       presolvingMethod.execute( problem, problemUpdate, num, reductions, t, cause );
+
+   // probing on p yields y = 1 + p; the integer y must be replaced and not the
+   // binary p, since the substitution is not invertible in this form
+   REQUIRE( presolveStatus == PresolveStatus::kReduced );
+   REQUIRE( reductions.size() == 2 );
+   REQUIRE( reductions.getReduction( 0 ).row == papilo::ColReduction::REPLACE );
+   REQUIRE( reductions.getReduction( 0 ).col == 0 );
+   REQUIRE( reductions.getReduction( 0 ).newval == 1 );
+   REQUIRE( reductions.getReduction( 1 ).row == papilo::ColReduction::NONE );
+   REQUIRE( reductions.getReduction( 1 ).col == 1 );
+   REQUIRE( reductions.getReduction( 1 ).newval == 1 );
 }
 
 Problem<double>
@@ -158,6 +195,42 @@ setupProblemWithProbingWithNoBinary()
    pb.addEntryAll( entries );
    pb.setColNameAll( columnNames );
    pb.setProblemName( "matrix for testing probing no binaries" );
+   Problem<double> problem = pb.build();
+   return problem;
+}
+
+Problem<double>
+setupProblemWithProbingSubstitutionOfInteger()
+{
+   // y - p = 1
+   // y integer in [1,2], p binary
+   Vec<double> coefficients{ 1.0, 1.0 };
+   Vec<double> upperBounds{ 2.0, 1.0 };
+   Vec<double> lowerBounds{ 1.0, 0.0 };
+   Vec<uint8_t> isIntegral{ 1, 1 };
+
+   Vec<double> rhs{ 1.0 };
+   Vec<double> lhs{ 1.0 };
+   Vec<std::string> rowNames{ "A1" };
+   Vec<std::string> columnNames{ "y", "p" };
+   Vec<std::tuple<int, int, double>> entries{
+       std::tuple<int, int, double>{ 0, 0, 1.0 },
+       std::tuple<int, int, double>{ 0, 1, -1.0 } };
+
+   ProblemBuilder<double> pb;
+   pb.reserve( entries.size(), rowNames.size(), columnNames.size() );
+   pb.setNumRows( rowNames.size() );
+   pb.setNumCols( columnNames.size() );
+   pb.setColUbAll( upperBounds );
+   pb.setColLbAll( lowerBounds );
+   pb.setObjAll( coefficients );
+   pb.setObjOffset( 0.0 );
+   pb.setColIntegralAll( isIntegral );
+   pb.setRowRhsAll( rhs );
+   pb.setRowLhsAll( lhs );
+   pb.addEntryAll( entries );
+   pb.setColNameAll( columnNames );
+   pb.setProblemName( "matrix for testing probing substitution of integer" );
    Problem<double> problem = pb.build();
    return problem;
 }

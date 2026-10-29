@@ -171,6 +171,7 @@ set(unit_tests
         #Probing
         "happy-path-probing"
         "failed-path-probing-on-not-binary-variables"
+        "probing-substitution-of-integer-by-binary"
 
         #Singleton Column
         "happy-path-singleton-column"
