@@ -200,14 +200,20 @@ if(NOT TARGET PAPILO_IMPORTED_TARGETS)
    endif()
    target_link_libraries(PAPILO_IMPORTED_TARGETS INTERFACE PAPILO::libpapilo-core)
 endif()
-set(PAPILO_IMPORTED_TARGETS "PAPILO_IMPORTED_TARGETS")
-get_target_property(PAPILO_INCLUDE_DIRS PAPILO::libpapilo INTERFACE_INCLUDE_DIRECTORIES)
 
 # Deprecated `papilo` aliases PAPILO::PAPILO.
 if(NOT TARGET papilo)
    add_library(papilo INTERFACE IMPORTED)
-   set_target_properties(papilo PROPERTIES
-      DEPRECATION "Do not use target papilo anymore, but PAPILO::PAPILO instead.")
+   if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.17)
+      set_target_properties(papilo PROPERTIES
+         DEPRECATION "Do not use target papilo anymore, but PAPILO::PAPILO instead.")
+   else()
+      message(DEBUG "CMake version ${CMAKE_VERSION} is too low to mark papilo target as deprecated!")
+   endif()
    target_link_libraries(papilo INTERFACE PAPILO::PAPILO)
 endif()
+
+# Deprecated variables.
+set(PAPILO_IMPORTED_TARGETS "PAPILO_IMPORTED_TARGETS")
+get_target_property(PAPILO_INCLUDE_DIRS PAPILO::libpapilo INTERFACE_INCLUDE_DIRECTORIES)
 
