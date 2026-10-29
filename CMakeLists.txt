@@ -56,7 +56,7 @@ set(TBB_MIN_VERSION 2018)
 include(GNUInstallDirs)
 
 # Path to CMake modules such as FindGMP.cmake.
-list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake/Modules/")
+list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
 
 ##### OPTIONS #####
 
@@ -450,7 +450,7 @@ endif()
 
 # Configure papilo-config.cmake for the build-tree:
 # We add the CMake module path from the sources.
-set(EXTRA_CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake/Modules")
+set(EXTRA_CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
 configure_file(${PROJECT_SOURCE_DIR}/papilo-config.cmake.in
    "${CMAKE_BINARY_DIR}/papilo-config.cmake"
    @ONLY)
@@ -466,15 +466,17 @@ configure_file(${PROJECT_SOURCE_DIR}/papilo-config.cmake.in
 install(FILES
    "${PROJECT_BINARY_DIR}/${CMAKE_FILES_DIRECTORY}/papilo-config.cmake"
    "${CMAKE_BINARY_DIR}/papilo-config-version.cmake"
-   $<$<BOOL:${PAPILO_HAS_GMP}>:${PROJECT_SOURCE_DIR}/cmake/Modules/FindGMP.cmake>
-   $<$<BOOL:${PAPILO_HAS_QUADMATH}>:${PROJECT_SOURCE_DIR}/cmake/Modules/FindQuadmath.cmake>
-   $<$<BOOL:${PAPILO_HAS_TBB}>:${PROJECT_SOURCE_DIR}/cmake/Modules/FindTBB.cmake>
-   DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/papilo")
+   "$<$<BOOL:${PAPILO_HAS_GMP}>:${PROJECT_SOURCE_DIR}/cmake/FindGMP.cmake>"
+   "$<$<BOOL:${PAPILO_HAS_QUADMATH}>:${PROJECT_SOURCE_DIR}/cmake/FindQuadmath.cmake>"
+   "$<$<BOOL:${PAPILO_HAS_TBB}>:${PROJECT_SOURCE_DIR}/cmake/FindTBB.cmake>"
+   DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/papilo"
+   )
 
 # Install the papilo-targets export set.
 install(EXPORT papilo-targets
    NAMESPACE PAPILO::
-   DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/papilo")
+   DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/papilo"
+   )
 
 # Export targets for the build-tree.
 export(EXPORT papilo-targets
