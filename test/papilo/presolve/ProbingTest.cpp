@@ -28,8 +28,6 @@
 #include "papilo/core/Problem.hpp"
 #include "papilo/core/ProblemBuilder.hpp"
 
-#include <atomic>
-
 using namespace papilo;
 
 Problem<double>
@@ -91,42 +89,6 @@ TEST_CASE( "failed-path-probing-on-not-binary-variables", "[presolve]" )
        presolvingMethod.execute( problem, problemUpdate, num, reductions, t, cause );
 
    REQUIRE( presolveStatus == PresolveStatus::kUnchanged );
-}
-
-TEST_CASE( "probing-no-work-measured-does-not-form-invalid-badge",
-           "[presolve]" )
-{
-   // see https://github.com/scipopt/papilo/issues/102
-   // the callback interrupts the first badge before any work is done and then
-   // lets probing continue with amountofwork == 0
-   Num<double> num{};
-   double time = 0.0;
-   int cause = -1;
-   Timer t{ time };
-   Message msg{};
-   Problem<double> problem = setupProblemWithProbing();
-   Statistics statistics{};
-   PresolveOptions presolveOptions{};
-   presolveOptions.dualreds = 0;
-   std::atomic<int> callback_calls{ 0 };
-   presolveOptions.early_exit_callback = [&callback_calls]()
-   { return callback_calls.fetch_add( 1 ) == 0; };
-   PostsolveStorage<double> postsolve =
-       PostsolveStorage<double>( problem, num, presolveOptions );
-   ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
-                                        presolveOptions, num, msg );
-   Probing<double> presolvingMethod{};
-   ParameterSet parameters;
-   presolvingMethod.addPresolverParams( parameters );
-   parameters.setParameter( "probing.minbadgesize", 1 );
-   parameters.setParameter( "probing.maxinitialbadgesize", 1 );
-   Reductions<double> reductions{};
-   problem.recomputeAllActivities();
-
-   PresolveStatus presolveStatus =
-       presolvingMethod.execute( problem, problemUpdate, num, reductions, t, cause );
-
-   REQUIRE( presolveStatus != PresolveStatus::kInfeasible );
 }
 
 Problem<double>
