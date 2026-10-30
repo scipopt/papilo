@@ -182,9 +182,17 @@ Substitution<REAL>::execute( const Problem<REAL>& problem,
       // equal to the smallest absolute coefficient in the row. Additional we
       // need to ensure that all coefficients are integral if divided by the
       // smallest absolute coefficient.
-      if( !containsContinuous &&
-          !is_divisible( num, length, rowvalues, minabsintvalue ) )
-         continue;
+      if( !containsContinuous )
+      {
+         if( !is_divisible( num, length, rowvalues, minabsintvalue ) )
+            continue;
+
+         REAL scaledside = rhs_values[row] / minabsintvalue;
+         if( !num.isFeasIntegral( scaledside ) )
+            return PresolveStatus::kInfeasible;
+         if( !num.isIntegral( scaledside ) )
+            continue;
+      }
 
       column_candidates.clear();
 

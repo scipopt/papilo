@@ -269,9 +269,6 @@ SingletonStuffing<REAL>::execute( const Problem<REAL>& problem,
 
          if( cflags[col].test( ColFlag::kIntegral ) )
          {
-            if( !num.isFeasIntegral( constMatrix.getRightHandSides()[row] / val ) )
-               continue;
-
             bool unsuitableForSubstitution = false;
 
             auto rowvec = constMatrix.getRowCoefficients( row );
@@ -296,6 +293,14 @@ SingletonStuffing<REAL>::execute( const Problem<REAL>& problem,
             }
 
             if( unsuitableForSubstitution )
+               continue;
+
+            // all variables are integral and all coefficients are divisible
+            // by val, hence the scaled side must be integral as well
+            REAL scaledside = constMatrix.getRightHandSides()[row] / val;
+            if( !num.isFeasIntegral( scaledside ) )
+               return PresolveStatus::kInfeasible;
+            if( !num.isIntegral( scaledside ) )
                continue;
          }
 

@@ -61,7 +61,7 @@ add_executable(unit_test
    )
 
 target_include_directories(unit_test
-   PRIVATE 
+   PRIVATE
      "${CMAKE_BINARY_DIR}/binaries"
    )
 target_link_libraries(unit_test
@@ -137,6 +137,7 @@ set(unit_tests
 
    #FreeVarSubstitution
    "happy-path-test-free-variable-detection"
+        "free-variable-substitution-detects-infeasible-integer-equation"
 
    #Implied Integer
    "happy-path-implied-integer-detection"
@@ -199,6 +200,8 @@ set(unit_tests
    #Singleton Stuffing
    "singleton-stuffing-make-sure-to-first-set-bounds-to-infinity"
    "singleton-stuffing-ensure-integrality"
+        "singleton-stuffing-ensure-integrality-not-divisible"
+        "singleton-stuffing-ensure-integrality-side-not-exactly-integral"
 
    #Simple Probing
    "simple-probing-trivial-example"
