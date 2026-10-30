@@ -549,7 +549,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
       working_limit += extrawork;
 
       // the work budget of this call is exhausted
-      if( working_limit <= 0 )
+      if( working_limit < 0 )
          break;
 
       // if no work was measured the ratio is undefined, keep the badge size
