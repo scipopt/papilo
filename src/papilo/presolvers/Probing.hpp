@@ -554,7 +554,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
 
       // if no work was measured the ratio is undefined, keep the badge size
       // (bounded by the remaining candidates); otherwise bound the proposal
-      // before converting it to int to avoid UB
+      // before converting it to int to avoid undefined behavior
       int remaining_cands = nprobingcands - current_badge_start;
       if( amountofwork > 0 )
       {
