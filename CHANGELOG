@@ -12,6 +12,7 @@ Fixed bugs
 - ProblemUpdate: decide redundancy for empty rows w.r.t. feasibility tolerance (#94)
 - ParallelColDetection: recompute continuous column from rounded integer column in postsolve
 - ParallelColDetection: correct bound check for second column after postsolve of primal-dual solution (#95)
+- SingleRow: decide implied bounds in row_implies_LB/UB w.r.t. epsilon instead of feasibility tolerance to avoid significant relaxation (scip#240)
 
 
 @section RN302 PaPILO 3.0.2
