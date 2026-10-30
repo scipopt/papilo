@@ -548,6 +548,10 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
       working_limit -= amountofwork;
       working_limit += extrawork;
 
+      // the work budget of this call is exhausted
+      if( working_limit < 0 )
+         break;
+
       // if no work was measured the ratio is undefined, keep the badge size
       // (bounded by the remaining candidates); otherwise bound the proposal
       // before converting it to int to avoid UB
@@ -557,7 +561,8 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
          double proposed_badge_size =
              ceil( badge_size * static_cast<double>( working_limit + extrawork ) /
                    (double) amountofwork );
-         assert( proposed_badge_size >= 0 || working_limit < 0 );
+         // working_limit >= 0 and extrawork >= 0
+         assert( proposed_badge_size >= 0 );
          badge_size = proposed_badge_size >= remaining_cands
                           ? remaining_cands
                           : static_cast<int>( proposed_badge_size );
@@ -568,7 +573,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
          badge_size = std::min( max_badge_size, badge_size );
       current_badge_end = current_badge_start + badge_size;
 
-      abort = n_useless >= consMatrix.getNnz() * 2 || working_limit < 0 ||
+      abort = n_useless >= consMatrix.getNnz() * 2 ||
               current_badge_start >= current_badge_end ||
               PresolveMethod<REAL>::is_interrupted(timer, problemUpdate.getPresolveOptions().tlim, problemUpdate.getPresolveOptions().early_exit_callback);
    } while( !abort );
