@@ -39,6 +39,9 @@ setup_simplify_ineq_reduce_rhs();
 Problem<double>
 setup_simple_problem_for_simplify_inequalities_2();
 
+Problem<double>
+setup_simplify_ineq_lhs_slightly_below_multiple_of_gcd();
+
 TEST_CASE( "happy-path-simplify-inequalities", "[presolve]" )
 {
    // 15x1 +15x2 +7x3 +3x4 +y1 <= 26
@@ -166,6 +169,38 @@ TEST_CASE( "simplify_inequ_doesnt_apply_lb_and_ub_on_one_row", "[presolve]" )
    REQUIRE( presolveStatus == PresolveStatus::kUnchanged );
 }
 
+TEST_CASE( "simplify_inequ_lhs_slightly_below_multiple_of_gcd", "[presolve]" )
+{
+   // 10000x - y >= -1e-6
+   Num<double> num{};
+   double time = 0.0;
+   int cause = -1;
+   Timer t{ time };
+   Message msg{};
+   Problem<double> problem =
+       setup_simplify_ineq_lhs_slightly_below_multiple_of_gcd();
+   Statistics statistics{};
+   PresolveOptions presolveOptions{};
+   PostsolveStorage<double> postsolve =
+       PostsolveStorage<double>( problem, num, presolveOptions );
+   ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
+                                        presolveOptions, num, msg );
+   problem.recomputeAllActivities();
+   SimplifyInequalities<double> presolvingMethod{};
+   Reductions<double> reductions{};
+
+#ifndef PAPILO_TBB
+   presolveOptions.threads = 1;
+#endif
+
+   presolvingMethod.execute( problem, problemUpdate, num, reductions, t, cause );
+
+   // y forces x to 1 and must not be deleted from the row, although lhs / gcd
+   // is rounded up to 0 by epsFloor
+   for( const auto& reduction : reductions.getReductions() )
+      REQUIRE( reduction.col != 1 );
+}
+
 Problem<double>
 setupProblemForSimplifyingInequalities()
 {
@@ -283,6 +318,40 @@ setup_simple_problem_for_simplify_inequalities_2()
    pb.addEntryAll( entries );
    pb.setColNameAll( columnNames );
    pb.setProblemName( "rhs and lhs of constraint2 can be tightened" );
+   Problem<double> problem = pb.build();
+   return problem;
+}
+
+Problem<double>
+setup_simplify_ineq_lhs_slightly_below_multiple_of_gcd()
+{
+   Vec<double> coefficients{ 0.0, 0.0 };
+   Vec<double> lowerBounds{ 0.0, 100.0 };
+   Vec<double> upperBounds{ 1.0, 10000.0 };
+   Vec<uint8_t> rhsInf{ 1 };
+   Vec<uint8_t> isIntegral{ 1, 0 };
+
+   Vec<double> lhs{ -1e-6 };
+   Vec<std::string> rowNames{ "A1" };
+   Vec<std::string> columnNames{ "x", "y" };
+   Vec<std::tuple<int, int, double>> entries{
+       std::tuple<int, int, double>{ 0, 0, 10000.0 },
+       std::tuple<int, int, double>{ 0, 1, -1.0 } };
+
+   ProblemBuilder<double> pb;
+   pb.reserve( (int) entries.size(), (int) rowNames.size(), (int) columnNames.size() );
+   pb.setNumRows( (int) rowNames.size() );
+   pb.setNumCols( (int) columnNames.size() );
+   pb.setColLbAll( lowerBounds );
+   pb.setColUbAll( upperBounds );
+   pb.setObjAll( coefficients );
+   pb.setObjOffset( 0.0 );
+   pb.setColIntegralAll( isIntegral );
+   pb.setRowLhsAll( lhs );
+   pb.setRowRhsInfAll( rhsInf );
+   pb.addEntryAll( entries );
+   pb.setColNameAll( columnNames );
+   pb.setProblemName( "y must not be deleted from the big-M constraint" );
    Problem<double> problem = pb.build();
    return problem;
 }

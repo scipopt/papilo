@@ -268,7 +268,9 @@ SimplifyInequalities<REAL>::simplify(
       else
       {
          siderest = lhs - num.epsFloor( lhs / gcd ) * gcd;
-         if( num.isZero( siderest ) )
+         // epsFloor may round lhs / gcd up to the next integer, which leads to
+         // a negative siderest
+         if( num.isZero( siderest ) || siderest < 0 )
             siderest = gcd;
       }
 

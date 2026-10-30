@@ -212,6 +212,7 @@ set(unit_tests
         "happy-path-simplify-inequalities"
         "simplify_inequ_doesnt_lock_more_rows"
         "simplify_inequ_doesnt_apply_lb_and_ub_on_one_row"
+        "simplify_inequ_lhs_slightly_below_multiple_of_gcd"
 
         #Sparsify
         "happy-path-sparsify"
