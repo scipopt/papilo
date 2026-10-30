@@ -574,7 +574,7 @@ Probing<REAL>::execute( const Problem<REAL>& problem,
       current_badge_end = current_badge_start + badge_size;
 
       abort = n_useless >= consMatrix.getNnz() * 2 ||
-              current_badge_start >= current_badge_end ||
+              current_badge_start == current_badge_end ||
               PresolveMethod<REAL>::is_interrupted(timer, problemUpdate.getPresolveOptions().tlim, problemUpdate.getPresolveOptions().early_exit_callback);
    } while( !abort );
 
