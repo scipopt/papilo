@@ -40,7 +40,10 @@ Problem<double>
 setup_simple_problem_for_simplify_inequalities_2();
 
 Problem<double>
-setup_simplify_ineq_lhs_slightly_below_multiple_of_gcd();
+setup_simplify_ineq_big_m_lhs( double lhs, double yUb );
+
+bool
+simplify_ineq_deletes_y_from_big_m_row( double lhs, double yUb );
 
 TEST_CASE( "happy-path-simplify-inequalities", "[presolve]" )
 {
@@ -169,36 +172,18 @@ TEST_CASE( "simplify_inequ_doesnt_apply_lb_and_ub_on_one_row", "[presolve]" )
    REQUIRE( presolveStatus == PresolveStatus::kUnchanged );
 }
 
-TEST_CASE( "simplify_inequ_lhs_slightly_below_multiple_of_gcd", "[presolve]" )
+TEST_CASE( "simplify_inequ_lhs_close_to_multiple_of_gcd", "[presolve]" )
 {
-   // 10000x - y >= -1e-6
-   Num<double> num{};
-   double time = 0.0;
-   int cause = -1;
-   Timer t{ time };
-   Message msg{};
-   Problem<double> problem =
-       setup_simplify_ineq_lhs_slightly_below_multiple_of_gcd();
-   Statistics statistics{};
-   PresolveOptions presolveOptions{};
-   PostsolveStorage<double> postsolve =
-       PostsolveStorage<double>( problem, num, presolveOptions );
-   ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
-                                        presolveOptions, num, msg );
-   problem.recomputeAllActivities();
-   SimplifyInequalities<double> presolvingMethod{};
-   Reductions<double> reductions{};
+   // 10000x - y >= lhs with x binary and y in [100, yUb]: since y >= 100,
+   // x is forced to 1 and y must not be deleted from the row, which would
+   // leave 10000x >= 0 after rounding lhs to a multiple of the gcd
 
-#ifndef PAPILO_TBB
-   presolveOptions.threads = 1;
-#endif
-
-   presolvingMethod.execute( problem, problemUpdate, num, reductions, t, cause );
-
-   // y forces x to 1 and must not be deleted from the row, although lhs / gcd
-   // is rounded up to 0 by epsFloor
-   for( const auto& reduction : reductions.getReductions() )
-      REQUIRE( reduction.col != 1 );
+   // lhs / gcd slightly below 0, epsFloor would round it up to 0
+   REQUIRE( !simplify_ineq_deletes_y_from_big_m_row( -1e-6, 10000.0 ) );
+   // siderest below -feastol if not computed consistently with feasCeil
+   REQUIRE( !simplify_ineq_deletes_y_from_big_m_row( -5e-6, 10000.0 ) );
+   // lhs / gcd slightly above 0, feasCeil rounds it down to 0
+   REQUIRE( !simplify_ineq_deletes_y_from_big_m_row( 1e-7, 9999.0 ) );
 }
 
 Problem<double>
@@ -322,16 +307,46 @@ setup_simple_problem_for_simplify_inequalities_2()
    return problem;
 }
 
+bool
+simplify_ineq_deletes_y_from_big_m_row( double lhs, double yUb )
+{
+   Num<double> num{};
+   double time = 0.0;
+   int cause = -1;
+   Timer t{ time };
+   Message msg{};
+   Problem<double> problem = setup_simplify_ineq_big_m_lhs( lhs, yUb );
+   Statistics statistics{};
+   PresolveOptions presolveOptions{};
+#ifndef PAPILO_TBB
+   presolveOptions.threads = 1;
+#endif
+   PostsolveStorage<double> postsolve =
+       PostsolveStorage<double>( problem, num, presolveOptions );
+   ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
+                                        presolveOptions, num, msg );
+   problem.recomputeAllActivities();
+   SimplifyInequalities<double> presolvingMethod{};
+   Reductions<double> reductions{};
+
+   presolvingMethod.execute( problem, problemUpdate, num, reductions, t, cause );
+
+   for( const auto& reduction : reductions.getReductions() )
+      if( reduction.row == 0 && reduction.col == 1 )
+         return true;
+   return false;
+}
+
 Problem<double>
-setup_simplify_ineq_lhs_slightly_below_multiple_of_gcd()
+setup_simplify_ineq_big_m_lhs( double lhs, double yUb )
 {
    Vec<double> coefficients{ 0.0, 0.0 };
    Vec<double> lowerBounds{ 0.0, 100.0 };
-   Vec<double> upperBounds{ 1.0, 10000.0 };
+   Vec<double> upperBounds{ 1.0, yUb };
    Vec<uint8_t> rhsInf{ 1 };
    Vec<uint8_t> isIntegral{ 1, 0 };
 
-   Vec<double> lhs{ -1e-6 };
+   Vec<double> lhsVec{ lhs };
    Vec<std::string> rowNames{ "A1" };
    Vec<std::string> columnNames{ "x", "y" };
    Vec<std::tuple<int, int, double>> entries{
@@ -347,7 +362,7 @@ setup_simplify_ineq_lhs_slightly_below_multiple_of_gcd()
    pb.setObjAll( coefficients );
    pb.setObjOffset( 0.0 );
    pb.setColIntegralAll( isIntegral );
-   pb.setRowLhsAll( lhs );
+   pb.setRowLhsAll( lhsVec );
    pb.setRowRhsInfAll( rhsInf );
    pb.addEntryAll( entries );
    pb.setColNameAll( columnNames );

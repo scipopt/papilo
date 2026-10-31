@@ -260,18 +260,22 @@ SimplifyInequalities<REAL>::simplify(
          resminact -= values[column_index] * ubs[colinds[column_index]];
       }
 
-      // calculate siderest
+      // calculate siderest, i.e., the distance of the side to the multiple of
+      // gcd L - gcd, where L is the multiple the side is rounded to in
+      // execute(); siderest has to be computed with the same rounding as L,
+      // otherwise the redundancy check and the rounded side do not match
       if( !rflag.test( RowFlag::kRhsInf ) )
       {
-         siderest = rhs - num.epsFloor( rhs / gcd ) * gcd;
+         // rhs is rounded down to L = feasFloor( rhs / gcd ) * gcd
+         siderest = rhs - num.feasFloor( rhs / gcd ) * gcd;
+         assert( siderest < gcd );
       }
       else
       {
-         siderest = lhs - num.epsFloor( lhs / gcd ) * gcd;
-         // epsFloor may round lhs / gcd up to the next integer, which leads to
-         // a negative siderest
-         if( num.isZero( siderest ) || siderest < 0 )
-            siderest = gcd;
+         // lhs is rounded up to L = feasCeil( lhs / gcd ) * gcd, hence
+         // siderest lies in (0, gcd] and equals gcd if lhs is a multiple of gcd
+         siderest = lhs - ( num.feasCeil( lhs / gcd ) - 1 ) * gcd;
+         assert( siderest > 0 );
       }
 
       // check if the ordered variables on the right of i are redundant
