@@ -1036,6 +1036,23 @@ Presolve<REAL>::run_presolvers( const Problem<REAL>& problem,
       {
          results[i] = presolvers[i]->run( problem, probUpdate, num, reductions[i], timer, cause );
          assert( cause != -1 || results[i] != PresolveStatus::kInfeasible || presolvers[i]->getName() != "probing" );
+         if( results[i] == PresolveStatus::kInfeasible )
+         {
+            if(results[i] == PresolveStatus::kInfeasible && presolvers[i]->getName() == "probing")
+            {
+               assert(cause != -1);
+               probUpdate.getCertificateInterface()->setInfeasibleCause(cause);
+            }
+            if( auto* parallelrows = dynamic_cast<ParallelRowDetection<REAL>*>(
+                    presolvers[i].get() ) )
+            {
+               auto rows = parallelrows->getInfeasibleRows();
+               assert( rows.first != -1 && rows.second != -1 );
+               probUpdate.getCertificateInterface()
+                   ->setInfeasibleCauseParallelRows( rows.first, rows.second,
+                                                    problem );
+            }
+         }
          apply_result_sequential( i, probUpdate, run_sequential );
          if( is_status_infeasible_or_unbounded( results[i] ) )
             return;
@@ -1060,6 +1077,20 @@ Presolve<REAL>::run_presolvers( const Problem<REAL>& problem,
                 {
                    assert(cause != -1);
                    probUpdate.getCertificateInterface()->setInfeasibleCause(cause);
+                }
+                else if( results[i] == PresolveStatus::kInfeasible )
+                {
+                   if( auto* parallelrows =
+                           dynamic_cast<ParallelRowDetection<REAL>*>(
+                               presolvers[i].get() ) )
+                   {
+                      auto rows = parallelrows->getInfeasibleRows();
+                      assert( rows.first != -1 && rows.second != -1 );
+                      probUpdate.getCertificateInterface()
+                          ->setInfeasibleCauseParallelRows( rows.first,
+                                                            rows.second,
+                                                            problem );
+                   }
                 }
              }
           },

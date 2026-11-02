@@ -85,6 +85,9 @@ class VeriPb : public CertificateInterface<REAL>
    /// information required for optimization problems
    bool is_optimization_problem = false;
    int cause = -1;
+   std::pair<int, int> cause_parallel_rows = { -1, -1 };
+   // pol derivation proving the infeasibility of cause_parallel_rows
+   String infeasible_pol;
    int row_forcing_propagation = -1;
 
    ////
@@ -1953,6 +1956,84 @@ class VeriPb : public CertificateInterface<REAL>
       cause = col;
    }
 
+   /// derives 0 >= k (k > 0) from two contradicting parallel rows.
+   /// The derivation is computed here (and written in infeasible()) since
+   /// row indices, scale factors and constraint ids are consistent now.
+   void
+   setInfeasibleCauseParallelRows( int row1, int row2,
+                                   const Problem<REAL>& problem ) override
+   {
+      cause_parallel_rows = { row1, row2 };
+      infeasible_pol.clear();
+
+      const auto& matrix = problem.getConstraintMatrix();
+      const auto& rflags = matrix.getRowFlags();
+      const auto& lhs = matrix.getLeftHandSides();
+      const auto& rhs = matrix.getRightHandSides();
+
+      // first coefficient of the rows as they appear in the proof
+      REAL a0 = matrix.getRowCoefficients( row1 ).getValues()[0] *
+                scale_factor[row1];
+      REAL b0 = matrix.getRowCoefficients( row2 ).getValues()[0] *
+                scale_factor[row2];
+      assert( num.isIntegral( a0 ) && num.isIntegral( b0 ) );
+
+      // a side of a row in the form  sign * c * x >= val
+      struct Side
+      {
+         int id;
+         int sign;
+         REAL val;
+      };
+      auto get_sides = [&]( int row, const REAL& c0 ) {
+         Vec<Side> sides;
+         if( !rflags[row].test( RowFlag::kLhsInf ) &&
+             lhs_row_mapping[row] != UNKNOWN )
+            sides.push_back( { lhs_row_mapping[row], c0 > 0 ? 1 : -1,
+                               lhs[row] * scale_factor[row] } );
+         if( !rflags[row].test( RowFlag::kRhsInf ) &&
+             rhs_row_mapping[row] != UNKNOWN )
+            sides.push_back( { rhs_row_mapping[row], c0 > 0 ? -1 : 1,
+                               -rhs[row] * scale_factor[row] } );
+         return sides;
+      };
+
+      // multiplying the side of row1 with |b0| and the side of row2 with
+      // |a0| cancels all variables if the first coefficients have opposite
+      // signs; the result is 0 >= mult1 * val1 + mult2 * val2
+      REAL mult1 = abs( b0 );
+      REAL mult2 = abs( a0 );
+      bool found = false;
+      Side best1{ UNKNOWN, 0, 0 };
+      Side best2{ UNKNOWN, 0, 0 };
+      REAL best_rhs = 0;
+      for( const Side& s1 : get_sides( row1, a0 ) )
+         for( const Side& s2 : get_sides( row2, b0 ) )
+         {
+            if( s1.sign == s2.sign )
+               continue;
+            REAL derived_rhs = mult1 * s1.val + mult2 * s2.val;
+            if( derived_rhs > 0 && ( !found || derived_rhs > best_rhs ) )
+            {
+               found = true;
+               best1 = s1;
+               best2 = s2;
+               best_rhs = derived_rhs;
+            }
+         }
+
+      if( !found )
+      {
+         proof_out << COMMENT << "parallel rows " << row1 << " and " << row2
+                   << " do not yield a contradiction\n";
+         return;
+      }
+
+      infeasible_pol = fmt::format(
+          "{}{} {} * {} {} * +\n", POL, best1.id,
+          cast_to_cpp( mult1 ).str(), best2.id, cast_to_cpp( mult2 ).str() );
+   }
+
    void
    infeasible( ) override
    {
@@ -1973,6 +2054,11 @@ class VeriPb : public CertificateInterface<REAL>
       {
          next_constraint_id++;
          proof_out << RUP << "1 " << names[colmapping[cause]] << " >= 1 ;\n";
+      }
+      if( !infeasible_pol.empty() )
+      {
+         next_constraint_id++;
+         proof_out << infeasible_pol;
       }
       next_constraint_id++;
       proof_out << "u >= 1 ;\n";

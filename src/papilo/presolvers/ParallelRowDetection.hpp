@@ -113,7 +113,18 @@ class ParallelRowDetection : public PresolveMethod<REAL>
                         std::unique_ptr<unsigned int[]>& coefhash,
                         std::unique_ptr<int[]>& row, int i );
 
+   // pair of parallel rows contradicting each other (set if infeasible)
+   std::pair<int, int> infeasible_rows{ -1, -1 };
+
  public:
+   /// rows that caused the infeasibility detected in the last call of
+   /// execute(); {-1, -1} if none
+   std::pair<int, int>
+   getInfeasibleRows() const
+   {
+      return infeasible_rows;
+   }
+
    ParallelRowDetection() : PresolveMethod<REAL>()
    {
       this->setName( "parallelrows" );
@@ -290,14 +301,16 @@ ParallelRowDetection<REAL>::execute( const Problem<REAL>& problem,
    const Vec<int>& rowperm = problemUpdate.getRandomRowPerm();
 
    PresolveStatus result = PresolveStatus::kUnchanged;
+   infeasible_rows = { -1, -1 };
 
    // get called less and less over time regardless of success since the
    // presolver can be expensive otherwise
    this->skipRounds( this->getNCalls() );
 
    // lambda mark all reductions except one redundant and update rhs/lhs
-   auto handleRows = [&reductions, &result, &lhs_values, &rhs_values, &rflags,
-                      &num, &constMatrix](const Vec<int> &parallel_rows ) {
+   auto handleRows = [this, &reductions, &result, &lhs_values, &rhs_values,
+                      &rflags, &num,
+                      &constMatrix]( const Vec<int>& parallel_rows ) {
       using std::swap;
 
       assert( parallel_rows.size() >= 2 );
@@ -334,6 +347,7 @@ ParallelRowDetection<REAL>::execute( const Problem<REAL>& problem,
             if( !num.isFeasEq( rhs_value, scaled_rhs ) )
             {
                result = PresolveStatus::kInfeasible;
+               infeasible_rows = { remaining_row, parallel_row };
                break;
             }
             if( !num.isGE( abs( coefficient ), abs( coefs2 ) ) )
@@ -353,6 +367,7 @@ ParallelRowDetection<REAL>::execute( const Problem<REAL>& problem,
                 ( ! lhs_infinity && num.isGT( lhs_value, scaled_lhs ) ) )
             {
                result = PresolveStatus::kInfeasible;
+               infeasible_rows = { remaining_row, parallel_row };
                break;
             }
             remaining_row = parallel_row;
@@ -378,6 +393,7 @@ ParallelRowDetection<REAL>::execute( const Problem<REAL>& problem,
                   num.isGT( scaled_lhs, lhs_value ) ) )
             {
                result = PresolveStatus::kInfeasible;
+               infeasible_rows = { remaining_row, parallel_row };
                break;
             }
          }
@@ -396,6 +412,7 @@ ParallelRowDetection<REAL>::execute( const Problem<REAL>& problem,
                   num.isLT( scaled_rhs, lhs_value ) ) )
             {
                result = PresolveStatus::kInfeasible;
+               infeasible_rows = { remaining_row, parallel_row };
                break;
             }
             if( ! num.isGE( abs( coefficient ), abs( coefs2 ) ) )
