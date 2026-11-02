@@ -37,12 +37,24 @@ namespace papilo
 template <typename REAL>
 class ConstraintPropagation : public PresolveMethod<REAL>
 {
+   double minboundimprovement = 1e-3;
+
  public:
    ConstraintPropagation() : PresolveMethod<REAL>()
    {
       this->setName( "propagation" );
       this->setTiming( PresolverTiming::kFast );
       this->setArgument(ArgumentType::kPropagation);
+   }
+
+   void
+   addPresolverParams( ParameterSet& paramSet ) override
+   {
+      paramSet.addParameter(
+          "propagation.minboundimprovement",
+          "minimal absolute tightening of a bound such that constraint "
+          "propagation is applied",
+          minboundimprovement, 0.0, std::numeric_limits<double>::max() );
    }
 
    /// todo how to communicate about postsolve information
@@ -93,6 +105,10 @@ ConstraintPropagation<REAL>::execute( const Problem<REAL>& problem,
    const REAL bound_tightening_offset =
        REAL(problemUpdate.getPresolveOptions().get_variable_bound_tightening_offset());
 
+   // bound tightenings (not fixings) are only applied if they improve the
+   // bound by more than this absolute amount
+   const REAL min_bound_improvement = REAL( minboundimprovement );
+
 #if ! PAPILO_HAS_TBB
    assert( problemUpdate.getPresolveOptions().runs_sequential() );
 #endif
@@ -140,7 +156,7 @@ ConstraintPropagation<REAL>::execute( const Problem<REAL>& problem,
 
             val -= weaken_bounds;
             if( domains.flags[col].test( ColFlag::kLbInf )
-                || num.isFeasGT( (val - domains.lower_bounds[col]) / 1000, 0 ) )
+                || val - domains.lower_bounds[col] > min_bound_improvement )
             {
                if(!skip_variable_tightening)
                {
@@ -195,7 +211,7 @@ ConstraintPropagation<REAL>::execute( const Problem<REAL>& problem,
 
             val += weaken_bounds;
             if( domains.flags[col].test( ColFlag::kUbInf )
-                || num.isFeasLT( (val - domains.upper_bounds[col]) / 1000, 0 ) )
+                || domains.upper_bounds[col] - val > min_bound_improvement )
             {
                if(!skip_variable_tightening)
                {
@@ -306,7 +322,7 @@ ConstraintPropagation<REAL>::execute( const Problem<REAL>& problem,
 
                       val -= weaken_bounds;
                       if( domains.flags[col].test( ColFlag::kLbInf )
-                          || num.isFeasGT( (val - domains.lower_bounds[col]) / 1000, 0 ) )
+                          || val - domains.lower_bounds[col] > min_bound_improvement )
                       {
                          if( !skip_variable_tightening )
                          {
@@ -365,7 +381,7 @@ ConstraintPropagation<REAL>::execute( const Problem<REAL>& problem,
 
                       val += weaken_bounds;
                       if( domains.flags[col].test( ColFlag::kUbInf )
-                          || num.isFeasLT( (val - domains.upper_bounds[col]) / 1000, 0 ) )
+                          || domains.upper_bounds[col] - val > min_bound_improvement )
                       {
                          if( !skip_variable_tightening )
                          {
