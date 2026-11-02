@@ -286,6 +286,8 @@ else()
 endif()
 
 # LUSOL
+set(PAPILO_HAS_LUSOL 0)
+set(PAPILO_HAS_FORTRAN 0)
 if(LUSOL)
    include(CheckLanguage)
    check_language(Fortran)
@@ -305,6 +307,7 @@ if(LUSOL)
    endif()
    if(CMAKE_Fortran_COMPILER AND BLAS_FOUND)
       set(PAPILO_HAS_LUSOL 1)
+      set(PAPILO_HAS_FORTRAN 1)
       if(CMAKE_VERSION VERSION_LESS 3.18)
          # TODO: Remove this once we require CMake >= 3.18.
          message(WARNING "Defining target BLAS::BLAS with linker flags \"${BLAS_LINKER_FLAGS}\" and libraries \"${BLAS_LIBRARIES}\". Consider upgrading to CMake version 3.18 or higher.")
@@ -313,11 +316,8 @@ if(LUSOL)
             INTERFACE_INCLUDE_DIRECTORIES "${BLAS_LINKER_FLAGS}"
             IMPORTED_LOCATION "${BLAS_LIBRARIES}")
       endif()
-   else()
-      set(PAPILO_HAS_LUSOL 0)
    endif()
 else()
-   set(PAPILO_HAS_LUSOL 0)
    message(STATUS "LUSOL is disabled.")
 endif()
 
