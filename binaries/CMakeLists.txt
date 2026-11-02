@@ -333,7 +333,7 @@ if(PAPILO_HAS_SCIP AND PAPILO_HAS_SOPLEX)
          EXPORT_MACRO_NAME "PAPILOLIB_EXPORT"
          )
 
-      # Add libpapilo_c to the papilo-binaries-targets export set.
+      # Add libpapilo_c to the papilo-interface-targets export set.
       install(TARGETS libpapilo_c
          EXPORT papilo-interface-targets
          ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
