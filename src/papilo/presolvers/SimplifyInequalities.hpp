@@ -70,6 +70,22 @@ class SimplifyInequalities : public PresolveMethod<REAL>
    REAL
    computeGreatestCommonDivisor( REAL val1, REAL val2, const Num<REAL>& num );
 
+   /// largest multiple of gcd that is feasibly <= rhs; the tolerance is
+   /// applied to the unscaled side since applying it to rhs / gcd would
+   /// magnify it by gcd
+   static REAL
+   roundRhsToMultiple( const REAL& rhs, const REAL& gcd, const Num<REAL>& num )
+   {
+      return floor( REAL( ( rhs + num.getFeasTol() ) / gcd ) ) * gcd;
+   }
+
+   /// smallest multiple of gcd that is feasibly >= lhs; see roundRhsToMultiple
+   static REAL
+   roundLhsToMultiple( const REAL& lhs, const REAL& gcd, const Num<REAL>& num )
+   {
+      return ceil( REAL( ( lhs - num.getFeasTol() ) / gcd ) ) * gcd;
+   }
+
    void
    simplify( const REAL* values, const int* colinds, int rowLength,
              const RowActivity<REAL>& activity, const RowFlags& rflag,
@@ -262,19 +278,21 @@ SimplifyInequalities<REAL>::simplify(
 
       // calculate siderest, i.e., the distance of the side to the multiple of
       // gcd L - gcd, where L is the multiple the side is rounded to in
-      // execute(); siderest has to be computed with the same rounding as L,
-      // otherwise the redundancy check and the rounded side do not match
+      // perform_simplify_ineq_task(); siderest has to be computed with the
+      // same rounding as L, otherwise the redundancy check and the rounded
+      // side do not match
       if( !rflag.test( RowFlag::kRhsInf ) )
       {
-         // rhs is rounded down to L = feasFloor( rhs / gcd ) * gcd
-         siderest = rhs - num.feasFloor( rhs / gcd ) * gcd;
+         // rhs is rounded down to L <= rhs + feastol, hence siderest lies in
+         // [-feastol, gcd)
+         siderest = rhs - roundRhsToMultiple( rhs, gcd, num );
          assert( siderest < gcd );
       }
       else
       {
-         // lhs is rounded up to L = feasCeil( lhs / gcd ) * gcd, hence
-         // siderest lies in (0, gcd] and equals gcd if lhs is a multiple of gcd
-         siderest = lhs - ( num.feasCeil( lhs / gcd ) - 1 ) * gcd;
+         // lhs is rounded up to L >= lhs - feastol, hence siderest lies in
+         // (feastol, gcd + feastol] and equals gcd if lhs is a multiple of gcd
+         siderest = lhs - roundLhsToMultiple( lhs, gcd, num ) + gcd;
          assert( siderest > 0 );
       }
 
@@ -436,14 +454,12 @@ SimplifyInequalities<REAL>::perform_simplify_ineq_task(
 
       if( !rflags[row].test( RowFlag::kRhsInf ) && rhs[row] != 0 )
       {
-         new_rhs = num.feasFloor( rhs[row] / greatestCommonDivisor ) *
-                   greatestCommonDivisor;
+         new_rhs = roundRhsToMultiple( rhs[row], greatestCommonDivisor, num );
          rhs_needs_update = new_rhs != rhs[row];
       }
       else if( !rflags[row].test( RowFlag::kLhsInf ) && lhs[row] != 0 )
       {
-         new_lhs = num.feasCeil( lhs[row] / greatestCommonDivisor ) *
-                   greatestCommonDivisor;
+         new_lhs = roundLhsToMultiple( lhs[row], greatestCommonDivisor, num );
          lhs_needs_update = new_lhs != lhs[row];
       }
 

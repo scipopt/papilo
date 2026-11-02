@@ -42,8 +42,16 @@ setup_simple_problem_for_simplify_inequalities_2();
 Problem<double>
 setup_simplify_ineq_big_m_lhs( double lhs, double yUb );
 
+Problem<double>
+setup_simplify_ineq_big_m_lhs( double lhs, double yCoef, double yLb,
+                               double yUb );
+
 bool
 simplify_ineq_deletes_y_from_big_m_row( double lhs, double yUb );
+
+bool
+simplify_ineq_deletes_y_from_big_m_row( double lhs, double yCoef, double yLb,
+                                        double yUb );
 
 TEST_CASE( "happy-path-simplify-inequalities", "[presolve]" )
 {
@@ -186,6 +194,20 @@ TEST_CASE( "simplify_inequ_lhs_close_to_multiple_of_gcd", "[presolve]" )
    REQUIRE( !simplify_ineq_deletes_y_from_big_m_row( 1e-7, 9999.0 ) );
 }
 
+TEST_CASE( "simplify_inequ_side_tolerance_not_scaled_by_gcd", "[presolve]" )
+{
+   // 10000x + y >= 5e-3 with x binary: lhs / gcd = 5e-7 is within feastol of
+   // 0, but lhs itself is not, so lhs must be rounded up to 10000 and not
+   // down to 0
+
+   // y in [0, 1e-3] can not satisfy the row, hence x = 1 and y is redundant
+   REQUIRE( simplify_ineq_deletes_y_from_big_m_row( 5e-3, 1.0, 0.0, 1e-3 ) );
+   // y in [0.01, 0.02] always satisfies the row, but y is only redundant if
+   // lhs is rounded down to 0, which exceeds the feasibility tolerance
+   REQUIRE(
+       !simplify_ineq_deletes_y_from_big_m_row( 5e-3, 1.0, 0.01, 0.02 ) );
+}
+
 Problem<double>
 setupProblemForSimplifyingInequalities()
 {
@@ -310,12 +332,20 @@ setup_simple_problem_for_simplify_inequalities_2()
 bool
 simplify_ineq_deletes_y_from_big_m_row( double lhs, double yUb )
 {
+   return simplify_ineq_deletes_y_from_big_m_row( lhs, -1.0, 100.0, yUb );
+}
+
+bool
+simplify_ineq_deletes_y_from_big_m_row( double lhs, double yCoef, double yLb,
+                                        double yUb )
+{
    Num<double> num{};
    double time = 0.0;
    int cause = -1;
    Timer t{ time };
    Message msg{};
-   Problem<double> problem = setup_simplify_ineq_big_m_lhs( lhs, yUb );
+   Problem<double> problem =
+       setup_simplify_ineq_big_m_lhs( lhs, yCoef, yLb, yUb );
    Statistics statistics{};
    PresolveOptions presolveOptions{};
 #ifndef PAPILO_TBB
@@ -340,8 +370,15 @@ simplify_ineq_deletes_y_from_big_m_row( double lhs, double yUb )
 Problem<double>
 setup_simplify_ineq_big_m_lhs( double lhs, double yUb )
 {
+   return setup_simplify_ineq_big_m_lhs( lhs, -1.0, 100.0, yUb );
+}
+
+Problem<double>
+setup_simplify_ineq_big_m_lhs( double lhs, double yCoef, double yLb,
+                               double yUb )
+{
    Vec<double> coefficients{ 0.0, 0.0 };
-   Vec<double> lowerBounds{ 0.0, 100.0 };
+   Vec<double> lowerBounds{ 0.0, yLb };
    Vec<double> upperBounds{ 1.0, yUb };
    Vec<uint8_t> rhsInf{ 1 };
    Vec<uint8_t> isIntegral{ 1, 0 };
@@ -351,7 +388,7 @@ setup_simplify_ineq_big_m_lhs( double lhs, double yUb )
    Vec<std::string> columnNames{ "x", "y" };
    Vec<std::tuple<int, int, double>> entries{
        std::tuple<int, int, double>{ 0, 0, 10000.0 },
-       std::tuple<int, int, double>{ 0, 1, -1.0 } };
+       std::tuple<int, int, double>{ 0, 1, yCoef } };
 
    ProblemBuilder<double> pb;
    pb.reserve( (int) entries.size(), (int) rowNames.size(), (int) columnNames.size() );
