@@ -437,16 +437,16 @@ write_basic_package_version_file("${CMAKE_BINARY_DIR}/papilo-config-version.cmak
 # Unless we build a package, we populate search directories for dependencies.
 include(PackageConfigDependencies)
 
-if(NOT BUILD_PACKAGE AND PAPILO_HAS_GMP AND GMP_DIR)
+if(NOT BUILD_PACKAGE AND PAPILO_HAS_GMP)
    package_config_dependency_dir(PAPILO_CONFIG_GMP_DIR GMP_FOUND GMP_DIR)
 endif()
-if(NOT BUILD_PACKAGE AND PAPILO_HAS_QUADMATH AND QUADMATH_DIR)
+if(NOT BUILD_PACKAGE AND PAPILO_HAS_QUADMATH)
    package_config_dependency_dir(PAPILO_CONFIG_QUADMATH_DIR Quadmath_FOUND QUADMATH_DIR)
 endif()
-if(NOT BUILD_PACKAGE AND PAPILO_HAS_BOOST AND Boost_DIR)
+if(NOT BUILD_PACKAGE AND PAPILO_HAS_BOOST)
    package_config_dependency_dir(PAPILO_CONFIG_BOOST_DIR Boost_FOUND Boost_DIR)
 endif()
-if(NOT BUILD_PACKAGE AND PAPILO_HAS_TBB AND TBB_DIR)
+if(NOT BUILD_PACKAGE AND PAPILO_HAS_TBB)
    package_config_dependency_dir(PAPILO_CONFIG_TBB_DIR TBB_FOUND TBB_DIR)
 endif()
 
