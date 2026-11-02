@@ -1,6 +1,9 @@
 # is presolver coefftightening enabled  [Boolean: {0,1}]
 coefftightening.enabled = 1
 
+# minimal absolute decrease of a coefficient such that coefficient strengthening is applied  [Numerical: [0,1.7976931348623157e+308]]
+coefftightening.mincoefimprovement = 1e-06
+
 # is the iteration over the rows in coefftightening parallelised? [Boolean: {0,1}]
 coefftightening.parallel = 1
 
@@ -162,6 +165,9 @@ probing.numcliquefails = 0
 
 # is presolver propagation enabled  [Boolean: {0,1}]
 propagation.enabled = 1
+
+# minimal absolute tightening of a bound such that constraint propagation is applied  [Numerical: [0,1.7976931348623157e+308]]
+propagation.minboundimprovement = 0.001
 
 # is the iteration over the rows in propagation parallelised? [Boolean: {0,1}]
 propagation.parallel = 1
