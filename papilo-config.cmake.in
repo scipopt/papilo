@@ -179,6 +179,11 @@ if(NOT TARGET PAPILO::PAPILO)
    endif()
 endif()
 
+if(interface IN_LIST PAPILO_FIND_COMPONENTS)
+   # Include the targets.
+   include("${CMAKE_CURRENT_LIST_DIR}/papilo-interface-targets.cmake")
+endif()
+
 # Deprecated variables.
 set(PAPILO_TBB ${PAPILO_HAS_TBB})
 set(PAPILO_HAVE_FLOAT128 ${PAPILO_HAS_QUADMATH})
