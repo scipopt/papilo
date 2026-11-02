@@ -31,6 +31,13 @@ set(PAPILO_HAS_PIC @PAPILO_HAS_PIC@)
 # Whether PaPILO uses the system fmt library.
 set(PAPILO_HAVE_SYSTEM_FMT @PAPILO_HAVE_SYSTEM_FMT@)
 
+# Whether PaPILO uses Fortran.
+set(PAPILO_HAS_FORTRAN @PAPILO_HAS_FORTRAN@)
+if(PAPILO_HAS_FORTRAN)
+   # This has to be done independently of presence of PAPILO::PAPILO.
+   enable_language(Fortran)
+endif()
+
 # Whether PaPILO was built with GMP.
 set(PAPILO_HAS_GMP @PAPILO_HAS_GMP@)
 
@@ -146,9 +153,8 @@ if(NOT TARGET PAPILO::PAPILO)
    # We also need Threads.
    find_dependency(Threads)
    
-   # If PAPILO was built with LUSOL then we also need Fortran and BLAS.
+   # If PAPILO was built with LUSOL then we also need BLAS.
    if(PAPILO_HAS_LUSOL)
-      enable_language(Fortran)
       find_dependency(BLAS)
       if(BLAS_FOUND AND (NOT TARGET BLAS::BLAS) AND (CMAKE_VERSION VERSION_LESS 3.18))
          message(WARNING "Defining target BLAS::BLAS with linker flags \"${BLAS_LINKER_FLAGS}\" and libraries \"${BLAS_LIBRARIES}\". Consider upgrading to CMake version 3.18 or higher.")
