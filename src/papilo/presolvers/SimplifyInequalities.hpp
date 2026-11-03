@@ -72,14 +72,14 @@ class SimplifyInequalities : public PresolveMethod<REAL>
 
    /// largest multiple of gcd that is at most rhs + feastol
    static REAL
-   roundFloorToMultiple( const REAL& rhs, const REAL& gcd, const Num<REAL>& num )
+   feasFloorToMultiple( const REAL& rhs, const REAL& gcd, const Num<REAL>& num )
    {
       return floor( REAL( ( rhs + num.getFeasTol() ) / gcd ) ) * gcd;
    }
 
    /// smallest multiple of gcd that is at least lhs - feastol
    static REAL
-   roundCeilToMultiple( const REAL& lhs, const REAL& gcd, const Num<REAL>& num )
+   feasCeilToMultiple( const REAL& lhs, const REAL& gcd, const Num<REAL>& num )
    {
       return ceil( REAL( ( lhs - num.getFeasTol() ) / gcd ) ) * gcd;
    }
@@ -281,14 +281,14 @@ SimplifyInequalities<REAL>::simplify(
       {
          // rhs is rounded down to L <= rhs + feastol, hence siderest lies in
          // [-feastol, gcd - feastol)
-         siderest = rhs - roundFloorToMultiple( rhs, gcd, num );
+         siderest = rhs - feasFloorToMultiple( rhs, gcd, num );
          assert( siderest < gcd );
       }
       else
       {
          // lhs is rounded up to L >= lhs - feastol, hence siderest lies in
          // (feastol, gcd + feastol]
-         siderest = lhs - roundCeilToMultiple( lhs, gcd, num ) + gcd;
+         siderest = lhs - feasCeilToMultiple( lhs, gcd, num ) + gcd;
          assert( siderest > 0 );
       }
 
@@ -450,12 +450,12 @@ SimplifyInequalities<REAL>::perform_simplify_ineq_task(
 
       if( !rflags[row].test( RowFlag::kRhsInf ) && rhs[row] != 0 )
       {
-         new_rhs = roundFloorToMultiple( rhs[row], greatestCommonDivisor, num );
+         new_rhs = feasFloorToMultiple( rhs[row], greatestCommonDivisor, num );
          rhs_needs_update = new_rhs != rhs[row];
       }
       else if( !rflags[row].test( RowFlag::kLhsInf ) && lhs[row] != 0 )
       {
-         new_lhs = roundCeilToMultiple( lhs[row], greatestCommonDivisor, num );
+         new_lhs = feasCeilToMultiple( lhs[row], greatestCommonDivisor, num );
          lhs_needs_update = new_lhs != lhs[row];
       }
 
