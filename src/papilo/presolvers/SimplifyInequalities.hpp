@@ -70,16 +70,14 @@ class SimplifyInequalities : public PresolveMethod<REAL>
    REAL
    computeGreatestCommonDivisor( REAL val1, REAL val2, const Num<REAL>& num );
 
-   /// largest multiple of gcd that is feasibly <= rhs; the tolerance is
-   /// applied to the unscaled side since applying it to rhs / gcd would
-   /// magnify it by gcd
+   /// largest multiple of gcd that is at most rhs + feastol
    static REAL
    roundRhsToMultiple( const REAL& rhs, const REAL& gcd, const Num<REAL>& num )
    {
       return floor( REAL( ( rhs + num.getFeasTol() ) / gcd ) ) * gcd;
    }
 
-   /// smallest multiple of gcd that is feasibly >= lhs; see roundRhsToMultiple
+   /// smallest multiple of gcd that is at least lhs - feastol
    static REAL
    roundLhsToMultiple( const REAL& lhs, const REAL& gcd, const Num<REAL>& num )
    {
@@ -278,20 +276,18 @@ SimplifyInequalities<REAL>::simplify(
 
       // calculate siderest, i.e., the distance of the side to the multiple of
       // gcd L - gcd, where L is the multiple the side is rounded to in
-      // perform_simplify_ineq_task(); siderest has to be computed with the
-      // same rounding as L, otherwise the redundancy check and the rounded
-      // side do not match
+      // perform_simplify_ineq_task(), computed with the same rounding
       if( !rflag.test( RowFlag::kRhsInf ) )
       {
          // rhs is rounded down to L <= rhs + feastol, hence siderest lies in
-         // [-feastol, gcd)
+         // [-feastol, gcd - feastol)
          siderest = rhs - roundRhsToMultiple( rhs, gcd, num );
          assert( siderest < gcd );
       }
       else
       {
          // lhs is rounded up to L >= lhs - feastol, hence siderest lies in
-         // (feastol, gcd + feastol] and equals gcd if lhs is a multiple of gcd
+         // (feastol, gcd + feastol]
          siderest = lhs - roundLhsToMultiple( lhs, gcd, num ) + gcd;
          assert( siderest > 0 );
       }
