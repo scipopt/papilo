@@ -25,6 +25,8 @@
 #include "papilo/core/SparseStorage.hpp"
 #include "papilo/external/catch/catch_amalgamated.hpp"
 #include "papilo/misc/compress_vector.hpp"
+#include <tuple>
+#include <vector>
 
 papilo::SparseStorage<double>
 setupSparseMatrix();
@@ -231,6 +233,39 @@ TEST_CASE(
          REQUIRE( false );
       }
    }
+}
+
+TEST_CASE( "changeRow does not report coefficients that keep their value",
+           "[core]" )
+{
+   // row 0 is ( 1 2 0 ... ); adding 1e-20 to the first coefficient is absorbed
+   // by rounding, adding 1 to the second changes it from 2 to 3
+   papilo::SparseStorage<double> matrix = setupSparseMatrix();
+
+   int cols[2] = { 0, 1 };
+   double deltas[2] = { 1e-20, 1.0 };
+
+   std::vector<std::tuple<int, double, double>> changes;
+   papilo::Vec<double> valbuffer;
+   papilo::Vec<int> indbuffer;
+
+   int newsize = matrix.changeRow(
+       0, 0, 2, [&]( int i ) { return cols[i]; },
+       [&]( int i ) { return deltas[i]; },
+       []( const double& a, const double& b ) { return a + b; },
+       [&]( int, int col, double oldval, double newval )
+       { changes.emplace_back( col, oldval, newval ); },
+       valbuffer, indbuffer );
+
+   REQUIRE( newsize == 2 );
+   REQUIRE( changes.size() == 1 );
+   REQUIRE( std::get<0>( changes[0] ) == 1 );
+   REQUIRE( std::get<1>( changes[0] ) == 2.0 );
+   REQUIRE( std::get<2>( changes[0] ) == 3.0 );
+
+   double* values = matrix.getValues() + matrix.getRowRanges()[0].start;
+   REQUIRE( values[0] == 1.0 );
+   REQUIRE( values[1] == 3.0 );
 }
 
 TEST_CASE( "transposed sparse matrix can be compressed", "[core]" )

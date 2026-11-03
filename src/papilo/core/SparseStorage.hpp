@@ -283,7 +283,8 @@ class SparseStorage
          if( columns[i] == col )
          {
             REAL newval = mergeVals( values[i], getVal( it ) );
-            coeffChanged( row, col, values[i], newval );
+            if( newval != values[i] )
+               coeffChanged( row, col, values[i], newval );
 
             if( newval != 0.0 )
             {
