@@ -27,8 +27,10 @@
 namespace papilo
 {
 
+#ifndef PAPILO_HEADER_ONLY
 template class Sparsify<double>;
 template class Sparsify<Quad>;
 template class Sparsify<Rational>;
+#endif /* !PAPILO_HEADER_ONLY */
 
 } // namespace papilo

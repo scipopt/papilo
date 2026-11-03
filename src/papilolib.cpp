@@ -116,7 +116,7 @@ struct AllocatorTraits<T>
 #include "papilo/interfaces/SoplexInterface.hpp"
 #include "papilo/misc/MultiPrecision.hpp"
 #include "papilo/Config.hpp"
-#ifdef PAPILO_TBB
+#if PAPILO_HAS_TBB
 #include "papilo/misc/tbb.hpp"
 #endif
 #include "papilo/core/postsolve/Postsolve.hpp"

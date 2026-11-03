@@ -41,13 +41,13 @@
 #include "papilo/misc/Vec.hpp"
 #include "papilo/misc/compress_vector.hpp"
 #include "papilo/misc/fmt.hpp"
-#ifdef PAPILO_TBB
+#if PAPILO_HAS_TBB
 #include "papilo/misc/tbb.hpp"
 #endif
 
 #include <fstream>
 
-#ifdef PAPILO_SERIALIZATION_AVAILABLE
+#if PAPILO_HAS_BOOST_SERIALIZATION
 #include <boost/archive/text_iarchive.hpp>
 #include <boost/archive/text_oarchive.hpp>
 #include <boost/archive/tmpdir.hpp>
@@ -171,11 +171,11 @@ class Postsolve
                                               int row ) const;
 };
 
-#ifdef PAPILO_USE_EXTERN_TEMPLATES
-extern template class Postsolve<double>;
-extern template class Postsolve<Quad>;
-extern template class Postsolve<Rational>;
-#endif
+#ifndef PAPILO_HEADER_ONLY
+extern template class PAPILO_EXPORT_TEMPLATE Postsolve<double>;
+extern template class PAPILO_EXPORT_TEMPLATE Postsolve<Quad>;
+extern template class PAPILO_EXPORT_TEMPLATE Postsolve<Rational>;
+#endif /* !PAPILO_HEADER_ONLY */
 
 template <typename REAL>
 PostsolveStatus

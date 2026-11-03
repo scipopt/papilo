@@ -54,12 +54,12 @@ struct SolParser
       if( !file )
          return false;
 
-#ifdef PAPILO_USE_BOOST_IOSTREAMS_WITH_ZLIB
+#if PAPILO_HAS_BOOST_IOSTREAMS_ZLIB
       if( boost::algorithm::ends_with( filename, ".gz" ) )
          in.push( boost::iostreams::gzip_decompressor() );
 #endif
 
-#ifdef PAPILO_USE_BOOST_IOSTREAMS_WITH_BZIP2
+#if PAPILO_HAS_BOOST_IOSTREAMS_BZIP2
       if( boost::algorithm::ends_with( filename, ".bz2" ) )
       in.push( boost::iostreams::bzip2_decompressor() );
 #endif
@@ -119,12 +119,12 @@ struct SolParser
       if( !file )
          return false;
 
-#ifdef PAPILO_USE_BOOST_IOSTREAMS_WITH_ZLIB
+#if PAPILO_HAS_BOOST_IOSTREAMS_ZLIB
       if( boost::algorithm::ends_with( filename, ".gz" ) )
          in.push( boost::iostreams::gzip_decompressor() );
 #endif
 
-#ifdef PAPILO_USE_BOOST_IOSTREAMS_WITH_BZIP2
+#if PAPILO_HAS_BOOST_IOSTREAMS_BZIP2
       if( boost::algorithm::ends_with( filename, ".bz2" ) )
          in.push( boost::iostreams::bzip2_decompressor() );
 #endif
@@ -229,6 +229,7 @@ struct SolParser
 
  private:
 
+   PAPILO_NO_EXPORT
    static void
    skip_header( const Vec<String>& colnames,
                 boost::iostreams::filtering_istream& filteringIstream,
@@ -244,6 +245,7 @@ struct SolParser
       }
    }
 
+   PAPILO_NO_EXPORT
    Vec<String> static split( const char* str )
    {
       Vec<String> tokens;

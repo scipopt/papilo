@@ -65,11 +65,11 @@ class SimpleProbing : public PresolveMethod<REAL>
        const Vec<int>& rowsize, const Vec<RowFlags>& rflags, int i );
 };
 
-#ifdef PAPILO_USE_EXTERN_TEMPLATES
-extern template class SimpleProbing<double>;
-extern template class SimpleProbing<Quad>;
-extern template class SimpleProbing<Rational>;
-#endif
+#ifndef PAPILO_HEADER_ONLY
+extern template class PAPILO_EXPORT_TEMPLATE SimpleProbing<double>;
+extern template class PAPILO_EXPORT_TEMPLATE SimpleProbing<Quad>;
+extern template class PAPILO_EXPORT_TEMPLATE SimpleProbing<Rational>;
+#endif /* !PAPILO_HEADER_ONLY */
 
 template <typename REAL>
 PresolveStatus
@@ -92,7 +92,7 @@ SimpleProbing<REAL>::execute( const Problem<REAL>& problem,
 
    int nrows = problem.getNRows();
 
-#ifndef PAPILO_TBB
+#if ! PAPILO_HAS_TBB
    assert( problemUpdate.getPresolveOptions().runs_sequential() );
 #endif
 
@@ -109,7 +109,7 @@ SimpleProbing<REAL>::execute( const Problem<REAL>& problem,
             status = PresolveStatus::kReduced;
       }
    }
-#ifdef PAPILO_TBB
+#if PAPILO_HAS_TBB
    else
    {
       Vec<Reductions<REAL>> stored_reductions( nrows );

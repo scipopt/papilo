@@ -27,8 +27,10 @@
 namespace papilo
 {
 
+#ifndef PAPILO_HEADER_ONLY
 template class ProblemUpdate<double>;
 template class ProblemUpdate<Quad>;
 template class ProblemUpdate<Rational>;
+#endif /* !PAPILO_HEADER_ONLY */
 
 } // namespace papilo

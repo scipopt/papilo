@@ -27,8 +27,10 @@
 namespace papilo
 {
 
+#ifndef PAPILO_HEADER_ONLY
 template class DominatedCols<double>;
 template class DominatedCols<Quad>;
 template class DominatedCols<Rational>;
+#endif /* !PAPILO_HEADER_ONLY */
 
 } // namespace papilo

@@ -31,17 +31,17 @@
 // work around build failure with boost on Fedora 37
 #include <memory>
 
-#ifdef PAPILO_SERIALIZATION_AVAILABLE
+#if PAPILO_HAS_BOOST_SERIALIZATION
 #include <boost/serialization/split_free.hpp>
 #endif
 
-#ifdef PAPILO_HAVE_FLOAT128
+#if PAPILO_HAS_QUADMATH
 #include <boost/multiprecision/float128.hpp>
 namespace papilo
 {
 using Quad = boost::multiprecision::float128;
 } // namespace papilo
-#elif defined( PAPILO_HAVE_GMP )
+#elif PAPILO_HAS_GMP
 #include <boost/multiprecision/gmp.hpp>
 
 namespace papilo
@@ -51,13 +51,13 @@ using Quad =
     boost::multiprecision::number<boost::multiprecision::gmp_float<35>>;
 } // namespace papilo
 
-#ifdef PAPILO_SERIALIZATION_AVAILABLE
+#if PAPILO_HAS_BOOST_SERIALIZATION
 BOOST_SERIALIZATION_SPLIT_FREE( papilo::Quad )
 #endif
 
 #else
 #include <boost/multiprecision/cpp_bin_float.hpp>
-#ifdef PAPILO_SERIALIZATION_AVAILABLE
+#if PAPILO_HAS_BOOST_SERIALIZATION
 #include <boost/serialization/nvp.hpp>
 #endif
 namespace papilo
@@ -66,10 +66,10 @@ using Quad = boost::multiprecision::cpp_bin_float_quad;
 } // namespace papilo
 #endif
 
-#ifdef PAPILO_HAVE_GMP
+#if PAPILO_HAS_GMP
 #include <boost/multiprecision/cpp_bin_float.hpp>
 #include <boost/multiprecision/gmp.hpp>
-#ifdef PAPILO_SERIALIZATION_AVAILABLE
+#if PAPILO_HAS_BOOST_SERIALIZATION
 #include <boost/serialization/nvp.hpp>
 #endif
 
@@ -84,7 +84,7 @@ using Float500 = boost::multiprecision::mpf_float_500;
 using Float1000 = boost::multiprecision::mpf_float_1000;
 } // namespace papilo
 
-#ifdef PAPILO_SERIALIZATION_AVAILABLE
+#if PAPILO_HAS_BOOST_SERIALIZATION
 BOOST_SERIALIZATION_SPLIT_FREE( papilo::Rational )
 BOOST_SERIALIZATION_SPLIT_FREE( papilo::Float100 )
 BOOST_SERIALIZATION_SPLIT_FREE( papilo::Float500 )
@@ -143,7 +143,7 @@ load( Archive& ar,
 #else
 #include <boost/multiprecision/cpp_bin_float.hpp>
 #include <boost/multiprecision/cpp_int.hpp>
-#ifdef PAPILO_SERIALIZATION_AVAILABLE
+#if PAPILO_HAS_BOOST_SERIALIZATION
 #include <boost/serialization/nvp.hpp>
 #endif
 namespace papilo

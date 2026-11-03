@@ -53,11 +53,11 @@ class ConstraintPropagation : public PresolveMethod<REAL>
             const Timer& timer, int& reason_of_infeasibility) override;
 };
 
-#ifdef PAPILO_USE_EXTERN_TEMPLATES
-extern template class ConstraintPropagation<double>;
-extern template class ConstraintPropagation<Quad>;
-extern template class ConstraintPropagation<Rational>;
-#endif
+#ifndef PAPILO_HEADER_ONLY
+extern template class PAPILO_EXPORT_TEMPLATE ConstraintPropagation<double>;
+extern template class PAPILO_EXPORT_TEMPLATE ConstraintPropagation<Quad>;
+extern template class PAPILO_EXPORT_TEMPLATE ConstraintPropagation<Rational>;
+#endif /* !PAPILO_HEADER_ONLY */
 
 template <typename REAL>
 PresolveStatus
@@ -93,7 +93,7 @@ ConstraintPropagation<REAL>::execute( const Problem<REAL>& problem,
    const REAL bound_tightening_offset =
        REAL(problemUpdate.getPresolveOptions().get_variable_bound_tightening_offset());
 
-#ifndef PAPILO_TBB
+#if ! PAPILO_HAS_TBB
    assert( problemUpdate.getPresolveOptions().runs_sequential() );
 #endif
 
@@ -251,7 +251,7 @@ ConstraintPropagation<REAL>::execute( const Problem<REAL>& problem,
             break;
       }
    }
-#ifdef PAPILO_TBB
+#if PAPILO_HAS_TBB
    else
    {
       Vec<Reductions<REAL>> stored_reductions( changedactivities.size() );

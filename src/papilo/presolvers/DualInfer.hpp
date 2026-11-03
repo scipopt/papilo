@@ -95,11 +95,11 @@ class DualInfer : public PresolveMethod<REAL>
        override;
 };
 
-#ifdef PAPILO_USE_EXTERN_TEMPLATES
-extern template class DualInfer<double>;
-extern template class DualInfer<Quad>;
-extern template class DualInfer<Rational>;
-#endif
+#ifndef PAPILO_HEADER_ONLY
+extern template class PAPILO_EXPORT_TEMPLATE DualInfer<double>;
+extern template class PAPILO_EXPORT_TEMPLATE DualInfer<Quad>;
+extern template class PAPILO_EXPORT_TEMPLATE DualInfer<Rational>;
+#endif /* !PAPILO_HEADER_ONLY */
 
 template <typename REAL>
 PresolveStatus
@@ -378,7 +378,7 @@ DualInfer<REAL>::execute( const Problem<REAL>& problem,
             REAL bnddist = newbound - dualLB[dualCol];
 
             // bound exceeded by more then feastol means infeasible
-            if( bnddist < -num.getFeasTol() )
+            if( num.isFeasLT( bnddist, 0 ) )
             {
                result = PresolveStatus::kUnbndOrInfeas;
                return;

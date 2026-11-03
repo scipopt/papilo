@@ -27,8 +27,10 @@
 namespace papilo
 {
 
+#ifndef PAPILO_HEADER_ONLY
 template class DualFix<double>;
 template class DualFix<Quad>;
 template class DualFix<Rational>;
+#endif /* !PAPILO_HEADER_ONLY */
 
 } // namespace papilo

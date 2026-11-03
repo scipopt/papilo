@@ -800,7 +800,7 @@ row_implies_LB( const Num<REAL>& num, REAL lhs, REAL rhs, RowFlags rflags,
    else
       return false;
 
-   return num.isFeasGE( ( side - resact ) / colcoef, collb );
+   return num.isGE( ( side - resact ) / colcoef, collb );
 }
 
 template <typename REAL>
@@ -846,7 +846,7 @@ row_implies_UB( const Num<REAL>& num, REAL lhs, REAL rhs, RowFlags rflags,
    else
       return false;
 
-   return num.isFeasLE( ( side - resact ) / colcoef, colub );
+   return num.isLE( ( side - resact ) / colcoef, colub );
 }
 
 } // namespace papilo

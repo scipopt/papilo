@@ -46,6 +46,7 @@ class ScipInterface : public SolverInterface<REAL>
    SCIP* scip;
    Vec<SCIP_VAR*> vars;
 
+   PAPILO_NO_EXPORT
    SCIP_RETCODE
    doSetUp( const Problem<REAL>& problem, const Vec<int>& origRowMap,
             const Vec<int>& origColMap )
@@ -183,6 +184,7 @@ class ScipInterface : public SolverInterface<REAL>
       return SCIP_OKAY;
    }
 
+   PAPILO_NO_EXPORT
    SCIP_RETCODE
    doSetUp( const Problem<REAL>& problem, const Vec<int>& origRowMap,
             const Vec<int>& origColMap, const Components& components,

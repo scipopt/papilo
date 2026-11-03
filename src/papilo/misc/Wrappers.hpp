@@ -36,7 +36,7 @@
 #include "papilo/misc/NumericalStatistics.hpp"
 #include "papilo/misc/OptionsParser.hpp"
 #include "papilo/misc/Validation.hpp"
-#ifdef PAPILO_TBB
+#if PAPILO_HAS_TBB
 #include "papilo/misc/tbb.hpp"
 #else
 #include <chrono>
@@ -316,7 +316,7 @@ presolve_and_solve(
       if( !opts.postsolve_archive_file.empty() )
       {
 
-#ifdef PAPILO_SERIALIZATION_AVAILABLE
+#if PAPILO_HAS_BOOST_SERIALIZATION
          Timer t( writetime );
          std::ofstream ofs( opts.postsolve_archive_file,
                             std::ios_base::binary );
@@ -428,7 +428,7 @@ postsolve( PostsolveStorage<REAL>& postsolveStorage,
 {
    Solution<REAL> original_sol;
 
-#ifdef PAPILO_TBB
+#if PAPILO_HAS_TBB
    auto t0 = tbb::tick_count::now();
 #else
    auto t0 = std::chrono::steady_clock::now();
@@ -437,7 +437,7 @@ postsolve( PostsolveStorage<REAL>& postsolveStorage,
    Postsolve<REAL> postsolve{ msg, postsolveStorage.getNum() };
    PostsolveStatus status =
        postsolve.undo( reduced_sol, original_sol, postsolveStorage );
-#ifdef PAPILO_TBB
+#if PAPILO_HAS_TBB
    auto t1 = tbb::tick_count::now();
    double sec1 = ( t1 - t0 ).seconds();
 #else
@@ -470,7 +470,7 @@ postsolve( PostsolveStorage<REAL>& postsolveStorage,
 
    if( !primal_solution_output.empty() )
    {
-#ifdef PAPILO_TBB
+#if PAPILO_HAS_TBB
       auto t2 = tbb::tick_count::now();
 #else
       auto t2 = std::chrono::steady_clock::now();
@@ -479,7 +479,7 @@ postsolve( PostsolveStorage<REAL>& postsolveStorage,
                                        original_sol.primal,
                                        origprob.getObjective().coefficients,
                                        origobj, origprob.getVariableNames() );
-#ifdef PAPILO_TBB
+#if PAPILO_HAS_TBB
       auto t3 = tbb::tick_count::now();
       double sec3 = ( t3 - t2 ).seconds();
 #else
@@ -505,7 +505,7 @@ postsolve( PostsolveStorage<REAL>& postsolveStorage,
    if( !dual_solution_output.empty() &&
        original_sol.type == SolutionType::kPrimalDual )
    {
-#ifdef PAPILO_TBB
+#if PAPILO_HAS_TBB
       auto t2 = tbb::tick_count::now();
 #else
       auto t2 = std::chrono::steady_clock::now();
@@ -516,7 +516,7 @@ postsolve( PostsolveStorage<REAL>& postsolveStorage,
                                      constraintMatrix.getRightHandSides(),
                                      constraintMatrix.getLeftHandSides(),
                                      origobj, origprob.getConstraintNames() );
-#ifdef PAPILO_TBB
+#if PAPILO_HAS_TBB
       auto t3 = tbb::tick_count::now();
       double sec3 = ( t3 - t2 ).seconds();
 #else
@@ -534,7 +534,7 @@ postsolve( PostsolveStorage<REAL>& postsolveStorage,
    if( !reduced_solution_output.empty() &&
        original_sol.type == SolutionType::kPrimalDual )
    {
-#ifdef PAPILO_TBB
+#if PAPILO_HAS_TBB
       auto t2 = tbb::tick_count::now();
 #else
       auto t2 = std::chrono::steady_clock::now();
@@ -543,7 +543,7 @@ postsolve( PostsolveStorage<REAL>& postsolveStorage,
           reduced_solution_output, original_sol.reducedCosts,
           origprob.getUpperBounds(), origprob.getLowerBounds(), origobj,
           origprob.getVariableNames() );
-#ifdef PAPILO_TBB
+#if PAPILO_HAS_TBB
       auto t3 = tbb::tick_count::now();
       double sec3 = ( t3 - t2 ).seconds();
 #else
@@ -560,7 +560,7 @@ postsolve( PostsolveStorage<REAL>& postsolveStorage,
 
    if( !basis_output.empty() && original_sol.type == SolutionType::kPrimalDual )
    {
-#ifdef PAPILO_TBB
+#if PAPILO_HAS_TBB
       auto t2 = tbb::tick_count::now();
 #else
       auto t2 = std::chrono::steady_clock::now();
@@ -570,7 +570,7 @@ postsolve( PostsolveStorage<REAL>& postsolveStorage,
                                    original_sol.rowBasisStatus,
                                    origprob.getVariableNames(),
                                    origprob.getConstraintNames() );
-#ifdef PAPILO_TBB
+#if PAPILO_HAS_TBB
       auto t3 = tbb::tick_count::now();
       double sec3 = ( t3 - t2 ).seconds();
 #else
@@ -600,7 +600,7 @@ template <typename REAL>
 void
 postsolve( const OptionsInfo& opts )
 {
-#ifdef PAPILO_SERIALIZATION_AVAILABLE
+#if PAPILO_HAS_BOOST_SERIALIZATION
    PostsolveStorage<REAL> ps;
    std::ifstream inArchiveFile( opts.postsolve_archive_file,
                                 std::ios_base::binary );

@@ -27,8 +27,10 @@
 namespace papilo
 {
 
+#ifndef PAPILO_HEADER_ONLY
 template class CoefficientStrengthening<double>;
 template class CoefficientStrengthening<Quad>;
 template class CoefficientStrengthening<Rational>;
+#endif /* !PAPILO_HEADER_ONLY */
 
 } // namespace papilo

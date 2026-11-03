@@ -36,7 +36,7 @@
 #include "papilo/misc/Vec.hpp"
 #include "papilo/misc/compress_vector.hpp"
 #include "papilo/misc/fmt.hpp"
-#ifdef PAPILO_TBB
+#if PAPILO_HAS_TBB
 #include "papilo/misc/tbb.hpp"
 #endif
 #include <fstream>
@@ -192,7 +192,7 @@ class PostsolveStorage
    compress( const Vec<int>& rowmapping, const Vec<int>& colmapping,
              bool full = false )
    {
-#ifdef PAPILO_TBB
+#if PAPILO_HAS_TBB
       tbb::parallel_invoke(
           [this, &colmapping, full]() {
              compress_vector( colmapping, origcol_mapping );
@@ -265,11 +265,11 @@ class PostsolveStorage
 
 };
 
-#ifdef PAPILO_USE_EXTERN_TEMPLATES
-extern template class PostsolveStorage<double>;
-extern template class PostsolveStorage<Quad>;
-extern template class PostsolveStorage<Rational>;
-#endif
+#ifndef PAPILO_HEADER_ONLY
+extern template class PAPILO_EXPORT_TEMPLATE PostsolveStorage<double>;
+extern template class PAPILO_EXPORT_TEMPLATE PostsolveStorage<Quad>;
+extern template class PAPILO_EXPORT_TEMPLATE PostsolveStorage<Rational>;
+#endif /* !PAPILO_HEADER_ONLY */
 
 template <typename REAL>
 void

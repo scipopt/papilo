@@ -44,6 +44,7 @@ class GurobiInterface : public SolverInterface<REAL>
    GRBEnv* env;
    Solution<REAL> sol;
 
+   PAPILO_NO_EXPORT
    int
    doSetUp( const Problem<REAL>& problem, const Vec<int>& origRowMap,
             const Vec<int>& origColMap )
@@ -169,6 +170,7 @@ class GurobiInterface : public SolverInterface<REAL>
       return 0;
    }
 
+   PAPILO_NO_EXPORT
    int
    doSetUp( const Problem<REAL>& problem, const Vec<int>& origRowMap,
             const Vec<int>& origColMap, const Components& components,

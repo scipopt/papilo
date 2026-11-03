@@ -27,8 +27,10 @@
 namespace papilo
 {
 
+#ifndef PAPILO_HEADER_ONLY
 template class SimplifyInequalities<double>;
 template class SimplifyInequalities<Quad>;
 template class SimplifyInequalities<Rational>;
+#endif /* !PAPILO_HEADER_ONLY */
 
 } // namespace papilo

@@ -235,11 +235,11 @@ private:
    int64_t amountofwork;
 };
 
-#ifdef PAPILO_USE_EXTERN_TEMPLATES
-extern template class ProbingView<double>;
-extern template class ProbingView<Quad>;
-extern template class ProbingView<Rational>;
-#endif
+#ifndef PAPILO_HEADER_ONLY
+extern template class PAPILO_EXPORT_TEMPLATE ProbingView<double>;
+extern template class PAPILO_EXPORT_TEMPLATE ProbingView<Quad>;
+extern template class PAPILO_EXPORT_TEMPLATE ProbingView<Rational>;
+#endif /* !PAPILO_HEADER_ONLY */
 
 template <typename REAL>
 ProbingView<REAL>::ProbingView( const Problem<REAL>& problem_,

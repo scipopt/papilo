@@ -27,12 +27,12 @@
 
 #include "papilo/Config.hpp"
 
-#ifndef PAPILO_USE_STANDARD_HASHMAP
+#if PAPILO_HAS_BYTELL_HASHMAP
 #include "papilo/external/ska/bytell_hash_map.hpp"
-#else
+#else /* !PAPILO_HAS_BYTELL_HASHMAP */
 #include <unordered_map>
 #include <unordered_set>
-#endif
+#endif /* PAPILO_HAS_BYTELL_HASHMAP */
 
 #include <cstdint>
 #include <type_traits>
@@ -102,7 +102,7 @@ struct Hasher<T, T>
    }
 };
 
-#ifndef PAPILO_USE_STANDARD_HASHMAP
+#if PAPILO_HAS_BYTELL_HASHMAP
 
 template <typename K, typename V, typename H = std::hash<K>,
           typename E = std::equal_to<K>>
@@ -112,7 +112,7 @@ using HashMap =
 template <typename T, typename H = std::hash<T>, typename E = std::equal_to<T>>
 using HashSet = ska::bytell_hash_set<T, H, E, Allocator<T>>;
 
-#else
+#else /* !PAPILO_HAS_BYTELL_HASHMAP */
 
 template <typename K, typename V, typename H = std::hash<K>,
           typename E = std::equal_to<K>>
@@ -122,7 +122,7 @@ using HashMap =
 template <typename T, typename H = std::hash<T>, typename E = std::equal_to<T>>
 using HashSet = std::unordered_set<T, H, E, Allocator<T>>;
 
-#endif
+#endif /* PAPILO_HAS_BYTELL_HASHMAP */
 
 } // namespace papilo
 

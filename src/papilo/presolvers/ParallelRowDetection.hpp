@@ -30,7 +30,7 @@
 #include "papilo/core/Problem.hpp"
 #include "papilo/core/ProblemUpdate.hpp"
 #include "papilo/misc/Hash.hpp"
-#ifdef PAPILO_TBB
+#if PAPILO_HAS_TBB
 #include "papilo/misc/tbb.hpp"
 #endif
 #include <boost/sort/pdqsort/pdqsort.hpp>
@@ -139,11 +139,11 @@ class ParallelRowDetection : public PresolveMethod<REAL>
             const Timer& timer, int& reason_of_infeasibility) override;
 };
 
-#ifdef PAPILO_USE_EXTERN_TEMPLATES
-extern template class ParallelRowDetection<double>;
-extern template class ParallelRowDetection<Quad>;
-extern template class ParallelRowDetection<Rational>;
-#endif
+#ifndef PAPILO_HEADER_ONLY
+extern template class PAPILO_EXPORT_TEMPLATE ParallelRowDetection<double>;
+extern template class PAPILO_EXPORT_TEMPLATE ParallelRowDetection<Quad>;
+extern template class PAPILO_EXPORT_TEMPLATE ParallelRowDetection<Rational>;
+#endif /* !PAPILO_HEADER_ONLY */
 
 template <typename REAL>
 void
@@ -216,7 +216,7 @@ void
 ParallelRowDetection<REAL>::computeRowHashes(
     const ConstraintMatrix<REAL>& constMatrix, unsigned int* rowhashes )
 {
-#ifdef PAPILO_TBB
+#if PAPILO_HAS_TBB
    tbb::parallel_for(
        tbb::blocked_range<int>( 0, constMatrix.getNRows() ),
        [&]( const tbb::blocked_range<int>& r ) {
@@ -255,7 +255,7 @@ ParallelRowDetection<REAL>::computeRowHashes(
 
              rowhashes[i] = hasher.getHash();
           }
-#ifdef PAPILO_TBB
+#if PAPILO_HAS_TBB
        } );
 #endif
 }
@@ -514,7 +514,7 @@ ParallelRowDetection<REAL>::execute( const Problem<REAL>& problem,
    std::unique_ptr<unsigned int[]> coefhash{ new unsigned int[nRows] };
    std::unique_ptr<int[]> row{ new int[nRows] };
 
-#ifdef PAPILO_TBB
+#if PAPILO_HAS_TBB
    tbb::parallel_invoke(
        [nRows, &row]() {
           for( int i = 0; i < nRows; ++i )

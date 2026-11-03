@@ -433,3 +433,6 @@ Anass Meskini &mdash; general development and contributions to substitution pres
 
 Wietze Koops &mdash ([@wkoops](https://github.com/wkoops)) &mdash; RoundingSAT interface
 
+[Matthias Walter](http://matthiaswalter.org/)  ([@discopt](https://github.com/discopt)) &mdash; build system
+
+

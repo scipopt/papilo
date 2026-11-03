@@ -27,8 +27,10 @@
 namespace papilo
 {
 
+#ifndef PAPILO_HEADER_ONLY
 template class Postsolve<double>;
 template class Postsolve<Quad>;
 template class Postsolve<papilo::Rational>;
+#endif /* !PAPILO_HEADER_ONLY */
 
 } // namespace papilo

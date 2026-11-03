@@ -27,7 +27,7 @@
 
 #include "papilo/Config.hpp"
 
-#ifdef PAPILO_HAVE_LUSOL
+#if PAPILO_HAS_LUSOL
 extern "C"
 {
 #include "papilo/external/lusol/clusol.h"
@@ -48,7 +48,7 @@ template <typename REAL>
 class DependentRows
 {
  public:
-#ifdef PAPILO_HAVE_LUSOL
+#if PAPILO_HAS_LUSOL
    constexpr static bool Enabled = true;
 #else
    constexpr static bool Enabled = false;
@@ -200,7 +200,7 @@ class DependentRows
       void
       computeDependentColumns( Vec<int>& colmapping )
       {
-#ifdef PAPILO_HAVE_LUSOL
+#if PAPILO_HAS_LUSOL
          // is passed in : int64_t nelem;
          std::array<int64_t, 30> luparm;
          std::array<double, 30> parmlu;

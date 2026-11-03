@@ -30,7 +30,7 @@
 #include "papilo/core/Problem.hpp"
 #include "papilo/core/ProblemUpdate.hpp"
 #include "papilo/misc/Hash.hpp"
-#ifdef PAPILO_TBB
+#if PAPILO_HAS_TBB
 #include "papilo/misc/tbb.hpp"
 #endif
 #include <boost/sort/pdqsort/pdqsort.hpp>
@@ -149,22 +149,26 @@ class ParallelColDetection : public PresolveMethod<REAL>
                        const Timer& timer ) override;
 
  private:
+   PAPILO_NO_EXPORT
    int
    determineBucketSize( int nColumns,
                         std::unique_ptr<unsigned int[]>& supportid,
                         std::unique_ptr<unsigned int[]>& coefficentHashes,
                         std::unique_ptr<int[]>& column, int i );
 
+   PAPILO_NO_EXPORT
    bool
    check_parallelity( const Num<REAL>& num, const Vec<REAL>& obj, int col1,
                       int length, const REAL* coefs1, int col2,
                       const REAL* coefs2 ) const;
 
+   PAPILO_NO_EXPORT
    bool
    can_be_merged( const Num<REAL>& num, const Vec<REAL>& lbs,
                   const Vec<REAL>& ubs, int col1, const REAL* coefs1,
                   const REAL* coefs2, const Vec<ColFlags>& cflags ) const;
 
+   PAPILO_NO_EXPORT
    bool
    determineOderingForZeroObj( REAL val1, REAL val2, int colpermCol1,
             int colpermCol2 ) const;
@@ -172,11 +176,11 @@ class ParallelColDetection : public PresolveMethod<REAL>
    bool symmetries = false;
 };
 
-#ifdef PAPILO_USE_EXTERN_TEMPLATES
-extern template class ParallelColDetection<double>;
-extern template class ParallelColDetection<Quad>;
-extern template class ParallelColDetection<Rational>;
-#endif
+#ifndef PAPILO_HEADER_ONLY
+extern template class PAPILO_EXPORT_TEMPLATE ParallelColDetection<double>;
+extern template class PAPILO_EXPORT_TEMPLATE ParallelColDetection<Quad>;
+extern template class PAPILO_EXPORT_TEMPLATE ParallelColDetection<Rational>;
+#endif /* !PAPILO_HEADER_ONLY */
 
 template <typename REAL>
 void
@@ -422,7 +426,7 @@ ParallelColDetection<REAL>::computeColHashes(
     const ConstraintMatrix<REAL>& constMatrix, const Vec<REAL>& obj,
     unsigned int* columnHashes )
 {
-#ifdef PAPILO_TBB
+#if PAPILO_HAS_TBB
    tbb::parallel_for(
        tbb::blocked_range<int>( 0, constMatrix.getNCols() ),
        [&]( const tbb::blocked_range<int>& r ) {
@@ -460,7 +464,7 @@ ParallelColDetection<REAL>::computeColHashes(
 
              columnHashes[i] = hasher.getHash();
           }
-#ifdef PAPILO_TBB
+#if PAPILO_HAS_TBB
        } );
 #endif
 }
@@ -517,7 +521,7 @@ ParallelColDetection<REAL>::execute( const Problem<REAL>& problem,
    std::unique_ptr<unsigned int[]> coefhash{ new unsigned int[ncols] };
    std::unique_ptr<int[]> col{ new int[ncols] };
 
-#ifdef PAPILO_TBB
+#if PAPILO_HAS_TBB
    tbb::parallel_invoke(
        [ncols, &col]() {
           for( int i = 0; i < ncols; ++i )

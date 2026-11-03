@@ -396,6 +396,7 @@ class SparseStorage
    }
 
  private:
+   PAPILO_NO_EXPORT
    int
    computeNAlloc() const
    {
@@ -414,11 +415,11 @@ class SparseStorage
    int minInterRowSpace = 0;
 };
 
-#ifdef PAPILO_USE_EXTERN_TEMPLATES
-extern template class SparseStorage<double>;
-extern template class SparseStorage<Quad>;
-extern template class SparseStorage<Rational>;
-#endif
+#ifndef PAPILO_HEADER_ONLY
+extern template class PAPILO_EXPORT_TEMPLATE SparseStorage<double>;
+extern template class PAPILO_EXPORT_TEMPLATE SparseStorage<Quad>;
+extern template class PAPILO_EXPORT_TEMPLATE SparseStorage<Rational>;
+#endif /* !PAPILO_HEADER_ONLY */
 
 template <typename REAL>
 SparseStorage<REAL>::SparseStorage( Vec<Triplet<REAL>> entries, int nRows_in,

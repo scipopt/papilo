@@ -31,7 +31,7 @@
 #include "papilo/core/ProblemUpdate.hpp"
 #include "papilo/core/SingleRow.hpp"
 #include "papilo/misc/Hash.hpp"
-#ifdef PAPILO_TBB
+#if PAPILO_HAS_TBB
 #include "papilo/misc/tbb.hpp"
 #endif
 
@@ -82,11 +82,11 @@ class Sparsify : public PresolveMethod<REAL>
             const Timer& timer, int& reason_of_infeasibility) override;
 };
 
-#ifdef PAPILO_USE_EXTERN_TEMPLATES
-extern template class Sparsify<double>;
-extern template class Sparsify<Quad>;
-extern template class Sparsify<Rational>;
-#endif
+#ifndef PAPILO_HEADER_ONLY
+extern template class PAPILO_EXPORT_TEMPLATE Sparsify<double>;
+extern template class PAPILO_EXPORT_TEMPLATE Sparsify<Quad>;
+extern template class PAPILO_EXPORT_TEMPLATE Sparsify<Rational>;
+#endif /* !PAPILO_HEADER_ONLY */
 
 template <typename REAL>
 PresolveStatus
@@ -137,7 +137,7 @@ Sparsify<REAL>::execute( const Problem<REAL>& problem,
       equalities.emplace_back( i );
    }
 
-#ifdef PAPILO_TBB
+#if PAPILO_HAS_TBB
    tbb::combinable<SparsifyData> sparsifyData(
        [nrows]() { return SparsifyData( nrows ); } );
 
@@ -418,11 +418,11 @@ Sparsify<REAL>::execute( const Problem<REAL>& problem,
                                                  int( sparsify.size() ) );
              }
           }
-#ifdef PAPILO_TBB
+#if PAPILO_HAS_TBB
        } );
 #endif
    int nreductions = 0;
-#ifdef PAPILO_TBB
+#if PAPILO_HAS_TBB
    sparsifyData.combine_each( [&]( const SparsifyData& localData ) {
       nreductions += localData.reductionBuffer.size();
    } );
@@ -438,7 +438,7 @@ Sparsify<REAL>::execute( const Problem<REAL>& problem,
 
       reductionData.reserve( nreductions );
 
-#ifdef PAPILO_TBB
+#if PAPILO_HAS_TBB
       sparsifyData.combine_each( [&]( SparsifyData& localData ) {
          for( const std::tuple<int, int, int>& reductionTuple :
               localData.reductionBuffer )

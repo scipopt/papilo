@@ -30,7 +30,7 @@
 #include "papilo/misc/MultiPrecision.hpp"
 #include "papilo/misc/Vec.hpp"
 #include "papilo/misc/compress_vector.hpp"
-#ifdef PAPILO_TBB
+#if PAPILO_HAS_TBB
 #include "papilo/misc/tbb.hpp"
 #endif
 
@@ -92,17 +92,17 @@ struct VariableDomains
    }
 };
 
-#ifdef PAPILO_USE_EXTERN_TEMPLATES
-extern template struct VariableDomains<double>;
-extern template struct VariableDomains<Quad>;
-extern template struct VariableDomains<Rational>;
-#endif
+#ifndef PAPILO_HEADER_ONLY
+extern template struct PAPILO_EXPORT_TEMPLATE VariableDomains<double>;
+extern template struct PAPILO_EXPORT_TEMPLATE VariableDomains<Quad>;
+extern template struct PAPILO_EXPORT_TEMPLATE VariableDomains<Rational>;
+#endif /* !PAPILO_HEADER_ONLY */
 
 template <typename REAL>
 void
 VariableDomains<REAL>::compress( const Vec<int>& colmapping, bool full )
 {
-#ifdef PAPILO_TBB
+#if PAPILO_HAS_TBB
    tbb::parallel_invoke(
        [this, &colmapping, full]() {
           compress_vector( colmapping, lower_bounds );

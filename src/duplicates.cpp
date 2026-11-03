@@ -30,7 +30,7 @@
 #include "papilo/misc/Vec.hpp"
 #include "papilo/misc/fmt.hpp"
 #include "papilo/Config.hpp"
-#ifdef PAPILO_TBB
+#if PAPILO_HAS_TBB
 #include "papilo/misc/tbb.hpp"
 #endif
 #include <algorithm>
@@ -209,7 +209,7 @@ compute_row_and_column_permutation( const Problem<double>& prob, bool verbose )
 
    while( nrows2 != 0 )
    {
-#ifdef PAPILO_TBB
+#if PAPILO_HAS_TBB
       tbb::parallel_for(
           tbb::blocked_range<int>( 0, nrows2 ),
           [&]( const tbb::blocked_range<int>& r ) {
@@ -233,7 +233,7 @@ compute_row_and_column_permutation( const Problem<double>& prob, bool verbose )
 
                 rowhashes[row] = hasher.getHash() >> 1;
              }
-#ifdef PAPILO_TBB
+#if PAPILO_HAS_TBB
           } );
 #endif
       distinct_row_hashes.clear();
@@ -276,7 +276,7 @@ compute_row_and_column_permutation( const Problem<double>& prob, bool verbose )
       if( ncols2 == 0 )
          break;
 
-#ifdef PAPILO_TBB
+#if PAPILO_HAS_TBB
       tbb::parallel_for(
           tbb::blocked_range<int>( 0, ncols2 ),
           [&]( const tbb::blocked_range<int>& r ) {
@@ -300,7 +300,7 @@ compute_row_and_column_permutation( const Problem<double>& prob, bool verbose )
 
                 colhashes[col] = hasher.getHash() >> 1;
              }
-#ifdef PAPILO_TBB
+#if PAPILO_HAS_TBB
           } );
 #endif
       distinct_hashes.clear();
@@ -799,7 +799,7 @@ compute_instancehash( const Problem<double>& prob )
    // Compute column and row hashes
    while( nrows2 != 0 && iters <= MAX_HASH_ITERS )
    {
-#ifdef PAPILO_TBB
+#if PAPILO_HAS_TBB
       tbb::parallel_for(
           tbb::blocked_range<int>( 0, nrows2 ),
           [&]( const tbb::blocked_range<int>& r ) {
@@ -823,7 +823,7 @@ compute_instancehash( const Problem<double>& prob )
 
                 rowhashes[row] = hasher.getHash() >> 1;
              }
-#ifdef PAPILO_TBB
+#if PAPILO_HAS_TBB
           } );
 #endif
 
@@ -867,7 +867,7 @@ compute_instancehash( const Problem<double>& prob )
       if( ncols2 == 0 )
          break;
 
-#ifdef PAPILO_TBB
+#if PAPILO_HAS_TBB
       tbb::parallel_for(
           tbb::blocked_range<int>( 0, ncols2 ),
           [&]( const tbb::blocked_range<int>& r ) {
@@ -891,7 +891,7 @@ compute_instancehash( const Problem<double>& prob )
 
                 colhashes[col] = hasher.getHash() >> 1;
              }
-#ifdef PAPILO_TBB
+#if PAPILO_HAS_TBB
           } );
 #endif
       distinct_col_hashes.clear();

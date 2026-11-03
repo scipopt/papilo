@@ -284,7 +284,7 @@ struct PresolveOptions
    bool
    runs_sequential() const
    {
-#ifdef PAPILO_TBB
+#if PAPILO_HAS_TBB
       return threads == 1;
 #else
       return true;

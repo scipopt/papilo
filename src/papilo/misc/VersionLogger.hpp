@@ -34,27 +34,30 @@
 #include "papilo/io/SolWriter.hpp"
 #include "papilo/misc/NumericalStatistics.hpp"
 #include "papilo/misc/OptionsParser.hpp"
-#ifdef PAPILO_TBB
+#if PAPILO_HAS_TBB
 #include "papilo/misc/tbb.hpp"
 #endif
 
-#ifdef PAPILO_HAVE_SOPLEX
+#if PAPILO_HAS_SOPLEX
 #include "soplex.h"
 #include "soplex/spxgithash.h"
-#endif
+#endif /* PAPILO_HAS_SOPLEX */
 
-#ifdef  PAPILO_HAVE_HIGHS
+#if PAPILO_HAS_HIGHS
 #include "Highs.h"
-#endif
+#endif /* PAPILO_HAS_HIGHS */
 
-#ifdef PAPILO_HAVE_SCIP
+#if PAPILO_HAS_SCIP
 #include "scip/scipgithash.h"
-#endif
+#endif /* PAPILO_HAS_SCIP */
 
+#if PAPILO_HAS_GUROBI
+#include "gurobi_c++.h"
+#endif /* PAPILO_HAS_GUROBI */
 
-#ifdef PAPILO_HAVE_GLOP
+#if PAPILO_HAS_GLOP
 #include "ortools/base/version.h"
-#endif
+#endif /* PAPILO_HAS_GLOP */
 
 #include <boost/archive/binary_iarchive.hpp>
 #include <boost/archive/binary_oarchive.hpp>
@@ -90,29 +93,29 @@ print_header()
 
    Vec<std::string> list_of_solvers;
    std::string solvers = "";
-#ifdef PAPILO_HAVE_HIGHS
+#if PAPILO_HAS_HIGHS
    list_of_solvers.push_back( "HiGHS" );
-#endif
-#ifdef PAPILO_HAVE_SCIP
+#endif /* PAPILO_HAS_HIGHS */
+#if PAPILO_HAS_SCIP
    list_of_solvers.push_back( "SCIP" );
-#endif
-#ifdef PAPILO_HAVE_GUROBI
+#endif /* PAPILO_HAS_SCIP */
+#if PAPILO_HAS_GUROBI
    list_of_solvers.push_back( "Gurobi" );
-#endif
-#ifdef PAPILO_HAVE_GLOP
+#endif /* PAPILO_HAS_GUROBI */
+#if PAPILO_HAS_GLOP
    list_of_solvers.push_back( "Ortools" );
-#endif
-#ifdef PAPILO_HAVE_SOPLEX
+#endif /* PAPILO_HAS_GLOP */
+#if PAPILO_HAS_SOPLEX
    list_of_solvers.push_back( "SoPlex" );
-#endif
-#ifdef PAPILO_HAVE_ROUNDINGSAT
+#endif /* PAPILO_HAS_SOPLEX */
+#if PAPILO_HAS_ROUNDINGSAT
    list_of_solvers.push_back( "ROUNDINGSAT" );
-#endif
+#endif /* PAPILO_HAS_ROUNDINGSAT */
    if( list_of_solvers.empty() )
       solvers = "none";
    else
       join( list_of_solvers, ',', solvers );
-#ifdef PAPILO_GITHASH_AVAILABLE
+#if PAPILO_HAS_GITHASH
    fmt::print( "PaPILO version {}.{}.{} [mode: {}][Solvers: {}][GitHash: {}]\n",
                PAPILO_VERSION_MAJOR, PAPILO_VERSION_MINOR, PAPILO_VERSION_PATCH,
                mode, solvers, PAPILO_GITHASH );
@@ -131,46 +134,47 @@ print_header()
                BOOST_VERSION_NUMBER_PATCH( BOOST_VERSION ) / 100,
                BOOST_VERSION_NUMBER_MAJOR( BOOST_VERSION ) );
 
-#ifdef PAPILO_TBB
+#if PAPILO_HAS_TBB
    fmt::print( "  TBB      {}.{}  \t Thread building block https://github.com/oneapi-src/oneTBB developed by Intel\n", TBB_VERSION_MAJOR, TBB_VERSION_MINOR);
 #endif
-#ifdef PAPILO_HAVE_GMP
+#if PAPILO_HAS_GMP
    fmt::print( "  GMP      {}  \t GNU Multiple Precision Arithmetic Library "
                "developed by T. Granlund (gmplib.org)\n",
-               GMP_VERSION );
+               PAPILO_GMP_VERSION );
 #endif
-#ifdef PAPILO_HAVE_HIGHS
+#if PAPILO_HAS_HIGHS
    fmt::print( "  HiGHS    {}.{}.{} \t high performance software "
                "for linear optimization (https://www.maths.ed.ac.uk/hall/HiGHS/) [GitHash: {}]\n" , HIGHS_VERSION_MAJOR, HIGHS_VERSION_MINOR, HIGHS_VERSION_PATCH,
                HIGHS_GITHASH);
-#endif
-#ifdef PAPILO_HAVE_ROUNDINGSAT
+#endif /* PAPILO_HAS_HIGHS */
+#if PAPILO_HAS_ROUNDINGSAT
     fmt::print( "  RoundingSAT    \t SAT Solver "
                 "(https://gitlab.com/MIAOresearch/software/roundingsat)\n");
-#endif
+#endif /* PAPILO_HAS_ROUNDINGSAT */
     //TODO
-#ifdef PAPILO_HAVE_GLOP
+#if PAPILO_HAS_GLOP
     fmt::print( "  ORTOOLS  {}.{}   \t fast and portable software for combinatorial optimization developed by Google.\n" ,
                 operations_research::OrToolsMajorVersion(), operations_research::OrToolsMinorVersion() );
-#endif
+#endif /* PAPILO_HAS_GLOP */
 
-#ifdef PAPILO_HAVE_SCIP
+#if PAPILO_HAS_SCIP
    fmt::print( "  SCIP     {}.{}.{} \t Mixed Integer Programming Solver "
                "developed at Zuse "
                "Institute Berlin (scip.zib.de) [GitHash: {}]\n",
                SCIP_VERSION_MAJOR, SCIP_VERSION_MINOR, SCIP_VERSION_PATCH,
                SCIPgetGitHash() );
-#endif
-#ifdef PAPILO_HAVE_GUROBI
-   fmt::print( "  Gurobi            \t Gurobi Optimizer \n" );
-#endif
-#ifdef PAPILO_HAVE_SOPLEX
+#endif /* PAPILO_HAS_SCIP */
+#if PAPILO_HAS_GUROBI
+   fmt::print( "  Gurobi   {}.{}.{} \t Gurobi Optimizer \n",
+               GRB_VERSION_MAJOR, GRB_VERSION_MINOR, GRB_VERSION_TECHNICAL );
+#endif /* PAPILO_HAS_GUROBI */
+#if PAPILO_HAS_SOPLEX
    fmt::print(
        "  SoPlex   {}.{}.{} \t Linear Programming Solver developed at Zuse "
        "Institute Berlin (soplex.zib.de) [GitHash: {}]\n",
        SOPLEX_VERSION / 100, ( SOPLEX_VERSION % 100 ) / 10, SOPLEX_VERSION % 10,
        soplex::getGitHash() );
-#endif
+#endif /* PAPILO_HAS_SOPLEX */
 
 
    fmt::print( "\n" );

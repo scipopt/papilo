@@ -25,30 +25,116 @@
 #ifndef _PAPILO_CMAKE_CONFIG_HPP_
 #define _PAPILO_CMAKE_CONFIG_HPP_
 
-#cmakedefine PAPILO_HAVE_SYSTEM_FMT
-#cmakedefine PAPILO_HAVE_FLOAT128
-#cmakedefine PAPILO_HAVE_GMP
-#cmakedefine PAPILO_COMMAND_LINE_AVAILABLE
-#cmakedefine PAPILO_SERIALIZATION_AVAILABLE
-#cmakedefine PAPILO_HAVE_LUSOL
-#cmakedefine PAPILO_USE_STANDARD_HASHMAP
-#cmakedefine PAPILO_USE_BOOST_IOSTREAMS_WITH_ZLIB
-#cmakedefine PAPILO_USE_BOOST_IOSTREAMS_WITH_BZIP2
-#cmakedefine PAPILO_GITHASH_AVAILABLE
-#cmakedefine PAPILO_TBB
+/* If we're building a static lib, a user may define PAPILO_NO_EXPORT, PAPILO_EXPORT
+   and/or PAPILO_EXPORT_TEMPLATE beforehand. */
+#cmakedefine PAPILO_STATIC_LIB
+
+#if defined(_MSC_VER)
+   #ifndef PAPILO_NO_EXPORT
+      #define PAPILO_NO_EXPORT
+   #endif
+   #if defined(PAPILO_STATIC_LIB)
+      #ifndef PAPILO_EXPORT
+         #define PAPILO_EXPORT
+      #endif
+      #ifndef PAPILO_EXPORT_TEMPLATE
+         #define PAPILO_EXPORT_TEMPLATE
+      #endif
+   #elif defined(PAPILO_BUILD_SHARED_LIB)
+      #define PAPILO_EXPORT __declspec(dllexport)
+      #define PAPILO_EXPORT_TEMPLATE __declspec(dllexport)
+   #else
+      #define PAPILO_EXPORT __declspec(dllimport)
+      #define PAPILO_EXPORT_TEMPLATE __declspec(dllimport)
+   #endif
+#else
+   #if defined(PAPILO_STATIC_LIB) || !defined(PAPILO_BUILD_SHARED_LIB)
+      #ifndef PAPILO_NO_EXPORT
+         #define PAPILO_NO_EXPORT
+      #endif
+      #ifndef PAPILO_EXPORT
+         #define PAPILO_EXPORT
+      #endif
+      #ifndef PAPILO_EXPORT_TEMPLATE
+         #define PAPILO_EXPORT_TEMPLATE
+      #endif
+   #else
+      #define PAPILO_NO_EXPORT __attribute__((visibility("hidden")))
+      #define PAPILO_EXPORT __attribute__((visibility("default")))
+      #define PAPILO_EXPORT_TEMPLATE
+   #endif 
+#endif
+
+
+/* If set here, PaPILO is header-only. Users can also set it before to ignore specialized
+   templates compiled into the library. */
+#cmakedefine PAPILO_HEADER_ONLY
+
+#cmakedefine01 PAPILO_HAS_QUADMATH
+#cmakedefine01 PAPILO_HAS_GMP
+#cmakedefine01 PAPILO_HAS_BOOST
+#cmakedefine01 PAPILO_HAS_BOOST_IOSTREAMS
+#cmakedefine01 PAPILO_HAS_BOOST_PROGRAM_OPTIONS
+#cmakedefine01 PAPILO_HAS_BOOST_SERIALIZATION
+#cmakedefine01 PAPILO_HAS_BOOST_IOSTREAMS_ZLIB
+#cmakedefine01 PAPILO_HAS_BOOST_IOSTREAMS_BZIP2
+#cmakedefine01 PAPILO_HAS_LUSOL
+#cmakedefine01 PAPILO_HAS_BYTELL_HASHMAP
+#cmakedefine01 PAPILO_HAS_SYSTEM_FMT
+#cmakedefine01 PAPILO_HAS_GITHASH
+#cmakedefine01 PAPILO_HAS_TBB
+
+/* Deprecated macros. Use PAPILO_HAS_* instead, noting that they are always defined with a binary value. */
+#if PAPILO_HAS_TBB && !defined(PAPILO_TBB)
+   #define PAPILO_TBB
+#endif /* PAPILO_HAS_TBB && !defined(PAPILO_TBB) */
+
+#if PAPILO_HAS_QUADMATH && !defined(PAPILO_HAVE_FLOAT128)
+   #define PAPILO_HAVE_FLOAT128
+#endif /* PAPILO_HAS_QUADMATH && !defined(PAPILO_HAVE_FLOAT128) */
+
+#if PAPILO_HAS_GMP && !defined(PAPILO_HAVE_GMP)
+   #define PAPILO_HAVE_GMP
+#endif /* PAPILO_HAS_GMP && !defined(PAPILO_HAVE_GMP) */
+
+#if PAPILO_HAS_BOOST_PROGRAM_OPTIONS && !defined(PAPILO_COMMAND_LINE_AVAILABLE)
+   #define PAPILO_COMMAND_LINE_AVAILABLE
+#endif /* PAPILO_HAS_BOOST_PROGRAM_OPTIONS && !defined(PAPILO_COMMAND_LINE_AVAILABLE) */
+
+#if PAPILO_HAS_BOOST_SERIALIZATION && !defined(PAPILO_SERIALIZATION_AVAILABLE)
+   #define PAPILO_SERIALIZATION_AVAILABLE
+#endif /* PAPILO_HAS_BOOST_SERIALIZATION && !defined(PAPILO_SERIALIZATION_AVAILABLE) */
+
+#if PAPILO_HAS_BOOST_IOSTREAMS_ZLIB && !defined(PAPILO_USE_BOOST_IOSTREAMS_WITH_ZLIB)
+   #define PAPILO_USE_BOOST_IOSTREAMS_WITH_ZLIB
+#endif /* PAPILO_HAS_BOOST_IOSTREAMS_ZLIB && !defined(PAPILO_USE_BOOST_IOSTREAMS_WITH_ZLIB) */
+
+#if PAPILO_HAS_BOOST_IOSTREAMS_BZIP2 && !defined(PAPILO_USE_BOOST_IOSTREAMS_WITH_BZIP2)
+   #define PAPILO_USE_BOOST_IOSTREAMS_WITH_BZIP2
+#endif /* PAPILO_HAS_BOOST_IOSTREAMS_BZIP2 && !defined(PAPILO_USE_BOOST_IOSTREAMS_WITH_BZIP2) */
+
+#if PAPILO_HAS_LUSOL && !defined(PAPILO_HAVE_LUSOL)
+   #define PAPILO_HAVE_LUSOL
+#endif /* PAPILO_HAS_LUSOL && !defined(PAPILO_HAVE_LUSOL) */
+
+#if PAPILO_HAS_GITHASH && !defined(PAPILO_GITHASH_AVAILABLE)
+   #define PAPILO_GITHASH_AVAILABLE
+#endif /* PAPILO_HAS_GITHASH && !defined(PAPILO_GITHASH_AVAILABLE) */
 
 #define PAPILO_VERSION_MAJOR @PROJECT_VERSION_MAJOR@
 #define PAPILO_VERSION_MINOR @PROJECT_VERSION_MINOR@
 #define PAPILO_VERSION_PATCH @PROJECT_VERSION_PATCH@
 #define PAPILO_VERSION_TWEAK @PROJECT_VERSION_TWEAK@
 #define PAPILO_API_VERSION @PAPILO_API_VERSION@
+#define PAPILO_BUILD_TYPE "@CMAKE_BUILD_TYPE@"
 
-#ifdef PAPILO_HAVE_GMP
-   #define GMP_VERSION "@GMP_VERSION@"
-#endif
 
-#ifdef PAPILO_GITHASH_AVAILABLE
+#if PAPILO_HAS_GMP
+   #define PAPILO_GMP_VERSION "@GMP_VERSION@"
+#endif /* PAPILO_HAS_GMP */
+
+#if PAPILO_HAS_GITHASH
    #define PAPILO_GITHASH "@PAPILO_GITHASH@"
-#endif
+#endif /* PAPILO_HAS_GITHASH */
 
 #endif

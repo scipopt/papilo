@@ -27,8 +27,10 @@
 namespace papilo
 {
 
+#ifndef PAPILO_HEADER_ONLY
 template class GF2<double>;
 template class GF2<Quad>;
 template class GF2<Rational>;
+#endif /* !PAPILO_HEADER_ONLY */
 
 } // namespace papilo

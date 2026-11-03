@@ -27,8 +27,10 @@
 namespace papilo
 {
 
+#ifndef PAPILO_HEADER_ONLY
 template class FixContinuous<double>;
 template class FixContinuous<Quad>;
 template class FixContinuous<Rational>;
+#endif /* !PAPILO_HEADER_ONLY */
 
 } // namespace papilo

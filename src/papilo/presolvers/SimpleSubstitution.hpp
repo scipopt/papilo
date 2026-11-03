@@ -63,6 +63,7 @@ class SimpleSubstitution : public PresolveMethod<REAL>
 
 
  private:
+   PAPILO_NO_EXPORT
    bool
    isConstraintsFeasibleWithGivenBounds(
        const Num<REAL>& num, const Vec<REAL>& lower_bounds,
@@ -70,6 +71,7 @@ class SimpleSubstitution : public PresolveMethod<REAL>
        REAL rhs, int subst, int stay,
        const boost::integer::euclidean_result_t<int64_t>& res ) const;
 
+   PAPILO_NO_EXPORT
    PresolveStatus
    perform_simple_substitution_step(
        const ProblemUpdate<REAL>& problemUpdate, const Num<REAL>& num,
@@ -80,11 +82,11 @@ class SimpleSubstitution : public PresolveMethod<REAL>
        const Vec<RowFlags>& rflags, const Vec<int>& rowperm, int k );
 };
 
-#ifdef PAPILO_USE_EXTERN_TEMPLATES
-extern template class SimpleSubstitution<double>;
-extern template class SimpleSubstitution<Quad>;
-extern template class SimpleSubstitution<Rational>;
-#endif
+#ifndef PAPILO_HEADER_ONLY
+extern template class PAPILO_EXPORT_TEMPLATE SimpleSubstitution<double>;
+extern template class PAPILO_EXPORT_TEMPLATE SimpleSubstitution<Quad>;
+extern template class PAPILO_EXPORT_TEMPLATE SimpleSubstitution<Rational>;
+#endif /* !PAPILO_HEADER_ONLY */
 
 template <typename REAL>
 PresolveStatus
@@ -110,7 +112,7 @@ SimpleSubstitution<REAL>::execute( const Problem<REAL>& problem,
 
    PresolveStatus result = PresolveStatus::kUnchanged;
 
-#ifndef PAPILO_TBB
+#if ! PAPILO_HAS_TBB
    assert( problemUpdate.getPresolveOptions().runs_sequential() );
 #endif
 
@@ -131,7 +133,7 @@ SimpleSubstitution<REAL>::execute( const Problem<REAL>& problem,
             return PresolveStatus::kInfeasible;
       }
    }
-#ifdef PAPILO_TBB
+#if PAPILO_HAS_TBB
    else
    {
       PresolveStatus infeasible = PresolveStatus::kUnchanged;

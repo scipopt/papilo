@@ -27,8 +27,10 @@
 namespace papilo
 {
 
+#ifndef PAPILO_HEADER_ONLY
 template class Substitution<double>;
 template class Substitution<Quad>;
 template class Substitution<Rational>;
+#endif /* !PAPILO_HEADER_ONLY */
 
 } // namespace papilo

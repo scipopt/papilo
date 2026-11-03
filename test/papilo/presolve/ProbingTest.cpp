@@ -161,7 +161,7 @@ TEST_CASE( "clique-probing-2", "[presolve]" )
 
    REQUIRE( presolveStatus == PresolveStatus::kReduced );
 
-#ifdef PAPILO_TBB
+#if PAPILO_HAS_TBB
 
     REQUIRE( reductions.size() == 8 );
 

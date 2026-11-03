@@ -26,7 +26,7 @@
 #define _PAPILO_MISC_TIMER_HPP_
 #include "papilo/Config.hpp"
 
-#ifdef PAPILO_TBB
+#if PAPILO_HAS_TBB
 #include "papilo/misc/tbb.hpp"
 #else
 #include <chrono>
@@ -35,7 +35,7 @@
 namespace papilo
 {
 
-#ifdef PAPILO_TBB
+#if PAPILO_HAS_TBB
 class Timer
 {
  public:
