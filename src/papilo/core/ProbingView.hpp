@@ -707,16 +707,13 @@ ProbingView<REAL>::analyzeImplications()
          int col2 = probingCol;
          REAL scale = onefixval - zerofixval;
 
-         // in case both columns are binary, we keep the one whith the
-         // smaller index
-         if( col1 < col2 && abs( scale ) == 1 &&
-             ( zerofixval == 1 || zerofixval == 0 ) &&
+         // in case both columns are binary, we keep the one with the smaller index;
+         // swapping is only valid for the fixed values (0, 1) and (1, 0) since the substitution is only self-inverse in these cases
+         if( col1 < col2 && abs( scale ) == 1 && zerofixval + onefixval == 1 &&
              probing_domain_flags[col1].test( ColFlag::kIntegral ) )
             std::swap( col1, col2 );
 
-         // add the corresponding substitution.
-         substitutions.emplace_back(
-             ProbingSubstitution<REAL>( col1, scale, col2, zerofixval ) );
+         substitutions.emplace_back( ProbingSubstitution<REAL>( col1, scale, col2, zerofixval ) );
       }
       else if( boundChg.upper &&
                !probing_domain_flags[boundChg.col].test( ColFlag::kUbInf ) &&

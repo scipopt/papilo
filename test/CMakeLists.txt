@@ -188,6 +188,8 @@ set(unit_tests
    "parallel_col_postsolve_cont_int_recompute_after_rounding"
    "parallel_col_postsolve_int_int_not_on_bounds"
    "parallel_col_postsolve_cont_free_col1_col2_on_bounds"
+   "failed-path-probing-on-not-binary-variables"
+   "probing-substitution-of-integer-by-binary"
 
    #Singleton Column
    "happy-path-singleton-column"
@@ -228,6 +230,8 @@ set(unit_tests
    "happy-path-simplify-inequalities"
    "simplify_inequ_doesnt_lock_more_rows"
    "simplify_inequ_doesnt_apply_lb_and_ub_on_one_row"
+        "simplify_inequ_lhs_close_to_multiple_of_gcd"
+        "simplify_inequ_side_tolerance_not_scaled_by_gcd"
 
    #Sparsify
    "happy-path-sparsify"

@@ -82,6 +82,9 @@ Fixed bugs
 - SimplifyInequalities: lock the bounds of all columns of the row to avoid applying a simplification that relies on bounds widened by merging parallel columns in the same round
 - FreeVarSubstitution: check divisibility of the side of an integral equation before substituting an integer column to avoid losing integrality and detect infeasibility (scip#239)
 - Probing: guard the badge size computation against division by zero and out-of-range conversion to int to avoid an invalid candidate range (#102)
+- SimplifyInequalities: compute the remainder of the side w.r.t. the same rounding as the previously rounded side to avoid deleting columns that are not redundant if the side is close to a multiple of the gcd (scip#263)
+- Probing: only swap the columns of a probing substitution if both are (implied) binaries (scip#261)
+- ProblemUpdate: respect infinite flags in the REPLACE reduction to avoid wrong transferred bound changes
 
 @section RN302 PaPILO 3.0.2
 
