@@ -36,6 +36,14 @@ setupProblemWithProbing();
 Problem<double>
 setupProblemWithProbingWithNoBinary();
 
+Problem<double>
+setupProblemWithProbingSubstitutionOfInteger();
+
+Problem<double>
+setupProblemWithProbingSubstitutionOfInfiniteColumn( double lb_y, bool lb_y_inf,
+                                                     double ub_y, bool ub_y_inf,
+                                                     double coef_p, double rhs );
+
 TEST_CASE( "happy-path-probing", "[presolve]" )
 {
    Num<double> num{};
@@ -89,6 +97,102 @@ TEST_CASE( "failed-path-probing-on-not-binary-variables", "[presolve]" )
        presolvingMethod.execute( problem, problemUpdate, num, reductions, t, cause );
 
    REQUIRE( presolveStatus == PresolveStatus::kUnchanged );
+}
+
+TEST_CASE( "probing-substitution-of-integer-by-binary", "[presolve]" )
+{
+   double time = 0.0;
+   int cause = -1;
+   Timer t{ time };
+   Num<double> num{};
+   Message msg{};
+   Problem<double> problem = setupProblemWithProbingSubstitutionOfInteger();
+   Statistics statistics{};
+   PresolveOptions presolveOptions{};
+   presolveOptions.dualreds = 0;
+   PostsolveStorage<double> postsolve =
+       PostsolveStorage<double>( problem, num, presolveOptions );
+   ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
+                                        presolveOptions, num, msg );
+   Probing<double> presolvingMethod{};
+   Reductions<double> reductions{};
+   problem.recomputeAllActivities();
+
+   PresolveStatus presolveStatus =
+       presolvingMethod.execute( problem, problemUpdate, num, reductions, t, cause );
+
+   // probing on p yields y = 1 + p; the integer y must be replaced and not the
+   // binary p, since the substitution is not invertible in this form
+   REQUIRE( presolveStatus == PresolveStatus::kReduced );
+   REQUIRE( reductions.size() == 2 );
+   REQUIRE( reductions.getReduction( 0 ).row == papilo::ColReduction::REPLACE );
+   REQUIRE( reductions.getReduction( 0 ).col == 0 );
+   REQUIRE( reductions.getReduction( 0 ).newval == 1 );
+   REQUIRE( reductions.getReduction( 1 ).row == papilo::ColReduction::NONE );
+   REQUIRE( reductions.getReduction( 1 ).col == 1 );
+   REQUIRE( reductions.getReduction( 1 ).newval == 1 );
+}
+
+TEST_CASE( "probing-substitution-of-column-with-infinite-bound", "[presolve]" )
+{
+   // the stored value of the infinite bound of y must not be transferred to p
+   struct Instance
+   {
+      double lb_y;
+      bool lb_y_inf;
+      double ub_y;
+      bool ub_y_inf;
+      double coef_p, rhs;
+   };
+   const Vec<Instance> instances{ // y in (-inf, 1]: y = -1 + 2 * p
+                                  { 0, true, 1, false, -2, -1 },
+                                  // y in [-1, inf): y = 1 - 2 * p
+                                  { -1, false, 0, true, 2, 1 } };
+
+   for( const Instance& i : instances )
+   {
+      Problem<double> problem =
+          setupProblemWithProbingSubstitutionOfInfiniteColumn(
+              i.lb_y, i.lb_y_inf, i.ub_y, i.ub_y_inf, i.coef_p, i.rhs );
+      double time = 0.0;
+      int cause = -1;
+      Timer t{ time };
+      Num<double> num{};
+      Message msg{};
+      Statistics statistics{};
+      PresolveOptions presolveOptions{};
+      presolveOptions.dualreds = 0;
+      PostsolveStorage<double> postsolve =
+          PostsolveStorage<double>( problem, num, presolveOptions );
+      ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
+                                           presolveOptions, num, msg );
+      Probing<double> presolvingMethod{};
+      Reductions<double> reductions{};
+      problem.recomputeAllActivities();
+      problemUpdate.checkChangedActivities();
+
+      REQUIRE( presolvingMethod.execute( problem, problemUpdate, num,
+                                         reductions, t, cause ) ==
+               PresolveStatus::kReduced );
+      REQUIRE( reductions.size() == 2 );
+      REQUIRE( reductions.getReduction( 0 ).row ==
+               papilo::ColReduction::REPLACE );
+      REQUIRE( reductions.getReduction( 0 ).col == 0 );
+
+      problemUpdate.setPostponeSubstitutions( false );
+      const auto& reds = reductions.getReductions();
+      const auto& transaction = reductions.getTransactions()[0];
+      auto status = problemUpdate.applyTransaction(
+                   &reds[transaction.start], &reds[transaction.end],
+                   ArgumentType::kPrimal );
+      REQUIRE( (status == ApplyResult::kApplied) );
+
+      const Vec<ColFlags>& flags = problem.getColFlags();
+      REQUIRE( flags[0].test( ColFlag::kSubstituted ) );
+      REQUIRE_FALSE( flags[1].test( ColFlag::kFixed ) );
+      REQUIRE( problem.getLowerBounds()[1] == 0 );
+      REQUIRE( problem.getUpperBounds()[1] == 1 );
+   }
 }
 
 Problem<double>
@@ -160,4 +264,72 @@ setupProblemWithProbingWithNoBinary()
    pb.setProblemName( "matrix for testing probing no binaries" );
    Problem<double> problem = pb.build();
    return problem;
+}
+
+Problem<double>
+setupProblemWithProbingSubstitutionOfInteger()
+{
+   // y - p = 1
+   // y integer in [1,2], p binary
+   Vec<double> coefficients{ 1.0, 1.0 };
+   Vec<double> upperBounds{ 2.0, 1.0 };
+   Vec<double> lowerBounds{ 1.0, 0.0 };
+   Vec<uint8_t> isIntegral{ 1, 1 };
+
+   Vec<double> rhs{ 1.0 };
+   Vec<double> lhs{ 1.0 };
+   Vec<std::string> rowNames{ "A1" };
+   Vec<std::string> columnNames{ "y", "p" };
+   Vec<std::tuple<int, int, double>> entries{
+       std::tuple<int, int, double>{ 0, 0, 1.0 },
+       std::tuple<int, int, double>{ 0, 1, -1.0 } };
+
+   ProblemBuilder<double> pb;
+   pb.reserve( entries.size(), rowNames.size(), columnNames.size() );
+   pb.setNumRows( rowNames.size() );
+   pb.setNumCols( columnNames.size() );
+   pb.setColUbAll( upperBounds );
+   pb.setColLbAll( lowerBounds );
+   pb.setObjAll( coefficients );
+   pb.setObjOffset( 0.0 );
+   pb.setColIntegralAll( isIntegral );
+   pb.setRowRhsAll( rhs );
+   pb.setRowLhsAll( lhs );
+   pb.addEntryAll( entries );
+   pb.setColNameAll( columnNames );
+   pb.setProblemName( "matrix for testing probing substitution of integer" );
+   Problem<double> problem = pb.build();
+   return problem;
+}
+
+Problem<double>
+setupProblemWithProbingSubstitutionOfInfiniteColumn( double lb_y, bool lb_y_inf,
+                                                     double ub_y, bool ub_y_inf,
+                                                     double coef_p, double rhs )
+{
+   // y + coef_p * p = rhs
+   // -100 <= y + p + z <= 100
+   // y integer in [lb_y, ub_y], p binary, z continuous
+   ProblemBuilder<double> pb;
+   pb.reserve( 5, 2, 3 );
+   pb.setNumRows( 2 );
+   pb.setNumCols( 3 );
+   pb.setColLbAll( Vec<double>{ lb_y, 0.0, 0.0 } );
+   pb.setColUbAll( Vec<double>{ ub_y, 1.0, 10.0 } );
+   pb.setColLbInf( 0, lb_y_inf );
+   pb.setColUbInf( 0, ub_y_inf );
+   pb.setObjAll( Vec<double>{ 1.0, 1.0, 1.0 } );
+   pb.setObjOffset( 0.0 );
+   pb.setColIntegralAll( Vec<uint8_t>{ 1, 1, 0 } );
+   pb.setRowRhsAll( Vec<double>{ rhs, 100.0 } );
+   pb.setRowLhsAll( Vec<double>{ rhs, -100.0 } );
+   pb.addEntryAll( Vec<std::tuple<int, int, double>>{ { 0, 0, 1.0 },
+                                                      { 0, 1, coef_p },
+                                                      { 1, 0, 1.0 },
+                                                      { 1, 1, 1.0 },
+                                                      { 1, 2, 1.0 } } );
+   pb.setColNameAll( Vec<std::string>{ "y", "p", "z" } );
+   pb.setProblemName( "matrix for testing probing substitution with infinite "
+                      "bound" );
+   return pb.build();
 }

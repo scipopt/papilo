@@ -2537,29 +2537,34 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
 
             assert( constraintMatrix.getColSizes()[col1] > 0 &&
                     constraintMatrix.getColSizes()[col2] > 0 );
+            assert( !cflags[col2].test( ColFlag::kLbInf, ColFlag::kUbInf ) );
 
+            bool col2_imp_lb_inf;
+            bool col2_imp_ub_inf;
             REAL col2_imp_lb;
             REAL col2_imp_ub;
             if( factor > 0.0 )
             {
-               col2_imp_lb = ( lbs[col1] - offset ) / factor;
-               col2_imp_ub = ( ubs[col1] - offset ) / factor;
+               col2_imp_lb_inf = cflags[col1].test( ColFlag::kLbInf );
+               col2_imp_ub_inf = cflags[col1].test( ColFlag::kUbInf );
+               col2_imp_lb = !col2_imp_lb_inf ? ( lbs[col1] - offset ) / factor : REAL( 0 );
+               col2_imp_ub = !col2_imp_ub_inf ? ( ubs[col1] - offset ) / factor : REAL( 0 );
             }
             else
             {
-               col2_imp_lb = ( ubs[col1] - offset ) / factor;
-               col2_imp_ub = ( lbs[col1] - offset ) / factor;
+               col2_imp_lb_inf = cflags[col1].test( ColFlag::kUbInf );
+               col2_imp_ub_inf = cflags[col1].test( ColFlag::kLbInf );
+               col2_imp_lb = !col2_imp_lb_inf ? ( ubs[col1] - offset ) / factor : REAL( 0 );
+               col2_imp_ub = !col2_imp_ub_inf ? ( lbs[col1] - offset ) / factor : REAL( 0 );
             }
-            if( col2_imp_lb > lbs[col2] )
+            if( !col2_imp_lb_inf && col2_imp_lb > lbs[col2] )
             {
-               if( changeLB( col2, col2_imp_lb ) ==
-                   PresolveStatus::kInfeasible )
+               if( changeLB( col2, col2_imp_lb ) == PresolveStatus::kInfeasible )
                   return ApplyResult::kInfeasible;
             }
-            else if( col2_imp_ub < ubs[col2] )
+            if( !col2_imp_ub_inf && col2_imp_ub < ubs[col2] )
             {
-               if( changeUB( col2, col2_imp_ub ) ==
-                   PresolveStatus::kInfeasible )
+               if( changeUB( col2, col2_imp_ub ) == PresolveStatus::kInfeasible )
                   return ApplyResult::kInfeasible;
             }
 
