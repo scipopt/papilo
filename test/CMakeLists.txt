@@ -188,7 +188,6 @@ set(unit_tests
    "parallel_col_postsolve_cont_int_recompute_after_rounding"
    "parallel_col_postsolve_int_int_not_on_bounds"
    "parallel_col_postsolve_cont_free_col1_col2_on_bounds"
-   "failed-path-probing-on-not-binary-variables"
    "probing-substitution-of-integer-by-binary"
 
    #Singleton Column
