@@ -43,7 +43,7 @@ endif()
 set(PAPILO_VERSION_MAJOR 4)
 set(PAPILO_VERSION_MINOR 0)
 set(PAPILO_VERSION_PATCH 0)
-set(PAPILO_API_VERSION 13)
+set(PAPILO_API_VERSION 14)
 
 # Project
 project(papilo
@@ -286,6 +286,8 @@ else()
 endif()
 
 # LUSOL
+set(PAPILO_HAS_LUSOL 0)
+set(PAPILO_HAS_FORTRAN 0)
 if(LUSOL)
    include(CheckLanguage)
    check_language(Fortran)
@@ -305,6 +307,7 @@ if(LUSOL)
    endif()
    if(CMAKE_Fortran_COMPILER AND BLAS_FOUND)
       set(PAPILO_HAS_LUSOL 1)
+      set(PAPILO_HAS_FORTRAN 1)
       if(CMAKE_VERSION VERSION_LESS 3.18)
          # TODO: Remove this once we require CMake >= 3.18.
          message(WARNING "Defining target BLAS::BLAS with linker flags \"${BLAS_LINKER_FLAGS}\" and libraries \"${BLAS_LIBRARIES}\". Consider upgrading to CMake version 3.18 or higher.")
@@ -313,11 +316,8 @@ if(LUSOL)
             INTERFACE_INCLUDE_DIRECTORIES "${BLAS_LINKER_FLAGS}"
             IMPORTED_LOCATION "${BLAS_LIBRARIES}")
       endif()
-   else()
-      set(PAPILO_HAS_LUSOL 0)
    endif()
 else()
-   set(PAPILO_HAS_LUSOL 0)
    message(STATUS "LUSOL is disabled.")
 endif()
 
@@ -437,16 +437,16 @@ write_basic_package_version_file("${CMAKE_BINARY_DIR}/papilo-config-version.cmak
 # Unless we build a package, we populate search directories for dependencies.
 include(PackageConfigDependencies)
 
-if(NOT BUILD_PACKAGE AND PAPILO_HAS_GMP AND GMP_DIR)
+if(NOT BUILD_PACKAGE AND PAPILO_HAS_GMP)
    package_config_dependency_dir(PAPILO_CONFIG_GMP_DIR GMP_FOUND GMP_DIR)
 endif()
-if(NOT BUILD_PACKAGE AND PAPILO_HAS_QUADMATH AND QUADMATH_DIR)
+if(NOT BUILD_PACKAGE AND PAPILO_HAS_QUADMATH)
    package_config_dependency_dir(PAPILO_CONFIG_QUADMATH_DIR Quadmath_FOUND QUADMATH_DIR)
 endif()
-if(NOT BUILD_PACKAGE AND PAPILO_HAS_BOOST AND Boost_DIR)
+if(NOT BUILD_PACKAGE AND PAPILO_HAS_BOOST)
    package_config_dependency_dir(PAPILO_CONFIG_BOOST_DIR Boost_FOUND Boost_DIR)
 endif()
-if(NOT BUILD_PACKAGE AND PAPILO_HAS_TBB AND TBB_DIR)
+if(NOT BUILD_PACKAGE AND PAPILO_HAS_TBB)
    package_config_dependency_dir(PAPILO_CONFIG_TBB_DIR TBB_FOUND TBB_DIR)
 endif()
 

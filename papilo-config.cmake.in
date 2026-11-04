@@ -31,6 +31,13 @@ set(PAPILO_HAS_PIC @PAPILO_HAS_PIC@)
 # Whether PaPILO uses the system fmt library.
 set(PAPILO_HAVE_SYSTEM_FMT @PAPILO_HAVE_SYSTEM_FMT@)
 
+# Whether PaPILO uses Fortran.
+set(PAPILO_HAS_FORTRAN @PAPILO_HAS_FORTRAN@)
+if(PAPILO_HAS_FORTRAN)
+   # This has to be done independently of presence of PAPILO::PAPILO.
+   enable_language(Fortran)
+endif()
+
 # Whether PaPILO was built with GMP.
 set(PAPILO_HAS_GMP @PAPILO_HAS_GMP@)
 
@@ -45,6 +52,7 @@ set(PAPILO_HAS_BYTELL_HASHMAP @PAPILO_HAS_BYTELL_HASHMAP@)
 
 # Whether PaPILO was built with Boost.
 set(PAPILO_HAS_BOOST @PAPILO_HAS_BOOST@)
+set(PAPILO_HAS_BOOST_SERIALIZATION @PAPILO_HAS_BOOST_SERIALIZATION@)
 
 # Whether PaPILO was built with LUSOL.
 set(PAPILO_HAS_LUSOL @PAPILO_HAS_LUSOL@)
@@ -65,8 +73,8 @@ if(NOT TARGET PAPILO::PAPILO)
    endif()
    
    # If PaPILO was built with GMP then we also need it.
-   @PAPILO_CONFIG_GMP_DIR@
    if(PAPILO_HAS_GMP)
+      @PAPILO_CONFIG_GMP_DIR@
       find_dependency(GMP)
    
       # Support legacy FindGMP.cmake module when importing PaPILO.
@@ -106,8 +114,8 @@ if(NOT TARGET PAPILO::PAPILO)
    endif()
    
    # If PAPILO was built with Quadmath then we also need it.
-   @PAPILO_CONFIG_QUADMATH_DIR@
    if(PAPILO_HAS_QUADMATH)
+      @PAPILO_CONFIG_QUADMATH_DIR@
       find_dependency(Quadmath)
    
       # Support legacy FindQuadmath.cmake module when importing PaPILO.
@@ -130,25 +138,28 @@ if(NOT TARGET PAPILO::PAPILO)
    endif()
    
    # If PAPILO was built with TBB then we also need it.
-   @PAPILO_CONFIG_TBB_DIR@
    if(PAPILO_HAS_TBB)
+      @PAPILO_CONFIG_TBB_DIR@
       find_dependency(TBB @TBB_MIN_VERSION@
          COMPONENTS tbb tbbmalloc
          HINTS "${TBB_DIR}")
    endif()
    
    # If PAPILO was built with Boost then we also need those.
-   @PAPILO_CONFIG_BOOST_DIR@
-   if(PAPILO_HAS_BOOST AND ((NOT Boost_FOUND) OR ("${Boost_VERSION}" VERSION_LESS @BOOST_MIN_VERSION@)))
-      find_dependency(Boost @BOOST_MIN_VERSION@)
+   if(PAPILO_HAS_BOOST)
+      @PAPILO_CONFIG_BOOST_DIR@
+      set(boost_components)
+      if(NOT PAPILO_HAS_PIC AND PAPILO_HAS_BOOST_SERIALIZATION)
+         list(APPEND boost_components serialization)
+      endif()
+      find_dependency(Boost @BOOST_MIN_VERSION@ COMPONENTS ${boost_components})
    endif()
    
    # We also need Threads.
    find_dependency(Threads)
    
-   # If PAPILO was built with LUSOL then we also need Fortran and BLAS.
+   # If PAPILO was built with LUSOL then we also need BLAS.
    if(PAPILO_HAS_LUSOL)
-      enable_language(Fortran)
       find_dependency(BLAS)
       if(BLAS_FOUND AND (NOT TARGET BLAS::BLAS) AND (CMAKE_VERSION VERSION_LESS 3.18))
          message(WARNING "Defining target BLAS::BLAS with linker flags \"${BLAS_LINKER_FLAGS}\" and libraries \"${BLAS_LIBRARIES}\". Consider upgrading to CMake version 3.18 or higher.")
@@ -177,6 +188,11 @@ if(NOT TARGET PAPILO::PAPILO)
    if(NOT PAPILO_FIND_QUIETLY)
       message(STATUS "Found PaPILO version ${PAPILO_VERSION}.")
    endif()
+endif()
+
+if(interface IN_LIST PAPILO_FIND_COMPONENTS)
+   # Include the targets.
+   include("${CMAKE_CURRENT_LIST_DIR}/papilo-interface-targets.cmake")
 endif()
 
 # Deprecated variables.

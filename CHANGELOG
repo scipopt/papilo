@@ -31,6 +31,9 @@ Interface changes
 
 ### New parameters with default values
 
+- coefftightening.mincoefimprovement = 1e-06: minimal absolute decrease of a coefficient such that coefficient strengthening is applied (PAPILO_API_VERSION 14)
+- gf2.enabled = 1: is presolver gf2 enabled  [Boolean: {0,1}] (PAPILO_API_VERSION 13)
+- gf2.limit = 1000: Upper bound on the number of constraints considered during GF2 presolver processing (PAPILO_API_VERSION 13)
 - probing.maxCliqueLength = 150: maximal size of cliques that are probed on (PAPILO_API_VERSION 12)
 - probing.max_probed_clique_vars = 3000: maximal number of variables in cliques that are probed on (PAPILO_API_VERSION 12)
 - probing.ratiocoveredcliquevars = 2: maximal ratio of variables in clique that are also covered by other probed cliques (PAPILO_API_VERSION 12)
@@ -38,8 +41,7 @@ Interface changes
 - probing.cliquereductionfactor = 3: number of reductions per variable in probed clique to deem clique probing successful (PAPILO_API_VERSION 12)
 - probing.minabortedvariables = 0: minimum number of variables left in clique before we consider abort probing on the clique (PAPILO_API_VERSION 12)
 - probing.numcliquefails = 0: number of times clique probing may fail before being disabled (PAPILO_API_VERSION 12)
-- gf2.enabled = 1: is presolver gf2 enabled  [Boolean: {0,1}] (PAPILO_API_VERSION 13)
-- gf2.limit = 1000: Upper bound on the number of constraints considered during GF2 presolver processing (PAPILO_API_VERSION 13)
+- propagation.minboundimprovement = 0.001: minimal absolute tightening of a bound such that constraint propagation is applied (PAPILO_API_VERSION 14)
 
 
 Data Structures
@@ -75,6 +77,8 @@ Fixed bugs
 - ProblemUpdate: skip probing reasoning in the certificate for columns that became inactive in the meantime
 - Probing: pass the probing column as the cause of implied bound changes to the certificate
 - SingletonStuffing: disable primal-only reductions if VeriPB is enabled
+
+- CoefficientStrengthening and ConstraintPropagation: decouple improvement requirements from feasibility tolerance to avoid unlimited sequence of tiny tightenings if numerics.feastol = 0
 
 Miscellaneous
 -------------

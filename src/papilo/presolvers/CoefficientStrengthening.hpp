@@ -36,6 +36,8 @@ namespace papilo
 template <typename REAL>
 class CoefficientStrengthening : public PresolveMethod<REAL>
 {
+   double mincoefimprovement = 1e-6;
+
  public:
    CoefficientStrengthening() : PresolveMethod<REAL>()
    {
@@ -43,6 +45,16 @@ class CoefficientStrengthening : public PresolveMethod<REAL>
       this->setType( PresolverType::kIntegralCols );
       this->setTiming( PresolverTiming::kFast );
       this->setArgument( ArgumentType::kSaturation );
+   }
+
+   void
+   addPresolverParams( ParameterSet& paramSet ) override
+   {
+      paramSet.addParameter(
+          "coefftightening.mincoefimprovement",
+          "minimal absolute decrease of a coefficient such that coefficient "
+          "strengthening is applied",
+          mincoefimprovement, 0.0, std::numeric_limits<double>::max() );
    }
 
    PresolveStatus
@@ -60,7 +72,8 @@ class CoefficientStrengthening : public PresolveMethod<REAL>
        const ConstraintMatrix<REAL>& constMatrix, const Vec<REAL>& lhs_values,
        const Vec<REAL>& rhs_values, const Vec<RowFlags>& rflags,
        const Vec<ColFlags>& cflags, Reductions<REAL>& reductions,
-       Vec<std::pair<REAL, int>>& integerCoefficients ) const;
+       Vec<std::pair<REAL, int>>& integerCoefficients,
+       const REAL& min_coef_improvement ) const;
 };
 
 #ifndef PAPILO_HEADER_ONLY
@@ -89,6 +102,10 @@ CoefficientStrengthening<REAL>::execute( const Problem<REAL>& problem,
 
    PresolveStatus result = PresolveStatus::kUnchanged;
 
+   // coefficients are only tightened if their absolute value decreases by
+   // more than this amount
+   const REAL min_coef_improvement = REAL( mincoefimprovement );
+
 #if ! PAPILO_HAS_TBB
    assert( problemUpdate.getPresolveOptions().runs_sequential() );
 #endif
@@ -104,7 +121,8 @@ CoefficientStrengthening<REAL>::execute( const Problem<REAL>& problem,
          if( perform_coefficient_tightening(
                  num, domains, activities, i, constMatrix, lhs_values,
                  rhs_values, rflags, cflags, reductions,
-                 integerCoefficients ) == PresolveStatus::kReduced )
+                 integerCoefficients,
+                 min_coef_improvement ) == PresolveStatus::kReduced )
             result = PresolveStatus::kReduced;
       }
    }
@@ -121,7 +139,8 @@ CoefficientStrengthening<REAL>::execute( const Problem<REAL>& problem,
                 if( perform_coefficient_tightening(
                         num, domains, activities, changedActivities[j],
                         constMatrix, lhs_values, rhs_values, rflags, cflags,
-                        stored_reductions[j], integerCoefficients ) == PresolveStatus::kReduced )
+                        stored_reductions[j], integerCoefficients,
+                        min_coef_improvement ) == PresolveStatus::kReduced )
                    result = PresolveStatus::kReduced;
              }
           } );
@@ -161,7 +180,8 @@ CoefficientStrengthening<REAL>::perform_coefficient_tightening(
     const ConstraintMatrix<REAL>& constMatrix, const Vec<REAL>& lhs_values,
     const Vec<REAL>& rhs_values, const Vec<RowFlags>& rflags,
     const Vec<ColFlags>& cflags, Reductions<REAL>& reductions,
-    Vec<std::pair<REAL, int>>& integerCoefficients ) const
+    Vec<std::pair<REAL, int>>& integerCoefficients,
+    const REAL& min_coef_improvement ) const
 {
    auto rowCoefficients = constMatrix.getRowCoefficients( changed_activity );
    const REAL* coefficients = rowCoefficients.getValues();
@@ -223,7 +243,7 @@ CoefficientStrengthening<REAL>::perform_coefficient_tightening(
           cflags[coefindices[k]].test( ColFlag::kFixed ) )
          continue;
 
-      if( num.isFeasGE( newabscoef, abs( coefficients[k] ) ) )
+      if( abs( coefficients[k] ) - newabscoef <= min_coef_improvement )
          continue;
 
       integerCoefficients.emplace_back( coefficients[k] * scale,
