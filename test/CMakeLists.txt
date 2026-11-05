@@ -206,6 +206,7 @@ set(unit_tests
         "simple-substitution-2-negative-integer"
         "simple-substitution-feasible-gcd"
         "simple-substitution-gcd-uses-bounds-of-row-columns"
+        "simple-substitution-gcd-large-bezout-solution"
         "simple-substitution-non-coprime"
         "simple-substitution-violated-gcd"
 
