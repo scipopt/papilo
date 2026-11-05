@@ -251,18 +251,20 @@ foreach(header_file
       papilo/presolvers/SingletonStuffing.hpp
       papilo/presolvers/Sparsify.hpp
       papilo/presolvers/CliqueMerging.hpp
+      papilo/external/fmt/args.h
+      papilo/external/fmt/base.h
       papilo/external/fmt/chrono.h
       papilo/external/fmt/color.h
       papilo/external/fmt/compile.h
       papilo/external/fmt/core.h
       papilo/external/fmt/format-inl.h
       papilo/external/fmt/format.h
-      papilo/external/fmt/locale.h
       papilo/external/fmt/os.h
       papilo/external/fmt/ostream.h
-      papilo/external/fmt/posix.h
       papilo/external/fmt/printf.h
       papilo/external/fmt/ranges.h
+      papilo/external/fmt/std.h
+      papilo/external/fmt/xchar.h
       papilo/external/ska/bytell_hash_map.hpp
       papilo/external/ska/flat_hash_map.hpp
       papilo/external/ska/unordered_map.hpp
@@ -282,18 +284,20 @@ install(
 # Install the included FMT unless we use the system one.
 if(NOT PAPILO_HAS_SYSTEM_FMT)
    install(FILES
+      "${PROJECT_SOURCE_DIR}/src/papilo/external/fmt/args.h"
+      "${PROJECT_SOURCE_DIR}/src/papilo/external/fmt/base.h"
       "${PROJECT_SOURCE_DIR}/src/papilo/external/fmt/chrono.h"
       "${PROJECT_SOURCE_DIR}/src/papilo/external/fmt/color.h"
       "${PROJECT_SOURCE_DIR}/src/papilo/external/fmt/compile.h"
       "${PROJECT_SOURCE_DIR}/src/papilo/external/fmt/core.h"
       "${PROJECT_SOURCE_DIR}/src/papilo/external/fmt/format-inl.h"
       "${PROJECT_SOURCE_DIR}/src/papilo/external/fmt/format.h"
-      "${PROJECT_SOURCE_DIR}/src/papilo/external/fmt/locale.h"
       "${PROJECT_SOURCE_DIR}/src/papilo/external/fmt/os.h"
       "${PROJECT_SOURCE_DIR}/src/papilo/external/fmt/ostream.h"
-      "${PROJECT_SOURCE_DIR}/src/papilo/external/fmt/posix.h"
       "${PROJECT_SOURCE_DIR}/src/papilo/external/fmt/printf.h"
       "${PROJECT_SOURCE_DIR}/src/papilo/external/fmt/ranges.h"
+      "${PROJECT_SOURCE_DIR}/src/papilo/external/fmt/std.h"
+      "${PROJECT_SOURCE_DIR}/src/papilo/external/fmt/xchar.h"
       DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/papilo/external/fmt")
 endif()
 

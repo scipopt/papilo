@@ -53,6 +53,7 @@ Build system
 - Moved library targets (declaration and installation) to src/CMakeLists.txt.
 - Added HEADER_ONLY option. If set, no specialized templates are compiled into the library.
 - Added option SYSTEM_FMT to link FMT library of system instead of bundled headers
+- Updated bundled fmt from 7.1.3 to 11.2.0.
 - Added option GITHASH_BRANCH to append the current git branch to the githash.
 
 Fixed bugs
