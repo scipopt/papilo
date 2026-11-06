@@ -410,7 +410,7 @@ install(FILES
    )
 if(NOT PAPILO_HAS_SYSTEM_FMT)
    install(FILES
-      "${PROJECT_SOURCE_DIR}/src/papilo/external/fmt/LICENSE.rst"
+      "${PROJECT_SOURCE_DIR}/src/papilo/external/fmt/LICENSE"
       DESTINATION "${CMAKE_INSTALL_DATADIR}/licenses/papilo/fmt"
       )
 endif()

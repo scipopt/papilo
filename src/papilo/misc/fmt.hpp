@@ -52,6 +52,10 @@
 #ifndef FMT_HEADER_ONLY
 #define FMT_HEADER_ONLY
 #endif
+// PaPILO prints only ASCII and must not force projects including this header to compile with /utf-8 on MSVC
+#ifndef FMT_UNICODE
+#define FMT_UNICODE 0
+#endif
 #include "papilo/external/fmt/format.h"
 #include "papilo/external/fmt/ostream.h"
 #endif /* PAPILO_HAS_SYSTEM_FMT */
