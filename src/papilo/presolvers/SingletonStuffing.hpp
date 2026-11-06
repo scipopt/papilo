@@ -103,7 +103,7 @@ SingletonStuffing<REAL>::execute( const Problem<REAL>& problem,
    Vec<int> rowsWithPenaltySingletons;
    Vec<uint8_t> penaltyVarCount( nrows );
 
-   bool is_primal = problemUpdate.getPostsolveType() == PostsolveType::kPrimal && !problemUpdate.getPresolveOptions().verification_with_VeriPB;
+   bool is_primal = problemUpdate.getPostsolveType() == PostsolveType::kPrimal;
 
    auto handleEquation = [&]( int col, bool lbimplied, bool ubimplied,
                               const REAL& val, int row, bool impliedeq,

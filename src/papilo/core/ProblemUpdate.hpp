@@ -228,17 +228,15 @@ class ProblemUpdate
    void
    markRowRedundant( int row, ArgumentType argument = ArgumentType::kPrimal)
    {
-
       RowFlags& rflags = problem.getRowFlags()[row];
       if( !rflags.test( RowFlag::kRedundant ) )
       {
          redundant_rows.push_back( row );
          ++stats.ndeletedrows;
          rflags.set( RowFlag::kRedundant );
-         postsolve.storeRedundantRow( row );
-         certificate_interface->mark_row_redundant(row, problem, argument);
       }
-
+      postsolve.storeRedundantRow( row );
+      certificate_interface->mark_row_redundant(row, problem, argument);
    }
 
    void
@@ -1573,7 +1571,6 @@ ProblemUpdate<REAL>::trivialRowPresolve()
                 __FILE__, __LINE__ );
             return PresolveStatus::kInfeasible;
          }
-         certificate_interface->mark_row_redundant(row, problem);
          rflags[row].set( RowFlag::kRedundant );
          rowsize[row] = -1;
          postsolve.storeRedundantRow( row );
@@ -1595,7 +1592,7 @@ ProblemUpdate<REAL>::trivialRowPresolve()
                                                      rhs[row] );
          switch( st )
          {
-            case RowStatus::kRedundant:
+         case RowStatus::kRedundant:
             markRowRedundant( row );
             break;
          case RowStatus::kRedundantLhs:
@@ -2219,9 +2216,6 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
             int col = reduction.col;
             assert(num.isIntegral(reduction.newval));
             int causing_col = (int) reduction.newval;
-            // column may have been fixed/substituted in the meantime
-            if( problem.getColFlags()[col].test( ColFlag::kInactive ) )
-               break;
             certificate_interface->add_probing_reasoning(false, causing_col, col, problem.getVariableNames(), postsolve.origcol_mapping );
             break;
          }
@@ -2230,9 +2224,6 @@ ProblemUpdate<REAL>::applyTransaction( const Reduction<REAL>* first,
             int causing_col = reduction.col;
             assert(num.isIntegral(reduction.newval));
             int col = (int) reduction.newval;
-            // column may have been fixed/substituted in the meantime
-            if( problem.getColFlags()[col].test( ColFlag::kInactive ) )
-               break;
             certificate_interface->add_probing_reasoning(true, causing_col, col, problem.getVariableNames(), postsolve.origcol_mapping );
             break;
          }

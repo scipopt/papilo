@@ -137,10 +137,17 @@ class Presolve
       return paramSet;
    }
 
+   Vec<int>&
+   getRowScalingFactors()
+   {
+      assert(presolveOptions.verification_with_VeriPB);
+      return row_scaling;
+   }
+
    /***
     * presolves the problem and applies the reductions found by the presolvers
     * immediately to it.
-    * The function returns the PresolveStatus (Reduced, Unchanged, ) and the
+    * The functions returns the PresolveStatus (Reduced, Unchanged, ) and the
     * postsolve information
     *
     * @tparam REAL: computational accuracy template
@@ -262,17 +269,6 @@ class Presolve
    std::pair<int, int>
    applyReductions( int p, const Reductions<REAL>& reductions_,
                     ProblemUpdate<REAL>& probUpdate );
-
-   int get_row_scaling(const int row) const {
-      return row_scaling[row];
-   }
-
-   const Vec<int>&
-   get_row_scaling_factors() const
-   {
-      assert( presolveOptions.verification_with_VeriPB );
-      return row_scaling;
-   }
 
  private:
    // data to perform presolving
@@ -595,10 +591,8 @@ Presolve<REAL>::apply( Problem<REAL>& problem, bool store_dual_postsolve )
             if( stats.nrounds == 0 )
                printRoundStats( "Trivial" );
 
-            if (is_status_infeasible_or_unbounded(result.status)) {
-               probUpdate.log_infeasiblity_in_certificate(result.postsolve.origcol_mapping, problem.getVariableNames());
+            if( is_status_infeasible_or_unbounded( result.status ) )
                return result;
-            }
 
             if( probUpdate.getNActiveCols() == 0 || probUpdate.getNActiveRows() == 0 )
                round_to_evaluate = Delegator::kAbort;
@@ -1058,23 +1052,6 @@ Presolve<REAL>::run_presolvers( const Problem<REAL>& problem,
       {
          results[i] = presolvers[i]->run( problem, probUpdate, num, reductions[i], timer, cause );
          assert( cause != -1 || results[i] != PresolveStatus::kInfeasible || presolvers[i]->getName() != "probing" );
-         if( results[i] == PresolveStatus::kInfeasible )
-         {
-            if(results[i] == PresolveStatus::kInfeasible && presolvers[i]->getName() == "probing")
-            {
-               assert(cause != -1);
-               probUpdate.getCertificateInterface()->setInfeasibleCause(cause);
-            }
-            if( auto* parallelrows = dynamic_cast<ParallelRowDetection<REAL>*>(
-                    presolvers[i].get() ) )
-            {
-               auto rows = parallelrows->getInfeasibleRows();
-               assert( rows.first != -1 && rows.second != -1 );
-               probUpdate.getCertificateInterface()
-                   ->setInfeasibleCauseParallelRows( rows.first, rows.second,
-                                                    problem );
-            }
-         }
          apply_result_sequential( i, probUpdate, run_sequential );
          if( is_status_infeasible_or_unbounded( results[i] ) )
             return;
@@ -1099,20 +1076,6 @@ Presolve<REAL>::run_presolvers( const Problem<REAL>& problem,
                 {
                    assert(cause != -1);
                    probUpdate.getCertificateInterface()->setInfeasibleCause(cause);
-                }
-                else if( results[i] == PresolveStatus::kInfeasible )
-                {
-                   if( auto* parallelrows =
-                           dynamic_cast<ParallelRowDetection<REAL>*>(
-                               presolvers[i].get() ) )
-                   {
-                      auto rows = parallelrows->getInfeasibleRows();
-                      assert( rows.first != -1 && rows.second != -1 );
-                      probUpdate.getCertificateInterface()
-                          ->setInfeasibleCauseParallelRows( rows.first,
-                                                            rows.second,
-                                                            problem );
-                   }
                 }
              }
           },
