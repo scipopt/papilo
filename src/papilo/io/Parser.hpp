@@ -28,6 +28,7 @@
 #include "papilo/Config.hpp"
 #include "papilo/io/MpsParser.hpp"
 #include "papilo/io/OpbParser.hpp"
+#include <boost/algorithm/string/predicate.hpp>
 #if PAPILO_HAS_BOOST_IOSTREAMS_BZIP2
 #include <boost/iostreams/filter/bzip2.hpp>
 #endif
@@ -46,9 +47,16 @@ class Parser
    static boost::optional<Problem<REAL>>
    loadProblem( const std::string& filename )
    {
-      if( filename.find(".mps") != std::string::npos)
+      // strip compression suffix, the parsers handle decompression themselves
+      std::string name = filename;
+      if( boost::algorithm::ends_with( name, ".gz" ) )
+         name.erase( name.size() - 3 );
+      else if( boost::algorithm::ends_with( name, ".bz2" ) )
+         name.erase( name.size() - 4 );
+
+      if( boost::algorithm::ends_with( name, ".mps" ) )
          return MpsParser<REAL>::loadProblem( filename );
-      else if( filename.find(".opb") != std::string::npos)
+      else if( boost::algorithm::ends_with( name, ".opb" ) )
          return OpbParser<REAL>::loadProblem( filename );
       else
          return boost::none;

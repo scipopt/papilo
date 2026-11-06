@@ -158,6 +158,10 @@ class CertificateInterface
    setInfeasibleCause(int col) = 0;
 
    virtual void
+   setInfeasibleCauseParallelRows( int row1, int row2,
+                                   const Problem<REAL>& problem ) { };
+
+   virtual void
    infeasible( ) { };
 
    virtual void
