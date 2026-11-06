@@ -206,7 +206,7 @@ struct OpbWriter
                   return false;
                }
                fmt::print( out, "{}{} {} ", val > 0 ? "+" : "-",
-                           abs( cast_to_cpp( val ) ),
+                          cpp_int( abs( cast_to_cpp( val ) )),
                            varnames[col_mapping[vector.getIndices()[j]]] );
             }
 
