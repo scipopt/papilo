@@ -220,6 +220,8 @@ set(unit_tests
         "happy-path-sparsify"
         "happy-path-sparsify-two-equalities"
         "failed-path-sparsify-if-misses-one-for-integer"
+        "failed-path-sparsify-negligible-scale"
+        "happy-path-sparsify-small-scale"
 
         #CliqueMerging
         "clique-merging-basic"
