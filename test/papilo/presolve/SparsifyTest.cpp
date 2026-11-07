@@ -45,6 +45,9 @@ setupProblemForSparsifyWithOneMiss_2( uint8_t binary );
 Problem<double>
 setupProblemForSparsifyWithContinuousVariableMissTwo();
 
+Problem<double>
+setupProblemForSparsifyWithSmallCoefficients( double coef1, double coef2 );
+
 TEST_CASE( "happy-path-sparsify", "[presolve]" )
 {
    Num<double> num{};
@@ -225,6 +228,63 @@ TEST_CASE( "failed-path-sparsify-if-misses-two-for-continuous", "[presolve]" )
    PresolveStatus presolveStatus =
        presolvingMethod.execute( problem, problemUpdate, num, reductions, t, cause );
    REQUIRE( presolveStatus == PresolveStatus::kUnchanged );
+}
+
+TEST_CASE( "failed-path-sparsify-negligible-scale", "[presolve]" )
+{
+   Num<double> num{};
+   Message msg{};
+   double time = 0.0;
+   int cause = -1;
+   Timer t{ time };
+
+   // the scales 1.7e-18 and -1.9e-18 count as equal within epsilon, see
+   // github.com/scipopt/papilo/issues/103
+   Problem<double> problem = setupProblemForSparsifyWithSmallCoefficients(
+       -1.734723475976807e-18, -1.894851796836205e-18 );
+   Statistics statistics{};
+   PresolveOptions presolveOptions{};
+   PostsolveStorage<double> postsolve =
+       PostsolveStorage<double>( problem, num, presolveOptions );
+   ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
+                                        presolveOptions, num, msg );
+   Sparsify<double> presolvingMethod{};
+   Reductions<double> reductions{};
+   problem.recomputeAllActivities();
+
+   PresolveStatus presolveStatus =
+       presolvingMethod.execute( problem, problemUpdate, num, reductions, t, cause );
+   REQUIRE( presolveStatus == PresolveStatus::kUnchanged );
+   REQUIRE( reductions.size() == 0 );
+}
+
+TEST_CASE( "happy-path-sparsify-small-scale", "[presolve]" )
+{
+   Num<double> num{};
+   Message msg{};
+   double time = 0.0;
+   int cause = -1;
+   Timer t{ time };
+
+   Problem<double> problem =
+       setupProblemForSparsifyWithSmallCoefficients( 1e-3, -1e-3 );
+   Statistics statistics{};
+   PresolveOptions presolveOptions{};
+   PostsolveStorage<double> postsolve =
+       PostsolveStorage<double>( problem, num, presolveOptions );
+   ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
+                                        presolveOptions, num, msg );
+   Sparsify<double> presolvingMethod{};
+   Reductions<double> reductions{};
+   problem.recomputeAllActivities();
+
+   PresolveStatus presolveStatus =
+       presolvingMethod.execute( problem, problemUpdate, num, reductions, t, cause );
+   REQUIRE( presolveStatus == PresolveStatus::kReduced );
+   REQUIRE( reductions.size() == 3 );
+   REQUIRE( reductions.getReduction( 1 ).col == RowReduction::SPARSIFY );
+   REQUIRE( reductions.getReduction( 2 ).row == 1 );
+   REQUIRE( reductions.getReduction( 2 ).newval == Catch::Approx( -1e-3 ) );
 }
 
 Problem<double>
@@ -408,6 +468,43 @@ setupProblemForSparsifyWithContinuousVariableMissTwo()
    pb.addEntryAll( entries );
    pb.setColNameAll( columnNames );
    pb.setProblemName( "Sparsify test: only 2 columns" );
+   Problem<double> problem = pb.build();
+   problem.getConstraintMatrix().modifyLeftHandSide( 0, num, rhs[0] );
+   return problem;
+}
+
+Problem<double>
+setupProblemForSparsifyWithSmallCoefficients( double coef1, double coef2 )
+{
+   Num<double> num{};
+   Vec<double> coefficients{ 1.0, 1.0, 1.0 };
+   Vec<double> upperBounds{ 3.0, 3.0, 3.0 };
+   Vec<double> lowerBounds{ 0.0, 0.0, 0.0 };
+
+   Vec<double> rhs{ 1.0, 2.0 };
+   Vec<std::string> rowNames{ "r1", "r2" };
+   Vec<std::string> columnNames{ "c1", "c2", "c3" };
+   Vec<std::tuple<int, int, double>> entries{
+       std::tuple<int, int, double>{ 0, 0, 1.0 },
+       std::tuple<int, int, double>{ 0, 1, -1.0 },
+       std::tuple<int, int, double>{ 0, 2, 10.0 },
+       std::tuple<int, int, double>{ 1, 0, coef1 },
+       std::tuple<int, int, double>{ 1, 1, coef2 },
+       std::tuple<int, int, double>{ 1, 2, 1.123 },
+   };
+
+   ProblemBuilder<double> pb;
+   pb.reserve( entries.size(), rowNames.size(), columnNames.size() );
+   pb.setNumRows( rowNames.size() );
+   pb.setNumCols( columnNames.size() );
+   pb.setColUbAll( upperBounds );
+   pb.setColLbAll( lowerBounds );
+   pb.setObjAll( coefficients );
+   pb.setObjOffset( 0.0 );
+   pb.setRowRhsAll( rhs );
+   pb.addEntryAll( entries );
+   pb.setColNameAll( columnNames );
+   pb.setProblemName( "matrix for testing sparsify with small coefficients" );
    Problem<double> problem = pb.build();
    problem.getConstraintMatrix().modifyLeftHandSide( 0, num, rhs[0] );
    return problem;

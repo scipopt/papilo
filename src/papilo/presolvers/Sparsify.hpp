@@ -377,7 +377,7 @@ Sparsify<REAL>::execute( const Problem<REAL>& problem,
 
                    for( int k = 0; k != eqlen - 1; ++k )
                    {
-                      if( scales[k] == 0 || abs( scales[k] ) > maxscale )
+                      if( num.isZero( scales[k] ) || abs( scales[k] ) > maxscale )
                          continue;
 
                       int ncancel = currcancel;

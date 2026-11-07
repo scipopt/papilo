@@ -86,6 +86,7 @@ Fixed bugs
 - SimplifyInequalities: compute the remainder of the side w.r.t. the same rounding as the previously rounded side to avoid deleting columns that are not redundant if the side is close to a multiple of the gcd (scip#263)
 - Probing: only swap the columns of a probing substitution if both are (implied) binaries (scip#261)
 - ProblemUpdate: respect infinite flags in the REPLACE reduction to avoid wrong transferred bound changes
+- Sparsify: use the epsilon tolerance instead of an exact zero check to skip negligible scales that only cancel numerical noise (#103)
 
 @section RN302 PaPILO 3.0.2
 
