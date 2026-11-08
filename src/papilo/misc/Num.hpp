@@ -63,7 +63,7 @@ struct num_traits
 };
 
 template <typename T>
-class provides_numerator_and_denominator_overloads
+struct provides_numerator_and_denominator_overloads
 {
    struct no
    {
@@ -74,7 +74,7 @@ class provides_numerator_and_denominator_overloads
    test_numerator( int );
 
    template <typename T2>
-   static decltype( numerator( std::declval<T2>() ) )
+   static decltype( denominator( std::declval<T2>() ) )
    test_denominator( int );
 
    template <typename T2>
@@ -85,7 +85,6 @@ class provides_numerator_and_denominator_overloads
    static no
    test_denominator( ... );
 
- public:
    constexpr static bool value =
        num_traits<decltype( test_numerator<T>( 0 ) )>::is_integer &&
        num_traits<decltype( test_denominator<T>( 0 ) )>::is_integer;
