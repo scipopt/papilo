@@ -45,15 +45,71 @@
 namespace papilo
 {
 
+using boost::multiprecision::cpp_int;
+
+
 /// Writer to write problem structures into an opb file
 template <typename REAL>
 struct OpbWriter
 {
 
+   static REAL computeIntegralScale(const REAL* values,
+                             int n,
+                             const Num<REAL>& num,
+                             REAL lhs,
+                             bool include_lhs)
+   {
+      REAL scale = 1;
+
+      auto update_scale = [&](REAL val)
+      {
+         if (num.isIntegral(val))
+            return;
+
+         REAL local_scale = 1;
+         REAL scaled = val;
+
+         for (int k = 0; k < 12; ++k)
+         {
+            if (num.isIntegral(scaled))
+               break;
+
+            local_scale *= 10;
+            scaled = val * local_scale;
+         }
+         scale *= local_scale;
+      };
+
+      for (int i = 0; i < n; ++i)
+         update_scale(values[i]);
+
+      if (include_lhs)
+         update_scale(lhs);
+
+      return scale;
+   }
+
+   static bool are_all_obj_coeff_and_offset_zero(const Objective<REAL> &obj) {
+      if (obj.offset != 0)
+         return false;
+      for (auto coef: obj.coefficients)
+         if (coef != 0) {
+            return false;
+         }
+      return true;
+   }
+
+
+   static bool is_write_objective(const bool is_reduced_decision, const bool verification_with_VeriPB, const Problem<REAL>& original_problem) {
+      if (!verification_with_VeriPB)
+         return !is_reduced_decision;
+      return !are_all_obj_coeff_and_offset_zero(original_problem.getObjective());
+   }
+
    static bool
-   writeProb( const std::string& filename, const Problem<REAL>& prob,
-              const Vec<int>& col_mapping, const Vec<int>& row_scaling,
-              const Num<REAL>& num)
+   writeProb( const std::string& filename, const Problem<REAL>& prob, const Problem<REAL>& original_problem,
+              const Vec<int>& col_mapping,
+              const Num<REAL>& num, const Presolve<REAL>& presolve)
    {
       const ConstraintMatrix<REAL>& matrix = prob.getConstraintMatrix();
       const Vec<std::string>& varnames = prob.getVariableNames();
@@ -91,48 +147,18 @@ struct OpbWriter
             return false;
          }
       }
-      for( int i = 0; i < prob.getNRows(); ++i )
-      {
-         auto vector = matrix.getRowCoefficients( i );
-         for( int j = 0; j < vector.getLength(); j++ )
-            if( !num.isIntegral( vector.getValues()[j] * row_scaling[i] ) )
-            {
-               fmt::print( "Matrix contains fractional values. Opb is not the "
-                           "write format." );
-               return false;
-            }
-         if( !num.isIntegral( lhs[i] * row_scaling[i] ) ||
-             !num.isIntegral( rhs[i] * row_scaling[i] ) )
-         {
-            fmt::print( "Lhs/Rhs contains fractional values. Opb is not the "
-                        "correct format.\n" );
-            return false;
-         }
-      }
+
       out.push( file );
 
       fmt::print( out, "* #variable= {} #constraint= {}\n",
                   getVars( prob, col_mapping ), getRows( prob ) );
       std::string offset_string;
       if (prob.getObjective().offset != 0) {
-         offset_string = prob.getObjective().offset >= 0? "+" : "-" + boost::multiprecision::cpp_int( abs(prob.getObjective().offset) ).str();
+         offset_string = (prob.getObjective().offset >= 0? "+" : "-") + boost::multiprecision::cpp_int( abs(prob.getObjective().offset) ).str();
          fmt::print( out, "* Objective Offset {}\n", offset_string);
       }
 
-      bool obj_has_nonzeros = false;
-      if( obj.offset == 0 )
-      {
-         for( auto coef : obj.coefficients )
-            if( coef != 0 )
-            {
-               obj_has_nonzeros = true;
-               break;
-            }
-      }
-      else
-         obj_has_nonzeros = true;
-
-      if( obj_has_nonzeros )
+      if( is_write_objective(are_all_obj_coeff_and_offset_zero(obj), presolve.getPresolveOptions().verification_with_VeriPB, original_problem) )
       {
          fmt::print( out, "min: " );
          for( int i = 0; i < prob.getNCols(); i++ )
@@ -143,7 +169,7 @@ struct OpbWriter
             fmt::print( out, "{}{} {} ", !prob.is_objective_negated() == (coef > 0) ? "+" : "-", boost::multiprecision::cpp_int( abs(coef) ).str(),
                         varnames[col_mapping[i]] );
          }
-         fmt::print(out, " {}", offset_string);
+         fmt::print(out, " {}", offset_string.empty() ? "0": offset_string);
          fmt::print( out, ";\n" );
       }
 
@@ -152,7 +178,7 @@ struct OpbWriter
          assert( !matrix.isRowRedundant( row ) );
          auto vector = matrix.getRowCoefficients( row );
 
-         bool scale_necessary = false;
+         bool scale_necessary = presolve.getPresolveOptions().verification_with_VeriPB;
          for( int j = 0; j < vector.getLength(); ++j )
          {
             if(scale_necessary)
@@ -163,7 +189,12 @@ struct OpbWriter
              !row_flags[row].test( RowFlag::kLhsInf ) )
          {
             scale_necessary = scale_necessary || !num.isIntegral(lhs[row]);
-            REAL scale = scale_necessary ? abs(row_scaling[row]) : 1;
+            REAL scale = 1;
+            if (presolve.getPresolveOptions().verification_with_VeriPB)
+               scale = presolve.get_row_scaling(row);
+            else if (scale_necessary)
+               scale = computeIntegralScale(vector.getValues(),
+                                    vector.getLength(), num, lhs[row], true);
 
             assert( !row_flags[row].test( RowFlag::kLhsInf ) );
             for( int j = 0; j < vector.getLength(); j++ )
@@ -171,16 +202,23 @@ struct OpbWriter
                REAL val = vector.getValues()[j] * scale;
                assert( val != 0 );
                assert( num.isIntegral(val ) );
+               if (!num.isIntegral(val)) {
+                  return false;
+               }
                fmt::print( out, "{}{} {} ", val > 0 ? "+" : "-",
-                           abs( cast_to_long( val ) ),
+                          cpp_int( abs( cast_to_cpp( val ) )),
                            varnames[col_mapping[vector.getIndices()[j]]] );
             }
-            assert(num.isIntegral( lhs[row] * scale ));
+
+            assert(num.isZero(lhs[row]) || num.isIntegral( lhs[row] * scale ));
+            if (!num.isZero(lhs[row]) && !num.isIntegral(lhs[row] * scale)) {
+               return false;
+            }
             if( row_flags[row].test( RowFlag::kEquation ) )
                fmt::print( out, "= " );
             else
                fmt::print( out, ">= " );
-            fmt::print( out, " {} ;\n", cast_to_long( lhs[row] * scale ) );
+            fmt::print( out, " {} ;\n", num.isZero(lhs[row]) ? 0 : cast_to_cpp( lhs[row] * scale ) );
          }
          if(!row_flags[row].test( RowFlag::kEquation ) &&
              !row_flags[row].test( RowFlag::kRhsInf ))
@@ -188,20 +226,33 @@ struct OpbWriter
             assert( !row_flags[row].test( RowFlag::kRhsInf ) );
 
             scale_necessary = scale_necessary || !num.isIntegral(rhs[row]);
-            REAL scale = scale_necessary ? abs(row_scaling[row]) : 1;
-            for( int j = 0; j < vector.getLength(); j++ )
-            {
+            REAL scale = 1;
+            if (presolve.getPresolveOptions().verification_with_VeriPB)
+               scale = presolve.get_row_scaling(row);
+            else if (scale_necessary)
+               scale = computeIntegralScale(vector.getValues(),
+                                    vector.getLength(),num,
+                                    rhs[row],
+                                    true);
+            for (int j = 0; j < vector.getLength(); j++) {
                REAL val = vector.getValues()[j] * scale;
                assert( val != 0 );
                assert( num.isIntegral(val ) );
+               if (!num.isIntegral(val)) {
+                  return false;
+               }
                fmt::print( out, "{}{} {} ", val < 0 ? "+" : "-",
                            boost::multiprecision::cpp_int( abs( val ) ).str(),
                            varnames[col_mapping[vector.getIndices()[j]]] );
             }
-            assert(num.isIntegral( rhs[row] * scale ));
-            fmt::print( out, ">= {} ;\n",
-                        -cast_to_long( rhs[row] * scale ) );
+            assert(num.isZero(rhs[row]) || num.isIntegral( rhs[row] * scale ));
+            if (!num.isIntegral(rhs[row] * scale)) {
+               return false;
+            }
+            fmt::print( out, ">= {} ;\n", num.isZero(rhs[row]) ? 0 :
+                        -cast_to_cpp( rhs[row] * scale ) );
          }
+         out.flush();
       }
       for( auto sym_c : sym )
       {
@@ -265,10 +316,11 @@ struct OpbWriter
 
    }
 
-   static long
-   cast_to_long( const REAL& x )
+   static cpp_int cast_to_cpp(const REAL& x)
    {
-      return (long) ( REAL( x + REAL( 0.5 ) ) );
+      return x >= 0
+          ? cpp_int(x + 0.5)
+          : cpp_int(x - 0.5);
    }
 };
 
