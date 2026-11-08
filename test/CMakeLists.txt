@@ -182,6 +182,10 @@ set(unit_tests
    "parallel_col_detection_cont_and_two_int_columns"
    "parallel_col_detection_cont_and_two_int_columns_fractional"
    "parallel_col_postsolve_int_into_cont"
+   "parallel_col_detection_singleton_integer_columns"
+   "parallel_col_detection_singleton_continuous_columns"
+   "parallel_col_detection_singleton_obj_not_parallel"
+   "parallel_col_detection_singleton_with_inactive_empty_columns"
 
    #Probing
    "happy-path-probing"

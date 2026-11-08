@@ -205,7 +205,8 @@ ParallelColDetection<REAL>::findParallelCols(
       return num.isLT(ubs[col] - lbs[col], abs(scale) - 1);
    };
 
-   if( constMatrix.getColumnCoefficients( bucket[0] ).getLength() <= 1 )
+   // inactive columns are sorted to the front and form a common bucket
+   if( cflags[bucket[0]].test( ColFlag::kInactive ) )
       return;
 
    assert( !cflags[bucket[bucketSize - 1]].test( ColFlag::kInactive ) );
@@ -442,7 +443,7 @@ ParallelColDetection<REAL>::computeColHashes(
 
              Hasher<unsigned int> hasher( len );
 
-             if( len > 1 )
+             if( len > 0 )
              {
                 // compute scale such that the first coefficient is
                 // positive 1/golden ratio. The choice of
