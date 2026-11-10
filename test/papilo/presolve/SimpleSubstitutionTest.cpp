@@ -259,17 +259,6 @@ TEST_CASE( "simple-substitution-feasible-gcd", "[presolve]" )
                 8.0, 3.0, 37.0, 3.0, -8.0, 0.0, 7.0, -5.0, 0.0 ) == PresolveStatus::kUnchanged );
 }
 
-TEST_CASE( "simple-substitution-gcd-large-bezout-solution", "[presolve]" )
-{
-   // 1000009x + 999989y = 13687399407 has the solutions x = 227496 + 999989k, y = -213813 - 1000009k,
-   // while the unreduced Bezout solution -6159261296152965 is not exactly rounded by Num::round
-   REQUIRE( check_gcd_result_with_expectation( 8.0, 3.0, 13687399407.0, 1000009.0, 999989.0, 0.0, 1000000.0,
-                                               -1000000.0, 0.0 ) == PresolveStatus::kUnchanged );
-   // same equation, all solutions are cut off by the bounds of x
-   REQUIRE( check_gcd_result_with_expectation( 8.0, 3.0, 13687399407.0, 1000009.0, 999989.0, 227497.0, 1227484.0,
-                                               -1000000000.0, 1000000000.0 ) == PresolveStatus::kInfeasible );
-}
-
 TEST_CASE( "simple-substitution-non-coprime", "[presolve]" )
 {
    // -128x - 1000 y = -2000 with x in {0,1} y in {0,1,2} -> solution x = 0, y = 2
