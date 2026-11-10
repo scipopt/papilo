@@ -211,19 +211,20 @@ set(unit_tests
    "simple-different-int-coeff"
    "simple-different-int-coeff-pt2"
 
-   #Simple Substitution
-   "simple-substitution-happy-path-for-2-int"
-   "simple-substitution-happy-path-for-2-continuous"
-   "simple-substitution-happy-path-for-continuous-and-integer"
-   "simple-substitution-happy-path-for-int-continuous-coeff"
-   "simple-substitution-should_return_feasible_if_gcd_of_coeff_is_in_rhs"
-   "simple-substitution-should_return_infeasible_if_gcd_of_coeff_is_in_rhs"
-   "simple-substitution-simple-substitution-for-2-int"
-   "simple-substitution-2-negative-integer"
-   "simple-substitution-feasible-gcd"
-   "simple-substitution-non-coprime"
-   "simple-substitution-gcd-uses-bounds-of-row-columns"
-   "simple-substitution-violated-gcd"
+        #Simple Substitution
+        "simple-substitution-happy-path-for-2-int"
+        "simple-substitution-happy-path-for-2-continuous"
+        "simple-substitution-happy-path-for-continuous-and-integer"
+        "simple-substitution-happy-path-for-int-continuous-coeff"
+        "simple-substitution-should_return_feasible_if_gcd_of_coeff_is_in_rhs"
+        "simple-substitution-should_return_infeasible_if_gcd_of_coeff_is_in_rhs"
+        "simple-substitution-simple-substitution-for-2-int"
+        "simple-substitution-2-negative-integer"
+        "simple-substitution-feasible-gcd"
+        "simple-substitution-gcd-uses-bounds-of-row-columns"
+        "simple-substitution-gcd-large-bezout-solution"
+        "simple-substitution-non-coprime"
+        "simple-substitution-violated-gcd"
 
    #Simplify Inequality
    "happy-path-simplify-inequalities"
