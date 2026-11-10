@@ -128,7 +128,7 @@ class GurobiInterface : public SolverInterface<REAL>
       {
          GRBLinExpr grbLinExpr = 0;
          auto& symmetry = symmetries[i];
-         double lhs;
+         double lhs = 0;
          switch( symmetry.getSymmetryType() )
          {
          case SymmetryType::kXgeY:
@@ -143,11 +143,10 @@ class GurobiInterface : public SolverInterface<REAL>
             break;
          default:
             assert( false );
+            continue;
          }
-
-         if( !consMatrix.getRowFlags()[i].test( RowFlag::kLhsInf ) )
-            model.addConstr( grbLinExpr, GRB_GREATER_EQUAL, lhs,
-                             "symmetry_" + std::to_string(i) );
+         model.addConstr( grbLinExpr, GRB_GREATER_EQUAL, lhs,
+                          "symmetry_" + std::to_string( i ) );
 
          model.update();
       }

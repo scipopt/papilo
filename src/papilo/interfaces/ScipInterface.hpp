@@ -165,6 +165,7 @@ class ScipInterface : public SolverInterface<REAL>
             consvars[1] = vars[symmetry.getDominatedCol()];
             consvals[1] = SCIP_Real( 1 );
             lhs = 1;
+            break;
          default:
             assert( false );
          }
