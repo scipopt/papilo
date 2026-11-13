@@ -43,6 +43,18 @@ setupProblemWithParallelColumns( bool first_col_int, bool second_col_int,
 Problem<double>
 setupProblemWithMultipleParallelColumns();
 
+Problem<double>
+setupProblemWithParallelSingletonColumns( bool integral, double factor,
+                                          double obj_factor,
+                                          int n_inactive_empty_cols );
+
+int
+countParallelReductions( Reductions<double>& reductions );
+
+PresolveStatus
+executeParallelColDetection( Problem<double>& problem,
+                             Reductions<double>& reductions );
+
 Vec<double>
 postsolveParallelContIntColumns( double lb_cont_col, double ub_cont_col,
                                  double lb_int_col, double ub_int_col,
@@ -452,6 +464,156 @@ TEST_CASE( "parallel_col_detection_cont_and_two_int_columns_fractional",
    REQUIRE( values[0] + values[1] + values[2] == Catch::Approx( -0.2 ) );
 }
 
+TEST_CASE( "parallel_col_detection_singleton_integer_columns", "[presolve]" )
+{
+   // knapsack row with two integer columns with the same coefficient and
+   // objective (as in p2m2p1m1p0n100), only one entry per column (#115)
+   Problem<double> problem =
+       setupProblemWithParallelSingletonColumns( true, 1.0, 1.0, 0 );
+   Reductions<double> reductions{};
+
+   PresolveStatus presolveStatus =
+       executeParallelColDetection( problem, reductions );
+
+   REQUIRE( presolveStatus == PresolveStatus::kReduced );
+   REQUIRE( countParallelReductions( reductions ) == 1 );
+}
+
+TEST_CASE( "parallel_col_detection_singleton_continuous_columns",
+           "[presolve]" )
+{
+   // continuous singleton columns are parallel for any scale if the
+   // objective is scaled by the same factor (#115)
+   Problem<double> problem =
+       setupProblemWithParallelSingletonColumns( false, 2.5, 2.5, 0 );
+   Reductions<double> reductions{};
+
+   PresolveStatus presolveStatus =
+       executeParallelColDetection( problem, reductions );
+
+   REQUIRE( presolveStatus == PresolveStatus::kReduced );
+   REQUIRE( countParallelReductions( reductions ) == 1 );
+}
+
+TEST_CASE( "parallel_col_detection_singleton_obj_not_parallel", "[presolve]" )
+{
+   // same coefficient in the row but a different objective: the singleton
+   // columns are not parallel
+   Problem<double> problem =
+       setupProblemWithParallelSingletonColumns( true, 1.0, 2.0, 0 );
+   Reductions<double> reductions{};
+
+   PresolveStatus presolveStatus =
+       executeParallelColDetection( problem, reductions );
+
+   REQUIRE( presolveStatus == PresolveStatus::kUnchanged );
+   REQUIRE( countParallelReductions( reductions ) == 0 );
+}
+
+TEST_CASE( "parallel_col_detection_singleton_with_inactive_empty_columns",
+           "[presolve]" )
+{
+   // inactive columns have no entries and end up in a common bucket; they
+   // must neither be merged nor prevent detecting the parallel singletons
+   Problem<double> problem =
+       setupProblemWithParallelSingletonColumns( true, 1.0, 1.0, 2 );
+   Reductions<double> reductions{};
+
+   PresolveStatus presolveStatus =
+       executeParallelColDetection( problem, reductions );
+
+   REQUIRE( presolveStatus == PresolveStatus::kReduced );
+   REQUIRE( countParallelReductions( reductions ) == 1 );
+   for( int i = 0; i < (int) reductions.size(); ++i )
+      REQUIRE( reductions.getReduction( i ).col < 2 );
+}
+
+PresolveStatus
+executeParallelColDetection( Problem<double>& problem,
+                             Reductions<double>& reductions )
+{
+   double time = 0.0;
+   int cause = -1;
+   Timer t{ time };
+   Num<double> num{};
+   Message msg{};
+   Statistics statistics{};
+   PresolveOptions presolveOptions{};
+   PostsolveStorage<double> postsolve =
+       PostsolveStorage<double>( problem, num, presolveOptions );
+   ProblemUpdate<double> problemUpdate( problem, postsolve, statistics,
+                                        presolveOptions, num, msg );
+   problemUpdate.checkChangedActivities();
+   ParallelColDetection<double> presolvingMethod{};
+   return presolvingMethod.execute( problem, problemUpdate, num, reductions, t,
+                                    cause );
+}
+
+int
+countParallelReductions( Reductions<double>& reductions )
+{
+   int count = 0;
+   for( int i = 0; i < (int) reductions.size(); ++i )
+      if( reductions.getReduction( i ).row == ColReduction::PARALLEL )
+         ++count;
+   return count;
+}
+
+Problem<double>
+setupProblemWithParallelSingletonColumns( bool integral, double factor,
+                                          double obj_factor,
+                                          int n_inactive_empty_cols )
+{
+   // min 3 c1 + 3 obj_factor c2 + 7 c3
+   // s.t. 3 c1 + 3 factor c2 + 7 c3 >= 5
+   //      c4 + c3 <= 1
+   // the first two columns are singletons, the last n_inactive_empty_cols
+   // columns are empty and marked as inactive
+   const int ncols = 4 + n_inactive_empty_cols;
+   Vec<double> obj( ncols, 0.0 );
+   obj[0] = 3.0;
+   obj[1] = 3.0 * obj_factor;
+   obj[2] = 7.0;
+   obj[3] = 1.0;
+   Vec<double> lowerBounds( ncols, 0.0 );
+   Vec<double> upperBounds( ncols, 1.0 );
+   upperBounds[0] = 4.0;
+   upperBounds[1] = 4.0;
+   Vec<uint8_t> isIntegral( ncols, integral );
+   Vec<std::string> columnNames;
+   for( int i = 0; i < ncols; ++i )
+      columnNames.emplace_back( "c" + std::to_string( i + 1 ) );
+
+   Vec<std::tuple<int, int, double>> entries{
+       std::tuple<int, int, double>{ 0, 0, 3.0 },
+       std::tuple<int, int, double>{ 0, 1, 3.0 * factor },
+       std::tuple<int, int, double>{ 0, 2, 7.0 },
+       std::tuple<int, int, double>{ 1, 2, 1.0 },
+       std::tuple<int, int, double>{ 1, 3, 1.0 },
+   };
+
+   ProblemBuilder<double> pb;
+   pb.reserve( entries.size(), 2, ncols );
+   pb.setNumRows( 2 );
+   pb.setNumCols( ncols );
+   pb.setColUbAll( upperBounds );
+   pb.setColLbAll( lowerBounds );
+   pb.setObjAll( obj );
+   pb.setObjOffset( 0.0 );
+   pb.setColIntegralAll( isIntegral );
+   pb.setRowLhs( 0, 5.0 );
+   pb.setRowRhsInf( 0, true );
+   pb.setRowLhsInf( 1, true );
+   pb.setRowRhs( 1, 1.0 );
+   pb.addEntryAll( entries );
+   pb.setColNameAll( columnNames );
+   pb.setProblemName( "matrix with parallel singleton columns (1 and 2)" );
+   Problem<double> problem = pb.build();
+   for( int i = 4; i < ncols; ++i )
+      problem.getColFlags()[i].set( ColFlag::kInactive );
+   return problem;
+}
+
 TEST_CASE( "parallel_col_postsolve_cont_int_recompute_after_rounding",
            "[presolve]" )
 {
@@ -779,7 +941,7 @@ presolveAndPostsolveContAndTwoIntParallelColumns( Problem<double>& problem,
 
    const auto& reds = reductions.getReductions();
    for( const auto& tx : reductions.getTransactions() )
-      problemUpdate.applyTransaction( &reds[tx.start], &reds[tx.end],
+      problemUpdate.applyTransaction( reds.data() + tx.start, reds.data() + tx.end,
                                       ArgumentType::kPrimal );
 
    // all three columns are merged into one continuous column

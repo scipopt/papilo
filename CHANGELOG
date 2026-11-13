@@ -17,6 +17,8 @@ Performance improvements
 - VeriPB: delete redundant, empty and derived temporary constraints as well as fixed variables from the proof
 - VeriPB: use arbitrary precision integers (cpp_int) when writing coefficients and the objective to the proof
 
+- ParallelColDetection: detect parallel singleton columns, e.g., columns with equal coefficient and objective in a knapsack row (#115)
+
 Interface changes
 -----------------
 
