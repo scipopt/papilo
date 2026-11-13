@@ -941,7 +941,7 @@ presolveAndPostsolveContAndTwoIntParallelColumns( Problem<double>& problem,
 
    const auto& reds = reductions.getReductions();
    for( const auto& tx : reductions.getTransactions() )
-      problemUpdate.applyTransaction( &reds[tx.start], &reds[tx.end],
+      problemUpdate.applyTransaction( reds.data() + tx.start, reds.data() + tx.end,
                                       ArgumentType::kPrimal );
 
    // all three columns are merged into one continuous column
