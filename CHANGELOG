@@ -107,6 +107,8 @@ Fixed bugs
 - Probing: only swap the columns of a probing substitution if both are (implied) binaries (scip#261)
 - ProblemUpdate: respect infinite flags in the REPLACE reduction to avoid wrong transferred bound changes
 - Sparsify: use the epsilon tolerance instead of an exact zero check to skip negligible scales that only cancel numerical noise (#103)
+- SimpleSubstitution: reduce the Bezout solution in the gcd feasibility check to avoid an overflow
+- ParallelColDetection: merged column is only integral if both columns are integral and postsolve handles integer columns merged into continuous columns (#93)
 
 @section RN302 PaPILO 3.0.2
 

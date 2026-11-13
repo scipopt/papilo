@@ -179,6 +179,9 @@ set(unit_tests
    "parallel_col_detection_obj_not_parallel"
    "parallel_col_detection_multiple_parallel_columns"
    "parallel_col_detection_objective_zero"
+   "parallel_col_detection_cont_and_two_int_columns"
+   "parallel_col_detection_cont_and_two_int_columns_fractional"
+   "parallel_col_postsolve_int_into_cont"
 
    #Probing
    "happy-path-probing"
@@ -222,6 +225,7 @@ set(unit_tests
         "simple-substitution-2-negative-integer"
         "simple-substitution-feasible-gcd"
         "simple-substitution-gcd-uses-bounds-of-row-columns"
+        "simple-substitution-gcd-large-bezout-solution"
         "simple-substitution-non-coprime"
         "simple-substitution-violated-gcd"
 

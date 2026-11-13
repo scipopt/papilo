@@ -3080,17 +3080,14 @@ ProblemUpdate<REAL>::merge_parallel_columns(
 
    newflags.set( ColFlag::kLbInf, ColFlag::kUbInf );
 
-   // in the case that column 1 is not integral the new column
-   // is also not integral regardless of whether column 2 is integral
-   // or not (the necessary conditions must have been checked by the
-   // presolver)
-   if( cflags[col1].test( ColFlag::kIntegral ) )
+   // the new column is only integral if both columns are integral
+   if( col1int || col2int )
    {
+      if( col1int && col2int )
+         newflags.set( ColFlag::kIntegral );
+
       --problem.getNumIntegralCols();
-      newflags.set( ColFlag::kIntegral );
    }
-   else if( cflags[col2].test( ColFlag::kIntegral ) )
-      --problem.getNumIntegralCols();
    else
       --problem.getNumContinuousCols();
 

@@ -31,7 +31,6 @@
 #include "papilo/core/postsolve/BoundStorage.hpp"
 #include "papilo/core/postsolve/PostsolveStatus.hpp"
 #include "papilo/core/postsolve/PostsolveStorage.hpp"
-#include "papilo/core/postsolve/PostsolveType.hpp"
 #include "papilo/core/postsolve/ReductionType.hpp"
 #include "papilo/core/postsolve/SavedRow.hpp"
 #include "papilo/misc/MultiPrecision.hpp"
@@ -39,13 +38,7 @@
 #include "papilo/misc/PrimalDualSolValidation.hpp"
 #include "papilo/misc/StableSum.hpp"
 #include "papilo/misc/Vec.hpp"
-#include "papilo/misc/compress_vector.hpp"
-#include "papilo/misc/fmt.hpp"
-#if PAPILO_HAS_TBB
-#include "papilo/misc/tbb.hpp"
-#endif
 
-#include <fstream>
 
 #if PAPILO_HAS_BOOST_SERIALIZATION
 #include <boost/archive/text_iarchive.hpp>
@@ -1106,6 +1099,9 @@ Postsolve<REAL>::apply_var_bound_change_forced_by_column_in_original_solution(
       case VarBasisStatus::UNDEFINED:
       case VarBasisStatus::BASIC:
          break;
+      default:
+         assert(false);
+         break;
       }
    }
 }
@@ -1132,35 +1128,16 @@ Postsolve<REAL>::apply_parallel_col_to_original_solution(
    const REAL& col2scale = values[first + 4];
    const REAL& solval = originalSolution.primal[col2];
 
+   const bool col1integral = col1boundFlags & IS_INTEGRAL;
+   const bool col2integral = col2boundFlags & IS_INTEGRAL;
+
    REAL col1val = 0;
    REAL col2val = 0;
 
-   if( col1boundFlags & IS_INTEGRAL )
-   {
-      assert( !( col1boundFlags & IS_LBINF ) );
-      assert( !( col1boundFlags & IS_UBINF ) );
-      assert( !( col2boundFlags & IS_LBINF ) );
-      assert( !( col2boundFlags & IS_UBINF ) );
-      assert( col2boundFlags & IS_INTEGRAL );
-      assert( num.isIntegral(col2scale) );
-
-      col1val = num.max(col1lb, num.min(col1ub, 0));
-      col2val = solval - col2scale * col1val;
-
-      // recompute feasible values next to the closest bound
-      if( num.isFeasLT( col2val, col2lb ) )
-      {
-         col1val = num.round((1 - abs(num.round(col2scale)) + 2 * (solval - col2lb)) / (2 * col2scale));
-         col2val = solval - col2scale * col1val;
-      }
-      else if( num.isFeasGT( col2val, col2ub ) )
-      {
-         col1val = num.round((abs(num.round(col2scale)) - 1 + 2 * (solval - col2ub)) / (2 * col2scale));
-         col2val = solval - col2scale * col1val;
-      }
-   }
-   else
-   {
+   // sets column 2 to one of its finite bounds (or zero) and column 1 to the
+   // rest; if this violates a bound of column 1, column 1 is set to that bound
+   // instead. Returns the guess for column 2.
+   auto setCol2ToBoundAndCol1ToRest = [&]() {
       REAL col2valGuess;
       if( !( col2boundFlags & IS_LBINF ) )
          col2valGuess = col2lb;
@@ -1176,13 +1153,13 @@ Postsolve<REAL>::apply_parallel_col_to_original_solution(
       {
          // lower bound was violated -> set column 1 to lower bound
          col1val = col1lb;
-         // compute new value for column1
+         // compute new value for column 2
          col2val = solval - col2scale * col1val;
       }
       else if( !( col1boundFlags & IS_UBINF ) &&
                num.isFeasGT( col1val, col1ub ) )
       {
-         // upper bound was violated -> set column 1 to lower bound
+         // upper bound was violated -> set column 1 to upper bound
          col1val = col1ub;
          // compute new value for column 2
          col2val = solval - col2scale * col1val;
@@ -1193,8 +1170,7 @@ Postsolve<REAL>::apply_parallel_col_to_original_solution(
          col2val = col2valGuess;
       }
 
-      // domains should be valid now,  except for integrality of column
-      // 2 which could still be violated
+      // domains should be valid now, except for integrality of column 2
       assert( ( col1boundFlags & IS_LBINF ) ||
               num.isFeasGE( col1val, col1lb ) );
       assert( ( col1boundFlags & IS_UBINF ) ||
@@ -1204,22 +1180,59 @@ Postsolve<REAL>::apply_parallel_col_to_original_solution(
       assert( ( col2boundFlags & IS_UBINF ) ||
               num.isFeasLE( col2val, col2ub ) );
 
-      // maybe integrality is violated now for column 2, then we round
-      // further in the direction that we already moved to column 2 to
-      if( ( col2boundFlags & IS_INTEGRAL ) && !num.isFeasIntegral( col2val ) )
+      return col2valGuess;
+   };
+
+   if( col1integral )
+   {
+      // int - int or int - cont: column 1 is rounded towards the violated bound
+      // of column 2. Column 2 can only be continuous if a continuous column was
+      // merged into it earlier in the same round. Then, solval is not
+      // necessarily integral and the bounds of column 2 can be infinite.
+      assert( !( col1boundFlags & IS_LBINF ) );
+      assert( !( col1boundFlags & IS_UBINF ) );
+      assert( !col2integral || !( col2boundFlags & IS_LBINF ) );
+      assert( !col2integral || !( col2boundFlags & IS_UBINF ) );
+      assert( num.isIntegral( col2scale ) );
+      assert( !col2integral || num.isFeasIntegral( solval ) );
+
+      col1val = num.max( col1lb, num.min( col1ub, 0 ) );
+      col2val = solval - col2scale * col1val;
+
+      if( !( col2boundFlags & IS_LBINF ) && num.isFeasLT( col2val, col2lb ) )
       {
-         // round in the direction that we moved away from when we
-         // corrected the bound violation for column 1 otherwise we
-         // will violate the bounds of column 1 again
+         REAL bound = ( solval - col2lb ) / col2scale;
+         col1val = col2scale > 0 ? num.feasFloor( bound ) : num.feasCeil( bound );
+         col2val = solval - col2scale * col1val;
+      }
+      else if( !( col2boundFlags & IS_UBINF ) &&
+               num.isFeasGT( col2val, col2ub ) )
+      {
+         REAL bound = ( solval - col2ub ) / col2scale;
+         col1val = col2scale > 0 ? num.feasCeil( bound ) : num.feasFloor( bound );
+         col2val = solval - col2scale * col1val;
+      }
+   }
+   else
+   {
+      assert(!col1integral);
+      REAL col2valGuess = setCol2ToBoundAndCol1ToRest();
+
+      // integrality of column 2 may be violated, then we round further in the
+      // direction that we moved away from when we corrected the bound
+      // violation for column 1, otherwise we will violate the bounds of
+      // column 1 again
+      if( col2integral && !num.isFeasIntegral( col2val ) )
+      {
          if( col2val > col2valGuess )
             col2val = ceil( col2val );
          else
             col2val = floor( col2val );
 
-         // recompute value for column 1
          col1val = ( solval - col2val ) / col2scale;
       }
    }
+
    // bounds and integrality should hold now within feasibility
    // tolerance
    assert( ( col1boundFlags & IS_LBINF ) || num.isFeasGE( col1val, col1lb ) );

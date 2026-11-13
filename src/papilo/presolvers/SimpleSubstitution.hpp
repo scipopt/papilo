@@ -31,6 +31,7 @@
 #include "papilo/core/ProblemUpdate.hpp"
 #include "papilo/misc/Num.hpp"
 #include "papilo/misc/fmt.hpp"
+#include <boost/multiprecision/cpp_int.hpp>
 #if BOOST_VERSION >= 107000
 #include <boost/integer/extended_euclidean.hpp>
 #else
@@ -349,7 +350,7 @@ SimpleSubstitution<REAL>::perform_simple_substitution_step(
 
 /**
  * check if the aggregated variable y of the equation a1 x1 + a2 x2 = b is within its bounds.
- * 1. generate a solution (s, t) for s a1 + t a2 = gcd(a1, a2)
+ * 1. generate a solution (s, t) for s a1 + t a2 = b with |s| <= |a2| / 2
  * 2. substitute variable x1 = -a2 y + s and x2 = a1 y + t
  * 3. check bounds of y
  *
@@ -367,9 +368,27 @@ SimpleSubstitution<REAL>::isConstraintsFeasibleWithGivenBounds(
    assert( num.round( vals[0] ) == vals[0] );
    assert( num.round( vals[1] ) == vals[1] );
    assert( num.round( rhs ) == rhs );
-   assert( abs( vals[stay] ) * res.x + abs( vals[subst] ) * res.y == 1 );
-   REAL s = res.x * (vals[stay] < 0 ? -rhs : rhs);
-   REAL t = res.y * (vals[subst] < 0 ? -rhs : rhs);
+   using boost::multiprecision::int128_t;
+   const int128_t a_stay = static_cast<int64_t>( vals[stay] );
+   const int128_t a_subst = static_cast<int64_t>( vals[subst] );
+   const int128_t b = static_cast<int64_t>( rhs );
+   const int128_t m = a_subst < 0 ? int128_t( -a_subst ) : a_subst;
+   assert( ( a_stay < 0 ? int128_t( -a_stay ) : a_stay ) * res.x + m * res.y == 1 );
+
+   // res.x * rhs can be too large to be represented exactly: reduce it modulo |a_subst|,
+   // which yields another solution of a_stay * s + a_subst * t = rhs
+   int128_t s_int = ( int128_t( res.x ) % m ) * ( b % m ) % m;
+   if( a_stay < 0 )
+      s_int = -s_int;
+   if( 2 * s_int > m )
+      s_int -= m;
+   else if( -2 * s_int > m )
+      s_int += m;
+   const int128_t t_int = ( b - a_stay * s_int ) / a_subst;
+   assert( a_stay * s_int + a_subst * t_int == b );
+
+   REAL s = REAL( static_cast<int64_t>( s_int ) );
+   REAL t = REAL( static_cast<int64_t>( t_int ) );
    assert( num.round( s ) == s );
    assert( num.round( t ) == t );
 
