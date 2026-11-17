@@ -740,15 +740,33 @@ Postsolve<REAL>::apply_substituted_column_to_original_solution(
       stored.set_bound_of_variable( col, false, ub_infinity, ub );
 
       // calculate the dual solution
-      bool variableOnLowerBound = is_variable_on_lower_bound(
-          lb_infinity, lb, originalSolution.primal[col] );
-      bool variableOnUpperBound = is_variable_on_upper_bound(
-          ub_infinity, ub, originalSolution.primal[col] );
+      bool variableOnLowerBound;
+      bool variableOnUpperBound;
+
+      if( originalSolution.basisAvailabe )
+      {
+         VarBasisStatus rowStatus = originalSolution.rowBasisStatus[row];
+         assert( rowStatus != VarBasisStatus::ZERO );
+         assert( rowStatus != VarBasisStatus::FIXED );
+         variableOnLowerBound =
+             rowStatus == ( colCoef > 0 ? VarBasisStatus::ON_UPPER
+                                        : VarBasisStatus::ON_LOWER );
+         variableOnUpperBound =
+             rowStatus == ( colCoef > 0 ? VarBasisStatus::ON_LOWER
+                                        : VarBasisStatus::ON_UPPER );
+      }
+      else
+      {
+         variableOnLowerBound = is_variable_on_lower_bound(
+             lb_infinity, lb, originalSolution.primal[col] );
+         variableOnUpperBound = is_variable_on_upper_bound(
+             ub_infinity, ub, originalSolution.primal[col] );
+      }
 
       if( variableOnLowerBound || variableOnUpperBound )
       {
-         // since the variable is not at its bounds calculate the reduced costs
-         // and update the dual solution
+         // since the variable is nonbasic calculate the reduced costs and
+         // update the dual solution
          originalSolution.dual[row] += obj / colCoef;
 
          StableSum<REAL> sum_dual;
@@ -762,36 +780,26 @@ Postsolve<REAL>::apply_substituted_column_to_original_solution(
          // set the basis of the variable
          if( originalSolution.basisAvailabe )
          {
-            if( originalSolution.rowBasisStatus[row] ==
-                    VarBasisStatus::BASIC &&
-                ! num.isFeasZero( originalSolution.dual[row] ) )
+            if( variableOnLowerBound )
             {
-               assert( num.isFeasZero( originalSolution.reducedCosts[col] ) );
-               originalSolution.varBasisStatus[col] = VarBasisStatus::BASIC;
-               originalSolution.rowBasisStatus[row] = VarBasisStatus::FIXED;
+               assert( !lb_infinity );
+               originalSolution.primal[col] = lb;
+               originalSolution.varBasisStatus[col] = VarBasisStatus::ON_LOWER;
             }
             else
             {
-               // set the variable on its bounds
-               if( variableOnLowerBound && variableOnUpperBound )
-                  originalSolution.varBasisStatus[col] = VarBasisStatus::FIXED;
-               else if( variableOnLowerBound )
-                  originalSolution.varBasisStatus[col] =
-                         VarBasisStatus::ON_LOWER;
-               else if( variableOnUpperBound )
-                  originalSolution.varBasisStatus[col] =
-                      VarBasisStatus::ON_UPPER;
-               else if( lb_infinity && ub_infinity &&
-                        num.isZero( originalSolution.primal[col] ) )
-                  originalSolution.varBasisStatus[col] =
-                      VarBasisStatus::ZERO;
+               assert( variableOnUpperBound );
+               assert( !ub_infinity );
+               originalSolution.primal[col] = ub;
+               originalSolution.varBasisStatus[col] = VarBasisStatus::ON_UPPER;
             }
+            originalSolution.rowBasisStatus[row] = VarBasisStatus::FIXED;
          }
       }
       else
       {
-         // since variable is not at its bounds the reduced costs are 0 and
-         // calculate the dual variable
+         // since the variable is basic the reduced costs are 0 and calculate
+         // the dual variable
          originalSolution.reducedCosts[col] = 0;
 
          REAL rowCoef = 0.0;

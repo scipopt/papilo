@@ -111,6 +111,7 @@ Fixed bugs
 - Sparsify: use the epsilon tolerance instead of an exact zero check to skip negligible scales that only cancel numerical noise (#103)
 - SimpleSubstitution: reduce the Bezout solution in the gcd feasibility check to avoid an overflow
 - ParallelColDetection: merged column is only integral if both columns are integral and postsolve handles integer columns merged into continuous columns (#93)
+- Postsolve: derive basis status of substituted column from basis status of corresponding row instead of restored column value to enable dual postsolving
 
 @section RN302 PaPILO 3.0.2
 
