@@ -33,10 +33,6 @@ set(PAPILO_HAVE_SYSTEM_FMT @PAPILO_HAVE_SYSTEM_FMT@)
 
 # Whether PaPILO uses Fortran.
 set(PAPILO_HAS_FORTRAN @PAPILO_HAS_FORTRAN@)
-if(PAPILO_HAS_FORTRAN)
-   # This has to be done independently of presence of PAPILO::PAPILO.
-   enable_language(Fortran)
-endif()
 
 # Whether PaPILO was built with GMP.
 set(PAPILO_HAS_GMP @PAPILO_HAS_GMP@)
@@ -61,11 +57,16 @@ set(PAPILO_HAS_LUSOL @PAPILO_HAS_LUSOL@)
 if(NOT TARGET PAPILO::PAPILO)
    # Indent messages for dependency search.
    list(APPEND CMAKE_MESSAGE_INDENT "  ")
+
+   # Enable Fortran if needed. Note that we also do that below if PAPILO::PAPILO is present.
+   if(PAPILO_HAS_FORTRAN)
+      enable_language(Fortran)
+   endif()
    
    # For `find_dependency` function.
    include(CMakeFindDependencyMacro)
    
-   list(APPEND CMAKE_MODULE_PATH @EXTRA_CMAKE_MODULE_PATH@)
+   list(APPEND CMAKE_MODULE_PATH "@EXTRA_CMAKE_MODULE_PATH@")
    
    # If PAPILO was built with system fmt then we also need it.
    if(PAPILO_HAVE_SYSTEM_FMT AND PAPILO_FOUND)
@@ -187,6 +188,13 @@ if(NOT TARGET PAPILO::PAPILO)
    # Report success.
    if(NOT PAPILO_FIND_QUIETLY)
       message(STATUS "Found PaPILO version ${PAPILO_VERSION}.")
+   endif()
+else()
+   # This has to be done independently of presence of PAPILO::PAPILO,
+   # but we do it separately due to indentation.
+
+   if(PAPILO_HAS_FORTRAN)
+      enable_language(Fortran)
    endif()
 endif()
 
